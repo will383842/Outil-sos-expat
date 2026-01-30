@@ -428,6 +428,216 @@ export const adminUpdateEarlyAdopterQuota = onCall(
 );
 
 // ============================================================================
+// ADMIN: INITIALIZE ALL EARLY ADOPTER COUNTERS
+// ============================================================================
+
+// All supported countries - GLOBAL (All continents)
+const SUPPORTED_PIONEER_COUNTRIES: Array<{ code: string; name: string }> = [
+  // ========== AFRICA (34 countries) ==========
+  // Francophone
+  { code: "SN", name: "Senegal" },
+  { code: "CI", name: "Côte d'Ivoire" },
+  { code: "CM", name: "Cameroon" },
+  { code: "ML", name: "Mali" },
+  { code: "BF", name: "Burkina Faso" },
+  { code: "TG", name: "Togo" },
+  { code: "BJ", name: "Benin" },
+  { code: "NE", name: "Niger" },
+  { code: "GN", name: "Guinea" },
+  { code: "GA", name: "Gabon" },
+  { code: "CG", name: "Congo" },
+  { code: "CD", name: "DR Congo" },
+  { code: "MG", name: "Madagascar" },
+  { code: "MU", name: "Mauritius" },
+  { code: "MA", name: "Morocco" },
+  { code: "TN", name: "Tunisia" },
+  { code: "DZ", name: "Algeria" },
+  // Anglophone
+  { code: "NG", name: "Nigeria" },
+  { code: "GH", name: "Ghana" },
+  { code: "KE", name: "Kenya" },
+  { code: "ZA", name: "South Africa" },
+  { code: "TZ", name: "Tanzania" },
+  { code: "UG", name: "Uganda" },
+  { code: "ZW", name: "Zimbabwe" },
+  { code: "ZM", name: "Zambia" },
+  { code: "RW", name: "Rwanda" },
+  { code: "MW", name: "Malawi" },
+  { code: "BW", name: "Botswana" },
+  { code: "NA", name: "Namibia" },
+  { code: "GM", name: "Gambia" },
+  { code: "SL", name: "Sierra Leone" },
+  { code: "LR", name: "Liberia" },
+  { code: "ET", name: "Ethiopia" },
+  { code: "EG", name: "Egypt" },
+
+  // ========== EUROPE (25 countries) ==========
+  { code: "FR", name: "France" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "DE", name: "Germany" },
+  { code: "ES", name: "Spain" },
+  { code: "IT", name: "Italy" },
+  { code: "PT", name: "Portugal" },
+  { code: "NL", name: "Netherlands" },
+  { code: "BE", name: "Belgium" },
+  { code: "CH", name: "Switzerland" },
+  { code: "AT", name: "Austria" },
+  { code: "PL", name: "Poland" },
+  { code: "RO", name: "Romania" },
+  { code: "SE", name: "Sweden" },
+  { code: "NO", name: "Norway" },
+  { code: "DK", name: "Denmark" },
+  { code: "FI", name: "Finland" },
+  { code: "IE", name: "Ireland" },
+  { code: "GR", name: "Greece" },
+  { code: "CZ", name: "Czech Republic" },
+  { code: "HU", name: "Hungary" },
+  { code: "UA", name: "Ukraine" },
+  { code: "RU", name: "Russia" },
+  { code: "TR", name: "Turkey" },
+  { code: "RS", name: "Serbia" },
+  { code: "HR", name: "Croatia" },
+
+  // ========== AMERICAS (20 countries) ==========
+  { code: "US", name: "United States" },
+  { code: "CA", name: "Canada" },
+  { code: "MX", name: "Mexico" },
+  { code: "BR", name: "Brazil" },
+  { code: "AR", name: "Argentina" },
+  { code: "CO", name: "Colombia" },
+  { code: "CL", name: "Chile" },
+  { code: "PE", name: "Peru" },
+  { code: "VE", name: "Venezuela" },
+  { code: "EC", name: "Ecuador" },
+  { code: "GT", name: "Guatemala" },
+  { code: "CU", name: "Cuba" },
+  { code: "DO", name: "Dominican Republic" },
+  { code: "HT", name: "Haiti" },
+  { code: "BO", name: "Bolivia" },
+  { code: "PY", name: "Paraguay" },
+  { code: "UY", name: "Uruguay" },
+  { code: "PA", name: "Panama" },
+  { code: "CR", name: "Costa Rica" },
+  { code: "JM", name: "Jamaica" },
+
+  // ========== ASIA (25 countries) ==========
+  { code: "CN", name: "China" },
+  { code: "JP", name: "Japan" },
+  { code: "KR", name: "South Korea" },
+  { code: "IN", name: "India" },
+  { code: "ID", name: "Indonesia" },
+  { code: "TH", name: "Thailand" },
+  { code: "VN", name: "Vietnam" },
+  { code: "PH", name: "Philippines" },
+  { code: "MY", name: "Malaysia" },
+  { code: "SG", name: "Singapore" },
+  { code: "PK", name: "Pakistan" },
+  { code: "BD", name: "Bangladesh" },
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "IL", name: "Israel" },
+  { code: "LB", name: "Lebanon" },
+  { code: "JO", name: "Jordan" },
+  { code: "IQ", name: "Iraq" },
+  { code: "IR", name: "Iran" },
+  { code: "KZ", name: "Kazakhstan" },
+  { code: "UZ", name: "Uzbekistan" },
+  { code: "NP", name: "Nepal" },
+  { code: "LK", name: "Sri Lanka" },
+  { code: "MM", name: "Myanmar" },
+  { code: "KH", name: "Cambodia" },
+
+  // ========== OCEANIA (5 countries) ==========
+  { code: "AU", name: "Australia" },
+  { code: "NZ", name: "New Zealand" },
+  { code: "FJ", name: "Fiji" },
+  { code: "PG", name: "Papua New Guinea" },
+  { code: "NC", name: "New Caledonia" },
+];
+
+const DEFAULT_PIONEER_SLOTS = 50;
+
+interface InitializeCountersResponse {
+  success: boolean;
+  created: number;
+  updated: number;
+  skipped: number;
+  countries: string[];
+}
+
+export const adminInitializeAllEarlyAdopterCounters = onCall(
+  {
+    region: "europe-west1",
+    memory: "512MiB",
+    timeoutSeconds: 120,
+  },
+  async (request): Promise<InitializeCountersResponse> => {
+    ensureInitialized();
+
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentication required");
+    }
+
+    const db = getFirestore();
+    const result: InitializeCountersResponse = {
+      success: true,
+      created: 0,
+      updated: 0,
+      skipped: 0,
+      countries: [],
+    };
+
+    try {
+      const batch = db.batch();
+
+      for (const country of SUPPORTED_PIONEER_COUNTRIES) {
+        const counterRef = db.collection("chatter_early_adopter_counters").doc(country.code);
+        const counterDoc = await counterRef.get();
+
+        if (!counterDoc.exists) {
+          // Create new counter
+          const counter: ChatterEarlyAdopterCounter = {
+            countryCode: country.code,
+            countryName: country.name,
+            maxEarlyAdopters: DEFAULT_PIONEER_SLOTS,
+            currentCount: 0,
+            remainingSlots: DEFAULT_PIONEER_SLOTS,
+            isOpen: true,
+            earlyAdopterIds: [],
+            updatedAt: Timestamp.now(),
+          };
+          batch.set(counterRef, counter);
+          result.created++;
+          result.countries.push(country.code);
+        } else {
+          // Update country name if needed, but don't reset counters
+          const existing = counterDoc.data() as ChatterEarlyAdopterCounter;
+          if (existing.countryName !== country.name) {
+            batch.update(counterRef, { countryName: country.name });
+            result.updated++;
+          } else {
+            result.skipped++;
+          }
+        }
+      }
+
+      await batch.commit();
+
+      logger.info("[adminInitializeAllEarlyAdopterCounters] Completed", {
+        created: result.created,
+        updated: result.updated,
+        skipped: result.skipped,
+      });
+
+      return result;
+    } catch (error) {
+      logger.error("[adminInitializeAllEarlyAdopterCounters] Error", { error });
+      throw new HttpsError("internal", "Failed to initialize counters");
+    }
+  }
+);
+
+// ============================================================================
 // ADMIN: GET REFERRAL FRAUD ALERTS
 // ============================================================================
 

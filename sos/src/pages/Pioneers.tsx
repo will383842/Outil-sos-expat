@@ -42,7 +42,7 @@ const PioneersPage: React.FC = () => {
                 <span className="text-amber-800 dark:text-amber-300 font-medium">
                   <FormattedMessage
                     id="pioneers.limitedOffer"
-                    defaultMessage="Offre limitee - 100 places par pays"
+                    defaultMessage="Offre limitee - 50 places par pays"
                   />
                 </span>
               </div>
@@ -63,7 +63,7 @@ const PioneersPage: React.FC = () => {
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">
                 <FormattedMessage
                   id="pioneers.subtitle"
-                  defaultMessage="Les 100 premiers Chatters de chaque pays beneficient d'un bonus de +50% a vie sur toutes leurs commissions de parrainage !"
+                  defaultMessage="Les 50 premiers Chatters de chaque pays beneficient d'un bonus de +50% a vie sur toutes leurs commissions de parrainage !"
                 />
               </p>
 

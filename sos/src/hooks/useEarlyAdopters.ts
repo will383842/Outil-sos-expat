@@ -47,8 +47,8 @@ export function useEarlyAdopters(): UseEarlyAdoptersReturn {
           countryCode: doc.id,
           countryName: data.countryName || doc.id,
           currentCount: data.currentCount || 0,
-          maxEarlyAdopters: data.maxEarlyAdopters || 100,
-          remainingSlots: data.remainingSlots || 100,
+          maxEarlyAdopters: data.maxEarlyAdopters || 50,
+          remainingSlots: data.remainingSlots || 50,
           isOpen: data.isOpen ?? true,
         };
       });

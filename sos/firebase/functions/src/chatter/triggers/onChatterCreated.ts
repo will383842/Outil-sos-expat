@@ -102,6 +102,12 @@ export const chatterOnChatterCreated = onDocumentCreated(
         };
         await db.collection("chatters").doc(chatterId).update(referralUpdates);
 
+        // Increment N1 parrain's totalRecruits counter
+        await db.collection("chatters").doc(chatter.recruitedBy).update({
+          totalRecruits: FieldValue.increment(1),
+          updatedAt: now,
+        });
+
         // If there's an N2 parrain, increment their referralsN2Count
         if (parrainNiveau2Id) {
           await db.collection("chatters").doc(parrainNiveau2Id).update({

@@ -2036,7 +2036,7 @@ export const REFERRAL_CONFIG = {
   /** Early adopter settings */
   EARLY_ADOPTER: {
     MULTIPLIER: 1.5,              // +50% bonus
-    DEFAULT_SLOTS_PER_COUNTRY: 100, // 100 first per country
+    DEFAULT_SLOTS_PER_COUNTRY: 50, // 50 first per country
   },
 
   /** Anti-fraud thresholds */

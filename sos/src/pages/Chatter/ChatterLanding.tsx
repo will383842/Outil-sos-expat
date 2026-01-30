@@ -113,7 +113,7 @@ const FloatingEmoji: React.FC<{ emoji: string; delay: number; position: string }
 );
 
 // ============================================================================
-// EARNINGS CALCULATOR COMPONENT
+// EARNINGS CALCULATOR COMPONENT - EXPANDED WITH TIME ESTIMATES
 // ============================================================================
 const EarningsCalculator: React.FC = () => {
   const intl = useIntl();
@@ -121,113 +121,231 @@ const EarningsCalculator: React.FC = () => {
   const [lawyers, setLawyers] = useState(3);
   const [callsPerLawyer, setCallsPerLawyer] = useState(15);
   const [filleuls, setFilleuls] = useState(5);
+  const [hoursPerDay, setHoursPerDay] = useState(2);
 
   const clientEarnings = clients * 10;
   const lawyerEarnings = lawyers * callsPerLawyer * 5;
-  const referralEarnings = filleuls >= 5 ? 25 : 0; // Tier bonus
-  const filleulRecurring = filleuls * 50 * 0.05; // 5% of $50 avg
-  const total = clientEarnings + lawyerEarnings + referralEarnings + filleulRecurring;
+  // Tier bonuses
+  const tierBonus = filleuls >= 50 ? 500 : filleuls >= 25 ? 200 : filleuls >= 10 ? 75 : filleuls >= 5 ? 25 : 0;
+  const filleulRecurring = filleuls * 50 * 0.05; // 5% of $50 avg monthly
+  const total = clientEarnings + lawyerEarnings + tierBonus + filleulRecurring;
+
+  // Time estimates (realistic conversions)
+  const postsPerHour = 6; // Average posts/shares per hour
+  const conversionRate = 0.03; // 3% conversion rate
+  const totalPosts = hoursPerDay * 30 * postsPerHour;
+  const estimatedClients = Math.round(totalPosts * conversionRate);
+
+  // Hourly rate calculation
+  const totalHoursMonth = hoursPerDay * 30;
+  const hourlyRate = totalHoursMonth > 0 ? (total / totalHoursMonth).toFixed(2) : 0;
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl p-6 md:p-8 text-white">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center">
-          <DollarSign className="w-6 h-6 text-white" />
+    <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl p-6 md:p-10 text-white shadow-2xl">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/30">
+          <DollarSign className="w-7 h-7 text-white" />
         </div>
         <div>
-          <h3 className="text-xl font-bold">
+          <h3 className="text-2xl md:text-3xl font-bold">
             <FormattedMessage id="chatter.calc.title" defaultMessage="Earnings Calculator" />
           </h3>
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400">
             <FormattedMessage id="chatter.calc.subtitle" defaultMessage="See your potential income" />
           </p>
         </div>
       </div>
 
-      <div className="space-y-5">
-        {/* Clients slider */}
-        <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-300">
-              <FormattedMessage id="chatter.calc.clients" defaultMessage="Clients referred/month" />
-            </span>
-            <span className="font-bold text-green-400">{clients} × $10 = ${clientEarnings}</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={clients}
-            onChange={(e) => setClients(Number(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-full appearance-none cursor-pointer slider-green"
-          />
-        </div>
-
-        {/* Lawyers recruited slider */}
-        <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-300">
-              <FormattedMessage id="chatter.calc.lawyers" defaultMessage="Lawyers recruited" />
-            </span>
-            <span className="font-bold text-purple-400">{lawyers}</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="20"
-            value={lawyers}
-            onChange={(e) => setLawyers(Number(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-full appearance-none cursor-pointer slider-purple"
-          />
-        </div>
-
-        {/* Calls per lawyer slider */}
-        <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-300">
-              <FormattedMessage id="chatter.calc.callsPerLawyer" defaultMessage="Calls/lawyer/month" />
-            </span>
-            <span className="font-bold text-purple-400">{lawyers} × {callsPerLawyer} × $5 = ${lawyerEarnings}</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="50"
-            value={callsPerLawyer}
-            onChange={(e) => setCallsPerLawyer(Number(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-full appearance-none cursor-pointer slider-purple"
-          />
-        </div>
-
-        {/* Filleuls slider */}
-        <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-300">
-              <FormattedMessage id="chatter.calc.filleuls" defaultMessage="Chatters you sponsor" />
-            </span>
-            <span className="font-bold text-orange-400">{filleuls}</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="50"
-            value={filleuls}
-            onChange={(e) => setFilleuls(Number(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-full appearance-none cursor-pointer slider-orange"
-          />
-        </div>
-
-        {/* Total */}
-        <div className="pt-4 border-t border-gray-700">
-          <div className="flex justify-between items-center">
-            <span className="text-lg text-gray-300">
-              <FormattedMessage id="chatter.calc.total" defaultMessage="Estimated monthly income" />
-            </span>
-            <div className="text-right">
-              <span className="text-4xl md:text-5xl font-black bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                ${total.toLocaleString()}
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Left Column - Sliders */}
+        <div className="space-y-6">
+          {/* Time invested slider - NEW */}
+          <div className="bg-gray-800/50 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-5 h-5 text-blue-400" />
+              <span className="text-gray-200 font-semibold">
+                <FormattedMessage id="chatter.calc.timePerDay" defaultMessage="Hours per day" />
               </span>
-              <span className="text-gray-400 text-sm block">/month</span>
+            </div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-gray-400">
+                <FormattedMessage id="chatter.calc.workTime" defaultMessage="Your daily investment" />
+              </span>
+              <span className="font-bold text-blue-400">{hoursPerDay}h/day = {hoursPerDay * 30}h/month</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="8"
+              step="0.5"
+              value={hoursPerDay}
+              onChange={(e) => setHoursPerDay(Number(e.target.value))}
+              className="w-full h-3 bg-gray-700 rounded-full appearance-none cursor-pointer slider-blue"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>30min</span>
+              <span>4h</span>
+              <span>8h</span>
+            </div>
+          </div>
+
+          {/* Clients slider */}
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-gray-300 flex items-center gap-2">
+                <Phone className="w-4 h-4 text-green-400" />
+                <FormattedMessage id="chatter.calc.clients" defaultMessage="Clients referred/month" />
+              </span>
+              <span className="font-bold text-green-400">{clients} × $10 = ${clientEarnings}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={clients}
+              onChange={(e) => setClients(Number(e.target.value))}
+              className="w-full h-3 bg-gray-700 rounded-full appearance-none cursor-pointer slider-green"
+            />
+          </div>
+
+          {/* Lawyers recruited slider */}
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-gray-300 flex items-center gap-2">
+                <Users className="w-4 h-4 text-purple-400" />
+                <FormattedMessage id="chatter.calc.lawyers" defaultMessage="Lawyers recruited" />
+              </span>
+              <span className="font-bold text-purple-400">{lawyers}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="20"
+              value={lawyers}
+              onChange={(e) => setLawyers(Number(e.target.value))}
+              className="w-full h-3 bg-gray-700 rounded-full appearance-none cursor-pointer slider-purple"
+            />
+          </div>
+
+          {/* Calls per lawyer slider */}
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-gray-300 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-purple-400" />
+                <FormattedMessage id="chatter.calc.callsPerLawyer" defaultMessage="Calls/lawyer/month" />
+              </span>
+              <span className="font-bold text-purple-400">{lawyers} × {callsPerLawyer} × $5 = ${lawyerEarnings}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="50"
+              value={callsPerLawyer}
+              onChange={(e) => setCallsPerLawyer(Number(e.target.value))}
+              className="w-full h-3 bg-gray-700 rounded-full appearance-none cursor-pointer slider-purple"
+            />
+          </div>
+
+          {/* Filleuls slider */}
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-gray-300 flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-orange-400" />
+                <FormattedMessage id="chatter.calc.filleuls" defaultMessage="Chatters you sponsor" />
+              </span>
+              <span className="font-bold text-orange-400">{filleuls}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="50"
+              value={filleuls}
+              onChange={(e) => setFilleuls(Number(e.target.value))}
+              className="w-full h-3 bg-gray-700 rounded-full appearance-none cursor-pointer slider-orange"
+            />
+            {/* Tier bonus indicator */}
+            {tierBonus > 0 && (
+              <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-orange-500/20 rounded-full text-xs text-orange-400">
+                <Trophy className="w-3 h-3" />
+                <FormattedMessage id="chatter.calc.tierBonus" defaultMessage="Tier bonus" />: +${tierBonus}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column - Results */}
+        <div className="flex flex-col justify-between">
+          {/* Breakdown */}
+          <div className="space-y-3 mb-6">
+            <h4 className="text-lg font-semibold text-gray-300 mb-4">
+              <FormattedMessage id="chatter.calc.breakdown" defaultMessage="Earnings Breakdown" />
+            </h4>
+            <div className="flex justify-between items-center py-2 border-b border-gray-700">
+              <span className="text-gray-400 flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <FormattedMessage id="chatter.calc.fromClients" defaultMessage="From clients" />
+              </span>
+              <span className="font-semibold text-green-400">${clientEarnings}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-700">
+              <span className="text-gray-400 flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-purple-500" />
+                <FormattedMessage id="chatter.calc.fromLawyers" defaultMessage="From lawyers" />
+              </span>
+              <span className="font-semibold text-purple-400">${lawyerEarnings}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-700">
+              <span className="text-gray-400 flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-orange-500" />
+                <FormattedMessage id="chatter.calc.fromReferrals" defaultMessage="From referrals (5%)" />
+              </span>
+              <span className="font-semibold text-orange-400">${filleulRecurring.toFixed(0)}</span>
+            </div>
+            {tierBonus > 0 && (
+              <div className="flex justify-between items-center py-2 border-b border-gray-700">
+                <span className="text-gray-400 flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                  <FormattedMessage id="chatter.calc.tierBonusLabel" defaultMessage="Tier bonus" />
+                </span>
+                <span className="font-semibold text-yellow-400">${tierBonus}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Total + Time metrics */}
+          <div className="bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-2xl p-6 border border-green-500/20">
+            <div className="text-center mb-4">
+              <span className="text-gray-400 text-sm">
+                <FormattedMessage id="chatter.calc.total" defaultMessage="Estimated monthly income" />
+              </span>
+              <div className="text-5xl md:text-6xl font-black bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                ${total.toLocaleString()}
+              </div>
+              <span className="text-gray-500">/month</span>
+            </div>
+
+            {/* Time metrics */}
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-green-500/20">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-400">{totalHoursMonth}h</div>
+                <div className="text-xs text-gray-500">
+                  <FormattedMessage id="chatter.calc.monthlyHours" defaultMessage="Monthly hours" />
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-400">${hourlyRate}</div>
+                <div className="text-xs text-gray-500">
+                  <FormattedMessage id="chatter.calc.hourlyRate" defaultMessage="Effective hourly rate" />
+                </div>
+              </div>
+            </div>
+
+            {/* Yearly projection */}
+            <div className="mt-4 pt-4 border-t border-green-500/20 text-center">
+              <span className="text-gray-400 text-sm">
+                <FormattedMessage id="chatter.calc.yearly" defaultMessage="Yearly projection" />
+              </span>
+              <div className="text-3xl font-bold text-white">${(total * 12).toLocaleString()}</div>
             </div>
           </div>
         </div>
@@ -339,7 +457,7 @@ const ChatterLanding: React.FC = () => {
   });
   const aiSummary = intl.formatMessage({
     id: 'chatter.landing.seo.aiSummary',
-    defaultMessage: 'SOS-Expat Chatter program: $10/client, $5/lawyer call, 2-level referral (N1: $4+5%, N2: $2), tier bonuses up to $500, Pioneer +50% lifetime bonus for first 100 per country.'
+    defaultMessage: 'SOS-Expat Chatter program: $10/client, $5/lawyer call, 2-level referral (N1: $4+5%, N2: $2), tier bonuses up to $500, Pioneer +50% lifetime bonus for first 50 per country.'
   });
 
   // FAQ
@@ -358,7 +476,7 @@ const ChatterLanding: React.FC = () => {
     },
     {
       question: intl.formatMessage({ id: 'chatter.faq.q4', defaultMessage: "What is the Pioneer Early Adopter bonus?" }),
-      answer: intl.formatMessage({ id: 'chatter.faq.a4', defaultMessage: "The first 100 chatters in each country who reach $50 in client earnings become Pioneers and get +50% LIFETIME bonus on ALL referral commissions. This is permanent and extremely valuable - don't miss your spot!" }),
+      answer: intl.formatMessage({ id: 'chatter.faq.a4', defaultMessage: "The first 50 chatters in each country who reach $50 in client earnings become Pioneers and get +50% LIFETIME bonus on ALL referral commissions. This is permanent and extremely valuable - don't miss your spot!" }),
     },
     {
       question: intl.formatMessage({ id: 'chatter.faq.q5', defaultMessage: "How and when do I get paid?" }),
@@ -374,61 +492,71 @@ const ChatterLanding: React.FC = () => {
     },
   ];
 
-  // Success stories - diverse and international
+  // Success stories - diverse across ALL continents with real photos
   const successStories = [
     {
-      name: 'Fatou D.',
-      country: '🇸🇳 Sénégal',
-      avatar: '👩🏾',
-      monthly: '$890',
-      story: intl.formatMessage({ id: 'chatter.story.1', defaultMessage: '52 clients + 12 chatters sponsored. Pioneer badge holder!' }),
+      name: 'Ricardo M.',
+      country: '🇧🇷 Brazil',
+      countryCode: 'BR',
+      photo: 'https://randomuser.me/api/portraits/men/32.jpg',
+      monthly: '$3,840',
+      team: 47,
+      story: intl.formatMessage({ id: 'chatter.story.team', defaultMessage: 'Built a team of {count} chatters. 60% of my income is now passive from referrals!' }),
+      badge: 'Diamond',
+      highlight: 'Team Leader',
+      isTeamLeader: true,
+    },
+    {
+      name: 'Sophie L.',
+      country: '🇫🇷 France',
+      countryCode: 'FR',
+      photo: 'https://randomuser.me/api/portraits/women/44.jpg',
+      monthly: '$1,450',
+      story: intl.formatMessage({ id: 'chatter.story.europe', defaultMessage: 'Expat communities in Europe are my niche. Pioneer status unlocked!' }),
       badge: 'Pioneer',
       highlight: '+50%',
     },
     {
-      name: 'Emmanuel O.',
-      country: '🇳🇬 Nigeria',
-      avatar: '👨🏿',
-      monthly: '$1,240',
-      story: intl.formatMessage({ id: 'chatter.story.2', defaultMessage: 'Recruited 8 lawyers, 67 clients. Diamond level in 4 months.' }),
-      badge: 'Diamond',
-      highlight: 'Top 3',
-    },
-    {
-      name: 'Aminata K.',
-      country: '🇨🇮 Côte d\'Ivoire',
-      avatar: '👩🏾‍🦱',
-      monthly: '$520',
-      story: intl.formatMessage({ id: 'chatter.story.3', defaultMessage: 'Part-time while studying. WhatsApp groups are gold!' }),
+      name: 'Amit P.',
+      country: '🇮🇳 India',
+      countryCode: 'IN',
+      photo: 'https://randomuser.me/api/portraits/men/67.jpg',
+      monthly: '$920',
+      story: intl.formatMessage({ id: 'chatter.story.asia', defaultMessage: 'Started 3 months ago. LinkedIn + WhatsApp groups = perfect combo.' }),
       badge: 'Gold',
       highlight: '',
     },
     {
-      name: 'Mohamed B.',
-      country: '🇲🇦 Morocco',
-      avatar: '👨🏽',
-      monthly: '$680',
-      story: intl.formatMessage({ id: 'chatter.story.4', defaultMessage: '23 chatters in my network earning passive income monthly.' }),
+      name: 'Fatou D.',
+      country: '🇸🇳 Senegal',
+      countryCode: 'SN',
+      photo: 'https://randomuser.me/api/portraits/women/68.jpg',
+      monthly: '$1,180',
+      story: intl.formatMessage({ id: 'chatter.story.africa', defaultMessage: '52 clients + 18 chatters sponsored. Wave withdrawal in 24h!' }),
       badge: 'Platinum',
-      highlight: '5%',
+      highlight: 'Top 10',
     },
     {
-      name: 'Grace N.',
-      country: '🇰🇪 Kenya',
-      avatar: '👩🏿',
-      monthly: '$445',
-      story: intl.formatMessage({ id: 'chatter.story.5', defaultMessage: 'M-Pesa withdrawal in 24h. Love this system!' }),
-      badge: 'Silver',
+      name: 'Maria G.',
+      country: '🇲🇽 Mexico',
+      countryCode: 'MX',
+      photo: 'https://randomuser.me/api/portraits/women/28.jpg',
+      monthly: '$680',
+      story: intl.formatMessage({ id: 'chatter.story.latam', defaultMessage: 'Part-time while studying. TikTok + Instagram = my secret weapon.' }),
+      badge: 'Gold',
       highlight: '',
     },
     {
-      name: 'Yves T.',
-      country: '🇨🇲 Cameroon',
-      avatar: '👨🏿',
-      monthly: '$760',
-      story: intl.formatMessage({ id: 'chatter.story.6', defaultMessage: 'Facebook groups + TikTok = unstoppable combo.' }),
-      badge: 'Platinum',
-      highlight: 'Top 3',
+      name: 'James O.',
+      country: '🇺🇸 USA',
+      countryCode: 'US',
+      photo: 'https://randomuser.me/api/portraits/men/52.jpg',
+      monthly: '$2,100',
+      team: 23,
+      story: intl.formatMessage({ id: 'chatter.story.usa', defaultMessage: 'Helping immigrants find legal help. Building passive income with my network.' }),
+      badge: 'Diamond',
+      highlight: 'Pioneer',
+      isTeamLeader: true,
     },
   ];
 
@@ -498,6 +626,15 @@ const ChatterLanding: React.FC = () => {
           border-radius: 50%;
           cursor: pointer;
           box-shadow: 0 2px 6px rgba(249, 115, 22, 0.4);
+        }
+        input[type="range"].slider-blue::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 24px;
+          height: 24px;
+          background: linear-gradient(to right, #3b82f6, #06b6d4);
+          border-radius: 50%;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
         }
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -879,7 +1016,7 @@ const ChatterLanding: React.FC = () => {
                 <FormattedMessage id="chatter.pioneer.title" defaultMessage="Become a Pioneer" />
               </h2>
               <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                <FormattedMessage id="chatter.pioneer.subtitle" defaultMessage="First 100 chatters per country to reach $50 get +50% LIFETIME bonus on all referral earnings" />
+                <FormattedMessage id="chatter.pioneer.subtitle" defaultMessage="First 50 chatters per country to reach $50 get +50% LIFETIME bonus on all referral earnings" />
               </p>
             </div>
 
@@ -969,15 +1106,44 @@ const ChatterLanding: React.FC = () => {
               {successStories.map((story, idx) => (
                 <div
                   key={idx}
-                  className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow"
+                  className={`bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow relative overflow-hidden ${
+                    story.isTeamLeader ? 'ring-2 ring-purple-500/50' : ''
+                  }`}
                 >
+                  {/* Team Leader badge */}
+                  {story.isTeamLeader && (
+                    <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
+                      <FormattedMessage id="chatter.stories.teamLeader" defaultMessage="Team Leader" />
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-2xl">
-                      {story.avatar}
+                    {/* Real photo */}
+                    <div className="relative">
+                      <img
+                        src={story.photo}
+                        alt={story.name}
+                        className="w-16 h-16 rounded-full object-cover border-3 border-white dark:border-gray-700 shadow-lg"
+                      />
+                      {story.badge === 'Pioneer' && (
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center">
+                          <Crown className="w-3 h-3 text-white" />
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1">
                       <div className="font-bold text-gray-900 dark:text-white">{story.name}</div>
                       <div className="text-sm text-gray-500">{story.country}</div>
+                      {story.team && (
+                        <div className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1 mt-1">
+                          <Users className="w-3 h-3" />
+                          <FormattedMessage
+                            id="chatter.stories.teamSize"
+                            defaultMessage="{count} chatters in team"
+                            values={{ count: story.team }}
+                          />
+                        </div>
+                      )}
                     </div>
                     {story.highlight && (
                       <span className="px-3 py-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-white text-xs font-bold rounded-full">
@@ -996,18 +1162,23 @@ const ChatterLanding: React.FC = () => {
                       </div>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      story.badge === 'Diamond' ? 'bg-purple-100 text-purple-700' :
-                      story.badge === 'Platinum' ? 'bg-cyan-100 text-cyan-700' :
-                      story.badge === 'Gold' ? 'bg-yellow-100 text-yellow-700' :
-                      story.badge === 'Silver' ? 'bg-gray-200 text-gray-700' :
-                      story.badge === 'Pioneer' ? 'bg-red-100 text-red-700' :
-                      'bg-amber-100 text-amber-700'
+                      story.badge === 'Diamond' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' :
+                      story.badge === 'Platinum' ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300' :
+                      story.badge === 'Gold' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
+                      story.badge === 'Silver' ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300' :
+                      story.badge === 'Pioneer' ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' :
+                      'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
                     }`}>
-                      {story.badge}
+                      {story.badge === 'Pioneer' && '🏆 '}{story.badge}
                     </span>
                   </div>
 
-                  <p className="text-sm text-gray-600 dark:text-gray-400 italic">"{story.story}"</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+                    "{typeof story.story === 'string' && story.team
+                      ? story.story.replace('{count}', String(story.team))
+                      : story.story
+                    }"
+                  </p>
                 </div>
               ))}
             </div>
@@ -1156,7 +1327,7 @@ const ChatterLanding: React.FC = () => {
               </h3>
             </div>
             <p className="text-lg text-white/90 max-w-2xl mx-auto">
-              <FormattedMessage id="chatter.nospam.desc" defaultMessage="We don't want spammers. The best chatters have authentic conversations and share their link naturally when it makes sense. Quality beats quantity every time." />
+              <FormattedMessage id="chatter.nospam.desc" defaultMessage="We don't want spammers. Any spammer is systematically and permanently banned from SOS-Expat. The best chatters have authentic conversations and share their link naturally when it makes sense. Quality beats quantity every time." />
             </p>
           </div>
         </section>

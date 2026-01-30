@@ -90,6 +90,7 @@ export {
   adminGetReferralTree,
   adminGetEarlyAdopters,
   adminUpdateEarlyAdopterQuota,
+  adminInitializeAllEarlyAdopterCounters,
   adminGetReferralFraudAlerts,
   adminReviewFraudAlert,
   adminGetReferralCommissions,

@@ -33,30 +33,52 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// Supported countries for early adopter counters
-const SUPPORTED_COUNTRIES = [
-  "SN", // Senegal
-  "CI", // Côte d'Ivoire
-  "CM", // Cameroon
-  "ML", // Mali
-  "BF", // Burkina Faso
-  "TG", // Togo
-  "BJ", // Benin
-  "NE", // Niger
-  "GN", // Guinea
-  "GA", // Gabon
-  "CG", // Congo
-  "CD", // DR Congo
-  "MG", // Madagascar
-  "HT", // Haiti
-  "MU", // Mauritius
-  "MA", // Morocco
-  "TN", // Tunisia
-  "DZ", // Algeria
+// Supported countries for early adopter counters - GLOBAL (109 countries)
+
+// AFRICA (35 countries)
+const AFRICA_COUNTRIES = [
+  "SN", "CI", "CM", "ML", "BF", "TG", "BJ", "NE", "GN", "GA",
+  "CG", "CD", "MG", "MU", "MA", "TN", "DZ", "NG", "GH", "KE",
+  "ZA", "TZ", "UG", "ZW", "ZM", "RW", "MW", "BW", "NA", "GM",
+  "SL", "LR", "ET", "EG", "AO",
 ];
 
-// Early adopter quota per country
-const EARLY_ADOPTER_QUOTA_PER_COUNTRY = 100;
+// EUROPE (25 countries)
+const EUROPE_COUNTRIES = [
+  "FR", "GB", "DE", "ES", "IT", "PT", "NL", "BE", "CH", "AT",
+  "PL", "RO", "SE", "NO", "DK", "FI", "IE", "GR", "CZ", "HU",
+  "UA", "RU", "TR", "RS", "HR",
+];
+
+// AMERICAS (20 countries)
+const AMERICAS_COUNTRIES = [
+  "US", "CA", "MX", "BR", "AR", "CO", "CL", "PE", "VE", "EC",
+  "GT", "CU", "DO", "HT", "BO", "PY", "UY", "PA", "CR", "JM",
+];
+
+// ASIA (25 countries)
+const ASIA_COUNTRIES = [
+  "CN", "JP", "KR", "IN", "ID", "TH", "VN", "PH", "MY", "SG",
+  "PK", "BD", "AE", "SA", "IL", "LB", "JO", "IQ", "IR", "KZ",
+  "UZ", "NP", "LK", "MM", "KH",
+];
+
+// OCEANIA (5 countries)
+const OCEANIA_COUNTRIES = [
+  "AU", "NZ", "FJ", "PG", "NC",
+];
+
+// Combined list - 110 countries total
+const SUPPORTED_COUNTRIES = [
+  ...AFRICA_COUNTRIES,
+  ...EUROPE_COUNTRIES,
+  ...AMERICAS_COUNTRIES,
+  ...ASIA_COUNTRIES,
+  ...OCEANIA_COUNTRIES,
+];
+
+// Early adopter quota per country (50 first pioneers per country)
+const EARLY_ADOPTER_QUOTA_PER_COUNTRY = 50;
 
 // Threshold in cents ($50 = 5000 cents)
 const QUALIFIED_THRESHOLD = 5000;
