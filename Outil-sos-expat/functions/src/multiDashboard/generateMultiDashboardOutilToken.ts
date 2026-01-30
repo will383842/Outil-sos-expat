@@ -178,10 +178,45 @@ export const generateMultiDashboardOutilToken = onCall<
 
       // If bookingId is provided, add redirect parameter to go directly to that conversation
       if (bookingId) {
-        const redirectPath = `/dashboard/conversation/${bookingId}`;
+        // FIX: The bookingId from multi-dashboard is a booking_request ID (SOS project)
+        // We need to find the corresponding Outil booking ID (outilBookingId) for proper redirect
+        let redirectBookingId = bookingId;
+
+        try {
+          // Check if this is a booking_request and get the outilBookingId
+          const bookingRequestDoc = await db.collection("booking_requests").doc(bookingId).get();
+
+          if (bookingRequestDoc.exists) {
+            const bookingRequestData = bookingRequestDoc.data();
+
+            if (bookingRequestData?.outilBookingId) {
+              // Use the Outil booking ID for redirect (this is what ConversationDetail expects)
+              redirectBookingId = bookingRequestData.outilBookingId;
+              logger.info("[generateMultiDashboardOutilToken] Found outilBookingId, using for redirect", {
+                bookingRequestId: bookingId,
+                outilBookingId: redirectBookingId,
+              });
+            } else {
+              // No outilBookingId yet - AI hasn't been triggered or is still processing
+              // Use the booking_request ID with a source hint for ConversationDetail
+              logger.info("[generateMultiDashboardOutilToken] No outilBookingId yet, using booking_request ID with source hint", {
+                bookingRequestId: bookingId,
+              });
+            }
+          }
+        } catch (lookupError) {
+          logger.warn("[generateMultiDashboardOutilToken] Could not lookup booking_request, using original ID", {
+            bookingId,
+            error: lookupError,
+          });
+        }
+
+        // Add source parameter to help ConversationDetail know where to look
+        const redirectPath = `/dashboard/conversation/${redirectBookingId}?source=multi_dashboard&originalId=${bookingId}`;
         ssoUrl += `&redirect=${encodeURIComponent(redirectPath)}`;
         logger.info("[generateMultiDashboardOutilToken] Adding redirect to conversation", {
           bookingId,
+          redirectBookingId,
           redirectPath,
         });
       }

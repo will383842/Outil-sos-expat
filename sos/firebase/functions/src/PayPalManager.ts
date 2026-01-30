@@ -2248,12 +2248,21 @@ export const createPayPalOrderHttp = onRequest(
       // ========== STEP 2: Fetch provider data ==========
       console.log(`🔷 [PAYPAL_DEBUG] STEP 2: Fetching provider ${providerId}...`);
       const db = admin.firestore();
-      const providerDoc = await db.collection("users").doc(providerId).get();
-      const providerData = providerDoc.data();
+
+      // Try sos_profiles first (where all provider profiles are), then users as fallback
+      let providerDoc = await db.collection("sos_profiles").doc(providerId).get();
+      let providerData = providerDoc.data();
+
+      if (!providerData) {
+        console.log(`⚠️ [PAYPAL_DEBUG] STEP 2: Not in sos_profiles, trying users...`);
+        providerDoc = await db.collection("users").doc(providerId).get();
+        providerData = providerDoc.data();
+      }
+
       console.log(`✅ [PAYPAL_DEBUG] STEP 2: OK - Provider exists=${providerDoc.exists}, hasData=${!!providerData}`);
 
       if (!providerData) {
-        console.error(`❌ [PAYPAL_DEBUG] STEP 2 FAILED: Provider ${providerId} not found in Firestore`);
+        console.error(`❌ [PAYPAL_DEBUG] STEP 2 FAILED: Provider ${providerId} not found in sos_profiles or users`);
         res.status(404).json({ error: "Provider not found" });
         return;
       }

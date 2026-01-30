@@ -7,8 +7,6 @@
 import React, { useState } from 'react';
 import {
   User,
-  Phone,
-  MessageSquare,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -20,6 +18,8 @@ import {
   Languages,
   Loader2,
   Bot,
+  Phone,
+  MessageSquare,
 } from 'lucide-react';
 import type { BookingRequestWithAI } from '../../hooks/useMultiProviderDashboard';
 import AiResponseDisplay from './AiResponseDisplay';
@@ -265,15 +265,15 @@ const BookingRequestCard: React.FC<BookingRequestCardProps> = ({
         </div>
       ) : null}
 
-      {/* Actions Bar */}
-      <div className="px-4 pb-3 flex items-center gap-2">
+      {/* Actions Bar - Single primary action only */}
+      <div className="px-4 pb-3">
         {/* Open AI Tool Button - PRIMARY action (opens full conversation) */}
         {onOpenAiTool && booking.providerId && (
           <button
             onClick={handleOpenAiTool}
             disabled={isOpeningAiTool}
             className={cn(
-              "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+              "w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
               "bg-gradient-to-r from-amber-500 to-orange-600 text-white",
               "hover:from-amber-600 hover:to-orange-700",
               "shadow-sm hover:shadow-md",
@@ -288,22 +288,6 @@ const BookingRequestCard: React.FC<BookingRequestCardProps> = ({
                 Ouvrir la Conversation
               </>
             )}
-          </button>
-        )}
-
-        {/* Chat Button - Secondary action (inline chat) */}
-        {onOpenChat && booking.providerId && (
-          <button
-            onClick={handleOpenChat}
-            className={cn(
-              "flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
-              "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
-              "hover:bg-gray-200 dark:hover:bg-gray-600"
-            )}
-            title="Chat rapide inline"
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span className="hidden sm:inline">Chat</span>
           </button>
         )}
       </div>

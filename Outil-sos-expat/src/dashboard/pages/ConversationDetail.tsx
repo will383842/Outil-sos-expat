@@ -799,7 +799,11 @@ export default function ConversationDetail() {
   const [bookingSource, setBookingSource] = useState<"bookings" | "booking_requests" | null>(null);
 
   const { isExpired, formattedTime, durationMinutes } = useConversationExpiration(booking);
-  const isDevMock = new URLSearchParams(window.location.search).get("dev") === "true";
+  const searchParams = new URLSearchParams(window.location.search);
+  const isDevMock = searchParams.get("dev") === "true";
+  // FIX: Detect if coming from multi-dashboard and get original booking_request ID
+  const isFromMultiDashboard = searchParams.get("source") === "multi_dashboard";
+  const originalBookingRequestId = searchParams.get("originalId");
 
   // Load booking - FIX: Use onSnapshot for real-time updates (detect when AI trigger completes)
   useEffect(() => {
@@ -823,28 +827,54 @@ export default function ConversationDetail() {
       }
     }
 
-    // FIX: Try loading from both 'bookings' and 'booking_requests' collections
-    // This supports both Outil-native bookings and multi-dashboard booking requests
+    // FIX: Try loading from 'bookings' collection with multiple strategies
+    // Strategy 1: Direct ID lookup
+    // Strategy 2: Search by externalId (for multi-dashboard booking_requests)
     let unsubscribe: (() => void) | null = null;
     let foundInCollection: string | null = null;
+    let actualBookingId: string = id;
 
     const setupBookingListener = async () => {
-      // First, try 'bookings' collection (Outil-native)
+      // Strategy 1: Direct lookup in 'bookings' collection
       const bookingsDoc = await getDoc(doc(db, "bookings", id));
 
       if (bookingsDoc.exists()) {
         foundInCollection = "bookings";
-        console.log("[ConversationDetail] 📦 Found in 'bookings' collection");
+        actualBookingId = id;
+        console.log("[ConversationDetail] 📦 Found directly in 'bookings' collection", { id });
       } else {
-        // Try 'booking_requests' collection (multi-dashboard)
-        const bookingRequestsDoc = await getDoc(doc(db, "booking_requests", id));
-        if (bookingRequestsDoc.exists()) {
-          foundInCollection = "booking_requests";
-          console.log("[ConversationDetail] 📦 Found in 'booking_requests' collection");
+        // Strategy 2: Search by externalId (when ID is a booking_request ID from multi-dashboard)
+        // The booking in Outil has externalId = booking_request ID from SOS
+        console.log("[ConversationDetail] 🔍 Not found directly, searching by externalId...", {
+          id,
+          isFromMultiDashboard,
+          originalBookingRequestId,
+        });
+
+        // Search by externalId (the booking_request ID)
+        const searchId = originalBookingRequestId || id;
+        const externalIdQuery = query(
+          collection(db, "bookings"),
+          where("externalId", "==", searchId)
+        );
+        const externalIdSnapshot = await getDocs(externalIdQuery);
+
+        if (!externalIdSnapshot.empty) {
+          foundInCollection = "bookings";
+          actualBookingId = externalIdSnapshot.docs[0].id;
+          console.log("[ConversationDetail] 📦 Found by externalId in 'bookings' collection", {
+            externalId: searchId,
+            actualBookingId,
+          });
         }
       }
 
       if (!foundInCollection) {
+        console.error("[ConversationDetail] ❌ Booking not found", {
+          id,
+          isFromMultiDashboard,
+          originalBookingRequestId,
+        });
         setError(t("dossierDetail.notFound"));
         setLoading(false);
         return;
@@ -853,8 +883,8 @@ export default function ConversationDetail() {
       // Store the booking source for conversation creation logic
       setBookingSource(foundInCollection as "bookings" | "booking_requests");
 
-      // Setup real-time listener on the found collection
-      const docRef = doc(db, foundInCollection, id);
+      // Setup real-time listener on the found booking
+      const docRef = doc(db, foundInCollection, actualBookingId);
       unsubscribe = onSnapshot(
         docRef,
         (docSnap) => {

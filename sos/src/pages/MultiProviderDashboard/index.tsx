@@ -25,6 +25,7 @@ import {
   List,
   ChevronDown,
   Bell,
+  Scale,
 } from 'lucide-react';
 import { useMultiProviderDashboard } from '../../hooks/useMultiProviderDashboard';
 import PasswordGate from './PasswordGate';
@@ -139,6 +140,27 @@ const MultiProviderDashboard: React.FC = () => {
   const accountsWithoutPending = useMemo(() => {
     return filteredAccounts.filter(a => !a.bookingRequests.some(b => b.status === 'pending'));
   }, [filteredAccounts]);
+
+  // NEW: Get all new requests (< 5 minutes old) from all accounts for the priority section
+  const newRequests = useMemo(() => {
+    const FIVE_MINUTES = 5 * 60 * 1000;
+    const now = Date.now();
+
+    return accounts.flatMap(account =>
+      account.bookingRequests
+        .filter(booking => {
+          const age = now - booking.createdAt.getTime();
+          return age < FIVE_MINUTES;
+        })
+        .map(booking => ({
+          ...booking,
+          accountName: account.displayName,
+          accountUserId: account.userId,
+          // Find provider name for this booking
+          providerInfo: account.providers.find(p => p.id === booking.providerId),
+        }))
+    ).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
+  }, [accounts]);
 
   // Handle opening chat
   const handleOpenChat = useCallback((
@@ -466,6 +488,114 @@ const MultiProviderDashboard: React.FC = () => {
             >
               &times;
             </button>
+          </div>
+        )}
+
+        {/* NEW REQUESTS SECTION - High visibility for requests < 5 minutes old */}
+        {newRequests.length > 0 && (
+          <div className="mb-6">
+            <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 dark:from-green-500/20 dark:via-emerald-500/20 dark:to-teal-500/20 rounded-2xl border-2 border-green-400 dark:border-green-600 p-4 animate-pulse-subtle">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="flex items-center gap-2 text-lg font-bold text-green-700 dark:text-green-400">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                  </span>
+                  NOUVELLES DEMANDES ({newRequests.length})
+                </h3>
+                <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">
+                  Moins de 5 min
+                </span>
+              </div>
+              <div className="space-y-3">
+                {newRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="bg-white dark:bg-gray-800 rounded-xl border border-green-200 dark:border-green-700 p-4 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      {/* Client Info - LEFT */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <span className="px-2 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded-full animate-pulse">
+                            NOUVEAU
+                          </span>
+                          <span className="font-bold text-gray-900 dark:text-white text-lg">
+                            {request.clientName}
+                          </span>
+                          {request.clientCurrentCountry && (
+                            <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              </svg>
+                              {request.clientCurrentCountry}
+                            </span>
+                          )}
+                          {request.clientPhone && (
+                            <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                              </svg>
+                              {request.clientPhone}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Request Title/Description */}
+                        {request.title && (
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2 bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg">
+                            "{request.title}"
+                          </p>
+                        )}
+
+                        {/* Provider & Account Info */}
+                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                          <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg flex items-center gap-1">
+                            {request.providerType === 'lawyer' ? (
+                              <Scale className="w-3 h-3" />
+                            ) : (
+                              <Users className="w-3 h-3" />
+                            )}
+                            {request.providerInfo?.name || request.providerName || 'Prestataire'}
+                          </span>
+                          <span className="text-gray-400">•</span>
+                          <span>{request.accountName}</span>
+                          <span className="text-gray-400">•</span>
+                          <Clock className="w-3 h-3" />
+                          <span>
+                            {Math.floor((Date.now() - request.createdAt.getTime()) / 60000)} min
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* ACTION BUTTON - RIGHT */}
+                      <div className="flex-shrink-0">
+                        <button
+                          onClick={() => openAiTool(request.providerId, request.id)}
+                          className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all text-sm"
+                        >
+                          <Bot className="w-4 h-4" />
+                          OUVRIR
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* AI Response Preview if available */}
+                    {request.aiResponse && (
+                      <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-1">
+                          <Bot className="w-3 h-3" />
+                          Reponse IA generee
+                        </div>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                          {request.aiResponse.content.substring(0, 150)}...
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
