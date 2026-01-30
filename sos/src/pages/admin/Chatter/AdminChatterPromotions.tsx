@@ -51,6 +51,7 @@ import {
   AlertTriangle,
   Trophy,
 } from "lucide-react";
+import AdminLayout from '../../../components/admin/AdminLayout';
 
 interface ChatterPromotion {
   id: string;
@@ -251,29 +252,30 @@ const AdminChatterPromotions: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Zap className="h-7 w-7 text-purple-500" />
-            Promotions & Hackathons
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Gérer les multiplicateurs et événements spéciaux
-          </p>
+    <AdminLayout>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Zap className="h-7 w-7 text-purple-500" />
+              Promotions & Hackathons
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Gérer les multiplicateurs et événements spéciaux
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={fetchPromotions} variant="outline" disabled={isLoading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+              Actualiser
+            </Button>
+            <Button onClick={() => handleOpenDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvelle promotion
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={fetchPromotions} variant="outline" disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Actualiser
-          </Button>
-          <Button onClick={() => handleOpenDialog()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle promotion
-          </Button>
-        </div>
-      </div>
 
       {/* Error */}
       {error && (
@@ -566,6 +568,7 @@ const AdminChatterPromotions: React.FC = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </AdminLayout>
   );
 };
 

@@ -45,6 +45,7 @@ import {
   Ban,
   RotateCcw,
 } from "lucide-react";
+import AdminLayout from '../../../components/admin/AdminLayout';
 
 interface FraudAlert {
   id: string;
@@ -192,23 +193,24 @@ const AdminChatterFraud: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <ShieldAlert className="h-7 w-7 text-red-500" />
-            Alertes Fraude Parrainage
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Détection de fraude et patterns suspects
-          </p>
+    <AdminLayout>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <ShieldAlert className="h-7 w-7 text-red-500" />
+              Alertes Fraude Parrainage
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Détection de fraude et patterns suspects
+            </p>
+          </div>
+          <Button onClick={fetchData} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            Actualiser
+          </Button>
         </div>
-        <Button onClick={fetchData} disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-          Actualiser
-        </Button>
-      </div>
 
       {/* Error */}
       {error && (
@@ -539,6 +541,7 @@ const AdminChatterFraud: React.FC = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </AdminLayout>
   );
 };
 

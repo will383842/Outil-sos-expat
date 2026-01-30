@@ -38,6 +38,7 @@ import {
   Users,
   Sparkles,
 } from "lucide-react";
+import AdminLayout from '../../../components/admin/AdminLayout';
 
 interface EarlyAdopterCounter {
   countryCode: string;
@@ -147,23 +148,24 @@ const AdminEarlyAdopters: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Award className="h-7 w-7 text-amber-500" />
-            Programme Pioneers (Early Adopters)
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Gestion des quotas par pays et liste des pioneers
-          </p>
+    <AdminLayout>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Award className="h-7 w-7 text-amber-500" />
+              Programme Pioneers (Early Adopters)
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Gestion des quotas par pays et liste des pioneers
+            </p>
+          </div>
+          <Button onClick={fetchData} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            Actualiser
+          </Button>
         </div>
-        <Button onClick={fetchData} disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-          Actualiser
-        </Button>
-      </div>
 
       {/* Error */}
       {error && (
@@ -400,6 +402,7 @@ const AdminEarlyAdopters: React.FC = () => {
         </CardContent>
       </Card>
     </div>
+    </AdminLayout>
   );
 };
 

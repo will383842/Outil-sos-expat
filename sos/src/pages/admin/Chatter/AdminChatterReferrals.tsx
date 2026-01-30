@@ -39,6 +39,7 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
+import AdminLayout from '../../../components/admin/AdminLayout';
 
 interface ReferralStats {
   totalReferrals: number;
@@ -253,23 +254,24 @@ const AdminChatterReferrals: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="h-7 w-7" />
-            Gestion Parrainage Chatters
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Statistiques, commissions et arbre de parrainage
-          </p>
+    <AdminLayout>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Users className="h-7 w-7" />
+              Gestion Parrainage Chatters
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Statistiques, commissions et arbre de parrainage
+            </p>
+          </div>
+          <Button onClick={fetchData} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            Actualiser
+          </Button>
         </div>
-        <Button onClick={fetchData} disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-          Actualiser
-        </Button>
-      </div>
 
       {/* Error */}
       {error && (
@@ -463,6 +465,7 @@ const AdminChatterReferrals: React.FC = () => {
         </CardContent>
       </Card>
     </div>
+    </AdminLayout>
   );
 };
 
