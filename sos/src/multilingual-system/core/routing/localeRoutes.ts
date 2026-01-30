@@ -41,24 +41,28 @@ function getCountryFromGeolocation(): string | null {
 }
 
 /**
- * Generate locale string (e.g., "en-us", "fr-fr")
+ * Generate locale string (e.g., "en-us", "fr-fr", "zh-cn")
  * Uses geolocation country when available, falls back to language default
+ * Note: Chinese uses 'zh' in URLs (ISO standard) but 'ch' internally
  */
 export function getLocaleString(lang: Language, country?: string): string {
+  // Chinese: internal code is 'ch' but URL should use 'zh' (ISO 639-1 standard)
+  const urlLang = lang === 'ch' ? 'zh' : lang;
+
   // If country is explicitly provided, use it
   if (country) {
-    return `${lang}-${country.toLowerCase()}`;
+    return `${urlLang}-${country.toLowerCase()}`;
   }
 
   // Try to get country from geolocation
   const geoCountry = getCountryFromGeolocation();
   if (geoCountry) {
-    return `${lang}-${geoCountry}`;
+    return `${urlLang}-${geoCountry}`;
   }
 
   // Fallback to language-to-country mapping
   const countryCode = LANGUAGE_TO_COUNTRY[lang];
-  return `${lang}-${countryCode}`;
+  return `${urlLang}-${countryCode}`;
 }
 
 /**
@@ -136,15 +140,22 @@ export function getSupportedLanguages(): Language[] {
 }
 
 /**
- * Check if a locale is valid (language code must be supported, country can be any)
- * Accepts: fr-fr, fr-be, fr-ca, es-es, es-fr, es-mx, etc.
+ * Check if a locale is valid (language code must be supported, country must be lowercase)
+ * Accepts: fr-fr, fr-be, fr-ca, es-es, es-fr, es-mx, zh-cn, etc.
+ * Rejects: ch-DJ (uppercase country), fr-FR (uppercase), invalid language codes
+ * Note: 'zh' is the URL code for Chinese, 'ch' is internal only
  */
 export function isValidLocale(locale: string): boolean {
+  // Must be lowercase format xx-yy
   const match = locale.match(/^([a-z]{2})-([a-z]{2})$/);
   if (!match) return false;
 
-  const lang = match[1] as Language;
-  return getSupportedLanguages().includes(lang);
+  const urlLang = match[1];
+  // Map URL language code to internal code (zh -> ch for Chinese)
+  const internalLang = urlLang === 'zh' ? 'ch' : urlLang;
+
+  // Check if language is supported
+  return getSupportedLanguages().includes(internalLang as Language);
 }
 
 /**
@@ -164,7 +175,7 @@ export function hasLegacyLocalePrefix(pathname: string): boolean {
 
 /**
  * Parse legacy locale from path and return redirect info
- * Converts /es/cookies -> /es-es/cookies, /zh/page -> /ch-cn/page
+ * Converts /es/cookies -> /es-es/cookies, /zh/page -> /zh-cn/page
  */
 export function parseLegacyLocaleFromPath(pathname: string): {
   shouldRedirect: boolean;

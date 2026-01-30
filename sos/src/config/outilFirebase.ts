@@ -34,8 +34,42 @@ try {
 export const outilFunctions = getFunctions(outilApp, "europe-west1");
 
 /**
- * Appelle la fonction IA pour générer une réponse automatique
- * pour un booking_request multi-prestataire
+ * Déclenche le système IA complet pour un booking_request
+ * Crée un booking dans Outil qui déclenche aiOnBookingCreated
+ * (GPT-4o + Perplexity pour recherche, Claude pour avocats)
+ */
+interface TriggerAiResult {
+  success: boolean;
+  bookingId?: string;
+  message?: string;
+  error?: string;
+}
+
+export async function triggerFullAiGeneration(bookingData: {
+  bookingRequestId: string;
+  clientId: string;
+  providerId: string;
+}): Promise<TriggerAiResult> {
+  try {
+    const triggerAi = httpsCallable<typeof bookingData, TriggerAiResult>(
+      outilFunctions,
+      "triggerAiFromBookingRequest"
+    );
+
+    const result = await triggerAi(bookingData);
+    return result.data;
+  } catch (error) {
+    console.error("[OutilFirebase] Error triggering AI:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * @deprecated Utiliser triggerFullAiGeneration à la place
+ * Ancienne fonction pour générer une réponse IA simple
  */
 interface AiResponseResult {
   success: boolean;
@@ -56,13 +90,25 @@ export async function generateAiResponseForBooking(bookingData: {
   title?: string;
 }): Promise<AiResponseResult> {
   try {
-    const generateAi = httpsCallable<typeof bookingData, AiResponseResult>(
-      outilFunctions,
-      "generateMultiDashboardAiResponse"
-    );
+    // Redirect to the new full AI system
+    const result = await triggerFullAiGeneration({
+      bookingRequestId: bookingData.bookingId,
+      clientId: "system", // Will be validated by checking booking_request exists
+      providerId: bookingData.providerId,
+    });
 
-    const result = await generateAi(bookingData);
-    return result.data;
+    if (result.success) {
+      return {
+        success: true,
+        aiResponse: "Réponse IA en cours de génération...",
+        model: "gpt-4o+perplexity",
+      };
+    } else {
+      return {
+        success: false,
+        error: result.error,
+      };
+    }
   } catch (error) {
     console.error("[OutilFirebase] Error calling AI function:", error);
     return {

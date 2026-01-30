@@ -358,9 +358,12 @@ const Login: React.FC = () => {
 
   // ==================== SEO METADATA ====================
   const metaData = useMemo(() => {
-    const baseUrl = window.location.origin;
-    const canonicalUrl = `${baseUrl}/${currentLang}/login`;
-    
+    // IMPORTANT: Use production URL directly for canonical to ensure consistency
+    const baseUrl = import.meta.env.PROD ? 'https://sos-expat.com' : window.location.origin;
+    const localePrefix = getLocaleString(currentLang as any);
+    const loginSlug = getTranslatedRouteSlug('login', currentLang as any);
+    const canonicalUrl = `${baseUrl}/${localePrefix}/${loginSlug}`;
+
     return {
       title: intl.formatMessage({ id: "seo.login.meta_title" }),
       description: intl.formatMessage({ id: "seo.login.meta_description" }),
@@ -373,16 +376,16 @@ const Login: React.FC = () => {
       twitterDescription: intl.formatMessage({ id: "seo.login.twitter_description" }),
       canonicalUrl,
       alternateUrls: {
-        'x-default': `${baseUrl}/en/login`,
-        fr: `${baseUrl}/fr/login`,
-        en: `${baseUrl}/en/login`,
-        es: `${baseUrl}/es/login`,
-        de: `${baseUrl}/de/login`,
-        ru: `${baseUrl}/ru/login`,
-        zh: `${baseUrl}/zh/login`,
-        pt: `${baseUrl}/pt/login`,
-        ar: `${baseUrl}/ar/login`,
-        hi: `${baseUrl}/hi/login`,
+        'x-default': `${baseUrl}/en-us/${getTranslatedRouteSlug('login', 'en')}`,
+        fr: `${baseUrl}/fr-fr/${getTranslatedRouteSlug('login', 'fr')}`,
+        en: `${baseUrl}/en-us/${getTranslatedRouteSlug('login', 'en')}`,
+        es: `${baseUrl}/es-es/${getTranslatedRouteSlug('login', 'es')}`,
+        de: `${baseUrl}/de-de/${getTranslatedRouteSlug('login', 'de')}`,
+        ru: `${baseUrl}/ru-ru/${getTranslatedRouteSlug('login', 'ru')}`,
+        'zh-Hans': `${baseUrl}/zh-cn/${getTranslatedRouteSlug('login', 'ch')}`,
+        pt: `${baseUrl}/pt-pt/${getTranslatedRouteSlug('login', 'pt')}`,
+        ar: `${baseUrl}/ar-sa/${getTranslatedRouteSlug('login', 'ar')}`,
+        hi: `${baseUrl}/hi-in/${getTranslatedRouteSlug('login', 'hi')}`,
       },
       structuredData: {
         "@context": "https://schema.org",

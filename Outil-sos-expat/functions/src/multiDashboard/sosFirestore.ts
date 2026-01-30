@@ -62,7 +62,7 @@ export function getSosApp(): admin.app.App {
 /**
  * Get the Firestore instance for the SOS project (sos-urgently-ac307)
  */
-export function getSosFirestore(): FirebaseFirestore.Firestore {
+export function getSosFirestore(): admin.firestore.Firestore {
   return admin.firestore(getSosApp());
 }
 

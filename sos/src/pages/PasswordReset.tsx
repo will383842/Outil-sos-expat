@@ -419,42 +419,68 @@ const PasswordReset: React.FC = () => {
   }, [isFullyReady, user, navigate]);
 
   // SEO & Social Media Meta Data with i18n
-  const metaData = useMemo(() => ({
+  // Use proper locale format (lang-country) for all URLs
+  // IMPORTANT: Use production URL directly for canonical to ensure consistency
+  const baseUrl = import.meta.env.PROD ? 'https://sos-expat.com' : window.location.origin;
+  const passwordResetSlugs: Record<string, { locale: string; slug: string }> = {
+    fr: { locale: 'fr-fr', slug: 'reinitialisation-mot-de-passe' },
+    en: { locale: 'en-us', slug: 'password-reset' },
+    es: { locale: 'es-es', slug: 'restablecer-contrasena' },
+    de: { locale: 'de-de', slug: 'passwort-zurucksetzen' },
+    ru: { locale: 'ru-ru', slug: 'sbros-parolya' },
+    pt: { locale: 'pt-pt', slug: 'redefinir-senha' },
+    ch: { locale: 'zh-cn', slug: 'chongzhi-mima' },
+    ar: { locale: 'ar-sa', slug: 'إعادة-تعيين-كلمة-المرور' },
+    hi: { locale: 'hi-in', slug: 'password-reset' },
+  };
+
+  const metaData = useMemo(() => {
+    const currentData = passwordResetSlugs[currentLang] || passwordResetSlugs.fr;
+    const canonicalUrl = `${baseUrl}/${currentData.locale}/${currentData.slug}`;
+
+    return {
     title: t('meta.title'),
     description: t('meta.description'),
     keywords: t('meta.keywords'),
     ogTitle: t('meta.og_title'),
     ogDescription: t('meta.og_description'),
-    canonicalUrl: `${window.location.origin}/${currentLang}/password-reset`,
+    canonicalUrl,
     alternateUrls: {
-      fr: `${window.location.origin}/fr/password-reset`,
-      en: `${window.location.origin}/en/password-reset`
+      fr: `${baseUrl}/fr-fr/reinitialisation-mot-de-passe`,
+      en: `${baseUrl}/en-us/password-reset`,
+      es: `${baseUrl}/es-es/restablecer-contrasena`,
+      de: `${baseUrl}/de-de/passwort-zurucksetzen`,
+      ru: `${baseUrl}/ru-ru/sbros-parolya`,
+      pt: `${baseUrl}/pt-pt/redefinir-senha`,
+      'zh-Hans': `${baseUrl}/zh-cn/chongzhi-mima`,
+      ar: `${baseUrl}/ar-sa/إعادة-تعيين-كلمة-المرور`,
+      hi: `${baseUrl}/hi-in/password-reset`,
     },
     structuredData: {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "@id": `${window.location.origin}/${currentLang}/password-reset#webpage`,
+      "@id": `${canonicalUrl}#webpage`,
       "name": t('meta.title'),
       "description": t('meta.description'),
-      "url": `${window.location.origin}/${currentLang}/password-reset`,
+      "url": canonicalUrl,
       "inLanguage": currentLang,
       "isPartOf": {
         "@type": "WebSite",
-        "@id": `${window.location.origin}#website`,
+        "@id": `${baseUrl}#website`,
         "name": "SOS Expats",
-        "url": window.location.origin,
+        "url": baseUrl,
         "potentialAction": {
           "@type": "SearchAction",
-          "target": `${window.location.origin}/search?q={search_term_string}`,
+          "target": `${baseUrl}/search?q={search_term_string}`,
           "query-input": "required name=search_term_string"
         }
       },
       "mainEntity": {
         "@type": "Action",
-        "@id": `${window.location.origin}/${currentLang}/password-reset#resetaction`,
+        "@id": `${canonicalUrl}#resetaction`,
         "name": t('reset.title'),
         "description": t('reset.subtitle'),
-        "target": `${window.location.origin}/${currentLang}/password-reset`,
+        "target": canonicalUrl,
         "object": {
           "@type": "Person",
           "name": "Utilisateur SOS Expats"
@@ -467,28 +493,28 @@ const PasswordReset: React.FC = () => {
             "@type": "ListItem",
             "position": 1,
             "name": "Accueil",
-            "item": window.location.origin
+            "item": baseUrl
           },
           {
             "@type": "ListItem",
             "position": 2,
             "name": "Connexion",
-            "item": `${window.location.origin}/${currentLang}/login`
+            "item": `${baseUrl}/${currentData.locale}/connexion`
           },
           {
             "@type": "ListItem",
             "position": 3,
             "name": t('reset.title'),
-            "item": `${window.location.origin}/${currentLang}/password-reset`
+            "item": canonicalUrl
           }
         ]
       },
       "author": {
         "@type": "Organization",
-        "@id": `${window.location.origin}#organization`,
+        "@id": `${baseUrl}#organization`,
         "name": "SOS Expats",
-        "url": window.location.origin,
-        "logo": `${window.location.origin}/sos-logo.webp`,
+        "url": baseUrl,
+        "logo": `${baseUrl}/sos-logo.webp`,
         "sameAs": [
           "https://www.facebook.com/sos-expat",
           "https://www.linkedin.com/company/sos-expat",
@@ -496,10 +522,10 @@ const PasswordReset: React.FC = () => {
         ]
       },
       "publisher": {
-        "@id": `${window.location.origin}#organization`
+        "@id": `${baseUrl}#organization`
       }
     }
-  }), [t, currentLang]);
+  }; }, [t, currentLang, baseUrl]);
 
   // Advanced form validation with i18n
   const emailRegex = useMemo(() => /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/, []);

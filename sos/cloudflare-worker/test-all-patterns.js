@@ -105,7 +105,7 @@ const testCases = {
     { url: '/de-de/', expected: true, desc: 'German Germany' },
     { url: '/ru-ru/', expected: true, desc: 'Russian Russia' },
     { url: '/pt-br/', expected: true, desc: 'Portuguese Brazil' },
-    { url: '/ch-cn/', expected: true, desc: 'Chinese China' },
+    { url: '/zh-cn/', expected: true, desc: 'Chinese China' },
     { url: '/hi-in/', expected: true, desc: 'Hindi India' },
     { url: '/ar-sa/', expected: true, desc: 'Arabic Saudi Arabia' },
     { url: '/fr-be/', expected: true, desc: 'French Belgium' },
@@ -122,7 +122,7 @@ const testCases = {
     { url: '/de-de/preise', expected: true, desc: 'Pricing DE' },
     { url: '/ru-ru/tseny', expected: true, desc: 'Pricing RU' },
     { url: '/pt-br/precos', expected: true, desc: 'Pricing PT' },
-    { url: '/ch-cn/jiage', expected: true, desc: 'Pricing ZH' },
+    { url: '/zh-cn/jiage', expected: true, desc: 'Pricing ZH' },
     { url: '/hi-in/mulya', expected: true, desc: 'Pricing HI' },
     { url: '/ar-sa/الأسعار', expected: true, desc: 'Pricing AR (native)' },
   ],
@@ -135,7 +135,7 @@ const testCases = {
     { url: '/de-de/faq', expected: true, desc: 'FAQ DE' },
     { url: '/ru-ru/voprosy-otvety', expected: true, desc: 'FAQ RU' },
     { url: '/pt-br/perguntas-frequentes', expected: true, desc: 'FAQ PT' },
-    { url: '/ch-cn/changjian-wenti', expected: true, desc: 'FAQ ZH' },
+    { url: '/zh-cn/changjian-wenti', expected: true, desc: 'FAQ ZH' },
     { url: '/hi-in/aksar-puche-jaane-wale-sawal', expected: true, desc: 'FAQ HI' },
     { url: '/ar-sa/الأسئلة-الشائعة', expected: true, desc: 'FAQ AR (native)' },
   ],
@@ -148,7 +148,7 @@ const testCases = {
     { url: '/de-de/hilfezentrum/konto-erstellen', expected: true, desc: 'Help DE' },
     { url: '/ru-ru/tsentr-pomoshchi/kak-sozdat-akkaunt', expected: true, desc: 'Help RU' },
     { url: '/pt-br/centro-ajuda/como-criar-conta', expected: true, desc: 'Help PT' },
-    { url: '/ch-cn/bangzhu-zhongxin/ruhe-chuangjian-zhanghao', expected: true, desc: 'Help ZH' },
+    { url: '/zh-cn/bangzhu-zhongxin/ruhe-chuangjian-zhanghao', expected: true, desc: 'Help ZH' },
     { url: '/hi-in/sahayata-kendra/khata-kaise-banaye', expected: true, desc: 'Help HI' },
     { url: '/ar-sa/مركز-المساعدة/كيفية-إنشاء-حساب', expected: true, desc: 'Help AR (native)' },
   ],
@@ -179,7 +179,7 @@ const testCases = {
     // Portuguese
     { url: '/pt-br/advogado-brasil/joao-silva-vwx567', expected: true, desc: 'Lawyer PT Brazil' },
     // Chinese (pinyin)
-    { url: '/ch-cn/lushi-zhongguo/zhang-wei-yza890', expected: true, desc: 'Lawyer ZH' },
+    { url: '/zh-cn/lushi-zhongguo/zhang-wei-yza890', expected: true, desc: 'Lawyer ZH' },
     // Hindi (romanized)
     { url: '/hi-in/vakil-bharat/raj-kumar-bcd123', expected: true, desc: 'Lawyer HI' },
     // Arabic (romanized)

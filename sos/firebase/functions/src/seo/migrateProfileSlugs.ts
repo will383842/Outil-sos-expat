@@ -20,8 +20,8 @@ const SHORT_ID_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const SHORT_ID_LENGTH = 6;
 
 // Supported languages
-// IMPORTANT: Use 'ch' for Chinese URLs (internal convention to match sitemaps.ts)
-// The translations use 'zh' internally but URLs use 'ch-cn/'
+// IMPORTANT: 'ch' is the internal code for Chinese, but URLs use 'zh-cn/' (ISO standard)
+// The translations use 'zh' internally and URLs also use 'zh' prefix
 const LANGUAGES = ['fr', 'en', 'de', 'es', 'pt', 'ru', 'ch', 'ar', 'hi'] as const;
 
 // Role translations (romanized for non-Latin scripts)
@@ -180,10 +180,12 @@ function generateMultilingualSlugs(
     const translatedRole = getTranslatedRole(role, lang);
     const translatedCountry = getTranslatedCountry(countryCode, lang);
     const locale = DEFAULT_LOCALES[lang];
+    // Chinese: internal code is 'ch' but URL should use 'zh' (ISO 639-1 standard)
+    const urlLang = lang === 'ch' ? 'zh' : lang;
 
-    // Format: {lang}-{locale}/{role}-{country}/{name}-{shortId}
-    // Ex: fr-fr/avocat-thailande/julien-abc123
-    slugs[lang] = `${lang}-${locale}/${translatedRole}-${translatedCountry}/${nameSlug}-${shortId}`;
+    // Format: {urlLang}-{locale}/{role}-{country}/{name}-{shortId}
+    // Ex: fr-fr/avocat-thailande/julien-abc123, zh-cn/lushi-faguo/julien-abc123
+    slugs[lang] = `${urlLang}-${locale}/${translatedRole}-${translatedCountry}/${nameSlug}-${shortId}`;
   }
 
   return slugs;
@@ -195,9 +197,11 @@ function generateMultilingualSlugs(
 export const migrateProfileSlugs = onRequest(
   {
     region: REGION,
-    memory: '1GiB',
+    memory: '256MiB',
     timeoutSeconds: 540, // 9 minutes max
     maxInstances: 1,
+    invoker: 'public', // Allow unauthenticated access (protected by API key)
+    concurrency: 1,
   },
   async (req, res) => {
     // Security: Only allow POST or require a secret key
@@ -208,15 +212,17 @@ export const migrateProfileSlugs = onRequest(
     }
 
     const db = admin.firestore();
+    const forceRegen = req.query.forceRegen === 'true';
     const results = {
       total: 0,
       updated: 0,
       skipped: 0,
       errors: [] as string[],
+      forceRegen,
     };
 
     try {
-      console.log('🚀 Starting profile slugs migration...');
+      console.log(`🚀 Starting profile slugs migration... (forceRegen: ${forceRegen})`);
 
       // Get all profiles
       const snapshot = await db.collection('sos_profiles').get();
@@ -251,11 +257,17 @@ export const migrateProfileSlugs = onRequest(
           const existingSlugs = profile.slugs || {};
           const hasAllLanguages = LANGUAGES.every(lang => existingSlugs[lang]);
 
-          if (!hasAllLanguages) {
+          // Also check for old Chinese format (ch-cn instead of zh-cn)
+          const chineseSlug = existingSlugs.ch || '';
+          const hasOldChineseFormat = chineseSlug.startsWith('ch-');
+
+          if (forceRegen || !hasAllLanguages || hasOldChineseFormat) {
             const newSlugs = generateMultilingualSlugs(profile, shortId);
             updates.slugs = newSlugs;
             needsUpdate = true;
-            console.log(`  🌐 [${profileId}] Generated slugs for ${LANGUAGES.length} languages`);
+            const reason = forceRegen ? 'forced regeneration' :
+                          (hasOldChineseFormat ? `old Chinese format: ${chineseSlug.substring(0, 20)}` : 'missing languages');
+            console.log(`  🌐 [${profileId}] Regenerated slugs (${reason})`);
           }
 
           // 3. Ensure visibility flags are set
@@ -321,6 +333,216 @@ export const migrateProfileSlugs = onRequest(
         success: false,
         error: error.message,
         results,
+      });
+    }
+  }
+);
+
+/**
+ * AUDIT function - identifies profiles with malformed slugs
+ * This function only READS data, it does not modify anything
+ *
+ * Checks for:
+ * 1. Uppercase country codes (ch-DJ instead of ch-dj)
+ * 2. Double locale prefixes (/xx-yy/zz/...)
+ * 3. Missing language slugs
+ * 4. Old format slugs (ch-cn instead of zh-cn)
+ * 5. Legacy single-language slugs
+ */
+export const auditProfileSlugs = onRequest(
+  {
+    region: REGION,
+    memory: '512MiB',
+    timeoutSeconds: 300,
+    maxInstances: 1,
+    invoker: 'public', // Allow unauthenticated access (protected by API key)
+  },
+  async (req, res) => {
+    // Security check
+    const authKey = req.query.key || req.headers['x-migration-key'];
+    if (authKey !== 'sos-expat-migrate-2024') {
+      res.status(403).json({ error: 'Unauthorized. Provide ?key=sos-expat-migrate-2024' });
+      return;
+    }
+
+    const db = admin.firestore();
+
+    interface SlugIssue {
+      profileId: string;
+      profileName: string;
+      issue: string;
+      slugValue: string;
+      language?: string;
+    }
+
+    const issues: SlugIssue[] = [];
+    const stats = {
+      totalProfiles: 0,
+      profilesWithIssues: 0,
+      uppercaseCountry: 0,
+      doubleLocale: 0,
+      missingLanguages: 0,
+      oldChineseFormat: 0,
+      legacySlugs: 0,
+      noSlugs: 0,
+    };
+
+    try {
+      console.log('🔍 Starting profile slugs audit...');
+
+      const snapshot = await db.collection('sos_profiles').get();
+      stats.totalProfiles = snapshot.docs.length;
+
+      console.log(`📊 Auditing ${stats.totalProfiles} profiles...`);
+
+      for (const doc of snapshot.docs) {
+        const profile = doc.data();
+        const profileId = doc.id;
+        const profileName = profile.firstName || profile.fullName || profile.name || 'Unknown';
+        let hasIssue = false;
+
+        // Check multilingual slugs
+        const slugs = profile.slugs as Record<string, string> | undefined;
+
+        if (!slugs || Object.keys(slugs).length === 0) {
+          // No multilingual slugs at all
+          stats.noSlugs++;
+          hasIssue = true;
+
+          // Check legacy slug
+          if (profile.slug) {
+            const legacySlug = profile.slug as string;
+            issues.push({
+              profileId,
+              profileName,
+              issue: 'LEGACY_SLUG_ONLY',
+              slugValue: legacySlug,
+            });
+            stats.legacySlugs++;
+
+            // Check if legacy slug has issues
+            if (/[A-Z]/.test(legacySlug)) {
+              issues.push({
+                profileId,
+                profileName,
+                issue: 'UPPERCASE_IN_LEGACY_SLUG',
+                slugValue: legacySlug,
+              });
+              stats.uppercaseCountry++;
+            }
+          } else {
+            issues.push({
+              profileId,
+              profileName,
+              issue: 'NO_SLUGS_AT_ALL',
+              slugValue: 'N/A',
+            });
+          }
+        } else {
+          // Check each language slug
+          for (const [lang, slug] of Object.entries(slugs)) {
+            if (!slug) {
+              issues.push({
+                profileId,
+                profileName,
+                issue: 'MISSING_SLUG',
+                slugValue: 'null/undefined',
+                language: lang,
+              });
+              stats.missingLanguages++;
+              hasIssue = true;
+              continue;
+            }
+
+            // Check for uppercase letters (indicates malformed locale like ch-DJ)
+            if (/[A-Z]/.test(slug)) {
+              issues.push({
+                profileId,
+                profileName,
+                issue: 'UPPERCASE_IN_SLUG',
+                slugValue: slug,
+                language: lang,
+              });
+              stats.uppercaseCountry++;
+              hasIssue = true;
+            }
+
+            // Check for double locale prefix (e.g., /fr-fr/en/...)
+            const doubleLocalePattern = /^[a-z]{2}-[a-z]{2}\/[a-z]{2}\//;
+            if (doubleLocalePattern.test(slug)) {
+              issues.push({
+                profileId,
+                profileName,
+                issue: 'DOUBLE_LOCALE_PREFIX',
+                slugValue: slug,
+                language: lang,
+              });
+              stats.doubleLocale++;
+              hasIssue = true;
+            }
+
+            // Check for old Chinese format (ch-cn instead of zh-cn)
+            if (slug.startsWith('ch-')) {
+              issues.push({
+                profileId,
+                profileName,
+                issue: 'OLD_CHINESE_FORMAT',
+                slugValue: slug,
+                language: lang,
+              });
+              stats.oldChineseFormat++;
+              hasIssue = true;
+            }
+          }
+
+          // Check for missing languages
+          const expectedLangs = ['fr', 'en', 'de', 'es', 'pt', 'ru', 'ch', 'ar', 'hi'];
+          for (const expectedLang of expectedLangs) {
+            if (!slugs[expectedLang]) {
+              issues.push({
+                profileId,
+                profileName,
+                issue: 'MISSING_LANGUAGE',
+                slugValue: 'N/A',
+                language: expectedLang,
+              });
+              stats.missingLanguages++;
+              hasIssue = true;
+            }
+          }
+        }
+
+        if (hasIssue) {
+          stats.profilesWithIssues++;
+        }
+      }
+
+      console.log('✅ Audit completed!');
+      console.log(`   Total profiles: ${stats.totalProfiles}`);
+      console.log(`   Profiles with issues: ${stats.profilesWithIssues}`);
+      console.log(`   Total issues found: ${issues.length}`);
+
+      // Group issues by type for summary
+      const issueSummary = issues.reduce((acc, issue) => {
+        acc[issue.issue] = (acc[issue.issue] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      res.status(200).json({
+        success: true,
+        message: 'Audit completed - NO CHANGES MADE',
+        stats,
+        issueSummary,
+        issues: issues.slice(0, 100), // Limit to first 100 issues in response
+        totalIssues: issues.length,
+        note: issues.length > 100 ? `Showing first 100 of ${issues.length} issues` : undefined,
+      });
+
+    } catch (error: any) {
+      console.error('❌ Audit failed:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
       });
     }
   }

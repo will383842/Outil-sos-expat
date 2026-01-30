@@ -33,8 +33,11 @@ export { submitToGoogleIndexing, submitBatchToGoogleIndexing, getUrlIndexingStat
 // Dynamic rendering for bots (SEO pre-rendering)
 export { renderForBotsV2, invalidateCacheEndpoint, invalidateCache } from './dynamicRender';
 
-// Migration tool for fixing profile slugs
-export { migrateProfileSlugs } from './migrateProfileSlugs';
+// Migration and audit tools for profile slugs
+export { migrateProfileSlugs, auditProfileSlugs } from './migrateProfileSlugs';
 
 // Diagnostic tool
 export { diagnoseProfiles } from './diagnoseProfiles';
+
+// OG Image generation service
+export { generateOgImage, getOgImageUrl } from './ogImageService';

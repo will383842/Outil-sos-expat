@@ -42,10 +42,13 @@ const LANGUAGE_TO_COUNTRY: Record<string, string> = {
 /**
  * Get locale string in format "lang-country" (e.g., "hi-in", "fr-fr")
  * This must match the format expected by the frontend LocaleRouter
+ * Special case: Chinese uses 'zh' as URL prefix (ISO standard) instead of 'ch' (internal code)
  */
 function getLocaleString(lang: string): string {
   const country = LANGUAGE_TO_COUNTRY[lang] || lang;
-  return `${lang}-${country}`;
+  // Chinese: internal code is 'ch' but URL should use 'zh' (ISO 639-1 standard)
+  const urlLang = lang === 'ch' ? 'zh' : lang;
+  return `${urlLang}-${country}`;
 }
 
 // Convertit le code de langue interne vers le code hreflang standard

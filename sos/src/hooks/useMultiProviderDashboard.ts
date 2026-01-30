@@ -145,6 +145,7 @@ interface UseMultiProviderDashboardReturn {
   refresh: () => Promise<void>;
   openAiTool: (providerId: string, bookingId?: string) => Promise<void>;
   migrateOldBookings: (dryRun?: boolean) => Promise<{ migrated: number; message: string } | null>;
+  triggerAiGeneration: (bookingRequestId: string) => Promise<{ success: boolean; bookingId?: string; error?: string }>;
 
   // Chat
   conversations: ChatConversation[];
@@ -456,6 +457,52 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
   }, []);
 
   /**
+   * Trigger AI generation for a booking request
+   * Uses the full AI system (GPT-4o + Perplexity research)
+   * Creates booking in Outil which triggers aiOnBookingCreated
+   */
+  const triggerAiGeneration = useCallback(async (bookingRequestId: string): Promise<{ success: boolean; bookingId?: string; error?: string }> => {
+    const session = getSession();
+    if (!session?.token) {
+      setError('Session invalide. Veuillez vous reconnecter.');
+      return { success: false, error: 'Session invalide' };
+    }
+
+    try {
+      const triggerAi = httpsCallable<
+        { sessionToken: string; bookingRequestId: string },
+        { success: boolean; bookingId?: string; message?: string; error?: string }
+      >(outilsFunctions, 'triggerAiFromBookingRequest');
+
+      const result = await triggerAi({
+        sessionToken: session.token,
+        bookingRequestId,
+      });
+
+      if (!result.data.success) {
+        throw new Error(result.data.error || 'Erreur lors de la génération IA');
+      }
+
+      // Refresh data after AI generation is triggered
+      // Note: AI response will be available after a few seconds (async processing)
+      setTimeout(() => {
+        loadAccounts();
+      }, 5000); // Wait 5 seconds for AI to process
+
+      return {
+        success: true,
+        bookingId: result.data.bookingId,
+      };
+
+    } catch (err) {
+      console.error('[useMultiProviderDashboard] triggerAiGeneration error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la génération IA';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  }, [loadAccounts]);
+
+  /**
    * Migrate old pending bookings to completed status
    * One-time operation to fix historical data
    */
@@ -604,6 +651,7 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
     refresh,
     openAiTool,
     migrateOldBookings,
+    triggerAiGeneration,
     // Chat
     conversations,
     chatLoading,

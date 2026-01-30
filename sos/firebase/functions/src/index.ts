@@ -994,7 +994,7 @@ export const executeCallTask = onRequest(
     memory: "512MiB",
     cpu: 1,  // Required for memory > 512MiB or long-running functions
     maxInstances: 10,
-    minInstances: 0,
+    minInstances: 1,  // Keep warm to avoid cold start delays on call execution
     concurrency: 1,
     // Secrets: TASKS_AUTH_SECRET for Cloud Tasks auth + Twilio + ENCRYPTION_KEY + Stripe (for refunds)
     secrets: [TASKS_AUTH_SECRET, ENCRYPTION_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST],

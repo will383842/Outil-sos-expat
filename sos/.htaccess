@@ -3,6 +3,45 @@ RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301,QSA]
 
+# 🔧 FIX: Redirect malformed locale URLs (uppercase country codes like /ch-DJ/, /fr-FR/)
+# These URLs should never exist - redirect to homepage
+RewriteCond %{REQUEST_URI} ^/[a-z]{2}-[A-Z]{2}/ [NC]
+RewriteRule ^[a-z]{2}-[A-Z]{2}/(.*)$ /fr-fr/ [R=301,L]
+
+# 🔧 FIX: Redirect double-locale URLs like /ch-dj/en/... to /fr-fr/
+RewriteCond %{REQUEST_URI} ^/[a-z]{2}-[a-z]{2}/[a-z]{2}/ [NC]
+RewriteRule ^[a-z]{2}-[a-z]{2}/[a-z]{2}/(.*)$ /fr-fr/$1 [R=301,L]
+
+# 🔧 FIX: Redirect legacy single-language URLs without country code
+# /en/... -> /en-us/..., /fr/... -> /fr-fr/..., /es/... -> /es-es/..., /ch/... -> /zh-cn/...
+RewriteRule ^fr/(.*)$ /fr-fr/$1 [R=301,L]
+RewriteRule ^en/(.*)$ /en-us/$1 [R=301,L]
+RewriteRule ^es/(.*)$ /es-es/$1 [R=301,L]
+RewriteRule ^de/(.*)$ /de-de/$1 [R=301,L]
+RewriteRule ^ru/(.*)$ /ru-ru/$1 [R=301,L]
+RewriteRule ^pt/(.*)$ /pt-pt/$1 [R=301,L]
+RewriteRule ^ch/(.*)$ /zh-cn/$1 [R=301,L]
+RewriteRule ^zh/(.*)$ /zh-cn/$1 [R=301,L]
+RewriteRule ^hi/(.*)$ /hi-in/$1 [R=301,L]
+RewriteRule ^ar/(.*)$ /ar-sa/$1 [R=301,L]
+
+# Handle root legacy language URLs (no trailing content)
+RewriteRule ^fr/?$ /fr-fr/ [R=301,L]
+RewriteRule ^en/?$ /en-us/ [R=301,L]
+RewriteRule ^es/?$ /es-es/ [R=301,L]
+RewriteRule ^de/?$ /de-de/ [R=301,L]
+RewriteRule ^ru/?$ /ru-ru/ [R=301,L]
+RewriteRule ^pt/?$ /pt-pt/ [R=301,L]
+RewriteRule ^ch/?$ /zh-cn/ [R=301,L]
+RewriteRule ^zh/?$ /zh-cn/ [R=301,L]
+RewriteRule ^hi/?$ /hi-in/ [R=301,L]
+RewriteRule ^ar/?$ /ar-sa/ [R=301,L]
+
+# 🔧 FIX: Redirect invalid locale combinations like /es-us/ to correct locale
+# Spanish should use es-es, not es-us
+RewriteRule ^es-us/(.*)$ /es-es/$1 [R=301,L]
+RewriteRule ^es-us/?$ /es-es/ [R=301,L]
+
 # Redirection des routes SPA vers index.html
 RewriteBase /
 RewriteRule ^index\.html$ - [L]

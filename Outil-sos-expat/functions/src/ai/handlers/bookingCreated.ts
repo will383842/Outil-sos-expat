@@ -391,32 +391,90 @@ export const aiOnBookingCreated = onDocumentCreated(
       });
 
       // ============================================================
-      // DEBUG STEP 12: SYNC AI RESPONSE TO SOS
+      // DEBUG STEP 12: SYNC TO SOS (AI Response + Conversation)
       // ============================================================
-      // If the booking has an externalId (SOS booking_request ID), sync the AI response back
+      // If the booking has an externalId (SOS booking_request ID), sync everything back
       const bookingAnyData = booking as Record<string, unknown>;
       const externalId = bookingAnyData.externalId as string | undefined;
 
       if (externalId) {
         try {
           const sosDb = getSosFirestore();
+          const nowIso = new Date().toISOString();
+
+          // 1. Sync AI response to booking_request
           await sosDb.collection("booking_requests").doc(externalId).update({
             aiResponse: {
               content: response.response,
-              generatedAt: new Date().toISOString(),
+              generatedAt: nowIso,
               model: response.model,
               provider: response.provider,
-              tokensUsed: response.tokensUsed || null,
               source: "outil_ai_sync",
               conversationId: convoRef.id,
             },
-            aiProcessedAt: new Date().toISOString(),
-            status: "in_progress", // Mark as in_progress when AI responds
+            aiProcessedAt: nowIso,
+            status: "in_progress",
+            outilConversationId: convoRef.id,
           });
 
-          logger.info(`🔄 [AI-DEBUG-${debugId}] STEP 12: AI response synced to SOS`, {
+          // 2. Sync conversation to SOS (for multi-dashboard access)
+          // Use the same conversation ID to maintain consistency
+          const sosConvoRef = sosDb.collection("conversations").doc(convoRef.id);
+          await sosConvoRef.set({
+            bookingId,
+            bookingRequestId: externalId,
+            providerId,
+            providerType,
+            status: "active",
+            clientName: booking.clientFirstName || booking.clientName || "Client",
+            clientFirstName: booking.clientFirstName || null,
+            title: booking.title || "Consultation",
+            subject: booking.title || "Consultation",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            lastMessageAt: new Date(),
+            messagesCount: 2,
+            source: "outil_ai_sync",
+            bookingContext: {
+              clientName: booking.clientFirstName || booking.clientName || "Client",
+              country: country,
+              nationality: booking.clientNationality || null,
+              title: booking.title || null,
+              description: booking.description || null,
+              category: booking.category || null,
+              urgency: booking.urgency || null,
+              specialties: booking.providerSpecialties || null,
+            },
+          });
+
+          // 3. Sync messages to SOS conversation
+          // User message (context)
+          await sosConvoRef.collection("messages").doc("context").set({
+            role: "user",
+            source: "system",
+            content: userMessage,
+            createdAt: new Date(),
+            order: 1,
+          });
+
+          // AI response message
+          await sosConvoRef.collection("messages").doc("ai_response").set({
+            role: "assistant",
+            source: response.provider === "claude" ? "claude" : "gpt",
+            content: response.response,
+            model: response.model,
+            provider: response.provider,
+            searchPerformed: response.searchPerformed,
+            citations: response.citations || null,
+            fallbackUsed: response.fallbackUsed || false,
+            createdAt: new Date(),
+            order: 2,
+          });
+
+          logger.info(`🔄 [AI-DEBUG-${debugId}] STEP 12: Full sync to SOS completed`, {
             externalId,
             conversationId: convoRef.id,
+            syncedTo: ["booking_requests", "conversations", "messages"],
           });
         } catch (syncError) {
           // Non-blocking - don't fail the whole function if sync fails

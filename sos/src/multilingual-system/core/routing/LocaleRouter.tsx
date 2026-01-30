@@ -85,6 +85,23 @@ function computeRedirectPath(
     return { redirectTo: `/${locale}${pathWithoutLocale}`, newLang: null };
   }
 
+  // FIX: Redirect invalid locale combinations (e.g., es-us -> es-es)
+  // These can occur when geolocation produces unusual lang-country combos
+  const invalidLocaleCombinations: Record<string, string> = {
+    'es-us': 'es-es',  // Spanish should use Spain, not US
+    'de-us': 'de-de',  // German should use Germany
+    'ru-us': 'ru-ru',  // Russian should use Russia
+    'pt-us': 'pt-pt',  // Portuguese should use Portugal
+    'ar-us': 'ar-sa',  // Arabic should use Saudi Arabia
+    'hi-us': 'hi-in',  // Hindi should use India
+  };
+  if (localeParam && invalidLocaleCombinations[localeParam]) {
+    const correctLocale = invalidLocaleCombinations[localeParam];
+    const { pathWithoutLocale } = parseLocaleFromPath(decodedPathname);
+    console.log("🔷 [LocaleRouter] Redirecting invalid locale combo:", localeParam, "->", correctLocale);
+    return { redirectTo: `/${correctLocale}${pathWithoutLocale}`, newLang: null };
+  }
+
   // Path doesn't have locale prefix - add it
   if (!hasLocalePrefix(decodedPathname)) {
     const locale = getLocaleString(language);
@@ -93,6 +110,31 @@ function computeRedirectPath(
 
   // Path has locale prefix - check if language needs to sync or slug needs translation
   const { lang, pathWithoutLocale } = parseLocaleFromPath(decodedPathname);
+
+  // MALFORMED URL FIX: Detect paths with DOUBLE locale prefixes like /ch-dj/en/lawyer-dj/...
+  // These are malformed URLs where locale is followed by another language prefix
+  if (pathWithoutLocale && pathWithoutLocale.length > 1) {
+    const pathAfterLocale = pathWithoutLocale.startsWith('/') ? pathWithoutLocale.slice(1) : pathWithoutLocale;
+    const firstSegment = pathAfterLocale.split('/')[0];
+
+    // Check if first segment after locale is a legacy language prefix (2 lowercase letters)
+    if (firstSegment && /^[a-z]{2}$/.test(firstSegment)) {
+      // This looks like /xx-yy/zz/... where zz might be a language code
+      const potentialLangCodes = ['fr', 'en', 'es', 'de', 'ru', 'pt', 'ch', 'zh', 'hi', 'ar'];
+      if (potentialLangCodes.includes(firstSegment)) {
+        console.log("🔷 [LocaleRouter] Detected MALFORMED double-locale URL:", {
+          pathname: decodedPathname,
+          firstLocale: localeParam,
+          secondLang: firstSegment,
+        });
+        // Extract the rest of the path after the second language code
+        const restOfPath = pathAfterLocale.split('/').slice(1).join('/');
+        const correctLocale = getLocaleString(language);
+        const redirectPath = `/${correctLocale}${restOfPath ? '/' + restOfPath : ''}`;
+        return { redirectTo: redirectPath, newLang: null };
+      }
+    }
+  }
 
   // Sync URL locale with app language
   if (lang && lang !== language) {

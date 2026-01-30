@@ -415,8 +415,24 @@ const Register: React.FC = () => {
       intl.formatMessage({ id: "meta.register.og.description" })
     );
 
-    const currentLangPath = language;
-    const canonicalUrl = `${window.location.origin}/${currentLangPath}/register`;
+    // Use proper locale format (lang-country) for all URLs
+    // IMPORTANT: Use production URL directly for canonical to ensure consistency
+    const baseUrl = import.meta.env.PROD ? 'https://sos-expat.com' : window.location.origin;
+    const localeMap: Record<string, { locale: string; slug: string }> = {
+      fr: { locale: 'fr-fr', slug: 'inscription' },
+      en: { locale: 'en-us', slug: 'register' },
+      es: { locale: 'es-es', slug: 'registro' },
+      de: { locale: 'de-de', slug: 'registrierung' },
+      ru: { locale: 'ru-ru', slug: 'registratsiya' },
+      pt: { locale: 'pt-pt', slug: 'cadastro' },
+      ch: { locale: 'zh-cn', slug: 'zhuce' },
+      ar: { locale: 'ar-sa', slug: 'التسجيل' },
+      hi: { locale: 'hi-in', slug: 'panjikaran' },
+    };
+
+    const currentLocaleData = localeMap[language] || localeMap.fr;
+    const canonicalUrl = `${baseUrl}/${currentLocaleData.locale}/${currentLocaleData.slug}`;
+
     let canonical = document.querySelector(
       'link[rel="canonical"]'
     ) as HTMLLinkElement | null;
@@ -430,13 +446,19 @@ const Register: React.FC = () => {
     document
       .querySelectorAll('link[rel="alternate"][hreflang]')
       .forEach((n) => n.parentElement?.removeChild(n));
+
     const alternates: Record<string, string> = {
-      fr: `${window.location.origin}/fr/register`,
-      en: `${window.location.origin}/en/register`,
-      es: `${window.location.origin}/es/register`,
-      ru: `${window.location.origin}/ru/register`,
-      de: `${window.location.origin}/de/register`,
+      fr: `${baseUrl}/fr-fr/inscription`,
+      en: `${baseUrl}/en-us/register`,
+      es: `${baseUrl}/es-es/registro`,
+      de: `${baseUrl}/de-de/registrierung`,
+      ru: `${baseUrl}/ru-ru/registratsiya`,
+      pt: `${baseUrl}/pt-pt/cadastro`,
+      'zh-Hans': `${baseUrl}/zh-cn/zhuce`,
+      ar: `${baseUrl}/ar-sa/التسجيل`,
+      hi: `${baseUrl}/hi-in/panjikaran`,
     };
+
     Object.entries(alternates).forEach(([langKey, url]) => {
       const link = document.createElement("link");
       link.rel = "alternate";
@@ -447,7 +469,7 @@ const Register: React.FC = () => {
     const xDefault = document.createElement("link");
     xDefault.rel = "alternate";
     xDefault.hreflang = "x-default";
-    xDefault.href = alternates.fr;
+    xDefault.href = alternates.en;
     document.head.appendChild(xDefault);
 
     const structuredData = {

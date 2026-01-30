@@ -104,7 +104,7 @@ export {
 export {
   validateDashboardPassword,
   getMultiDashboardData,
-  onBookingRequestCreatedGenerateAi,
+  triggerAiFromBookingRequest,
   generateMultiDashboardOutilToken,
   getProviderConversations,
   sendMultiDashboardMessage,

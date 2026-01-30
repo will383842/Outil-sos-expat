@@ -1673,17 +1673,28 @@ const ProviderProfile: React.FC = () => {
       };
 
       const ogDesc = pickDescription(provider, preferredLangKey, intl).slice(0, 160);
-      const ogImage =
+
+      // ✅ Image OG dynamique avec overlay (nom, rôle, pays)
+      // Utilise le service Firebase pour générer une image optimisée pour les réseaux sociaux
+      const dynamicOgImageUrl = `https://europe-west1-sos-urgently-ac307.cloudfunctions.net/generateOgImage/${provider.id || provider.uid}?lang=${language}`;
+
+      // Fallback vers l'image de profil simple
+      const fallbackImage =
         provider.profilePhoto ||
         provider.photoURL ||
         provider.avatar ||
         "/default-avatar.png";
-      const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${window.location.origin}${ogImage}`;
+      const fallbackImageUrl = fallbackImage.startsWith('http') ? fallbackImage : `${window.location.origin}${fallbackImage}`;
+
+      // Utiliser l'image dynamique si le profil a un ID, sinon fallback
+      const fullImageUrl = (provider.id || provider.uid) ? dynamicOgImageUrl : fallbackImageUrl;
 
       // ✅ Open Graph
       updateOrCreateMeta("og:title", pageTitle);
       updateOrCreateMeta("og:description", ogDesc);
       updateOrCreateMeta("og:image", fullImageUrl);
+      updateOrCreateMeta("og:image:width", "1200");
+      updateOrCreateMeta("og:image:height", "630");
       updateOrCreateMeta("og:url", window.location.href);
       updateOrCreateMeta("og:type", "profile");
       updateOrCreateMeta("og:site_name", "SOS Expat & Travelers");
@@ -1710,7 +1721,6 @@ const ProviderProfile: React.FC = () => {
       // ✅ Hreflang pour SEO international
       const SUPPORTED_LANGS = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ch', 'ar', 'hi'];
       const baseUrl = window.location.origin;
-      const pathWithoutLang = window.location.pathname.replace(/^\/(fr|en|es|de|pt|ru|ch|ar|hi)/, '');
 
       document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
 
@@ -1719,14 +1729,20 @@ const ProviderProfile: React.FC = () => {
         link.rel = 'alternate';
         // Convertir 'ch' en 'zh-Hans' pour le standard hreflang SEO
         link.hreflang = lang === 'ch' ? 'zh-Hans' : lang;
-        link.href = `${baseUrl}/${lang}${pathWithoutLang}`;
+
+        // Générer l'URL avec le slug actuel pour chaque langue
+        const pathWithoutLang = window.location.pathname.replace(/^\/(fr-[a-z]{2}|en-[a-z]{2}|es-[a-z]{2}|de-[a-z]{2}|pt-[a-z]{2}|ru-[a-z]{2}|zh-[a-z]{2}|ar-[a-z]{2}|hi-[a-z]{2}|fr|en|es|de|pt|ru|ch|ar|hi)/, '');
+        const urlLang = lang === 'ch' ? 'zh' : lang;
+        const defaultLocales: Record<string, string> = { fr: 'fr', en: 'us', de: 'de', es: 'es', pt: 'br', ru: 'ru', ch: 'cn', ar: 'sa', hi: 'in' };
+        link.href = `${baseUrl}/${urlLang}-${defaultLocales[lang]}${pathWithoutLang}`;
         document.head.appendChild(link);
       });
-      
+
       const xDefaultLink = document.createElement('link');
       xDefaultLink.rel = 'alternate';
       xDefaultLink.hreflang = 'x-default';
-      xDefaultLink.href = `${baseUrl}/fr${pathWithoutLang}`;
+      // x-default pointe vers la version française
+      xDefaultLink.href = `${baseUrl}/fr-fr${window.location.pathname.replace(/^\/(fr-[a-z]{2}|en-[a-z]{2}|es-[a-z]{2}|de-[a-z]{2}|pt-[a-z]{2}|ru-[a-z]{2}|zh-[a-z]{2}|ar-[a-z]{2}|hi-[a-z]{2}|fr|en|es|de|pt|ru|ch|ar|hi)/, '')}`;
       document.head.appendChild(xDefaultLink);
       
       seoUpdatedRef.current = true;
@@ -1921,11 +1937,17 @@ const ProviderProfile: React.FC = () => {
   return convertLanguageNamesToCodes(languagesList);
 }, [languagesList]);
   
-  const mainPhoto: string =
+  // Photo de profil pour l'affichage
+  const profilePhoto: string =
     provider?.profilePhoto ||
     provider?.photoURL ||
     provider?.avatar ||
     "/default-avatar.png";
+
+  // Image OG dynamique avec overlay pour les réseaux sociaux
+  const mainPhoto: string = (provider?.id || provider?.uid)
+    ? `https://europe-west1-sos-urgently-ac307.cloudfunctions.net/generateOgImage/${provider?.id || provider?.uid}?lang=${language}`
+    : profilePhoto;
   
   const descriptionText = useMemo(() => {
     if (!provider) return "";
@@ -2073,7 +2095,7 @@ const ProviderProfile: React.FC = () => {
       name: displayName,
       image: {
         "@type": "ImageObject",
-        url: mainPhoto,
+        url: profilePhoto.startsWith('http') ? profilePhoto : `${window.location.origin}${profilePhoto}`,
         width: IMAGE_SIZES.MODAL_MAX_WIDTH,
         height: IMAGE_SIZES.MODAL_MAX_HEIGHT,
       },
@@ -2088,7 +2110,7 @@ const ProviderProfile: React.FC = () => {
         "@type": "Person",
         name: displayName,
         jobTitle: roleLabel,
-        image: mainPhoto,
+        image: profilePhoto.startsWith('http') ? profilePhoto : `${window.location.origin}${profilePhoto}`,
         worksFor: {
           "@type": "Organization",
           name: "SOS Expat & Travelers",
@@ -2158,7 +2180,7 @@ const ProviderProfile: React.FC = () => {
   }, [
     provider,
     isLawyer,
-    mainPhoto,
+    profilePhoto,
     descriptionText,
     intl,
     languagesList,
@@ -2468,7 +2490,7 @@ const ProviderProfile: React.FC = () => {
                   <div className="relative flex-shrink-0">
                     <div className="p-[3px] rounded-full bg-gradient-to-br from-red-400 via-orange-400 to-yellow-300">
                       <img
-                        src={mainPhoto}
+                        src={profilePhoto}
                         alt={intl.formatMessage(
                           { id: "providerProfile.profilePhotoAlt", defaultMessage: "Photo de profil de {name}" },
                           {
@@ -3451,7 +3473,7 @@ const ProviderProfile: React.FC = () => {
         >
           <div className="relative max-w-3xl max-h-[90vh]">
             <img
-              src={mainPhoto}
+              src={profilePhoto}
               alt={intl.formatMessage({ id: "providerProfile.fullPhotoAlt", defaultMessage: "Photo complète de {name}" }, { name: formatPublicName(provider) })}
               className="max-w-full max-h-[90vh] object-contain rounded-2xl"
               onError={handleImageError}
