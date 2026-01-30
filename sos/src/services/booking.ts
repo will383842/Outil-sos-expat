@@ -1,7 +1,7 @@
 // src/services/booking.ts
-import { addDoc, collection, serverTimestamp, doc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, doc, updateDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
-import { generateAiResponseForBooking } from "../config/outilFirebase";
+import { triggerFullAiGeneration } from "../config/outilFirebase";
 
 /**
  * Champs MINIMAUX exigés par tes rules :
@@ -120,57 +120,65 @@ export async function createBookingRequest(data: BookingRequestCreate) {
     "NETWORK_TIMEOUT"
   );
 
-  // For multi-provider accounts: Generate AI response asynchronously
-  // Check if providerId starts with "aaa_" (multi-provider naming convention)
-  const isMultiProvider = providerId.startsWith("aaa_");
+  // Check if provider has AI access (subscription or forced access)
+  // This triggers AI for ALL providers with AI access, not just multi-providers
+  (async () => {
+    try {
+      // Check provider's AI access in BOTH sos_profiles AND users
+      // Admin can set forcedAIAccess on either collection
+      const [profileDoc, userDoc] = await Promise.all([
+        getDoc(doc(db, "sos_profiles", providerId)),
+        getDoc(doc(db, "users", providerId)),
+      ]);
 
-  if (isMultiProvider) {
-    // Call AI generation in background (don't block the booking creation)
-    generateAiResponseForBooking({
-      bookingId: docRef.id,
-      providerId,
-      clientName: data.clientName || `${data.clientFirstName || ""} ${data.clientLastName || ""}`.trim() || "Client",
-      clientCurrentCountry: data.clientCurrentCountry,
-      clientLanguages: data.clientLanguages,
-      serviceType,
-      providerType: data.providerType as "lawyer" | "expat" | undefined,
-      title: data.title,
-    })
-      .then(async (result) => {
-        if (result.success && result.aiResponse) {
-          // Update the booking_request with the AI response
-          try {
-            await updateDoc(doc(db, "booking_requests", docRef.id), {
-              aiResponse: {
-                content: result.aiResponse,
-                generatedAt: serverTimestamp(),
-                model: result.model || "claude-3-5-sonnet",
-                tokensUsed: result.tokensUsed || 0,
-                source: "multi_dashboard_callable",
-              },
-              aiProcessedAt: serverTimestamp(),
-            });
-            console.log("[Booking] AI response saved for multi-provider booking:", docRef.id);
-          } catch (updateError) {
-            console.error("[Booking] Failed to save AI response:", updateError);
-          }
-        } else if (result.error) {
-          console.error("[Booking] AI generation failed:", result.error);
-          // Optionally save the error
-          try {
-            await updateDoc(doc(db, "booking_requests", docRef.id), {
-              aiError: result.error,
-              aiErrorAt: serverTimestamp(),
-            });
-          } catch {
-            // Ignore update errors
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("[Booking] AI generation call failed:", error);
+      const profileData = profileDoc.exists() ? profileDoc.data() : null;
+      const userData = userDoc.exists() ? userDoc.data() : null;
+
+      const hasAiAccess =
+        // Check sos_profiles
+        profileData?.forcedAIAccess === true ||
+        profileData?.hasActiveSubscription === true ||
+        profileData?.subscriptionStatus === "active" ||
+        // Check users collection (admin may set forcedAIAccess here too)
+        userData?.forcedAIAccess === true ||
+        userData?.hasActiveSubscription === true ||
+        userData?.subscriptionStatus === "active";
+
+      if (!hasAiAccess) {
+        console.log("[Booking] Provider does not have AI access, skipping AI generation:", providerId);
+        return;
+      }
+
+      console.log("[Booking] Provider has AI access, triggering AI generation:", providerId);
+
+      // Call AI generation in background (don't block the booking creation)
+      const result = await triggerFullAiGeneration({
+        bookingRequestId: docRef.id,
+        clientId: u.uid,
+        providerId,
       });
-  }
+
+      if (result.success) {
+        console.log("[Booking] AI generation triggered successfully:", {
+          bookingRequestId: docRef.id,
+          bookingId: result.bookingId,
+        });
+      } else if (result.error) {
+        console.error("[Booking] AI generation failed:", result.error);
+        // Save error to booking_request
+        try {
+          await updateDoc(doc(db, "booking_requests", docRef.id), {
+            aiError: result.error,
+            aiErrorAt: serverTimestamp(),
+          });
+        } catch {
+          // Ignore update errors
+        }
+      }
+    } catch (error) {
+      console.error("[Booking] Error checking AI access or triggering AI:", error);
+    }
+  })();
 
   return docRef.id;
 }
