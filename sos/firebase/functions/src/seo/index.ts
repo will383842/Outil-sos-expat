@@ -40,4 +40,4 @@ export { migrateProfileSlugs, auditProfileSlugs } from './migrateProfileSlugs';
 export { diagnoseProfiles } from './diagnoseProfiles';
 
 // OG Image generation service
-export { generateOgImage, getOgImageUrl } from './ogImageService';
+export { generateOgImage } from './ogImageService';

@@ -63,11 +63,6 @@ const IN_LABELS: Record<string, string> = {
   hi: 'में',
 };
 
-interface OGImageParams {
-  profileId: string;
-  lang?: string;
-}
-
 /**
  * Génère une URL d'image OG pour un profil
  * Format: /og-image/{profileId}?lang=fr
@@ -230,7 +225,6 @@ function generateOgSvg(params: {
  */
 function generateStarsSvg(rating: number): string {
   let stars = '';
-  const starSize = 24;
   const spacing = 26;
 
   for (let i = 0; i < 5; i++) {

@@ -188,6 +188,7 @@ interface SosProfile {
   firstName: string;
   lastName: string;
   slug?: string;
+  shortId?: string;
   country: string;
   city?: string;
   residenceCountry?: string;
@@ -1810,10 +1811,12 @@ const ProviderProfile: React.FC = () => {
     } catch {
       // Ignore storage errors
     }
-    const target = `/booking-request/${provider.id}`;
+    // Utiliser shortId (6 chars) si disponible, sinon fallback sur id
+    const providerIdentifier = provider.shortId || provider.id;
+    const target = `/booking-request/${providerIdentifier}`;
 
-    // Validation: s'assurer que provider.id est défini
-    if (!provider.id) {
+    // Validation: s'assurer que l'identifiant est défini
+    if (!providerIdentifier) {
       return;
     }
 
@@ -1831,13 +1834,15 @@ const ProviderProfile: React.FC = () => {
 
   // Callback quand l'authentification réussit via le wizard
   const handleAuthSuccess = useCallback(() => {
-    if (!provider || !provider.id) {
+    if (!provider || (!provider.shortId && !provider.id)) {
       return;
     }
 
     setShowAuthWizard(false);
 
-    const target = `/booking-request/${provider.id}`;
+    // Utiliser shortId (6 chars) si disponible
+    const providerIdentifier = provider.shortId || provider.id;
+    const target = `/booking-request/${providerIdentifier}`;
     navigate(target, {
       state: {
         selectedProvider: provider,

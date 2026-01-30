@@ -52,7 +52,7 @@ import { LanguageUtils } from "../locales/languageMap";
 import { countriesData } from "../data/countries";
 
 import { db, auth } from "../config/firebase";
-import { doc, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { fetchSignInMethodsForEmail } from "firebase/auth";
 
 import type { Provider } from "../types/provider";
@@ -2218,7 +2218,27 @@ const BookingRequest: React.FC = () => {
           setProviderLoading(false);
           return;
         }
-        const ref = doc(db, "sos_profiles", providerId);
+
+        // Support shortId (6 chars) ou ID Firebase long (28 chars)
+        const isShortId = providerId.length <= 8;
+        let docId = providerId;
+
+        // Si c'est un shortId, chercher le vrai ID Firebase
+        if (isShortId) {
+          const q = query(
+            collection(db, "sos_profiles"),
+            where("shortId", "==", providerId)
+          );
+          const querySnap = await getDocs(q);
+          if (!querySnap.empty) {
+            docId = querySnap.docs[0].id;
+          } else {
+            // Pas trouvé par shortId, essayer comme ID Firebase
+            docId = providerId;
+          }
+        }
+
+        const ref = doc(db, "sos_profiles", docId);
         unsub = onSnapshot(
           ref,
           (snap) => {

@@ -20,6 +20,7 @@ import { languagesData } from '../data/languages-spoken';
 import { flattenLawyerSpecialities } from '../data/lawyer-specialties';
 import { expatHelpTypesData } from '../data/expat-help-types';
 import { getNamesByCountry } from '../data/names-by-country';
+import { generateShortId, generateMultilingualSlugs } from './slugGenerator';
 
 // Types
 export type Role = 'lawyer' | 'expat';
@@ -550,16 +551,29 @@ export async function generateCompleteAaaProfile(params: AaaProfileGenerationPar
   // Save to users collection
   await setDoc(doc(db, 'users', uid), cleanUser);
 
-  // Save to sos_profiles collection
+  // Générer shortId et slugs multilingues pour SEO
+  const shortId = generateShortId(uid);
+  const slugs = generateMultilingualSlugs({
+    firstName: cleanUser.firstName || fullName.split(' ')[0],
+    lastName: cleanUser.lastName || '',
+    role: role,
+    country: countryCode,
+    languages: languageCodes,
+    specialties: specialties,
+  });
+
+  // Save to sos_profiles collection avec shortId et slugs
   const providerProfile = {
     ...cleanUser,
     type: role,
     createdByAdmin: true,
     profileCompleted: true,
+    shortId,
+    slugs,
   };
   await setDoc(doc(db, 'sos_profiles', uid), providerProfile);
 
-  // Save to UI collections
+  // Save to UI collections avec slug SEO-friendly
   const card = {
     id: uid,
     uid,
@@ -571,7 +585,10 @@ export async function generateCompleteAaaProfile(params: AaaProfileGenerationPar
     reviewCount,
     languages: languageCodes,
     specialties,
-    href: `/profile/${uid}`,
+    shortId,
+    slugs,
+    // URL SEO-friendly avec slug français par défaut
+    href: slugs.fr ? `/${slugs.fr}` : `/profile/${uid}`,
     createdAt: serverTimestamp(),
   };
   await setDoc(doc(db, 'ui_profile_cards', uid), card);
