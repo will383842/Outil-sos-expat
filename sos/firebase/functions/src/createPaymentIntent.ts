@@ -79,7 +79,7 @@ const FUNCTION_OPTIONS = {
   memory: '256MiB' as const,
   concurrency: 1,
   timeoutSeconds: 60,
-  minInstances: 1,  // Keep warm to avoid cold start delays on payment
+  minInstances: 0,  // Temporarily 0 to free quota - TODO: restore to 1 after quota increase
   maxInstances: 3,
   cors: [
     'https://sos-expat.com',

@@ -39,6 +39,8 @@ interface BookingRequestData {
   providerType?: "lawyer" | "expat";
   providerCountry?: string;
   providerEmail?: string;
+  providerSpecialties?: string[];
+  providerLanguages?: string[];
   clientName?: string;
   clientFirstName?: string;
   clientLastName?: string;
@@ -50,6 +52,7 @@ interface BookingRequestData {
   serviceType?: string;
   title?: string;
   description?: string;
+  urgency?: string;
   status?: string;
   aiResponse?: object;
   aiProcessedAt?: admin.firestore.Timestamp;
@@ -181,13 +184,16 @@ export const triggerAiFromBookingRequest = onCall<
         description: bookingRequest.description || null,
         serviceType: bookingRequest.serviceType || null,
         category: bookingRequest.serviceType || null,
-        urgency: "normal",
+        urgency: bookingRequest.urgency || "normal",
 
         // Provider info
         providerId: bookingRequest.providerId,
         providerType: bookingRequest.providerType || providerData?.type || "lawyer",
         providerName: bookingRequest.providerName || providerData?.name || null,
         providerCountry: bookingRequest.providerCountry || providerData?.country || null,
+        // IMPORTANT: Provider specialties for better AI context
+        providerSpecialties: bookingRequest.providerSpecialties || providerData?.specialties || null,
+        providerLanguages: bookingRequest.providerLanguages || providerData?.languages || null,
 
         // Status
         status: "pending",

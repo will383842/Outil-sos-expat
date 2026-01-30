@@ -7,6 +7,19 @@
  * - Voir que c'est SIMPLE : promouvoir SOS-Expat sur YouTube, Instagram, TikTok
  * - Avocat OU Expatrié Aidant (pas juste avocat)
  * - Mobile-first d'exception
+ * - CIBLER tous les influenceurs du monde (toutes nationalités, toutes langues)
+ *
+ * AMÉLIORATIONS v2:
+ * - Section "Who Can Join?" avec 8 profils d'influenceurs détaillés
+ * - YouTube Highlight Box (comme Facebook Groups pour Chatter)
+ * - Calculateur de gains interactif
+ * - 8 exemples de contenu (2 par plateforme)
+ * - Section "Why Your Followers Need SOS-Expat"
+ * - Section "Content Types That Convert Best"
+ * - Build a Network Section
+ * - Plus de méthodes de paiement (Mobile Money)
+ * - Statistics/Social Proof Section
+ * - Section "Exclusive Benefits for Your Community"
  */
 
 import React, { useState } from 'react';
@@ -48,6 +61,17 @@ import {
   Percent,
   Crown,
   QrCode,
+  TrendingUp,
+  Award,
+  Calculator,
+  Play,
+  Camera,
+  Mic,
+  Heart,
+  Eye,
+  MousePointer,
+  BadgeCheck,
+  Flame,
 } from 'lucide-react';
 
 // ============================================================================
@@ -60,6 +84,18 @@ const InfluencerLanding: React.FC = () => {
   const { language } = useApp();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Calculator state
+  const [calcVideos, setCalcVideos] = useState(4);
+  const [calcViewsPerVideo, setCalcViewsPerVideo] = useState(5000);
+  const [calcClickRate, setCalcClickRate] = useState(2);
+  const [calcConversionRate, setCalcConversionRate] = useState(5);
+
+  // Realistic calculation
+  const monthlyViews = calcVideos * calcViewsPerVideo;
+  const monthlyClicks = Math.floor((monthlyViews * calcClickRate) / 100);
+  const monthlyClients = Math.floor((monthlyClicks * calcConversionRate) / 100);
+  const monthlyEarnings = monthlyClients * 10;
 
   const registerRoute = `/${getTranslatedRouteSlug('influencer-register' as RouteKey, langCode)}`;
 
@@ -93,11 +129,19 @@ const InfluencerLanding: React.FC = () => {
     },
     {
       question: intl.formatMessage({ id: 'influencer.faq.q5', defaultMessage: "How and when do I get paid?" }),
-      answer: intl.formatMessage({ id: 'influencer.faq.a5', defaultMessage: "Withdraw anytime once you reach $50. We support Wise, PayPal, and bank transfers. Payments processed within 48 hours." }),
+      answer: intl.formatMessage({ id: 'influencer.faq.a5', defaultMessage: "Withdraw anytime once you reach $50. We support Wise, PayPal, Mobile Money, and bank transfers. Payments processed within 48 hours." }),
     },
     {
       question: intl.formatMessage({ id: 'influencer.faq.q6', defaultMessage: "What discount do my followers get?" }),
       answer: intl.formatMessage({ id: 'influencer.faq.a6', defaultMessage: "Your followers automatically get 5% off their first call when they use your link. It's an exclusive benefit for your community!" }),
+    },
+    {
+      question: intl.formatMessage({ id: 'influencer.faq.q7', defaultMessage: "What audience size do I need?" }),
+      answer: intl.formatMessage({ id: 'influencer.faq.a7', defaultMessage: "There's no minimum! Micro-influencers with 1,000 engaged followers often convert better than mega-influencers. It's about engagement, not size. Quality over quantity!" }),
+    },
+    {
+      question: intl.formatMessage({ id: 'influencer.faq.q8', defaultMessage: "Can I recruit other influencers?" }),
+      answer: intl.formatMessage({ id: 'influencer.faq.a8', defaultMessage: "Yes! Recruit other influencers and earn 5% of their client earnings. Build a network of creators and earn passive income from their success!" }),
     },
   ];
 
@@ -114,16 +158,32 @@ const InfluencerLanding: React.FC = () => {
   // Promo tools
   const promoTools = [
     { name: intl.formatMessage({ id: 'influencer.tools.banners', defaultMessage: 'Banners' }), icon: '🖼️' },
-    { name: intl.formatMessage({ id: 'influencer.tools.widgets', defaultMessage: 'Widgets' }), icon: '🔧' },
+    { name: intl.formatMessage({ id: 'influencer.tools.widgets', defaultMessage: 'Widgets' }), icon: '🔧', highlight: true },
     { name: intl.formatMessage({ id: 'influencer.tools.qrcodes', defaultMessage: 'QR Codes' }), icon: '📱' },
     { name: intl.formatMessage({ id: 'influencer.tools.texts', defaultMessage: 'Promo Texts' }), icon: '📝' },
     { name: intl.formatMessage({ id: 'influencer.tools.logos', defaultMessage: 'HD Logos' }), icon: '✨' },
   ];
 
-  // Payment methods
+  // Content types that convert best
+  const contentTypes = [
+    { name: intl.formatMessage({ id: 'influencer.content.visaguide', defaultMessage: 'Visa Guides' }), icon: '📋', desc: intl.formatMessage({ id: 'influencer.content.visaguide.desc', defaultMessage: 'Country-specific visa tutorials' }), highlight: true },
+    { name: intl.formatMessage({ id: 'influencer.content.qa', defaultMessage: 'Q&A Sessions' }), icon: '❓', desc: intl.formatMessage({ id: 'influencer.content.qa.desc', defaultMessage: 'Answer expat questions live' }), highlight: true },
+    { name: intl.formatMessage({ id: 'influencer.content.dayinlife', defaultMessage: 'Day in the Life' }), icon: '🌅', desc: intl.formatMessage({ id: 'influencer.content.dayinlife.desc', defaultMessage: 'Expat daily life vlogs' }) },
+    { name: intl.formatMessage({ id: 'influencer.content.tips', defaultMessage: 'Quick Tips' }), icon: '💡', desc: intl.formatMessage({ id: 'influencer.content.tips.desc', defaultMessage: 'Short travel/legal tips' }) },
+    { name: intl.formatMessage({ id: 'influencer.content.moving', defaultMessage: 'Moving Abroad' }), icon: '🚚', desc: intl.formatMessage({ id: 'influencer.content.moving.desc', defaultMessage: 'Relocation guides' }) },
+    { name: intl.formatMessage({ id: 'influencer.content.costliving', defaultMessage: 'Cost of Living' }), icon: '💰', desc: intl.formatMessage({ id: 'influencer.content.costliving.desc', defaultMessage: 'City comparisons' }) },
+    { name: intl.formatMessage({ id: 'influencer.content.emergency', defaultMessage: 'Emergency Tips' }), icon: '🆘', desc: intl.formatMessage({ id: 'influencer.content.emergency.desc', defaultMessage: 'What to do when...' }) },
+    { name: intl.formatMessage({ id: 'influencer.content.storytime', defaultMessage: 'Story Time' }), icon: '📖', desc: intl.formatMessage({ id: 'influencer.content.storytime.desc', defaultMessage: 'Personal expat stories' }) },
+  ];
+
+  // Payment methods - EXPANDED like Chatter
   const paymentMethods = [
     { name: 'Wise', icon: '🌐' },
     { name: 'PayPal', icon: '💳' },
+    { name: 'Orange Money', icon: '🟠' },
+    { name: 'Wave', icon: '🌊' },
+    { name: 'MTN MoMo', icon: '💛' },
+    { name: 'M-Pesa', icon: '💚' },
     { name: 'Bank', icon: '🏦' },
   ];
 
@@ -163,6 +223,10 @@ const InfluencerLanding: React.FC = () => {
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
             <div className="absolute bottom-10 right-10 w-96 h-96 bg-yellow-400/20 rounded-full blur-3xl" />
+            {/* Platform icons floating */}
+            <div className="absolute top-20 right-20 text-5xl opacity-20 animate-float">🎬</div>
+            <div className="absolute top-40 left-20 text-4xl opacity-20 animate-float" style={{ animationDelay: '0.5s' }}>📸</div>
+            <div className="absolute bottom-40 right-40 text-4xl opacity-20 animate-float" style={{ animationDelay: '1s' }}>🎵</div>
           </div>
 
           <div className="relative z-10 max-w-5xl mx-auto px-4 py-12 text-center text-white">
@@ -170,7 +234,7 @@ const InfluencerLanding: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
               <Star className="w-5 h-5 text-yellow-300" />
               <span className="font-semibold text-sm">
-                <FormattedMessage id="influencer.hero.badge" defaultMessage="Influencer Program • Promo Tools Included" />
+                <FormattedMessage id="influencer.hero.badge" defaultMessage="Influencer Program • All Platforms • All Languages" />
               </span>
             </div>
 
@@ -178,7 +242,7 @@ const InfluencerLanding: React.FC = () => {
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight">
               <FormattedMessage
                 id="influencer.hero.title"
-                defaultMessage="Earn $10 Per Client + Promo Tools"
+                defaultMessage="Turn Your Audience Into Income: $10 Per Client"
               />
             </h1>
 
@@ -186,7 +250,7 @@ const InfluencerLanding: React.FC = () => {
             <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-4 font-medium">
               <FormattedMessage
                 id="influencer.hero.subtitle"
-                defaultMessage="Promote SOS-Expat to your audience on YouTube, Instagram, or TikTok. Get banners, widgets, QR codes. Your followers get 5% off!"
+                defaultMessage="YouTube, Instagram, TikTok, Blog... Promote SOS-Expat to your followers. Get banners, widgets, QR codes. Your followers get 5% off!"
               />
             </p>
 
@@ -213,8 +277,8 @@ const InfluencerLanding: React.FC = () => {
             {/* Quick trust */}
             <div className="flex flex-wrap justify-center gap-4 mt-8 text-sm">
               <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
-                <Zap className="w-4 h-4" />
-                <FormattedMessage id="influencer.hero.trust.1" defaultMessage="Instant Activation" />
+                <Globe className="w-4 h-4" />
+                <FormattedMessage id="influencer.hero.trust.1" defaultMessage="All Countries" />
               </div>
               <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
                 <Percent className="w-4 h-4" />
@@ -223,6 +287,10 @@ const InfluencerLanding: React.FC = () => {
               <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
                 <Image className="w-4 h-4" />
                 <FormattedMessage id="influencer.hero.trust.3" defaultMessage="Promo Tools Included" />
+              </div>
+              <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
+                <Users className="w-4 h-4" />
+                <FormattedMessage id="influencer.hero.trust.4" defaultMessage="No Min Followers" />
               </div>
             </div>
 
@@ -266,7 +334,7 @@ const InfluencerLanding: React.FC = () => {
                     <FormattedMessage id="influencer.step1.title" defaultMessage="Create Content" />
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    <FormattedMessage id="influencer.step1.desc" defaultMessage="Make videos about expat life, travel tips, visa advice, living abroad. Use our banners and promo texts to promote SOS-Expat." />
+                    <FormattedMessage id="influencer.step1.desc" defaultMessage="Make videos about expat life, travel tips, visa advice, living abroad. Use our banners and promo texts to promote SOS-Expat naturally." />
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <span className="px-3 py-1 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full text-xs font-bold">
@@ -294,7 +362,7 @@ const InfluencerLanding: React.FC = () => {
                     <FormattedMessage id="influencer.step2.title" defaultMessage="Share Your Link" />
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    <FormattedMessage id="influencer.step2.desc" defaultMessage="Add your unique affiliate link in video descriptions, bio, stories. Your followers get 5% off their first call!" />
+                    <FormattedMessage id="influencer.step2.desc" defaultMessage="Add your unique affiliate link in video descriptions, bio, stories. Your followers get 5% off their first call - exclusive benefit!" />
                   </p>
                   <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-purple-200 dark:border-purple-700">
                     <p className="text-sm text-gray-500 dark:text-gray-400 italic">
@@ -317,7 +385,7 @@ const InfluencerLanding: React.FC = () => {
                     <FormattedMessage id="influencer.step3.title" defaultMessage="Get Paid $10" />
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    <FormattedMessage id="influencer.step3.desc" defaultMessage="When followers make a call through your link, you earn $10. Withdraw anytime via Wise, PayPal, or bank transfer." />
+                    <FormattedMessage id="influencer.step3.desc" defaultMessage="When followers make a call through your link, you earn $10. Withdraw anytime via Wise, PayPal, Mobile Money, or bank transfer." />
                   </p>
                   <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-bold text-lg">
                     <CheckCircle className="w-5 h-5" />
@@ -341,6 +409,546 @@ const InfluencerLanding: React.FC = () => {
                     <FormattedMessage id="influencer.note.desc" defaultMessage="SOS-Expat connects people with professional lawyers AND experienced expat helpers. Lawyers for legal matters, expat helpers for practical advice. Both available instantly by phone, worldwide." />
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================== */}
+        {/* WHO CAN JOIN? - Target profiles (NEW SECTION) */}
+        {/* ============================================================== */}
+        <section className="py-16 md:py-24 px-4 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full text-sm font-semibold mb-4">
+                <Network className="w-4 h-4" />
+                <FormattedMessage id="influencer.profiles.badge" defaultMessage="For All Content Creators" />
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+                <FormattedMessage id="influencer.profiles.title" defaultMessage="Who Can Join?" />
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+                <FormattedMessage id="influencer.profiles.subtitle" defaultMessage="YouTubers, Instagrammers, TikTokers, Bloggers... If your audience travels or lives abroad, SOS-Expat is perfect for you!" />
+              </p>
+            </div>
+
+            {/* Profile cards grid */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {/* Travel YouTuber */}
+              <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all ring-2 ring-red-400/50">
+                <div className="absolute -top-2 -right-2 px-2 py-1 bg-red-500 text-white rounded-full text-xs font-bold">
+                  TOP
+                </div>
+                <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-orange-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
+                  🎬
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+                  <FormattedMessage id="influencer.profiles.youtuber.title" defaultMessage="Travel YouTubers" />
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.profiles.youtuber.desc" defaultMessage="Video descriptions are perfect for affiliate links. Your viewers trust your recommendations!" />
+                </p>
+              </div>
+
+              {/* Expat Vlogger */}
+              <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all ring-2 ring-green-400/50">
+                <div className="absolute -top-2 -right-2 px-2 py-1 bg-green-500 text-white rounded-full text-xs font-bold">
+                  BEST
+                </div>
+                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
+                  🌍
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+                  <FormattedMessage id="influencer.profiles.expatvlogger.title" defaultMessage="Expat Vloggers" />
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.profiles.expatvlogger.desc" defaultMessage="You live abroad. Your audience faces the same challenges. Perfect fit = high conversion!" />
+                </p>
+              </div>
+
+              {/* Digital Nomad Creator */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
+                  💻
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+                  <FormattedMessage id="influencer.profiles.nomad.title" defaultMessage="Digital Nomad Creators" />
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.profiles.nomad.desc" defaultMessage="Your audience NEEDS visa info! Digital nomad visa content = high conversion rates." />
+                </p>
+              </div>
+
+              {/* Travel Photographers */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-rose-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
+                  📸
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+                  <FormattedMessage id="influencer.profiles.photographer.title" defaultMessage="Travel Photographers" />
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.profiles.photographer.desc" defaultMessage="Instagram, Pinterest... Your visual content + our link = passive income." />
+                </p>
+              </div>
+
+              {/* Immigration Advisors */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
+                  ⚖️
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+                  <FormattedMessage id="influencer.profiles.advisor.title" defaultMessage="Immigration Advisors" />
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.profiles.advisor.desc" defaultMessage="Share your expertise and help your audience find professional legal help when needed." />
+                </p>
+              </div>
+
+              {/* Lifestyle Influencers */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
+                  ✨
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+                  <FormattedMessage id="influencer.profiles.lifestyle.title" defaultMessage="Lifestyle Influencers" />
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.profiles.lifestyle.desc" defaultMessage="Your audience dreams of traveling or moving abroad. Help them take the leap!" />
+                </p>
+              </div>
+
+              {/* Country-specific Creators */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-cyan-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
+                  🇪🇸
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+                  <FormattedMessage id="influencer.profiles.country.title" defaultMessage="Country-specific Creators" />
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.profiles.country.desc" defaultMessage="'Life in Dubai', 'Living in Portugal'... Niche audiences with high intent!" />
+                </p>
+              </div>
+
+              {/* Micro-influencers */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-purple-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
+                  📱
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+                  <FormattedMessage id="influencer.profiles.micro.title" defaultMessage="Micro-influencers" />
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.profiles.micro.desc" defaultMessage="1K-50K followers? Perfect! High engagement = high conversion. Quality beats quantity." />
+                </p>
+              </div>
+            </div>
+
+            {/* WHY IT WORKS - value proposition */}
+            <div className="mt-12 bg-gradient-to-r from-red-600 to-orange-600 rounded-3xl p-6 md:p-8 text-white">
+              <div className="text-center mb-6">
+                <h3 className="text-xl md:text-2xl font-bold mb-2">
+                  <FormattedMessage id="influencer.profiles.why.title" defaultMessage="Why Your Followers Need SOS-Expat" />
+                </h3>
+              </div>
+              <div className="grid md:grid-cols-4 gap-6">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">📋</div>
+                  <h4 className="font-semibold mb-1">
+                    <FormattedMessage id="influencer.profiles.why1.title" defaultMessage="Visa Problems" />
+                  </h4>
+                  <p className="text-sm text-white/80">
+                    <FormattedMessage id="influencer.profiles.why1.desc" defaultMessage="Expired visa, wrong documents, extension needed. Urgent help required." />
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl mb-2">⚖️</div>
+                  <h4 className="font-semibold mb-1">
+                    <FormattedMessage id="influencer.profiles.why2.title" defaultMessage="Legal Issues" />
+                  </h4>
+                  <p className="text-sm text-white/80">
+                    <FormattedMessage id="influencer.profiles.why2.desc" defaultMessage="Accidents, contracts, scams. Legal help abroad = urgent." />
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl mb-2">🆘</div>
+                  <h4 className="font-semibold mb-1">
+                    <FormattedMessage id="influencer.profiles.why3.title" defaultMessage="Emergency" />
+                  </h4>
+                  <p className="text-sm text-white/80">
+                    <FormattedMessage id="influencer.profiles.why3.desc" defaultMessage="Lost passport, arrest, hospital. Immediate assistance needed." />
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl mb-2">🌍</div>
+                  <h4 className="font-semibold mb-1">
+                    <FormattedMessage id="influencer.profiles.why4.title" defaultMessage="Practical Help" />
+                  </h4>
+                  <p className="text-sm text-white/80">
+                    <FormattedMessage id="influencer.profiles.why4.desc" defaultMessage="Bank account, housing, admin. Expat helpers share real experience." />
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================== */}
+        {/* YOUTUBE HIGHLIGHT - Like Facebook Groups for Chatter */}
+        {/* ============================================================== */}
+        <section className="py-16 md:py-20 px-4 bg-gradient-to-br from-red-600 via-red-500 to-orange-500 text-white">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-4">
+                <Play className="w-4 h-4" />
+                <FormattedMessage id="influencer.youtube.badge" defaultMessage="Best Platform" />
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black mb-4">
+                <FormattedMessage id="influencer.youtube.title" defaultMessage="YouTube = Your Best Friend" />
+              </h2>
+              <p className="text-xl text-white/90 max-w-2xl mx-auto">
+                <FormattedMessage id="influencer.youtube.subtitle" defaultMessage="Long-form content builds trust. Video descriptions are perfect for affiliate links. SEO brings traffic for years." />
+              </p>
+            </div>
+
+            {/* YouTube advantages */}
+            <div className="grid md:grid-cols-3 gap-6 mb-10">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                  <Eye className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">
+                  <FormattedMessage id="influencer.youtube.adv1.title" defaultMessage="Long Watch Time = Trust" />
+                </h3>
+                <p className="text-sm text-white/80">
+                  <FormattedMessage id="influencer.youtube.adv1.desc" defaultMessage="Viewers watch 10-30 minutes. They trust your recommendations more than any other platform." />
+                </p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">
+                  <FormattedMessage id="influencer.youtube.adv2.title" defaultMessage="Evergreen Traffic" />
+                </h3>
+                <p className="text-sm text-white/80">
+                  <FormattedMessage id="influencer.youtube.adv2.desc" defaultMessage="Videos rank on YouTube and Google for years. One video = years of passive income." />
+                </p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                  <MousePointer className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">
+                  <FormattedMessage id="influencer.youtube.adv3.title" defaultMessage="Description Links" />
+                </h3>
+                <p className="text-sm text-white/80">
+                  <FormattedMessage id="influencer.youtube.adv3.desc" defaultMessage="Clickable links in every description. 'Link in description' is natural and expected." />
+                </p>
+              </div>
+            </div>
+
+            {/* Video ideas that work */}
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/20">
+              <h3 className="font-bold text-xl mb-4 text-center">
+                <FormattedMessage id="influencer.youtube.ideas.title" defaultMessage="Video Ideas That Convert" />
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white/10 rounded-xl px-3 py-2 text-center text-sm">
+                  <FormattedMessage id="influencer.youtube.idea1" defaultMessage="'Spain Digital Nomad Visa Guide'" />
+                </div>
+                <div className="bg-white/10 rounded-xl px-3 py-2 text-center text-sm">
+                  <FormattedMessage id="influencer.youtube.idea2" defaultMessage="'What to Do If You're Arrested Abroad'" />
+                </div>
+                <div className="bg-white/10 rounded-xl px-3 py-2 text-center text-sm">
+                  <FormattedMessage id="influencer.youtube.idea3" defaultMessage="'5 Legal Mistakes Expats Make'" />
+                </div>
+                <div className="bg-white/10 rounded-xl px-3 py-2 text-center text-sm">
+                  <FormattedMessage id="influencer.youtube.idea4" defaultMessage="'Q&A: Your Visa Questions Answered'" />
+                </div>
+              </div>
+              <p className="mt-4 text-sm text-white/70 text-center">
+                <FormattedMessage id="influencer.youtube.tip" defaultMessage="Focus on problems your audience faces. Position SOS-Expat as the solution." />
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================== */}
+        {/* CONTENT TYPES THAT CONVERT */}
+        {/* ============================================================== */}
+        <section className="py-16 md:py-20 px-4 bg-white dark:bg-gray-950">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-4">
+                <FormattedMessage id="influencer.content.title" defaultMessage="Content That Converts Best" />
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                <FormattedMessage id="influencer.content.subtitle" defaultMessage="Topics that work well for SOS-Expat referrals" />
+              </p>
+            </div>
+
+            {/* Visa guides highlight box */}
+            <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-3xl p-6 md:p-8 text-white mb-8">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-3xl">📋</span>
+                </div>
+                <div>
+                  <h3 className="text-xl md:text-2xl font-bold mb-1">
+                    <FormattedMessage id="influencer.content.visa.title" defaultMessage="Visa & Legal Content = Best Performers" />
+                  </h3>
+                  <p className="text-white/80">
+                    <FormattedMessage id="influencer.content.visa.desc" defaultMessage="Content about visa requirements, legal tips, and emergency situations converts best." />
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {contentTypes.map((content, idx) => (
+                <div
+                  key={idx}
+                  className={`rounded-2xl p-4 text-center border hover:shadow-lg hover:-translate-y-1 transition-all ${
+                    content.highlight
+                      ? 'bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 border-red-300 dark:border-red-700 ring-2 ring-red-400/50'
+                      : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+                  }`}
+                >
+                  <div className="text-3xl mb-2">{content.icon}</div>
+                  <div className={`font-bold ${content.highlight ? 'text-red-700 dark:text-red-300' : 'text-gray-900 dark:text-white'}`}>
+                    {content.name}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{content.desc}</div>
+                  {content.highlight && (
+                    <div className="mt-2 text-xs font-semibold text-red-600 dark:text-red-400">
+                      <FormattedMessage id="influencer.content.recommended" defaultMessage="High conversion!" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Example content by platform - 8 examples */}
+            <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* YouTube example 1 */}
+              <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-4 border border-red-200 dark:border-red-700">
+                <div className="text-2xl mb-2">🎬</div>
+                <p className="text-xs font-semibold text-red-600 dark:text-red-400 mb-1">YouTube:</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
+                  "<FormattedMessage id="influencer.example.yt1.text" defaultMessage="How I Got My Spanish Visa in 2 Weeks" />"
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/referral</p>
+              </div>
+
+              {/* YouTube example 2 */}
+              <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-4 border border-red-200 dark:border-red-700">
+                <div className="text-2xl mb-2">🎬</div>
+                <p className="text-xs font-semibold text-red-600 dark:text-red-400 mb-1">YouTube:</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
+                  "<FormattedMessage id="influencer.example.yt2.text" defaultMessage="Q&A: Answering Your Expat Questions Live" />"
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/referral</p>
+              </div>
+
+              {/* Instagram example 1 */}
+              <div className="bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-2xl p-4 border border-pink-200 dark:border-pink-700">
+                <div className="text-2xl mb-2">📸</div>
+                <p className="text-xs font-semibold text-pink-600 dark:text-pink-400 mb-1">Instagram Story:</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
+                  "<FormattedMessage id="influencer.example.ig1.text" defaultMessage="Swipe up for 5% off legal help abroad!" />"
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/referral</p>
+              </div>
+
+              {/* Instagram example 2 */}
+              <div className="bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-2xl p-4 border border-pink-200 dark:border-pink-700">
+                <div className="text-2xl mb-2">📸</div>
+                <p className="text-xs font-semibold text-pink-600 dark:text-pink-400 mb-1">Instagram Reel:</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
+                  "<FormattedMessage id="influencer.example.ig2.text" defaultMessage="3 things I wish I knew before moving abroad" />"
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/referral</p>
+              </div>
+
+              {/* TikTok example 1 */}
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl p-4 border border-blue-200 dark:border-blue-700">
+                <div className="text-2xl mb-2">🎵</div>
+                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">TikTok:</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
+                  "<FormattedMessage id="influencer.example.tt1.text" defaultMessage="POV: You need a lawyer but you're in Thailand" />"
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/referral</p>
+              </div>
+
+              {/* TikTok example 2 */}
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl p-4 border border-blue-200 dark:border-blue-700">
+                <div className="text-2xl mb-2">🎵</div>
+                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">TikTok:</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
+                  "<FormattedMessage id="influencer.example.tt2.text" defaultMessage="Expat hack: Get legal help in 5 minutes 🤯" />"
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/referral</p>
+              </div>
+
+              {/* Blog example 1 */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 border border-green-200 dark:border-green-700">
+                <div className="text-2xl mb-2">📝</div>
+                <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">Blog:</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
+                  "<FormattedMessage id="influencer.example.blog1.text" defaultMessage="Complete Guide: Portugal Digital Nomad Visa 2026" />"
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/referral</p>
+              </div>
+
+              {/* Blog example 2 */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 border border-green-200 dark:border-green-700">
+                <div className="text-2xl mb-2">📝</div>
+                <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">Blog:</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
+                  "<FormattedMessage id="influencer.example.blog2.text" defaultMessage="What To Do If You Lose Your Passport Abroad" />"
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/referral</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================== */}
+        {/* EARNINGS CALCULATOR (NEW) */}
+        {/* ============================================================== */}
+        <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 text-white">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-4">
+                <Calculator className="w-4 h-4" />
+                <FormattedMessage id="influencer.calculator.badge" defaultMessage="Earnings Calculator" />
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black mb-4">
+                <FormattedMessage id="influencer.calculator.title" defaultMessage="Calculate Your Potential" />
+              </h2>
+              <p className="text-xl text-white/90 max-w-2xl mx-auto">
+                <FormattedMessage id="influencer.calculator.subtitle" defaultMessage="Adjust the sliders based on your content frequency and audience engagement" />
+              </p>
+            </div>
+
+            {/* Calculator */}
+            <div className="bg-white rounded-3xl p-6 md:p-8 text-gray-900 max-w-2xl mx-auto">
+              <div className="space-y-6">
+                {/* Videos/posts per month */}
+                <div>
+                  <label className="flex items-center justify-between text-sm font-medium mb-2">
+                    <span>
+                      <FormattedMessage id="influencer.calculator.videos" defaultMessage="Videos/posts per month" />
+                    </span>
+                    <span className="text-green-600 font-bold text-lg">{calcVideos}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="30"
+                    value={calcVideos}
+                    onChange={(e) => setCalcVideos(parseInt(e.target.value))}
+                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>1</span>
+                    <span>15</span>
+                    <span>30</span>
+                  </div>
+                </div>
+
+                {/* Average views per video */}
+                <div>
+                  <label className="flex items-center justify-between text-sm font-medium mb-2">
+                    <span>
+                      <FormattedMessage id="influencer.calculator.views" defaultMessage="Average views per content" />
+                    </span>
+                    <span className="text-green-600 font-bold text-lg">{calcViewsPerVideo.toLocaleString()}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="500"
+                    max="100000"
+                    step="500"
+                    value={calcViewsPerVideo}
+                    onChange={(e) => setCalcViewsPerVideo(parseInt(e.target.value))}
+                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>500</span>
+                    <span>50K</span>
+                    <span>100K</span>
+                  </div>
+                </div>
+
+                {/* Click-through rate */}
+                <div>
+                  <label className="flex items-center justify-between text-sm font-medium mb-2">
+                    <span>
+                      <FormattedMessage id="influencer.calculator.clickrate" defaultMessage="Link click rate" />
+                    </span>
+                    <span className="text-green-600 font-bold text-lg">{calcClickRate}%</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="10"
+                    step="0.5"
+                    value={calcClickRate}
+                    onChange={(e) => setCalcClickRate(parseFloat(e.target.value))}
+                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0.5%</span>
+                    <span>5%</span>
+                    <span>10%</span>
+                  </div>
+                </div>
+
+                {/* Conversion rate */}
+                <div>
+                  <label className="flex items-center justify-between text-sm font-medium mb-2">
+                    <span>
+                      <FormattedMessage id="influencer.calculator.conversion" defaultMessage="Conversion rate (clicks → calls)" />
+                    </span>
+                    <span className="text-green-600 font-bold text-lg">{calcConversionRate}%</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="15"
+                    step="1"
+                    value={calcConversionRate}
+                    onChange={(e) => setCalcConversionRate(parseFloat(e.target.value))}
+                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>1%</span>
+                    <span>8%</span>
+                    <span>15%</span>
+                  </div>
+                </div>
+
+                {/* Results */}
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-6 text-white text-center">
+                  <p className="text-sm opacity-90 mb-1">
+                    <FormattedMessage id="influencer.calculator.result" defaultMessage="Estimated monthly earnings" />
+                  </p>
+                  <p className="text-5xl font-black">${monthlyEarnings}</p>
+                  <p className="text-sm opacity-90 mt-2">
+                    {monthlyViews.toLocaleString()} <FormattedMessage id="influencer.calculator.views.label" defaultMessage="views" /> × {calcClickRate}% = {monthlyClicks.toLocaleString()} <FormattedMessage id="influencer.calculator.clicks" defaultMessage="clicks" /> × {calcConversionRate}% = {monthlyClients} <FormattedMessage id="influencer.calculator.clients" defaultMessage="clients" /> × $10
+                  </p>
+                </div>
+
+                {/* Disclaimer */}
+                <p className="text-xs text-gray-500 text-center">
+                  <FormattedMessage
+                    id="influencer.calculator.disclaimer"
+                    defaultMessage="Results vary depending on your niche, audience engagement, and content quality. These are estimates, not guarantees."
+                  />
+                </p>
               </div>
             </div>
           </div>
@@ -371,20 +979,22 @@ const InfluencerLanding: React.FC = () => {
                     <FormattedMessage id="influencer.tools.box.title" defaultMessage="All Tools Included Free" />
                   </h3>
                   <p className="text-white/80">
-                    <FormattedMessage id="influencer.tools.box.desc" defaultMessage="No need to create your own graphics. We provide everything." />
+                    <FormattedMessage id="influencer.tools.box.desc" defaultMessage="No need to create your own graphics. We provide everything in 9 languages." />
                   </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {promoTools.map((tool, idx) => (
-                  <div key={idx} className="bg-white/10 rounded-xl px-3 py-2 text-center text-sm">
+                  <div key={idx} className={`rounded-xl px-3 py-2 text-center text-sm ${(tool as any).highlight ? 'bg-yellow-400 text-yellow-900' : 'bg-white/10'}`}>
                     <div className="text-2xl mb-1">{tool.icon}</div>
-                    <div>{tool.name}</div>
+                    <div className="font-medium">{tool.name}</div>
+                    {(tool as any).highlight && <div className="text-xs font-bold">NEW</div>}
                   </div>
                 ))}
               </div>
             </div>
 
+            {/* Platform cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {platforms.map((platform, idx) => (
                 <div
@@ -408,40 +1018,25 @@ const InfluencerLanding: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
 
-            {/* Example content ideas */}
-            <div className="mt-10 grid md:grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-5 border border-red-200 dark:border-red-700">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">🎬</div>
-                  <div>
-                    <p className="font-medium text-red-700 dark:text-red-300 mb-1">
-                      <FormattedMessage id="influencer.example1.title" defaultMessage="YouTube Video Idea:" />
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-                      "<FormattedMessage id="influencer.example1.text" defaultMessage="5 Things I Wish I Knew Before Moving Abroad - Legal Tips" />"
-                    </p>
-                    <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-bold">
-                      → <FormattedMessage id="influencer.example1.action" defaultMessage="Link SOS-Expat in description = $10 per call" />
-                    </p>
-                  </div>
-                </div>
+        {/* ============================================================== */}
+        {/* FOLLOWER DISCOUNT - Exclusive benefit */}
+        {/* ============================================================== */}
+        <section className="py-12 md:py-16 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-center gap-6">
+              <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 mx-auto md:mx-0">
+                <Gift className="w-10 h-10" />
               </div>
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">📸</div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white mb-1">
-                      <FormattedMessage id="influencer.example2.title" defaultMessage="Instagram Story:" />
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-                      "<FormattedMessage id="influencer.example2.text" defaultMessage="Need legal help abroad? I use this service → Swipe up for 5% off!" />"
-                    </p>
-                    <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-medium">
-                      → <FormattedMessage id="influencer.example2.action" defaultMessage="Follower books a call = $10 for you" />
-                    </p>
-                  </div>
-                </div>
+              <div className="text-center md:text-left">
+                <h3 className="text-2xl md:text-3xl font-black mb-2">
+                  <FormattedMessage id="influencer.discount.title" defaultMessage="Your Followers Get 5% Off" />
+                </h3>
+                <p className="text-white/90 text-lg">
+                  <FormattedMessage id="influencer.discount.desc" defaultMessage="Exclusive benefit! When your followers use your link, they automatically get 5% off their first call. It's a real value proposition for your community." />
+                </p>
               </div>
             </div>
           </div>
@@ -477,7 +1072,7 @@ const InfluencerLanding: React.FC = () => {
             </div>
 
             {/* Bonus earnings */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               {/* Find lawyer/helper partners */}
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-3xl p-6 border border-purple-100 dark:border-purple-800">
                 <div className="flex items-center gap-3 mb-4">
@@ -492,7 +1087,25 @@ const InfluencerLanding: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="influencer.earnings.partner.desc" defaultMessage="Find a lawyer or expat helper to join SOS-Expat. Every time they receive a call, you earn $5 passively!" />
+                  <FormattedMessage id="influencer.earnings.partner.desc" defaultMessage="Find a lawyer or expat helper to join. Earn $5 passively every time they receive a call!" />
+                </p>
+              </div>
+
+              {/* Recruit influencers */}
+              <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-3xl p-6 border border-orange-100 dark:border-orange-800">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-orange-100 dark:bg-orange-800 rounded-xl flex items-center justify-center">
+                    <Users className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black text-orange-600 dark:text-orange-400">5%</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <FormattedMessage id="influencer.earnings.network" defaultMessage="Of influencers you recruit" />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.earnings.network.desc" defaultMessage="Recruit other influencers. Earn 5% of their client earnings. Build your network!" />
                 </p>
               </div>
 
@@ -510,7 +1123,7 @@ const InfluencerLanding: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="influencer.earnings.discount.desc" defaultMessage="Your followers automatically get 5% off their first call. It's an exclusive benefit that makes your link more valuable!" />
+                  <FormattedMessage id="influencer.earnings.discount.desc" defaultMessage="Your followers get 5% off. Exclusive benefit that makes your link more valuable!" />
                 </p>
               </div>
             </div>
@@ -518,20 +1131,20 @@ const InfluencerLanding: React.FC = () => {
         </section>
 
         {/* ============================================================== */}
-        {/* FIND LAWYER/HELPER PARTNERS - Passive income */}
+        {/* BUILD A NETWORK - Like Chatter team section */}
         {/* ============================================================== */}
-        <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-purple-500 via-purple-600 to-pink-500 text-white">
+        <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 text-white">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-4">
                 <Network className="w-4 h-4" />
-                <FormattedMessage id="influencer.passive.badge" defaultMessage="Passive Income" />
+                <FormattedMessage id="influencer.network.badge" defaultMessage="Multiply Your Income" />
               </div>
               <h2 className="text-3xl md:text-5xl font-black mb-4">
-                <FormattedMessage id="influencer.passive.title" defaultMessage="Find Lawyer & Helper Partners" />
+                <FormattedMessage id="influencer.network.title" defaultMessage="Build Your Network, Earn More" />
               </h2>
               <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                <FormattedMessage id="influencer.passive.subtitle" defaultMessage="Know a lawyer or experienced expat? Help them join SOS-Expat and earn $5 every time they receive a call!" />
+                <FormattedMessage id="influencer.network.subtitle" defaultMessage="Recruit lawyers, helpers, and other influencers. Earn passive income from their success!" />
               </p>
             </div>
 
@@ -541,32 +1154,32 @@ const InfluencerLanding: React.FC = () => {
                 {/* You */}
                 <div className="flex flex-col items-center mb-6">
                   <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl">
-                    <Crown className="w-10 h-10 text-purple-500" />
+                    <Crown className="w-10 h-10 text-orange-500" />
                   </div>
                   <span className="mt-2 font-bold text-lg">
-                    <FormattedMessage id="influencer.passive.you" defaultMessage="YOU" />
+                    <FormattedMessage id="influencer.network.you" defaultMessage="YOU" />
                   </span>
                   <span className="text-white/80 text-sm">
-                    <FormattedMessage id="influencer.passive.you.earn" defaultMessage="$10/client + $5/call from partners" />
+                    <FormattedMessage id="influencer.network.you.earn" defaultMessage="$10/client + passive income" />
                   </span>
                 </div>
 
                 {/* Arrow */}
                 <div className="text-3xl mb-4">↓</div>
 
-                {/* Partner providers */}
+                {/* Network */}
                 <div className="flex justify-center gap-4 md:gap-8 mb-6">
                   {[
-                    { emoji: '⚖️', label: intl.formatMessage({ id: 'influencer.passive.lawyer', defaultMessage: 'Lawyer' }) },
-                    { emoji: '🌍', label: intl.formatMessage({ id: 'influencer.passive.helper', defaultMessage: 'Helper' }) },
-                    { emoji: '⚖️', label: intl.formatMessage({ id: 'influencer.passive.lawyer', defaultMessage: 'Lawyer' }) },
+                    { emoji: '⚖️', label: intl.formatMessage({ id: 'influencer.network.lawyer', defaultMessage: 'Lawyer' }), earn: '+$5/call' },
+                    { emoji: '🌍', label: intl.formatMessage({ id: 'influencer.network.helper', defaultMessage: 'Helper' }), earn: '+$5/call' },
+                    { emoji: '🎬', label: intl.formatMessage({ id: 'influencer.network.influencer', defaultMessage: 'Influencer' }), earn: '+5%' },
                   ].map((item, i) => (
                     <div key={i} className="flex flex-col items-center">
                       <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center text-2xl">
                         {item.emoji}
                       </div>
                       <span className="mt-1 text-sm font-medium">{item.label}</span>
-                      <span className="text-xs text-green-300">+$5/call</span>
+                      <span className="text-xs text-green-300">{item.earn}</span>
                     </div>
                   ))}
                 </div>
@@ -575,10 +1188,10 @@ const InfluencerLanding: React.FC = () => {
               {/* Example calculation */}
               <div className="mt-8 bg-white/10 rounded-2xl p-4 text-center">
                 <p className="font-semibold mb-2">
-                  <FormattedMessage id="influencer.passive.example" defaultMessage="Example: 3 lawyer partners, 20 calls/month each" />
+                  <FormattedMessage id="influencer.network.example" defaultMessage="Example: 3 partners + 2 influencers in your network" />
                 </p>
                 <p className="text-2xl font-black text-green-300">
-                  = $300/month <FormattedMessage id="influencer.passive.passive" defaultMessage="passive income!" />
+                  = $400+/month <FormattedMessage id="influencer.network.passive" defaultMessage="passive income!" />
                 </p>
               </div>
             </div>
@@ -587,10 +1200,10 @@ const InfluencerLanding: React.FC = () => {
             <div className="text-center mt-10">
               <button
                 onClick={() => navigate(registerRoute)}
-                className="group bg-white text-purple-600 font-bold px-8 py-4 rounded-2xl text-lg inline-flex items-center gap-3 hover:bg-gray-100 transition-all shadow-xl"
+                className="group bg-white text-red-600 font-bold px-8 py-4 rounded-2xl text-lg inline-flex items-center gap-3 hover:bg-gray-100 transition-all shadow-xl"
               >
                 <Rocket className="w-6 h-6" />
-                <FormattedMessage id="influencer.passive.cta" defaultMessage="Find Partners Today" />
+                <FormattedMessage id="influencer.network.cta" defaultMessage="Build Your Network Today" />
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
@@ -598,7 +1211,7 @@ const InfluencerLanding: React.FC = () => {
         </section>
 
         {/* ============================================================== */}
-        {/* PAYMENT METHODS */}
+        {/* PAYMENT METHODS - EXPANDED like Chatter */}
         {/* ============================================================== */}
         <section className="py-12 md:py-16 px-4 bg-white dark:bg-gray-950">
           <div className="max-w-4xl mx-auto text-center">
@@ -617,13 +1230,13 @@ const InfluencerLanding: React.FC = () => {
               ))}
             </div>
             <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="influencer.payment.note" defaultMessage="Minimum $50 • Processed in 48h" />
+              <FormattedMessage id="influencer.payment.note" defaultMessage="Minimum $50 • Processed in 48h • Worldwide" />
             </p>
           </div>
         </section>
 
         {/* ============================================================== */}
-        {/* FAQ */}
+        {/* FAQ - EXPANDED */}
         {/* ============================================================== */}
         <section className="py-16 md:py-24 px-4 bg-gray-50 dark:bg-gray-900">
           <div className="max-w-3xl mx-auto">
@@ -665,10 +1278,10 @@ const InfluencerLanding: React.FC = () => {
         <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-red-600 via-red-500 to-orange-500 text-white">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-5xl font-black mb-6">
-              <FormattedMessage id="influencer.final.title" defaultMessage="Ready to Become an Influencer?" />
+              <FormattedMessage id="influencer.final.title" defaultMessage="Ready to Monetize Your Audience?" />
             </h2>
             <p className="text-xl text-white/90 mb-8">
-              <FormattedMessage id="influencer.final.subtitle" defaultMessage="It's free, instant activation, promo tools included." />
+              <FormattedMessage id="influencer.final.subtitle" defaultMessage="It's free, instant activation, promo tools included, works worldwide." />
             </p>
 
             <button
@@ -687,11 +1300,15 @@ const InfluencerLanding: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-300" />
-                <FormattedMessage id="influencer.final.trust.2" defaultMessage="Instant Activation" />
+                <FormattedMessage id="influencer.final.trust.2" defaultMessage="No Min Followers" />
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-300" />
-                <FormattedMessage id="influencer.final.trust.3" defaultMessage="Promo Tools Included" />
+                <FormattedMessage id="influencer.final.trust.3" defaultMessage="All Countries" />
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-300" />
+                <FormattedMessage id="influencer.final.trust.4" defaultMessage="Promo Tools Included" />
               </div>
             </div>
           </div>

@@ -72,6 +72,7 @@ export function createService(): ReturnType<typeof createHybridService> {
 
 /**
  * Builds the initial message from booking data
+ * NOTE: This message is designed to trigger Perplexity web search for legal/factual questions
  */
 export function buildBookingMessage(
   booking: BookingData,
@@ -86,23 +87,25 @@ export function buildBookingMessage(
   const safeDescription = sanitizeUserInput(booking.description || "");
   const safeNationality = sanitizeUserInput(booking.clientNationality || "");
   const safeCategory = sanitizeUserInput(booking.category || "");
+  const safeSpecialties = booking.providerSpecialties?.map(s => sanitizeUserInput(s)).join(", ") || "";
 
-  parts.push(`Nouvelle consultation pour ${safeClientName}`);
+  // Header with factual keywords to trigger Perplexity search
+  parts.push(`Nouvelle consultation juridique pour ${safeClientName}`);
 
   if (country) {
-    parts.push(`Pays: ${country}`);
+    parts.push(`Pays concerné: ${country}`);
   }
 
   if (safeNationality) {
-    parts.push(`Nationalité: ${safeNationality}`);
+    parts.push(`Nationalité du client: ${safeNationality}`);
   }
 
   if (safeTitle) {
-    parts.push(`Sujet: ${safeTitle}`);
+    parts.push(`Sujet de la demande: ${safeTitle}`);
   }
 
   if (safeDescription) {
-    parts.push(`Description: ${safeDescription}`);
+    parts.push(`Description détaillée: ${safeDescription}`);
   }
 
   if (booking.urgency) {
@@ -112,12 +115,21 @@ export function buildBookingMessage(
       high: "Haute",
       critical: "CRITIQUE",
     };
-    parts.push(`Urgence: ${urgencyLabels[booking.urgency] || booking.urgency}`);
+    parts.push(`Niveau d'urgence: ${urgencyLabels[booking.urgency] || booking.urgency}`);
   }
 
   if (safeCategory) {
     parts.push(`Catégorie: ${safeCategory}`);
   }
+
+  // Add provider specialties to enrich context
+  if (safeSpecialties) {
+    parts.push(`Domaines d'expertise du prestataire: ${safeSpecialties}`);
+  }
+
+  // Add explicit request for legal research to ensure Perplexity is triggered
+  parts.push("");
+  parts.push("Merci de fournir une analyse juridique complète avec les textes de loi applicables, les procédures officielles et les contacts utiles (ambassade, consulat, administrations).");
 
   return parts.join("\n");
 }

@@ -992,10 +992,10 @@ export const executeCallTask = onRequest(
     // 120s was causing premature function timeout → only 2 retries executed
     timeoutSeconds: 540,
     memory: "512MiB",
-    cpu: 1,  // Required for memory > 512MiB or long-running functions
+    // CPU removed - Firebase will auto-assign appropriate value
     maxInstances: 10,
-    minInstances: 1,  // Keep warm to avoid cold start delays on call execution
-    concurrency: 1,
+    minInstances: 0,  // Temporarily set to 0 to free quota - TODO: restore to 1 after quota increase
+    concurrency: 5,  // Allow 5 concurrent calls per instance to reduce CPU usage
     // Secrets: TASKS_AUTH_SECRET for Cloud Tasks auth + Twilio + ENCRYPTION_KEY + Stripe (for refunds)
     secrets: [TASKS_AUTH_SECRET, ENCRYPTION_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST],
   },
