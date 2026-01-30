@@ -2098,8 +2098,10 @@ export const stripeWebhook = onRequest(
                 // await scheduleCallTask(callSessionId, 240);
                 console.log("⚠️ [checkout.session.completed] Scheduling skipped - handled by createAndScheduleCallHTTPS");
 
-                console.log("📨 Sending notifications...");
-                await sendPaymentNotifications(callSessionId, database);
+                // P0 FIX 2026-01-30: Ne plus envoyer de notifications ici - createAndScheduleCallHTTPS le fait déjà
+                // L'envoi double causait des SMS en double au prestataire
+                // await sendPaymentNotifications(callSessionId, database);
+                console.log("⚠️ [checkout.session.completed] Notifications skipped - handled by createAndScheduleCallHTTPS");
 
                 console.log("✅ Checkout processing complete");
               }
@@ -3056,16 +3058,10 @@ const handlePaymentIntentSucceeded = traceFunction(
             }
           );
 
-          // Send notifications (on garde les notifications)
-          try {
-            await sendPaymentNotifications(callSessionId, database);
-            console.log("✅ Notifications sent successfully");
-          } catch (notificationError) {
-            console.log(
-              "⚠️ Notification error (non-critical):",
-              notificationError
-            );
-          }
+          // P0 FIX 2026-01-30: Ne plus envoyer de notifications ici - createAndScheduleCallHTTPS le fait déjà
+          // L'envoi double causait des SMS en double au prestataire
+          // await sendPaymentNotifications(callSessionId, database);
+          console.log("⚠️ [payment_intent.succeeded] Notifications skipped - handled by createAndScheduleCallHTTPS");
         } catch (notificationError) {
           console.log("⚠️ Notification processing error:", notificationError);
           // Ne pas throw ici - les notifications ne sont pas critiques
