@@ -8,14 +8,17 @@
  *
  * This allows generating AI responses even though the booking_request
  * is stored in a different Firebase project (sos-urgently-ac307).
+ *
+ * IMPORTANT: This function reads from sos-urgently-ac307 (main SOS project).
  */
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
+import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "./sosFirestore";
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin for local project
 try {
   admin.app();
 } catch {
@@ -70,25 +73,22 @@ interface ClaudeResponse {
 // =============================================================================
 
 async function checkIfMultiProvider(providerId: string): Promise<boolean> {
-  // Query the SOS project's Firestore via Admin SDK
-  // Note: This requires the outils-sos-expat service account to have access
-  // to sos-urgently-ac307's Firestore
+  // Query the SOS project's Firestore (sos-urgently-ac307)
+  const db = getSosFirestore();
 
-  // For now, we'll check the local providers collection
-  const db = admin.firestore();
+  // Check if this provider is linked to a multi-provider account
+  const usersSnap = await db.collection("users")
+    .where("linkedProviderIds", "array-contains", providerId)
+    .limit(1)
+    .get();
 
-  // Check if this provider exists and is marked as multi
-  const providerDoc = await db.collection("providers").doc(providerId).get();
-
-  if (providerDoc.exists) {
-    const data = providerDoc.data();
-    // If provider has isMultiProviderLinked or similar flag
-    return data?.isMultiProviderLinked === true;
+  if (!usersSnap.empty) {
+    const userData = usersSnap.docs[0].data();
+    // Multi-provider = account with 2+ linked providers
+    return Array.isArray(userData.linkedProviderIds) && userData.linkedProviderIds.length >= 2;
   }
 
-  // Fallback: Check if providerId follows multi-provider naming convention
-  // Multi-provider IDs typically start with "aaa_"
-  return providerId.startsWith("aaa_");
+  return false;
 }
 
 // =============================================================================
@@ -191,7 +191,7 @@ export const generateMultiDashboardAiResponse = onCall<
 >(
   {
     region: "europe-west1",
-    secrets: [ANTHROPIC_API_KEY],
+    secrets: [ANTHROPIC_API_KEY, SOS_SERVICE_ACCOUNT],
     memory: "512MiB",
     timeoutSeconds: 60,
     maxInstances: 10,

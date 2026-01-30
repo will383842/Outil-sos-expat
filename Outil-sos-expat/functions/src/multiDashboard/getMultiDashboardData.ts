@@ -3,11 +3,14 @@
  * MULTI DASHBOARD - Get Dashboard Data
  * =============================================================================
  *
- * Callable function to fetch all multi-dashboard data securely.
- * Uses Admin SDK to bypass Firestore rules (session token validated).
+ * Callable function to fetch all multi-provider accounts from SOS-Expat.
+ *
+ * IMPORTANT: This function reads from sos-urgently-ac307 (main SOS project),
+ * where the admin console writes multi-provider accounts.
+ *
+ * Multi-provider account = account with linkedProviderIds.length >= 2
  *
  * OPTIMIZATIONS (2025-01):
- * - Only load accounts with isMultiProvider=true (not just any linkedProviderIds)
  * - Batch load all profiles in parallel instead of sequential
  * - Batch load all booking requests with IN query
  * - Cache provider data for reuse
@@ -16,8 +19,9 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
+import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "./sosFirestore";
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin for the local project (outils-sos-expat)
 try {
   admin.app();
 } catch {
@@ -159,6 +163,8 @@ export const getMultiDashboardData = onCall<
     region: "europe-west1",
     timeoutSeconds: 60,
     maxInstances: 10,
+    // CRITICAL: Include the SOS service account secret to access sos-urgently-ac307
+    secrets: [SOS_SERVICE_ACCOUNT],
     cors: [
       "https://sos-expat.com",
       "https://www.sos-expat.com",
@@ -178,42 +184,30 @@ export const getMultiDashboardData = onCall<
     }
 
     try {
-      const db = admin.firestore();
+      // ==========================================================================
+      // Use the SOS project's Firestore (sos-urgently-ac307)
+      // This is where the admin console writes multi-provider accounts
+      // ==========================================================================
+      const db = getSosFirestore();
+
+      logger.info("[getMultiDashboardData] Connected to SOS Firestore (sos-urgently-ac307)");
 
       // ==========================================================================
-      // 1. Load ONLY TRUE multi-provider accounts
+      // 1. Load multi-provider accounts (accounts with 2+ linked providers)
       // ==========================================================================
-      // A TRUE multi-provider account = 2 or more providers linked to the same user
-      // We check both:
-      // - isMultiProvider flag (explicitly set in admin)
-      // - OR linkedProviderIds.length >= 2 (fallback for accounts not yet flagged)
+      // Multi-provider = account managing 2 or more providers
 
-      // First, try to get users marked as multi-provider
-      const flaggedUsersSnap = await db.collection("users")
-        .where("isMultiProvider", "==", true)
-        .get();
+      const allUsersSnap = await db.collection("users").get();
+      const usersToProcess = allUsersSnap.docs.filter(doc => {
+        const data = doc.data();
+        const linkedIds = data.linkedProviderIds;
+        // Multi-provider = 2 or more providers linked
+        return Array.isArray(linkedIds) && linkedIds.length >= 2;
+      });
 
-      // If no flagged users, fall back to checking linkedProviderIds length
-      // This handles the case where the database hasn't been repaired yet
-      let usersToProcess: FirebaseFirestore.QueryDocumentSnapshot[] = [];
-
-      if (flaggedUsersSnap.empty) {
-        // Fallback: load users with 2+ linked providers
-        logger.info("[getMultiDashboardData] No isMultiProvider flag found, checking linkedProviderIds");
-        const allUsersSnap = await db.collection("users").get();
-        usersToProcess = allUsersSnap.docs.filter(doc => {
-          const data = doc.data();
-          const linkedIds = data.linkedProviderIds;
-          // TRUE multi-provider = 2 or more providers
-          return Array.isArray(linkedIds) && linkedIds.length >= 2;
-        });
-      } else {
-        usersToProcess = flaggedUsersSnap.docs;
-      }
-
-      logger.info("[getMultiDashboardData] Found multi-provider users", {
+      logger.info("[getMultiDashboardData] Found multi-provider accounts", {
         count: usersToProcess.length,
-        source: flaggedUsersSnap.empty ? "linkedProviderIds fallback" : "isMultiProvider flag",
+        totalUsers: allUsersSnap.size,
         elapsed: Date.now() - startTime,
       });
 
@@ -290,10 +284,11 @@ export const getMultiDashboardData = onCall<
       for (let i = 0; i < providerIdsArray.length; i += BATCH_SIZE) {
         const batch = providerIdsArray.slice(i, i + BATCH_SIZE);
 
+        // Note: Removed orderBy to avoid requiring a composite index
+        // Sorting is done later when building accounts
         const bookingsSnap = await db
           .collection("booking_requests")
           .where("providerId", "in", batch)
-          .orderBy("createdAt", "desc")
           .limit(200) // Limit total to avoid excessive data
           .get();
 
@@ -428,8 +423,14 @@ export const getMultiDashboardData = onCall<
       };
 
     } catch (error) {
-      logger.error("[getMultiDashboardData] Error", { error });
-      throw new HttpsError("internal", "Failed to load dashboard data");
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error("[getMultiDashboardData] Error", {
+        message: errorMessage,
+        stack: errorStack,
+        error: JSON.stringify(error, Object.getOwnPropertyNames(error || {})),
+      });
+      throw new HttpsError("internal", `Failed to load dashboard data: ${errorMessage}`);
     }
   }
 );

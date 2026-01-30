@@ -139,7 +139,7 @@ interface PaymentIntentResponse {
   serviceType: string;
   status: string;
   expiresAt: string;
-  useDirectCharges?: boolean; // P0 SECURITY FIX: Boolean instead of exposing stripeAccountId
+  useDirectCharges?: boolean;
 }
 
 interface CreateAndScheduleCallData {
@@ -2071,11 +2071,10 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           throw new Error(t("err.noClientSecret"));
         }
 
-        // P0 SECURITY FIX: stripeAccountId n'est plus exposé côté frontend
-        // Pour Direct Charges, le clientSecret encode déjà l'information du compte connecté
-        // confirmCardPayment utilise le flux standard sans avoir besoin de stripeAccount
+        // Pour Destination Charges, le PaymentIntent est créé sur la plateforme
+        // Le transfert vers le provider est automatique après capture
         if (resData?.useDirectCharges) {
-          console.log("[DEBUG] Direct Charges mode enabled (provider has completed KYC)");
+          console.log("[DEBUG] Provider has completed KYC - using Destination Charges");
         }
 
         const chosenCardElement = isMobile
@@ -2108,9 +2107,6 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
         console.log("[DEBUG] " + "🔵 actuallySubmitPayment: Appel confirmCardPayment...");
 
-        // Pour Direct Charges, le PaymentIntent est créé server-side avec stripeAccount
-        // Le clientSecret encode l'information du compte connecté
-        // confirmCardPayment utilise le flux standard (pas besoin de passer stripeAccount)
         const result = await stripe!.confirmCardPayment(
           clientSecret,
           {

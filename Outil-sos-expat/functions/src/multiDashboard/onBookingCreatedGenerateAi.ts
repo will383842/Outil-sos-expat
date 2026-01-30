@@ -11,6 +11,10 @@
  * - Provider document with hasActiveSubscription = true
  * - Provider document with freeTrialUntil in the future
  *
+ * NOTE: This trigger listens to booking_requests in outils-sos-expat.
+ * For it to work, booking_requests must be synced from sos-urgently-ac307
+ * OR this function should be moved to the SOS project.
+ *
  * This is separate from the main aiOnBookingCreated trigger because:
  * 1. It listens to booking_requests (not bookings)
  * 2. It generates a "welcome" response, not a full analysis
@@ -21,8 +25,9 @@ import * as admin from "firebase-admin";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
+import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "./sosFirestore";
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin for local project
 try {
   admin.app();
 } catch {
@@ -82,7 +87,8 @@ interface AiAccessResult {
 }
 
 async function checkProviderAiAccess(providerId: string): Promise<AiAccessResult> {
-  const db = admin.firestore();
+  // Use SOS Firestore to check provider access
+  const db = getSosFirestore();
   const now = new Date();
 
   // Check provider document for AI access flags (synced from SOS)
@@ -226,7 +232,7 @@ export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
   {
     document: "booking_requests/{bookingId}",
     region: "europe-west1",
-    secrets: [ANTHROPIC_API_KEY],
+    secrets: [ANTHROPIC_API_KEY, SOS_SERVICE_ACCOUNT],
     memory: "512MiB",
     timeoutSeconds: 60,
     maxInstances: 10,

@@ -152,12 +152,14 @@ interface PaymentDoc {
   environment?: string;
   mode?: 'live' | 'test';
   callSessionId?: string;
-  /* ===== Direct Charges ===== */
-  /** Stripe Account ID du provider (charge créée sur son compte) */
+  /* ===== Destination Charges (modèle actif) ===== */
+  /** Stripe Account ID du provider (pour transfer_data.destination) */
   providerStripeAccountId?: string;
   /** Commission SOS-Expat en centimes (application_fee_amount) */
   applicationFeeAmountCents?: number;
-  /** Indique si le paiement utilise Direct Charges */
+  /** Indique si le paiement utilise Destination Charges (KYC complet, transfert auto) */
+  useDestinationCharges?: boolean;
+  /** @deprecated - conservé pour compatibilité avec anciens paiements Direct Charges */
   useDirectCharges?: boolean;
   /* ===== KYC / Pending Transfer ===== */
   /** Indique si le provider avait complété son KYC au moment du paiement */
@@ -168,8 +170,6 @@ interface PaymentDoc {
   destinationAccountId?: string;
   /** @deprecated - conservé pour compatibilité avec anciens paiements */
   transferAmountCents?: number;
-  /** @deprecated - conservé pour compatibilité avec anciens paiements */
-  useDestinationCharges?: boolean;
 }
 
 /* ===================================================================
@@ -472,10 +472,13 @@ export class StripeManager {
       const commissionAmountCents = toCents(commissionEuros);
       const providerAmountCents = toCents(data.providerAmount);
 
-      // ===== DIRECT CHARGES vs PLATFORM ESCROW =====
+      // ===== DESTINATION CHARGES vs PLATFORM ESCROW =====
       // Priorité: providerStripeAccountId > destinationAccountId (legacy)
+      // FIX 2026-01-30: Utiliser DESTINATION CHARGES au lieu de DIRECT CHARGES
+      // - Destination Charges: PaymentIntent créé sur la PLATEFORME, transfert auto au provider
+      // - Direct Charges: PaymentIntent créé sur le COMPTE CONNECT (problème frontend)
       const providerStripeAccountId = data.providerStripeAccountId || data.destinationAccountId;
-      let useDirectCharges = false;
+      let useDestinationCharges = false;
       let providerKycComplete = false;
       let pendingTransferRequired = false;
 
@@ -497,20 +500,21 @@ export class StripeManager {
           const connectedAccount = await this.stripe.accounts.retrieve(providerStripeAccountId);
 
           if (connectedAccount.charges_enabled) {
-            // ===== KYC COMPLET: Direct Charges =====
-            // L'argent va directement au provider
-            useDirectCharges = true;
+            // ===== KYC COMPLET: Destination Charges =====
+            // PaymentIntent créé sur la plateforme, transfert automatique au provider après capture
+            useDestinationCharges = true;
             providerKycComplete = true;
-            console.log('[createPaymentIntent] KYC complet - Mode DIRECT CHARGES actif:', {
+            console.log('[createPaymentIntent] KYC complet - Mode DESTINATION CHARGES actif:', {
               accountId: providerStripeAccountId,
               chargesEnabled: connectedAccount.charges_enabled,
               payoutsEnabled: connectedAccount.payouts_enabled,
               country: connectedAccount.country,
+              note: 'PaymentIntent créé sur plateforme, transfert auto après capture',
             });
           } else {
             // ===== KYC INCOMPLET: Platform Escrow =====
             // L'argent va sur le compte plateforme, transfert différé quand KYC sera fait
-            useDirectCharges = false;
+            useDestinationCharges = false;
             providerKycComplete = false;
             pendingTransferRequired = true;
             console.log('[createPaymentIntent] KYC incomplet - Mode PLATFORM ESCROW actif:', {
@@ -523,7 +527,7 @@ export class StripeManager {
         } catch (stripeError) {
           // Compte inexistant ou erreur - utiliser mode plateforme
           console.warn('[createPaymentIntent] Erreur verification compte Connect, utilisation mode plateforme:', stripeError);
-          useDirectCharges = false;
+          useDestinationCharges = false;
           providerKycComplete = false;
           pendingTransferRequired = true;
 
@@ -558,7 +562,7 @@ export class StripeManager {
         providerEuros: data.providerAmount,
         providerReceivesCents: amountCents - commissionAmountCents,
         mode: this.mode,
-        useDirectCharges,
+        useDestinationCharges,
         providerKycComplete,
         pendingTransferRequired,
         providerStripeAccountId: providerStripeAccountId || 'N/A (platform mode)',
@@ -566,21 +570,26 @@ export class StripeManager {
 
       console.log("data in createPaymentIntent", data.callSessionId);
 
-      // ===== DIRECT CHARGES: Construction des paramètres =====
-      // Avec Direct Charges:
-      // - La charge est créée SUR LE COMPTE DU PROVIDER (stripeAccount option)
-      // - Le montant total va au provider
-      // - application_fee_amount définit la commission SOS-Expat qui est prélevée
+      // ===== DESTINATION CHARGES: Construction des paramètres =====
+      // FIX 2026-01-30: Utiliser Destination Charges au lieu de Direct Charges
+      // Avec Destination Charges:
+      // - La charge est créée SUR LA PLATEFORME (pas sur le compte Connect)
+      // - transfer_data.destination spécifie le compte Connect du provider
+      // - application_fee_amount définit la commission SOS-Expat
+      // - Stripe transfère automatiquement (amount - application_fee) au provider après capture
       // - capture_method: 'manual' permet l'escrow pendant l'appel
       const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
         amount: amountCents,
         currency,
         capture_method: 'manual', // ESCROW: L'argent est bloqué jusqu'à capture après appel >= 2 min
         automatic_payment_methods: { enabled: true },
-        // ===== DIRECT CHARGES: application_fee_amount =====
-        // Cette commission va DIRECTEMENT à SOS-Expat (compte plateforme)
-        // Le reste (amountCents - commissionAmountCents) reste sur le compte du provider
-        ...(useDirectCharges && commissionAmountCents > 0 ? {
+        // ===== DESTINATION CHARGES: transfer_data + application_fee_amount =====
+        // - transfer_data.destination: le provider reçoit (amount - application_fee) après capture
+        // - application_fee_amount: SOS-Expat garde cette commission
+        ...(useDestinationCharges && providerStripeAccountId ? {
+          transfer_data: {
+            destination: providerStripeAccountId,
+          },
           application_fee_amount: commissionAmountCents,
         } : {}),
         metadata: {
@@ -595,7 +604,8 @@ export class StripeManager {
           providerAmountEuros: data.providerAmount.toFixed(2),
           environment: process.env.NODE_ENV || 'development',
           mode: this.mode,
-          useDirectCharges: String(useDirectCharges),
+          useDestinationCharges: String(useDestinationCharges),
+          useDirectCharges: 'false', // Legacy: toujours false maintenant
           providerKycComplete: String(providerKycComplete),
           pendingTransferRequired: String(pendingTransferRequired),
           ...(providerStripeAccountId ? { providerStripeAccountId } : {}),
@@ -625,36 +635,29 @@ export class StripeManager {
       console.log(`[createPaymentIntent] Idempotency key: callSessionId=${data.callSessionId ? 'present' : 'MISSING (DEV fallback)'}`);
 
 
-      // ===== DIRECT CHARGES: Création sur le compte du provider =====
-      // La différence clé avec Destination Charges:
-      // - stripeAccount dans les options fait créer la charge SUR le compte du provider
-      // - L'argent va directement au provider, pas à la plateforme puis transfert
+      // ===== DESTINATION CHARGES: Création sur la plateforme =====
+      // FIX 2026-01-30: Toujours créer sur la plateforme (pas de stripeAccount option)
+      // - transfer_data.destination dans les params gère le transfert auto au provider
+      // - L'argent va à la plateforme, Stripe transfère au provider après capture
       let paymentIntent: Stripe.PaymentIntent;
 
       // P0 FIX 2026-01-30: Wrap Stripe API calls with circuit breaker for resilience
       try {
-        if (useDirectCharges && providerStripeAccountId) {
-          console.log('[createPaymentIntent] Création PaymentIntent sur le compte du provider (Direct Charges)');
-          paymentIntent = await stripeCircuitBreaker.execute(() =>
-            this.stripe!.paymentIntents.create(
-              paymentIntentParams,
-              {
-                idempotencyKey: idempotencyKey.substring(0, 255),
-                stripeAccount: providerStripeAccountId, // DIRECT CHARGES: Charge créée sur le compte du provider
-              }
-            )
-          );
-        } else {
-          console.log('[createPaymentIntent] Création PaymentIntent sur le compte plateforme (fallback mode)');
-          paymentIntent = await stripeCircuitBreaker.execute(() =>
-            this.stripe!.paymentIntents.create(
-              paymentIntentParams,
-              {
-                idempotencyKey: idempotencyKey.substring(0, 255),
-              }
-            )
-          );
-        }
+        // Toujours créer sur le compte plateforme
+        // Si useDestinationCharges=true, les params contiennent transfer_data.destination
+        console.log('[createPaymentIntent] Création PaymentIntent sur le compte plateforme', {
+          useDestinationCharges,
+          hasTransferData: useDestinationCharges && !!providerStripeAccountId,
+        });
+        paymentIntent = await stripeCircuitBreaker.execute(() =>
+          this.stripe!.paymentIntents.create(
+            paymentIntentParams,
+            {
+              idempotencyKey: idempotencyKey.substring(0, 255),
+              // PAS de stripeAccount ici - le PaymentIntent est créé sur la plateforme
+            }
+          )
+        );
       } catch (error) {
         if (error instanceof CircuitBreakerError) {
           console.error('[createPaymentIntent] Circuit breaker OPEN - Stripe API unavailable');
@@ -664,15 +667,16 @@ export class StripeManager {
       }
       console.log('paymentIntent created with idempotency key:', idempotencyKey.substring(0, 50) + '...');
 
-      console.log('PaymentIntent Stripe cree (DIRECT CHARGES):', {
+      console.log('PaymentIntent Stripe cree (DESTINATION CHARGES):', {
         id: paymentIntent.id,
         amount: paymentIntent.amount,
         amountInEuros: paymentIntent.amount / 100,
         status: paymentIntent.status,
         mode: this.mode,
-        useDirectCharges,
-        applicationFeeAmount: useDirectCharges ? commissionAmountCents : 0,
-        createdOnAccount: useDirectCharges ? providerStripeAccountId : 'plateforme',
+        useDestinationCharges,
+        applicationFeeAmount: useDestinationCharges ? commissionAmountCents : 0,
+        transferDestination: useDestinationCharges ? providerStripeAccountId : 'N/A (platform escrow)',
+        createdOnAccount: 'plateforme (toujours)',
       });
 
       await this.savePaymentRecord(
@@ -683,9 +687,10 @@ export class StripeManager {
           commissionAmountCents,
           providerAmountCents,
           currency,
-          useDirectCharges,
+          useDirectCharges: false, // Legacy: toujours false (on utilise Destination Charges)
+          useDestinationCharges,
           providerStripeAccountId,
-          applicationFeeAmountCents: useDirectCharges ? commissionAmountCents : undefined,
+          applicationFeeAmountCents: useDestinationCharges ? commissionAmountCents : undefined,
           pendingTransferRequired,
           providerKycComplete,
         }
@@ -740,7 +745,7 @@ export class StripeManager {
         status: paymentIntent.status,
         amount: paymentIntent.amount,
         currency: paymentIntent.currency,
-        useDirectCharges,
+        useDestinationCharges,
         pendingTransferRequired,
       });
 

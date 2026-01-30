@@ -728,11 +728,15 @@ const Login: React.FC = () => {
       const redirectFromStorage = sessionStorage.getItem("loginRedirect");
       const redirectFromParams = searchParams.get("redirect");
 
-      // ✅ CHATTER REDIRECT: Rediriger les chatters vers leur dashboard dédié
-      // Les rôles sont mutuellement exclusifs : un chatter n'est ni client, ni avocat, ni expat
+      // ✅ ROLE-BASED REDIRECT: Rediriger vers le dashboard approprié selon le rôle
+      // Les rôles sont mutuellement exclusifs : chatter, influencer, blogger ne sont ni client, ni avocat, ni expat
       let defaultDashboard = "/dashboard";
       if (user.role === "chatter") {
         defaultDashboard = "/chatter/dashboard";
+      } else if (user.role === "influencer") {
+        defaultDashboard = "/influencer/tableau-de-bord";
+      } else if (user.role === "blogger") {
+        defaultDashboard = "/blogger/tableau-de-bord";
       }
 
       const rawRedirectToUse = redirectFromStorage || redirectFromParams || defaultDashboard;

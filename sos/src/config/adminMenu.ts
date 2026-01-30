@@ -61,6 +61,7 @@ import {
   GraduationCap,
   // Blogger icons
   FolderOpen,
+  Code,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -694,6 +695,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: BookOpen,
         badge: "NEW",
         descriptionKey: "admin.menu.bloggersGuide.description",
+      },
+      {
+        id: "bloggers-widgets",
+        labelKey: "admin.menu.bloggersWidgets",
+        path: "/admin/bloggers/widgets",
+        icon: Code,
+        badge: "NEW",
+        descriptionKey: "admin.menu.bloggersWidgets.description",
       },
       {
         id: "bloggers-config",

@@ -6,13 +6,18 @@
  * Callable function to generate SSO token for AI tool access from multi-dashboard.
  * Uses session token authentication (no Firebase Auth required).
  * Returns a custom token that can be used to sign in to ia.sos-expat.com
+ *
+ * IMPORTANT: This function reads from sos-urgently-ac307 but signs tokens
+ * with outils-sos-expat (the project where ia.sos-expat.com runs).
  */
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
+import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "./sosFirestore";
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin for local project (outils-sos-expat)
+// This is used to sign custom tokens for the Outil IA
 try {
   admin.app();
 } catch {
@@ -55,6 +60,7 @@ export const generateMultiDashboardOutilToken = onCall<
     region: "europe-west1",
     timeoutSeconds: 30,
     maxInstances: 10,
+    secrets: [SOS_SERVICE_ACCOUNT],
     cors: [
       "https://sos-expat.com",
       "https://www.sos-expat.com",
@@ -81,7 +87,9 @@ export const generateMultiDashboardOutilToken = onCall<
     }
 
     try {
-      const db = admin.firestore();
+      // Use SOS Firestore for reading data (sos-urgently-ac307)
+      const db = getSosFirestore();
+      // Use local auth for signing tokens (outils-sos-expat - where ia.sos-expat.com runs)
       const auth = admin.auth();
 
       // 1. Verify the provider exists (try sos_profiles first, then providers)

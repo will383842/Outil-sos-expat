@@ -19,6 +19,8 @@
 // Payment Method Management
 export { savePaymentMethod } from './savePaymentMethod';
 export { getPaymentMethods } from './getPaymentMethods';
+export { deletePaymentMethod } from './deletePaymentMethod';
+export { setDefaultPaymentMethod } from './setDefaultPaymentMethod';
 
 // Withdrawal Operations
 export { requestWithdrawal } from './requestWithdrawal';

@@ -6,14 +6,18 @@
  * Callable function to validate dashboard password securely.
  * Password is stored in Google Cloud Secret Manager for security.
  * Returns a session token on success.
+ *
+ * IMPORTANT: This function reads/writes to sos-urgently-ac307 (main SOS project)
+ * for config and audit logs.
  */
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
+import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "./sosFirestore";
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin for local project
 try {
   admin.app();
 } catch {
@@ -58,7 +62,7 @@ export const validateDashboardPassword = onCall<
     region: "europe-west1",
     timeoutSeconds: 30,
     maxInstances: 10,
-    secrets: [MULTI_DASHBOARD_PASSWORD], // Use secret from Secret Manager
+    secrets: [MULTI_DASHBOARD_PASSWORD, SOS_SERVICE_ACCOUNT], // Use secrets from Secret Manager
     cors: [
       "https://sos-expat.com",
       "https://www.sos-expat.com",
@@ -81,7 +85,8 @@ export const validateDashboardPassword = onCall<
     }
 
     try {
-      const db = admin.firestore();
+      // Use SOS Firestore (sos-urgently-ac307) for config and audit logs
+      const db = getSosFirestore();
 
       // Get dashboard config (for enabled flag only)
       const configDoc = await db.doc("admin_config/multi_dashboard").get();

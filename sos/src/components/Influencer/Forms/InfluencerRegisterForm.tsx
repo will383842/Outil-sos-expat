@@ -87,9 +87,14 @@ interface InfluencerFormData {
   bio: string;
   communitySize: string;
   communityNiche: string;
+  referralCode: string;
 }
 
-const InfluencerRegisterForm: React.FC = () => {
+interface InfluencerRegisterFormProps {
+  referralCode?: string;
+}
+
+const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referralCode = '' }) => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const { user } = useAuth();
@@ -112,6 +117,7 @@ const InfluencerRegisterForm: React.FC = () => {
     bio: '',
     communitySize: '',
     communityNiche: '',
+    referralCode: referralCode,
   });
 
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
@@ -250,6 +256,7 @@ const InfluencerRegisterForm: React.FC = () => {
         bio: formData.bio || undefined,
         communitySize: formData.communitySize ? parseInt(formData.communitySize) : undefined,
         communityNiche: formData.communityNiche || undefined,
+        recruiterCode: formData.referralCode || undefined,
       });
 
       const data = result.data as { success: boolean; affiliateCodeClient: string };

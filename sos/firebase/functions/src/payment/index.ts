@@ -18,6 +18,8 @@
 export {
   savePaymentMethod as paymentSaveMethod,
   getPaymentMethods as paymentGetMethods,
+  deletePaymentMethod as paymentDeleteMethod,
+  setDefaultPaymentMethod as paymentSetDefault,
   requestWithdrawal as paymentRequestWithdrawal,
   cancelWithdrawal as paymentCancelWithdrawal,
   getWithdrawalStatus as paymentGetStatus,

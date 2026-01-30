@@ -7,6 +7,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
+import { useSearchParams } from 'react-router-dom';
+import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +33,7 @@ import {
   ChevronDown,
   Search,
   Check,
+  Gift,
 } from 'lucide-react';
 import {
   FormInput,
@@ -88,14 +91,28 @@ interface BloggerFormData {
   blogTraffic: string;
   blogDescription: string;
   definitiveRoleAcknowledged: boolean;
+  referralCode: string;
 }
 
 const BloggerRegister: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { language } = useApp();
   const locale = (language || 'en') as string;
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+
+  // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
+  const referralCodeFromUrl = useMemo(() => {
+    return searchParams.get('ref')
+      || searchParams.get('referralCode')
+      || searchParams.get('code')
+      || searchParams.get('sponsor')
+      || '';
+  }, [searchParams]);
+
+  const dashboardRoute = `/${getTranslatedRouteSlug('blogger-dashboard' as RouteKey, langCode)}`;
 
   const [formData, setFormData] = useState<BloggerFormData>({
     firstName: '',
@@ -111,6 +128,7 @@ const BloggerRegister: React.FC = () => {
     blogTraffic: '1k-5k',
     blogDescription: '',
     definitiveRoleAcknowledged: false,
+    referralCode: referralCodeFromUrl,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -307,12 +325,13 @@ const BloggerRegister: React.FC = () => {
         blogTraffic: formData.blogTraffic as RegisterBloggerInput['blogTraffic'],
         blogDescription: formData.blogDescription,
         definitiveRoleAcknowledged: formData.definitiveRoleAcknowledged,
+        recruiterCode: formData.referralCode || undefined,
       });
 
       if (result.data.success) {
         setSuccess(true);
         setTimeout(() => {
-          navigate('/blogger/tableau-de-bord');
+          navigate(dashboardRoute);
         }, 2000);
       } else {
         setError(result.data.message);
@@ -359,6 +378,29 @@ const BloggerRegister: React.FC = () => {
 
           {/* Form Card */}
           <div className={formStyles.formCard}>
+            {/* Referral code banner if present */}
+            {referralCodeFromUrl && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Gift className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-green-800 dark:text-green-300">
+                      <FormattedMessage id="blogger.register.referralDetected" defaultMessage="You've been referred!" />
+                    </p>
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      <FormattedMessage
+                        id="blogger.register.referralCode.applied"
+                        defaultMessage="Referral code {code} will be applied automatically"
+                        values={{ code: <strong>{referralCodeFromUrl}</strong> }}
+                      />
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-8">
               <FormError error={error} />
 

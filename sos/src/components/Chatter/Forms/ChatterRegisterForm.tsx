@@ -1,6 +1,7 @@
 /**
  * ChatterRegisterForm - Mobile-first registration form for chatters
- * Harmonized 2026 UX with phone code selector and multi-language selection
+ * Harmonized 2026 UX - NO phone required at registration
+ * Phone will be collected after quiz for WhatsApp community
  */
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -8,7 +9,6 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import {
   User,
   Mail,
-  Phone,
   Globe,
   Languages,
   Gift,
@@ -51,8 +51,6 @@ export interface ChatterRegistrationData {
   firstName: string;
   lastName: string;
   email: string;
-  phoneCode: string;
-  phoneNumber: string;
   country: string;
   languages: string[];
   referralCode?: string;
@@ -64,6 +62,8 @@ interface ChatterRegisterFormProps {
   loading?: boolean;
   error?: string | null;
   success?: boolean;
+  /** If true, the referral code field will be hidden (already shown in parent) */
+  hideReferralField?: boolean;
 }
 
 const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
@@ -72,6 +72,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   loading = false,
   error,
   success = false,
+  hideReferralField = false,
 }) => {
   const intl = useIntl();
   const { language } = useApp();
@@ -81,32 +82,23 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     firstName: initialData?.firstName || '',
     lastName: initialData?.lastName || '',
     email: initialData?.email || '',
-    phoneCode: initialData?.phoneCode || '+33',
-    phoneNumber: initialData?.phoneNumber || '',
     country: initialData?.country || '',
     languages: initialData?.languages || ['en'],
     referralCode: initialData?.referralCode || '',
   });
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [phoneCodeSearch, setPhoneCodeSearch] = useState('');
   const [languageSearch, setLanguageSearch] = useState('');
-  const [showPhoneDropdown, setShowPhoneDropdown] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
 
-  const phoneDropdownRef = useRef<HTMLDivElement>(null);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (phoneDropdownRef.current && !phoneDropdownRef.current.contains(e.target as Node)) {
-        setShowPhoneDropdown(false);
-        setPhoneCodeSearch('');
-      }
       if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
         setShowCountryDropdown(false);
         setCountrySearch('');
@@ -119,17 +111,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // Filter phone codes based on search
-  const filteredPhoneCodes = useMemo(() => {
-    if (!phoneCodeSearch) return phoneCodesData;
-    const search = phoneCodeSearch.toLowerCase();
-    return phoneCodesData.filter(entry =>
-      getCountryName(entry, locale).toLowerCase().includes(search) ||
-      entry.phoneCode.includes(search) ||
-      entry.code.toLowerCase().includes(search)
-    );
-  }, [phoneCodeSearch, locale]);
 
   // Filter countries based on search
   const filteredCountries = useMemo(() => {
@@ -152,12 +133,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     );
   }, [languageSearch, locale]);
 
-  // Get selected phone code entry
-  const selectedPhoneEntry = useMemo(() =>
-    phoneCodesData.find(e => e.phoneCode === formData.phoneCode),
-    [formData.phoneCode]
-  );
-
   // Get selected country entry
   const selectedCountryEntry = useMemo(() =>
     phoneCodesData.find(e => e.code === formData.country),
@@ -175,17 +150,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         return newErrors;
       });
     }
-  };
-
-  // Select phone code
-  const selectPhoneCode = (entry: PhoneCodeEntry) => {
-    setFormData(prev => ({
-      ...prev,
-      phoneCode: entry.phoneCode,
-      country: prev.country || entry.code
-    }));
-    setShowPhoneDropdown(false);
-    setPhoneCodeSearch('');
   };
 
   // Select country
@@ -244,10 +208,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       errors.email = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' });
-    }
-
-    if (!formData.phoneNumber.trim()) {
-      errors.phoneNumber = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
     }
 
     if (!formData.country) {
@@ -326,100 +286,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         required
         autoComplete="email"
       />
-
-      {/* Phone with country code selector */}
-      <div className="space-y-2">
-        <label className={formStyles.label}>
-          <FormattedMessage id="form.phone" defaultMessage="Phone number" />
-          <span className="text-red-500 ml-0.5">*</span>
-        </label>
-
-        <div className="flex gap-3">
-          {/* Phone code dropdown */}
-          <div ref={phoneDropdownRef} className="relative flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowPhoneDropdown(!showPhoneDropdown)}
-              className={`
-                ${formStyles.input}
-                w-[120px] md:w-[140px]
-                flex items-center justify-between gap-1 px-3
-              `}
-            >
-              <span className="flex items-center gap-2">
-                {selectedPhoneEntry && (
-                  <>
-                    <span className="text-lg">{getFlag(selectedPhoneEntry.code)}</span>
-                    <span className="text-sm font-medium">{selectedPhoneEntry.phoneCode}</span>
-                  </>
-                )}
-              </span>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showPhoneDropdown ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showPhoneDropdown && (
-              <div className={`${formStyles.dropdown} w-[300px] md:w-[340px]`}>
-                <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={phoneCodeSearch}
-                      onChange={(e) => setPhoneCodeSearch(e.target.value)}
-                      placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search country...' })}
-                      className="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-xl border-0 focus:ring-2 focus:ring-red-500/30"
-                      autoFocus
-                    />
-                  </div>
-                </div>
-                <div className="max-h-[280px] overflow-y-auto overscroll-contain">
-                  {filteredPhoneCodes.map((entry) => (
-                    <button
-                      key={entry.code}
-                      type="button"
-                      onClick={() => selectPhoneCode(entry)}
-                      className={`
-                        ${formStyles.dropdownItem}
-                        ${entry.phoneCode === formData.phoneCode ? 'bg-red-50 dark:bg-red-900/20' : ''}
-                      `}
-                    >
-                      <span className="text-xl">{getFlag(entry.code)}</span>
-                      <span className="flex-1 text-sm truncate">{getCountryName(entry, locale)}</span>
-                      <span className="text-sm text-gray-500 font-medium">{entry.phoneCode}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Phone number input */}
-          <div className="relative flex-1">
-            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="tel"
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              className={`
-                ${formStyles.input}
-                pl-12
-                ${validationErrors.phoneNumber ? formStyles.inputError : formStyles.inputDefault}
-              `}
-              placeholder={intl.formatMessage({ id: 'form.phone.placeholder', defaultMessage: '6 12 34 56 78' })}
-              autoComplete="tel"
-            />
-          </div>
-        </div>
-
-        {validationErrors.phoneNumber && (
-          <p className={formStyles.errorText}>
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">!</span>
-            {validationErrors.phoneNumber}
-          </p>
-        )}
-      </div>
 
       {/* Country */}
       <div ref={countryDropdownRef} className="space-y-2">
@@ -592,17 +458,19 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         )}
       </div>
 
-      {/* Referral Code (Optional) */}
-      <FormInput
-        id="referralCode"
-        name="referralCode"
-        value={formData.referralCode || ''}
-        onChange={handleChange}
-        label={<FormattedMessage id="form.referralCode" defaultMessage="Referral code (optional)" />}
-        placeholder={intl.formatMessage({ id: 'form.referralCode.placeholder', defaultMessage: 'REC-XXXX' })}
-        icon={<Gift className="w-5 h-5" />}
-        helperText={<FormattedMessage id="form.referralCode.hint" defaultMessage="If someone referred you, enter their code" />}
-      />
+      {/* Referral Code (Optional) - Hidden if already provided via URL */}
+      {!initialData?.referralCode && (
+        <FormInput
+          id="referralCode"
+          name="referralCode"
+          value={formData.referralCode || ''}
+          onChange={handleChange}
+          label={<FormattedMessage id="form.referralCode" defaultMessage="Referral code (optional)" />}
+          placeholder={intl.formatMessage({ id: 'form.referralCode.placeholder', defaultMessage: 'REC-XXXX' })}
+          icon={<Gift className="w-5 h-5" />}
+          helperText={<FormattedMessage id="form.referralCode.hint" defaultMessage="If someone referred you, enter their code" />}
+        />
+      )}
 
       {/* Submit Button */}
       <FormButton

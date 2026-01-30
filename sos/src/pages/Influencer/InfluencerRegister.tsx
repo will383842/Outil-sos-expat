@@ -1,11 +1,12 @@
 /**
  * InfluencerRegister - Registration page for influencers
  * No quiz required - direct activation after registration
+ * Supports auto referral code from URL params
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
@@ -19,6 +20,16 @@ const UI = {
 const InfluencerRegister: React.FC = () => {
   const intl = useIntl();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
+  const referralCodeFromUrl = useMemo(() => {
+    return searchParams.get('ref')
+      || searchParams.get('referralCode')
+      || searchParams.get('code')
+      || searchParams.get('sponsor')
+      || '';
+  }, [searchParams]);
 
   const seoTitle = intl.formatMessage({
     id: 'influencer.register.seo.title',
@@ -36,7 +47,7 @@ const InfluencerRegister: React.FC = () => {
     },
     {
       icon: <Users className="w-5 h-5 text-purple-500" />,
-      text: intl.formatMessage({ id: 'influencer.register.benefit2', defaultMessage: '$5/appel prestataire recruté (6 mois)' }),
+      text: intl.formatMessage({ id: 'influencer.register.benefit2.v3', defaultMessage: '$5/appel avocat ou expatrié aidant recruté' }),
     },
     {
       icon: <Image className="w-5 h-5 text-blue-500" />,
@@ -102,7 +113,29 @@ const InfluencerRegister: React.FC = () => {
             {/* Registration Form */}
             <div className="lg:col-span-2">
               <div className={`${UI.card} p-6`}>
-                <InfluencerRegisterForm />
+                {/* Referral code banner if present */}
+                {referralCodeFromUrl && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Gift className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-green-800 dark:text-green-300">
+                          <FormattedMessage id="influencer.register.referralDetected" defaultMessage="You've been referred!" />
+                        </p>
+                        <p className="text-sm text-green-600 dark:text-green-400">
+                          <FormattedMessage
+                            id="influencer.register.referralCode.applied"
+                            defaultMessage="Referral code {code} will be applied automatically"
+                            values={{ code: <strong>{referralCodeFromUrl}</strong> }}
+                          />
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <InfluencerRegisterForm referralCode={referralCodeFromUrl} />
               </div>
             </div>
           </div>

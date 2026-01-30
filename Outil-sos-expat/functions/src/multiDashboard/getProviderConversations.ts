@@ -5,13 +5,16 @@
  *
  * Callable function to fetch conversations and messages for a provider.
  * Used by the multi-dashboard to display inline chat.
+ *
+ * IMPORTANT: This function reads/writes to sos-urgently-ac307 (main SOS project).
  */
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
+import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "./sosFirestore";
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin for local project
 try {
   admin.app();
 } catch {
@@ -82,6 +85,7 @@ export const getProviderConversations = onCall<
     region: "europe-west1",
     timeoutSeconds: 30,
     maxInstances: 10,
+    secrets: [SOS_SERVICE_ACCOUNT],
     cors: [
       "https://sos-expat.com",
       "https://www.sos-expat.com",
@@ -108,7 +112,8 @@ export const getProviderConversations = onCall<
     }
 
     try {
-      const db = admin.firestore();
+      // Use SOS Firestore (sos-urgently-ac307)
+      const db = getSosFirestore();
 
       // Build query for conversations
       let query = db.collection("conversations")
@@ -200,6 +205,7 @@ export const sendMultiDashboardMessage = onCall<
     region: "europe-west1",
     timeoutSeconds: 60,
     maxInstances: 20,
+    secrets: [SOS_SERVICE_ACCOUNT],
     cors: [
       "https://sos-expat.com",
       "https://www.sos-expat.com",
@@ -231,7 +237,8 @@ export const sendMultiDashboardMessage = onCall<
     }
 
     try {
-      const db = admin.firestore();
+      // Use SOS Firestore (sos-urgently-ac307)
+      const db = getSosFirestore();
       const now = admin.firestore.FieldValue.serverTimestamp();
 
       // Get provider info

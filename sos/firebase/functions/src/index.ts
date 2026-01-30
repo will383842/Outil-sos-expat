@@ -5768,6 +5768,8 @@ export {
   // User callables
   paymentSaveMethod,
   paymentGetMethods,
+  paymentDeleteMethod,
+  paymentSetDefault,
   paymentRequestWithdrawal,
   paymentCancelWithdrawal,
   paymentGetStatus,

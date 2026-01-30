@@ -146,7 +146,8 @@ const ChatterDashboard = lazy(() => import('./pages/Chatter/ChatterDashboard'));
 const ChatterLeaderboard = lazy(() => import('./pages/Chatter/ChatterLeaderboard'));
 const ChatterPayments = lazy(() => import('./pages/Chatter/ChatterPayments'));
 const ChatterSuspended = lazy(() => import('./pages/Chatter/ChatterSuspended'));
-const ChatterCountrySelection = lazy(() => import('./pages/Chatter/ChatterCountrySelection'));
+// DISABLED: Country selection feature - kept for potential future use
+// const ChatterCountrySelection = lazy(() => import('./pages/Chatter/ChatterCountrySelection'));
 const ChatterPosts = lazy(() => import('./pages/Chatter/ChatterPosts'));
 const ChatterZoom = lazy(() => import('./pages/Chatter/ChatterZoom'));
 const ChatterTraining = lazy(() => import('./pages/Chatter/ChatterTraining'));
@@ -338,7 +339,8 @@ const protectedUserRoutes: RouteConfig[] = [
   // Après inscription, l'utilisateur a role="chatter" - toutes les autres routes sont réservées aux chatters
   { path: "/chatter/presentation", component: ChatterPresentation, protected: true, role: 'chatter', translated: "chatter-presentation" },
   { path: "/chatter/quiz", component: ChatterQuiz, protected: true, role: 'chatter', translated: "chatter-quiz" },
-  { path: "/chatter/pays", component: ChatterCountrySelection, protected: true, role: 'chatter', translated: "chatter-country-selection" },
+  // DISABLED: Country selection feature - kept for potential future use
+  // { path: "/chatter/pays", component: ChatterCountrySelection, protected: true, role: 'chatter', translated: "chatter-country-selection" },
   { path: "/chatter/tableau-de-bord", component: ChatterDashboard, protected: true, role: 'chatter', translated: "chatter-dashboard" },
   { path: "/chatter/classement", component: ChatterLeaderboard, protected: true, role: 'chatter', translated: "chatter-leaderboard" },
   { path: "/chatter/paiements", component: ChatterPayments, protected: true, role: 'chatter', translated: "chatter-payments" },

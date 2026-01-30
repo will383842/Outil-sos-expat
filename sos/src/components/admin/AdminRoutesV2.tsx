@@ -395,6 +395,9 @@ const AdminBloggersResources = lazy(
 const AdminBloggersGuide = lazy(
   () => import("../../pages/admin/Bloggers/AdminBloggersGuide")
 );
+const AdminBloggersWidgets = lazy(
+  () => import("../../pages/admin/Bloggers/AdminBloggersWidgets")
+);
 
 // ===== LAZY IMPORTS - CENTRALIZED PAYMENTS =====
 const AdminPaymentsDashboard = lazy(
@@ -1212,6 +1215,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminBloggersConfig />
+          </Suspense>
+        }
+      />
+      <Route
+        path="bloggers/widgets"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggersWidgets />
           </Suspense>
         }
       />

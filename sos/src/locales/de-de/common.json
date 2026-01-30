@@ -1,0 +1,21 @@
+{
+  "admin.bloggers.widgets.create": "Widget erstellen",
+  "admin.bloggers.widgets.createFirst": "Erstes Widget erstellen",
+  "admin.bloggers.widgets.empty": "Keine Widgets gefunden",
+  "admin.bloggers.widgets.search": "Suchen...",
+  "admin.bloggers.widgets.subtitle": "Verwalten Sie Widgets fur Blogger",
+  "admin.bloggers.widgets.title": "Werbe-Widgets",
+  "admin.menu.bloggersWidgets": "Promo-Widgets",
+  "admin.menu.bloggersWidgets.description": "Promo-Widgets fur Blogger verwalten",
+  "blogger.tools.banners": "Banner",
+  "blogger.tools.buttons": "CTA-Buttons",
+  "blogger.tools.clientLink": "Kundenlink",
+  "blogger.tools.copied": "Kopiert",
+  "blogger.tools.copy": "Kopieren",
+  "blogger.tools.linkGenerator": "Link-Generator",
+  "blogger.tools.links": "Ihre Affiliate-Links",
+  "blogger.tools.qrCodes": "QR-Codes",
+  "blogger.tools.recruitLink": "Partnerlink",
+  "blogger.tools.subtitle": "Widgets, Links und QR-Codes mit integriertem Affiliate-Code",
+  "blogger.tools.title": "Werbetools"
+}

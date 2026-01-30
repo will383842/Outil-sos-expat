@@ -532,6 +532,7 @@ export interface RegisterBloggerInput {
   blogTraffic: BlogTrafficTier;
   blogDescription?: string;
   definitiveRoleAcknowledged: boolean;
+  recruiterCode?: string;
 }
 
 export interface RegisterBloggerResponse {
@@ -732,3 +733,269 @@ export const BLOGGER_BADGE_INFO: Record<BloggerBadgeType, { emoji: string; icon:
   top3: { emoji: '🥉', icon: '🥉', color: 'bronze', labelFr: 'Top 3', labelEn: 'Top 3' },
   top1: { emoji: '🥇', icon: '🥇', color: 'gold', labelFr: 'Numéro 1', labelEn: 'Number 1' },
 };
+
+// ============================================================================
+// PROMO WIDGETS (NEW - For Blogger Dashboard)
+// ============================================================================
+
+/**
+ * Type of promo widget
+ * - button: CTA button with customizable text and colors
+ * - banner: Image banner with various dimensions
+ */
+export type PromoWidgetType = 'button' | 'banner';
+
+/**
+ * Target type for tracking
+ * - client: For referring new clients ($10/call)
+ * - recruitment: For finding partners ($5/call for 6 months)
+ */
+export type PromoWidgetTargetType = 'client' | 'recruitment';
+
+/**
+ * Standard banner dimensions
+ */
+export type PromoWidgetDimension =
+  | '728x90'    // Leaderboard
+  | '300x250'   // Medium Rectangle
+  | '160x600'   // Wide Skyscraper
+  | '320x50'    // Mobile Leaderboard
+  | '300x600'   // Half Page
+  | '970x250'   // Billboard
+  | '250x250'   // Square
+  | '120x60'    // Button (small)
+  | '468x60'    // Full Banner
+  | 'custom';   // Custom size for buttons
+
+/**
+ * Widget style configuration for buttons
+ */
+export interface PromoWidgetButtonStyle {
+  backgroundColor: string;
+  backgroundGradient?: string;
+  textColor: string;
+  borderRadius: string;
+  fontSize: string;
+  fontWeight: string;
+  padding: string;
+  hoverBackgroundColor?: string;
+  hoverBackgroundGradient?: string;
+  shadow?: string;
+}
+
+/**
+ * Promo Widget definition
+ * Stored in Firestore collection: blogger_promo_widgets
+ */
+export interface PromoWidget {
+  id: string;
+
+  // Basic info
+  name: string;
+  nameTranslations?: Record<string, string>;
+  description?: string;
+  descriptionTranslations?: Record<string, string>;
+
+  // Widget configuration
+  type: PromoWidgetType;
+  targetType: PromoWidgetTargetType;
+  dimension: PromoWidgetDimension;
+  customWidth?: number;
+  customHeight?: number;
+
+  // Content
+  buttonText?: string;
+  buttonTextTranslations?: Record<string, string>;
+  imageUrl?: string;
+  altText?: string;
+  altTextTranslations?: Record<string, string>;
+
+  // Styling (for buttons)
+  style?: PromoWidgetButtonStyle;
+
+  // HTML template (with placeholders: {{affiliateUrl}}, {{affiliateCode}}, {{trackingParams}})
+  htmlTemplate: string;
+
+  // Tracking
+  trackingId: string;
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+
+  // Status
+  isActive: boolean;
+  order: number;
+
+  // Stats
+  views: number;
+  clicks: number;
+  conversions: number;
+
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+}
+
+/**
+ * Widget usage tracking for analytics
+ */
+export interface PromoWidgetUsage {
+  id: string;
+  widgetId: string;
+  bloggerId: string;
+  bloggerCode: string;
+  action: 'view' | 'copy' | 'click' | 'conversion';
+  metadata?: {
+    referrer?: string;
+    userAgent?: string;
+    clientId?: string;
+    callSessionId?: string;
+    conversionValue?: number;
+  };
+  createdAt: string;
+}
+
+/**
+ * Blogger-specific widget stats
+ * Stored in subcollection: bloggers/{bloggerId}/widget_stats/{widgetId}
+ */
+export interface BloggerWidgetStats {
+  widgetId: string;
+  widgetName: string;
+  widgetType: PromoWidgetType;
+  copies: number;
+  lastCopiedAt: string | null;
+  // These are tracked via UTM parameters when conversions happen
+  clicks: number;
+  conversions: number;
+  earnings: number;
+  updatedAt: string;
+}
+
+/**
+ * Standard widget dimensions with labels
+ */
+export const PROMO_WIDGET_DIMENSIONS: {
+  value: PromoWidgetDimension;
+  width: number;
+  height: number;
+  labelFr: string;
+  labelEn: string;
+  category: 'standard' | 'mobile' | 'large';
+}[] = [
+  { value: '728x90', width: 728, height: 90, labelFr: 'Leaderboard (728x90)', labelEn: 'Leaderboard (728x90)', category: 'standard' },
+  { value: '300x250', width: 300, height: 250, labelFr: 'Rectangle moyen (300x250)', labelEn: 'Medium Rectangle (300x250)', category: 'standard' },
+  { value: '160x600', width: 160, height: 600, labelFr: 'Skyscraper large (160x600)', labelEn: 'Wide Skyscraper (160x600)', category: 'standard' },
+  { value: '468x60', width: 468, height: 60, labelFr: 'Bannière complète (468x60)', labelEn: 'Full Banner (468x60)', category: 'standard' },
+  { value: '250x250', width: 250, height: 250, labelFr: 'Carré (250x250)', labelEn: 'Square (250x250)', category: 'standard' },
+  { value: '120x60', width: 120, height: 60, labelFr: 'Bouton (120x60)', labelEn: 'Button (120x60)', category: 'standard' },
+  { value: '320x50', width: 320, height: 50, labelFr: 'Mobile Leaderboard (320x50)', labelEn: 'Mobile Leaderboard (320x50)', category: 'mobile' },
+  { value: '300x600', width: 300, height: 600, labelFr: 'Demi-page (300x600)', labelEn: 'Half Page (300x600)', category: 'large' },
+  { value: '970x250', width: 970, height: 250, labelFr: 'Billboard (970x250)', labelEn: 'Billboard (970x250)', category: 'large' },
+  { value: 'custom', width: 0, height: 0, labelFr: 'Personnalisé', labelEn: 'Custom', category: 'standard' },
+];
+
+/**
+ * Default button styles for quick creation
+ */
+export const PROMO_WIDGET_BUTTON_PRESETS: {
+  id: string;
+  name: string;
+  nameTranslations: Record<string, string>;
+  style: PromoWidgetButtonStyle;
+}[] = [
+  {
+    id: 'purple-gradient',
+    name: 'Purple Gradient',
+    nameTranslations: { fr: 'Dégradé violet', en: 'Purple Gradient', es: 'Degradado púrpura' },
+    style: {
+      backgroundColor: '#8b5cf6',
+      backgroundGradient: 'linear-gradient(to right, #8b5cf6, #7c3aed)',
+      textColor: '#ffffff',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontWeight: '500',
+      padding: '12px 24px',
+      hoverBackgroundGradient: 'linear-gradient(to right, #7c3aed, #6d28d9)',
+      shadow: '0 4px 6px -1px rgba(139, 92, 246, 0.3)',
+    },
+  },
+  {
+    id: 'red-gradient',
+    name: 'Red Gradient (SOS-Expat)',
+    nameTranslations: { fr: 'Dégradé rouge (SOS-Expat)', en: 'Red Gradient (SOS-Expat)', es: 'Degradado rojo (SOS-Expat)' },
+    style: {
+      backgroundColor: '#dc2626',
+      backgroundGradient: 'linear-gradient(to right, #dc2626, #b91c1c)',
+      textColor: '#ffffff',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontWeight: '600',
+      padding: '12px 24px',
+      hoverBackgroundGradient: 'linear-gradient(to right, #b91c1c, #991b1b)',
+      shadow: '0 4px 6px -1px rgba(220, 38, 38, 0.3)',
+    },
+  },
+  {
+    id: 'green-gradient',
+    name: 'Green Gradient',
+    nameTranslations: { fr: 'Dégradé vert', en: 'Green Gradient', es: 'Degradado verde' },
+    style: {
+      backgroundColor: '#16a34a',
+      backgroundGradient: 'linear-gradient(to right, #16a34a, #15803d)',
+      textColor: '#ffffff',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontWeight: '500',
+      padding: '12px 24px',
+      hoverBackgroundGradient: 'linear-gradient(to right, #15803d, #166534)',
+      shadow: '0 4px 6px -1px rgba(22, 163, 74, 0.3)',
+    },
+  },
+  {
+    id: 'blue-gradient',
+    name: 'Blue Gradient',
+    nameTranslations: { fr: 'Dégradé bleu', en: 'Blue Gradient', es: 'Degradado azul' },
+    style: {
+      backgroundColor: '#2563eb',
+      backgroundGradient: 'linear-gradient(to right, #2563eb, #1d4ed8)',
+      textColor: '#ffffff',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontWeight: '500',
+      padding: '12px 24px',
+      hoverBackgroundGradient: 'linear-gradient(to right, #1d4ed8, #1e40af)',
+      shadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)',
+    },
+  },
+  {
+    id: 'dark-solid',
+    name: 'Dark Solid',
+    nameTranslations: { fr: 'Noir solide', en: 'Dark Solid', es: 'Negro sólido' },
+    style: {
+      backgroundColor: '#1f2937',
+      textColor: '#ffffff',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontWeight: '500',
+      padding: '12px 24px',
+      hoverBackgroundColor: '#111827',
+      shadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)',
+    },
+  },
+  {
+    id: 'white-outline',
+    name: 'White Outline',
+    nameTranslations: { fr: 'Contour blanc', en: 'White Outline', es: 'Contorno blanco' },
+    style: {
+      backgroundColor: 'transparent',
+      textColor: '#8b5cf6',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontWeight: '500',
+      padding: '10px 22px',
+      shadow: 'inset 0 0 0 2px #8b5cf6',
+    },
+  },
+];

@@ -1,0 +1,21 @@
+{
+  "admin.bloggers.widgets.create": "إنشاء أداة",
+  "admin.bloggers.widgets.createFirst": "إنشاء الأداة الأولى",
+  "admin.bloggers.widgets.empty": "لم يتم العثور على أدوات",
+  "admin.bloggers.widgets.search": "بحث...",
+  "admin.bloggers.widgets.subtitle": "إدارة الأدوات المتاحة للمدونين",
+  "admin.bloggers.widgets.title": "أدوات الترويج",
+  "admin.menu.bloggersWidgets": "أدوات الترويج",
+  "admin.menu.bloggersWidgets.description": "إدارة أدوات الترويج للمدونين",
+  "blogger.tools.banners": "اللافتات",
+  "blogger.tools.buttons": "أزرار CTA",
+  "blogger.tools.clientLink": "رابط العميل",
+  "blogger.tools.copied": "تم النسخ",
+  "blogger.tools.copy": "نسخ",
+  "blogger.tools.linkGenerator": "مولد الروابط",
+  "blogger.tools.links": "روابط الشراكة الخاصة بك",
+  "blogger.tools.qrCodes": "رموز QR",
+  "blogger.tools.recruitLink": "رابط الشركاء",
+  "blogger.tools.subtitle": "أدوات وروابط ورموز QR مع رمز الشراكة الخاص بك",
+  "blogger.tools.title": "أدوات الترويج"
+}

@@ -1,0 +1,21 @@
+{
+  "admin.bloggers.widgets.create": "विजेट बनाएं",
+  "admin.bloggers.widgets.createFirst": "पहला विजेट बनाएं",
+  "admin.bloggers.widgets.empty": "कोई विजेट नहीं मिला",
+  "admin.bloggers.widgets.search": "खोजें...",
+  "admin.bloggers.widgets.subtitle": "ब्लॉगर्स के लिए उपलब्ध विजेट प्रबंधित करें",
+  "admin.bloggers.widgets.title": "प्रचार विजेट",
+  "admin.menu.bloggersWidgets": "प्रोमो विजेट",
+  "admin.menu.bloggersWidgets.description": "ब्लॉगर्स के लिए प्रोमो विजेट प्रबंधित करें",
+  "blogger.tools.banners": "बैनर",
+  "blogger.tools.buttons": "CTA बटन",
+  "blogger.tools.clientLink": "ग्राहक लिंक",
+  "blogger.tools.copied": "कॉपी किया गया",
+  "blogger.tools.copy": "कॉपी करें",
+  "blogger.tools.linkGenerator": "लिंक जनरेटर",
+  "blogger.tools.links": "आपके संबद्ध लिंक",
+  "blogger.tools.qrCodes": "QR कोड",
+  "blogger.tools.recruitLink": "साझेदार लिंक",
+  "blogger.tools.subtitle": "आपके संबद्ध कोड के साथ विजेट, लिंक और QR कोड",
+  "blogger.tools.title": "प्रचार उपकरण"
+}

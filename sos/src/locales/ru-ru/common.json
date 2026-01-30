@@ -1,0 +1,21 @@
+{
+  "admin.bloggers.widgets.create": "Создать виджет",
+  "admin.bloggers.widgets.createFirst": "Создать первый виджет",
+  "admin.bloggers.widgets.empty": "Виджеты не найдены",
+  "admin.bloggers.widgets.search": "Поиск...",
+  "admin.bloggers.widgets.subtitle": "Управляйте виджетами доступными блогерам",
+  "admin.bloggers.widgets.title": "Рекламные виджеты",
+  "admin.menu.bloggersWidgets": "Промо виджеты",
+  "admin.menu.bloggersWidgets.description": "Управление промо-виджетами для блогеров",
+  "blogger.tools.banners": "Баннеры",
+  "blogger.tools.buttons": "Кнопки CTA",
+  "blogger.tools.clientLink": "Ссылка для клиентов",
+  "blogger.tools.copied": "Скопировано",
+  "blogger.tools.copy": "Копировать",
+  "blogger.tools.linkGenerator": "Генератор ссылок",
+  "blogger.tools.links": "Ваши партнерские ссылки",
+  "blogger.tools.qrCodes": "QR-коды",
+  "blogger.tools.recruitLink": "Ссылка для партнеров",
+  "blogger.tools.subtitle": "Виджеты, ссылки и QR-коды с интегрированным партнерским кодом",
+  "blogger.tools.title": "Рекламные инструменты"
+}

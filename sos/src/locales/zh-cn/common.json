@@ -1,0 +1,21 @@
+{
+  "admin.bloggers.widgets.create": "创建小工具",
+  "admin.bloggers.widgets.createFirst": "创建第一个小工具",
+  "admin.bloggers.widgets.empty": "未找到小工具",
+  "admin.bloggers.widgets.search": "搜索...",
+  "admin.bloggers.widgets.subtitle": "管理博主可用的小工具",
+  "admin.bloggers.widgets.title": "推广小工具",
+  "admin.menu.bloggersWidgets": "推广小工具",
+  "admin.menu.bloggersWidgets.description": "管理博主推广小工具",
+  "blogger.tools.banners": "横幅广告",
+  "blogger.tools.buttons": "CTA按钮",
+  "blogger.tools.clientLink": "客户链接",
+  "blogger.tools.copied": "已复制",
+  "blogger.tools.copy": "复制",
+  "blogger.tools.linkGenerator": "链接生成器",
+  "blogger.tools.links": "您的联盟链接",
+  "blogger.tools.qrCodes": "二维码",
+  "blogger.tools.recruitLink": "合作伙伴链接",
+  "blogger.tools.subtitle": "包含您的联盟代码的小工具、链接和二维码",
+  "blogger.tools.title": "推广工具"
+}

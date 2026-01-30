@@ -3,9 +3,10 @@
  * Handles the sign-up process with form validation
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
+import { useSearchParams } from 'react-router-dom';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +14,7 @@ import Layout from '@/components/layout/Layout';
 import ChatterRegisterForm from '@/components/Chatter/Forms/ChatterRegisterForm';
 import type { ChatterRegistrationData } from '@/components/Chatter/Forms/ChatterRegisterForm';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Star, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Star, ArrowLeft, CheckCircle, Gift } from 'lucide-react';
 
 // Design tokens
 const UI = {
@@ -23,6 +24,7 @@ const UI = {
 const ChatterRegister: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
+  const [searchParams] = useSearchParams();
   const { language } = useApp();
   const { user, authInitialized } = useAuth();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
@@ -32,6 +34,15 @@ const ChatterRegister: React.FC = () => {
   const [success, setSuccess] = useState(false);
 
   const functions = getFunctions(undefined, 'europe-west1');
+
+  // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
+  const referralCodeFromUrl = useMemo(() => {
+    return searchParams.get('ref')
+      || searchParams.get('referralCode')
+      || searchParams.get('code')
+      || searchParams.get('sponsor')
+      || '';
+  }, [searchParams]);
 
   // Routes
   const landingRoute = `/${getTranslatedRouteSlug('chatter-landing' as RouteKey, langCode)}`;
@@ -56,7 +67,7 @@ const ChatterRegister: React.FC = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        phone: `${data.phoneCode}${data.phoneNumber}`,
+        // Phone is collected later after quiz, not at registration
         country: data.country,
         languages: data.languages,
         recruiterCode: data.referralCode || undefined,
@@ -130,12 +141,36 @@ const ChatterRegister: React.FC = () => {
           ) : (
             /* Registration Form */
             <div className={`${UI.card} p-6`}>
+              {/* Referral code banner if present */}
+              {referralCodeFromUrl && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Gift className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-green-800 dark:text-green-300">
+                        <FormattedMessage id="chatter.register.referralDetected" defaultMessage="You've been referred!" />
+                      </p>
+                      <p className="text-sm text-green-600 dark:text-green-400">
+                        <FormattedMessage
+                          id="chatter.register.referralCode.applied"
+                          defaultMessage="Referral code {code} will be applied automatically"
+                          values={{ code: <strong>{referralCodeFromUrl}</strong> }}
+                        />
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <ChatterRegisterForm
                 onSubmit={handleSubmit}
                 initialData={{
                   firstName: user?.firstName || '',
                   lastName: user?.lastName || '',
                   email: user?.email || '',
+                  referralCode: referralCodeFromUrl,
                 }}
                 loading={loading}
                 error={error}

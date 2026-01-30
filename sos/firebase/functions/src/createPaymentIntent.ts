@@ -171,8 +171,9 @@ interface SuccessResponse {
   status: string;
   expiresAt: string;
   stripeMode?: string;
-  // P0 SECURITY FIX: Ne plus exposer stripeAccountId - utiliser un booléen à la place
   useDirectCharges?: boolean;
+  // FIX: Pour Direct Charges, le frontend a besoin du stripeAccountId pour confirmCardPayment
+  stripeAccountId?: string;
 }
 
 interface RateLimitBucket {
@@ -1140,9 +1141,10 @@ export const createPaymentIntent = onCall(
         status: 'requires_payment_method',
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         stripeMode: STRIPE_MODE.value() || 'test',
-        // P0 SECURITY FIX: Ne plus exposer stripeAccountId - utiliser un booléen à la place
-        // Le frontend n'a pas besoin de l'ID pour confirmCardPayment (clientSecret suffit)
         useDirectCharges: isDirectChargesMode,
+        // FIX: Pour Direct Charges, le frontend a besoin du stripeAccountId pour confirmCardPayment
+        // Car le PaymentIntent est créé sur le compte Connect du provider, pas sur la plateforme
+        ...(isDirectChargesMode && providerStripeAccountId ? { stripeAccountId: providerStripeAccountId } : {}),
       };
     } catch (err: unknown) {
       const processingTime = Date.now() - startTime;

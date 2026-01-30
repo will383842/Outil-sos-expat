@@ -9,7 +9,7 @@
  * Solution: This scheduled function runs every 30 minutes to:
  * 1. Find payments stuck in 'requires_capture' for more than 10 minutes
  * 2. Check if the call session is completed - if so, capture the payment
- * 3. Find payments stuck in 'requires_capture' for more than 24 hours - refund them
+ * 3. Find payments stuck in 'requires_capture' for more than 6 hours - refund them
  * 4. Alert admins about stuck payments
  *
  * Runs every 30 minutes
@@ -34,8 +34,9 @@ import {
 const RECOVERY_CONFIG = {
   // Payments stuck for more than 10 minutes with completed call = auto-capture
   CAPTURE_THRESHOLD_MINUTES: 10,
-  // Payments stuck for more than 24 hours without completed call = auto-refund
-  REFUND_THRESHOLD_HOURS: 24,
+  // Payments stuck for more than 6 hours without completed call = auto-refund
+  // P0 FIX 2026-01-30: Reduced from 24h to 6h for better customer experience
+  REFUND_THRESHOLD_HOURS: 6,
   // Maximum payments to process per run
   BATCH_SIZE: 50,
   // Minimum call duration for capture (seconds)
@@ -245,8 +246,9 @@ async function captureCompletedCallPayments(
 }
 
 /**
- * Find very old stuck payments (> 24 hours) and refund them
+ * Find very old stuck payments (> 6 hours) and refund them
  * This prevents money from being held indefinitely
+ * P0 FIX 2026-01-30: Reduced from 24h to 6h for better customer experience
  */
 async function refundOldStuckPayments(
   db: admin.firestore.Firestore,
@@ -256,7 +258,7 @@ async function refundOldStuckPayments(
     Date.now() - RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS * 60 * 60 * 1000
   );
 
-  console.log(`💸 [StuckPayments] Looking for very old stuck payments (> 24h)`);
+  console.log(`💸 [StuckPayments] Looking for very old stuck payments (> 6h)`);
 
   try {
     const veryOldPayments = await db
@@ -304,14 +306,14 @@ async function refundOldStuckPayments(
             status: "cancelled",
             cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
             cancelledBy: "stuck_payments_recovery",
-            cancellationReason: "Payment stuck for more than 24 hours without completed call",
+            cancellationReason: "Payment stuck for more than 6 hours without completed call",
           });
 
           // Also update call session status if exists
           if (sessionId) {
             await db.collection("call_sessions").doc(sessionId).update({
               status: "cancelled",
-              cancelledReason: "Payment timeout - stuck for 24+ hours",
+              cancelledReason: "Payment timeout - stuck for 6+ hours",
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
           }
@@ -341,7 +343,7 @@ async function alertStuckPayments(
   const criticalCutoff = new Date(Date.now() - 6 * 60 * 60 * 1000); // 6 hours
 
   try {
-    // Find payments that are stuck for 1-24 hours
+    // Find payments that are stuck for 1-6 hours
     const warningPayments = await db
       .collection("payments")
       .where("status", "==", "requires_capture")

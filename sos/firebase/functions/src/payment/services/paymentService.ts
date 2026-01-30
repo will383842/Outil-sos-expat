@@ -32,6 +32,7 @@ import {
   ProviderTransactionResult,
   DEFAULT_PAYMENT_CONFIG,
 } from '../types';
+import { createPaymentRouter } from './paymentRouter';
 
 // ============================================================================
 // COLLECTION PATHS
@@ -575,7 +576,7 @@ export class PaymentService {
    * Process a withdrawal (trigger actual payment via provider).
    *
    * This method is called to actually send the payment through Wise or Flutterwave.
-   * Note: PaymentRouter and actual provider calls should be implemented separately.
+   * It uses the PaymentRouter to route to the correct provider based on payment method type.
    *
    * @param withdrawalId - The withdrawal ID
    * @param adminId - Optional admin ID if manually triggered
@@ -605,26 +606,134 @@ export class PaymentService {
       { processedAt: new Date().toISOString() }
     );
 
-    // NOTE: Actual provider processing would be done here via PaymentRouter
-    // For now, we return a placeholder result indicating the withdrawal is processing
-    // The actual implementation should:
-    // 1. Use PaymentRouter to route to correct provider (Wise or Flutterwave)
-    // 2. Call provider.processPayment() with withdrawal details
-    // 3. Handle the response and update withdrawal accordingly
-
-    logger.info('[PaymentService.processWithdrawal] Withdrawal processing initiated', {
+    logger.info('[PaymentService.processWithdrawal] Processing withdrawal via provider', {
       withdrawalId,
       provider: withdrawal.provider,
+      methodType: withdrawal.methodType,
       amount: withdrawal.amount,
+      targetCurrency: withdrawal.targetCurrency,
       adminId,
     });
 
-    // Placeholder result - actual implementation should return provider response
-    return {
-      success: true,
-      status: 'processing',
-      message: 'Withdrawal is being processed',
-    };
+    try {
+      // Get payment config for router settings
+      const config = await this.getConfig();
+
+      // Create payment router with config
+      const router = createPaymentRouter({
+        wiseEnabled: config.wiseEnabled,
+        flutterwaveEnabled: config.flutterwaveEnabled,
+      });
+
+      // Get country from payment details
+      const countryCode = withdrawal.paymentDetails.country;
+
+      // Process payment via router
+      const result = await router.processPayment({
+        withdrawalId: withdrawal.id,
+        amount: withdrawal.amount,
+        sourceCurrency: withdrawal.sourceCurrency,
+        targetCurrency: withdrawal.targetCurrency,
+        countryCode,
+        methodType: withdrawal.methodType,
+        details: withdrawal.paymentDetails,
+        reference: `SOS-Expat-${withdrawal.userType}-${withdrawal.id}`,
+      });
+
+      if (result.success) {
+        // Update withdrawal with provider response
+        await this.updateWithdrawalStatus(
+          withdrawalId,
+          'sent',
+          'system',
+          'system',
+          result.message || 'Payment sent to provider',
+          {
+            providerTransactionId: result.transactionId,
+            providerStatus: result.status,
+            providerResponse: result.rawResponse,
+            exchangeRate: result.exchangeRate,
+            fees: result.fees,
+            estimatedDelivery: result.estimatedDelivery,
+            sentAt: new Date().toISOString(),
+          }
+        );
+
+        logger.info('[PaymentService.processWithdrawal] Payment sent successfully', {
+          withdrawalId,
+          transactionId: result.transactionId,
+          status: result.status,
+        });
+      } else {
+        // Payment failed - update status
+        const newRetryCount = withdrawal.retryCount + 1;
+        const shouldRefund = newRetryCount >= withdrawal.maxRetries;
+
+        await this.updateWithdrawalStatus(
+          withdrawalId,
+          'failed',
+          'system',
+          'system',
+          result.message || 'Payment failed',
+          {
+            errorCode: 'PROVIDER_ERROR',
+            errorMessage: result.message,
+            providerResponse: result.rawResponse,
+            retryCount: newRetryCount,
+            lastRetryAt: new Date().toISOString(),
+            failedAt: new Date().toISOString(),
+          }
+        );
+
+        // Refund balance if max retries reached
+        if (shouldRefund) {
+          await this.refundUserBalance(withdrawal.userId, withdrawal.userType, withdrawal.amount);
+          logger.info('[PaymentService.processWithdrawal] Balance refunded after max retries', {
+            withdrawalId,
+            amount: withdrawal.amount,
+            retryCount: newRetryCount,
+          });
+        }
+
+        logger.warn('[PaymentService.processWithdrawal] Payment failed', {
+          withdrawalId,
+          message: result.message,
+          retryCount: newRetryCount,
+          shouldRefund,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // Update withdrawal status to failed
+      await this.updateWithdrawalStatus(
+        withdrawalId,
+        'failed',
+        'system',
+        'system',
+        `Provider error: ${errorMessage}`,
+        {
+          errorCode: 'PROVIDER_EXCEPTION',
+          errorMessage,
+          retryCount: withdrawal.retryCount + 1,
+          lastRetryAt: new Date().toISOString(),
+          failedAt: new Date().toISOString(),
+        }
+      );
+
+      logger.error('[PaymentService.processWithdrawal] Exception during processing', {
+        withdrawalId,
+        error: errorMessage,
+      });
+
+      return {
+        success: false,
+        status: 'failed',
+        message: errorMessage,
+      };
+    }
   }
 
   /**
