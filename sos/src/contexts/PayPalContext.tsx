@@ -43,7 +43,7 @@ export const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
   const initialOptions: ReactPayPalScriptOptions = useMemo(() => ({
     clientId: clientId || "test",
     currency: "EUR",
-    intent: "capture",
+    intent: "authorize",
     components: "buttons,card-fields",
     "disable-funding": "credit",
   }), [clientId]);
