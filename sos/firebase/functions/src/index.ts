@@ -996,10 +996,12 @@ export const executeCallTask = onRequest(
     // 120s was causing premature function timeout → only 2 retries executed
     timeoutSeconds: 540,
     memory: "512MiB",
-    // CPU removed - Firebase will auto-assign appropriate value
+    // P0 FIX: Use fractional CPU to reduce quota consumption (like twilioCallWebhook)
+    // With concurrency: 1, we can use cpu < 1 which uses less quota per instance
+    cpu: 0.5,
     maxInstances: 10,
     minInstances: 0,  // Temporarily set to 0 to free quota - TODO: restore to 1 after quota increase
-    concurrency: 5,  // Allow 5 concurrent calls per instance to reduce CPU usage
+    concurrency: 1,   // P0 FIX: Set to 1 to allow fractional CPU (concurrency > 1 requires cpu >= 1)
     // Secrets: TASKS_AUTH_SECRET for Cloud Tasks auth + Twilio + ENCRYPTION_KEY + Stripe/PayPal (for refunds/voids)
     secrets: [TASKS_AUTH_SECRET, ENCRYPTION_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
