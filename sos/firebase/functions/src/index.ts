@@ -998,7 +998,8 @@ export const executeCallTask = onRequest(
     memory: "512MiB",
     // P0 FIX: Use fractional CPU to reduce quota consumption (like twilioCallWebhook)
     // With concurrency: 1, we can use cpu < 1 which uses less quota per instance
-    cpu: 0.5,
+    // 0.25 CPU is sufficient since function mostly waits for Twilio API responses
+    cpu: 0.25,
     maxInstances: 10,
     minInstances: 0,  // Temporarily set to 0 to free quota - TODO: restore to 1 after quota increase
     concurrency: 1,   // P0 FIX: Set to 1 to allow fractional CPU (concurrency > 1 requires cpu >= 1)
