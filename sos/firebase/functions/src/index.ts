@@ -4736,10 +4736,11 @@ export { generateSitemaps, onProviderChange, scheduledSitemapGeneration } from '
 export { providerCatalogFeed, generateProviderFeed } from './providerCatalogFeed';
 
 // ========== TRANSLATION FUNCTIONS ==========
-export * from './translation/translateProvider';
-// DISABLED 2026-01-30: One-time init function - removed to free Cloud Run quota
+// DISABLED 2026-01-31: Provider translation system temporarily disabled
+// To re-enable: uncomment these exports AND set PROVIDER_TRANSLATION: true in featureFlags.ts
+// export * from './translation/translateProvider';
 // export * from './translation/initializeProviderTranslation';
-export * from './translation/updateProviderTranslation';
+// export * from './translation/updateProviderTranslation';
 
 // ========== EMAIL MARKETING AUTOMATION (MailWizz) ==========
 export { handleUserRegistration } from './emailMarketing/functions/userLifecycle';

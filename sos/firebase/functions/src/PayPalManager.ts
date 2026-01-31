@@ -1766,10 +1766,10 @@ export class PayPalManager {
 
       // Appeler l'API PayPal pour récupérer le statut actuel
       // et vérifier s'il y a des autorisations à annuler
+      // P0 FIX: Ne pas passer de body pour les requêtes GET (cause "Request with GET/HEAD method cannot have body")
       const orderDetails = await this.apiRequest<any>(
         "GET",
-        `/v2/checkout/orders/${orderId}`,
-        {}
+        `/v2/checkout/orders/${orderId}`
       );
 
       const paypalStatus = orderDetails.status;

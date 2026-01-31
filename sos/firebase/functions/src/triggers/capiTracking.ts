@@ -482,13 +482,11 @@ export const onCallSessionPaymentAuthorized = onDocumentUpdated(
           currency,
         });
 
-        // Store tracking info in the document
-        await admin.firestore().collection("call_sessions").doc(sessionId).update({
-          capiTracking: {
-            initiateCheckoutEventId: result.eventId,
-            trackedAt: admin.firestore.FieldValue.serverTimestamp(),
-          },
-        });
+        // P0 FIX: DO NOT update call_sessions here!
+        // Updating the same document that triggered this function causes an infinite loop
+        // of Firestore triggers (chatterOnCallCompleted, influencerOnCallCompleted, etc.)
+        // The tracking info is already stored in capi_events below, so this is redundant.
+        // This was causing quota exhaustion (cpu_allocation) since 2026-01-31
 
         // Log to capi_events for analytics dashboard
         await logCAPIEventToFirestore({

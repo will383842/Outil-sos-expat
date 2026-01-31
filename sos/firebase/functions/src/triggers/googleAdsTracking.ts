@@ -447,13 +447,11 @@ export const onCallSessionPaymentAuthorizedTrackGoogleAdsCheckout = onDocumentUp
           currency,
         });
 
-        // Store tracking info in the document
-        await admin.firestore().collection("call_sessions").doc(sessionId).update({
-          googleAdsTracking: {
-            checkoutOrderId: result.orderId,
-            trackedAt: admin.firestore.FieldValue.serverTimestamp(),
-          },
-        });
+        // P0 FIX: DO NOT update call_sessions here!
+        // Updating the same document that triggered this function causes an infinite loop
+        // of Firestore triggers (chatterOnCallCompleted, influencerOnCallCompleted, etc.)
+        // The tracking info is already logged to google_ads_events collection.
+        // This was causing quota exhaustion (cpu_allocation) since 2026-01-31
       } else {
         console.warn(`[Google Ads Checkout] Failed for session ${sessionId}:`, result.error);
       }

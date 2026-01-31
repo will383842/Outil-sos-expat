@@ -9,24 +9,52 @@ import {
   isRobot,
 } from '../services/providerTranslationService';
 import { useAuth } from '../contexts/AuthContext';
+import { isProviderTranslationEnabled } from '../config/featureFlags';
+
+// État vide retourné quand la fonctionnalité est désactivée
+const DISABLED_STATE: ProviderTranslation = {
+  translation: null,
+  original: null,
+  availableLanguages: [],
+  isLoading: false,
+  error: null,
+};
 
 export function useProviderTranslation(
   providerId: string | null,
   targetLanguage: SupportedLanguage | null
 ) {
   const { user } = useAuth();
-  const [state, setState] = useState<ProviderTranslation>({
-    translation: null,
-    original: null,
-    availableLanguages: [],
-    isLoading: true,
-    error: null,
-  });
-  
+
+  // Feature flag: si désactivé, retourner un état vide sans faire d'appels API
+  const isEnabled = isProviderTranslationEnabled();
+
+  const [state, setState] = useState<ProviderTranslation>(
+    isEnabled
+      ? {
+          translation: null,
+          original: null,
+          availableLanguages: [],
+          isLoading: true,
+          error: null,
+        }
+      : DISABLED_STATE
+  );
+
   // Ref to track if we're manually managing a translation (via translate() or reloadForLanguage())
   // This prevents automatic loadTranslation() from overwriting manual state updates
   const isManuallyManagingRef = useRef(false);
   const currentLanguageRef = useRef<SupportedLanguage | null>(null);
+
+  // Si désactivé, retourner des fonctions no-op
+  if (!isEnabled) {
+    return {
+      ...DISABLED_STATE,
+      translate: async () => null,
+      reload: () => {},
+      reloadForLanguage: async () => {},
+    };
+  }
 
   const loadTranslation = useCallback(async () => {
     // Skip automatic loading if we're manually managing a translation

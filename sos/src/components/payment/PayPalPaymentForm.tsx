@@ -18,6 +18,15 @@ import { getCurrentTrafficSource } from "../../utils/trafficSource";
 import { getStoredMetaIdentifiers } from "../../utils/fbpCookie";
 import { getOrCreateEventId } from "../../utils/sharedEventId";
 
+interface BookingData {
+  firstName?: string;
+  lastName?: string;
+  title?: string;
+  description?: string;
+  clientPhone?: string;
+  currentCountry?: string;
+}
+
 interface PayPalPaymentFormProps {
   amount: number;
   currency: string;
@@ -30,6 +39,8 @@ interface PayPalPaymentFormProps {
   // P0 FIX: Phone numbers required for Twilio call
   clientPhone: string;
   providerPhone: string;
+  // Booking data for validation
+  bookingData?: BookingData;
   onSuccess: (details: PayPalSuccessDetails) => void;
   onError: (error: Error) => void;
   onCancel?: () => void;
@@ -189,6 +200,37 @@ const CardFieldsSubmitButton: React.FC<{
   );
 };
 
+// Validation des données requises avant paiement
+interface ValidationResult {
+  isValid: boolean;
+  missingFields: string[];
+}
+
+const validateBookingData = (data?: BookingData, intl?: ReturnType<typeof useIntl>): ValidationResult => {
+  const missingFields: string[] = [];
+
+  if (!data?.firstName?.trim()) {
+    missingFields.push(intl?.formatMessage({ id: 'payment.validation.firstName', defaultMessage: 'Prénom' }) || 'Prénom');
+  }
+  if (!data?.lastName?.trim()) {
+    missingFields.push(intl?.formatMessage({ id: 'payment.validation.lastName', defaultMessage: 'Nom' }) || 'Nom');
+  }
+  if (!data?.clientPhone?.trim()) {
+    missingFields.push(intl?.formatMessage({ id: 'payment.validation.phone', defaultMessage: 'Téléphone' }) || 'Téléphone');
+  }
+  if (!data?.title?.trim() || (data.title.trim().length < 10)) {
+    missingFields.push(intl?.formatMessage({ id: 'payment.validation.title', defaultMessage: 'Titre de la demande (min. 10 caractères)' }) || 'Titre de la demande');
+  }
+  if (!data?.description?.trim() || (data.description.trim().length < 50)) {
+    missingFields.push(intl?.formatMessage({ id: 'payment.validation.description', defaultMessage: 'Description (min. 50 caractères)' }) || 'Description');
+  }
+
+  return {
+    isValid: missingFields.length === 0,
+    missingFields
+  };
+};
+
 export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   amount,
   currency,
@@ -199,6 +241,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   serviceType = 'expat',
   clientPhone,
   providerPhone,
+  bookingData,
   onSuccess,
   onError,
   onCancel,
@@ -209,9 +252,20 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [errorCode, setErrorCode] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal" | null>(null);
+  const [validationError, setValidationError] = useState<ValidationResult | null>(null);
 
   const intl = useIntl();
   const currentOrderIdRef = useRef<string>("");
+
+  // Validate booking data on mount and when it changes
+  useEffect(() => {
+    const validation = validateBookingData(bookingData, intl);
+    if (!validation.isValid) {
+      setValidationError(validation);
+    } else {
+      setValidationError(null);
+    }
+  }, [bookingData, intl]);
 
   // Stabiliser le montant pour éviter les re-renders du SDK PayPal
   const stableAmount = useRef(amount);
@@ -415,14 +469,34 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     setIsProcessing(false);
   };
 
-  // Loading state
+  // Loading state - Skeleton loader to prevent page jumping
   if (isPending) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-xl border border-gray-200">
-        <div className="animate-spin rounded-full border-4 border-gray-200 border-t-red-500 w-10 h-10 mb-4" />
-        <span className="text-gray-600 font-medium">
-          <FormattedMessage id="payment.paypal.loading" defaultMessage="Chargement..." />
-        </span>
+      <div className="paypal-payment-container">
+        <div className="paypal-skeleton">
+          <div className="p-6 space-y-4">
+            {/* Skeleton for amount */}
+            <div className="h-12 bg-white/50 rounded-lg animate-pulse" />
+            {/* Skeleton for card form */}
+            <div className="space-y-3">
+              <div className="h-5 w-32 bg-white/50 rounded animate-pulse" />
+              <div className="h-11 bg-white/50 rounded-lg animate-pulse" />
+              <div className="h-11 bg-white/50 rounded-lg animate-pulse" />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="h-11 bg-white/50 rounded-lg animate-pulse" />
+                <div className="h-11 bg-white/50 rounded-lg animate-pulse" />
+              </div>
+              <div className="h-12 bg-white/50 rounded-xl animate-pulse" />
+            </div>
+            {/* Skeleton for separator */}
+            <div className="h-4 bg-white/30 rounded animate-pulse" />
+            {/* Skeleton for PayPal button */}
+            <div className="h-12 bg-yellow-100/50 rounded-lg animate-pulse" />
+          </div>
+        </div>
+        <p className="text-center text-gray-500 text-sm mt-3 animate-pulse">
+          <FormattedMessage id="payment.paypal.loading" defaultMessage="Chargement du système de paiement sécurisé..." />
+        </p>
       </div>
     );
   }
@@ -547,8 +621,37 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     );
   }
 
+  // Check if payment should be blocked due to validation errors
+  const isBlocked = !!(validationError && !validationError.isValid);
+
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="paypal-payment-container space-y-3 sm:space-y-4">
+      {/* Validation error - Blocking message */}
+      {isBlocked && (
+        <div className="paypal-validation-error">
+          <AlertCircle className="error-icon w-5 h-5 mt-0.5" />
+          <div className="error-content flex-1">
+            <h4 className="text-sm">
+              <FormattedMessage
+                id="payment.validation.incomplete"
+                defaultMessage="Informations manquantes"
+              />
+            </h4>
+            <p className="text-xs text-red-600 mb-2">
+              <FormattedMessage
+                id="payment.validation.completeFirst"
+                defaultMessage="Veuillez compléter les informations suivantes avant de procéder au paiement :"
+              />
+            </p>
+            <ul className="text-xs space-y-0.5">
+              {validationError.missingFields.map((field, index) => (
+                <li key={index}>{field}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* Récapitulatif du paiement - Style Stripe compact */}
       <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
         <div className="flex justify-between items-center">
@@ -561,64 +664,32 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         </div>
       </div>
 
-      {/* Processing state */}
+      {/* Processing state - Enhanced with step indicator */}
       {isProcessing && (
-        <div className="flex items-center justify-center gap-3 p-4 bg-red-50 rounded-lg border border-red-100">
-          <div className="animate-spin rounded-full border-2 border-red-200 border-t-red-500 w-5 h-5" />
-          <span className="text-gray-700 font-medium text-sm">
-            <FormattedMessage
-              id="payment.paypal.processing"
-              defaultMessage="Traitement sécurisé en cours..."
-            />
-          </span>
+        <div className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-red-100">
+          <div className="relative">
+            <div className="animate-spin rounded-full border-2 border-red-200 border-t-red-500 w-6 h-6" />
+            <Lock className="absolute inset-0 m-auto w-3 h-3 text-red-500" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-gray-800 font-semibold text-sm">
+              <FormattedMessage
+                id="payment.paypal.processing"
+                defaultMessage="Traitement sécurisé en cours..."
+              />
+            </span>
+            <span className="text-gray-500 text-xs">
+              <FormattedMessage
+                id="payment.paypal.doNotClose"
+                defaultMessage="Ne fermez pas cette page"
+              />
+            </span>
+          </div>
         </div>
       )}
 
-      {/* CSS pour les champs PayPal - Style identique à Stripe */}
-      <style>{`
-        .paypal-field-container {
-          position: relative;
-          display: flex;
-          align-items: center;
-          border: 2px solid #e5e7eb;
-          border-radius: 0.5rem;
-          background-color: #ffffff;
-          transition: all 0.2s ease;
-          overflow: hidden;
-          height: 44px;
-        }
-        .paypal-field-container:hover {
-          border-color: #d1d5db;
-        }
-        .paypal-field-container:focus-within {
-          border-color: #ef4444;
-          box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-        }
-        .paypal-field-container .field-icon {
-          padding-left: 12px;
-          display: flex;
-          align-items: center;
-          color: #9ca3af;
-        }
-        .paypal-field-container .paypal-card-field {
-          flex: 1;
-          height: 100%;
-        }
-        .paypal-card-field > div,
-        .paypal-card-field iframe {
-          border: none !important;
-          outline: none !important;
-          background: transparent !important;
-        }
-        @media (min-width: 640px) {
-          .paypal-field-container {
-            height: 46px;
-          }
-        }
-      `}</style>
-
       {/* Section Carte Bancaire */}
-      <div className={`transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`transition-opacity duration-200 ${disabled || isProcessing || isBlocked ? "opacity-50 pointer-events-none" : ""}`}>
         <PayPalCardFieldsProvider
           createOrder={createOrder}
           onApprove={onCardApprove}
@@ -674,11 +745,11 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
                 <FormattedMessage id="payment.cardholderName" defaultMessage="Nom sur la carte" />
               </label>
-              <div className="paypal-field-container">
+              <div className="paypal-field-wrapper">
                 <div className="field-icon">
                   <User className="h-4 w-4" />
                 </div>
-                <PayPalNameField className="paypal-card-field" />
+                <PayPalNameField className="paypal-field-inner" />
               </div>
             </div>
 
@@ -687,11 +758,11 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
                 <FormattedMessage id="payment.cardNumber" defaultMessage="Numéro de carte" />
               </label>
-              <div className="paypal-field-container">
+              <div className="paypal-field-wrapper">
                 <div className="field-icon">
                   <CreditCard className="h-4 w-4" />
                 </div>
-                <PayPalNumberField className="paypal-card-field" />
+                <PayPalNumberField className="paypal-field-inner" />
               </div>
             </div>
 
@@ -701,22 +772,22 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
                 <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
                   <FormattedMessage id="payment.expiry" defaultMessage="Expiration" />
                 </label>
-                <div className="paypal-field-container">
+                <div className="paypal-field-wrapper">
                   <div className="field-icon">
                     <Calendar className="h-4 w-4" />
                   </div>
-                  <PayPalExpiryField className="paypal-card-field" />
+                  <PayPalExpiryField className="paypal-field-inner" />
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
                   <FormattedMessage id="payment.cvv" defaultMessage="CVV" />
                 </label>
-                <div className="paypal-field-container">
+                <div className="paypal-field-wrapper">
                   <div className="field-icon">
                     <Shield className="h-4 w-4" />
                   </div>
-                  <PayPalCVVField className="paypal-card-field" />
+                  <PayPalCVVField className="paypal-field-inner" />
                 </div>
               </div>
             </div>
@@ -724,7 +795,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
             {/* Bouton Payer par carte - Plus grand sur mobile */}
             <CardFieldsSubmitButton
               isProcessing={isProcessing && paymentMethod === "card"}
-              disabled={disabled}
+              disabled={disabled || isBlocked}
               onSubmit={() => setPaymentMethod("card")}
             />
           </div>
@@ -744,7 +815,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       </div>
 
       {/* Bouton PayPal */}
-      <div className={`transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`paypal-buttons-container transition-opacity duration-200 ${disabled || isProcessing || isBlocked ? "opacity-50 pointer-events-none" : ""}`}>
         <PayPalButtons
           style={{
             layout: "horizontal",

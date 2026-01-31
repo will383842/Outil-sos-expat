@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useProviderTranslation } from "../../hooks/useProviderTranslation";
 import { SupportedLanguage } from "@/services/providerTranslationService";
+import { isProviderTranslationEnabled } from "../../config/featureFlags";
 import {
   Languages as LanguagesIcon,
   Eye,
@@ -103,7 +104,10 @@ type Props = {
 const toFirebaseKey = (lang: SupportedLanguage): string => lang === 'ch' ? 'zh' : lang;
 
 const TranslationModal: React.FC<Props> = ({ isOpen, onClose, providerId /*, t */ }) => {
-  const { tLocal } = useI18n();
+  const { tLocal, lang } = useI18n();
+
+  // Feature flag: si désactivé, afficher un message
+  const isEnabled = isProviderTranslationEnabled();
 
   const [loading, setLoading] = useState(false);
   const [translationsDoc, setTranslationsDoc] = useState<any | null>(null);
@@ -639,6 +643,35 @@ const TranslationModal: React.FC<Props> = ({ isOpen, onClose, providerId /*, t *
         onClose={() => setLangModal(null)}
         onSave={langModal.mode === "edit" ? (data) => saveLanguageEdits(langModal.lang, data) : undefined}
       />
+    );
+  }
+
+  // Feature flag: afficher un message si désactivé
+  if (!isEnabled) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} title={tLocal("translation")}>
+        <div className="p-6 text-center">
+          <div className="mb-4">
+            <Ban className="w-12 h-12 mx-auto text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {lang === "fr" ? "Fonctionnalité désactivée" : "Feature disabled"}
+          </h3>
+          <p className="text-sm text-gray-500 mb-4">
+            {lang === "fr"
+              ? "Le système de traduction des pages prestataires est temporairement désactivé. Les traductions existantes sont conservées."
+              : "The provider page translation system is temporarily disabled. Existing translations are preserved."}
+          </p>
+          <p className="text-xs text-gray-400">
+            {lang === "fr"
+              ? "Pour réactiver : modifier PROVIDER_TRANSLATION dans featureFlags.ts"
+              : "To re-enable: change PROVIDER_TRANSLATION in featureFlags.ts"}
+          </p>
+          <Button className="mt-4" onClick={onClose}>
+            {tLocal("cancel")}
+          </Button>
+        </div>
+      </Modal>
     );
   }
 

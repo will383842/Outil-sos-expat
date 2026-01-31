@@ -836,71 +836,117 @@
 }
 
 /* ============================================
-   PAYPAL CARD FIELDS - Remove nested borders
-   Force removal of ALL PayPal-injected styles
+   PAYPAL CARD FIELDS - Clean Integration
    ============================================ */
 
-/* Target PayPal iframe containers to remove internal borders */
-.paypal-card-field,
-[class*="paypal-card"],
-[data-uid^="paypal"],
-div[id^="card-"] {
+/* Main payment container - establishes positioning context */
+.paypal-payment-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Skeleton loader for PayPal - prevents layout jumping */
+.paypal-skeleton {
+  min-height: 420px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: paypal-shimmer 1.5s infinite;
+  border-radius: 0.75rem;
+}
+
+@keyframes paypal-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* PayPal field container - styled wrapper */
+.paypal-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  height: 44px;
+}
+
+.paypal-field-wrapper:hover {
+  border-color: #d1d5db;
+}
+
+.paypal-field-wrapper:focus-within {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.paypal-field-wrapper.has-error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.paypal-field-wrapper .field-icon {
+  padding-left: 12px;
+  display: flex;
+  align-items: center;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* PayPal field inner content - full width */
+.paypal-field-wrapper .paypal-field-inner {
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+}
+
+/* Reset PayPal iframe styles - minimal overrides */
+.paypal-field-inner iframe {
   border: none !important;
-  box-shadow: none !important;
-  outline: none !important;
   background: transparent !important;
 }
 
-/* Remove borders from PayPal iframes */
-iframe[name^="__paypal"],
-iframe[title*="PayPal"],
-iframe[src*="paypal"] {
-  border: 0 !important;
-  border-width: 0 !important;
-  outline: none !important;
+/* PayPal buttons container - stable height */
+.paypal-buttons-container {
+  min-height: 55px;
 }
 
-/* Target PayPal field wrappers */
-[class*="PayPalNameField"],
-[class*="PayPalNumberField"],
-[class*="PayPalExpiryField"],
-[class*="PayPalCVVField"] {
-  border: none !important;
+/* Validation error message */
+.paypal-validation-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #fef2f2;
+  border: 2px solid #fecaca;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-/* Ensure the wrapper div doesn't add borders */
-[class*="PayPalNameField"] > div,
-[class*="PayPalNumberField"] > div,
-[class*="PayPalExpiryField"] > div,
-[class*="PayPalCVVField"] > div {
-  border: none !important;
-  box-shadow: none !important;
+.paypal-validation-error .error-icon {
+  flex-shrink: 0;
+  color: #dc2626;
 }
 
-/* Force removal of ALL PayPal internal borders - deeper nesting */
-[class*="paypal"] > div,
-[class*="PayPal"] > div,
-div[id*="card-field"] > div,
-div[id*="card-field"] > div > div {
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
+.paypal-validation-error .error-content h4 {
+  font-weight: 600;
+  color: #991b1b;
+  margin-bottom: 0.25rem;
 }
 
-/* Target the specific PayPal card field container class */
-.card-field-container,
-[class*="card-field-container"],
-[class*="CardField"] > div {
-  border: none !important;
-  box-shadow: none !important;
-  outline: none !important;
+.paypal-validation-error .error-content ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  color: #b91c1c;
+  font-size: 0.875rem;
 }
 
-/* Override any inline styles on PayPal generated elements */
-div[data-pp-id] > div,
-div[data-pp-id] > div > div {
-  border: none !important;
-  box-shadow: none !important;
+/* Responsive adjustments */
+@media (min-width: 640px) {
+  .paypal-field-wrapper {
+    height: 48px;
+  }
 }
 
 /* ============================================

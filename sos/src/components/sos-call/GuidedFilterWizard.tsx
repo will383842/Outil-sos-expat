@@ -516,40 +516,15 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     );
   }, []);
 
-  // Track if user just navigated back (to prevent auto-advance)
-  const justNavigatedBackRef = useRef<boolean>(false);
-
-  // Track the last selected country to detect new selections
-  const lastSelectedCountryRef = useRef<string>("");
-
   const handleCountrySelect = useCallback((code: string) => {
-    // Clear the "navigated back" flag since user is making a new selection
-    justNavigatedBackRef.current = false;
-    lastSelectedCountryRef.current = code;
     setSelectedCountry(code);
   }, []);
 
   // Handler for going back to step 1
   const handleBackToStep1 = useCallback(() => {
-    justNavigatedBackRef.current = true;
     setStep(1);
   }, []);
 
-  // Auto-advance effect when country is selected (only for NEW selections)
-  useEffect(() => {
-    // Don't auto-advance if user just navigated back
-    if (justNavigatedBackRef.current) {
-      return;
-    }
-
-    // Only auto-advance if this is a new selection (country changed)
-    if (selectedCountry && step === 1 && lastSelectedCountryRef.current === selectedCountry) {
-      const timer = setTimeout(() => {
-        setStep(2);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedCountry, step]);
 
   // Auto-advance: Type selection → Complete wizard
   const handleTypeSelect = useCallback((type: "all" | "lawyer" | "expat") => {
@@ -585,20 +560,8 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
       setSelectedCountry("");
       setSelectedLanguages([]);
       setSelectedType(null);
-      justNavigatedBackRef.current = false;
-      lastSelectedCountryRef.current = "";
     }
   }, [isOpen]);
-
-  const handleComplete = useCallback(() => {
-    const data = {
-      country: selectedCountry,
-      languages: selectedLanguages,
-      type: selectedType || "all", // Default to "all" if null
-    };
-    console.log('🟡 [GuidedFilterWizard] handleComplete - sending data:', data);
-    onComplete(data);
-  }, [onComplete, selectedCountry, selectedLanguages, selectedType]);
 
   const canProceed = useMemo(() => {
     if (step === 1) return !!selectedCountry;
@@ -648,10 +611,29 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 16px)' }}
       >
         {step === 1 && (
-          // Step 1: Hint text - selection auto-advances
-          <p className="text-center text-gray-400 text-base py-4">
-            <FormattedMessage id="wizard.hint.selectCountry" defaultMessage="Sélectionnez votre pays" />
-          </p>
+          // Step 1: Next button only
+          <button
+            onClick={() => setStep(2)}
+            onTouchEnd={(e) => {
+              if (canProceed) {
+                e.preventDefault();
+                setStep(2);
+              }
+            }}
+            disabled={!canProceed}
+            style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' } as React.CSSProperties}
+            className={`
+              w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
+              min-h-[60px]
+              ${canProceed
+                ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:opacity-80 shadow-lg shadow-red-500/30"
+                : "bg-white/10 text-gray-500 cursor-not-allowed"
+              }
+            `}
+          >
+            <FormattedMessage id="action.next" />
+            <ChevronRight className="w-6 h-6" />
+          </button>
         )}
 
         {step === 2 && (

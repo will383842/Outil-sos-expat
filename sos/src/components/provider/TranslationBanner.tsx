@@ -8,6 +8,7 @@ import {
   LANGUAGE_NAMES,
   type SupportedLanguage,
 } from '../../services/providerTranslationService';
+import { isProviderTranslationEnabled } from '../../config/featureFlags';
 
 interface TranslationBannerProps {
   providerId?: string;
@@ -138,6 +139,11 @@ export const TranslationBanner: React.FC<TranslationBannerProps> = ({
   const [isTranslating, setIsTranslating] = useState<SupportedLanguage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [justTranslated, setJustTranslated] = useState<SupportedLanguage | null>(null);
+
+  // Feature flag: si désactivé, ne rien afficher
+  if (!isProviderTranslationEnabled()) {
+    return null;
+  }
 
   const allLanguages = SUPPORTED_LANGUAGES;
 

@@ -27,9 +27,11 @@ import {
   CardExpiryElement,
   CardCvcElement,
   CardElement,
+  PaymentRequestButtonElement,
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import type { PaymentRequest } from "@stripe/stripe-js";
 import { functions, db } from "../config/firebase";
 import { httpsCallable, HttpsCallable } from "firebase/functions";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
@@ -1676,6 +1678,10 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     >(null);
     const [showFeeBreakdown, setShowFeeBreakdown] = useState(false);
 
+    // Payment Request (Apple Pay / Google Pay)
+    const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
+    const [canMakePaymentRequest, setCanMakePaymentRequest] = useState(false);
+
     // P0-1 FIX: callSessionId stable généré UNE SEULE FOIS pour garantir l'idempotence
     // NE PAS utiliser Date.now() dans actuallySubmitPayment car cela crée une nouvelle clé à chaque retry
     const [stableCallSessionId] = useState(() =>
@@ -1814,6 +1820,175 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         watch,
       ]
     );
+
+    // Initialiser Payment Request (Apple Pay / Google Pay)
+    useEffect(() => {
+      if (!stripe || !adminPricing.totalAmount) return;
+
+      const amountInCents = Math.round(adminPricing.totalAmount * 100);
+
+      const pr = stripe.paymentRequest({
+        country: "FR",
+        currency: serviceCurrency,
+        total: {
+          label: `SOS Expats - ${service.serviceType === "lawyer_call" ? "Avocat" : "Expert"}`,
+          amount: amountInCents,
+        },
+        requestPayerName: true,
+        requestPayerEmail: true,
+      });
+
+      // Vérifier si Apple Pay / Google Pay est disponible
+      pr.canMakePayment().then((result) => {
+        if (result) {
+          console.log("[PaymentRequest] ✅ Apple Pay / Google Pay disponible:", result);
+          setPaymentRequest(pr);
+          setCanMakePaymentRequest(true);
+        } else {
+          console.log("[PaymentRequest] ❌ Apple Pay / Google Pay non disponible");
+          setCanMakePaymentRequest(false);
+        }
+      });
+
+      // Cleanup: on ne peut pas annuler un PaymentRequest, mais on reset l'état
+      return () => {
+        setPaymentRequest(null);
+        setCanMakePaymentRequest(false);
+      };
+    }, [stripe, adminPricing.totalAmount, serviceCurrency, service.serviceType]);
+
+    // Gestionnaire du paiement via Apple Pay / Google Pay
+    useEffect(() => {
+      if (!paymentRequest || !stripe) return;
+
+      const handlePaymentMethod = async (ev: {
+        paymentMethod: { id: string };
+        complete: (status: "success" | "fail") => void;
+      }) => {
+        console.log("[PaymentRequest] 🍎 Paiement Apple Pay / Google Pay reçu");
+        setIsProcessing(true);
+
+        try {
+          // Valider les données de base
+          if (!user?.uid) throw new Error(t("err.unauth"));
+          if (adminPricing.totalAmount < 0.5) throw new Error(t("err.minAmount"));
+
+          const callSessionId = stableCallSessionId;
+
+          // Créer le PaymentIntent
+          const createPaymentIntent: HttpsCallable<
+            PaymentIntentData,
+            PaymentIntentResponse
+          > = httpsCallable(functions, "createPaymentIntent");
+
+          const paymentData: PaymentIntentData = {
+            amount: adminPricing.totalAmount,
+            commissionAmount: adminPricing.connectionFeeAmount,
+            providerAmount: adminPricing.providerAmount,
+            currency: stripeCurrency,
+            serviceType: service.serviceType,
+            providerId: provider.id,
+            clientId: user.uid,
+            clientEmail: user.email || "",
+            providerName: provider.fullName || provider.name || "",
+            callSessionId: callSessionId,
+            description:
+              service.serviceType === "lawyer_call"
+                ? intl.formatMessage({ id: "checkout.consultation.lawyer" })
+                : intl.formatMessage({ id: "checkout.consultation.expat" }),
+            metadata: {
+              providerType: provider.role || provider.type || "expat",
+              duration: String(adminPricing.duration),
+              clientName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+              clientPhone: service.clientPhone || "",
+              clientWhatsapp: "",
+              currency: serviceCurrency,
+              timestamp: new Date().toISOString(),
+              callSessionId: callSessionId,
+              paymentMethod: "apple_pay_google_pay",
+            },
+          };
+
+          const res = await createPaymentIntent(paymentData);
+          const resData = res.data as PaymentIntentResponse;
+
+          if (!resData?.clientSecret) {
+            throw new Error(t("err.noClientSecret"));
+          }
+
+          // Confirmer le paiement avec le payment method de Apple Pay / Google Pay
+          const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
+            resData.clientSecret,
+            { payment_method: ev.paymentMethod.id },
+            { handleActions: false }
+          );
+
+          if (confirmError) {
+            console.error("[PaymentRequest] ❌ Erreur confirmation:", confirmError);
+            ev.complete("fail");
+            onError(confirmError.message || t("err.stripe"));
+            return;
+          }
+
+          if (!paymentIntent) {
+            ev.complete("fail");
+            onError(t("err.paymentFailed"));
+            return;
+          }
+
+          // Gérer 3D Secure si nécessaire
+          if (paymentIntent.status === "requires_action") {
+            const { error: actionError } = await stripe.confirmCardPayment(resData.clientSecret);
+            if (actionError) {
+              ev.complete("fail");
+              onError(actionError.message || t("err.actionRequired"));
+              return;
+            }
+          }
+
+          // Succès !
+          ev.complete("success");
+          console.log("[PaymentRequest] ✅ Paiement Apple Pay / Google Pay réussi!");
+
+          // Persister les documents et appeler onSuccess
+          const orderId = await persistPaymentDocs(paymentIntent.id);
+
+          onSuccess({
+            paymentIntentId: paymentIntent.id,
+            call: "skipped", // L'appel sera planifié côté serveur
+            orderId: orderId,
+          });
+        } catch (err) {
+          console.error("[PaymentRequest] ❌ Erreur:", err);
+          ev.complete("fail");
+          onError(err instanceof Error ? err.message : String(err));
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+
+      paymentRequest.on("paymentmethod", handlePaymentMethod);
+
+      return () => {
+        paymentRequest.off("paymentmethod", handlePaymentMethod);
+      };
+    }, [
+      paymentRequest,
+      stripe,
+      user,
+      provider,
+      service,
+      adminPricing,
+      serviceCurrency,
+      stripeCurrency,
+      stableCallSessionId,
+      intl,
+      t,
+      onSuccess,
+      onError,
+      setIsProcessing,
+      persistPaymentDocs,
+    ]);
 
     const sendProviderNotifications = useCallback(
       async (
@@ -2447,6 +2622,37 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       <>
         <form onSubmit={(e) => { e.preventDefault(); console.log("[Form] onSubmit intercepted"); handlePaymentSubmit(e); }} className="space-y-4" noValidate>
           <div className="space-y-4">
+            {/* Apple Pay / Google Pay Button */}
+            {canMakePaymentRequest && paymentRequest && (
+              <div className="space-y-3">
+                <PaymentRequestButtonElement
+                  options={{
+                    paymentRequest,
+                    style: {
+                      paymentRequestButton: {
+                        type: "default",
+                        theme: "dark",
+                        height: "48px",
+                      },
+                    },
+                  }}
+                />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-4 bg-white text-gray-500">
+                      {language === "fr" ? "ou payer par carte" :
+                       language === "es" ? "o pagar con tarjeta" :
+                       language === "de" ? "oder mit Karte bezahlen" :
+                       "or pay with card"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <label className="block text-sm font-semibold text-gray-700">
               <div className="flex items-center space-x-2">
                 <CreditCard
@@ -3057,6 +3263,25 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       return "";
     }
   }, []);
+
+  // Récupérer les données de réservation pour validation PayPal
+  const bookingDataForValidation = useMemo(() => {
+    try {
+      const raw = sessionStorage.getItem("bookingMeta");
+      if (!raw) return undefined;
+      const parsed = JSON.parse(raw);
+      return {
+        firstName: parsed.clientFirstName || user?.firstName || "",
+        lastName: user?.lastName || "",
+        title: parsed.title || "",
+        description: parsed.description || "",
+        clientPhone: storedClientPhone || user?.phone || "",
+        currentCountry: parsed.country || "",
+      };
+    } catch {
+      return undefined;
+    }
+  }, [storedClientPhone, user?.firstName, user?.lastName, user?.phone]);
 
   const adminPricing: PricingEntryTrace | null = useMemo(() => {
     if (!pricing || !providerRole) return null;
@@ -3891,8 +4116,12 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                   serviceType={providerRole === "lawyer" ? "lawyer" : "expat"}
                   clientPhone={service?.clientPhone || ""}
                   providerPhone={provider?.phone || ""}
+                  bookingData={bookingDataForValidation}
                   onSuccess={handlePayPalPaymentSuccess}
-                  onError={(err) => handlePaymentError(err.message)}
+                  onError={() => {
+                    // PayPalPaymentForm handles error display internally
+                    // Don't set parent error to avoid duplicate messages
+                  }}
                   onCancel={() => console.log("PayPal cancelled")}
                   disabled={isProcessing}
                 />
