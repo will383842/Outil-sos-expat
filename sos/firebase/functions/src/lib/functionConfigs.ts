@@ -42,7 +42,7 @@ export const emergencyConfig = {
 export const adminConfig = {
   region: "europe-west1" as const,
   memory: "512MiB" as const,
-  cpu: 0.5,
+  cpu: 0.25,  // Reduced from 0.5 - admin functions mostly do simple DB operations
   maxInstances: 5,
   minInstances: 0,
   concurrency: 1,
@@ -85,7 +85,7 @@ export const highTrafficConfig = {
 export const webhookConfig = {
   region: "europe-west1" as const,
   memory: "512MiB" as const,
-  cpu: 0.5,
+  cpu: 0.25,  // Reduced from 0.5 - webhooks mostly wait for external API responses
   maxInstances: 30,
   minInstances: 0,
   concurrency: 1, // Important: one webhook at a time per instance
@@ -99,7 +99,7 @@ export const webhookConfig = {
 export const scheduledConfig = {
   region: "europe-west1" as const,
   memory: "512MiB" as const,
-  cpu: 0.5,
+  cpu: 0.25,  // Reduced from 0.5 - scheduled tasks mostly do DB operations
   maxInstances: 1,
   minInstances: 0,
   concurrency: 1,

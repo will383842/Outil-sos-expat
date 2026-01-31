@@ -97,7 +97,7 @@ function formatAmount(amountInCents: number): string {
  * Returns data in CSV or JSON format.
  */
 export const adminExportWithdrawals = onCall(
-  { ...adminConfig, memory: '1GiB', timeoutSeconds: 120 },
+  { ...adminConfig, memory: '1GiB', cpu: 0.5, timeoutSeconds: 120 },  // cpu: 0.5 required for memory > 512MiB
   async (request): Promise<ExportWithdrawalsResponse> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);
