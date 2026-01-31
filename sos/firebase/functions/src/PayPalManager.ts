@@ -741,6 +741,10 @@ export class PayPalManager {
     const encryptedProviderPhone = data.providerPhone ? encryptPhoneNumber(data.providerPhone) : "";
     console.log(`🔐 [PAYPAL_DEBUG] Phone encryption: client=${!!encryptedClientPhone}, provider=${!!encryptedProviderPhone}`);
 
+    // P0 FIX CRITICAL: Generate conference name for Twilio (required by TwilioCallManager.executeCallSequence)
+    const conferenceName = `conf_${data.callSessionId}_${Date.now()}`;
+    console.log(`🔶 [PAYPAL_DEBUG] Generated conference name: ${conferenceName}`);
+
     await this.db.collection("call_sessions").doc(data.callSessionId).set({
       id: data.callSessionId,
       status: "pending",
@@ -774,16 +778,20 @@ export class PayPalManager {
           attemptCount: 0,
         },
       },
+      // P0 FIX CRITICAL: Add conference object for Twilio (required by TwilioCallManager)
+      conference: { name: conferenceName },
       metadata: {
         providerId: data.providerId,
         clientId: data.clientId,
+        // P0 FIX: Add maxDuration for Twilio call (32 min default for non-lawyers)
+        maxDuration: 1920,
         // Include tracking metadata for attribution (UTM, Meta identifiers)
         ...(data.trackingMetadata || {}),
       },
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
-    console.log(`🔶 [PAYPAL_DEBUG] call_sessions document saved with encrypted phones`);
+    console.log(`🔶 [PAYPAL_DEBUG] call_sessions document saved with conference name and encrypted phones`);
 
     console.log(`✅ [PAYPAL_DEBUG] createSimpleOrder COMPLETE - orderId: ${response.id}`);
 
@@ -930,6 +938,10 @@ export class PayPalManager {
     const encryptedProviderPhone = data.providerPhone ? encryptPhoneNumber(data.providerPhone) : "";
     console.log(`🔐 [PAYPAL] Phone encryption (DIRECT): client=${!!encryptedClientPhone}, provider=${!!encryptedProviderPhone}`);
 
+    // P0 FIX CRITICAL: Generate conference name for Twilio (required by TwilioCallManager.executeCallSequence)
+    const conferenceNameDirect = `conf_${data.callSessionId}_${Date.now()}`;
+    console.log(`🔶 [PAYPAL] Generated conference name (DIRECT): ${conferenceNameDirect}`);
+
     await this.db.collection("call_sessions").doc(data.callSessionId).set({
       id: data.callSessionId,
       status: "pending",
@@ -963,9 +975,13 @@ export class PayPalManager {
           attemptCount: 0,
         },
       },
+      // P0 FIX CRITICAL: Add conference object for Twilio (required by TwilioCallManager)
+      conference: { name: conferenceNameDirect },
       metadata: {
         providerId: data.providerId,
         clientId: data.clientId,
+        // P0 FIX: Add maxDuration for Twilio call (32 min default for non-lawyers)
+        maxDuration: 1920,
         // Include tracking metadata for attribution (UTM, Meta identifiers)
         ...(data.trackingMetadata || {}),
       },
@@ -973,7 +989,7 @@ export class PayPalManager {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
 
-    console.log("✅ [PAYPAL] Order created with encrypted phones:", response.id);
+    console.log("✅ [PAYPAL] Order created with conference name and encrypted phones:", response.id);
 
     return {
       orderId: response.id,
