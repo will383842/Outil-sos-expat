@@ -269,7 +269,7 @@ const LEFT_NAVIGATION_ITEMS: readonly NavigationItem[] = [
     labelKey: "header.nav.viewProfiles",
     mobileIcon: "👥",
     desktopIcon: "👥",
-    showInMobileMenu: false,
+    showInMobileMenu: true,
   },
   {
     path: "/testimonials",
