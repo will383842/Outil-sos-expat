@@ -68,9 +68,69 @@ const TestimonialsSection: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        {/* Mobile/Tablet: Scroll horizontal CENTRÉ */}
+        <div
+          className="lg:hidden flex gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+          style={{
+            scrollPaddingInline: 'calc(50vw - 150px)',
+            paddingLeft: 'calc(50vw - 150px)',
+            paddingRight: 'calc(50vw - 150px)',
+          }}
+        >
           {testimonials.map((testimonial) => (
-            <div key={testimonial.id} className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-red-200 transition-all hover:-translate-y-2 group">
+            <div key={testimonial.id} className="flex-shrink-0 w-[300px] sm:w-[340px] snap-center bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-red-200 transition-all hover:-translate-y-2 group">
+              {/* Header avec rating et vérification */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                {testimonial.verified && (
+                  <div className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs font-medium border border-blue-200">
+                    <CheckCircle className="h-3 w-3" />
+                    {intl.formatMessage({ id: 'testimonials.verified' })}
+                  </div>
+                )}
+              </div>
+
+              {/* Contenu du témoignage */}
+              <p className="text-slate-700 mb-4 leading-relaxed text-sm sm:text-base line-clamp-4">
+                "{testimonial.comment}"
+              </p>
+
+              {/* Impact */}
+              <div className="mb-4">
+                <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium border border-emerald-200">
+                  <TrendingUp className="h-3 w-3" />
+                  {testimonial.impact}
+                </div>
+              </div>
+
+              {/* Type d'expert */}
+              <div className="mb-4">
+                <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 px-2 py-1 rounded-full text-xs">
+                  <Users className="h-3 w-3" />
+                  {testimonial.expertType}
+                </span>
+              </div>
+
+              {/* Auteur */}
+              <div>
+                <p className="font-bold text-slate-900 text-sm sm:text-base">{testimonial.name}</p>
+                <p className="text-slate-600 text-xs sm:text-sm flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {testimonial.location}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: Grille 3 colonnes */}
+        <div className="hidden lg:grid lg:grid-cols-3 gap-8">
+          {testimonials.map((testimonial) => (
+            <div key={testimonial.id} className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-red-200 transition-all hover:-translate-y-2 group">
               {/* Header avec rating et vérification */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex gap-1">

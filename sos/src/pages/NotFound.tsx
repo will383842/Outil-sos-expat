@@ -171,7 +171,7 @@ const NotFound: React.FC = () => {
             <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-red-50 dark:bg-red-900/20 mb-6">
               <AlertCircle className="w-16 h-16 text-red-600 dark:text-red-400" />
             </div>
-            <h1 className="text-6xl font-bold text-gray-900 dark:text-white mb-4">404</h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4">404</h1>
             <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
               <FormattedMessage id="error.404.title" defaultMessage="Page Not Found" />
             </h2>

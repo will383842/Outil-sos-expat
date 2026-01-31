@@ -483,19 +483,25 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         </div>
       )}
 
-      {/* Mobile & Tablet - Scroll horizontal avec snap - Mobile First */}
-      {/* ⚠️ FIX: Utiliser 100% au lieu de 100vw pour éviter débordement horizontal */}
+      {/* Mobile & Tablet - Scroll horizontal avec snap - CENTRÉ */}
+      {/* ✅ FIX: Première carte centrée sur l'écran grâce au padding calculé */}
       <div
-        className="lg:hidden w-full overflow-hidden max-w-full"
+        className="lg:hidden w-full overflow-hidden"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div
-          className="flex gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide px-4 sm:px-6"
+          className="flex flex-nowrap gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide"
+          style={{
+            scrollPaddingInline: 'calc(50vw - 140px)',
+            paddingLeft: 'calc(50vw - 140px)',
+            paddingRight: 'calc(50vw - 140px)',
+          }}
         >
           {displayProviders.map((provider, index) => (
             <div
               key={`${provider.id}-${rotationIndex}`}
-              className="flex-shrink-0 snap-center first:ml-0 last:mr-0"
+              className="flex-shrink-0 snap-center"
+              style={{ minWidth: '280px', maxWidth: '300px' }}
             >
               <ModernProfileCard
                 provider={provider}

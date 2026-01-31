@@ -67,12 +67,12 @@ const HowItWorksPage: React.FC = () => {
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
-            <h1 className="text-6xl md:text-8xl font-black mb-4 leading-tight">
-              <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-black mb-4 leading-tight">
+              <span className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
                 <FormattedMessage id="howItWorks.title1" />
               </span>
               <br />
-              <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
+              <span className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
                 <FormattedMessage id="howItWorks.title2" />
               </span>
             </h1>
@@ -96,8 +96,8 @@ const HowItWorksPage: React.FC = () => {
 
           <div className="relative z-10 max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-              <h2 className="text-5xl md:text-6xl font-black text-white mb-6">
-                <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6">
+                <span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
                   <FormattedMessage id="howItWorks.stepsTitle" />
                 </span>
               </h2>
@@ -193,12 +193,12 @@ const HowItWorksPage: React.FC = () => {
         <section className="py-28 bg-white">
           <div className="max-w-7xl mx-auto px-6">
             <div className="max-w-4xl mx-auto text-center mb-20">
-              <h2 className="text-5xl font-black text-gray-900 mb-6">
-                <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-6">
+                <span className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
                   <FormattedMessage id="howItWorks.whyUsTitle" />
                 </span>
               </h2>
-              <p className="text-xl text-gray-600 font-bold">
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 font-bold">
                 <FormattedMessage id="howItWorks.whyUsSubtitle" />
               </p>
             </div>
@@ -260,11 +260,11 @@ const HowItWorksPage: React.FC = () => {
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
-            <h2 className="text-5xl md:text-7xl font-black text-white mb-8 leading-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-white mb-8 leading-tight">
               <FormattedMessage id="howItWorks.ctaTitle" />
             </h2>
 
-            <p className="text-2xl md:text-3xl text-white/95 mb-12 max-w-4xl mx-auto leading-relaxed font-bold">
+            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white/95 mb-12 max-w-4xl mx-auto leading-relaxed font-bold">
               <FormattedMessage id="howItWorks.ctaDesc" />
             </p>
 

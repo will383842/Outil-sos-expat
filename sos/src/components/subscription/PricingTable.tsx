@@ -70,7 +70,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
   const intl = useIntl();
   const { language } = useApp();
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currency);
-  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
   const locale = language as SupportedLanguage;
 
   // Calculer les prix pour chaque plan selon la période sélectionnée

@@ -1222,13 +1222,13 @@ const Login: React.FC = () => {
                 {/* Remember Me & Forgot Password */}
                 <div className="flex items-center justify-between text-xs sm:text-sm">
                   <label className="flex items-center cursor-pointer select-none">
-                    <input 
-                      id="remember-me" 
-                      name="remember-me" 
-                      type="checkbox" 
-                      checked={formData.rememberMe} 
-                      onChange={(e) => handleFieldChange("rememberMe", e.target.checked)} 
-                      className="h-3.5 w-3.5 text-red-600 bg-white/10 border-white/20 rounded focus:ring-red-500"
+                    <input
+                      id="remember-me"
+                      name="remember-me"
+                      type="checkbox"
+                      checked={formData.rememberMe}
+                      onChange={(e) => handleFieldChange("rememberMe", e.target.checked)}
+                      className="h-5 w-5 text-red-600 bg-white/10 border-white/20 rounded focus:ring-red-500"
                     />
                     <span className="ml-2 text-gray-300">
                       {intl.formatMessage({ id: "login.remember_me" })}

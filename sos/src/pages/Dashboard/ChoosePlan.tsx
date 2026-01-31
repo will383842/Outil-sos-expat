@@ -481,8 +481,8 @@ export const ChoosePlan: React.FC = () => {
   const locale = language as SupportedLanguage;
 
   // State
-  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
-  const [currency, setCurrency] = useState<Currency>('EUR');
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
+  const [currency, setCurrency] = useState<Currency>('USD');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

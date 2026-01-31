@@ -207,43 +207,13 @@ function CarouselSkeleton() {
 }
 
 /* ================================
-   Slider d'avis
+   Slider d'avis - Version horizontale avec scroll
    ================================ */
 function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
-  const [current, setCurrent] = useState(0);
   const intl = useIntl();
-  const [paused, setPaused] = useState(false);
-  const touchStartX = useRef<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const isDark = theme === "dark";
-
-  useEffect(() => {
-    if (paused) return;
-    const id = window.setInterval(() => {
-      setCurrent((p) => (p + 1) % REVIEWS.length);
-    }, 4500);
-    return () => window.clearInterval(id);
-  }, [paused]);
-
-  const goTo = (i: number) => setCurrent((i + REVIEWS.length) % REVIEWS.length);
-  const prev = () => goTo(current - 1);
-  const next = () => goTo(current + 1);
-
-  const onTouchStart: React.TouchEventHandler<HTMLDivElement> = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-  const onTouchEnd: React.TouchEventHandler<HTMLDivElement> = (e) => {
-    if (touchStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(dx) > 50) {
-      if (dx > 0) {
-        prev();
-      } else {
-        next();
-      }
-    }
-    touchStartX.current = null;
-  };
 
   const labelType = (t: TypeEchange): string => {
     return t === "lawyer"
@@ -261,160 +231,171 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
     }
   };
 
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div
-      className="relative max-w-[980px] mx-auto select-none"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
+      className="relative max-w-full mx-auto select-none"
       role="region"
       aria-label={intl.formatMessage({ id: "aria.reviewsCarousel" })}
     >
-      <div className="overflow-hidden rounded-[28px]">
-        <div
-          className="flex transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(-${current * 100}%)` }}
-        >
-          {REVIEWS.map((r, idx) => {
-            const reviewerName = intl.formatMessage({ id: r.nameKey });
-            const reviewerCity = intl.formatMessage({ id: r.cityKey });
-            const reviewComment = intl.formatMessage({ id: r.commentKey });
-            
-            return (
-              <article 
-                key={r.id} 
-                className="w-full shrink-0 px-2 sm:px-4"
-                aria-hidden={idx !== current}
+      {/* Container avec scroll horizontal */}
+      <div
+        ref={scrollContainerRef}
+        className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 px-4 sm:px-6 snap-x snap-mandatory scrollbar-hide"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        {REVIEWS.map((r, idx) => {
+          const reviewerName = intl.formatMessage({ id: r.nameKey });
+          const reviewerCity = intl.formatMessage({ id: r.cityKey });
+          const reviewComment = intl.formatMessage({ id: r.commentKey });
+
+          return (
+            <article
+              key={r.id}
+              className="flex-shrink-0 w-[300px] sm:w-[340px] md:w-[380px] snap-center"
+            >
+              <Link
+                to="/testimonials"
+                className={
+                  isDark
+                    ? "block h-full rounded-2xl sm:rounded-[28px] border border-white/15 bg-gradient-to-br from-white/8 to-white/5 backdrop-blur-xl p-5 sm:p-6 hover:border-white/25 hover:shadow-2xl transition-all duration-300"
+                    : "block h-full rounded-2xl sm:rounded-[28px] border border-gray-200 bg-white p-5 sm:p-6 shadow-lg hover:shadow-2xl transition-all duration-300"
+                }
+                aria-label={intl.formatMessage({ id: "aria.viewReviewFrom" }, { name: reviewerName })}
               >
-                <Link
-                  to="/testimonials"
+                {/* Badge type */}
+                <div
                   className={
                     isDark
-                      ? "block rounded-[28px] border border-white/15 bg-gradient-to-br from-white/8 to-white/5 backdrop-blur-xl p-6 sm:p-10 md:p-12 hover:border-white/25 hover:shadow-2xl transition-all duration-300"
-                      : "block rounded-[28px] border border-gray-200 bg-white p-6 sm:p-10 md:p-12 hover:shadow-2xl transition-all duration-300"
+                      ? "mb-4 inline-flex items-center gap-2 bg-white/15 border border-white/25 text-white rounded-full px-3 py-1.5 text-xs sm:text-sm font-semibold backdrop-blur"
+                      : "mb-4 inline-flex items-center gap-2 bg-gray-100 border border-gray-200 text-gray-700 rounded-full px-3 py-1.5 text-xs sm:text-sm font-semibold"
                   }
-                  aria-label={intl.formatMessage({ id: "aria.viewReviewFrom" }, { name: reviewerName })}
                 >
-                  <div
-                    className={
-                      isDark
-                        ? "mb-5 sm:mb-6 inline-flex items-center gap-2 bg-white/15 border border-white/25 text-white rounded-full px-3.5 py-2 text-xs sm:text-sm font-semibold backdrop-blur"
-                        : "mb-5 sm:mb-6 inline-flex items-center gap-2 bg-gray-100 border border-gray-200 text-gray-700 rounded-full px-3.5 py-2 text-xs sm:text-sm font-semibold"
-                    }
-                  >
-                    {r.typeEchange === "lawyer" ? (
-                      <Briefcase size={14} aria-hidden="true" />
-                    ) : (
-                      <User size={14} aria-hidden="true" />
-                    )}
-                    {labelType(r.typeEchange)}
-                  </div>
+                  {r.typeEchange === "lawyer" ? (
+                    <Briefcase size={14} aria-hidden="true" />
+                  ) : (
+                    <User size={14} aria-hidden="true" />
+                  )}
+                  {labelType(r.typeEchange)}
+                </div>
 
-                  <div className="flex flex-col md:flex-row md:items-start items-center gap-5 sm:gap-7 md:gap-8 text-center md:text-left">
-                    <div className="flex flex-col items-center md:items-start">
-                      <div
-                        className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full p-[3px] ${isDark ? "bg-gradient-to-br from-white/40 to-white/10" : "bg-gradient-to-br from-gray-200 to-gray-100"} shadow`}
-                      >
-                        <img
-                          src={r.avatar}
-                          alt={intl.formatMessage({ id: "aria.portraitOf" }, { name: reviewerName })}
-                          className="w-full h-full rounded-full object-cover"
-                          loading={idx === current ? "eager" : "lazy"}
-                          decoding="async"
-                          referrerPolicy="no-referrer"
-                          onError={(e) => onImgError(e, r.fallback)}
-                          width={112}
-                          height={112}
-                        />
+                {/* Contenu principal */}
+                <div className="flex flex-col">
+                  {/* Avatar et infos */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div
+                      className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ${isDark ? "bg-gradient-to-br from-white/40 to-white/10" : "bg-gradient-to-br from-gray-200 to-gray-100"} shadow flex-shrink-0`}
+                    >
+                      <img
+                        src={r.avatar}
+                        alt={intl.formatMessage({ id: "aria.portraitOf" }, { name: reviewerName })}
+                        className="w-full h-full rounded-full object-cover"
+                        loading={idx < 3 ? "eager" : "lazy"}
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => onImgError(e, r.fallback)}
+                        width={64}
+                        height={64}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div
+                          className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-base sm:text-lg truncate`}
+                        >
+                          {reviewerName}
+                        </div>
+                        <span className="px-2 py-0.5 text-[10px] sm:text-xs font-semibold rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-sm whitespace-nowrap">
+                          <FormattedMessage id="badge.earlyBetaUser" />
+                        </span>
                       </div>
-                      <div className="mt-3">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <div
-                            className={`font-extrabold ${isDark ? "text-white" : "text-gray-900"} text-lg sm:text-xl leading-tight`}
-                          >
-                            {reviewerName}
-                          </div>
-                          <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-sm whitespace-nowrap">
-                            <FormattedMessage id="badge.earlyBetaUser" />
-                          </span>
-                        </div>
-                        <div
-                          className={`mt-0.5 inline-flex items-center gap-1 ${isDark ? "text-gray-300/90" : "text-gray-500"} text-xs sm:text-sm`}
-                        >
-                          <MapPin size={16} aria-hidden="true" />
-                          <span>{reviewerCity}</span>
-                        </div>
-                        <div
-                          className="mt-2 inline-flex gap-1"
-                          aria-label={intl.formatMessage({ id: "aria.rating5Stars" })}
-                        >
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              size={18}
-                              className="text-yellow-400 fill-yellow-400"
-                              aria-hidden="true"
-                            />
-                          ))}
-                        </div>
+                      <div
+                        className={`mt-0.5 inline-flex items-center gap-1 ${isDark ? "text-gray-300/90" : "text-gray-500"} text-xs sm:text-sm`}
+                      >
+                        <MapPin size={12} aria-hidden="true" />
+                        <span className="truncate">{reviewerCity}</span>
                       </div>
                     </div>
-
-                    <blockquote
-                      className={`${isDark ? "text-white/95" : "text-gray-700"} text-base sm:text-lg md:text-xl leading-7 sm:leading-8 md:leading-9 max-w-[58ch]`}
-                    >
-                      "{reviewComment}"
-                    </blockquote>
                   </div>
-                </Link>
-              </article>
-            );
-          })}
-        </div>
+
+                  {/* Étoiles */}
+                  <div
+                    className="flex gap-0.5 mb-3"
+                    aria-label={intl.formatMessage({ id: "aria.rating5Stars" })}
+                  >
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        size={16}
+                        className="text-yellow-400 fill-yellow-400"
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+
+                  {/* Commentaire */}
+                  <blockquote
+                    className={`${isDark ? "text-white/90" : "text-gray-700"} text-sm sm:text-base leading-relaxed line-clamp-4`}
+                  >
+                    "{reviewComment}"
+                  </blockquote>
+                </div>
+              </Link>
+            </article>
+          );
+        })}
       </div>
 
+      {/* Boutons de navigation - visibles sur desktop */}
       <button
-        onClick={prev}
+        onClick={scrollLeft}
         className={
           isDark
-            ? "absolute left-1 sm:left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-4 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 hover:border-white/30 transition-all duration-300 flex items-center justify-center text-white active:scale-95"
-            : "absolute left-1 sm:left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-4 w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 hover:bg-gray-200 rounded-full border border-gray-200 transition-all duration-300 flex items-center justify-center text-gray-700 active:scale-95"
+            ? "hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 hover:border-white/30 transition-all duration-300 items-center justify-center text-white active:scale-95"
+            : "hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 sm:w-12 sm:h-12 bg-white hover:bg-gray-50 rounded-full border border-gray-200 shadow-lg transition-all duration-300 items-center justify-center text-gray-700 active:scale-95"
         }
         aria-label={intl.formatMessage({ id: "aria.previousReview" })}
       >
         <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
       </button>
       <button
-        onClick={next}
+        onClick={scrollRight}
         className={
           isDark
-            ? "absolute right-1 sm:right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-4 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 hover:border-white/30 transition-all duration-300 flex items-center justify-center text-white active:scale-95"
-            : "absolute right-1 sm:right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-4 w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 hover:bg-gray-200 rounded-full border border-gray-200 transition-all duration-300 flex items-center justify-center text-gray-700 active:scale-95"
+            ? "hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 hover:border-white/30 transition-all duration-300 items-center justify-center text-white active:scale-95"
+            : "hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-10 h-10 sm:w-12 sm:h-12 bg-white hover:bg-gray-50 rounded-full border border-gray-200 shadow-lg transition-all duration-300 items-center justify-center text-gray-700 active:scale-95"
         }
         aria-label={intl.formatMessage({ id: "aria.nextReview" })}
       >
         <ChevronRightIcon className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
       </button>
 
-      <div 
-        className="flex items-center justify-center gap-2 mt-6"
-        role="tablist"
-        aria-label={intl.formatMessage({ id: "aria.reviewsPagination" })}
-      >
+      {/* Indicateur de scroll sur mobile */}
+      <div className="flex sm:hidden justify-center mt-4 gap-1">
         {REVIEWS.map((_, i) => (
-          <button
+          <div
             key={i}
-            onClick={() => goTo(i)}
-            role="tab"
-            aria-selected={current === i}
-            className={`h-2 rounded-full transition-all duration-300 ${current === i ? "w-8 bg-gradient-to-r from-red-500 to-orange-500" : isDark ? "w-2 bg-white/40 hover:bg-white/60" : "w-2 bg-gray-300 hover:bg-gray-400"}`}
-            aria-label={intl.formatMessage({ id: "aria.goToReview" }, { number: i + 1 })}
+            className={`h-1.5 rounded-full transition-all duration-300 ${i === 0 ? "w-6 bg-gradient-to-r from-red-500 to-orange-500" : isDark ? "w-1.5 bg-white/30" : "w-1.5 bg-gray-300"}`}
           />
         ))}
       </div>
 
-      <div className="text-center mt-7 sm:mt-8">
+      <div className="text-center mt-6 sm:mt-8">
         <Link
           to="/testimonials"
           className={`inline-flex items-center gap-2 ${isDark ? "text-blue-300 hover:text-blue-200" : "text-blue-600 hover:text-blue-700"} font-semibold transition-colors`}
@@ -425,6 +406,16 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
           <ChevronRightIcon className="w-5 h-5" aria-hidden="true" />
         </Link>
       </div>
+
+      <style>{`
+        .scrollbar-hide {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 }
@@ -862,27 +853,8 @@ const OptimizedHomePage: React.FC = () => {
     usdOverride?: number;
     minutes: number;
     currency?: "eur" | "usd";
-  }> = ({ euro, usdRate, usdOverride, minutes, currency }) => {
-    if (currency) {
-      const formatted = formatCurrency(euro, currency);
-      return (
-        <div
-          className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
-          aria-label={intl.formatMessage({ id: "aria.priceAndDuration" })}
-        >
-          <div className="flex items-end gap-3">
-            <span className="text-5xl font-black text-gray-900 leading-none">
-              {formatted}
-            </span>
-          </div>
-          <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-900 text-white font-semibold">
-            <Clock className="w-4 h-4" aria-hidden="true" />
-            <span>{minutes} <FormattedMessage id="unit.minutes" /></span>
-          </div>
-        </div>
-      );
-    }
-
+  }> = ({ euro, usdRate, usdOverride, minutes }) => {
+    // Toujours afficher les deux devises (€ et $)
     const effectiveRate = typeof usdRate === "number" ? usdRate : DEFAULT_USD_RATE;
     const usdValue = typeof usdOverride === "number" ? usdOverride : Math.round(euro * effectiveRate);
 
@@ -891,12 +863,12 @@ const OptimizedHomePage: React.FC = () => {
         className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
         aria-label={intl.formatMessage({ id: "aria.priceAndDuration" })}
       >
-        <div className="flex items-end gap-3">
-          <span className="text-5xl font-black text-gray-900 leading-none">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-3">
+          <span className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-none">
             {formatCurrency(euro, "eur")}
           </span>
-          <span className="text-2xl font-extrabold text-gray-700 leading-none">
-            ({formatCurrency(usdValue, "usd")})
+          <span className="text-xl sm:text-2xl font-extrabold text-gray-600 leading-none">
+            / {formatCurrency(usdValue, "usd")}
           </span>
         </div>
         <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-900 text-white font-semibold">
@@ -1256,15 +1228,15 @@ const OptimizedHomePage: React.FC = () => {
 
           <div className="relative z-10 max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-              <h1 
+              <h1
                 id="main-heading"
-                className="text-6xl md:text-8xl font-black mb-8 leading-tight"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black mb-8 leading-tight"
               >
-                <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
+                <span className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
                   <FormattedMessage id="hero.title.line1" />
                 </span>
                 <br />
-                <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
+                <span className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
                   <FormattedMessage id="hero.title.line2" />
                 </span>
               </h1>
@@ -1359,9 +1331,9 @@ const OptimizedHomePage: React.FC = () => {
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" aria-hidden="true" />
               </div>
 
-              <h2 id="experts-heading" className="text-3xl sm:text-5xl font-black text-gray-900 mb-3 sm:mb-4 leading-tight">
+              <h2 id="experts-heading" className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-3 sm:mb-4 leading-tight">
                 <FormattedMessage id="experts.title.prefix" />
-                <span className="bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
+                <span className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
                   {" "}<FormattedMessage id="experts.title.highlight" />{" "}
                 </span>
                 <FormattedMessage id="experts.title.suffix" />
@@ -1403,9 +1375,9 @@ const OptimizedHomePage: React.FC = () => {
                 <Check className="w-5 h-5 text-green-400" aria-hidden="true" />
               </div>
 
-              <h2 id="pricing-heading" className="text-5xl font-black text-white mb-4">
+              <h2 id="pricing-heading" className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
                 <FormattedMessage id="pricing.title.prefix" />{" "}
-                <span className="bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
+                <span className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
                   <FormattedMessage id="pricing.title.highlight" />
                 </span>{" "}
                 <FormattedMessage id="pricing.title.suffix" />
@@ -1492,10 +1464,15 @@ const OptimizedHomePage: React.FC = () => {
 
                 {(() => {
                   const currency = selectedCurrency;
-                  const currencySymbol = currency === "eur" ? "€" : "$";
 
-                  const effLawyer = getEffectivePrice(pricing, "lawyer", currency) as EffectivePrice;
-                  const effExpat = getEffectivePrice(pricing, "expat", currency) as EffectivePrice;
+                  // Récupérer les prix dans les DEUX devises
+                  const effLawyerEur = getEffectivePrice(pricing, "lawyer", "eur") as EffectivePrice;
+                  const effLawyerUsd = getEffectivePrice(pricing, "lawyer", "usd") as EffectivePrice;
+                  const effExpatEur = getEffectivePrice(pricing, "expat", "eur") as EffectivePrice;
+                  const effExpatUsd = getEffectivePrice(pricing, "expat", "usd") as EffectivePrice;
+
+                  const effLawyer = currency === "eur" ? effLawyerEur : effLawyerUsd;
+                  const effExpat = currency === "eur" ? effExpatEur : effExpatUsd;
 
                   const minutesLawyer = pricing.lawyer[currency].duration;
                   const minutesExpat = pricing.expat[currency].duration;
@@ -1508,30 +1485,39 @@ const OptimizedHomePage: React.FC = () => {
                     });
                   };
 
-                  const renderEffPrice = (eff: EffectivePrice, minutes: number) => (
+                  // Composant pour afficher les deux devises
+                  const renderEffPrice = (effEur: EffectivePrice, effUsd: EffectivePrice, minutes: number) => (
                     <div
                       className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
                       aria-label={intl.formatMessage({ id: "aria.priceAndDuration" })}
                     >
-                      <div className="flex items-end gap-2">
-                        {eff.override ? (
-                          <div className="flex items-end gap-2">
-                            <span className="line-through text-gray-500" aria-label={intl.formatMessage({ id: "aria.originalPrice" })}>
-                              {currencySymbol}{formatPriceNumber(eff.standard.totalAmount)}
+                      <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-3">
+                        {effEur.override ? (
+                          <div className="flex flex-wrap items-end gap-2">
+                            <span className="line-through text-gray-400 text-sm" aria-label={intl.formatMessage({ id: "aria.originalPrice" })}>
+                              €{formatPriceNumber(effEur.standard.totalAmount)}
                             </span>
-                            <span className="text-2xl sm:text-5xl font-bold">
-                              {currencySymbol}{formatPriceNumber(eff.price.totalAmount)}
+                            <span className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900">
+                              €{formatPriceNumber(effEur.price.totalAmount)}
                             </span>
-                            {eff.override?.label && (
+                            <span className="text-lg sm:text-xl md:text-2xl font-extrabold text-gray-600">
+                              / ${formatPriceNumber(effUsd.price.totalAmount)}
+                            </span>
+                            {effEur.override?.label && (
                               <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">
-                                {eff.override.label}
+                                {effEur.override.label}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-2xl sm:text-5xl font-bold">
-                            {currencySymbol}{formatPriceNumber(eff.price.totalAmount)}
-                          </span>
+                          <>
+                            <span className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 leading-none">
+                              €{formatPriceNumber(effEur.price.totalAmount)}
+                            </span>
+                            <span className="text-lg sm:text-xl md:text-2xl font-extrabold text-gray-600 leading-none">
+                              / ${formatPriceNumber(effUsd.price.totalAmount)}
+                            </span>
+                          </>
                         )}
                       </div>
                       <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-900 text-white font-semibold">
@@ -1554,7 +1540,7 @@ const OptimizedHomePage: React.FC = () => {
                         icon={<User className="w-4 h-4" aria-hidden="true" />}
                         lightColor="bg-blue-50"
                         borderColor="border-blue-200"
-                        renderPrice={renderEffPrice(effExpat, minutesExpat)}
+                        renderPrice={renderEffPrice(effExpatEur, effExpatUsd, minutesExpat)}
                       />
 
                       <OfferCard
@@ -1568,7 +1554,7 @@ const OptimizedHomePage: React.FC = () => {
                         icon={<Briefcase className="w-4 h-4" aria-hidden="true" />}
                         lightColor="bg-red-50"
                         borderColor="border-red-200"
-                        renderPrice={renderEffPrice(effLawyer, minutesLawyer)}
+                        renderPrice={renderEffPrice(effLawyerEur, effLawyerUsd, minutesLawyer)}
                       />
                     </div>
                   );
@@ -1660,9 +1646,9 @@ const OptimizedHomePage: React.FC = () => {
         >
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 id="why-heading" className="text-5xl font-black text-gray-900 mb-6">
+              <h2 id="why-heading" className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-6">
                 <FormattedMessage id="why.title.prefix" />{" "}
-                <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+                <span className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
                   <FormattedMessage id="why.title.highlight" />
                 </span>
                 <FormattedMessage id="why.title.suffix" />
@@ -1725,9 +1711,9 @@ const OptimizedHomePage: React.FC = () => {
                 </span>
               </span>
               
-              <h2 id="reviews-heading" className="text-3xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">
+              <h2 id="reviews-heading" className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
                 <FormattedMessage id="reviews.title.prefix" />{" "}
-                <span className="bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                <span className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
                   <FormattedMessage id="reviews.title.highlight" />
                 </span>
               </h2>
@@ -1748,11 +1734,11 @@ const OptimizedHomePage: React.FC = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20 pointer-events-none" aria-hidden="true" />
           <div className="relative z-10 max-w-5xl mx-auto text-center px-6">
-            <h2 id="cta-heading" className="text-5xl md:text-6xl font-black text-white mb-6 md:mb-8">
+            <h2 id="cta-heading" className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 md:mb-8">
               <FormattedMessage id="cta.title" />
             </h2>
             
-            <p className="text-2xl text-white/90 mb-12 leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-12 leading-relaxed">
               <FormattedMessage
                 id="cta.subtitle"
                 values={{

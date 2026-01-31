@@ -422,11 +422,11 @@ const Pricing: React.FC = () => {
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
               </div>
 
-              <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight">
-                <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-black mb-8 leading-tight">
+                <span className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
                   <FormattedMessage id="pricing.heading" />{" "}
                 </span>
-                <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+                <span className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
                   <FormattedMessage id="pricing.headingHighlight" />
                 </span>
               </h1>
@@ -552,13 +552,13 @@ const Pricing: React.FC = () => {
 
           <div className="relative z-10 max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-              <h2 className="text-5xl font-black text-gray-900 mb-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-4">
                 <FormattedMessage id="pricing.ourOffers" />{" "}
-                <span className="bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
+                <span className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
                   <FormattedMessage id="pricing.ourOffersHighlight" />
                 </span>
               </h2>
-              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto">
                 <FormattedMessage id="pricing.chooseServiceDesc" />
               </p>
             </div>
@@ -784,13 +784,13 @@ const Pricing: React.FC = () => {
 
           <div className="relative z-10 max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-              <h2 className="text-5xl font-black text-white mb-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
                 <FormattedMessage id="pricing.securityTitle" />{" "}
-                <span className="bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
+                <span className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
                   <FormattedMessage id="pricing.securityHighlight" />
                 </span>
               </h2>
-              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto">
                 <FormattedMessage id="pricing.securitySubtitle" />
               </p>
             </div>
@@ -853,10 +853,10 @@ const Pricing: React.FC = () => {
         <section className="py-28 bg-gradient-to-b from-white to-gray-50">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-              <h2 className="text-5xl font-black text-gray-900 mb-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-4">
                 {intl.formatMessage({ id: "pricing.faq" })}
               </h2>
-              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto">
                 <FormattedMessage id="pricing.faqSubtitle" />
               </p>
             </div>
@@ -899,10 +899,10 @@ const Pricing: React.FC = () => {
         <section className="py-32 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20 pointer-events-none" />
           <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
-            <h2 className="text-5xl md:text-6xl font-black text-white mb-8">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-8">
               <FormattedMessage id="pricing.ctaTitle" />
             </h2>
-            <p className="text-2xl text-white/90 mb-12 leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-12 leading-relaxed">
               <FormattedMessage
                 id="pricing.ctaDesc"
                 values={{

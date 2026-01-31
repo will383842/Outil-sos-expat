@@ -404,7 +404,7 @@ export const PlansPage: React.FC = () => {
 
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>('USD');
-  const [selectedBillingPeriod, setSelectedBillingPeriod] = useState<BillingPeriod>('monthly');
+  const [selectedBillingPeriod, setSelectedBillingPeriod] = useState<BillingPeriod>('yearly');
   const [showCheckout, setShowCheckout] = useState(false);
 
   // Determine provider type
