@@ -3272,7 +3272,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       const parsed = JSON.parse(raw);
       return {
         firstName: parsed.clientFirstName || user?.firstName || "",
-        lastName: user?.lastName || "",
+        lastName: parsed.clientLastName || user?.lastName || "",
         title: parsed.title || "",
         description: parsed.description || "",
         clientPhone: storedClientPhone || user?.phone || "",

@@ -3267,6 +3267,7 @@ const BookingRequest: React.FC = () => {
           description: (bookingRequest.description || "").toString().trim(),
           country: bookingRequest.clientCurrentCountry || "",
           clientFirstName: bookingRequest.clientFirstName,
+          clientLastName: bookingRequest.clientLastName,
           clientNationality: bookingRequest.clientNationality || "",
           clientLanguages: bookingRequest.clientLanguages || [],
         }));

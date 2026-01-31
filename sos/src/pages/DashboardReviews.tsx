@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { useIntl } from 'react-intl';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Review } from '../types';
@@ -9,6 +10,7 @@ const POLLING_INTERVAL_MS = 90000; // 90 seconds - optimized for cost savings
 
 const DashboardReviews: React.FC = () => {
   const { user } = useAuth();
+  const intl = useIntl();
   const [reviews, setReviews] = useState<Review[]>([]);
   const mountedRef = useRef(true);
 
@@ -52,7 +54,9 @@ const DashboardReviews: React.FC = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Mes avis clients</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        {intl.formatMessage({ id: 'dashboard.myReviews' })}
+      </h2>
       <Reviews reviews={reviews} mode="list" />
     </div>
   );

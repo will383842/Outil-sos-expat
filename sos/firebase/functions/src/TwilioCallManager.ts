@@ -1884,9 +1884,17 @@ export class TwilioCallManager {
         try {
           const providerId = callSession.metadata?.providerId;
           if (providerId) {
-            console.log(`📴 [handleCallFailure] Attempting to set provider ${providerId} OFFLINE (provider_no_answer)`);
+            // ✅ EXEMPTION AAA: Les profils AAA ne doivent JAMAIS être mis hors ligne automatiquement
+            const providerDoc = await this.db.collection('sos_profiles').doc(providerId).get();
+            const providerData = providerDoc.data();
+            const isAaaProfile = providerId.startsWith('aaa_') || providerData?.isAAA === true;
 
-            // Use transaction for atomic read-then-write to prevent race condition
+            if (isAaaProfile) {
+              console.log(`📴 [handleCallFailure] ⏭️ SKIP: Provider ${providerId} is AAA profile - will NOT be set offline for no_answer`);
+            } else {
+              console.log(`📴 [handleCallFailure] Attempting to set provider ${providerId} OFFLINE (provider_no_answer)`);
+
+              // Use transaction for atomic read-then-write to prevent race condition
             const sessionRef = this.db.collection('call_sessions').doc(sessionId);
             const wasSetOffline = await this.db.runTransaction(async (transaction) => {
               const sessionDoc = await transaction.get(sessionRef);
@@ -1961,6 +1969,7 @@ export class TwilioCallManager {
             };
             await this.db.collection('message_events').add(offlineNotification);
             console.log(`📴 [handleCallFailure] Notification sent to provider about being set offline`);
+            } // Fin du else (non-AAA)
           }
         } catch (offlineError) {
           console.error(`⚠️ Failed to set provider offline (non-blocking):`, offlineError);

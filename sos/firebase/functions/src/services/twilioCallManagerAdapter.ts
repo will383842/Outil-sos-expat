@@ -99,12 +99,17 @@ export async function beginOutboundCallForSession(callSessionId: string) {
     console.log(`💰 [Adapter][${debugId}] Payment intent ID: ${sessionData?.payment?.intentId}`);
     console.log(`💰 [Adapter][${debugId}] Payment amount: ${sessionData?.payment?.amount}€`);
 
-    if (paymentStatus && paymentStatus !== "authorized" && paymentStatus !== "requires_capture") {
+    // P0 SECURITY FIX: Vérifier que le paiement EST autorisé (pas juste qu'il n'est pas refusé)
+    // Statuts valides:
+    // - "authorized" (PayPal après authorizeOrder)
+    // - "requires_capture" (Stripe avec capture_method: manual)
+    const validPaymentStatuses = ["authorized", "requires_capture"];
+    if (!paymentStatus || !validPaymentStatuses.includes(paymentStatus)) {
       console.error(`❌ [Adapter][${debugId}] Payment NOT authorized!`);
       console.error(`❌ [Adapter][${debugId}] Expected: 'authorized' or 'requires_capture', Got: '${paymentStatus}'`);
       throw new Error(`Paiement non autorisé pour session ${callSessionId} (status=${paymentStatus})`);
     }
-    console.log(`✅ [Adapter][${debugId}] Payment verified OK`);
+    console.log(`✅ [Adapter][${debugId}] Payment verified OK (status: ${paymentStatus})`);
 
     // ✅ ÉTAPE 7: Import et appel TwilioCallManager
     console.log(`\n📞 [Adapter][${debugId}] STEP 7: Importing TwilioCallManager...`);

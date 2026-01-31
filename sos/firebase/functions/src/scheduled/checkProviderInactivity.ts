@@ -28,8 +28,17 @@ export const checkProviderInactivity = scheduler.onSchedule(
         .get();
 
       // Filtrer uniquement les prestataires (lawyers et expats) en mémoire
+      // ✅ EXEMPTION AAA: Les profils AAA ne doivent JAMAIS être mis hors ligne automatiquement
       const providerDocs = onlineProvidersSnapshot.docs.filter(doc => {
-        const type = doc.data().type;
+        const data = doc.data();
+        const type = data.type;
+        const isAAA = data.isAAA === true || doc.id.startsWith('aaa_');
+
+        // Skip les profils AAA - ils restent en ligne jusqu'à mise hors ligne manuelle
+        if (isAAA) {
+          return false;
+        }
+
         return type === 'lawyer' || type === 'expat';
       });
 

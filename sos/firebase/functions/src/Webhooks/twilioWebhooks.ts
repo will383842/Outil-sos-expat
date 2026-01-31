@@ -954,6 +954,18 @@ async function handleCallFailed(
             const providerDoc = await transaction.get(providerRef);
             const providerData = providerDoc.data();
 
+            // ✅ EXEMPTION AAA: Les profils AAA ne doivent JAMAIS être mis hors ligne automatiquement
+            const isAaaProfile = providerId.startsWith('aaa_') || providerData?.isAAA === true;
+            if (isAaaProfile) {
+              console.log(`[BONUS] ⏭️ SKIP: Provider ${providerId} is AAA profile - will NOT be set offline`);
+              transaction.update(sessionRef, {
+                'metadata.providerSetOffline': true,
+                'metadata.providerSetOfflineReason': 'aaa_profile_exempt',
+                'metadata.providerSetOfflineAt': admin.firestore.FieldValue.serverTimestamp(),
+              });
+              return { wasSetOffline: false, preferredLanguage: providerData?.preferredLanguage || 'fr' };
+            }
+
             if (!providerData?.isOnline) {
               console.log(`[BONUS] Prestataire ${providerId} déjà hors ligne, marking session only`);
               // Still mark session as processed to prevent future attempts

@@ -1,5 +1,6 @@
 import React, { memo, useCallback } from 'react';
 import { Star, MapPin, Calendar, ThumbsUp, Flag } from 'lucide-react';
+import { useIntl } from 'react-intl';
 import { useApp } from '../../contexts/AppContext';
 import { formatDate } from '../../utils/localeFormatters';
 
@@ -41,6 +42,7 @@ const Reviews: React.FC<ReviewsProps> = memo(function Reviews({
   ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
 }) {
   const { language } = useApp();
+  const intl = useIntl();
 
   // OPTIMISÉ: useCallback pour éviter re-création de la fonction
   const renderStars = useCallback((rating: number) => {
@@ -84,11 +86,13 @@ const Reviews: React.FC<ReviewsProps> = memo(function Reviews({
 
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Avis clients</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              {intl.formatMessage({ id: 'providerProfile.customerReviews' })}
+            </h3>
             <div className="flex items-center">
               <div className="flex mr-2">{renderStars(averageRating || 0)}</div>
               <span className="text-lg font-medium text-gray-900">{(averageRating || 0).toFixed(1)}</span>
-              <span className="text-gray-500 ml-1">({totalReviews || 0} avis)</span>
+              <span className="text-gray-500 ml-1">({totalReviews || 0} {intl.formatMessage({ id: 'providerProfile.reviews' })})</span>
             </div>
           </div>
         </div>

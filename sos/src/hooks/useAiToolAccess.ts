@@ -78,6 +78,7 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
   const subscriptionPlansRoute = `/${getTranslatedRouteSlug('dashboard-subscription-plans' as RouteKey, langCode)}`;
 
   // Load forced access flag from sos_profiles
+  // AAA profiles automatically get access (isAAA: true OR uid starts with 'aaa_')
   useEffect(() => {
     const uid = user?.uid;
     if (!uid) {
@@ -95,13 +96,17 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
 
         if (profileDoc.exists()) {
           const data = profileDoc.data();
-          setHasForcedAccess(data?.forcedAIAccess === true);
+          // AAA profiles always get forced access (isAAA: true OR uid starts with 'aaa_')
+          const isAaaProfile = data?.isAAA === true || uid.startsWith('aaa_');
+          setHasForcedAccess(data?.forcedAIAccess === true || isAaaProfile);
         } else {
-          setHasForcedAccess(false);
+          // Even without a profile doc, check if uid starts with 'aaa_'
+          setHasForcedAccess(uid.startsWith('aaa_'));
         }
       } catch (err) {
         console.warn('[useAiToolAccess] Error loading forced access:', err);
-        setHasForcedAccess(false);
+        // Fallback: check uid prefix
+        setHasForcedAccess(uid.startsWith('aaa_'));
       } finally {
         if (isMounted) {
           setForcedAccessLoading(false);

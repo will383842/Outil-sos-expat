@@ -641,11 +641,24 @@ async function isProvider(db: FirebaseFirestore.Firestore, uid: string): Promise
 /**
  * Vérifie si l'utilisateur a un accès admin forcé (gratuit sans abonnement)
  * Vérifie dans users ET sos_profiles car l'admin peut définir forcedAIAccess sur l'un ou l'autre
+ * Les profils AAA (isAAA: true OU uid commençant par 'aaa_') ont automatiquement accès
  */
 async function checkForcedAccess(db: FirebaseFirestore.Firestore, uid: string): Promise<{ hasForcedAccess: boolean; freeTrialUntil: Date | null }> {
+  // 0. Les profils AAA ont automatiquement accès (vérifier le préfixe uid)
+  if (uid.startsWith("aaa_")) {
+    console.log("[checkForcedAccess] AAA profile detected (uid prefix) for:", uid);
+    return { hasForcedAccess: true, freeTrialUntil: null };
+  }
+
   // 1. Vérifier dans users
   const userDoc = await db.collection("users").doc(uid).get();
   const userData = userDoc.exists ? userDoc.data() : null;
+
+  // Vérifier si c'est un profil AAA (isAAA: true)
+  if (userData?.isAAA === true) {
+    console.log("[checkForcedAccess] AAA profile detected (isAAA flag in users) for:", uid);
+    return { hasForcedAccess: true, freeTrialUntil: null };
+  }
 
   // Vérifier l'accès admin forcé sur users
   if (userData?.forcedAIAccess === true) {
@@ -656,6 +669,12 @@ async function checkForcedAccess(db: FirebaseFirestore.Firestore, uid: string): 
   // 2. Vérifier dans sos_profiles (où l'admin console définit souvent forcedAIAccess)
   const profileDoc = await db.collection("sos_profiles").doc(uid).get();
   const profileData = profileDoc.exists ? profileDoc.data() : null;
+
+  // Vérifier si c'est un profil AAA (isAAA: true)
+  if (profileData?.isAAA === true) {
+    console.log("[checkForcedAccess] AAA profile detected (isAAA flag in sos_profiles) for:", uid);
+    return { hasForcedAccess: true, freeTrialUntil: null };
+  }
 
   if (profileData?.forcedAIAccess === true) {
     console.log("[checkForcedAccess] Found forcedAIAccess in sos_profiles collection for:", uid);

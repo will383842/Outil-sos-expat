@@ -16,7 +16,11 @@ const ProviderOnlineManager: React.FC<ProviderOnlineManagerProps> = ({ children 
   // Vérifier si l'utilisateur est un prestataire
   const isProvider = user?.type === 'lawyer' || user?.type === 'expat' || user?.role === 'lawyer' || user?.role === 'expat';
   const isOnline = user?.isOnline === true;
-  const shouldTrack = Boolean(user && isProvider && isOnline);
+
+  // ✅ EXEMPTION AAA: Les profils AAA ne doivent PAS recevoir de rappels d'inactivité
+  // ni être mis hors ligne automatiquement - ils restent en ligne jusqu'à action manuelle
+  const isAaaProfile = user?.uid?.startsWith('aaa_') || user?.isAAA === true;
+  const shouldTrack = Boolean(user && isProvider && isOnline && !isAaaProfile);
 
   // Hook de tracking d'activité - toujours appelé mais désactivé si pas prestataire
   const { lastActivity } = useProviderActivityTracker({

@@ -803,27 +803,20 @@ export class PayPalManager {
   }
 
   /**
-   * Cree un ordre PayPal avec PAIEMENT DIRECT au provider
+   * @deprecated Cette fonction n'est plus utilisée en production.
+   * Utilisez createSimpleOrder() à la place.
    *
-   * FLUX DE PAIEMENT DIRECT (PayPal Commerce Platform):
+   * Le flux Direct (merchantId) n'est jamais utilisé car:
+   * - Les prestataires sont majoritairement des particuliers sans compte PayPal Business
+   * - L'onboarding PayPal Commerce Platform est trop complexe
+   * - Le flux Simple (payout vers email) fonctionne pour tous les cas
+   *
+   * ANCIEN FLUX DE PAIEMENT DIRECT (PayPal Commerce Platform):
    * ====================================================
    * 1. Le client paie le montant total (ex: 100 EUR)
    * 2. L'argent va DIRECTEMENT sur le compte PayPal du provider (payee.merchant_id)
    * 3. SOS-Expat recoit uniquement sa commission via platform_fees (ex: 20 EUR)
    * 4. Le provider recoit le reste (ex: 80 EUR) instantanement
-   *
-   * Avantages:
-   * - Pas de transit par la plateforme SOS-Expat
-   * - Provider recoit son argent immediatement apres capture
-   * - Conforme aux regulations (pas de retention de fonds par la plateforme)
-   * - Split automatique gere par PayPal
-   *
-   * Configuration requise:
-   * - PAYPAL_PLATFORM_MERCHANT_ID: Merchant ID du compte SOS-Expat
-   * - Le provider doit avoir complete l'onboarding PayPal Commerce Platform
-   *
-   * NOTE: Ce flux nécessite le statut Partner PayPal. Si vous n'avez pas
-   * ce statut, utilisez createSimpleOrder() à la place.
    */
   async createOrder(data: CreateOrderData): Promise<{
     orderId: string;
@@ -1059,6 +1052,40 @@ export class PayPalManager {
     const authCurrency = authorization.amount?.currency_code || orderData.currency;
 
     console.log(`🔐 [PAYPAL] Authorization created: ${authorizationId}, status: ${authorizationStatus}`);
+
+    // ========================================
+    // P0 CRITICAL FIX: Vérifier que l'autorisation a réellement réussi
+    // PayPal peut retourner HTTP 200 avec status DENIED, PENDING, VOIDED, etc.
+    // Seul le statut "CREATED" signifie que l'autorisation est valide
+    // ========================================
+    if (authorizationStatus !== "CREATED") {
+      console.error(`❌ [PAYPAL] Authorization NOT successful! Status: ${authorizationStatus}`);
+      console.error(`❌ [PAYPAL] Expected: CREATED, Got: ${authorizationStatus}`);
+      console.error(`❌ [PAYPAL] Order ${orderId} will NOT be marked as authorized`);
+
+      // Mettre à jour l'ordre avec le statut d'échec
+      await this.db.collection("paypal_orders").doc(orderId).update({
+        status: "AUTHORIZATION_FAILED",
+        authorizationId,
+        authorizationStatus,
+        authorizationFailedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Mettre à jour la call_session avec le statut d'échec
+      if (orderData.callSessionId) {
+        await this.db.collection("call_sessions").doc(orderData.callSessionId).update({
+          "payment.status": "authorization_failed",
+          "payment.failureReason": `PayPal authorization status: ${authorizationStatus}`,
+          "payment.failedAt": admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+
+      throw new Error(`PayPal authorization failed: status=${authorizationStatus} (expected CREATED)`);
+    }
+
+    console.log(`✅ [PAYPAL] Authorization status verified: CREATED`);
 
     // Mettre à jour l'ordre dans Firestore avec l'ID d'autorisation
     await this.db.collection("paypal_orders").doc(orderId).update({
@@ -2284,12 +2311,13 @@ export const createPayPalOrderHttp = onRequest(
       }
 
       // ========== STEP 3: Check PayPal config ==========
-      const hasMerchantId = !!providerData.paypalMerchantId;
+      // SIMPLIFICATION: On utilise UNIQUEMENT le flux Simple (payout vers email)
+      // Le flux Direct (merchantId) n'est jamais utilisé en production
       const hasPayPalEmail = !!providerData.paypalEmail;
-      console.log(`🔷 [PAYPAL_DEBUG] STEP 3: Provider PayPal config - merchantId=${hasMerchantId}, email=${hasPayPalEmail ? providerData.paypalEmail : 'NONE'}`);
+      console.log(`🔷 [PAYPAL_DEBUG] STEP 3: Provider PayPal email: ${hasPayPalEmail ? providerData.paypalEmail : 'NONE'}`);
 
-      if (!hasMerchantId && !hasPayPalEmail) {
-        console.log(`⚠️ [PAYPAL_DEBUG] Provider ${providerId} has no PayPal config - payment will go to platform`);
+      if (!hasPayPalEmail) {
+        console.log(`⚠️ [PAYPAL_DEBUG] Provider ${providerId} has no PayPal email - payment will go to platform (payout later when email configured)`);
       }
 
       // ========== STEP 4: Get server pricing ==========
@@ -2304,7 +2332,7 @@ export const createPayPalOrderHttp = onRequest(
       const clientAmount = typeof amount === "number" ? amount : parseFloat(amount);
       console.log(`🔷 [PAYPAL_DEBUG] STEP 5: Validating amount - client=${clientAmount}, server=${serverPricing.totalAmount}`);
 
-      if (Math.abs(clientAmount - serverPricing.totalAmount) > 0.01) {
+      if (Math.abs(clientAmount - serverPricing.totalAmount) > 0.05) {
         console.error(`❌ [PAYPAL_DEBUG] STEP 5 FAILED: Amount mismatch! client=${clientAmount}, server=${serverPricing.totalAmount}`);
         res.status(400).json({
           error: `Invalid amount. Expected ${serverPricing.totalAmount} ${normalizedCurrency.toUpperCase()}`,
@@ -2319,59 +2347,35 @@ export const createPayPalOrderHttp = onRequest(
       const serverConnectionFee = serverPricing.connectionFeeAmount;
 
       // ========== STEP 6: Create PayPal order ==========
-      console.log(`🔷 [PAYPAL_DEBUG] STEP 6: Creating PayPal order - flow=${hasMerchantId ? "DIRECT" : "SIMPLE"}`);
+      // SIMPLIFICATION: Toujours utiliser le flux Simple (payout vers email)
+      console.log(`🔷 [PAYPAL_DEBUG] STEP 6: Creating PayPal order - flow=SIMPLE`);
       console.log(`🔷 [PAYPAL_DEBUG] STEP 6: Order params - total=${serverPricing.totalAmount}, provider=${serverProviderAmount}, fee=${serverConnectionFee}`);
 
       const manager = new PayPalManager();
-      let result;
+      console.log(`🔷 [PAYPAL_DEBUG] STEP 6: Using SIMPLE flow with email: ${providerData.paypalEmail || 'UNDEFINED'}`);
 
-      if (hasMerchantId) {
-        // ===== FLUX DIRECT: Split automatique via PayPal Commerce Platform =====
-        console.log(`🔷 [PAYPAL_DEBUG] STEP 6a: Using DIRECT flow with merchantId: ${providerData.paypalMerchantId}`);
-
-        result = await manager.createOrder({
-          callSessionId,
-          amount: serverPricing.totalAmount,
-          providerAmount: serverProviderAmount,
-          platformFee: serverConnectionFee,
-          currency: normalizedCurrency.toUpperCase(),
-          providerId,
-          providerPayPalMerchantId: providerData.paypalMerchantId,
-          clientId: auth.uid,
-          description: description || "SOS Expat - Consultation",
-          // P0 FIX: Phone numbers required for Twilio call
-          clientPhone: clientPhone || "",
-          providerPhone: providerPhone || providerData.phone || providerData.encryptedPhone || "",
-          trackingMetadata: trackingMetadata as Record<string, string> | undefined,
-        });
-        console.log(`✅ [PAYPAL_DEBUG] STEP 6a: OK - DIRECT order created, orderId=${result?.orderId}`);
-      } else {
-        // ===== FLUX SIMPLE: Payout après capture =====
-        console.log(`🔷 [PAYPAL_DEBUG] STEP 6b: Using SIMPLE flow with email: ${providerData.paypalEmail || 'UNDEFINED'}`);
-
-        result = await manager.createSimpleOrder({
-          callSessionId,
-          amount: serverPricing.totalAmount,
-          providerAmount: serverProviderAmount,
-          platformFee: serverConnectionFee,
-          currency: normalizedCurrency.toUpperCase(),
-          providerId,
-          providerPayPalEmail: providerData.paypalEmail,
-          clientId: auth.uid,
-          description: description || "SOS Expat - Consultation",
-          // P0 FIX: Phone numbers required for Twilio call
-          clientPhone: clientPhone || "",
-          providerPhone: providerPhone || providerData.phone || providerData.encryptedPhone || "",
-          trackingMetadata: trackingMetadata as Record<string, string> | undefined,
-        });
-        console.log(`✅ [PAYPAL_DEBUG] STEP 6b: OK - SIMPLE order created, orderId=${result?.orderId}`);
-      }
+      const result = await manager.createSimpleOrder({
+        callSessionId,
+        amount: serverPricing.totalAmount,
+        providerAmount: serverProviderAmount,
+        platformFee: serverConnectionFee,
+        currency: normalizedCurrency.toUpperCase(),
+        providerId,
+        providerPayPalEmail: providerData.paypalEmail,
+        clientId: auth.uid,
+        description: description || "SOS Expat - Consultation",
+        // P0 FIX: Phone numbers required for Twilio call
+        clientPhone: clientPhone || "",
+        providerPhone: providerPhone || providerData.phone || providerData.encryptedPhone || "",
+        trackingMetadata: trackingMetadata as Record<string, string> | undefined,
+      });
+      console.log(`✅ [PAYPAL_DEBUG] STEP 6: OK - SIMPLE order created, orderId=${result?.orderId}`);
 
       prodLogger.info('PAYPAL_ORDER_HTTP_SUCCESS', `[${requestId}] PayPal order created successfully (HTTP)`, {
         requestId,
         orderId: result.orderId,
         callSessionId,
-        flow: hasMerchantId ? "direct" : "simple",
+        flow: "simple",
         amount: serverPricing.totalAmount,
         currency: normalizedCurrency,
       });
@@ -2379,7 +2383,7 @@ export const createPayPalOrderHttp = onRequest(
       res.status(200).json({
         success: true,
         ...result,
-        flow: hasMerchantId ? "direct" : "simple",
+        flow: "simple",
       });
 
     } catch (error) {
@@ -2738,15 +2742,13 @@ export const createPayPalOrder = onCall(
       throw new HttpsError("not-found", "Provider not found");
     }
 
-    // Déterminer le flux à utiliser
-    const hasMerchantId = !!providerData.paypalMerchantId;
+    // SIMPLIFICATION: On utilise UNIQUEMENT le flux Simple (payout vers email)
+    // Le flux Direct (merchantId) n'est jamais utilisé en production
     const hasPayPalEmail = !!providerData.paypalEmail;
 
-    if (!hasMerchantId && !hasPayPalEmail) {
-      throw new HttpsError(
-        "failed-precondition",
-        "Le prestataire n'a pas configuré son compte PayPal. Il doit d'abord entrer son email PayPal dans son profil."
-      );
+    // Note: Si pas d'email PayPal, on continue quand même (payout sera fait plus tard quand l'email sera configuré)
+    if (!hasPayPalEmail) {
+      console.log(`⚠️ [PAYPAL] Provider ${providerId} has no PayPal email - payout will be pending until email configured`);
     }
 
     // ===== P0 SECURITY FIX: Calculer les frais côté serveur =====
@@ -2759,7 +2761,7 @@ export const createPayPalOrder = onCall(
     // Valider que le montant correspond à la configuration serveur
     const clientAmount = typeof amount === "number" ? amount : parseFloat(amount);
 
-    if (Math.abs(clientAmount - serverPricing.totalAmount) > 0.01) {
+    if (Math.abs(clientAmount - serverPricing.totalAmount) > 0.05) {
       console.error(`[PAYPAL] Amount mismatch: client=${clientAmount}, server=${serverPricing.totalAmount}`);
       throw new HttpsError(
         "invalid-argument",
@@ -2773,62 +2775,37 @@ export const createPayPalOrder = onCall(
 
     console.log(`[PAYPAL] Server-calculated: total=${serverPricing.totalAmount}, ` +
       `provider=${serverProviderAmount}, frais mise en relation=${serverConnectionFee}`);
-    console.log(`[PAYPAL] Flow: ${hasMerchantId ? "DIRECT (split)" : "SIMPLE (payout)"}`);
+    console.log(`[PAYPAL] Flow: SIMPLE (payout vers email)`);
 
     const manager = new PayPalManager();
 
     try {
-      let result;
+      // SIMPLIFICATION: Toujours utiliser le flux Simple (payout vers email)
+      console.log(`[PAYPAL] Using SIMPLE flow with email: ${providerData.paypalEmail || 'UNDEFINED'}`);
 
-      if (hasMerchantId) {
-        // ===== FLUX DIRECT: Split automatique via PayPal Commerce Platform =====
-        console.log(`[PAYPAL] Using DIRECT flow with merchantId: ${providerData.paypalMerchantId}`);
-
-        result = await manager.createOrder({
-          callSessionId,
-          amount: serverPricing.totalAmount,
-          providerAmount: serverProviderAmount,
-          platformFee: serverConnectionFee, // Sera renommé en connectionFee plus tard
-          currency: normalizedCurrency.toUpperCase(),
-          providerId,
-          providerPayPalMerchantId: providerData.paypalMerchantId,
-          clientId: request.auth.uid,
-          description: description || "SOS Expat - Consultation",
-          // Legacy onCall: phone numbers will be empty (use HTTP function instead)
-          clientPhone: "",
-          providerPhone: providerData.phone || providerData.encryptedPhone || "",
-          // Pass tracking metadata for attribution (UTM, Meta identifiers)
-          trackingMetadata: trackingMetadata as Record<string, string> | undefined,
-        });
-
-      } else {
-        // ===== FLUX SIMPLE: Payout après capture =====
-        console.log(`[PAYPAL] Using SIMPLE flow with email: ${providerData.paypalEmail}`);
-
-        result = await manager.createSimpleOrder({
-          callSessionId,
-          amount: serverPricing.totalAmount,
-          providerAmount: serverProviderAmount,
-          platformFee: serverConnectionFee,
-          currency: normalizedCurrency.toUpperCase(),
-          providerId,
-          providerPayPalEmail: providerData.paypalEmail,
-          clientId: request.auth.uid,
-          description: description || "SOS Expat - Consultation",
-          // Legacy onCall: phone numbers will be empty (use HTTP function instead)
-          clientPhone: "",
-          providerPhone: providerData.phone || providerData.encryptedPhone || "",
-          // Pass tracking metadata for attribution (UTM, Meta identifiers)
-          trackingMetadata: trackingMetadata as Record<string, string> | undefined,
-        });
-      }
+      const result = await manager.createSimpleOrder({
+        callSessionId,
+        amount: serverPricing.totalAmount,
+        providerAmount: serverProviderAmount,
+        platformFee: serverConnectionFee,
+        currency: normalizedCurrency.toUpperCase(),
+        providerId,
+        providerPayPalEmail: providerData.paypalEmail,
+        clientId: request.auth.uid,
+        description: description || "SOS Expat - Consultation",
+        // Legacy onCall: phone numbers will be empty (use HTTP function instead)
+        clientPhone: "",
+        providerPhone: providerData.phone || providerData.encryptedPhone || "",
+        // Pass tracking metadata for attribution (UTM, Meta identifiers)
+        trackingMetadata: trackingMetadata as Record<string, string> | undefined,
+      });
 
       // Log de succès
       prodLogger.info('PAYPAL_ORDER_SUCCESS', `[${requestId}] PayPal order created successfully`, {
         requestId,
         orderId: result.orderId,
         callSessionId,
-        flow: hasMerchantId ? "direct" : "simple",
+        flow: "simple",
         amount: serverPricing.totalAmount,
         currency: normalizedCurrency,
       });
@@ -2836,7 +2813,7 @@ export const createPayPalOrder = onCall(
       return {
         success: true,
         ...result,
-        flow: hasMerchantId ? "direct" : "simple",
+        flow: "simple",
       };
 
     } catch (error) {
@@ -2855,9 +2832,8 @@ export const createPayPalOrder = onCall(
         currency: normalizedCurrency,
         providerId,
         serviceType: normalizedServiceType,
-        hasMerchantId,
         hasPayPalEmail,
-        flow: hasMerchantId ? "direct" : "simple",
+        flow: "simple",
       });
       throw new HttpsError("internal", "Failed to create order");
     }
