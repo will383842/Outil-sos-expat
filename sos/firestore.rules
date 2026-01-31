@@ -302,7 +302,10 @@ service cloud.firestore {
       // Empêche la création de notifications pour d'autres utilisateurs
       allow create: if (isAuthenticated() && request.resource.data.userId == request.auth.uid)
                     || isAdmin();
-      allow update: if isOwner(resource.data.userId) || isAdmin() || isDev();
+      // SECURITY FIX: Users can only update isRead/readAt fields, not notification content
+      allow update: if (isOwner(resource.data.userId) &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']))
+                    || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }
 
@@ -1116,9 +1119,14 @@ service cloud.firestore {
     match /ad_conversions/{conversionId} {
       // Seuls les admins peuvent lire les données d'attribution
       allow read: if isAdmin() || isDev();
-      // Tout utilisateur authentifié peut créer une conversion (tracking)
-      // Même non-auth pour permettre le tracking des visiteurs anonymes
-      allow create: if true;
+      // SECURITY FIX: Validate required fields to prevent DDoS/abuse
+      // Still allows unauthenticated visitors for tracking, but with structure validation
+      allow create: if request.resource.data.keys().hasAll(['source', 'timestamp']) &&
+                    request.resource.data.source is string &&
+                    request.resource.data.source.size() > 0 &&
+                    request.resource.data.source.size() < 100 &&
+                    request.resource.data.timestamp is timestamp &&
+                    request.resource.data.keys().size() < 20;
       // Les conversions ne peuvent jamais être modifiées ou supprimées (audit trail)
       allow update, delete: if false;
     }

@@ -78,7 +78,8 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
   const subscriptionPlansRoute = `/${getTranslatedRouteSlug('dashboard-subscription-plans' as RouteKey, langCode)}`;
 
   // Load forced access flag from sos_profiles
-  // AAA profiles automatically get access (isAAA: true OR uid starts with 'aaa_')
+  // AAA profiles automatically get access via isAAA: true field (set by admin only)
+  // SECURITY: Only trust isAAA field from Firestore, not UID patterns (spoofable)
   useEffect(() => {
     const uid = user?.uid;
     if (!uid) {
@@ -96,17 +97,19 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
 
         if (profileDoc.exists()) {
           const data = profileDoc.data();
-          // AAA profiles always get forced access (isAAA: true OR uid starts with 'aaa_')
-          const isAaaProfile = data?.isAAA === true || uid.startsWith('aaa_');
+          // SECURITY FIX: Only trust isAAA field from Firestore (admin-controlled)
+          // Do NOT check uid.startsWith('aaa_') - UIDs can be spoofed
+          const isAaaProfile = data?.isAAA === true;
           setHasForcedAccess(data?.forcedAIAccess === true || isAaaProfile);
         } else {
-          // Even without a profile doc, check if uid starts with 'aaa_'
-          setHasForcedAccess(uid.startsWith('aaa_'));
+          // No profile doc = no forced access
+          // SECURITY: Do NOT grant access based on UID prefix
+          setHasForcedAccess(false);
         }
       } catch (err) {
         console.warn('[useAiToolAccess] Error loading forced access:', err);
-        // Fallback: check uid prefix
-        setHasForcedAccess(uid.startsWith('aaa_'));
+        // On error, deny forced access for security
+        setHasForcedAccess(false);
       } finally {
         if (isMounted) {
           setForcedAccessLoading(false);

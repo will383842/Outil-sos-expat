@@ -19,7 +19,8 @@ const ProviderOnlineManager: React.FC<ProviderOnlineManagerProps> = ({ children 
 
   // ✅ EXEMPTION AAA: Les profils AAA ne doivent PAS recevoir de rappels d'inactivité
   // ni être mis hors ligne automatiquement - ils restent en ligne jusqu'à action manuelle
-  const isAaaProfile = user?.uid?.startsWith('aaa_') || user?.isAAA === true;
+  // SECURITY: Only trust isAAA field from Firestore (admin-controlled), not UID prefix
+  const isAaaProfile = user?.isAAA === true;
   const shouldTrack = Boolean(user && isProvider && isOnline && !isAaaProfile);
 
   // Hook de tracking d'activité - toujours appelé mais désactivé si pas prestataire
