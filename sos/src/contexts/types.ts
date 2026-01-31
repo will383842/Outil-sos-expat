@@ -55,6 +55,7 @@ export interface User {
   isBanned?: boolean;
   isVisible?: boolean;
   isOnline?: boolean;
+  isAAA?: boolean; // Profil AAA avec accès spéciaux
 
   // Stripe KYC
   stripeAccountId?: string;
