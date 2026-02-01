@@ -358,15 +358,17 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
     );
 
     return (
-      <div className="flex-shrink-0 flex justify-center max-w-full">
+      <div className="flex-shrink-0 flex justify-center max-w-full select-none">
         <article
           className={`
             relative bg-white rounded-2xl overflow-hidden cursor-pointer
-            border-2 shadow-lg
+            transition-all duration-300 ease-out border-2 shadow-lg
             w-[280px] sm:w-[300px] h-[520px] max-w-[calc(100vw-32px)]
             ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
+            ${isHovered ? `scale-[1.02] ${statusColors.glow} shadow-xl` : ""}
             focus:outline-none focus:ring-4 focus:ring-blue-500/50
-            lg:transition-shadow lg:duration-300 lg:hover:shadow-xl
+            hover:shadow-xl
+            select-none
           `}
           onClick={handleClick}
           onMouseEnter={handleMouseEnter}
@@ -384,6 +386,10 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
           style={{
             animationDelay: `${index * 100}ms`,
             WebkitTapHighlightColor: 'transparent',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+            WebkitUserDrag: 'none',
+            touchAction: 'pan-x pan-y',
           } as React.CSSProperties}
         >
           {/* Header avec photo et statut - Dimensions explicites pour éviter layout shift */}
@@ -394,9 +400,9 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               src={provider.avatar || provider.profilePhoto || DEFAULT_AVATAR}
               alt={`Photo de profil de ${provider.name}`}
               className={`
-              w-full h-full object-cover pointer-events-none
-              transition-opacity duration-300
+              w-full h-full object-cover transition-all duration-300 select-none pointer-events-none
               ${imageLoaded ? "opacity-100" : "opacity-0"}
+              ${isHovered ? "scale-105" : ""}
             `}
               onLoad={() => setImageLoaded(true)}
               onError={handleImageError}
@@ -405,6 +411,11 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               width={CARD_DIMENSIONS.width}
               height={CARD_DIMENSIONS.imageHeight}
               draggable="false"
+              style={{
+                WebkitUserDrag: 'none',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+              } as React.CSSProperties}
             />
 
             {/* Overlay gradient amélioré */}
@@ -581,32 +592,35 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
           </div>
         </article>
 
-        {/* Styles optimisés - animations désactivées sur mobile pour éviter les problèmes de scroll */}
+        {/* Styles optimisés avec prefers-reduced-motion */}
         <style>{`
-        /* Animation uniquement sur desktop */
-        @media (min-width: 1024px) {
-          article {
-            animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-            transform: translateY(20px);
-          }
-
-          @keyframes slideInUp {
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
+        article {
+          animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        
+        @keyframes slideInUp {
+          to {
+            opacity: 1;
+            transform: translateY(0);
           }
         }
-
+        
         @media (prefers-reduced-motion: reduce) {
           article {
-            animation: none !important;
-            opacity: 1 !important;
-            transform: none !important;
+            animation: none;
+            opacity: 1;
+            transform: none;
+          }
+          
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
           }
         }
-
+        
         /* Optimisation focus pour navigation clavier */
         article:focus-visible {
           outline: 2px solid #3b82f6;

@@ -483,17 +483,45 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         </div>
       )}
 
-      {/* Mobile & Tablet - Scroll horizontal avec snap - VERSION SIMPLE QUI FONCTIONNE */}
+      {/* Mobile & Tablet - Scroll horizontal avec snap - CENTRÉ */}
+      {/* ✅ FIX 2026: Carousel mobile avec scroll tactile natif */}
       <div
-        className="lg:hidden w-full max-w-full"
+        className="lg:hidden w-full pt-4 select-none"
+        style={{
+          overflow: 'visible',
+          WebkitOverflowScrolling: 'touch',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+        }}
       >
         <div
-          className="flex gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide px-4 sm:px-6"
+          className="flex flex-nowrap gap-4 sm:gap-5 pb-6 scrollbar-hide"
+          style={{
+            overflowX: 'scroll',
+            overflowY: 'hidden',
+            scrollSnapType: 'x mandatory',
+            scrollPaddingInline: 'calc(50vw - 140px)',
+            paddingLeft: 'calc(50vw - 140px)',
+            paddingRight: 'calc(50vw - 140px)',
+            touchAction: 'pan-x',
+            WebkitOverflowScrolling: 'touch',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+            cursor: 'grab',
+          }}
         >
           {displayProviders.map((provider, index) => (
             <div
               key={`${provider.id}-${rotationIndex}`}
-              className="flex-shrink-0 snap-center first:ml-0 last:mr-0"
+              className="flex-shrink-0 select-none"
+              style={{
+                minWidth: '280px',
+                maxWidth: '300px',
+                scrollSnapAlign: 'center',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+                WebkitTouchCallout: 'none',
+              }}
             >
               <ModernProfileCard
                 provider={provider}
