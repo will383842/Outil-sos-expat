@@ -484,36 +484,30 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
       )}
 
       {/* Mobile & Tablet - Scroll horizontal avec snap - CENTRÉ */}
-      {/* ✅ FIX: Première carte centrée sur l'écran grâce au padding calculé */}
-      {/* ✅ FIX: pt-4 pour éviter que la première carte soit cachée par le bandeau de filtre */}
+      {/* ✅ FIX 2026-02-01: Structure simplifiée (single div) comme TestimonialsSection qui fonctionne */}
       <div
-        className="lg:hidden w-full pt-4"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        className="lg:hidden flex gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+        style={{
+          scrollPaddingInline: 'calc(50vw - 150px)',
+          paddingLeft: 'calc(50vw - 150px)',
+          paddingRight: 'calc(50vw - 150px)',
+          WebkitOverflowScrolling: 'touch',
+        }}
       >
-        <div
-          className="flex flex-nowrap gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide"
-          style={{
-            scrollPaddingInline: 'calc(50vw - 140px)',
-            paddingLeft: 'calc(50vw - 140px)',
-            paddingRight: 'calc(50vw - 140px)',
-          }}
-        >
-          {displayProviders.map((provider, index) => (
-            <div
-              key={`${provider.id}-${rotationIndex}`}
-              className="flex-shrink-0 snap-center"
-              style={{ minWidth: '280px', maxWidth: '300px' }}
-            >
-              <ModernProfileCard
-                provider={provider}
-                onProfileClick={handleProfileClick}
-                isUserConnected={isUserConnected}
-                index={index}
-                language={language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar"}
-              />
-            </div>
-          ))}
-        </div>
+        {displayProviders.map((provider, index) => (
+          <div
+            key={`${provider.id}-${rotationIndex}`}
+            className="flex-shrink-0 w-[300px] sm:w-[340px] snap-center"
+          >
+            <ModernProfileCard
+              provider={provider}
+              onProfileClick={handleProfileClick}
+              isUserConnected={isUserConnected}
+              index={index}
+              language={language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar"}
+            />
+          </div>
+        ))}
       </div>
 
       {/* Desktop - Animation infinite scroll */}
