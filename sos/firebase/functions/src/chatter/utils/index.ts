@@ -33,6 +33,17 @@ export {
   areRegistrationsEnabled,
   getValidationDelayMs,
   getReleaseDelayMs,
+  // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
+  getFlashBonusMultiplier,
+  getClientCallCommission,
+  getN1CallCommission,
+  getN2CallCommission,
+  getActivationBonusAmount,
+  getN1RecruitBonusAmount,
+  getActivationCallsRequired,
+  getProviderCallCommission,
+  getProviderRecruitmentDurationMonths,
+  getStreakBonusMultiplier,
 } from "./chatterConfigService";
 
 // Fraud Detection

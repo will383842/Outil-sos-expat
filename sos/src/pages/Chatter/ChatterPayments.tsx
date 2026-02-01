@@ -126,15 +126,15 @@ const ChatterPayments: React.FC = () => {
   const validatedBalance = chatter?.validatedBalance || 0;
   const totalBalance = availableBalance + pendingBalance + validatedBalance;
 
-  // Format amount
+  // Format amount in USD (primary display)
   const formatAmount = useCallback(
     (cents: number) => {
       return new Intl.NumberFormat(intl.locale, {
         style: 'currency',
-        currency: 'XOF',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(cents);
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(cents / 100);
     },
     [intl.locale]
   );
@@ -462,7 +462,7 @@ const ChatterPayments: React.FC = () => {
             {/* Withdrawal Form using centralized component */}
             <WithdrawalRequestForm
               availableBalance={availableBalance}
-              currency="XOF"
+              currency="USD"
               onSubmit={handleWithdrawalRequest}
               onAddPaymentMethod={() => {
                 setActiveTab('methods');

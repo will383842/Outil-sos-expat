@@ -21,6 +21,7 @@ import {
   getLevelBonus,
   getTop3Bonus,
   getZoomBonus,
+  getStreakBonusMultiplier,
   calculateCommissionWithBonuses,
   getValidationDelayMs,
   getReleaseDelayMs,
@@ -54,6 +55,9 @@ export interface CreateCommissionInput {
       month?: string;
       streakDays?: number;
       levelReached?: 1 | 2 | 3 | 4 | 5;
+      // For social likes bonus
+      networkCount?: number;
+      networks?: string;
     };
   };
   baseAmount?: number; // Override base amount (otherwise use config)
@@ -158,11 +162,28 @@ export async function createCommission(
       baseAmount = inputBaseAmount;
     } else {
       switch (type) {
+        // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
+        case "client_call":
+          baseAmount = config.commissionClientCallAmount || config.commissionClientAmount || 1000;
+          break;
+        case "n1_call":
+          baseAmount = config.commissionN1CallAmount || 100;
+          break;
+        case "n2_call":
+          baseAmount = config.commissionN2CallAmount || 50;
+          break;
+        case "activation_bonus":
+          baseAmount = config.commissionActivationBonusAmount || 500;
+          break;
+        case "n1_recruit_bonus":
+          baseAmount = config.commissionN1RecruitBonusAmount || 100;
+          break;
+        // LEGACY types (kept for backward compatibility)
         case "client_referral":
-          baseAmount = config.commissionClientAmount;
+          baseAmount = config.commissionClientAmount || config.commissionClientCallAmount || 1000;
           break;
         case "recruitment":
-          baseAmount = config.commissionRecruitmentAmount;
+          baseAmount = config.commissionRecruitmentAmount || 500;
           break;
         default:
           baseAmount = 0;
@@ -173,9 +194,30 @@ export async function createCommission(
     const levelBonus = getLevelBonus(chatter.level, config);
     const top3Bonus = getTop3Bonus(chatter.currentMonthRank, config);
     const zoomBonus = getZoomBonus(chatter.lastZoomAttendance, config);
+    const streakBonus = getStreakBonusMultiplier(chatter.currentStreak || 0, config);
 
-    const { amount: finalAmount, details: calculationDetails } =
+    // 6b. Check for monthly top multiplier (reward for being top 3 previous month)
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+    const monthlyTopMultiplier =
+      chatter.monthlyTopMultiplierMonth === currentMonth && chatter.monthlyTopMultiplier > 1.0
+        ? chatter.monthlyTopMultiplier
+        : 1.0;
+
+    const { amount: calculatedAmount, details: calculationDetails } =
       calculateCommissionWithBonuses(baseAmount, levelBonus, top3Bonus, zoomBonus);
+
+    // Apply streak bonus and monthly top multiplier on top of other bonuses
+    const afterStreakAmount = Math.round(calculatedAmount * streakBonus);
+    const finalAmount = Math.round(afterStreakAmount * monthlyTopMultiplier);
+
+    // Build final calculation details
+    let finalCalculationDetails = calculationDetails;
+    if (streakBonus > 1.0) {
+      finalCalculationDetails += ` × ${streakBonus}x (Streak ${chatter.currentStreak}j)`;
+    }
+    if (monthlyTopMultiplier > 1.0) {
+      finalCalculationDetails += ` × ${monthlyTopMultiplier}x (Top ${chatter.currentMonthRank || '?'} mois précédent)`;
+    }
 
     // 7. Create timestamp
     const now = Timestamp.now();
@@ -196,9 +238,11 @@ export async function createCommission(
       levelBonus,
       top3Bonus,
       zoomBonus,
+      streakBonus,
+      monthlyTopMultiplier, // multiplier for being top 3 previous month
       amount: finalAmount,
       currency: "USD",
-      calculationDetails,
+      calculationDetails: finalCalculationDetails,
       status: "pending",
       validatedAt: null, // Will be set when validated
       availableAt: null, // Will be set when available
@@ -227,10 +271,12 @@ export async function createCommission(
 
       // Update commission count by type
       const commissionsByType = { ...currentData.commissionsByType };
-      if (type === "client_referral") {
+      // NEW SIMPLIFIED SYSTEM: client_call, n1_call, n2_call count as client_referral
+      // activation_bonus, n1_recruit_bonus count as recruitment
+      if (type === "client_referral" || type === "client_call" || type === "n1_call" || type === "n2_call") {
         commissionsByType.client_referral.count += 1;
         commissionsByType.client_referral.amount += finalAmount;
-      } else if (type === "recruitment") {
+      } else if (type === "recruitment" || type === "activation_bonus" || type === "n1_recruit_bonus") {
         commissionsByType.recruitment.count += 1;
         commissionsByType.recruitment.amount += finalAmount;
       } else {
@@ -320,6 +366,18 @@ function getDefaultDescription(
   details?: CreateCommissionInput["source"]["details"]
 ): string {
   switch (type) {
+    // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
+    case "client_call":
+      return `Commission appel client${details?.clientEmail ? ` (${maskEmail(details.clientEmail)})` : ""}`;
+    case "n1_call":
+      return `Commission N1${details?.providerEmail ? ` (${maskEmail(details.providerEmail)})` : ""}`;
+    case "n2_call":
+      return `Commission N2${details?.providerEmail ? ` (${maskEmail(details.providerEmail)})` : ""}`;
+    case "activation_bonus":
+      return `Bonus activation${details?.providerEmail ? ` (${maskEmail(details.providerEmail)})` : ""}`;
+    case "n1_recruit_bonus":
+      return `Bonus recrutement N1${details?.providerEmail ? ` (${maskEmail(details.providerEmail)})` : ""}`;
+    // LEGACY types (kept for backward compatibility)
     case "client_referral":
       return `Commission client referral${details?.clientEmail ? ` (${maskEmail(details.clientEmail)})` : ""}`;
     case "recruitment":
@@ -332,6 +390,8 @@ function getDefaultDescription(
       return `Bonus Top ${details?.rank || ""} mensuel (${details?.month || ""})`;
     case "bonus_zoom":
       return "Bonus participation Zoom";
+    case "bonus_social":
+      return `Bonus likes reseaux sociaux${details?.networkCount ? ` (${details.networkCount} reseaux)` : ""}`;
     case "manual_adjustment":
       return details?.bonusReason || "Ajustement manuel";
     default:
@@ -477,6 +537,9 @@ export async function releaseCommission(
 
     // Check for level up
     await checkAndUpdateLevel(commission.chatterId);
+
+    // Check and award milestone badges
+    await checkAndAwardBadges(commission.chatterId);
 
     // REMOVED: $50 recruiter bonus feature has been disabled
     // await checkRecruiterMilestoneBonus(commission.chatterId);
@@ -690,6 +753,321 @@ export async function checkRecruiterMilestoneBonus(_chatterId: string): Promise<
 }> {
   // Feature disabled - always return false
   return { bonusAwarded: false };
+}
+
+// ============================================================================
+// AUTOMATIC BADGE ATTRIBUTION
+// ============================================================================
+
+/**
+ * Badge milestone definitions
+ */
+const BADGE_MILESTONES = {
+  // Streak badges (consecutive days with activity)
+  streak: [
+    { badge: "streak_7" as const, threshold: 7 },
+    { badge: "streak_30" as const, threshold: 30 },
+    { badge: "streak_100" as const, threshold: 100 },
+  ],
+  // Client count badges
+  clients: [
+    { badge: "clients_10" as const, threshold: 10 },
+    { badge: "clients_50" as const, threshold: 50 },
+    { badge: "clients_100" as const, threshold: 100 },
+  ],
+  // Direct recruits (N1) badges - Team building motivation
+  recruits: [
+    { badge: "recruits_3" as const, threshold: 3 },   // Première équipe
+    { badge: "recruits_5" as const, threshold: 5 },   // Équipe Bronze
+    { badge: "recruits_10" as const, threshold: 10 }, // Équipe Argent
+    { badge: "recruits_25" as const, threshold: 25 }, // Équipe Or
+    { badge: "recruits_50" as const, threshold: 50 }, // Équipe Platine
+  ],
+  // Earnings badges (in cents)
+  earnings: [
+    { badge: "earned_100" as const, threshold: 10000 },   // $100
+    { badge: "earned_500" as const, threshold: 50000 },   // $500
+    { badge: "earned_1000" as const, threshold: 100000 }, // $1000
+  ],
+  // Team size badges (N1 + N2 total network)
+  teamSize: [
+    { badge: "team_10" as const, threshold: 10 },   // Réseau 10 personnes
+    { badge: "team_25" as const, threshold: 25 },   // Réseau 25 personnes
+    { badge: "team_50" as const, threshold: 50 },   // Réseau 50 personnes
+    { badge: "team_100" as const, threshold: 100 }, // Réseau 100 personnes
+  ],
+  // Team earnings badges (total earned by N1 recruits)
+  teamEarnings: [
+    { badge: "team_earned_500" as const, threshold: 50000 },    // Équipe a gagné $500
+    { badge: "team_earned_1000" as const, threshold: 100000 },  // Équipe a gagné $1000
+    { badge: "team_earned_5000" as const, threshold: 500000 },  // Équipe a gagné $5000
+  ],
+};
+
+/**
+ * Get team statistics for a chatter (N1 + N2 network)
+ */
+async function getTeamStats(
+  db: FirebaseFirestore.Firestore,
+  chatterId: string
+): Promise<{
+  totalTeamSize: number;
+  n1Count: number;
+  n2Count: number;
+  teamTotalEarnings: number;
+}> {
+  try {
+    // Get direct recruits (N1)
+    const n1Query = await db
+      .collection("chatters")
+      .where("recruitedBy", "==", chatterId)
+      .where("status", "==", "active")
+      .get();
+
+    const n1Count = n1Query.size;
+    let n2Count = 0;
+    let teamTotalEarnings = 0;
+
+    // For each N1, count their recruits (N2) and sum earnings
+    for (const n1Doc of n1Query.docs) {
+      const n1Data = n1Doc.data() as Chatter;
+      teamTotalEarnings += n1Data.totalEarned || 0;
+
+      // Count N2 (recruits of this N1)
+      const n2Query = await db
+        .collection("chatters")
+        .where("recruitedBy", "==", n1Doc.id)
+        .where("status", "==", "active")
+        .get();
+
+      n2Count += n2Query.size;
+    }
+
+    return {
+      totalTeamSize: n1Count + n2Count,
+      n1Count,
+      n2Count,
+      teamTotalEarnings,
+    };
+  } catch (error) {
+    logger.error("[getTeamStats] Error", { chatterId, error });
+    return {
+      totalTeamSize: 0,
+      n1Count: 0,
+      n2Count: 0,
+      teamTotalEarnings: 0,
+    };
+  }
+}
+
+/**
+ * Check and award all milestone badges for a chatter
+ * Should be called after commission processing
+ */
+export async function checkAndAwardBadges(chatterId: string): Promise<{
+  badgesAwarded: string[];
+}> {
+  const db = getFirestore();
+  const badgesAwarded: string[] = [];
+
+  try {
+    const chatterDoc = await db.collection("chatters").doc(chatterId).get();
+
+    if (!chatterDoc.exists) {
+      return { badgesAwarded };
+    }
+
+    const chatter = chatterDoc.data() as Chatter;
+    const currentBadges = new Set(chatter.badges || []);
+    const newBadges: string[] = [];
+
+    // Check streak badges
+    for (const { badge, threshold } of BADGE_MILESTONES.streak) {
+      if (chatter.bestStreak >= threshold && !currentBadges.has(badge)) {
+        newBadges.push(badge);
+      }
+    }
+
+    // Check client badges
+    for (const { badge, threshold } of BADGE_MILESTONES.clients) {
+      if (chatter.totalClients >= threshold && !currentBadges.has(badge)) {
+        newBadges.push(badge);
+      }
+    }
+
+    // Check recruit badges (direct N1 recruits)
+    for (const { badge, threshold } of BADGE_MILESTONES.recruits) {
+      if (chatter.totalRecruits >= threshold && !currentBadges.has(badge)) {
+        newBadges.push(badge);
+      }
+    }
+
+    // Check earnings badges
+    for (const { badge, threshold } of BADGE_MILESTONES.earnings) {
+      if (chatter.totalEarned >= threshold && !currentBadges.has(badge)) {
+        newBadges.push(badge);
+      }
+    }
+
+    // Check team size badges (N1 + N2 network)
+    const teamStats = await getTeamStats(db, chatterId);
+
+    for (const { badge, threshold } of BADGE_MILESTONES.teamSize) {
+      if (teamStats.totalTeamSize >= threshold && !currentBadges.has(badge)) {
+        newBadges.push(badge);
+      }
+    }
+
+    // Check team earnings badges (total earned by N1 recruits)
+    for (const { badge, threshold } of BADGE_MILESTONES.teamEarnings) {
+      if (teamStats.teamTotalEarnings >= threshold && !currentBadges.has(badge)) {
+        newBadges.push(badge);
+      }
+    }
+
+    // Award new badges
+    if (newBadges.length > 0) {
+      await db.collection("chatters").doc(chatterId).update({
+        badges: FieldValue.arrayUnion(...newBadges),
+        updatedAt: Timestamp.now(),
+      });
+
+      // Create badge award records
+      const batch = db.batch();
+      for (const badge of newBadges) {
+        const awardRef = db.collection("chatter_badge_awards").doc();
+        batch.set(awardRef, {
+          chatterId,
+          chatterEmail: chatter.email,
+          badgeType: badge,
+          awardedAt: Timestamp.now(),
+          bonusCommissionId: null,
+          context: {
+            bestStreak: chatter.bestStreak,
+            totalClients: chatter.totalClients,
+            totalRecruits: chatter.totalRecruits,
+            totalEarned: chatter.totalEarned,
+            zoomMeetings: chatter.zoomMeetingsAttended,
+          },
+        });
+      }
+      await batch.commit();
+
+      // Create notifications for each badge
+      for (const badge of newBadges) {
+        const notificationRef = db.collection("chatter_notifications").doc();
+        await notificationRef.set({
+          id: notificationRef.id,
+          chatterId,
+          type: "badge_earned",
+          title: `Badge débloqué : ${getBadgeDisplayName(badge)} !`,
+          titleTranslations: { en: `Badge unlocked: ${getBadgeDisplayName(badge)}!` },
+          message: getBadgeDescription(badge),
+          messageTranslations: { en: getBadgeDescription(badge) },
+          isRead: false,
+          emailSent: false,
+          data: { badgeType: badge },
+          createdAt: Timestamp.now(),
+        });
+      }
+
+      badgesAwarded.push(...newBadges);
+
+      logger.info("[checkAndAwardBadges] Badges awarded", {
+        chatterId,
+        badges: newBadges,
+      });
+    }
+
+    return { badgesAwarded };
+  } catch (error) {
+    logger.error("[checkAndAwardBadges] Error", { chatterId, error });
+    return { badgesAwarded };
+  }
+}
+
+/**
+ * Get display name for a badge
+ */
+function getBadgeDisplayName(badge: string): string {
+  const names: Record<string, string> = {
+    // Streak badges
+    streak_7: "Série 7 jours",
+    streak_30: "Série 30 jours",
+    streak_100: "Série 100 jours",
+    // Client badges
+    clients_10: "10 Clients",
+    clients_50: "50 Clients",
+    clients_100: "100 Clients",
+    // Direct recruits badges (N1)
+    recruits_3: "Première Équipe",
+    recruits_5: "Équipe Bronze",
+    recruits_10: "Équipe Argent",
+    recruits_25: "Équipe Or",
+    recruits_50: "Équipe Platine",
+    // Earnings badges
+    earned_100: "$100 Gagnés",
+    earned_500: "$500 Gagnés",
+    earned_1000: "$1000 Gagnés",
+    // Team size badges (N1 + N2)
+    team_10: "Réseau 10",
+    team_25: "Réseau 25",
+    team_50: "Réseau 50",
+    team_100: "Réseau 100",
+    // Team earnings badges
+    team_earned_500: "Équipe $500",
+    team_earned_1000: "Équipe $1000",
+    team_earned_5000: "Équipe $5000",
+    // Special badges
+    first_client: "Premier Client",
+    first_recruitment: "Première Recrue",
+    first_quiz_pass: "Quiz Réussi",
+    top1_monthly: "Top 1 Mensuel",
+    top3_monthly: "Top 3 Mensuel",
+  };
+  return names[badge] || badge;
+}
+
+/**
+ * Get description for a badge
+ */
+function getBadgeDescription(badge: string): string {
+  const descriptions: Record<string, string> = {
+    // Streak badges
+    streak_7: "Vous avez été actif 7 jours consécutifs !",
+    streak_30: "Vous avez été actif 30 jours consécutifs !",
+    streak_100: "Incroyable ! 100 jours consécutifs d'activité !",
+    // Client badges
+    clients_10: "Vous avez référé 10 clients !",
+    clients_50: "Vous avez référé 50 clients !",
+    clients_100: "Félicitations ! 100 clients référés !",
+    // Direct recruits badges (N1)
+    recruits_3: "Vous avez recruté 3 personnes dans votre équipe !",
+    recruits_5: "Équipe Bronze : 5 recrues directes !",
+    recruits_10: "Équipe Argent : 10 recrues directes !",
+    recruits_25: "Équipe Or : 25 recrues directes ! Impressionnant !",
+    recruits_50: "Équipe Platine : 50 recrues directes ! Vous êtes un leader !",
+    // Earnings badges
+    earned_100: "Vous avez gagné $100 en commissions !",
+    earned_500: "Vous avez gagné $500 en commissions !",
+    earned_1000: "Félicitations ! $1000 de gains !",
+    // Team size badges (N1 + N2)
+    team_10: "Votre réseau compte 10 personnes (N1 + N2) !",
+    team_25: "Votre réseau compte 25 personnes !",
+    team_50: "Votre réseau compte 50 personnes ! Belle croissance !",
+    team_100: "Réseau de 100 personnes ! Vous construisez un empire !",
+    // Team earnings badges
+    team_earned_500: "Votre équipe N1 a généré $500 de gains !",
+    team_earned_1000: "Votre équipe N1 a généré $1000 de gains !",
+    team_earned_5000: "Incroyable ! Votre équipe a généré $5000 !",
+    // Special badges
+    first_client: "Vous avez référé votre premier client !",
+    first_recruitment: "Vous avez recruté votre premier membre d'équipe !",
+    first_quiz_pass: "Vous avez réussi le quiz de qualification !",
+    top1_monthly: "Vous avez été #1 du classement mensuel !",
+    top3_monthly: "Vous avez été dans le Top 3 mensuel !",
+  };
+  return descriptions[badge] || "Badge débloqué !";
 }
 
 // ============================================================================

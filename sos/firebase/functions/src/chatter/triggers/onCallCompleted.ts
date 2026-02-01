@@ -1,20 +1,43 @@
 /**
  * Trigger: onCallCompleted
  *
- * Fires when a call session is marked as completed.
- * - Checks if client was referred by a chatter
- * - Creates client referral commission
- * - Checks if provider was recruited by a chatter
- * - Creates recruitment commission (first call only)
+ * NEW SIMPLIFIED COMMISSION SYSTEM (2026)
+ *
+ * Fires when a call session is marked as completed and paid.
+ *
+ * Commission Structure:
+ * 1. CLIENT CALL: $10 - when a client calls via chatter's link
+ * 2. N1 CALL: $1 - when your direct referral (N1) makes a call
+ * 3. N2 CALL: $0.50 - when your N1's referral (N2) makes a call
+ * 4. ACTIVATION BONUS: $5 - ONLY after referral's 2nd client call (anti-fraud)
+ * 5. N1 RECRUIT BONUS: $1 - when your N1 recruits someone who activates
+ *
+ * Removed (OLD SYSTEM):
+ * - NO commission at signup (was $2)
+ * - NO commission at quiz (was $3)
+ * - NO commission at 1st call only
  */
 
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { ChatterNotification, Chatter } from "../types";
-import { createCommission } from "../services";
+import { createCommission, checkAndPaySocialBonus } from "../services";
+import {
+  getChatterConfigCached,
+  getClientCallCommission,
+  getN1CallCommission,
+  getN2CallCommission,
+  getActivationBonusAmount,
+  getN1RecruitBonusAmount,
+  getActivationCallsRequired,
+  getFlashBonusMultiplier,
+  getProviderCallCommission,
+  getProviderRecruitmentDurationMonths,
+} from "../utils/chatterConfigService";
+import { updateChatterChallengeScore } from "../scheduled/weeklyChallenges";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -86,19 +109,339 @@ export const chatterOnCallCompleted = onDocumentUpdated(
     });
 
     const db = getFirestore();
+    const config = await getChatterConfigCached();
+    const flashMultiplier = getFlashBonusMultiplier(config);
 
     try {
-      // 1. Check if client was referred by a chatter
+      // ========================================================================
+      // PART A: PROVIDER RECRUITMENT COMMISSION ($5)
+      // Process this FIRST and independently of client referral
+      // When a recruited provider receives ANY call, their recruiter earns $5
+      // ========================================================================
+
+      await processProviderRecruitmentCommission(db, session, config, sessionId, flashMultiplier);
+
+      // ========================================================================
+      // PART B: CLIENT REFERRAL COMMISSIONS ($10, $1, $0.50, etc.)
+      // Only if the CLIENT was referred by a chatter
+      // ========================================================================
+
+      // Check if client was referred by a chatter
       const clientDoc = await db.collection("users").doc(session.clientId).get();
 
-      if (clientDoc.exists) {
-        const clientData = clientDoc.data() as UserDocument;
+      if (!clientDoc.exists) {
+        logger.info("[chatterOnCallCompleted] Client not found, skipping client referral", { sessionId });
+        return;
+      }
 
-        if (clientData.referredByChatterId) {
-          // Create client referral commission
-          const result = await createCommission({
-            chatterId: clientData.referredByChatterId,
-            type: "client_referral",
+      const clientData = clientDoc.data() as UserDocument;
+
+      // If client was NOT referred by a chatter, skip client referral processing
+      // (provider recruitment was already processed above)
+      if (!clientData.referredByChatterId) {
+        logger.info("[chatterOnCallCompleted] Client not referred by chatter, skipping client referral", {
+          sessionId,
+          clientId: session.clientId,
+        });
+        return;
+      }
+
+      const chatterId = clientData.referredByChatterId;
+
+      // Get chatter document
+      const chatterDoc = await db.collection("chatters").doc(chatterId).get();
+      if (!chatterDoc.exists) {
+        logger.warn("[chatterOnCallCompleted] Chatter not found", { chatterId });
+        return;
+      }
+
+      const chatter = chatterDoc.data() as Chatter;
+
+      // ========================================================================
+      // 1. DIRECT CLIENT CALL COMMISSION ($10)
+      // ========================================================================
+
+      const clientCallAmount = getClientCallCommission(config);
+
+      const clientCallResult = await createCommission({
+        chatterId,
+        type: "client_call",
+        source: {
+          id: sessionId,
+          type: "call_session",
+          details: {
+            clientId: session.clientId,
+            clientEmail: clientData.email,
+            callSessionId: sessionId,
+            callDuration: session.duration,
+            connectionFee: session.connectionFee,
+          },
+        },
+        baseAmount: clientCallAmount,
+        description: `Commission appel client${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+      });
+
+      if (clientCallResult.success) {
+        logger.info("[chatterOnCallCompleted] Client call commission created", {
+          sessionId,
+          chatterId,
+          commissionId: clientCallResult.commissionId,
+          amount: clientCallResult.amount,
+        });
+
+        // Create notification
+        await createCommissionNotification(
+          db,
+          chatterId,
+          "commission_earned",
+          "Commission appel client !",
+          `Vous avez gagn\u00e9 $${(clientCallAmount / 100).toFixed(2)} pour l'appel de ${maskEmail(clientData.email)}.`,
+          clientCallResult.commissionId!,
+          clientCallResult.amount!
+        );
+
+        // Check and award first client badge
+        await checkFirstClientBadge(db, chatterId);
+
+        // Update weekly challenge score for client call
+        await updateChatterChallengeScore(chatterId, "client_call");
+
+        // Update daily missions progress
+        await updateDailyMissionCall(db, chatterId);
+
+        // Check and pay social bonus if eligible (requires $100 direct earnings)
+        const socialBonusResult = await checkAndPaySocialBonus(chatterId);
+        if (socialBonusResult.paid) {
+          logger.info("[chatterOnCallCompleted] Social bonus paid", {
+            chatterId,
+            amount: socialBonusResult.amount,
+          });
+        }
+      }
+
+      // ========================================================================
+      // 2. INCREMENT CALL COUNT & CHECK ACTIVATION (with transaction to prevent race conditions)
+      // ========================================================================
+
+      const activationRequired = getActivationCallsRequired(config);
+
+      // Use transaction to atomically update call count and check activation
+      const activationResult = await db.runTransaction(async (transaction) => {
+        const chatterRef = db.collection("chatters").doc(chatterId);
+        const chatterSnap = await transaction.get(chatterRef);
+
+        if (!chatterSnap.exists) {
+          return { activated: false, newCallCount: 0, shouldPayActivationBonus: false };
+        }
+
+        const currentChatter = chatterSnap.data() as Chatter;
+        const currentCallCount = currentChatter.totalClientCalls || 0;
+        const newCallCount = currentCallCount + 1;
+
+        // Check if this triggers activation (after 2nd call by default)
+        const wasNotActivated = !currentChatter.isActivated;
+        const shouldActivate = wasNotActivated && newCallCount >= activationRequired;
+
+        // Check if we should pay activation bonus (only once)
+        const shouldPayActivationBonus = shouldActivate &&
+          currentChatter.recruitedBy &&
+          !currentChatter.activationBonusPaid;
+
+        // Update chatter atomically
+        const updateData: Record<string, unknown> = {
+          totalClientCalls: newCallCount,
+          updatedAt: Timestamp.now(),
+        };
+
+        if (shouldActivate) {
+          updateData.isActivated = true;
+          updateData.activatedAt = Timestamp.now();
+        }
+
+        if (shouldPayActivationBonus) {
+          // Mark as paid BEFORE creating commission to prevent double payment
+          updateData.activationBonusPaid = true;
+        }
+
+        transaction.update(chatterRef, updateData);
+
+        return {
+          activated: shouldActivate,
+          newCallCount,
+          shouldPayActivationBonus,
+          recruitedBy: currentChatter.recruitedBy,
+          chatterData: currentChatter,
+        };
+      });
+
+      const newCallCount = activationResult.newCallCount;
+
+      if (activationResult.activated) {
+        logger.info("[chatterOnCallCompleted] Chatter activation triggered", {
+          chatterId,
+          callCount: newCallCount,
+          activationRequired,
+        });
+      }
+
+      // ========================================================================
+      // 3. ACTIVATION BONUS TO RECRUITER ($5) - Outside transaction but protected by flag
+      // ========================================================================
+
+      if (activationResult.shouldPayActivationBonus && activationResult.recruitedBy) {
+        const activationBonusAmount = getActivationBonusAmount(config);
+        const chatterData = activationResult.chatterData!;
+
+        const bonusResult = await createCommission({
+          chatterId: activationResult.recruitedBy,
+          type: "activation_bonus",
+          source: {
+            id: chatterId,
+            type: "user",
+            details: {
+              providerId: chatterId,
+              providerEmail: chatterData.email,
+              bonusType: "activation",
+              bonusReason: `Activation de ${chatterData.firstName} ${chatterData.lastName.charAt(0)}. apr\u00e8s ${newCallCount} appels`,
+            },
+          },
+          baseAmount: activationBonusAmount,
+          description: `Bonus activation filleul ${chatterData.firstName} ${chatterData.lastName.charAt(0)}.${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+          skipFraudCheck: true,
+        });
+
+        if (bonusResult.success) {
+          logger.info("[chatterOnCallCompleted] Activation bonus paid", {
+            recruiterId: activationResult.recruitedBy,
+            recruitedChatterId: chatterId,
+            commissionId: bonusResult.commissionId,
+            amount: bonusResult.amount,
+          });
+
+          // Notify the recruiter
+          await createCommissionNotification(
+            db,
+            activationResult.recruitedBy,
+            "commission_earned",
+            "Bonus d'activation !",
+            `Votre filleul ${chatterData.firstName} ${chatterData.lastName.charAt(0)}. est maintenant activ\u00e9 ! +$${(activationBonusAmount / 100).toFixed(2)}`,
+            bonusResult.commissionId!,
+            bonusResult.amount!
+          );
+
+          // ========================================================================
+          // 4. N1 RECRUIT BONUS ($1) - When N1 recruits someone who activates
+          // ========================================================================
+
+          // Check if the recruiter (N1) was also recruited by someone (N2 parrain)
+          const recruiterDoc = await db.collection("chatters").doc(activationResult.recruitedBy).get();
+          if (recruiterDoc.exists) {
+            const recruiter = recruiterDoc.data() as Chatter;
+
+            if (recruiter.recruitedBy) {
+              const n1RecruitBonusAmount = getN1RecruitBonusAmount(config);
+
+              const n1RecruitResult = await createCommission({
+                chatterId: recruiter.recruitedBy,
+                type: "n1_recruit_bonus",
+                source: {
+                  id: chatterId,
+                  type: "user",
+                  details: {
+                    providerId: chatterId,
+                    providerEmail: chatterData.email,
+                    bonusType: "n1_recruit",
+                    bonusReason: `N1 ${recruiter.firstName} ${recruiter.lastName.charAt(0)}. a recrut\u00e9 ${chatterData.firstName} qui s'est activ\u00e9`,
+                  },
+                },
+                baseAmount: n1RecruitBonusAmount,
+                description: `Bonus recrutement N1${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+                skipFraudCheck: true,
+              });
+
+              if (n1RecruitResult.success) {
+                logger.info("[chatterOnCallCompleted] N1 recruit bonus paid", {
+                  n2ParrainId: recruiter.recruitedBy,
+                  n1RecruiterId: activationResult.recruitedBy,
+                  activatedChatterId: chatterId,
+                  commissionId: n1RecruitResult.commissionId,
+                  amount: n1RecruitResult.amount,
+                });
+
+                await createCommissionNotification(
+                  db,
+                  recruiter.recruitedBy,
+                  "commission_earned",
+                  "Bonus recrutement N1 !",
+                  `Votre filleul ${recruiter.firstName} ${recruiter.lastName.charAt(0)}. a recrut\u00e9 un nouveau chatter activ\u00e9 ! +$${(n1RecruitBonusAmount / 100).toFixed(2)}`,
+                  n1RecruitResult.commissionId!,
+                  n1RecruitResult.amount!
+                );
+              }
+            }
+          }
+        }
+      }
+
+      // ========================================================================
+      // 5. N1 CALL COMMISSION ($1) - If chatter has a recruiter
+      // ========================================================================
+
+      if (chatter.recruitedBy) {
+        const n1CallAmount = getN1CallCommission(config);
+
+        const n1Result = await createCommission({
+          chatterId: chatter.recruitedBy,
+          type: "n1_call",
+          source: {
+            id: sessionId,
+            type: "call_session",
+            details: {
+              clientId: session.clientId,
+              clientEmail: clientData.email,
+              callSessionId: sessionId,
+              callDuration: session.duration,
+              providerId: chatterId,
+              providerEmail: chatter.email,
+            },
+          },
+          baseAmount: n1CallAmount,
+          description: `Commission N1 (appel de ${chatter.firstName} ${chatter.lastName.charAt(0)}.)${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+        });
+
+        if (n1Result.success) {
+          logger.info("[chatterOnCallCompleted] N1 call commission created", {
+            sessionId,
+            n1ParrainId: chatter.recruitedBy,
+            chatterWhoCalled: chatterId,
+            commissionId: n1Result.commissionId,
+            amount: n1Result.amount,
+          });
+
+          await createCommissionNotification(
+            db,
+            chatter.recruitedBy,
+            "commission_earned",
+            "Commission N1 !",
+            `Votre filleul ${chatter.firstName} ${chatter.lastName.charAt(0)}. a g\u00e9n\u00e9r\u00e9 un appel ! +$${(n1CallAmount / 100).toFixed(2)}`,
+            n1Result.commissionId!,
+            n1Result.amount!
+          );
+
+          // Update weekly challenge score for N1 call
+          await updateChatterChallengeScore(chatter.recruitedBy, "n1_call");
+        }
+
+        // ========================================================================
+        // 6. N2 CALL COMMISSION ($0.50) - If chatter's recruiter also has a recruiter
+        // ========================================================================
+
+        if (chatter.parrainNiveau2Id) {
+          const n2CallAmount = getN2CallCommission(config);
+
+          const n2Result = await createCommission({
+            chatterId: chatter.parrainNiveau2Id,
+            type: "n2_call",
             source: {
               id: sessionId,
               type: "call_session",
@@ -107,212 +450,214 @@ export const chatterOnCallCompleted = onDocumentUpdated(
                 clientEmail: clientData.email,
                 callSessionId: sessionId,
                 callDuration: session.duration,
-                connectionFee: session.connectionFee,
+                providerId: chatterId,
+                providerEmail: chatter.email,
               },
             },
+            baseAmount: n2CallAmount,
+            description: `Commission N2 (appel de ${chatter.firstName} ${chatter.lastName.charAt(0)}.)${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
           });
 
-          if (result.success) {
-            logger.info("[chatterOnCallCompleted] Client referral commission created", {
+          if (n2Result.success) {
+            logger.info("[chatterOnCallCompleted] N2 call commission created", {
               sessionId,
-              chatterId: clientData.referredByChatterId,
-              commissionId: result.commissionId,
-              amount: result.amount,
+              n2ParrainId: chatter.parrainNiveau2Id,
+              n1ParrainId: chatter.recruitedBy,
+              chatterWhoCalled: chatterId,
+              commissionId: n2Result.commissionId,
+              amount: n2Result.amount,
             });
 
-            // Create notification for chatter
+            // Get N1 recruiter name for notification
+            const n1Doc = await db.collection("chatters").doc(chatter.recruitedBy).get();
+            const n1Name = n1Doc.exists
+              ? `${(n1Doc.data() as Chatter).firstName} ${(n1Doc.data() as Chatter).lastName.charAt(0)}.`
+              : "votre filleul N1";
+
             await createCommissionNotification(
               db,
-              clientData.referredByChatterId,
+              chatter.parrainNiveau2Id,
               "commission_earned",
-              "Nouvelle commission client !",
-              `Vous avez gagné une commission pour le client ${maskEmail(clientData.email)}.`,
-              result.commissionId!,
-              result.amount!
+              "Commission N2 !",
+              `Le filleul de ${n1Name} a g\u00e9n\u00e9r\u00e9 un appel ! +$${(n2CallAmount / 100).toFixed(2)}`,
+              n2Result.commissionId!,
+              n2Result.amount!
             );
 
-            // Check if this is the first commission for the chatter (award badge)
-            await checkFirstClientBadge(db, clientData.referredByChatterId);
-
-            // Check if the chatter was recruited by another chatter (recruiter commission)
-            const chatterDoc = await db
-              .collection("chatters")
-              .doc(clientData.referredByChatterId)
-              .get();
-
-            if (chatterDoc.exists) {
-              const chatter = chatterDoc.data() as Chatter;
-
-              // If this chatter was recruited and hasn't generated a recruiter commission yet
-              if (chatter.recruitedBy && !chatter.recruiterCommissionPaid) {
-                // Mark that recruiter commission will be paid (prevent race conditions)
-                await db.collection("chatters").doc(clientData.referredByChatterId).update({
-                  recruiterCommissionPaid: true,
-                  updatedAt: Timestamp.now(),
-                });
-
-                // Create recruitment commission for the recruiter
-                const recruiterResult = await createCommission({
-                  chatterId: chatter.recruitedBy,
-                  type: "recruitment",
-                  source: {
-                    id: clientData.referredByChatterId,
-                    type: "user",
-                    details: {
-                      providerId: clientData.referredByChatterId,
-                      providerEmail: chatter.email,
-                      providerType: "expat", // Chatters are treated as expat-type
-                      firstCallId: sessionId,
-                    },
-                  },
-                });
-
-                if (recruiterResult.success) {
-                  logger.info("[chatterOnCallCompleted] Recruiter commission created", {
-                    recruiterId: chatter.recruitedBy,
-                    recruitedChatterId: clientData.referredByChatterId,
-                    commissionId: recruiterResult.commissionId,
-                  });
-
-                  await createCommissionNotification(
-                    db,
-                    chatter.recruitedBy,
-                    "commission_earned",
-                    "Commission de recrutement !",
-                    `Votre filleul ${chatter.firstName} ${chatter.lastName.charAt(0)}. a apporté son premier client !`,
-                    recruiterResult.commissionId!,
-                    recruiterResult.amount!
-                  );
-                } else {
-                  // If commission creation failed, rollback the flag
-                  await db.collection("chatters").doc(clientData.referredByChatterId).update({
-                    recruiterCommissionPaid: false,
-                    updatedAt: Timestamp.now(),
-                  });
-                }
-              }
-            }
-          } else {
-            logger.warn("[chatterOnCallCompleted] Failed to create client commission", {
-              sessionId,
-              chatterId: clientData.referredByChatterId,
-              error: result.error,
-            });
-          }
-        }
-      }
-
-      // 2. Check if provider was recruited by a chatter (commission for EACH call during 6 months)
-      const providerDoc = await db.collection("users").doc(session.providerId).get();
-
-      if (providerDoc.exists) {
-        const providerData = providerDoc.data() as UserDocument;
-
-        // Check if provider was recruited by a chatter
-        if (providerData.providerRecruitedByChatterId) {
-          // Check if recruitment link is still active (within 6 months)
-          const linkQuery = await db
-            .collection("chatter_recruitment_links")
-            .where("chatterId", "==", providerData.providerRecruitedByChatterId)
-            .where("usedByProviderId", "==", session.providerId)
-            .where("isActive", "==", true)
-            .limit(1)
-            .get();
-
-          // Check if link exists and is not expired
-          let isWithinRecruitmentPeriod = false;
-          let recruitmentLink = null;
-
-          if (!linkQuery.empty) {
-            recruitmentLink = linkQuery.docs[0];
-            const linkData = recruitmentLink.data();
-            // Link is active if expiresAt is in the future
-            isWithinRecruitmentPeriod = linkData.expiresAt.toMillis() > Date.now();
-          }
-
-          if (isWithinRecruitmentPeriod) {
-            // Track if this is the first call (for badge)
-            const isFirstCall = !providerData.providerFirstCallReceived;
-
-            if (isFirstCall) {
-              // Mark provider as having received first call
-              await db.collection("users").doc(session.providerId).update({
-                providerFirstCallReceived: true,
-                providerFirstCallAt: Timestamp.now(),
-              });
-            }
-
-            // Create recruitment commission for EACH call during the 6-month period
-            const result = await createCommission({
-              chatterId: providerData.providerRecruitedByChatterId,
-              type: "recruitment",
-              source: {
-                id: session.providerId,
-                type: "provider",
-                details: {
-                  providerId: session.providerId,
-                  providerEmail: providerData.email,
-                  providerType: session.providerType,
-                  firstCallId: isFirstCall ? sessionId : undefined,
-                  callSessionId: sessionId,
-                },
-              },
-            });
-
-            if (result.success) {
-              logger.info("[chatterOnCallCompleted] Provider recruitment commission created", {
-                sessionId,
-                chatterId: providerData.providerRecruitedByChatterId,
-                providerId: session.providerId,
-                commissionId: result.commissionId,
-                isFirstCall,
-              });
-
-              await createCommissionNotification(
-                db,
-                providerData.providerRecruitedByChatterId,
-                "commission_earned",
-                "Commission de recrutement prestataire !",
-                isFirstCall
-                  ? `Le prestataire ${maskEmail(providerData.email)} a reçu son premier appel !`
-                  : `Le prestataire ${maskEmail(providerData.email)} a reçu un appel !`,
-                result.commissionId!,
-                result.amount!
-              );
-
-              // Update recruitment link commission count
-              if (recruitmentLink) {
-                const currentCount = recruitmentLink.data().commissionCount || 0;
-                await recruitmentLink.ref.update({
-                  commissionCount: currentCount + 1,
-                  lastCommissionAt: Timestamp.now(),
-                  lastCommissionId: result.commissionId,
-                });
-              }
-
-              // Check first recruitment badge (only on first call)
-              if (isFirstCall) {
-                await checkFirstRecruitmentBadge(db, providerData.providerRecruitedByChatterId);
-              }
-            }
-          } else {
-            logger.info("[chatterOnCallCompleted] Recruitment link expired, no commission", {
-              sessionId,
-              providerId: session.providerId,
-              chatterId: providerData.providerRecruitedByChatterId,
-            });
+            // Update weekly challenge score for N2 call (counts as team action)
+            await updateChatterChallengeScore(chatter.parrainNiveau2Id, "n2_call");
           }
         }
       }
 
       logger.info("[chatterOnCallCompleted] Call processing complete", {
         sessionId,
+        chatterId,
+        callCount: newCallCount,
+        wasActivated: activationResult.activated,
       });
+
     } catch (error) {
       logger.error("[chatterOnCallCompleted] Error", { sessionId, error });
     }
   }
 );
+
+/**
+ * Process provider recruitment commission
+ * When a chatter recruits a provider (lawyer/expat), they earn $5 on EVERY call
+ * the provider receives for 6 months from recruitment date.
+ */
+async function processProviderRecruitmentCommission(
+  db: FirebaseFirestore.Firestore,
+  session: CallSession,
+  config: Awaited<ReturnType<typeof getChatterConfigCached>>,
+  sessionId: string,
+  flashMultiplier: number
+): Promise<void> {
+  try {
+    // Get provider data
+    const providerDoc = await db.collection("users").doc(session.providerId).get();
+
+    if (!providerDoc.exists) {
+      return;
+    }
+
+    const providerData = providerDoc.data() as UserDocument;
+
+    // Check if provider was recruited by a chatter
+    if (!providerData.providerRecruitedByChatterId) {
+      return;
+    }
+
+    // Get the recruitment link to check the date
+    const linkQuery = await db
+      .collection("chatter_recruitment_links")
+      .where("chatterId", "==", providerData.providerRecruitedByChatterId)
+      .where("usedByProviderId", "==", session.providerId)
+      .limit(1)
+      .get();
+
+    if (linkQuery.empty) {
+      // Fallback: check user document for recruitment date
+      // The provider might have been recruited before the link system was in place
+      logger.info("[processProviderRecruitmentCommission] No recruitment link found, checking user doc", {
+        providerId: session.providerId,
+        chatterId: providerData.providerRecruitedByChatterId,
+      });
+    }
+
+    // Determine recruitment date
+    let recruitmentDate: Date | null = null;
+
+    if (!linkQuery.empty) {
+      const linkData = linkQuery.docs[0].data();
+      recruitmentDate = linkData.usedAt?.toDate() || linkData.createdAt?.toDate();
+    }
+
+    // If no recruitment date found, use a fallback (user creation date)
+    if (!recruitmentDate && providerDoc.createTime) {
+      recruitmentDate = providerDoc.createTime.toDate();
+    }
+
+    if (!recruitmentDate) {
+      logger.warn("[processProviderRecruitmentCommission] No recruitment date found", {
+        providerId: session.providerId,
+      });
+      return;
+    }
+
+    // Check if within the commission window (6 months by default)
+    const durationMonths = getProviderRecruitmentDurationMonths(config);
+    const expirationDate = new Date(recruitmentDate);
+    expirationDate.setMonth(expirationDate.getMonth() + durationMonths);
+
+    const now = new Date();
+    if (now > expirationDate) {
+      logger.info("[processProviderRecruitmentCommission] Commission window expired", {
+        providerId: session.providerId,
+        recruitmentDate: recruitmentDate.toISOString(),
+        expirationDate: expirationDate.toISOString(),
+      });
+      return;
+    }
+
+    // Get the recruiting chatter
+    const recruiterChatterId = providerData.providerRecruitedByChatterId;
+    const recruiterDoc = await db.collection("chatters").doc(recruiterChatterId).get();
+
+    if (!recruiterDoc.exists) {
+      logger.warn("[processProviderRecruitmentCommission] Recruiter chatter not found", {
+        chatterId: recruiterChatterId,
+      });
+      return;
+    }
+
+    const recruiter = recruiterDoc.data() as Chatter;
+
+    // Check recruiter is active
+    if (recruiter.status !== "active") {
+      logger.info("[processProviderRecruitmentCommission] Recruiter not active", {
+        chatterId: recruiterChatterId,
+        status: recruiter.status,
+      });
+      return;
+    }
+
+    // Create commission for provider call
+    const providerCallAmount = getProviderCallCommission(config);
+
+    const providerCallResult = await createCommission({
+      chatterId: recruiterChatterId,
+      type: "provider_call",
+      source: {
+        id: sessionId,
+        type: "call_session",
+        details: {
+          providerId: session.providerId,
+          providerEmail: providerData.email,
+          providerType: session.providerType,
+          callSessionId: sessionId,
+          callDuration: session.duration,
+        },
+      },
+      baseAmount: providerCallAmount,
+      description: `Commission prestataire recruté (${session.providerType === "lawyer" ? "avocat" : "aidant"})${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+      skipFraudCheck: true, // Provider calls are low-fraud risk
+    });
+
+    if (providerCallResult.success) {
+      logger.info("[processProviderRecruitmentCommission] Provider call commission created", {
+        sessionId,
+        recruiterId: recruiterChatterId,
+        providerId: session.providerId,
+        commissionId: providerCallResult.commissionId,
+        amount: providerCallResult.amount,
+        monthsRemaining: Math.ceil((expirationDate.getTime() - now.getTime()) / (30 * 24 * 60 * 60 * 1000)),
+      });
+
+      // Create notification
+      await createCommissionNotification(
+        db,
+        recruiterChatterId,
+        "commission_earned",
+        "Commission prestataire recruté !",
+        `Votre ${session.providerType === "lawyer" ? "avocat" : "aidant"} recruté a reçu un appel ! +$${(providerCallAmount / 100).toFixed(2)}`,
+        providerCallResult.commissionId!,
+        providerCallResult.amount!
+      );
+
+      // Update weekly challenge score
+      await updateChatterChallengeScore(recruiterChatterId, "provider_call");
+    }
+  } catch (error) {
+    logger.error("[processProviderRecruitmentCommission] Error", {
+      sessionId,
+      providerId: session.providerId,
+      error,
+    });
+  }
+}
 
 /**
  * Create a commission notification
@@ -334,10 +679,15 @@ async function createCommissionNotification(
     type,
     title,
     titleTranslations: {
-      en:
-        type === "commission_earned"
-          ? "New commission earned!"
-          : "Recruitment commission!",
+      en: title.includes("N1")
+        ? "N1 Commission!"
+        : title.includes("N2")
+          ? "N2 Commission!"
+          : title.includes("activation")
+            ? "Activation Bonus!"
+            : title.includes("recrutement")
+              ? "Recruitment Bonus!"
+              : "Client Call Commission!",
     },
     message,
     messageTranslations: {
@@ -357,27 +707,40 @@ async function createCommissionNotification(
 }
 
 /**
- * Check and award first client badge
+ * Check and award first client badge (with transaction to prevent duplicates)
  */
 async function checkFirstClientBadge(
   db: FirebaseFirestore.Firestore,
   chatterId: string
 ): Promise<void> {
-  const chatterDoc = await db.collection("chatters").doc(chatterId).get();
+  // Use transaction to prevent awarding badge twice
+  const badgeAwarded = await db.runTransaction(async (transaction) => {
+    const chatterRef = db.collection("chatters").doc(chatterId);
+    const chatterSnap = await transaction.get(chatterRef);
 
-  if (!chatterDoc.exists) return;
+    if (!chatterSnap.exists) return false;
 
-  const chatter = chatterDoc.data() as Chatter;
+    const chatter = chatterSnap.data() as Chatter;
 
-  // Check if badge already awarded
-  if (chatter.badges.includes("first_client")) return;
+    // Check if badge already awarded
+    if (chatter.badges && chatter.badges.includes("first_client")) {
+      return false;
+    }
 
-  // Award badge
-  await db.collection("chatters").doc(chatterId).update({
-    badges: [...chatter.badges, "first_client"],
+    // Award badge atomically
+    transaction.update(chatterRef, {
+      badges: FieldValue.arrayUnion("first_client"),
+      updatedAt: Timestamp.now(),
+    });
+
+    return { awarded: true, chatter };
   });
 
-  // Create badge award record
+  if (!badgeAwarded || typeof badgeAwarded === 'boolean') return;
+
+  const chatter = badgeAwarded.chatter;
+
+  // Create badge award record (outside transaction - idempotent)
   await db.collection("chatter_badge_awards").add({
     chatterId,
     chatterEmail: chatter.email,
@@ -393,9 +756,9 @@ async function checkFirstClientBadge(
     id: notificationRef.id,
     chatterId,
     type: "badge_earned",
-    title: "Badge débloqué : Premier Client !",
+    title: "Badge d\u00e9bloqu\u00e9 : Premier Client !",
     titleTranslations: { en: "Badge unlocked: First Client!" },
-    message: "Vous avez référé votre premier client !",
+    message: "Vous avez r\u00e9f\u00e9r\u00e9 votre premier client !",
     messageTranslations: { en: "You referred your first client!" },
     isRead: false,
     emailSent: false,
@@ -407,56 +770,6 @@ async function checkFirstClientBadge(
 }
 
 /**
- * Check and award first recruitment badge
- */
-async function checkFirstRecruitmentBadge(
-  db: FirebaseFirestore.Firestore,
-  chatterId: string
-): Promise<void> {
-  const chatterDoc = await db.collection("chatters").doc(chatterId).get();
-
-  if (!chatterDoc.exists) return;
-
-  const chatter = chatterDoc.data() as Chatter;
-
-  // Check if badge already awarded
-  if (chatter.badges.includes("first_recruitment")) return;
-
-  // Award badge
-  await db.collection("chatters").doc(chatterId).update({
-    badges: [...chatter.badges, "first_recruitment"],
-  });
-
-  // Create badge award record
-  await db.collection("chatter_badge_awards").add({
-    chatterId,
-    chatterEmail: chatter.email,
-    badgeType: "first_recruitment",
-    awardedAt: Timestamp.now(),
-    bonusCommissionId: null,
-    context: { recruitCount: 1 },
-  });
-
-  // Create notification
-  const notificationRef = db.collection("chatter_notifications").doc();
-  await notificationRef.set({
-    id: notificationRef.id,
-    chatterId,
-    type: "badge_earned",
-    title: "Badge débloqué : Premier Recrutement !",
-    titleTranslations: { en: "Badge unlocked: First Recruitment!" },
-    message: "Vous avez recruté votre premier prestataire !",
-    messageTranslations: { en: "You recruited your first provider!" },
-    isRead: false,
-    emailSent: false,
-    data: { badgeType: "first_recruitment" },
-    createdAt: Timestamp.now(),
-  });
-
-  logger.info("[checkFirstRecruitmentBadge] Badge awarded", { chatterId });
-}
-
-/**
  * Mask email for display
  */
 function maskEmail(email: string): string {
@@ -464,4 +777,57 @@ function maskEmail(email: string): string {
   if (!local || !domain) return "***@***.***";
   const maskedLocal = local.length > 2 ? local.substring(0, 2) + "***" : "***";
   return `${maskedLocal}@${domain}`;
+}
+
+/**
+ * Update daily mission progress when a call is generated
+ * Increments callsToday counter in the chatter's daily missions
+ */
+async function updateDailyMissionCall(
+  db: FirebaseFirestore.Firestore,
+  chatterId: string
+): Promise<void> {
+  try {
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split("T")[0];
+    const missionRef = db
+      .collection("chatters")
+      .doc(chatterId)
+      .collection("dailyMissions")
+      .doc(today);
+
+    // Use transaction for atomic update
+    await db.runTransaction(async (transaction) => {
+      const missionDoc = await transaction.get(missionRef);
+
+      if (missionDoc.exists) {
+        // Increment existing counter
+        const data = missionDoc.data();
+        transaction.update(missionRef, {
+          callsToday: (data?.callsToday || 0) + 1,
+          updatedAt: Timestamp.now(),
+        });
+      } else {
+        // Create new daily mission doc with 1 call
+        transaction.set(missionRef, {
+          date: today,
+          sharesCount: 0,
+          loggedInToday: false,
+          messagesSentToday: 0,
+          videoWatched: false,
+          callsToday: 1,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        });
+      }
+    });
+
+    logger.info("[updateDailyMissionCall] Daily mission updated", {
+      chatterId,
+      date: today,
+    });
+  } catch (error) {
+    // Don't fail the main trigger if daily mission update fails
+    logger.error("[updateDailyMissionCall] Error", { chatterId, error });
+  }
 }

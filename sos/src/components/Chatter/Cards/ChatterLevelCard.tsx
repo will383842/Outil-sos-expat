@@ -1,17 +1,41 @@
 /**
  * ChatterLevelCard - Displays chatter level, progress, and badges
  * Shows gamification elements like level progression and streak
+ *
+ * Features:
+ * - Animated progress bar fill
+ * - Hover lift effect
+ * - Shimmer loading state
+ * - Staggered entrance animation
+ * - Animated streak counter
  */
 
-import React from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Star, Flame, Trophy, ArrowUp, Zap } from 'lucide-react';
+import { formatCurrencyLocale } from './currencyUtils';
+import AnimatedNumber from '@/components/ui/AnimatedNumber';
 
-// Design tokens
+// Design tokens with enhanced effects
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  cardHover: "hover:shadow-xl transition-shadow duration-300",
-  skeleton: "animate-pulse bg-gray-200 dark:bg-white/10 rounded",
+  cardHover: `
+    transition-all duration-300 ease-out
+    hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-white/5
+    hover:-translate-y-1
+  `,
+  skeleton: `
+    relative overflow-hidden
+    bg-gray-200 dark:bg-white/10 rounded
+    before:absolute before:inset-0
+    before:-translate-x-full
+    before:animate-shimmer
+    before:bg-gradient-to-r
+    before:from-transparent
+    before:via-white/20
+    before:to-transparent
+    dark:before:via-white/10
+  `,
 } as const;
 
 // Level configurations
@@ -35,26 +59,33 @@ interface ChatterLevelCardProps {
   bestStreak: number;
   monthlyRank?: number;
   loading?: boolean;
+  /** Animation delay for staggered entrance (in ms) */
+  animationDelay?: number;
 }
 
-const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
+const ChatterLevelCard = memo(function ChatterLevelCard({
   level,
   totalEarned,
   currentStreak,
   bestStreak,
   monthlyRank,
   loading,
-}) => {
+  animationDelay = 0,
+}: ChatterLevelCardProps) {
   const intl = useIntl();
+  const [progressAnimated, setProgressAnimated] = useState(false);
 
-  // Format amount in cents to display
+  // Trigger progress bar animation after mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setProgressAnimated(true);
+    }, animationDelay + 300);
+    return () => clearTimeout(timer);
+  }, [animationDelay]);
+
+  // Format amount in cents to USD display
   const formatAmount = (cents: number) => {
-    return new Intl.NumberFormat(intl.locale, {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(cents);
+    return formatCurrencyLocale(cents, intl.locale);
   };
 
   const levelConfig = LEVEL_CONFIG[level];
@@ -70,30 +101,44 @@ const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
     ? Math.max(0, nextLevel.minEarned - totalEarned)
     : 0;
 
+  // Loading skeleton with shimmer effect
   if (loading) {
     return (
       <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-          <div className={`${UI.skeleton} w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl`} />
+          <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl ${UI.skeleton}`} />
           <div className="flex-1">
-            <div className={`${UI.skeleton} h-4 sm:h-5 w-20 sm:w-24 mb-2`} />
-            <div className={`${UI.skeleton} h-3 sm:h-4 w-24 sm:w-32`} />
+            <div className={`h-4 sm:h-5 w-20 sm:w-24 mb-2 ${UI.skeleton}`} />
+            <div className={`h-3 sm:h-4 w-24 sm:w-32 ${UI.skeleton}`} />
           </div>
         </div>
-        <div className={`${UI.skeleton} h-1.5 sm:h-2 w-full mb-3 sm:mb-4`} />
+        <div className={`h-1.5 sm:h-2 w-full mb-3 sm:mb-4 ${UI.skeleton} rounded-full`} />
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          <div className={`${UI.skeleton} h-14 sm:h-16 rounded-lg sm:rounded-xl`} />
-          <div className={`${UI.skeleton} h-14 sm:h-16 rounded-lg sm:rounded-xl`} />
+          <div className={`h-14 sm:h-16 rounded-lg sm:rounded-xl ${UI.skeleton}`} />
+          <div className={`h-14 sm:h-16 rounded-lg sm:rounded-xl ${UI.skeleton}`} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`${UI.card} ${UI.cardHover} p-4 sm:p-6`}>
+    <div
+      className={`${UI.card} ${UI.cardHover} p-4 sm:p-6 opacity-0 animate-fade-in-up`}
+      style={{
+        animationDelay: `${animationDelay}ms`,
+        animationFillMode: 'forwards',
+      }}
+    >
       {/* Level Header */}
       <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-        <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-gradient-to-br ${levelConfig.color} flex items-center justify-center shadow-lg`}>
+        <div
+          className={`
+            w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl
+            bg-gradient-to-br ${levelConfig.color}
+            flex items-center justify-center shadow-lg
+            transition-transform duration-300 hover:scale-110
+          `}
+        >
           <LevelIcon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
         </div>
         <div className="min-w-0 flex-1">
@@ -103,7 +148,14 @@ const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
               defaultMessage="Niveau {level}"
               values={{ level }}
             />
-            <span className={`text-xs sm:text-sm font-medium px-1.5 sm:px-2 py-0.5 rounded-full bg-gradient-to-r ${levelConfig.color} text-white`}>
+            <span
+              className={`
+                text-xs sm:text-sm font-medium px-1.5 sm:px-2 py-0.5 rounded-full
+                bg-gradient-to-r ${levelConfig.color} text-white
+                animate-fade-in
+              `}
+              style={{ animationDelay: `${animationDelay + 200}ms` }}
+            >
               {levelConfig.name}
             </span>
           </h3>
@@ -117,19 +169,30 @@ const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
         </div>
       </div>
 
-      {/* Progress to Next Level */}
+      {/* Progress to Next Level - Animated fill */}
       {nextLevel && (
         <div className="mb-3 sm:mb-4">
           <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1">
             <span className="truncate mr-2">
               <FormattedMessage id="chatter.level.progress" defaultMessage="Progression vers niveau {level}" values={{ level: level + 1 }} />
             </span>
-            <span className="flex-shrink-0">{Math.round(progressToNextLevel)}%</span>
+            <span className="flex-shrink-0 font-medium">
+              <AnimatedNumber
+                value={progressToNextLevel}
+                duration={1000}
+                delay={animationDelay + 400}
+                decimals={0}
+                suffix="%"
+                animateOnVisible
+              />
+            </span>
           </div>
           <div className="h-1.5 sm:h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
             <div
-              className={`h-full bg-gradient-to-r ${levelConfig.color} transition-all duration-500`}
-              style={{ width: `${progressToNextLevel}%` }}
+              className={`h-full bg-gradient-to-r ${levelConfig.color} rounded-full transition-all duration-1000 ease-out`}
+              style={{
+                width: progressAnimated ? `${progressToNextLevel}%` : '0%',
+              }}
             />
           </div>
           <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
@@ -150,7 +213,7 @@ const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
 
       {/* Max Level Reached */}
       {!nextLevel && (
-        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg sm:rounded-xl text-center">
+        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg sm:rounded-xl text-center animate-pulse-subtle">
           <p className="text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300">
             <FormattedMessage id="chatter.level.maxReached" defaultMessage="Niveau maximum atteint !" />
           </p>
@@ -160,15 +223,34 @@ const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
       {/* Streak and Rank */}
       <div className="grid grid-cols-2 gap-2 sm:gap-3">
         {/* Current Streak */}
-        <div className="p-2 sm:p-3 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg sm:rounded-xl">
+        <div
+          className={`
+            p-2 sm:p-3 bg-gradient-to-br from-orange-50 to-red-50
+            dark:from-orange-900/20 dark:to-red-900/20
+            rounded-lg sm:rounded-xl
+            transition-transform hover:scale-[1.02]
+            ${currentStreak >= 7 ? 'ring-2 ring-orange-400/50' : ''}
+          `}
+        >
           <div className="flex items-center gap-1 sm:gap-2 mb-1">
-            <Flame className={`w-3 h-3 sm:w-4 sm:h-4 ${currentStreak > 0 ? 'text-orange-500' : 'text-gray-400'}`} />
+            <Flame
+              className={`
+                w-3 h-3 sm:w-4 sm:h-4
+                ${currentStreak > 0 ? 'text-orange-500' : 'text-gray-400'}
+                ${currentStreak >= 7 ? 'animate-pulse' : ''}
+              `}
+            />
             <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
               <FormattedMessage id="chatter.streak.current" defaultMessage="Streak actuel" />
             </span>
           </div>
           <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-            {currentStreak}
+            <AnimatedNumber
+              value={currentStreak}
+              duration={800}
+              delay={animationDelay + 500}
+              animateOnVisible
+            />
             <span className="text-xs sm:text-sm font-normal text-gray-500 dark:text-gray-400 ml-0.5 sm:ml-1">
               <FormattedMessage id="chatter.streak.days" defaultMessage="jours" />
             </span>
@@ -185,9 +267,22 @@ const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
         </div>
 
         {/* Monthly Rank */}
-        <div className="p-2 sm:p-3 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg sm:rounded-xl">
+        <div
+          className={`
+            p-2 sm:p-3 bg-gradient-to-br from-red-50 to-orange-50
+            dark:from-red-900/20 dark:to-orange-900/20
+            rounded-lg sm:rounded-xl
+            transition-transform hover:scale-[1.02]
+            ${monthlyRank && monthlyRank <= 3 ? 'ring-2 ring-red-400/50 animate-pulse-subtle' : ''}
+          `}
+        >
           <div className="flex items-center gap-1 sm:gap-2 mb-1">
-            <Trophy className={`w-3 h-3 sm:w-4 sm:h-4 ${monthlyRank && monthlyRank <= 3 ? 'text-red-500' : 'text-gray-400'}`} />
+            <Trophy
+              className={`
+                w-3 h-3 sm:w-4 sm:h-4
+                ${monthlyRank && monthlyRank <= 3 ? 'text-red-500' : 'text-gray-400'}
+              `}
+            />
             <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
               <FormattedMessage id="chatter.rank.monthly" defaultMessage="Classement" />
             </span>
@@ -195,10 +290,15 @@ const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
           {monthlyRank ? (
             <>
               <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                #{monthlyRank}
+                #<AnimatedNumber
+                  value={monthlyRank}
+                  duration={600}
+                  delay={animationDelay + 600}
+                  animateOnVisible
+                />
               </p>
               {monthlyRank <= 3 && (
-                <p className="text-[10px] sm:text-xs text-red-600 dark:text-red-400 mt-0.5 sm:mt-1">
+                <p className="text-[10px] sm:text-xs text-red-600 dark:text-red-400 mt-0.5 sm:mt-1 font-medium">
                   <FormattedMessage
                     id={`chatter.rank.top${monthlyRank}`}
                     defaultMessage="Top {rank} ce mois!"
@@ -209,13 +309,13 @@ const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
             </>
           ) : (
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="chatter.rank.notRanked" defaultMessage="Non classé" />
+              <FormattedMessage id="chatter.rank.notRanked" defaultMessage="Non classe" />
             </p>
           )}
         </div>
       </div>
     </div>
   );
-};
+});
 
 export default ChatterLevelCard;

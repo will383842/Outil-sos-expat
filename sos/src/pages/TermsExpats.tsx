@@ -224,7 +224,7 @@ const TermsExpats: React.FC = () => {
     de: {
       title: "Expat-Helfer Bedingungen",
       subtitle: "Nutzungsbedingungen für Expatriate-Helfer",
-      lastUpdated: "Version 2.2 – Letzte Aktualisierung: 16. Juni 2025",
+      lastUpdated: "Version 3.0 – Letzte Aktualisierung: 1. Februar 2026",
       loading: "Lädt...",
       joinNetwork: "Dem Netzwerk beitreten",
       trustedByHelpers: "Bereits über 1K+ Expat-Helfer vertrauen uns",
@@ -1736,191 +1736,356 @@ La **Plataforma**, sus **marcas, logotipos, bases de datos y contenidos** están
 Para cualquier pregunta o solicitud legal, contáctenos:
 `;
   const defaultDe = `
-# Allgemeine Nutzungsbedingungen – Expatriates Aidants (Global)
+# Allgemeine Nutzungsbedingungen – Expatriierte Helfer (Global)
 
-**SOS Expat von WorldExpat OÜ** (die „**Plattform**“, „**SOS**“, „**wir**“)
+**SOS Expat von WorldExpat OÜ** (estnische Gesellschaft, Registernr. 16885621, Sitz: Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145, Estland) – nachfolgend die « **Plattform** », « **SOS** », « **wir** »
 
-**Version 2.2 – Letzte Aktualisierung: 16. Juni 2025**
+**Version 3.0 – Letzte Aktualisierung: 1. Februar 2026**
 
 ---
 
 ## 1. Definitionen
 
-**Expatrié Aidant** („**Aidant**“): jede auf der Plattform registrierte Person, die eigenständig **nicht-juristische und nicht-medizinische Unterstützungsleistungen** für Nutzer anbietet (Orientierung, praktische Hilfe, Begleitung, informelle Übersetzungen, lokale Vernetzung usw.).
+**Anwendung / Website / Plattform**: Digitale Dienste, die von **WorldExpat OÜ** (estnische Gesellschaft, Registernr. 16885621, Sitz: Tallinn, Estland) betrieben werden und die Vernetzung zwischen Nutzern (den « **Nutzern** ») und expatriierten Helfern (den « **Helfern** ») ermöglichen.
 
-**Nutzer**: jede Person, die die Plattform verwendet, um einen Aidant zu kontaktieren.
+**Expatriierter Helfer** („**Helfer**"): jede auf der Plattform registrierte Person, die eigenständig **nicht-juristische und nicht-medizinische Unterstützungsleistungen** für Nutzer anbietet (Orientierung, praktische Hilfe, Begleitung, informelle Übersetzungen, lokale Vernetzung usw.).
 
-**Vernetzung / Matching**: die technische/operative Einführung, die von der Plattform zwischen einem Nutzer und einem Aidant vorgenommen wird (Weitergabe von Kontaktdaten und/oder Eröffnung eines Kommunikationskanals und/oder Annahme einer über die Plattform gestellten Anfrage durch den Aidant).
+**Nutzer**: jede Person, die die Plattform verwendet, um einen Helfer zu kontaktieren.
 
-**Einsatzland**: die Rechtsordnung, auf die sich die Nutzeranfrage zum Zeitpunkt der Vernetzung hauptsächlich bezieht; falls nicht definiert, das Wohnsitzland des Nutzers zum Zeitpunkt der Anfrage.
+**Vermittlung**: die technische/operative Einführung, die von der Plattform zwischen einem Nutzer und einem Helfer vorgenommen wird, die sich manifestiert durch (i) die Übermittlung von Kontaktdaten, (ii) die Eröffnung eines Kommunikationskanals (Anruf, Nachricht, Video), oder (iii) die Annahme einer über die Plattform gestellten Anfrage durch den Helfer.
 
-**Vernetzungsgebühren**: feste Gebühren, die an SOS pro Vernetzung zu zahlen sind (Art. 7): **19 €** bei Zahlung in **EUR** oder **25 $ USD** bei Zahlung in **USD**, Änderungen und/oder **lokale Tarife** nach Land/Währung vorbehalten, mit **zukunftsgerichteter Wirkung**.
+**Einsatzland**: die Rechtsordnung, auf die sich die Nutzeranfrage zum Zeitpunkt der Vermittlung hauptsächlich bezieht. Fehlt eine solche, gilt das Wohnsitzland des Nutzers zum Zeitpunkt der Anfrage; bei mehreren Jurisdiktionen gilt diejenige, die dem Gegenstand der Anfrage am engsten verbunden ist.
 
-**Zahlungsdienstleister**: Dritte, die Zahlungen abwickeln und Gelder verteilen.
+**Vermittlungsgebühr**: Gebühr, die SOS für jede Vermittlung geschuldet wird (Art. 7): **19 €** bei Zahlung in **EUR** oder **25 $ USD** bei Zahlung in **USD**; SOS Expat kann diese Beträge ändern und/oder lokale Tarife nach Land/Währung veröffentlichen, mit prospektiver Wirkung.
 
----
+**Zahlungsdienstleister**: Dritte, die für den Einzug der einmaligen Zahlung des Nutzers und die Verteilung der Gelder genutzt werden.
 
-## 2. Zweck, Anwendungsbereich und Zustimmung
-
-2.1. Diese AGB regeln den Zugriff auf und die Nutzung der Plattform durch die Aidants.
-
-2.2. **SOS Expat fungiert ausschließlich als technischer Vermittler für die Vernetzung.** SOS Expat ist weder Arbeitgeber, Vertreter noch Partner der Aidants, bietet keine rechtlichen, medizinischen, steuerlichen, buchhalterischen oder regulierten Beratungen an und ist nicht Partei von Verträgen zwischen Aidants und Nutzern.
-
-2.3. **Elektronische Zustimmung (Click-wrap).** Die Registrierung und/oder Nutzung der Plattform gilt als Zustimmung zu den AGB, elektronische Unterzeichnung und vertragliche Einwilligung. SOS kann technische Nachweise (Zeitstempel, IDs) aufbewahren.
-
-2.4. **Änderungen.** SOS kann die AGB und/oder die Gebührenordnungen (nach Land/Währung) mit **zukunftsgerichteter Wirkung** durch Veröffentlichung auf der Plattform aktualisieren. Fortgesetzte Nutzung gilt als Zustimmung.
-
-2.5. **Berufliche Kapazität (B2B).** Der Aidant erklärt, **ausschließlich beruflich** zu handeln; Verbraucherschutzregelungen gelten nicht für die Beziehung SOS Expat–Aidant.
+**Sanktionslisten**: Listen von Personen, Einrichtungen oder Ländern, die Wirtschaftssanktionen oder Embargos unterliegen, insbesondere die Listen der OFAC (Vereinigte Staaten), der Europäischen Union, der Vereinten Nationen, des britischen Finanzministeriums (HMT) und jeder anderen zuständigen Behörde.
 
 ---
 
-## 3. Status des Aidants – Compliance, Genehmigungen und Verantwortung
+## 2. Zweck, Geltungsbereich und Annahme
 
-3.1. **Unabhängigkeit.** Der Aidant handelt als **selbstständiger Fachmann**; keine Beschäftigungs-, Mandats-, Agentur-, Partnerschafts- oder Joint-Venture-Beziehung zu SOS Expat wird begründet.
+2.1. Diese AGB regeln den Zugang und die Nutzung der Plattform durch Helfer.
 
-3.2. **Arbeitserlaubnis & Einwanderungsstatus.** Der Aidant ist **allein verantwortlich**, alle erforderlichen Genehmigungen in jedem Einsatzland zu beschaffen und aufrechtzuerhalten (Visum, Arbeitserlaubnis, Geschäftsanmeldung/Selbständigkeit, Versicherungen, lokale Lizenzen etc.). SOS Expat **prüft diese Genehmigungen nicht** und **trägt hierfür keine Verantwortung**.
+2.2. SOS Expat agiert ausschließlich als technischer Vermittler. SOS Expat ist weder Arbeitgeber, Vertreter noch Partner der Helfer, bietet keine rechtlichen, medizinischen, steuerlichen, buchhalterischen oder regulierten Beratungen an und ist nicht Partei von Verträgen zwischen Helfern und Nutzern.
 
-3.3. **Nicht regulierte Dienstleistungen.** Der Aidant verpflichtet sich, **keine regulierten Dienstleistungen** (z. B. Rechts-, Medizin-, Finanz-, Steuerberater-, Immobilienmaklerdienstleistungen etc.) **ohne** erforderliche **Genehmigungen/Lizenzen** und **ohne vollständige Einhaltung der lokalen Gesetze** anzubieten. Andernfalls verzichtet er auf diese Dienste und verweist den Nutzer an einen ordnungsgemäß befugten Fachmann (z. B. registrierter Anwalt).
+2.3. **Elektronische Zustimmung (Click-Wrap) und Nachverfolgbarkeit.** Der Helfer akzeptiert die AGB durch Anklicken des entsprechenden Feldes bei der Registrierung und/oder durch Nutzung der Plattform. Diese Handlung gilt als elektronische Unterschrift und vertragliche Zustimmung gemäß der Verordnung (EU) Nr. 910/2014 (eIDAS). SOS Expat führt **zeitgestempelte Auditprotokolle**, die Folgendes enthalten: (i) das genaue Datum und die Uhrzeit (UTC) der Annahme, (ii) die IP-Adresse des Helfers, (iii) die eindeutige Sitzungskennung, (iv) den User-Agent des Browsers, (v) die Version der akzeptierten AGB, (vi) den kryptografischen Hash des akzeptierten Dokuments und (vii) die eindeutige Kennung des Helfers. Diese Protokolle stellen einen **rechtlich durchsetzbaren Nachweis** der Annahme der AGB dar.
 
-3.4. **Allgemeine Compliance.** Der Aidant hält die geltenden Gesetze/Vorschriften ein (Verbraucherschutz, E-Commerce, Werbung/Telefonwerbung, fairer Wettbewerb, AML/KYC falls zutreffend, Steuern, Datenschutz, Sanktionen/Export, Sicherheit von Personen).
+2.4. **Aufbewahrung der Annahmenachweise.** Gemäß DSGVO und den gesetzlichen Aufbewahrungspflichten bewahrt SOS Expat die Nachweise der AGB-Annahme für einen Zeitraum von **zehn (10) Jahren** ab dem Datum der Annahme auf, oder bis zum Abschluss eines laufenden Rechtsstreits, je nachdem, was zutrifft. Der Helfer kann auf schriftliche Anfrage über das Kontaktformular eine **Annahmebestätigung** mit den oben genannten Nachweiselementen erhalten. Diese Aufbewahrung beruht auf dem berechtigten Interesse von SOS Expat, im Streitfall über Beweise zu verfügen (Art. 6 Abs. 1 lit. f DSGVO), sowie auf der gesetzlichen Pflicht zur Aufbewahrung von Handelsverträgen.
 
-3.5. **Versicherungen.** Der Aidant erklärt, die erforderlichen Versicherungen (berufliche Haftpflicht, falls zutreffend) für seine Tätigkeiten und Einsatzgebiete zu haben.
+2.5. **Änderungen.** SOS kann die AGB und/oder die Gebührenordnung (nach Land/Währung) jederzeit mit prospektiver Wirkung nach Veröffentlichung auf der Plattform aktualisieren. Die fortgesetzte Nutzung gilt als Zustimmung. Bei wesentlichen Änderungen wird der Helfer aufgefordert, seine Annahme erneut zu bestätigen, die dann gemäß Artikel 2.3 erneut protokolliert wird.
 
-3.6. **Vertraulichkeit.** Der Aidant schützt die Daten der Nutzer und gibt sie nicht weiter, außer bei gesetzlicher Pflicht oder Einwilligung.
+2.6. **Berufliche Kapazität (B2B).** Der Helfer erklärt, ausschließlich zu beruflichen Zwecken zu handeln. Verbraucherschutzregelungen gelten nicht für die Beziehung zwischen SOS Expat und dem Helfer.
+
+2.7. Laufzeit: unbefristet.
+
+2.8. **Ergänzende Hinweise zur Annahme.** Der Helfer nimmt zur Kenntnis, dass die Annahme dieser AGB: (i) die Übertragung der hierin genannten Rechte und Pflichten beinhaltet, (ii) eine wesentliche Voraussetzung für den Zugang zu den Diensten der Plattform darstellt, und (iii) jederzeit durch SOS Expat technisch nachgewiesen werden kann.
 
 ---
 
-## 4. Konto, Überprüfungen und Sicherheit
+## 3. Status des Helfers – Unabhängigkeit, Compliance und Erklärungen
 
-4.1. **Registrierung.** Ein (1) Konto pro Aidant; genaue, vollständige und aktuelle Angaben (Identität, Kontaktmöglichkeiten, Leistungsbeschreibung, Einsatzgebiete usw.).
+3.1. Der Helfer handelt als unabhängiger Dienstleister; es entsteht kein Arbeits-, Agentur-, Mandats-, Partnerschafts- oder Joint-Venture-Verhältnis mit SOS Expat.
 
-4.2. **Überprüfungen.** SOS Expat kann angemessene Kontrollen durchführen (Identität, Profilkonsistenz, Sanktions-/KYC-Prüfungen über Dienstleister) und den Zugang aus Sicherheits-, Compliance- oder Qualitätsgründen verweigern, aussetzen oder löschen.
+3.2. Der Helfer ist allein verantwortlich für: (i) die Beschaffung und Aufrechterhaltung aller erforderlichen Genehmigungen in jedem Einsatzland (Visum, Arbeitserlaubnis, Gewerbeanmeldung/Selbständigkeit, Versicherungen, lokale Lizenzen usw.); (ii) seine gültige Haftpflichtversicherung, angepasst an die Einsatzländer; (iii) die Einhaltung der lokalen Gesetze und Vorschriften (Verbraucherschutz, E-Commerce, Werbung, fairer Wettbewerb, Geldwäscheprävention/KYC falls zutreffend, Steuern, Datenschutz, Sanktionen/Export, Personensicherheit usw.).
 
-4.3. **Zugriffssicherheit.** Der Aidant schützt seine Zugangsdaten. Jede Aktivität über das Konto gilt als durch ihn erfolgt.
+3.3. SOS Expat überwacht oder bewertet weder den Inhalt noch die Qualität der Leistungen des Helfers und übernimmt hierfür keinerlei Verantwortung.
 
-4.4. **Inaktivität & Kündigung.** Nach **365 Tagen Inaktivität** kann das Konto nach vorheriger Benachrichtigung automatisch deaktiviert werden. Der Aidant kann sein Konto jederzeit schließen, nachdem er seine laufenden Verpflichtungen erfüllt hat. SOS Expat kann ein Konto wegen Verstoßes gegen die AGB aussetzen oder kündigen, unbeschadet anderer Rechtsbehelfe.
+3.4. **Nicht regulierte Dienstleistungen.** Der Helfer verpflichtet sich, **keine regulierten Dienstleistungen** (z. B. Rechts-, Medizin-, Finanz-, Steuerberater-, Immobilienmaklerdienstleistungen etc.) **ohne** erforderliche **Genehmigungen/Lizenzen** und **ohne vollständige Einhaltung der lokalen Gesetze** anzubieten. Andernfalls verzichtet er auf diese Dienste und verweist den Nutzer an einen ordnungsgemäß befugten Fachmann.
 
-4.5. **Elektronische Kommunikation.** Der Aidant stimmt zu, alle Benachrichtigungen bezüglich der AGB elektronisch zu erhalten (E-Mail, In-App-Benachrichtigung, Veröffentlichung auf der Plattform).
+3.5. **Versicherungen.** Der Helfer erklärt, die erforderlichen Versicherungen (berufliche Haftpflicht, falls zutreffend) für seine Tätigkeiten und Einsatzgebiete zu haben.
+
+3.6. **Einhaltung der Gesetzgebung des Einsatzlandes.** Der Helfer verpflichtet sich, bei jeder Vermittlung die im Einsatzland geltenden Gesetze und Vorschriften zu kennen und einzuhalten, insbesondere hinsichtlich: (i) der Ausübung seiner Tätigkeit (Genehmigungen, Lizenzen, Zulassungen), (ii) des Verbraucherschutzes, (iii) des Datenschutzes, (iv) der steuerlichen Verpflichtungen, und (v) aller anderen anwendbaren zwingenden Vorschriften. Die Verantwortung für die Einhaltung dieser Vorschriften liegt ausschließlich beim Helfer.
+
+3.7. **Erklärungen und Garantien des Helfers.** Mit der Registrierung auf der Plattform erklärt und garantiert der Helfer ausdrücklich, dass:
+- (a) Er nach dem Recht seines Wohnsitz- und/oder Tätigkeitslandes **volljährig** ist;
+- (b) Er die **volle Geschäftsfähigkeit** besitzt, um Verträge abzuschließen und seine Tätigkeit auszuüben;
+- (c) Er nicht unter Vormundschaft, Betreuung, gerichtlichem Schutz oder einem gleichwertigen Schutzregime steht;
+- (d) Gegen ihn kein **Berufs- oder Tätigkeitsverbot** besteht, weder vorübergehend noch dauerhaft;
+- (e) Er auf **keiner Sanktionsliste** (OFAC, EU, UN, HMT oder andere) steht;
+- (f) Er nicht wegen Straftaten **strafrechtlich verurteilt** wurde, die mit der Ausübung seiner Tätigkeit unvereinbar sind;
+- (g) Alle bei der Registrierung angegebenen Informationen **korrekt, vollständig und aktuell** sind;
+- (h) Er sich verpflichtet, SOS Expat **unverzüglich über Änderungen** zu informieren, die diese Erklärungen betreffen;
+- (i) Er das **tatsächliche Recht hat, seine Tätigkeit** in jedem der Länder auszuüben, die er bei der Registrierung oder später in seinem Profil als "Einsatzländer" ausgewählt hat. Die Auswahl eines Einsatzlandes, in dem der Helfer nicht zur Tätigkeitsausübung berechtigt ist, stellt einen **schwerwiegenden Verstoß** gegen diese AGB dar.
+Jede falsche Erklärung stellt einen schwerwiegenden Verstoß gegen die AGB dar, der zu einem sofortigen und endgültigen Ausschluss führen kann, unbeschadet etwaiger Schadensersatzansprüche.
+
+---
+
+## 4. Kontoerstellung, Überprüfungen und Sicherheit
+
+4.1. Voraussetzungen: gültige Berechtigung zur Tätigkeitsausübung in mindestens einer Jurisdiktion, Identitätsnachweise, gültige Haftpflichtversicherung (falls zutreffend).
+
+4.2. Verfahren: Kontoerstellung, Vorlage der Dokumente, manuelle Validierung, die KYC/AML-Prüfungen über Dienstleister umfassen kann.
+
+4.3. Richtigkeit & Aktualisierung: Der Helfer garantiert die Richtigkeit und Aktualität der Angaben; ein (1) Konto pro Helfer.
+
+4.4. Sicherheit: Der Helfer schützt seine Zugangsdaten; jede Aktivität über das Konto gilt als von ihm vorgenommen; jede Kompromittierung ist unverzüglich zu melden.
+
+4.5. **Zusätzliche Überprüfungen jederzeit.** SOS Expat behält sich das Recht vor, vom Helfer **jederzeit und ohne Begründung** die Vorlage oder Aktualisierung von Dokumenten zu verlangen, die seine Identität, seine Berechtigung zur Tätigkeitsausübung, seine Haftpflichtversicherung oder andere relevante Nachweise belegen. Der Helfer verpflichtet sich, auf solche Anfragen innerhalb von **sieben (7) Werktagen** zu antworten. Das Ausbleiben einer Antwort oder die Vorlage nicht konformer Dokumente kann zur sofortigen Kontosperrung führen.
+
+4.6. **Moderation und Qualitätskontrolle.** SOS Expat setzt eine Moderationsrichtlinie um, die darauf abzielt, die Qualität und Konformität der auf der Plattform angebotenen Dienstleistungen sicherzustellen. Diese Moderation kann umfassen: (i) Überprüfung von Profilen und veröffentlichten Inhalten, (ii) Analyse von Nutzerbewertungen und Beschwerden, (iii) Kontrolle der Einhaltung der AGB und anwendbarer Gesetze, (iv) alle anderen angemessenen Qualitätskontrollmaßnahmen. Der Helfer erklärt sich mit dieser Moderation einverstanden.
+
+4.7. **Vorübergehende Kontosperrung.** SOS Expat kann das Konto des Helfers in folgenden Fällen **sofort und ohne Vorankündigung sperren**:
+- (a) Verdacht auf Betrug, Identitätsdiebstahl oder falsche Angaben;
+- (b) Mehrfache oder schwerwiegende Beschwerden von Nutzern;
+- (c) Nichtvorlage der gemäß Artikel 4.5 angeforderten Dokumente;
+- (d) Nachgewiesener oder vermuteter Verstoß gegen die AGB oder anwendbare Gesetze;
+- (e) Verhalten, das dem Image oder dem Ruf der Plattform schadet;
+- (f) Anordnung einer Justiz- oder Verwaltungsbehörde;
+- (g) Jeder andere berechtigte Grund nach alleinigem Ermessen von SOS Expat.
+Während der Sperrung kann der Helfer nicht auf sein Konto zugreifen und keine neuen Vermittlungen erhalten. Ausstehende Zahlungen können bis zur Klärung der Situation einbehalten werden.
+
+4.8. **Dauerhafter Ausschluss (Kündigung wegen Vertragsverletzung).** SOS Expat kann das Konto des Helfers in folgenden Fällen **dauerhaft und ohne Vorankündigung kündigen** ("Ausschluss"):
+- (a) Schwerer oder wiederholter Verstoß gegen die AGB;
+- (b) Nachgewiesener Betrug, vorsätzlich falsche Angaben oder Identitätsdiebstahl;
+- (c) Verlust des Rechts zur Tätigkeitsausübung;
+- (d) Strafrechtliche Verurteilung, die mit der Tätigkeitsausübung unvereinbar ist;
+- (e) Verhalten, das Nutzern oder der Plattform schwerwiegend schadet;
+- (f) Wiederholung nach einer vorübergehenden Sperrung;
+- (g) Nachgewiesene Umgehung der Plattform zur Vermeidung von Vermittlungsgebühren;
+- (h) Nichteinhaltung der KYC-Verifizierungspflichten trotz Mahnungen;
+- (i) Jeder andere schwerwiegende Grund nach alleinigem Ermessen von SOS Expat.
+Der Ausschluss ist **endgültig und unwiderruflich**. Ein ausgeschlossener Helfer kann kein neues Konto erstellen. Ausstehende Gelder können als pauschaler Schadensersatz einbehalten werden, unbeschadet weiterer Schadensersatzansprüche.
+
+4.9. **Verfahren und Benachrichtigung.** Im Falle einer Sperrung oder eines Ausschlusses benachrichtigt SOS Expat den Helfer per E-Mail an die registrierte Adresse. Diese Benachrichtigung gibt den Grund der Maßnahme an (es sei denn, eine gesetzliche Vertraulichkeitspflicht besteht). Der Helfer hat **fünfzehn (15) Tage** Zeit, um schriftliche Stellungnahmen über das Kontaktformular einzureichen. SOS Expat prüft diese Stellungnahmen, ist aber nicht verpflichtet, die Maßnahme aufzuheben. Die Entscheidung von SOS Expat ist **nach eigenem Ermessen und endgültig**.
+
+4.10. **Auswirkungen der Sperrung oder des Ausschlusses.** Im Falle einer Sperrung oder eines Ausschlusses:
+- (a) Der Kontozugang wird sofort gesperrt;
+- (b) Das Profil des Helfers wird aus den Suchergebnissen entfernt;
+- (c) Laufende Vermittlungen können storniert werden;
+- (d) Ausstehende Zahlungen können einbehalten oder mit Beträgen verrechnet werden, die SOS Expat geschuldet werden;
+- (e) Der Helfer bleibt gemäß den Fortgeltungsklauseln an seine Verpflichtungen (Vertraulichkeit, Nicht-Abwerbung usw.) gebunden.
+
+4.11. **Inaktivität.** Bei **Inaktivität von mehr als 365 Tagen** kann das Konto nach Benachrichtigung automatisch deaktiviert werden. Der Helfer kann sein Konto auf Anfrage reaktivieren, sofern er die erforderlichen Verifizierungsdokumente vorlegt.
+
+4.12. **Freiwillige Kündigung.** Der Helfer kann sein Konto jederzeit schließen, nachdem er seine ausstehenden Verpflichtungen erfüllt hat. Der Schließungsantrag erfolgt über das Kontaktformular. SOS Expat führt die Schließung innerhalb von **dreißig (30) Tagen** durch.
+
+4.13. **Elektronische Kommunikation.** Der Helfer erklärt sich damit einverstanden, alle Benachrichtigungen bezüglich der AGB, der Moderation und der Sperr-/Ausschlussmaßnahmen auf elektronischem Wege zu erhalten (E-Mail, In-App-Benachrichtigung, Veröffentlichung auf der Plattform). Der Helfer verpflichtet sich, eine gültige E-Mail-Adresse zu führen und seine Benachrichtigungen regelmäßig zu prüfen.
 
 ---
 
 ## 5. Nutzungsregeln – Qualität, Verbote, Umgehungsverbot
 
-5.1. **Qualität & zutreffende Beschreibung.** Der Aidant beschreibt seine Dienstleistungen korrekt, ohne Erfolgsgarantie. Keine falschen Angaben (z. B. unberechtigte Berufsausübung).
+5.1. **Qualität & zutreffende Beschreibung.** Der Helfer beschreibt seine Dienstleistungen korrekt, ohne Erfolgsgarantie. Keine falschen Angaben über Qualifikationen oder Berufsbezeichnungen.
 
-5.2. **Verbote.** Illegale, diskriminierende oder irreführende Inhalte; unfaire Praktiken; missbräuchliche Datennutzung; Umgehung/Reverse-Engineering der Plattform; Kollusion/Boykott; Verletzung von Sanktionen/Export; jegliche illegale Aktivitäten.
+5.2. **Verbote.** Illegale, diskriminierende oder irreführende Inhalte; unfaire Praktiken; missbräuchliche Datennutzung; Umgehung/Reverse-Engineering der Plattform; Kollusion/Boykott zum Nachteil der Plattform; Verstöße gegen Sanktions- oder Exportgesetze; jegliche illegale Aktivitäten.
 
-5.3. **Umgehungsverbot.** Jede **neue Vernetzung** mit einem **neuen Nutzer** über die Plattform unterliegt den **Vernetzungsgebühren** (Art. 7). Es ist **verboten**, diese Gebühren durch Umgehung der Plattform zu vermeiden.
+5.3. **Umgehungsverbot.** Jede neue Vermittlung mit einem neuen Nutzer über die Plattform löst die Vermittlungsgebühr aus. Es ist verboten, die Plattform zu umgehen, um diese Gebühren bei einer neuen Einführung zu vermeiden.
 
-5.4. **Verfügbarkeit.** Die Plattform wird **„wie besehen“** bereitgestellt; keine durchgehende Verfügbarkeit garantiert (Wartung, Zwischenfälle, höhere Gewalt). Zugang kann gesetzlich eingeschränkt werden.
+5.4. **Verfügbarkeit.** Die Plattform wird „wie besehen" bereitgestellt; keine Garantie für ununterbrochene Verfügbarkeit (Wartung, Störungen, höhere Gewalt). Der Zugang kann gesetzlich eingeschränkt werden.
+
+5.5. **Vertraulichkeit.** Der Helfer schützt die Informationen der Nutzer und gibt sie nicht weiter, außer bei gesetzlicher Verpflichtung oder mit Einwilligung.
 
 ---
 
-## 6. Beziehung Aidant–Nutzer (außerhalb der Plattform)
+## 6. Beziehung Helfer–Nutzer (außerhalb der Plattform)
 
-6.1. Nach der Vernetzung können Aidant und Nutzer **außerhalb der Plattform** Verträge schließen. **Honorare** und Bedingungen werden von beiden frei festgelegt, unter Einhaltung der lokalen Gesetze.
+6.1. Nach der Vermittlung können Helfer und Nutzer außerhalb der Plattform einen Vertrag schließen. Honorare und Bedingungen werden von beiden frei festgelegt, unter Einhaltung der lokalen Gesetze.
 
-6.2. Der Aidant stellt **Leistungsbedingungen/-bestätigungen** nach lokalem Recht aus, verwaltet **Rechnungen** und **steuerliche Verpflichtungen**.
+6.2. Der Helfer stellt Leistungsbestätigungen gemäß dem lokalen Recht aus, erhebt/entrichtet anfallende Steuern und verwaltet seine Rechnungen sowie steuerlichen Verpflichtungen.
 
-6.3. SOS Expat **trägt keine Verantwortung** für Qualität, Richtigkeit oder Ergebnisse der Leistungen des Aidants oder für Vereinbarungen zwischen Aidant und Nutzer.
+6.3. SOS Expat ist nicht verantwortlich für die Qualität, Richtigkeit oder das Ergebnis der Leistungen des Helfers oder für Vereinbarungen zwischen Helfer und Nutzer.
 
 ---
 
 ## 7. Gebühren, Einmalzahlung und Steuern
 
-7.1. **Vernetzungsgebühren (Pauschale).** **19 € (EUR)** **oder** **25 $ (USD)** **pro Vernetzung**, zuzüglich Steuern und Zahlungsdienstleistergebühren. SOS Expat kann diese Beträge ändern und/oder **lokale Tarife** veröffentlichen, mit zukunftsgerichteter Wirkung.
+7.1. **Vermittlungsgebühr (Pauschalbetrag).** Die Vermittlungsgebühr beträgt derzeit **19 € (EUR)** oder **25 $ (USD)** pro Vermittlung, exkl. Steuern und Zahlungsdienstleistergebühren. **Diese Beträge sind indikativ und können jederzeit geändert werden.** SOS Expat behält sich das Recht vor, diese Beträge zu ändern und/oder lokale Tarife nach Land/Währung zu veröffentlichen, mit prospektiver Wirkung nach Veröffentlichung auf der Plattform. Dem Helfer wird empfohlen, regelmäßig die aktuelle Gebührenordnung in seinem persönlichen Dashboard einzusehen.
 
-7.2. **Einmalzahlung & Verteilung.** Der Nutzer leistet **eine Einmalzahlung** über die Plattform, die (i) die **Vergütung des Aidants** und (ii) die **Vernetzungsgebühren von SOS Expat** abdeckt. SOS Expat (oder dessen Dienstleister) zieht Gebühren ab und überweist den Rest an den Aidant. Der Aidant **erlaubt** diese Abzüge und Verteilungen.
+7.2. **Preisstruktur für den Nutzer und Mittelverteilung.** Der dem Nutzer auf der Plattform angezeigte Preis **enthält** die Vermittlungsgebühr von SOS Expat. Der Nutzer leistet eine Einmalzahlung über die Plattform. **Die Mittelverteilung erfolgt wie folgt:**
+- (a) **Vom Nutzer gezahlter Betrag** = Vergütung des Helfers + Vermittlungsgebühr von SOS Expat;
+- (b) **An den Helfer überwiesener Nettobetrag** = Vom Nutzer gezahlter Betrag − Vermittlungsgebühr von SOS Expat − Bankgebühren des Zahlungsdienstleisters − Währungsumrechnungsgebühren (falls zutreffend).
 
-7.3. **Fälligkeit & Nicht-Rückerstattung.** Vernetzungsgebühren sind **bei Vernetzung fällig** und **nicht erstattbar** (außer nach freiem Ermessen von SOS Expat bei ausschließlich durch die Plattform verursachtem Scheitern und **sofern gesetzlich zulässig**).
+Der Helfer ermächtigt SOS Expat ausdrücklich, diese Abzüge vor jeder Überweisung vorzunehmen. **Der genaue Betrag, der an den Helfer überwiesen wird, wird in seinem Dashboard vor und nach jeder Transaktion angezeigt.**
 
-7.4. **Rückerstattung an Nutzer.** Wird einem Nutzer eine Rückerstattung gewährt, wird sie **vom Anteil des Aidants abgezogen**: SOS Expat kann den Betrag **einbehalten/kompensieren** oder Rückzahlung verlangen, falls keine zukünftigen Zahlungen anstehen. **Keine Rückerstattung** der Vernetzungsgebühren, außer nach Ermessen von SOS Expat.
+7.3. **Bankgebühren des Zahlungsdienstleisters.** Der Zahlungsdienstleister (Stripe oder Äquivalent) erhebt Bearbeitungsgebühren für jede Transaktion. **Diese Bankgebühren gehen vollständig zulasten des Helfers** und werden automatisch von dem ihm überwiesenen Betrag abgezogen. Details zu diesen Gebühren sind in den Bedingungen des Zahlungsdienstleisters und im Dashboard des Helfers für jede Transaktion verfügbar.
 
-7.5. **Währungen & Umrechnung.** Mehrere Währungen möglich; ggf. Gebühren/Umrechnung durch Zahlungsdienstleister.
+7.4. **Wechselkurs- und Währungsumrechnungsgebühren.** Wenn die Zahlungswährung des Nutzers von der Währung des Bankkontos des Helfers abweicht, werden vom Zahlungsdienstleister **Währungsumrechnungsgebühren** erhoben. **Diese Wechselgebühren gehen vollständig zulasten des Helfers** und werden von dem ihm überwiesenen Betrag abgezogen. Die angewandten Wechselkurse sind die des Zahlungsdienstleisters zum Zeitpunkt der Überweisung. Der Helfer erkennt an und akzeptiert ausdrücklich, dass SOS Expat keine Kontrolle über diese Wechselkurse hat und jede Haftung für Währungsschwankungen oder vom Dienstleister erhobene Gebühren ablehnt.
 
-7.6. **Steuern.** Der Aidant bleibt verantwortlich für **alle anwendbaren Steuern** (MwSt., Einkommensteuer, Sozialversicherung etc.). SOS Expat erhebt/überweist, wenn erforderlich, MwSt./lokale Äquivalente auf Vernetzungsgebühren.
+7.5. **Berechnung des überwiesenen Nettobetrags.** Der an den Helfer überwiesene Nettobetrag wird nach folgender Formel berechnet: **Vom Nutzer gezahlter Betrag − Vermittlungsgebühr − Bankgebühren des Dienstleisters − Wechselgebühren (falls zutreffend)**. Der genaue Betrag variiert je nach den zum Zeitpunkt der Transaktion geltenden Gebühren. **Der Helfer wird vor jeder Leistung in seinem Dashboard über den genauen Betrag informiert, den er erhalten wird, und kann so eine fundierte Entscheidung treffen, ob er die Vermittlung annimmt oder nicht.**
 
-7.7. **Kompensation.** SOS Expat kann Forderungen gegen den Aidant mit Zahlungen an ihn verrechnen.
+7.6. **Fälligkeit & Nicht-Erstattung.** Die Vermittlungsgebühr wird mit der effektiven Vermittlung fällig und ist **nicht erstattungsfähig** (außer aus Kulanz von SOS Expat bei einem Fehler, der ausschließlich der Plattform zuzuschreiben ist, soweit gesetzlich zulässig).
 
----
+7.7. **Rückzahlung an den Nutzer.** Wird einem Nutzer eine Rückzahlung gewährt, wird diese vom Anteil des Helfers abgezogen: SOS Expat kann den entsprechenden Betrag mit zukünftigen Zahlungen an den Helfer verrechnen oder eine direkte Rückzahlung verlangen, falls keine Zahlungen ausstehen. Die Vermittlungsgebühr verbleibt bei SOS Expat, sofern nicht nach eigenem Ermessen anders entschieden.
 
-## 8. Persönliche Daten (globaler Rahmen – DSGVO/DSA)
+7.8. **Zahlungsfristen.** Vorbehaltlich des Abschlusses des KYC-Prozesses (Artikel 8) werden die Gelder innerhalb von **sieben (7) Werktagen** nach der Leistung an den Helfer überwiesen, es sei denn, es liegt ein Streitfall, eine Nutzerbeschwerde oder eine laufende Compliance-Prüfung vor.
 
-8.1. **Rollen.** Für vom Nutzer empfangene Daten zur Vernetzung handeln **SOS Expat und der Aidant** jeweils als **Verantwortliche für die Datenverarbeitung** für ihre eigenen Zwecke, gemäß der **Verordnung (EU) 2016/679 (DSGVO)**.
+7.9. **Steuern.** Der Helfer bleibt **allein verantwortlich** für alle seine steuerlichen Verpflichtungen (Einkommensteuer, Umsatzsteuer, Sozialabgaben usw.) in seiner Wohnsitz- und/oder Tätigkeitsjurisdiktion. Die an den Helfer überwiesenen Beträge sind **Bruttobeträge**; der Helfer ist für die Anmeldung und Zahlung aller anfallenden Steuern verantwortlich. SOS Expat erhebt und führt, soweit gesetzlich vorgeschrieben, Umsatzsteuer/lokales Äquivalent nur auf die Vermittlungsgebühr ab.
 
-8.2. **Grundlagen & Zwecke.** Vertragserfüllung (Vernetzung), berechtigte Interessen (Sicherheit, Betrugsprävention, Verbesserung), gesetzliche Pflichten (AML/KYC, Sanktionen) und Einwilligung, wo erforderlich.
+7.10. **Verrechnung.** SOS Expat kann jeden Betrag, den der Helfer schuldet (aufgrund einer Nutzererstattung, Strafe oder anderer Verpflichtung), mit jedem dem Helfer geschuldeten Betrag verrechnen.
 
-8.3. **Internationale Übermittlungen** mit **angemessenen Garantien**, wenn erforderlich.
-
-8.4. **Rechte & Kontakt.** Ausübung über das **Kontaktformular** der Plattform.
-
-8.5. **Sicherheit.** Angemessene technische/organisatorische Maßnahmen; Benachrichtigung über Verstöße gemäß geltendem Recht.
-
-8.6. Der Aidant verarbeitet Daten gemäß dem Recht des **Einsatzlands**.
-
-8.7. **DSA-Konformität.** Die Plattform fungiert als **Vermittlungsdienst** im Sinne der **Verordnung (EU) 2022/2065 (Gesetz über digitale Dienste)**. SOS Expat implementiert Mechanismen zur Meldung illegaler Inhalte und kooperiert mit den zuständigen Behörden gemäß dem DSA.
+7.11. **Gebührentransparenz und Historie.** Der Helfer kann jederzeit in seinem persönlichen Dashboard einsehen: (i) vollständige Details zu jeder Transaktion, (ii) den vom Nutzer gezahlten Bruttobetrag, (iii) die abgezogene Vermittlungsgebühr, (iv) die Bankgebühren des Zahlungsdienstleisters, (v) ggf. Wechselgebühren, (vi) den überwiesenen oder zu überweisenden Nettobetrag und (vii) die Historie aller seiner Transaktionen. Diese Informationen werden während der gesamten Kontolaufzeit und **fünf (5) Jahre** nach dessen Schließung aufbewahrt und sind zugänglich.
 
 ---
 
-## 9. Geistiges Eigentum
+## 8. Zahlungen – KYC/AML – Sanktionen
 
-Die Plattform, Marken, Logos, Datenbanken und Inhalte sind geschützt. Kein Recht wird an den Aidant übertragen, außer einem **persönlichen, nicht-exklusiven, nicht übertragbaren** Zugriffsrecht während der AGB-Laufzeit. Inhalte, die vom Aidant bereitgestellt werden, unterliegen einer **weltweiten, nicht-exklusiven Lizenz** zugunsten von SOS Expat für Hosting und Anzeige auf der Plattform.
+8.1. Zahlungen werden über Drittanbieter abgewickelt. Der Helfer akzeptiert deren Bedingungen und KYC/AML-Verfahren.
 
----
+8.2. SOS Expat kann Zahlungen bei Verdacht auf Betrug, Nichtkonformität oder aufgrund gesetzlicher Anordnung zurückhalten, verzögern oder stornieren.
 
-## 10. Garantien, Haftung und Entschädigung
+8.3. **Internationale Sanktionen und Embargos.** Der Helfer erklärt und garantiert:
+- (a) Nicht direkt oder indirekt auf einer **Sanktionsliste** zu stehen (OFAC/SDN, EU, UN, HMT oder jede andere anwendbare Sanktionsliste);
+- (b) Nicht direkt oder indirekt im Eigentum oder unter der Kontrolle einer Person oder Einrichtung zu stehen, die auf einer Sanktionsliste steht;
+- (c) Kein Einwohner, Staatsangehöriger zu sein oder sich nicht in einem Land zu befinden, das einem **umfassenden Embargo** unterliegt (derzeit: Nordkorea, Iran, Syrien, Kuba, Regionen Krim/Donezk/Luhansk oder jedes andere später hinzugefügte Gebiet);
+- (d) Die Plattform nicht für Transaktionen zu nutzen, die sanktionierte Personen, Einrichtungen oder Länder betreffen;
+- (e) Alle geltenden **Exportkontrollgesetze** einzuhalten.
+SOS Expat behält sich das Recht vor, den Zugang zur Plattform in jedem von Sanktionen oder Embargos betroffenen Gebiet oder für jeden Helfer, der verdächtigt wird, gegen diese Bestimmungen zu verstoßen, **sofort zu beschränken oder zu sperren**, ohne Vorankündigung oder Entschädigung. SOS Expat kann auch verpflichtet sein, die Gelder des Helfers auf Anordnung einer zuständigen Behörde **einzufrieren**.
 
-10.1. **Keine Garantie** für Ergebnisse/Qualität/Umsatz; Plattform wird **„wie besehen“** bereitgestellt.
+8.4. **Ausführliche Liste der Sanktionsbehörden.** Die von SOS Expat berücksichtigten Sanktionslisten umfassen insbesondere:
+- (a) **OFAC** (Office of Foreign Assets Control, Vereinigte Staaten) – einschließlich der SDN-Liste (Specially Designated Nationals);
+- (b) **Europäische Union** – konsolidierte Sanktionsliste;
+- (c) **Vereinte Nationen** – Sicherheitsrats-Sanktionslisten;
+- (d) **HMT** (His Majesty's Treasury, Vereinigtes Königreich) – Konsolidierte Liste;
+- (e) Jede andere von einer zuständigen Behörde veröffentlichte Liste.
+Die aktuell von umfassenden Embargos betroffenen Länder sind: Nordkorea, Iran, Syrien, Kuba sowie die Regionen Krim, Donezk und Luhansk. Diese Liste kann sich entsprechend den internationalen Entwicklungen ändern.
 
-10.2. **Haftungsbegrenzung:** Soweit zulässig, ist die Gesamthaftung von SOS Expat gegenüber dem Aidant auf **direkte Schäden** begrenzt und darf die Summe der von SOS Expat erhaltenen **Vernetzungsgebühren** der betreffenden **Transaktion** nicht überschreiten.
+### Nicht beanspruchte Gelder und KYC-Verifizierung
 
-10.3. **Ausschlüsse:** keine indirekten/folgenden/sonderen/Strafschäden (Gewinnverlust, Chancenverlust, Kundenverlust, Rufschädigung, Ersatzkosten etc.).
+8.5. **Pflicht zur Vervollständigung des Verifizierungsprozesses (KYC).** Um Zahlungen aus über die Plattform erbrachten Leistungen zu erhalten, verpflichtet sich der Helfer, den Identitätsverifizierungsprozess (KYC - Know Your Customer) bei unserem Zahlungspartner Stripe schnellstmöglich nach der Registrierung abzuschließen. Der Helfer erkennt an, dass das Fehlen einer vollständigen KYC-Verifizierung die Überweisung von Geldern auf sein Bankkonto technisch verhindert.
 
-10.4. **Entschädigung:** Der Aidant **schützt und stellt frei** SOS Expat (einschließlich verbundener Unternehmen, Führungskräfte, Mitarbeiter, Vertreter) von Ansprüchen, Verlusten, Schäden, Strafen und Kosten (einschließlich Anwaltsgebühren) im Zusammenhang mit (i) Verstößen gegen AGB/Gesetze, (ii) Inhalten, (iii) Dienstleistungen/Unterlassungen, (iv) fehlenden Arbeitserlaubnissen/Immigration/Lizenzen.
+8.6. **Verwahrung ausstehender Gelder.** Wenn ein Nutzer eine Zahlung für eine Leistung leistet, die von einem Helfer erbracht wurde, der seine KYC-Verifizierung nicht abgeschlossen hat, werden die dem Anteil des Helfers entsprechenden Gelder (nach Abzug der Vermittlungsgebühr der Plattform) auf einem Treuhandkonto verwahrt. Die Plattform verpflichtet sich:
+- Den Helfer per E-Mail über das Vorhandensein ausstehender Gelder zu benachrichtigen;
+- Regelmäßige Erinnerungen zu senden (nach 7, 30, 60, 90, 120 und 150 Tagen);
+- Dem Helfer alle erforderlichen Mittel zur Verfügung zu stellen, um seine KYC-Verifizierung abzuschließen.
 
-10.5. **Verzicht auf Regress.** Der Aidant **verzichtet ausdrücklich und unwiderruflich** auf jeglichen Regress gegen SOS Expat für (i) Schäden aus der Erbringung von Dienstleistungen, (ii) indirekte Verluste, (iii) vertragliche Streitigkeiten mit Nutzern, (iv) jegliche Mängel der vom Aidant erbrachten Dienstleistungen. Dieser Verzicht gilt im maximal gesetzlich zulässigen Umfang.
+8.7. **Nicht beanspruchte Gelder und Verfall.** Wird die KYC-Verifizierung nicht innerhalb von **einhundertachtzig (180) Tagen** ab der ersten zurückgehaltenen Zahlung abgeschlossen, und trotz der in Artikel 8.6 vorgesehenen Benachrichtigungen, gelten die Gelder als vom Helfer **aufgegeben**. Der Helfer erkennt ausdrücklich an und akzeptiert, dass:
+- (a) Nicht beanspruchte Gelder innerhalb dieser Frist endgültig von der Plattform als pauschale Entschädigung für Verwaltungs-, Aufbewahrungs- und Kontaktierungskosten erworben werden;
+- (b) Dieser Erwerb die von der Plattform für die Verwaltung nicht beanspruchter Gelder getragenen Verwaltungskosten kompensiert;
+- (c) Er ausdrücklich auf jeden Anspruch auf diese Gelder nach Ablauf der 180-Tage-Frist verzichtet.
 
-10.6. **Keine Vertretung.** Nichts begründet Mandat, Anstellung, Partnerschaft oder Joint Venture zwischen SOS Expat und dem Aidant.
+8.8. **Ausnahmsweiser Anspruch.** Abweichend von Artikel 8.7 kann der Helfer innerhalb von maximal **zwölf (12) Monaten** nach Ablauf der 180-Tage-Frist einen begründeten Anspruch geltend machen, nur in folgenden Fällen: dokumentierte medizinische Arbeitsunfähigkeit, ordnungsgemäß begründete höhere Gewalt oder technischer Fehler, der der Plattform zuzuschreiben ist. Die Plattform prüft den Antrag innerhalb von 30 Tagen und behält sich das Recht vor, den Anspruch anzunehmen oder abzulehnen. Im Falle der Annahme wird eine Bearbeitungsgebühr von **zwanzig Prozent (20%)** vom erstatteten Betrag einbehalten.
 
-10.7. **Höhere Gewalt.** SOS Expat haftet nicht für Verzögerungen oder Ausfälle, die durch Ereignisse **höherer Gewalt** verursacht werden (Naturkatastrophe, Krieg, Pandemie, Cyberangriff, Strom- oder Internetausfall, Regierungsentscheidung, Streik usw.).
-
-10.8. **Fortbestehen.** Die Art. 5, 7, 8, 9, 10, 11 und 12 bleiben nach Kündigung wirksam.
-
----
-
-## 11. Anwendbares Recht – Schiedsgericht – Estnische Gerichtsbarkeit – Sammelklagen
-
-11.1. **Materielles Recht:** Für jede Vernetzung gilt das Recht des **Einsatzlands**, vorbehaltlich lokaler zwingender Vorschriften und internationaler zwingender Normen. **Ergänzend und für die Auslegung/Gültigkeit der AGB sowie nicht geregelte Fragen gilt estnisches Recht.**
-
-11.2. **Verbindliche ICC-Schiedsgerichtsbarkeit:** Alle Streitigkeiten zwischen SOS Expat und Aidant werden **endgültig** nach dem Schiedsgerichtsreglement der **ICC** gelöst. **Sitz: Tallinn (Estland)**. **Sprache: Französisch.** Das Gericht wendet das in Art. 11.1 definierte materielle Recht an. **Vertrauliches Verfahren.**
-
-11.3. **Verzicht auf Sammelklagen:** Soweit zulässig, ausgeschlossen; nur **individuelle Ansprüche**.
-
-11.4. **Ausschließliche Zuständigkeit estnischer Gerichte:** Für nicht-schiedsgerichtliche Ansprüche, Vollstreckung von Urteilen oder einstweilige Maßnahmen haben estnische Gerichte (zuständig in Tallinn) **ausschließliche Zuständigkeit**. Der Aidant verzichtet auf Einwände wegen unpassendem Gerichtsstand.
-
----
-
-## 12. Sonstiges
-
-12.1. **Abtretung.** SOS Expat kann die AGB an ein Konzernunternehmen oder einen Nachfolger abtreten; der Aidant kann ohne schriftliche Zustimmung von SOS Expat nicht abtreten.
-
-12.2. **Gesamtheit.** Die AGB bilden die vollständige Vereinbarung und ersetzen alle vorherigen Vereinbarungen zum selben Gegenstand.
-
-12.3. **Benachrichtigungen.** Durch Veröffentlichung auf der Plattform, In-App-Benachrichtigung oder über das **Kontaktformular**.
-
-12.4. **Auslegung.** Überschriften sind nur Hinweis; keine Regel **contra proferentem**.
-
-12.5. **Sprachen.** Übersetzungen können bereitgestellt werden; **Französisch ist maßgeblich** für die Auslegung.
-
-12.6. **Teilnichtigkeit.** Ist eine Bestimmung ungültig/unanwendbar, bleibt der Rest in Kraft; ersetzbar durch gültige Bestimmung mit gleichwertiger Wirkung, wenn möglich.
-
-12.7. **Nichtverzicht.** Nichtausübung eines Rechts bedeutet keinen Verzicht.
+8.9. **Ausdrückliche Annahme.** Mit der Registrierung auf der Plattform als Helfer erklärt dieser, die vorliegenden Bedingungen bezüglich nicht beanspruchter Gelder zur Kenntnis genommen zu haben und akzeptiert sie ausdrücklich. Diese Annahme stellt eine wesentliche und bestimmende Bedingung für den Zugang zum Anbieterstatus auf der Plattform dar.
 
 ---
 
-## 13. Kontakt
+## 9. Personenbezogene Daten (globaler Rahmen – GDPR/DSA)
 
-Bei Fragen oder rechtlichen Anliegen kontaktieren Sie uns:
+9.1. **Rollen.** Für Nutzerdaten, die zum Zweck der Vermittlung verarbeitet werden, handeln SOS Expat und der Helfer jeweils als eigenständige Verantwortliche für ihre jeweiligen Zwecke, gemäß der **Verordnung (EU) 2016/679 (DSGVO/GDPR)**.
+
+9.2. **Rechtsgrundlagen & Zwecke.** Vertragserfüllung (Vermittlung), berechtigte Interessen (Sicherheit, Betrugsprävention, Verbesserung), gesetzliche Verpflichtungen (AML, Sanktionen) und ggf. Einwilligung.
+
+9.3. **Internationale Übermittlungen** mit angemessenen Garantien, sofern erforderlich (Standardvertragsklauseln, Angemessenheitsbeschluss usw.).
+
+9.4. **Rechte & Kontakt.** Ausübung der Rechte (Auskunft, Berichtigung, Löschung, Übertragbarkeit, Widerspruch) über das Kontaktformular der Plattform.
+
+9.5. **Sicherheit.** Angemessene technische/organisatorische Maßnahmen; Meldung von Datenschutzverletzungen gemäß geltendem Recht (72 Stunden gemäß DSGVO).
+
+9.6. Der Helfer verarbeitet die erhaltenen Daten gemäß dem Recht des Einsatzlandes.
+
+9.7. **DSA-Konformität.** Die Plattform fungiert als **Vermittlungsdienst** im Sinne der **Verordnung (EU) 2022/2065 (Gesetz über digitale Dienste)**. SOS Expat implementiert Mechanismen zur Meldung illegaler Inhalte und kooperiert mit den zuständigen Behörden gemäß dem DSA.
+
+---
+
+## 10. Geistiges Eigentum
+
+Die Plattform, ihre Marken, Logos, Datenbanken und Inhalte sind geschützt. Es werden keine Rechte an den Helfer übertragen, außer einem persönlichen, nicht exklusiven, nicht übertragbaren Zugangsrecht während der Laufzeit dieser AGB. Inhalte, die vom Helfer bereitgestellt werden (Profil, Foto, Beschreibungen), werden SOS Expat mit einer weltweiten, nicht exklusiven Lizenz zur Speicherung und Anzeige auf der Plattform eingeräumt.
+
+---
+
+## 11. Garantien, Haftung und Freistellung
+
+11.1. Keine Garantie in Bezug auf Dienstleistungen; SOS Expat garantiert weder Ergebnis, Qualität noch Geschäftsvolumen.
+
+11.2. Plattform „wie besehen"; keine Garantie für ständige Verfügbarkeit.
+
+11.3. **Haftungsbeschränkung**: Soweit gesetzlich zulässig, ist die Gesamthaftung von SOS Expat gegenüber dem Helfer auf direkte Schäden beschränkt und darf den Gesamtbetrag der von SOS Expat im Zusammenhang mit der betreffenden Transaktion erhobenen Vermittlungsgebühren nicht überschreiten.
+
+11.4. **Ausschlüsse**: keine Haftung für indirekte/folgende/besondere/punitive Schäden (z. B. entgangener Gewinn, Kundenverlust, Rufschaden usw.).
+
+11.5. **Freistellung**: Der Helfer stellt SOS Expat (und dessen verbundene Unternehmen, Führungskräfte, Mitarbeiter, Vertreter) von allen Ansprüchen/Schäden/Kosten (einschließlich Anwaltskosten) frei, die sich aus (i) Verstößen gegen die AGB/Gesetze, (ii) seinen Inhalten, (iii) seinen Leistungen oder Unterlassungen, (iv) fehlenden Arbeitserlaubnissen/Immigration/Lizenzen ergeben.
+
+11.6. **Verzicht auf Ansprüche.** Der Helfer **verzichtet ausdrücklich und unwiderruflich** auf alle Ansprüche gegen SOS Expat wegen (i) Schäden aus der Erbringung von Dienstleistungen, (ii) indirekter Verluste, (iii) vertraglicher Streitigkeiten mit Nutzern, (iv) jeglicher Mängel der vom Helfer erbrachten Leistungen. Dieser Verzicht gilt im gesetzlich zulässigen Umfang.
+
+11.7. Keine Vertretung: Nichts hierin begründet ein Mandats-, Arbeits-, Partner- oder Joint-Venture-Verhältnis zwischen SOS Expat und dem Helfer.
+
+11.8. **Höhere Gewalt.** SOS Expat haftet nicht für Verzögerungen oder Ausfälle aufgrund von **höherer Gewalt** (Naturkatastrophe, Krieg, Pandemie, Cyberangriff, Strom- oder Internetausfall, behördliche Anordnung, Streik usw.).
+
+11.9. **Fortbestand von Klauseln.** Die folgenden Artikel bleiben nach Beendigung oder Ablauf der AGB unabhängig von der Ursache in Kraft: Artikel 2 (Annahmenachweise), 3.7 (Erklärungen), 5 (Nutzungsregeln), 7 (Gebühren und Zahlungen), 8 (KYC und Sanktionen), 9 (personenbezogene Daten), 10 (geistiges Eigentum), 11 (Haftung und Freistellung), 12 (anwendbares Recht und Schiedsgerichtsbarkeit), 13 (Schutzklauseln) und 14 (Verschiedenes). Diese Klauseln bleiben so lange in Kraft, wie es zur Entfaltung ihrer Wirkung erforderlich ist.
+
+---
+
+## 12. Anwendbares Recht – Schiedsgerichtsbarkeit – Estnische Gerichtsbarkeit – Sammelklagen
+
+12.1. **Anwendbares Recht.** Diese AGB, ihre Auslegung, Gültigkeit und Durchführung unterliegen ausschließlich dem **estnischen Recht** unter Ausschluss seiner Kollisionsnormen. Für Fragen bezüglich der Erbringung von Dienstleistungen in einem bestimmten Einsatzland gelten die dortigen zwingenden Vorschriften und öffentlichen Ordnung ergänzend, soweit sie zwingend sind.
+
+12.2. **Verbindliches internationales Schiedsverfahren.** Jeder Streit, jede Meinungsverschiedenheit oder jeder Anspruch, der sich aus diesen AGB ergibt oder damit zusammenhängt, einschließlich ihrer Gültigkeit, Auslegung, Durchführung oder Beendigung, wird endgültig durch **Schiedsverfahren** gemäß der Schiedsgerichtsordnung der **Internationalen Handelskammer (ICC)** entschieden.
+- **Sitz des Schiedsverfahrens**: Tallinn, Estland;
+- **Sprache des Schiedsverfahrens**: **Englisch**;
+- **Anzahl der Schiedsrichter**: ein (1) Einzelschiedsrichter, es sei denn, der Streitwert übersteigt 100.000 €, in welchem Fall drei (3) Schiedsrichter;
+- **Materielles Recht**: estnisches Recht (Art. 12.1);
+- **Verfahren**: vertraulich. Die Parteien verpflichten sich, die Existenz, den Inhalt oder das Ergebnis des Schiedsverfahrens nicht offenzulegen, es sei denn, dies ist gesetzlich vorgeschrieben oder zur Vollstreckung des Schiedsspruchs erforderlich.
+Der Schiedsspruch ist für die Parteien **endgültig und bindend**. Die Parteien verzichten im gesetzlich zulässigen Umfang auf jeden Aufhebungsantrag.
+
+12.3. **Verzicht auf Sammelklagen und Geschworenengerichte.** Im größtmöglichen gesetzlich zulässigen Umfang:
+- (a) Der Helfer verzichtet auf die Teilnahme an **Sammelklagen, Gruppenklagen oder Vertretungsklagen** gegen SOS Expat;
+- (b) Jeder Streit wird **ausschließlich individuell** beigelegt;
+- (c) Der Helfer verzichtet ausdrücklich auf jedes **Recht auf ein Geschworenengericht** (Jury Trial Waiver);
+- (d) Der Helfer verzichtet auf **Class Actions, Consolidated Actions oder Representative Actions** nach US-amerikanischem Recht oder gleichwertigem Recht.
+
+12.4. **Ausschließliche Zuständigkeit estnischer Gerichte.** Für nicht schiedsfähige Ansprüche nach anwendbarem Recht, für dringende einstweilige Maßnahmen vor Konstituierung des Schiedsgerichts und für die Vollstreckung von Schiedssprüchen sind die **Gerichte in Tallinn (Estland)** **ausschließlich zuständig**. Der Helfer:
+- (a) Stimmt dieser Zuständigkeit unwiderruflich zu;
+- (b) Verzichtet auf jede Einrede des **Forum non conveniens**;
+- (c) Verzichtet auf jede Einrede der fehlenden persönlichen Zuständigkeit;
+- (d) Akzeptiert, dass jede Zustellung an die auf der Plattform registrierte E-Mail-Adresse erfolgen kann.
+
+12.5. **Obligatorische vorherige Mediation.** Vor jedem Schiedsverfahren verpflichten sich die Parteien, zu versuchen, den Streit gütlich durch **Verhandlung in gutem Glauben** für einen Zeitraum von **dreißig (30) Tagen** ab schriftlicher Benachrichtigung über den Streit beizulegen. Diese Benachrichtigung muss per E-Mail mit Empfangsbestätigung an die Kontaktadresse der anderen Partei gesendet werden. Das Scheitern der Mediation ist Voraussetzung für die Einreichung eines Schiedsantrags.
+
+12.6. **Verjährung.** Jede Klage oder jeder Anspruch des Helfers gegen SOS Expat muss innerhalb von **einem (1) Jahr** ab dem Eintritt des auslösenden Ereignisses erhoben werden, andernfalls ist er endgültig verjährt, soweit nach anwendbarem Recht zulässig.
+
+---
+
+## 13. Internationale Schutzklauseln
+
+13.1. **Antikorruption.** Der Helfer verpflichtet sich, keine Bestechungsgelder oder unzulässige Vorteile an öffentliche oder private Amtsträger anzubieten, zu versprechen oder zu zahlen. Er hält die geltenden Antikorruptionsgesetze ein (FCPA, UK Bribery Act, Sapin-II-Gesetz usw.).
+
+13.2. **Vertraulichkeit der Kommunikation.** Die über die Plattform geführte Kommunikation (Nachrichten, Telefonate) ist **vertraulich**. Der Helfer verpflichtet sich, diese nicht aufzuzeichnen, offenzulegen oder für andere Zwecke als die vereinbarte Leistung zu verwenden, es sei denn, es liegt eine schriftliche Genehmigung oder eine gesetzliche Verpflichtung vor.
+
+13.3. **Abwerbeverbot.** Während der Laufzeit dieser AGB und **zwölf (12) Monate** nach deren Beendigung darf der Helfer Nutzer, die er über die Plattform kennengelernt hat, nicht direkt abwerben, um die Vermittlungsgebühren zu umgehen.
+
+13.4. **Alleinige Verantwortung des Helfers.** Der Helfer ist **allein verantwortlich** für die Qualität, Richtigkeit und Rechtmäßigkeit der von ihm erbrachten Leistungen. Der Helfer ist **vollständig verantwortlich** für die Einhaltung der gesetzlichen und regulatorischen Bestimmungen des Landes, in dem er tätig ist. SOS Expat **garantiert nicht** die vom Helfer erbrachten Leistungen und **lehnt jede Haftung** für Schäden ab, die einem Nutzer aufgrund der Leistungen des Helfers entstehen.
+
+13.5. **Kein Beratungsverhältnis.** SOS Expat ist **kein Beratungsunternehmen** und kein Anbieter von rechtlichen, steuerlichen, medizinischen oder regulierten Dienstleistungen. Die Plattform beschränkt sich auf die **Vermittlung**. Jedes Beratungsverhältnis wird **ausschließlich** zwischen dem Helfer und dem Nutzer **außerhalb** von SOS Expat begründet.
+
+13.6. **Streitigkeiten zwischen Helfer und Nutzer.** Jede Streitigkeit zwischen einem Helfer und einem Nutzer fällt **ausschließlich** in deren direkte Beziehung. SOS Expat **greift nicht** in solche Streitigkeiten ein und **kann nicht** als Partei, Garant oder Vermittler in Anspruch genommen werden. SOS Expat ist **in keinem Fall verantwortlich** für Streitigkeiten zwischen Helfer und Nutzer.
+
+---
+
+## 14. Verschiedenes
+
+14.1. **Abtretung**: SOS Expat kann die AGB an ein Konzernunternehmen oder einen Rechtsnachfolger übertragen; der Helfer darf dies nur mit schriftlicher Zustimmung von SOS Expat.
+
+14.2. **Gesamtheit**: Diese AGB stellen die vollständige Vereinbarung dar und ersetzen alle früheren Vereinbarungen zum selben Gegenstand.
+
+14.3. **Mitteilungen**: Durch Veröffentlichung auf der Plattform, In-App-Benachrichtigung oder über das Kontaktformular.
+
+14.4. **Auslegung**: Überschriften dienen nur der Übersicht. Keine Auslegungsregel contra proferentem.
+
+14.5. **Sprachen**: Übersetzungen können bereitgestellt werden; für die Auslegung ist die **englische Fassung maßgeblich**.
+
+14.6. **Teilnichtigkeit und Trennbarkeit.** Wird eine Bestimmung dieser AGB von einem zuständigen Gericht oder Schiedsrichter für nichtig, ungültig oder nicht durchsetzbar erklärt:
+- (a) Berührt diese Nichtigkeit nicht die Gültigkeit der übrigen Bestimmungen, die in Kraft bleiben;
+- (b) Die nichtige Bestimmung wird, soweit möglich, durch eine gültige Bestimmung mit gleichwertiger wirtschaftlicher Wirkung ersetzt;
+- (c) Die Parteien verhandeln in gutem Glauben, um eine Ersatzbestimmung zu vereinbaren.
+
+14.7. **Geografische Trennbarkeit.** Ist eine Bestimmung dieser AGB in einer bestimmten Jurisdiktion nicht durchsetzbar oder rechtswidrig:
+- (a) Gilt diese Bestimmung nur in dieser Jurisdiktion nicht;
+- (b) Sie bleibt in allen anderen Jurisdiktionen vollständig anwendbar;
+- (c) Die lokale Nichtdurchsetzbarkeit berührt nicht die globale Gültigkeit der AGB.
+
+14.8. **Kein Verzicht.** Das Unterlassen oder die Verzögerung der Ausübung eines Rechts durch SOS Expat stellt keinen Verzicht auf dieses Recht dar. Jeder Verzicht muss ausdrücklich und schriftlich erfolgen. Ein einmaliger Verzicht stellt keinen allgemeinen Verzicht dar.
+
+14.9. **Unabhängigkeit der Klauseln.** Jede Klausel dieser AGB ist unabhängig. Die Unwirksamkeit einer Klausel führt nicht zur Unwirksamkeit der Klauseln über Haftungsbeschränkung, Freistellung, Schiedsgerichtsbarkeit oder Zuständigkeit, die im größtmöglichen gesetzlich zulässigen Umfang anwendbar bleiben.
+
+14.10. **Dritte.** Diese AGB gewähren Dritten keine Rechte (mit Ausnahme der ausdrücklich genannten verbundenen Unternehmen von SOS Expat). Kein Dritter kann sich auf die Bestimmungen der AGB berufen.
+
+---
+
+## 15. Kontakt
+
+Für rechtliche oder sonstige Anfragen: **https://sos-expat.com/contact**
 `;
   const defaultCh = `
 # 使用条款 – 海外互助者（全球版）
@@ -2109,191 +2274,343 @@ Bei Fragen oder rechtlichen Anliegen kontaktieren Sie uns:
 `;
 
   const defaultAr = `
-# الشروط والأحكام – Expatriates Aidants (عالمي)
+# شروط وأحكام الاستخدام العامة – المغتربون المساعدون (عالمي)
 
-**SOS Expat بواسطة WorldExpat OÜ** (ويشار إليها فيما يلي باسم “**المنصة**”، “**SOS**” أو “**نحن**”)
+**SOS Expat** هي خدمة تديرها **WorldExpat OÜ**، شركة مسجلة وفق القانون الإستوني (سجل الشركات رقم 16885621)، ومقرها الرئيسي في Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145، إستونيا (يُشار إليها فيما يلي بـ"**المنصة**" أو "**SOS**" أو "**SOS Expat**" أو "**نحن**").
 
-**الإصدار 2.2 – آخر تحديث: 16 يونيو 2025**
+**الإصدار 3.0 – آخر تحديث: 1 فبراير 2026**
 
 ---
 
 ## 1. التعريفات
 
-**Expatrié Aidant** (“**المساعد**”): أي شخص مسجل على المنصة ويقدم خدمات دعم **غير قانونية وغير طبية** بشكل مستقل (مثل: الإرشاد، المساعدة العملية، المرافقة، الترجمة غير الرسمية، بناء الشبكات المحلية، إلخ).
+**المغترب المساعد** ("**المساعد**"): أي شخص طبيعي مسجل على المنصة لتقديم خدمات مساعدة **غير قانونية وغير طبية** بصفة مستقلة للمستخدمين (التوجيه، الإجراءات العملية، المرافقة، الترجمة غير الرسمية، التواصل المحلي، إلخ).
 
 **المستخدم**: أي شخص يستخدم المنصة للتواصل مع مساعد.
 
-**التواصل / التوفيق بين الأطراف**: تقديم المنصة لتسهيل التواصل بين المستخدم والمساعد (مشاركة معلومات الاتصال، فتح قنوات اتصال، أو قبول طلب عبر المنصة).
+**التوصيل / الربط**: التقديم التقني والتشغيلي الذي تقوم به المنصة بين المستخدم والمساعد، ويتمثل في: (أ) نقل بيانات الاتصال، و/أو (ب) فتح قناة اتصال (مكالمة، رسالة، مكالمة فيديو)، و/أو (ج) قبول المساعد لطلب مقدم عبر المنصة.
 
-**البلد / الإقليم**: الاختصاص القانوني الذي يشير إليه المستخدم في الغالب عند التواصل؛ إذا لم يُحدد، يُعتبر بلد إقامة المستخدم.
+**بلد التدخل**: الولاية القضائية المستهدفة بشكل رئيسي بطلب المستخدم وقت التوصيل. في حال عدم التحديد، يُعتبر بلد إقامة المستخدم في تاريخ الطلب؛ وفي حالة تعدد الولايات القضائية، تُعتبر الولاية الأوثق صلة بموضوع الطلب.
 
-**رسوم التواصل**: الرسوم الثابتة التي تدفع لـ SOS مقابل كل تواصل (المادة 7): **19 €** (يورو) أو **25 $** (دولار أمريكي)، مع إمكانية تعديلها حسب العملة أو الموقع.
+**رسوم التوصيل**: الرسوم الثابتة المستحقة لـ SOS عن كل توصيل (المادة 7): **19 يورو** إذا تم الدفع بـ **اليورو** أو **25 دولار أمريكي** إذا تم الدفع بـ **الدولار الأمريكي**، مع إمكانية تعديل هذه المبالغ و/أو نشر جداول تعرفة محلية حسب البلد/العملة، بأثر مستقبلي.
 
-**مزود الدفع**: طرف ثالث مسؤول عن معالجة المدفوعات وتوزيع الأموال.
+**مزود(و) الدفع**: الخدمات الخارجية المستخدمة لتحصيل الدفعة الموحدة من المستخدم وتوزيع الأموال.
 
----
-
-## 2. الهدف والنطاق والموافقة
-
-2.1. تحكم هذه الشروط الوصول إلى المنصة واستخدامها من قبل المساعدين.
-
-2.2. **تعمل SOS Expat فقط كوسيط تقني.** SOS Expat ليست صاحب عمل، ممثلًا، أو شريكًا للمساعد، ولا تقدم خدمات قانونية أو طبية أو مالية، ولا تشارك في أي عقد بين المساعد والمستخدم.
-
-2.3. **الموافقة الإلكترونية (Click-wrap).** التسجيل أو استخدام المنصة يعني قبول هذه الشروط. يمكن لـ SOS الاحتفاظ بسجلات تقنية (طابع زمني، معرف، إلخ).
-
-2.4. **التعديلات.** يمكن لـ SOS تحديث الشروط والرسوم في المستقبل؛ ويعتبر استمرار استخدام المنصة بمثابة قبول لهذه التحديثات.
-
-2.5. **القدرة المهنية (B2B).** يصرح المساعد بأنه يعمل **بشكل مهني فقط**؛ ولا تنطبق حماية المستهلك.
+**قوائم العقوبات**: قوائم الأشخاص والكيانات والدول الخاضعة لعقوبات اقتصادية أو حظر، بما في ذلك قوائم مكتب مراقبة الأصول الأجنبية (OFAC) الأمريكي، والاتحاد الأوروبي، والأمم المتحدة، وخزانة صاحب الجلالة البريطانية (HMT)، وأي سلطة مختصة أخرى.
 
 ---
 
-## 3. حالة المساعد – الامتثال، التصاريح والمسؤوليات
+## 2. الموضوع والنطاق والقبول
 
-3.1. **الاستقلالية.** يعمل المساعد كـ **مهني مستقل**؛ ولا ينشأ أي علاقة توظيف أو وكالة أو مشروع مشترك مع SOS Expat.
+2.1. تحكم هذه الشروط والأحكام العامة الوصول إلى المنصة واستخدامها من قبل المساعدين.
 
-3.2. **تصاريح العمل ووضع الهجرة.** المساعد مسؤول عن الحصول على جميع التصاريح اللازمة في كل بلد (تأشيرة، تصريح عمل، تسجيل تجاري، تأمين، تراخيص محلية). SOS Expat لا تتحقق من هذه التصاريح.
+2.2. **تعمل SOS Expat حصرياً كوسيط تقني للتوصيل.** SOS Expat ليست صاحب عمل أو وكيل أو شريك للمساعدين، ولا تقدم أي استشارات قانونية أو طبية أو ضريبية أو محاسبية أو منظمة، وليست طرفاً في العقود المبرمة بين المساعدين والمستخدمين.
 
-3.3. **الخدمات غير المنظمة.** لا يقدم المساعد خدمات منظمة بدون الترخيص المناسب (قانونية، طبية، مالية، ضريبية، إلخ).
+2.3. **القبول الإلكتروني (Click-wrap) والتتبع.** يقبل المساعد هذه الشروط بوضع علامة في المربع المخصص عند التسجيل و/أو باستخدام المنصة. يُعد هذا الفعل توقيعاً إلكترونياً وموافقة تعاقدية وفقاً للائحة (الاتحاد الأوروبي) رقم 910/2014 (eIDAS). تحتفظ SOS Expat بـ **سجلات تدقيق مختومة زمنياً** تتضمن: (أ) التاريخ والوقت الدقيقين (بالتوقيت العالمي المنسق) للقبول، (ب) عنوان IP الخاص بالمساعد، (ج) معرف الجلسة الفريد، (د) وكيل مستخدم المتصفح، (هـ) إصدار الشروط المقبولة، (و) البصمة التشفيرية للوثيقة المقبولة، (ز) المعرف الفريد للمساعد. تُشكل هذه السجلات **دليلاً قانونياً قابلاً للاحتجاج به** على قبول الشروط.
 
-3.4. **الامتثال العام.** يلتزم المساعد بجميع القوانين المعمول بها (حماية المستهلك، التجارة الإلكترونية، الإعلانات، المنافسة، مكافحة غسيل الأموال، الضرائب، حماية البيانات، السلامة، العقوبات، إلخ).
+2.4. **حفظ أدلة القبول.** وفقاً للائحة العامة لحماية البيانات (GDPR) والالتزامات القانونية للحفظ، تحتفظ SOS Expat بأدلة قبول الشروط لمدة **عشر (10) سنوات** من تاريخ القبول، أو حتى انتهاء أي نزاع قائم حسب الاقتضاء. يمكن للمساعد، بناءً على طلب كتابي عبر نموذج الاتصال، الحصول على **شهادة قبول** تتضمن عناصر الإثبات المذكورة أعلاه. يستند هذا الحفظ إلى المصلحة المشروعة لـ SOS Expat في امتلاك أدلة في حالة النزاع (المادة 6.1.و من GDPR) وإلى الالتزام القانوني بحفظ العقود التجارية.
 
-3.5. **التأمين.** يؤكد المساعد أنه يمتلك التأمين المهني المناسب لأنشطته.
+2.5. **التعديلات.** يجوز لـ SOS تحديث هذه الشروط و/أو جداول الرسوم (حسب البلد/العملة) في أي وقت، بأثر مستقبلي بعد النشر على المنصة. يُعد الاستمرار في الاستخدام قبولاً. في حالة إجراء تعديل جوهري، سيُدعى المساعد لإعادة تأكيد قبوله، والذي سيُتتبع مرة أخرى وفقاً لأحكام المادة 2.3.
 
-3.6. **السرية.** يحمي المساعد بيانات المستخدم ولا يشاركها إلا بموجب القانون أو بموافقة المستخدم.
+2.6. **الأهلية المهنية (B2B).** يُقر المساعد بأنه يتصرف **حصرياً لأغراض مهنية**؛ ولا تنطبق أنظمة حماية المستهلك على العلاقة بين SOS Expat والمساعد.
 
----
-
-## 4. الحساب، التحقق والأمان
-
-4.1. **التسجيل.** لكل مساعد حساب واحد فقط؛ يجب أن تكون جميع المعلومات دقيقة ومحدثة.
-
-4.2. **التحقق.** يمكن لـ SOS Expat رفض، تعليق، أو حذف الوصول لأسباب أمنية أو امتثال أو جودة.
-
-4.3. **الأمان.** تعتبر جميع الأنشطة التي تتم عبر الحساب من مسؤولية المساعد.
-
-4.4. **عدم النشاط.** بعد 365 يومًا من عدم النشاط، قد يتم إلغاء تنشيط الحساب تلقائيًا. يمكن للمساعد إغلاق حسابه في أي وقت بعد الوفاء بالتزاماته. يحق لـ SOS Expat تعليق أو إنهاء الحساب في حالة انتهاك الشروط.
-
-4.5. **الاتصالات الإلكترونية.** يوافق المساعد على تلقي الإشعارات عبر الوسائل الإلكترونية (البريد الإلكتروني، الإشعارات داخل التطبيق، النشر على المنصة).
+2.7. **المدة.** غير محددة.
 
 ---
 
-## 5. قواعد الاستخدام – الجودة، الحظر ورسوم التواصل
+## 3. وضع المساعد – الاستقلالية والامتثال والإقرارات
 
-5.1. **الجودة والوصف.** يقدم المساعد أوصاف دقيقة لخدماته؛ لا يُسمح بالادعاءات الكاذبة.
+3.1. **الاستقلالية.** يعمل المساعد بصفته **مهنياً مستقلاً**؛ ولا تُنشأ أي علاقة توظيف أو وكالة أو شراكة أو مشروع مشترك مع SOS Expat.
 
-5.2. **المحظورات.** المحتوى غير القانوني أو التمييزي أو المضلل؛ استخدام البيانات بشكل غير قانوني؛ الوصول غير المصرح به للمنصة؛ التواطؤ؛ الأنشطة غير القانونية.
+3.2. **تصريح العمل ووضع الهجرة.** المساعد هو **المسؤول الوحيد** عن الحصول على جميع التصاريح اللازمة في كل بلد تدخل والحفاظ عليها (تأشيرة، تصريح عمل، تسجيل نشاط/عمل حر، تأمينات، تراخيص محلية، إلخ). **لا تتحقق** SOS Expat من هذه التصاريح و**لا تتحمل أي مسؤولية** في هذا الشأن.
 
-5.3. **رسوم التواصل.** كل اتصال جديد يخضع **لرسوم التواصل**.
+3.3. **الخدمات غير المنظمة.** يلتزم المساعد بـ **عدم تقديم خدمات منظمة** (مثل الاستشارات القانونية أو الطبية أو المالية أو المحاسبية أو العقارية، إلخ) **دون** امتلاك **التصاريح/التراخيص** اللازمة **و** دون الامتثال الكامل للقوانين المحلية. وإلا، يمتنع عن تقديم مثل هذه الخدمات ويحيل المستخدم إلى متخصص مرخص حسب الأصول (مثل محامٍ مسجل).
 
-5.4. **التوافر.** يتم تقديم المنصة **“كما هي”**؛ لا توجد ضمانات لاستمرارية الخدمة.
+3.4. **الامتثال العام.** يلتزم المساعد بالقوانين واللوائح المعمول بها (حماية المستهلك، التجارة الإلكترونية، الإعلان/التسويق، المنافسة العادلة، مكافحة غسل الأموال/اعرف عميلك عند الاقتضاء، الضرائب، حماية البيانات، العقوبات/الرقابة على الصادرات، سلامة الأشخاص).
+
+3.5. **التأمينات.** يُقر المساعد بامتلاكه التأمينات اللازمة (المسؤولية المدنية المهنية، عند الاقتضاء) التي تغطي أنشطته ومناطق تدخله.
+
+3.6. **الامتثال لتشريعات بلد التدخل.** يلتزم المساعد بالامتثال لجميع القوانين واللوائح المعمول بها في كل بلد تدخل يقدم فيه خدماته، بما في ذلك على سبيل المثال لا الحصر: قوانين العمل، واللوائح الضريبية، وقواعد حماية المستهلك، ومتطلبات التراخيص المهنية، وأي إطار تنظيمي محلي آخر معمول به. يُقر المساعد بأن SOS Expat **لا تضمن** امتثال المساعد للقوانين المحلية و**لا تتحمل أي مسؤولية** عن أي انتهاك يرتكبه المساعد.
+
+3.7. **إقرارات وضمانات المساعد.** بالتسجيل على المنصة، يُقر المساعد ويضمن صراحةً أنه:
+- (أ) **بالغ** وفقاً لقانون بلد إقامته و/أو ممارسته؛
+- (ب) يتمتع بـ **الأهلية القانونية الكاملة** للتعاقد وممارسة نشاطه؛
+- (ج) ليس خاضعاً للوصاية أو القوامة أو الحماية القضائية أو أي نظام حماية مماثل؛
+- (د) ليس ممنوعاً من **ممارسة** نشاطه، سواء مؤقتاً أو نهائياً؛
+- (هـ) لم يتم شطبه أو إيقافه أو استبعاده من أي هيئة مهنية ذات صلة؛
+- (و) ليس خاضعاً لأي **إجراء تأديبي جارٍ** قد يؤدي إلى التعليق أو الشطب (أو يلتزم بإبلاغ SOS Expat فوراً في حال حدوث ذلك)؛
+- (ز) لا يظهر على **أي قائمة عقوبات** (OFAC، الاتحاد الأوروبي، الأمم المتحدة، HMT، أو غيرها)؛
+- (ح) لم تتم **إدانته جنائياً** بأفعال تتعارض مع ممارسة نشاطه؛
+- (ط) جميع المعلومات المقدمة عند التسجيل **دقيقة وكاملة ومحدثة**؛
+- (ي) يلتزم بـ **إبلاغ SOS Expat فوراً** بأي تغيير يؤثر على هذه الإقرارات.
+يُعد أي إقرار كاذب انتهاكاً جسيماً لهذه الشروط قد يؤدي إلى الحظر الفوري والنهائي، دون الإخلال بأي دعوى تعويضية.
+
+3.8. **السرية.** يحمي المساعد معلومات المستخدمين ويمتنع عن إفشائها، إلا بموجب التزام قانوني أو موافقة.
+
+---
+
+## 4. إنشاء الحساب والتحقق والأمان
+
+4.1. **التسجيل.** حساب واحد (1) لكل مساعد؛ يجب أن تكون المعلومات دقيقة وكاملة ومحدثة (الهوية، وسائل الاتصال، وصف الخدمات، مناطق التدخل، إلخ).
+
+4.2. **التحقق.** يجوز لـ SOS Expat إجراء فحوصات معقولة (الهوية، اتساق الملف الشخصي، فحوصات العقوبات/اعرف عميلك عبر مزودي الخدمة) ورفض/تعليق/إزالة الوصول لأسباب تتعلق بالأمان أو الامتثال أو جودة الخدمة.
+
+4.3. **أمان الدخول.** يحمي المساعد بيانات اعتماده. أي نشاط عبر الحساب يُعتبر منفذاً من قبله.
+
+4.4. **إجراءات التحقق التكميلي في أي وقت.** تحتفظ SOS Expat بالحق في طلب من المساعد، **في أي وقت ودون الحاجة لتبرير طلبها**، تقديم أو تحديث أي وثيقة تثبت حقه في الممارسة، أو تسجيله المهني أو ما يعادله، أو تأمين المسؤولية المدنية المهنية، أو هويته، أو أي إثبات آخر ذي صلة. يلتزم المساعد بالرد على هذه الطلبات خلال **سبعة (7) أيام عمل**. قد يؤدي عدم الرد أو تقديم وثائق غير مطابقة إلى التعليق الفوري للحساب.
+
+4.5. **الإشراف ومراقبة الجودة.** تنفذ SOS Expat سياسة إشراف تهدف إلى ضمان جودة وامتثال الخدمات المقدمة على المنصة. قد يشمل هذا الإشراف: (أ) التحقق من الملفات الشخصية والمحتوى المنشور، (ب) تحليل تقييمات وشكاوى المستخدمين، (ج) مراقبة الامتثال للشروط والقوانين المعمول بها، (د) أي إجراء معقول آخر لمراقبة الجودة. يقبل المساعد الخضوع لهذا الإشراف.
+
+4.6. **التعليق المؤقت للحساب.** يجوز لـ SOS Expat **تعليق حساب المساعد فوراً ودون إشعار مسبق** في الحالات التالية:
+- (أ) الاشتباه في الاحتيال أو انتحال الهوية أو الإقرار الكاذب؛
+- (ب) الشكاوى المتعددة أو الجسيمة من المستخدمين؛
+- (ج) عدم تقديم الوثائق المطلوبة بموجب المادة 4.4؛
+- (د) الانتهاك المؤكد أو المشتبه به للشروط أو القوانين المعمول بها؛
+- (هـ) السلوك الذي يضر بصورة أو سمعة المنصة؛
+- (و) أمر من سلطة قضائية أو إدارية أو مهنية؛
+- (ز) أي سبب مشروع آخر تقدره SOS Expat وفق تقديرها المطلق.
+خلال فترة التعليق، لا يمكن للمساعد الوصول إلى حسابه أو استلام توصيلات جديدة. يجوز حجز المدفوعات المعلقة حتى توضيح الوضع.
+
+4.7. **الحظر النهائي (الإنهاء بسبب المخالفة).** يجوز لـ SOS Expat **إنهاء حساب المساعد نهائياً ودون إشعار مسبق** ("الحظر") في الحالات التالية:
+- (أ) الانتهاك الجسيم أو المتكرر للشروط؛
+- (ب) الاحتيال المؤكد أو الإقرار الكاذب المتعمد أو انتحال الهوية/الصفة؛
+- (ج) فقدان الحق في الممارسة (الشطب، التعليق المهني، عدم تجديد التسجيل)؛
+- (د) الإدانة الجنائية التي تتعارض مع ممارسة النشاط؛
+- (هـ) السلوك الضار بشكل جسيم بالمستخدمين أو المنصة؛
+- (و) العودة للمخالفة بعد تعليق مؤقت؛
+- (ز) التحايل المؤكد على المنصة لتجنب رسوم التوصيل؛
+- (ح) عدم الامتثال لالتزامات التحقق من الهوية (KYC) رغم التذكيرات؛
+- (ط) أي سبب جسيم آخر تقدره SOS Expat وفق تقديرها المطلق.
+الحظر **نهائي وغير قابل للإلغاء**. لا يمكن للمساعد المحظور إنشاء حساب جديد. يجوز حجز الأموال المعلقة كتعويضات جزافية، دون الإخلال بأي دعوى تعويضية أخرى.
+
+4.8. **الإجراءات والإشعار.** في حالة التعليق أو الحظر، تُخطر SOS Expat المساعد بالبريد الإلكتروني على العنوان المسجل. يوضح هذا الإشعار سبب الإجراء (ما لم يكن هناك التزام قانوني بالسرية). يحق للمساعد تقديم ملاحظاته كتابياً عبر نموذج الاتصال خلال **خمسة عشر (15) يوماً**. تدرس SOS Expat هذه الملاحظات لكنها غير ملزمة برفع الإجراء. قرار SOS Expat **تقديري ونهائي**.
+
+4.9. **آثار التعليق أو الحظر.** في حالة التعليق أو الحظر:
+- (أ) يُحظر الوصول إلى الحساب فوراً؛
+- (ب) يُزال ملف المساعد من نتائج البحث؛
+- (ج) يجوز إلغاء التوصيلات الجارية؛
+- (د) يجوز حجز المدفوعات المعلقة أو مقاصتها مع أي مبلغ مستحق لـ SOS Expat؛
+- (هـ) يظل المساعد ملزماً بالتزاماته (السرية، عدم الاستقطاب، إلخ) وفقاً لبنود البقاء.
+
+4.10. **عدم النشاط.** في حالة **عدم النشاط لأكثر من 365 يوماً**، يجوز تعطيل الحساب تلقائياً بعد الإشعار. يمكن للمساعد إعادة تنشيط حسابه عند الطلب، بشرط تقديم وثائق التحقق المطلوبة.
+
+4.11. **الإنهاء الطوعي.** يمكن للمساعد إغلاق حسابه في أي وقت بعد الوفاء بالتزاماته الجارية (الخدمات المقبولة، المبالغ المستردة المحتملة). يتم طلب الإغلاق عبر نموذج الاتصال. تقوم SOS Expat بالإغلاق خلال **ثلاثين (30) يوماً**.
+
+4.12. **الاتصالات الإلكترونية.** يوافق المساعد على تلقي أي إشعار يتعلق بالشروط والإشراف وإجراءات التعليق/الحظر عبر الوسائل الإلكترونية (البريد الإلكتروني، الإشعارات داخل التطبيق، النشر على المنصة). يلتزم المساعد بالحفاظ على عنوان بريد إلكتروني صالح ومراجعة إشعاراته بانتظام.
+
+---
+
+## 5. قواعد الاستخدام – الجودة، المحظورات، عدم التحايل
+
+5.1. **الجودة والوصف الدقيق.** يصف المساعد خدماته بدقة، دون وعد بنتائج. لا يدعي **أي صفة زائفة** (مثل مهنة منظمة لا يحملها).
+
+5.2. **المحظورات.** المحتوى غير القانوني أو التمييزي أو المضلل؛ الممارسات غير العادلة؛ الجمع أو الاستخدام التعسفي للبيانات؛ التحايل/الهندسة العكسية للمنصة؛ التواطؤ/المقاطعة بهدف الإضرار؛ انتهاكات العقوبات/الرقابة على الصادرات؛ أي نشاط غير قانوني.
+
+5.3. **عدم التحايل.** كل **توصيل جديد** مع **مستخدم جديد** عبر المنصة يترتب عليه **رسوم التوصيل** (المادة 7). **يُحظر** تجنب هذه الرسوم بالتحايل على المنصة لتقديم جديد.
+
+5.4. **التوافر.** المنصة مقدمة **"كما هي"**؛ لا ضمان للتوافر المستمر (الصيانة، الحوادث، القوة القاهرة). قد يُقيد الوصول إذا تطلب القانون ذلك.
 
 ---
 
 ## 6. العلاقة بين المساعد والمستخدم (خارج المنصة)
 
-6.1. بعد التواصل، يمكن لكلا الطرفين إبرام عقود مستقلة.
+6.1. بعد التوصيل، يمكن للمساعد والمستخدم التعاقد **خارج المنصة**. **الأتعاب** والشروط تُحدد بحرية بينهما، مع مراعاة القوانين المحلية.
 
-6.2. يدير المساعد شروط الخدمة والفواتير وفقًا للقوانين المحلية.
+6.2. يقدم المساعد **شروط/تأكيدات الخدمة** المتوافقة مع القانون المحلي، ويدير **فواتيره** و**التزاماته الضريبية**.
 
-6.3. **SOS Expat ليست مسؤولة عن جودة أو نتائج الخدمة.**
-
----
-
-## 7. الرسوم والدفع الفردي والضرائب
-
-7.1. **رسوم التواصل:** 19 € (يورو) أو 25 $ (دولار أمريكي) لكل تواصل.
-
-7.2. **الدفع الفردي والتوزيع.** تتم المدفوعات عبر المنصة؛ تقوم SOS Expat بخصم الرسوم وتحويل الرصيد إلى المساعد.
-
-7.3. **غير قابلة للاسترداد.** رسوم التواصل غير قابلة للاسترداد.
-
-7.4. **الخصم عند الاسترداد.** يمكن خصم أي استرداد من حصة المساعد.
-
-7.5. **العملة والتحويل.** يمكن قبول عملات متعددة؛ وقد تطبق رسوم مزود الدفع.
-
-7.6. **الضرائب.** المساعد مسؤول عن جميع الضرائب المترتبة.
-
-7.7. **التعويض.** يمكن لـ SOS Expat تعديل المدفوعات لتعويض أي مطالبات.
+6.3. SOS Expat **ليست مسؤولة** عن جودة أو دقة أو نتيجة خدمات المساعد، ولا عن الالتزامات المتخذة بين المساعد والمستخدم.
 
 ---
 
-## 8. البيانات الشخصية (عالمي – GDPR/DSA)
+## 7. الرسوم والدفعة الموحدة والضرائب
 
-8.1. **الأدوار.** فيما يتعلق ببيانات المستخدمين المستلمة لأغراض التواصل، يعمل كل من SOS Expat والمساعد كمتحكمين مستقلين في البيانات لأغراضهما الخاصة، وفقًا **للائحة (EU) 2016/679 (GDPR)**.
+7.1. **رسوم التوصيل (السعر الثابت).** تبلغ رسوم التوصيل حالياً **19 يورو (EUR)** أو **25 دولار أمريكي (USD)** لكل توصيل، باستثناء الضرائب ورسوم مزود الدفع. **هذه المبالغ إرشادية وقابلة للتعديل في أي وقت.** تحتفظ SOS Expat بالحق في تعديل هذه المبالغ و/أو نشر جداول تعرفة محلية حسب البلد/العملة، بأثر مستقبلي بعد النشر على المنصة. يُدعى المساعد للاطلاع بانتظام على جدول التعرفة المعمول به المتاح في مساحته الشخصية.
 
-8.2. **الغرض.** التواصل، الأمان، منع الاحتيال، الامتثال القانوني.
+7.2. **هيكل السعر المعروض للعميل وتوزيع الأموال.** السعر المعروض للمستخدم على المنصة **يتضمن** رسوم التوصيل الخاصة بـ SOS Expat. يقوم المستخدم بدفعة موحدة عبر المنصة. **يتم توزيع الأموال كما يلي:**
+- (أ) **المبلغ المدفوع من المستخدم** = أتعاب المساعد + رسوم التوصيل لـ SOS Expat؛
+- (ب) **المبلغ الصافي المحول للمساعد** = المبلغ المدفوع من المستخدم − رسوم التوصيل لـ SOS Expat − الرسوم البنكية لمزود الدفع − رسوم تحويل العملة (عند الاقتضاء).
 
-8.3. **النقل الدولي.** يتم تطبيق تدابير أمنية مناسبة.
+يفوض المساعد صراحةً SOS Expat بإجراء هذه الخصومات قبل أي تحويل. **يُعرض المبلغ الدقيق الذي سيُحول للمساعد في لوحة التحكم قبل وبعد كل معاملة.**
 
-8.4. **الحقوق والتواصل.** عبر نموذج الاتصال في المنصة.
+7.3. **الرسوم البنكية لمزود الدفع.** يحصّل مزود الدفع (Stripe أو ما يعادله) رسوم معالجة على كل معاملة. **هذه الرسوم البنكية تقع بالكامل على عاتق المساعد** وتُخصم تلقائياً من المبلغ المحول إليه. تفاصيل هذه الرسوم متاحة في شروط مزود الدفع وفي لوحة تحكم المساعد لكل معاملة.
 
-8.5. **الأمان.** تدابير تقنية وتنظيمية مناسبة.
+7.4. **رسوم الصرف وتحويل العملات.** عندما تختلف عملة دفع المستخدم عن عملة الحساب البنكي للمساعد، تُطبق **رسوم تحويل عملات** من قبل مزود الدفع. **رسوم الصرف هذه تقع بالكامل على عاتق المساعد** وتُخصم من المبلغ المحول إليه. أسعار الصرف المطبقة هي تلك الخاصة بمزود الدفع وقت التحويل. يُقر المساعد ويقبل صراحةً أن SOS Expat ليس لها أي سيطرة على أسعار الصرف هذه وتُخلي مسؤوليتها عن تقلبات العملات أو الرسوم المطبقة من قبل المزود.
 
-8.6. يعالج المساعد البيانات وفق قوانين بلده/منطقته.
+7.5. **حساب المبلغ الصافي المحول.** يُحسب المبلغ الصافي المحول للمساعد وفق الصيغة: **المبلغ المدفوع من المستخدم − رسوم التوصيل − الرسوم البنكية للمزود − رسوم الصرف (عند الاقتضاء)**. يختلف المبلغ الدقيق حسب الرسوم المعمول بها وقت المعاملة. **يُعلم المساعد بالمبلغ الدقيق الذي سيحصل عليه في لوحة التحكم قبل كل خدمة ويمكنه بالتالي اتخاذ قرار مستنير بقبول أو رفض التوصيل.**
 
-8.7. **الامتثال لـ DSA.** تعمل المنصة كـ **خدمة وسيطة** بموجب **اللائحة (EU) 2022/2065 (قانون الخدمات الرقمية)**. تطبق SOS Expat آليات للإبلاغ عن المحتوى غير القانوني وتتعاون مع السلطات المختصة وفقًا لـ DSA.
+7.6. **الاستحقاق وعدم الاسترداد.** رسوم التوصيل مستحقة فور التوصيل الفعلي و**غير قابلة للاسترداد** (إلا بموجب بادرة حسن نية تقديرية من SOS Expat في حالة فشل يُعزى حصرياً للمنصة وبالقدر الذي يسمح به القانون).
 
----
+7.7. **استرداد المستخدم.** إذا مُنح استرداد للمستخدم، فإنه يُحسم من حصة المساعد: يجوز لـ SOS Expat حجز/مقاصة المبلغ المقابل من المدفوعات المستقبلية للمساعد، أو طلب السداد المباشر إذا لم تكن هناك مدفوعات مستحقة. تظل رسوم التوصيل مكتسبة لـ SOS Expat، إلا بموجب قرار تقديري مخالف.
 
-## 9. الملكية الفكرية
+7.8. **مواعيد الدفع.** بشرط إكمال عملية التحقق من الهوية (KYC) (المادة 8)، تُحول الأموال للمساعد خلال **سبعة (7) أيام عمل** بعد تقديم الخدمة، إلا في حالة وجود نزاع أو شكوى من المستخدم أو التحقق من الامتثال الجاري.
 
-المنصة والعلامات التجارية والشعارات وقاعدة البيانات والمحتوى محمية. يمنح المساعد فقط حقًا محدودًا وشخصيًا وغير قابل للتحويل. يمنح المحتوى المقدم من المساعد SOS Expat ترخيصًا غير حصري لاستضافته وعرضه على المنصة.
+7.9. **الضرائب.** يظل المساعد **المسؤول الوحيد** عن جميع التزاماته الضريبية (ضريبة الدخل، ضريبة القيمة المضافة، الاشتراكات الاجتماعية، الرسوم المهنية، إلخ) في ولايته القضائية للإقامة و/أو الممارسة. المبالغ المحولة للمساعد هي **مبالغ إجمالية**؛ والمساعد مسؤول عن التصريح بجميع الضرائب المستحقة ودفعها. تحصّل SOS Expat وتحول، عند الاقتضاء بموجب القانون، ضريبة القيمة المضافة/ما يعادلها محلياً على رسوم التوصيل فقط.
 
----
+7.10. **المقاصة.** يجوز لـ SOS Expat مقاصة أي مبلغ مستحق عليها للمساعد (بموجب استرداد للمستخدم أو غرامة أو التزام آخر) مع أي مبلغ مستحق للمساعد.
 
-## 10. الضمان والمسؤولية والتعويض
-
-10.1. لا يوجد ضمان على النتائج أو الجودة.
-
-10.2. **حدود المسؤولية:** المسؤولية الإجمالية محدودة برسوم التواصل.
-
-10.3. **الاستثناء:** لا تُطبق المسؤولية عن الأضرار غير المباشرة أو التبعية أو العقابية.
-
-10.4. **التعويض:** يعوض المساعد SOS Expat عن أي مطالبات أو أضرار أو تكاليف قانونية.
-
-10.5. **التنازل عن حق الرجوع.** يتنازل المساعد **صراحةً وبشكل لا رجعة فيه** عن أي حق رجوع ضد SOS Expat فيما يخص: (i) الأضرار الناتجة عن تقديم الخدمات، (ii) الخسائر غير المباشرة، (iii) النزاعات التعاقدية مع المستخدمين، (iv) أي قصور في الخدمات المقدمة من المساعد. يسري هذا التنازل إلى أقصى حد يسمح به القانون.
-
-10.6. **عدم التمثيل.** لا شيء في هذه الشروط ينشئ علاقة وكالة أو توظيف أو شراكة أو مشروع مشترك بين SOS Expat والمساعد.
-
-10.7. **القوة القاهرة.** لا تتحمل SOS Expat المسؤولية عن التأخيرات أو الإخفاقات الناتجة عن أحداث **القوة القاهرة** (كوارث طبيعية، حروب، أوبئة، هجمات إلكترونية، انقطاع الكهرباء أو الإنترنت، قرارات حكومية، إضرابات، إلخ).
-
-10.8. تظل هذه الأحكام سارية بعد إنهاء الحساب.
+7.11. **الشفافية في التعرفة والسجل.** يمكن للمساعد في أي وقت الاطلاع في لوحة التحكم الشخصية على: (أ) التفاصيل الكاملة لكل معاملة، (ب) المبلغ الإجمالي المدفوع من المستخدم، (ج) رسوم التوصيل المخصومة، (د) الرسوم البنكية لمزود الدفع، (هـ) رسوم الصرف عند الاقتضاء، (و) المبلغ الصافي المحول أو المستحق التحويل، (ز) سجل جميع معاملاته. تُحفظ هذه المعلومات وتبقى متاحة طوال مدة الحساب و**خمس (5) سنوات** بعد إغلاقه.
 
 ---
 
-## 11. القانون المطبق – التحكيم – الاختصاص القضائي الإستوني – الدعاوى الجماعية
+## 8. المدفوعات – KYC/مكافحة غسل الأموال – العقوبات
 
-11.1. **القانون المطبق:** لكل اتصال، يُطبق قانون البلد/المنطقة.
+8.1. **مزودو الدفع.** تتم معالجة المدفوعات بواسطة **مزودين خارجيين** (Stripe، إلخ). يقبل المساعد شروطهم وإجراءات التحقق **KYC/مكافحة غسل الأموال** الخاصة بهم.
 
-11.2. **التحكيم ICC:** تُحل جميع النزاعات وفق قواعد ICC. المكان: تالين، إستونيا؛ اللغة: الفرنسية.
+8.2. يجوز لـ SOS Expat تأجيل أو حجز أو إلغاء المدفوعات في حالة الاشتباه في الاحتيال أو عدم الامتثال أو الأمر القانوني.
 
-11.3. **التنازل عن الدعوى الجماعية.**
+8.3. **العقوبات الدولية والحظر.** يُقر المساعد ويضمن:
+- (أ) عدم ظهوره، مباشرة أو غير مباشرة، على **قائمة عقوبات** (OFAC/SDN، الاتحاد الأوروبي، الأمم المتحدة، HMT، أو أي قائمة عقوبات أخرى معمول بها)؛
+- (ب) عدم امتلاكه أو سيطرته، مباشرة أو غير مباشرة، من قبل شخص أو كيان يظهر على قائمة عقوبات؛
+- (ج) عدم كونه مقيماً أو مواطناً أو متواجداً في بلد خاضع لـ **حظر شامل** (حالياً: كوريا الشمالية، إيران، سوريا، كوبا، مناطق القرم/دونيتسك/لوهانسك، أو أي إقليم آخر يُضاف لاحقاً)؛
+- (د) عدم استخدام المنصة لمعاملات تشمل أشخاصاً أو كيانات أو دولاً خاضعة للعقوبات؛
+- (هـ) الامتثال لجميع **قوانين الرقابة على الصادرات** المعمول بها.
+تحتفظ SOS Expat بالحق في **تقييد أو حظر الوصول فوراً** إلى المنصة في أي إقليم خاضع للعقوبات أو الحظر، أو لأي مساعد يُشتبه في انتهاكه لهذه الأحكام، دون إشعار مسبق أو تعويض. يجوز لـ SOS Expat أيضاً أن تكون ملزمة بـ **تجميد أموال** المساعد في حالة صدور أمر من سلطة مختصة.
 
-11.4. **الاختصاص القضائي الإستوني.**
+8.4. **التزام إكمال عملية التحقق (KYC).** لاستلام المدفوعات الناتجة عن الخدمات المقدمة عبر المنصة، يلتزم المساعد بإكمال عملية التحقق من الهوية (KYC - اعرف عميلك) لدى شريكنا في الدفع Stripe في أقرب وقت ممكن بعد التسجيل. يُقر المساعد بأن عدم إكمال التحقق من الهوية يمنع تقنياً تحويل الأموال إلى حسابه البنكي.
+
+### الأموال غير المطالب بها والتحقق من الهوية KYC
+
+8.5. **حفظ الأموال المعلقة.** عندما يتم دفع مبلغ من قبل مستخدم مقابل خدمة قدمها مساعد لم يُكمل التحقق من هويته، تُحفظ الأموال المقابلة لحصة المساعد (بعد خصم رسوم التوصيل للمنصة) في حساب ضمان. تلتزم المنصة بـ:
+- إشعار المساعد بالبريد الإلكتروني بوجود أموال معلقة؛
+- إرسال تذكيرات منتظمة (في 7 أيام، 30 يوماً، 60 يوماً، 90 يوماً، 120 يوماً، و150 يوماً)؛
+- تزويد المساعد بجميع الوسائل اللازمة لإكمال التحقق من هويته.
+
+8.6. **الأموال غير المطالب بها والسقوط.** في حال عدم إكمال التحقق من الهوية خلال **مائة وثمانين (180) يوماً** من تاريخ أول دفعة معلقة، ورغم الإشعارات المنصوص عليها في المادة 8.5، تُعتبر الأموال **متخلى عنها** من قبل المساعد. يُقر المساعد ويقبل صراحةً أن:
+- (أ) الأموال غير المطالب بها خلال هذه الفترة ستؤول نهائياً للمنصة كتعويض جزافي عن تكاليف الإدارة والحفظ ومحاولات الاتصال؛
+- (ب) هذا الاكتساب هو مقابل التكاليف الإدارية التي تتحملها المنصة لإدارة الأموال غير المطالب بها؛
+- (ج) يتنازل صراحةً عن أي مطالبة بهذه الأموال بعد انقضاء فترة 180 يوماً.
+
+8.7. **المطالبة الاستثنائية.** استثناءً من المادة 8.6، يجوز للمساعد تقديم طلب مطالبة مسبب خلال مدة أقصاها **اثنا عشر (12) شهراً** بعد انقضاء فترة 180 يوماً، فقط في الحالات التالية: عدم القدرة الطبية الموثقة، القوة القاهرة المبررة حسب الأصول، أو الخطأ التقني المنسوب للمنصة. ستدرس المنصة الطلب خلال 30 يوماً وتحتفظ بالحق في قبول أو رفض المطالبة. في حالة القبول، ستُحتجز رسوم معالجة قدرها **عشرون بالمائة (20%)** من المبلغ المسترد.
+
+8.8. **القبول الصريح.** بالتسجيل على المنصة كمساعد، يُقر بأنه اطلع على هذه الشروط المتعلقة بالأموال غير المطالب بها ويقبلها صراحةً. يُشكل هذا القبول شرطاً جوهرياً وحاسماً للوصول إلى وضع مقدم الخدمة على المنصة.
+
+8.9. **التعاون القانوني.** يلتزم المساعد بالتعاون مع SOS Expat والسلطات المختصة في حالة التحقيق المتعلق بغسل الأموال أو تمويل الإرهاب أو أي جريمة مالية أخرى.
 
 ---
 
-## 12. متفرقات
+## 9. البيانات الشخصية (الإطار العالمي – GDPR/DSA)
 
-12.1. **النقل.** يمكن لـ SOS Expat نقل حقوقها.
+9.1. **الأدوار.** فيما يتعلق ببيانات المستخدمين المستلمة لأغراض التوصيل، يعمل كل من **SOS Expat والمساعد** **كل منهما** بصفته **مسؤول معالجة** لأغراضه الخاصة، وفقاً لـ **اللائحة (الاتحاد الأوروبي) 2016/679 (GDPR)**.
 
-12.2. **الاتفاق الكامل.**
+9.2. **الأسس والأغراض.** تنفيذ العقد (التوصيل)، المصالح المشروعة (الأمان، منع الاحتيال، التحسين)، الامتثال القانوني (مكافحة غسل الأموال، العقوبات)، والموافقة عند الاقتضاء.
 
-12.3. **الإشعارات.** عبر النشر على المنصة أو نموذج الاتصال.
+9.3. **النقل الدولي** مع **ضمانات مناسبة** عند الاقتضاء (البنود التعاقدية النموذجية، قرارات الملاءمة، إلخ).
 
-12.4. **التفسير.**
+9.4. **الحقوق والاتصال.** ممارسة الحقوق (الوصول، التصحيح، المحو، قابلية النقل، الاعتراض) عبر **نموذج الاتصال** الخاص بالمنصة.
 
-12.5. **اللغات.** النسخة الفرنسية هي النسخة الأصلية.
+9.5. **الأمان.** تدابير تقنية/تنظيمية معقولة؛ الإخطار بالانتهاكات وفقاً للقوانين المعمول بها (72 ساعة وفقاً لـ GDPR).
 
-12.6. **الاستقلالية.**
+9.6. يعالج المساعد البيانات وفقاً لقانون **بلد التدخل**.
 
-12.7. **عدم التنازل.**
+9.7. **الامتثال لـ DSA.** تعمل المنصة بصفتها **خدمة وسيطة** بموجب **اللائحة (الاتحاد الأوروبي) 2022/2065 (قانون الخدمات الرقمية)**. تنفذ SOS Expat آليات للإبلاغ عن المحتوى غير القانوني وتتعاون مع السلطات المختصة وفقاً لـ DSA.
 
 ---
 
-## 13. الاتصال
+## 10. الملكية الفكرية
 
-لأي أسئلة أو مسائل قانونية، يرجى التواصل معنا عبر:
+المنصة وعلاماتها التجارية وشعاراتها وقواعد بياناتها ومحتوياتها محمية. لا تُنقل أي حقوق للمساعد، باستثناء حق **شخصي وغير حصري وغير قابل للتحويل** للوصول خلال مدة هذه الشروط. المحتوى المقدم من المساعد يخضع لـ **ترخيص عالمي وغير حصري** لصالح SOS Expat للاستضافة والعرض على المنصة.
+
+---
+
+## 11. الضمانات والمسؤولية والتعويض
+
+11.1. **لا ضمان** فيما يتعلق بالنتائج/الجودة/حجم الأعمال؛ المنصة مقدمة **"كما هي"**.
+
+11.2. **تحديد المسؤولية**: بالقدر المسموح به، تقتصر المسؤولية الإجمالية لـ SOS Expat تجاه المساعد على **الأضرار المباشرة** و**لا يمكن أن تتجاوز** إجمالي **رسوم التوصيل** التي حصلت عليها SOS Expat بموجب **المعاملة** محل المطالبة.
+
+11.3. **الاستثناءات**: لا أضرار غير مباشرة/تبعية/خاصة/عقابية (خسارة الأرباح، الفرص، العملاء، الإضرار بالسمعة، تكاليف الاستبدال، إلخ).
+
+11.4. **التعويض**: **يعوض المساعد ويضمن** SOS Expat (وكذلك الشركات التابعة لها ومديريها وموظفيها ووكلائها) ضد أي مطالبة أو خسارة أو ضرر أو عقوبة أو مصاريف (بما في ذلك أتعاب المحاماة) تتعلق بـ (أ) مخالفته للشروط/القوانين، (ب) محتوياته، (ج) خدماته/إغفالاته، (د) عدم امتلاك تصاريح العمل/الهجرة/التراخيص.
+
+11.5. **التنازل عن حق الرجوع.** يتنازل المساعد **صراحةً وبشكل لا رجعة فيه** عن أي حق رجوع ضد SOS Expat بموجب (أ) الأضرار الناتجة عن تقديم الخدمات، (ب) الخسائر غير المباشرة، (ج) النزاعات التعاقدية مع المستخدمين، (د) أي قصور في الخدمات المقدمة من المساعد. يسري هذا التنازل بأقصى حد يسمح به القانون.
+
+11.6. **لا تمثيل.** لا شيء يُنشئ علاقة وكالة أو توظيف أو شراكة أو مشروع مشترك بين SOS Expat والمساعد.
+
+11.7. **القوة القاهرة.** لا تتحمل SOS Expat المسؤولية عن التأخيرات أو الإخفاقات الناتجة عن أحداث **القوة القاهرة** (كارثة طبيعية، حرب، وباء، هجوم إلكتروني، انقطاع الكهرباء أو الإنترنت، قرار حكومي، إضراب، إلخ).
+
+11.8. **البقاء.** تبقى المواد التالية سارية بعد إنهاء أو انتهاء هذه الشروط، أياً كان السبب: المواد 2 (أدلة القبول)، 3.7 (الإقرارات)، 5 (قواعد الاستخدام)، 7 (الرسوم والمدفوعات)، 8 (KYC والعقوبات)، 9 (البيانات الشخصية)، 10 (الملكية الفكرية)، 11 (المسؤولية والتعويض)، 12 (القانون المطبق والتحكيم)، 13 (بنود الحماية) و14 (متفرقات). تظل هذه البنود سارية طالما كان ذلك ضرورياً لإنتاج آثارها.
+
+---
+
+## 12. القانون المطبق – التحكيم – الاختصاص القضائي الإستوني – الدعاوى الجماعية
+
+12.1. **القانون المطبق.** تخضع هذه الشروط وتفسيرها وصحتها وتنفيذها حصرياً لـ **القانون الإستوني**، باستثناء قواعد تنازع القوانين. بالنسبة للمسائل المتعلقة بتقديم الخدمات في بلد تدخل محدد، تُطبق القواعد المهنية وقواعد النظام العام المحلية لذلك البلد بشكل تكميلي بالقدر الذي تكون فيه آمرة.
+
+12.2. **التحكيم الدولي الإلزامي.** أي نزاع أو خلاف أو مطالبة ناشئة عن هذه الشروط أو متعلقة بها، بما في ذلك صحتها وتفسيرها وتنفيذها أو إنهائها، يُفصل فيها نهائياً بـ **التحكيم** وفقاً لنظام التحكيم لـ **غرفة التجارة الدولية (ICC)**.
+- **مقر التحكيم**: تالين، إستونيا؛
+- **لغة التحكيم**: **الإنجليزية**؛
+- **عدد المحكمين**: محكم واحد (1)، إلا إذا تجاوز المبلغ محل النزاع 100,000 يورو، وفي هذه الحالة ثلاثة (3) محكمين؛
+- **القانون المطبق على الموضوع**: القانون الإستوني (المادة 12.1)؛
+- **الإجراءات**: سرية. يلتزم الطرفان بعدم الإفصاح عن وجود أو محتوى أو نتيجة التحكيم، إلا بموجب التزام قانوني أو لتنفيذ الحكم.
+حكم التحكيم **نهائي وملزم** للطرفين. يتنازل الطرفان عن أي طعن بالإلغاء بالقدر الذي يسمح به القانون.
+
+12.3. **التنازل عن الدعاوى الجماعية وهيئة المحلفين.** بأقصى حد يسمح به القانون المعمول به:
+- (أ) يتنازل المساعد عن المشاركة في أي **دعوى جماعية أو دعوى مجموعة أو دعوى تمثيلية** ضد SOS Expat؛
+- (ب) يُحل أي نزاع على **أساس فردي فقط**؛
+- (ج) يتنازل المساعد صراحةً عن أي **حق في المحاكمة أمام هيئة محلفين** (التنازل عن هيئة المحلفين)؛
+- (د) يتنازل المساعد عن أي دعوى جماعية أو دعوى موحدة أو دعوى تمثيلية بموجب القانون الأمريكي أو أي قانون مماثل.
+
+12.4. **الاختصاص الحصري للمحاكم الإستونية.** لأي مطالبة غير قابلة للتحكيم وفقاً للقانون المعمول به، وللتدابير المؤقتة أو التحفظية العاجلة قبل تشكيل هيئة التحكيم، ولتنفيذ أحكام التحكيم، تكون **لمحاكم تالين (إستونيا)** **الاختصاص الحصري**. المساعد:
+- (أ) يوافق بشكل لا رجعة فيه على هذا الاختصاص؛
+- (ب) يتنازل عن أي اعتراض على أساس **المحكمة غير الملائمة**؛
+- (ج) يتنازل عن أي اعتراض مبني على انعدام الاختصاص الشخصي؛
+- (د) يقبل أن أي تبليغ يمكن أن يتم على عنوان البريد الإلكتروني المسجل على المنصة.
+
+12.5. **الوساطة المسبقة الإلزامية.** قبل أي تحكيم، يلتزم الطرفان بمحاولة حل النزاع ودياً عن طريق **التفاوض بحسن نية** لمدة **ثلاثين (30) يوماً** من الإخطار الكتابي بالنزاع. يجب إرسال هذا الإخطار بالبريد الإلكتروني مع إشعار بالاستلام إلى عنوان الاتصال الخاص بالطرف الآخر. فشل الوساطة شرط مسبق لتقديم طلب التحكيم.
+
+12.6. **التقادم.** يجب تقديم أي دعوى أو مطالبة من المساعد ضد SOS Expat خلال **سنة واحدة (1)** من تاريخ الواقعة المنشئة، وإلا سقط الحق نهائياً، بالقدر الذي يسمح به القانون المعمول به.
+
+---
+
+## 13. بنود الحماية الدولية
+
+13.1. **مكافحة الفساد.** يلتزم المساعد بعدم تقديم أو وعد أو دفع رشاوى أو مزايا غير مشروعة لموظفين عموميين أو خاصين. يلتزم بقوانين مكافحة الفساد المعمول بها (FCPA، قانون الرشوة البريطاني، قانون سابان الثاني، إلخ).
+
+13.2. **سرية الاتصالات.** الاتصالات التي تتم عبر المنصة (الرسائل، المكالمات الهاتفية) **سرية**. يمتنع المساعد عن تسجيلها أو إفشائها أو استخدامها لأغراض أخرى غير الخدمة المتفق عليها، إلا بإذن كتابي أو التزام قانوني.
+
+13.3. **عدم الاستقطاب.** خلال مدة هذه الشروط و**اثني عشر (12) شهراً** بعد إنهائها، يمتنع المساعد عن استقطاب المستخدمين الذين تعرف عليهم عبر المنصة مباشرةً لتجنب رسوم التوصيل.
+
+13.4. **المسؤولية الحصرية للمساعد.** المساعد هو **المسؤول الوحيد** عن جودة ودقة ومشروعية الخدمات التي يقدمها. SOS Expat **لا تضمن** النصائح أو المعلومات أو الخدمات المقدمة من المساعد و**تُخلي مسؤوليتها** عن أي ضرر يلحق بالمستخدم بسبب خدمات المساعد.
+
+13.5. **انعدام علاقة الاستشارة.** SOS Expat **ليست شركة استشارات**، ولا مقدم خدمات قانونية أو ضريبية أو طبية أو منظمة. تقتصر المنصة على **التوصيل**. أي علاقة استشارية تُقام **حصرياً** بين المساعد والمستخدم، **خارج** SOS Expat.
+
+13.6. **النزاعات بين المساعد والمستخدم.** أي نزاع بين المساعد والمستخدم يقع **حصرياً** ضمن علاقتهما المباشرة. SOS Expat **لا تتدخل** في هذه النزاعات و**لا يمكن إشراكها** كطرف أو ضامن أو وسيط.
+
+---
+
+## 14. متفرقات
+
+14.1. **التنازل.** يجوز لـ SOS Expat التنازل عن هذه الشروط لكيان من مجموعتها أو لخلف؛ لا يجوز للمساعد التنازل دون موافقة كتابية من SOS Expat.
+
+14.2. **الاتفاق الكامل.** تُشكل هذه الشروط الاتفاق الكامل وتحل محل أي اتفاق سابق يتعلق بنفس الموضوع.
+
+14.3. **الإشعارات.** عبر النشر على المنصة أو الإشعار داخل التطبيق أو عبر نموذج الاتصال.
+
+14.4. **التفسير.** العناوين إرشادية فقط. لا تُطبق قاعدة **التفسير ضد المحرر**.
+
+14.5. **اللغات.** قد تُقدم ترجمات؛ **الإنجليزية هي السائدة** للتفسير.
+
+14.6. **البطلان الجزئي والقابلية للتجزئة.** إذا أُعلن بطلان أو عدم نفاذ أي حكم من هذه الشروط من قبل محكمة أو محكم مختص:
+- (أ) لا يؤثر هذا البطلان على صحة الأحكام الأخرى التي تظل سارية؛
+- (ب) يُستبدل الحكم الباطل بحكم صحيح ذي أثر اقتصادي مماثل، قدر الإمكان؛
+- (ج) يتفاوض الطرفان بحسن نية للاتفاق على حكم بديل.
+
+14.7. **القابلية للتجزئة الجغرافية.** إذا كان حكم من هذه الشروط غير قابل للتطبيق أو غير قانوني في ولاية قضائية محددة:
+- (أ) لا يُطبق هذا الحكم في تلك الولاية القضائية فقط؛
+- (ب) يظل قابلاً للتطبيق بالكامل في جميع الولايات القضائية الأخرى؛
+- (ج) لا يؤثر عدم قابلية التطبيق المحلي على الصحة العامة للشروط.
+
+14.8. **عدم التنازل.** إن عدم ممارسة أو التأخر في ممارسة حق من قبل SOS Expat لا يُعد تنازلاً عن هذا الحق. يجب أن يكون أي تنازل صريحاً وكتابياً. التنازل المحدد لا يُشكل تنازلاً عاماً.
+
+14.9. **استقلالية البنود.** كل بند من هذه الشروط مستقل. بطلان أي بند لا يؤدي إلى بطلان بنود تحديد المسؤولية أو التعويض أو التحكيم أو الاختصاص القضائي، التي تظل قابلة للتطبيق بأقصى حد يسمح به القانون.
+
+14.10. **الغير.** لا تمنح هذه الشروط أي حقوق للغير (باستثناء الشركات التابعة لـ SOS Expat المذكورة صراحةً). لا يجوز لأي طرف ثالث الاستفادة من أحكام هذه الشروط.
+
+---
+
+## 15. الاتصال
+
+لأي سؤال أو طلب قانوني: **https://sos-expat.com/contact**
 `;
 
   const defaultPt = `

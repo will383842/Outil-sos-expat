@@ -100,19 +100,19 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
     accountHolderName: '',
     accountNumber: '',
     country: '',
-    currency: 'XOF',
+    currency: 'USD',
     iban: '',
     swiftBic: '',
   });
 
-  // Format amount in cents to display
+  // Format amount in cents to USD display (all amounts stored in cents)
   const formatAmount = (cents: number) => {
     return new Intl.NumberFormat(intl.locale, {
       style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(cents);
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(cents / 100);
   };
 
   // Get final amount to withdraw

@@ -79,6 +79,7 @@ export async function beginOutboundCallForSession(callSessionId: string) {
     }
 
     // 🔧 FIX LANGUAGE ISSUE BEFORE CALLING TwilioCallManager:
+    // Default to English ('en') as universal fallback when no language is specified
     console.log(`\n🔧 [Adapter][${debugId}] STEP 5: Language check...`);
     if (!sessionData?.metadata?.clientLanguages) {
       console.log(`🔧 [Adapter][${debugId}] Adding missing clientLanguages (defaulting to ['en'])`);

@@ -18,8 +18,12 @@ import {
   SupportedChatterLanguage,
   ChatterPlatform,
 } from "../types";
-import { getChatterConfigCached, areRegistrationsEnabled, isCountrySupported } from "../utils";
-import { checkChatterRegistrationFraud, hashIP } from "../utils";
+import { getChatterConfigCached, areRegistrationsEnabled, isCountrySupported, hashIP } from "../utils";
+import {
+  performFraudCheck,
+  storeRegistrationIP,
+  flagForManualReview,
+} from "../antiFraud";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -72,22 +76,18 @@ export const registerChatter = onCall(
       throw new HttpsError("invalid-argument", "Valid country code is required");
     }
 
-    if (!input.interventionCountries || input.interventionCountries.length === 0) {
-      throw new HttpsError("invalid-argument", "At least one intervention country is required");
-    }
+    // interventionCountries is now optional - defaults to user's country if not provided
 
     if (!input.language || !VALID_LANGUAGES.includes(input.language)) {
       throw new HttpsError("invalid-argument", "Valid language is required");
     }
 
-    if (!input.platforms || input.platforms.length === 0) {
-      throw new HttpsError("invalid-argument", "At least one platform is required");
-    }
-
-    // Validate platforms
-    for (const platform of input.platforms) {
-      if (!VALID_PLATFORMS.includes(platform)) {
-        throw new HttpsError("invalid-argument", `Invalid platform: ${platform}`);
+    // Validate platforms if provided (optional field)
+    if (input.platforms && input.platforms.length > 0) {
+      for (const platform of input.platforms) {
+        if (!VALID_PLATFORMS.includes(platform)) {
+          throw new HttpsError("invalid-argument", `Invalid platform: ${platform}`);
+        }
       }
     }
 
@@ -217,27 +217,7 @@ export const registerChatter = onCall(
         throw new HttpsError("already-exists", "A chatter with this email already exists");
       }
 
-      // 8. Fraud check
-      const ip = request.rawRequest?.ip || "unknown";
-      const fraudResult = await checkChatterRegistrationFraud(
-        input.email,
-        ip,
-        input.recruitmentCode
-      );
-
-      if (fraudResult.shouldBlock) {
-        logger.warn("[registerChatter] Blocked by fraud detection", {
-          userId,
-          email: input.email,
-          flags: fraudResult.flags,
-        });
-        throw new HttpsError(
-          "permission-denied",
-          "Registration blocked. Please contact support if this is an error."
-        );
-      }
-
-      // 9. Find recruiter if recruitment code provided
+      // 8. Find recruiter FIRST (needed for fraud check)
       let recruitedBy: string | null = null;
       let recruitedByCode: string | null = null;
 
@@ -255,6 +235,37 @@ export const registerChatter = onCall(
         }
       }
 
+      // 9. ENHANCED FRAUD CHECK using new anti-fraud system
+      const ip = request.rawRequest?.ip || "unknown";
+      const fraudResult = await performFraudCheck({
+        ip,
+        email: input.email,
+        referrerId: recruitedBy || undefined,
+        userId,
+      });
+
+      if (fraudResult.shouldBlock) {
+        logger.warn("[registerChatter] Blocked by fraud detection", {
+          userId,
+          email: input.email,
+          flags: fraudResult.flags,
+          severity: fraudResult.severity,
+        });
+        throw new HttpsError(
+          "permission-denied",
+          "Registration blocked. Please contact support if this is an error."
+        );
+      }
+
+      // Flag for manual review if needed (but don't block)
+      if (fraudResult.requiresManualReview) {
+        await flagForManualReview(userId, fraudResult.flags, fraudResult.severity, {
+          email: input.email,
+          country: input.country,
+          recruitedBy,
+        });
+      }
+
       // 10. Create chatter document
       const now = Timestamp.now();
 
@@ -265,10 +276,10 @@ export const registerChatter = onCall(
         lastName: input.lastName.trim(),
         phone: input.phone?.trim(),
         country: input.country.toUpperCase(),
-        interventionCountries: input.interventionCountries.map((c) => c.toUpperCase()),
+        interventionCountries: input.interventionCountries?.map((c) => c.toUpperCase()) || [input.country.toUpperCase()],
         language: input.language,
         additionalLanguages: input.additionalLanguages || [],
-        platforms: input.platforms,
+        platforms: input.platforms ?? [],
         bio: input.bio?.trim(),
 
         status: "pending_quiz",
@@ -300,6 +311,10 @@ export const registerChatter = onCall(
         currentMonthRank: null,
         bestRank: null,
 
+        // Monthly top multiplier (reward for top 3)
+        monthlyTopMultiplier: 1.0, // No bonus by default
+        monthlyTopMultiplierMonth: null,
+
         zoomMeetingsAttended: 0,
         lastZoomAttendance: null,
 
@@ -329,9 +344,28 @@ export const registerChatter = onCall(
         threshold50Reached: false,
         tierBonusesPaid: [],
 
+        // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
+        totalClientCalls: 0,
+        isActivated: false,
+        activatedAt: null,
+        activationBonusPaid: false,
+
         createdAt: now,
         updatedAt: now,
         lastLoginAt: now,
+
+        // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
+        termsAccepted: input.acceptTerms ?? true,
+        termsAcceptedAt: input.termsAcceptedAt || now.toDate().toISOString(),
+        termsVersion: input.termsVersion || "3.0",
+        termsType: input.termsType || "terms_chatters",
+        termsAcceptanceMeta: input.termsAcceptanceMeta || {
+          userAgent: request.rawRequest?.headers?.['user-agent'] || "unknown",
+          language: input.language || "en",
+          timestamp: Date.now(),
+          acceptanceMethod: "checkbox_click",
+          ipAddress: request.rawRequest?.ip || "unknown",
+        },
       };
 
       // 11. Create user document and chatter document in transaction
@@ -386,6 +420,9 @@ export const registerChatter = onCall(
           });
         }
       });
+
+      // Store IP address for anti-fraud tracking (in separate collection for privacy)
+      await storeRegistrationIP(userId, ip, input.email);
 
       logger.info("[registerChatter] Chatter registered", {
         chatterId: userId,

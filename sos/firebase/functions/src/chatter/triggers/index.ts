@@ -12,3 +12,6 @@ export {
 
 // Referral system trigger
 export { chatterOnChatterEarningsUpdated } from "./onChatterEarningsUpdated";
+
+// Activity feed trigger
+export { chatterOnCommissionCreated } from "./onCommissionCreated";

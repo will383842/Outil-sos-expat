@@ -39,8 +39,8 @@ function getStripe(): Stripe {
 
 // Configuration simplifiee
 export const REFUND_CONFIG = {
-  // Duree minimum pour considerer un appel comme "effectue" (2 minutes)
-  MIN_CALL_DURATION_SECONDS: 120,
+  // Duree minimum pour considerer un appel comme "effectue" (1 minute) - P0 FIX 2026-02-01
+  MIN_CALL_DURATION_SECONDS: 60,
 
   // Statuts de remboursement
   STATUS: {

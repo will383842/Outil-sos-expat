@@ -257,3 +257,142 @@ export function getValidationDelayMs(config: ChatterConfig): number {
 export function getReleaseDelayMs(config: ChatterConfig): number {
   return config.releaseDelayHours * 60 * 60 * 1000;
 }
+
+// ============================================================================
+// NEW SIMPLIFIED COMMISSION SYSTEM (2026)
+// ============================================================================
+
+/**
+ * Get the flash bonus multiplier (1.0 if not active or expired)
+ */
+export function getFlashBonusMultiplier(config: ChatterConfig): number {
+  if (!config.flashBonusActive) {
+    return 1.0;
+  }
+
+  // Check if flash bonus has expired
+  if (config.flashBonusEndsAt) {
+    const now = Date.now();
+    const endsAt = config.flashBonusEndsAt.toMillis();
+    if (now > endsAt) {
+      return 1.0;
+    }
+  }
+
+  return config.flashBonusMultiplier || 1.0;
+}
+
+/**
+ * Get commission amount for a direct client call
+ * Applies flash bonus multiplier if active
+ */
+export function getClientCallCommission(config: ChatterConfig): number {
+  const base = config.commissionClientCallAmount || 1000; // Default $10
+  const flashMultiplier = getFlashBonusMultiplier(config);
+  return Math.round(base * flashMultiplier);
+}
+
+/**
+ * Get commission amount for N1 referral call
+ * Applies flash bonus multiplier if active
+ */
+export function getN1CallCommission(config: ChatterConfig): number {
+  const base = config.commissionN1CallAmount || 100; // Default $1
+  const flashMultiplier = getFlashBonusMultiplier(config);
+  return Math.round(base * flashMultiplier);
+}
+
+/**
+ * Get commission amount for N2 referral call
+ * Applies flash bonus multiplier if active
+ */
+export function getN2CallCommission(config: ChatterConfig): number {
+  const base = config.commissionN2CallAmount || 50; // Default $0.50
+  const flashMultiplier = getFlashBonusMultiplier(config);
+  return Math.round(base * flashMultiplier);
+}
+
+/**
+ * Get activation bonus amount (after referral's 2nd call)
+ * Applies flash bonus multiplier if active
+ */
+export function getActivationBonusAmount(config: ChatterConfig): number {
+  const base = config.commissionActivationBonusAmount || 500; // Default $5
+  const flashMultiplier = getFlashBonusMultiplier(config);
+  return Math.round(base * flashMultiplier);
+}
+
+/**
+ * Get N1 recruit bonus amount (when N1 recruits someone who activates)
+ * Applies flash bonus multiplier if active
+ */
+export function getN1RecruitBonusAmount(config: ChatterConfig): number {
+  const base = config.commissionN1RecruitBonusAmount || 100; // Default $1
+  const flashMultiplier = getFlashBonusMultiplier(config);
+  return Math.round(base * flashMultiplier);
+}
+
+/**
+ * Get the number of calls required for activation
+ */
+export function getActivationCallsRequired(config: ChatterConfig): number {
+  return config.activationCallsRequired || 2;
+}
+
+/**
+ * Get commission amount for recruited provider's call
+ * Applies flash bonus multiplier if active
+ */
+export function getProviderCallCommission(config: ChatterConfig): number {
+  const base = config.commissionProviderCallAmount || 500; // Default $5
+  const flashMultiplier = getFlashBonusMultiplier(config);
+  return Math.round(base * flashMultiplier);
+}
+
+/**
+ * Get the duration (in months) for provider recruitment commission
+ */
+export function getProviderRecruitmentDurationMonths(config: ChatterConfig): number {
+  return config.providerRecruitmentDurationMonths || 6;
+}
+
+/**
+ * Get streak bonus multiplier based on current streak days
+ *
+ * Streak bonuses reward consecutive activity days:
+ * - 7+ days: 1.05x (5% bonus)
+ * - 14+ days: 1.10x (10% bonus)
+ * - 30+ days: 1.20x (20% bonus)
+ * - 100+ days: 1.50x (50% bonus)
+ *
+ * Returns 1.0 (no bonus) for streaks under 7 days.
+ */
+export function getStreakBonusMultiplier(
+  currentStreak: number,
+  config: ChatterConfig
+): number {
+  // No bonus for streaks under 7 days
+  if (currentStreak < 7) {
+    return 1.0;
+  }
+
+  const bonuses = config.streakBonuses || {
+    days7: 1.05,
+    days14: 1.10,
+    days30: 1.20,
+    days100: 1.50,
+  };
+
+  // Return the highest applicable bonus
+  if (currentStreak >= 100) {
+    return bonuses.days100;
+  }
+  if (currentStreak >= 30) {
+    return bonuses.days30;
+  }
+  if (currentStreak >= 14) {
+    return bonuses.days14;
+  }
+
+  return bonuses.days7;
+}

@@ -105,20 +105,22 @@ export const chatterOnQuizPassed = onDocumentUpdated(
         createdAt: now,
       });
 
-      // 4. If this chatter was recruited, notify the recruiter about potential future commission
-      // The actual commission will be created when this chatter refers their first client
+      // 4. If this chatter was recruited, notify the recruiter
+      // NEW SYSTEM: No commission at quiz pass. Commission comes from:
+      // - $1 per call (N1 call commission)
+      // - $5 activation bonus after 2nd client call
       if (chatter.recruitedBy) {
         const recruiterNotification: ChatterNotification = {
           id: "",
           chatterId: chatter.recruitedBy,
           type: "system",
-          title: "Votre filleul a validé son quiz !",
+          title: "Votre filleul a valid\u00e9 son quiz !",
           titleTranslations: {
             en: "Your recruit passed the quiz!",
           },
-          message: `${chatter.firstName} ${chatter.lastName.charAt(0)}. est maintenant actif. Vous recevrez une commission quand il/elle apportera son premier client.`,
+          message: `${chatter.firstName} ${chatter.lastName.charAt(0)}. est maintenant actif. Vous recevrez $1 \u00e0 chaque appel qu'il/elle g\u00e9n\u00e8re, et un bonus de $5 apr\u00e8s son 2\u00e8me appel client !`,
           messageTranslations: {
-            en: `${chatter.firstName} ${chatter.lastName.charAt(0)}. is now active. You'll receive a commission when they bring their first client.`,
+            en: `${chatter.firstName} ${chatter.lastName.charAt(0)}. is now active. You'll receive $1 for each call they generate, and a $5 bonus after their 2nd client call!`,
           },
           isRead: false,
           emailSent: false,

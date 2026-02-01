@@ -28,6 +28,9 @@ import {
   STRIPE_SECRET_KEY_TEST,
   STRIPE_SECRET_KEY_LIVE,
   STRIPE_MODE,
+  // P0 FIX 2026-02-01: PayPal secrets for stuck PayPal payments recovery
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
 } from "../lib/secrets";
 
 // Configuration
@@ -39,8 +42,8 @@ const RECOVERY_CONFIG = {
   REFUND_THRESHOLD_HOURS: 6,
   // Maximum payments to process per run
   BATCH_SIZE: 50,
-  // Minimum call duration for capture (seconds)
-  MIN_CALL_DURATION: 120,
+  // Minimum call duration for capture (seconds) - P0 FIX 2026-02-01: Reduced from 2 min to 1 min
+  MIN_CALL_DURATION: 60,
 };
 
 /**
@@ -68,7 +71,8 @@ export const stuckPaymentsRecovery = onSchedule(
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
     memory: "512MiB",
-    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
+    // P0 FIX 2026-02-01: Added PayPal secrets for stuck PayPal payments recovery
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async () => {
     console.log("🔧 [StuckPayments] Starting stuck payments recovery...");
@@ -83,19 +87,25 @@ export const stuckPaymentsRecovery = onSchedule(
       transfersRecovered: 0,
       transfersSucceeded: 0,
       transfersFailed: 0,
+      // P0 FIX 2026-02-01: Add PayPal stuck payments recovery results
+      paypalCaptured: 0,
+      paypalVoided: 0,
     };
 
     try {
-      // 1. Find and capture payments for completed calls
+      // 1. Find and capture Stripe payments for completed calls
       await captureCompletedCallPayments(db, results);
 
-      // 2. Find and refund very old stuck payments
+      // 2. P0 FIX 2026-02-01: Find and capture PayPal payments for completed calls
+      await captureCompletedPayPalPayments(db, results);
+
+      // 3. Find and refund very old stuck Stripe payments
       await refundOldStuckPayments(db, results);
 
-      // 3. Alert about remaining stuck payments
+      // 4. Alert about remaining stuck payments
       await alertStuckPayments(db, results);
 
-      // 4. P0 FIX: Recover stuck pending_transfers (in "processing" for > 1 hour)
+      // 5. P0 FIX: Recover stuck pending_transfers (in "processing" for > 1 hour)
       try {
         const transferResults = await recoverStuckTransfers(db);
         results.transfersRecovered = transferResults.recovered;
@@ -111,14 +121,16 @@ export const stuckPaymentsRecovery = onSchedule(
 
       // Log summary if any action was taken
       const hasPaymentActions = results.captured > 0 || results.refunded > 0 || results.alerted > 0;
+      const hasPayPalActions = results.paypalCaptured > 0 || results.paypalVoided > 0;
       const hasTransferActions = results.transfersRecovered > 0;
 
-      if (hasPaymentActions || hasTransferActions) {
+      if (hasPaymentActions || hasPayPalActions || hasTransferActions) {
         await db.collection("admin_alerts").add({
           type: "stuck_payments_recovery",
           priority: results.refunded > 0 || results.transfersFailed > 0 ? "high" : "medium",
           title: "Récupération paiements/transferts bloqués",
-          message: `Paiements - Capturés: ${results.captured}, Remboursés: ${results.refunded}, Alertes: ${results.alerted}. ` +
+          message: `Stripe - Capturés: ${results.captured}, Remboursés: ${results.refunded}, Alertes: ${results.alerted}. ` +
+            `PayPal - Capturés: ${results.paypalCaptured}, Annulés: ${results.paypalVoided}. ` +
             `Transferts - Récupérés: ${results.transfersRecovered}, Réussis: ${results.transfersSucceeded}, Échoués: ${results.transfersFailed}`,
           results,
           read: false,
@@ -241,6 +253,176 @@ async function captureCompletedCallPayments(
     }
   } catch (error) {
     console.error("❌ [StuckPayments] Error in captureCompletedCallPayments:", error);
+    results.errors++;
+  }
+}
+
+/**
+ * P0 FIX 2026-02-01: Find PayPal payments stuck in AUTHORIZED where the call is completed
+ * and capture them automatically
+ *
+ * This fixes the issue where:
+ * 1. Client pays via PayPal → authorization created
+ * 2. Call completes successfully (> 2 min)
+ * 3. But payment.status in call_session is not "authorized" (maybe "pending_approval")
+ * 4. shouldCapturePayment() returns false → capture never happens
+ *
+ * This recovery job finds these cases and captures them.
+ */
+async function captureCompletedPayPalPayments(
+  db: admin.firestore.Firestore,
+  results: { paypalCaptured: number; paypalVoided: number; errors: number }
+): Promise<void> {
+  console.log(`💳 [StuckPayments] Looking for stuck PayPal payments...`);
+
+  try {
+    // Find PayPal orders in AUTHORIZED status that haven't been captured
+    const stuckPayPalOrders = await db
+      .collection("paypal_orders")
+      .where("status", "==", "AUTHORIZED")
+      .where("intent", "==", "AUTHORIZE")
+      .limit(RECOVERY_CONFIG.BATCH_SIZE)
+      .get();
+
+    if (stuckPayPalOrders.empty) {
+      console.log("💳 [StuckPayments] No stuck PayPal payments found");
+      return;
+    }
+
+    console.log(`💳 [StuckPayments] Found ${stuckPayPalOrders.size} stuck PayPal orders to evaluate`);
+
+    // Import PayPalManager dynamically to avoid circular dependencies
+    const { PayPalManager } = await import("../PayPalManager");
+    const paypalManager = new PayPalManager();
+
+    for (const orderDoc of stuckPayPalOrders.docs) {
+      const orderData = orderDoc.data();
+      const orderId = orderDoc.id;
+      const callSessionId = orderData.callSessionId;
+
+      if (!callSessionId) {
+        console.warn(`⚠️ [StuckPayments] PayPal order ${orderId} has no callSessionId`);
+        continue;
+      }
+
+      try {
+        // Find the associated call session
+        const sessionDoc = await db.collection("call_sessions").doc(callSessionId).get();
+
+        if (!sessionDoc.exists) {
+          console.warn(`⚠️ [StuckPayments] Call session ${callSessionId} not found for PayPal order ${orderId}`);
+          continue;
+        }
+
+        const sessionData = sessionDoc.data()!;
+        const sessionStatus = sessionData.status;
+        const paymentStatus = sessionData.payment?.status;
+
+        // Calculate duration from various sources
+        let duration = sessionData.conference?.duration || sessionData.conference?.billingDuration || 0;
+
+        // Fallback: calculate from timestamps
+        if (duration === 0 && sessionData.participants?.client?.connectedAt && sessionData.participants?.provider?.connectedAt) {
+          const clientConnected = sessionData.participants.client.connectedAt.toDate().getTime();
+          const providerConnected = sessionData.participants.provider.connectedAt.toDate().getTime();
+          const bothConnectedAt = Math.max(clientConnected, providerConnected);
+
+          const clientDisconnected = sessionData.participants.client.disconnectedAt?.toDate()?.getTime();
+          const providerDisconnected = sessionData.participants.provider.disconnectedAt?.toDate()?.getTime();
+
+          if (clientDisconnected || providerDisconnected) {
+            const firstDisconnectedAt = Math.min(
+              clientDisconnected || Infinity,
+              providerDisconnected || Infinity
+            );
+            if (firstDisconnectedAt !== Infinity) {
+              duration = Math.round((firstDisconnectedAt - bothConnectedAt) / 1000);
+            }
+          }
+        }
+
+        console.log(`💳 [StuckPayments] Evaluating PayPal order ${orderId}:`);
+        console.log(`   sessionId: ${callSessionId}`);
+        console.log(`   sessionStatus: ${sessionStatus}`);
+        console.log(`   paymentStatus: ${paymentStatus}`);
+        console.log(`   duration: ${duration}s`);
+
+        // Check if call is completed and meets minimum duration
+        const isCompleted = sessionStatus === "completed";
+        const meetsMinDuration = duration >= RECOVERY_CONFIG.MIN_CALL_DURATION;
+
+        if (isCompleted && meetsMinDuration) {
+          // Call completed successfully - capture the payment
+          console.log(`💳 [StuckPayments] CAPTURING PayPal order ${orderId} for completed call ${callSessionId}`);
+
+          try {
+            const captureResult = await paypalManager.captureOrder(orderId);
+
+            if (captureResult.success) {
+              results.paypalCaptured++;
+              console.log(`✅ [StuckPayments] Successfully captured PayPal order ${orderId}`);
+
+              // Update call session to mark as captured
+              await db.collection("call_sessions").doc(callSessionId).update({
+                "payment.status": "captured",
+                "payment.capturedAt": admin.firestore.FieldValue.serverTimestamp(),
+                "payment.paypalCaptureId": captureResult.captureId,
+                "payment.capturedBy": "stuck_payments_recovery",
+                "isPaid": true,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            } else {
+              console.error(`❌ [StuckPayments] PayPal capture failed for ${orderId}:`, captureResult);
+              results.errors++;
+            }
+          } catch (captureError) {
+            console.error(`❌ [StuckPayments] Error capturing PayPal order ${orderId}:`, captureError);
+            results.errors++;
+          }
+        } else if (sessionStatus === "failed" || sessionStatus === "cancelled") {
+          // Call failed or was cancelled - void the authorization
+          console.log(`💳 [StuckPayments] VOIDING PayPal order ${orderId} for failed/cancelled call ${callSessionId}`);
+
+          try {
+            const authorizationId = orderData.authorizationId;
+            if (authorizationId) {
+              const voidResult = await paypalManager.voidAuthorization(authorizationId);
+
+              if (voidResult.success) {
+                results.paypalVoided++;
+                console.log(`✅ [StuckPayments] Successfully voided PayPal authorization ${authorizationId}`);
+
+                // Update PayPal order status
+                await db.collection("paypal_orders").doc(orderId).update({
+                  status: "VOIDED",
+                  voidedAt: admin.firestore.FieldValue.serverTimestamp(),
+                  voidedBy: "stuck_payments_recovery",
+                });
+
+                // Update call session payment status
+                await db.collection("call_sessions").doc(callSessionId).update({
+                  "payment.status": "cancelled",
+                  "payment.cancelledAt": admin.firestore.FieldValue.serverTimestamp(),
+                  "payment.cancelledBy": "stuck_payments_recovery",
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+              }
+            }
+          } catch (voidError) {
+            console.error(`❌ [StuckPayments] Error voiding PayPal order ${orderId}:`, voidError);
+            results.errors++;
+          }
+        } else {
+          // Session still in progress or other status - leave it alone
+          console.log(`ℹ️ [StuckPayments] Skipping PayPal order ${orderId} - session status: ${sessionStatus}, duration: ${duration}s`);
+        }
+      } catch (error) {
+        console.error(`❌ [StuckPayments] Error processing PayPal order ${orderId}:`, error);
+        results.errors++;
+      }
+    }
+  } catch (error) {
+    console.error("❌ [StuckPayments] Error in captureCompletedPayPalPayments:", error);
     results.errors++;
   }
 }
@@ -394,11 +576,13 @@ async function alertStuckPayments(
 
 /**
  * Manual trigger for stuck payments recovery (admin only)
+ * P0 FIX 2026-02-01: Added PayPal recovery
  */
 export const triggerStuckPaymentsRecovery = onCall(
   {
     region: "europe-west1",
-    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
+    // P0 FIX 2026-02-01: Added PayPal secrets
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (request) => {
     if (!request.auth) {
@@ -421,10 +605,15 @@ export const triggerStuckPaymentsRecovery = onCall(
       refunded: 0,
       alerted: 0,
       errors: 0,
+      // P0 FIX 2026-02-01: Add PayPal results
+      paypalCaptured: 0,
+      paypalVoided: 0,
     };
 
     try {
       await captureCompletedCallPayments(db, results);
+      // P0 FIX 2026-02-01: Add PayPal recovery
+      await captureCompletedPayPalPayments(db, results);
       await refundOldStuckPayments(db, results);
       await alertStuckPayments(db, results);
 
@@ -440,3 +629,108 @@ export const triggerStuckPaymentsRecovery = onCall(
     }
   }
 );
+
+/**
+ * P0 FIX 2026-02-01: Manual capture for a specific PayPal payment
+ * This can be used to immediately recover a stuck PayPal payment without waiting for the scheduled job
+ */
+export const capturePayPalPaymentManually = onCall(
+  {
+    region: "europe-west1",
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    // Verify admin role
+    const db = admin.firestore();
+    const userDoc = await db.collection("users").doc(request.auth.uid).get();
+    const userData = userDoc.data();
+
+    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+      throw new HttpsError("permission-denied", "Only admins can manually capture payments");
+    }
+
+    const { callSessionId, paypalOrderId } = request.data;
+
+    if (!callSessionId && !paypalOrderId) {
+      throw new HttpsError("invalid-argument", "Either callSessionId or paypalOrderId is required");
+    }
+
+    console.log(`💳 [ManualCapture] Triggered by ${request.auth.uid} for session: ${callSessionId || paypalOrderId}`);
+
+    try {
+      let orderId = paypalOrderId;
+
+      // If callSessionId provided, get the PayPal order ID from the session
+      if (callSessionId && !paypalOrderId) {
+        const sessionDoc = await db.collection("call_sessions").doc(callSessionId).get();
+        if (!sessionDoc.exists) {
+          throw new HttpsError("not-found", `Call session ${callSessionId} not found`);
+        }
+        const sessionData = sessionDoc.data()!;
+        orderId = sessionData.payment?.paypalOrderId;
+        if (!orderId) {
+          throw new HttpsError("invalid-argument", "This session does not have a PayPal order");
+        }
+      }
+
+      // Import PayPalManager
+      const { PayPalManager } = await import("../PayPalManager");
+      const paypalManager = new PayPalManager();
+
+      // Capture the order
+      console.log(`💳 [ManualCapture] Capturing PayPal order: ${orderId}`);
+      const captureResult = await paypalManager.captureOrder(orderId);
+
+      if (captureResult.success) {
+        // Update call session
+        const finalCallSessionId = callSessionId || (await findCallSessionByPayPalOrder(db, orderId));
+        if (finalCallSessionId) {
+          await db.collection("call_sessions").doc(finalCallSessionId).update({
+            "payment.status": "captured",
+            "payment.capturedAt": admin.firestore.FieldValue.serverTimestamp(),
+            "payment.paypalCaptureId": captureResult.captureId,
+            "payment.capturedBy": `manual_${request.auth.uid}`,
+            "isPaid": true,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+
+        console.log(`✅ [ManualCapture] Successfully captured PayPal order ${orderId}`);
+        return {
+          success: true,
+          captureId: captureResult.captureId,
+          orderId,
+          callSessionId: finalCallSessionId,
+          capturedBy: request.auth.uid,
+          timestamp: new Date().toISOString(),
+        };
+      } else {
+        throw new HttpsError("internal", `PayPal capture failed: ${captureResult.status}`);
+      }
+    } catch (error) {
+      console.error("❌ [ManualCapture] Failed:", error);
+      if (error instanceof HttpsError) throw error;
+      throw new HttpsError("internal", error instanceof Error ? error.message : "Capture failed");
+    }
+  }
+);
+
+/**
+ * Helper function to find call session by PayPal order ID
+ */
+async function findCallSessionByPayPalOrder(
+  db: admin.firestore.Firestore,
+  paypalOrderId: string
+): Promise<string | null> {
+  const sessionQuery = await db
+    .collection("call_sessions")
+    .where("payment.paypalOrderId", "==", paypalOrderId)
+    .limit(1)
+    .get();
+
+  return sessionQuery.empty ? null : sessionQuery.docs[0].id;
+}

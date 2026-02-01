@@ -3,15 +3,22 @@
  * Shows gamified daily tasks that reset every 24h to motivate chatters
  *
  * Features:
- * - 5 daily tasks with XP rewards
+ * - 5 daily tasks with XP rewards (AUTO-TRACKED)
  * - Progress bar showing completion
  * - Streak counter for consecutive days
  * - Bonus reward for completing all tasks
  * - Confetti celebration on completion
  * - Mobile-first swipeable design
+ *
+ * TRACKABLE MISSIONS (not manual checkboxes):
+ * - Share link 3x: tracked via ShareButtons clicks
+ * - Login: auto-tracked on dashboard load
+ * - Send team message: tracked via TeamMessagesCard
+ * - Watch training video: tracked on video completion
+ * - Generate client call: tracked server-side
  */
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { memo, useState, useEffect, useRef, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import Confetti from 'react-confetti';
@@ -22,15 +29,17 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Facebook,
+  Share2,
+  LogIn,
   MessageCircle,
-  Users,
-  Trophy,
-  UserPlus,
+  PlayCircle,
+  Phone,
   Sparkles,
   Clock,
   Zap,
+  Lock,
 } from 'lucide-react';
+import { useChatterMissions, type Mission } from '@/hooks/useChatterMissions';
 
 // Design tokens - matching existing Chatter card styles
 const UI = {
@@ -42,9 +51,10 @@ const UI = {
   },
 } as const;
 
-// Task definitions with XP rewards
+// Task definitions with XP rewards - mapped to useChatterMissions
 interface DailyTask {
   id: string;
+  missionId: string; // Maps to useChatterMissions mission id
   icon: React.ElementType;
   titleKey: string;
   defaultTitle: string;
@@ -57,56 +67,61 @@ interface DailyTask {
 
 const DAILY_TASKS: DailyTask[] = [
   {
-    id: 'facebook_share',
-    icon: Facebook,
-    titleKey: 'chatter.dailyMissions.facebook.title',
-    defaultTitle: 'Share on Facebook',
-    descriptionKey: 'chatter.dailyMissions.facebook.desc',
-    defaultDescription: 'Share your link on 3 Facebook groups',
+    id: 'share_link',
+    missionId: 'share',
+    icon: Share2,
+    titleKey: 'chatter.dailyMissions.share.title',
+    defaultTitle: 'Partage ton lien 3 fois',
+    descriptionKey: 'chatter.dailyMissions.share.desc',
+    defaultDescription: 'Partage ton lien sur les reseaux sociaux',
     xp: 50,
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'bg-blue-100 dark:bg-blue-900/30',
   },
   {
-    id: 'whatsapp_status',
-    icon: MessageCircle,
-    titleKey: 'chatter.dailyMissions.whatsapp.title',
-    defaultTitle: 'WhatsApp Status',
-    descriptionKey: 'chatter.dailyMissions.whatsapp.desc',
-    defaultDescription: 'Post on WhatsApp status',
-    xp: 30,
+    id: 'daily_login',
+    missionId: 'login',
+    icon: LogIn,
+    titleKey: 'chatter.dailyMissions.login.title',
+    defaultTitle: 'Connecte-toi a l\'app',
+    descriptionKey: 'chatter.dailyMissions.login.desc',
+    defaultDescription: 'Connexion quotidienne completee',
+    xp: 15,
     color: 'text-green-600 dark:text-green-400',
     bgColor: 'bg-green-100 dark:bg-green-900/30',
   },
   {
-    id: 'help_expats',
-    icon: Users,
-    titleKey: 'chatter.dailyMissions.help.title',
-    defaultTitle: 'Help Expats',
-    descriptionKey: 'chatter.dailyMissions.help.desc',
-    defaultDescription: 'Reply to 5 expat questions online',
-    xp: 75,
+    id: 'team_message',
+    missionId: 'message',
+    icon: MessageCircle,
+    titleKey: 'chatter.dailyMissions.message.title',
+    defaultTitle: 'Envoie 1 message a un equipier',
+    descriptionKey: 'chatter.dailyMissions.message.desc',
+    defaultDescription: 'Motive ton equipe avec un message',
+    xp: 30,
     color: 'text-purple-600 dark:text-purple-400',
     bgColor: 'bg-purple-100 dark:bg-purple-900/30',
   },
   {
-    id: 'check_leaderboard',
-    icon: Trophy,
-    titleKey: 'chatter.dailyMissions.leaderboard.title',
-    defaultTitle: 'Check Leaderboard',
-    descriptionKey: 'chatter.dailyMissions.leaderboard.desc',
-    defaultDescription: 'View the leaderboard',
-    xp: 15,
+    id: 'watch_video',
+    missionId: 'video',
+    icon: PlayCircle,
+    titleKey: 'chatter.dailyMissions.video.title',
+    defaultTitle: 'Regarde la video formation',
+    descriptionKey: 'chatter.dailyMissions.video.desc',
+    defaultDescription: 'Apprends les techniques de vente',
+    xp: 25,
     color: 'text-yellow-600 dark:text-yellow-400',
     bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
   },
   {
-    id: 'invite_chatter',
-    icon: UserPlus,
-    titleKey: 'chatter.dailyMissions.invite.title',
-    defaultTitle: 'Invite a Chatter',
-    descriptionKey: 'chatter.dailyMissions.invite.desc',
-    defaultDescription: 'Invite 1 new chatter to join',
+    id: 'generate_call',
+    missionId: 'call',
+    icon: Phone,
+    titleKey: 'chatter.dailyMissions.call.title',
+    defaultTitle: 'Genere 1 appel client',
+    descriptionKey: 'chatter.dailyMissions.call.desc',
+    defaultDescription: 'Fais passer un client a l\'action',
     xp: 100,
     color: 'text-red-600 dark:text-red-400',
     bgColor: 'bg-red-100 dark:bg-red-900/30',
@@ -117,37 +132,35 @@ const COMPLETION_BONUS_XP = 150;
 const SWIPE_THRESHOLD = 50;
 
 interface DailyMissionsCardProps {
-  /** Initial completed task IDs (from localStorage or server) */
-  initialCompletedTasks?: string[];
   /** Current streak count */
   streak?: number;
   /** Best streak achieved */
   bestStreak?: number;
-  /** Callback when a task is completed */
-  onTaskComplete?: (taskId: string) => void;
   /** Callback when all tasks are completed */
   onAllComplete?: () => void;
-  /** Loading state */
+  /** Loading state (overrides internal loading) */
   loading?: boolean;
 }
 
-const DailyMissionsCard: React.FC<DailyMissionsCardProps> = ({
-  initialCompletedTasks = [],
+const DailyMissionsCard = memo(function DailyMissionsCard({
   streak = 0,
   bestStreak = 0,
-  onTaskComplete,
   onAllComplete,
-  loading = false,
-}) => {
+  loading: externalLoading = false,
+}: DailyMissionsCardProps) {
   const intl = useIntl();
-  const [completedTasks, setCompletedTasks] = useState<Set<string>>(
-    new Set(initialCompletedTasks)
-  );
+  const {
+    missions,
+    completedCount,
+    totalXP,
+    isLoading: missionsLoading,
+  } = useChatterMissions();
+
   const [showCelebration, setShowCelebration] = useState(false);
-  const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasShownCelebrationRef = useRef(false);
 
   // Window size for confetti
   const [windowSize, setWindowSize] = useState({
@@ -155,24 +168,27 @@ const DailyMissionsCard: React.FC<DailyMissionsCardProps> = ({
     height: typeof window !== 'undefined' ? window.innerHeight : 600,
   });
 
+  const loading = externalLoading || missionsLoading;
+
+  // Create a map of missions by id for easy lookup
+  const missionMap = useMemo(() => {
+    const map = new Map<string, Mission>();
+    missions.forEach(m => map.set(m.id, m));
+    return map;
+  }, [missions]);
+
   // Calculate derived values
-  const completedCount = completedTasks.size;
   const totalTasks = DAILY_TASKS.length;
   const progressPercent = (completedCount / totalTasks) * 100;
   const allCompleted = completedCount === totalTasks;
 
   const totalXpEarned = useMemo(() => {
-    let xp = 0;
-    DAILY_TASKS.forEach(task => {
-      if (completedTasks.has(task.id)) {
-        xp += task.xp;
-      }
-    });
+    let xp = totalXP;
     if (allCompleted) {
       xp += COMPLETION_BONUS_XP;
     }
     return xp;
-  }, [completedTasks, allCompleted]);
+  }, [totalXP, allCompleted]);
 
   const totalPossibleXp = useMemo(() => {
     return DAILY_TASKS.reduce((sum, task) => sum + task.xp, 0) + COMPLETION_BONUS_XP;
@@ -214,7 +230,8 @@ const DailyMissionsCard: React.FC<DailyMissionsCardProps> = ({
 
   // Check for all tasks completion
   useEffect(() => {
-    if (allCompleted && !showCelebration) {
+    if (allCompleted && !hasShownCelebrationRef.current) {
+      hasShownCelebrationRef.current = true;
       setShowCelebration(true);
       onAllComplete?.();
 
@@ -225,25 +242,7 @@ const DailyMissionsCard: React.FC<DailyMissionsCardProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [allCompleted, showCelebration, onAllComplete]);
-
-  // Toggle task completion
-  const toggleTask = useCallback((taskId: string) => {
-    setCompletedTasks(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(taskId)) {
-        newSet.delete(taskId);
-      } else {
-        newSet.add(taskId);
-        setJustCompleted(taskId);
-        onTaskComplete?.(taskId);
-
-        // Clear animation after delay
-        setTimeout(() => setJustCompleted(null), 600);
-      }
-      return newSet;
-    });
-  }, [onTaskComplete]);
+  }, [allCompleted, onAllComplete]);
 
   // Swipe handling for mobile
   const x = useMotionValue(0);
@@ -471,51 +470,55 @@ const DailyMissionsCard: React.FC<DailyMissionsCardProps> = ({
                 >
                   <TaskCard
                     task={DAILY_TASKS[currentCardIndex]}
-                    isCompleted={completedTasks.has(DAILY_TASKS[currentCardIndex].id)}
-                    justCompleted={justCompleted === DAILY_TASKS[currentCardIndex].id}
-                    onToggle={() => toggleTask(DAILY_TASKS[currentCardIndex].id)}
+                    mission={missionMap.get(DAILY_TASKS[currentCardIndex].missionId)}
                     intl={intl}
                   />
                 </motion.div>
               </AnimatePresence>
             </motion.div>
 
-            {/* Navigation Arrows */}
+            {/* Navigation Arrows - 44px minimum touch targets */}
             <button
               onClick={() => goToCard(currentCardIndex - 1)}
               disabled={currentCardIndex === 0}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg disabled:opacity-30 disabled:cursor-not-allowed z-10"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-11 h-11 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg disabled:opacity-30 disabled:cursor-not-allowed z-10 touch-manipulation active:scale-95"
               aria-label="Previous task"
             >
-              <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
 
             <button
               onClick={() => goToCard(currentCardIndex + 1)}
               disabled={currentCardIndex === totalTasks - 1}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg disabled:opacity-30 disabled:cursor-not-allowed z-10"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 w-11 h-11 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg disabled:opacity-30 disabled:cursor-not-allowed z-10 touch-manipulation active:scale-95"
               aria-label="Next task"
             >
-              <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
           </div>
 
-          {/* Pagination Dots */}
-          <div className="flex justify-center gap-1.5 mt-3">
-            {DAILY_TASKS.map((task, index) => (
-              <button
-                key={task.id}
-                onClick={() => goToCard(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentCardIndex
-                    ? 'w-6 bg-gradient-to-r from-red-500 to-orange-500'
-                    : completedTasks.has(task.id)
-                      ? 'bg-green-500'
-                      : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-                aria-label={`Go to task ${index + 1}`}
-              />
-            ))}
+          {/* Pagination Dots - Larger touch targets */}
+          <div className="flex justify-center gap-2 mt-4">
+            {DAILY_TASKS.map((task, index) => {
+              const mission = missionMap.get(task.missionId);
+              const isCompleted = mission?.completed ?? false;
+              return (
+                <button
+                  key={task.id}
+                  onClick={() => goToCard(index)}
+                  className={`min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation`}
+                  aria-label={`Go to task ${index + 1}`}
+                >
+                  <span className={`block rounded-full transition-all ${
+                    index === currentCardIndex
+                      ? 'w-6 h-2.5 bg-gradient-to-r from-red-500 to-orange-500'
+                      : isCompleted
+                        ? 'w-2.5 h-2.5 bg-green-500'
+                        : 'w-2.5 h-2.5 bg-gray-300 dark:bg-gray-600'
+                  }`} />
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -526,9 +529,7 @@ const DailyMissionsCard: React.FC<DailyMissionsCardProps> = ({
               <TaskListItem
                 key={task.id}
                 task={task}
-                isCompleted={completedTasks.has(task.id)}
-                justCompleted={justCompleted === task.id}
-                onToggle={() => toggleTask(task.id)}
+                mission={missionMap.get(task.missionId)}
                 isExpanded={isExpanded}
                 intl={intl}
               />
@@ -567,25 +568,25 @@ const DailyMissionsCard: React.FC<DailyMissionsCardProps> = ({
       </div>
     </>
   );
-};
+});
 
 // Task Card for Mobile Swipe View
 interface TaskCardProps {
   task: DailyTask;
-  isCompleted: boolean;
-  justCompleted: boolean;
-  onToggle: () => void;
+  mission?: Mission;
   intl: ReturnType<typeof useIntl>;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
   task,
-  isCompleted,
-  justCompleted,
-  onToggle,
+  mission,
   intl,
 }) => {
   const Icon = task.icon;
+  const isCompleted = mission?.completed ?? false;
+  const current = mission?.current ?? 0;
+  const target = mission?.target ?? 1;
+  const showProgress = target > 1;
 
   return (
     <motion.div
@@ -594,8 +595,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
           ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
           : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/10'
       }`}
-      animate={justCompleted ? { scale: [1, 1.02, 1] } : {}}
-      transition={{ duration: 0.3 }}
     >
       <div className="flex items-start gap-4">
         {/* Icon */}
@@ -612,6 +611,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
             {intl.formatMessage({ id: task.descriptionKey, defaultMessage: task.defaultDescription })}
           </p>
 
+          {/* Progress indicator for multi-step missions */}
+          {showProgress && !isCompleted && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                <span>{current}/{target}</span>
+              </div>
+              <div className="h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300"
+                  style={{ width: `${(current / target) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* XP Badge */}
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
@@ -626,13 +640,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </div>
 
-      {/* Complete Button */}
-      <button
-        onClick={onToggle}
+      {/* Auto-tracked status indicator */}
+      <div
         className={`mt-4 w-full min-h-[48px] rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
           isCompleted
             ? 'bg-green-500 text-white'
-            : 'bg-gradient-to-r from-red-500 to-orange-500 text-white active:scale-[0.98]'
+            : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'
         }`}
       >
         {isCompleted ? (
@@ -647,9 +660,15 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <FormattedMessage id="chatter.dailyMissions.completed" defaultMessage="Completed" />
           </>
         ) : (
-          <FormattedMessage id="chatter.dailyMissions.markComplete" defaultMessage="Mark as Complete" />
+          <>
+            <Lock className="w-4 h-4" />
+            <FormattedMessage
+              id="chatter.dailyMissions.autoTracked"
+              defaultMessage="Auto-tracked"
+            />
+          </>
         )}
-      </button>
+      </div>
     </motion.div>
   );
 };
@@ -657,42 +676,38 @@ const TaskCard: React.FC<TaskCardProps> = ({
 // Task List Item for Desktop View
 interface TaskListItemProps {
   task: DailyTask;
-  isCompleted: boolean;
-  justCompleted: boolean;
-  onToggle: () => void;
+  mission?: Mission;
   isExpanded: boolean;
   intl: ReturnType<typeof useIntl>;
 }
 
 const TaskListItem: React.FC<TaskListItemProps> = ({
   task,
-  isCompleted,
-  justCompleted,
-  onToggle,
+  mission,
   intl,
 }) => {
   const Icon = task.icon;
+  const isCompleted = mission?.completed ?? false;
+  const current = mission?.current ?? 0;
+  const target = mission?.target ?? 1;
+  const showProgress = target > 1;
 
   return (
     <motion.div
-      className={`flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer group ${
+      className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
         isCompleted
           ? 'bg-green-50 dark:bg-green-900/20'
-          : 'bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
+          : 'bg-gray-50 dark:bg-white/5'
       }`}
-      onClick={onToggle}
-      animate={justCompleted ? { scale: [1, 1.02, 1] } : {}}
+      animate={isCompleted ? { scale: [1, 1.02, 1] } : {}}
       transition={{ duration: 0.3 }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onToggle()}
     >
-      {/* Checkbox */}
+      {/* Checkbox / Status indicator */}
       <div
         className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
           isCompleted
             ? 'bg-green-500 border-green-500'
-            : 'border-gray-300 dark:border-gray-600 group-hover:border-red-400'
+            : 'border-gray-300 dark:border-gray-600'
         }`}
       >
         <AnimatePresence>
@@ -721,9 +736,21 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
         }`}>
           {intl.formatMessage({ id: task.titleKey, defaultMessage: task.defaultTitle })}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-          {intl.formatMessage({ id: task.descriptionKey, defaultMessage: task.defaultDescription })}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+            {intl.formatMessage({ id: task.descriptionKey, defaultMessage: task.defaultDescription })}
+          </p>
+          {/* Progress indicator for multi-step missions */}
+          {showProgress && (
+            <span className={`text-xs font-medium ${
+              isCompleted
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-blue-600 dark:text-blue-400'
+            }`}>
+              ({current}/{target})
+            </span>
+          )}
+        </div>
       </div>
 
       {/* XP Badge */}

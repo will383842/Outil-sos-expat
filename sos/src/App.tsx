@@ -97,6 +97,7 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsExpats = lazy(() => import('./pages/TermsExpats'));
 const TermsLawyers = lazy(() => import('./pages/TermsLawyers'));
 const TermsClients = lazy(() => import('./pages/TermsClients'));
+const TermsChatters = lazy(() => import('./pages/TermsChatters'));
 const TestimonialDetail = lazy(() => import('./pages/TestimonialDetail'));
 const Testimonials = lazy(() => import('./pages/Testimonials'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
@@ -243,6 +244,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/terms-clients", component: TermsClients, alias: "/cgu-clients", translated: "terms-clients" },
   { path: "/terms-lawyers", component: TermsLawyers, alias: "/cgu-avocats", translated: "terms-lawyers" },
   { path: "/terms-expats", component: TermsExpats, alias: "/cgu-expatries", translated: "terms-expats" },
+  { path: "/terms-chatters", component: TermsChatters, alias: "/cgu-chatters", translated: "terms-chatters" },
   {
     path: "/privacy-policy",
     component: PrivacyPolicy,

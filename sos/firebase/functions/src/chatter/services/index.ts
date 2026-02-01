@@ -9,6 +9,7 @@ export {
   releaseCommission,
   cancelCommission,
   checkAndUpdateLevel,
+  checkAndAwardBadges,
   validatePendingCommissions,
   releaseValidatedCommissions,
   CreateCommissionInput,
@@ -151,3 +152,21 @@ export {
   CreatePromotionInput,
   UpdatePromotionInput,
 } from "./chatterPromotionService";
+
+// Social Likes Service
+export {
+  getAllSocialNetworks,
+  getActiveSocialNetworks,
+  addSocialNetwork,
+  updateSocialNetwork,
+  deleteSocialNetwork,
+  markNetworkAsLiked,
+  getChatterSocialLikes,
+  checkSocialBonusEligibility,
+  paySocialBonus,
+  checkAndPaySocialBonus,
+  AddSocialNetworkInput,
+  UpdateSocialNetworkInput,
+  MarkNetworkLikedInput,
+  SocialBonusCheckResult,
+} from "./chatterSocialLikesService";

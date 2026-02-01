@@ -4,7 +4,7 @@
  * to keep chatters engaged and help them earn more
  */
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { memo, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
   Lightbulb,
@@ -25,6 +25,7 @@ import {
   Sparkles,
   Share2,
 } from 'lucide-react';
+import { formatCurrencyLocale } from './currencyUtils';
 
 // Design tokens - consistent with other Chatter components
 const UI = {
@@ -119,7 +120,7 @@ const TIPS_POOL: Tip[] = [
 // COMPONENT
 // ============================================================================
 
-const MotivationWidget: React.FC<MotivationWidgetProps> = ({
+const MotivationWidget = memo(function MotivationWidget({
   totalEarned = 0,
   nextLevelThreshold = 10000,
   totalChatters = 0,
@@ -132,7 +133,7 @@ const MotivationWidget: React.FC<MotivationWidgetProps> = ({
   onViewLeaderboard,
   loading = false,
   defaultExpanded = true,
-}) => {
+}: MotivationWidgetProps) {
   const intl = useIntl();
 
   // State
@@ -201,7 +202,7 @@ const MotivationWidget: React.FC<MotivationWidgetProps> = ({
   const weeklyEarningsStat = useMemo(() => {
     // This would be calculated from actual data in production
     const mockActiveChatters = totalChatters || 150;
-    const mockWeeklyTotal = 2500000; // In XOF
+    const mockWeeklyTotal = 250000; // In cents (USD) - $2500
     return {
       chatters: mockActiveChatters,
       total: mockWeeklyTotal,
@@ -291,14 +292,9 @@ const MotivationWidget: React.FC<MotivationWidgetProps> = ({
     onShareWhatsApp?.(linkToShare);
   };
 
-  // Format amount
+  // Format amount in cents to USD display
   const formatAmount = (cents: number) => {
-    return new Intl.NumberFormat(intl.locale, {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(cents);
+    return formatCurrencyLocale(cents, intl.locale);
   };
 
   // Loading skeleton
@@ -505,17 +501,17 @@ const MotivationWidget: React.FC<MotivationWidgetProps> = ({
             </div>
           )}
 
-          {/* Quick Actions */}
+          {/* Quick Actions - Touch-friendly with 48px+ targets */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               <FormattedMessage id="motivation.actions.title" defaultMessage="Actions rapides" />
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {/* Copy Link */}
               <button
                 onClick={handleCopyLink}
                 disabled={!clientShareUrl && !recruitmentShareUrl}
-                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] transition-all active:scale-[0.98] ${
+                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] transition-all active:scale-[0.98] touch-manipulation ${
                   copied
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200'
@@ -526,7 +522,7 @@ const MotivationWidget: React.FC<MotivationWidgetProps> = ({
                 ) : (
                   <Copy className="w-5 h-5" />
                 )}
-                <span className="text-xs font-medium text-center leading-tight">
+                <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">
                   {copied ? (
                     <FormattedMessage id="common.copied" defaultMessage="Copie !" />
                   ) : (
@@ -539,10 +535,10 @@ const MotivationWidget: React.FC<MotivationWidgetProps> = ({
               <button
                 onClick={handleShareWhatsApp}
                 disabled={!clientShareUrl && !recruitmentShareUrl}
-                className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] bg-green-500 hover:bg-green-600 text-white transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] bg-green-500 hover:bg-green-600 text-white transition-all active:scale-[0.98] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Share2 className="w-5 h-5" />
-                <span className="text-xs font-medium text-center leading-tight">
+                <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">
                   <FormattedMessage id="motivation.action.whatsapp" defaultMessage="WhatsApp" />
                 </span>
               </button>
@@ -550,10 +546,10 @@ const MotivationWidget: React.FC<MotivationWidgetProps> = ({
               {/* View Leaderboard */}
               <button
                 onClick={onViewLeaderboard}
-                className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white transition-all active:scale-[0.98]"
+                className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white transition-all active:scale-[0.98] touch-manipulation"
               >
                 <Trophy className="w-5 h-5" />
-                <span className="text-xs font-medium text-center leading-tight">
+                <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">
                   <FormattedMessage id="motivation.action.leaderboard" defaultMessage="Top Chatters" />
                 </span>
               </button>
@@ -582,7 +578,7 @@ const MotivationWidget: React.FC<MotivationWidgetProps> = ({
       </div>
     </div>
   );
-};
+});
 
 // ============================================================================
 // HELPER FUNCTIONS

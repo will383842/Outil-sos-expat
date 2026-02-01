@@ -4116,6 +4116,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                   serviceType={providerRole === "lawyer" ? "lawyer" : "expat"}
                   clientPhone={service?.clientPhone || ""}
                   providerPhone={provider?.phone || ""}
+                  clientLanguages={[language]}
+                  providerLanguages={provider?.languagesSpoken || provider?.languages || ["fr"]}
                   bookingData={bookingDataForValidation}
                   onSuccess={handlePayPalPaymentSuccess}
                   onError={() => {

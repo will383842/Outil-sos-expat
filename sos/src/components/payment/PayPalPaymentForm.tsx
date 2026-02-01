@@ -39,6 +39,9 @@ interface PayPalPaymentFormProps {
   // P0 FIX: Phone numbers required for Twilio call
   clientPhone: string;
   providerPhone: string;
+  // P0 FIX: Languages for Twilio voice prompts
+  clientLanguages: string[];
+  providerLanguages: string[];
   // Booking data for validation
   bookingData?: BookingData;
   onSuccess: (details: PayPalSuccessDetails) => void;
@@ -241,6 +244,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   serviceType = 'expat',
   clientPhone,
   providerPhone,
+  clientLanguages,
+  providerLanguages,
   bookingData,
   onSuccess,
   onError,
@@ -328,7 +333,13 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
             // P0 FIX: Phone numbers required for Twilio call
             clientPhone,
             providerPhone,
-            description: description || `Appel SOS-Expat - Session ${callSessionId}`,
+            // P0 FIX: Languages for Twilio voice prompts
+            clientLanguages,
+            providerLanguages,
+            // P1 FIX: Send booking title, description and country for SMS notifications to provider
+            title: bookingData?.title || description || `Appel SOS-Expat - Session ${callSessionId}`,
+            description: bookingData?.description || description || `Appel SOS-Expat - Session ${callSessionId}`,
+            clientCurrentCountry: bookingData?.currentCountry || "",
             serviceType,
             metadata: {
               ...(metaIds.fbp && { fbp: metaIds.fbp }),
@@ -366,7 +377,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       setIsProcessing(false);
       throw error;
     }
-  }, [amount, currency, providerId, callSessionId, clientId, description, serviceType, platformFee, providerAmount, clientPhone, providerPhone]);
+  }, [amount, currency, providerId, callSessionId, clientId, description, serviceType, platformFee, providerAmount, clientPhone, providerPhone, clientLanguages, providerLanguages, bookingData]);
 
   // Autorisation après approbation (AUTHORIZE flow comme Stripe)
   // L'autorisation bloque les fonds mais ne les capture pas encore

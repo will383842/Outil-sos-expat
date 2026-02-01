@@ -17,7 +17,7 @@ import React, {
   useRef,
 } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useLocaleNavigate } from "../multilingual-system";
+import { useLocaleNavigate, LocaleLink } from "../multilingual-system";
 import {
   Mail,
   Lock,
@@ -947,6 +947,21 @@ const RegisterExpat: React.FC = () => {
           keystrokes: stats.keystrokes,
           userAgent: navigator.userAgent,
           timestamp: Date.now(),
+        },
+        // ✅ TRACKING CGU - Preuve légale d'acceptation des conditions
+        termsAccepted: form.acceptTerms,
+        termsAcceptedAt: new Date().toISOString(),
+        termsVersion: "3.0", // Version actuelle des CGU expatriés
+        termsType: "terms_expats",
+        paymentTermsAccepted: form.acceptPaymentTerms,
+        paymentTermsAcceptedAt: new Date().toISOString(),
+        paymentTermsVersion: "2.0", // Version des conditions de paiement
+        // Métadonnées d'acceptation pour conformité légale (eIDAS/RGPD)
+        termsAcceptanceMeta: {
+          userAgent: navigator.userAgent,
+          language: navigator.language,
+          timestamp: Date.now(),
+          acceptanceMethod: "checkbox_click",
         },
         // AFFILIATE: Include referral code and tracking data if present
         ...(referralCode && { pendingReferralCode: referralCode.toUpperCase().trim() }),
@@ -2019,15 +2034,15 @@ const RegisterExpat: React.FC = () => {
                   className="text-sm text-gray-800 font-medium"
                 >
                   <FormattedMessage id="registerExpat.ui.acceptTerms" />{" "}
-                  <Link 
-                    to="/cgu-expatries" 
-                    className="text-emerald-600 font-bold hover:text-emerald-700 underline" 
-                    target="_blank" 
+                  <LocaleLink
+                    to="/cgu-expatries"
+                    className="text-emerald-600 font-bold hover:text-emerald-700 underline"
+                    target="_blank"
                     rel="noopener noreferrer"
                     aria-label={intl.formatMessage({ id: "registerExpat.ui.termsLinkAriaLabel" })}
                   >
                     <FormattedMessage id="registerExpat.ui.termsLink" />
-                  </Link>
+                  </LocaleLink>
                   <span className="text-red-500 ml-1" aria-label={intl.formatMessage({ id: "common.required" })}>*</span>
                 </label>
               </div>
@@ -2126,13 +2141,13 @@ const RegisterExpat: React.FC = () => {
               >
                 <FormattedMessage id="registerExpat.footer.privacy" />
               </Link>
-              <Link 
-                to="/cgu-expatries" 
+              <LocaleLink
+                to="/cgu-expatries"
                 className="hover:text-emerald-600 transition-colors"
                 aria-label={intl.formatMessage({ id: "registerExpat.footer.termsAriaLabel" })}
               >
                 <FormattedMessage id="registerExpat.footer.terms" />
-              </Link>
+              </LocaleLink>
               <Link 
                 to="/contact" 
                 className="hover:text-emerald-600 transition-colors"

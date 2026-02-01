@@ -251,6 +251,7 @@ export type RouteKey =
   | "terms-lawyers"    // /terms-lawyers -> /cgu-avocats, etc.
   | "terms-expats"     // /terms-expats -> /cgu-expatries, etc.
   | "terms-clients"    // /terms-clients -> /cgu-clients, etc.
+  | "terms-chatters"   // /terms-chatters -> /cgu-chatters, etc.
   | "sos-call"         // /sos-appel -> /emergency-call, /notruf, etc.
   | "expat-call"       // /appel-expatrie -> /expat-call, etc.
   | "pricing"          // /tarifs -> /pricing, /preise, etc.
@@ -429,6 +430,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "tiaokuan-waipai",
     hi: "shartein-pravasi",
     ar: "شروط-المغتربين",
+  },
+  "terms-chatters": {
+    fr: "cgu-chatters",
+    en: "terms-chatters",
+    es: "terminos-chatters",
+    de: "agb-chatters",
+    ru: "usloviya-chattery",
+    pt: "termos-chatters",
+    ch: "tiaokuan-chatters",
+    hi: "shartein-chatters",
+    ar: "شروط-المروجين",
   },
   "sos-call": {
     fr: "sos-appel",

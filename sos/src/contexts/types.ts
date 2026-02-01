@@ -169,6 +169,22 @@ export interface User {
   lastSeenAt?: Date | Timestamp;
   registrationDate?: string;
 
+  // ✅ TRACKING CGU - Preuve légale d'acceptation des conditions (eIDAS/RGPD)
+  termsAccepted?: boolean;
+  termsAcceptedAt?: string | Date | Timestamp;
+  termsVersion?: string;
+  termsType?: string; // terms_clients, terms_lawyers, terms_expats, terms_chatters
+  paymentTermsAccepted?: boolean;
+  paymentTermsAcceptedAt?: string | Date | Timestamp;
+  paymentTermsVersion?: string;
+  termsAcceptanceMeta?: {
+    userAgent?: string;
+    language?: string;
+    timestamp?: number;
+    acceptanceMethod?: string; // checkbox_click, implicit, api
+    ipAddress?: string; // Si capturé côté serveur
+  };
+
   // Motivation (pour expatriés)
   motivation?: string;
 }

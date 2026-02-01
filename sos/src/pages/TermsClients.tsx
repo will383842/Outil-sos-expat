@@ -77,7 +77,7 @@ const TermsClients: React.FC = () => {
     fr: {
       title: "CGU Clients",
       subtitle: "Conditions générales d'utilisation pour les clients",
-      lastUpdated: "Version 2.2 – Dernière mise à jour : 16 juin 2025",
+      lastUpdated: "Version 3.0 – Dernière mise à jour : 1er février 2026",
       loading: "Chargement...",
       languageToggle: "Changer de langue",
       keyFeatures: "Points clés",
@@ -100,7 +100,7 @@ const TermsClients: React.FC = () => {
     en: {
       title: "Client Terms",
       subtitle: "General terms of use for customers",
-      lastUpdated: "Version 2.2 – Last updated: 16 June 2025",
+      lastUpdated: "Version 3.0 – Last updated: February 1, 2026",
       loading: "Loading...",
       languageToggle: "Switch language",
       keyFeatures: "Key features",
@@ -123,7 +123,7 @@ const TermsClients: React.FC = () => {
     es: {
       title: "Términos del Cliente",
       subtitle: "Condiciones generales de uso para clientes",
-      lastUpdated: "Versión 2.2 – Última actualización: 16 de junio de 2025",
+      lastUpdated: "Versión 3.0 – Última actualización: 1 de febrero de 2026",
       loading: "Cargando...",
       languageToggle: "Cambiar idioma",
       keyFeatures: "Características clave",
@@ -146,7 +146,7 @@ const TermsClients: React.FC = () => {
     de: {
       title: "Kundenbedingungen",
       subtitle: "Allgemeine Nutzungsbedingungen für Kunden",
-      lastUpdated: "Version 2.2 – Letzte Aktualisierung: 16. Juni 2025",
+      lastUpdated: "Version 3.0 – Letzte Aktualisierung: 1. Februar 2026",
       loading: "Wird geladen...",
       languageToggle: "Sprache wechseln",
       keyFeatures: "Wichtige Merkmale",
@@ -169,7 +169,7 @@ const TermsClients: React.FC = () => {
     ru: {
       title: "Условия для клиентов",
       subtitle: "Общие условия использования для клиентов",
-      lastUpdated: "Версия 2.2 – Последнее обновление: 16 июня 2025",
+      lastUpdated: "Версия 3.0 – Последнее обновление: 1 февраля 2026",
       loading: "Загрузка...",
       languageToggle: "Сменить язык",
       keyFeatures: "Ключевые особенности",
@@ -192,7 +192,7 @@ const TermsClients: React.FC = () => {
     hi: {
       title: "ग्राहक शर्तें",
       subtitle: "ग्राहकों के लिए सामान्य उपयोग की शर्तें",
-      lastUpdated: "संस्करण 2.2 – अंतिम अपडेट: 16 जून 2025",
+      lastUpdated: "संस्करण 3.0 – अंतिम अपडेट: 1 फ़रवरी 2026",
       loading: "लोड हो रहा है...",
       languageToggle: "भाषा बदलें",
       keyFeatures: "मुख्य विशेषताएं",
@@ -215,7 +215,7 @@ const TermsClients: React.FC = () => {
     pt: {
       title: "Termos do Cliente",
       subtitle: "Condições gerais de uso para clientes",
-      lastUpdated: "Versão 2.2 – Última atualização: 16 de junho de 2025",
+      lastUpdated: "Versão 3.0 – Última atualização: 1 de fevereiro de 2026",
       loading: "Carregando...",
       languageToggle: "Mudar idioma",
       keyFeatures: "Características principais",
@@ -238,7 +238,7 @@ const TermsClients: React.FC = () => {
     ar: {
       title: "شروط العملاء",
       subtitle: "الشروط العامة للعملاء",
-      lastUpdated: "الإصدار 2.2 – آخر تحديث: 16 يونيو 2025",
+      lastUpdated: "الإصدار 3.0 – آخر تحديث: 1 فبراير 2026",
       loading: "جارٍ التحميل...",
       languageToggle: "غيّر اللغة",
       keyFeatures: "الميزات الرئيسية",
@@ -261,7 +261,7 @@ const TermsClients: React.FC = () => {
     ch: {
       title: "客户条款",
       subtitle: "客户通用使用条款",
-      lastUpdated: "版本 2.2 – 最后更新：2025年6月16日",
+      lastUpdated: "版本 3.0 – 最后更新：2026年2月1日",
       loading: "加载中...",
       languageToggle: "切换语言",
       keyFeatures: "主要功能",
@@ -474,53 +474,74 @@ const TermsClients: React.FC = () => {
 
 
   const defaultHi = `
-# सामान्य सेवा शर्तें – ग्राहक (वैश्विक)
+# सामान्य उपयोग की शर्तें – ग्राहक (वैश्विक)
 
-**SOS Expat द्वारा WorldExpat OÜ** (आगे “प्लेटफ़ॉर्म”, “SOS”, “हम”)
+**SOS Expat** एक सेवा है जो **WorldExpat OÜ** द्वारा संचालित है, जो एस्टोनियाई कानून के तहत एक कंपनी है (कंपनी रजिस्टर संख्या 16885621), जिसका पंजीकृत कार्यालय Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145, एस्टोनिया में स्थित है ("**प्लेटफ़ॉर्म**", "**SOS**", "**SOS Expat**", "**हम**")।
 
-**संस्करण 2.2 – अंतिम अद्यतन: 16 जून 2025**
-
----
-
-## 1. उद्देश्य और क्षेत्र
-
-1.1. ये सामान्य सेवा शर्तें (“T&C”) उस प्लेटफ़ॉर्म के उपयोग को नियंत्रित करती हैं जहाँ कोई भी व्यक्ति या संस्था खाता बनाकर सेवाएँ बुक करती है (आगे “ग्राहक”)।
-
-1.2. **SOS Expat की भूमिका।** SOS Expat एक प्लेटफ़ॉर्म है जो (i) स्वतंत्र वकीलों (“वकील”) और/या (ii) स्वतंत्र Expat सहायक (“सहायक”) से कनेक्शन प्रदान करता है। SOS Expat कोई वकील फर्म नहीं है, कोई कानूनी, चिकित्सा, कर या विनियमित सलाह नहीं देता, और ग्राहक और सेवा प्रदाता (वकील/सहायक) के बीच कोई अनुबंध पक्ष नहीं है।
-
-1.3. **इलेक्ट्रॉनिक सहमति (Click-wrap).** “स्वीकार करें” पर क्लिक करना या प्लेटफ़ॉर्म का उपयोग करना इन T&C की स्वीकृति का संकेत है। SOS तकनीकी रिकॉर्ड रख सकता है (टाइमस्टैम्प, आईडी)।
-
-1.4. **परिवर्तन।** हम T&C और/या शुल्क समय-समय पर प्लेटफ़ॉर्म पर प्रकाशित करके बदल सकते हैं। लगातार उपयोग का अर्थ है सहमति।
+**संस्करण 3.0 – अंतिम अपडेट: 1 फरवरी 2026**
 
 ---
 
-## 2. खाते, अनुपालन और उपयोग
+## 1. उद्देश्य और दायरा
 
-2.1. **आयु और क्षमता।** ग्राहक पुष्टि करता है कि वह कम से कम 18 वर्ष का है और कानूनी रूप से सक्षम है। यदि ग्राहक एक संस्था है, तो उपयोगकर्ता प्रमाणित करता है कि वह संस्था को बाध्य करने के लिए सक्षम है।
+1.1. ये सामान्य शर्तें ("CGU") प्लेटफ़ॉर्म के उपयोग को नियंत्रित करती हैं जो किसी भी व्यक्ति या कानूनी इकाई द्वारा की जाती है जो ग्राहक खाता बनाता है और प्लेटफ़ॉर्म के माध्यम से सेवा बुक करता है ("ग्राहक")।
 
-2.2. **सटीक जानकारी।** प्रदान की गई जानकारी (पहचान, संपर्क विवरण, देश, अनुरोध का उद्देश्य) सही और अद्यतन होनी चाहिए।
+1.2. **SOS Expat की भूमिका।** SOS Expat एक कनेक्शन प्लेटफ़ॉर्म है: (i) स्वतंत्र वकीलों ("वकील") के साथ, और/या (ii) स्वतंत्र प्रवासी सहायकों ("सहायक") के साथ। SOS Expat कोई कानूनी फर्म नहीं है, कोई कानूनी, चिकित्सा, कर या विनियमित सलाह प्रदान नहीं करता है, और ग्राहक और सेवा प्रदाता (वकील/सहायक) के बीच संपन्न सेवा अनुबंध का पक्ष नहीं है।
 
-2.3. **उचित उपयोग।** ग्राहक प्लेटफ़ॉर्म का अवैध या दुरुपयोग के लिए उपयोग नहीं कर सकता। प्लेटफ़ॉर्म को आपातकालीन चिकित्सा या जीवन-धमकाने वाली स्थिति के लिए नहीं उपयोग किया जाना चाहिए।
+1.3. **इलेक्ट्रॉनिक स्वीकृति (क्लिक-रैप)।** स्वीकृति बॉक्स पर टिक करके और/या प्लेटफ़ॉर्म का उपयोग करके, ग्राहक इन CGU को स्वीकार करता है, जो **eIDAS (EU) विनियम संख्या 910/2014** और समकक्ष राष्ट्रीय कानूनों के अर्थ में एक वैध इलेक्ट्रॉनिक हस्ताक्षर का गठन करता है।
 
-2.4. **उपलब्धता।** प्लेटफ़ॉर्म “जैसा उपलब्ध है” आधार पर है; निरंतर उपलब्धता की कोई गारंटी नहीं है (रखरखाव, तकनीकी समस्याएं, FORCE MAJEURE)।
+1.4. **स्वीकृति की ट्रेसबिलिटी।** SOS Expat एक टाइमस्टैम्प्ड (UTC) ऑडिट लॉग रखता है जिसमें शामिल है: IP पता, सत्र पहचानकर्ता, उपयोगकर्ता-एजेंट, CGU संस्करण, स्वीकृत दस्तावेज़ का डिजिटल फिंगरप्रिंट (हैश) और ग्राहक की अद्वितीय पहचान। यह डेटा स्वीकृति का **स्वीकार्य प्रमाण** है।
 
----
+1.5. **प्रमाण का संरक्षण।** स्वीकृति लॉग ग्राहक की अंतिम गतिविधि या खाता बंद होने के बाद **दस (10) वर्षों** तक संरक्षित किए जाते हैं। अनुरोध पर स्वीकृति प्रमाणपत्र जारी किया जा सकता है।
 
-## 3. प्लेटफ़ॉर्म पर बुक की जाने वाली सेवाओं का प्रकार
+1.6. **संशोधन।** हम प्लेटफ़ॉर्म पर प्रकाशन द्वारा भावी प्रभाव के साथ CGU और/या मूल्य/शुल्क अपडेट कर सकते हैं। ग्राहक के अधिकारों या दायित्वों को प्रभावित करने वाला कोई भी महत्वपूर्ण संशोधन अधिसूचित किया जाएगा और मौजूदा ग्राहकों के लिए **नई स्वीकृति** आवश्यक होगी।
 
-3.1. **कानूनी परामर्श।** संक्षिप्त परामर्श (उदा., 20 मिनट)। वकील अपने सुझावों और पेशेवर/कानूनी नियमों के लिए पूरी तरह जिम्मेदार है।
-
-3.2. **सहायक सेवाएँ।** गैर-योग्य सहायता (व्यावहारिक मदद, अनौपचारिक अनुवाद, स्थानीय संपर्क आदि)। कानूनी, चिकित्सा या विनियमित सलाह केवल लाइसेंस प्राप्त पेशेवर द्वारा दी जाएगी।
-
-3.3. **कोई गारंटी नहीं।** SOS परिणाम, गुणवत्ता, उपयुक्तता या उपलब्धता के लिए कोई गारंटी नहीं देता।
+1.7. **अवधि।** CGU अनिश्चित अवधि के लिए संपन्न हैं।
 
 ---
 
-## 4. मूल्य, मुद्रा और Vermittlungsgebühr (मध्यस्थता शुल्क)
+## 2. खाते, पात्रता और उपयोग
 
-4.1. **मूल्य।** बुकिंग पर कुल मूल्य में शामिल है: (i) सेवा प्रदाता का शुल्क और (ii) SOS की Vermittlungsgebühr।
+2.1. **आयु और क्षमता।** ग्राहक घोषणा करता है कि वह 18 वर्ष का है और कानूनी क्षमता रखता है। कानूनी संस्थाओं के लिए, उपयोगकर्ता घोषणा करता है कि वह कंपनी को बाध्य करने के लिए अधिकृत है।
 
-4.2. **स्थिर Vermittlungsgebühr।** 19 € (EUR) या 25 $ (USD) प्रति मध्यस्थता (करों के बिना), कुल मूल्य में शामिल। SOS भविष्य में शुल्क बदल सकता है।
+2.2. **जानकारी की सटीकता।** प्रदान की गई जानकारी (पहचान, संपर्क साधन, देश, अनुरोध का उद्देश्य) सटीक और अद्यतन होनी चाहिए।
+
+2.3. **ग्राहक की घोषणाएं और गारंटी।** खाता बनाकर और प्लेटफ़ॉर्म का उपयोग करके, ग्राहक स्पष्ट रूप से घोषणा करता है और गारंटी देता है कि:
+- (a) वह अपने निवास देश के कानून के अनुसार **वयस्क** है (न्यूनतम 18 वर्ष);
+- (b) उसके पास अनुबंध करने की **पूर्ण कानूनी क्षमता** है;
+- (c) वह संरक्षकता या किसी समकक्ष सुरक्षा व्यवस्था के अधीन नहीं है;
+- (d) वह **किसी भी अंतरराष्ट्रीय प्रतिबंध सूची** (OFAC/SDN, EU, UN, HMT) में सूचीबद्ध नहीं है;
+- (e) पंजीकरण के समय प्रदान की गई सभी जानकारी **सटीक, पूर्ण और अद्यतन** है;
+- (f) वह इन घोषणाओं को प्रभावित करने वाले किसी भी परिवर्तन के बारे में **तुरंत** SOS Expat को सूचित करेगा;
+- (g) **कानूनी संस्थाओं** के लिए: प्रतिनिधि के पास कंपनी को बाध्य करने की शक्तियां हैं।
+कोई भी झूठी घोषणा खाते के निलंबन का कारण बन सकती है।
+
+2.4. **अनुरूप उपयोग।** ग्राहक किसी भी अवैध या अपमानजनक उपयोग (धोखाधड़ी, अवैध सामग्री, उत्पीड़न, पहचान चोरी, आदि) से बचेगा। **SOS Expat आपातकालीन सेवा नहीं है**।
+
+2.5. **खाता सुरक्षा।** ग्राहक अपने लॉगिन क्रेडेंशियल्स की सुरक्षा करता है। उसके खाते के माध्यम से की गई कोई भी गतिविधि उसके द्वारा की गई मानी जाती है।
+
+2.6. **उपलब्धता।** प्लेटफ़ॉर्म "जैसा है" आधार पर प्रदान किया गया है: कोई निर्बाध उपलब्धता की गारंटी नहीं है।
+
+---
+
+## 3. बुक करने योग्य सेवाओं की प्रकृति
+
+3.1. **वकीलों के साथ कॉल।** संक्षिप्त मार्गदर्शन परामर्श (जैसे 20 मिनट)। वकील अपनी सलाह और अपने आचार संहिता/स्थानीय कानूनों के अनुपालन के लिए पूर्ण रूप से जिम्मेदार है।
+
+3.2. **सहायकों के साथ कॉल।** अनियमित सहायता (व्यावहारिक मार्गदर्शन, अनौपचारिक अनुवाद, स्थानीय संपर्क...)। उपयुक्त स्थानीय लाइसेंस के बिना कोई कानूनी/चिकित्सा/विनियमित सलाह नहीं।
+
+3.3. **कोई गारंटी नहीं।** हम परिणाम, गुणवत्ता, किसी विशेष आवश्यकता के लिए उपयुक्तता, या सेवा प्रदाताओं की उपलब्धता की गारंटी नहीं देते।
+
+---
+
+## 4. मूल्य, मुद्राएं और कनेक्शन शुल्क
+
+4.1. **मूल्य प्रदर्शन।** बुकिंग के समय प्रदर्शित कुल मूल्य में शामिल है:
+- (a) प्रस्तुत प्रस्ताव में परिभाषित **सेवा प्रदाता का पारिश्रमिक** (वकील/सहायक);
+- (b) SOS Expat को देय **कनेक्शन शुल्क** (निश्चित शुल्क)।
+ग्राहक अपनी बुकिंग की पुष्टि करने से पहले **कर सहित कुल मूल्य** देखता है।
+
+4.2. **कनेक्शन शुल्क (सांकेतिक निश्चित दर)।** 19 € (EUR) या 25 $ (USD) प्रति मध्यस्थता (करों के बिना), कुल मूल्य में शामिल। SOS भविष्य में शुल्क बदल सकता है।
 
 4.3. **मुद्रा और रूपांतरण।** कीमतें विभिन्न मुद्राओं में दिखाई जा सकती हैं। भुगतान प्रदाता के विनिमय शुल्क लागू हो सकते हैं।
 
@@ -586,19 +607,27 @@ const TermsClients: React.FC = () => {
 
 ---
 
-## 10. व्यक्तिगत डेटा
+## 10. व्यक्तिगत डेटा (GDPR / डेटा संरक्षण)
 
-10.1. **भूमिकाएँ।** डेटा के संदर्भ में SOS और सेवा प्रदाता स्वतंत्र डेटा नियंत्रक हैं।
+10.1. **डेटा नियंत्रक।** कनेक्शन के लिए आवश्यक डेटा के लिए, **SOS Expat (WorldExpat OÜ)** और **सेवा प्रदाता** (वकील/सहायक) प्रत्येक अपने-अपने उद्देश्यों के लिए **स्वतंत्र डेटा नियंत्रक** के रूप में कार्य करते हैं, **विनियम (EU) 2016/679 (GDPR)** के अनुसार।
 
-10.2. **कानूनी आधार।** अनुबंध पूरा करना, वैध हित (सुरक्षा, धोखाधड़ी रोकथाम), कानूनी दायित्व, सहमति।
+10.2. **एकत्रित डेटा।** SOS Expat निम्नलिखित डेटा एकत्र करता है: पहचान, संपर्क विवरण, निवास का देश, अनुरोध का उद्देश्य, भुगतान डेटा (तृतीय-पक्ष प्रदाताओं द्वारा संसाधित), कनेक्शन डेटा (IP, टाइमस्टैम्प, डिवाइस), बुकिंग इतिहास।
 
-10.3. **अंतरराष्ट्रीय ट्रांसफर।** सुरक्षित ट्रांसफर संभव।
+10.3. **कानूनी आधार और उद्देश्य।**
+- **अनुबंध निष्पादन**: बुकिंग प्रसंस्करण, कनेक्शन, भुगतान;
+- **वैध हित**: सुरक्षा, धोखाधड़ी रोकथाम, सेवा सुधार, अनाम सांख्यिकी;
+- **कानूनी दायित्व**: AML/CFT अनुपालन, प्रतिबंध, कर दायित्व;
+- **सहमति**: विपणन संचार (किसी भी समय वापस लिया जा सकता है)।
 
-10.4. **अधिकार और संपर्क।** प्लेटफ़ॉर्म के संपर्क फ़ॉर्म के माध्यम से।
+10.4. **प्रतिधारण अवधि।** डेटा संविदात्मक संबंध की अवधि के लिए रखा जाता है, फिर कानूनी सीमा अवधि (डेटा के आधार पर 5 से 10 वर्ष) के लिए संग्रहीत किया जाता है।
 
-10.5. **सुरक्षा।** उचित तकनीकी और संगठनात्मक उपाय; डेटा उल्लंघन की सूचना कानून अनुसार।
+10.5. **अंतर्राष्ट्रीय स्थानांतरण।** डेटा **उचित सुरक्षा उपायों** (मानक संविदात्मक खंड, पर्याप्तता निर्णय, आदि) के साथ यूरोपीय आर्थिक क्षेत्र के बाहर स्थानांतरित किया जा सकता है।
 
-10.6. **DSA अनुपालन।** प्लेटफ़ॉर्म **विनियम (EU) 2022/2065 (डिजिटल सेवा अधिनियम)** के अर्थ में एक **मध्यस्थ सेवा** के रूप में कार्य करता है। SOS Expat अवैध सामग्री की रिपोर्टिंग के लिए तंत्र लागू करता है और DSA के अनुसार सक्षम अधिकारियों के साथ सहयोग करता है।
+10.6. **ग्राहक के अधिकार।** ग्राहक के निम्नलिखित अधिकार हैं: पहुंच, सुधार, मिटाना, प्रतिबंध, पोर्टेबिलिटी, आपत्ति। प्लेटफ़ॉर्म के **संपर्क फ़ॉर्म** या ईमेल के माध्यम से प्रयोग करें।
+
+10.7. **सुरक्षा।** उचित तकनीकी और संगठनात्मक उपाय (एन्क्रिप्शन, एक्सेस नियंत्रण, ऑडिट)। GDPR के अनुसार **72 घंटों** के भीतर डेटा उल्लंघन अधिसूचना।
+
+10.8. **DSA अनुपालन।** प्लेटफ़ॉर्म **विनियम (EU) 2022/2065 (डिजिटल सेवा अधिनियम)** के अर्थ में एक **मध्यस्थ सेवा** के रूप में संचालित होता है। SOS Expat अवैध सामग्री की रिपोर्टिंग के लिए तंत्र लागू करता है और सक्षम अधिकारियों के साथ सहयोग करता है।
 
 ---
 
@@ -608,40 +637,80 @@ const TermsClients: React.FC = () => {
 
 ---
 
-## 12. उत्तरदायित्व
+## 12. उत्तरदायित्व और गारंटी
 
-12.1. **स्वतंत्र सेवा प्रदाता।** ग्राहक मानता है कि वकील और सहायक स्वतंत्र हैं। SOS किसी सलाह/सेवा या परिणाम के लिए जिम्मेदार नहीं है।
+12.1. **केवल कनेक्शन भूमिका।** SOS Expat **विशेष रूप से** एक तकनीकी कनेक्शन प्लेटफ़ॉर्म है। SOS Expat:
+- कानूनी फर्म, परामर्श फर्म, या कानूनी, चिकित्सा, कर या विनियमित सेवाओं का प्रदाता **नहीं है**;
+- ग्राहक और सेवा प्रदाता (वकील/सहायक) के बीच अनुबंध का **पक्ष नहीं है**;
+- सेवा प्रदाताओं द्वारा प्रदान की गई सलाह या सेवाओं की गुणवत्ता, सटीकता, वैधता या परिणाम की **गारंटी नहीं देता**;
+- सेवा प्रदाताओं के शुल्क निर्धारण में **हस्तक्षेप नहीं करता** (कनेक्शन शुल्क को छोड़कर)।
 
-12.2. **सीमित उत्तरदायित्व।** SOS की अधिकतम उत्तरदायित्व राशि उस बुकिंग के लिए ग्राहक द्वारा भुगतान की गई कुल राशि तक सीमित है।
+12.2. **स्वतंत्र सेवा प्रदाता।** वकील और सहायक **स्वतंत्र पेशेवर** हैं, जो अपनी सलाह, सेवाओं और अपने कानूनी तथा नैतिक दायित्वों के अनुपालन के लिए पूर्ण रूप से जिम्मेदार हैं। SOS Expat किसी सेवा प्रदाता की सेवाओं के परिणामस्वरूप ग्राहक को हुई किसी भी क्षति के लिए **सभी उत्तरदायित्व से इनकार करता है**।
 
-12.3. **कोई गारंटी नहीं।** SOS लगातार प्लेटफ़ॉर्म संचालन या त्रुटि-रहित सेवा की गारंटी नहीं देता।
+12.3. **उत्तरदायित्व की सीमा।** **लागू कानून द्वारा अनुमत अधिकतम सीमा तक** और **उपभोक्ताओं के अनिवार्य अधिकारों पर प्रतिकूल प्रभाव डाले बिना**:
+- (a) ग्राहक के प्रति SOS Expat का कुल उत्तरदायित्व **सिद्ध प्रत्यक्ष क्षति** तक सीमित है और दावे को जन्म देने वाली बुकिंग के लिए ग्राहक द्वारा भुगतान की गई कुल कीमत से **अधिक नहीं हो सकता**;
+- (b) SOS Expat अप्रत्यक्ष, विशेष, परिणामी, दंडात्मक या अनुकरणीय क्षति (अवसर की हानि, लाभ, अवसर, प्रतिष्ठा को नुकसान, नैतिक क्षति, आदि) के लिए **उत्तरदायी नहीं है**।
+
+12.4. **कोई गारंटी नहीं।** प्लेटफ़ॉर्म "**जैसा है**" और "**उपलब्धता के अनुसार**" आधार पर प्रदान किया गया है। SOS Expat गारंटी नहीं देता:
+- प्लेटफ़ॉर्म की निरंतर या अबाध उपलब्धता;
+- त्रुटियों, बग या सुरक्षा कमजोरियों की अनुपस्थिति;
+- किसी विशेष सेवा प्रदाता की उपलब्धता;
+- ग्राहक की विशेष आवश्यकताओं के लिए सेवाओं की उपयुक्तता।
+
+12.5. **अप्रत्याशित घटना।** SOS Expat **अप्रत्याशित घटनाओं** (प्राकृतिक आपदा, युद्ध, महामारी, साइबर हमला, बिजली या इंटरनेट आउटेज, सरकारी निर्णय, हड़ताल, आदि) के कारण होने वाली देरी या विफलताओं के लिए उत्तरदायी नहीं है।
+
+12.6. **ग्राहक-सेवा प्रदाता विवाद।** ग्राहक और सेवा प्रदाता के बीच कोई भी विवाद **विशेष रूप से** उनके प्रत्यक्ष संबंध का मामला है। SOS Expat ऐसे विवादों में **हस्तक्षेप नहीं करता** और पक्ष, गारंटर या मध्यस्थ के रूप में **उत्तरदायी नहीं ठहराया जा सकता**।
 
 ---
 
-## 13. लागू कानून और विवाद समाधान
+## 13. लागू कानून, विवाद समाधान और सक्षम न्यायालय
 
-13.1. **सामग्री कानून।** सेवा के देश का कानून लागू होगा। अतिरिक्त रूप से, व्याख्या और रिक्तियों के लिए एस्टोनियाई कानून।
+13.1. **लागू कानून।**
+- **गैर-उपभोक्ता ग्राहक (B2B)**: ये शर्तें **विशेष रूप से** **एस्टोनियाई कानून** द्वारा शासित हैं, इसके विधि-संघर्ष नियमों को छोड़कर।
+- **उपभोक्ता ग्राहक (B2C)**: शर्तें एस्टोनियाई कानून द्वारा शासित हैं, **ग्राहक को** उसके निवास स्थान के उपभोक्ता संरक्षण के अनिवार्य प्रावधानों से **वंचित किए बिना**।
 
-13.2. **ICC मध्यस्थता / B2C विकल्प।**
+13.2. **ICC मध्यस्थता।**
+- **गैर-उपभोक्ता ग्राहक (B2B)**: कोई भी विवाद **ICC (अंतर्राष्ट्रीय वाणिज्य मंडल)** के मध्यस्थता नियमों के तहत **अंतिम रूप से** निपटाया जाएगा। **स्थान: तेलिन (एस्टोनिया)**। **भाषा: अंग्रेजी**। एक (1) मध्यस्थ। **गोपनीय** कार्यवाही।
+- **उपभोक्ता ग्राहक (B2C)**: ग्राहक के पास ICC मध्यस्थता (समान शर्तें) या अपने निवास स्थान के अनिवार्य कानूनों के तहत सक्षम न्यायालयों के बीच **चुनाव** है।
 
-* **B2B ग्राहक:** ICC मध्यस्थता, स्थान: Tallinn, भाषा: फ्रेंच।
-* **उपभोक्ता:** ICC या राष्ट्रीय न्यायालय।
+13.3. **सामूहिक कार्रवाइयों और जूरी से त्याग।** **लागू कानून द्वारा अनुमत अधिकतम सीमा तक** और **उपभोक्ताओं के अनिवार्य अधिकारों पर प्रतिकूल प्रभाव डाले बिना**:
+- (a) कोई भी **सामूहिक, समूह, प्रतिनिधि या समेकित कार्रवाई** **बहिष्कृत** है; केवल **व्यक्तिगत** दावे स्वीकार्य हैं;
+- (b) गैर-उपभोक्ता ग्राहक **जूरी परीक्षण के अधिकार से स्पष्ट रूप से त्याग करते हैं** (जूरी परीक्षण त्याग)।
 
-13.3. **एस्टोनियाई न्यायालय।** असंबद्ध विवाद, आदेश और आपात उपायों के लिए।
+13.4. **एस्टोनियाई न्यायालयों की क्षेत्राधिकार।** किसी भी **गैर-मध्यस्थता योग्य दावे**, **एक्जीक्वेटर** (मध्यस्थ पंचाटों का प्रवर्तन), या **अंतरिम/संरक्षात्मक उपायों** के लिए, **तेलिन** में एस्टोनियाई न्यायालयों की विशेष क्षेत्राधिकार है, उपभोक्ता ग्राहक के अपने निवास स्थान के न्यायालयों में कार्यवाही लाने के अधिकार **पर प्रतिकूल प्रभाव डाले बिना**।
 
-13.4. **समूह दावे का त्याग।** समूह/समानित दावे निषिद्ध, जब तक कानून न कहे।
+13.5. **पूर्व मध्यस्थता।** कोई भी मध्यस्थता या न्यायालय कार्यवाही शुरू करने से पहले, पक्षों को विवाद की लिखित सूचना से **तीस (30) दिनों** की अवधि के लिए **सद्भावपूर्ण बातचीत** के माध्यम से विवाद को सौहार्दपूर्ण ढंग से हल करने का प्रयास करने के लिए प्रोत्साहित किया जाता है।
+
+13.6. **सीमा अवधि।** गैर-उपभोक्ता ग्राहक द्वारा SOS Expat के खिलाफ कोई भी कार्रवाई या दावा कार्रवाई का कारण उत्पन्न होने की तारीख से **एक (1) वर्ष** के भीतर लाया जाना चाहिए। उपभोक्ताओं पर लागू सीमा अवधि उनके निवास स्थान के अनिवार्य कानून द्वारा प्रदान की गई है।
 
 ---
 
-## 14. समाप्ति/निलंबन और अन्य
+## 14. समाप्ति/निलंबन और विविध
 
-14.1. **निलंबन।** धोखाधड़ी, उल्लंघन या कानूनी जोखिम पर SOS खाता निलंबित कर सकता है।
+14.1. **निलंबन और बंद करना।** SOS Expat निम्नलिखित मामलों में तत्काल प्रभाव से ग्राहक के खाते को **अस्थायी रूप से निलंबित** या **स्थायी रूप से बंद** कर सकता है:
+- (a) **धोखाधड़ी, पहचान चोरी या अवैध गतिविधि** का संदेह;
+- (b) **शर्तों का उल्लंघन** या अपमानजनक व्यवहार;
+- (c) **भुगतान न करना** या अपमानजनक भुगतान विवाद;
+- (d) **अंतर्राष्ट्रीय प्रतिबंध सूची** में सूचीबद्ध होना;
+- (e) **न्यायिक या प्रशासनिक प्राधिकरण** से अनुरोध;
+- (f) कोई अन्य वैध सुरक्षा या अनुपालन कारण।
+बंद होने की स्थिति में, लंबित बुकिंग रद्द और रिफंड की जा सकती हैं, ग्राहक की गलती के मामले को छोड़कर।
 
-14.2. **पूर्णता।** T&C प्लेटफ़ॉर्म उपयोग के लिए संपूर्ण समझौता है।
+14.2. **ग्राहक द्वारा बंद करना।** ग्राहक किसी भी समय अपने व्यक्तिगत स्थान के माध्यम से या समर्थन से संपर्क करके अपना खाता बंद कर सकता है। बंद करने से पहले से उपभोग की गई सेवाओं के लिए कोई रिफंड नहीं मिलता।
 
-14.3. **भाषा।** अनुवाद संभव; व्याख्या में फ्रेंच संस्करण सर्वोच्च।
+14.3. **संपूर्णता।** ये शर्तें प्लेटफ़ॉर्म के उपयोग के लिए SOS Expat और ग्राहक के बीच पूर्ण समझौते का गठन करती हैं और किसी भी पूर्व समझौते को प्रतिस्थापित करती हैं।
 
-14.4. **अंश-अमान्यता।** एक खंड अमान्य होने पर बाकी वैध रहेंगे।
+14.4. **भाषाएं।** अनुवाद सूचनात्मक उद्देश्यों के लिए प्रदान किए जा सकते हैं; विसंगति की स्थिति में व्याख्या के लिए **अंग्रेजी प्रबल** होती है।
+
+14.5. **आंशिक अमान्यता।** यदि कोई प्रावधान शून्य या अप्रवर्तनीय है, तो शेष प्रभावी रहता है; इसे समकक्ष प्रभाव के वैध खंड से प्रतिस्थापित किया जा सकता है।
+
+14.6. **भौगोलिक विभाज्यता।** यदि इन शर्तों का कोई खंड किसी विशेष क्षेत्राधिकार में शून्य, अप्रवर्तनीय या अवैध घोषित किया जाता है, तो यह निर्णय **अन्य क्षेत्राधिकारों** में उसी खंड की **वैधता को प्रभावित नहीं करता** जहां यह वैध और प्रवर्तनीय रहता है।
+
+14.7. **त्याग नहीं।** किसी अधिकार का प्रयोग न करना त्याग नहीं माना जाता।
+
+14.8. **असाइनमेंट।** SOS Expat शर्तों को किसी समूह इकाई या उत्तराधिकारी को असाइन कर सकता है। ग्राहक SOS Expat की लिखित सहमति के बिना असाइन नहीं कर सकता।
+
+14.9. **साक्ष्य।** SOS Expat और इसके प्रदाताओं की प्रणालियों में रखे गए कंप्यूटर रिकॉर्ड अन्यथा सिद्ध होने तक साक्ष्य के रूप में कार्य करते हैं।
 
 14.5. **त्याग।** किसी अधिकार का उपयोग न करना त्याग नहीं है।
 
@@ -653,11 +722,11 @@ const TermsClients: React.FC = () => {
 `;
 
   const defaultFr = `
-# Conditions Générales – Clients (Global)
+# Conditions Générales d'Utilisation – Clients (Global)
 
-**SOS Expat d’WorldExpat OÜ** (la « Plateforme », « SOS », « nous »)
+**SOS Expat** est un service opéré par **WorldExpat OÜ**, société de droit estonien (registre des sociétés n° 16885621), dont le siège social est situé Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145, Estonie (la « **Plateforme** », « **SOS** », « **SOS Expat** », « **nous** »).
 
-**Version 2.2 – Dernière mise à jour : 16 juin 2025**
+**Version 3.0 – Dernière mise à jour : 1er février 2026**
 
 ---
 
@@ -667,9 +736,15 @@ const TermsClients: React.FC = () => {
 
 1.2. **Rôle de SOS Expat.** SOS Expat est une plateforme de mise en relation : (i) avec des avocats indépendants (« Avocats »), et/ou (ii) avec des expatriés aidants indépendants (« Aidants »). SOS Expat n'est pas un cabinet d’avocats, ne fournit aucun conseil juridique, médical, fiscal ou réglementé, et n’est pas partie au contrat de prestation conclu entre le Client et le prestataire (Avocat/Aidant).
 
-1.3. **Acceptation électronique (click-wrap).** En cochant la case d’acceptation et/ou en utilisant la Plateforme, le Client accepte les présentes CGV (signature électronique). SOS peut conserver des preuves techniques (horodatage, identifiants).
+1.3. **Acceptation électronique (click-wrap).** En cochant la case d'acceptation et/ou en utilisant la Plateforme, le Client accepte les présentes CGU, ce qui constitue une signature électronique valide au sens du règlement **eIDAS (UE) n° 910/2014** et des législations nationales équivalentes.
 
-1.4. **Modifications.** Nous pouvons mettre à jour les CGV et/ou les tarifs/frais avec effet prospectif par publication sur la Plateforme. La poursuite d’usage vaut acceptation.
+1.4. **Traçabilité de l'acceptation.** SOS Expat conserve un journal d'audit horodaté (UTC) incluant : adresse IP, identifiant de session, agent utilisateur (user-agent), version des CGU, empreinte numérique (hash) du document accepté et identifiant unique du Client. Ces données constituent une **preuve recevable** de l'acceptation.
+
+1.5. **Conservation des preuves.** Les journaux d'acceptation sont conservés pendant **dix (10) ans** après la dernière activité du Client ou la fermeture de son compte. Un certificat d'acceptation peut être délivré sur demande.
+
+1.6. **Modifications.** Nous pouvons mettre à jour les CGU et/ou les tarifs/frais avec effet prospectif par publication sur la Plateforme. Toute modification substantielle affectant les droits ou obligations du Client sera notifiée et fera l'objet d'une **nouvelle acceptation** requise pour les Clients existants. La poursuite d'usage après notification vaut acceptation.
+
+1.7. **Durée.** Les CGU sont conclues pour une durée indéterminée.
 
 ---
 
@@ -679,9 +754,21 @@ const TermsClients: React.FC = () => {
 
 2.2. **Exactitude des informations.** Les informations fournies (identité, moyens de contact, pays, objet de la demande) doivent être exactes et à jour.
 
-2.3. **Usage conforme.** Le Client s’interdit toute utilisation illicite ou abusive (fraude, contenu illégal, harcèlement, atteinte aux droits de tiers, détournement des flux de paiement, etc.). Aucun usage pour des situations médicales ou vitales d’urgence ; SOS n’est pas un service d’urgence.
+2.3. **Déclarations et garanties du Client.** En créant un compte et en utilisant la Plateforme, le Client déclare et garantit expressément que :
+- (a) Il est **majeur** selon le droit de son pays de résidence (18 ans minimum ou âge de la majorité civile applicable) ;
+- (b) Il dispose de la **pleine capacité juridique** pour contracter ;
+- (c) Il n'est pas placé sous tutelle, curatelle, sauvegarde de justice ou tout régime équivalent de protection qui l'empêcherait de contracter ;
+- (d) Il ne figure sur **aucune liste de sanctions internationales** (OFAC/SDN, UE, ONU, HMT, ou autre) ;
+- (e) Toutes les informations fournies lors de l'inscription sont **exactes, complètes et à jour** ;
+- (f) Il s'engage à **informer immédiatement** SOS Expat de tout changement affectant ces déclarations ;
+- (g) Pour les **personnes morales** : le représentant dispose des pouvoirs nécessaires pour engager la société.
+Toute fausse déclaration peut entraîner la suspension ou la fermeture du compte, sans préjudice de toute action en réparation.
 
-2.4. **Disponibilité.** La Plateforme est fournie « en l’état » : aucune disponibilité ininterrompue n’est garantie (maintenance, incidents, force majeure).
+2.4. **Usage conforme.** Le Client s'interdit toute utilisation illicite ou abusive (fraude, contenu illégal, harcèlement, atteinte aux droits de tiers, détournement des flux de paiement, usurpation d'identité, etc.). **SOS Expat n'est pas un service d'urgence** : aucun usage pour des situations médicales, vitales ou d'urgence immédiate.
+
+2.5. **Sécurité du compte.** Le Client protège ses identifiants de connexion. Toute activité réalisée via son compte est réputée effectuée par lui. En cas de suspicion de compromission, le Client doit immédiatement modifier son mot de passe et en informer SOS Expat.
+
+2.6. **Disponibilité.** La Plateforme est fournie « en l'état » : aucune disponibilité ininterrompue n'est garantie (maintenance, incidents, force majeure).
 
 ---
 
@@ -697,13 +784,18 @@ const TermsClients: React.FC = () => {
 
 ## 4. Prix, devises et frais de mise en relation
 
-4.1. **Affichage des prix.** Le prix total affiché au moment de la réservation inclut : (i) la rémunération du prestataire (Avocat/Aidant) fixée selon l’offre présentée, et (ii) les frais de mise en relation dus à SOS (forfait).
+4.1. **Affichage des prix.** Le prix total affiché au moment de la réservation comprend :
+- (a) La **rémunération du Prestataire** (Avocat/Aidant) telle que définie dans l'offre présentée ;
+- (b) Les **Frais de Mise en relation** dus à SOS Expat (forfait).
+Le Client voit le **prix total TTC** avant de confirmer sa réservation.
 
-4.2. **Frais de mise en relation (forfait).** 19 € (EUR) ou 25 $ (USD) par mise en relation (hors taxes), intégrés dans le prix total. SOS peut modifier ce forfait et/ou publier des barèmes locaux par pays/devise avec effet prospectif.
+4.2. **Frais de Mise en relation (forfait indicatif).** Les Frais de Mise en relation sont actuellement de **19 € (EUR)** ou **25 $ (USD)** par mise en relation. Ces montants sont **indicatifs** et peuvent être modifiés à tout moment par SOS Expat, avec effet prospectif. Des **barèmes locaux** par pays/devise peuvent être publiés. Le prix applicable est celui affiché au moment de la réservation.
 
-4.3. **Devises & conversion.** Les prix peuvent être proposés en plusieurs devises. Des frais/taux de change du prestataire de paiement peuvent s’appliquer.
+4.3. **Devises & conversion.** Les prix peuvent être proposés en plusieurs devises. Des frais et taux de change du prestataire de paiement peuvent s'appliquer. Le Client est informé du montant exact dans sa devise avant confirmation.
 
-4.4. **Taxes.** Les prix affichés incluent, le cas échéant, la TVA ou taxes applicables sur les frais de mise en relation. Les Prestataires demeurent responsables de leurs propres obligations fiscales.
+4.4. **Taxes.** Les prix affichés incluent, le cas échéant, la TVA ou taxes applicables sur les Frais de Mise en relation. Les Prestataires demeurent responsables de leurs propres obligations fiscales.
+
+4.5. **Transparence.** Aucun frais caché. Le prix affiché au moment de la réservation est le prix final, sauf frais de conversion de devise appliqués par le prestataire de paiement ou la banque du Client.
 
 ---
 
@@ -767,19 +859,27 @@ const TermsClients: React.FC = () => {
 
 ---
 
-## 10. Données personnelles
+## 10. Données personnelles (GDPR / Protection des données)
 
-10.1. **Rôles.** Pour les données strictement nécessaires à la mise en relation, SOS et le Prestataire agissent chacun en responsable de traitement pour leurs finalités propres.
+10.1. **Responsable de traitement.** Pour les données strictement nécessaires à la mise en relation, **SOS Expat (WorldExpat OÜ)** et le **Prestataire** (Avocat/Aidant) agissent chacun en **responsable de traitement indépendant** pour leurs finalités respectives, conformément au **Règlement (UE) 2016/679 (GDPR)**.
 
-10.2. **Bases & finalités.** Exécution du contrat (réservation), intérêts légitimes (sécurité, prévention de la fraude, amélioration), compliance (LCB-FT/sanctions) et consentement si requis.
+10.2. **Données collectées.** SOS Expat collecte les données suivantes : identité, coordonnées, pays de résidence, objet de la demande, données de paiement (traitées par des prestataires tiers), données de connexion (IP, horodatage, appareil), historique des réservations.
 
-10.3. **Transferts internationaux** possibles avec garanties appropriées.
+10.3. **Bases légales & finalités.**
+- **Exécution du contrat** : traitement de la réservation, mise en relation, paiement ;
+- **Intérêts légitimes** : sécurité, prévention de la fraude, amélioration des services, statistiques anonymisées ;
+- **Obligation légale** : conformité LCB-FT, sanctions, obligations fiscales ;
+- **Consentement** : communications marketing (révocable à tout moment).
 
-10.4. **Droits & contact.** Exercice via le formulaire de contact de la Plateforme.
+10.4. **Durée de conservation.** Les données sont conservées pendant la durée de la relation contractuelle, puis archivées pendant les durées légales de prescription (5 à 10 ans selon les données).
 
-10.5. **Sécurité.** Mesures techniques/organisationnelles raisonnables ; notification des violations requises par la loi.
+10.5. **Transferts internationaux.** Les données peuvent être transférées hors de l'Espace Économique Européen avec des **garanties appropriées** (clauses contractuelles types, décision d'adéquation, etc.).
 
-10.6. **Conformité DSA.** La Plateforme agit en tant que **service intermédiaire** au sens du **Règlement (UE) 2022/2065 (Digital Services Act)**. SOS Expat met en œuvre des mécanismes de signalement des contenus illicites et coopère avec les autorités compétentes conformément au DSA.
+10.6. **Droits du Client.** Le Client dispose des droits suivants : accès, rectification, effacement, limitation, portabilité, opposition. Exercice via le **formulaire de contact** de la Plateforme ou par email.
+
+10.7. **Sécurité.** Mesures techniques et organisationnelles raisonnables (chiffrement, contrôle d'accès, audits). Notification des violations de données dans les **72 heures** conformément au GDPR.
+
+10.8. **Conformité DSA.** La Plateforme opère en tant que **service intermédiaire** au sens du **Règlement (UE) 2022/2065 (Digital Services Act)**. SOS Expat met en œuvre des mécanismes de signalement des contenus illicites et coopère avec les autorités compétentes.
 
 ---
 
@@ -789,41 +889,80 @@ La Plateforme, ses marques, logos, bases de données et contenus sont protégés
 
 ---
 
-## 12. Responsabilité
+## 12. Responsabilité et garanties
 
-12.1. **Prestataires indépendants.** Le Client reconnaît que les Avocats et Aidants sont indépendants. SOS n’est pas responsable des conseils/services fournis ni de leur résultat.
+12.1. **Rôle exclusif de mise en relation.** SOS Expat est **exclusivement** une plateforme de mise en relation technique. SOS Expat :
+- **N'est pas** un cabinet d'avocats, un cabinet de conseil, un prestataire de services juridiques, médicaux, fiscaux ou réglementés ;
+- **N'est pas partie** au contrat entre le Client et le Prestataire (Avocat/Aidant) ;
+- **Ne garantit pas** la qualité, l'exactitude, la légalité ou le résultat des conseils ou services fournis par les Prestataires ;
+- **N'intervient pas** dans la fixation des honoraires des Prestataires (hors Frais de Mise en relation).
 
-12.2. **Limitations.** Dans la mesure permise par la loi, la responsabilité de SOS pour un dommage direct prouvé est limitée au prix total payé par le Client pour la réservation concernée. SOS n’est pas responsable des dommages indirects/spéciaux/consécutifs (perte de chance, de profits, d’image, etc.), dans la mesure permise.
+12.2. **Prestataires indépendants.** Les Avocats et Aidants sont des **professionnels indépendants**, seuls responsables de leurs conseils, services, et du respect de leurs obligations légales et déontologiques. SOS Expat **décline toute responsabilité** pour tout préjudice subi par le Client du fait des services d'un Prestataire.
 
-12.3. **Aucune garantie.** SOS ne garantit pas la disponibilité continue de la Plateforme ni l’absence d’erreurs.
+12.3. **Limitation de responsabilité.** Dans la **mesure maximale permise par la loi applicable** et **sans préjudice des droits impératifs des consommateurs** :
+- (a) La responsabilité totale de SOS Expat envers le Client est limitée aux **dommages directs** prouvés et **ne peut excéder** le prix total payé par le Client pour la réservation à l'origine de la réclamation ;
+- (b) SOS Expat **n'est pas responsable** des dommages indirects, spéciaux, consécutifs, punitifs ou exemplaires (perte de chance, de profits, d'opportunités, atteinte à la réputation, préjudice moral, etc.).
+
+12.4. **Aucune garantie.** La Plateforme est fournie « **en l'état** » et « **selon disponibilité** ». SOS Expat ne garantit pas :
+- La disponibilité continue ou ininterrompue de la Plateforme ;
+- L'absence d'erreurs, de bugs ou de failles de sécurité ;
+- La disponibilité d'un Prestataire particulier ;
+- L'adéquation des services à un besoin particulier du Client.
+
+12.5. **Force majeure.** SOS Expat n'est pas responsable des retards ou défaillances causés par des événements de **force majeure** (catastrophe naturelle, guerre, pandémie, cyberattaque, panne électrique ou internet, décision gouvernementale, grève, etc.).
+
+12.6. **Litiges Client-Prestataire.** Tout litige entre le Client et un Prestataire relève **exclusivement** de leur relation directe. SOS Expat **n'intervient pas** dans ces litiges et **ne peut être mis en cause** comme partie, garant ou médiateur.
 
 ---
 
 ## 13. Droit applicable, règlement des litiges et tribunaux compétents
 
-13.1. **Droit matériel.** Pour chaque service couvrant un pays donné, la relation SOS–Client est régie par les lois du pays d’intervention sans priver le Client consommateur de ses droits impératifs de résidence. À titre supplétif, le droit estonien régit l’interprétation/validité des CGV et toute question non régie par ce droit local.
+13.1. **Droit applicable.**
+- **Client non-consommateur (B2B)** : les présentes CGU sont régies **exclusivement** par le **droit estonien**, à l'exclusion de ses règles de conflit de lois.
+- **Client consommateur (B2C)** : les CGU sont régies par le droit estonien, **sans priver le Client** des dispositions impératives de protection des consommateurs de son pays de résidence habituelle.
 
-13.2. **Arbitrage CCI (option consommateur) / obligatoire non-consommateur.**
-- **Client non-consommateur (B2B)** : arbitrage CCI obligatoire, siège : Tallinn (Estonie), langue : français, droit matériel selon 13.1, procédure confidentielle.
-- **Client consommateur** : option de recourir à l’arbitrage CCI (mêmes modalités) ou aux juridictions compétentes en vertu des lois impératives applicables.
+13.2. **Arbitrage CCI.**
+- **Client non-consommateur (B2B)** : tout litige est tranché **définitivement** selon le Règlement d'Arbitrage de la **CCI (Chambre de Commerce Internationale)**. **Siège : Tallinn (Estonie)**. **Langue : ANGLAIS**. Un (1) arbitre. Procédure **confidentielle**.
+- **Client consommateur (B2C)** : le Client a le **choix** entre l'arbitrage CCI (mêmes modalités) ou les juridictions compétentes en vertu des lois impératives de son lieu de résidence.
 
-13.3. **Compétence des tribunaux estoniens (Tallinn).** Pour toute demande non arbitrable, l’exécution des sentences ou les mesures urgentes, compétence exclusive des tribunaux d’Estonie (Tallinn), sans préjudice des droits impératifs du consommateur.
+13.3. **Renonciation aux actions collectives et au jury.** Dans la **mesure maximale permise par la loi applicable** et **sans préjudice des droits impératifs des consommateurs** :
+- (a) Toute action **collective, de groupe, représentative ou consolidée** est **exclue** ; seules les réclamations **individuelles** sont recevables ;
+- (b) Le Client non-consommateur **renonce expressément au droit à un procès devant jury** (jury trial waiver).
 
-13.4. **Renonciation aux actions collectives (dans la mesure permise).** Toute action collective/de groupe/représentative est exclue, sauf si la loi impérative du lieu de résidence du consommateur en dispose autrement.
+13.4. **Compétence des tribunaux estoniens.** Pour toute demande **non arbitrable**, l'**exequatur** (exécution des sentences arbitrales) ou les **mesures provisoires/conservatoires**, les tribunaux estoniens sis à **Tallinn** ont compétence exclusive, **sans préjudice** du droit du Client consommateur de saisir les tribunaux de son lieu de résidence.
+
+13.5. **Médiation préalable.** Avant toute saisine arbitrale ou judiciaire, les parties sont encouragées à tenter de résoudre le litige à l'amiable par **négociation de bonne foi** pendant un délai de **trente (30) jours** à compter de la notification écrite du différend.
+
+13.6. **Prescription.** Toute action ou réclamation du Client non-consommateur contre SOS Expat doit être intentée dans un délai d'**un (1) an** à compter de la date à laquelle le fait générateur est survenu. Les délais de prescription applicables aux consommateurs sont ceux prévus par la loi impérative de leur lieu de résidence.
 
 ---
 
 ## 14. Résiliation/suspension et divers
 
-14.1. **Suspension.** SOS peut suspendre/fermer le compte en cas de fraude, non-conformité, abus ou risque juridique.
+14.1. **Suspension et fermeture.** SOS Expat peut **suspendre temporairement** ou **fermer définitivement** le compte du Client, avec effet immédiat, dans les cas suivants :
+- (a) Soupçon de **fraude, usurpation d'identité ou activité illégale** ;
+- (b) **Violation des CGU** ou comportement abusif ;
+- (c) **Non-paiement** ou contestation de paiement abusive ;
+- (d) Inscription sur une **liste de sanctions internationales** ;
+- (e) Demande d'une **autorité judiciaire ou administrative** ;
+- (f) Tout autre motif légitime de sécurité ou de conformité.
+En cas de fermeture, les réservations en cours peuvent être annulées et remboursées, sauf faute du Client.
 
-14.2. **Intégralité.** Les CGV constituent l’accord complet entre SOS et le Client pour l’usage de la Plateforme.
+14.2. **Fermeture par le Client.** Le Client peut fermer son compte à tout moment via son espace personnel ou en contactant le support. La fermeture ne donne lieu à aucun remboursement des services déjà consommés.
 
-14.3. **Langues.** Des traductions peuvent être fournies ; le français prévaut pour l’interprétation.
+14.3. **Intégralité.** Les CGU constituent l'accord complet entre SOS Expat et le Client pour l'usage de la Plateforme et remplacent tout accord antérieur.
 
-14.4. **Nullité partielle.** Si une stipulation est nulle/inapplicable, le reste demeure en vigueur ; elle pourra être remplacée par une clause valide d’effet équivalent.
+14.4. **Langues.** Des traductions peuvent être fournies à titre informatif ; **l'anglais prévaut** pour l'interprétation en cas de divergence.
 
-14.5. **Non-renonciation.** Le fait de ne pas exercer un droit n’emporte pas renonciation.
+14.5. **Nullité partielle.** Si une stipulation est nulle ou inapplicable, le reste demeure en vigueur ; elle pourra être remplacée par une clause valide d'effet équivalent.
+
+14.6. **Divisibilité géographique.** Si une clause des présentes CGU est déclarée nulle, inapplicable ou illégale dans une juridiction particulière, cette décision n'affecte **pas la validité** de cette même clause dans les **autres juridictions** où elle demeure licite et applicable.
+
+14.7. **Non-renonciation.** Le fait de ne pas exercer un droit n'emporte pas renonciation.
+
+14.8. **Cession.** SOS Expat peut céder les CGU à une entité de son groupe ou à un successeur. Le Client ne peut céder sans accord écrit de SOS Expat.
+
+14.9. **Preuve.** Les registres informatiques conservés dans les systèmes de SOS Expat et de ses Prestataires font foi jusqu'à preuve contraire.
 
 ---
 
@@ -835,21 +974,27 @@ La Plateforme, ses marques, logos, bases de données et contenus sont protégés
   const defaultEn = `
 # Terms and Conditions – Clients (Global)
 
-**SOS Expat of WorldExpat OÜ** (the “Platform,” “SOS,” “we”)
+**SOS Expat** is a service operated by **WorldExpat OÜ**, a company incorporated under Estonian law (company registry no. 16885621), with its registered office at Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145, Estonia (the "**Platform**," "**SOS**," "**SOS Expat**," "**we**").
 
-**Version 2.2 – Last updated: June 16, 2025**
+**Version 3.0 – Last updated: February 1, 2026**
 
 ---
 
 ## 1. Purpose and Scope
 
-1.1. These general terms and conditions (“T&Cs”) govern the use of the Platform by any individual or legal entity who creates a client account and books a service via the Platform (the “Client”).
+1.1. These general terms and conditions ("T&Cs") govern the use of the Platform by any individual or legal entity who creates a client account and books a service via the Platform (the "Client").
 
-1.2. **Role of SOS Expat.** SOS Expat is a connection platform: (i) with independent lawyers (“Lawyers”), and/or (ii) with independent expat helpers (“Helpers”). SOS Expat is not a law firm, does not provide legal, medical, tax, or regulated advice, and is not a party to the service contract concluded between the Client and the provider (Lawyer/Helper).
+1.2. **Role of SOS Expat.** SOS Expat is a connection platform: (i) with independent lawyers ("Lawyers"), and/or (ii) with independent expat helpers ("Helpers"). SOS Expat is not a law firm, does not provide legal, medical, tax, or regulated advice, and is not a party to the service contract concluded between the Client and the provider (Lawyer/Helper).
 
-1.3. **Electronic Acceptance (click-wrap).** By checking the acceptance box and/or using the Platform, the Client accepts these T&Cs (electronic signature). SOS may retain technical evidence (timestamp, identifiers).
+1.3. **Electronic Acceptance (click-wrap).** By checking the acceptance box and/or using the Platform, the Client accepts these T&Cs, which constitutes a valid electronic signature within the meaning of **Regulation (EU) No 910/2014 (eIDAS)** and equivalent national legislation.
 
-1.4. **Changes.** We may update the T&Cs and/or fees with prospective effect by posting on the Platform. Continued use constitutes acceptance.
+1.4. **Acceptance Traceability.** SOS Expat maintains a timestamped audit log (UTC) including: IP address, session identifier, user agent, T&Cs version, digital fingerprint (hash) of the accepted document, and unique Client identifier. This data constitutes **admissible evidence** of acceptance.
+
+1.5. **Retention of Evidence.** Acceptance logs are retained for **ten (10) years** after the Client's last activity or account closure. A certificate of acceptance may be issued upon request.
+
+1.6. **Changes.** We may update the T&Cs and/or prices/fees with prospective effect by posting on the Platform. Any substantial change affecting the Client's rights or obligations will be notified and will require **renewed acceptance** for existing Clients. Continued use after notification constitutes acceptance.
+
+1.7. **Duration.** These T&Cs are concluded for an indefinite period.
 
 ---
 
@@ -859,17 +1004,29 @@ La Plateforme, ses marques, logos, bases de données et contenus sont protégés
 
 2.2. **Accuracy of Information.** Information provided (identity, contact methods, country, purpose of request) must be accurate and up-to-date.
 
-2.3. **Proper Use.** The Client shall not engage in any unlawful or abusive use (fraud, illegal content, harassment, infringement of third-party rights, payment diversion, etc.). No use for medical or life-threatening emergencies; SOS is not an emergency service.
+2.3. **Client Declarations and Warranties.** By creating an account and using the Platform, the Client expressly declares and warrants that:
+- (a) They are of **legal age** under the laws of their country of residence (minimum 18 years or applicable age of majority);
+- (b) They have **full legal capacity** to enter into contracts;
+- (c) They are not under guardianship, curatorship, judicial protection, or any equivalent protective regime that would prevent them from contracting;
+- (d) They do not appear on **any international sanctions list** (OFAC/SDN, EU, UN, HMT, or other);
+- (e) All information provided during registration is **accurate, complete, and up-to-date**;
+- (f) They undertake to **immediately inform** SOS Expat of any change affecting these declarations;
+- (g) For **legal entities**: the representative has the necessary authority to bind the company.
+Any false declaration may result in suspension or closure of the account, without prejudice to any claim for damages.
 
-2.4. **Availability.** The Platform is provided “as-is”: uninterrupted availability is not guaranteed (maintenance, incidents, force majeure).
+2.4. **Proper Use.** The Client shall not engage in any unlawful or abusive use (fraud, illegal content, harassment, infringement of third-party rights, payment diversion, identity theft, etc.). **SOS Expat is not an emergency service**: no use for medical, life-threatening, or immediate emergency situations.
+
+2.5. **Account Security.** The Client protects their login credentials. Any activity carried out via their account is deemed to have been performed by them. In case of suspected compromise, the Client must immediately change their password and inform SOS Expat.
+
+2.6. **Availability.** The Platform is provided "as-is": uninterrupted availability is not guaranteed (maintenance, incidents, force majeure).
 
 ---
 
 ## 3. Nature of Bookable Services
 
-3.1. **Calls with Lawyers.** Short orientation consultations (e.g., 20 minutes). The Lawyer remains solely responsible for their advice and compliance with professional ethics/local laws.
+3.1. **Calls with Lawyers.** Short orientation consultations (e.g., 20 minutes). The Lawyer remains solely responsible for their advice and compliance with their professional ethics/local laws.
 
-3.2. **Calls with Helpers.** Unregulated assistance (practical guidance, informal translation, local contacts…). No legal/medical/regulated advice without appropriate local license.
+3.2. **Calls with Helpers.** Unregulated assistance (practical guidance, informal translation, local contacts...). No legal/medical/regulated advice without appropriate local license.
 
 3.3. **No Guarantee.** We do not guarantee outcome, quality, suitability for specific needs, or provider availability.
 
@@ -877,35 +1034,40 @@ La Plateforme, ses marques, logos, bases de données et contenus sont protégés
 
 ## 4. Prices, Currencies, and Connection Fees
 
-4.1. **Price Display.** The total price shown at booking includes: (i) the provider’s fee (Lawyer/Helper) as per the presented offer, and (ii) the connection fee due to SOS (flat fee).
+4.1. **Price Display.** The total price shown at booking includes:
+- (a) The **Provider's fee** (Lawyer/Helper) as defined in the presented offer;
+- (b) The **Connection Fees** due to SOS Expat (flat fee).
+The Client sees the **total price including taxes** before confirming their booking.
 
-4.2. **Connection Fee (flat).** €19 (EUR) or $25 (USD) per connection (excluding taxes), included in the total price. SOS may modify this fee and/or publish local rates per country/currency with prospective effect.
+4.2. **Connection Fee (indicative flat rate).** Connection Fees are currently **EUR 19** or **USD 25** per connection. These amounts are **indicative** and may be modified at any time by SOS Expat, with prospective effect. **Local rates** by country/currency may be published. The applicable price is the one displayed at the time of booking.
 
-4.3. **Currencies & Conversion.** Prices may be offered in multiple currencies. Payment provider fees/exchange rates may apply.
+4.3. **Currencies & Conversion.** Prices may be offered in multiple currencies. Payment provider fees and exchange rates may apply. The Client is informed of the exact amount in their currency before confirmation.
 
-4.4. **Taxes.** Displayed prices include VAT or applicable taxes on the connection fee, if any. Providers remain responsible for their own tax obligations.
+4.4. **Taxes.** Displayed prices include, where applicable, VAT or applicable taxes on the Connection Fees. Providers remain responsible for their own tax obligations.
+
+4.5. **Transparency.** No hidden fees. The price displayed at the time of booking is the final price, except for currency conversion fees applied by the payment provider or the Client's bank.
 
 ---
 
 ## 5. Booking, Call, and Contact Attempts
 
-5.1. **Definition of “Connection.”** Connection occurs when: (a) Client–Provider contact information is transmitted, and/or (b) a call/messaging/video channel is opened via the Platform, and/or (c) the Provider accepts a Client request.
+5.1. **Definition of "Connection."** Connection is deemed to have occurred when: (a) Client–Provider contact information is transmitted, and/or (b) a call/messaging/video channel is opened via the Platform, and/or (c) the Provider accepts a Client request.
 
-5.2. **Call Attempts.** For immediate calls, the Platform makes up to three (3) attempts within about 15 minutes (unless stated otherwise in-app).
+5.2. **Call Attempts.** For immediate calls: the Platform makes up to three (3) attempts within approximately 15 minutes (unless stated otherwise in-app).
 
-5.3. **Provider Unavailability.** If no connection occurs after attempts, the booking is canceled and the Client is fully refunded.
+5.3. **Provider Unavailability.** If no connection could be established after the attempts, the booking is canceled and the Client is fully refunded the total price paid.
 
-5.4. **Client Non-Response.** If a connection occurs (per 5.1) but no effective exchange happens (no answer, busy, refusal, premature end), payment remains due and non-refundable.
+5.4. **Client Non-Response.** If connection has occurred (per 5.1) but the Client does not achieve an effective exchange (no answer, busy, refusal, premature termination), payment remains due and non-refundable.
 
-5.5. **Communication Quality.** Client must be in adequate coverage area and use compatible equipment. SOS is not responsible for third-party network interruptions.
+5.5. **Communication Quality.** The Client must be in an area with sufficient coverage and use compatible equipment. SOS is not responsible for third-party network interruptions.
 
 ---
 
 ## 6. Right of Withdrawal (Consumers) & Immediate Execution
 
-6.1. **Information.** If the Client is a consumer and local mandatory law provides a right of withdrawal, it may be exercised within legal deadlines unless the Client requests immediate execution.
+6.1. **Information.** If the Client is a consumer and local mandatory law provides a right of withdrawal, it may be exercised within legal deadlines unless the Client requests immediate execution of the service.
 
-6.2. **Waiver.** By booking an immediate or scheduled call before the legal deadline expires, the Client requests immediate execution and acknowledges that, once fully performed, the right of withdrawal is lost. For partial execution before withdrawal, the Client must pay for services already provided and the connection fee, non-refundable.
+6.2. **Waiver.** By booking an immediate or scheduled call before the legal deadline expires, the Client requests immediate execution and acknowledges that, once the service is fully performed, they lose their right of withdrawal. In case of partial execution before withdrawal, the Client must pay for the portion already provided and the connection fee, which are non-refundable.
 
 6.3. **Formality.** The Platform collects explicit acceptance of these points at booking, when required.
 
@@ -913,7 +1075,7 @@ La Plateforme, ses marques, logos, bases de données et contenus sont protégés
 
 ## 7. Payment, Security, Chargebacks
 
-7.1. **Single Payment & Allocation.** The Client makes a single payment via the Platform covering (i) the Provider’s share and (ii) the connection fee. SOS (or its payment provider) collects, deducts its fees, and transfers the balance to the Provider.
+7.1. **Single Payment & Allocation.** The Client makes a single payment via the Platform covering (i) the Provider's share and (ii) the connection fee. SOS (or its payment provider) collects, deducts its fees, and transfers the balance to the Provider.
 
 7.2. **Security.** Payments are processed by third-party payment providers. KYC/AML controls may apply.
 
@@ -926,9 +1088,8 @@ La Plateforme, ses marques, logos, bases de données et contenus sont protégés
 ## 8. Cancellations and Refunds
 
 8.1. **General.** Except for mandatory legal provisions:
-
-* connection fees are non-refundable once the connection occurs (5.1);
-* provider fees are non-refundable once the service starts, unless waived by the Provider.
+- connection fees are non-refundable once the connection occurs (5.1);
+- provider fees are non-refundable once the service starts, unless waived by the Provider as a commercial gesture.
 
 8.2. **Client Cancellation Before Connection.** Full refund.
 
@@ -940,296 +1101,428 @@ La Plateforme, ses marques, logos, bases de données et contenus sont protégés
 
 ## 9. Behavior, Security, and Content
 
-9.1. **Respect.** Client agrees to behave respectfully, not record or share exchanges without legally required consent, and not solicit illegal acts.
+9.1. **Respect.** The Client agrees to behave respectfully, not record or share exchanges without legally required consent, and not solicit illegal acts.
 
-9.2. **Provided Content.** Information provided must be honest, accurate, and lawful. Client indemnifies SOS and Provider against claims related to illegal content.
+9.2. **Provided Content.** Information provided must be honest, accurate, and lawful. The Client indemnifies SOS and the Provider against claims related to illegal content they provide.
 
 9.3. **Reporting.** Any abuse can be reported via the contact form.
 
 ---
 
-## 10. Personal Data
+## 10. Personal Data (GDPR / Data Protection)
 
-10.1. **Roles.** For data strictly necessary for connection, SOS and the Provider act as independent controllers for their own purposes.
+10.1. **Data Controller.** For data strictly necessary for connection, **SOS Expat (WorldExpat OÜ)** and the **Provider** (Lawyer/Helper) each act as **independent data controllers** for their respective purposes, in accordance with **Regulation (EU) 2016/679 (GDPR)**.
 
-10.2. **Bases & Purposes.** Contract performance (booking), legitimate interests (security, fraud prevention, improvement), compliance (AML/sanctions), and consent if required.
+10.2. **Data Collected.** SOS Expat collects the following data: identity, contact details, country of residence, purpose of request, payment data (processed by third-party providers), connection data (IP, timestamp, device), booking history.
 
-10.3. **International Transfers** possible with appropriate safeguards.
+10.3. **Legal Bases & Purposes.**
+- **Contract performance**: booking processing, connection, payment;
+- **Legitimate interests**: security, fraud prevention, service improvement, anonymized statistics;
+- **Legal obligation**: AML/CFT compliance, sanctions, tax obligations;
+- **Consent**: marketing communications (revocable at any time).
 
-10.4. **Rights & Contact.** Exercised via Platform contact form.
+10.4. **Retention Period.** Data is retained for the duration of the contractual relationship, then archived for legal limitation periods (5 to 10 years depending on the data).
 
-10.5. **Security.** Reasonable technical/organizational measures; breach notification as required by law.
+10.5. **International Transfers.** Data may be transferred outside the European Economic Area with **appropriate safeguards** (standard contractual clauses, adequacy decision, etc.).
 
-10.6. **DSA Compliance.** The Platform operates as an **intermediary service** within the meaning of **Regulation (EU) 2022/2065 (Digital Services Act)**. SOS Expat implements mechanisms for reporting illegal content and cooperates with competent authorities in accordance with the DSA.
+10.6. **Client Rights.** The Client has the following rights: access, rectification, erasure, restriction, portability, objection. Exercise via the Platform's **contact form** or by email.
+
+10.7. **Security.** Reasonable technical and organizational measures (encryption, access control, audits). Data breach notification within **72 hours** in accordance with GDPR.
+
+10.8. **DSA Compliance.** The Platform operates as an **intermediary service** within the meaning of **Regulation (EU) 2022/2065 (Digital Services Act)**. SOS Expat implements mechanisms for reporting illegal content and cooperates with competent authorities.
 
 ---
 
 ## 11. Intellectual Property
 
-The Platform, its trademarks, logos, databases, and content are protected. No rights are transferred to the Client. Use is strictly limited to personal access per the T&Cs.
+The Platform, its trademarks, logos, databases, and content are protected. No rights are transferred to the Client. Use is strictly limited to personal access in accordance with the T&Cs.
 
 ---
 
-## 12. Liability
+## 12. Liability and Warranties
 
-12.1. **Independent Providers.** Client acknowledges that Lawyers and Helpers are independent. SOS is not responsible for advice/services provided or their outcome.
+12.1. **Connection Role Only.** SOS Expat is **exclusively** a technical connection platform. SOS Expat:
+- **Is not** a law firm, consulting firm, or provider of legal, medical, tax, or regulated services;
+- **Is not a party** to the contract between the Client and the Provider (Lawyer/Helper);
+- **Does not guarantee** the quality, accuracy, legality, or outcome of advice or services provided by Providers;
+- **Does not intervene** in setting Provider fees (other than Connection Fees).
 
-12.2. **Limitations.** To the extent permitted by law, SOS’s liability for proven direct damage is limited to the total price paid by the Client for the relevant booking. SOS is not liable for indirect/special/consequential damages (loss of opportunity, profit, reputation, etc.), to the extent permitted.
+12.2. **Independent Providers.** Lawyers and Helpers are **independent professionals**, solely responsible for their advice, services, and compliance with their legal and ethical obligations. SOS Expat **disclaims all liability** for any damage suffered by the Client as a result of a Provider's services.
 
-12.3. **No Guarantee.** SOS does not guarantee continuous availability of the Platform or absence of errors.
+12.3. **Limitation of Liability.** To the **maximum extent permitted by applicable law** and **without prejudice to mandatory consumer rights**:
+- (a) SOS Expat's total liability to the Client is limited to **proven direct damages** and **shall not exceed** the total price paid by the Client for the booking giving rise to the claim;
+- (b) SOS Expat **is not liable** for indirect, special, consequential, punitive, or exemplary damages (loss of chance, profits, opportunities, reputational harm, moral damages, etc.).
+
+12.4. **No Warranty.** The Platform is provided "**as is**" and "**as available**." SOS Expat does not guarantee:
+- Continuous or uninterrupted availability of the Platform;
+- Absence of errors, bugs, or security vulnerabilities;
+- Availability of any particular Provider;
+- Suitability of services for the Client's particular needs.
+
+12.5. **Force Majeure.** SOS Expat is not liable for delays or failures caused by **force majeure** events (natural disaster, war, pandemic, cyberattack, power or internet outage, government decision, strike, etc.).
+
+12.6. **Client-Provider Disputes.** Any dispute between the Client and a Provider is **exclusively** a matter of their direct relationship. SOS Expat **does not intervene** in such disputes and **cannot be held liable** as a party, guarantor, or mediator.
 
 ---
 
 ## 13. Governing Law, Dispute Resolution, and Competent Courts
 
-13.1. **Substantive Law.** For each service covering a given country, the SOS–Client relationship is governed by the laws of the country of intervention without depriving the consumer of mandatory residence rights. Supplementarily, Estonian law governs T&Cs interpretation/validity and issues not governed by local law.
+13.1. **Governing Law.**
+- **Non-consumer Client (B2B)**: these T&Cs are governed **exclusively** by **Estonian law**, excluding its conflict of laws rules.
+- **Consumer Client (B2C)**: the T&Cs are governed by Estonian law, **without depriving the Client** of the mandatory consumer protection provisions of their country of habitual residence.
 
-13.2. **ICC Arbitration (Consumer Option) / Mandatory for Non-Consumer.**
+13.2. **ICC Arbitration.**
+- **Non-consumer Client (B2B)**: any dispute shall be **finally settled** under the Rules of Arbitration of the **ICC (International Chamber of Commerce)**. **Seat: Tallinn (Estonia)**. **Language: ENGLISH**. One (1) arbitrator. **Confidential** proceedings.
+- **Consumer Client (B2C)**: the Client has the **choice** between ICC arbitration (same terms) or the competent courts under mandatory laws of their place of residence.
 
-* **Non-consumer Client (B2B):** ICC arbitration mandatory, seat: Tallinn (Estonia), language: French, substantive law per 13.1, confidential procedure.
-* **Consumer Client:** Option to resort to ICC arbitration (same terms) or competent courts under applicable mandatory laws.
+13.3. **Waiver of Class Actions and Jury Trial.** To the **maximum extent permitted by applicable law** and **without prejudice to mandatory consumer rights**:
+- (a) Any **class, collective, representative, or consolidated action** is **excluded**; only **individual** claims are admissible;
+- (b) Non-consumer Clients **expressly waive the right to a jury trial** (jury trial waiver).
 
-13.3. **Estonian Courts Competence (Tallinn).** For any non-arbitrable claim, enforcement of awards, or urgent measures, exclusive competence of Estonian courts (Tallinn), without prejudice to mandatory consumer rights.
+13.4. **Estonian Courts Jurisdiction.** For any **non-arbitrable claim**, **exequatur** (enforcement of arbitral awards), or **interim/conservatory measures**, Estonian courts in **Tallinn** have exclusive jurisdiction, **without prejudice** to the consumer Client's right to bring proceedings before the courts of their place of residence.
 
-13.4. **Waiver of Class Actions (where permitted).** Any collective/group/representative action is excluded, unless mandatory law of consumer residence provides otherwise.
+13.5. **Prior Mediation.** Before initiating any arbitration or court proceedings, the parties are encouraged to attempt to resolve the dispute amicably through **good faith negotiation** for a period of **thirty (30) days** from written notice of the dispute.
+
+13.6. **Limitation Period.** Any action or claim by a non-consumer Client against SOS Expat must be brought within **one (1) year** from the date the cause of action arose. Limitation periods applicable to consumers are those provided by the mandatory law of their place of residence.
 
 ---
 
 ## 14. Termination/Suspension and Miscellaneous
 
-14.1. **Suspension.** SOS may suspend/close accounts in case of fraud, non-compliance, abuse, or legal risk.
+14.1. **Suspension and Closure.** SOS Expat may **temporarily suspend** or **permanently close** the Client's account, with immediate effect, in the following cases:
+- (a) Suspicion of **fraud, identity theft, or illegal activity**;
+- (b) **Violation of T&Cs** or abusive behavior;
+- (c) **Non-payment** or abusive payment dispute;
+- (d) Listing on an **international sanctions list**;
+- (e) Request from a **judicial or administrative authority**;
+- (f) Any other legitimate security or compliance reason.
+In case of closure, pending bookings may be canceled and refunded, except in case of Client fault.
 
-14.2. **Entire Agreement.** The T&Cs constitute the entire agreement between SOS and the Client for Platform use.
+14.2. **Closure by Client.** The Client may close their account at any time via their personal space or by contacting support. Closure does not entitle the Client to any refund for services already consumed.
 
-14.3. **Languages.** Translations may be provided; French prevails for interpretation.
+14.3. **Entire Agreement.** These T&Cs constitute the complete agreement between SOS Expat and the Client for use of the Platform and supersede any prior agreement.
 
-14.4. **Partial Invalidity.** If a provision is invalid/unenforceable, the rest remains in force; it may be replaced by a valid clause of equivalent effect.
+14.4. **Languages.** Translations may be provided for information purposes; **English prevails** for interpretation in case of discrepancy.
 
-14.5. **No Waiver.** Failure to exercise a right does not constitute waiver.
+14.5. **Partial Invalidity.** If a provision is void or unenforceable, the remainder remains in force; it may be replaced by a valid clause of equivalent effect.
+
+14.6. **Geographic Severability.** If a clause of these T&Cs is declared void, unenforceable, or illegal in a particular jurisdiction, this decision **does not affect the validity** of that same clause in **other jurisdictions** where it remains lawful and enforceable.
+
+14.7. **No Waiver.** Failure to exercise a right does not constitute waiver.
+
+14.8. **Assignment.** SOS Expat may assign the T&Cs to a group entity or successor. The Client may not assign without SOS Expat's written consent.
+
+14.9. **Evidence.** Computer records maintained in SOS Expat's and its Providers' systems constitute evidence until proven otherwise.
 
 ---
 
 ## 15. Contact
 
-**Contact Form (Support & Legal Requests):** **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
+**Contact Form (Support & Legal Requests):** **https://sos-expat.com/contact**
 `;
 
   const defaultEs = `
-# Condiciones Generales – Clientes (Global)
+# Condiciones Generales de Uso – Clientes (Global)
 
-**SOS Expat de WorldExpat OÜ** (la “Plataforma”, “SOS”, “nosotros”)
+**SOS Expat** es un servicio operado por **WorldExpat OÜ**, sociedad de derecho estonio (registro mercantil n.º 16885621), con domicilio social en Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145, Estonia (la "**Plataforma**", "**SOS**", "**SOS Expat**", "**nosotros**").
 
-**Versión 2.2 – Última actualización: 16 de junio de 2025**
+**Versión 3.0 – Última actualización: 1 de febrero de 2026**
 
 ---
 
-## 1. Objeto y alcance
+## 1. Objeto y ámbito de aplicación
 
-1.1. Estas condiciones generales (“CG”) regulan el uso de la Plataforma por cualquier persona física o jurídica que cree una cuenta de cliente y reserve un servicio a través de la Plataforma (el “Cliente”).
+1.1. Estas condiciones generales ("CG") regulan el uso de la Plataforma por cualquier persona física o jurídica que cree una cuenta de cliente y reserve un servicio a través de la Plataforma (el "Cliente").
 
-1.2. **Rol de SOS Expat.** SOS Expat es una plataforma de conexión: (i) con abogados independientes (“Abogados”), y/o (ii) con ayudantes expatriados independientes (“Ayudantes”). SOS Expat no es un despacho de abogados, no proporciona asesoramiento legal, médico, fiscal o regulado, y no es parte del contrato de prestación celebrado entre el Cliente y el proveedor (Abogado/Ayudante).
+1.2. **Rol de SOS Expat.** SOS Expat es una plataforma de intermediación: (i) con abogados independientes ("Abogados"), y/o (ii) con ayudantes expatriados independientes ("Ayudantes"). SOS Expat no es un despacho de abogados, no proporciona asesoramiento jurídico, médico, fiscal o regulado, y no es parte del contrato de prestación celebrado entre el Cliente y el prestador (Abogado/Ayudante).
 
-1.3. **Aceptación electrónica (click-wrap).** Al marcar la casilla de aceptación y/o utilizar la Plataforma, el Cliente acepta estas CG (firma electrónica). SOS puede conservar pruebas técnicas (sello de tiempo, identificadores).
+1.3. **Aceptación electrónica (click-wrap).** Al marcar la casilla de aceptación y/o utilizar la Plataforma, el Cliente acepta las presentes CG, lo que constituye una firma electrónica válida en el sentido del **Reglamento (UE) n.º 910/2014 (eIDAS)** y legislaciones nacionales equivalentes.
 
-1.4. **Modificaciones.** Podemos actualizar las CG y/o tarifas con efecto prospectivo mediante publicación en la Plataforma. La continuación del uso implica aceptación.
+1.4. **Trazabilidad de la aceptación.** SOS Expat conserva un registro de auditoría con marca temporal (UTC) que incluye: dirección IP, identificador de sesión, agente de usuario (user-agent), versión de las CG, huella digital (hash) del documento aceptado e identificador único del Cliente. Estos datos constituyen **prueba admisible** de la aceptación.
+
+1.5. **Conservación de pruebas.** Los registros de aceptación se conservan durante **diez (10) años** tras la última actividad del Cliente o el cierre de su cuenta. Se podrá expedir un certificado de aceptación a solicitud.
+
+1.6. **Modificaciones.** Podemos actualizar las CG y/o los precios/tarifas con efecto prospectivo mediante publicación en la Plataforma. Cualquier modificación sustancial que afecte a los derechos u obligaciones del Cliente será notificada y requerirá **nueva aceptación** para los Clientes existentes. La continuación del uso tras la notificación implica aceptación.
+
+1.7. **Duración.** Las CG se celebran por tiempo indefinido.
 
 ---
 
 ## 2. Cuentas, elegibilidad y uso
 
-2.1. **Edad y capacidad.** El Cliente declara tener al menos 18 años y capacidad legal. Para personas jurídicas, el usuario declara estar autorizado para comprometer a la empresa.
+2.1. **Edad y capacidad.** El Cliente declara tener 18 años cumplidos y capacidad jurídica plena. Para personas jurídicas, el usuario declara estar autorizado para obligar a la empresa.
 
 2.2. **Exactitud de la información.** La información proporcionada (identidad, medios de contacto, país, objeto de la solicitud) debe ser exacta y estar actualizada.
 
-2.3. **Uso adecuado.** El Cliente no deberá realizar ningún uso ilícito o abusivo (fraude, contenido ilegal, acoso, vulneración de derechos de terceros, desvío de pagos, etc.). No se permite el uso para situaciones médicas o de emergencia vital; SOS no es un servicio de urgencias.
+2.3. **Declaraciones y garantías del Cliente.** Al crear una cuenta y utilizar la Plataforma, el Cliente declara y garantiza expresamente que:
+- (a) Es **mayor de edad** según la legislación de su país de residencia (mínimo 18 años o la mayoría de edad civil aplicable);
+- (b) Posee **plena capacidad jurídica** para contratar;
+- (c) No está sometido a tutela, curatela, salvaguardia judicial ni ningún régimen equivalente de protección que le impida contratar;
+- (d) No figura en **ninguna lista de sanciones internacionales** (OFAC/SDN, UE, ONU, HMT u otras);
+- (e) Toda la información facilitada durante el registro es **exacta, completa y actualizada**;
+- (f) Se compromete a **informar inmediatamente** a SOS Expat de cualquier cambio que afecte a estas declaraciones;
+- (g) Para **personas jurídicas**: el representante dispone de los poderes necesarios para obligar a la sociedad.
+Cualquier declaración falsa puede dar lugar a la suspensión o cierre de la cuenta, sin perjuicio de cualquier acción de indemnización.
 
-2.4. **Disponibilidad.** La Plataforma se proporciona “tal cual”: no se garantiza disponibilidad continua (mantenimiento, incidentes, fuerza mayor).
+2.4. **Uso conforme.** El Cliente se abstendrá de cualquier uso ilícito o abusivo (fraude, contenido ilegal, acoso, vulneración de derechos de terceros, desvío de flujos de pago, suplantación de identidad, etc.). **SOS Expat no es un servicio de emergencias**: no se permite su uso para situaciones médicas, vitales o de emergencia inmediata.
+
+2.5. **Seguridad de la cuenta.** El Cliente protege sus credenciales de acceso. Toda actividad realizada a través de su cuenta se considera efectuada por él. En caso de sospecha de compromiso, el Cliente debe cambiar inmediatamente su contraseña e informar a SOS Expat.
+
+2.6. **Disponibilidad.** La Plataforma se proporciona "tal cual": no se garantiza disponibilidad ininterrumpida (mantenimiento, incidentes, fuerza mayor).
 
 ---
 
 ## 3. Naturaleza de los servicios reservables
 
-3.1. **Llamadas con Abogados.** Consultas breves de orientación (p.ej., 20 minutos). El Abogado es el único responsable de sus consejos y del cumplimiento de su ética profesional y leyes locales.
+3.1. **Llamadas con Abogados.** Consultas breves de orientación (p. ej., 20 minutos). El Abogado es el único responsable de sus consejos y del cumplimiento de su deontología y leyes locales.
 
-3.2. **Llamadas con Ayudantes.** Asistencia no regulada (orientación práctica, traducción informal, contactos locales…). No se proporciona asesoramiento legal, médico o regulado sin la licencia local adecuada.
+3.2. **Llamadas con Ayudantes.** Asistencia no regulada (orientación práctica, traducción informal, contactos locales…). No se proporciona asesoramiento jurídico, médico o regulado sin la licencia local adecuada.
 
-3.3. **Sin garantía.** No garantizamos resultados, calidad, adecuación a necesidades específicas ni disponibilidad de los proveedores.
+3.3. **Sin garantía.** No garantizamos el resultado, la calidad, la adecuación a una necesidad particular ni la disponibilidad de los prestadores.
 
 ---
 
-## 4. Precios, monedas y tarifas de conexión
+## 4. Precios, divisas y tarifas de intermediación
 
-4.1. **Visualización de precios.** El precio total mostrado al momento de la reserva incluye: (i) la remuneración del proveedor (Abogado/Ayudante) según la oferta presentada, y (ii) la tarifa de conexión debida a SOS (tarifa fija).
+4.1. **Visualización de precios.** El precio total mostrado en el momento de la reserva incluye:
+- (a) La **remuneración del Prestador** (Abogado/Ayudante) según la oferta presentada;
+- (b) Las **Tarifas de Intermediación** debidas a SOS Expat (forfait).
+El Cliente ve el **precio total con impuestos incluidos** antes de confirmar su reserva.
 
-4.2. **Tarifa de conexión (fija).** 19 € (EUR) o 25 $ (USD) por conexión (sin impuestos), incluida en el precio total. SOS puede modificar esta tarifa y/o publicar tarifas locales por país/moneda con efecto prospectivo.
+4.2. **Tarifa de Intermediación (forfait indicativo).** Las Tarifas de Intermediación son actualmente de **19 EUR** o **25 USD** por intermediación. Estos importes son **indicativos** y pueden ser modificados en cualquier momento por SOS Expat, con efecto prospectivo. Podrán publicarse **tarifas locales** por país/divisa. El precio aplicable es el mostrado en el momento de la reserva.
 
-4.3. **Monedas y conversión.** Los precios pueden mostrarse en varias monedas. Pueden aplicarse comisiones/tasas de cambio del proveedor de pago.
+4.3. **Divisas y conversión.** Los precios pueden ofrecerse en varias divisas. Pueden aplicarse comisiones y tipos de cambio del proveedor de pago. El Cliente es informado del importe exacto en su divisa antes de la confirmación.
 
-4.4. **Impuestos.** Los precios mostrados incluyen, cuando corresponda, IVA o impuestos aplicables sobre la tarifa de conexión. Los proveedores siguen siendo responsables de sus obligaciones fiscales.
+4.4. **Impuestos.** Los precios mostrados incluyen, en su caso, el IVA u otros impuestos aplicables sobre las Tarifas de Intermediación. Los Prestadores siguen siendo responsables de sus propias obligaciones fiscales.
+
+4.5. **Transparencia.** Sin cargos ocultos. El precio mostrado en el momento de la reserva es el precio final, salvo comisiones de conversión de divisa aplicadas por el proveedor de pago o el banco del Cliente.
 
 ---
 
 ## 5. Reserva, llamada e intentos de contacto
 
-5.1. **Definición de “conexión”.** Se considera realizada cuando: (a) se transmiten los datos de contacto Cliente–Proveedor, y/o (b) se abre un canal de llamada/mensajería/video a través de la Plataforma, y/o (c) el Proveedor acepta la solicitud del Cliente.
+5.1. **Definición de "intermediación".** Se considera realizada: (a) la transmisión de los datos de contacto Cliente–Prestador, y/o (b) la apertura por la Plataforma de un canal de llamada/mensajería/vídeo, y/o (c) la aceptación por el Prestador de una solicitud del Cliente.
 
-5.2. **Intentos de llamada.** En caso de llamada inmediata, la Plataforma realiza hasta tres (3) intentos en aproximadamente 15 minutos (a menos que se indique lo contrario en la app).
+5.2. **Intentos de llamada.** En caso de llamada inmediata: la Plataforma realiza hasta tres (3) intentos en un período de aproximadamente 15 minutos (salvo indicación diferente en la app).
 
-5.3. **Indisponibilidad del proveedor.** Si no se logra ninguna conexión tras los intentos, la reserva se cancela y el Cliente recibe un reembolso completo.
+5.3. **Indisponibilidad del prestador.** Si no se ha podido realizar ninguna intermediación tras los intentos, la reserva se cancela y el Cliente recibe el reembolso íntegro del precio total pagado.
 
-5.4. **No respuesta del Cliente.** Si se realiza la conexión (según 5.1) pero no se produce un intercambio efectivo (no contesta, ocupado, rechazo, interrupción prematura), el pago sigue siendo debido y no es reembolsable.
+5.4. **No respuesta del Cliente.** Si la intermediación se ha producido (según 5.1) pero el Cliente no logra un intercambio efectivo (no contesta, ocupado, rechazo, interrupción prematura), el pago sigue siendo debido y no es reembolsable.
 
-5.5. **Calidad de la comunicación.** El Cliente debe encontrarse en una zona con cobertura suficiente y usar un equipo compatible. SOS no se responsabiliza de interrupciones o redes de terceros.
+5.5. **Calidad de la comunicación.** El Cliente debe encontrarse en una zona con cobertura suficiente y utilizar un equipo compatible. SOS no es responsable de cortes o redes de terceros.
 
 ---
 
 ## 6. Derecho de desistimiento (consumidores) y ejecución inmediata
 
-6.1. **Información.** Si el Cliente es consumidor y la ley local imperativa prevé un derecho de desistimiento, este podrá ejercerse dentro de los plazos legales, salvo que el Cliente solicite la ejecución inmediata del servicio.
+6.1. **Información.** Si el Cliente es consumidor y la ley imperativa local prevé un derecho de desistimiento, este podrá ejercerse dentro de los plazos legales, salvo que el Cliente solicite la ejecución inmediata del servicio.
 
-6.2. **Renuncia.** Al reservar una llamada inmediata o programada antes de que expire el plazo legal, el Cliente solicita la ejecución inmediata y reconoce que, una vez prestado el servicio por completo, pierde el derecho de desistimiento. En caso de ejecución parcial antes del desistimiento, el Cliente debe pagar la parte ya prestada y la tarifa de conexión, no reembolsable.
+6.2. **Renuncia.** Al reservar una llamada inmediata o programada antes de que expire el plazo legal, el Cliente solicita la ejecución inmediata y reconoce que, una vez prestado el servicio en su totalidad, pierde su derecho de desistimiento. En caso de ejecución parcial antes del desistimiento, el Cliente debe pagar la parte ya prestada y las tarifas de intermediación, no reembolsables.
 
 6.3. **Formalidad.** La Plataforma recoge la aceptación explícita de estos puntos al realizar la reserva, cuando sea necesario.
 
 ---
 
-## 7. Pago, seguridad y contracargos
+## 7. Pago, seguridad y devoluciones de cargo
 
-7.1. **Pago único y distribución.** El Cliente realiza un único pago a través de la Plataforma cubriendo (i) la parte del Proveedor y (ii) la tarifa de conexión. SOS (o su proveedor de pago) cobra, deduce sus comisiones y transfiere el saldo al Proveedor.
+7.1. **Pago único y distribución.** El Cliente realiza un pago único a través de la Plataforma que cubre (i) la parte del Prestador y (ii) las tarifas de intermediación. SOS (o su proveedor de pago) cobra, deduce sus comisiones y transfiere el saldo al Prestador.
 
-7.2. **Seguridad.** Los pagos se realizan mediante proveedores de pago externos. Pueden aplicarse controles KYC/AML.
+7.2. **Seguridad.** Los pagos se procesan a través de proveedores de pago externos. Pueden aplicarse controles KYC/PBC-FT.
 
-7.3. **Contracargos/Disputas.** En caso de disputa de pago, SOS puede facilitar al proveedor de pago los datos estrictamente necesarios y suspender los servicios/pagos relacionados.
+7.3. **Devoluciones de cargo/disputas.** En caso de disputa de pago, SOS puede facilitar al proveedor de pago los datos estrictamente necesarios y suspender servicios/pagos relacionados.
 
-7.4. **Compensación.** Si se concede un reembolso al Cliente, la parte correspondiente se deduce del proveedor implicado; SOS puede compensar en pagos futuros.
+7.4. **Compensación.** Si se concede un reembolso al Cliente, la parte correspondiente se deduce del prestador implicado; SOS puede compensar en sus pagos futuros.
 
 ---
 
 ## 8. Cancelaciones y reembolsos
 
 8.1. **General.** Salvo disposiciones legales imperativas:
+- las tarifas de intermediación no son reembolsables una vez realizada la intermediación (5.1);
+- la parte del Prestador no es reembolsable una vez iniciada la prestación, salvo gesto comercial del Prestador.
 
-* Las tarifas de conexión no son reembolsables una vez realizada la conexión (5.1).
-* La parte del Proveedor no es reembolsable una vez comenzado el servicio, salvo gesto comercial del Proveedor.
+8.2. **Cancelación por el Cliente antes de la intermediación.** Reembolso íntegro.
 
-8.2. **Cancelación por el Cliente antes de la conexión.** Reembolso completo.
+8.3. **Cancelación por el Prestador.** Reembolso íntegro. SOS puede ofrecer redirigir a otro prestador disponible.
 
-8.3. **Cancelación por el Proveedor.** Reembolso completo. SOS puede ofrecer redirigir a otro proveedor disponible.
-
-8.4. **Problemas técnicos imputables a SOS.** Reembolso o crédito a discreción de SOS, en la medida permitida por la ley.
+8.4. **Problemas técnicos imputables a SOS.** Reembolso o recrédito a discreción de SOS, en la medida permitida por la ley.
 
 ---
 
 ## 9. Comportamiento, seguridad y contenidos
 
-9.1. **Respeto.** El Cliente se compromete a comportarse respetuosamente, no grabar ni difundir el intercambio sin consentimiento legal y no solicitar actos ilegales.
+9.1. **Respeto.** El Cliente se compromete a comportarse respetuosamente, a no grabar ni difundir el intercambio sin el consentimiento legalmente requerido, y a no solicitar actos ilegales.
 
-9.2. **Contenidos proporcionados.** La información transmitida debe ser veraz, exacta y lícita. El Cliente indemniza a SOS y al Proveedor frente a cualquier reclamación relacionada con contenidos ilegales que proporcione.
+9.2. **Contenidos proporcionados.** La información transmitida debe ser leal, exacta y lícita. El Cliente garantiza a SOS y al Prestador frente a cualquier reclamación relacionada con contenidos ilegales que proporcione.
 
-9.3. **Denuncias.** Cualquier abuso puede notificarse a través del formulario de contacto.
+9.3. **Denuncia.** Cualquier abuso puede denunciarse a través del formulario de contacto.
 
 ---
 
-## 10. Datos personales
+## 10. Datos personales (RGPD / Protección de datos)
 
-10.1. **Roles.** Para los datos estrictamente necesarios para la conexión, SOS y el Proveedor actúan como responsables independientes para sus propios fines.
+10.1. **Responsable del tratamiento.** Para los datos estrictamente necesarios para la intermediación, **SOS Expat (WorldExpat OÜ)** y el **Prestador** (Abogado/Ayudante) actúan cada uno como **responsable del tratamiento independiente** para sus respectivas finalidades, de conformidad con el **Reglamento (UE) 2016/679 (RGPD)**.
 
-10.2. **Bases y fines.** Ejecución del contrato (reserva), intereses legítimos (seguridad, prevención de fraude, mejora), cumplimiento normativo (AML/sanciones) y consentimiento si se requiere.
+10.2. **Datos recogidos.** SOS Expat recoge los siguientes datos: identidad, datos de contacto, país de residencia, objeto de la solicitud, datos de pago (tratados por proveedores externos), datos de conexión (IP, marca temporal, dispositivo), historial de reservas.
 
-10.3. **Transferencias internacionales** posibles con garantías adecuadas.
+10.3. **Bases jurídicas y finalidades.**
+- **Ejecución del contrato**: tratamiento de la reserva, intermediación, pago;
+- **Intereses legítimos**: seguridad, prevención del fraude, mejora de los servicios, estadísticas anonimizadas;
+- **Obligación legal**: cumplimiento PBC-FT, sanciones, obligaciones fiscales;
+- **Consentimiento**: comunicaciones comerciales (revocable en cualquier momento).
 
-10.4. **Derechos y contacto.** Ejercicio a través del formulario de contacto de la Plataforma.
+10.4. **Plazo de conservación.** Los datos se conservan durante la relación contractual y posteriormente se archivan durante los plazos legales de prescripción (de 5 a 10 años según los datos).
 
-10.5. **Seguridad.** Medidas técnicas/organizativas razonables; notificación de violaciones según la ley.
+10.5. **Transferencias internacionales.** Los datos pueden transferirse fuera del Espacio Económico Europeo con **garantías adecuadas** (cláusulas contractuales tipo, decisión de adecuación, etc.).
 
-10.6. **Conformidad DSA.** La Plataforma opera como un **servicio intermediario** en el sentido del **Reglamento (UE) 2022/2065 (Ley de Servicios Digitales)**. SOS Expat implementa mecanismos para reportar contenido ilegal y coopera con las autoridades competentes de acuerdo con el DSA.
+10.6. **Derechos del Cliente.** El Cliente dispone de los siguientes derechos: acceso, rectificación, supresión, limitación, portabilidad, oposición. Ejercicio a través del **formulario de contacto** de la Plataforma o por correo electrónico.
+
+10.7. **Seguridad.** Medidas técnicas y organizativas razonables (cifrado, control de acceso, auditorías). Notificación de violaciones de datos en las **72 horas** de conformidad con el RGPD.
+
+10.8. **Conformidad DSA.** La Plataforma opera como **servicio intermediario** en el sentido del **Reglamento (UE) 2022/2065 (Ley de Servicios Digitales)**. SOS Expat implementa mecanismos de notificación de contenidos ilícitos y coopera con las autoridades competentes.
 
 ---
 
 ## 11. Propiedad intelectual
 
-La Plataforma, sus marcas, logotipos, bases de datos y contenidos están protegidos. No se ceden derechos al Cliente. El uso se limita estrictamente a acceso personal conforme a las CG.
+La Plataforma, sus marcas, logotipos, bases de datos y contenidos están protegidos. No se cede ningún derecho al Cliente. El uso se limita estrictamente a un acceso personal conforme a las CG.
 
 ---
 
-## 12. Responsabilidad
+## 12. Responsabilidad y garantías
 
-12.1. **Proveedores independientes.** El Cliente reconoce que Abogados y Ayudantes son independientes. SOS no se responsabiliza de los consejos/servicios proporcionados ni de sus resultados.
+12.1. **Rol exclusivo de intermediación.** SOS Expat es **exclusivamente** una plataforma de intermediación técnica. SOS Expat:
+- **No es** un despacho de abogados, gabinete de consultoría, ni prestador de servicios jurídicos, médicos, fiscales o regulados;
+- **No es parte** del contrato entre el Cliente y el Prestador (Abogado/Ayudante);
+- **No garantiza** la calidad, exactitud, legalidad o resultado de los consejos o servicios prestados por los Prestadores;
+- **No interviene** en la fijación de los honorarios de los Prestadores (salvo las Tarifas de Intermediación).
 
-12.2. **Limitaciones.** En la medida permitida por la ley, la responsabilidad de SOS por daño directo probado se limita al precio total pagado por el Cliente para la reserva correspondiente. SOS no es responsable de daños indirectos/especiales/consecuentes (pérdida de oportunidad, beneficios, imagen, etc.), en la medida permitida.
+12.2. **Prestadores independientes.** Los Abogados y Ayudantes son **profesionales independientes**, únicos responsables de sus consejos, servicios y del cumplimiento de sus obligaciones legales y deontológicas. SOS Expat **declina toda responsabilidad** por cualquier perjuicio sufrido por el Cliente como consecuencia de los servicios de un Prestador.
 
-12.3. **Sin garantía.** SOS no garantiza la disponibilidad continua de la Plataforma ni la ausencia de errores.
+12.3. **Limitación de responsabilidad.** En la **máxima medida permitida por la ley aplicable** y **sin perjuicio de los derechos imperativos de los consumidores**:
+- (a) La responsabilidad total de SOS Expat frente al Cliente se limita a los **daños directos** probados y **no podrá exceder** el precio total pagado por el Cliente por la reserva origen de la reclamación;
+- (b) SOS Expat **no es responsable** de daños indirectos, especiales, consecuentes, punitivos o ejemplares (pérdida de oportunidad, beneficios, oportunidades, daño reputacional, daño moral, etc.).
+
+12.4. **Sin garantía.** La Plataforma se proporciona "**tal cual**" y "**según disponibilidad**". SOS Expat no garantiza:
+- La disponibilidad continua o ininterrumpida de la Plataforma;
+- La ausencia de errores, fallos o vulnerabilidades de seguridad;
+- La disponibilidad de un Prestador en particular;
+- La adecuación de los servicios a una necesidad particular del Cliente.
+
+12.5. **Fuerza mayor.** SOS Expat no es responsable de retrasos o fallos causados por eventos de **fuerza mayor** (catástrofe natural, guerra, pandemia, ciberataque, corte eléctrico o de internet, decisión gubernamental, huelga, etc.).
+
+12.6. **Litigios Cliente-Prestador.** Cualquier litigio entre el Cliente y un Prestador es **exclusivamente** asunto de su relación directa. SOS Expat **no interviene** en dichos litigios y **no puede ser demandado** como parte, garante o mediador.
 
 ---
 
-## 13. Ley aplicable, resolución de conflictos y tribunales competentes
+## 13. Ley aplicable, resolución de litigios y tribunales competentes
 
-13.1. **Derecho sustantivo.** Para cada servicio que cubra un país, la relación SOS–Cliente se rige por las leyes del país de intervención sin privar al consumidor de sus derechos imperativos de residencia. Supletoriamente, el derecho estonio rige la interpretación/validez de las CG y cualquier cuestión no regulada por la ley local.
+13.1. **Ley aplicable.**
+- **Cliente no consumidor (B2B)**: las presentes CG se rigen **exclusivamente** por el **derecho estonio**, con exclusión de sus normas de conflicto de leyes.
+- **Cliente consumidor (B2C)**: las CG se rigen por el derecho estonio, **sin privar al Cliente** de las disposiciones imperativas de protección de los consumidores de su país de residencia habitual.
 
-13.2. **Arbitraje CCI (opción consumidor) / obligatorio para no consumidores.**
+13.2. **Arbitraje CCI.**
+- **Cliente no consumidor (B2B)**: todo litigio será resuelto **definitivamente** conforme al Reglamento de Arbitraje de la **CCI (Cámara de Comercio Internacional)**. **Sede: Tallinn (Estonia)**. **Idioma: INGLÉS**. Un (1) árbitro. Procedimiento **confidencial**.
+- **Cliente consumidor (B2C)**: el Cliente tiene la **opción** de elegir entre el arbitraje CCI (mismas condiciones) o los tribunales competentes en virtud de las leyes imperativas de su lugar de residencia.
 
-* **Cliente no consumidor (B2B):** arbitraje CCI obligatorio, sede: Tallinn (Estonia), idioma: francés, derecho sustantivo según 13.1, procedimiento confidencial.
-* **Cliente consumidor:** opción de recurrir al arbitraje CCI (mismas condiciones) o tribunales competentes según leyes imperativas aplicables.
+13.3. **Renuncia a acciones colectivas y al jurado.** En la **máxima medida permitida por la ley aplicable** y **sin perjuicio de los derechos imperativos de los consumidores**:
+- (a) Queda **excluida** toda acción **colectiva, de grupo, representativa o consolidada**; solo son admisibles las reclamaciones **individuales**;
+- (b) El Cliente no consumidor **renuncia expresamente al derecho a un juicio con jurado** (jury trial waiver).
 
-13.3. **Tribunales estonios (Tallinn).** Para cualquier reclamo no arbitrable, ejecución de laudos o medidas urgentes, competencia exclusiva de tribunales de Estonia (Tallinn), sin perjuicio de los derechos imperativos del consumidor.
+13.4. **Competencia de los tribunales estonios.** Para cualquier demanda **no arbitrable**, el **exequátur** (ejecución de laudos arbitrales) o las **medidas provisionales/cautelares**, los tribunales estonios de **Tallinn** tienen competencia exclusiva, **sin perjuicio** del derecho del Cliente consumidor a acudir a los tribunales de su lugar de residencia.
 
-13.4. **Renuncia a acciones colectivas (dentro de lo permitido).** Se excluye cualquier acción colectiva/de grupo/repre- sentativa, salvo que la ley imperativa del lugar de residencia del consumidor disponga lo contrario.
+13.5. **Mediación previa.** Antes de iniciar cualquier procedimiento arbitral o judicial, se anima a las partes a intentar resolver el litigio de forma amistosa mediante **negociación de buena fe** durante un plazo de **treinta (30) días** a partir de la notificación escrita del conflicto.
+
+13.6. **Prescripción.** Toda acción o reclamación del Cliente no consumidor contra SOS Expat debe interponerse en un plazo de **un (1) año** a partir de la fecha en que se produjo el hecho generador. Los plazos de prescripción aplicables a los consumidores son los previstos por la ley imperativa de su lugar de residencia.
 
 ---
 
-## 14. Terminación/suspensión y diversos
+## 14. Resolución/suspensión y disposiciones diversas
 
-14.1. **Suspensión.** SOS puede suspender/cerrar la cuenta en caso de fraude, incumplimiento, abuso o riesgo legal.
+14.1. **Suspensión y cierre.** SOS Expat puede **suspender temporalmente** o **cerrar definitivamente** la cuenta del Cliente, con efecto inmediato, en los siguientes casos:
+- (a) Sospecha de **fraude, suplantación de identidad o actividad ilegal**;
+- (b) **Incumplimiento de las CG** o comportamiento abusivo;
+- (c) **Impago** o disputa de pago abusiva;
+- (d) Inclusión en una **lista de sanciones internacionales**;
+- (e) Solicitud de una **autoridad judicial o administrativa**;
+- (f) Cualquier otro motivo legítimo de seguridad o cumplimiento normativo.
+En caso de cierre, las reservas en curso podrán cancelarse y reembolsarse, salvo culpa del Cliente.
 
-14.2. **Integridad.** Las CG constituyen el acuerdo completo entre SOS y el Cliente para el uso de la Plataforma.
+14.2. **Cierre por el Cliente.** El Cliente puede cerrar su cuenta en cualquier momento desde su espacio personal o contactando con el soporte. El cierre no da derecho a ningún reembolso de los servicios ya consumidos.
 
-14.3. **Idiomas.** Pueden proporcionarse traducciones; prevalece el francés para interpretación.
+14.3. **Integridad.** Las CG constituyen el acuerdo completo entre SOS Expat y el Cliente para el uso de la Plataforma y sustituyen cualquier acuerdo anterior.
 
-14.4. **Nulidad parcial.** Si una disposición es nula/inaplicable, el resto sigue en vigor; puede sustituirse por una cláusula válida de efecto equivalente.
+14.4. **Idiomas.** Pueden proporcionarse traducciones a título informativo; **el inglés prevalece** para la interpretación en caso de discrepancia.
 
-14.5. **No renuncia.** La falta de ejercicio de un derecho no implica renuncia.
+14.5. **Nulidad parcial.** Si una estipulación es nula o inaplicable, el resto permanece en vigor; podrá ser sustituida por una cláusula válida de efecto equivalente.
+
+14.6. **Divisibilidad geográfica.** Si una cláusula de las presentes CG es declarada nula, inaplicable o ilegal en una jurisdicción particular, dicha decisión **no afecta a la validez** de esa misma cláusula en las **demás jurisdicciones** donde siga siendo lícita y aplicable.
+
+14.7. **No renuncia.** El hecho de no ejercer un derecho no implica renuncia.
+
+14.8. **Cesión.** SOS Expat puede ceder las CG a una entidad de su grupo o a un sucesor. El Cliente no puede ceder sin el consentimiento escrito de SOS Expat.
+
+14.9. **Prueba.** Los registros informáticos conservados en los sistemas de SOS Expat y de sus Prestadores hacen fe hasta prueba en contrario.
 
 ---
 
 ## 15. Contacto
 
-**Formulario de contacto (soporte y solicitudes legales):** **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
+**Formulario de contacto (soporte y solicitudes legales):** **https://sos-expat.com/contact**
 `;
 
   const defaultDe = `
-# Allgemeine Geschäftsbedingungen – Kunden (Global)
+# Allgemeine Nutzungsbedingungen – Kunden (Global)
 
-**SOS Expat von WorldExpat OÜ** (im Folgenden „Plattform“, „SOS“, „wir“)
+**SOS Expat** ist ein Dienst, der von **WorldExpat OÜ** betrieben wird, einer Gesellschaft estnischen Rechts (Handelsregister Nr. 16885621) mit Sitz in Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145, Estland (die "**Plattform**", "**SOS**", "**SOS Expat**", "**wir**").
 
-**Version 2.2 – Letzte Aktualisierung: 16. Juni 2025**
+**Version 3.0 – Letzte Aktualisierung: 1. Februar 2026**
 
 ---
 
 ## 1. Zweck und Anwendungsbereich
 
-1.1. Diese Allgemeinen Geschäftsbedingungen („AGB“) regeln die Nutzung der Plattform durch jede natürliche oder juristische Person, die ein Kundenkonto erstellt und über die Plattform eine Dienstleistung bucht (im Folgenden „Kunde“).
+1.1. Diese Allgemeinen Geschäftsbedingungen („AGB") regeln die Nutzung der Plattform durch jede natürliche oder juristische Person, die ein Kundenkonto erstellt und über die Plattform eine Dienstleistung bucht (der „Kunde").
 
-1.2. **Rolle von SOS Expat.** SOS Expat ist eine Plattform, die (i) unabhängige Anwälte („Anwälte“) und/oder (ii) unabhängige Expat-Helfer („Helfer“) vermittelt. SOS Expat ist keine Anwaltskanzlei, bietet keine rechtliche, medizinische, steuerliche oder regulierte Beratung an und ist keine Vertragspartei zwischen Kunde und Anbieter (Anwalt/Helfer).
+1.2. **Rolle von SOS Expat.** SOS Expat ist eine Vermittlungsplattform: (i) zu unabhängigen Anwälten („Anwälte") und/oder (ii) zu unabhängigen Expat-Helfern („Helfer"). SOS Expat ist keine Anwaltskanzlei, bietet keine rechtliche, medizinische, steuerliche oder regulierte Beratung an und ist nicht Vertragspartei des Dienstleistungsvertrags zwischen dem Kunden und dem Anbieter (Anwalt/Helfer).
 
-1.3. **Elektronische Zustimmung (Click-wrap).** Das Anklicken der Zustimmung oder die Nutzung der Plattform bedeutet die Annahme dieser AGB (elektronische Signatur). SOS kann technische Nachweise speichern (Zeitstempel, IDs).
+1.3. **Elektronische Annahme (Click-wrap).** Durch Anklicken des Zustimmungsfelds und/oder Nutzung der Plattform akzeptiert der Kunde diese AGB, was eine gültige elektronische Signatur im Sinne der **Verordnung (EU) Nr. 910/2014 (eIDAS)** und gleichwertiger nationaler Rechtsvorschriften darstellt.
 
-1.4. **Änderungen.** Wir können die AGB und/oder Gebühren mit Wirkung für die Zukunft durch Veröffentlichung auf der Plattform aktualisieren. Die fortgesetzte Nutzung bedeutet Zustimmung.
+1.4. **Nachverfolgbarkeit der Annahme.** SOS Expat führt ein mit Zeitstempel (UTC) versehenes Prüfprotokoll, das Folgendes umfasst: IP-Adresse, Sitzungskennung, User-Agent, AGB-Version, digitaler Fingerabdruck (Hash) des akzeptierten Dokuments und eindeutige Kundenkennung. Diese Daten stellen einen **zulässigen Nachweis** der Annahme dar.
 
----
+1.5. **Aufbewahrung von Nachweisen.** Die Annahmeprotokolle werden **zehn (10) Jahre** nach der letzten Aktivität des Kunden oder der Kontoschließung aufbewahrt. Auf Anfrage kann eine Annahmebestätigung ausgestellt werden.
 
-## 2. Konten, Compliance und Nutzung
+1.6. **Änderungen.** Wir können die AGB und/oder Preise/Gebühren mit Wirkung für die Zukunft durch Veröffentlichung auf der Plattform aktualisieren. Jede wesentliche Änderung, die die Rechte oder Pflichten des Kunden betrifft, wird mitgeteilt und erfordert eine **erneute Zustimmung** bestehender Kunden. Die fortgesetzte Nutzung nach Benachrichtigung gilt als Zustimmung.
 
-2.1. **Alter und Geschäftsfähigkeit.** Der Kunde erklärt, dass er mindestens 18 Jahre alt ist und voll geschäftsfähig ist. Bei juristischen Personen bestätigt der Nutzer, dass er befugt ist, das Unternehmen zu binden.
-
-2.2. **Genauigkeit der Informationen.** Bereitgestellte Informationen (Identität, Kontaktdaten, Land, Zweck der Anfrage) müssen korrekt und aktuell sein.
-
-2.3. **Richtige Nutzung.** Der Kunde darf die Plattform nicht rechtswidrig oder missbräuchlich verwenden (Betrug, rechtswidrige Inhalte, Belästigung, Verletzung von Rechten Dritter, Umgehung von Zahlungen usw.). Die Plattform darf nicht für Notfälle im medizinischen oder lebensbedrohlichen Bereich genutzt werden; SOS ist kein Notfalldienst.
-
-2.4. **Verfügbarkeit.** Die Plattform wird „wie verfügbar“ bereitgestellt; eine durchgehende Verfügbarkeit wird nicht garantiert (Wartung, technische Probleme, höhere Gewalt).
+1.7. **Laufzeit.** Diese AGB werden auf unbestimmte Zeit geschlossen.
 
 ---
 
-## 3. Art der über die Plattform buchbaren Dienstleistungen
+## 2. Konten, Berechtigung und Nutzung
+
+2.1. **Alter und Geschäftsfähigkeit.** Der Kunde erklärt, dass er mindestens 18 Jahre alt und voll geschäftsfähig ist. Bei juristischen Personen erklärt der Nutzer, dass er befugt ist, das Unternehmen zu vertreten.
+
+2.2. **Richtigkeit der Angaben.** Die bereitgestellten Informationen (Identität, Kontaktdaten, Land, Zweck der Anfrage) müssen korrekt und aktuell sein.
+
+2.3. **Erklärungen und Garantien des Kunden.** Durch Erstellung eines Kontos und Nutzung der Plattform erklärt und garantiert der Kunde ausdrücklich, dass:
+- (a) Er nach dem Recht seines Wohnsitzlandes **volljährig** ist (mindestens 18 Jahre oder das geltende Volljährigkeitsalter);
+- (b) Er die **volle Geschäftsfähigkeit** zum Vertragsabschluss besitzt;
+- (c) Er nicht unter Vormundschaft, Pflegschaft, gerichtlichem Schutz oder einem vergleichbaren Schutzregime steht, das ihn am Vertragsabschluss hindern würde;
+- (d) Er auf **keiner internationalen Sanktionsliste** steht (OFAC/SDN, EU, UN, HMT oder andere);
+- (e) Alle bei der Registrierung bereitgestellten Informationen **korrekt, vollständig und aktuell** sind;
+- (f) Er sich verpflichtet, SOS Expat **unverzüglich** über jede Änderung zu informieren, die diese Erklärungen betrifft;
+- (g) Bei **juristischen Personen**: der Vertreter über die erforderlichen Befugnisse verfügt, das Unternehmen zu binden.
+Falsche Angaben können zur Aussetzung oder Schließung des Kontos führen, unbeschadet etwaiger Schadensersatzansprüche.
+
+2.4. **Ordnungsgemäße Nutzung.** Der Kunde unterlässt jede rechtswidrige oder missbräuchliche Nutzung (Betrug, illegale Inhalte, Belästigung, Verletzung von Rechten Dritter, Umleitung von Zahlungsströmen, Identitätsdiebstahl usw.). **SOS Expat ist kein Notdienst**: keine Nutzung für medizinische, lebensbedrohliche oder unmittelbare Notfallsituationen.
+
+2.5. **Kontosicherheit.** Der Kunde schützt seine Zugangsdaten. Jede über sein Konto durchgeführte Aktivität gilt als von ihm ausgeführt. Bei Verdacht auf Kompromittierung muss der Kunde unverzüglich sein Passwort ändern und SOS Expat informieren.
+
+2.6. **Verfügbarkeit.** Die Plattform wird „wie besehen" bereitgestellt: eine unterbrechungsfreie Verfügbarkeit wird nicht garantiert (Wartung, Störungen, höhere Gewalt).
+
+---
+
+## 3. Art der buchbaren Dienstleistungen
 
 3.1. **Anwaltliche Beratung.** Kurze Beratungen (z. B. 20 Minuten). Der Anwalt ist allein verantwortlich für seine Ratschläge und die Einhaltung beruflicher und gesetzlicher Vorschriften.
 
@@ -1248,6 +1541,8 @@ La Plataforma, sus marcas, logotipos, bases de datos y contenidos están protegi
 4.3. **Währungen und Umrechnung.** Preise können in unterschiedlichen Währungen angezeigt werden. Gebühren/Kurse des Zahlungsanbieters können anfallen.
 
 4.4. **Steuern.** Angezeigte Preise enthalten, sofern zutreffend, Mehrwertsteuer oder andere Steuern auf die Vermittlungsgebühr. Dienstleister sind für ihre steuerlichen Pflichten selbst verantwortlich.
+
+4.5. **Transparenz.** Keine versteckten Gebühren. Der zum Zeitpunkt der Buchung angezeigte Preis ist der Endpreis, ausgenommen Währungsumrechnungsgebühren des Zahlungsanbieters oder der Bank des Kunden.
 
 ---
 
@@ -1312,19 +1607,27 @@ La Plataforma, sus marcas, logotipos, bases de datos y contenidos están protegi
 
 ---
 
-## 10. Persönliche Daten
+## 10. Personenbezogene Daten (DSGVO / Datenschutz)
 
-10.1. **Rollen.** Für datenbezogene Zwecke agieren SOS und Dienstleister jeweils als unabhängige Verantwortliche.
+10.1. **Verantwortlicher.** Für die zur Vermittlung zwingend erforderlichen Daten handeln **SOS Expat (WorldExpat OÜ)** und der **Dienstleister** (Anwalt/Helfer) jeweils als **eigenständige Verantwortliche** für ihre jeweiligen Zwecke, gemäß der **Verordnung (EU) 2016/679 (DSGVO)**.
 
-10.2. **Rechtsgrundlagen und Zwecke.** Vertragserfüllung (Buchung), berechtigtes Interesse (Sicherheit, Betrugsprävention, Optimierung), gesetzliche Pflichten (AML/Sanktionen), Einwilligung falls erforderlich.
+10.2. **Erhobene Daten.** SOS Expat erhebt folgende Daten: Identität, Kontaktdaten, Wohnsitzland, Zweck der Anfrage, Zahlungsdaten (werden von Drittanbietern verarbeitet), Verbindungsdaten (IP, Zeitstempel, Gerät), Buchungsverlauf.
 
-10.3. **Internationale Übertragungen.** Möglich mit angemessenen Garantien.
+10.3. **Rechtsgrundlagen und Zwecke.**
+- **Vertragserfüllung**: Bearbeitung der Buchung, Vermittlung, Zahlung;
+- **Berechtigte Interessen**: Sicherheit, Betrugsprävention, Verbesserung der Dienste, anonymisierte Statistiken;
+- **Gesetzliche Verpflichtung**: Einhaltung von Geldwäscheprävention, Sanktionen, steuerliche Pflichten;
+- **Einwilligung**: Marketingkommunikation (jederzeit widerrufbar).
 
-10.4. **Rechte und Kontakt.** Umsetzung über das Kontaktformular auf der Plattform.
+10.4. **Speicherdauer.** Die Daten werden für die Dauer der Vertragsbeziehung gespeichert und anschließend für die gesetzlichen Verjährungsfristen archiviert (je nach Datenart 5 bis 10 Jahre).
 
-10.5. **Sicherheit.** Angemessene technische und organisatorische Maßnahmen; Benachrichtigung bei Datenschutzverletzungen gemäß Gesetz.
+10.5. **Internationale Übermittlungen.** Daten können mit **angemessenen Garantien** (Standardvertragsklauseln, Angemessenheitsbeschluss usw.) außerhalb des Europäischen Wirtschaftsraums übermittelt werden.
 
-10.6. **DSA-Konformität.** Die Plattform fungiert als **Vermittlungsdienst** im Sinne der **Verordnung (EU) 2022/2065 (Gesetz über digitale Dienste)**. SOS Expat implementiert Mechanismen zur Meldung illegaler Inhalte und kooperiert mit den zuständigen Behörden gemäß dem DSA.
+10.6. **Rechte des Kunden.** Der Kunde hat folgende Rechte: Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch. Ausübung über das **Kontaktformular** der Plattform oder per E-Mail.
+
+10.7. **Sicherheit.** Angemessene technische und organisatorische Maßnahmen (Verschlüsselung, Zugriffskontrolle, Audits). Benachrichtigung bei Datenschutzverletzungen innerhalb von **72 Stunden** gemäß DSGVO.
+
+10.8. **DSA-Konformität.** Die Plattform fungiert als **Vermittlungsdienst** im Sinne der **Verordnung (EU) 2022/2065 (Gesetz über digitale Dienste)**. SOS Expat setzt Mechanismen zur Meldung rechtswidriger Inhalte um und arbeitet mit den zuständigen Behörden zusammen.
 
 ---
 
@@ -1334,56 +1637,94 @@ Die Plattform, Marken, Logos, Datenbanken und Inhalte sind geschützt. Keine Rec
 
 ---
 
-## 12. Haftung
+## 12. Haftung und Gewährleistung
 
-12.1. **Unabhängige Dienstleister.** Kunde erkennt an, dass Anwälte und Helfer unabhängig sind. SOS haftet nicht für Ratschläge/Dienstleistungen oder deren Ergebnisse.
+12.1. **Ausschließliche Vermittlerrolle.** SOS Expat ist **ausschließlich** eine technische Vermittlungsplattform. SOS Expat:
+- **Ist keine** Anwaltskanzlei, Beratungsfirma oder Anbieter von rechtlichen, medizinischen, steuerlichen oder regulierten Dienstleistungen;
+- **Ist nicht Vertragspartei** des Vertrags zwischen dem Kunden und dem Dienstleister (Anwalt/Helfer);
+- **Garantiert nicht** die Qualität, Richtigkeit, Rechtmäßigkeit oder das Ergebnis der von Dienstleistern erbrachten Beratungen oder Leistungen;
+- **Greift nicht** in die Festsetzung der Honorare der Dienstleister ein (außer der Vermittlungsgebühr).
 
-12.2. **Haftungsbeschränkung.** Im gesetzlich maximal zulässigen Umfang ist die Haftung von SOS für direkten Schaden auf die vom Kunden für die jeweilige Buchung gezahlte Summe beschränkt. SOS haftet nicht für indirekte, spezielle oder Folgeschäden (entgangene Chancen, Gewinne, Reputation etc.).
+12.2. **Unabhängige Dienstleister.** Anwälte und Helfer sind **unabhängige Fachleute**, die allein für ihre Beratung, Dienstleistungen und die Einhaltung ihrer rechtlichen und berufsständischen Pflichten verantwortlich sind. SOS Expat **lehnt jede Haftung** für Schäden ab, die dem Kunden durch die Leistungen eines Dienstleisters entstehen.
 
-12.3. **Keine Garantie.** SOS garantiert weder durchgehenden Plattformbetrieb noch Fehlerfreiheit.
+12.3. **Haftungsbeschränkung.** Im **maximal nach geltendem Recht zulässigen Umfang** und **unbeschadet zwingender Verbraucherrechte**:
+- (a) Die Gesamthaftung von SOS Expat gegenüber dem Kunden ist auf **nachgewiesene direkte Schäden** beschränkt und **darf den Gesamtpreis nicht übersteigen**, den der Kunde für die den Anspruch begründende Buchung gezahlt hat;
+- (b) SOS Expat **haftet nicht** für indirekte, spezielle, Folge-, Straf- oder exemplarische Schäden (entgangene Chancen, Gewinne, Geschäftsmöglichkeiten, Rufschädigung, immaterielle Schäden usw.).
+
+12.4. **Keine Gewährleistung.** Die Plattform wird „**wie besehen**" und „**nach Verfügbarkeit**" bereitgestellt. SOS Expat gewährleistet nicht:
+- Die kontinuierliche oder unterbrechungsfreie Verfügbarkeit der Plattform;
+- Die Fehlerfreiheit, das Fehlen von Bugs oder Sicherheitslücken;
+- Die Verfügbarkeit eines bestimmten Dienstleisters;
+- Die Eignung der Dienste für einen bestimmten Bedarf des Kunden.
+
+12.5. **Höhere Gewalt.** SOS Expat haftet nicht für Verzögerungen oder Ausfälle, die durch Ereignisse **höherer Gewalt** verursacht werden (Naturkatastrophen, Krieg, Pandemie, Cyberangriff, Strom- oder Internetausfall, behördliche Entscheidungen, Streik usw.).
+
+12.6. **Streitigkeiten zwischen Kunde und Dienstleister.** Jede Streitigkeit zwischen dem Kunden und einem Dienstleister ist **ausschließlich** Angelegenheit ihrer direkten Beziehung. SOS Expat **greift nicht** in solche Streitigkeiten ein und **kann nicht** als Partei, Garant oder Vermittler in Anspruch genommen werden.
 
 ---
 
 ## 13. Anwendbares Recht, Streitbeilegung und Gerichtsbarkeit
 
-13.1. **Materielles Recht.** Für jede Dienstleistung gilt das Recht des Landes, in dem sie erbracht wird, ohne zwingende Verbraucherrechte einzuschränken. Zusätzlich gilt estnisches Recht für Auslegung und Lücken.
+13.1. **Anwendbares Recht.**
+- **Nicht-Verbraucher-Kunde (B2B)**: Diese AGB unterliegen **ausschließlich** dem **estnischen Recht**, unter Ausschluss seiner Kollisionsnormen.
+- **Verbraucher-Kunde (B2C)**: Die AGB unterliegen estnischem Recht, **ohne den Kunden** der zwingenden Verbraucherschutzbestimmungen seines gewöhnlichen Aufenthaltslandes zu berauben.
 
-13.2. **ICC-Schiedsverfahren (Option für Verbraucher) / verbindlich für B2B.**
+13.2. **ICC-Schiedsverfahren.**
+- **Nicht-Verbraucher-Kunde (B2B)**: Jede Streitigkeit wird **endgültig entschieden** nach der Schiedsgerichtsordnung der **ICC (Internationale Handelskammer)**. **Sitz: Tallinn (Estland)**. **Sprache: ENGLISCH**. Ein (1) Schiedsrichter. **Vertrauliches** Verfahren.
+- **Verbraucher-Kunde (B2C)**: Der Kunde hat die **Wahl** zwischen ICC-Schiedsverfahren (gleiche Bedingungen) oder den nach den zwingenden Gesetzen seines Wohnorts zuständigen Gerichten.
 
-* **Kunde kein Verbraucher (B2B):** verbindliches ICC-Schiedsverfahren, Ort: Tallinn (Estland), Sprache: Französisch, materielles Recht gem. 13.1, vertrauliches Verfahren.
-* **Verbraucher:** Wahl zwischen ICC-Schiedsverfahren (wie oben) oder ordentlichen Gerichten mit zwingendem Recht.
+13.3. **Verzicht auf Sammelklagen und Geschworenengerichte.** Im **maximal nach geltendem Recht zulässigen Umfang** und **unbeschadet zwingender Verbraucherrechte**:
+- (a) Jede **Sammel-, Gruppen-, Vertreter- oder konsolidierte Klage** ist **ausgeschlossen**; nur **individuelle** Ansprüche sind zulässig;
+- (b) Nicht-Verbraucher-Kunden **verzichten ausdrücklich auf das Recht auf ein Geschworenengericht** (jury trial waiver).
 
-13.3. **Estnische Gerichte (Tallinn).** Für Streitigkeiten, die nicht schiedsbar sind, Vollstreckung von Schiedssprüchen oder dringende Maßnahmen – ausschließliche Zuständigkeit estnischer Gerichte (Tallinn), ohne zwingende Verbraucherrechte einzuschränken.
+13.4. **Zuständigkeit estnischer Gerichte.** Für **nicht schiedsfähige Ansprüche**, **Exequatur** (Vollstreckung von Schiedssprüchen) oder **einstweilige/sichernde Maßnahmen** sind estnische Gerichte in **Tallinn** ausschließlich zuständig, **unbeschadet** des Rechts des Verbraucher-Kunden, vor den Gerichten seines Wohnorts zu klagen.
 
-13.4. **Verzicht auf Sammelklagen.** Gruppen-, Sammel- oder Vertreterklagen sind ausgeschlossen, soweit nicht zwingendes Recht anderes vorsieht.
+13.5. **Vorherige Mediation.** Vor Einleitung eines Schieds- oder Gerichtsverfahrens werden die Parteien ermutigt, die Streitigkeit gütlich durch **Verhandlung in gutem Glauben** innerhalb von **dreißig (30) Tagen** ab schriftlicher Mitteilung der Streitigkeit beizulegen.
+
+13.6. **Verjährung.** Jede Klage oder Forderung eines Nicht-Verbraucher-Kunden gegen SOS Expat muss innerhalb von **einem (1) Jahr** ab dem Zeitpunkt erhoben werden, zu dem der anspruchsbegründende Sachverhalt eingetreten ist. Die für Verbraucher geltenden Verjährungsfristen sind die des zwingenden Rechts ihres Wohnorts.
 
 ---
 
-## 14. Kündigung/Aussetzung und Sonstiges
+## 14. Kündigung/Aussetzung und Verschiedenes
 
-14.1. **Aussetzung.** SOS kann Konten bei Betrug, Verstößen gegen AGB, Missbrauch oder rechtlichem Risiko aussetzen oder schließen.
+14.1. **Aussetzung und Schließung.** SOS Expat kann das Konto des Kunden mit sofortiger Wirkung **vorübergehend aussetzen** oder **dauerhaft schließen** in folgenden Fällen:
+- (a) Verdacht auf **Betrug, Identitätsdiebstahl oder illegale Aktivität**;
+- (b) **Verstoß gegen die AGB** oder missbräuchliches Verhalten;
+- (c) **Nichtzahlung** oder missbräuchliche Zahlungsstreitigkeit;
+- (d) Aufnahme in eine **internationale Sanktionsliste**;
+- (e) Ersuchen einer **Justiz- oder Verwaltungsbehörde**;
+- (f) Jeder andere legitime Sicherheits- oder Compliance-Grund.
+Bei Schließung können laufende Buchungen storniert und erstattet werden, außer bei Verschulden des Kunden.
 
-14.2. **Gesamtheit.** Die AGB bilden die vollständige Vereinbarung zwischen SOS und Kunde über die Nutzung der Plattform.
+14.2. **Schließung durch den Kunden.** Der Kunde kann sein Konto jederzeit über seinen persönlichen Bereich oder durch Kontaktaufnahme mit dem Support schließen. Die Schließung berechtigt nicht zur Erstattung bereits verbrauchter Dienstleistungen.
 
-14.3. **Sprachen.** Übersetzungen möglich; bei Auslegung hat die französische Version Vorrang.
+14.3. **Vollständigkeit.** Diese AGB stellen die vollständige Vereinbarung zwischen SOS Expat und dem Kunden für die Nutzung der Plattform dar und ersetzen jede frühere Vereinbarung.
 
-14.4. **Teilnichtigkeit.** Ist eine Bestimmung ungültig, bleiben die übrigen gültig; sie kann durch eine gültige Bestimmung mit äquivalenter Wirkung ersetzt werden.
+14.4. **Sprachen.** Übersetzungen können zu Informationszwecken bereitgestellt werden; **Englisch ist maßgeblich** für die Auslegung bei Abweichungen.
 
-14.5. **Verzicht.** Unterlassene Durchsetzung eines Rechts gilt nicht als Verzicht.
+14.5. **Teilnichtigkeit.** Ist eine Bestimmung nichtig oder undurchsetzbar, bleibt der Rest in Kraft; sie kann durch eine gültige Klausel mit gleichwertiger Wirkung ersetzt werden.
+
+14.6. **Geografische Teilbarkeit.** Wird eine Klausel dieser AGB in einer bestimmten Rechtsordnung für nichtig, undurchsetzbar oder rechtswidrig erklärt, **berührt diese Entscheidung nicht die Gültigkeit** derselben Klausel in **anderen Rechtsordnungen**, in denen sie rechtmäßig und durchsetzbar bleibt.
+
+14.7. **Kein Verzicht.** Das Nichtausüben eines Rechts stellt keinen Verzicht dar.
+
+14.8. **Abtretung.** SOS Expat kann die AGB an ein Konzernunternehmen oder einen Rechtsnachfolger abtreten. Der Kunde darf ohne schriftliche Zustimmung von SOS Expat nicht abtreten.
+
+14.9. **Beweis.** Die in den Systemen von SOS Expat und seinen Anbietern gespeicherten Computeraufzeichnungen dienen bis zum Beweis des Gegenteils als Nachweis.
 
 ---
 
 ## 15. Kontakt
 
-**Kontaktformular (Support und rechtliche Anfragen):** **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
+**Kontaktformular (Support & rechtliche Anfragen):** **https://sos-expat.com/contact**
 `;
 
   const defaultRu = `
-# Общие условия – Клиенты (Глобальные)
+# Общие условия использования – Клиенты (Глобальные)
 
-**SOS Expat от WorldExpat OÜ** (далее — «Платформа», «SOS», «мы»)
+**SOS Expat** — это сервис, управляемый компанией **WorldExpat OÜ**, зарегистрированной по эстонскому праву (регистрационный номер компании 16885621), с юридическим адресом: Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145, Эстония («**Платформа**», «**SOS**», «**SOS Expat**», «**мы**»)
 
-**Версия 2.2 – Последнее обновление: 16 июня 2025 г.**
+**Версия 3.0 – Последнее обновление: 1 февраля 2026 г.**
 
 ---
 
@@ -1393,9 +1734,15 @@ Die Plattform, Marken, Logos, Datenbanken und Inhalte sind geschützt. Keine Rec
 
 1.2. **Роль SOS Expat.** SOS Expat является платформой для соединения: (i) с независимыми юристами («Юристы») и/или (ii) с независимыми помощниками для экспатов («Помощники»). SOS Expat не является юридической фирмой, не предоставляет юридические, медицинские, налоговые или регулируемые консультации и не является стороной договора между Клиентом и поставщиком (Юрист/Помощник).
 
-1.3. **Электронное согласие (click-wrap).** Отметка галочки согласия и/или использование Платформы означает принятие настоящих ОУ (электронная подпись). SOS может сохранять технические доказательства (метка времени, идентификаторы).
+1.3. **Электронное согласие (click-wrap).** Отмечая галочку согласия и/или используя Платформу, Клиент принимает настоящие ОУ, что является действительной электронной подписью в соответствии с **Регламентом eIDAS (ЕС) № 910/2014** и эквивалентным национальным законодательством.
 
-1.4. **Изменения.** Мы можем обновлять ОУ и/или тарифы с перспективным действием через публикацию на Платформе. Продолжение использования означает согласие.
+1.4. **Отслеживание принятия.** SOS Expat ведёт журнал аудита с временными метками (UTC), включающий: IP-адрес, идентификатор сессии, user-agent, версию ОУ, цифровой отпечаток (хэш) принятого документа и уникальный идентификатор Клиента. Эти данные являются **допустимым доказательством** принятия.
+
+1.5. **Хранение доказательств.** Журналы принятия хранятся в течение **десяти (10) лет** после последней активности Клиента или закрытия его учётной записи. По запросу может быть выдан сертификат принятия.
+
+1.6. **Изменения.** Мы можем обновлять ОУ и/или тарифы/комиссии с перспективным действием через публикацию на Платформе. Любое существенное изменение, затрагивающее права или обязанности Клиента, будет уведомлено и потребует **нового согласия** для существующих Клиентов.
+
+1.7. **Срок действия.** ОУ заключаются на неопределённый срок.
 
 ---
 
@@ -1405,9 +1752,21 @@ Die Plattform, Marken, Logos, Datenbanken und Inhalte sind geschützt. Keine Rec
 
 2.2. **Точность информации.** Предоставленная информация (личность, контактные данные, страна, цель запроса) должна быть точной и актуальной.
 
-2.3. **Правильное использование.** Клиент не должен использовать Платформу незаконно или злоумышленно (мошенничество, незаконный контент, домогательства, нарушение прав третьих лиц, обход платежей и т.д.). Запрещено использовать для экстренных медицинских или жизненных ситуаций; SOS не является службой экстренной помощи.
+2.3. **Заявления и гарантии Клиента.** Создавая учётную запись и используя Платформу, Клиент прямо заявляет и гарантирует, что:
+- (a) Является **совершеннолетним** по законодательству страны проживания (минимум 18 лет);
+- (b) Обладает **полной дееспособностью** для заключения договоров;
+- (c) Не находится под опекой, попечительством или иной формой защиты;
+- (d) Не включён в **какие-либо международные санкционные списки** (OFAC/SDN, ЕС, ООН, HMT или иные);
+- (e) Вся информация, предоставленная при регистрации, является **точной, полной и актуальной**;
+- (f) Обязуется **немедленно уведомить** SOS Expat о любых изменениях этих заявлений;
+- (g) Для **юридических лиц**: представитель имеет необходимые полномочия.
+Любое ложное заявление может повлечь приостановку или закрытие учётной записи.
 
-2.4. **Доступность.** Платформа предоставляется «как есть»: непрерывная доступность не гарантируется (техническое обслуживание, инциденты, форс-мажор).
+2.4. **Надлежащее использование.** Клиент не должен использовать Платформу незаконно или злоумышленно (мошенничество, незаконный контент, домогательства, хищение личных данных и т.д.). **SOS Expat не является службой экстренной помощи**.
+
+2.5. **Безопасность учётной записи.** Клиент защищает свои учётные данные. Любая активность через его учётную запись считается совершённой им.
+
+2.6. **Доступность.** Платформа предоставляется «как есть»: непрерывная доступность не гарантируется.
 
 ---
 
@@ -1423,13 +1782,18 @@ Die Plattform, Marken, Logos, Datenbanken und Inhalte sind geschützt. Keine Rec
 
 ## 4. Цены, валюты и комиссия за соединение
 
-4.1. **Отображение цен.** Общая цена при бронировании включает: (i) вознаграждение поставщика (Юриста/Помощника) согласно предложению и (ii) комиссию SOS за соединение (фиксированная).
+4.1. **Отображение цен.** Общая цена, отображаемая при бронировании, включает:
+- (a) **Вознаграждение Поставщика** (Юриста/Помощника), определённое в представленном предложении;
+- (b) **Комиссию за соединение**, причитающуюся SOS Expat (фиксированная).
+Клиент видит **общую цену с учётом налогов** до подтверждения бронирования.
 
-4.2. **Комиссия за соединение (фиксированная).** 19 € (EUR) или 25 $ (USD) за соединение (без налогов), включена в общую стоимость. SOS может изменять эту комиссию и/или публиковать местные тарифы по странам/валютам с перспективным действием.
+4.2. **Комиссия за соединение (ориентировочная фиксированная ставка).** Комиссия за соединение в настоящее время составляет **19 € (EUR)** или **25 $ (USD)** за соединение. Эти суммы являются **ориентировочными** и могут быть изменены SOS Expat в любое время с перспективным действием. Могут публиковаться **местные тарифы** по странам/валютам. Применимая цена — та, что отображается на момент бронирования.
 
-4.3. **Валюты и конвертация.** Цены могут отображаться в разных валютах. Могут применяться комиссии/курсы обмена платёжного провайдера.
+4.3. **Валюты и конвертация.** Цены могут предлагаться в нескольких валютах. Могут применяться комиссии и курсы обмена платёжного провайдера. Клиент информируется о точной сумме в своей валюте до подтверждения.
 
-4.4. **Налоги.** Отображаемые цены включают, где применимо, НДС или другие налоги на комиссию за соединение. Поставщики остаются ответственными за свои налоговые обязательства.
+4.4. **Налоги.** Отображаемые цены включают, где применимо, НДС или применимые налоги на комиссию за соединение. Поставщики остаются ответственными за свои собственные налоговые обязательства.
+
+4.5. **Прозрачность.** Никаких скрытых сборов. Цена, отображаемая при бронировании, является окончательной ценой, за исключением комиссий за конвертацию валюты, применяемых платёжным провайдером или банком Клиента.
 
 ---
 
@@ -1494,19 +1858,27 @@ Die Plattform, Marken, Logos, Datenbanken und Inhalte sind geschützt. Keine Rec
 
 ---
 
-## 10. Персональные данные
+## 10. Персональные данные (GDPR / Защита данных)
 
-10.1. **Роли.** Для данных, необходимых для соединения, SOS и Поставщик выступают как независимые контролёры для своих целей.
+10.1. **Контролёр данных.** Для данных, строго необходимых для соединения, **SOS Expat (WorldExpat OÜ)** и **Поставщик** (Юрист/Помощник) действуют как **независимые контролёры данных** для своих соответствующих целей, в соответствии с **Регламентом (ЕС) 2016/679 (GDPR)**.
 
-10.2. **Основания и цели.** Исполнение договора (бронирование), законные интересы (безопасность, предотвращение мошенничества, улучшение), соблюдение норм (AML/санкции), согласие при необходимости.
+10.2. **Собираемые данные.** SOS Expat собирает следующие данные: личность, контактные данные, страна проживания, цель запроса, платёжные данные (обрабатываются сторонними провайдерами), данные о подключении (IP, временная метка, устройство), история бронирований.
 
-10.3. **Международные передачи.** Возможны с адекватными гарантиями.
+10.3. **Правовые основания и цели.**
+- **Исполнение договора**: обработка бронирования, соединение, оплата;
+- **Законные интересы**: безопасность, предотвращение мошенничества, улучшение сервиса, анонимизированная статистика;
+- **Юридическое обязательство**: соблюдение AML/CFT, санкции, налоговые обязательства;
+- **Согласие**: маркетинговые сообщения (отзываемые в любое время).
 
-10.4. **Права и контакт.** Реализуются через форму обратной связи на Платформе.
+10.4. **Срок хранения.** Данные хранятся в течение срока договорных отношений, затем архивируются на период законных сроков давности (от 5 до 10 лет в зависимости от данных).
 
-10.5. **Безопасность.** Разумные технические и организационные меры; уведомление о нарушениях в соответствии с законом.
+10.5. **Международные передачи.** Данные могут передаваться за пределы Европейской экономической зоны с **соответствующими гарантиями** (стандартные договорные положения, решение об адекватности и т.д.).
 
-10.6. **Соответствие DSA.** Платформа действует как **посреднический сервис** в соответствии с **Регламентом (ЕС) 2022/2065 (Закон о цифровых услугах)**. SOS Expat внедряет механизмы для сообщения о незаконном контенте и сотрудничает с компетентными органами в соответствии с DSA.
+10.6. **Права Клиента.** Клиент имеет следующие права: доступ, исправление, удаление, ограничение, переносимость, возражение. Реализация через **форму обратной связи** на Платформе или по электронной почте.
+
+10.7. **Безопасность.** Разумные технические и организационные меры (шифрование, контроль доступа, аудит). Уведомление о нарушении данных в течение **72 часов** в соответствии с GDPR.
+
+10.8. **Соответствие DSA.** Платформа функционирует как **посреднический сервис** в смысле **Регламента (ЕС) 2022/2065 (Закон о цифровых услугах)**. SOS Expat внедряет механизмы для сообщения о незаконном контенте и сотрудничает с компетентными органами.
 
 ---
 
@@ -1518,56 +1890,93 @@ Die Plattform, Marken, Logos, Datenbanken und Inhalte sind geschützt. Keine Rec
 
 ## 12. Ответственность
 
-12.1. **Независимые поставщики.** Клиент признаёт, что Юристы и Помощники независимы. SOS не несёт ответственности за советы/услуги и их результаты.
+12.1. **Исключительно роль соединения.** SOS Expat **исключительно** является технической платформой для соединения. SOS Expat:
+- **Не является** юридической фирмой, консалтинговой компанией или поставщиком юридических, медицинских, налоговых или регулируемых услуг;
+- **Не является стороной** договора между Клиентом и Поставщиком (Юристом/Помощником);
+- **Не гарантирует** качество, точность, законность или результат консультаций или услуг, предоставляемых Поставщиками;
+- **Не вмешивается** в установление гонораров Поставщиков (кроме Комиссии за соединение).
 
-12.2. **Ограничения.** В максимально допустимой законом степени ответственность SOS за прямой ущерб ограничивается общей суммой, уплаченной Клиентом за соответствующее бронирование. SOS не отвечает за косвенный/специальный/побочный ущерб (потеря возможностей, прибыли, имиджа и т.д.).
+12.2. **Независимые поставщики.** Юристы и Помощники являются **независимыми профессионалами**, несущими полную ответственность за свои консультации, услуги и соблюдение своих юридических и этических обязательств. SOS Expat **отказывается от всякой ответственности** за любой ущерб, понесённый Клиентом в результате услуг Поставщика.
 
-12.3. **Без гарантии.** SOS не гарантирует непрерывность Платформы и отсутствие ошибок.
+12.3. **Ограничение ответственности.** В **максимально допустимой применимым законом степени** и **без ущерба обязательным правам потребителей**:
+- (a) Общая ответственность SOS Expat перед Клиентом ограничивается **доказанным прямым ущербом** и **не может превышать** общую цену, уплаченную Клиентом за бронирование, послужившее основанием для претензии;
+- (b) SOS Expat **не несёт ответственности** за косвенный, специальный, последующий, штрафной или примерный ущерб (упущенные возможности, прибыль, репутационный ущерб, моральный вред и т.д.).
+
+12.4. **Отсутствие гарантий.** Платформа предоставляется «**как есть**» и «**по мере доступности**». SOS Expat не гарантирует:
+- Непрерывную или бесперебойную доступность Платформы;
+- Отсутствие ошибок, багов или уязвимостей безопасности;
+- Доступность какого-либо конкретного Поставщика;
+- Пригодность услуг для конкретных потребностей Клиента.
+
+12.5. **Форс-мажор.** SOS Expat не несёт ответственности за задержки или сбои, вызванные **форс-мажорными** обстоятельствами (стихийное бедствие, война, пандемия, кибератака, отключение электричества или интернета, правительственное решение, забастовка и т.д.).
+
+12.6. **Споры Клиент-Поставщик.** Любой спор между Клиентом и Поставщиком является **исключительно** предметом их прямых отношений. SOS Expat **не вмешивается** в такие споры и **не может быть привлечён к ответственности** в качестве стороны, гаранта или посредника.
 
 ---
 
-## 13. Применимое право, разрешение споров и юрисдикция
+## 13. Применимое право, разрешение споров и компетентные суды
 
-13.1. **Материальное право.** Для каждой услуги, охватывающей страну, отношения SOS–Клиент регулируются законами страны предоставления без ограничения обязательных прав потребителя. Дополнительно применимо эстонское право для толкования и любых пробелов.
+13.1. **Применимое право.**
+- **Клиент не потребитель (B2B)**: настоящие ОУ регулируются **исключительно** **эстонским правом**, исключая его коллизионные нормы.
+- **Клиент-потребитель (B2C)**: ОУ регулируются эстонским правом, **без лишения Клиента** обязательных положений о защите прав потребителей его страны обычного проживания.
 
-13.2. **Арбитраж ICC (опция для потребителя) / обязательный для B2B.**
+13.2. **Арбитраж ICC.**
+- **Клиент не потребитель (B2B)**: любой спор разрешается **окончательно** в соответствии с Регламентом арбитража **ICC (Международная торговая палата)**. **Место: Таллинн (Эстония)**. **Язык: АНГЛИЙСКИЙ**. Один (1) арбитр. **Конфиденциальное** разбирательство.
+- **Клиент-потребитель (B2C)**: Клиент имеет **выбор** между арбитражем ICC (те же условия) или компетентными судами в соответствии с императивными законами его места проживания.
 
-* **Клиент не потребитель (B2B):** обязательный арбитраж ICC, место: Таллинн (Эстония), язык: французский, материальное право по 13.1, конфиденциальная процедура.
-* **Потребитель:** выбор между арбитражем ICC (те же условия) или судами по законам обязательного применения.
+13.3. **Отказ от коллективных исков и суда присяжных.** В **максимально допустимой применимым законом степени** и **без ущерба обязательным правам потребителей**:
+- (a) Любой **коллективный, групповой, представительский или объединённый иск** **исключается**; допускаются только **индивидуальные** претензии;
+- (b) Клиенты не потребители **прямо отказываются от права на суд присяжных** (отказ от суда присяжных).
 
-13.3. **Эстонские суды (Таллинн).** Для споров, не подлежащих арбитражу, исполнения арбитражных решений или срочных мер — исключительная юрисдикция судов Эстонии (Таллинн), без ущерба обязательным правам потребителя.
+13.4. **Юрисдикция эстонских судов.** Для любых **неарбитрабельных требований**, **экзекватуры** (исполнения арбитражных решений) или **обеспечительных/предварительных мер** эстонские суды в **Таллинне** имеют исключительную юрисдикцию, **без ущерба** праву Клиента-потребителя обращаться в суды по месту его проживания.
 
-13.4. **Отказ от коллективных исков.** Запрещены коллективные/групповые/представительные иски, если местное императивное право не устанавливает иное.
+13.5. **Предварительная медиация.** До начала арбитражного или судебного разбирательства стороны поощряются попытаться разрешить спор мирным путём посредством **добросовестных переговоров** в течение **тридцати (30) дней** с момента письменного уведомления о споре.
+
+13.6. **Срок давности.** Любой иск или претензия Клиента не потребителя против SOS Expat должны быть предъявлены в течение **одного (1) года** с даты возникновения основания для иска. Сроки давности, применимые к потребителям, устанавливаются императивным законодательством их места проживания.
 
 ---
 
 ## 14. Прекращение/приостановка и прочее
 
-14.1. **Приостановка.** SOS может приостановить/закрыть учётную запись в случае мошенничества, нарушения ОУ, злоупотребления или юридического риска.
+14.1. **Приостановка и закрытие.** SOS Expat может **временно приостановить** или **окончательно закрыть** учётную запись Клиента с немедленным вступлением в силу в следующих случаях:
+- (a) Подозрение в **мошенничестве, краже личных данных или незаконной деятельности**;
+- (b) **Нарушение ОУ** или злоупотребительное поведение;
+- (c) **Неоплата** или злоупотребительное оспаривание платежа;
+- (d) Включение в **международный санкционный список**;
+- (e) Запрос от **судебного или административного органа**;
+- (f) Любая другая законная причина безопасности или соответствия.
+В случае закрытия ожидающие бронирования могут быть отменены и возвращены, за исключением случаев вины Клиента.
 
-14.2. **Целостность.** ОУ составляют полное соглашение между SOS и Клиентом по использованию Платформы.
+14.2. **Закрытие Клиентом.** Клиент может закрыть свою учётную запись в любое время через личный кабинет или обратившись в службу поддержки. Закрытие не даёт права на возврат средств за уже потреблённые услуги.
 
-14.3. **Языки.** Возможны переводы; для толкования преимущество имеет французский.
+14.3. **Полнота.** Настоящие ОУ составляют полное соглашение между SOS Expat и Клиентом об использовании Платформы и заменяют любое предшествующее соглашение.
 
-14.4. **Частичная недействительность.** Если положение недействительно, остальные остаются в силе; может быть заменено действительным положением эквивалентного эффекта.
+14.4. **Языки.** Переводы могут предоставляться в информационных целях; **английский язык имеет приоритет** для толкования в случае расхождений.
 
-14.5. **Отсутствие отказа.** Неприменение права не означает отказ.
+14.5. **Частичная недействительность.** Если положение является недействительным или неисполнимым, остальная часть остаётся в силе; оно может быть заменено действительным положением эквивалентного эффекта.
+
+14.6. **Географическая делимость.** Если положение настоящих ОУ признано недействительным, неисполнимым или незаконным в конкретной юрисдикции, это решение **не влияет на действительность** того же положения в **других юрисдикциях**, где оно остаётся законным и исполнимым.
+
+14.7. **Отсутствие отказа.** Неиспользование права не означает отказ от него.
+
+14.8. **Уступка.** SOS Expat может уступить ОУ аффилированной компании или правопреемнику. Клиент не может уступить без письменного согласия SOS Expat.
+
+14.9. **Доказательства.** Компьютерные записи, хранящиеся в системах SOS Expat и его Поставщиков, служат доказательством до тех пор, пока не доказано обратное.
 
 ---
 
 ## 15. Контакты
 
-**Форма обратной связи (поддержка и юридические запросы):** **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
+**Форма обратной связи (поддержка и юридические запросы):** **https://sos-expat.com/contact**
 `;
 
 const defaultPt = `
-# Condições Gerais – Clientes (Global)
+# Condições Gerais de Utilização – Clientes (Global)
+
+**SOS Expat** é um serviço operado pela **WorldExpat OÜ**, sociedade de direito estoniano (registro comercial n.º 16885621), com sede em Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145, Estônia (a "**Plataforma**", "**SOS**", "**SOS Expat**", "**nós**")
 
 
-**SOS Expat da WorldExpat OÜ** (a "Plataforma", "SOS", "nós")
-
-
-**Versão 2.2 – Última atualização: 16 de junho de 2025**
+**Versão 3.0 – Última atualização: 1 de fevereiro de 2026**
 
 
 ---
@@ -1626,21 +2035,20 @@ const defaultPt = `
 
 ## 4. Preços, moedas e taxas de conexão
 
+4.1. **Exibição de preços.** O preço total exibido no momento da reserva inclui:
+- (a) A **remuneração do Prestador** (Advogado/Assistente) conforme definida na oferta apresentada;
+- (b) As **Taxas de Conexão** devidas à SOS Expat (taxa fixa).
+O Cliente vê o **preço total com impostos** antes de confirmar sua reserva.
 
-4.1. **Exibição de preços.** O preço total exibido no momento da reserva inclui: (i) a remuneração do prestador (Advogado/Assistente) definida de acordo com a oferta apresentada, e (ii) as taxas de conexão devidas à SOS (taxa fixa).
+4.2. **Taxas de conexão (taxa fixa indicativa).** As Taxas de Conexão são atualmente de **19 € (EUR)** ou **25 $ (USD)** por conexão. Esses valores são **indicativos** e podem ser modificados a qualquer momento pela SOS Expat, com efeito prospectivo. **Tarifas locais** por país/moeda podem ser publicadas. O preço aplicável é o exibido no momento da reserva.
 
+4.3. **Moedas e conversão.** Os preços podem ser oferecidos em várias moedas. Taxas e câmbio do processador de pagamento podem se aplicar. O Cliente é informado do valor exato em sua moeda antes da confirmação.
 
-4.2. **Taxas de conexão (taxa fixa).** 19€ (EUR) ou 25$ (USD) por conexão (excluindo impostos), integradas no preço total. SOS pode modificar esta taxa e/ou publicar tabelas locais por país/moeda com efeito prospectivo.
+4.4. **Impostos.** Os preços exibidos incluem, quando aplicável, IVA ou impostos aplicáveis nas Taxas de Conexão. Os Prestadores permanecem responsáveis por suas próprias obrigações fiscais.
 
-
-4.3. **Moedas e conversão.** Os preços podem ser oferecidos em várias moedas. Taxas/taxas de câmbio do processador de pagamento podem se aplicar.
-
-
-4.4. **Impostos.** Os preços exibidos incluem, quando aplicável, IVA ou impostos aplicáveis nas taxas de conexão. Os Prestadores permanecem responsáveis por suas próprias obrigações fiscais.
-
+4.5. **Transparência.** Nenhuma taxa oculta. O preço exibido no momento da reserva é o preço final, exceto taxas de conversão de moeda aplicadas pelo processador de pagamento ou banco do Cliente.
 
 ---
-
 
 ## 5. Reserva, chamada e tentativas de contato
 
@@ -1731,28 +2139,29 @@ const defaultPt = `
 ---
 
 
-## 10. Dados pessoais
+## 10. Dados pessoais (GDPR / Proteção de dados)
 
+10.1. **Responsável pelo tratamento.** Para dados estritamente necessários para a conexão, **SOS Expat (WorldExpat OÜ)** e o **Prestador** (Advogado/Assistente) atuam cada um como **responsável pelo tratamento independente** para seus respectivos fins, em conformidade com o **Regulamento (UE) 2016/679 (GDPR)**.
 
-10.1. **Funções.** Para dados estritamente necessários para a conexão, SOS e o Prestador atuam cada um como responsável pelo tratamento para seus próprios fins.
+10.2. **Dados coletados.** SOS Expat coleta os seguintes dados: identidade, detalhes de contato, país de residência, finalidade da solicitação, dados de pagamento (processados por provedores terceiros), dados de conexão (IP, timestamp, dispositivo), histórico de reservas.
 
+10.3. **Bases legais e finalidades.**
+- **Execução do contrato**: processamento de reserva, conexão, pagamento;
+- **Interesses legítimos**: segurança, prevenção de fraude, melhoria do serviço, estatísticas anonimizadas;
+- **Obrigação legal**: conformidade AML/CFT, sanções, obrigações fiscais;
+- **Consentimento**: comunicações de marketing (revogável a qualquer momento).
 
-10.2. **Bases & fins.** Execução do contrato (reserva), interesses legítimos (segurança, prevenção de fraude, melhoria), conformidade (AML/sanções) e consentimento se exigido.
+10.4. **Período de retenção.** Os dados são retidos durante a duração da relação contratual, depois arquivados durante os períodos de prescrição legais (5 a 10 anos dependendo dos dados).
 
+10.5. **Transferências internacionais.** Os dados podem ser transferidos para fora do Espaço Econômico Europeu com **garantias apropriadas** (cláusulas contratuais padrão, decisão de adequação, etc.).
 
-10.3. **Transferências internacionais** possíveis com garantias apropriadas.
+10.6. **Direitos do Cliente.** O Cliente tem os seguintes direitos: acesso, retificação, apagamento, restrição, portabilidade, oposição. Exercício via **formulário de contato** da Plataforma ou por e-mail.
 
+10.7. **Segurança.** Medidas técnicas e organizacionais razoáveis (criptografia, controle de acesso, auditorias). Notificação de violação de dados em **72 horas** em conformidade com o GDPR.
 
-10.4. **Direitos & contato.** Exercício via formulário de contato da Plataforma.
-
-
-10.5. **Segurança.** Medidas técnicas/organizacionais razoáveis; notificação de violações conforme exigido por lei.
-
-10.6. **Conformidade DSA.** A Plataforma opera como um **serviço intermediário** no âmbito do **Regulamento (UE) 2022/2065 (Lei dos Serviços Digitais)**. SOS Expat implementa mecanismos para reportar conteúdo ilegal e coopera com as autoridades competentes de acordo com o DSA.
-
+10.8. **Conformidade DSA.** A Plataforma opera como um **serviço intermediário** no âmbito do **Regulamento (UE) 2022/2065 (Lei dos Serviços Digitais)**. SOS Expat implementa mecanismos para reportar conteúdo ilegal e coopera com as autoridades competentes.
 
 ---
-
 
 ## 11. Propriedade intelectual
 
@@ -1763,256 +2172,394 @@ A Plataforma, suas marcas, logos, bases de dados e conteúdos são protegidos. N
 ---
 
 
-## 12. Responsabilidade
+## 12. Responsabilidade e garantias
 
+12.1. **Função exclusiva de conexão.** SOS Expat é **exclusivamente** uma plataforma técnica de conexão. SOS Expat:
+- **Não é** um escritório de advocacia, empresa de consultoria ou prestador de serviços jurídicos, médicos, fiscais ou regulamentados;
+- **Não é parte** do contrato entre o Cliente e o Prestador (Advogado/Assistente);
+- **Não garante** a qualidade, exatidão, legalidade ou resultado dos conselhos ou serviços prestados pelos Prestadores;
+- **Não intervém** na fixação dos honorários dos Prestadores (além das Taxas de Conexão).
 
-12.1. **Prestadores independentes.** O Cliente reconhece que Advogados e Assistentes são independentes. SOS não é responsável pelos conselhos/serviços fornecidos nem por seu resultado.
+12.2. **Prestadores independentes.** Advogados e Assistentes são **profissionais independentes**, exclusivamente responsáveis por seus conselhos, serviços e conformidade com suas obrigações legais e éticas. SOS Expat **declina toda responsabilidade** por qualquer dano sofrido pelo Cliente em decorrência dos serviços de um Prestador.
 
+12.3. **Limitação de responsabilidade.** Na **máxima extensão permitida pela lei aplicável** e **sem prejuízo dos direitos imperativos dos consumidores**:
+- (a) A responsabilidade total de SOS Expat perante o Cliente é limitada a **danos diretos comprovados** e **não pode exceder** o preço total pago pelo Cliente pela reserva que originou a reclamação;
+- (b) SOS Expat **não é responsável** por danos indiretos, especiais, consequentes, punitivos ou exemplares (perda de chance, lucros, oportunidades, danos à reputação, danos morais, etc.).
 
-12.2. **Limitações.** Na medida permitida por lei, a responsabilidade de SOS por dano direto comprovado é limitada ao preço total pago pelo Cliente pela reserva em questão. SOS não é responsável por danos indiretos/especiais/consequentes (perda de oportunidade, lucros, reputação, etc.), na medida permitida.
+12.4. **Sem garantia.** A Plataforma é fornecida "**como está**" e "**conforme disponibilidade**". SOS Expat não garante:
+- Disponibilidade contínua ou ininterrupta da Plataforma;
+- Ausência de erros, bugs ou vulnerabilidades de segurança;
+- Disponibilidade de qualquer Prestador específico;
+- Adequação dos serviços às necessidades particulares do Cliente.
 
+12.5. **Força maior.** SOS Expat não é responsável por atrasos ou falhas causados por eventos de **força maior** (desastre natural, guerra, pandemia, ciberataque, queda de energia ou internet, decisão governamental, greve, etc.).
 
-12.3. **Sem garantias.** SOS não garante disponibilidade contínua da Plataforma nem ausência de erros.
-
+12.6. **Litígios Cliente-Prestador.** Qualquer litígio entre o Cliente e um Prestador é **exclusivamente** um assunto de sua relação direta. SOS Expat **não intervém** em tais litígios e **não pode ser responsabilizado** como parte, garantidor ou mediador.
 
 ---
-
 
 ## 13. Lei aplicável, resolução de litígios e tribunais competentes
 
+13.1. **Lei aplicável.**
+- **Cliente não-consumidor (B2B)**: estas CGV são regidas **exclusivamente** pelo **direito estoniano**, excluindo suas regras de conflito de leis.
+- **Cliente consumidor (B2C)**: as CGV são regidas pelo direito estoniano, **sem privar o Cliente** das disposições imperativas de proteção ao consumidor de seu país de residência habitual.
 
-13.1. **Lei material.** Para cada serviço abrangendo um país dado, a relação SOS-Cliente é regida pelas leis do país de intervenção sem privar o Cliente consumidor de seus direitos imperativos de residência. Subsidiariamente, a lei estoniana rege a interpretação/validade das CGV e qualquer questão não regida por esta lei local.
+13.2. **Arbitragem ICC.**
+- **Cliente não-consumidor (B2B)**: qualquer litígio será **definitivamente resolvido** segundo o Regulamento de Arbitragem da **ICC (Câmara de Comércio Internacional)**. **Sede: Tallinn (Estônia)**. **Idioma: INGLÊS**. Um (1) árbitro. Procedimento **confidencial**.
+- **Cliente consumidor (B2C)**: o Cliente tem a **opção** entre arbitragem ICC (mesmas condições) ou os tribunais competentes sob as leis imperativas de seu local de residência.
 
+13.3. **Renúncia a ações coletivas e júri.** Na **máxima extensão permitida pela lei aplicável** e **sem prejuízo dos direitos imperativos dos consumidores**:
+- (a) Qualquer ação **coletiva, de grupo, representativa ou consolidada** é **excluída**; apenas reclamações **individuais** são admissíveis;
+- (b) Clientes não-consumidores **renunciam expressamente ao direito a julgamento por júri** (renúncia ao júri).
 
-13.2. **Arbitragem ICC (opção consumidor) / obrigatória não-consumidor.**
-- **Cliente não-consumidor (B2B)**: arbitragem ICC obrigatória, sede: Tallinn (Estônia), idioma: português, lei material conforme 13.1, procedimento confidencial.
-- **Cliente consumidor**: opção de recorrer à arbitragem ICC (mesmas modalidades) ou aos tribunais competentes sob as leis imperativas aplicáveis.
+13.4. **Competência dos tribunais estonianos.** Para qualquer demanda **não arbitrável**, **exequatur** (execução de sentenças arbitrais) ou **medidas provisórias/cautelares**, os tribunais estonianos em **Tallinn** têm competência exclusiva, **sem prejuízo** do direito do Cliente consumidor de recorrer aos tribunais de seu local de residência.
 
+13.5. **Mediação prévia.** Antes de iniciar qualquer arbitragem ou procedimento judicial, as partes são encorajadas a tentar resolver o litígio amigavelmente por **negociação de boa-fé** durante um período de **trinta (30) dias** a partir da notificação escrita do litígio.
 
-13.3. **Competência dos tribunais estonios (Tallinn).** Para qualquer demanda não arbitrável, execução de sentenças ou medidas urgentes, competência exclusiva dos tribunais da Estônia (Tallinn), sem prejuízo dos direitos imperativos do consumidor.
-
-
-13.4. **Renúncia a ações coletivas (na medida permitida).** Qualquer ação coletiva/de grupo/representativa é excluída, exceto se a lei imperativa do local de residência do consumidor dispuser de outra forma.
-
+13.6. **Prescrição.** Qualquer ação ou reclamação de um Cliente não-consumidor contra SOS Expat deve ser apresentada dentro de **um (1) ano** a partir da data em que a causa de ação surgiu. Os prazos de prescrição aplicáveis aos consumidores são os previstos pela lei imperativa de seu local de residência.
 
 ---
-
 
 ## 14. Rescisão/suspensão e diversos
 
+14.1. **Suspensão e encerramento.** SOS Expat pode **suspender temporariamente** ou **encerrar definitivamente** a conta do Cliente, com efeito imediato, nos seguintes casos:
+- (a) Suspeita de **fraude, roubo de identidade ou atividade ilegal**;
+- (b) **Violação das CGV** ou comportamento abusivo;
+- (c) **Inadimplência** ou contestação abusiva de pagamento;
+- (d) Inclusão em uma **lista de sanções internacionais**;
+- (e) Solicitação de uma **autoridade judicial ou administrativa**;
+- (f) Qualquer outro motivo legítimo de segurança ou conformidade.
+Em caso de encerramento, reservas pendentes podem ser canceladas e reembolsadas, exceto em caso de culpa do Cliente.
 
-14.1. **Suspensão.** SOS pode suspender/fechar a conta em caso de fraude, não-conformidade, abuso ou risco legal.
+14.2. **Encerramento pelo Cliente.** O Cliente pode encerrar sua conta a qualquer momento através de seu espaço pessoal ou contatando o suporte. O encerramento não dá direito a reembolso por serviços já consumidos.
 
+14.3. **Integralidade.** Estas CGV constituem o acordo completo entre SOS Expat e o Cliente para uso da Plataforma e substituem qualquer acordo anterior.
 
-14.2. **Integralidade.** As CGV constituem o acordo completo entre SOS e o Cliente para o uso da Plataforma.
+14.4. **Idiomas.** Traduções podem ser fornecidas para fins informativos; **o inglês prevalece** para interpretação em caso de divergência.
 
+14.5. **Nulidade parcial.** Se uma disposição for nula ou inexequível, o restante permanece em vigor; pode ser substituída por uma cláusula válida de efeito equivalente.
 
-14.3. **Idiomas.** Traduções podem ser fornecidas; o português prevalece para interpretação.
+14.6. **Divisibilidade geográfica.** Se uma cláusula destas CGV for declarada nula, inexequível ou ilegal em uma jurisdição específica, esta decisão **não afeta a validade** da mesma cláusula em **outras jurisdições** onde permanece lícita e aplicável.
 
+14.7. **Não-renúncia.** O fato de não exercer um direito não constitui renúncia.
 
-14.4. **Nulidade parcial.** Se uma estipulação for nula/inaplicável, o restante permanece em vigor; pode ser substituída por uma cláusula válida de efeito equivalente.
+14.8. **Cessão.** SOS Expat pode ceder as CGV a uma entidade do grupo ou sucessor. O Cliente não pode ceder sem o consentimento escrito de SOS Expat.
 
-
-14.5. **Não-renúncia.** O fato de não exercer um direito não implica renúncia.
-
+14.9. **Prova.** Os registros informatizados mantidos nos sistemas de SOS Expat e de seus Prestadores constituem prova até prova em contrário.
 
 ---
 
-
 ## 15. Contato
 
-
-**Formulário de contato (suporte & solicitações legais)**: [**https://sos-expat.com/contact**](https://sos-expat.com/contact)
+**Formulário de contato (suporte e solicitações legais):** **https://sos-expat.com/contact**
 `;
 const defaultCh = `
-# 一般条款 – 客户（全球）
+# 通用条款 – 客户（全球）
 
-**SOS Expat by WorldExpat OÜ**（以下简称“平台”、“SOS”、“我们”）
+**SOS Expat** 是由 **WorldExpat OÜ** 运营的服务，WorldExpat OÜ 是一家爱沙尼亚法律下的公司（商业登记号 16885621），注册地址位于 Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145, 爱沙尼亚（以下简称"**平台**"、"**SOS**"、"**SOS Expat**"、"**我们**"）。
 
-**版本 2.2 – 最后更新：2025年6月16日**
+**版本 3.0 – 最后更新：2026年2月1日**
+
+---
 
 ## 1. 目的与适用范围
 
-1.1 本通用条款及条件（“GTC”）适用于任何创建客户账户并通过平台预订服务的个人或法人实体（“客户”）。
+1.1. 本通用条款（"GTC"）规范任何通过平台创建客户账户并预订服务的自然人或法人实体（"客户"）对平台的使用。
 
-1.2 SOS Expat 的角色。SOS Expat 是一个连接以下双方的平台：(i) 独立律师（“律师”），和/或 (ii) 独立外籍护理人员（“护理人员”）。SOS Expat 并非律师事务所，不提供任何法律、医疗、税务或监管方面的建议，也并非客户与服务提供商（律师/护理人员）之间签订的服务协议的当事方。
+1.2. **SOS Expat 的角色。** SOS Expat 是一个连接平台：(i) 连接独立律师（"律师"），和/或 (ii) 连接独立外籍援助人员（"援助人员"）。SOS Expat 不是律师事务所，不提供任何法律、医疗、税务或受监管的建议，也不是客户与服务提供商（律师/援助人员）之间签订的服务合同的当事方。
 
-1.3 电子接受（点击式）。客户勾选接受框和/或使用平台即表示接受本 GTC（电子签名）。SOS 可能会保留技术证据（时间戳、标识符）。
+1.3. **电子接受（点击确认）。** 通过勾选接受框和/或使用平台，客户接受本 GTC，这构成根据 **eIDAS 法规 (EU) No 910/2014** 及同等国家立法有效的电子签名。
 
-1.4 条款及条件的修改。我们可能会通过在平台上发布更新后的条款及条件和/或价格/费用，该更新将对未来生效。继续使用即表示接受。
+1.4. **接受可追溯性。** SOS Expat 保留带有 UTC 时间戳的审计日志，包括：IP 地址、会话标识符、用户代理、GTC 版本、所接受文件的数字指纹（哈希值）及客户唯一标识符。这些数据构成接受的**可采信证据**。
+
+1.5. **证据保留。** 接受日志自客户最后一次活动或账户关闭后保留**十（10）年**。可应要求出具接受证明。
+
+1.6. **修改。** 我们可能通过在平台上发布的方式，以前瞻性效力更新 GTC 和/或价格/费用。任何影响客户权利或义务的重大修改将被通知，并要求现有客户**重新接受**。通知后继续使用即视为接受。
+
+1.7. **期限。** GTC 订立为无固定期限。
 
 ---
 
 ## 2. 账户、资格与使用
 
-2.1 年满18岁且具备法律行为能力。 企业用户保证其代表授权合法。
+2.1. **年龄与行为能力。** 客户声明其年满 18 周岁且具有法律行为能力。对于法人实体，用户声明其有权代表公司行事。
 
-2.2 必须提供并保持准确、最新的信息。
+2.2. **信息准确性。** 所提供的信息（身份、联系方式、国家、请求事项）必须准确且保持最新。
 
-2.3 禁止非法或滥用行为；平台并非紧急服务。
+2.3. **客户的声明与保证。** 通过创建账户并使用平台，客户明确声明并保证：
+- (a) 其根据其居住国法律已**成年**（至少 18 岁或适用的成年年龄）；
+- (b) 其具有**完全的法律行为能力**签订合同；
+- (c) 其未处于监护、托管、司法保护或任何妨碍其签订合同的同等保护制度下；
+- (d) 其**未列入任何国际制裁名单**（OFAC/SDN、欧盟、联合国、HMT 或其他）；
+- (e) 注册时提供的所有信息**准确、完整且为最新**；
+- (f) 其承诺**立即通知** SOS Expat 任何影响这些声明的变更；
+- (g) 对于**法人实体**：代表人拥有代表公司行事的必要授权。
+任何虚假声明可能导致账户暂停或关闭，且不影响任何损害赔偿请求。
 
-2.4 可用性按“现状”提供（“as is”）。
+2.4. **合规使用。** 客户不得进行任何非法或滥用性使用（欺诈、非法内容、骚扰、侵犯第三方权利、转移支付流、身份盗用等）。**SOS Expat 不是紧急服务**：不得用于任何医疗、生命威胁或紧急情况。
+
+2.5. **账户安全。** 客户保护其登录凭据。通过其账户进行的任何活动均视为由其本人进行。如怀疑账户被盗用，客户必须立即更改密码并通知 SOS Expat。
+
+2.6. **可用性。** 平台以"现状"提供：不保证不间断可用（维护、事故、不可抗力）。
 
 ---
 
-## 3. 可预订的服务
+## 3. 可预订服务的性质
 
-3.1 与律师通话。提供简短的初步咨询（例如 20 分钟）。律师对其提供的建议以及遵守职业道德和当地法律负全部责任。
+3.1. **与律师通话。** 简短的指导性咨询（例如 20 分钟）。律师对其建议及遵守其职业道德/当地法律负全部责任。
 
-3.2 与护理人员通话。提供非监管性协助（实用指导、非正式翻译、当地联系人等）。未持有相应的当地执照，我们不提供任何法律、医疗或监管方面的建议。
+3.2. **与援助人员通话。** 非受监管的援助（实用指导、非正式翻译、当地联系人等）。未持有适当当地执照，不提供法律/医疗/受监管建议。
 
-3.3 不作任何保证。我们不保证服务结果、质量、是否适合特定需求或服务提供商的可用性。
+3.3. **不作保证。** 我们不保证结果、质量、是否适合特定需求或服务提供商的可用性。
 
 ---
 
 ## 4. 价格、货币与连接费用
 
-4.1 显示的总价包括：(i) 服务提供方的报酬；及 (ii) SOS 的固定连接费用。
-4.2 连接费用： 每次连接 19欧元（EUR） 或 25美元（USD）（不含税），金额可能调整，或依据不同国家/货币制定本地费用表并前瞻性生效。
-4.3 可能适用汇率及支付处理费用。在法律要求的情况下，连接费含税；服务提供方负责其自身税务义务。
+4.1. **价格显示。** 预订时显示的总价包括：
+- (a) **服务提供商的报酬**（律师/援助人员），如所呈现的报价所定义；
+- (b) 应付给 SOS Expat 的**连接费用**（固定费用）。
+客户在确认预订前看到**含税总价**。
+
+4.2. **连接费用（指示性固定费用）。** 连接费用目前为每次连接 **19 欧元（EUR）** 或 **25 美元（USD）**。这些金额为**指示性**，SOS Expat 可随时修改，以前瞻性效力生效。可发布按国家/货币的**当地费率表**。适用价格为预订时显示的价格。
+
+4.3. **货币与转换。** 价格可以多种货币提供。可能适用支付服务提供商的费用和汇率。客户在确认前被告知其货币的确切金额。
+
+4.4. **税费。** 显示的价格包括（如适用）连接费用的增值税或适用税费。服务提供商对其自身税务义务负责。
+
+4.5. **透明度。** 无隐藏费用。预订时显示的价格即为最终价格，除非支付服务提供商或客户银行收取货币转换费用。
 
 ---
 
-## 5. 预订、通话与尝试
+## 5. 预订、通话与联系尝试
 
-5.1 当客户与提供方交换联系方式和/或开启通话/消息/视频渠道及/或提供方接受请求时，即视为建立连接（Connection）。
-5.2 即时通话可进行最多三（3）次尝试，约15分钟内完成。
-5.3 如未能建立连接，则全额退款。
-5.4 如已建立连接，但客户未参与（未接听、拒绝或提前终止），支付仍视为应付且不可退款。
+5.1. **"连接"的定义。** 以下情况视为连接已建立：(a) 客户-服务提供商联系信息已传输，和/或 (b) 平台已开启通话/消息/视频渠道，和/或 (c) 服务提供商已接受客户的请求。
+
+5.2. **通话尝试。** 对于即时通话：平台在约 15 分钟的窗口内进行最多三（3）次尝试（除非应用内另有说明）。
+
+5.3. **服务提供商不可用。** 如果在尝试后未能建立连接，预订将被取消，客户将获得所付总价的全额退款。
+
+5.4. **客户未响应。** 如果连接已建立（按 5.1 的定义）但客户未能进行有效交流（未接听、占线、拒绝、提前终止），付款仍为应付且不可退款。
+
+5.5. **通信质量。** 客户必须处于有足够覆盖的区域并使用兼容设备。SOS 不对第三方网络中断负责。
 
 ---
 
 ## 6. 撤销权（消费者）与立即履行
 
-6.1 若强制性当地法律赋予撤销权，则该权利可能适用，除非客户要求立即履行服务。
-6.2 当客户预订立即或短期通话时，即表示其要求立即履行，并确认服务完全履行后撤销权即消失；若在撤销前部分履行，客户须支付已履行部分的费用及不可退款的连接费。
-6.3 平台在需要时会收集明确同意。
+6.1. **信息。** 如果客户是消费者且当地强制性法律规定了撤销权，该权利可在法定期限内行使，除非客户请求立即履行服务。
+
+6.2. **放弃。** 通过在法定期限届满前预订即时或预定通话，客户请求立即履行并确认，一旦服务完全履行，其撤销权即丧失。如在撤销前部分履行，客户必须支付已提供服务的部分及不可退款的连接费用。
+
+6.3. **形式要求。** 平台在需要时于预订期间收集对这些要点的明确接受。
 
 ---
 
-## 7. 付款、安全与退款争议
+## 7. 付款、安全、退单
 
-7.1 单次付款与分配： 客户支付的总金额涵盖提供方份额及连接费用。SOS（或其支付处理方）收取款项，扣除连接费后将余额汇给提供方。
-7.2 付款通过第三方处理；可能适用反洗钱（AML）/客户识别（KYC）要求。
-7.3 如发生退款或争议（chargeback），SOS可与支付处理方共享必要数据，并可暂停相关服务或款项支付。
-7.4 抵销： 若客户获得退款，将从提供方份额中承担；SOS可从未来应付款中抵销。
+7.1. **单次付款与分配。** 客户通过平台进行单次付款，涵盖 (i) 服务提供商份额和 (ii) 连接费用。SOS（或其支付服务提供商）收款、扣除其费用，然后将余额转给服务提供商。
 
----  
+7.2. **安全。** 付款由第三方支付服务提供商处理。可能适用 KYC/反洗钱控制。
+
+7.3. **退单/争议。** 如发生付款争议，SOS 可向支付服务提供商传输必要数据，并暂停相关服务/付款。
+
+7.4. **抵销。** 如果向客户退款，相应份额将从相关服务提供商处扣除；SOS 可从其未来付款中抵销。
+
+---
 
 ## 8. 取消与退款
 
-8.1 除强制性法律另有规定外：
+8.1. **一般规定。** 除强制性法律规定外：
+- 一旦连接建立（5.1），连接费用不可退款；
+- 一旦服务开始，服务提供商份额不可退款，除非服务提供商善意处理。
 
-一旦建立连接，连接费不可退款；
+8.2. **客户在连接前取消。** 全额退款。
 
-一旦服务开始履行，提供方份额不可退款，除非提供方基于善意自行处理；
+8.3. **服务提供商取消。** 全额退款。SOS 可提供重新路由到其他可用服务提供商。
 
-8.2 连接前取消： 全额退款；
-
-8.3 提供方取消： 全额退款；
-
-8.4 因平台技术故障： SOS可在法律允许范围内酌情退款或发放信用额度。
+8.4. **可归因于 SOS 的技术情况。** 在法律允许的范围内，由 SOS 自行决定退款或重新入账。
 
 ---
 
-## 9. 行为规范、安全与内容
+## 9. 行为、安全与内容
 
-9.1 尊重。客户参与时应尊重行为，不得在未取得法律同意的情况下进行变更注册，也不得要求采取非法行为。
+9.1. **尊重。** 客户承诺行为尊重，未经法律要求的同意不得录制或传播交流内容，不得请求非法行为。
 
-9.2 Contenus fournis。信息以忠诚、严格和合法的方式传播。客户保证 SOS 和 Prestataire 不会完全收回其内容。
+9.2. **提供的内容。** 传输的信息必须忠实、准确且合法。客户就其提供的任何非法内容向 SOS 和服务提供商提供担保，使其免受相关索赔。
 
-9.3 信号。请通过联系方式发送信号。
+9.3. **举报。** 任何滥用行为可通过联系表单举报。
 
 ---
 
-## 10. 数据保护
+## 10. 个人数据（GDPR / 数据保护）
 
-10.1 独立数据控制者： SOS 与服务提供方各自独立处理个人数据，用于各自目的（合同履行、安全与防欺诈、服务改进、反洗钱/制裁、及在适用时的同意）。
-10.2 可能进行国际数据传输，并在需要时采取保障措施。
-10.3 权利与联系： 可通过联系表单行使。
-10.4 采用安全措施，并在发生泄露时依规通知。
+10.1. **数据控制者。** 对于连接所必需的数据，**SOS Expat (WorldExpat OÜ)** 和**服务提供商**（律师/援助人员）各自作为**独立数据控制者**处理各自目的的数据，符合 **法规 (EU) 2016/679 (GDPR)**。
 
-10.5 **DSA合规。** 本平台作为**欧盟法规2022/2065（数字服务法）**定义的**中介服务**运营。SOS Expat实施非法内容举报机制，并根据DSA与主管当局合作。
+10.2. **收集的数据。** SOS Expat 收集以下数据：身份、联系信息、居住国、请求事项、付款数据（由第三方提供商处理）、连接数据（IP、时间戳、设备）、预订历史。
+
+10.3. **法律依据与目的。**
+- **合同履行**：预订处理、连接、付款；
+- **合法利益**：安全、欺诈预防、服务改进、匿名统计；
+- **法律义务**：反洗钱合规、制裁、税务义务；
+- **同意**：营销通讯（可随时撤销）。
+
+10.4. **保留期限。** 数据在合同关系期间保留，然后根据法定时效期限归档（根据数据类型为 5 至 10 年）。
+
+10.5. **国际传输。** 数据可在采取**适当保障措施**（标准合同条款、充分性决定等）的情况下传输至欧洲经济区以外。
+
+10.6. **客户权利。** 客户拥有以下权利：访问、更正、删除、限制、可携带性、反对。通过平台**联系表单**或电子邮件行使。
+
+10.7. **安全。** 合理的技术和组织措施（加密、访问控制、审计）。根据 GDPR 在 **72 小时**内通知数据泄露。
+
+10.8. **DSA 合规。** 平台作为 **法规 (EU) 2022/2065（数字服务法）** 意义上的**中介服务**运营。SOS Expat 实施非法内容举报机制，并与主管当局合作。
 
 ---
 
 ## 11. 知识产权
 
-平台的知识产权归 WorldExpat OÜ 所有；客户仅获得个人、有限的访问使用权。
+平台及其商标、标识、数据库和内容受保护。不向客户转让任何权利。使用严格限于根据 GTC 进行的个人访问。
 
 ---
 
-## 12. 责任
+## 12. 责任与保证
 
-12.1 服务提供方为独立主体；SOS 对其服务或结果不承担责任。
-12.2 在法律允许的最大范围内，SOS 对客户的总责任限于因相关预订而支付的总价；在允许的范围内，不承担间接、特殊或后果性损害赔偿。
+12.1. **连接的专属角色。** SOS Expat **专门**作为技术连接平台。SOS Expat：
+- **不是**律师事务所、咨询公司、法律、医疗、税务或受监管服务提供商；
+- **不是**客户与服务提供商（律师/援助人员）之间合同的当事方；
+- **不保证**服务提供商提供的建议或服务的质量、准确性、合法性或结果；
+- **不干预**服务提供商费用的设定（连接费用除外）。
+
+12.2. **独立服务提供商。** 律师和援助人员是**独立专业人员**，对其建议、服务及遵守其法律和职业义务负全部责任。SOS Expat **不承担**客户因服务提供商服务所遭受的任何损害的责任。
+
+12.3. **责任限制。** 在**适用法律允许的最大范围内**且**不影响消费者的强制性权利**：
+- (a) SOS Expat 对客户的总责任限于已证明的**直接损害**，且**不得超过**客户为引起索赔的预订所支付的总价；
+- (b) SOS Expat **不承担**间接、特殊、后果性、惩罚性或惩戒性损害赔偿责任（机会损失、利润损失、商机损失、声誉损害、精神损害等）。
+
+12.4. **不作保证。** 平台以"**现状**"和"**视可用性**"提供。SOS Expat 不保证：
+- 平台的持续或不间断可用性；
+- 不存在错误、漏洞或安全缺陷；
+- 特定服务提供商的可用性；
+- 服务是否适合客户的特定需求。
+
+12.5. **不可抗力。** SOS Expat 不对因**不可抗力**事件（自然灾害、战争、流行病、网络攻击、电力或互联网故障、政府决定、罢工等）造成的延误或故障负责。
+
+12.6. **客户-服务提供商争议。** 客户与服务提供商之间的任何争议**专属于**其直接关系。SOS Expat **不介入**此类争议，且**不得被作为**当事方、担保人或调解人追究。
 
 ---
 
-## 13. 适用法律、争议与法院管辖
+## 13. 适用法律、争议解决与管辖法院
 
-13.1 实体法： 对每个提供服务的国家，适用该介入国家的法律，同时不影响客户在居住地享有的强制性消费者权利。
-13.2 补充适用： 爱沙尼亚法律用于解释与效力，以及未被当地法律涵盖的事项。
- 非消费者： 争议须提交国际商会（ICC）仲裁（仲裁地：爱沙尼亚塔林；语言：法语；保密）。
- 消费者： 可选择参加ICC仲裁或依据强制性法律使用有管辖权的法院。
-13.3 非仲裁事项、裁决执行及紧急措施由**爱沙尼亚法院（塔林）**专属管辖，但须遵守强制性消费者权利。
-13.4 在法律允许范围内，放弃集体/联合诉讼权利。
+13.1. **适用法律。**
+- **非消费者客户（B2B）**：本 GTC **专门**受**爱沙尼亚法律**管辖，排除其法律冲突规则。
+- **消费者客户（B2C）**：GTC 受爱沙尼亚法律管辖，**但不剥夺客户**其惯常居住地消费者保护的强制性规定。
+
+13.2. **ICC 仲裁。**
+- **非消费者客户（B2B）**：任何争议根据**ICC（国际商会）仲裁规则**作出**最终**裁决。**仲裁地：塔林（爱沙尼亚）**。**语言：英语**。一（1）名仲裁员。程序**保密**。
+- **消费者客户（B2C）**：客户可**选择** ICC 仲裁（相同条件）或根据其居住地强制性法律有管辖权的法院。
+
+13.3. **放弃集体诉讼和陪审团审判。** 在**适用法律允许的最大范围内**且**不影响消费者的强制性权利**：
+- (a) 任何**集体、群体、代表或合并**诉讼均被**排除**；仅受理**个人**索赔；
+- (b) 非消费者客户**明确放弃陪审团审判权**。
+
+13.4. **爱沙尼亚法院管辖权。** 对于任何**不可仲裁的**请求、**承认与执行**（仲裁裁决的执行）或**临时/保全措施**，位于**塔林**的爱沙尼亚法院具有专属管辖权，**但不影响**消费者客户向其居住地法院起诉的权利。
+
+13.5. **事先调解。** 在任何仲裁或司法程序之前，鼓励当事方在书面通知争议后**三十（30）天**内通过**善意协商**友好解决争议。
+
+13.6. **时效。** 非消费者客户对 SOS Expat 的任何诉讼或索赔必须在引起诉讼的事实发生之日起**一（1）年**内提起。适用于消费者的时效期限为其居住地强制性法律规定的期限。
 
 ---
 
-## 14. 终止/暂停及其他条款
+## 14. 终止/暂停及其他
 
-14.1 如存在欺诈、不合规、滥用或法律风险，我们可暂停或关闭账户。
-14.2 法语版本优先用于解释。
-14.3 适用可分割性及不放弃原则。
-14.4 通知可通过平台发布、应用内提示或联系表单发送。
+14.1. **暂停与关闭。** SOS Expat 可在以下情况下**立即**生效地**临时暂停**或**永久关闭**客户账户：
+- (a) 涉嫌**欺诈、身份盗用或非法活动**；
+- (b) **违反 GTC** 或滥用行为；
+- (c) **未付款**或滥用付款争议；
+- (d) 被列入**国际制裁名单**；
+- (e) **司法或行政机关**的要求；
+- (f) 任何其他出于安全或合规的合法理由。
+如账户关闭，进行中的预订可能被取消并退款，除非客户有过错。
+
+14.2. **客户关闭账户。** 客户可随时通过其个人空间或联系支持关闭账户。关闭不会导致已消费服务的任何退款。
+
+14.3. **完整性。** GTC 构成 SOS Expat 与客户之间关于平台使用的完整协议，取代任何先前协议。
+
+14.4. **语言。** 可能提供翻译版本以供参考；如有歧义，**英语版本优先**用于解释。
+
+14.5. **部分无效。** 如某条款无效或不可执行，其余条款仍然有效；该条款可由具有同等效力的有效条款替代。
+
+14.6. **地理可分割性。** 如本 GTC 的某条款在特定司法管辖区被宣布无效、不可执行或非法，该决定**不影响**该同一条款在其仍然合法且可执行的**其他司法管辖区**的效力。
+
+14.7. **不放弃。** 未行使权利不构成放弃。
+
+14.8. **转让。** SOS Expat 可将 GTC 转让给其集团内实体或继承者。未经 SOS Expat 书面同意，客户不得转让。
+
+14.9. **证据。** 保存在 SOS Expat 及其服务提供商系统中的计算机记录在无相反证据的情况下具有证明力。
 
 ---
 
 ## 15. 联系方式
 
-联系表单（支持与法律请求）： https://sos-expat.com/contact
+**联系表单（支持与法律请求）**：**https://sos-expat.com/contact**
 `
 
   
   const defaultAr = `
-# الشروط العامة – العملاء (عالمي)
+# الشروط والأحكام العامة – العملاء (عالمي)
 
-**SOS Expat من WorldExpat OÜ** ("المنصة"، "SOS"، "نحن")
+**SOS Expat** هي خدمة تديرها **WorldExpat OÜ**، شركة إستونية (السجل التجاري رقم 16885621)، مقرها Harju maakond, Tallinn, Kesklinna linnaosa, Tornimäe tn 3/5/7, 10145، إستونيا ("**المنصة**"، "**SOS**"، "**SOS Expat**"، "**نحن**").
 
-**الإصدار 2.2 – آخر تحديث: 16 يونيو 2025**
+**الإصدار 3.0 – آخر تحديث: 1 فبراير 2026**
 
 ---
 
-## 1. الموضوع والنطاق
+## 1. الموضوع ونطاق التطبيق
 
-1.1. تحكم الشروط العامة الحالية ("CGV") استخدام المنصة من قبل أي شخص طبيعي أو معنوي ينشئ حساب عميل ويحجز خدمة من خلال المنصة ("العميل").
+1.1. تحكم هذه الشروط والأحكام العامة ("الشروط") استخدام المنصة من قبل أي شخص طبيعي أو اعتباري ينشئ حساب عميل ويحجز خدمة عبر المنصة ("العميل").
 
-1.2. **دور SOS Expat.** SOS Expat هي منصة ربط: (i) مع محامين مستقلين ("محامون")، و/أو (ii) مع مساعدين مغتربين مستقلين ("مساعدون"). SOS Expat ليست مكتب محاماة، لا تقدم أي استشارات قانونية أو طبية أو ضريبية أو منظمة، وليست طرفاً في عقد الخدمة المبرم بين العميل ومقدم الخدمة (محامي/مساعد).
+1.2. **دور SOS Expat.** SOS Expat هي منصة ربط: (أ) مع محامين مستقلين ("المحامون")، و/أو (ب) مع مساعدين مغتربين مستقلين ("المساعدون"). SOS Expat ليست مكتب محاماة، ولا تقدم أي استشارات قانونية أو طبية أو ضريبية أو منظمة، وليست طرفاً في عقد الخدمة المبرم بين العميل ومقدم الخدمة (المحامي/المساعد).
 
-1.3. **القبول الإلكتروني (النقر).** بتحديد خانة القبول و/أو استخدام المنصة، يقبل العميل هذه الشروط العامة (التوقيع الإلكتروني). يمكن لـ SOS الاحتفاظ بالأدلة التقنية (الطابع الزمني، المعرفات).
+1.3. **القبول الإلكتروني (click-wrap).** بتحديد خانة القبول و/أو استخدام المنصة، يقبل العميل هذه الشروط، مما يشكل توقيعاً إلكترونياً صالحاً بموجب **لائحة eIDAS (EU) رقم 910/2014** والتشريعات الوطنية المعادلة.
 
-1.4. **التعديلات.** يجوز لنا تحديث الشروط العامة و/أو الأسعار/الرسوم بتأثير محتمل بالنشر على المنصة. استمرار الاستخدام يشكل قبولاً.
+1.4. **تتبع القبول.** تحتفظ SOS Expat بسجل تدقيق مؤرخ (UTC) يتضمن: عنوان IP، معرف الجلسة، وكيل المستخدم، إصدار الشروط، البصمة الرقمية (hash) للوثيقة المقبولة، والمعرف الفريد للعميل. تشكل هذه البيانات **دليلاً مقبولاً** على القبول.
+
+1.5. **حفظ الأدلة.** تُحفظ سجلات القبول لمدة **عشر (10) سنوات** بعد آخر نشاط للعميل أو إغلاق حسابه. يمكن إصدار شهادة قبول عند الطلب.
+
+1.6. **التعديلات.** يجوز لنا تحديث الشروط و/أو الأسعار/الرسوم بأثر مستقبلي عبر النشر على المنصة. سيتم إخطار العميل بأي تعديل جوهري يؤثر على حقوقه أو التزاماته وسيتطلب **قبولاً جديداً** من العملاء الحاليين. يُعتبر الاستمرار في الاستخدام بعد الإخطار قبولاً.
+
+1.7. **المدة.** تُبرم الشروط لمدة غير محددة.
 
 ---
 
 ## 2. الحسابات والأهلية والاستخدام
 
-2.1. **العمر والأهلية.** يعلن العميل أنه يبلغ 18 سنة على الأقل وله أهلية قانونية. بالنسبة للأشخاص المعنويين، يعلن المستخدم أنه مخول بربط الشركة.
+2.1. **العمر والأهلية.** يُقر العميل بأنه يبلغ 18 عاماً على الأقل وله أهلية قانونية. بالنسبة للأشخاص الاعتباريين، يُقر المستخدم بأنه مخول للتصرف نيابة عن الشركة.
 
-2.2. **دقة المعلومات.** يجب أن تكون المعلومات المقدمة (الهوية، جهات الاتصال، البلد، موضوع الطلب) دقيقة ومحدثة.
+2.2. **دقة المعلومات.** يجب أن تكون المعلومات المقدمة (الهوية، وسائل الاتصال، البلد، موضوع الطلب) دقيقة ومحدثة.
 
-2.3. **الاستخدام المتوافق.** يحظر العميل على نفسه أي استخدام غير قانوني أو تعسفي (احتيال، محتوى غير قانوني، مضايقة، انتهاك حقوق الغير، تحويل تدفقات الدفع، إلخ). لا استخدام للحالات الطبية أو الحالات الحيوية الطارئة؛ SOS ليست خدمة طوارئ.
+2.3. **إقرارات وضمانات العميل.** بإنشاء حساب واستخدام المنصة، يُقر العميل ويضمن صراحةً أنه:
+- (أ) **بالغ** وفقاً لقانون بلد إقامته (18 عاماً على الأقل أو سن الرشد المعمول به)؛
+- (ب) يتمتع بـ**الأهلية القانونية الكاملة** للتعاقد؛
+- (ج) ليس تحت الوصاية أو القوامة أو الحماية القضائية أو أي نظام حماية معادل يمنعه من التعاقد؛
+- (د) **غير مدرج في أي قائمة عقوبات دولية** (OFAC/SDN، الاتحاد الأوروبي، الأمم المتحدة، HMT، أو غيرها)؛
+- (هـ) جميع المعلومات المقدمة عند التسجيل **دقيقة وكاملة ومحدثة**؛
+- (و) يلتزم بـ**إخطار SOS Expat فوراً** بأي تغيير يؤثر على هذه الإقرارات؛
+- (ز) بالنسبة لـ**الأشخاص الاعتباريين**: يملك الممثل الصلاحيات اللازمة للتصرف نيابة عن الشركة.
+قد يؤدي أي إقرار كاذب إلى تعليق أو إغلاق الحساب، دون المساس بأي دعوى تعويض.
 
-2.4. **التوفر.** توفر المنصة "كما هي": لا يتم ضمان أي توفر متواصل (صيانة، حوادث، قوة قاهرة).
+2.4. **الاستخدام المتوافق.** يُحظر على العميل أي استخدام غير قانوني أو تعسفي (احتيال، محتوى غير قانوني، مضايقة، انتهاك حقوق الغير، تحويل تدفقات الدفع، انتحال الهوية، إلخ). **SOS Expat ليست خدمة طوارئ**: لا يجوز استخدامها للحالات الطبية أو المهددة للحياة أو حالات الطوارئ الفورية.
+
+2.5. **أمان الحساب.** يحمي العميل بيانات تسجيل الدخول الخاصة به. يُعتبر أي نشاط يتم عبر حسابه صادراً عنه. في حالة الاشتباه في اختراق الحساب، يجب على العميل تغيير كلمة المرور فوراً وإخطار SOS Expat.
+
+2.6. **التوفر.** تُقدم المنصة "كما هي": لا يُضمن توفر متواصل (صيانة، حوادث، قوة قاهرة).
 
 ---
 
 ## 3. طبيعة الخدمات القابلة للحجز
 
-3.1. **المكالمات مع المحامين.** استشارات توجيه قصيرة (مثل 20 دقيقة). يبقى المحامي مسؤولاً بشكل حصري عن نصيحته والامتثال لآدابه/القوانين المحلية.
+3.1. **المكالمات مع المحامين.** استشارات توجيهية قصيرة (مثل 20 دقيقة). يظل المحامي مسؤولاً وحده عن نصائحه والامتثال لأخلاقياته المهنية/القوانين المحلية.
 
-3.2. **المكالمات مع المساعدين.** مساعدة غير منظمة (إرشادات عملية، ترجمة غير رسمية، جهات اتصال محلية...). لا استشارة قانونية/طبية/منظمة بدون ترخيص محلي مناسب.
+3.2. **المكالمات مع المساعدين.** مساعدة غير منظمة (إرشادات عملية، ترجمة غير رسمية، جهات اتصال محلية...). لا يُقدم أي استشارة قانونية/طبية/منظمة بدون ترخيص محلي مناسب.
 
 3.3. **بدون ضمانات.** لا نضمن النتيجة أو الجودة أو الملاءمة لاحتياجات معينة أو توفر مقدمي الخدمات.
 
@@ -2020,139 +2567,190 @@ const defaultCh = `
 
 ## 4. الأسعار والعملات ورسوم الربط
 
-4.1. **عرض الأسعار.** السعر الإجمالي المعروض عند وقت الحجز يشمل: (i) تعويض مقدم الخدمة (محامي/مساعد) المحدد وفقاً للعرض المقدم، و(ii) رسوم الربط المستحقة لـ SOS (رسم ثابت).
+4.1. **عرض الأسعار.** يشمل السعر الإجمالي المعروض عند الحجز:
+- (أ) **أتعاب مقدم الخدمة** (المحامي/المساعد) كما هو محدد في العرض المقدم؛
+- (ب) **رسوم الربط** المستحقة لـ SOS Expat (رسم ثابت).
+يرى العميل **السعر الإجمالي شاملاً الضريبة** قبل تأكيد حجزه.
 
-4.2. **رسوم الربط (رسم ثابت).** 19 يورو (EUR) أو 25 دولار (USD) لكل ربط (بدون ضرائب)، متكاملة في السعر الإجمالي. يمكن لـ SOS تعديل هذه الرسوم و/أو نشر جداول محلية حسب الدولة/العملة بتأثير محتمل.
+4.2. **رسوم الربط (رسم ثابت إرشادي).** تبلغ رسوم الربط حالياً **19 يورو (EUR)** أو **25 دولار (USD)** لكل ربط. هذه المبالغ **إرشادية** ويمكن لـ SOS Expat تعديلها في أي وقت بأثر مستقبلي. يمكن نشر **جداول أسعار محلية** حسب الدولة/العملة. السعر المطبق هو السعر المعروض وقت الحجز.
 
-4.3. **العملات والتحويل.** يمكن عرض الأسعار بعملات متعددة. قد تنطبق رسوم/أسعار صرف معالج الدفع.
+4.3. **العملات والتحويل.** قد تُعرض الأسعار بعملات متعددة. قد تُطبق رسوم وأسعار صرف مزود الدفع. يُبلغ العميل بالمبلغ الدقيق بعملته قبل التأكيد.
 
-4.4. **الضرائب.** تشمل الأسعار المعروضة، عند الانطباق، ضريبة القيمة المضافة أو الضرائب المعمول بها على رسوم الربط. يبقى مقدمو الخدمات مسؤولين عن التزاماتهم الضريبية الخاصة.
+4.4. **الضرائب.** تشمل الأسعار المعروضة، عند الاقتضاء، ضريبة القيمة المضافة أو الضرائب المطبقة على رسوم الربط. يظل مقدمو الخدمات مسؤولين عن التزاماتهم الضريبية الخاصة.
+
+4.5. **الشفافية.** لا رسوم خفية. السعر المعروض وقت الحجز هو السعر النهائي، ما لم تُطبق رسوم تحويل العملة من قبل مزود الدفع أو بنك العميل.
 
 ---
 
 ## 5. الحجز والمكالمة ومحاولات الاتصال
 
-5.1. **تعريف "الربط".** يعتبر محققاً عندما: (أ) نقل تفاصيل العميل-مقدم الخدمة، و/أو (ب) فتح المنصة قناة مكالمة/رسالة/فيديو، و/أو (ج) قبول مقدم الخدمة لطلب العميل.
+5.1. **تعريف "الربط".** يُعتبر الربط قد تحقق عندما: (أ) نقل معلومات الاتصال بين العميل ومقدم الخدمة، و/أو (ب) فتح المنصة قناة مكالمة/رسالة/فيديو، و/أو (ج) قبول مقدم الخدمة لطلب العميل.
 
-5.2. **محاولات المكالمة.** في حالة المكالمة الفورية: تجري المنصة حتى ثلاث (3) محاولات في نافذة زمنية تقارب 15 دقيقة (إلا إذا كان هناك مؤشر مختلف في التطبيق).
+5.2. **محاولات المكالمة.** في حالة المكالمة الفورية: تُجري المنصة حتى ثلاث (3) محاولات في نافذة زمنية تقارب 15 دقيقة (ما لم يُذكر خلاف ذلك في التطبيق).
 
-5.3. **عدم توفر مقدم الخدمة.** إذا لم يتمكن من تحقيق أي ربط بعد المحاولات، يتم إلغاء الحجز ويتم استرجاع السعر الإجمالي المدفوع بالكامل للعميل.
+5.3. **عدم توفر مقدم الخدمة.** إذا لم يتحقق أي ربط بعد المحاولات، يُلغى الحجز ويُسترد للعميل كامل السعر المدفوع.
 
-5.4. **عدم رد العميل.** إذا تم تحقيق الربط (وفقاً 5.1) لكن العميل لم يحقق تبادلاً فعلياً (عدم رد، خط مشغول، رفض، توقف مبكر)، يبقى الدفع مستحقاً وغير قابل للاسترجاع.
+5.4. **عدم رد العميل.** إذا تحقق الربط (وفقاً لـ 5.1) لكن العميل لم يُجرِ تبادلاً فعلياً (عدم رد، خط مشغول، رفض، توقف مبكر)، يظل الدفع مستحقاً وغير قابل للاسترداد.
 
-5.5. **جودة الاتصال.** يجب أن يكون العميل في منطقة تغطية كافية واستخدام معدات متوافقة. SOS ليست مسؤولة عن انقطاعات/شبكات الأطراف الثالثة.
+5.5. **جودة الاتصال.** يجب أن يكون العميل في منطقة تغطية كافية وأن يستخدم معدات متوافقة. SOS ليست مسؤولة عن انقطاعات/شبكات الأطراف الثالثة.
 
 ---
 
-## 6. حق الندم (المستهلكون) والتنفيذ الفوري
+## 6. حق الانسحاب (المستهلكون) والتنفيذ الفوري
 
-6.1. **معلومات.** إذا كان العميل مستهلكاً والقانون المحلي الإلزامي ينص على حق ندم، يمكن ممارسته ضمن الآجال القانونية، إلا إذا طلب العميل التنفيذ الفوري للخدمة.
+6.1. **معلومات.** إذا كان العميل مستهلكاً وينص القانون المحلي الإلزامي على حق انسحاب، يمكن ممارسته ضمن المهل القانونية، ما لم يطلب العميل التنفيذ الفوري للخدمة.
 
-6.2. **التنازل.** بحجز مكالمة فورية أو مجدولة قبل انقضاء الأجل القانوني، يطلب العميل التنفيذ الفوري ويعترف بأنه، بمجرد تنفيذ الخدمة بالكامل، يفقد حق الندم. في حالة التنفيذ الجزئي قبل الندم، يجب على العميل دفع الجزء المنفذ بالفعل ورسوم الربط، غير قابلة للاسترجاع.
+6.2. **التنازل.** بحجز مكالمة فورية أو مجدولة قبل انقضاء المهلة القانونية، يطلب العميل التنفيذ الفوري ويُقر بأنه بمجرد تنفيذ الخدمة بالكامل، يفقد حق الانسحاب. في حالة التنفيذ الجزئي قبل الانسحاب، يجب على العميل دفع الجزء المنفذ بالفعل ورسوم الربط غير القابلة للاسترداد.
 
 6.3. **الشكليات.** تجمع المنصة القبول الصريح لهذه النقاط أثناء الحجز، عند الضرورة.
 
 ---
 
-## 7. الدفع والأمان والمنازعات
+## 7. الدفع والأمان ورد المبالغ
 
-7.1. **دفع موحد وتقسيم.** يقوم العميل بدفع موحد عبر المنصة يغطي (i) حصة مقدم الخدمة و(ii) رسوم الربط. تجمع SOS (أو معالج الدفع الخاص بها)، تخصم رسومها، ثم تحول الرصيد إلى مقدم الخدمة.
+7.1. **دفع موحد وتوزيع.** يقوم العميل بدفع واحد عبر المنصة يغطي (أ) حصة مقدم الخدمة و(ب) رسوم الربط. تجمع SOS (أو مزود الدفع الخاص بها)، تخصم رسومها، ثم تحول الرصيد إلى مقدم الخدمة.
 
-7.2. **الأمان.** تمر المدفوعات عبر معالجات دفع من طرف ثالث. قد تنطبق عمليات التحقق من معرفة العميل (KYC)/مكافحة غسيل الأموال (AML).
+7.2. **الأمان.** تتم معالجة المدفوعات عبر مزودي دفع من طرف ثالث. قد تُطبق عمليات التحقق من هوية العميل (KYC)/مكافحة غسيل الأموال (AML).
 
-7.3. **المنازعات/النزاع.** في حالة نزاع بشأن الدفع، يمكن لـ SOS نقل المعالج بيانات مقدم الخدمة الضرورية تماماً والنوايا المرتبطة بها/الدفعات.
+7.3. **رد المبالغ/النزاعات.** في حالة نزاع بشأن الدفع، يمكن لـ SOS نقل البيانات الضرورية إلى مزود الدفع وتعليق الخدمات/المدفوعات ذات الصلة.
 
-7.4. **التعويض.** إذا تم منح استرجاع للعميل، يتم خصم الجزء المقابل من مقدم الخدمة المعني؛ يمكن لـ SOS التعويض على دفعاته المستقبلية.
-
----
-
-## 8. الإلغاءات والاسترجاعات
-
-8.1. **عام.** ما لم تكن هناك أحكام قانونية إلزامية:
-- رسوم الربط غير قابلة للاسترجاع بمجرد تحقيق الربط (5.1)؛
-- حصة مقدم الخدمة غير قابلة للاسترجاع بمجرد بدء الخدمة، إلا بإيماءة تجارية من مقدم الخدمة.
-
-8.2. **إلغاء بواسطة العميل قبل الربط.** استرجاع كامل.
-
-8.3. **إلغاء بواسطة مقدم الخدمة.** استرجاع كامل. يمكن لـ SOS عرض إعادة توجيه لمقدم خدمة آخر متاح.
-
-8.4. **حالات تقنية قابلة للنسب إلى SOS.** استرجاع أو إعادة تجميد حسب تقدير SOS، بقدر ما يسمح به القانون.
+7.4. **المقاصة.** إذا مُنح استرداد للعميل، يُخصم الجزء المقابل من مقدم الخدمة المعني؛ يمكن لـ SOS المقاصة من مدفوعاته المستقبلية.
 
 ---
 
-## 9. السلوكيات والأمان والمحتويات
+## 8. الإلغاءات والاستردادات
+
+8.1. **عام.** ما لم تنص أحكام قانونية إلزامية على خلاف ذلك:
+- رسوم الربط غير قابلة للاسترداد بمجرد تحقيق الربط (5.1)؛
+- حصة مقدم الخدمة غير قابلة للاسترداد بمجرد بدء الخدمة، إلا بلفتة حسن نية من مقدم الخدمة.
+
+8.2. **إلغاء من العميل قبل الربط.** استرداد كامل.
+
+8.3. **إلغاء من مقدم الخدمة.** استرداد كامل. يمكن لـ SOS عرض إعادة التوجيه إلى مقدم خدمة آخر متاح.
+
+8.4. **حالات تقنية منسوبة لـ SOS.** استرداد أو إعادة رصيد حسب تقدير SOS، بالقدر الذي يسمح به القانون.
+
+---
+
+## 9. السلوك والأمان والمحتوى
 
 9.1. **الاحترام.** يلتزم العميل بسلوك محترم، وعدم تسجيل أو نشر التبادل بدون الموافقة المطلوبة قانوناً، وعدم طلب أعمال غير قانونية.
 
-9.2. **المحتويات المقدمة.** يجب أن تكون المعلومات المنقولة نزيهة ودقيقة وقانونية. يضمن العميل SOS ومقدم الخدمة ضد أي مطالبة تتعلق بمحتويات غير قانونية قدمها.
+9.2. **المحتوى المقدم.** يجب أن تكون المعلومات المنقولة نزيهة ودقيقة وقانونية. يضمن العميل SOS ومقدم الخدمة ضد أي مطالبة تتعلق بمحتويات غير قانونية قدمها.
 
 9.3. **الإبلاغ.** يمكن الإبلاغ عن أي إساءة عبر نموذج الاتصال.
 
 ---
 
-## 10. البيانات الشخصية
+## 10. البيانات الشخصية (GDPR / حماية البيانات)
 
-10.1. **الأدوار.** بالنسبة للبيانات الضرورية تماماً للربط، تعمل SOS ومقدم الخدمة كل منهما كمسؤول معالجة لأغراضهما الخاصة.
+10.1. **مسؤول المعالجة.** بالنسبة للبيانات الضرورية للربط، تعمل **SOS Expat (WorldExpat OÜ)** و**مقدم الخدمة** (المحامي/المساعد) كـ**مسؤول معالجة مستقل** كل لأغراضه الخاصة، وفقاً لـ**اللائحة (EU) 2016/679 (GDPR)**.
 
-10.2. **الأسس والأغراض.** تنفيذ العقد (الحجز)، المصالح المشروعة (الأمان، منع الاحتيال، التحسين)، الامتثال (AML/العقوبات) والموافقة إذا لزم الأمر.
+10.2. **البيانات المجمعة.** تجمع SOS Expat البيانات التالية: الهوية، معلومات الاتصال، بلد الإقامة، موضوع الطلب، بيانات الدفع (تُعالج بواسطة مزودين خارجيين)، بيانات الاتصال (IP، الطابع الزمني، الجهاز)، سجل الحجوزات.
 
-10.3. **التحويلات الدولية** ممكنة مع ضمانات مناسبة.
+10.3. **الأسس القانونية والأغراض.**
+- **تنفيذ العقد**: معالجة الحجز، الربط، الدفع؛
+- **المصالح المشروعة**: الأمان، منع الاحتيال، تحسين الخدمات، الإحصاءات المجهولة؛
+- **الالتزام القانوني**: الامتثال لمكافحة غسيل الأموال، العقوبات، الالتزامات الضريبية؛
+- **الموافقة**: الاتصالات التسويقية (قابلة للإلغاء في أي وقت).
 
-10.4. **الحقوق والاتصال.** الممارسة عبر نموذج الاتصال بالمنصة.
+10.4. **مدة الاحتفاظ.** تُحفظ البيانات طوال فترة العلاقة التعاقدية، ثم تُؤرشف وفقاً لفترات التقادم القانونية (5 إلى 10 سنوات حسب نوع البيانات).
 
-10.5. **الأمان.** تدابير تقنية/تنظيمية معقولة؛ إشعار الانتهاكات حسب المطلوب بموجب القانون.
+10.5. **التحويلات الدولية.** قد تُنقل البيانات خارج المنطقة الاقتصادية الأوروبية مع **ضمانات مناسبة** (البنود التعاقدية النموذجية، قرارات الملاءمة، إلخ).
 
-10.6. **الامتثال لـ DSA.** تعمل المنصة كـ **خدمة وسيطة** وفقاً لـ **اللائحة (EU) 2022/2065 (قانون الخدمات الرقمية)**. تنفذ SOS Expat آليات للإبلاغ عن المحتوى غير القانوني وتتعاون مع السلطات المختصة وفقاً لـ DSA.
+10.6. **حقوق العميل.** يتمتع العميل بالحقوق التالية: الوصول، التصحيح، المحو، التقييد، قابلية النقل، الاعتراض. تُمارس عبر **نموذج الاتصال** بالمنصة أو البريد الإلكتروني.
+
+10.7. **الأمان.** تدابير تقنية وتنظيمية معقولة (التشفير، التحكم في الوصول، التدقيق). إشعار بانتهاكات البيانات خلال **72 ساعة** وفقاً لـ GDPR.
+
+10.8. **الامتثال لـ DSA.** تعمل المنصة كـ**خدمة وسيطة** وفقاً لـ**اللائحة (EU) 2022/2065 (قانون الخدمات الرقمية)**. تنفذ SOS Expat آليات للإبلاغ عن المحتوى غير القانوني وتتعاون مع السلطات المختصة.
 
 ---
 
 ## 11. الملكية الفكرية
 
-المنصة وعلاماتها التجارية وشعاراتها وقواعد بيانات المحتوى محمية. لا يتم نقل أي حقوق إلى العميل. الاستخدام مقتصر بشكل صارم على الوصول الشخصي وفقاً للشروط العامة.
+المنصة وعلاماتها التجارية وشعاراتها وقواعد بياناتها ومحتوياتها محمية. لا تُنقل أي حقوق إلى العميل. الاستخدام مقتصر بشكل صارم على الوصول الشخصي وفقاً للشروط.
 
 ---
 
-## 12. المسؤولية
+## 12. المسؤولية والضمانات
 
-12.1. **مقدمو الخدمات المستقلون.** يعترف العميل بأن المحامين والمساعدين مستقلون. SOS ليست مسؤولة عن الاستشارات/الخدمات المقدمة أو نتائجها.
+12.1. **الدور الحصري للربط.** SOS Expat هي **حصرياً** منصة ربط تقنية. SOS Expat:
+- **ليست** مكتب محاماة أو شركة استشارات أو مقدم خدمات قانونية أو طبية أو ضريبية أو منظمة؛
+- **ليست طرفاً** في العقد بين العميل ومقدم الخدمة (المحامي/المساعد)؛
+- **لا تضمن** جودة أو دقة أو شرعية أو نتيجة النصائح أو الخدمات المقدمة من مقدمي الخدمات؛
+- **لا تتدخل** في تحديد أتعاب مقدمي الخدمات (باستثناء رسوم الربط).
 
-12.2. **القيود.** بقدر ما يسمح به القانون، تقتصر مسؤولية SOS عن الضرر المباشر المثبت على السعر الإجمالي المدفوع من قبل العميل للحجز المعني. SOS ليست مسؤولة عن الأضرار غير المباشرة/الخاصة/الناتجة (فقدان الفرصة، الأرباح، السمعة، إلخ)، بقدر ما يسمح به.
+12.2. **مقدمو خدمات مستقلون.** المحامون والمساعدون **مهنيون مستقلون**، مسؤولون وحدهم عن نصائحهم وخدماتهم والامتثال لالتزاماتهم القانونية والمهنية. **تخلي SOS Expat مسؤوليتها** عن أي ضرر يلحق بالعميل نتيجة خدمات مقدم الخدمة.
 
-12.3. **بدون ضمانات.** SOS لا تضمن التوفر المستمر للمنصة أو غياب الأخطاء.
+12.3. **حد المسؤولية.** في **أقصى حد يسمح به القانون المعمول به** و**دون المساس بالحقوق الإلزامية للمستهلكين**:
+- (أ) تقتصر المسؤولية الإجمالية لـ SOS Expat تجاه العميل على **الأضرار المباشرة** المثبتة و**لا يمكن أن تتجاوز** السعر الإجمالي المدفوع من العميل للحجز المسبب للمطالبة؛
+- (ب) **لا تتحمل SOS Expat مسؤولية** الأضرار غير المباشرة أو الخاصة أو التبعية أو العقابية أو التأديبية (فقدان الفرصة، الأرباح، الفرص التجارية، السمعة، الأضرار المعنوية، إلخ).
+
+12.4. **بدون ضمانات.** تُقدم المنصة "**كما هي**" و"**حسب التوفر**". لا تضمن SOS Expat:
+- التوفر المستمر أو المتواصل للمنصة؛
+- غياب الأخطاء أو الثغرات أو العيوب الأمنية؛
+- توفر مقدم خدمة معين؛
+- ملاءمة الخدمات لاحتياجات العميل الخاصة.
+
+12.5. **القوة القاهرة.** لا تتحمل SOS Expat مسؤولية التأخيرات أو الإخفاقات الناجمة عن أحداث **القوة القاهرة** (كارثة طبيعية، حرب، جائحة، هجوم إلكتروني، انقطاع الكهرباء أو الإنترنت، قرار حكومي، إضراب، إلخ).
+
+12.6. **نزاعات العميل-مقدم الخدمة.** أي نزاع بين العميل ومقدم الخدمة يخص **حصرياً** علاقتهما المباشرة. **لا تتدخل SOS Expat** في هذه النزاعات و**لا يمكن محاسبتها** كطرف أو ضامن أو وسيط.
 
 ---
 
 ## 13. القانون المعمول به وحل النزاعات والمحاكم المختصة
 
-13.1. **القانون الموضوعي.** لكل خدمة تغطي بلداً معيناً، تحكم علاقة SOS-العميل قوانين دولة التدخل دون حرمان العميل المستهلك من حقوقه الإلزامية بموطنه. بشكل استبدالي، يحكم القانون الإستوني تفسير/صحة الشروط العامة وأي مسألة لا يحكمها هذا القانون المحلي.
+13.1. **القانون المعمول به.**
+- **العميل غير المستهلك (B2B)**: تخضع هذه الشروط **حصرياً** لـ**القانون الإستوني**، باستثناء قواعد تنازع القوانين.
+- **العميل المستهلك (B2C)**: تخضع الشروط للقانون الإستوني، **دون حرمان العميل** من الأحكام الإلزامية لحماية المستهلك في بلد إقامته المعتاد.
 
-13.2. **التحكيم ICC (خيار المستهلك) / إلزامي غير المستهلك.**
-- **العميل غير المستهلك (B2B)**: تحكيم ICC إلزامي، المقر: تالين (إستونيا)، اللغة: العربية، القانون الموضوعي وفقاً 13.1، الإجراء سري.
-- **العميل المستهلك**: خيار اللجوء إلى تحكيم ICC (نفس الشروط) أو المحاكم المختصة بموجب القوانين الإلزامية المعمول بها.
+13.2. **تحكيم ICC.**
+- **العميل غير المستهلك (B2B)**: يُفصل في أي نزاع **نهائياً** وفقاً لقواعد تحكيم **ICC (غرفة التجارة الدولية)**. **المقر: تالين (إستونيا)**. **اللغة: الإنجليزية**. محكم واحد (1). الإجراءات **سرية**.
+- **العميل المستهلك (B2C)**: للعميل **خيار** تحكيم ICC (نفس الشروط) أو المحاكم المختصة بموجب القوانين الإلزامية لمحل إقامته.
 
-13.3. **اختصاص المحاكم الإستونية (تالين).** لأي دعوى غير قابلة للتحكيم أو تنفيذ أحكام أو تدابير عاجلة، الاختصاص الحصري لمحاكم إستونيا (تالين)، دون الإخلال بحقوق المستهلك الإلزامية.
+13.3. **التنازل عن الدعاوى الجماعية والمحاكمة أمام هيئة محلفين.** في **أقصى حد يسمح به القانون المعمول به** و**دون المساس بالحقوق الإلزامية للمستهلكين**:
+- (أ) **تُستثنى** أي دعوى **جماعية أو تمثيلية أو موحدة**؛ تُقبل فقط المطالبات **الفردية**؛
+- (ب) **يتنازل العميل غير المستهلك صراحةً عن حقه في المحاكمة أمام هيئة محلفين**.
 
-13.4. **التنازل عن الإجراءات الجماعية (بقدر ما يسمح به).** أي إجراء جماعي/جماعي/تمثيلي مستثنى، إلا إذا نص القانون الإلزامي لمحل إقامة المستهلك على غير ذلك.
+13.4. **اختصاص المحاكم الإستونية.** لأي طلب **غير قابل للتحكيم** أو **الاعتراف والتنفيذ** (تنفيذ أحكام التحكيم) أو **التدابير المؤقتة/التحفظية**، تختص محاكم إستونيا في **تالين** حصرياً، **دون المساس** بحق العميل المستهلك في اللجوء إلى محاكم محل إقامته.
 
----
+13.5. **الوساطة المسبقة.** قبل أي إجراء تحكيمي أو قضائي، يُشجع الطرفان على محاولة حل النزاع ودياً عبر **التفاوض بحسن نية** خلال **ثلاثين (30) يوماً** من الإخطار الكتابي بالنزاع.
 
-## 14. الإنهاء/الإيقاف والمسائل المختلفة
-
-14.1. **الإيقاف.** يمكن لـ SOS إيقاف/إغلاق الحساب في حالة احتيال أو عدم امتثال أو إساءة استخدام أو مخاطرة قانونية.
-
-14.2. **الكمال.** تشكل الشروط العامة الاتفاق الكامل بين SOS والعميل لاستخدام المنصة.
-
-14.3. **اللغات.** قد يتم توفير ترجمات؛ تغلب العربية على التفسير.
-
-14.4. **العطل الجزئي.** إذا كانت ميزة ما باطلة/غير قابلة للتطبيق، يبقى الباقي ساري المفعول؛ قد يتم استبدالها بميزة صحيحة بتأثير معادل.
-
-14.5. **عدم التنازل.** حقيقة عدم ممارسة حق لا تعني التنازل عنه.
+13.6. **التقادم.** يجب رفع أي دعوى أو مطالبة من العميل غير المستهلك ضد SOS Expat خلال **سنة واحدة (1)** من تاريخ وقوع الحدث المسبب. تُطبق فترات التقادم المعمول بها للمستهلكين وفقاً للقانون الإلزامي لمحل إقامتهم.
 
 ---
 
-## 15. اتصل
+## 14. الإنهاء/التعليق والأحكام المتنوعة
 
-**نموذج الاتصال (الدعم والطلبات القانونية)**: [[**https://sos-expat.com/contact**](https://sos-expat.com/contact)](https://sos-expat.com/contact)
+14.1. **التعليق والإغلاق.** يحتفظ SOS Expat بالحق في تعليق أو تقييد أو إغلاق حساب العميل بشكل مؤقت أو دائم، فوراً ودون إشعار مسبق، في حالة:
+- (أ) احتيال أو اشتباه في احتيال أو سرقة هوية؛
+- (ب) انتهاك هذه الشروط العامة أو أي سياسة سارية؛
+- (ج) سوء استخدام، تحرش، سلوك مسيء أو إساءة لفظية تجاه مزودي الخدمات أو فريق SOS؛
+- (د) مخاطر قانونية أو تنظيمية أو سمعية على المنصة؛
+- (هـ) طلب من سلطة مختصة؛
+- (و) عدم دفع أو نزاع في الدفع غير مبرر. لا يُستحق أي تعويض في حالة الإغلاق لسبب.
+
+14.2. **إغلاق حساب العميل.** يمكن للعميل إغلاق حسابه في أي وقت عبر إعداداته أو بالتواصل مع الدعم. يظل العميل مسؤولاً عن أي مدفوعات معلقة.
+
+14.3. **الاكتمال.** تشكل هذه الشروط العامة، مع السياسات والوثائق المشار إليها، الاتفاقية الكاملة بين SOS Expat والعميل فيما يتعلق باستخدام المنصة، وتحل محل أي اتفاقيات أو اتصالات سابقة.
+
+14.4. **اللغات.** تتوفر هذه الشروط العامة بعدة لغات لراحة المستخدم. **في حالة التعارض في التفسير، تسود النسخة الإنجليزية** على جميع الترجمات الأخرى.
+
+14.5. **البطلان الجزئي.** إذا اعتُبر أي حكم باطلاً أو غير قابل للتطبيق أو غير ساري، يظل الباقي سارياً بكامل قوته. يُستبدل الحكم المعيب بحكم صحيح يحقق، قدر الإمكان، الهدف الاقتصادي للأطراف.
+
+14.6. **قابلية التجزئة الجغرافية.** إذا كان حكم ما غير قابل للتطبيق في ولاية قضائية معينة، يظل سارياً في جميع الولايات القضائية الأخرى حيث يُسمح به.
+
+14.7. **عدم التنازل.** عدم ممارسة أو تأخر ممارسة SOS Expat لأي حق لا يُشكل تنازلاً عنه. لا يكون أي تنازل سارياً إلا إذا كان كتابياً ولحالة محددة.
+
+14.8. **التنازل عن الحقوق.** يجوز لـ SOS Expat التنازل عن هذه الشروط العامة أو نقلها إلى أي كيان تابع أو خلف، دون موافقة مسبقة من العميل. لا يجوز للعميل التنازل عن حقوقه دون موافقة كتابية مسبقة من SOS.
+
+14.9. **الإثبات.** يوافق الأطراف على أن السجلات الإلكترونية (السجلات، البيانات الوصفية، الطوابع الزمنية) التي يحتفظ بها SOS Expat قابلة للقبول كدليل ولها نفس القيمة الإثباتية للوثائق الورقية الأصلية.
+
+---
+
+## 15. الاتصال
+
+**نموذج الاتصال (الدعم والطلبات القانونية)**: [https://sos-expat.com/contact](https://sos-expat.com/contact)
 `;
 
   

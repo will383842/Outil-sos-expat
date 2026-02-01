@@ -19,7 +19,7 @@ import React, {
   useRef,
 } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useLocaleNavigate } from "../multilingual-system";
+import { useLocaleNavigate, LocaleLink } from "../multilingual-system";
 import {
   Scale,
   Mail,
@@ -1205,6 +1205,21 @@ const RegisterLawyer: React.FC = () => {
           userAgent: navigator.userAgent,
           timestamp: Date.now(),
         },
+        // ✅ TRACKING CGU - Preuve légale d'acceptation des conditions
+        termsAccepted: form.acceptTerms,
+        termsAcceptedAt: new Date().toISOString(),
+        termsVersion: "3.0", // Version actuelle des CGU avocats
+        termsType: "terms_lawyers",
+        paymentTermsAccepted: form.acceptPaymentTerms,
+        paymentTermsAcceptedAt: new Date().toISOString(),
+        paymentTermsVersion: "2.0", // Version des conditions de paiement
+        // Métadonnées d'acceptation pour conformité légale (eIDAS/RGPD)
+        termsAcceptanceMeta: {
+          userAgent: navigator.userAgent,
+          language: navigator.language,
+          timestamp: Date.now(),
+          acceptanceMethod: "checkbox_click",
+        },
         // AFFILIATE: Include referral code and tracking data if present
         ...(referralCode && { pendingReferralCode: referralCode.toUpperCase().trim() }),
         // AFFILIATE: Include UTM tracking data for analytics
@@ -2365,15 +2380,15 @@ const RegisterLawyer: React.FC = () => {
                   className="text-sm text-gray-800 font-medium"
                 >
                   <FormattedMessage id="registerLawyer.ui.acceptTerms" />{" "}
-                  <Link 
-                    to="/cgu-avocats" 
-                    className="text-indigo-600 font-bold hover:text-indigo-700 underline" 
-                    target="_blank" 
+                  <LocaleLink
+                    to="/cgu-avocats"
+                    className="text-indigo-600 font-bold hover:text-indigo-700 underline"
+                    target="_blank"
                     rel="noopener noreferrer"
                     aria-label={intl.formatMessage({ id: "registerLawyer.ui.termsLinkAriaLabel" })}
                   >
                     <FormattedMessage id="registerLawyer.ui.termsLink" />
-                  </Link>
+                  </LocaleLink>
                   <span className="text-red-500 ml-1" aria-label={intl.formatMessage({ id: "common.required" })}>*</span>
                 </label>
               </div>
@@ -2469,13 +2484,13 @@ const RegisterLawyer: React.FC = () => {
               >
                 <FormattedMessage id="registerLawyer.footer.privacy" />
               </Link>
-              <Link 
-                to="/cgu-avocats" 
+              <LocaleLink
+                to="/cgu-avocats"
                 className="hover:text-indigo-600 transition-colors"
                 aria-label={intl.formatMessage({ id: "registerLawyer.footer.termsAriaLabel" })}
               >
                 <FormattedMessage id="registerLawyer.footer.terms" />
-              </Link>
+              </LocaleLink>
               <Link 
                 to="/contact" 
                 className="hover:text-indigo-600 transition-colors"

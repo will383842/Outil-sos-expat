@@ -27,8 +27,6 @@ import {
   Eye,
   ChevronRight,
   ChevronDown,
-  Check,
-  Clock,
   Zap,
   Gift,
   PartyPopper,
@@ -36,8 +34,11 @@ import {
   Share2,
   X,
   RefreshCw,
+  AlertTriangle,
+  Phone,
 } from 'lucide-react';
 import { ChatterFilleulN1, ChatterFilleulN2, ChatterReferralStats } from '@/types/chatter';
+import { TeamMessagesCard, TeamMessagesCardProps } from './TeamMessagesCard';
 
 // ============================================================================
 // TYPES
@@ -54,6 +55,26 @@ interface TeamMember {
   joinedAt: string;
   isQualified: boolean;
   parrainN1Name?: string;
+  whatsapp?: string;  // Phone number for WhatsApp
+  // Activity tracking for alerts
+  lastCallDate?: string;
+  recentCallCount?: number;
+  previousCallCount?: number;
+  isFirstCall?: boolean;
+  isTopPerformer?: boolean;
+}
+
+// Alert types for "A FAIRE MAINTENANT" section
+type AlertType = 'urgent' | 'attention' | 'celebrate' | 'congratulate';
+
+interface TeamAlert {
+  memberId: string;
+  memberName: string;
+  type: AlertType;
+  message: string;
+  whatsapp?: string;
+  email?: string;
+  messageStatus: TeamMessagesCardProps['memberStatus'];
 }
 
 interface TeamManagementCardProps {
@@ -67,6 +88,8 @@ interface TeamManagementCardProps {
   onViewMember?: (memberId: string) => void;
   onMessageMember?: (memberId: string) => void;
   onRefresh?: () => void;
+  onWhatsAppContact?: (memberId: string, phone: string) => void;
+  onShowMessages?: (memberId: string, status: string) => void;
 }
 
 // ============================================================================
@@ -87,6 +110,42 @@ const GROWTH_TIPS = [
   { id: 'success', icon: TrendingUp, key: 'team.tips.shareSuccess' },
   { id: 'train', icon: Lightbulb, key: 'team.tips.trainTeam' },
 ];
+
+// Alert configuration for "A FAIRE MAINTENANT" section
+const ALERT_CONFIG = {
+  urgent: {
+    icon: '🔴',
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-50 dark:bg-red-900/20',
+    borderColor: 'border-red-200 dark:border-red-800/50',
+    buttonLabel: 'MESSAGE',
+    buttonColor: 'bg-red-500 hover:bg-red-600',
+  },
+  attention: {
+    icon: '🟡',
+    color: 'text-amber-600 dark:text-amber-400',
+    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    borderColor: 'border-amber-200 dark:border-amber-800/50',
+    buttonLabel: 'MOTIVER',
+    buttonColor: 'bg-amber-500 hover:bg-amber-600',
+  },
+  celebrate: {
+    icon: '🟢',
+    color: 'text-green-600 dark:text-green-400',
+    bgColor: 'bg-green-50 dark:bg-green-900/20',
+    borderColor: 'border-green-200 dark:border-green-800/50',
+    buttonLabel: 'FÉLICITER',
+    buttonColor: 'bg-green-500 hover:bg-green-600',
+  },
+  congratulate: {
+    icon: '⭐',
+    color: 'text-yellow-600 dark:text-yellow-400',
+    bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
+    borderColor: 'border-yellow-200 dark:border-yellow-800/50',
+    buttonLabel: 'FÉLICITER',
+    buttonColor: 'bg-yellow-500 hover:bg-yellow-600',
+  },
+} as const;
 
 // ============================================================================
 // ANIMATED COUNTER HOOK
@@ -381,7 +440,7 @@ const TeamTree: React.FC<TeamTreeProps> = ({ members, onViewMember }) => {
         {n2Members.map((member, i) => {
           const n2Pos = n2Positions[i];
           // Find parent N1
-          const parentN1Index = n1Members.findIndex(n1 => {
+          const parentN1Index = n1Members.findIndex(() => {
             // Match by parrainN1Name or use first available
             return member.parrainN1Name && n1Members.some(m => m.name === member.parrainN1Name);
           });
@@ -676,9 +735,17 @@ interface MemberCardProps {
   member: TeamMember;
   onView?: () => void;
   onMessage?: () => void;
+  onWhatsApp?: (memberId: string, phone: string) => void;
+  onRequestWhatsApp?: (memberId: string) => void;
 }
 
-const MemberCard: React.FC<MemberCardProps> = ({ member, onView, onMessage }) => {
+const MemberCard: React.FC<MemberCardProps> = ({
+  member,
+  onView,
+  onMessage,
+  onWhatsApp,
+  onRequestWhatsApp,
+}) => {
   const intl = useIntl();
 
   const statusConfig = {
@@ -728,6 +795,8 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, onView, onMessage }) =>
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
+          {/* Alert Icon */}
+          <AlertIcon member={member} />
           <h4 className="font-semibold text-gray-900 dark:text-white truncate">
             {member.name}
           </h4>
@@ -764,6 +833,14 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, onView, onMessage }) =>
             <MessageCircle className="w-4 h-4" />
           </button>
         )}
+        {/* WhatsApp Button */}
+        <WhatsAppButton
+          whatsapp={member.whatsapp}
+          memberId={member.id}
+          onWhatsAppClick={onWhatsApp}
+          onRequestWhatsApp={onRequestWhatsApp}
+          compact
+        />
         {onView && (
           <button
             onClick={onView}
@@ -789,8 +866,6 @@ interface GoalProgressProps {
 }
 
 const GoalProgress: React.FC<GoalProgressProps> = ({ current, paidTiers, onCelebrate }) => {
-  const intl = useIntl();
-
   // Find the next milestone
   const nextMilestone = MILESTONES.find(m => current < m && !paidTiers.includes(m)) || MILESTONES[MILESTONES.length - 1];
   const prevMilestone = MILESTONES.filter(m => m <= current).pop() || 0;
@@ -953,6 +1028,273 @@ const GrowthTips: React.FC = () => {
 };
 
 // ============================================================================
+// URGENT ACTIONS SECTION ("A FAIRE MAINTENANT")
+// ============================================================================
+
+interface UrgentActionsSectionProps {
+  alerts: TeamAlert[];
+  onMessageClick: (memberId: string, status: TeamMessagesCardProps['memberStatus']) => void;
+  onWhatsAppClick: (memberId: string, phone: string) => void;
+  onRequestWhatsApp?: (memberId: string) => void;
+}
+
+const UrgentActionsSection: React.FC<UrgentActionsSectionProps> = ({
+  alerts,
+  onMessageClick,
+  onWhatsAppClick,
+  onRequestWhatsApp,
+}) => {
+  const intl = useIntl();
+
+  if (alerts.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="p-4 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl border border-orange-200/50 dark:border-orange-500/20">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+        <h3 className="font-bold text-gray-900 dark:text-white">
+          <FormattedMessage
+            id="team.urgentActions.title"
+            defaultMessage="A FAIRE MAINTENANT"
+          />
+        </h3>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-orange-300/50 dark:border-orange-600/30 mb-4" />
+
+      {/* Alert Items */}
+      <div className="space-y-3">
+        {alerts.map((alert) => {
+          const config = ALERT_CONFIG[alert.type];
+
+          return (
+            <div
+              key={alert.memberId}
+              className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-xl ${config.bgColor} border ${config.borderColor}`}
+            >
+              {/* Alert Icon and Message */}
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <span className="text-lg flex-shrink-0">{config.icon}</span>
+                <span className={`text-sm font-medium ${config.color} truncate`}>
+                  {alert.message}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Message Button */}
+                <button
+                  onClick={() => onMessageClick(alert.memberId, alert.messageStatus)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white rounded-lg transition-all active:scale-[0.98] ${config.buttonColor}`}
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  {config.buttonLabel}
+                </button>
+
+                {/* WhatsApp Button */}
+                {alert.whatsapp ? (
+                  <button
+                    onClick={() => onWhatsAppClick(alert.memberId, alert.whatsapp!)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-green-500 hover:bg-green-600 rounded-lg transition-all active:scale-[0.98]"
+                    title={intl.formatMessage({ id: 'team.action.whatsapp', defaultMessage: 'WhatsApp' })}
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    WHATSAPP
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onRequestWhatsApp?.(alert.memberId)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-all active:scale-[0.98]"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">
+                      <FormattedMessage id="team.action.requestWhatsapp" defaultMessage="Demander WhatsApp" />
+                    </span>
+                    <span className="sm:hidden">?</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// MESSAGES MODAL/DRAWER
+// ============================================================================
+
+interface MessagesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  memberName: string;
+  memberStatus: TeamMessagesCardProps['memberStatus'];
+  memberPhone?: string;
+  memberEmail?: string;
+  onSendMessage?: (message: string, channel: 'copy' | 'whatsapp' | 'email') => void;
+}
+
+const MessagesModal: React.FC<MessagesModalProps> = ({
+  isOpen,
+  onClose,
+  memberName,
+  memberStatus,
+  memberPhone,
+  memberEmail,
+  onSendMessage,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      {/* Backdrop click to close */}
+      <div className="absolute inset-0" onClick={onClose} />
+
+      {/* Modal Content */}
+      <div className="relative w-full sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-2xl shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Drag indicator (mobile) */}
+        <div className="sm:hidden flex justify-center pt-3">
+          <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
+        </div>
+
+        {/* TeamMessagesCard Content */}
+        <TeamMessagesCard
+          memberName={memberName}
+          memberStatus={memberStatus}
+          memberPhone={memberPhone}
+          memberEmail={memberEmail}
+          onSendMessage={onSendMessage}
+        />
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// WHATSAPP BUTTON COMPONENT
+// ============================================================================
+
+interface WhatsAppButtonProps {
+  whatsapp?: string;
+  memberId: string;
+  onWhatsAppClick?: (memberId: string, phone: string) => void;
+  onRequestWhatsApp?: (memberId: string) => void;
+  compact?: boolean;
+}
+
+const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
+  whatsapp,
+  memberId,
+  onWhatsAppClick,
+  onRequestWhatsApp,
+  compact = false,
+}) => {
+  const intl = useIntl();
+
+  if (whatsapp) {
+    return (
+      <button
+        onClick={() => onWhatsAppClick?.(memberId, whatsapp)}
+        className={`flex items-center gap-1.5 ${
+          compact ? 'p-2' : 'px-3 py-1.5'
+        } text-xs font-medium text-white bg-green-500 hover:bg-green-600 rounded-lg transition-all active:scale-[0.98]`}
+        title={intl.formatMessage({ id: 'team.action.whatsapp', defaultMessage: 'WhatsApp' })}
+      >
+        <Phone className="w-4 h-4" />
+        {!compact && <span>WhatsApp</span>}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => onRequestWhatsApp?.(memberId)}
+      className={`flex items-center gap-1.5 ${
+        compact ? 'p-2' : 'px-3 py-1.5'
+      } text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-lg transition-all active:scale-[0.98]`}
+      title={intl.formatMessage({ id: 'team.action.requestWhatsapp', defaultMessage: 'Demander WhatsApp' })}
+    >
+      <Phone className="w-4 h-4" />
+      {!compact && (
+        <span className="text-[10px]">
+          <FormattedMessage id="team.action.requestWhatsapp" defaultMessage="Demander" />
+        </span>
+      )}
+    </button>
+  );
+};
+
+// ============================================================================
+// ALERT ICON COMPONENT
+// ============================================================================
+
+interface AlertIconProps {
+  member: TeamMember;
+}
+
+const AlertIcon: React.FC<AlertIconProps> = ({ member }) => {
+  // Determine alert type based on member status
+  const getAlertType = (): AlertType | null => {
+    // Check for inactivity (0 calls in X days)
+    if (member.lastCallDate) {
+      const daysSinceLastCall = Math.floor(
+        (Date.now() - new Date(member.lastCallDate).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (daysSinceLastCall >= 14 && member.recentCallCount === 0) {
+        return 'urgent';
+      }
+    }
+
+    // Check for slowing activity
+    if (
+      member.recentCallCount !== undefined &&
+      member.previousCallCount !== undefined &&
+      member.previousCallCount > 0 &&
+      member.recentCallCount < member.previousCallCount * 0.5
+    ) {
+      return 'attention';
+    }
+
+    // Check for first call celebration
+    if (member.isFirstCall) {
+      return 'celebrate';
+    }
+
+    // Check for top performer
+    if (member.isTopPerformer) {
+      return 'congratulate';
+    }
+
+    return null;
+  };
+
+  const alertType = getAlertType();
+  if (!alertType) return null;
+
+  const config = ALERT_CONFIG[alertType];
+
+  return (
+    <span className="text-sm flex-shrink-0" title={alertType}>
+      {config.icon}
+    </span>
+  );
+};
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -967,11 +1309,23 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
   onViewMember,
   onMessageMember,
   onRefresh,
+  onWhatsAppContact,
+  onShowMessages,
 }) => {
   const intl = useIntl();
   const [activeTab, setActiveTab] = useState<'tree' | 'list'>('tree');
   const [celebratingMilestone, setCelebratingMilestone] = useState<number | null>(null);
   const [expandedSection, setExpandedSection] = useState<'stats' | 'members' | 'tips' | null>('stats');
+
+  // Messages modal state
+  const [messagesModalOpen, setMessagesModalOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<{
+    id: string;
+    name: string;
+    status: TeamMessagesCardProps['memberStatus'];
+    phone?: string;
+    email?: string;
+  } | null>(null);
 
   // Convert filleuls to team members
   const teamMembers: TeamMember[] = useMemo(() => {
@@ -984,6 +1338,13 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
       earnings: f.clientEarnings,
       joinedAt: f.joinedAt,
       isQualified: f.threshold50Reached,
+      // WhatsApp and activity tracking (from extended filleul data if available)
+      whatsapp: (f as any).whatsapp,
+      lastCallDate: (f as any).lastCallDate,
+      recentCallCount: (f as any).recentCallCount,
+      previousCallCount: (f as any).previousCallCount,
+      isFirstCall: (f as any).isFirstCall,
+      isTopPerformer: (f as any).isTopPerformer,
     }));
 
     const n2Members: TeamMember[] = filleulsN2.map(f => ({
@@ -995,6 +1356,13 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
       joinedAt: f.joinedAt,
       isQualified: f.threshold50Reached,
       parrainN1Name: f.parrainN1Name,
+      // WhatsApp and activity tracking
+      whatsapp: (f as any).whatsapp,
+      lastCallDate: (f as any).lastCallDate,
+      recentCallCount: (f as any).recentCallCount,
+      previousCallCount: (f as any).previousCallCount,
+      isFirstCall: (f as any).isFirstCall,
+      isTopPerformer: (f as any).isTopPerformer,
     }));
 
     return [...n1Members, ...n2Members];
@@ -1007,6 +1375,100 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
       .sort((a, b) => b.earnings - a.earnings)[0] || null;
   }, [teamMembers]);
 
+  // Generate alerts for "A FAIRE MAINTENANT" section
+  const teamAlerts: TeamAlert[] = useMemo(() => {
+    const alerts: TeamAlert[] = [];
+
+    teamMembers.forEach(member => {
+      // Check for inactivity (0 calls in 14+ days) - URGENT
+      if (member.lastCallDate) {
+        const daysSinceLastCall = Math.floor(
+          (Date.now() - new Date(member.lastCallDate).getTime()) / (1000 * 60 * 60 * 24)
+        );
+        if (daysSinceLastCall >= 14 && member.recentCallCount === 0) {
+          alerts.push({
+            memberId: member.id,
+            memberName: member.name,
+            type: 'urgent',
+            message: intl.formatMessage(
+              { id: 'team.alert.inactive', defaultMessage: '{name} : 0 appel depuis {days} jours' },
+              { name: member.name, days: daysSinceLastCall }
+            ),
+            whatsapp: member.whatsapp,
+            email: member.email,
+            messageStatus: 'inactive',
+          });
+          return; // Skip other checks for this member
+        }
+      }
+
+      // Check for slowing activity - ATTENTION
+      if (
+        member.recentCallCount !== undefined &&
+        member.previousCallCount !== undefined &&
+        member.previousCallCount > 0 &&
+        member.recentCallCount < member.previousCallCount * 0.5
+      ) {
+        alerts.push({
+          memberId: member.id,
+          memberName: member.name,
+          type: 'attention',
+          message: intl.formatMessage(
+            { id: 'team.alert.slowing', defaultMessage: '{name} : a ralenti ({recent} vs {previous})' },
+            { name: member.name, recent: member.recentCallCount, previous: member.previousCallCount }
+          ),
+          whatsapp: member.whatsapp,
+          email: member.email,
+          messageStatus: 'slowing',
+        });
+        return;
+      }
+
+      // Check for first call - CELEBRATE
+      if (member.isFirstCall) {
+        alerts.push({
+          memberId: member.id,
+          memberName: member.name,
+          type: 'celebrate',
+          message: intl.formatMessage(
+            { id: 'team.alert.firstCall', defaultMessage: '{name} : premier appel !' },
+            { name: member.name }
+          ),
+          whatsapp: member.whatsapp,
+          email: member.email,
+          messageStatus: 'beginner',
+        });
+        return;
+      }
+
+      // Check for top performer - CONGRATULATE
+      if (member.isTopPerformer) {
+        alerts.push({
+          memberId: member.id,
+          memberName: member.name,
+          type: 'congratulate',
+          message: intl.formatMessage(
+            { id: 'team.alert.topPerformer', defaultMessage: '{name} : top performer !' },
+            { name: member.name }
+          ),
+          whatsapp: member.whatsapp,
+          email: member.email,
+          messageStatus: 'top',
+        });
+      }
+    });
+
+    // Sort alerts by priority: urgent > attention > celebrate > congratulate
+    const priorityOrder: Record<AlertType, number> = {
+      urgent: 0,
+      attention: 1,
+      celebrate: 2,
+      congratulate: 3,
+    };
+
+    return alerts.sort((a, b) => priorityOrder[a.type] - priorityOrder[b.type]);
+  }, [teamMembers, intl]);
+
   // Calculate stats
   const totalTeamSize = (stats?.totalFilleulsN1 || 0) + (stats?.totalFilleulsN2 || 0);
   const activeMembers = teamMembers.filter(m => m.status === 'active').length;
@@ -1016,6 +1478,53 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
   // Handle celebration
   const handleCelebrate = useCallback((milestone: number) => {
     setCelebratingMilestone(milestone);
+  }, []);
+
+  // Handle WhatsApp contact
+  const handleWhatsAppClick = useCallback((memberId: string, phone: string) => {
+    // Open WhatsApp with the phone number
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/${cleanPhone}`, '_blank');
+    onWhatsAppContact?.(memberId, phone);
+  }, [onWhatsAppContact]);
+
+  // Handle request WhatsApp (when member doesn't have WhatsApp)
+  const handleRequestWhatsApp = useCallback((memberId: string) => {
+    // Find the member and open messages modal with a request message
+    const member = teamMembers.find(m => m.id === memberId);
+    if (member) {
+      setSelectedMember({
+        id: member.id,
+        name: member.name,
+        status: member.status === 'inactive' ? 'inactive' :
+               member.status === 'pending' ? 'beginner' : 'top',
+        phone: member.whatsapp,
+        email: member.email,
+      });
+      setMessagesModalOpen(true);
+    }
+  }, [teamMembers]);
+
+  // Handle message click (from alerts or member card)
+  const handleMessageClick = useCallback((memberId: string, status: TeamMessagesCardProps['memberStatus']) => {
+    const member = teamMembers.find(m => m.id === memberId);
+    if (member) {
+      setSelectedMember({
+        id: member.id,
+        name: member.name,
+        status,
+        phone: member.whatsapp,
+        email: member.email,
+      });
+      setMessagesModalOpen(true);
+      onShowMessages?.(memberId, status);
+    }
+  }, [teamMembers, onShowMessages]);
+
+  // Close messages modal
+  const handleCloseMessagesModal = useCallback(() => {
+    setMessagesModalOpen(false);
+    setSelectedMember(null);
   }, []);
 
   // Loading state
@@ -1041,6 +1550,18 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
         <CelebrationModal
           milestone={celebratingMilestone}
           onClose={() => setCelebratingMilestone(null)}
+        />
+      )}
+
+      {/* Messages Modal */}
+      {selectedMember && (
+        <MessagesModal
+          isOpen={messagesModalOpen}
+          onClose={handleCloseMessagesModal}
+          memberName={selectedMember.name}
+          memberStatus={selectedMember.status}
+          memberPhone={selectedMember.phone}
+          memberEmail={selectedMember.email}
         />
       )}
 
@@ -1091,6 +1612,16 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
         </div>
 
         <div className="p-4 sm:p-6 space-y-6">
+          {/* A FAIRE MAINTENANT Section - Urgent Actions */}
+          {teamAlerts.length > 0 && (
+            <UrgentActionsSection
+              alerts={teamAlerts}
+              onMessageClick={handleMessageClick}
+              onWhatsAppClick={handleWhatsAppClick}
+              onRequestWhatsApp={handleRequestWhatsApp}
+            />
+          )}
+
           {/* Stats Section */}
           <div>
             <button
@@ -1213,7 +1744,15 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
                       key={member.id}
                       member={member}
                       onView={() => onViewMember?.(member.id)}
-                      onMessage={() => onMessageMember?.(member.id)}
+                      onMessage={() => {
+                        const status: TeamMessagesCardProps['memberStatus'] =
+                          member.status === 'inactive' ? 'inactive' :
+                          member.isFirstCall ? 'beginner' :
+                          member.isTopPerformer ? 'top' : 'slowing';
+                        handleMessageClick(member.id, status);
+                      }}
+                      onWhatsApp={handleWhatsAppClick}
+                      onRequestWhatsApp={handleRequestWhatsApp}
                     />
                   ))
                 )}

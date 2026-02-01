@@ -59,6 +59,13 @@ interface UseChatterReturn {
     input: UpdateChatterProfileInput
   ) => Promise<{ success: boolean; message: string }>;
   markNotificationRead: (notificationId: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
+  markSocialNetworkLiked: (networkId: string) => Promise<{
+    success: boolean;
+    bonusPaid?: boolean;
+    bonusAmount?: number;
+    error?: string;
+  }>;
 
   // Computed
   clientShareUrl: string;
@@ -66,6 +73,7 @@ interface UseChatterReturn {
   canWithdraw: boolean;
   minimumWithdrawal: number;
   totalBalance: number;
+  unreadNotificationsCount: number;
 }
 
 // ============================================================================
@@ -184,6 +192,73 @@ export function useChatter(): UseChatterReturn {
       });
     },
     [user?.uid, db]
+  );
+
+  // Mark all notifications as read
+  const markAllNotificationsRead = useCallback(
+    async (): Promise<void> => {
+      if (!user?.uid) return;
+
+      const { doc, updateDoc, Timestamp, writeBatch } = await import("firebase/firestore");
+      const batch = writeBatch(db);
+      const now = Timestamp.now();
+
+      // Get unread notifications and update them in a batch
+      const unreadNotifications = notifications.filter((n) => !n.isRead);
+
+      if (unreadNotifications.length === 0) return;
+
+      for (const notification of unreadNotifications) {
+        const notificationRef = doc(db, "chatter_notifications", notification.id);
+        batch.update(notificationRef, {
+          isRead: true,
+          readAt: now,
+        });
+      }
+
+      await batch.commit();
+    },
+    [user?.uid, db, notifications]
+  );
+
+  // Mark social network as liked (for piggy bank bonus)
+  const markSocialNetworkLiked = useCallback(
+    async (networkId: string): Promise<{
+      success: boolean;
+      bonusPaid?: boolean;
+      bonusAmount?: number;
+      error?: string;
+    }> => {
+      if (!user?.uid) {
+        return { success: false, error: "User must be authenticated" };
+      }
+
+      try {
+        const markLikedFn = httpsCallable<
+          { networkId: string },
+          {
+            success: boolean;
+            bonusPaid?: boolean;
+            bonusAmount?: number;
+            error?: string;
+          }
+        >(functions, "markSocialNetworkLiked");
+
+        const result = await markLikedFn({ networkId });
+
+        // Refresh dashboard to update piggy bank data
+        await refreshDashboard();
+
+        return result.data;
+      } catch (err) {
+        console.error("[useChatter] Error marking social network as liked:", err);
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : "Failed to mark network as liked",
+        };
+      }
+    },
+    [user?.uid, functions, refreshDashboard]
   );
 
   // Subscribe to commissions
@@ -323,6 +398,14 @@ export function useChatter(): UseChatterReturn {
     return chatter.availableBalance + chatter.pendingBalance + chatter.validatedBalance;
   }, [dashboardData]);
 
+  // Unread notifications count (from real-time subscription or dashboard data)
+  const unreadNotificationsCount = useMemo(() => {
+    // Prefer real-time count from notifications subscription
+    const realtimeUnread = notifications.filter((n) => !n.isRead).length;
+    // Fall back to dashboard data if notifications haven't loaded yet
+    return realtimeUnread || dashboardData?.unreadNotifications || 0;
+  }, [notifications, dashboardData?.unreadNotifications]);
+
   return {
     dashboardData,
     commissions,
@@ -335,11 +418,14 @@ export function useChatter(): UseChatterReturn {
     requestWithdrawal,
     updateProfile,
     markNotificationRead,
+    markAllNotificationsRead,
+    markSocialNetworkLiked,
     clientShareUrl,
     recruitmentShareUrl,
     canWithdraw,
     minimumWithdrawal,
     totalBalance,
+    unreadNotificationsCount,
   };
 }
 

@@ -14,6 +14,28 @@ import { ultraLogger, traceFunction } from "../utils/ultraDebugLogger";
 import { decryptPhoneNumber } from "../utils/encryption";
 import { OUTIL_SYNC_API_KEY, ENCRYPTION_KEY } from "../lib/secrets";
 
+// Language code to name mapping for SMS notifications
+const LANGUAGE_NAMES: Record<string, string> = {
+  fr: 'Français',
+  en: 'English',
+  es: 'Español',
+  de: 'Deutsch',
+  pt: 'Português',
+  ar: 'العربية',
+  hi: 'हिन्दी',
+  ru: 'Русский',
+  zh: '中文',
+  ja: '日本語',
+  ko: '한국어',
+};
+
+function formatLanguages(languages: string[] | undefined): string {
+  if (!languages || languages.length === 0) return 'Non spécifié';
+  return languages
+    .map(code => LANGUAGE_NAMES[code.toLowerCase()] || code.toUpperCase())
+    .join(', ');
+}
+
 // Outil ingest endpoint
 const OUTIL_INGEST_ENDPOINT = "https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking";
 
@@ -337,12 +359,15 @@ export const sendPaymentNotifications = traceFunction(
       if (providerId || providerEmail) {
         console.log(`📨 [${debugId}] Creating PROVIDER notification (booking_paid_provider - SMS ENABLED)...`);
 
-        const clientName = cs?.participants?.client?.name ?? cs?.clientName ?? "Client";
+        const clientName = cs?.participants?.client?.name ?? cs?.participants?.client?.firstName ?? cs?.clientName ?? "Client";
         const clientCountry = cs?.clientCurrentCountry ?? cs?.metadata?.clientCountry ?? "N/A";
         const amount = cs?.payment?.amount ?? cs?.metadata?.amount ?? 0;
         const currency = cs?.payment?.currency ?? cs?.currency ?? "EUR";
         const serviceType = cs?.metadata?.serviceType ?? cs?.serviceType ?? "consultation";
-        const description = cs?.description ?? `${title} - ${serviceType}`;
+        const description = cs?.description ?? cs?.metadata?.description ?? `${title} - ${serviceType}`;
+        // P1 FIX: Get client languages for SMS template
+        const clientLanguages = cs?.metadata?.clientLanguages ?? cs?.clientLanguages ?? [language];
+        const clientLanguagesFormatted = formatLanguages(clientLanguages);
 
         const providerEventData = {
           eventId: "booking_paid_provider",  // P0 FIX: Changed from call.scheduled.provider (sms:false) to booking_paid_provider (sms:true)
@@ -368,6 +393,8 @@ export const sendPaymentNotifications = traceFunction(
               amount: amount,
               currency: currency,
             },
+            // P1 FIX: Add clientLanguagesFormatted for SMS template
+            clientLanguagesFormatted,
             // Legacy flat fields for inapp compatibility
             title,
             scheduledTime: scheduledTime instanceof Date ? scheduledTime.toISOString() : scheduledTime,

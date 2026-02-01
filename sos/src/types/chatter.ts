@@ -25,19 +25,28 @@ export type SupportedChatterLanguage =
   | "zh";
 
 export type ChatterCommissionType =
-  | "client_referral"
-  | "recruitment"
-  | "bonus_level"
-  | "bonus_streak"
-  | "bonus_top3"
-  | "bonus_zoom"
-  | "manual_adjustment"
-  // Referral system commissions (2-level)
-  | "threshold_10"
-  | "threshold_50"
-  | "threshold_50_n2"
-  | "recurring_5pct"
-  | "tier_bonus";
+  // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
+  | "client_call"        // $10 - Direct client call via chatter's link
+  | "n1_call"            // $1 - N1 filleul's client call
+  | "n2_call"            // $0.50 - N2 filleul's client call
+  | "activation_bonus"   // $5 - When filleul activates (after 2nd call)
+  | "n1_recruit_bonus"   // $1 - When N1 recruits someone who activates
+  // Tier bonuses
+  | "tier_bonus"         // Milestone bonus (5→$25, 10→$75, etc.)
+  // Monthly rewards
+  | "bonus_top3"         // Monthly top 3 rewards ($200/$100/$50)
+  // Other bonuses
+  | "bonus_level"        // Level-up bonus
+  | "bonus_streak"       // Streak bonus
+  | "bonus_zoom"         // Zoom attendance bonus
+  | "manual_adjustment"  // Admin manual adjustment
+  // LEGACY (kept for backward compatibility)
+  | "client_referral"    // @deprecated - Use client_call
+  | "recruitment"        // @deprecated - Use activation_bonus
+  | "threshold_10"       // @deprecated - Old referral system
+  | "threshold_50"       // @deprecated - Old referral system
+  | "threshold_50_n2"    // @deprecated - Old referral system
+  | "recurring_5pct";    // @deprecated - Old referral system
 
 export type ChatterCommissionStatus =
   | "pending"
@@ -171,6 +180,7 @@ export interface ChatterData {
   firstName: string;
   lastName: string;
   phone?: string;
+  whatsapp?: string;
   photoUrl?: string;
   country: string;
   interventionCountries: string[];
@@ -433,6 +443,86 @@ export interface ChatterConfig {
 // DASHBOARD RESPONSE
 // ============================================================================
 
+/**
+ * Piggy bank social network data
+ */
+export interface PiggyBankSocialNetwork {
+  id: string;
+  platform: string;
+  label: string;
+  url: string;
+  bonusAmount: number;
+  liked: boolean;
+}
+
+/**
+ * Piggy bank data for bonus display
+ */
+export interface PiggyBankData {
+  isUnlocked: boolean;
+  clientEarnings: number;
+  unlockThreshold: number;
+  progressPercent: number;
+  amountToUnlock: number;
+  socialLikes: {
+    networksAvailable: number;
+    networksLiked: number;
+    bonusPending: number;
+    bonusPaid: number;
+    networks: PiggyBankSocialNetwork[];
+  };
+  totalPending: number;
+  message: string;
+}
+
+/**
+ * Weekly/monthly trend data for visualization
+ */
+export interface ChatterTrendsData {
+  /** Daily earnings for this week (7 values, in cents) */
+  earningsWeekly: number[];
+  /** Daily earnings for last week (7 values, in cents) */
+  earningsMonthly: number[];
+  /** Daily clients for this week (7 values) */
+  clientsWeekly: number[];
+  /** Daily recruits for this week (7 values) */
+  recruitsWeekly: number[];
+}
+
+/**
+ * Month-over-month comparison data
+ */
+export interface ChatterComparisonData {
+  /** Earnings this month vs last month (percentage change) */
+  earningsVsLastMonth: number;
+  /** Clients this month vs last month (percentage change) */
+  clientsVsLastMonth: number;
+  /** Recruits this month vs last month (percentage change) */
+  recruitsVsLastMonth: number;
+  /** Rank change (positive = moved up) */
+  rankChange: number;
+  /** Last month raw values for display */
+  lastMonth: {
+    earnings: number;
+    clients: number;
+    recruits: number;
+  };
+}
+
+/**
+ * Forecast/projection data
+ */
+export interface ChatterForecastData {
+  /** Estimated end-of-month earnings (in cents) */
+  estimatedMonthlyEarnings: number;
+  /** Estimated time to next level (in days, null if max level) */
+  estimatedNextLevel: number | null;
+  /** Potential bonus from next tier (in cents) */
+  potentialBonus: number;
+  /** Current day of month */
+  currentDayOfMonth: number;
+}
+
 export interface ChatterDashboardData {
   chatter: ChatterData;
   recentCommissions: ChatterCommissionSummary[];
@@ -450,6 +540,13 @@ export interface ChatterDashboardData {
   } | null;
   unreadNotifications: number;
   config: ChatterConfig;
+  piggyBank?: PiggyBankData;
+  /** Weekly/monthly trend data for visualization */
+  trends?: ChatterTrendsData;
+  /** Month-over-month comparison data */
+  comparison?: ChatterComparisonData;
+  /** Forecast/projection data */
+  forecast?: ChatterForecastData;
 }
 
 // ============================================================================
@@ -461,6 +558,7 @@ export interface RegisterChatterInput {
   lastName: string;
   email: string;
   phone?: string;
+  whatsapp?: string;
   country: string;
   interventionCountries: string[];
   language: SupportedChatterLanguage;
@@ -492,6 +590,7 @@ export interface RequestWithdrawalInput {
 
 export interface UpdateChatterProfileInput {
   phone?: string;
+  whatsapp?: string;
   country?: string;
   interventionCountries?: string[];
   additionalLanguages?: SupportedChatterLanguage[];
@@ -695,12 +794,17 @@ export interface ChatterReferralCommission {
 export interface ChatterFilleulN1 {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
+  phone?: string;
+  whatsapp?: string;
   clientEarnings: number;
   threshold10Reached: boolean;
   threshold50Reached: boolean;
   isActive: boolean;
   joinedAt: string;
+  lastActivityAt?: string;
 }
 
 /**
@@ -709,6 +813,7 @@ export interface ChatterFilleulN1 {
 export interface ChatterFilleulN2 {
   id: string;
   name: string;
+  whatsapp?: string;
   parrainN1Name: string;
   threshold50Reached: boolean;
   joinedAt: string;
@@ -733,6 +838,8 @@ export interface ChatterTierProgress {
   nextTier: number | null;
   filleulsNeeded: number;
   bonusAmount: number;
+  qualifiedFilleulsCount?: number;
+  paidTierBonuses?: number[];
 }
 
 /**
@@ -842,3 +949,26 @@ export const REFERRAL_CONFIG = {
     DEFAULT_SLOTS_PER_COUNTRY: 100,
   },
 } as const;
+
+// ============================================================================
+// ACTIVITY FEED
+// ============================================================================
+
+/**
+ * Activity types for live feed
+ */
+export type ActivityFeedType = "commission" | "signup" | "level_up";
+
+/**
+ * Activity feed item for live social proof display
+ */
+export interface ActivityFeedItem {
+  id: string;
+  type: ActivityFeedType;
+  chatterName: string; // Anonymized: "Marie D."
+  country: string; // ISO country code: "FR"
+  amount?: number; // In cents, for commission type
+  level?: number; // For level_up type
+  createdAt: string; // ISO timestamp
+  expiresAt: string; // TTL 24h
+}

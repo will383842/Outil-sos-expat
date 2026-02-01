@@ -470,10 +470,12 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
       billingDuration = 0;
     }
 
+    // P0 FIX 2026-02-01: Minimum duration reduced from 120s (2 min) to 60s (1 min)
+    const MIN_DURATION_FOR_CAPTURE = 60;
     console.log(`🏁 [${endId}]   twilioDuration (total): ${twilioDuration}s (${(twilioDuration / 60).toFixed(1)} min)`);
     console.log(`🏁 [${endId}]   billingDuration (both connected): ${billingDuration}s (${(billingDuration / 60).toFixed(1)} min)`);
-    console.log(`🏁 [${endId}]   minDurationForCapture: 120s (2 min)`);
-    console.log(`🏁 [${endId}]   willCapture: ${billingDuration >= 120 ? 'YES' : 'NO - will refund/cancel'}`);
+    console.log(`🏁 [${endId}]   minDurationForCapture: ${MIN_DURATION_FOR_CAPTURE}s (1 min)`);
+    console.log(`🏁 [${endId}]   willCapture: ${billingDuration >= MIN_DURATION_FOR_CAPTURE ? 'YES' : 'NO - will refund/cancel'}`);
 
     console.log(`🏁 [${endId}] STEP 2: Updating conference info (endedAt + duration)...`);
     await twilioCallManager.updateConferenceInfo(sessionId, {
@@ -484,8 +486,8 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
     console.log(`🏁 [${endId}]   ✅ Conference info updated`);
 
     // Log si appel trop court (pour monitoring) - use BILLING duration
-    if (billingDuration < 120) {
-      console.log(`🏁 [${endId}] ⚠️ BILLING DURATION TOO SHORT: ${billingDuration}s < 120s minimum`);
+    if (billingDuration < MIN_DURATION_FOR_CAPTURE) {
+      console.log(`🏁 [${endId}] ⚠️ BILLING DURATION TOO SHORT: ${billingDuration}s < ${MIN_DURATION_FOR_CAPTURE}s minimum`);
       console.log(`🏁 [${endId}]   Action: Will trigger refund/cancel via handleCallCompletion`);
       await logCallRecord({
         callId: sessionId,
@@ -494,17 +496,17 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
         additionalData: {
           twilioDuration,
           billingDuration,
-          reason: 'Billing duration (from both connected) less than 2 minutes - will trigger refund/cancel'
+          reason: `Billing duration (from both connected) less than ${MIN_DURATION_FOR_CAPTURE}s - will trigger refund/cancel`
         }
       });
     } else {
-      console.log(`🏁 [${endId}] ✅ BILLING DURATION OK: ${billingDuration}s >= 120s minimum`);
+      console.log(`🏁 [${endId}] ✅ BILLING DURATION OK: ${billingDuration}s >= ${MIN_DURATION_FOR_CAPTURE}s minimum`);
       console.log(`🏁 [${endId}]   Action: Will capture payment via handleCallCompletion`);
     }
 
     // handleCallCompletion gère TOUS les cas:
-    // - Si durée >= 120s → capture paiement + schedule transfer prestataire
-    // - Si durée < 120s  → processRefund (cancel ou refund selon état paiement)
+    // - Si durée >= 60s → capture paiement + schedule transfer prestataire
+    // - Si durée < 60s  → processRefund (cancel ou refund selon état paiement)
     // P0 FIX: Pass BILLING duration (from when both connected), not Twilio's total duration
     console.log(`🏁 [${endId}] STEP 3: Calling handleCallCompletion(sessionId, ${billingDuration})...`);
     await twilioCallManager.handleCallCompletion(sessionId, billingDuration);

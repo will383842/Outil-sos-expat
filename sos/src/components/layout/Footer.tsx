@@ -19,10 +19,9 @@ import {
 } from "lucide-react";
 import { useIntl } from "react-intl";
 import { useApp } from "../../contexts/AppContext";
-import { Link } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebase";
-import { getLocaleString } from "../../multilingual-system";
+import { getLocaleString, LocaleLink } from "../../multilingual-system";
 
 // ============================================================================
 // TYPES
@@ -183,14 +182,14 @@ const FooterLink = memo<FooterLinkProps>(function FooterLink({
   }
 
   return (
-    <Link
+    <LocaleLink
       to={href}
       className={baseClass}
       aria-label={ariaLabel}
       {...(prefetch && { "data-prefetch": "true" })}
     >
       {children}
-    </Link>
+    </LocaleLink>
   );
 });
 
@@ -314,13 +313,13 @@ const ContactItem = memo<ContactItemProps>(function ContactItem({ item }) {
   }
 
   return (
-    <Link
+    <LocaleLink
       to={item.href}
       className={`${wrapperClass} focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 touch-manipulation`}
       aria-label={item.ariaLabel}
     >
       {content}
-    </Link>
+    </LocaleLink>
   );
 });
 
@@ -368,21 +367,21 @@ const LegalLinksNav = memo<LegalLinksNavProps>(function LegalLinksNav({
       >
         {links.map((link, index) => (
           <li key={`${link.href}-${index}`} className="flex items-center">
-            <Link
+            <LocaleLink
               to={link.href}
-              className="px-3 py-2 rounded-lg text-gray-400 hover:text-white 
-                focus:text-white transition-all duration-300 
+              className="px-3 py-2 rounded-lg text-gray-400 hover:text-white
+                focus:text-white transition-all duration-300
                 hover:bg-white/5 focus:bg-white/5 focus:outline-none
                 focus-visible:ring-2 focus-visible:ring-red-500/50
                 touch-manipulation relative group overflow-hidden"
             >
               <span
-                className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-red-600/10 
+                className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-red-600/10
                   opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"
                 aria-hidden="true"
               />
               <span className="relative z-10">{link.label}</span>
-            </Link>
+            </LocaleLink>
             {index < links.length - 1 && (
               <span
                 className="text-gray-600 select-none flex items-center px-1"
@@ -429,7 +428,7 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
         {/* Boutons en grille sur mobile, empilés sur desktop */}
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
           {/* Bouton Chatter */}
-          <Link
+          <LocaleLink
             to={chatterHref}
             className="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-4 sm:py-5 rounded-xl
               bg-gradient-to-r from-red-500 to-red-600
@@ -448,10 +447,10 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
             <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
               →
             </span>
-          </Link>
+          </LocaleLink>
 
           {/* Bouton Influenceur */}
-          <Link
+          <LocaleLink
             to={influencerHref}
             className="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-4 sm:py-5 rounded-xl
               bg-gradient-to-r from-orange-500 to-red-500
@@ -470,10 +469,10 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
             <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
               →
             </span>
-          </Link>
+          </LocaleLink>
 
           {/* Bouton Blogger */}
-          <Link
+          <LocaleLink
             to={bloggerHref}
             className="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-4 sm:py-5 rounded-xl
               bg-gradient-to-r from-purple-500 to-purple-600
@@ -492,7 +491,7 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
             <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
               →
             </span>
-          </Link>
+          </LocaleLink>
         </div>
       </div>
     </div>

@@ -107,6 +107,15 @@ const GOOGLE_TIMEOUT = 5000; // 5 secondes
 // =============================================================================
 // TYPES
 // =============================================================================
+// ReferralTracking type (mirrors useAffiliate.ts)
+interface ReferralTracking {
+  code: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  capturedAt: string;
+}
+
 interface CreateUserData {
   role: "client";
   firstName: string;
@@ -121,6 +130,19 @@ interface CreateUserData {
   status?: string;
   createdAt: FieldValue;
   pendingReferralCode?: string; // Code parrainage capturé depuis l'URL (?ref=CODE)
+  // ✅ TRACKING CGU - Preuve légale d'acceptation des conditions
+  termsAccepted?: boolean;
+  termsAcceptedAt?: string;
+  termsVersion?: string;
+  termsType?: string;
+  termsAcceptanceMeta?: {
+    userAgent: string;
+    language: string;
+    timestamp: number;
+    acceptanceMethod: string;
+  };
+  // AFFILIATE: Include UTM tracking data for analytics
+  referralTracking?: ReferralTracking;
 }
 
 interface FormData {
@@ -998,6 +1020,18 @@ const RegisterClient: React.FC = () => {
           verificationStatus: 'approved',
           status: 'active',
           createdAt: serverTimestamp(),
+          // ✅ TRACKING CGU - Preuve légale d'acceptation des conditions
+          termsAccepted: true,
+          termsAcceptedAt: new Date().toISOString(),
+          termsVersion: "3.0", // Version actuelle des CGU clients
+          termsType: "terms_clients",
+          // Métadonnées d'acceptation pour conformité légale (eIDAS/RGPD)
+          termsAcceptanceMeta: {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            timestamp: Date.now(),
+            acceptanceMethod: "checkbox_click",
+          },
           // AFFILIATE: Include referral code and tracking data if present
           ...(referralCode && { pendingReferralCode: referralCode.toUpperCase().trim() }),
           // AFFILIATE: Include UTM tracking data for analytics

@@ -231,9 +231,18 @@ interface CreateSimpleOrderData {
   providerPayPalEmail: string; // Email au lieu de Merchant ID
   clientId: string;
   description: string;
+  // P1 FIX: Title for SMS notifications to provider
+  title?: string;
+  // P1 FIX: Client country for SMS notifications to provider
+  clientCurrentCountry?: string;
   // P0 FIX: Phone numbers required for Twilio call
   clientPhone: string;
   providerPhone: string;
+  // P0 FIX: Languages for Twilio voice prompts
+  clientLanguages?: string[];
+  providerLanguages?: string[];
+  // P0 FIX: Service type required for pricing calculation during capture
+  serviceType?: "lawyer" | "expat";
   // Tracking metadata for Meta CAPI and UTM attribution
   trackingMetadata?: Record<string, string>;
 }
@@ -754,6 +763,10 @@ export class PayPalManager {
       providerId: data.providerId,
       payment: {
         paypalOrderId: response.id,
+        // P0 FIX: Add gateway field for TwilioCallManager to detect PayPal payments
+        gateway: "paypal",
+        // P0 FIX: intentId is required by capturePaymentForSession - use paypalOrderId as fallback
+        intentId: response.id,
         paymentMethod: "paypal",
         paymentFlow: "simple_payout",
         status: "pending_approval",
@@ -780,11 +793,28 @@ export class PayPalManager {
       },
       // P0 FIX CRITICAL: Add conference object for Twilio (required by TwilioCallManager)
       conference: { name: conferenceName },
+      // P1 FIX: Add title, description and country for SMS notifications to provider
+      title: data.title || data.description || "Consultation",
+      description: data.description || "Consultation",
+      clientCurrentCountry: data.clientCurrentCountry || "",
       metadata: {
         providerId: data.providerId,
         clientId: data.clientId,
-        // P0 FIX: Add maxDuration for Twilio call (32 min default for non-lawyers)
-        maxDuration: 1920,
+        // P0 FIX CRITICAL: serviceType and providerType required for pricing calculation during capture
+        serviceType: data.serviceType === "lawyer" ? "lawyer_call" : "expat_call",
+        providerType: data.serviceType || "expat",
+        // P0 FIX: Add maxDuration for Twilio call (32 min for expat, 20 min for lawyer)
+        maxDuration: data.serviceType === "lawyer" ? 1200 : 1920,
+        // P0 FIX: Languages for Twilio voice prompts (critical for correct TTS language)
+        clientLanguages: data.clientLanguages || ["fr"],
+        providerLanguages: data.providerLanguages || ["fr"],
+        // P1 FIX: Title, description and country for SMS notifications (read by paymentNotifications.ts)
+        title: data.title || data.description || "Consultation",
+        description: data.description || "Consultation",
+        clientCountry: data.clientCurrentCountry || "",
+        // P1 FIX: Add audit fields for consistency with Stripe (environment, requestId)
+        environment: process.env.NODE_ENV || "production",
+        requestId: `paypal_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         // Include tracking metadata for attribution (UTM, Meta identifiers)
         ...(data.trackingMetadata || {}),
       },
@@ -2256,9 +2286,16 @@ export const createPayPalOrderHttp = onRequest(
       providerId,
       serviceType,
       description,
+      // P1 FIX: Title for SMS notifications to provider
+      title,
+      // P1 FIX: Client country for SMS notifications to provider
+      clientCurrentCountry,
       // P0 FIX: Phone numbers required for Twilio call
       clientPhone,
       providerPhone,
+      // P0 FIX: Languages for Twilio voice prompts
+      clientLanguages,
+      providerLanguages,
       metadata: trackingMetadata,
     } = req.body;
 
@@ -2364,9 +2401,18 @@ export const createPayPalOrderHttp = onRequest(
         providerPayPalEmail: providerData.paypalEmail,
         clientId: auth.uid,
         description: description || "SOS Expat - Consultation",
+        // P1 FIX: Title for SMS notifications to provider (read by paymentNotifications.ts)
+        title: title || description || "Consultation",
+        // P1 FIX: Client country for SMS notifications to provider
+        clientCurrentCountry: clientCurrentCountry || "",
         // P0 FIX: Phone numbers required for Twilio call
         clientPhone: clientPhone || "",
         providerPhone: providerPhone || providerData.phone || providerData.encryptedPhone || "",
+        // P0 FIX: Languages for Twilio voice prompts (defaults to French if not provided)
+        clientLanguages: clientLanguages || ["fr"],
+        providerLanguages: providerLanguages || providerData.languagesSpoken || providerData.languages || ["fr"],
+        // P0 FIX CRITICAL: serviceType required for pricing calculation during capture
+        serviceType: normalizedServiceType,
         trackingMetadata: trackingMetadata as Record<string, string> | undefined,
       });
       console.log(`✅ [PAYPAL_DEBUG] STEP 6: OK - SIMPLE order created, orderId=${result?.orderId}`);

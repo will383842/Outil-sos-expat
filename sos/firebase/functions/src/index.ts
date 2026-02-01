@@ -139,6 +139,8 @@ export { paymentDataCleanup } from "./scheduled/paymentDataCleanup";
 export {
   stuckPaymentsRecovery,
   triggerStuckPaymentsRecovery,
+  // P0 FIX 2026-02-01: Added manual PayPal capture function
+  capturePayPalPaymentManually,
 } from "./scheduled/stuckPaymentsRecovery";
 
 // P1-6 FIX: Notification retry mechanism

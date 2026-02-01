@@ -134,6 +134,10 @@ export interface CallSessionState {
     paypalOrderId?: string;
     /** ID de capture PayPal */
     paypalCaptureId?: string;
+    /** P1 FIX: Flag indiquant que le service a été rendu (bloque les remboursements automatiques) */
+    serviceDelivered?: boolean;
+    /** P1 FIX: Flag bloquant les remboursements automatiques après capture (peut être bypass avec forceRefund) */
+    refundBlocked?: boolean;
   };
   metadata: {
     providerId: string;
@@ -167,7 +171,7 @@ const CALL_CONFIG = {
   MAX_RETRIES: 3,
   CALL_TIMEOUT: 60, // 60 s
   CONNECTION_WAIT_TIME: 90_000, // 90 s
-  MIN_CALL_DURATION: 120, // 2 minutes (120 seconds)
+  MIN_CALL_DURATION: 60, // 1 minute (60 seconds) - P0 FIX 2026-02-01: Reduced from 2 min
   MAX_CONCURRENT_CALLS: 200, // P2-12 FIX: Increased from 50 to handle traffic spikes
   WEBHOOK_VALIDATION: true,
 } as const;
@@ -549,6 +553,8 @@ export class TwilioCallManager {
         conference: { name: conferenceName },
         payment: {
           intentId: params.paymentIntentId,
+          // P0 FIX: Add gateway field for consistency with PayPal (used by capturePaymentForSession)
+          gateway: "stripe" as const,
           status: "authorized",
           amount: params.amount,
         },
@@ -2093,7 +2099,8 @@ export class TwilioCallManager {
 
   private async processRefund(
     sessionId: string,
-    reason: string
+    reason: string,
+    options?: { forceRefund?: boolean }
   ): Promise<void> {
     // 🔍 DEBUG P0: Log détaillé avec stack trace pour identifier l'origine du refund
     const refundDebugId = `refund_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -2103,6 +2110,7 @@ export class TwilioCallManager {
     console.log(`💸 [${refundDebugId}] ========== PROCESS REFUND CALLED ==========`);
     console.log(`💸 [${refundDebugId}] SessionId: ${sessionId}`);
     console.log(`💸 [${refundDebugId}] Reason: ${reason}`);
+    console.log(`💸 [${refundDebugId}] ForceRefund: ${options?.forceRefund || false}`);
     console.log(`💸 [${refundDebugId}] Timestamp: ${new Date().toISOString()}`);
     console.log(`💸 [${refundDebugId}] STACK TRACE (qui a appelé processRefund?):`);
     console.log(stackTrace);
@@ -2116,6 +2124,7 @@ export class TwilioCallManager {
       console.log(`💸 [${refundDebugId}]   session.status: ${callSession?.status || 'N/A'}`);
       console.log(`💸 [${refundDebugId}]   payment.status: ${callSession?.payment?.status || 'N/A'}`);
       console.log(`💸 [${refundDebugId}]   payment.intentId: ${callSession?.payment?.intentId || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   payment.refundBlocked: ${callSession?.payment?.refundBlocked || false}`);
       console.log(`💸 [${refundDebugId}]   client.status: ${callSession?.participants?.client?.status || 'N/A'}`);
       console.log(`💸 [${refundDebugId}]   client.connectedAt: ${callSession?.participants?.client?.connectedAt?.toDate?.() || 'N/A'}`);
       console.log(`💸 [${refundDebugId}]   client.disconnectedAt: ${callSession?.participants?.client?.disconnectedAt?.toDate?.() || 'N/A'}`);
@@ -2128,6 +2137,22 @@ export class TwilioCallManager {
 
       if (!callSession?.payment.intentId && !callSession?.payment.paypalOrderId) {
         console.log(`💸 [${refundDebugId}] ⚠️ No payment intent/order found - skipping`);
+        return;
+      }
+
+      // P1 FIX: Check refundBlocked flag (service already delivered)
+      // Can be bypassed with forceRefund: true (admin override) or via Stripe Dashboard
+      if (callSession.payment.refundBlocked && !options?.forceRefund) {
+        console.log(`💸 [${refundDebugId}] ❌ REFUND BLOCKED - Service already delivered`);
+        console.log(`💸 [${refundDebugId}]   To override: use forceRefund: true or refund via Stripe/PayPal Dashboard`);
+        // Log blocked attempt for audit
+        await this.db.collection("refund_attempts_blocked").add({
+          sessionId,
+          reason,
+          blockedAt: admin.firestore.FieldValue.serverTimestamp(),
+          paymentStatus: callSession.payment.status,
+          gateway: callSession.payment.gateway || "stripe",
+        });
         return;
       }
 
@@ -2457,29 +2482,41 @@ export class TwilioCallManager {
       console.log(`📄 Duration calculated from conference timestamps: ${actualDuration}s`);
     }
     
-    // 🆕 FALLBACK 2: Calculate from participant timestamps (MOST RELIABLE)
+    // 🆕 FALLBACK 2: Calculate OVERLAP duration from participant timestamps
+    // P0 FIX 2026-02-01: Aligned with TwilioConferenceWebhook.ts calculation
+    // OVERLAP = time when BOTH participants were connected simultaneously
+    // bothConnectedAt = when 2nd person joined (MAX of connected times)
+    // firstDisconnectedAt = when 1st person left (MIN of disconnected times)
     if (actualDuration === 0) {
-      // Use the earlier connected timestamp
       const clientConnected = client.connectedAt?.toDate().getTime();
       const providerConnected = provider.connectedAt?.toDate().getTime();
-      const startTime = Math.min(
-        clientConnected || Infinity, 
-        providerConnected || Infinity
-      );
-      
-      // Use the later disconnected timestamp
       const clientDisconnected = client.disconnectedAt?.toDate().getTime();
       const providerDisconnected = provider.disconnectedAt?.toDate().getTime();
-      const endTime = Math.max(
-        clientDisconnected || 0, 
-        providerDisconnected || 0
-      );
-      
-      if (startTime !== Infinity && endTime > 0) {
-        actualDuration = Math.floor((endTime - startTime) / 1000);
-        console.log(`📄 Duration calculated from participant timestamps: ${actualDuration}s`);
-        console.log(`📄   Client: connected=${clientConnected}, disconnected=${clientDisconnected}`);
-        console.log(`📄   Provider: connected=${providerConnected}, disconnected=${providerDisconnected}`);
+
+      if (clientConnected && providerConnected) {
+        // bothConnectedAt = when the SECOND participant joined (the later of the two)
+        const bothConnectedAt = Math.max(clientConnected, providerConnected);
+
+        // firstDisconnectedAt = when the FIRST participant left (the earlier of the two)
+        // Use current time as fallback if not yet disconnected
+        const now = Date.now();
+        const firstDisconnectedAt = Math.min(
+          clientDisconnected || now,
+          providerDisconnected || now
+        );
+
+        // OVERLAP duration = time when BOTH were connected simultaneously
+        actualDuration = Math.max(0, Math.floor((firstDisconnectedAt - bothConnectedAt) / 1000));
+
+        console.log(`📄 Duration calculated as OVERLAP (both connected):`);
+        console.log(`📄   Client: connected=${new Date(clientConnected).toISOString()}, disconnected=${clientDisconnected ? new Date(clientDisconnected).toISOString() : 'N/A'}`);
+        console.log(`📄   Provider: connected=${new Date(providerConnected).toISOString()}, disconnected=${providerDisconnected ? new Date(providerDisconnected).toISOString() : 'N/A'}`);
+        console.log(`📄   bothConnectedAt (2nd joined): ${new Date(bothConnectedAt).toISOString()}`);
+        console.log(`📄   firstDisconnectedAt (1st left): ${new Date(firstDisconnectedAt).toISOString()}`);
+        console.log(`📄   OVERLAP duration: ${actualDuration}s`);
+      } else {
+        console.log(`📄 Cannot calculate overlap - missing connectedAt timestamps`);
+        console.log(`📄   clientConnected: ${clientConnected || 'N/A'}, providerConnected: ${providerConnected || 'N/A'}`);
       }
     }
   
@@ -2498,12 +2535,31 @@ export class TwilioCallManager {
     // we also accept "requires_action" and let Stripe reject if not ready.
     const validPaymentStatuses = ["authorized", "requires_action"];
 
-    if (!validPaymentStatuses.includes(session.payment.status)) {
+    // P0 FIX 2026-02-01: For PayPal, also accept "pending_approval" if there's an authorizationId
+    // This handles the case where authorizeOrder() created the authorization on PayPal
+    // but failed to update the local status before the call completed.
+    const isPayPal = !!session.payment.paypalOrderId;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const paymentAny = session.payment as any;
+    const hasPayPalAuthorization = !!paymentAny.authorizationId;
+
+    if (isPayPal && hasPayPalAuthorization) {
+      // PayPal payment with authorization - allow capture regardless of local status
+      console.log(`📄 ✅ PayPal payment with authorizationId detected - allowing capture`);
+      console.log(`📄    paypalOrderId: ${session.payment.paypalOrderId}`);
+      console.log(`📄    authorizationId: ${paymentAny.authorizationId}`);
+      console.log(`📄    local status: ${session.payment.status} (may be stale)`);
+    } else if (isPayPal && !hasPayPalAuthorization && session.payment.status !== "authorized") {
+      // PayPal payment without authorization - need to check if we can still capture
+      // The captureOrder() function will call authorizeOrder() if needed
+      console.log(`📄 ⚠️ PayPal payment without local authorizationId`);
+      console.log(`📄    paypalOrderId: ${session.payment.paypalOrderId}`);
+      console.log(`📄    local status: ${session.payment.status}`);
+      console.log(`📄    Will attempt capture - captureOrder() will authorize if needed`);
+    } else if (!validPaymentStatuses.includes(session.payment.status)) {
       console.log(`📄 ❌ Payment status check failed: ${session.payment.status} not in ${validPaymentStatuses.join(", ")} - returning false`);
       return false;
-    }
-
-    if (session.payment.status === "requires_action") {
+    } else if (session.payment.status === "requires_action") {
       console.log(`📄 ⚠️ Payment status is "requires_action" (3D Secure) - attempting capture anyway`);
       console.log(`📄    If 3D Secure wasn't completed, Stripe will reject the capture`);
     } else {
@@ -2668,8 +2724,11 @@ export class TwilioCallManager {
       const { getPricingConfig } = await import("./services/pricingService");
       const pricingConfig = await getPricingConfig();
 
-      const serviceType = session.metadata.providerType; // 'lawyer' or 'expat'
+      // P0 FIX: Fallback to 'expat' if providerType is not defined (fixes PayPal capture failure)
+      const serviceType = session.metadata.providerType || 'expat'; // 'lawyer' or 'expat'
       const currency = 'eur'; // Default to EUR
+
+      console.log(`💸 [${captureId}] serviceType: ${serviceType} (from metadata: ${session.metadata.providerType || 'undefined'})`);
 
       const providerAmount = pricingConfig[serviceType][currency].providerAmount;
       const platformFee = pricingConfig[serviceType][currency].connectionFeeAmount;

@@ -10,6 +10,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useChatter } from "@/hooks/useChatter";
+import { useChatterMissions } from "@/hooks/useChatterMissions";
 import { ChatterViralKit } from "@/types/chatter";
 
 interface SharePlatform {
@@ -120,6 +121,7 @@ const PLATFORMS: SharePlatform[] = [
 
 export function useViralKit(): UseViralKitReturn {
   const { dashboardData } = useChatter();
+  const { trackShare } = useChatterMissions();
   const [copied, setCopied] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<"fr" | "en">("fr");
   const [selectedMessageIndex, setSelectedMessageIndex] = useState(0);
@@ -174,6 +176,9 @@ export function useViralKit(): UseViralKitReturn {
     const shareUrl = platform.getShareUrl(message, referralLink);
 
     window.open(shareUrl, "_blank", "noopener,noreferrer");
+
+    // Track share for daily missions
+    trackShare();
   };
 
   // Select message

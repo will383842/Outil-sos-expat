@@ -1,6 +1,13 @@
 /**
  * ChatterLeaderboard - Monthly leaderboard for chatters
  * Shows top performers with country flags, earnings, and conversions
+ *
+ * Features:
+ * - Top 3 podium with bonus display ($200, $100, $50)
+ * - Team-based ranking (N1 + N2 calls)
+ * - Monthly countdown timer
+ * - Motivational messages for climbing ranks
+ * - Previous month winners display
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -14,15 +21,16 @@ import {
   Medal,
   Crown,
   Star,
-  TrendingUp,
   Users,
-  Flame,
-  Globe,
   ChevronLeft,
   ChevronRight,
   Loader2,
   AlertCircle,
-  User,
+  Clock,
+  Calendar,
+  Target,
+  Award,
+  Sparkles,
 } from 'lucide-react';
 import type { ChatterLeaderboardEntry, ChatterLevel } from '@/types/chatter';
 
@@ -44,7 +52,7 @@ const LEVEL_CONFIG: Record<ChatterLevel, { name: string; color: string; gradient
   5: { name: 'Diamond', color: 'text-purple-400', gradient: 'from-purple-400 to-pink-500' },
 };
 
-// Top 3 podium styles
+// Top 3 podium styles with bonus amounts
 const PODIUM_STYLES = {
   1: {
     icon: Crown,
@@ -52,6 +60,9 @@ const PODIUM_STYLES = {
     ring: 'ring-4 ring-yellow-400/50',
     size: 'w-20 h-20 sm:w-24 sm:h-24',
     badge: 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white',
+    bonus: 200,
+    emoji: '🥇',
+    glowColor: 'shadow-yellow-400/50',
   },
   2: {
     icon: Medal,
@@ -59,6 +70,9 @@ const PODIUM_STYLES = {
     ring: 'ring-4 ring-gray-400/50',
     size: 'w-16 h-16 sm:w-20 sm:h-20',
     badge: 'bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800',
+    bonus: 100,
+    emoji: '🥈',
+    glowColor: 'shadow-gray-400/50',
   },
   3: {
     icon: Medal,
@@ -66,14 +80,29 @@ const PODIUM_STYLES = {
     ring: 'ring-4 ring-amber-600/50',
     size: 'w-16 h-16 sm:w-20 sm:h-20',
     badge: 'bg-gradient-to-r from-amber-600 to-orange-600 text-white',
+    bonus: 50,
+    emoji: '🥉',
+    glowColor: 'shadow-orange-400/50',
   },
 };
 
+// Extended leaderboard entry with team calls
+interface ExtendedLeaderboardEntry extends ChatterLeaderboardEntry {
+  teamCalls?: number;
+  n1Calls?: number;
+  n2Calls?: number;
+}
+
 interface LeaderboardResponse {
-  rankings: ChatterLeaderboardEntry[];
+  rankings: ExtendedLeaderboardEntry[];
   month: string;
   totalParticipants: number;
   myRank: number | null;
+  previousMonthWinners?: {
+    first?: { name: string; country: string };
+    second?: { name: string; country: string };
+    third?: { name: string; country: string };
+  };
 }
 
 const ChatterLeaderboard: React.FC = () => {
@@ -82,7 +111,7 @@ const ChatterLeaderboard: React.FC = () => {
   const { dashboardData, isLoading: chatterLoading } = useChatter();
 
   // State
-  const [rankings, setRankings] = useState<ChatterLeaderboardEntry[]>([]);
+  const [rankings, setRankings] = useState<ExtendedLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
@@ -91,6 +120,22 @@ const ChatterLeaderboard: React.FC = () => {
   });
   const [totalParticipants, setTotalParticipants] = useState(0);
   const [myRank, setMyRank] = useState<number | null>(null);
+  const [showTeamView, setShowTeamView] = useState(false);
+  const [previousMonthWinners, setPreviousMonthWinners] = useState<LeaderboardResponse['previousMonthWinners']>(undefined);
+
+  // Calculate days remaining in month
+  const daysRemaining = useMemo(() => {
+    const now = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return lastDay.getDate() - now.getDate();
+  }, []);
+
+  // Check if viewing current month
+  const isCurrentMonth = useMemo(() => {
+    const now = new Date();
+    const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    return selectedMonth === currentMonthStr;
+  }, [selectedMonth]);
 
   // Available months (last 6 months)
   const availableMonths = useMemo(() => {
@@ -127,6 +172,7 @@ const ChatterLeaderboard: React.FC = () => {
         setRankings(result.data.rankings);
         setTotalParticipants(result.data.totalParticipants);
         setMyRank(result.data.myRank);
+        setPreviousMonthWinners(result.data.previousMonthWinners);
       } catch (err: any) {
         console.error('Error fetching leaderboard:', err);
         setError(err.message || 'Failed to load leaderboard');
@@ -153,14 +199,14 @@ const ChatterLeaderboard: React.FC = () => {
     }
   };
 
-  // Format amount
+  // Format amount in USD (primary display)
   const formatAmount = (cents: number) => {
     return new Intl.NumberFormat(intl.locale, {
       style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(cents);
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(cents / 100);
   };
 
   // Get country flag emoji
@@ -181,6 +227,26 @@ const ChatterLeaderboard: React.FC = () => {
   const currentUserEntry = dashboardData?.chatter
     ? rankings.find(r => r.chatterId === dashboardData.chatter.id)
     : null;
+
+  // Calculate calls needed for Top 3
+  const callsNeededForTop3 = useMemo(() => {
+    if (!myRank || myRank <= 3 || !currentUserEntry || top3.length < 3) return null;
+    const thirdPlaceTeamCalls = top3[2]?.teamCalls ?? (top3[2]?.monthlyClients ?? 0);
+    const myTeamCalls = currentUserEntry?.teamCalls ?? (currentUserEntry?.monthlyClients ?? 0);
+    return Math.max(0, thirdPlaceTeamCalls - myTeamCalls + 1);
+  }, [myRank, currentUserEntry, top3]);
+
+  // Format team calls display
+  const formatTeamCalls = (entry: ExtendedLeaderboardEntry) => {
+    const teamCalls = entry.teamCalls ?? entry.monthlyClients;
+    const n1Calls = entry.n1Calls ?? entry.monthlyClients;
+    const n2Calls = entry.n2Calls ?? 0;
+    return {
+      total: teamCalls,
+      n1: n1Calls,
+      n2: n2Calls,
+    };
+  };
 
   if (chatterLoading) {
     return (
@@ -211,40 +277,142 @@ const ChatterLeaderboard: React.FC = () => {
             </p>
           </div>
 
-          {/* Month Navigation */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePreviousMonth}
-              disabled={availableMonths.indexOf(selectedMonth) === availableMonths.length - 1}
-              className={`${UI.button.secondary} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white min-w-[140px] text-center">
-              {formatMonth(selectedMonth)}
-            </span>
-            <button
-              onClick={handleNextMonth}
-              disabled={availableMonths.indexOf(selectedMonth) === 0}
-              className={`${UI.button.secondary} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+          {/* Month Navigation & Time Remaining */}
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePreviousMonth}
+                disabled={availableMonths.indexOf(selectedMonth) === availableMonths.length - 1}
+                className={`${UI.button.secondary} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <span className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white min-w-[140px] text-center">
+                {formatMonth(selectedMonth)}
+              </span>
+              <button
+                onClick={handleNextMonth}
+                disabled={availableMonths.indexOf(selectedMonth) === 0}
+                className={`${UI.button.secondary} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+            {/* Countdown Timer - only show for current month */}
+            {isCurrentMonth && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-full">
+                <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
+                  <FormattedMessage
+                    id="chatter.leaderboard.daysRemaining"
+                    defaultMessage="Fin du mois dans {days} jours"
+                    values={{ days: daysRemaining }}
+                  />
+                </span>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Top 3 Bonus Banner */}
+        <div className={`${UI.card} p-4 sm:p-6 bg-gradient-to-r from-yellow-50 via-amber-50 to-orange-50 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-orange-900/20 border-yellow-200/50 dark:border-yellow-500/20`}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-yellow-400/20 rounded-xl">
+              <Trophy className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              <FormattedMessage id="chatter.leaderboard.bonusTitle" defaultMessage="TOP 3 DU MOIS - Gains bonus" />
+            </h2>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="flex items-center gap-2 p-3 bg-white/60 dark:bg-white/5 rounded-xl">
+              <span className="text-2xl">🥇</span>
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">1er</p>
+                <p className="font-bold text-yellow-600 dark:text-yellow-400">200$ bonus</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-white/60 dark:bg-white/5 rounded-xl">
+              <span className="text-2xl">🥈</span>
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">2eme</p>
+                <p className="font-bold text-gray-600 dark:text-gray-300">100$ bonus</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-white/60 dark:bg-white/5 rounded-xl">
+              <span className="text-2xl">🥉</span>
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">3eme</p>
+                <p className="font-bold text-amber-600 dark:text-amber-400">50$ bonus</p>
+              </div>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            <FormattedMessage
+              id="chatter.leaderboard.resetInfo"
+              defaultMessage="Le classement est remis a zero chaque 1er du mois. Base sur le total des appels d'equipe (N1 + N2)."
+            />
+          </p>
+        </div>
+
+        {/* View Toggle - Team vs Individual */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowTeamView(false)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              !showTeamView
+                ? 'bg-red-500 text-white'
+                : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20'
+            }`}
+          >
+            <FormattedMessage id="chatter.leaderboard.viewIndividual" defaultMessage="Vue individuelle" />
+          </button>
+          <button
+            onClick={() => setShowTeamView(true)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+              showTeamView
+                ? 'bg-red-500 text-white'
+                : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <FormattedMessage id="chatter.leaderboard.viewTeam" defaultMessage="Vue equipe" />
+          </button>
         </div>
 
         {/* My Rank Card */}
         {myRank && currentUserEntry && (
-          <div className={`${UI.card} p-4 bg-gradient-to-r from-red-500/10 to-orange-500/10 border-red-500/30`}>
-            <div className="flex items-center justify-between">
+          <div className={`${UI.card} p-4 sm:p-6 ${
+            myRank <= 3
+              ? 'bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-orange-500/10 border-yellow-500/30'
+              : 'bg-gradient-to-r from-red-500/10 to-orange-500/10 border-red-500/30'
+          }`}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white font-bold">
-                  #{myRank}
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl ${
+                  myRank === 1 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 ring-4 ring-yellow-400/30' :
+                  myRank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 ring-4 ring-gray-400/30' :
+                  myRank === 3 ? 'bg-gradient-to-br from-amber-600 to-orange-500 ring-4 ring-orange-400/30' :
+                  'bg-gradient-to-br from-red-400 to-orange-500'
+                }`}>
+                  {myRank <= 3 ? (
+                    <span className="text-2xl">{PODIUM_STYLES[myRank as 1 | 2 | 3].emoji}</span>
+                  ) : (
+                    `#${myRank}`
+                  )}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    <FormattedMessage id="chatter.leaderboard.yourRank" defaultMessage="Votre classement" />
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      <FormattedMessage id="chatter.leaderboard.yourRank" defaultMessage="Votre classement" />
+                    </p>
+                    {myRank <= 3 && (
+                      <span className="px-2 py-0.5 text-xs font-bold bg-yellow-400 text-yellow-900 rounded-full">
+                        TOP 3
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     <FormattedMessage
                       id="chatter.leaderboard.outOf"
@@ -252,16 +420,23 @@ const ChatterLeaderboard: React.FC = () => {
                       values={{ total: totalParticipants }}
                     />
                   </p>
+                  {/* Team calls breakdown */}
+                  {showTeamView && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {formatTeamCalls(currentUserEntry).total} appels d'equipe
+                      (N1: {formatTeamCalls(currentUserEntry).n1}, N2: {formatTeamCalls(currentUserEntry).n2})
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <p className="font-semibold text-green-600 dark:text-green-400">
                   {formatAmount(currentUserEntry.monthlyEarnings)}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   <FormattedMessage
                     id="chatter.leaderboard.conversions"
-                    defaultMessage="{clients} clients, {recruits} recrutés"
+                    defaultMessage="{clients} clients, {recruits} recrutes"
                     values={{
                       clients: currentUserEntry.monthlyClients,
                       recruits: currentUserEntry.monthlyRecruits,
@@ -270,6 +445,54 @@ const ChatterLeaderboard: React.FC = () => {
                 </p>
               </div>
             </div>
+
+            {/* Motivational message for non-Top 3 */}
+            {myRank > 3 && callsNeededForTop3 !== null && isCurrentMonth && (
+              <div className="mt-4 pt-4 border-t border-red-200/30 dark:border-red-500/20">
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-xl">
+                  <Target className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                      <FormattedMessage
+                        id="chatter.leaderboard.motivational"
+                        defaultMessage="Tu es #{rank} - +{calls} appels pour le Top 3!"
+                        values={{ rank: myRank, calls: callsNeededForTop3 }}
+                      />
+                    </p>
+                    <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">
+                      <FormattedMessage
+                        id="chatter.leaderboard.motivationalSub"
+                        defaultMessage="Continue, tu peux y arriver! 💪"
+                      />
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Celebration for Top 3 */}
+            {myRank <= 3 && isCurrentMonth && (
+              <div className="mt-4 pt-4 border-t border-yellow-200/30 dark:border-yellow-500/20">
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 rounded-xl">
+                  <Sparkles className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                      <FormattedMessage
+                        id="chatter.leaderboard.top3congrats"
+                        defaultMessage="Bravo! Tu es dans le Top 3 ce mois-ci!"
+                      />
+                    </p>
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-0.5">
+                      <FormattedMessage
+                        id="chatter.leaderboard.bonusEligible"
+                        defaultMessage="Tu recevras {bonus}$ de bonus a la fin du mois!"
+                        values={{ bonus: PODIUM_STYLES[myRank as 1 | 2 | 3].bonus }}
+                      />
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -302,21 +525,28 @@ const ChatterLeaderboard: React.FC = () => {
           <>
             {/* Top 3 Podium */}
             {top3.length >= 3 && (
-              <div className={`${UI.card} p-6 sm:p-8`}>
-                <div className="flex items-end justify-center gap-4 sm:gap-8">
+              <div className={`${UI.card} p-6 sm:p-8 overflow-hidden relative`}>
+                {/* Background decorations */}
+                <div className="absolute inset-0 bg-gradient-to-b from-yellow-50/50 via-transparent to-transparent dark:from-yellow-900/10 pointer-events-none" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-b from-yellow-200/20 to-transparent dark:from-yellow-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative flex items-end justify-center gap-4 sm:gap-8">
                   {/* 2nd Place */}
                   {top3[1] && (
                     <div className="flex flex-col items-center order-1">
-                      <div className={`${PODIUM_STYLES[2].size} rounded-full bg-gradient-to-br ${PODIUM_STYLES[2].gradient} ${PODIUM_STYLES[2].ring} flex items-center justify-center mb-3`}>
-                        {top3[1].photoUrl ? (
-                          <img src={top3[1].photoUrl} alt={top3[1].chatterName} className="w-full h-full rounded-full object-cover" />
-                        ) : (
-                          <span className="text-2xl sm:text-3xl font-bold text-white">
-                            {top3[1].chatterName.charAt(0)}
-                          </span>
-                        )}
+                      <div className="relative">
+                        <div className={`${PODIUM_STYLES[2].size} rounded-full bg-gradient-to-br ${PODIUM_STYLES[2].gradient} ${PODIUM_STYLES[2].ring} flex items-center justify-center mb-3 shadow-lg ${PODIUM_STYLES[2].glowColor}`}>
+                          {top3[1].photoUrl ? (
+                            <img src={top3[1].photoUrl} alt={top3[1].chatterName} className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            <span className="text-2xl sm:text-3xl font-bold text-white">
+                              {top3[1].chatterName.charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="absolute -top-2 -right-2 text-3xl">{PODIUM_STYLES[2].emoji}</span>
                       </div>
-                      <span className={`${PODIUM_STYLES[2].badge} px-3 py-1 rounded-full text-sm font-bold mb-2`}>
+                      <span className={`${PODIUM_STYLES[2].badge} px-3 py-1 rounded-full text-sm font-bold mb-2 shadow-md`}>
                         #2
                       </span>
                       <p className="font-semibold text-gray-900 dark:text-white text-center text-sm sm:text-base">
@@ -328,24 +558,37 @@ const ChatterLeaderboard: React.FC = () => {
                       <p className="font-bold text-green-600 dark:text-green-400 mt-1">
                         {formatAmount(top3[1].monthlyEarnings)}
                       </p>
-                      <div className="h-20 w-16 sm:w-20 bg-gradient-to-t from-gray-300 to-gray-200 dark:from-gray-600 dark:to-gray-500 rounded-t-lg mt-3" />
+                      {/* Team calls if in team view */}
+                      {showTeamView && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {formatTeamCalls(top3[1]).total} appels
+                        </p>
+                      )}
+                      {/* Bonus badge */}
+                      <div className="mt-2 px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full">
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">+{PODIUM_STYLES[2].bonus}$</span>
+                      </div>
+                      <div className="h-20 w-16 sm:w-20 bg-gradient-to-t from-gray-300 to-gray-200 dark:from-gray-600 dark:to-gray-500 rounded-t-lg mt-3 shadow-inner" />
                     </div>
                   )}
 
                   {/* 1st Place */}
                   {top3[0] && (
                     <div className="flex flex-col items-center order-2">
-                      <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-500 mb-2 animate-pulse" />
-                      <div className={`${PODIUM_STYLES[1].size} rounded-full bg-gradient-to-br ${PODIUM_STYLES[1].gradient} ${PODIUM_STYLES[1].ring} flex items-center justify-center mb-3`}>
-                        {top3[0].photoUrl ? (
-                          <img src={top3[0].photoUrl} alt={top3[0].chatterName} className="w-full h-full rounded-full object-cover" />
-                        ) : (
-                          <span className="text-3xl sm:text-4xl font-bold text-white">
-                            {top3[0].chatterName.charAt(0)}
-                          </span>
-                        )}
+                      <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-500 mb-2 animate-pulse drop-shadow-lg" />
+                      <div className="relative">
+                        <div className={`${PODIUM_STYLES[1].size} rounded-full bg-gradient-to-br ${PODIUM_STYLES[1].gradient} ${PODIUM_STYLES[1].ring} flex items-center justify-center mb-3 shadow-xl ${PODIUM_STYLES[1].glowColor} animate-pulse`} style={{ animationDuration: '3s' }}>
+                          {top3[0].photoUrl ? (
+                            <img src={top3[0].photoUrl} alt={top3[0].chatterName} className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            <span className="text-3xl sm:text-4xl font-bold text-white">
+                              {top3[0].chatterName.charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="absolute -top-2 -right-2 text-3xl">{PODIUM_STYLES[1].emoji}</span>
                       </div>
-                      <span className={`${PODIUM_STYLES[1].badge} px-4 py-1.5 rounded-full text-base font-bold mb-2`}>
+                      <span className={`${PODIUM_STYLES[1].badge} px-4 py-1.5 rounded-full text-base font-bold mb-2 shadow-lg`}>
                         #1
                       </span>
                       <p className="font-bold text-gray-900 dark:text-white text-center text-base sm:text-lg">
@@ -357,23 +600,36 @@ const ChatterLeaderboard: React.FC = () => {
                       <p className="font-bold text-green-600 dark:text-green-400 text-lg mt-1">
                         {formatAmount(top3[0].monthlyEarnings)}
                       </p>
-                      <div className="h-28 w-16 sm:w-20 bg-gradient-to-t from-yellow-500 to-amber-400 dark:from-yellow-600 dark:to-amber-500 rounded-t-lg mt-3" />
+                      {/* Team calls if in team view */}
+                      {showTeamView && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {formatTeamCalls(top3[0]).total} appels
+                        </p>
+                      )}
+                      {/* Bonus badge */}
+                      <div className="mt-2 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-full shadow-md">
+                        <span className="text-sm font-bold text-yellow-900">+{PODIUM_STYLES[1].bonus}$</span>
+                      </div>
+                      <div className="h-28 w-16 sm:w-20 bg-gradient-to-t from-yellow-500 to-amber-400 dark:from-yellow-600 dark:to-amber-500 rounded-t-lg mt-3 shadow-lg" />
                     </div>
                   )}
 
                   {/* 3rd Place */}
                   {top3[2] && (
                     <div className="flex flex-col items-center order-3">
-                      <div className={`${PODIUM_STYLES[3].size} rounded-full bg-gradient-to-br ${PODIUM_STYLES[3].gradient} ${PODIUM_STYLES[3].ring} flex items-center justify-center mb-3`}>
-                        {top3[2].photoUrl ? (
-                          <img src={top3[2].photoUrl} alt={top3[2].chatterName} className="w-full h-full rounded-full object-cover" />
-                        ) : (
-                          <span className="text-2xl sm:text-3xl font-bold text-white">
-                            {top3[2].chatterName.charAt(0)}
-                          </span>
-                        )}
+                      <div className="relative">
+                        <div className={`${PODIUM_STYLES[3].size} rounded-full bg-gradient-to-br ${PODIUM_STYLES[3].gradient} ${PODIUM_STYLES[3].ring} flex items-center justify-center mb-3 shadow-lg ${PODIUM_STYLES[3].glowColor}`}>
+                          {top3[2].photoUrl ? (
+                            <img src={top3[2].photoUrl} alt={top3[2].chatterName} className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            <span className="text-2xl sm:text-3xl font-bold text-white">
+                              {top3[2].chatterName.charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="absolute -top-2 -right-2 text-3xl">{PODIUM_STYLES[3].emoji}</span>
                       </div>
-                      <span className={`${PODIUM_STYLES[3].badge} px-3 py-1 rounded-full text-sm font-bold mb-2`}>
+                      <span className={`${PODIUM_STYLES[3].badge} px-3 py-1 rounded-full text-sm font-bold mb-2 shadow-md`}>
                         #3
                       </span>
                       <p className="font-semibold text-gray-900 dark:text-white text-center text-sm sm:text-base">
@@ -385,7 +641,17 @@ const ChatterLeaderboard: React.FC = () => {
                       <p className="font-bold text-green-600 dark:text-green-400 mt-1">
                         {formatAmount(top3[2].monthlyEarnings)}
                       </p>
-                      <div className="h-14 w-16 sm:w-20 bg-gradient-to-t from-amber-600 to-orange-500 dark:from-amber-700 dark:to-orange-600 rounded-t-lg mt-3" />
+                      {/* Team calls if in team view */}
+                      {showTeamView && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {formatTeamCalls(top3[2]).total} appels
+                        </p>
+                      )}
+                      {/* Bonus badge */}
+                      <div className="mt-2 px-2 py-1 bg-amber-200 dark:bg-amber-800 rounded-full">
+                        <span className="text-xs font-semibold text-amber-800 dark:text-amber-200">+{PODIUM_STYLES[3].bonus}$</span>
+                      </div>
+                      <div className="h-14 w-16 sm:w-20 bg-gradient-to-t from-amber-600 to-orange-500 dark:from-amber-700 dark:to-orange-600 rounded-t-lg mt-3 shadow-md" />
                     </div>
                   )}
                 </div>
@@ -415,9 +681,15 @@ const ChatterLeaderboard: React.FC = () => {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden sm:table-cell">
                           <FormattedMessage id="chatter.leaderboard.level" defaultMessage="Niveau" />
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">
-                          <FormattedMessage id="chatter.leaderboard.conversions" defaultMessage="Conv." />
-                        </th>
+                        {showTeamView ? (
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">
+                            <FormattedMessage id="chatter.leaderboard.teamCalls" defaultMessage="Appels equipe" />
+                          </th>
+                        ) : (
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">
+                            <FormattedMessage id="chatter.leaderboard.conversions" defaultMessage="Conv." />
+                          </th>
+                        )}
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                           <FormattedMessage id="chatter.leaderboard.earnings" defaultMessage="Gains" />
                         </th>
@@ -426,21 +698,26 @@ const ChatterLeaderboard: React.FC = () => {
                     <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                       {restOfRankings.map((entry) => {
                         const isCurrentUser = dashboardData?.chatter.id === entry.chatterId;
+                        const teamCallsData = formatTeamCalls(entry);
                         return (
                           <tr
                             key={entry.chatterId}
-                            className={`hover:bg-gray-50 dark:hover:bg-white/5 ${
-                              isCurrentUser ? 'bg-red-50 dark:bg-red-900/10' : ''
+                            className={`hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${
+                              isCurrentUser
+                                ? 'bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 ring-2 ring-red-500/30 ring-inset'
+                                : ''
                             }`}
                           >
                             <td className="px-4 py-4 whitespace-nowrap">
-                              <span className="font-bold text-gray-900 dark:text-white">
+                              <span className={`font-bold ${isCurrentUser ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
                                 #{entry.rank}
                               </span>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white font-bold">
+                                <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white font-bold ${
+                                  isCurrentUser ? 'ring-2 ring-red-500' : ''
+                                }`}>
                                   {entry.photoUrl ? (
                                     <img src={entry.photoUrl} alt={entry.chatterName} className="w-full h-full rounded-full object-cover" />
                                   ) : (
@@ -451,7 +728,7 @@ const ChatterLeaderboard: React.FC = () => {
                                   <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
                                     {entry.chatterName}
                                     {isCurrentUser && (
-                                      <span className="text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded ml-1">
+                                      <span className="text-xs px-1.5 py-0.5 bg-red-500 text-white rounded-full ml-1 font-bold">
                                         <FormattedMessage id="chatter.leaderboard.you" defaultMessage="Vous" />
                                       </span>
                                     )}
@@ -472,12 +749,23 @@ const ChatterLeaderboard: React.FC = () => {
                               </div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-right hidden md:table-cell">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
-                                {entry.monthlyClients} / {entry.monthlyRecruits}
-                              </span>
+                              {showTeamView ? (
+                                <div className="text-right">
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                    {teamCallsData.total}
+                                  </span>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    N1: {teamCallsData.n1} | N2: {teamCallsData.n2}
+                                  </p>
+                                </div>
+                              ) : (
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  {entry.monthlyClients} / {entry.monthlyRecruits}
+                                </span>
+                              )}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-right">
-                              <span className="font-semibold text-green-600 dark:text-green-400">
+                              <span className={`font-semibold ${isCurrentUser ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                                 {formatAmount(entry.monthlyEarnings)}
                               </span>
                             </td>
@@ -492,15 +780,87 @@ const ChatterLeaderboard: React.FC = () => {
           </>
         )}
 
-        {/* Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`${UI.card} p-4`}>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                <Crown className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+        {/* Previous Month Winners */}
+        {previousMonthWinners && (previousMonthWinners.first || previousMonthWinners.second || previousMonthWinners.third) && (
+          <div className={`${UI.card} p-4 sm:p-6`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+                <Award className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                <FormattedMessage id="chatter.leaderboard.previousWinners" defaultMessage="Gagnants du mois dernier" />
+              </h3>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {previousMonthWinners.first && (
+                <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
+                  <span className="text-2xl">🥇</span>
+                  <p className="font-medium text-gray-900 dark:text-white text-sm mt-1">{previousMonthWinners.first.name}</p>
+                  <p className="text-xs text-gray-500">{getFlagEmoji(previousMonthWinners.first.country)}</p>
+                </div>
+              )}
+              {previousMonthWinners.second && (
+                <div className="text-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                  <span className="text-2xl">🥈</span>
+                  <p className="font-medium text-gray-900 dark:text-white text-sm mt-1">{previousMonthWinners.second.name}</p>
+                  <p className="text-xs text-gray-500">{getFlagEmoji(previousMonthWinners.second.country)}</p>
+                </div>
+              )}
+              {previousMonthWinners.third && (
+                <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                  <span className="text-2xl">🥉</span>
+                  <p className="font-medium text-gray-900 dark:text-white text-sm mt-1">{previousMonthWinners.third.name}</p>
+                  <p className="text-xs text-gray-500">{getFlagEmoji(previousMonthWinners.third.country)}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Team Competition Info */}
+        {showTeamView && (
+          <div className={`${UI.card} p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200/50 dark:border-blue-500/20`}>
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex-shrink-0">
+                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Top 1</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  <FormattedMessage id="chatter.leaderboard.teamCompetition" defaultMessage="Competition par equipe" />
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage
+                    id="chatter.leaderboard.teamCompetitionDesc"
+                    defaultMessage="Les appels d'equipe = tes appels (N1) + les appels de tes recrutes (N2). Aide ton equipe a performer pour monter dans le classement!"
+                  />
+                </p>
+                <div className="mt-3 flex items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-blue-500" />
+                    <span className="text-xs text-gray-600 dark:text-gray-400">N1 = Tes appels directs</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-indigo-500" />
+                    <span className="text-xs text-gray-600 dark:text-gray-400">N2 = Appels de tes recrutes</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={`${UI.card} p-4 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/10`}>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl shadow-lg shadow-yellow-400/30">
+                <Crown className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  Top 1
+                  <span className="text-yellow-600 dark:text-yellow-400 text-sm">+200$</span>
+                </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   <FormattedMessage id="chatter.leaderboard.bonus.top1" defaultMessage="+100% bonus commissions" />
                 </p>
@@ -508,13 +868,16 @@ const ChatterLeaderboard: React.FC = () => {
             </div>
           </div>
 
-          <div className={`${UI.card} p-4`}>
+          <div className={`${UI.card} p-4 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-900/10 dark:to-slate-900/10`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                <Medal className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <div className="p-2.5 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl shadow-lg shadow-gray-400/30">
+                <Medal className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Top 2</p>
+                <p className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  Top 2
+                  <span className="text-gray-600 dark:text-gray-400 text-sm">+100$</span>
+                </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   <FormattedMessage id="chatter.leaderboard.bonus.top2" defaultMessage="+50% bonus commissions" />
                 </p>
@@ -522,13 +885,16 @@ const ChatterLeaderboard: React.FC = () => {
             </div>
           </div>
 
-          <div className={`${UI.card} p-4`}>
+          <div className={`${UI.card} p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <Medal className="w-5 h-5 text-red-600 dark:text-red-400" />
+              <div className="p-2.5 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg shadow-orange-400/30">
+                <Medal className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Top 3</p>
+                <p className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  Top 3
+                  <span className="text-amber-600 dark:text-amber-400 text-sm">+50$</span>
+                </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   <FormattedMessage id="chatter.leaderboard.bonus.top3" defaultMessage="+15% bonus commissions" />
                 </p>
@@ -536,6 +902,28 @@ const ChatterLeaderboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Monthly Reset Reminder */}
+        {isCurrentMonth && (
+          <div className={`${UI.card} p-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20`}>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-900 dark:text-white">
+                  <FormattedMessage id="chatter.leaderboard.monthlyReset" defaultMessage="Remise a zero mensuelle" />
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <FormattedMessage
+                    id="chatter.leaderboard.monthlyResetDesc"
+                    defaultMessage="Le classement repart a zero chaque 1er du mois. Tous les chatters ont leur chance de gagner les bonus!"
+                  />
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ChatterDashboardLayout>
   );

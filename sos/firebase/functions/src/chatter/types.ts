@@ -46,21 +46,40 @@ export type SupportedChatterLanguage =
 
 /**
  * Commission type for chatters
+ *
+ * NEW SIMPLIFIED SYSTEM (2026):
+ * - client_call: $10 when client calls via chatter's link
+ * - n1_call: $1 when your N1 referral makes a call
+ * - n2_call: $0.50 when your N2 referral makes a call
+ * - activation_bonus: $5 after referral's 2nd client call (anti-fraud)
+ * - n1_recruit_bonus: $1 when your N1 recruits someone who activates
+ *
+ * OLD types kept for backward compatibility but no longer actively used:
+ * - recruitment (deprecated)
+ * - threshold_10, threshold_50, threshold_50_n2 (deprecated)
+ * - recurring_5pct (deprecated)
  */
 export type ChatterCommissionType =
-  | "client_referral"       // Client completed a paid call
-  | "recruitment"           // Recruited provider received first call
+  | "client_referral"       // LEGACY: Client completed a paid call (now use client_call)
+  | "client_call"           // NEW: $10 - Client call via chatter's link
+  | "n1_call"               // NEW: $1 - N1 referral made a call
+  | "n2_call"               // NEW: $0.50 - N2 referral made a call
+  | "activation_bonus"      // NEW: $5 - After referral's 2nd client call
+  | "n1_recruit_bonus"      // NEW: $1 - N1 recruits someone who activates
+  | "provider_call"         // NEW: $5 - Recruited provider received a call (6 months window)
+  | "recruitment"           // LEGACY: Recruited provider received first call
   | "bonus_level"           // Level-up bonus
   | "bonus_streak"          // Streak bonus
   | "bonus_top3"            // Monthly Top 3 bonus
   | "bonus_zoom"            // Zoom meeting attendance bonus
   | "manual_adjustment"     // Admin manual adjustment
-  // Referral system commissions (2-level)
-  | "threshold_10"          // Filleul N1 reached $10 threshold
-  | "threshold_50"          // Filleul N1 reached $50 threshold
-  | "threshold_50_n2"       // Filleul N2 reached $50 threshold
-  | "recurring_5pct"        // Monthly recurring 5% on active filleuls
-  | "tier_bonus";           // Tier bonus (5/10/25/50 filleuls)
+  // LEGACY: Referral system commissions (2-level) - kept for backward compatibility
+  | "threshold_10"          // LEGACY: Filleul N1 reached $10 threshold
+  | "threshold_50"          // LEGACY: Filleul N1 reached $50 threshold
+  | "threshold_50_n2"       // LEGACY: Filleul N2 reached $50 threshold
+  | "recurring_5pct"        // LEGACY: Monthly recurring 5% on active filleuls
+  | "tier_bonus"            // Tier bonus (5/10/20/50/100/500 filleuls)
+  | "bonus_social";         // Social media likes bonus
 
 /**
  * Commission status lifecycle
@@ -117,28 +136,45 @@ export type ChatterPlatform =
  * Badge types
  */
 export type ChatterBadgeType =
+  // Onboarding badges
   | "first_client"          // First client referral
-  | "first_recruitment"     // First provider recruited
+  | "first_recruitment"     // First team member recruited
   | "first_quiz_pass"       // First quiz pass
+  // Streak badges (consecutive activity days)
   | "streak_7"              // 7-day streak
   | "streak_30"             // 30-day streak
   | "streak_100"            // 100-day streak
+  // Level badges
   | "level_2"               // Reached level 2
   | "level_3"               // Reached level 3
   | "level_4"               // Reached level 4
   | "level_5"               // Reached level 5
+  // Monthly ranking badges
   | "top1_monthly"          // Monthly #1
   | "top3_monthly"          // Monthly Top 3
+  // Client milestone badges
   | "clients_10"            // 10 clients
   | "clients_50"            // 50 clients
   | "clients_100"           // 100 clients
-  | "recruits_5"            // 5 providers recruited
-  | "recruits_10"           // 10 providers recruited
+  // Direct recruits (N1) badges - Team building
+  | "recruits_3"            // 3 direct recruits (Première Équipe)
+  | "recruits_5"            // 5 direct recruits (Équipe Bronze)
+  | "recruits_10"           // 10 direct recruits (Équipe Argent)
+  | "recruits_25"           // 25 direct recruits (Équipe Or)
+  | "recruits_50"           // 50 direct recruits (Équipe Platine)
+  // Earnings badges
   | "earned_100"            // Earned $100
   | "earned_500"            // Earned $500
   | "earned_1000"           // Earned $1000
-  | "zoom_participant"      // First Zoom meeting
-  | "zoom_regular";         // 5 Zoom meetings
+  // Team size badges (N1 + N2 network)
+  | "team_10"               // Network of 10 people
+  | "team_25"               // Network of 25 people
+  | "team_50"               // Network of 50 people
+  | "team_100"              // Network of 100 people
+  // Team earnings badges (total earned by N1 recruits)
+  | "team_earned_500"       // Team earned $500
+  | "team_earned_1000"      // Team earned $1000
+  | "team_earned_5000";     // Team earned $5000
 
 // ============================================================================
 // CHATTER PROFILE
@@ -253,6 +289,17 @@ export interface Chatter {
   /** Best ever rank */
   bestRank: number | null;
 
+  // ---- Monthly Top Multiplier (reward for top 3) ----
+
+  /**
+   * Commission multiplier for this month (reward for being top 3 previous month)
+   * 1.0 = no bonus, 2.0 = double, 1.5 = +50%, 1.15 = +15%
+   */
+  monthlyTopMultiplier: number;
+
+  /** Month during which the multiplier is active (YYYY-MM format, null if no active bonus) */
+  monthlyTopMultiplierMonth: string | null;
+
   // ---- Zoom ----
 
   /** Total Zoom meetings attended */
@@ -300,6 +347,23 @@ export interface Chatter {
   // REMOVED: recruiterMilestoneBonusPaid and recruiterMilestoneBonusAt
   // The $50 milestone bonus feature has been disabled
 
+  // ---- NEW SIMPLIFIED COMMISSION SYSTEM (2026) ----
+
+  /** Total client calls made through this chatter's link */
+  totalClientCalls: number;
+
+  /**
+   * Whether this chatter is "activated" (had 2+ client calls)
+   * Activation triggers a $5 bonus to the recruiter (anti-fraud measure)
+   */
+  isActivated: boolean;
+
+  /** When this chatter was activated (after 2nd client call) */
+  activatedAt: Timestamp | null;
+
+  /** Whether the activation bonus has been paid to the recruiter */
+  activationBonusPaid: boolean;
+
   // ---- Referral N2 (2-level referral system) ----
 
   /** N2 parrain - the parrain of this chatter's parrain */
@@ -338,8 +402,22 @@ export interface Chatter {
   /** Whether this chatter's $50 threshold was reached (commission paid to parrain N1 and N2) */
   threshold50Reached: boolean;
 
-  /** Tier bonuses already paid to this chatter (5, 10, 25, 50 filleuls) */
+  /** Tier bonuses already paid to this chatter (5, 10, 20, 50, 100, 500 filleuls) */
   tierBonusesPaid: number[];
+
+  // ---- Social Media Likes Bonus ----
+
+  /** IDs of social networks the chatter has marked as "liked" */
+  likedSocialNetworks?: string[];
+
+  /** Whether the social bonus has been unlocked (requires $100 direct earnings) */
+  socialBonusUnlocked?: boolean;
+
+  /** Total social bonus amount paid (in cents) */
+  socialBonusPaid?: number;
+
+  /** Timestamp when social bonus was unlocked */
+  socialBonusUnlockedAt?: Timestamp | null;
 
   // ---- Timestamps ----
 
@@ -351,6 +429,29 @@ export interface Chatter {
 
   /** Last login */
   lastLoginAt: Timestamp | null;
+
+  // ---- TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD) ----
+
+  /** Whether terms were accepted */
+  termsAccepted: boolean;
+
+  /** ISO timestamp of terms acceptance */
+  termsAcceptedAt: string;
+
+  /** Version of terms accepted (e.g., "3.0") */
+  termsVersion: string;
+
+  /** Type of terms accepted */
+  termsType: string; // "terms_chatters"
+
+  /** Metadata about the acceptance for legal compliance */
+  termsAcceptanceMeta?: {
+    userAgent?: string;
+    language?: string;
+    timestamp?: number;
+    acceptanceMethod?: string; // "checkbox_click"
+    ipAddress?: string; // If captured server-side
+  };
 }
 
 /**
@@ -471,6 +572,10 @@ export interface ChatterCommission {
     month?: string; // YYYY-MM
     streakDays?: number;
     levelReached?: ChatterLevel;
+
+    // For social likes bonus
+    networkCount?: number;
+    networks?: string;
   };
 
   // ---- Amount ----
@@ -486,6 +591,12 @@ export interface ChatterCommission {
 
   /** Zoom bonus multiplier applied (1.0 = no bonus) */
   zoomBonus: number;
+
+  /** Streak bonus multiplier applied (1.0 = no bonus) */
+  streakBonus?: number;
+
+  /** Monthly top multiplier (reward for being top 3 previous month, 1.0 = no bonus) */
+  monthlyTopMultiplier?: number;
 
   /** Final commission amount (cents) */
   amount: number;
@@ -698,11 +809,47 @@ export interface ChatterConfig {
   trainingEnabled: boolean;
 
   // ---- Commission Amounts (cents) ----
+  // NEW SIMPLIFIED SYSTEM (2026)
 
-  /** Fixed commission per client referral */
+  /** Commission for direct client call ($10 = 1000 cents) */
+  commissionClientCallAmount: number;
+
+  /** Commission when N1 referral makes a call ($1 = 100 cents) */
+  commissionN1CallAmount: number;
+
+  /** Commission when N2 referral makes a call ($0.50 = 50 cents) */
+  commissionN2CallAmount: number;
+
+  /** Activation bonus after referral's 2nd client call ($5 = 500 cents) */
+  commissionActivationBonusAmount: number;
+
+  /** Bonus when N1 recruits someone who activates ($1 = 100 cents) */
+  commissionN1RecruitBonusAmount: number;
+
+  /** Number of client calls required before activation (anti-fraud) */
+  activationCallsRequired: number;
+
+  /** Commission when recruited provider receives a call ($5 = 500 cents) */
+  commissionProviderCallAmount: number;
+
+  /** Duration in months for provider recruitment commission window */
+  providerRecruitmentDurationMonths: number;
+
+  /** Flash bonus multiplier (for promotions, e.g., 2.0 = double commissions) */
+  flashBonusMultiplier: number;
+
+  /** Whether flash bonus is currently active */
+  flashBonusActive: boolean;
+
+  /** Flash bonus end date (if active) */
+  flashBonusEndsAt: Timestamp | null;
+
+  // ---- LEGACY Commission Amounts (kept for backward compatibility) ----
+
+  /** @deprecated Use commissionClientCallAmount instead */
   commissionClientAmount: number;
 
-  /** Fixed commission per provider recruitment */
+  /** @deprecated Use commissionN1RecruitBonusAmount instead */
   commissionRecruitmentAmount: number;
 
   // ---- Level Bonuses ----
@@ -737,6 +884,16 @@ export interface ChatterConfig {
 
   /** Days after Zoom meeting that bonus applies */
   zoomBonusDurationDays: number;
+
+  // ---- Streak Bonus ----
+
+  /** Streak bonus multipliers based on consecutive activity days */
+  streakBonuses: {
+    days7: number;   // 1.05 = +5% bonus at 7+ days
+    days14: number;  // 1.10 = +10% bonus at 14+ days
+    days30: number;  // 1.20 = +20% bonus at 30+ days
+    days100: number; // 1.50 = +50% bonus at 100+ days
+  };
 
   // ---- Recruitment Links ----
 
@@ -800,8 +957,22 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   withdrawalsEnabled: true,
   trainingEnabled: true,
 
-  commissionClientAmount: 1000,      // $10
-  commissionRecruitmentAmount: 500,  // $5
+  // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
+  commissionClientCallAmount: 1000,       // $10 - Direct client call
+  commissionN1CallAmount: 100,            // $1 - N1 referral makes a call
+  commissionN2CallAmount: 50,             // $0.50 - N2 referral makes a call
+  commissionActivationBonusAmount: 500,   // $5 - After referral's 2nd client call
+  commissionN1RecruitBonusAmount: 100,    // $1 - N1 recruits someone who activates
+  activationCallsRequired: 2,             // 2 calls to activate (anti-fraud)
+  commissionProviderCallAmount: 500,      // $5 - Provider recruitment call
+  providerRecruitmentDurationMonths: 6,   // 6 months window for provider recruitment
+  flashBonusMultiplier: 1.0,              // No flash bonus by default
+  flashBonusActive: false,
+  flashBonusEndsAt: null,
+
+  // LEGACY (kept for backward compatibility)
+  commissionClientAmount: 1000,      // $10 - deprecated
+  commissionRecruitmentAmount: 500,  // $5 - deprecated
 
   levelBonuses: {
     level1: 1.00,
@@ -825,6 +996,13 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   zoomBonusMultiplier: 1.10,
   zoomBonusDurationDays: 7,
 
+  streakBonuses: {
+    days7: 1.05,    // +5% bonus at 7+ consecutive days
+    days14: 1.10,   // +10% bonus at 14+ consecutive days
+    days30: 1.20,   // +20% bonus at 30+ consecutive days
+    days100: 1.50,  // +50% bonus at 100+ consecutive days
+  },
+
   recruitmentLinkDurationMonths: 6,
 
   minimumWithdrawalAmount: 2500,     // $25
@@ -832,7 +1010,7 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   releaseDelayHours: 24,             // 1 day after validation
 
   quizPassingScore: 85,
-  quizRetryDelayHours: 24,
+  quizRetryDelayHours: 6,
   quizQuestionsCount: 5,
 
   attributionWindowDays: 30,
@@ -2026,12 +2204,18 @@ export const REFERRAL_CONFIG = {
   },
 
   /** Tier bonuses (filleuls count → bonus in cents) */
+  /** Qualified filleul = has earned $20+ in direct commissions (clientEarnings) */
   TIER_BONUSES: {
-    5: 2500,    // $25 for 5 qualified filleuls
-    10: 7500,   // $75 for 10 qualified filleuls
-    25: 20000,  // $200 for 25 qualified filleuls
-    50: 50000,  // $500 for 50 qualified filleuls
+    5: 1500,     // $15 for 5 qualified filleuls
+    10: 3500,    // $35 for 10 qualified filleuls
+    20: 7500,    // $75 for 20 qualified filleuls
+    50: 25000,   // $250 for 50 qualified filleuls
+    100: 60000,  // $600 for 100 qualified filleuls
+    500: 500000, // $5000 for 500 qualified filleuls
   } as Record<number, number>,
+
+  /** Minimum direct earnings (cents) for a filleul to be counted as "qualified" */
+  QUALIFIED_FILLEUL_THRESHOLD: 2000, // $20
 
   /** Early adopter settings */
   EARLY_ADOPTER: {
@@ -2045,7 +2229,96 @@ export const REFERRAL_CONFIG = {
     MAX_REFERRALS_PER_DAY: 10,
     CIRCULAR_DETECTION_DEPTH: 5,
   },
+
+  /** Social media likes bonus settings */
+  SOCIAL_LIKES: {
+    BONUS_PER_NETWORK: 100,        // $1 per network liked
+    UNLOCK_THRESHOLD: 10000,       // $100 direct earnings required to unlock
+    MIN_VIEW_SECONDS: 5,           // Minimum seconds on social page before confirming
+  },
 } as const;
+
+// ============================================================================
+// SOCIAL MEDIA NETWORKS (Admin-managed)
+// ============================================================================
+
+/**
+ * Social network platform types
+ */
+export type SocialPlatformType =
+  | "facebook"
+  | "instagram"
+  | "tiktok"
+  | "youtube"
+  | "twitter"
+  | "linkedin"
+  | "other";
+
+/**
+ * Social network document (admin-managed)
+ * Collection: chatter_social_networks/{networkId}
+ */
+export interface ChatterSocialNetwork {
+  /** Document ID */
+  id: string;
+
+  /** Platform type for icon display */
+  platform: SocialPlatformType;
+
+  /** Display label (e.g., "Notre page Facebook") */
+  label: string;
+
+  /** URL to the social network page */
+  url: string;
+
+  /** Bonus amount in cents for liking this network */
+  bonusAmount: number;
+
+  /** Whether this network is active (visible to chatters) */
+  isActive: boolean;
+
+  /** Display order (lower = first) */
+  order: number;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+
+  /** Created by (admin user ID) */
+  createdBy: string;
+}
+
+/**
+ * Record of a chatter's social like action
+ * Subcollection: chatters/{chatterId}/socialLikes/{networkId}
+ */
+export interface ChatterSocialLike {
+  /** Network ID */
+  networkId: string;
+
+  /** Platform type */
+  platform: SocialPlatformType;
+
+  /** Network label at time of like */
+  networkLabel: string;
+
+  /** When the chatter marked this as liked */
+  likedAt: Timestamp;
+
+  /** Bonus amount (in cents) at time of like */
+  bonusAmount: number;
+
+  /** Whether the bonus has been paid */
+  bonusPaid: boolean;
+
+  /** When the bonus was paid (null if not paid yet) */
+  bonusPaidAt: Timestamp | null;
+
+  /** Commission ID if bonus was paid */
+  commissionId: string | null;
+}
 
 // ============================================================================
 // INPUT/OUTPUT TYPES FOR CALLABLES
@@ -2057,12 +2330,24 @@ export interface RegisterChatterInput {
   email: string;
   phone?: string;
   country: string;
-  interventionCountries: string[];
+  interventionCountries?: string[]; // Optional - defaults to country
   language: SupportedChatterLanguage;
   additionalLanguages?: SupportedChatterLanguage[];
-  platforms: ChatterPlatform[];
+  platforms?: ChatterPlatform[]; // Optional - not collected at registration
   bio?: string;
-  recruitmentCode?: string; // If recruited by another chatter
+  recruitmentCode?: string; // Auto from URL - not manual input
+  // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
+  acceptTerms?: boolean;
+  termsAcceptedAt?: string;
+  termsVersion?: string;
+  termsType?: string;
+  termsAcceptanceMeta?: {
+    userAgent?: string;
+    language?: string;
+    timestamp?: number;
+    acceptanceMethod?: string;
+    ipAddress?: string;
+  };
 }
 
 export interface RegisterChatterResponse {
@@ -2162,6 +2447,78 @@ export interface GetChatterDashboardResponse {
     multiplier: number;
     endsAt: string;
   } | null;
+
+  /** Piggy Bank - Bonus pending unlock (social likes, etc.) */
+  piggyBank: {
+    /** Whether the piggy bank is unlocked ($100+ direct earnings) */
+    isUnlocked: boolean;
+    /** Current direct client earnings (cents) */
+    clientEarnings: number;
+    /** Threshold to unlock (cents) - default $100 */
+    unlockThreshold: number;
+    /** Progress percentage towards unlock */
+    progressPercent: number;
+    /** Amount remaining to unlock (cents) */
+    amountToUnlock: number;
+    /** Social likes bonus details */
+    socialLikes: {
+      /** Total networks available to like */
+      networksAvailable: number;
+      /** Networks already liked by chatter */
+      networksLiked: number;
+      /** Bonus amount pending payment (cents) */
+      bonusPending: number;
+      /** Bonus amount already paid (cents) */
+      bonusPaid: number;
+      /** List of networks with like status */
+      networks: Array<{
+        id: string;
+        platform: SocialPlatformType;
+        label: string;
+        url: string;
+        bonusAmount: number;
+        liked: boolean;
+      }>;
+    };
+    /** Total pending bonus in piggy bank (cents) */
+    totalPending: number;
+    /** User-friendly message for UI */
+    message: string;
+  };
+
+  /** Historical trends data for charts */
+  trends: {
+    /** Earnings for last 4 weeks (cents), index 0 = oldest week */
+    earningsWeekly: number[];
+    /** Earnings for last 6 months (cents), index 0 = oldest month */
+    earningsMonthly: number[];
+    /** Client referrals for last 4 weeks, index 0 = oldest week */
+    clientsWeekly: number[];
+    /** Recruits for last 4 weeks, index 0 = oldest week */
+    recruitsWeekly: number[];
+  };
+
+  /** Comparison with previous period */
+  comparison: {
+    /** Percentage change in earnings vs last month (+15 means +15%) */
+    earningsVsLastMonth: number;
+    /** Percentage change in clients vs last month */
+    clientsVsLastMonth: number;
+    /** Percentage change in recruits vs last month */
+    recruitsVsLastMonth: number;
+    /** Rank change (+2 means improved 2 positions, -1 means dropped 1) */
+    rankChange: number;
+  };
+
+  /** Simple forecast based on current pace */
+  forecast: {
+    /** Estimated monthly earnings based on current pace (cents) */
+    estimatedMonthlyEarnings: number;
+    /** Estimated time to reach next level (e.g., "2 weeks") or null if already max */
+    estimatedNextLevel: string | null;
+    /** Next tier bonus available (cents) */
+    potentialBonus: number;
+  };
 }
 
 export interface RequestWithdrawalInput {
@@ -2572,4 +2929,112 @@ export interface SubmitTrainingQuizResponse {
 export interface GetTrainingCertificateResponse {
   certificate: ChatterTrainingCertificate;
   verificationUrl: string;
+}
+
+// ============================================================================
+// WEEKLY CHALLENGES
+// ============================================================================
+
+/**
+ * Weekly challenge type
+ */
+export type WeeklyChallengeType = "recruiter" | "caller" | "team";
+
+/**
+ * Leaderboard entry for weekly challenges
+ */
+export interface WeeklyChallengeLeaderboardEntry {
+  chatterId: string;
+  name: string;
+  score: number;
+  photoUrl?: string;
+}
+
+/**
+ * Weekly challenge document
+ * Collection: chatter_weekly_challenges/{challengeId}
+ */
+export interface WeeklyChallenge {
+  /** Document ID (format: challenge-YYYY-WXX) */
+  id: string;
+
+  /** Challenge title (English) */
+  title: string;
+
+  /** Translated titles */
+  titleTranslations?: {
+    fr?: string;
+    en?: string;
+    es?: string;
+    pt?: string;
+    ar?: string;
+  };
+
+  /** Challenge description (English) */
+  description: string;
+
+  /** Translated descriptions */
+  descriptionTranslations?: {
+    fr?: string;
+    en?: string;
+    es?: string;
+    pt?: string;
+    ar?: string;
+  };
+
+  /** Challenge type */
+  type: WeeklyChallengeType;
+
+  /** Start date (Monday 00:00 UTC) */
+  startDate: Timestamp;
+
+  /** End date (Sunday 23:59 UTC) */
+  endDate: Timestamp;
+
+  /** Prize amounts in cents */
+  prizes: {
+    1: number; // 1st place: 5000 cents = $50
+    2: number; // 2nd place: 2500 cents = $25
+    3: number; // 3rd place: 1000 cents = $10
+  };
+
+  /** Current leaderboard (top 50) */
+  leaderboard: WeeklyChallengeLeaderboardEntry[];
+
+  /** Challenge status */
+  status: "active" | "completed" | "cancelled";
+
+  /** Week number of the year (1-52) */
+  weekNumber: number;
+
+  /** Year */
+  year: number;
+
+  /** Whether prizes have been awarded */
+  prizesAwarded: boolean;
+
+  /** Commission IDs for awarded prizes */
+  prizeCommissionIds: string[];
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+/**
+ * Response for getCurrentChallenge callable
+ */
+export interface GetCurrentChallengeResponse {
+  challenge: WeeklyChallenge | null;
+  myRank: number | null;
+  myScore: number | null;
+}
+
+/**
+ * Response for getChallengeHistory callable
+ */
+export interface GetChallengeHistoryResponse {
+  challenges: WeeklyChallenge[];
 }

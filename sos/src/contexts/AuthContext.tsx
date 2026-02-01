@@ -679,12 +679,22 @@ const createUserDocumentInFirestore = async (
         
         // ===== PRÉFÉRENCES =====
         preferredLanguage: additionalData.preferredLanguage || 'fr',
-        
+
+        // ===== TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD) =====
+        termsAccepted: additionalData.termsAccepted || false,
+        termsAcceptedAt: additionalData.termsAcceptedAt || null,
+        termsVersion: additionalData.termsVersion || null,
+        termsType: additionalData.termsType || null,
+        paymentTermsAccepted: additionalData.paymentTermsAccepted || false,
+        paymentTermsAcceptedAt: additionalData.paymentTermsAcceptedAt || null,
+        paymentTermsVersion: additionalData.paymentTermsVersion || null,
+        termsAcceptanceMeta: additionalData.termsAcceptanceMeta || null,
+
         // ===== TIMESTAMPS =====
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      
+
       console.log('✅ [Auth] Profil créé dans sos_profiles avec tous les champs:', {
         uid: firebaseUser.uid,
         type: additionalData.role,
@@ -727,6 +737,15 @@ const createUserDocumentInFirestore = async (
         isActive: true,
         isApproved: false,
         isVisible: false,
+        // ===== TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD) =====
+        termsAccepted: additionalData.termsAccepted || false,
+        termsAcceptedAt: additionalData.termsAcceptedAt || null,
+        termsVersion: additionalData.termsVersion || null,
+        termsType: additionalData.termsType || null,
+        paymentTermsAccepted: additionalData.paymentTermsAccepted || false,
+        paymentTermsAcceptedAt: additionalData.paymentTermsAcceptedAt || null,
+        paymentTermsVersion: additionalData.paymentTermsVersion || null,
+        termsAcceptanceMeta: additionalData.termsAcceptanceMeta || null,
         // Champs Stripe (seront remplis plus tard par createStripeAccount)
         stripeAccountId: null,
         stripeAccountStatus: null,
@@ -1567,12 +1586,34 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             }
           }
 
-          // Si tous les retries ont échoué, afficher un avertissement mais continuer
-          // Le onAuthStateChanged listener va réessayer de charger le document
+          // Si tous les retries ont échoué, essayer la création directe en fallback
           if (lastError) {
-            console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec définitif après " + MAX_RETRIES + " tentatives");
-            // On ne lance pas l'erreur - on laisse l'auth continuer
-            // Le polling dans onSnapshot va réessayer de trouver le document
+            console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec Cloud Function après " + MAX_RETRIES + " tentatives");
+            console.log("[DEBUG] " + "🔄 GOOGLE POPUP: Tentative fallback création directe Firestore...");
+
+            // ✅ FIX ORPHAN USERS: Fallback vers création directe si Cloud Function échoue
+            try {
+              await createUserDocumentInFirestore(googleUser, {
+                role: 'client',
+                email: googleUser.email || '',
+                preferredLanguage: 'fr',
+                provider: 'google.com',
+                ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+              });
+              console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document créé via fallback Firestore direct");
+            } catch (fallbackError) {
+              console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec fallback Firestore:", fallbackError);
+              // Vérifier si le document existe malgré tout (race condition possible)
+              const checkRef = doc(db, 'users', googleUser.uid);
+              const checkDoc = await getDoc(checkRef);
+              if (!checkDoc.exists()) {
+                // Document vraiment absent - afficher erreur mais ne pas bloquer
+                console.error("[DEBUG] " + "❌ GOOGLE POPUP: Document utilisateur non créé - orphan user possible");
+                setError("Votre compte a été créé mais le profil prend plus de temps. Veuillez rafraîchir la page.");
+              } else {
+                console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document existait déjà (race condition résolue)");
+              }
+            }
           }
         }
 
@@ -1676,8 +1717,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Vérification du retour...");
 
         // ⏱️ Timeout pour éviter blocage infini sur certains navigateurs
-        // ✅ Augmenté à 30s pour les réseaux lents (3G, pays émergents)
-        const REDIRECT_TIMEOUT = 30000; // 30 secondes
+        // ✅ Augmenté à 60s pour les réseaux lents (3G, pays émergents, Afrique, Asie)
+        const REDIRECT_TIMEOUT = 60000; // 60 secondes
         let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
         const resultPromise = getRedirectResult(auth);
@@ -1799,8 +1840,33 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             }
           }
 
+          // Si tous les retries ont échoué, essayer la création directe en fallback
           if (lastError) {
-            console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec définitif après " + MAX_RETRIES + " tentatives");
+            console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec Cloud Function après " + MAX_RETRIES + " tentatives");
+            console.log("[DEBUG] " + "🔄 GOOGLE REDIRECT: Tentative fallback création directe Firestore...");
+
+            // ✅ FIX ORPHAN USERS: Fallback vers création directe si Cloud Function échoue
+            try {
+              await createUserDocumentInFirestore(googleUser, {
+                role: 'client',
+                email: googleUser.email || '',
+                preferredLanguage: 'fr',
+                provider: 'google.com',
+                ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+              });
+              console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document créé via fallback Firestore direct");
+            } catch (fallbackError) {
+              console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec fallback Firestore:", fallbackError);
+              // Vérifier si le document existe malgré tout (race condition possible)
+              const checkRef = doc(db, 'users', googleUser.uid);
+              const checkDoc = await getDoc(checkRef);
+              if (!checkDoc.exists()) {
+                console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Document utilisateur non créé - orphan user possible");
+                setError("Votre compte a été créé mais le profil prend plus de temps. Veuillez rafraîchir la page.");
+              } else {
+                console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document existait déjà (race condition résolue)");
+              }
+            }
           }
         }
 

@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
+import { useChatterMissions } from '@/hooks/useChatterMissions';
 import {
   ChatterTrainingModule,
   ChatterTrainingProgress,
@@ -49,6 +50,9 @@ export function useChatterTraining(): UseChatterTrainingReturn {
   const [isLoadingModule, setIsLoadingModule] = useState(false);
   const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Track video watched for daily missions
+  const { trackVideoWatched } = useChatterMissions();
 
   // Load all training modules
   const loadModules = useCallback(async () => {
@@ -149,6 +153,9 @@ export function useChatterTraining(): UseChatterTrainingReturn {
           isCompleted: true,
           bestScore: Math.max(currentProgress.bestScore, data.score),
         });
+
+        // Track video watched for daily missions (quiz completion = video watched)
+        trackVideoWatched();
       }
 
       // Refresh modules list to get updated progress
@@ -162,7 +169,7 @@ export function useChatterTraining(): UseChatterTrainingReturn {
     } finally {
       setIsSubmittingQuiz(false);
     }
-  }, [currentProgress, loadModules]);
+  }, [currentProgress, loadModules, trackVideoWatched]);
 
   // Load certificate
   const loadCertificate = useCallback(async (certificateId: string) => {

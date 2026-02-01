@@ -115,8 +115,16 @@ const ChatterRegister: React.FC = () => {
         email: data.email,
         // Phone is collected later after quiz, not at registration
         country: data.country,
-        languages: data.languages,
-        recruiterCode: data.referralCode || undefined,
+        interventionCountries: data.interventionCountries, // Required by backend
+        language: data.language,
+        additionalLanguages: data.additionalLanguages,
+        recruitmentCode: data.referralCode || undefined, // Correct field name for backend
+        // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
+        acceptTerms: data.acceptTerms,
+        termsAcceptedAt: data.termsAcceptedAt,
+        termsVersion: data.termsVersion,
+        termsType: data.termsType,
+        termsAcceptanceMeta: data.termsAcceptanceMeta,
       });
 
       setSuccess(true);

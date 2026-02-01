@@ -657,12 +657,14 @@ async function handleCallCompleted(
 
     // === LOGS POUR DEBUG RACCROCHAGE ===
     console.log(`\n${'🏁'.repeat(30)}`);
+    // P0 FIX 2026-02-01: Minimum duration reduced from 120s (2 min) to 60s (1 min)
+    const MIN_CALL_DURATION = 60;
     console.log(`🏁 [${completedId}] === HANGUP SUMMARY ===`);
     console.log(`🏁 [${completedId}]   sessionId: ${sessionId}`);
     console.log(`🏁 [${completedId}]   participant who hung up: ${participantType}`);
     console.log(`🏁 [${completedId}]   billingDuration: ${billingDuration}s`);
-    console.log(`🏁 [${completedId}]   threshold (MIN_CALL_DURATION): 120s`);
-    console.log(`🏁 [${completedId}]   action taken: ${billingDuration >= 120 ? 'handleCallCompletion (CAPTURE)' : 'handleEarlyDisconnection (MAY REFUND)'}`);
+    console.log(`🏁 [${completedId}]   threshold (MIN_CALL_DURATION): ${MIN_CALL_DURATION}s`);
+    console.log(`🏁 [${completedId}]   action taken: ${billingDuration >= MIN_CALL_DURATION ? 'handleCallCompletion (CAPTURE)' : 'handleEarlyDisconnection (MAY REFUND)'}`);
 
     // Fetch final state for debug
     const finalSession = await twilioCallManager.getCallSession(sessionId);
