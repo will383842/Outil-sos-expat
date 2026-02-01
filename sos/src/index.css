@@ -6,7 +6,9 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    overflow-x: hidden;
+    /* ✅ FIX 2026: Retiré overflow-x: hidden - bloquait les carousels */
+    /* On utilise max-width: 100% pour contenir le contenu */
+    max-width: 100%;
     /* Mobile 2026: Allow scroll while eliminating zoom delay */
     touch-action: pan-x pan-y;
     -webkit-tap-highlight-color: transparent;
@@ -18,7 +20,7 @@
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
+    /* ✅ FIX 2026: Retiré overflow-x: hidden - bloquait les carousels */
     /* Use 100% instead of 100vw to avoid scrollbar width issues */
     max-width: 100%;
     width: 100%;
@@ -32,8 +34,9 @@
 
   /* Fix mobile viewport issues */
   #root {
-    overflow-x: hidden;
+    /* ✅ FIX 2026: Retiré overflow-x: hidden - bloquait les carousels */
     max-width: 100%;
+    width: 100%;
   }
 
   /* Mobile 2026: All interactive elements instant tap response */
@@ -226,12 +229,13 @@
 
 /* Ultra-strict overflow prevention */
 @media (max-width: 768px) {
-  /* Prevent all horizontal overflow on mobile - use 100% not 100vw to avoid scrollbar issues */
+  /* ✅ FIX 2026: Retiré overflow-x: hidden pour permettre les carousels */
+  /* On utilise width/max-width pour contenir le contenu sans bloquer les scrolls internes */
   html, body, #root {
-    overflow-x: hidden !important;
     max-width: 100% !important;
     width: 100% !important;
     position: relative !important;
+    /* overflow-x: hidden retiré - il bloquait les carousels */
   }
 
   /* Force all forms and inputs to respect viewport */

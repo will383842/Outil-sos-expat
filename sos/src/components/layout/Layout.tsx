@@ -176,7 +176,8 @@ const Layout: React.FC<LayoutProps> = ({
         />
       </Helmet>
 
-      <div className="min-h-screen flex flex-col bg-gray-50 antialiased overflow-x-hidden max-w-full">
+      {/* ✅ FIX 2026: Retiré overflow-x-hidden pour permettre les carousels - on utilise max-w-full pour contenir le contenu */}
+      <div className="min-h-screen flex flex-col bg-gray-50 antialiased max-w-full w-full">
         {/* Skip links pour accessibilité - Support 9 langues */}
         <nav aria-label="Skip links" className="sr-only focus-within:not-sr-only">
           <a
