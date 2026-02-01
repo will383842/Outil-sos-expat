@@ -249,14 +249,14 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
       role="region"
       aria-label={intl.formatMessage({ id: "aria.reviewsCarousel" })}
     >
-      {/* Container avec scroll horizontal */}
+      {/* Container avec scroll horizontal - MOBILE FIX */}
       <div
         ref={scrollContainerRef}
         className="flex flex-nowrap gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
         style={{
-          scrollPaddingInline: 'calc(50vw - 150px)',
-          paddingLeft: 'calc(50vw - 150px)',
-          paddingRight: 'calc(50vw - 150px)',
+          scrollPaddingInline: 'max(1rem, calc(50vw - 150px))',
+          paddingLeft: 'max(1rem, calc(50vw - 150px))',
+          paddingRight: 'max(1rem, calc(50vw - 150px))',
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
@@ -270,7 +270,8 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
           return (
             <article
               key={r.id}
-              className="flex-shrink-0 w-[300px] sm:w-[340px] md:w-[380px] snap-center"
+              className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px] snap-center"
+              style={{ minWidth: '280px' }}
             >
               <Link
                 to="/testimonials"
@@ -900,7 +901,7 @@ const OptimizedHomePage: React.FC = () => {
   }) => {
     return (
       <article
-        className={`group relative h-full flex flex-col p-8 rounded-3xl border ${borderColor} ${lightColor} transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] focus-within:scale-[1.02] overflow-hidden`}
+        className={`group relative h-full flex flex-col p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border ${borderColor} ${lightColor} transition-all duration-300 md:hover:shadow-2xl md:hover:scale-[1.02] focus-within:scale-[1.02] overflow-hidden`}
         aria-labelledby={`offer-${badgeKey}`}
       >
         <div
@@ -908,12 +909,12 @@ const OptimizedHomePage: React.FC = () => {
           aria-hidden="true"
         />
         <div className="relative z-10 flex-1 flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-full px-4 py-2 text-gray-900 text-sm font-semibold">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 sm:mb-6">
+            <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-gray-900 text-xs sm:text-sm font-semibold">
               {icon}
               <FormattedMessage id={badgeKey} />
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-xs sm:text-sm text-gray-600">
               <FormattedMessage id="pricing.callIn5Min" />
             </div>
           </div>
@@ -987,8 +988,8 @@ const OptimizedHomePage: React.FC = () => {
     gradient,
   }) => {
     return (
-      <article 
-        className="group relative h-full flex flex-col rounded-3xl border border-gray-200 bg-white p-8 sm:p-10 shadow-sm transition-all duration-300 hover:shadow-2xl"
+      <article
+        className="group relative h-full flex flex-col rounded-2xl sm:rounded-3xl border border-gray-200 bg-white p-4 sm:p-6 md:p-8 lg:p-10 shadow-sm transition-all duration-300 md:hover:shadow-2xl"
         aria-labelledby={`join-${label.toLowerCase().replace(/\s+/g, '-')}`}
       >
         <div
@@ -1008,7 +1009,7 @@ const OptimizedHomePage: React.FC = () => {
             </div>
           </div>
 
-          <h4 id={`join-${label.toLowerCase().replace(/\s+/g, '-')}`} className="mt-6 text-2xl sm:text-3xl font-black text-gray-900">
+          <h4 id={`join-${label.toLowerCase().replace(/\s+/g, '-')}`} className="mt-4 sm:mt-6 text-xl sm:text-2xl md:text-3xl font-black text-gray-900">
             {title}
           </h4>
 
@@ -1229,26 +1230,26 @@ const OptimizedHomePage: React.FC = () => {
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
           </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-6">
-            <div className="text-center mb-20">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-12 sm:mb-16 md:mb-20">
               <h1
                 id="main-heading"
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black mb-8 leading-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl font-black mb-6 sm:mb-8 leading-tight break-words"
               >
-                <span className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
+                <span className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
                   <FormattedMessage id="hero.title.line1" />
                 </span>
                 <br />
-                <span className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
+                <span className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
                   <FormattedMessage id="hero.title.line2" />
                 </span>
               </h1>
 
-              <h2 className="text-2xl md:text-3xl text-white font-semibold max-w-4xl mx-auto mb-3 leading-relaxed">
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white font-semibold max-w-4xl mx-auto mb-3 leading-relaxed">
                 <FormattedMessage id="hero.subtitle" />
               </h2>
-              
-              <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto mb-12 leading-relaxed">
+
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto mb-8 sm:mb-12 leading-relaxed">
                 <FormattedMessage id="hero.description" />
               </p>
 
@@ -1260,7 +1261,7 @@ const OptimizedHomePage: React.FC = () => {
                 {/* Mobile fix: hover:scale only on desktop (md:), active states for touch feedback */}
                 <Link
                   to="/sos-appel"
-                  className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 active:scale-[0.98] text-white px-10 sm:px-12 py-5 sm:py-6 rounded-3xl font-black text-lg sm:text-xl transition-colors duration-150 md:transition-all md:duration-200 md:hover:scale-105 md:hover:shadow-2xl md:hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent]"
+                  className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 active:scale-[0.98] text-white px-6 sm:px-10 md:px-12 py-4 sm:py-5 md:py-6 rounded-2xl sm:rounded-3xl font-black text-base sm:text-lg md:text-xl transition-colors duration-150 md:transition-all md:duration-200 md:hover:scale-105 md:hover:shadow-2xl md:hover:shadow-red-500/50 flex items-center justify-center space-x-2 sm:space-x-3 md:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent] w-full sm:w-auto max-w-xs sm:max-w-none"
                   aria-label={intl.formatMessage({ id: "aria.urgentCall" })}
                   style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
                 >
@@ -1286,25 +1287,25 @@ const OptimizedHomePage: React.FC = () => {
             </div>
 
             {/* Stats */}
-            <section 
-              className="grid grid-cols-2 md:grid-cols-3 gap-8"
+            <section
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
               aria-label={intl.formatMessage({ id: "aria.keyStats" })}
             >
               {stats.map((stat, index) => (
                 <div
                   key={index}
-                  className="group text-center p-8 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 touch-manipulation"
+                  className="group text-center p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300 md:hover:scale-105 touch-manipulation"
                 >
                   <div
-                    className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r ${stat.color} mb-4 group-hover:scale-110 transition-transform duration-300`}
+                    className={`inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-r ${stat.color} mb-3 sm:mb-4 md:group-hover:scale-110 transition-transform duration-300`}
                     aria-hidden="true"
                   >
                     <div className="text-white">{stat.icon}</div>
                   </div>
-                  <div className="text-4xl font-black text-white mb-2">
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2">
                     <FormattedMessage id={stat.valueKey} />
                   </div>
-                  <div className="text-gray-400 font-medium">
+                  <div className="text-xs sm:text-sm md:text-base text-gray-400 font-medium">
                     <FormattedMessage id={stat.labelKey} />
                   </div>
                 </div>

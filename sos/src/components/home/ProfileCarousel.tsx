@@ -487,7 +487,7 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
       {/* ✅ FIX: Première carte centrée sur l'écran grâce au padding calculé */}
       {/* ✅ FIX: pt-4 pour éviter que la première carte soit cachée par le bandeau de filtre */}
       <div
-        className="lg:hidden w-full overflow-hidden pt-4"
+        className="lg:hidden w-full pt-4"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div

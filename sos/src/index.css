@@ -245,9 +245,15 @@
     font-size: 16px !important;
   }
 
-  /* Force flex containers to wrap properly */
-  .flex {
+  /* ✅ FIX: Ne pas forcer flex-wrap globalement - casse les carousels */
+  /* Utiliser .flex-wrap-mobile explicitement si besoin */
+  .flex-wrap-mobile {
     flex-wrap: wrap;
+  }
+
+  /* Protéger les carousels du wrap forcé */
+  .flex-nowrap, [class*="carousel"], [class*="slider"] {
+    flex-wrap: nowrap !important;
   }
 
   /* Truncate long text */
@@ -265,9 +271,9 @@
   }
 
   /* Force cards and containers to respect parent width - use 100% not 100vw */
-  .card, article, section, div[class*="rounded"] {
+  /* ✅ FIX: Exclure les articles dans les carousels du overflow-x: hidden */
+  .card, section, div[class*="rounded"]:not([class*="carousel"]):not([class*="slider"]) {
     max-width: 100%;
-    overflow-x: hidden;
   }
 
   /* ⚠️ FIX 2026: Force ALL grid and flex containers to stay within viewport */

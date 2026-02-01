@@ -118,14 +118,17 @@ const Pricing: React.FC = () => {
   }, []);
 
   // ✅ FIX: Move effectivePrices and dynamicServices before handleSelectService
+  // ✅ FIX 2026: Calculate prices for BOTH currencies to display side by side
   const effectivePrices = useMemo(() => {
-    if (!pricing) return { lawyer: null, expat: null };
+    if (!pricing) return { lawyer: null, expat: null, lawyerUsd: null, expatUsd: null };
 
     return {
-      lawyer: getEffectivePrice(pricing as any, "lawyer", selectedCurrency),
-      expat: getEffectivePrice(pricing as any, "expat", selectedCurrency),
+      lawyer: getEffectivePrice(pricing as any, "lawyer", "eur"),
+      expat: getEffectivePrice(pricing as any, "expat", "eur"),
+      lawyerUsd: getEffectivePrice(pricing as any, "lawyer", "usd"),
+      expatUsd: getEffectivePrice(pricing as any, "expat", "usd"),
     };
-  }, [pricing, selectedCurrency]);
+  }, [pricing]);
 
   const dynamicServices = useMemo<DynamicService[]>(() => {
     if (!pricing || !effectivePrices.lawyer || !effectivePrices.expat)
@@ -336,6 +339,31 @@ const Pricing: React.FC = () => {
     [intl, selectedCurrency]
   );
 
+  // ✅ FIX 2026: Format prices for EUR and USD display
+  const formatPriceEur = useCallback(
+    (amount: number): string => {
+      return intl.formatNumber(amount, {
+        style: "currency",
+        currency: "EUR",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    },
+    [intl]
+  );
+
+  const formatPriceUsd = useCallback(
+    (amount: number): string => {
+      return intl.formatNumber(amount, {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    },
+    [intl]
+  );
+
   // SEO configuration
   const pageTitle = intl.formatMessage({ id: "pricing.heading" }) + " " + intl.formatMessage({ id: "pricing.headingHighlight" }) + " - SOS Expat";
   const pageDescription = intl.formatMessage({ id: "pricing.subtitle" });
@@ -440,105 +468,6 @@ const Pricing: React.FC = () => {
                 />
               </h2>
 
-              {/* Currency Selector */}
-              <div className="mb-8">
-                <div className="inline-flex bg-white/10 rounded-full p-1 backdrop-blur-sm border border-white/20">
-                  <button
-                    onClick={() => setSelectedCurrency("eur")}
-                    disabled={pricingLoading}
-                    className={`px-6 py-2 rounded-full transition-all font-semibold ${
-                      selectedCurrency === "eur"
-                        ? "bg-white text-gray-900"
-                        : "text-white hover:bg-white/10"
-                    } ${pricingLoading ? "opacity-60 cursor-not-allowed" : ""}`}
-                  >
-                    🇪🇺 EUR
-                  </button>
-                  <button
-                    onClick={() => setSelectedCurrency("usd")}
-                    disabled={pricingLoading}
-                    className={`px-6 py-2 rounded-full transition-all font-semibold ${
-                      selectedCurrency === "usd"
-                        ? "bg-white text-gray-900"
-                        : "text-white hover:bg-white/10"
-                    } ${pricingLoading ? "opacity-60 cursor-not-allowed" : ""}`}
-                  >
-                    🇺🇸 USD
-                  </button>
-                </div>
-              </div>
-
-              {/* Promo Code Input */}
-              <div className="max-w-md mx-auto">
-                <div className="flex rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20 overflow-hidden">
-                  <input
-                    type="text"
-                    placeholder={intl.formatMessage({ id: "pricing.promoPlaceholder" })}
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                    className="flex-1 px-6 py-4 bg-transparent text-white placeholder-white/60 focus:outline-none text-lg"
-                    maxLength={20}
-                  />
-                  <button
-                    onClick={() => validatePromoCode()}
-                    disabled={isValidating || !promoCode.trim()}
-                    className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 px-8 py-4 font-bold text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isValidating ? (
-                      <span className="flex items-center">
-                        <svg
-                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        {intl.formatMessage({ id: "pricing.validating" })}
-                      </span>
-                    ) : (
-                      intl.formatMessage({ id: "pricing.apply" })
-                    )}
-                  </button>
-                </div>
-
-                {error && (
-                  <p className="mt-4 text-red-300 bg-red-900/20 border border-red-500/30 rounded-2xl px-4 py-2">
-                    {error}
-                  </p>
-                )}
-
-                {activePromo && (
-                  <div className="mt-4 bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-2xl flex items-center border border-green-400/30">
-                    <CheckCircle className="w-5 h-5 mr-3" />
-                    <span className="font-semibold">
-                      {intl.formatMessage(
-                        { id: "pricing.promoApplied" },
-                        {
-                          code: activePromo.code,
-                          value: activePromo.discountValue,
-                          symbol:
-                            activePromo.discountType === "percentage"
-                              ? "%"
-                              : selectedCurrency.toUpperCase(),
-                        }
-                      )}
-                    </span>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </section>
@@ -672,21 +601,14 @@ const Pricing: React.FC = () => {
                                   )}
                                 </div>
                               ) : (
-                                <div className="flex items-end gap-3">
-                                  {hasPromoDiscount ? (
-                                    <>
-                                      <span className="text-gray-500 line-through text-2xl">
-                                        {formatPrice(originalPrice)}
-                                      </span>
-                                      <span className="text-5xl font-black text-red-600 leading-none">
-                                        {formatPrice(Math.round(discountedPrice))}
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <span className="text-5xl font-black text-gray-900 leading-none">
-                                      {formatPrice(originalPrice)}
-                                    </span>
-                                  )}
+                                <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-3">
+                                  {/* ✅ FIX 2026: Display BOTH EUR and USD prices */}
+                                  <span className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-none">
+                                    {formatPriceEur(isLawyer ? effectivePrices.lawyer?.price.totalAmount || 0 : effectivePrices.expat?.price.totalAmount || 0)}
+                                  </span>
+                                  <span className="text-xl sm:text-2xl font-extrabold text-gray-600 leading-none">
+                                    / {formatPriceUsd(isLawyer ? effectivePrices.lawyerUsd?.price.totalAmount || 0 : effectivePrices.expatUsd?.price.totalAmount || 0)}
+                                  </span>
                                 </div>
                               )}
                             </div>
