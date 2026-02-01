@@ -256,6 +256,24 @@
     flex-wrap: nowrap !important;
   }
 
+  /* ✅ FIX 2026: Permettre le scroll horizontal dans les carousels */
+  /* Les conteneurs avec overflow-x-auto doivent pouvoir scroller */
+  .overflow-x-auto, .carousel-scroll {
+    overflow-x: scroll !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-x !important;
+    overscroll-behavior-x: contain;
+    /* Isolation pour éviter les conflits avec overflow-hidden parent */
+    isolation: isolate;
+    contain: layout style;
+  }
+
+  /* Assurer que les sections contenant des carousels ne bloquent pas le scroll */
+  section:has(.carousel-scroll) {
+    overflow: visible !important;
+  }
+
   /* Truncate long text */
   .truncate-mobile {
     overflow: hidden;

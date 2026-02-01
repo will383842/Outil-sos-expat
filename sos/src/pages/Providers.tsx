@@ -769,7 +769,7 @@ const Providers: React.FC = () => {
         </div>
 
         {/* Results */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10 w-full overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-8 sm:pb-12 relative z-10 w-full overflow-x-hidden">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
               {filteredProviders.length} {t.expertsFound}

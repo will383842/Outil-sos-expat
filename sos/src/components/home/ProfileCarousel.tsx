@@ -486,16 +486,22 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
       {/* Mobile & Tablet - Scroll horizontal avec snap - CENTRÉ */}
       {/* ✅ FIX: Première carte centrée sur l'écran grâce au padding calculé */}
       {/* ✅ FIX: pt-4 pour éviter que la première carte soit cachée par le bandeau de filtre */}
+      {/* ✅ FIX 2026: overflow-visible sur le parent pour permettre le scroll enfant */}
       <div
         className="lg:hidden w-full pt-4"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        style={{
+          overflow: 'visible',
+          WebkitOverflowScrolling: 'touch'
+        }}
       >
         <div
-          className="flex flex-nowrap gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide"
+          className="flex flex-nowrap gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide carousel-scroll"
           style={{
             scrollPaddingInline: 'calc(50vw - 140px)',
             paddingLeft: 'calc(50vw - 140px)',
             paddingRight: 'calc(50vw - 140px)',
+            touchAction: 'pan-x',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
           {displayProviders.map((provider, index) => (
@@ -546,11 +552,18 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-        /* Amélioration tactile mobile */
+        /* ✅ FIX 2026: Force le scroll horizontal sur mobile */
         @media (max-width: 1023px) {
-          .scrollbar-hide {
+          .carousel-scroll {
+            overflow-x: scroll !important;
+            overflow-y: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
             scroll-snap-type: x mandatory;
             overscroll-behavior-x: contain;
+            touch-action: pan-x !important;
+            /* Isolation du conteneur pour éviter les conflits avec overflow-hidden parent */
+            position: relative;
+            z-index: 1;
           }
         }
       `}</style>

@@ -250,9 +250,10 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
       aria-label={intl.formatMessage({ id: "aria.reviewsCarousel" })}
     >
       {/* Container avec scroll horizontal - MOBILE FIX */}
+      {/* ✅ FIX 2026: carousel-scroll pour forcer le scroll tactile */}
       <div
         ref={scrollContainerRef}
-        className="flex flex-nowrap gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+        className="flex flex-nowrap gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide carousel-scroll"
         style={{
           scrollPaddingInline: 'max(1rem, calc(50vw - 150px))',
           paddingLeft: 'max(1rem, calc(50vw - 150px))',
@@ -260,6 +261,7 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-x',
         }}
       >
         {REVIEWS.map((r, idx) => {
@@ -1315,11 +1317,13 @@ const OptimizedHomePage: React.FC = () => {
         </header>
 
         {/* ================= EXPERTS ================= */}
+        {/* ✅ FIX 2026: Pas de overflow-hidden ici pour permettre le scroll du carousel */}
         <section
-          className="py-16 sm:py-28 bg-gradient-to-b from-white via-rose-50 to-white relative overflow-hidden touch-manipulation"
+          className="py-16 sm:py-28 bg-gradient-to-b from-white via-rose-50 to-white relative touch-manipulation"
           aria-labelledby="experts-heading"
         >
-          <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          {/* Éléments décoratifs dans leur propre conteneur avec overflow-hidden */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
             <div className="absolute top-1/4 right-1/4 w-40 sm:w-80 h-40 sm:h-80 bg-gradient-to-r from-red-400/10 to-orange-400/10 rounded-full blur-2xl" />
             <div className="absolute bottom-1/4 left-1/4 w-40 sm:w-80 h-40 sm:h-80 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full blur-2xl" />
           </div>
@@ -1662,12 +1666,13 @@ const OptimizedHomePage: React.FC = () => {
         </section>
 
         {/* ================= REVIEWS ================= */}
-        <section 
-          className="py-28 sm:py-32 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden"
+        {/* ✅ FIX 2026: Pas de overflow-hidden pour permettre le scroll du carousel des avis */}
+        <section
+          className="py-28 sm:py-32 bg-gradient-to-b from-white to-gray-50 relative"
           aria-labelledby="reviews-heading"
         >
-          {/* ✅ PERF: blur-3xl masqué sur mobile */}
-          <div className="absolute inset-0 hidden md:block" aria-hidden="true">
+          {/* ✅ PERF: blur-3xl masqué sur mobile - overflow-hidden sur ce conteneur seulement */}
+          <div className="absolute inset-0 hidden md:block overflow-hidden" aria-hidden="true">
             <div className="absolute -top-10 left-1/4 w-80 h-80 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl" />
             <div className="absolute -bottom-10 right-1/4 w-96 h-96 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-full blur-3xl" />
           </div>
