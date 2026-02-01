@@ -675,10 +675,10 @@ const Providers: React.FC = () => {
         contentType="ItemList"
         aiSummary={`Liste de ${stats.totalProviders} experts vérifiés (avocats et expatriés) disponibles pour des consultations`}
       />
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 overflow-x-hidden">
         {/* Header - FIX: Tailles responsives pour mobile */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-10 sm:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-10 sm:py-16 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full">
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4">{t.title}</h1>
             <p className="text-base sm:text-xl text-red-100 max-w-2xl mx-auto mb-6 sm:mb-8">{t.subtitle}</p>
             <div className="flex justify-center space-x-4 sm:space-x-8 text-base sm:text-lg">
@@ -703,8 +703,8 @@ const Providers: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white border-b border-gray-200 py-6 relative z-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white border-b border-gray-200 py-6 relative z-20 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
               {/* Search */}
               <div className="relative flex-1 max-w-md w-full">
@@ -752,15 +752,15 @@ const Providers: React.FC = () => {
                 </select>
               </div>
               
-              <label htmlFor="online-filter" className="flex items-center gap-3 min-h-[48px] px-3 py-2 rounded-xl hover:bg-gray-50 cursor-pointer touch-manipulation select-none">
+              <label htmlFor="online-filter" className="flex items-center gap-3 min-h-[48px] px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer touch-manipulation select-none border border-gray-200">
                 <input
                   id="online-filter"
                   type="checkbox"
                   checked={onlineOnly}
                   onChange={(e) => setOnlineOnly(e.target.checked)}
-                  className="h-5 w-5 text-red-600 focus:ring-red-500 border-gray-300 rounded touch-manipulation"
+                  className="h-6 w-6 text-red-600 focus:ring-red-500 border-gray-300 rounded touch-manipulation"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-base text-gray-700">
                   {t.onlineOnly}
                 </span>
               </label>
@@ -769,15 +769,15 @@ const Providers: React.FC = () => {
         </div>
 
         {/* Results */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10 w-full overflow-x-hidden">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
               {filteredProviders.length} {t.expertsFound}
             </h2>
           </div>
 
-          {/* ⚠️ FIX: Réduire le gap sur mobile et ajouter max-w-full pour éviter débordement */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-full">
+          {/* FIX: Grille responsive avec overflow hidden pour eviter debordement */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden">
             {filteredProviders.map((provider) => (
               <div
                 key={provider.id}
@@ -888,15 +888,17 @@ const Providers: React.FC = () => {
           </div>
 
           {filteredProviders.length === 0 && !isLoading && (
-            <div className="text-center py-12 px-4 max-w-md mx-auto">
-              <div className="text-5xl mb-4">🔍</div>
-              <div className="text-gray-700 text-lg sm:text-xl font-medium mb-4">{t.noExperts}</div>
-              <button
-                onClick={resetFilters}
-                className="text-red-600 hover:text-red-700 font-semibold text-base sm:text-lg underline underline-offset-2"
-              >
-                {t.resetFilters}
-              </button>
+            <div className="text-center py-8 sm:py-12 w-full overflow-hidden">
+              <div className="max-w-xs sm:max-w-md mx-auto px-4">
+                <div className="text-4xl sm:text-5xl mb-4">🔍</div>
+                <div className="text-gray-700 text-base sm:text-xl font-medium mb-4">{t.noExperts}</div>
+                <button
+                  onClick={resetFilters}
+                  className="text-red-600 hover:text-red-700 font-semibold text-sm sm:text-lg underline underline-offset-2 min-h-[44px] touch-manipulation"
+                >
+                  {t.resetFilters}
+                </button>
+              </div>
             </div>
           )}
         </div>

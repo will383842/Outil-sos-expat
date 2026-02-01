@@ -1380,12 +1380,13 @@ const ModernProfileCard: React.FC<{
   );
 
   return (
-    <div className="flex-shrink-0 w-full lg:w-auto flex justify-center">
+    <div className="flex-shrink-0 w-full lg:w-auto flex justify-center overflow-hidden">
       <article
         className={`
           relative bg-white rounded-2xl overflow-hidden cursor-pointer
           transition-all duration-300 ease-out border-2 shadow-lg
-          w-full max-w-[340px] h-auto min-h-[480px]
+          w-[calc(100%-1rem)] max-w-[340px] h-auto min-h-[480px]
+          sm:w-full sm:max-w-[340px]
           lg:w-[320px] lg:h-[520px] lg:min-h-0
           xl:w-[340px] xl:h-[540px]
           2xl:w-[360px] 2xl:h-[560px]
@@ -1443,18 +1444,18 @@ const ModernProfileCard: React.FC<{
                 inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium
                 backdrop-blur-sm border shadow-sm transition-colors
                 ${statusColors.badge}
-                min-h-[36px] sm:min-h-[44px]
+                min-h-[44px]
               `}
               role="status"
               aria-live="polite"
               aria-label={ariaLabels.status}
             >
               {availability === 'available' ? (
-                <Wifi className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+                <Wifi className="w-4 h-4" aria-hidden="true" />
               ) : availability === 'busy' ? (
-                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+                <Clock className="w-4 h-4" aria-hidden="true" />
               ) : (
-                <WifiOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+                <WifiOff className="w-4 h-4" aria-hidden="true" />
               )}
               <span>
                 {availability === 'available'
@@ -1470,10 +1471,10 @@ const ModernProfileCard: React.FC<{
           <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3">
             <div
               className={`
-              inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full 
+              inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full
               backdrop-blur-sm border shadow-sm border-white/30
               ${professionInfo.bgColor} ${professionInfo.textColor}
-              min-h-[36px] sm:min-h-[44px]
+              min-h-[44px]
             `}
             >
               <span className="text-xs sm:text-sm font-medium">
@@ -1492,14 +1493,14 @@ const ModernProfileCard: React.FC<{
           {/* Note */}
           <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3">
             <div
-              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/95 backdrop-blur-sm border border-slate-200 shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/95 backdrop-blur-sm border border-slate-200 shadow-sm min-h-[36px]"
               aria-label={ariaLabels.rating}
             >
               <Star
-                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 fill-current"
+                className="w-4 h-4 text-amber-500 fill-current"
                 aria-hidden="true"
               />
-              <span className="text-slate-800 text-xs sm:text-sm font-medium">
+              <span className="text-slate-800 text-sm font-medium">
                 {provider.rating.toFixed(1)}
               </span>
             </div>
@@ -1508,7 +1509,7 @@ const ModernProfileCard: React.FC<{
 
         {/* Contenu principal */}
         <div
-          className="p-2.5 sm:p-3 flex flex-col"
+          className="p-3 sm:p-4 flex flex-col"
           style={{ height: "45%" }}
         >
           {/* Nom et expérience */}
@@ -1517,9 +1518,9 @@ const ModernProfileCard: React.FC<{
               <h3 className="text-lg sm:text-xl font-bold text-slate-800 truncate flex-1">
                 {provider.name}
               </h3>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-teal-50 border border-teal-200 flex-shrink-0">
-                <Zap className="w-3 h-3 text-teal-600" aria-hidden="true" />
-                <span className="text-teal-600 text-[10px] sm:text-xs font-medium">
+              <div className="flex items-center gap-1 px-2 py-1.5 rounded-md bg-teal-50 border border-teal-200 flex-shrink-0 min-h-[32px]">
+                <Zap className="w-3.5 h-3.5 text-teal-600" aria-hidden="true" />
+                <span className="text-teal-600 text-xs font-medium">
                   {provider.yearsOfExperience}{" "}
                   <FormattedMessage id="sosCall.card.years" />
                 </span>
@@ -1528,12 +1529,12 @@ const ModernProfileCard: React.FC<{
           </div>
 
           {/* Informations */}
-          <div className="space-y-1.5 sm:space-y-2 flex-1 overflow-hidden">
+          <div className="space-y-2 flex-1 overflow-hidden">
             {/* Pays d'intervention */}
             {formattedCountries && (
-              <div className="flex items-start gap-1.5 sm:gap-2">
-                <MapPin className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                <span className="text-blue-600 text-xs sm:text-sm leading-tight line-clamp-2">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <span className="text-blue-600 text-xs sm:text-sm leading-relaxed line-clamp-2">
                   {formattedCountries}
                 </span>
               </div>
@@ -1541,9 +1542,9 @@ const ModernProfileCard: React.FC<{
 
             {/* Langues parlées */}
             {formattedLanguages && (
-              <div className="flex items-start gap-1.5 sm:gap-2">
-                <Globe className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                <span className="text-indigo-600 text-xs sm:text-sm leading-tight line-clamp-2">
+              <div className="flex items-start gap-2">
+                <Globe className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <span className="text-indigo-600 text-xs sm:text-sm leading-relaxed line-clamp-2">
                   {formattedLanguages}
                 </span>
               </div>
@@ -1551,9 +1552,9 @@ const ModernProfileCard: React.FC<{
 
             {/* Spécialités */}
             {formattedSpecialties && (
-              <div className="flex items-start gap-1.5 sm:gap-2">
-                <Briefcase className="w-3.5 h-3.5 text-purple-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                <span className="text-purple-600 text-xs sm:text-sm leading-tight line-clamp-2">
+              <div className="flex items-start gap-2">
+                <Briefcase className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <span className="text-purple-600 text-xs sm:text-sm leading-relaxed line-clamp-2">
                   {formattedSpecialties}
                 </span>
               </div>
@@ -1562,14 +1563,14 @@ const ModernProfileCard: React.FC<{
 
           {/* Stats */}
           <div className="flex items-center justify-between pt-2 border-t border-slate-200 mt-auto">
-            <div className="flex items-center gap-1">
-              <Users className="w-3 h-3 text-amber-600" aria-hidden="true" />
-              <span className="text-amber-600 text-[10px] sm:text-xs font-medium">
+            <div className="flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-amber-600" aria-hidden="true" />
+              <span className="text-amber-600 text-xs font-medium">
                 {provider.reviewCount}{" "}
                 <FormattedMessage id="sosCall.card.reviews" />
               </span>
             </div>
-            <div className="text-slate-500 text-[10px] sm:text-xs">
+            <div className="text-slate-500 text-xs">
               <FormattedMessage
                 id={
                   provider.type === "lawyer"
@@ -1584,8 +1585,8 @@ const ModernProfileCard: React.FC<{
           <div className="mt-2 sm:mt-3">
             <button
               className={`
-                w-full rounded-lg font-bold text-xs sm:text-sm text-white
-                transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2
+                w-full rounded-xl font-bold text-sm text-white
+                transition-all duration-300 flex items-center justify-center gap-2
                 border-2 shadow-lg relative overflow-hidden
                 ${statusColors.button}
                 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]
@@ -1594,8 +1595,8 @@ const ModernProfileCard: React.FC<{
                 touch-manipulation
               `}
               style={{
-                minHeight: "44px",
-                padding: "10px 14px",
+                minHeight: "48px",
+                padding: "12px 16px",
               }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -1604,11 +1605,11 @@ const ModernProfileCard: React.FC<{
               type="button"
               aria-label={ariaLabels.viewProfile}
             >
-              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+              <Eye className="w-4 h-4" aria-hidden="true" />
               <span className="font-bold">
                 <FormattedMessage id="sosCall.card.viewProfile" />
               </span>
-              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -1659,11 +1660,11 @@ const FAQSection: React.FC<{
 
   return (
     <section
-      className="py-10 sm:py-12 lg:py-16 bg-gray-900"
+      className="py-10 sm:py-12 lg:py-16 bg-gray-900 overflow-hidden"
       aria-labelledby="faq-heading"
       id="faq"
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 w-full">
         {/* ===== H2 - Titre FAQ ===== */}
         <div className="text-center mb-6 sm:mb-10">
           <h2
@@ -2054,7 +2055,10 @@ const FilterBottomSheet: React.FC<{
         {/* Footer */}
         <div className="px-5 py-4 border-t border-white/10 flex gap-3">
           <button
-            onClick={resetFilters}
+            onClick={() => {
+              resetFilters();
+              onClose();
+            }}
             className="flex-1 py-4 px-4 rounded-2xl font-semibold text-gray-300 bg-white/5 border-2 border-white/10 flex items-center justify-center gap-2 active:scale-[0.98] touch-manipulation min-h-[60px]"
           >
             <RotateCcw className="w-5 h-5" />
@@ -3431,7 +3435,7 @@ const SOSCall: React.FC = () => {
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pt-0 pt-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pt-0 pt-4 w-full overflow-hidden">
             {/* ===== H2 - Titre de section (Desktop uniquement) ===== */}
             <div className="text-center mb-5 sm:mb-8">
               <h2
@@ -3730,9 +3734,9 @@ const SOSCall: React.FC = () => {
                 </div>
 
                 {/* Quick Filter Chips - SCROLL HORIZONTAL */}
-                <div 
-                  className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide lg:overflow-visible lg:flex-wrap lg:mx-0 lg:px-0 lg:pb-0 lg:justify-center lg:gap-3"
-                  style={{ 
+                <div
+                  className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide lg:overflow-visible lg:flex-wrap lg:pb-0 lg:justify-center lg:gap-3 max-w-full"
+                  style={{
                     WebkitOverflowScrolling: 'touch',
                   }}
                 >
@@ -3880,14 +3884,14 @@ const SOSCall: React.FC = () => {
               <>
                 {/* Skeleton Mobile - Grille verticale */}
                 <div
-                  className="lg:hidden space-y-4 pb-24"
+                  className="lg:hidden space-y-4 pb-24 w-full max-w-full"
                   aria-label={intl.formatMessage({ id: "sosCall.loading.ariaLabel", defaultMessage: "Chargement des experts" })}
                   aria-busy="true"
                 >
                   {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={`sk-mobile-${index}`} className="flex justify-center">
+                    <div key={`sk-mobile-${index}`} className="flex justify-center w-full max-w-full">
                       <div
-                        className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden animate-pulse w-full max-w-[340px] min-h-[400px]"
+                        className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden animate-pulse w-full max-w-[calc(100vw-2rem)] sm:max-w-[340px] min-h-[400px]"
                         role="article"
                       >
                         <div className="w-full h-52 bg-white/10" />
@@ -3930,13 +3934,13 @@ const SOSCall: React.FC = () => {
                     📱 Version Mobile - Grille verticale 1 colonne
                 ======================================== */}
                 <div
-                  className="lg:hidden space-y-4 pb-24 relative z-10"
+                  className="lg:hidden space-y-4 pb-24 relative z-10 w-full overflow-x-hidden"
                   role="list"
                   aria-label={intl.formatMessage({ id: "sosCall.providerList.mobileAriaLabel" })}
                 >
                   {/* Affiche tous les providers filtrés sur mobile (pas de pagination) */}
                   {filteredProviders.map((provider, index) => (
-                    <div key={provider.id} className="flex justify-center w-full" role="listitem">
+                    <div key={provider.id} className="flex justify-center w-full overflow-hidden" role="listitem">
                       <ModernProfileCard
                         provider={provider}
                         onProfileClick={handleProviderClick}
@@ -3986,8 +3990,8 @@ const SOSCall: React.FC = () => {
                 </div>
               </>
             ) : (
-              <div className="w-full px-4 py-10 sm:py-14" role="status" aria-live="polite">
-                <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-5 sm:p-10 max-w-sm sm:max-w-md mx-auto text-center">
+              <div className="w-full py-10 sm:py-14 overflow-hidden" role="status" aria-live="polite">
+                <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-5 sm:p-10 max-w-xs sm:max-w-md mx-auto text-center">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     <Search className="w-6 h-6 sm:w-7 sm:h-7 text-gray-200" aria-hidden="true" />
                   </div>
@@ -4040,6 +4044,14 @@ const SOSCall: React.FC = () => {
 
       {/* Global Styles */}
       <style>{`
+        /* Prevent horizontal overflow on mobile */
+        @media (max-width: 1023px) {
+          html, body {
+            overflow-x: hidden;
+            max-width: 100vw;
+          }
+        }
+
         .scrollbar-hide {
           scrollbar-width: none;
           -ms-overflow-style: none;
@@ -4047,7 +4059,7 @@ const SOSCall: React.FC = () => {
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
-        
+
         select option {
           background-color: #1f2937;
           color: white;

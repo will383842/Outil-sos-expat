@@ -192,7 +192,7 @@ function CarouselSkeleton() {
       {[...Array(4)].map((_, i) => (
         <div
           key={i}
-          className="flex-shrink-0 w-[280px] sm:w-[300px] h-[280px] sm:h-[288px] bg-gray-800/50 rounded-2xl animate-pulse"
+          className="flex-shrink-0 w-[280px] sm:w-[300px] h-[520px] bg-gray-800/50 rounded-2xl animate-pulse"
         >
           <div className="p-4">
             <div className="w-20 h-20 bg-gray-700/50 rounded-full mx-auto mb-4" />
@@ -252,8 +252,11 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
       {/* Container avec scroll horizontal */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 px-4 sm:px-6 snap-x snap-mandatory scrollbar-hide"
+        className="flex flex-nowrap gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
         style={{
+          scrollPaddingInline: 'calc(50vw - 150px)',
+          paddingLeft: 'calc(50vw - 150px)',
+          paddingRight: 'calc(50vw - 150px)',
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
@@ -1431,37 +1434,6 @@ const OptimizedHomePage: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="text-center mb-8" role="radiogroup" aria-label={intl.formatMessage({ id: "aria.currencySelector" })}>
-                  <div className="inline-flex bg-white/10 rounded-full p-1 backdrop-blur-sm border border-white/20">
-                    <button
-                      onClick={() => setSelectedCurrency("eur")}
-                      className={`px-6 py-2 rounded-full transition-all font-semibold ${
-                        selectedCurrency === "eur"
-                          ? "bg-white text-gray-900"
-                          : "text-white hover:bg-white/10"
-                      }`}
-                      role="radio"
-                      aria-checked={selectedCurrency === "eur"}
-                      aria-label={intl.formatMessage({ id: "aria.selectEuro" })}
-                    >
-                      <FormattedMessage id="currency.eur.flag" /> <FormattedMessage id="currency.eur.code" />
-                    </button>
-                    <button
-                      onClick={() => setSelectedCurrency("usd")}
-                      className={`px-6 py-2 rounded-full transition-all font-semibold ${
-                        selectedCurrency === "usd"
-                          ? "bg-white text-gray-900"
-                          : "text-white hover:bg-white/10"
-                      }`}
-                      role="radio"
-                      aria-checked={selectedCurrency === "usd"}
-                      aria-label={intl.formatMessage({ id: "aria.selectDollar" })}
-                    >
-                      <FormattedMessage id="currency.usd.flag" /> <FormattedMessage id="currency.usd.code" />
-                    </button>
-                  </div>
-                </div>
-
                 {(() => {
                   const currency = selectedCurrency;
 

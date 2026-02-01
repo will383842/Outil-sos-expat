@@ -124,7 +124,7 @@ export const LandingCTA = memo<LandingCTAProps>(({
           {/* Primary CTA */}
           <Link
             to={primaryUrl}
-            className="group relative overflow-hidden bg-white text-red-600 hover:text-red-700 px-10 sm:px-12 py-5 sm:py-6 rounded-3xl font-black text-lg sm:text-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center gap-4 touch-manipulation"
+            className="group relative overflow-hidden bg-white text-red-600 md:hover:text-red-700 px-10 sm:px-12 py-5 sm:py-6 rounded-3xl font-black text-lg sm:text-xl transition-colors duration-150 md:transition-all md:duration-200 active:scale-[0.98] md:hover:scale-105 md:hover:shadow-2xl flex items-center gap-4 touch-manipulation"
           >
             <Phone className="w-6 h-6" />
             <span>{primaryText}</span>
@@ -135,7 +135,7 @@ export const LandingCTA = memo<LandingCTAProps>(({
           {secondaryUrl && secondaryText && (
             <Link
               to={secondaryUrl}
-              className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-10 sm:px-12 py-5 sm:py-6 rounded-3xl font-bold text-lg sm:text-xl transition-all duration-300 hover:scale-105 hover:bg-white/10 flex items-center gap-4 touch-manipulation"
+              className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-10 sm:px-12 py-5 sm:py-6 rounded-3xl font-bold text-lg sm:text-xl transition-colors duration-150 md:transition-all md:duration-200 active:scale-[0.98] md:hover:scale-105 md:hover:bg-white/10 flex items-center gap-4 touch-manipulation"
             >
               <span>{secondaryText}</span>
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
