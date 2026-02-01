@@ -3,9 +3,9 @@ import * as admin from 'firebase-admin';
 
 export const checkProviderInactivity = scheduler.onSchedule(
   {
-    // 2026-02-01: Réduit à toutes les heures pour économiser sur les coûts Firebase (était 15 min)
+    // 2026-01-19: Toutes les 15 minutes pour mettre hors ligne les prestataires inactifs
     // Le frontend ne peut pas gérer les cas où l'onglet est fermé/arrière-plan
-    schedule: '0 * * * *', // Every hour (reduced from 15 min to save costs)
+    schedule: 'every 15 minutes',
     timeZone: 'Europe/Paris',
     // ✅ BUG FIX: Ajouter configuration pour éviter les échecs silencieux
     region: 'europe-west1',
