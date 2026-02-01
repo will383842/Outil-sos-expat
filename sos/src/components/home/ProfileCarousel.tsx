@@ -485,8 +485,9 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
 
       {/* Mobile & Tablet - Scroll horizontal avec snap - CENTRÉ */}
       {/* ✅ FIX: Première carte centrée sur l'écran grâce au padding calculé */}
+      {/* ✅ FIX: pt-4 pour éviter que la première carte soit cachée par le bandeau de filtre */}
       <div
-        className="lg:hidden w-full overflow-hidden"
+        className="lg:hidden w-full overflow-hidden pt-4"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div
