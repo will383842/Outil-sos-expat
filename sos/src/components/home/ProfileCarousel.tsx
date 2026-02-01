@@ -483,26 +483,19 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         </div>
       )}
 
-      {/* Mobile & Tablet - Scroll horizontal avec snap - CENTRÉ */}
-      {/* ✅ FIX 2026: Structure simplifiée comme TestimonialsSection */}
+      {/* Mobile & Tablet - Scroll horizontal avec snap - IDENTIQUE à TestimonialsSection */}
       <div
-        className="lg:hidden flex gap-4 sm:gap-5 pb-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+        className="lg:hidden flex gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
         style={{
-          scrollPaddingInline: 'calc(50vw - 140px)',
-          paddingLeft: 'calc(50vw - 140px)',
-          paddingRight: 'calc(50vw - 140px)',
-          paddingTop: '1rem',
-          WebkitOverflowScrolling: 'touch',
+          scrollPaddingInline: 'calc(50vw - 150px)',
+          paddingLeft: 'calc(50vw - 150px)',
+          paddingRight: 'calc(50vw - 150px)',
         }}
       >
         {displayProviders.map((provider, index) => (
           <div
             key={`${provider.id}-${rotationIndex}`}
-            className="flex-shrink-0 snap-center"
-            style={{
-              minWidth: '280px',
-              maxWidth: '300px',
-            }}
+            className="flex-shrink-0 w-[300px] sm:w-[320px] snap-center"
           >
             <ModernProfileCard
               provider={provider}

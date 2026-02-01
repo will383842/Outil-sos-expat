@@ -362,12 +362,11 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
         <article
           className={`
             relative bg-white rounded-2xl overflow-hidden cursor-pointer
-            transition-all duration-300 ease-out border-2 shadow-lg
+            border-2 shadow-lg
             w-[280px] sm:w-[300px] h-[520px] max-w-[calc(100vw-32px)]
             ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
-            ${isHovered ? `scale-[1.02] ${statusColors.glow} shadow-xl` : ""}
             focus:outline-none focus:ring-4 focus:ring-blue-500/50
-            hover:shadow-xl
+            lg:transition-shadow lg:duration-300 lg:hover:shadow-xl
           `}
           onClick={handleClick}
           onMouseEnter={handleMouseEnter}
@@ -395,9 +394,9 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               src={provider.avatar || provider.profilePhoto || DEFAULT_AVATAR}
               alt={`Photo de profil de ${provider.name}`}
               className={`
-              w-full h-full object-cover transition-all duration-300 pointer-events-none
+              w-full h-full object-cover pointer-events-none
+              transition-opacity duration-300
               ${imageLoaded ? "opacity-100" : "opacity-0"}
-              ${isHovered ? "scale-105" : ""}
             `}
               onLoad={() => setImageLoaded(true)}
               onError={handleImageError}
@@ -582,35 +581,32 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
           </div>
         </article>
 
-        {/* Styles optimisés avec prefers-reduced-motion */}
+        {/* Styles optimisés - animations désactivées sur mobile pour éviter les problèmes de scroll */}
         <style>{`
-        article {
-          animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        
-        @keyframes slideInUp {
-          to {
-            opacity: 1;
-            transform: translateY(0);
+        /* Animation uniquement sur desktop */
+        @media (min-width: 1024px) {
+          article {
+            animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+          }
+
+          @keyframes slideInUp {
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
         }
-        
+
         @media (prefers-reduced-motion: reduce) {
           article {
-            animation: none;
-            opacity: 1;
-            transform: none;
-          }
-          
-          *, *::before, *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
           }
         }
-        
+
         /* Optimisation focus pour navigation clavier */
         article:focus-visible {
           outline: 2px solid #3b82f6;
