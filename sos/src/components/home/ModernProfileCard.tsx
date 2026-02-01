@@ -358,7 +358,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
     );
 
     return (
-      <div className="flex-shrink-0 flex justify-center max-w-full">
+      <div className="flex-shrink-0 flex justify-center max-w-full select-none">
         <article
           className={`
             relative bg-white rounded-2xl overflow-hidden cursor-pointer
@@ -368,7 +368,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
             ${isHovered ? `scale-[1.02] ${statusColors.glow} shadow-xl` : ""}
             focus:outline-none focus:ring-4 focus:ring-blue-500/50
             hover:shadow-xl
-            touch-manipulation
+            select-none
           `}
           onClick={handleClick}
           onMouseEnter={handleMouseEnter}
@@ -382,10 +382,15 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
           tabIndex={0}
           role="button"
           aria-label={ariaLabels.card}
+          draggable="false"
           style={{
             animationDelay: `${index * 100}ms`,
             WebkitTapHighlightColor: 'transparent',
-          }}
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+            WebkitUserDrag: 'none',
+            touchAction: 'pan-x pan-y',
+          } as React.CSSProperties}
         >
           {/* Header avec photo et statut - Dimensions explicites pour éviter layout shift */}
           <div
@@ -395,7 +400,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               src={provider.avatar || provider.profilePhoto || DEFAULT_AVATAR}
               alt={`Photo de profil de ${provider.name}`}
               className={`
-              w-full h-full object-cover transition-all duration-300
+              w-full h-full object-cover transition-all duration-300 select-none pointer-events-none
               ${imageLoaded ? "opacity-100" : "opacity-0"}
               ${isHovered ? "scale-105" : ""}
             `}
@@ -405,6 +410,12 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               decoding="async"
               width={CARD_DIMENSIONS.width}
               height={CARD_DIMENSIONS.imageHeight}
+              draggable="false"
+              style={{
+                WebkitUserDrag: 'none',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+              } as React.CSSProperties}
             />
 
             {/* Overlay gradient amélioré */}
