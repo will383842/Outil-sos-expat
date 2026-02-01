@@ -483,29 +483,28 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         </div>
       )}
 
-      {/* Mobile & Tablet - Scroll horizontal avec snap - IDENTIQUE à TestimonialsSection */}
+      {/* Mobile & Tablet - Scroll horizontal avec snap - VERSION SIMPLE QUI FONCTIONNE */}
       <div
-        className="lg:hidden flex gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
-        style={{
-          scrollPaddingInline: 'calc(50vw - 150px)',
-          paddingLeft: 'calc(50vw - 150px)',
-          paddingRight: 'calc(50vw - 150px)',
-        }}
+        className="lg:hidden w-full max-w-full"
       >
-        {displayProviders.map((provider, index) => (
-          <div
-            key={`${provider.id}-${rotationIndex}`}
-            className="flex-shrink-0 w-[300px] sm:w-[320px] snap-center"
-          >
-            <ModernProfileCard
-              provider={provider}
-              onProfileClick={handleProfileClick}
-              isUserConnected={isUserConnected}
-              index={index}
-              language={language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar"}
-            />
-          </div>
-        ))}
+        <div
+          className="flex gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide px-4 sm:px-6"
+        >
+          {displayProviders.map((provider, index) => (
+            <div
+              key={`${provider.id}-${rotationIndex}`}
+              className="flex-shrink-0 snap-center first:ml-0 last:mr-0"
+            >
+              <ModernProfileCard
+                provider={provider}
+                onProfileClick={handleProfileClick}
+                isUserConnected={isUserConnected}
+                index={index}
+                language={language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar"}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Desktop - Animation infinite scroll */}
