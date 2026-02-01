@@ -47,8 +47,8 @@ export default function ChatterRefer() {
       icon: Users,
     },
     {
-      label: t("chatter.referrals.recurringMonthly"),
-      amount: "5%",
+      label: t("chatter.referrals.perCallN1"),
+      amount: REFERRAL_CONFIG.COMMISSIONS.N1_PER_CALL / 100,
       icon: TrendingUp,
     },
   ];

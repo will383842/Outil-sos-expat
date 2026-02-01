@@ -37,6 +37,7 @@ import {
   ChatterStatsCard,
   ChatterLevelCard,
   PiggyBankCard,
+  EarningsMotivationCard,
 } from '@/components/Chatter/Cards';
 import type { SocialNetwork } from '@/components/Chatter/Cards/PiggyBankCard';
 import type { EarningsByCategory } from '@/components/Chatter/Cards/EarningsBreakdownCard';
@@ -1413,6 +1414,21 @@ const ChatterDashboard: React.FC = () => {
                 animationDelay={200}
               />
             </div>
+
+            {/* Earnings Motivation Card - Shows cumulative earnings & motivation */}
+            <EarningsMotivationCard
+              totalEarned={chatter.totalEarned}
+              monthlyEarnings={dashboardData?.monthlyStats?.earnings || 0}
+              lastMonthEarnings={dashboardData?.comparison?.lastMonth?.earnings}
+              currentStreak={chatter.currentStreak}
+              totalClients={chatter.totalClients}
+              totalRecruits={chatter.totalRecruits}
+              memberSince={chatter.createdAt}
+              monthlyRank={chatter.currentMonthRank}
+              onViewLeaderboard={navigateToLeaderboard}
+              loading={isLoading}
+              animationDelay={250}
+            />
 
             {/* Earnings Breakdown Card - Shows earnings sources with donut chart */}
             {chatter.totalEarned > 0 && (

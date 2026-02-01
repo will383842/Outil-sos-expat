@@ -1,20 +1,27 @@
 /**
  * Scheduled Function: monthlyRecurringCommissions
  *
- * Runs on the 1st of each month at 02:00 UTC.
- * Calculates and creates 5% recurring commissions for parrains
- * based on their active filleuls' earnings from the previous month.
+ * @deprecated This function is DISABLED. The old 5% monthly recurring system
+ * has been replaced by per-call commissions in real-time.
  *
- * A filleul is "active" if they earned at least $20 (client earnings) in the month.
+ * NEW SYSTEM (via onCallCompleted trigger):
+ * - N1 calls: $1 per call
+ * - N2 calls: $0.50 per call
+ *
+ * This scheduled function no longer creates any commissions.
+ * It only runs promotion maintenance tasks.
+ *
+ * OLD SYSTEM (removed):
+ * - 5% monthly on active filleuls' earnings
+ * - A filleul was "active" if they earned at least $20/month
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
-import { Chatter } from "../types";
-import { calculateMonthlyRecurringCommission } from "../services/chatterReferralService";
+// NOTE: Chatter and calculateMonthlyRecurringCommission are no longer used
+// The 5% recurring system has been replaced by per-call commissions
 import { deactivateExpiredPromotions, checkPromotionBudgets } from "../services/chatterPromotionService";
 
 // Lazy initialization
@@ -35,88 +42,43 @@ function getPreviousMonth(): string {
   return `${year}-${month}`;
 }
 
+/**
+ * @deprecated Monthly recurring 5% commissions are DISABLED.
+ * N1/N2 commissions are now paid per-call in real-time via onCallCompleted.
+ *
+ * This function only runs promotion maintenance tasks.
+ */
 export const chatterMonthlyRecurringCommissions = onSchedule(
   {
     schedule: "0 2 1 * *", // 1st of each month at 02:00 UTC
     region: "europe-west1",
-    memory: "512MiB",
-    timeoutSeconds: 540, // 9 minutes
-    retryCount: 3,
+    memory: "256MiB",
+    timeoutSeconds: 120,
+    retryCount: 2,
   },
   async () => {
     ensureInitialized();
 
-    const db = getFirestore();
     const previousMonth = getPreviousMonth();
 
-    logger.info("[monthlyRecurringCommissions] Starting monthly commission calculation", {
+    logger.info("[monthlyRecurringCommissions] Running monthly maintenance (5% commissions DISABLED)", {
       month: previousMonth,
+      note: "N1/N2 commissions are now paid per-call via onCallCompleted trigger",
     });
 
-    const stats = {
-      parrainsProcessed: 0,
-      filleulsActifsTotal: 0,
-      totalCommissionsCreated: 0,
-      totalCommissionAmount: 0,
-      errors: 0,
-    };
-
     try {
-      // Get all chatters who have at least one qualified filleul
-      // (qualifiedReferralsCount > 0 means they have filleuls who reached $50)
-      const parrainsQuery = await db
-        .collection("chatters")
-        .where("status", "==", "active")
-        .where("qualifiedReferralsCount", ">", 0)
-        .get();
-
-      logger.info("[monthlyRecurringCommissions] Found potential parrains", {
-        count: parrainsQuery.size,
-      });
-
-      // Process each parrain
-      for (const parrainDoc of parrainsQuery.docs) {
-        const parrain = parrainDoc.data() as Chatter;
-        const parrainId = parrainDoc.id;
-
-        try {
-          const result = await calculateMonthlyRecurringCommission(parrainId, previousMonth);
-
-          stats.parrainsProcessed++;
-          stats.filleulsActifsTotal += result.filleulsActifs;
-          stats.totalCommissionsCreated += result.commissionsCreated.length;
-          stats.totalCommissionAmount += result.totalCommission;
-
-          if (result.filleulsActifs > 0) {
-            logger.info("[monthlyRecurringCommissions] Parrain processed", {
-              parrainId,
-              parrainEmail: parrain.email,
-              filleulsActifs: result.filleulsActifs,
-              totalCommission: result.totalCommission,
-              commissionsCreated: result.commissionsCreated.length,
-            });
-          }
-        } catch (error) {
-          stats.errors++;
-          logger.error("[monthlyRecurringCommissions] Error processing parrain", {
-            parrainId,
-            error,
-          });
-        }
-      }
-
-      // Also run promotion maintenance
+      // Only run promotion maintenance - no more 5% recurring commissions
       const promoExpired = await deactivateExpiredPromotions();
       const promoExhausted = await checkPromotionBudgets();
 
-      logger.info("[monthlyRecurringCommissions] Completed", {
+      logger.info("[monthlyRecurringCommissions] Monthly maintenance completed", {
         month: previousMonth,
-        ...stats,
         promotionsDeactivated: promoExpired.deactivated,
         promotionsBudgetExhausted: promoExhausted.exhausted,
+        recurringCommissions: "DISABLED - using per-call system",
       });
     } catch (error) {
-      logger.error("[monthlyRecurringCommissions] Fatal error", { error });
+      logger.error("[monthlyRecurringCommissions] Error during maintenance", { error });
       throw error;
     }
   }

@@ -13,7 +13,7 @@
  * - 20 filleuls qualifiés  -> $75   (7500 cents)
  * - 50 filleuls qualifiés  -> $250  (25000 cents)
  * - 100 filleuls qualifiés -> $600  (60000 cents)
- * - 500 filleuls qualifiés -> $5000 (500000 cents)
+ * - 500 filleuls qualifiés -> $4000 (400000 cents)
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -254,7 +254,7 @@ export async function processTierBonusCheck(): Promise<TierBonusCheckResult> {
       20: 7500,     // $75
       50: 25000,    // $250
       100: 60000,   // $600
-      500: 500000,  // $5000
+      500: 400000,  // $4000
     };
     const qualifiedThreshold = config.qualifiedFilleulThreshold || DEFAULT_QUALIFIED_THRESHOLD;
 

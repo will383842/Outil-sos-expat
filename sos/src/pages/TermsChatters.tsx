@@ -703,8 +703,8 @@ const TermsChatters: React.FC = () => {
 
 4.2. **Commissions Recrutement.** Le Chatter perçoit des commissions sur les performances de ses Filleuls :
 - **5€** par Chatter N1 activé (2+ appels)
-- **5%** des gains N1 à vie
-- **2%** des gains N2 à vie
+- **1$** par appel client de vos filleuls N1 (à vie)
+- **0.50$** par appel client de vos filleuls N2 (à vie)
 
 4.3. **Seuils de paiement.** Les commissions sont validées après :
 - Période de rétractation client (14 jours)
@@ -941,8 +941,8 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 4.2. **Recruitment Commissions.** The Chatter earns commissions on their Referrals' performance:
 - **€5** per activated N1 Chatter (2+ calls)
-- **5%** of N1 lifetime earnings
-- **2%** of N2 lifetime earnings
+- **$1** per client call from your N1 referrals (lifetime)
+- **$0.50** per client call from your N2 referrals (lifetime)
 
 4.3. **Payment Thresholds.** Commissions are validated after:
 - Client withdrawal period (14 days)

@@ -39,3 +39,6 @@ export type { EarningsByCategory } from './EarningsBreakdownCard';
 
 // Achievement badges
 export { default as AchievementBadgesCard } from './AchievementBadgesCard';
+
+// Earnings motivation card (cumulative earnings display)
+export { default as EarningsMotivationCard } from './EarningsMotivationCard';

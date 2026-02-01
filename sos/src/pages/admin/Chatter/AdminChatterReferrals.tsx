@@ -247,7 +247,7 @@ const AdminChatterReferrals: React.FC = () => {
       threshold_10: "Seuil 10$",
       threshold_50: "Seuil 50$",
       threshold_50_n2: "Seuil 50$ N2",
-      recurring_5pct: "Récurrent 5%",
+      n1_per_call: "$1/appel N1",
       tier_bonus: "Bonus palier",
     };
     return <Badge variant="outline">{typeLabels[type] || type}</Badge>;
@@ -414,7 +414,7 @@ const AdminChatterReferrals: React.FC = () => {
                   <SelectItem value="threshold_10">Seuil 10$</SelectItem>
                   <SelectItem value="threshold_50">Seuil 50$</SelectItem>
                   <SelectItem value="threshold_50_n2">Seuil 50$ N2</SelectItem>
-                  <SelectItem value="recurring_5pct">Récurrent 5%</SelectItem>
+                  <SelectItem value="n1_per_call">$1/appel N1</SelectItem>
                   <SelectItem value="tier_bonus">Bonus palier</SelectItem>
                 </SelectContent>
               </Select>

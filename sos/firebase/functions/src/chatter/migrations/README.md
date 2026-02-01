@@ -47,10 +47,12 @@ npx ts-node src/chatter/migrations/addRecruiterCommissionPaidField.ts
 **Background:**
 Implementation of a comprehensive 2-level referral (parrainage) system with:
 - Commission thresholds: $10 → $1, $50 → $4 (N1), $50 → $2 (N2)
-- Monthly recurring 5% on active filleuls
-- Tier bonuses: 5 filleuls → $25, 10 → $75, 25 → $200, 50 → $500
-- Early Adopter (Pioneer): +50% lifetime bonus for first 100 per country
+- Per-call commissions: N1 = $1/call, N2 = $0.50/call (real-time via onCallCompleted)
+- Tier bonuses: 5 → $15, 10 → $35, 20 → $75, 50 → $250, 100 → $600, 500 → $4,000
+- Early Adopter (Pioneer): +50% lifetime bonus for first 50 chatters GLOBALLY
 - Promotions/Hackathons with multipliers
+
+NOTE: The old monthly recurring 5% system has been REPLACED by per-call commissions.
 
 **What it does:**
 - Adds referral system fields to all chatters:
@@ -62,7 +64,7 @@ Implementation of a comprehensive 2-level referral (parrainage) system with:
   - `referralToClientRatio`: For anti-fraud
   - `threshold10Reached`, `threshold50Reached`: Prevent duplicate bonuses
   - `tierBonusesPaid`: Array of paid tier bonuses
-- Creates `chatter_early_adopter_counters` collection with 100 slots per country
+- Creates `chatter_early_adopter_counters` collection with a "global" document for 50 slots total
 
 **When to run:**
 BEFORE deploying the referral system triggers and callables.
@@ -99,6 +101,6 @@ When running these migrations, ensure the following code changes are deployed:
 4. **chatterReferralService.ts:** Core referral commission logic
 5. **chatterPromotionService.ts:** Promotion multipliers
 6. **chatterReferralFraudService.ts:** Anti-fraud detection
-7. **monthlyRecurringCommissions.ts:** Scheduled 5% recurring
+7. **monthlyRecurringCommissions.ts:** DEPRECATED - now only runs promo maintenance. Per-call commissions via onCallCompleted
 8. **Admin callables:** referral.ts and promotions.ts
 9. **Frontend:** Referral pages, hooks, and components

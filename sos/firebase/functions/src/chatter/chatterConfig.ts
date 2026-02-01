@@ -81,7 +81,7 @@ export interface ChatterConfigSettings {
     20: number;   // Default: 7500 ($75)
     50: number;   // Default: 25000 ($250)
     100: number;  // Default: 60000 ($600)
-    500: number;  // Default: 500000 ($5000)
+    500: number;  // Default: 400000 ($4000)
   };
 
   /**
@@ -149,7 +149,7 @@ export const DEFAULT_CHATTER_CONFIG_SETTINGS: Omit<
     20: 7500,      // $75
     50: 25000,     // $250
     100: 60000,    // $600
-    500: 500000,   // $5000
+    500: 400000,   // $4000
   },
 
   qualifiedFilleulThreshold: 2000, // $20 - filleul must earn this much in direct commissions

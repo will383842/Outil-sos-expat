@@ -935,14 +935,17 @@ export const REFERRAL_CONFIG = {
     THRESHOLD_10_AMOUNT: 100,    // $1
     THRESHOLD_50_N1_AMOUNT: 400, // $4
     THRESHOLD_50_N2_AMOUNT: 200, // $2
-    RECURRING_PERCENT: 0.05,
+    N1_PER_CALL: 100,            // $1 per call from N1
+    N2_PER_CALL: 50,             // $0.50 per call from N2
     MONTHLY_ACTIVITY_THRESHOLD: 2000,
   },
   TIER_BONUSES: {
-    5: 2500,   // $25
-    10: 7500,  // $75
-    25: 20000, // $200
-    50: 50000, // $500
+    5: 1500,      // $15
+    10: 3500,     // $35
+    20: 7500,     // $75
+    50: 25000,    // $250
+    100: 60000,   // $600
+    500: 400000,  // $4,000
   } as Record<number, number>,
   EARLY_ADOPTER: {
     MULTIPLIER: 1.5,

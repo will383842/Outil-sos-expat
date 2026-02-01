@@ -3,10 +3,13 @@
  *
  * Core business logic for the 2-level referral system:
  * - Threshold-based commissions ($10 → $1, $50 → $4, N2 $50 → $2)
- * - Monthly recurring 5% on active filleuls
- * - Tier bonuses (5/10/25/50 filleuls → $25/$75/$200/$500)
+ * - Per-call commissions: N1 = $1/call, N2 = $0.50/call (real-time via onCallCompleted)
+ * - Tier bonuses (5/10/20/50/100/500 qualified filleuls)
  * - Early adopter (+50% lifetime bonus)
  * - Promotion multipliers (hackathons, special events)
+ *
+ * NOTE: Old monthly 5% recurring system has been REMOVED.
+ * Commissions are now paid in real-time per call via the onCallCompleted trigger.
  */
 
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
@@ -208,8 +211,8 @@ export async function checkAndApplyEarlyAdopter(chatterId: string): Promise<Earl
     // Must have reached $50 threshold
     if (!chatter.threshold50Reached) return result;
 
-    const country = chatter.country;
-    const counterRef = db.collection("chatter_early_adopter_counters").doc(country);
+    // GLOBAL early adopter counter (not per country) - uses "global" as the key
+    const counterRef = db.collection("chatter_early_adopter_counters").doc("global");
 
     // Try to claim an early adopter slot
     const success = await db.runTransaction(async (transaction) => {
@@ -219,11 +222,11 @@ export async function checkAndApplyEarlyAdopter(chatterId: string): Promise<Earl
       if (!counterDoc.exists) {
         // Create counter if it doesn't exist
         counter = {
-          countryCode: country,
-          countryName: country, // Will be updated with actual name
-          maxEarlyAdopters: REFERRAL_CONFIG.EARLY_ADOPTER.DEFAULT_SLOTS_PER_COUNTRY,
+          countryCode: "global",
+          countryName: "Global",
+          maxEarlyAdopters: REFERRAL_CONFIG.EARLY_ADOPTER.TOTAL_SLOTS,
           currentCount: 0,
-          remainingSlots: REFERRAL_CONFIG.EARLY_ADOPTER.DEFAULT_SLOTS_PER_COUNTRY,
+          remainingSlots: REFERRAL_CONFIG.EARLY_ADOPTER.TOTAL_SLOTS,
           isOpen: true,
           earlyAdopterIds: [],
           updatedAt: Timestamp.now(),
@@ -252,11 +255,11 @@ export async function checkAndApplyEarlyAdopter(chatterId: string): Promise<Earl
         transaction.set(counterRef, { ...counter, ...updatedCounter });
       }
 
-      // Update chatter
+      // Update chatter - keep earlyAdopterCountry for backwards compatibility but set to "global"
       const chatterRef = db.collection("chatters").doc(chatterId);
       transaction.update(chatterRef, {
         isEarlyAdopter: true,
-        earlyAdopterCountry: country,
+        earlyAdopterCountry: "global", // Now global instead of per-country
         earlyAdopterDate: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
@@ -266,11 +269,11 @@ export async function checkAndApplyEarlyAdopter(chatterId: string): Promise<Earl
 
     if (success) {
       result.becameEarlyAdopter = true;
-      result.country = country;
+      result.country = "global";
 
-      logger.info("[checkAndApplyEarlyAdopter] New early adopter", {
+      logger.info("[checkAndApplyEarlyAdopter] New early adopter (global program)", {
         chatterId,
-        country,
+        originalCountry: chatter.country,
       });
     }
 
@@ -399,7 +402,15 @@ export function getNextTierBonus(chatter: Chatter): {
 }
 
 // ============================================================================
-// MONTHLY RECURRING COMMISSIONS
+// MONTHLY RECURRING COMMISSIONS - DEPRECATED
+// ============================================================================
+// NOTE: This system has been REPLACED by per-call commissions.
+// N1 and N2 commissions are now paid in real-time via onCallCompleted trigger:
+// - N1: $1 per call (n1_call)
+// - N2: $0.50 per call (n2_call)
+//
+// The old 5% monthly system is no longer used.
+// Keeping this interface for backwards compatibility with existing code.
 // ============================================================================
 
 export interface RecurringCommissionResult {
@@ -409,106 +420,29 @@ export interface RecurringCommissionResult {
 }
 
 /**
- * Calculate and create monthly recurring commissions for a parrain
- * Called by scheduled function on the 1st of each month
+ * @deprecated Use per-call commissions via onCallCompleted trigger instead.
+ * This function is kept for backwards compatibility but returns empty results.
+ *
+ * The new system pays commissions in real-time:
+ * - N1 calls: $1 per call
+ * - N2 calls: $0.50 per call
  */
 export async function calculateMonthlyRecurringCommission(
   parrainId: string,
   month: string // YYYY-MM format
 ): Promise<RecurringCommissionResult> {
-  const db = getFirestore();
-  const result: RecurringCommissionResult = {
+  logger.warn("[calculateMonthlyRecurringCommission] DEPRECATED - Using per-call system now", {
+    parrainId,
+    month,
+    message: "This function is deprecated. N1/N2 commissions are now paid in real-time via onCallCompleted.",
+  });
+
+  // Return empty result - commissions are now handled per-call
+  return {
     filleulsActifs: 0,
     totalCommission: 0,
     commissionsCreated: [],
   };
-
-  try {
-    const parrainDoc = await db.collection("chatters").doc(parrainId).get();
-    if (!parrainDoc.exists) return result;
-
-    // Parrain exists, continue
-
-    // Get all N1 filleuls who have reached $50 threshold
-    const filleulsQuery = await db
-      .collection("chatters")
-      .where("recruitedBy", "==", parrainId)
-      .where("threshold50Reached", "==", true)
-      .get();
-
-    if (filleulsQuery.empty) return result;
-
-    // Calculate previous month dates
-    const [year, monthNum] = month.split("-").map(Number);
-    const startOfMonth = new Date(year, monthNum - 1, 1);
-    const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59);
-
-    for (const filleulDoc of filleulsQuery.docs) {
-      const filleulId = filleulDoc.id;
-
-      // Calculate filleul's client earnings for the month
-      // Query commissions for this filleul in the target month
-      const commissionsQuery = await db
-        .collection("chatter_commissions")
-        .where("chatterId", "==", filleulId)
-        .where("type", "in", ["client_referral", "recruitment"]) // Only client earnings
-        .where("status", "==", "available")
-        .where("createdAt", ">=", Timestamp.fromDate(startOfMonth))
-        .where("createdAt", "<=", Timestamp.fromDate(endOfMonth))
-        .get();
-
-      let monthlyClientEarnings = 0;
-      for (const commDoc of commissionsQuery.docs) {
-        monthlyClientEarnings += commDoc.data().amount || 0;
-      }
-
-      // Check if filleul is "active" (earned $20+ this month)
-      if (monthlyClientEarnings < REFERRAL_CONFIG.COMMISSIONS.MONTHLY_ACTIVITY_THRESHOLD) {
-        continue;
-      }
-
-      result.filleulsActifs++;
-
-      // Calculate 5% commission
-      const baseCommission = Math.floor(
-        monthlyClientEarnings * REFERRAL_CONFIG.COMMISSIONS.RECURRING_PERCENT
-      );
-
-      if (baseCommission <= 0) continue;
-
-      // Create recurring commission
-      const commissionId = await createReferralCommission({
-        parrainId,
-        filleulId,
-        type: "recurring_5pct",
-        level: 1,
-        baseAmount: baseCommission,
-        recurringMonth: month,
-        filleulMonthlyEarnings: monthlyClientEarnings,
-      });
-
-      if (commissionId) {
-        result.commissionsCreated.push(commissionId);
-        result.totalCommission += baseCommission;
-      }
-    }
-
-    logger.info("[calculateMonthlyRecurringCommission] Completed", {
-      parrainId,
-      month,
-      filleulsActifs: result.filleulsActifs,
-      totalCommission: result.totalCommission,
-    });
-
-    return result;
-  } catch (error) {
-    logger.error("[calculateMonthlyRecurringCommission] Error", {
-      parrainId,
-      month,
-      error,
-    });
-    return result;
-  }
 }
 
 // ============================================================================
@@ -598,11 +532,10 @@ export async function getActivePromoMultiplier(
 interface CreateReferralCommissionInput {
   parrainId: string;
   filleulId: string;
-  type: "threshold_10" | "threshold_50" | "threshold_50_n2" | "recurring_5pct" | "tier_bonus";
+  // NOTE: "recurring_5pct" removed - replaced by per-call commissions (n1_call, n2_call)
+  type: "threshold_10" | "threshold_50" | "threshold_50_n2" | "tier_bonus";
   level: 1 | 2;
   baseAmount: number;
-  recurringMonth?: string;
-  filleulMonthlyEarnings?: number;
   tierReached?: number;
 }
 
@@ -669,8 +602,7 @@ async function createReferralCommission(input: CreateReferralCommissionInput): P
       earlyAdopterMultiplier,
       promoMultiplier: promoResult.multiplier,
       amount: finalAmount,
-      recurringMonth: input.recurringMonth,
-      filleulMonthlyEarnings: input.filleulMonthlyEarnings,
+      // recurringMonth and filleulMonthlyEarnings removed - old 5% system deprecated
       tierReached: input.tierReached,
       currency: "USD",
       status: "pending",

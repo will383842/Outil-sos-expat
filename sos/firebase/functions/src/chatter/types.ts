@@ -77,7 +77,7 @@ export type ChatterCommissionType =
   | "threshold_10"          // LEGACY: Filleul N1 reached $10 threshold
   | "threshold_50"          // LEGACY: Filleul N1 reached $50 threshold
   | "threshold_50_n2"       // LEGACY: Filleul N2 reached $50 threshold
-  | "recurring_5pct"        // LEGACY: Monthly recurring 5% on active filleuls
+  | "recurring_5pct"        // LEGACY: Old monthly 5% system, replaced by per-call commissions - kept for DB compatibility
   | "tier_bonus"            // Tier bonus (5/10/20/50/100/500 filleuls)
   | "bonus_social";         // Social media likes bonus
 
@@ -374,7 +374,7 @@ export interface Chatter {
   /** Whether this chatter is an early adopter (+50% bonus for life) */
   isEarlyAdopter: boolean;
 
-  /** Country where this chatter became an early adopter */
+  /** LEGACY: Was country-based, now always "global". Kept for backwards compatibility. */
   earlyAdopterCountry: string | null;
 
   /** Date when this chatter became an early adopter */
@@ -1888,7 +1888,9 @@ export interface ChatterReferralCommission {
   filleulEmail: string;
   filleulName: string;
 
-  /** Type of referral commission */
+  /** Type of referral commission
+   * NOTE: "recurring_5pct" is DEPRECATED - kept for backwards compatibility with existing records
+   * New system uses n1_call and n2_call via onCallCompleted trigger */
   type: "threshold_10" | "threshold_50" | "threshold_50_n2" | "recurring_5pct" | "tier_bonus";
 
   /** Level (1 = direct filleul, 2 = filleul of filleul) */
@@ -1999,14 +2001,17 @@ export interface ChatterPromotion {
 }
 
 /**
- * Early Adopter counter per country
- * Collection: chatter_early_adopter_counters/{countryCode}
+ * Early Adopter counter - GLOBAL (not per country)
+ * Collection: chatter_early_adopter_counters/global
+ *
+ * NOTE: Previously was per-country, now uses a single "global" document
+ * for the first 50 chatters worldwide to get +50% lifetime bonus.
  */
 export interface ChatterEarlyAdopterCounter {
-  /** Country code (document ID) */
+  /** "global" for the worldwide counter (legacy: was country code) */
   countryCode: string;
 
-  /** Country name */
+  /** "Global" (legacy: was country name) */
   countryName: string;
 
   /** Maximum early adopters for this country */
@@ -2199,8 +2204,9 @@ export const REFERRAL_CONFIG = {
     THRESHOLD_10_AMOUNT: 100,    // $1 when filleul reaches $10
     THRESHOLD_50_N1_AMOUNT: 400, // $4 when filleul N1 reaches $50
     THRESHOLD_50_N2_AMOUNT: 200, // $2 when filleul N2 reaches $50
-    RECURRING_PERCENT: 0.05,     // 5% monthly on active filleuls
-    MONTHLY_ACTIVITY_THRESHOLD: 2000, // $20/month to be "active"
+    N1_PER_CALL: 100,            // $1 per call from N1 filleul (real-time)
+    N2_PER_CALL: 50,             // $0.50 per call from N2 filleul (real-time)
+    // REMOVED: RECURRING_PERCENT - Old 5% monthly system replaced by per-call commissions
   },
 
   /** Tier bonuses (filleuls count → bonus in cents) */
@@ -2211,7 +2217,7 @@ export const REFERRAL_CONFIG = {
     20: 7500,    // $75 for 20 qualified filleuls
     50: 25000,   // $250 for 50 qualified filleuls
     100: 60000,  // $600 for 100 qualified filleuls
-    500: 500000, // $5000 for 500 qualified filleuls
+    500: 400000, // $4000 for 500 qualified filleuls
   } as Record<number, number>,
 
   /** Minimum direct earnings (cents) for a filleul to be counted as "qualified" */
@@ -2220,7 +2226,7 @@ export const REFERRAL_CONFIG = {
   /** Early adopter settings */
   EARLY_ADOPTER: {
     MULTIPLIER: 1.5,              // +50% bonus
-    DEFAULT_SLOTS_PER_COUNTRY: 50, // 50 first per country
+    TOTAL_SLOTS: 50,              // 50 first chatters globally (not per country)
   },
 
   /** Anti-fraud thresholds */
