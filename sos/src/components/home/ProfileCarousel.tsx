@@ -484,55 +484,35 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
       )}
 
       {/* Mobile & Tablet - Scroll horizontal avec snap - CENTRÉ */}
-      {/* ✅ FIX 2026: Carousel mobile avec scroll tactile natif */}
+      {/* ✅ FIX 2026: Structure simplifiée comme TestimonialsSection */}
       <div
-        className="lg:hidden w-full pt-4 select-none"
+        className="lg:hidden flex gap-4 sm:gap-5 pb-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
         style={{
-          overflow: 'visible',
+          scrollPaddingInline: 'calc(50vw - 140px)',
+          paddingLeft: 'calc(50vw - 140px)',
+          paddingRight: 'calc(50vw - 140px)',
+          paddingTop: '1rem',
           WebkitOverflowScrolling: 'touch',
-          WebkitUserSelect: 'none',
-          userSelect: 'none',
         }}
       >
-        <div
-          className="flex flex-nowrap gap-4 sm:gap-5 pb-6 scrollbar-hide"
-          style={{
-            overflowX: 'scroll',
-            overflowY: 'hidden',
-            scrollSnapType: 'x mandatory',
-            scrollPaddingInline: 'calc(50vw - 140px)',
-            paddingLeft: 'calc(50vw - 140px)',
-            paddingRight: 'calc(50vw - 140px)',
-            touchAction: 'pan-x',
-            WebkitOverflowScrolling: 'touch',
-            WebkitUserSelect: 'none',
-            userSelect: 'none',
-            cursor: 'grab',
-          }}
-        >
-          {displayProviders.map((provider, index) => (
-            <div
-              key={`${provider.id}-${rotationIndex}`}
-              className="flex-shrink-0 select-none"
-              style={{
-                minWidth: '280px',
-                maxWidth: '300px',
-                scrollSnapAlign: 'center',
-                WebkitUserSelect: 'none',
-                userSelect: 'none',
-                WebkitTouchCallout: 'none',
-              }}
-            >
-              <ModernProfileCard
-                provider={provider}
-                onProfileClick={handleProfileClick}
-                isUserConnected={isUserConnected}
-                index={index}
-                language={language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar"}
-              />
-            </div>
-          ))}
-        </div>
+        {displayProviders.map((provider, index) => (
+          <div
+            key={`${provider.id}-${rotationIndex}`}
+            className="flex-shrink-0 snap-center"
+            style={{
+              minWidth: '280px',
+              maxWidth: '300px',
+            }}
+          >
+            <ModernProfileCard
+              provider={provider}
+              onProfileClick={handleProfileClick}
+              isUserConnected={isUserConnected}
+              index={index}
+              language={language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar"}
+            />
+          </div>
+        ))}
       </div>
 
       {/* Desktop - Animation infinite scroll */}
