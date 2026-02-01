@@ -250,11 +250,14 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
       aria-label={intl.formatMessage({ id: "aria.reviewsCarousel" })}
     >
       {/* Container avec scroll horizontal - MOBILE FIX */}
-      {/* ✅ FIX 2026: carousel-scroll pour forcer le scroll tactile */}
+      {/* ✅ FIX 2026: Scroll tactile natif avec user-select: none */}
       <div
         ref={scrollContainerRef}
-        className="flex flex-nowrap gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide carousel-scroll"
+        className="flex flex-nowrap gap-4 sm:gap-6 pb-4 scrollbar-hide select-none"
         style={{
+          overflowX: 'scroll',
+          overflowY: 'hidden',
+          scrollSnapType: 'x mandatory',
           scrollPaddingInline: 'max(1rem, calc(50vw - 150px))',
           paddingLeft: 'max(1rem, calc(50vw - 150px))',
           paddingRight: 'max(1rem, calc(50vw - 150px))',
@@ -262,6 +265,9 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-x',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+          cursor: 'grab',
         }}
       >
         {REVIEWS.map((r, idx) => {
@@ -272,8 +278,14 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
           return (
             <article
               key={r.id}
-              className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px] snap-center"
-              style={{ minWidth: '280px' }}
+              className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px] select-none"
+              style={{
+                minWidth: '280px',
+                scrollSnapAlign: 'center',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+                WebkitTouchCallout: 'none',
+              }}
             >
               <Link
                 to="/testimonials"
