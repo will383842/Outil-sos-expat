@@ -484,44 +484,25 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
       )}
 
       {/* Mobile & Tablet - Scroll horizontal avec snap - CENTRÉ */}
-      {/* ✅ FIX 2026: Carousel mobile avec scroll tactile natif */}
+      {/* ✅ FIX: Première carte centrée sur l'écran grâce au padding calculé */}
+      {/* ✅ FIX: pt-4 pour éviter que la première carte soit cachée par le bandeau de filtre */}
       <div
-        className="lg:hidden w-full pt-4 select-none"
-        style={{
-          overflow: 'visible',
-          WebkitOverflowScrolling: 'touch',
-          WebkitUserSelect: 'none',
-          userSelect: 'none',
-        }}
+        className="lg:hidden w-full pt-4"
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div
-          className="flex flex-nowrap gap-4 sm:gap-5 pb-6 scrollbar-hide"
+          className="flex flex-nowrap gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide"
           style={{
-            overflowX: 'scroll',
-            overflowY: 'hidden',
-            scrollSnapType: 'x mandatory',
             scrollPaddingInline: 'calc(50vw - 140px)',
             paddingLeft: 'calc(50vw - 140px)',
             paddingRight: 'calc(50vw - 140px)',
-            touchAction: 'pan-x',
-            WebkitOverflowScrolling: 'touch',
-            WebkitUserSelect: 'none',
-            userSelect: 'none',
-            cursor: 'grab',
           }}
         >
           {displayProviders.map((provider, index) => (
             <div
               key={`${provider.id}-${rotationIndex}`}
-              className="flex-shrink-0 select-none"
-              style={{
-                minWidth: '280px',
-                maxWidth: '300px',
-                scrollSnapAlign: 'center',
-                WebkitUserSelect: 'none',
-                userSelect: 'none',
-                WebkitTouchCallout: 'none',
-              }}
+              className="flex-shrink-0 snap-center"
+              style={{ minWidth: '280px', maxWidth: '300px' }}
             >
               <ModernProfileCard
                 provider={provider}
@@ -560,9 +541,18 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         .scrollbar-hide {
           scrollbar-width: none;
           -ms-overflow-style: none;
+          scroll-behavior: smooth;
           -webkit-overflow-scrolling: touch;
         }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        /* Amélioration tactile mobile */
+        @media (max-width: 1023px) {
+          .scrollbar-hide {
+            scroll-snap-type: x mandatory;
+            overscroll-behavior-x: contain;
+          }
+        }
       `}</style>
     </div>
   );

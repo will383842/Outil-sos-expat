@@ -6,9 +6,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* ✅ FIX 2026: Retiré overflow-x: hidden - bloquait les carousels */
-    /* On utilise max-width: 100% pour contenir le contenu */
-    max-width: 100%;
+    overflow-x: hidden;
     /* Mobile 2026: Allow scroll while eliminating zoom delay */
     touch-action: pan-x pan-y;
     -webkit-tap-highlight-color: transparent;
@@ -20,7 +18,7 @@
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* ✅ FIX 2026: Retiré overflow-x: hidden - bloquait les carousels */
+    overflow-x: hidden;
     /* Use 100% instead of 100vw to avoid scrollbar width issues */
     max-width: 100%;
     width: 100%;
@@ -34,9 +32,8 @@
 
   /* Fix mobile viewport issues */
   #root {
-    /* ✅ FIX 2026: Retiré overflow-x: hidden - bloquait les carousels */
+    overflow-x: hidden;
     max-width: 100%;
-    width: 100%;
   }
 
   /* Mobile 2026: All interactive elements instant tap response */
@@ -229,13 +226,12 @@
 
 /* Ultra-strict overflow prevention */
 @media (max-width: 768px) {
-  /* ✅ FIX 2026: Retiré overflow-x: hidden pour permettre les carousels */
-  /* On utilise width/max-width pour contenir le contenu sans bloquer les scrolls internes */
+  /* Prevent all horizontal overflow on mobile - use 100% not 100vw to avoid scrollbar issues */
   html, body, #root {
+    overflow-x: hidden !important;
     max-width: 100% !important;
     width: 100% !important;
     position: relative !important;
-    /* overflow-x: hidden retiré - il bloquait les carousels */
   }
 
   /* Force all forms and inputs to respect viewport */
@@ -258,24 +254,6 @@
   /* Protéger les carousels du wrap forcé */
   .flex-nowrap, [class*="carousel"], [class*="slider"] {
     flex-wrap: nowrap !important;
-  }
-
-  /* ✅ FIX 2026: Permettre le scroll horizontal dans les carousels */
-  /* Les conteneurs avec overflow-x-auto doivent pouvoir scroller */
-  .overflow-x-auto, .carousel-scroll {
-    overflow-x: scroll !important;
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-x !important;
-    overscroll-behavior-x: contain;
-    /* Isolation pour éviter les conflits avec overflow-hidden parent */
-    isolation: isolate;
-    contain: layout style;
-  }
-
-  /* Assurer que les sections contenant des carousels ne bloquent pas le scroll */
-  section:has(.carousel-scroll) {
-    overflow: visible !important;
   }
 
   /* Truncate long text */
