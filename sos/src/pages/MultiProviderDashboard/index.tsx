@@ -13,13 +13,11 @@ import React, { useState, useCallback, useMemo } from 'react';
 import {
   RefreshCw,
   Users,
-  MessageSquare,
   Bot,
   Clock,
   LogOut,
   Loader2,
   AlertCircle,
-  TrendingUp,
   Filter,
   LayoutGrid,
   List,
@@ -29,7 +27,6 @@ import {
 } from 'lucide-react';
 import { useMultiProviderDashboard } from '../../hooks/useMultiProviderDashboard';
 import PasswordGate from './PasswordGate';
-import AccountCard from './AccountCard';
 import ChatPanel from './ChatPanel';
 import { cn } from '../../utils/cn';
 
@@ -42,6 +39,12 @@ interface ChatState {
   bookingRequestId?: string;
   initialMessage?: string;
 }
+
+// ============================================================================
+// CONSTANTS: Time thresholds for booking classification
+// ============================================================================
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+const FIVE_MINUTES = 5 * 60 * 1000;
 
 const MultiProviderDashboard: React.FC = () => {
   const {
@@ -83,10 +86,13 @@ const MultiProviderDashboard: React.FC = () => {
       return (localStorage.getItem('multi_dashboard_view_mode') as 'expanded' | 'condensed') || 'condensed';
     } catch { return 'condensed'; }
   });
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'active'>(() => {
+  // Simplified filter: 'active' (à traiter) or 'history' (historique)
+  const [filterStatus, setFilterStatus] = useState<'active' | 'history'>(() => {
     try {
-      return (localStorage.getItem('multi_dashboard_filter') as 'all' | 'pending' | 'active') || 'all';
-    } catch { return 'all'; }
+      const saved = localStorage.getItem('multi_dashboard_filter');
+      if (saved === 'history') return 'history';
+      return 'active'; // Default to active (à traiter)
+    } catch { return 'active'; }
   });
   const [expandedAccountId, setExpandedAccountId] = useState<string | null>(() => {
     try {
@@ -117,68 +123,92 @@ const MultiProviderDashboard: React.FC = () => {
     } catch { /* ignore */ }
   }, [expandedAccountId]);
 
-  // Filtered accounts based on status
-  const filteredAccounts = useMemo(() => {
-    if (filterStatus === 'all') return accounts;
+  // ============================================================================
+  // EXPIRATION LOGIC: Pending requests > 24h are considered "expired"
+  // ============================================================================
 
-    return accounts.filter(account => {
-      if (filterStatus === 'pending') {
-        return account.bookingRequests.some(b => b.status === 'pending');
-      }
-      if (filterStatus === 'active') {
-        return account.bookingRequests.some(b => b.status === 'in_progress' || b.status === 'confirmed');
-      }
-      return true;
-    });
-  }, [accounts, filterStatus]);
+  // Helper to check if a booking is "active" (needs attention)
+  const isActiveBooking = useCallback((booking: { status: string; createdAt: Date }) => {
+    const age = Date.now() - booking.createdAt.getTime();
+    // Active = pending AND less than 24h old
+    return booking.status === 'pending' && age < TWENTY_FOUR_HOURS;
+  }, []);
 
-  // Accounts with pending requests (prioritized)
-  const accountsWithPending = useMemo(() => {
-    return filteredAccounts.filter(a => a.bookingRequests.some(b => b.status === 'pending'));
-  }, [filteredAccounts]);
+  // Helper to check if booking is "new" (< 5 min)
+  const isNewBooking = useCallback((booking: { createdAt: Date }) => {
+    const age = Date.now() - booking.createdAt.getTime();
+    return age < FIVE_MINUTES;
+  }, []);
 
-  const accountsWithoutPending = useMemo(() => {
-    return filteredAccounts.filter(a => !a.bookingRequests.some(b => b.status === 'pending'));
-  }, [filteredAccounts]);
+  // Helper to check if booking is "expired" (pending > 24h) or completed/cancelled
+  const isHistoryBooking = useCallback((booking: { status: string; createdAt: Date }) => {
+    const age = Date.now() - booking.createdAt.getTime();
+    // History = completed, cancelled, OR pending > 24h (expired)
+    return booking.status === 'completed' ||
+           booking.status === 'cancelled' ||
+           (booking.status === 'pending' && age >= TWENTY_FOUR_HOURS);
+  }, []);
 
-  // NEW: Get all new requests (< 5 minutes old) from all accounts for the priority section
+  // ============================================================================
+  // FILTERED DATA
+  // ============================================================================
+
+  // Count of active bookings (for stats)
+  const activeBookingsCount = useMemo(() => {
+    return accounts.flatMap(a => a.bookingRequests).filter(isActiveBooking).length;
+  }, [accounts, isActiveBooking]);
+
+  // Accounts with HISTORY bookings (completed, cancelled, or expired pending)
+  const accountsWithHistoryBookings = useMemo(() => {
+    return accounts.filter(account =>
+      account.bookingRequests.some(isHistoryBooking)
+    ).map(account => ({
+      ...account,
+      // Filter to only show history bookings
+      bookingRequests: account.bookingRequests.filter(isHistoryBooking)
+    }));
+  }, [accounts, isHistoryBooking]);
+
+  // Count expired pending (for info)
+  const expiredPendingCount = useMemo(() => {
+    return accounts.flatMap(a => a.bookingRequests).filter(b => {
+      const age = Date.now() - b.createdAt.getTime();
+      return b.status === 'pending' && age >= TWENTY_FOUR_HOURS;
+    }).length;
+  }, [accounts]);
+
+  // URGENT: Get all new requests (< 5 minutes old) from all accounts
   const newRequests = useMemo(() => {
-    const FIVE_MINUTES = 5 * 60 * 1000;
-    const now = Date.now();
+    return accounts.flatMap(account =>
+      account.bookingRequests
+        .filter(booking => isNewBooking(booking) && booking.status === 'pending')
+        .map(booking => ({
+          ...booking,
+          accountName: account.displayName,
+          accountUserId: account.userId,
+          providerInfo: account.providers.find(p => p.id === booking.providerId),
+        }))
+    ).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }, [accounts, isNewBooking]);
 
+  // À TRAITER: Pending requests between 5 min and 24h old
+  const pendingRequests = useMemo(() => {
     return accounts.flatMap(account =>
       account.bookingRequests
         .filter(booking => {
-          const age = now - booking.createdAt.getTime();
-          return age < FIVE_MINUTES;
+          const age = Date.now() - booking.createdAt.getTime();
+          return booking.status === 'pending' &&
+                 age >= FIVE_MINUTES &&
+                 age < TWENTY_FOUR_HOURS;
         })
         .map(booking => ({
           ...booking,
           accountName: account.displayName,
           accountUserId: account.userId,
-          // Find provider name for this booking
           providerInfo: account.providers.find(p => p.id === booking.providerId),
         }))
-    ).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
+    ).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }, [accounts]);
-
-  // Handle opening chat
-  const handleOpenChat = useCallback((
-    providerId: string,
-    providerName: string,
-    providerType: 'lawyer' | 'expat' | undefined,
-    bookingRequestId: string,
-    initialMessage?: string
-  ) => {
-    setChatState({
-      isOpen: true,
-      providerId,
-      providerName,
-      providerType,
-      bookingRequestId,
-      initialMessage,
-    });
-  }, []);
 
   // Handle closing chat
   const handleCloseChat = useCallback(() => {
@@ -192,11 +222,6 @@ const MultiProviderDashboard: React.FC = () => {
       await loadConversations(chatState.providerId);
     }
   }, [chatState.providerId, loadConversations]);
-
-  // Toggle account expansion
-  const toggleAccountExpansion = useCallback((userId: string) => {
-    setExpandedAccountId(prev => prev === userId ? null : userId);
-  }, []);
 
   // Handle sending message
   const handleSendMessage = useCallback(async (message: string, conversationId?: string) => {
@@ -286,7 +311,7 @@ const MultiProviderDashboard: React.FC = () => {
                             key={account.userId}
                             onClick={() => {
                               setExpandedAccountId(account.userId);
-                              setFilterStatus('all');
+                              setFilterStatus('active');
                               // Scroll to the account
                               setTimeout(() => {
                                 document.getElementById(`account-${account.userId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -360,8 +385,22 @@ const MultiProviderDashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {/* Stats Cards - Simplified and action-oriented */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <StatCard
+            icon={<Bell className="w-5 h-5" />}
+            label="Urgents (< 5 min)"
+            value={newRequests.length}
+            color="green"
+            pulse={newRequests.length > 0}
+          />
+          <StatCard
+            icon={<Clock className="w-5 h-5" />}
+            label="À traiter"
+            value={activeBookingsCount}
+            color="amber"
+            pulse={activeBookingsCount > 0}
+          />
           <StatCard
             icon={<Users className="w-5 h-5" />}
             label="Comptes"
@@ -369,71 +408,57 @@ const MultiProviderDashboard: React.FC = () => {
             color="blue"
           />
           <StatCard
-            icon={<TrendingUp className="w-5 h-5" />}
-            label="Prestataires"
-            value={stats.totalProviders}
-            color="purple"
-          />
-          <StatCard
-            icon={<MessageSquare className="w-5 h-5" />}
-            label="Demandes"
-            value={stats.totalBookings}
-            color="gray"
-          />
-          <StatCard
-            icon={<Clock className="w-5 h-5" />}
-            label="En attente"
-            value={stats.pendingBookings}
-            color="amber"
-            pulse={stats.pendingBookings > 0}
-          />
-          <StatCard
             icon={<Bot className="w-5 h-5" />}
             label="Réponses IA"
             value={stats.aiGeneratedResponses}
-            color="green"
+            color="purple"
           />
         </div>
 
         {/* Toolbar: Filters & View Mode */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
-          {/* Filters */}
+          {/* Filters - Simplified: À traiter vs Historique */}
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-gray-500" />
             <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1">
               <button
-                onClick={() => setFilterStatus('all')}
-                className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                  filterStatus === 'all'
-                    ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                )}
-              >
-                Tous ({accounts.length})
-              </button>
-              <button
-                onClick={() => setFilterStatus('pending')}
-                className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5",
-                  filterStatus === 'pending'
-                    ? "bg-amber-500 text-white shadow-sm"
-                    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                )}
-              >
-                <Bell className="w-3.5 h-3.5" />
-                En attente ({accountsWithPending.length})
-              </button>
-              <button
                 onClick={() => setFilterStatus('active')}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                  "px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2",
                   filterStatus === 'active'
-                    ? "bg-green-500 text-white shadow-sm"
+                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                     : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                 )}
               >
-                Actifs
+                <Bell className="w-4 h-4" />
+                À traiter
+                {activeBookingsCount > 0 && (
+                  <span className={cn(
+                    "px-2 py-0.5 rounded-full text-xs font-bold",
+                    filterStatus === 'active'
+                      ? "bg-white/20 text-white"
+                      : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                  )}>
+                    {activeBookingsCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setFilterStatus('history')}
+                className={cn(
+                  "px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2",
+                  filterStatus === 'history'
+                    ? "bg-gray-500 text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                )}
+              >
+                <Clock className="w-4 h-4" />
+                Historique
+                {expiredPendingCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300">
+                    +{expiredPendingCount} expirées
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -605,96 +630,221 @@ const MultiProviderDashboard: React.FC = () => {
             <Loader2 className="w-12 h-12 text-red-500 animate-spin mb-4" />
             <p className="text-gray-500 dark:text-gray-400">Chargement des comptes...</p>
           </div>
-        ) : filteredAccounts.length === 0 ? (
-          <div className="text-center py-20">
-            <Users className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              {accounts.length === 0 ? 'Aucun compte multi-prestataire' : 'Aucun compte correspondant'}
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-              {accounts.length === 0
-                ? 'Les comptes avec plusieurs prestataires liés apparaîtront ici. Utilisez l\'onglet Multi-Prestataires dans l\'admin IA pour lier des prestataires.'
-                : 'Aucun compte ne correspond aux filtres sélectionnés. Essayez de modifier vos filtres.'
-              }
-            </p>
-            {filterStatus !== 'all' && (
-              <button
-                onClick={() => setFilterStatus('all')}
-                className="mt-4 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              >
-                Afficher tous les comptes
-              </button>
-            )}
+        ) : filterStatus === 'active' ? (
+          /* ========== VUE "À TRAITER" ========== */
+          <div className="space-y-6">
+            {/* Section: À TRAITER (pending 5min-24h) */}
+            {pendingRequests.length > 0 ? (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-amber-200 dark:border-amber-800 overflow-hidden">
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 px-4 py-3 border-b border-amber-200 dark:border-amber-800">
+                  <h3 className="flex items-center gap-2 font-bold text-amber-700 dark:text-amber-400">
+                    <Bell className="w-5 h-5" />
+                    À TRAITER ({pendingRequests.length})
+                    <span className="text-xs font-normal text-amber-600 dark:text-amber-500 ml-2">
+                      Demandes de 5 min à 24h
+                    </span>
+                  </h3>
+                </div>
+                <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {pendingRequests.map((request) => {
+                    const ageMinutes = Math.floor((Date.now() - request.createdAt.getTime()) / 60000);
+                    const ageHours = Math.floor(ageMinutes / 60);
+                    const ageDisplay = ageHours > 0 ? `${ageHours}h ${ageMinutes % 60}min` : `${ageMinutes} min`;
+
+                    return (
+                      <div key={request.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <div className="flex items-start justify-between gap-4">
+                          {/* Client Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-2">
+                              <span className="font-bold text-gray-900 dark:text-white">
+                                {request.clientName}
+                              </span>
+                              {request.clientCurrentCountry && (
+                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                  📍 {request.clientCurrentCountry}
+                                </span>
+                              )}
+                              {request.clientPhone && (
+                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                  📞 {request.clientPhone}
+                                </span>
+                              )}
+                            </div>
+
+                            {request.title && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+                                "{request.title}"
+                              </p>
+                            )}
+
+                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                              <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg flex items-center gap-1">
+                                {request.providerType === 'lawyer' ? <Scale className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+                                {request.providerInfo?.name || 'Prestataire'}
+                              </span>
+                              <span className="text-gray-400">•</span>
+                              <span>{request.accountName}</span>
+                              <span className="text-gray-400">•</span>
+                              <span className={cn(
+                                "flex items-center gap-1 px-2 py-0.5 rounded-full",
+                                ageHours >= 12 ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" :
+                                ageHours >= 1 ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400" :
+                                "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                              )}>
+                                <Clock className="w-3 h-3" />
+                                {ageDisplay}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <button
+                            onClick={() => openAiTool(request.providerId, request.id)}
+                            className="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                          >
+                            <Bot className="w-4 h-4" />
+                            Répondre
+                          </button>
+                        </div>
+
+                        {/* AI Response Preview */}
+                        {request.aiResponse && (
+                          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-1">
+                              <Bot className="w-3 h-3" />
+                              Réponse IA générée
+                            </div>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                              {request.aiResponse.content.substring(0, 150)}...
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : newRequests.length === 0 ? (
+              /* No active requests at all */
+              <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Tout est à jour !
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Aucune demande en attente de réponse.
+                </p>
+                {accountsWithHistoryBookings.length > 0 && (
+                  <button
+                    onClick={() => setFilterStatus('history')}
+                    className="mt-4 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white underline"
+                  >
+                    Voir l'historique des conversations
+                  </button>
+                )}
+              </div>
+            ) : null}
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Accounts with pending requests - Show section header only when viewing 'all' */}
-            {accountsWithPending.length > 0 && filterStatus === 'all' && (
-              <div className="mb-6">
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400 mb-3 px-1">
-                  <Bell className="w-4 h-4" />
-                  Demandes en attente ({accountsWithPending.length} compte{accountsWithPending.length > 1 ? 's' : ''})
-                </h3>
-                <div className="space-y-4">
-                  {accountsWithPending.map((account) => (
-                    <AccountCard
-                      key={account.userId}
-                      account={account}
-                      onOpenAiTool={openAiTool}
-                      onOpenChat={handleOpenChat}
-                      isCondensed={viewMode === 'condensed'}
-                      isExpanded={expandedAccountId === account.userId || viewMode === 'expanded'}
-                      onToggleExpand={() => toggleAccountExpansion(account.userId)}
-                    />
-                  ))}
+          /* ========== VUE "HISTORIQUE" ========== */
+          <div className="space-y-6">
+            {accountsWithHistoryBookings.length > 0 ? (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="flex items-center gap-2 font-bold text-gray-700 dark:text-gray-300">
+                    <Clock className="w-5 h-5" />
+                    HISTORIQUE
+                    <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-2">
+                      Conversations terminées et demandes expirées (&gt;24h)
+                    </span>
+                  </h3>
                 </div>
+                <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-[600px] overflow-y-auto">
+                  {accountsWithHistoryBookings.flatMap(account =>
+                    account.bookingRequests.map(booking => ({
+                      ...booking,
+                      accountName: account.displayName,
+                      accountUserId: account.userId,
+                      providerInfo: account.providers.find(p => p.id === booking.providerId),
+                    }))
+                  ).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 50).map((request) => {
+                    const isExpired = request.status === 'pending';
+                    const dateStr = request.createdAt.toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: request.createdAt.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                    });
+
+                    return (
+                      <div key={request.id} className="p-4 opacity-75 hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={cn(
+                                "px-2 py-0.5 text-xs font-medium rounded-full",
+                                isExpired
+                                  ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                                  : request.status === 'completed'
+                                  ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                              )}>
+                                {isExpired ? 'Expirée' : request.status === 'completed' ? 'Terminée' : 'Annulée'}
+                              </span>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">
+                                {request.clientName}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                → {request.providerInfo?.name || 'Prestataire'}
+                              </span>
+                              <span className="text-xs text-gray-400 dark:text-gray-500">
+                                • {dateStr}
+                              </span>
+                            </div>
+                            {request.title && (
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                                {request.title}
+                              </p>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => openAiTool(request.providerId, request.id)}
+                            className="flex-shrink-0 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                          >
+                            Voir
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                <Clock className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Aucun historique
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Les conversations terminées apparaîtront ici.
+                </p>
               </div>
             )}
 
-            {/* Other accounts (or all filtered accounts when filter is not 'all') */}
-            {filterStatus === 'all' ? (
-              // Show "Other accounts" section only when viewing all
-              accountsWithoutPending.length > 0 && (
-                <div>
-                  {accountsWithPending.length > 0 && (
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 px-1">
-                      <Users className="w-4 h-4" />
-                      Autres comptes ({accountsWithoutPending.length})
-                    </h3>
-                  )}
-                  <div className="space-y-4">
-                    {accountsWithoutPending.map((account) => (
-                      <AccountCard
-                        key={account.userId}
-                        account={account}
-                        onOpenAiTool={openAiTool}
-                        onOpenChat={handleOpenChat}
-                        isCondensed={viewMode === 'condensed'}
-                        isExpanded={expandedAccountId === account.userId || viewMode === 'expanded'}
-                        onToggleExpand={() => toggleAccountExpansion(account.userId)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )
-            ) : (
-              // When filter is 'pending' or 'active', show filtered accounts directly
-              filteredAccounts.length > 0 && (
-                <div className="space-y-4">
-                  {filteredAccounts.map((account) => (
-                    <AccountCard
-                      key={account.userId}
-                      account={account}
-                      onOpenAiTool={openAiTool}
-                      onOpenChat={handleOpenChat}
-                      isCondensed={viewMode === 'condensed'}
-                      isExpanded={expandedAccountId === account.userId || viewMode === 'expanded'}
-                      onToggleExpand={() => toggleAccountExpansion(account.userId)}
-                    />
-                  ))}
-                </div>
-              )
-            )}
+            {/* Back to active */}
+            <div className="text-center">
+              <button
+                onClick={() => setFilterStatus('active')}
+                className="px-4 py-2 text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 underline"
+              >
+                ← Retour aux demandes à traiter
+              </button>
+            </div>
           </div>
         )}
       </main>
