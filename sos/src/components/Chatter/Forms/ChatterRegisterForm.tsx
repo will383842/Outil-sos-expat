@@ -89,6 +89,7 @@ interface ChatterRegisterFormProps {
   loading?: boolean;
   error?: string | null;
   success?: boolean;
+  onErrorClear?: () => void; // Called when user modifies form to clear parent error
 }
 
 const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
@@ -97,6 +98,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   loading = false,
   error,
   success = false,
+  onErrorClear,
 }) => {
   const intl = useIntl();
   const { language } = useApp();
@@ -177,6 +179,8 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear parent error when user modifies any field
+    onErrorClear?.();
     if (validationErrors[name]) {
       setValidationErrors(prev => {
         const newErrors = { ...prev };

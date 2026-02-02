@@ -26,7 +26,7 @@ const ChatterRegister: React.FC = () => {
   const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
   const { language } = useApp();
-  const { user, authInitialized, isLoading: authLoading, register } = useAuth();
+  const { user, authInitialized, isLoading: authLoading, register, refreshUser } = useAuth();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
   const [loading, setLoading] = useState(false);
@@ -56,12 +56,12 @@ const ChatterRegister: React.FC = () => {
   const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'lawyer', 'expat', 'client'].includes(userRole);
   const isAlreadyChatter = userRole === 'chatter';
 
-  // Redirect chatters to their dashboard
+  // Redirect chatters to their dashboard (but not if they just registered - they go to presentation)
   useEffect(() => {
-    if (authInitialized && !authLoading && isAlreadyChatter) {
+    if (authInitialized && !authLoading && isAlreadyChatter && !success) {
       navigate(dashboardRoute);
     }
-  }, [authInitialized, authLoading, isAlreadyChatter, navigate, dashboardRoute]);
+  }, [authInitialized, authLoading, isAlreadyChatter, navigate, dashboardRoute, success]);
 
   // Show error if user has another role
   if (authInitialized && !authLoading && hasExistingRole && !isAlreadyChatter) {
@@ -149,9 +149,12 @@ const ChatterRegister: React.FC = () => {
 
       setSuccess(true);
 
+      // Refresh user data to ensure role is updated in context
+      await refreshUser();
+
       // Redirect to presentation after short delay
       setTimeout(() => {
-        navigate(presentationRoute);
+        navigate(presentationRoute, { replace: true });
       }, 2000);
     } catch (err: unknown) {
       console.error('[ChatterRegister] Error:', err);
@@ -269,6 +272,7 @@ const ChatterRegister: React.FC = () => {
                 }}
                 loading={loading}
                 error={error}
+                onErrorClear={() => setError(null)}
               />
             </div>
           )}

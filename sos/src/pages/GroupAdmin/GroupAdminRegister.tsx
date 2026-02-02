@@ -63,7 +63,7 @@ const GROUP_SIZES: GroupSizeTier[] = [
 const GroupAdminRegister: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
-  const { user, register } = useAuth();
+  const { user, register, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
   const recruitmentCode = searchParams.get('ref') || '';
 
@@ -229,6 +229,8 @@ const GroupAdminRegister: React.FC = () => {
 
       if (data.success) {
         setSuccess(true);
+        // Refresh user data to ensure role is updated in context
+        await refreshUser();
         setAffiliateCodes({
           client: data.affiliateCodeClient,
           recruitment: data.affiliateCodeRecruitment,

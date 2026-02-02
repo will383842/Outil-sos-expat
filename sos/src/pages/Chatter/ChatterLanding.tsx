@@ -5,7 +5,7 @@
  *
  * OBJECTIFS:
  * - Comprendre en 3 secondes qu'on peut gagner de l'argent
- * - Visualiser le potentiel de revenus ($10/client + équipe illimitée)
+ * - Visualiser le potentiel de revenus ($10/call + équipe illimitée)
  * - Montrer que c'est SIMPLE et RAPIDE
  * - Mettre en avant le programme de recrutement
  * - Mobile-first d'exception avec animations fluides
@@ -13,6 +13,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
@@ -164,7 +165,7 @@ const ChatterLanding: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // SEO
+  // SEO - Comprehensive optimization for Google, Bing, and AI (ChatGPT, Perplexity, Claude)
   const seoTitle = intl.formatMessage({
     id: 'chatter.landing.seo.title',
     defaultMessage: 'Become a SOS-Expat Chatter | Earn $10/call + Unlimited Team Income'
@@ -173,6 +174,197 @@ const ChatterLanding: React.FC = () => {
     id: 'chatter.landing.seo.description',
     defaultMessage: 'Join the Chatter program: Earn $10 per call, build an unlimited team, get $1 per call from your recruits. Paid via Mobile Money, Wise worldwide.'
   });
+  const seoKeywords = intl.formatMessage({
+    id: 'chatter.landing.seo.keywords',
+    defaultMessage: 'earn money online, affiliate program, work from home, expat assistance, legal help abroad, mobile money, passive income, remote work, chatter program, SOS-Expat, international job, MLM alternative, team building income, worldwide payment'
+  });
+  const seoAiSummary = intl.formatMessage({
+    id: 'chatter.landing.seo.aiSummary',
+    defaultMessage: 'SOS-Expat Chatter Program: A legitimate affiliate opportunity where participants earn $10 for each client they refer who calls for legal assistance abroad. Additional income through team building: $1 per call from direct recruits (N1), $0.50 from indirect recruits (N2). No investment required, 100% free to join. Payments via Mobile Money (Orange Money, Wave, MTN MoMo, M-Pesa, Airtel Money), Wise, or bank transfer. Minimum withdrawal: $25. Available worldwide to all nationalities. Simple process: find expats needing legal help, share your unique link, earn when they call.'
+  });
+  const seoOgTitle = intl.formatMessage({
+    id: 'chatter.landing.seo.ogTitle',
+    defaultMessage: 'Become a Chatter | Earn $10/Call Helping Expats Find Legal Assistance'
+  });
+  const seoOgDescription = intl.formatMessage({
+    id: 'chatter.landing.seo.ogDescription',
+    defaultMessage: 'Join 2,800+ Chatters worldwide earning money from home. $10/call + unlimited team passive income. Payments via Mobile Money & Wise. 100% free to start!'
+  });
+
+  // Build canonical URL
+  const getCanonicalUrl = () => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}${location.pathname}`;
+    }
+    return `https://sos-expat.com${location.pathname}`;
+  };
+
+  // Structured Data: HowTo Schema (How to become a Chatter)
+  const howToSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: intl.formatMessage({ id: 'chatter.schema.howto.name', defaultMessage: 'How to Become a SOS-Expat Chatter and Earn Money' }),
+    description: intl.formatMessage({ id: 'chatter.schema.howto.description', defaultMessage: 'Step-by-step guide to joining the Chatter affiliate program and earning $10 per referred call.' }),
+    totalTime: 'PT5M',
+    estimatedCost: {
+      '@type': 'MonetaryAmount',
+      currency: 'USD',
+      value: '0'
+    },
+    supply: [],
+    tool: [
+      {
+        '@type': 'HowToTool',
+        name: intl.formatMessage({ id: 'chatter.schema.tool.smartphone', defaultMessage: 'Smartphone or Computer' })
+      },
+      {
+        '@type': 'HowToTool',
+        name: intl.formatMessage({ id: 'chatter.schema.tool.internet', defaultMessage: 'Internet Connection' })
+      }
+    ],
+    step: [
+      {
+        '@type': 'HowToStep',
+        position: 1,
+        name: intl.formatMessage({ id: 'chatter.schema.step1.name', defaultMessage: 'Register for Free' }),
+        text: intl.formatMessage({ id: 'chatter.schema.step1.text', defaultMessage: 'Sign up on SOS-Expat, pass a quick 5-question quiz (2 minutes), and get your unique affiliate link.' }),
+        url: `https://sos-expat.com${registerRoute}`
+      },
+      {
+        '@type': 'HowToStep',
+        position: 2,
+        name: intl.formatMessage({ id: 'chatter.schema.step2.name', defaultMessage: 'Find People Who Need Help' }),
+        text: intl.formatMessage({ id: 'chatter.schema.step2.text', defaultMessage: 'Search for expats, travelers, or immigrants who need legal assistance abroad. Look in Facebook groups, WhatsApp groups, Reddit communities, or your personal network.' })
+      },
+      {
+        '@type': 'HowToStep',
+        position: 3,
+        name: intl.formatMessage({ id: 'chatter.schema.step3.name', defaultMessage: 'Share Your Link' }),
+        text: intl.formatMessage({ id: 'chatter.schema.step3.text', defaultMessage: 'Share your unique affiliate link with people who need help. When they call a lawyer or expat helper through your link, you earn $10.' })
+      },
+      {
+        '@type': 'HowToStep',
+        position: 4,
+        name: intl.formatMessage({ id: 'chatter.schema.step4.name', defaultMessage: 'Get Paid' }),
+        text: intl.formatMessage({ id: 'chatter.schema.step4.text', defaultMessage: 'Withdraw your earnings when you reach $25 minimum. Payments via Mobile Money (Orange Money, Wave, MTN MoMo, M-Pesa), Wise, or bank transfer within 48 hours.' })
+      }
+    ]
+  };
+
+  // Structured Data: JobPosting Schema
+  const jobPostingSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'JobPosting',
+    title: intl.formatMessage({ id: 'chatter.schema.job.title', defaultMessage: 'SOS-Expat Chatter - Affiliate Partner' }),
+    description: intl.formatMessage({ id: 'chatter.schema.job.description', defaultMessage: 'Earn money by helping expats and travelers find legal assistance. Earn $10 per referred call plus passive income from your team. Work from anywhere, anytime. No experience required, 100% free to join.' }),
+    datePosted: '2024-01-01',
+    validThrough: '2026-12-31',
+    employmentType: 'CONTRACTOR',
+    hiringOrganization: {
+      '@type': 'Organization',
+      name: 'SOS-Expat',
+      sameAs: 'https://sos-expat.com',
+      logo: 'https://sos-expat.com/logo.png'
+    },
+    jobLocation: {
+      '@type': 'Place',
+      address: {
+        '@type': 'PostalAddress',
+        addressCountry: 'Worldwide'
+      }
+    },
+    jobLocationType: 'TELECOMMUTE',
+    applicantLocationRequirements: {
+      '@type': 'Country',
+      name: 'Worldwide'
+    },
+    baseSalary: {
+      '@type': 'MonetaryAmount',
+      currency: 'USD',
+      value: {
+        '@type': 'QuantitativeValue',
+        value: 10,
+        unitText: 'PER_REFERRAL'
+      }
+    },
+    responsibilities: intl.formatMessage({ id: 'chatter.schema.job.responsibilities', defaultMessage: 'Find people who need legal help abroad and share your affiliate link. Build a team of chatters for passive income.' }),
+    qualifications: intl.formatMessage({ id: 'chatter.schema.job.qualifications', defaultMessage: 'No experience required. Must pass a simple 5-question quiz about SOS-Expat.' }),
+    skills: intl.formatMessage({ id: 'chatter.schema.job.skills', defaultMessage: 'Social media skills, communication, networking' }),
+    incentiveCompensation: intl.formatMessage({ id: 'chatter.schema.job.incentive', defaultMessage: '$10 per referred call, $1 per call from direct recruits (N1), $0.50 per call from indirect recruits (N2)' })
+  };
+
+  // Structured Data: Service Schema
+  const serviceSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: intl.formatMessage({ id: 'chatter.schema.service.name', defaultMessage: 'SOS-Expat Chatter Affiliate Program' }),
+    description: intl.formatMessage({ id: 'chatter.schema.service.description', defaultMessage: 'Affiliate program for earning money by referring expatriates to legal assistance services. Earn $10 per client plus team-based passive income.' }),
+    provider: {
+      '@type': 'Organization',
+      name: 'SOS-Expat',
+      url: 'https://sos-expat.com'
+    },
+    serviceType: 'Affiliate Marketing Program',
+    areaServed: {
+      '@type': 'Place',
+      name: 'Worldwide'
+    },
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Chatter Earning Opportunities',
+      itemListElement: [
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: intl.formatMessage({ id: 'chatter.schema.offer.direct', defaultMessage: 'Direct Client Referral' }),
+            description: intl.formatMessage({ id: 'chatter.schema.offer.direct.desc', defaultMessage: 'Earn $10 for each client you refer who calls a lawyer or expat helper' })
+          }
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: intl.formatMessage({ id: 'chatter.schema.offer.team', defaultMessage: 'Team Building Income' }),
+            description: intl.formatMessage({ id: 'chatter.schema.offer.team.desc', defaultMessage: 'Earn $1 per call from direct recruits (N1) and $0.50 from indirect recruits (N2), unlimited team size' })
+          }
+        }
+      ]
+    }
+  };
+
+  // Structured Data: WebPage with Speakable
+  const webPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: seoTitle,
+    description: seoDescription,
+    url: getCanonicalUrl(),
+    inLanguage: langCode === 'ch' ? 'zh' : langCode,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'SOS-Expat',
+      url: 'https://sos-expat.com'
+    },
+    about: {
+      '@type': 'Thing',
+      name: 'Chatter Affiliate Program',
+      description: 'Earn money by helping expats find legal assistance worldwide'
+    },
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '.hero-title', '.seo-speakable']
+    },
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: '$10 per referred call' },
+        { '@type': 'ListItem', position: 2, name: 'Unlimited team building' },
+        { '@type': 'ListItem', position: 3, name: 'Worldwide payments' },
+        { '@type': 'ListItem', position: 4, name: '100% free to join' }
+      ]
+    }
+  };
 
   // FAQ
   const faqs = [
@@ -211,17 +403,47 @@ const ChatterLanding: React.FC = () => {
   // Calculate team earnings ($1 per call, assume 10 calls/month per chatter)
   const teamEarnings = teamSize * 10;
 
+  // Get locale for SEO
+  const getLocaleForSEO = () => {
+    const localeMap: Record<string, string> = {
+      'fr': 'fr_FR', 'en': 'en_US', 'es': 'es_ES', 'de': 'de_DE',
+      'pt': 'pt_PT', 'ru': 'ru_RU', 'ch': 'zh_CN', 'hi': 'hi_IN', 'ar': 'ar_SA'
+    };
+    return localeMap[langCode] || 'en_US';
+  };
+
   return (
     <Layout>
+      {/* Comprehensive SEO Head with AI optimization */}
       <SEOHead
         title={seoTitle}
         description={seoDescription}
         ogImage="/og-image.png"
         ogType="website"
         contentType="LandingPage"
+        keywords={seoKeywords}
+        aiSummary={seoAiSummary}
+        expertise="professional"
+        trustworthiness="established"
+        contentQuality="high"
+        locale={getLocaleForSEO()}
+        siteName="SOS-Expat"
+        twitterSite="@sosexpat"
+        lastReviewed={new Date().toISOString().split('T')[0]}
       />
       <HreflangLinks pathname={location.pathname} />
+
+      {/* FAQ Schema for rich snippets / Position 0 */}
       <FAQPageSchema faqs={faqs.map(f => ({ question: f.question, answer: f.answer }))} pageTitle={seoTitle} />
+
+      {/* Additional JSON-LD Schemas for comprehensive SEO - wrapped in Helmet for head placement */}
+      {/* Note: Organization schema removed - handled at site level, not page level */}
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(webPageSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(jobPostingSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(serviceSchema)}</script>
+      </Helmet>
 
       {/* Custom Animations */}
       <style>{`
@@ -335,7 +557,7 @@ const ChatterLanding: React.FC = () => {
                 ))}
               </div>
               <span className="font-bold text-sm">
-                <AnimatedCounter end={2847} suffix="+" className="font-black" />
+                <AnimatedCounter end={1247} suffix="+" className="font-black" />
                 <FormattedMessage id="chatter.hero.badge" defaultMessage=" Chatters worldwide" />
               </span>
             </div>
@@ -404,6 +626,7 @@ const ChatterLanding: React.FC = () => {
             {/* MEGA CTA */}
             <button
               onClick={() => navigate(registerRoute)}
+              aria-label={intl.formatMessage({ id: 'chatter.aria.cta.main', defaultMessage: 'Start earning money now - Register as a Chatter for free' })}
               className="group relative bg-gradient-to-r from-amber-400 to-yellow-500 text-gray-900 font-black px-10 py-6 rounded-2xl text-xl md:text-2xl inline-flex items-center gap-4 hover:from-amber-300 hover:to-yellow-400 transition-all shadow-2xl animate-pulse-glow-gold overflow-hidden"
             >
               <div className="absolute inset-0 animate-shimmer" />
@@ -531,7 +754,7 @@ const ChatterLanding: React.FC = () => {
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 { icon: '✅', text: intl.formatMessage({ id: 'chatter.what.easy1', defaultMessage: 'Real need, real solution' }) },
-                { icon: '💰', text: intl.formatMessage({ id: 'chatter.what.easy2', defaultMessage: '$10 per referred client' }) },
+                { icon: '💰', text: intl.formatMessage({ id: 'chatter.what.easy2', defaultMessage: '$10 per referred call' }) },
                 { icon: '⚡', text: intl.formatMessage({ id: 'chatter.what.easy3', defaultMessage: 'Instant booking' }) },
                 { icon: '🌐', text: intl.formatMessage({ id: 'chatter.what.easy4', defaultMessage: 'All languages & countries' }) },
               ].map((item, i) => (
@@ -577,7 +800,7 @@ const ChatterLanding: React.FC = () => {
                       <FormattedMessage id="chatter.calc.direct" defaultMessage="Your Direct Earnings" />
                     </h3>
                     <p className="text-amber-200 text-sm">
-                      <FormattedMessage id="chatter.calc.direct.sub" defaultMessage="$10 per referred client - your link works unlimited times!" />
+                      <FormattedMessage id="chatter.calc.direct.sub" defaultMessage="$10 per referred call - your link works unlimited times!" />
                     </p>
                   </div>
                 </div>
@@ -1180,6 +1403,7 @@ const ChatterLanding: React.FC = () => {
             <div className="text-center">
               <button
                 onClick={() => navigate(registerRoute)}
+                aria-label={intl.formatMessage({ id: 'chatter.aria.cta.team', defaultMessage: 'Start building your team and earn passive income' })}
                 className="group bg-white text-orange-600 font-black px-10 py-5 rounded-2xl text-xl inline-flex items-center gap-4 hover:bg-gray-100 transition-all shadow-2xl animate-pulse-glow-orange"
               >
                 <Rocket className="w-7 h-7" />
@@ -1463,7 +1687,7 @@ const ChatterLanding: React.FC = () => {
             {/* Stats bar */}
             <div className="grid grid-cols-3 gap-4 mb-10">
               {[
-                { value: <AnimatedCounter end={2847} />, label: intl.formatMessage({ id: 'chatter.stats.chatters', defaultMessage: 'Active Chatters' }), icon: '👥' },
+                { value: <AnimatedCounter end={1247} />, label: intl.formatMessage({ id: 'chatter.stats.chatters', defaultMessage: 'Active Chatters' }), icon: '👥' },
                 { value: <><AnimatedCounter end={156} prefix="$" />K</>, label: intl.formatMessage({ id: 'chatter.stats.paid', defaultMessage: 'Paid This Month' }), icon: '💰' },
                 { value: <AnimatedCounter end={47} />, label: intl.formatMessage({ id: 'chatter.stats.countries', defaultMessage: 'Countries' }), icon: '🌍' },
               ].map((stat, i) => (
@@ -1648,6 +1872,9 @@ const ChatterLanding: React.FC = () => {
                 >
                   <button
                     onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                    aria-expanded={openFaq === idx}
+                    aria-controls={`faq-answer-${idx}`}
+                    aria-label={`${faq.question} - ${intl.formatMessage({ id: 'chatter.aria.faq.toggle', defaultMessage: 'Click to expand or collapse this FAQ' })}`}
                     className="w-full flex items-center gap-4 p-5 text-left"
                   >
                     <div className="w-10 h-10 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 rounded-xl flex items-center justify-center text-red-600 dark:text-red-400 flex-shrink-0">
@@ -1659,7 +1886,7 @@ const ChatterLanding: React.FC = () => {
                     <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform flex-shrink-0 ${openFaq === idx ? 'rotate-180' : ''}`} />
                   </button>
                   {openFaq === idx && (
-                    <div className="px-5 pb-5 pl-[4.5rem] text-gray-600 dark:text-gray-300 animate-slide-up">
+                    <div id={`faq-answer-${idx}`} className="px-5 pb-5 pl-[4.5rem] text-gray-600 dark:text-gray-300 animate-slide-up">
                       <p>{faq.answer}</p>
                     </div>
                   )}
@@ -1757,6 +1984,7 @@ const ChatterLanding: React.FC = () => {
             {/* MEGA CTA - GOLD */}
             <button
               onClick={() => navigate(registerRoute)}
+              aria-label={intl.formatMessage({ id: 'chatter.aria.cta.final', defaultMessage: 'Become a Chatter now - Join our affiliate program and start earning today' })}
               className="group relative bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 text-gray-900 font-black px-12 py-7 rounded-2xl text-2xl md:text-3xl inline-flex items-center gap-4 hover:from-amber-300 hover:via-yellow-400 hover:to-amber-300 transition-all shadow-2xl animate-pulse-glow-gold overflow-hidden"
             >
               <div className="absolute inset-0 animate-shimmer" />
@@ -1781,6 +2009,7 @@ const ChatterLanding: React.FC = () => {
             <div className="bg-gray-900 border-t border-amber-500/30 px-4 py-3 shadow-2xl">
               <button
                 onClick={() => navigate(registerRoute)}
+                aria-label={intl.formatMessage({ id: 'chatter.aria.cta.sticky', defaultMessage: 'Earn $10 per call - Register free as a Chatter' })}
                 className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 text-gray-900 font-bold py-5 rounded-xl flex items-center justify-center gap-2 sm:gap-3 shadow-lg min-h-[56px] touch-manipulation"
               >
                 <DollarSign className="w-5 h-5" />

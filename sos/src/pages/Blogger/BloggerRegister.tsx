@@ -104,7 +104,7 @@ const BloggerRegister: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
-  const { user, isLoading: authLoading, register } = useAuth();
+  const { user, isLoading: authLoading, register, refreshUser } = useAuth();
   const { language } = useApp();
   const [showPassword, setShowPassword] = useState(false);
   const locale = (language || 'en') as string;
@@ -122,21 +122,7 @@ const BloggerRegister: React.FC = () => {
   const dashboardRoute = `/${getTranslatedRouteSlug('blogger-dashboard' as RouteKey, langCode)}`;
 
   // ============================================================================
-  // ROLE CHECK VARIABLES (used in hooks and conditional return)
-  // ============================================================================
-  const userRole = user?.role;
-  const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'lawyer', 'expat', 'client'].includes(userRole);
-  const isAlreadyBlogger = userRole === 'blogger';
-
-  // Redirect bloggers to their dashboard (hook must be before any return)
-  useEffect(() => {
-    if (!authLoading && isAlreadyBlogger) {
-      navigate(dashboardRoute);
-    }
-  }, [authLoading, isAlreadyBlogger, navigate, dashboardRoute]);
-
-  // ============================================================================
-  // ALL OTHER HOOKS
+  // ALL STATE HOOKS (must be before effects that use them)
   // ============================================================================
 
   const [formData, setFormData] = useState<BloggerFormData>({
@@ -161,6 +147,20 @@ const BloggerRegister: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // ============================================================================
+  // ROLE CHECK VARIABLES (used in hooks and conditional return)
+  // ============================================================================
+  const userRole = user?.role;
+  const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'lawyer', 'expat', 'client'].includes(userRole);
+  const isAlreadyBlogger = userRole === 'blogger';
+
+  // Redirect bloggers to their dashboard (but not if they just registered)
+  useEffect(() => {
+    if (!authLoading && isAlreadyBlogger && !success) {
+      navigate(dashboardRoute);
+    }
+  }, [authLoading, isAlreadyBlogger, navigate, dashboardRoute, success]);
 
   // Dropdown states
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
@@ -256,6 +256,8 @@ const BloggerRegister: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error when user modifies form
+    setError(null);
     if (validationErrors[name]) {
       setValidationErrors(prev => {
         const newErrors = { ...prev };
@@ -374,8 +376,10 @@ const BloggerRegister: React.FC = () => {
 
       if (result.data.success) {
         setSuccess(true);
+        // Refresh user data to ensure role is updated in context
+        await refreshUser();
         setTimeout(() => {
-          navigate(dashboardRoute);
+          navigate(dashboardRoute, { replace: true });
         }, 2000);
       } else {
         setError(result.data.message);

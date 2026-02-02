@@ -100,7 +100,7 @@ interface InfluencerRegisterFormProps {
 const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referralCode = '' }) => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
-  const { user, register } = useAuth();
+  const { user, register, refreshUser } = useAuth();
   const { language } = useApp();
   const locale = (language || 'en') as string;
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
@@ -172,6 +172,8 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referra
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error when user modifies form
+    setError(null);
     if (validationErrors[name]) {
       setValidationErrors(prev => {
         const newErrors = { ...prev };
@@ -288,8 +290,10 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referra
       if (data.success) {
         console.log('[InfluencerRegister] Registration completed successfully');
         setSuccess(true);
+        // Refresh user data to ensure role is updated in context
+        await refreshUser();
         setTimeout(() => {
-          navigate(`/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`);
+          navigate(`/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`, { replace: true });
         }, 2000);
       }
     } catch (err: unknown) {
