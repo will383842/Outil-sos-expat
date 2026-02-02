@@ -106,6 +106,7 @@ export interface CallSessionState {
     endedAt?: admin.firestore.Timestamp;
     duration?: number; // Total Twilio conference duration
     billingDuration?: number; // P0 FIX: Duration from when BOTH participants connected (for billing)
+    effectiveBillingDuration?: number; // P0 FIX 2026-02-02: Effective billing duration used for capture decision (with fallback)
     recordingUrl?: string;
     recordingSid?: string;
   };

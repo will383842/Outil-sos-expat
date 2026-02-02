@@ -472,22 +472,63 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
 
     // P0 FIX 2026-02-01: Minimum duration reduced from 120s (2 min) to 60s (1 min)
     const MIN_DURATION_FOR_CAPTURE = 60;
+
+    // P0 FIX 2026-02-02: CRITICAL FIX for PayPal capture not triggering!
+    // If billingDuration = 0 but twilioDuration >= MIN_DURATION, use twilioDuration as fallback.
+    // This happens when connectedAt is not set for one or both participants due to:
+    // - handleParticipantJoin skipping update (status was amd_pending/calling/ringing)
+    // - Race condition between DTMF confirmation and participant-join webhooks
+    //
+    // SAFETY: We ONLY use twilioDuration as fallback when:
+    // 1. billingDuration = 0 (something went wrong with timestamp tracking)
+    // 2. twilioDuration >= MIN_DURATION (conference actually lasted long enough)
+    // 3. Both participants were at some point in a "connected-like" state
+    //
+    // This prevents false captures while ensuring real calls are captured.
+    let effectiveBillingDuration = billingDuration;
+
+    if (billingDuration === 0 && twilioDuration >= MIN_DURATION_FOR_CAPTURE) {
+      console.log(`🏁 [${endId}] ⚠️ P0 FIX 2026-02-02: billingDuration=0 but twilioDuration=${twilioDuration}s`);
+      console.log(`🏁 [${endId}]   This indicates connectedAt timestamps were not properly set`);
+
+      // Check if both participants reached "connected" status at some point
+      const clientStatus = sessionBefore?.participants?.client?.status;
+      const providerStatus = sessionBefore?.participants?.provider?.status;
+      const clientEverConnected = clientStatus === 'connected' || clientStatus === 'disconnected';
+      const providerEverConnected = providerStatus === 'connected' || providerStatus === 'disconnected';
+
+      console.log(`🏁 [${endId}]   clientStatus: ${clientStatus}, everConnected: ${clientEverConnected}`);
+      console.log(`🏁 [${endId}]   providerStatus: ${providerStatus}, everConnected: ${providerEverConnected}`);
+
+      if (clientEverConnected && providerEverConnected) {
+        // Both participants connected at some point - use Twilio duration as fallback
+        effectiveBillingDuration = twilioDuration;
+        console.log(`🏁 [${endId}]   ✅ FALLBACK: Using twilioDuration=${twilioDuration}s as effectiveBillingDuration`);
+        console.log(`🏁 [${endId}]   Reason: Both participants were connected but connectedAt timestamps missing`);
+      } else {
+        console.log(`🏁 [${endId}]   ❌ NOT using fallback: Not all participants were connected`);
+        console.log(`🏁 [${endId}]   Keeping billingDuration=0 to trigger refund`);
+      }
+    }
+
     console.log(`🏁 [${endId}]   twilioDuration (total): ${twilioDuration}s (${(twilioDuration / 60).toFixed(1)} min)`);
     console.log(`🏁 [${endId}]   billingDuration (both connected): ${billingDuration}s (${(billingDuration / 60).toFixed(1)} min)`);
+    console.log(`🏁 [${endId}]   effectiveBillingDuration: ${effectiveBillingDuration}s (${(effectiveBillingDuration / 60).toFixed(1)} min)`);
     console.log(`🏁 [${endId}]   minDurationForCapture: ${MIN_DURATION_FOR_CAPTURE}s (1 min)`);
-    console.log(`🏁 [${endId}]   willCapture: ${billingDuration >= MIN_DURATION_FOR_CAPTURE ? 'YES' : 'NO - will refund/cancel'}`);
+    console.log(`🏁 [${endId}]   willCapture: ${effectiveBillingDuration >= MIN_DURATION_FOR_CAPTURE ? 'YES' : 'NO - will refund/cancel'}`);
 
     console.log(`🏁 [${endId}] STEP 2: Updating conference info (endedAt + duration)...`);
     await twilioCallManager.updateConferenceInfo(sessionId, {
       endedAt: admin.firestore.Timestamp.fromDate(conferenceEndTime),
       duration: twilioDuration,
-      billingDuration: billingDuration // Store both for transparency
+      billingDuration: billingDuration, // Store original for transparency
+      effectiveBillingDuration: effectiveBillingDuration // P0 FIX 2026-02-02: Store effective duration used for capture decision
     });
     console.log(`🏁 [${endId}]   ✅ Conference info updated`);
 
-    // Log si appel trop court (pour monitoring) - use BILLING duration
-    if (billingDuration < MIN_DURATION_FOR_CAPTURE) {
-      console.log(`🏁 [${endId}] ⚠️ BILLING DURATION TOO SHORT: ${billingDuration}s < ${MIN_DURATION_FOR_CAPTURE}s minimum`);
+    // Log si appel trop court (pour monitoring) - use EFFECTIVE BILLING duration
+    if (effectiveBillingDuration < MIN_DURATION_FOR_CAPTURE) {
+      console.log(`🏁 [${endId}] ⚠️ EFFECTIVE BILLING DURATION TOO SHORT: ${effectiveBillingDuration}s < ${MIN_DURATION_FOR_CAPTURE}s minimum`);
       console.log(`🏁 [${endId}]   Action: Will trigger refund/cancel via handleCallCompletion`);
       await logCallRecord({
         callId: sessionId,
@@ -496,20 +537,21 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
         additionalData: {
           twilioDuration,
           billingDuration,
-          reason: `Billing duration (from both connected) less than ${MIN_DURATION_FOR_CAPTURE}s - will trigger refund/cancel`
+          effectiveBillingDuration,
+          reason: `Effective billing duration less than ${MIN_DURATION_FOR_CAPTURE}s - will trigger refund/cancel`
         }
       });
     } else {
-      console.log(`🏁 [${endId}] ✅ BILLING DURATION OK: ${billingDuration}s >= ${MIN_DURATION_FOR_CAPTURE}s minimum`);
+      console.log(`🏁 [${endId}] ✅ EFFECTIVE BILLING DURATION OK: ${effectiveBillingDuration}s >= ${MIN_DURATION_FOR_CAPTURE}s minimum`);
       console.log(`🏁 [${endId}]   Action: Will capture payment via handleCallCompletion`);
     }
 
     // handleCallCompletion gère TOUS les cas:
     // - Si durée >= 60s → capture paiement + schedule transfer prestataire
     // - Si durée < 60s  → processRefund (cancel ou refund selon état paiement)
-    // P0 FIX: Pass BILLING duration (from when both connected), not Twilio's total duration
-    console.log(`🏁 [${endId}] STEP 3: Calling handleCallCompletion(sessionId, ${billingDuration})...`);
-    await twilioCallManager.handleCallCompletion(sessionId, billingDuration);
+    // P0 FIX 2026-02-02: Pass EFFECTIVE BILLING duration (with fallback to Twilio duration)
+    console.log(`🏁 [${endId}] STEP 3: Calling handleCallCompletion(sessionId, ${effectiveBillingDuration})...`);
+    await twilioCallManager.handleCallCompletion(sessionId, effectiveBillingDuration);
     console.log(`🏁 [${endId}]   ✅ handleCallCompletion completed`);
 
     console.log(`🏁 [${endId}] STEP 4: Fetching session state AFTER completion...`);
@@ -526,6 +568,7 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
       additionalData: {
         twilioDuration,
         billingDuration,
+        effectiveBillingDuration,
         conferenceSid: body.ConferenceSid
       }
     });
@@ -537,8 +580,9 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
     console.log(`🎤 [${endId}]   conferenceSid: ${body.ConferenceSid}`);
     console.log(`🎤 [${endId}]   twilioDuration (total): ${twilioDuration}s`);
     console.log(`🎤 [${endId}]   billingDuration (both connected): ${billingDuration}s`);
-    console.log(`🎤 [${endId}]   capture threshold: 120s`);
-    console.log(`🎤 [${endId}]   decision: ${billingDuration >= 120 ? 'CAPTURE PAYMENT' : 'REFUND/CANCEL'}`);
+    console.log(`🎤 [${endId}]   effectiveBillingDuration (used for capture): ${effectiveBillingDuration}s`);
+    console.log(`🎤 [${endId}]   capture threshold: ${MIN_DURATION_FOR_CAPTURE}s (1 min)`);
+    console.log(`🎤 [${endId}]   decision: ${effectiveBillingDuration >= MIN_DURATION_FOR_CAPTURE ? 'CAPTURE PAYMENT' : 'REFUND/CANCEL'}`);
 
     // Fetch and log final state
     const finalSessionState = await twilioCallManager.getCallSession(sessionId);
