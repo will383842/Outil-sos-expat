@@ -735,8 +735,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         </div>
       )}
 
-      {/* Section Carte Bancaire */}
-      <div className={`transition-opacity duration-200 ${disabled || isProcessing || isBlocked ? "opacity-50 pointer-events-none" : ""}`}>
+      {/* Section Carte Bancaire - Ne pas griser les champs, seulement désactiver le bouton */}
+      <div className={`transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
         <PayPalCardFieldsProvider
           createOrder={createOrder}
           onApprove={onCardApprove}
@@ -749,13 +749,13 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               "font-family": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
               "font-weight": "400",
               "color": "#1f2937",
-              "padding": "0 14px",
+              "padding": "0 12px 0 8px",
               "border": "none",
               "border-radius": "0",
-              "height": "100%",
+              "height": "44px",
               "box-sizing": "border-box",
               "background-color": "transparent",
-              "line-height": "48px",
+              "line-height": "44px",
             },
             "input::placeholder": {
               "color": "#9ca3af",
@@ -866,8 +866,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         </div>
       </div>
 
-      {/* Bouton PayPal */}
-      <div className={`paypal-buttons-container transition-opacity duration-200 ${disabled || isProcessing || isBlocked ? "opacity-50 pointer-events-none" : ""}`}>
+      {/* Bouton PayPal - Ne pas griser pour validation, seulement pour disabled/processing */}
+      <div className={`paypal-buttons-container transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
         <PayPalButtons
           style={{
             layout: "horizontal",
@@ -877,7 +877,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
             height: 44,
             tagline: false,
           }}
-          disabled={disabled || isProcessing}
+          disabled={disabled || isProcessing || isBlocked}
           createOrder={createOrder}
           onApprove={onApprove}
           onError={handleError}
