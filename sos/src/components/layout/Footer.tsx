@@ -15,6 +15,7 @@ import {
   MessageCircle,
   Users,
   FileText,
+  Shield,
   type LucideIcon,
 } from "lucide-react";
 import { useIntl } from "react-intl";
@@ -401,9 +402,11 @@ interface JoinUsCTAProps {
   readonly chatterLabel: string;
   readonly influencerLabel: string;
   readonly bloggerLabel: string;
+  readonly groupAdminLabel: string;
   readonly chatterHref: string;
   readonly influencerHref: string;
   readonly bloggerHref: string;
+  readonly groupAdminHref: string;
   readonly sectionTitle: string;
 }
 
@@ -411,26 +414,28 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
   chatterLabel,
   influencerLabel,
   bloggerLabel,
+  groupAdminLabel,
   chatterHref,
   influencerHref,
   bloggerHref,
+  groupAdminHref,
   sectionTitle,
 }) {
   return (
     <div className="col-span-1 md:col-span-2 lg:col-span-1 order-first lg:order-last">
       {/* Mobile: Section mise en évidence avec fond */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.02]
+      <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.02]
         border border-white/10 backdrop-blur-sm">
-        <h3 className="text-lg sm:text-xl font-bold text-white text-center lg:text-left mb-4">
+        <h3 className="text-base sm:text-lg font-bold text-white text-center lg:text-left mb-3">
           {sectionTitle}
         </h3>
 
-        {/* Boutons en grille sur mobile, empilés sur desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
+        {/* Boutons en grille 2x2 sur mobile, 4 colonnes sur tablette, empilés sur desktop */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-1 gap-2 sm:gap-2.5">
           {/* Bouton Chatter */}
           <LocaleLink
             to={chatterHref}
-            className="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-4 sm:py-5 rounded-xl
+            className="group flex items-center gap-2 sm:gap-2.5 w-full px-2.5 sm:px-3 py-2.5 sm:py-3 rounded-xl
               bg-gradient-to-r from-red-500 to-red-600
               hover:from-red-600 hover:to-red-700
               shadow-lg shadow-red-500/25 hover:shadow-red-500/40
@@ -438,13 +443,13 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
               transition-all duration-300 focus:outline-none
               focus-visible:ring-2 focus-visible:ring-white/50"
           >
-            <div className="p-2.5 sm:p-3 rounded-xl bg-white/20 group-hover:bg-white/30 transition-colors">
-              <MessageCircle size={22} className="text-white" />
+            <div className="p-1.5 sm:p-2 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors">
+              <MessageCircle size={16} className="text-white sm:w-[18px] sm:h-[18px]" />
             </div>
-            <div className="flex flex-col flex-1">
-              <span className="text-white font-bold text-base sm:text-lg">{chatterLabel}</span>
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-white font-bold text-xs sm:text-sm truncate">{chatterLabel}</span>
             </div>
-            <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
+            <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all hidden lg:inline" aria-hidden="true">
               →
             </span>
           </LocaleLink>
@@ -452,7 +457,7 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
           {/* Bouton Influenceur */}
           <LocaleLink
             to={influencerHref}
-            className="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-4 sm:py-5 rounded-xl
+            className="group flex items-center gap-2 sm:gap-2.5 w-full px-2.5 sm:px-3 py-2.5 sm:py-3 rounded-xl
               bg-gradient-to-r from-orange-500 to-red-500
               hover:from-orange-600 hover:to-red-600
               shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40
@@ -460,13 +465,13 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
               transition-all duration-300 focus:outline-none
               focus-visible:ring-2 focus-visible:ring-white/50"
           >
-            <div className="p-2.5 sm:p-3 rounded-xl bg-white/20 group-hover:bg-white/30 transition-colors">
-              <Users size={22} className="text-white" />
+            <div className="p-1.5 sm:p-2 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors">
+              <Users size={16} className="text-white sm:w-[18px] sm:h-[18px]" />
             </div>
-            <div className="flex flex-col flex-1">
-              <span className="text-white font-bold text-base sm:text-lg">{influencerLabel}</span>
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-white font-bold text-xs sm:text-sm truncate">{influencerLabel}</span>
             </div>
-            <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
+            <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all hidden lg:inline" aria-hidden="true">
               →
             </span>
           </LocaleLink>
@@ -474,7 +479,7 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
           {/* Bouton Blogger */}
           <LocaleLink
             to={bloggerHref}
-            className="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-4 sm:py-5 rounded-xl
+            className="group flex items-center gap-2 sm:gap-2.5 w-full px-2.5 sm:px-3 py-2.5 sm:py-3 rounded-xl
               bg-gradient-to-r from-purple-500 to-purple-600
               hover:from-purple-600 hover:to-purple-700
               shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40
@@ -482,13 +487,35 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
               transition-all duration-300 focus:outline-none
               focus-visible:ring-2 focus-visible:ring-white/50"
           >
-            <div className="p-2.5 sm:p-3 rounded-xl bg-white/20 group-hover:bg-white/30 transition-colors">
-              <FileText size={22} className="text-white" />
+            <div className="p-1.5 sm:p-2 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors">
+              <FileText size={16} className="text-white sm:w-[18px] sm:h-[18px]" />
             </div>
-            <div className="flex flex-col flex-1">
-              <span className="text-white font-bold text-base sm:text-lg">{bloggerLabel}</span>
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-white font-bold text-xs sm:text-sm truncate">{bloggerLabel}</span>
             </div>
-            <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
+            <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all hidden lg:inline" aria-hidden="true">
+              →
+            </span>
+          </LocaleLink>
+
+          {/* Bouton Admin Groupe */}
+          <LocaleLink
+            to={groupAdminHref}
+            className="group flex items-center gap-2 sm:gap-2.5 w-full px-2.5 sm:px-3 py-2.5 sm:py-3 rounded-xl
+              bg-gradient-to-r from-emerald-500 to-teal-600
+              hover:from-emerald-600 hover:to-teal-700
+              shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40
+              transform hover:scale-[1.02] active:scale-[0.98]
+              transition-all duration-300 focus:outline-none
+              focus-visible:ring-2 focus-visible:ring-white/50"
+          >
+            <div className="p-1.5 sm:p-2 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors">
+              <Shield size={16} className="text-white sm:w-[18px] sm:h-[18px]" />
+            </div>
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-white font-bold text-xs sm:text-sm truncate">{groupAdminLabel}</span>
+            </div>
+            <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all hidden lg:inline" aria-hidden="true">
               →
             </span>
           </LocaleLink>
@@ -920,9 +947,11 @@ const Footer: React.FC = () => {
               chatterLabel={intl.formatMessage({ id: "footer.joinUs.chatter", defaultMessage: "Devenir Chatter" })}
               influencerLabel={intl.formatMessage({ id: "footer.joinUs.influencer", defaultMessage: "Devenir Influenceur" })}
               bloggerLabel={intl.formatMessage({ id: "footer.joinUs.blogger", defaultMessage: "Devenir Blogger" })}
+              groupAdminLabel={intl.formatMessage({ id: "footer.joinUs.groupAdmin", defaultMessage: "Admin Groupe" })}
               chatterHref="/devenir-chatter"
               influencerHref="/devenir-influenceur"
               bloggerHref="/devenir-blogger"
+              groupAdminHref="/devenir-admin-groupe"
             />
           </div>
 
