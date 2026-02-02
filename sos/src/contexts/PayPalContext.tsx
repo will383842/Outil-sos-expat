@@ -41,7 +41,7 @@ export const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
   }
 
   const initialOptions: ReactPayPalScriptOptions = useMemo(() => ({
-    clientId: clientId || "test",
+    clientId: clientId, // Ne jamais utiliser de fallback invalide - le SDK échouera proprement
     currency: "EUR",
     intent: "authorize",
     components: "buttons,card-fields",

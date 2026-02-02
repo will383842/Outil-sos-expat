@@ -151,7 +151,8 @@ const CardFieldsSubmitButton: React.FC<{
   isProcessing: boolean;
   disabled: boolean;
   onSubmit: () => void;
-}> = ({ isProcessing, disabled, onSubmit }) => {
+  onError?: (error: unknown) => void;
+}> = ({ isProcessing, disabled, onSubmit, onError }) => {
   const { cardFieldsForm } = usePayPalCardFields();
 
   const handleClick = async () => {
@@ -171,6 +172,8 @@ const CardFieldsSubmitButton: React.FC<{
       if (import.meta.env.DEV) {
         console.error("Card submit error:", err);
       }
+      // Reset processing state on error to prevent stuck UI
+      onError?.(err);
     });
   };
 
@@ -258,9 +261,23 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const [errorCode, setErrorCode] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal" | null>(null);
   const [validationError, setValidationError] = useState<ValidationResult | null>(null);
+  const [sdkLoadTimeout, setSdkLoadTimeout] = useState(false);
 
   const intl = useIntl();
   const currentOrderIdRef = useRef<string>("");
+
+  // Safety timeout: if SDK is still pending after 15 seconds, show error
+  useEffect(() => {
+    if (isPending && !sdkLoadTimeout) {
+      const timeoutId = setTimeout(() => {
+        if (isPending) {
+          console.error("PayPal SDK loading timeout after 15s");
+          setSdkLoadTimeout(true);
+        }
+      }, 15000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isPending, sdkLoadTimeout]);
 
   // Validate booking data on mount and when it changes
   useEffect(() => {
@@ -512,17 +529,36 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     );
   }
 
-  // Error state du script PayPal
-  if (isRejected) {
+  // Error state du script PayPal (rejected or timeout)
+  if (isRejected || sdkLoadTimeout) {
     return (
-      <div className="flex items-center p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-        <AlertCircle className="w-6 h-6 text-red-500 mr-3 flex-shrink-0" />
-        <span className="text-red-700 font-medium">
-          <FormattedMessage
-            id="payment.paypal.loadError"
-            defaultMessage="Impossible de charger le système de paiement. Veuillez rafraîchir la page."
-          />
-        </span>
+      <div className="space-y-4">
+        <div className="flex items-center p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+          <AlertCircle className="w-6 h-6 text-red-500 mr-3 flex-shrink-0" />
+          <div className="flex-1">
+            <span className="text-red-700 font-medium block">
+              <FormattedMessage
+                id="payment.paypal.loadError"
+                defaultMessage="Impossible de charger le système de paiement. Veuillez rafraîchir la page."
+              />
+            </span>
+            {sdkLoadTimeout && (
+              <span className="text-red-600 text-sm block mt-1">
+                <FormattedMessage
+                  id="payment.paypal.timeoutHint"
+                  defaultMessage="Un bloqueur de publicités ou une extension de sécurité peut bloquer le chargement."
+                />
+              </span>
+            )}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-red-500/30"
+        >
+          <FormattedMessage id="payment.paypal.reload" defaultMessage="Rafraîchir la page" />
+        </button>
       </div>
     );
   }
@@ -808,6 +844,11 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               isProcessing={isProcessing && paymentMethod === "card"}
               disabled={disabled || isBlocked}
               onSubmit={() => setPaymentMethod("card")}
+              onError={(err) => {
+                setIsProcessing(false);
+                setPaymentStatus("error");
+                setErrorCode(extractPayPalErrorCode(err));
+              }}
             />
           </div>
         </PayPalCardFieldsProvider>

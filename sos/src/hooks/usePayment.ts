@@ -955,7 +955,7 @@ export function usePaymentConfig(): UsePaymentConfigReturn {
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState("USD");
 
-  // Fetch config
+  // Fetch config with timeout to prevent infinite loading
   useEffect(() => {
     const fetchConfig = async () => {
       if (!user?.uid) {
@@ -969,7 +969,12 @@ export function usePaymentConfig(): UsePaymentConfigReturn {
           "getPaymentConfig"
         );
 
-        const result = await getPaymentConfigFn();
+        // Add 10 second timeout to prevent infinite loading
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("Config fetch timeout")), 10000);
+        });
+
+        const result = await Promise.race([getPaymentConfigFn(), timeoutPromise]);
 
         if (result.data.success) {
           setMinimumWithdrawal(result.data.config.minimumWithdrawalAmount);

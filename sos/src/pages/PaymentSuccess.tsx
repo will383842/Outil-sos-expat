@@ -453,6 +453,7 @@ const SuccessPayment: React.FC = () => {
      P1 FIX: Ajout de retry si le document n'existe pas encore
      ========================= */
   const [sessionRetryCount, setSessionRetryCount] = useState(0);
+  const [sessionLoadError, setSessionLoadError] = useState(false);
   const MAX_SESSION_RETRIES = 10; // 10 retries x 2s = 20s max wait
 
   useEffect(() => {
@@ -491,6 +492,7 @@ const SuccessPayment: React.FC = () => {
           }, 2000); // Retry every 2 seconds
         } else {
           console.error(`❌ [SUCCESS_PAGE_DEBUG] Max retries reached for call_sessions/${callId}`);
+          setSessionLoadError(true);
         }
         return;
       }
@@ -606,6 +608,7 @@ const SuccessPayment: React.FC = () => {
         }, 3000);
       } else {
         console.error(`❌ [SUCCESS_PAGE_DEBUG] Max retries reached, giving up on call_sessions/${callId}`);
+        setSessionLoadError(true);
       }
     });
 
@@ -1109,8 +1112,35 @@ const SuccessPayment: React.FC = () => {
               </div>
             )}
 
+            {/* Session Load Error */}
+            {sessionLoadError && (
+              <div className="mb-8 p-6 bg-orange-500/20 border border-orange-400/30 rounded-2xl backdrop-blur-sm">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-orange-500/30 rounded-full">
+                    <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-orange-300 mb-2">
+                      {intl.formatMessage({ id: "success.sessionLoadError.title", defaultMessage: "Connexion lente" })}
+                    </h3>
+                    <p className="text-orange-200/80 text-sm mb-4">
+                      {intl.formatMessage({ id: "success.sessionLoadError.message", defaultMessage: "La session prend plus de temps que prévu à charger. Votre paiement a été enregistré et l'appel sera lancé automatiquement." })}
+                    </p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors"
+                    >
+                      {intl.formatMessage({ id: "success.sessionLoadError.refresh", defaultMessage: "Rafraîchir la page" })}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* États */}
-            {callState === "connecting" && (
+            {callState === "connecting" && !sessionLoadError && (
               <>
                 <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
                   <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">

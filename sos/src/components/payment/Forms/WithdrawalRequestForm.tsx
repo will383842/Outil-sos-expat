@@ -229,15 +229,18 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
   const [showMethodList, setShowMethodList] = useState(false);
 
   // Set default method when methods are loaded
+  // Note: selectedMethodId is intentionally not in deps to avoid circular updates
   useEffect(() => {
-    if (methods.length > 0 && !selectedMethodId) {
-      // Try to use default method, otherwise use first method
-      const defaultMethod = methods.find((m) => m.id === defaultMethodId) || methods[0];
-      if (defaultMethod) {
-        setSelectedMethodId(defaultMethod.id);
-      }
+    if (methods.length > 0) {
+      setSelectedMethodId((current) => {
+        // Only set if not already selected
+        if (current) return current;
+        // Try to use default method, otherwise use first method
+        const defaultMethod = methods.find((m) => m.id === defaultMethodId) || methods[0];
+        return defaultMethod?.id || null;
+      });
     }
-  }, [methods, defaultMethodId, selectedMethodId]);
+  }, [methods, defaultMethodId]);
 
   // Get selected method
   const selectedMethod = useMemo(() => {
