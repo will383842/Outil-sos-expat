@@ -2825,6 +2825,8 @@
   "admin.menu.chattersPromotions.description": "Promotions actives et bonus",
   "admin.menu.chattersReferrals": "Réseau Parrainage",
   "admin.menu.chattersReferrals.description": "Arbre de parrainage et statistiques",
+  "admin.menu.chattersCommissions": "Suivi Commissions",
+  "admin.menu.chattersCommissions.description": "Tracker professionnel des commissions N1/N2",
   "admin.menu.clients": "Clients",
   "admin.menu.clients.description": "Utilisateurs clients",
   "admin.menu.commissionRules": "Règles de Commissions",

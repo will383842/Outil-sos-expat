@@ -581,11 +581,18 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.chattersReferrals.description",
       },
       {
+        id: "chatters-commissions",
+        labelKey: "admin.menu.chattersCommissions",
+        path: "/admin/chatters/commissions",
+        icon: DollarSign,
+        badge: "NEW",
+        descriptionKey: "admin.menu.chattersCommissions.description",
+      },
+      {
         id: "chatters-payments",
         labelKey: "admin.menu.chattersPayments",
         path: "/admin/chatters/payments",
         icon: Wallet,
-        badge: "NEW",
         descriptionKey: "admin.menu.chattersPayments.description",
       },
       {

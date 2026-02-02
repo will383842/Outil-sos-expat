@@ -2852,6 +2852,8 @@
   "admin.menu.chattersPromotions.description": "Active promotions and bonuses",
   "admin.menu.chattersReferrals": "Referral Network",
   "admin.menu.chattersReferrals.description": "Sponsorship tree and referral stats",
+  "admin.menu.chattersCommissions": "Commission Tracker",
+  "admin.menu.chattersCommissions.description": "Professional N1/N2 commission tracking",
   "admin.menu.clients": "Clients",
   "admin.menu.clients.description": "Client users",
   "admin.menu.commissionRules": "Commission Rules",
