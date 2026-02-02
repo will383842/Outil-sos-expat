@@ -12,16 +12,13 @@ import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
 import {
-  User,
-  Mail,
-  Phone,
-  Globe,
-  Facebook,
-  Users,
   CheckCircle,
   ArrowRight,
   AlertCircle,
   Loader2,
+  Lock,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import {
   GroupType,
@@ -66,7 +63,7 @@ const GROUP_SIZES: GroupSizeTier[] = [
 const GroupAdminRegister: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, register } = useAuth();
   const [searchParams] = useSearchParams();
   const recruitmentCode = searchParams.get('ref') || '';
 
@@ -75,6 +72,7 @@ const GroupAdminRegister: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [affiliateCodes, setAffiliateCodes] = useState<{ client: string; recruitment: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -82,6 +80,7 @@ const GroupAdminRegister: React.FC = () => {
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
     phone: '',
     country: '',
     language: 'en' as SupportedGroupAdminLanguage,
@@ -127,6 +126,13 @@ const GroupAdminRegister: React.FC = () => {
       setError(intl.formatMessage({ id: 'groupadmin.register.error.emailRequired', defaultMessage: 'Valid email is required' }));
       return false;
     }
+    // Validate password only if user is not already logged in
+    if (!user) {
+      if (!formData.password || formData.password.length < 6) {
+        setError(intl.formatMessage({ id: 'groupadmin.register.error.passwordMin', defaultMessage: 'Password must be at least 6 characters' }));
+        return false;
+      }
+    }
     if (!formData.country) {
       setError(intl.formatMessage({ id: 'groupadmin.register.error.countryRequired', defaultMessage: 'Country is required' }));
       return false;
@@ -171,15 +177,36 @@ const GroupAdminRegister: React.FC = () => {
   const handleSubmit = async () => {
     if (!validateStep2()) return;
 
-    if (!user) {
-      setError(intl.formatMessage({ id: 'groupadmin.register.error.loginRequired', defaultMessage: 'Please log in to register' }));
-      return;
-    }
-
     setIsSubmitting(true);
     setError(null);
 
     try {
+      // Step 1: Create Firebase Auth account if user is not logged in
+      if (!user) {
+        try {
+          await register({
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            role: 'groupAdmin',
+          }, formData.password);
+        } catch (authErr: unknown) {
+          const authError = authErr as { message?: string; code?: string };
+          if (authError.message?.includes('email-already-in-use') || authError.code === 'auth/email-already-in-use') {
+            setError(intl.formatMessage({ id: 'groupadmin.register.error.emailInUse', defaultMessage: 'This email is already in use. Please log in instead.' }));
+          } else if (authError.message?.includes('weak-password') || authError.code === 'auth/weak-password') {
+            setError(intl.formatMessage({ id: 'groupadmin.register.error.weakPassword', defaultMessage: 'Password is too weak. Please use at least 6 characters.' }));
+          } else if (authError.message?.includes('invalid-email') || authError.code === 'auth/invalid-email') {
+            setError(intl.formatMessage({ id: 'groupadmin.register.error.invalidEmail', defaultMessage: 'Invalid email address.' }));
+          } else {
+            setError(authError.message || intl.formatMessage({ id: 'groupadmin.register.error.authFailed', defaultMessage: 'Account creation failed. Please try again.' }));
+          }
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Step 2: Call Cloud Function to create group admin profile
       const registerGroupAdmin = httpsCallable(functions, 'registerGroupAdmin');
       const result = await registerGroupAdmin({
         firstName: formData.firstName,
@@ -340,6 +367,43 @@ const GroupAdminRegister: React.FC = () => {
                     placeholder="john@example.com"
                   />
                 </div>
+
+                {/* Password field - only show if user is not logged in */}
+                {!user && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <span className="flex items-center gap-1.5">
+                        <Lock className="w-4 h-4" />
+                        <FormattedMessage id="groupadmin.register.password" defaultMessage="Password" />
+                        <span className="text-red-500">*</span>
+                      </span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.password}
+                        onChange={(e) => handleInputChange('password', e.target.value)}
+                        className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder={intl.formatMessage({ id: 'groupadmin.register.password.placeholder', defaultMessage: 'Min. 6 characters' })}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      <FormattedMessage id="groupadmin.register.password.hint" defaultMessage="Password must be at least 6 characters" />
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -535,7 +599,7 @@ const GroupAdminRegister: React.FC = () => {
                   </button>
                   <button
                     onClick={handleSubmit}
-                    disabled={isSubmitting || !user}
+                    disabled={isSubmitting}
                     className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
@@ -552,9 +616,9 @@ const GroupAdminRegister: React.FC = () => {
                   </button>
                 </div>
 
-                {!user && (
-                  <p className="text-center text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
-                    <FormattedMessage id="groupadmin.register.loginRequired" defaultMessage="Please log in or create an account to register as a Group Admin." />
+                {user && (
+                  <p className="text-center text-sm text-green-600 bg-green-50 p-3 rounded-lg">
+                    <FormattedMessage id="groupadmin.register.loggedInAs" defaultMessage="You are logged in as {email}" values={{ email: user.email }} />
                   </p>
                 )}
               </div>

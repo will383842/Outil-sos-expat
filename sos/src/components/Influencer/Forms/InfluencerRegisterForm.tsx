@@ -11,10 +11,12 @@ import {
   Globe,
   Users,
   Tag,
-  FileText,
   ChevronDown,
   Search,
   Check,
+  Lock,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocaleNavigate } from '@/multilingual-system';
@@ -81,6 +83,7 @@ interface InfluencerFormData {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
   country: string;
   language: string;
   platforms: string[];
@@ -97,7 +100,7 @@ interface InfluencerRegisterFormProps {
 const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referralCode = '' }) => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
-  const { user } = useAuth();
+  const { user, register } = useAuth();
   const { language } = useApp();
   const locale = (language || 'en') as string;
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
@@ -106,11 +109,13 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referra
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState<InfluencerFormData>({
     firstName: user?.firstName || user?.displayName?.split(' ')[0] || '',
     lastName: user?.lastName || user?.displayName?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
+    password: '',
     country: '',
     language: (language || 'fr') as string,
     platforms: [],
@@ -222,6 +227,13 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referra
       errors.email = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' });
     }
 
+    // Password validation - minimum 8 characters
+    if (!formData.password) {
+      errors.password = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    } else if (formData.password.length < 8) {
+      errors.password = intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Password must be at least 8 characters' });
+    }
+
     if (!formData.country) {
       errors.country = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
     }
@@ -243,6 +255,18 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referra
     setError(null);
 
     try {
+      // Step 1: Create Firebase Auth account with role 'influencer'
+      console.log('[InfluencerRegister] Creating Firebase Auth account...');
+      await register({
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: 'influencer',
+      }, formData.password);
+      console.log('[InfluencerRegister] Firebase Auth account created successfully');
+
+      // Step 2: Call Cloud Function to create influencer profile
+      console.log('[InfluencerRegister] Calling registerInfluencer Cloud Function...');
       const functions = getFunctions(undefined, 'europe-west1');
       const registerInfluencer = httpsCallable(functions, 'registerInfluencer');
 
@@ -262,15 +286,27 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referra
       const data = result.data as { success: boolean; affiliateCodeClient: string };
 
       if (data.success) {
+        console.log('[InfluencerRegister] Registration completed successfully');
         setSuccess(true);
         setTimeout(() => {
           navigate(`/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`);
         }, 2000);
       }
     } catch (err: unknown) {
-      console.error('Registration error:', err);
+      console.error('[InfluencerRegister] Registration error:', err);
+
+      // Handle specific Firebase Auth errors
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
-      setError(errorMessage);
+
+      if (errorMessage.includes('email-already-in-use')) {
+        setError(intl.formatMessage({ id: 'form.error.emailAlreadyInUse', defaultMessage: 'This email is already registered' }));
+      } else if (errorMessage.includes('weak-password')) {
+        setError(intl.formatMessage({ id: 'form.error.weakPassword', defaultMessage: 'Password is too weak' }));
+      } else if (errorMessage.includes('invalid-email')) {
+        setError(intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' }));
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -333,6 +369,52 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referra
             required
             autoComplete="email"
           />
+
+          {/* Password Field */}
+          <div className="space-y-2">
+            <label htmlFor="password" className={formStyles.label}>
+              <FormattedMessage id="form.password" defaultMessage="Password" />
+              <span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleChange}
+                placeholder={intl.formatMessage({ id: 'form.password.placeholder', defaultMessage: 'Minimum 8 characters' })}
+                autoComplete="new-password"
+                className={`
+                  ${formStyles.input}
+                  pl-12 pr-12
+                  ${validationErrors.password ? formStyles.inputError : formStyles.inputDefault}
+                `}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                aria-label={showPassword
+                  ? intl.formatMessage({ id: 'form.password.hide', defaultMessage: 'Hide password' })
+                  : intl.formatMessage({ id: 'form.password.show', defaultMessage: 'Show password' })
+                }
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+            {validationErrors.password && (
+              <p className={formStyles.errorText}>
+                <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">!</span>
+                {validationErrors.password}
+              </p>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Country Dropdown */}

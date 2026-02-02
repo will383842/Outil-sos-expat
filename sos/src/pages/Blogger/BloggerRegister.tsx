@@ -34,6 +34,9 @@ import {
   Search,
   Check,
   Gift,
+  Lock,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import {
   FormInput,
@@ -81,6 +84,7 @@ interface BloggerFormData {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
   country: string;
   language: SupportedBloggerLanguage;
   blogUrl: string;
@@ -94,12 +98,15 @@ interface BloggerFormData {
   referralCode: string;
 }
 
+const MIN_PASSWORD_LENGTH = 6;
+
 const BloggerRegister: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, register } = useAuth();
   const { language } = useApp();
+  const [showPassword, setShowPassword] = useState(false);
   const locale = (language || 'en') as string;
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
@@ -136,6 +143,7 @@ const BloggerRegister: React.FC = () => {
     firstName: '',
     lastName: '',
     email: user?.email || '',
+    password: '',
     country: '',
     language: 'fr',
     blogUrl: '',
@@ -284,6 +292,15 @@ const BloggerRegister: React.FC = () => {
       errors.email = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' });
     }
 
+    if (!formData.password) {
+      errors.password = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    } else if (formData.password.length < MIN_PASSWORD_LENGTH) {
+      errors.password = intl.formatMessage({
+        id: 'form.error.passwordTooShort',
+        defaultMessage: 'Password must be at least {min} characters'
+      }, { min: MIN_PASSWORD_LENGTH });
+    }
+
     if (!formData.country) {
       errors.country = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
     }
@@ -322,6 +339,15 @@ const BloggerRegister: React.FC = () => {
     setError(null);
 
     try {
+      // Step 1: Create Firebase Auth account
+      await register({
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: 'blogger',
+      }, formData.password);
+
+      // Step 2: Call Cloud Function to create blogger profile
       const registerBlogger = httpsCallable<RegisterBloggerInput, RegisterBloggerResponse>(
         functions,
         'registerBlogger'
@@ -355,8 +381,22 @@ const BloggerRegister: React.FC = () => {
         setError(result.data.message);
       }
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'An error occurred');
+      const e = err as { message?: string; code?: string };
+
+      // Handle Firebase Auth specific errors
+      let errorMessage = e.message || intl.formatMessage({ id: 'form.error.generic', defaultMessage: 'An error occurred' });
+
+      if (e.message?.includes('email-already-in-use') || e.message?.includes('already associated')) {
+        errorMessage = intl.formatMessage({ id: 'form.error.emailAlreadyExists', defaultMessage: 'This email is already registered' });
+      } else if (e.message?.includes('weak-password') || e.message?.includes('6 characters')) {
+        errorMessage = intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Password must be at least 6 characters' });
+      } else if (e.message?.includes('invalid-email')) {
+        errorMessage = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' });
+      } else if (e.message?.includes('network')) {
+        errorMessage = intl.formatMessage({ id: 'form.error.network', defaultMessage: 'Network error. Please try again.' });
+      }
+
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -509,6 +549,52 @@ const BloggerRegister: React.FC = () => {
                     required
                     autoComplete="email"
                   />
+
+                  {/* Password Field */}
+                  <div className="space-y-2">
+                    <label htmlFor="password" className={formStyles.label}>
+                      <FormattedMessage id="form.password" defaultMessage="Password" />
+                      <span className="text-red-500 ml-0.5">*</span>
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                      <input
+                        id="password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder={intl.formatMessage({ id: 'form.password.placeholder', defaultMessage: 'Min. 6 characters' })}
+                        autoComplete="new-password"
+                        className={`
+                          ${formStyles.input}
+                          pl-12 pr-12
+                          ${validationErrors.password ? formStyles.inputError : formStyles.inputDefault}
+                        `}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        aria-label={showPassword
+                          ? intl.formatMessage({ id: 'form.password.hide', defaultMessage: 'Hide password' })
+                          : intl.formatMessage({ id: 'form.password.show', defaultMessage: 'Show password' })
+                        }
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    {validationErrors.password && (
+                      <p className={formStyles.errorText}>
+                        <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">!</span>
+                        {validationErrors.password}
+                      </p>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Country Dropdown */}

@@ -1956,7 +1956,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     setError(null);
 
     try {
-      if (!userData.role || !['client', 'lawyer', 'expat', 'admin'].includes(userData.role)) {
+      if (!userData.role || !['client', 'lawyer', 'expat', 'admin', 'chatter', 'blogger', 'influencer', 'groupAdmin'].includes(userData.role)) {
         console.log("[DEBUG] " + "❌ REGISTER: Rôle invalide - " + userData.role);
         const err = new Error('Rôle utilisateur invalide ou manquant.') as AppError;
         err.code = 'sos/invalid-role';

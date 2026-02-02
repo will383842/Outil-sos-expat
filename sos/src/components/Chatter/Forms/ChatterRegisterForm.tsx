@@ -14,6 +14,9 @@ import {
   ChevronDown,
   Search,
   Check,
+  Lock,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -51,6 +54,7 @@ export interface ChatterRegistrationData {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;                // Password for Firebase Auth account
   country: string;
   interventionCountries?: string[]; // Countries where chatter can operate
   language: string;                // Primary language
@@ -103,11 +107,15 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     firstName: initialData?.firstName || '',
     lastName: initialData?.lastName || '',
     email: initialData?.email || '',
+    password: '',
     country: initialData?.country || '',
     language: initialData?.language || locale,
     referralCode: initialData?.referralCode, // Auto from URL only
     acceptTerms: false,
   });
+
+  // Password visibility toggle
+  const [showPassword, setShowPassword] = useState(false);
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [languageSearch, setLanguageSearch] = useState('');
@@ -117,7 +125,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   const [antiBotError, setAntiBotError] = useState<string | null>(null);
 
   // Anti-bot protection
-  const { honeypotValue, setHoneypotValue, validateHuman, recaptchaEnabled } = useAntiBot();
+  const { honeypotValue, setHoneypotValue, validateHuman } = useAntiBot();
 
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
@@ -220,6 +228,13 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       errors.email = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' });
+    }
+
+    // Password validation - minimum 6 characters (Firebase requirement)
+    if (!formData.password) {
+      errors.password = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    } else if (formData.password.length < 6) {
+      errors.password = intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Password must be at least 6 characters' });
     }
 
     if (!formData.country) {
@@ -352,6 +367,89 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         required
         autoComplete="email"
       />
+
+      {/* Password */}
+      <div className="space-y-2">
+        <label htmlFor="password" className={formStyles.label}>
+          <FormattedMessage id="form.password" defaultMessage="Password" />
+          <span className="text-red-500 ml-0.5">*</span>
+        </label>
+        <div className="relative">
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
+          <input
+            id="password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            value={formData.password}
+            onChange={handleChange}
+            placeholder={intl.formatMessage({ id: 'form.password.placeholder', defaultMessage: 'Minimum 6 characters' })}
+            autoComplete="new-password"
+            className={`
+              ${formStyles.input}
+              pl-12 pr-12
+              ${validationErrors.password ? formStyles.inputError : formStyles.inputDefault}
+            `}
+            aria-required="true"
+            aria-invalid={!!validationErrors.password}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors z-10"
+            aria-label={showPassword
+              ? intl.formatMessage({ id: 'form.password.hide', defaultMessage: 'Hide password' })
+              : intl.formatMessage({ id: 'form.password.show', defaultMessage: 'Show password' })
+            }
+          >
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+        </div>
+
+        {/* Password strength indicator */}
+        {formData.password.length > 0 && (
+          <div className="mt-2">
+            <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 ${
+                  formData.password.length < 6
+                    ? 'w-1/4 bg-red-500'
+                    : formData.password.length < 8
+                    ? 'w-1/2 bg-orange-500'
+                    : formData.password.length < 10
+                    ? 'w-3/4 bg-yellow-500'
+                    : 'w-full bg-green-500'
+                }`}
+              />
+            </div>
+            <p className={`text-xs mt-1 ${
+              formData.password.length < 6
+                ? 'text-red-500'
+                : formData.password.length < 8
+                ? 'text-orange-500'
+                : formData.password.length < 10
+                ? 'text-yellow-600 dark:text-yellow-400'
+                : 'text-green-500'
+            }`}>
+              {formData.password.length < 6 ? (
+                <FormattedMessage id="form.password.strength.weak" defaultMessage="Too short (min. 6 characters)" />
+              ) : formData.password.length < 8 ? (
+                <FormattedMessage id="form.password.strength.fair" defaultMessage="Fair" />
+              ) : formData.password.length < 10 ? (
+                <FormattedMessage id="form.password.strength.good" defaultMessage="Good" />
+              ) : (
+                <FormattedMessage id="form.password.strength.strong" defaultMessage="Strong" />
+              )}
+            </p>
+          </div>
+        )}
+
+        {validationErrors.password && (
+          <p className={formStyles.errorText}>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">!</span>
+            {validationErrors.password}
+          </p>
+        )}
+      </div>
 
       {/* Country */}
       <div ref={countryDropdownRef} className="space-y-2">

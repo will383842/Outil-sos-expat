@@ -26,7 +26,7 @@ const ChatterRegister: React.FC = () => {
   const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
   const { language } = useApp();
-  const { user, authInitialized, isLoading: authLoading } = useAuth();
+  const { user, authInitialized, isLoading: authLoading, register } = useAuth();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
   const [loading, setLoading] = useState(false);
@@ -108,6 +108,26 @@ const ChatterRegister: React.FC = () => {
     setError(null);
 
     try {
+      // Step 1: Create Firebase Auth account with role 'chatter'
+      // This creates the user in Firebase Auth AND in Firestore users collection
+      await register(
+        {
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: 'chatter',
+          // Include terms acceptance data
+          termsAccepted: data.acceptTerms,
+          termsAcceptedAt: data.termsAcceptedAt,
+          termsVersion: data.termsVersion,
+          termsType: data.termsType,
+          termsAcceptanceMeta: data.termsAcceptanceMeta,
+        },
+        data.password
+      );
+
+      // Step 2: Now that user is authenticated, call registerChatter Cloud Function
+      // to create the chatter profile with additional data
       const registerChatterFn = httpsCallable(functions, 'registerChatter');
       await registerChatterFn({
         firstName: data.firstName,
@@ -135,7 +155,27 @@ const ChatterRegister: React.FC = () => {
       }, 2000);
     } catch (err: unknown) {
       console.error('[ChatterRegister] Error:', err);
-      const errorMessage = err instanceof Error ? err.message : intl.formatMessage({ id: 'chatter.register.error.generic', defaultMessage: 'Une erreur est survenue' });
+
+      // Handle specific Firebase Auth errors
+      let errorMessage = intl.formatMessage({ id: 'chatter.register.error.generic', defaultMessage: 'An error occurred' });
+
+      if (err instanceof Error) {
+        const errorCode = (err as { code?: string })?.code || '';
+        const message = err.message;
+
+        if (errorCode === 'auth/email-already-in-use' || message.includes('email-already-in-use') || message.includes('already registered')) {
+          errorMessage = intl.formatMessage({ id: 'chatter.register.error.emailInUse', defaultMessage: 'This email is already registered. Please use another email or log in.' });
+        } else if (errorCode === 'auth/weak-password' || message.includes('weak-password') || message.includes('6 characters')) {
+          errorMessage = intl.formatMessage({ id: 'chatter.register.error.weakPassword', defaultMessage: 'Password is too weak. Please use at least 6 characters.' });
+        } else if (errorCode === 'auth/invalid-email' || message.includes('invalid-email')) {
+          errorMessage = intl.formatMessage({ id: 'chatter.register.error.invalidEmail', defaultMessage: 'Invalid email address.' });
+        } else if (errorCode === 'auth/network-request-failed' || message.includes('network')) {
+          errorMessage = intl.formatMessage({ id: 'chatter.register.error.network', defaultMessage: 'Network error. Please check your connection and try again.' });
+        } else if (message) {
+          errorMessage = message;
+        }
+      }
+
       setError(errorMessage);
     } finally {
       setLoading(false);
