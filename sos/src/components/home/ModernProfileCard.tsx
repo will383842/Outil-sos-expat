@@ -221,9 +221,9 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
 
-    // ✅ FIX 2026-02-02: Distinguer clic vs swipe pour permettre le scroll horizontal
-    const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-    const isDraggingRef = useRef(false);
+    // ✅ FIX 2026-02-02: Utiliser pointer events pour distinguer clic vs drag
+    const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+    const wasDraggingRef = useRef(false);
 
     // Déterminer le statut de disponibilité
     const availability: AvailabilityStatus = useMemo(() => {
@@ -312,50 +312,53 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
       [imageError]
     );
 
-    // ✅ FIX 2026-02-02: Handlers pour distinguer clic vs swipe
-    const handleTouchStart = useCallback((e: React.TouchEvent) => {
-      const touch = e.touches[0];
-      touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
-      isDraggingRef.current = false;
+    // ✅ FIX 2026-02-02: Utiliser pointer events (ne bloque PAS le scroll natif)
+    const handlePointerDown = useCallback((e: React.PointerEvent) => {
+      // Seulement tracker le point de départ, NE PAS bloquer l'événement
+      pointerStartRef.current = { x: e.clientX, y: e.clientY };
+      wasDraggingRef.current = false;
     }, []);
 
-    const handleTouchMove = useCallback((e: React.TouchEvent) => {
-      if (!touchStartRef.current) return;
-      const touch = e.touches[0];
-      const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
-      const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
-      // Si mouvement horizontal > 10px, c'est un swipe, pas un clic
-      if (deltaX > 10 || deltaY > 10) {
-        isDraggingRef.current = true;
+    const handlePointerMove = useCallback((e: React.PointerEvent) => {
+      if (!pointerStartRef.current) return;
+      const deltaX = Math.abs(e.clientX - pointerStartRef.current.x);
+      const deltaY = Math.abs(e.clientY - pointerStartRef.current.y);
+      // Si mouvement > 8px, c'est un drag/swipe
+      if (deltaX > 8 || deltaY > 8) {
+        wasDraggingRef.current = true;
       }
     }, []);
 
-    const handleTouchEnd = useCallback(() => {
-      // Reset après un court délai pour permettre le click event de se propager si nécessaire
+    const handlePointerUp = useCallback(() => {
+      // Reset après un court délai
       setTimeout(() => {
-        touchStartRef.current = null;
-      }, 100);
+        pointerStartRef.current = null;
+      }, 50);
     }, []);
 
     const handleClick = useCallback((e: React.MouseEvent) => {
-      // ✅ Si c'était un swipe, ignorer le clic
-      if (isDraggingRef.current) {
+      // ✅ Si c'était un swipe/drag, ignorer le clic
+      if (wasDraggingRef.current) {
         e.preventDefault();
-        e.stopPropagation();
-        isDraggingRef.current = false;
+        wasDraggingRef.current = false;
         return;
       }
       onProfileClick(provider);
     }, [provider, onProfileClick]);
 
+    // ✅ FIX 2026-02-02: Vérifier hover support DANS LES DEUX handlers
     const handleMouseEnter = useCallback(() => {
-      if (window.matchMedia("(hover: hover)").matches) {
+      // Seulement sur les appareils avec vrai hover (pas tactile)
+      if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
         setIsHovered(true);
       }
     }, []);
 
     const handleMouseLeave = useCallback(() => {
-      setIsHovered(false);
+      // Seulement reset si on est sur un appareil avec vrai hover
+      if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+        setIsHovered(false);
+      }
     }, []);
 
     // Fonction helper pour obtenir le texte du statut traduit
@@ -398,7 +401,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
         <article
           className={`
             relative bg-white rounded-2xl overflow-hidden cursor-pointer
-            border-2 shadow-lg
+            border-2 shadow-lg select-none
             w-[280px] sm:w-[300px] h-[520px] max-w-[calc(100vw-32px)]
             ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
             focus:outline-none focus:ring-4 focus:ring-blue-500/50
@@ -407,9 +410,10 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
           onClick={handleClick}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
@@ -417,12 +421,14 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
             }
           }}
           tabIndex={0}
-          role="button"
           aria-label={ariaLabels.card}
           data-hovered={isHovered ? "true" : "false"}
           style={{
             animationDelay: `${index * 100}ms`,
             WebkitTapHighlightColor: 'transparent',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+            touchAction: 'pan-x pan-y',
           }}
         >
           {/* Header avec photo et statut - Dimensions explicites pour éviter layout shift */}
@@ -595,7 +601,6 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
                   border-2 shadow-lg
                   ${statusColors.button}
                   focus:outline-none focus:ring-4 focus:ring-blue-500/50
-                  carousel-card-button
                 `}
                 style={{
                   minHeight: `${TOUCH_TARGETS.button}px`,
@@ -619,26 +624,22 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
           </div>
         </article>
 
-        {/* ✅ FIX 2026-02-02: Styles optimisés - hover UNIQUEMENT sur desktop */}
+        {/* ✅ FIX 2026-02-02: Styles simplifiés - AUCUN transform sur mobile */}
         <style>{`
-        /* Animation d'entrée */
-        article.card-hover-effect {
-          animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          opacity: 0;
-          transform: translateY(20px);
-        }
-
-        @keyframes slideInUp {
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        /* ✅ Desktop SEULEMENT: effets hover avec scale */
+        /* Animation d'entrée - désactivée sur mobile pour éviter les problèmes */
         @media (hover: hover) and (pointer: fine) {
           article.card-hover-effect {
+            animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
             transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+          }
+
+          @keyframes slideInUp {
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
 
           article.card-hover-effect:hover,
@@ -646,53 +647,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
             transform: scale(1.02);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
           }
-        }
 
-        /* ✅ Mobile/Tactile: PAS de scale, PAS de transition transform */
-        @media (hover: none), (pointer: coarse) {
-          article.card-hover-effect {
-            /* Transition uniquement sur les couleurs, pas sur transform */
-            transition: box-shadow 0.2s ease-out;
-          }
-
-          article.card-hover-effect:hover,
-          article.card-hover-effect[data-hovered="true"] {
-            /* Pas de scale sur mobile - évite le "mouvement" de la section */
-            transform: none;
-          }
-
-          /* Active state léger pour feedback tactile */
-          article.card-hover-effect:active {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          article.card-hover-effect {
-            animation: none;
-            opacity: 1;
-            transform: none;
-          }
-
-          *, *::before, *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-          }
-        }
-
-        /* Optimisation focus pour navigation clavier */
-        article:focus-visible {
-          outline: 2px solid #3b82f6;
-          outline-offset: 2px;
-        }
-
-        /* Image hover - Desktop uniquement */
-        .profile-card-image {
-          transition: opacity 0.3s ease-out;
-        }
-
-        @media (hover: hover) and (pointer: fine) {
           .profile-card-image {
             transition: opacity 0.3s ease-out, transform 0.3s ease-out;
           }
@@ -702,21 +657,39 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
           }
         }
 
+        /* ✅ Mobile/Tactile: AUCUNE animation, AUCUN transform */
         @media (hover: none), (pointer: coarse) {
+          article.card-hover-effect {
+            /* Pas d'animation, pas de transform - évite TOUS les problèmes de scroll */
+            animation: none !important;
+            transform: none !important;
+            opacity: 1;
+          }
+
+          article.card-hover-effect:hover,
+          article.card-hover-effect:active,
+          article.card-hover-effect[data-hovered="true"] {
+            transform: none !important;
+          }
+
+          .profile-card-image,
           .profile-card-image[data-hovered="true"] {
+            transform: none !important;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          article.card-hover-effect {
+            animation: none;
+            opacity: 1;
             transform: none;
           }
         }
 
-        /* Bouton dans le carousel - pas de transform pour ne pas interférer avec le scroll */
-        .carousel-card-button {
-          touch-action: pan-x;
-        }
-
-        @media (hover: hover) and (pointer: fine) {
-          .carousel-card-button:active {
-            transform: scale(0.98);
-          }
+        /* Optimisation focus pour navigation clavier */
+        article:focus-visible {
+          outline: 2px solid #3b82f6;
+          outline-offset: 2px;
         }
       `}</style>
       </div>
