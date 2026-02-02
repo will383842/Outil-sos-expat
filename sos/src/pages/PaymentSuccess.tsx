@@ -113,62 +113,56 @@ const SuccessPayment: React.FC = () => {
   // Extract country from URL path (e.g., /en-de/... → de)
   const { country: urlCountry } = parseLocaleFromPath(location.pathname);
 
-  // URL Parameters
-  const callStatus = searchParams.get("call");
-  const providerId =
-    searchParams.get("providerId") || searchParams.get("provider") || "1";
-  // P0 FIX: Recuperer callId depuis URL ou sessionStorage (en cas de F5)
-  // IMPORTANT: Ne JAMAIS generer un nouveau callId car il ne correspondra a aucun document Firestore
-  const callId = useMemo(() => {
-    const urlCallId = searchParams.get("callId");
-    if (urlCallId) {
-      console.log("✅ [SUCCESS_PAGE] callId from URL:", urlCallId);
-      return urlCallId;
-    }
-    // Fallback: recuperer depuis sessionStorage (sauvegarde avant navigation)
+  // P0 FIX 2026-02-02: Récupérer les données PRINCIPALEMENT depuis sessionStorage (URL propre)
+  // Fallback sur les paramètres URL pour rétrocompatibilité avec anciens liens
+  const paymentData = useMemo(() => {
+    // Priorité 1: sessionStorage (données fraîches, URL propre)
     try {
       const savedData = sessionStorage.getItem('lastPaymentSuccess');
       if (savedData) {
         const parsed = JSON.parse(savedData);
-        if (parsed.callId && parsed.savedAt && (Date.now() - parsed.savedAt) < 10 * 60 * 1000) {
-          console.log("✅ [SUCCESS_PAGE] callId recovered from sessionStorage:", parsed.callId);
-          return parsed.callId;
+        // Vérifier que les données ne sont pas expirées (10 minutes)
+        if (parsed.savedAt && (Date.now() - parsed.savedAt) < 10 * 60 * 1000) {
+          console.log("✅ [SUCCESS_PAGE] Data loaded from sessionStorage:", {
+            callId: parsed.callId,
+            orderId: parsed.orderId,
+            paymentIntentId: parsed.paymentIntentId?.substring(0, 15) + '...',
+          });
+          return parsed;
         }
       }
     } catch (e) {
       console.warn("⚠️ [SUCCESS_PAGE] Error reading sessionStorage:", e);
     }
-    console.error("❌ [SUCCESS_PAGE] No valid callId found");
+
+    // Priorité 2: URL params (rétrocompatibilité avec anciens liens / F5 après expiration)
+    const urlData = {
+      callId: searchParams.get("callId"),
+      paymentIntentId: searchParams.get("paymentIntentId"),
+      orderId: searchParams.get("orderId"),
+      providerId: searchParams.get("providerId") || searchParams.get("provider"),
+      call: searchParams.get("call"),
+      serviceType: searchParams.get("serviceType") || searchParams.get("service"),
+      amount: searchParams.get("amount"),
+      duration: searchParams.get("duration"),
+      providerRole: searchParams.get("providerRole"),
+    };
+
+    if (urlData.callId || urlData.paymentIntentId) {
+      console.log("✅ [SUCCESS_PAGE] Data loaded from URL params (fallback):", urlData);
+      return urlData;
+    }
+
+    console.error("❌ [SUCCESS_PAGE] No valid payment data found");
     return null;
   }, [searchParams]);
 
-  // P0 FIX: Recuperer paymentIntentId depuis URL ou sessionStorage (en cas de F5)
-  const paymentIntentId = useMemo(() => {
-    const urlPaymentIntentId = searchParams.get("paymentIntentId");
-    if (urlPaymentIntentId && urlPaymentIntentId !== "undefined") {
-      console.log("✅ [SUCCESS_PAGE] paymentIntentId from URL:", urlPaymentIntentId.substring(0, 15) + '...');
-      return urlPaymentIntentId;
-    }
-    // Fallback: recuperer depuis sessionStorage (sauvegarde avant navigation)
-    try {
-      const savedData = sessionStorage.getItem('lastPaymentSuccess');
-      if (savedData) {
-        const parsed = JSON.parse(savedData);
-        if (parsed.paymentIntentId && parsed.savedAt && (Date.now() - parsed.savedAt) < 10 * 60 * 1000) {
-          console.log("✅ [SUCCESS_PAGE] paymentIntentId recovered from sessionStorage:", parsed.paymentIntentId.substring(0, 15) + '...');
-          return parsed.paymentIntentId;
-        }
-      }
-    } catch (e) {
-      console.warn("⚠️ [SUCCESS_PAGE] Error reading paymentIntentId from sessionStorage:", e);
-    }
-    console.warn("⚠️ [SUCCESS_PAGE] No valid paymentIntentId found");
-    return null;
-  }, [searchParams]);
-
-  // >>> orderId pour le bloc "total payé + économies"
-  // const { orderId } = useParams<{ orderId: string }>();
-  const orderId = searchParams.get("orderId");
+  // Extraire les valeurs individuelles depuis paymentData
+  const callStatus = paymentData?.call || searchParams.get("call");
+  const providerId = paymentData?.providerId || "1";
+  const callId = paymentData?.callId || null;
+  const paymentIntentId = paymentData?.paymentIntentId || null;
+  const orderId = paymentData?.orderId || null;
 
   // DEBUG: Log l'arrivée sur la page avec tous les paramètres
   useEffect(() => {
@@ -203,6 +197,10 @@ const SuccessPayment: React.FC = () => {
       console.warn("⚠️ [SUCCESS_PAGE_DEBUG] Missing critical params:", missingParams);
     }
   }, []);
+
+  // P0 FIX: État d'initialisation pour éviter le flash d'erreur "serviceNotFound"
+  // On attend que initializeServiceData() ait fini avant d'afficher quoi que ce soit
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // UI state (appel)
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -279,37 +277,50 @@ const SuccessPayment: React.FC = () => {
   }, [providerId]);
 
   /* =========================
-     Init infos service (montant/durée) via URL ou storage
+     Init infos service (montant/durée) via sessionStorage ou storage
+     P0 FIX 2026-02-02: Priorité sessionStorage (paymentData) puis selectedProvider
+     Retourne true si l'initialisation a réussi (données trouvées)
      ========================= */
-  const initializeServiceData = useCallback(() => {
+  const initializeServiceData = useCallback((): boolean => {
+    // Priorité 1: Données de paymentData (sessionStorage, sauvegardées par CallCheckout)
+    if (paymentData?.amount && paymentData?.serviceType) {
+      const parsedAmount = parseFloat(String(paymentData.amount));
+      setPaidAmount(Number.isNaN(parsedAmount) ? 0 : parsedAmount);
+      setPaidServiceType(paymentData.serviceType);
+      // Durées fixes basées sur le type de service
+      const isLawyerService = paymentData.serviceType === "lawyer_call" || paymentData.providerRole === "lawyer";
+      const d = isLawyerService ? 20 : 30;
+      setPaidDuration(d);
+      setProviderRole(paymentData.providerRole || "");
+      setTimeRemaining(d * 60);
+      console.log("✅ [SUCCESS_PAGE] Service data initialized from sessionStorage");
+      return true;
+    }
+
+    // Priorité 2: URL params (rétrocompatibilité)
     const urlAmount = searchParams.get("amount");
     const urlServiceType =
       searchParams.get("serviceType") || searchParams.get("service");
-    const urlDuration = searchParams.get("duration");
     const urlProviderRole = searchParams.get("providerRole");
 
     if (urlAmount && urlServiceType) {
       const parsedAmount = parseFloat(urlAmount);
       setPaidAmount(Number.isNaN(parsedAmount) ? 0 : parsedAmount);
       setPaidServiceType(urlServiceType);
-      // P0 FIX 2026-01-21: Toujours utiliser la durée standard basée sur le type de service
-      // Ignorer urlDuration car il peut contenir une valeur incorrecte
-      // Durées fixes: lawyer_call = 20 min, expat_call = 30 min
       const isLawyerService = urlServiceType === "lawyer_call" || urlProviderRole === "lawyer";
       const d = isLawyerService ? 20 : 30;
       setPaidDuration(d);
       setProviderRole(urlProviderRole || "");
       setTimeRemaining(d * 60);
-      return;
+      console.log("✅ [SUCCESS_PAGE] Service data initialized from URL params");
+      return true;
     }
 
+    // Priorité 3: selectedProvider dans sessionStorage
     const providerInfo = getProviderFromStorage();
     if (providerInfo) {
       const price =
         providerInfo.price || (providerInfo.type === "lawyer" ? 49 : 19);
-      // P0 FIX 2026-01-21: Toujours utiliser la durée standard basée sur le type de provider
-      // Ignorer providerInfo.duration car il peut contenir une valeur incorrecte (ex: 44 au lieu de 20/30)
-      // Durées fixes: Avocat = 20 min, Expat = 30 min
       const duration = providerInfo.type === "lawyer" ? 20 : 30;
 
       setPaidAmount(price);
@@ -319,9 +330,11 @@ const SuccessPayment: React.FC = () => {
       setPaidDuration(duration);
       setProviderRole(providerInfo.type);
       setTimeRemaining(duration * 60);
-      return;
+      console.log("✅ [SUCCESS_PAGE] Service data initialized from selectedProvider");
+      return true;
     }
 
+    // Priorité 4: Fallback sur PROVIDER_DEFAULTS
     const fallbackProvider =
       PROVIDER_DEFAULTS[providerId as keyof typeof PROVIDER_DEFAULTS];
     if (fallbackProvider) {
@@ -332,8 +345,12 @@ const SuccessPayment: React.FC = () => {
       setPaidDuration(fallbackProvider.duration);
       setProviderRole(fallbackProvider.role);
       setTimeRemaining(fallbackProvider.duration * 60);
+      console.log("✅ [SUCCESS_PAGE] Service data initialized from fallback defaults");
+      return true;
     }
-  }, [searchParams, providerId, getProviderFromStorage]);
+
+    return false;
+  }, [paymentData, searchParams, providerId, getProviderFromStorage]);
 
   /* =========================
      Timestamp de paiement (PaymentIntent) - inchangé
@@ -443,9 +460,17 @@ const SuccessPayment: React.FC = () => {
 
   /* =========================
      Init données
+     P0 FIX: Marquer l'initialisation comme terminée après avoir chargé les données
      ========================= */
   useEffect(() => {
-    initializeServiceData();
+    const success = initializeServiceData();
+    // Même si pas de données trouvées, on termine l'initialisation
+    // pour éviter un loader infini - le guard affichera le message d'erreur
+    setIsInitializing(false);
+
+    if (!success) {
+      console.warn("⚠️ [SUCCESS_PAGE] No service data found during initialization");
+    }
   }, [initializeServiceData]);
 
   /* =========================
@@ -1032,6 +1057,24 @@ const SuccessPayment: React.FC = () => {
   /* =========================
      Rendu
      ========================= */
+  // P0 FIX: Afficher un loader pendant l'initialisation pour éviter le flash "serviceNotFound"
+  if (isInitializing) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-red-600 to-orange-500 shadow-2xl mb-6">
+              <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
+            </div>
+            <p className="text-xl text-gray-300">
+              {intl.formatMessage({ id: "success.loadingPaymentInfo", defaultMessage: "Chargement..." })}
+            </p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!paidAmount && !paidServiceType) {
     // Garde-fou si jamais pas d'info service (cohérent avec ton ancien rendu)
     return (

@@ -3660,27 +3660,17 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       setCurrentStep("calling");
       setCallProgress(1);
 
-      // P0 FIX: Ne pas ajouter de paramètres vides à l'URL
-      const params = new URLSearchParams();
-      params.set("paymentIntentId", payload.paymentIntentId);
-      params.set("providerId", provider?.id || "");
-      params.set("call", payload.call);
-
-      // Ajouter seulement si les valeurs existent
-      if (payload.callId) params.set("callId", payload.callId);
-      if (payload.orderId) params.set("orderId", payload.orderId);
-
-      // P0 FIX: Utiliser le système de routing multilingue complet
-      // La route doit être /{locale}/{slug-traduit} ex: /fr-fr/paiement-reussi
+      // P0 FIX 2026-02-02: URL PROPRE - Ne plus exposer les paramètres sensibles dans l'URL
+      // Toutes les données sont stockées dans sessionStorage et récupérées par PaymentSuccess.tsx
       const locale = getLocaleString(language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
       const translatedSlug = getTranslatedRouteSlug("payment-success", language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
-      const targetUrl = `/${locale}/${translatedSlug}?${params.toString()}`;
+      const targetUrl = `/${locale}/${translatedSlug}`;
 
       // DEBUG: Log la navigation
       navigationLogger.beforeNavigate({
         from: window.location.pathname,
         to: targetUrl,
-        params: Object.fromEntries(params)
+        params: { stored: 'sessionStorage' }
       });
 
       console.log("🚀 [NAVIGATION_DEBUG] About to navigate:", {
@@ -3690,8 +3680,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         historyLength: window.history.length
       });
 
-      // P0 FIX: Sauvegarder les données critiques dans sessionStorage AVANT navigation
-      // En cas de F5 par l'utilisateur, ces données seront récupérables
+      // P0 FIX: Sauvegarder TOUTES les données critiques dans sessionStorage AVANT navigation
+      // La page PaymentSuccess.tsx récupérera ces données depuis sessionStorage
       try {
         const paymentSuccessData = {
           paymentIntentId: payload.paymentIntentId,
@@ -3699,6 +3689,11 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
           callId: payload.callId,
           orderId: payload.orderId,
           providerId: provider?.id,
+          // P0 FIX 2026-02-02: Ajouter les données de service pour initialisation rapide
+          serviceType: service?.serviceType,
+          amount: adminPricing?.totalAmount,
+          duration: adminPricing?.duration,
+          providerRole: provider?.role || provider?.type,
           savedAt: Date.now()
         };
         sessionStorage.setItem('lastPaymentSuccess', JSON.stringify(paymentSuccessData));
@@ -3713,7 +3708,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       console.log("🚀 [NAVIGATION] Redirecting with window.location.href to:", targetUrl);
       window.location.href = targetUrl;
     },
-    [navigate, provider?.id, language]
+    [navigate, provider?.id, provider?.role, provider?.type, language, service?.serviceType, adminPricing?.totalAmount, adminPricing?.duration]
   );
 
   // ========================================
