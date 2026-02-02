@@ -230,37 +230,6 @@ const CardFieldsSubmitButton: React.FC<{
   );
 };
 
-// Validation des données requises avant paiement
-interface ValidationResult {
-  isValid: boolean;
-  missingFields: string[];
-}
-
-const validateBookingData = (data?: BookingData, intl?: ReturnType<typeof useIntl>): ValidationResult => {
-  const missingFields: string[] = [];
-
-  if (!data?.firstName?.trim()) {
-    missingFields.push(intl?.formatMessage({ id: 'payment.validation.firstName', defaultMessage: 'Prénom' }) || 'Prénom');
-  }
-  if (!data?.lastName?.trim()) {
-    missingFields.push(intl?.formatMessage({ id: 'payment.validation.lastName', defaultMessage: 'Nom' }) || 'Nom');
-  }
-  if (!data?.clientPhone?.trim()) {
-    missingFields.push(intl?.formatMessage({ id: 'payment.validation.phone', defaultMessage: 'Téléphone' }) || 'Téléphone');
-  }
-  if (!data?.title?.trim() || (data.title.trim().length < 10)) {
-    missingFields.push(intl?.formatMessage({ id: 'payment.validation.title', defaultMessage: 'Titre de la demande (min. 10 caractères)' }) || 'Titre de la demande');
-  }
-  if (!data?.description?.trim() || (data.description.trim().length < 50)) {
-    missingFields.push(intl?.formatMessage({ id: 'payment.validation.description', defaultMessage: 'Description (min. 50 caractères)' }) || 'Description');
-  }
-
-  return {
-    isValid: missingFields.length === 0,
-    missingFields
-  };
-};
-
 export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   amount,
   currency,
@@ -284,7 +253,6 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [errorCode, setErrorCode] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal" | null>(null);
-  const [validationError, setValidationError] = useState<ValidationResult | null>(null);
   const [sdkLoadTimeout, setSdkLoadTimeout] = useState(false);
 
   const intl = useIntl();
@@ -302,16 +270,6 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       return () => clearTimeout(timeoutId);
     }
   }, [isPending, sdkLoadTimeout]);
-
-  // Validate booking data on mount and when it changes
-  useEffect(() => {
-    const validation = validateBookingData(bookingData, intl);
-    if (!validation.isValid) {
-      setValidationError(validation);
-    } else {
-      setValidationError(null);
-    }
-  }, [bookingData, intl]);
 
   // Stabiliser le montant pour éviter les re-renders du SDK PayPal
   const stableAmount = useRef(amount);
@@ -692,38 +650,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     );
   }
 
-  // Check if payment should be blocked due to validation errors
-  // DISABLED: Validation is now a warning, not a blocker - users can still pay
-  // This allows testing and edge cases where booking data isn't fully populated
-  const isBlocked = false; // Previously: !!(validationError && !validationError.isValid);
-
   return (
     <div className="paypal-payment-container space-y-3 sm:space-y-4">
-      {/* Validation warning - No longer blocking, just informational */}
-      {false && validationError && !validationError.isValid && (
-        <div className="paypal-validation-error">
-          <AlertCircle className="error-icon w-5 h-5 mt-0.5" />
-          <div className="error-content flex-1">
-            <h4 className="text-sm">
-              <FormattedMessage
-                id="payment.validation.incomplete"
-                defaultMessage="Informations manquantes"
-              />
-            </h4>
-            <p className="text-xs text-red-600 mb-2">
-              <FormattedMessage
-                id="payment.validation.completeFirst"
-                defaultMessage="Veuillez compléter les informations suivantes avant de procéder au paiement :"
-              />
-            </p>
-            <ul className="text-xs space-y-0.5">
-              {validationError.missingFields.map((field, index) => (
-                <li key={index}>{field}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
 
       {/* Récapitulatif du paiement - Style Stripe compact */}
       <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
@@ -851,7 +779,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
             {/* Bouton Payer par carte - Plus grand sur mobile */}
             <CardFieldsSubmitButton
               isProcessing={isProcessing && paymentMethod === "card"}
-              disabled={disabled || isBlocked}
+              disabled={disabled}
               onSubmit={() => setPaymentMethod("card")}
               onError={(err) => {
                 setIsProcessing(false);
@@ -886,7 +814,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
             height: 44,
             tagline: false,
           }}
-          disabled={disabled || isProcessing || isBlocked}
+          disabled={disabled || isProcessing}
           createOrder={createOrder}
           onApprove={onApprove}
           onError={handleError}
