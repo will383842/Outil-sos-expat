@@ -167,11 +167,11 @@ const ChatterLanding: React.FC = () => {
   // SEO
   const seoTitle = intl.formatMessage({
     id: 'chatter.landing.seo.title',
-    defaultMessage: 'Become a SOS-Expat Chatter | Earn $10/client + Unlimited Team Income'
+    defaultMessage: 'Become a SOS-Expat Chatter | Earn $10/call + Unlimited Team Income'
   });
   const seoDescription = intl.formatMessage({
     id: 'chatter.landing.seo.description',
-    defaultMessage: 'Join the Chatter program: Earn $10 per client, build an unlimited team, get $1 per call from your recruits. Paid via Mobile Money, Wise worldwide.'
+    defaultMessage: 'Join the Chatter program: Earn $10 per call, build an unlimited team, get $1 per call from your recruits. Paid via Mobile Money, Wise worldwide.'
   });
 
   // FAQ
@@ -1537,7 +1537,7 @@ const ChatterLanding: React.FC = () => {
                 className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 text-gray-900 font-bold py-4 rounded-xl flex items-center justify-center gap-3 text-lg shadow-lg"
               >
                 <DollarSign className="w-6 h-6" />
-                <FormattedMessage id="chatter.sticky.cta" defaultMessage="Earn $10/client - Start Free" />
+                <FormattedMessage id="chatter.sticky.cta" defaultMessage="Earn $10/call - Start Free" />
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
