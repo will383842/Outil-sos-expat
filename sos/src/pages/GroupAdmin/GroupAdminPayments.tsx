@@ -1,0 +1,371 @@
+/**
+ * GroupAdminPayments - Payments and withdrawals page
+ */
+
+import React, { useState, useEffect } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
+import Layout from '@/components/layout/Layout';
+import SEOHead from '@/components/layout/SEOHead';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/firebase';
+import { DollarSign, CreditCard, Clock, CheckCircle, XCircle, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import {
+  GroupAdmin,
+  GroupAdminCommission,
+  GroupAdminWithdrawal,
+  GroupAdminWithdrawalStatus,
+  GroupAdminPaymentMethod,
+  GroupAdminPaymentDetails,
+  formatGroupAdminAmount,
+} from '@/types/groupAdmin';
+
+const getWithdrawalStatusBadge = (status: GroupAdminWithdrawalStatus) => {
+  const statusConfig: Record<GroupAdminWithdrawalStatus, { bg: string; text: string }> = {
+    pending: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+    approved: { bg: 'bg-blue-100', text: 'text-blue-800' },
+    processing: { bg: 'bg-purple-100', text: 'text-purple-800' },
+    completed: { bg: 'bg-green-100', text: 'text-green-800' },
+    rejected: { bg: 'bg-red-100', text: 'text-red-800' },
+    failed: { bg: 'bg-red-100', text: 'text-red-800' },
+  };
+  return statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800' };
+};
+
+const PAYMENT_METHODS: { value: GroupAdminPaymentMethod; label: string; description: string }[] = [
+  { value: 'paypal', label: 'PayPal', description: 'Fast and easy' },
+  { value: 'wise', label: 'Wise', description: 'Low fees worldwide' },
+  { value: 'bank_transfer', label: 'Bank Transfer', description: '3-5 business days' },
+  { value: 'mobile_money', label: 'Mobile Money', description: 'For Africa & Asia' },
+];
+
+const GroupAdminPayments: React.FC = () => {
+  const intl = useIntl();
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<GroupAdmin | null>(null);
+  const [commissions, setCommissions] = useState<GroupAdminCommission[]>([]);
+  const [withdrawals, setWithdrawals] = useState<GroupAdminWithdrawal[]>([]);
+  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const [withdrawForm, setWithdrawForm] = useState({
+    amount: 0,
+    paymentMethod: 'paypal' as GroupAdminPaymentMethod,
+    email: '',
+    accountHolderName: '',
+    currency: 'USD',
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const getDashboard = httpsCallable(functions, 'getGroupAdminDashboard');
+      const result = await getDashboard({});
+      const data = result.data as {
+        profile: GroupAdmin;
+        recentCommissions: GroupAdminCommission[];
+        recentWithdrawals: GroupAdminWithdrawal[];
+      };
+      setProfile(data.profile);
+      setCommissions(data.recentCommissions);
+      setWithdrawals(data.recentWithdrawals || []);
+      setWithdrawForm((prev) => ({ ...prev, amount: data.profile.availableBalance }));
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!profile || withdrawForm.amount < 2500) {
+      setError('Minimum withdrawal is $25');
+      return;
+    }
+    if (withdrawForm.amount > profile.availableBalance) {
+      setError('Amount exceeds available balance');
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      let paymentDetails: GroupAdminPaymentDetails;
+
+      switch (withdrawForm.paymentMethod) {
+        case 'paypal':
+          paymentDetails = { type: 'paypal', email: withdrawForm.email };
+          break;
+        case 'wise':
+          paymentDetails = {
+            type: 'wise',
+            email: withdrawForm.email,
+            accountHolderName: withdrawForm.accountHolderName,
+            currency: withdrawForm.currency,
+          };
+          break;
+        default:
+          paymentDetails = { type: 'paypal', email: withdrawForm.email };
+      }
+
+      const requestWithdrawal = httpsCallable(functions, 'requestGroupAdminWithdrawal');
+      await requestWithdrawal({
+        amount: withdrawForm.amount,
+        paymentMethod: withdrawForm.paymentMethod,
+        paymentDetails,
+      });
+
+      setSuccess('Withdrawal request submitted successfully!');
+      setShowWithdrawForm(false);
+      fetchData();
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || 'Failed to submit withdrawal');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <SEOHead title={intl.formatMessage({ id: 'groupAdmin.payments.title', defaultMessage: 'Payments | SOS-Expat Group Admin' })} />
+
+      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
+            <FormattedMessage id="groupAdmin.payments.heading" defaultMessage="Payments & Withdrawals" />
+          </h1>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              <span className="text-red-700">{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-500" />
+              <span className="text-green-700">{success}</span>
+            </div>
+          )}
+
+          {/* Balance Card */}
+          {profile && (
+            <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 mb-1">Available Balance</p>
+                  <p className="text-4xl font-bold">{formatGroupAdminAmount(profile.availableBalance)}</p>
+                  <p className="text-green-100 text-sm mt-2">
+                    Pending: {formatGroupAdminAmount(profile.pendingBalance)} · Total: {formatGroupAdminAmount(profile.totalEarned)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowWithdrawForm(true)}
+                  disabled={profile.availableBalance < 2500 || !!profile.pendingWithdrawalId}
+                  className="bg-white text-green-600 font-bold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Withdraw
+                </button>
+              </div>
+              {profile.pendingWithdrawalId && (
+                <p className="mt-4 text-green-100 text-sm">You have a pending withdrawal request</p>
+              )}
+            </div>
+          )}
+
+          {/* Withdrawal Form Modal */}
+          {showWithdrawForm && profile && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl p-6 max-w-md w-full">
+                <h2 className="text-xl font-bold mb-6">Request Withdrawal</h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount (cents)</label>
+                    <input
+                      type="number"
+                      value={withdrawForm.amount}
+                      onChange={(e) => setWithdrawForm({ ...withdrawForm, amount: Number(e.target.value) })}
+                      max={profile.availableBalance}
+                      min={2500}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Min: $25 | Max: {formatGroupAdminAmount(profile.availableBalance)}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                    <select
+                      value={withdrawForm.paymentMethod}
+                      onChange={(e) => setWithdrawForm({ ...withdrawForm, paymentMethod: e.target.value as GroupAdminPaymentMethod })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                    >
+                      {PAYMENT_METHODS.map((method) => (
+                        <option key={method.value} value={method.value}>{method.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={withdrawForm.email}
+                      onChange={(e) => setWithdrawForm({ ...withdrawForm, email: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+
+                  {withdrawForm.paymentMethod === 'wise' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Account Holder Name</label>
+                      <input
+                        type="text"
+                        value={withdrawForm.accountHolderName}
+                        onChange={(e) => setWithdrawForm({ ...withdrawForm, accountHolderName: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowWithdrawForm(false)}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleWithdraw}
+                    disabled={submitting}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold py-2 px-4 rounded-lg"
+                  >
+                    {submitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Submit'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Commissions History */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="font-bold text-lg mb-4">Recent Commissions</h2>
+            {commissions.length > 0 ? (
+              <div className="space-y-3">
+                {commissions.map((commission) => (
+                  <div key={commission.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                    <div>
+                      <p className="font-medium">{commission.description}</p>
+                      <p className="text-sm text-gray-500">{new Date(commission.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-bold ${commission.status === 'available' ? 'text-green-600' : 'text-amber-600'}`}>
+                        {formatGroupAdminAmount(commission.amount)}
+                      </p>
+                      <p className="text-xs text-gray-500 capitalize">{commission.status}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No commissions yet</p>
+            )}
+          </div>
+
+          {/* Withdrawal History */}
+          <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
+            <h2 className="font-bold text-lg mb-4">
+              <FormattedMessage id="groupAdmin.payments.history" defaultMessage="Withdrawal History" />
+            </h2>
+            {withdrawals.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+                        <FormattedMessage id="groupAdmin.payments.date" defaultMessage="Date" />
+                      </th>
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+                        <FormattedMessage id="groupAdmin.payments.amount" defaultMessage="Amount" />
+                      </th>
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+                        <FormattedMessage id="groupAdmin.payments.method" defaultMessage="Method" />
+                      </th>
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+                        <FormattedMessage id="groupAdmin.payments.status" defaultMessage="Status" />
+                      </th>
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+                        <FormattedMessage id="groupAdmin.payments.reference" defaultMessage="Reference" />
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {withdrawals.map((withdrawal) => {
+                      const statusBadge = getWithdrawalStatusBadge(withdrawal.status);
+                      return (
+                        <tr key={withdrawal.id} className="border-b border-gray-100 last:border-0">
+                          <td className="py-3 px-2 text-sm text-gray-700">
+                            {new Date(withdrawal.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="py-3 px-2 text-sm font-medium text-gray-900">
+                            {formatGroupAdminAmount(withdrawal.amount)}
+                          </td>
+                          <td className="py-3 px-2 text-sm text-gray-700 capitalize">
+                            {withdrawal.paymentMethod.replace('_', ' ')}
+                          </td>
+                          <td className="py-3 px-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.text}`}>
+                              <FormattedMessage
+                                id={`groupAdmin.payments.withdrawalStatus.${withdrawal.status}`}
+                                defaultMessage={withdrawal.status}
+                              />
+                            </span>
+                            {(withdrawal.rejectionReason || withdrawal.failureReason) && (
+                              <p className="text-xs text-red-600 mt-1">
+                                {withdrawal.rejectionReason || withdrawal.failureReason}
+                              </p>
+                            )}
+                          </td>
+                          <td className="py-3 px-2 text-sm text-gray-500">
+                            {withdrawal.paymentReference || '-'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">
+                <FormattedMessage id="groupAdmin.payments.noWithdrawals" defaultMessage="No withdrawals made" />
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default GroupAdminPayments;

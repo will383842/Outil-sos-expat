@@ -912,10 +912,37 @@
   min-width: 0;
 }
 
-/* Reset PayPal iframe styles - minimal overrides */
-.paypal-field-inner iframe {
+/* PayPal iframe styles - CRITICAL for card field interaction */
+/* The PayPal SDK creates iframes for card fields that need explicit interactivity */
+.paypal-field-wrapper,
+.paypal-field-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.paypal-field-inner iframe,
+.paypal-field-wrapper iframe {
   border: none !important;
   background: transparent !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 10 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 44px !important;
+}
+
+/* Ensure PayPal card fields container allows interaction */
+.paypal-payment-container .paypal-field-wrapper {
+  cursor: text;
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* Override any global touch-action that might block iframe input */
+.paypal-field-inner,
+.paypal-field-wrapper {
+  touch-action: auto !important;
 }
 
 /* PayPal buttons container - stable height */

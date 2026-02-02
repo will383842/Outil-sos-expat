@@ -211,7 +211,7 @@ export async function checkAndApplyEarlyAdopter(chatterId: string): Promise<Earl
     // Must have reached $50 threshold
     if (!chatter.threshold50Reached) return result;
 
-    // GLOBAL early adopter counter (not per country) - uses "global" as the key
+    // GLOBAL early adopter counter - uses "global" as the key (100 slots worldwide)
     const counterRef = db.collection("chatter_early_adopter_counters").doc("global");
 
     // Try to claim an early adopter slot
@@ -259,7 +259,7 @@ export async function checkAndApplyEarlyAdopter(chatterId: string): Promise<Earl
       const chatterRef = db.collection("chatters").doc(chatterId);
       transaction.update(chatterRef, {
         isEarlyAdopter: true,
-        earlyAdopterCountry: "global", // Now global instead of per-country
+        earlyAdopterCountry: "global", // Global program
         earlyAdopterDate: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });

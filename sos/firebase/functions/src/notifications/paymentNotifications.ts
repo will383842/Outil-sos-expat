@@ -360,7 +360,10 @@ export const sendPaymentNotifications = traceFunction(
         console.log(`📨 [${debugId}] Creating PROVIDER notification (booking_paid_provider - SMS ENABLED)...`);
 
         const clientName = cs?.participants?.client?.name ?? cs?.participants?.client?.firstName ?? cs?.clientName ?? "Client";
-        const clientCountry = cs?.clientCurrentCountry ?? cs?.metadata?.clientCountry ?? "N/A";
+        // P2 FIX: Use providerCountry as intervention country (where client needs help)
+        // providerCountry = country of the provider = intervention country (e.g., Thailand)
+        // clientCurrentCountry = where the client is located (e.g., France)
+        const interventionCountry = cs?.providerCountry ?? cs?.metadata?.providerCountry ?? cs?.clientCurrentCountry ?? "N/A";
         const amount = cs?.payment?.amount ?? cs?.metadata?.amount ?? 0;
         const currency = cs?.payment?.currency ?? cs?.currency ?? "EUR";
         const serviceType = cs?.metadata?.serviceType ?? cs?.serviceType ?? "consultation";
@@ -385,7 +388,7 @@ export const sendPaymentNotifications = traceFunction(
               name: clientName,
             },
             request: {
-              country: clientCountry,
+              country: interventionCountry,  // P2 FIX: Use intervention country (provider's country)
               title: title,
               description: description,
             },
@@ -410,7 +413,7 @@ export const sendPaymentNotifications = traceFunction(
 
         const providerEventRef = await database.collection("message_events").add(providerEventData);
         console.log(`✅ [${debugId}] Provider notification created: ${providerEventRef.id}`);
-        console.log(`✅ [${debugId}]   → SMS will be sent: "Client: ${clientName} (${clientCountry}) - ${amount}${currency}"`);
+        console.log(`✅ [${debugId}]   → SMS will be sent: "Client: ${clientName} (${interventionCountry}) - Langue: ${clientLanguagesFormatted}"`);
         ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification provider créée (SMS enabled)", { callSessionId, providerId, eventDocId: providerEventRef.id, debugId });
       } else {
         console.log(`⚠️ [${debugId}] SKIPPED provider notification - no providerId or providerEmail`);

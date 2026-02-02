@@ -735,13 +735,16 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         </div>
       )}
 
-      {/* Section Carte Bancaire - Ne pas griser les champs, seulement désactiver le bouton */}
-      <div className={`transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
+      {/* Section Carte Bancaire - opacity only, NO pointer-events-none (blocks iframes) */}
+      <div className={`transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50" : ""}`}>
         <PayPalCardFieldsProvider
           createOrder={createOrder}
           onApprove={onCardApprove}
           onError={handleError}
-          // Note: PayPal SDK style types are incomplete, using type assertion
+          // Note: PayPal SDK only allows certain CSS properties
+          // Allowed: font-size, font-family, font-weight, font-style, color, padding,
+          // letter-spacing, line-height, text-align, text-decoration, text-shadow, text-transform
+          // NOT allowed: background-color, border, border-radius, box-shadow, height, etc.
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           style={{
             input: {
@@ -749,22 +752,15 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               "font-family": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
               "font-weight": "400",
               "color": "#1f2937",
-              "padding": "0 12px 0 8px",
-              "border": "none",
-              "border-radius": "0",
-              "height": "44px",
-              "box-sizing": "border-box",
-              "background-color": "transparent",
-              "line-height": "44px",
+              "padding": "12px",
+              "line-height": "1.5",
             },
             "input::placeholder": {
               "color": "#9ca3af",
               "font-weight": "400",
             },
             "input:focus": {
-              "border": "none",
-              "box-shadow": "none",
-              "outline": "none",
+              "color": "#1f2937",
             },
             ".invalid": {
               "color": "#ef4444",

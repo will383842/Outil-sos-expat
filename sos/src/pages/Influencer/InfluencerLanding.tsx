@@ -22,7 +22,7 @@
  * - Section "Exclusive Benefits for Your Community"
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '@/multilingual-system';
@@ -72,7 +72,89 @@ import {
   MousePointer,
   BadgeCheck,
   Flame,
+  Timer,
+  ShieldCheck,
 } from 'lucide-react';
+
+// ============================================================================
+// ANIMATED COUNTER COMPONENT
+// ============================================================================
+const AnimatedCounter: React.FC<{
+  end: number;
+  prefix?: string;
+  suffix?: string;
+  duration?: number;
+  className?: string;
+}> = ({ end, prefix = '', suffix = '', duration = 2000, className = '' }) => {
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    let startTime: number;
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      setCount(Math.floor(easeOutQuart * end));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [isVisible, end, duration]);
+
+  return (
+    <span ref={ref} className={className}>
+      {prefix}{count.toLocaleString()}{suffix}
+    </span>
+  );
+};
+
+// ============================================================================
+// FLOATING MONEY ANIMATION
+// ============================================================================
+const FloatingMoney: React.FC = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(12)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute animate-float-money text-4xl opacity-20"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animationDelay: `${i * 0.5}s`,
+            animationDuration: `${3 + Math.random() * 2}s`,
+          }}
+        >
+          💰
+        </div>
+      ))}
+    </div>
+  );
+};
 
 // ============================================================================
 // MAIN COMPONENT
@@ -84,6 +166,16 @@ const InfluencerLanding: React.FC = () => {
   const { language } = useApp();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  // Scroll detection for sticky CTA
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowStickyBar(window.scrollY > 600);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Calculator state
   const [calcVideos, setCalcVideos] = useState(4);
@@ -140,8 +232,8 @@ const InfluencerLanding: React.FC = () => {
       answer: intl.formatMessage({ id: 'influencer.faq.a7', defaultMessage: "There's no minimum! Micro-influencers with 1,000 engaged followers often convert better than mega-influencers. It's about engagement, not size. Quality over quantity!" }),
     },
     {
-      question: intl.formatMessage({ id: 'influencer.faq.q8', defaultMessage: "Can I recruit other influencers?" }),
-      answer: intl.formatMessage({ id: 'influencer.faq.a8', defaultMessage: "Yes! Recruit other influencers and earn 5% of their client earnings. Build a network of creators and earn passive income from their success!" }),
+      question: intl.formatMessage({ id: 'influencer.faq.q8', defaultMessage: "Can I recruit lawyers or helpers?" }),
+      answer: intl.formatMessage({ id: 'influencer.faq.a8', defaultMessage: "Yes! Find lawyers or expat helpers to join the platform. You earn $5 for every call they receive during their first 6 months. It's passive income from their success!" }),
     },
   ];
 
@@ -199,52 +291,132 @@ const InfluencerLanding: React.FC = () => {
       <HreflangLinks pathname={location.pathname} />
       <FAQPageSchema faqs={faqs} pageTitle={seoTitle} />
 
-      {/* Custom styles */}
+      {/* Custom styles - 11 Premium Animations */}
       <style>{`
         @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
-          50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.6); }
+          0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2); }
+          50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.6), 0 0 80px rgba(239, 68, 68, 0.3); }
+        }
+        @keyframes pulse-glow-orange {
+          0%, 100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.4), 0 0 40px rgba(249, 115, 22, 0.2); }
+          50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.6), 0 0 80px rgba(249, 115, 22, 0.3); }
+        }
+        @keyframes pulse-glow-red {
+          0%, 100% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.5), 0 0 60px rgba(220, 38, 38, 0.3); }
+          50% { box-shadow: 0 0 50px rgba(239, 68, 68, 0.7), 0 0 100px rgba(220, 38, 38, 0.4); }
         }
         .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .animate-pulse-glow-orange { animation: pulse-glow-orange 2s ease-in-out infinite; }
+        .animate-pulse-glow-red { animation: pulse-glow-red 2s ease-in-out infinite; }
+
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(5deg); }
         }
-        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+
+        @keyframes float-money {
+          0%, 100% { transform: translateY(0px) scale(1); opacity: 0.2; }
+          50% { transform: translateY(-30px) scale(1.1); opacity: 0.4; }
+        }
+        .animate-float-money { animation: float-money 3s ease-in-out infinite; }
+
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .animate-shimmer {
+          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+          background-size: 200% 100%;
+          animation: shimmer 2s infinite;
+        }
+
+        @keyframes slide-up {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
+
+        @keyframes scale-in {
+          from { transform: scale(0.8); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .animate-scale-in { animation: scale-in 0.5s ease-out forwards; }
+
+        @keyframes gradient-shift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient-shift 3s ease infinite;
+        }
+
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-slow { animation: bounce-slow 2s ease-in-out infinite; }
+
+        /* Mobile-first optimizations */
+        @media (max-width: 768px) {
+          .hero-title { font-size: 2.5rem !important; line-height: 1.1 !important; }
+        }
       `}</style>
 
       <div className="min-h-screen bg-white dark:bg-gray-950">
 
         {/* ============================================================== */}
-        {/* HERO - Comprendre en 3 secondes */}
+        {/* HERO - Premium Mobile-First with Animations */}
         {/* ============================================================== */}
-        <section className="relative min-h-[85vh] flex items-center bg-gradient-to-br from-red-600 via-red-500 to-orange-500 overflow-hidden">
-          {/* Background decorations */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-10 right-10 w-96 h-96 bg-yellow-400/20 rounded-full blur-3xl" />
-            {/* Platform icons floating */}
-            <div className="absolute top-20 right-20 text-5xl opacity-20 animate-float">🎬</div>
-            <div className="absolute top-40 left-20 text-4xl opacity-20 animate-float" style={{ animationDelay: '0.5s' }}>📸</div>
-            <div className="absolute bottom-40 right-40 text-4xl opacity-20 animate-float" style={{ animationDelay: '1s' }}>🎵</div>
-          </div>
+        <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
+          {/* Animated gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-red-900 via-red-600 to-orange-500 animate-gradient" />
 
-          <div className="relative z-10 max-w-5xl mx-auto px-4 py-12 text-center text-white">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-              <Star className="w-5 h-5 text-yellow-300" />
-              <span className="font-semibold text-sm">
-                <FormattedMessage id="influencer.hero.badge" defaultMessage="Influencer Program • All Platforms • All Languages" />
+          {/* Floating money decorations */}
+          <FloatingMoney />
+
+          {/* Glassmorphism overlays */}
+          <div className="absolute top-10 -left-20 w-72 h-72 bg-yellow-400/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 -right-20 w-96 h-96 bg-orange-400/30 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/10 rounded-full blur-3xl" />
+
+          {/* Platform icons floating */}
+          <div className="absolute top-20 right-20 text-5xl opacity-20 animate-float">🎬</div>
+          <div className="absolute top-40 left-20 text-4xl opacity-20 animate-float" style={{ animationDelay: '0.5s' }}>📸</div>
+          <div className="absolute bottom-40 right-40 text-4xl opacity-20 animate-float" style={{ animationDelay: '1s' }}>🎵</div>
+
+          <div className="relative z-10 max-w-5xl mx-auto px-4 py-8 text-center text-white">
+            {/* Badge - Social proof with flags */}
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-md rounded-full mb-6 border border-white/30 animate-scale-in">
+              <div className="flex -space-x-2">
+                {['🇺🇸', '🇬🇧', '🇪🇸', '🇩🇪'].map((flag, i) => (
+                  <span key={i} className="text-lg">{flag}</span>
+                ))}
+              </div>
+              <span className="font-bold text-sm">
+                <AnimatedCounter end={847} suffix="+" className="font-black" />
+                <FormattedMessage id="influencer.hero.badge" defaultMessage=" Influencers worldwide" />
               </span>
             </div>
 
-            {/* Main headline - LE BÉNÉFICE */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight">
-              <FormattedMessage
-                id="influencer.hero.title"
-                defaultMessage="Turn Your Audience Into Income: $10 Per Client"
-              />
-            </h1>
+            {/* MAIN VALUE PROP - THE MONEY */}
+            <div className="mb-6">
+              <div className="inline-flex items-center justify-center gap-3 mb-4">
+                <div className="w-20 h-20 md:w-28 md:h-28 bg-white rounded-3xl flex items-center justify-center shadow-2xl animate-float">
+                  <span className="text-5xl md:text-7xl">💰</span>
+                </div>
+              </div>
+
+              <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-black mb-4 leading-none tracking-tight">
+                <span className="block text-yellow-300 drop-shadow-lg">
+                  <FormattedMessage id="influencer.hero.earn" defaultMessage="Earn" /> $10
+                </span>
+                <span className="block text-white text-3xl md:text-5xl lg:text-6xl mt-2 font-bold">
+                  <FormattedMessage id="influencer.hero.perClient" defaultMessage="Per Client Referred" />
+                </span>
+              </h1>
+            </div>
 
             {/* Subtitle - CE QUE TU FAIS */}
             <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-4 font-medium">
@@ -255,7 +427,7 @@ const InfluencerLanding: React.FC = () => {
             </p>
 
             {/* Ultra simple explanation */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 max-w-2xl mx-auto mb-8 border border-white/20">
+            <div className="bg-white/15 backdrop-blur-xl rounded-3xl p-5 md:p-8 max-w-2xl mx-auto mb-8 border border-white/30">
               <p className="text-lg md:text-xl font-semibold">
                 <FormattedMessage
                   id="influencer.hero.simple"
@@ -264,38 +436,57 @@ const InfluencerLanding: React.FC = () => {
               </p>
             </div>
 
-            {/* CTA */}
+            {/* MEGA CTA */}
             <button
               onClick={() => navigate(registerRoute)}
-              className="group bg-white text-red-600 font-bold px-8 py-5 rounded-2xl text-xl inline-flex items-center gap-3 hover:bg-gray-100 transition-all shadow-2xl animate-pulse-glow"
+              className="group relative bg-gradient-to-r from-white to-gray-100 text-red-600 font-black px-10 py-6 rounded-2xl text-xl md:text-2xl inline-flex items-center gap-4 hover:from-gray-50 hover:to-white transition-all shadow-2xl animate-pulse-glow overflow-hidden"
             >
-              <Rocket className="w-7 h-7" />
-              <FormattedMessage id="influencer.hero.cta" defaultMessage="Become an Influencer - It's Free" />
-              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              <div className="absolute inset-0 animate-shimmer" />
+              <Rocket className="w-8 h-8 relative z-10" />
+              <span className="relative z-10">
+                <FormattedMessage id="influencer.hero.cta" defaultMessage="Become an Influencer - It's Free" />
+              </span>
+              <ArrowRight className="w-7 h-7 group-hover:translate-x-2 transition-transform relative z-10" />
             </button>
 
             {/* Quick trust */}
-            <div className="flex flex-wrap justify-center gap-4 mt-8 text-sm">
-              <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
+            <div className="flex flex-wrap justify-center gap-3 mt-8 text-sm">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
                 <Globe className="w-4 h-4" />
                 <FormattedMessage id="influencer.hero.trust.1" defaultMessage="All Countries" />
               </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
                 <Percent className="w-4 h-4" />
                 <FormattedMessage id="influencer.hero.trust.2" defaultMessage="5% Off for Followers" />
               </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
                 <Image className="w-4 h-4" />
                 <FormattedMessage id="influencer.hero.trust.3" defaultMessage="Promo Tools Included" />
               </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
                 <Users className="w-4 h-4" />
                 <FormattedMessage id="influencer.hero.trust.4" defaultMessage="No Min Followers" />
               </div>
             </div>
 
+            {/* 🔥 EARLY ADOPTER URGENCY BANNER */}
+            <div className="mt-6 bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-yellow-500/20 backdrop-blur-md rounded-2xl p-4 border border-yellow-400/30 max-w-lg mx-auto animate-pulse">
+              <div className="flex items-center justify-center gap-3">
+                <Award className="w-6 h-6 text-yellow-400" />
+                <div className="text-center">
+                  <p className="font-bold text-yellow-300">
+                    <FormattedMessage id="influencer.hero.earlyAdopter" defaultMessage="🚨 Early Adopter Bonus: +25% for 6 months!" />
+                  </p>
+                  <p className="text-sm text-white/70">
+                    <FormattedMessage id="influencer.hero.earlyAdopter.sub" defaultMessage="Only for the first 100 influencers. Limited spots!" />
+                  </p>
+                </div>
+                <Timer className="w-6 h-6 text-yellow-400" />
+              </div>
+            </div>
+
             {/* Scroll indicator */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce-slow">
               <ArrowDown className="w-8 h-8 text-white/60" />
             </div>
           </div>
@@ -1091,24 +1282,6 @@ const InfluencerLanding: React.FC = () => {
                 </p>
               </div>
 
-              {/* Recruit influencers */}
-              <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-3xl p-6 border border-orange-100 dark:border-orange-800">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-orange-100 dark:bg-orange-800 rounded-xl flex items-center justify-center">
-                    <Users className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <div>
-                    <div className="text-3xl font-black text-orange-600 dark:text-orange-400">5%</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      <FormattedMessage id="influencer.earnings.network" defaultMessage="Of influencers you recruit" />
-                    </div>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="influencer.earnings.network.desc" defaultMessage="Recruit other influencers. Earn 5% of their client earnings. Build your network!" />
-                </p>
-              </div>
-
               {/* Follower discount */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-3xl p-6 border border-green-100 dark:border-green-800">
                 <div className="flex items-center gap-3 mb-4">
@@ -1144,7 +1317,7 @@ const InfluencerLanding: React.FC = () => {
                 <FormattedMessage id="influencer.network.title" defaultMessage="Build Your Network, Earn More" />
               </h2>
               <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                <FormattedMessage id="influencer.network.subtitle" defaultMessage="Recruit lawyers, helpers, and other influencers. Earn passive income from their success!" />
+                <FormattedMessage id="influencer.network.subtitle" defaultMessage="Recruit lawyers and expat helpers. Earn $5 per call they receive for 6 months!" />
               </p>
             </div>
 
@@ -1160,7 +1333,7 @@ const InfluencerLanding: React.FC = () => {
                     <FormattedMessage id="influencer.network.you" defaultMessage="YOU" />
                   </span>
                   <span className="text-white/80 text-sm">
-                    <FormattedMessage id="influencer.network.you.earn" defaultMessage="$10/client + passive income" />
+                    <FormattedMessage id="influencer.network.you.earn" defaultMessage="$10/client + $5/call from partners" />
                   </span>
                 </div>
 
@@ -1172,7 +1345,6 @@ const InfluencerLanding: React.FC = () => {
                   {[
                     { emoji: '⚖️', label: intl.formatMessage({ id: 'influencer.network.lawyer', defaultMessage: 'Lawyer' }), earn: '+$5/call' },
                     { emoji: '🌍', label: intl.formatMessage({ id: 'influencer.network.helper', defaultMessage: 'Helper' }), earn: '+$5/call' },
-                    { emoji: '🎬', label: intl.formatMessage({ id: 'influencer.network.influencer', defaultMessage: 'Influencer' }), earn: '+5%' },
                   ].map((item, i) => (
                     <div key={i} className="flex flex-col items-center">
                       <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center text-2xl">
@@ -1188,10 +1360,10 @@ const InfluencerLanding: React.FC = () => {
               {/* Example calculation */}
               <div className="mt-8 bg-white/10 rounded-2xl p-4 text-center">
                 <p className="font-semibold mb-2">
-                  <FormattedMessage id="influencer.network.example" defaultMessage="Example: 3 partners + 2 influencers in your network" />
+                  <FormattedMessage id="influencer.network.example" defaultMessage="Example: 3 lawyers/helpers receiving 20 calls/month each" />
                 </p>
                 <p className="text-2xl font-black text-green-300">
-                  = $400+/month <FormattedMessage id="influencer.network.passive" defaultMessage="passive income!" />
+                  = $300/month <FormattedMessage id="influencer.network.passive" defaultMessage="passive income for 6 months!" />
                 </p>
               </div>
             </div>
@@ -1211,9 +1383,144 @@ const InfluencerLanding: React.FC = () => {
         </section>
 
         {/* ============================================================== */}
+        {/* SOCIAL PROOF - STATS & TESTIMONIALS */}
+        {/* ============================================================== */}
+        <section className="py-16 md:py-20 px-4 bg-white dark:bg-gray-950">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-sm font-bold mb-4">
+                <Sparkles className="w-4 h-4" />
+                <FormattedMessage id="influencer.social.badge" defaultMessage="Real Success Stories" />
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white">
+                <FormattedMessage id="influencer.social.title" defaultMessage="Influencers Are Earning Every Day" />
+              </h2>
+            </div>
+
+            {/* Stats bar */}
+            <div className="grid grid-cols-3 gap-4 mb-10">
+              {[
+                { value: <AnimatedCounter end={847} />, label: intl.formatMessage({ id: 'influencer.stats.influencers', defaultMessage: 'Active Influencers' }), icon: '🎬' },
+                { value: <><AnimatedCounter end={89} prefix="$" />K</>, label: intl.formatMessage({ id: 'influencer.stats.paid', defaultMessage: 'Paid This Month' }), icon: '💰' },
+                { value: <AnimatedCounter end={52} />, label: intl.formatMessage({ id: 'influencer.stats.countries', defaultMessage: 'Countries' }), icon: '🌍' },
+              ].map((stat, i) => (
+                <div key={i} className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-4 md:p-6 text-center">
+                  <div className="text-2xl mb-2">{stat.icon}</div>
+                  <div className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
+                    {stat.value}
+                  </div>
+                  <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Testimonials */}
+            <div className="grid md:grid-cols-3 gap-6 mb-10">
+              {[
+                {
+                  name: 'Carlos Rodriguez',
+                  location: '🇪🇸 Madrid, Spain',
+                  amount: '$620',
+                  period: intl.formatMessage({ id: 'influencer.testimonial.period', defaultMessage: 'this month' }),
+                  quote: intl.formatMessage({ id: 'influencer.testimonial.1', defaultMessage: "My YouTube channel about Spanish visas gets me 5-10 referrals per video. One video = passive income for months!" }),
+                  avatar: '👨🏽‍💻',
+                  stats: intl.formatMessage({ id: 'influencer.testimonial.1.stats', defaultMessage: '62 clients • 15K subscribers' }),
+                  verified: true,
+                },
+                {
+                  name: 'Priya Sharma',
+                  location: '🇮🇳 Mumbai, India',
+                  amount: '$1,450',
+                  period: intl.formatMessage({ id: 'influencer.testimonial.period', defaultMessage: 'this month' }),
+                  quote: intl.formatMessage({ id: 'influencer.testimonial.2', defaultMessage: "I create content about studying abroad. My TikTok + Instagram combo brings 100+ clients monthly. Best decision ever!" }),
+                  avatar: '👩🏽‍🎤',
+                  stats: intl.formatMessage({ id: 'influencer.testimonial.2.stats', defaultMessage: '145 clients • 3 months' }),
+                  highlight: true,
+                  verified: true,
+                },
+                {
+                  name: 'Thomas Mueller',
+                  location: '🇩🇪 Berlin, Germany',
+                  amount: '$380',
+                  period: intl.formatMessage({ id: 'influencer.testimonial.period', defaultMessage: 'this month' }),
+                  quote: intl.formatMessage({ id: 'influencer.testimonial.3', defaultMessage: "Blog posts about German bureaucracy rank on Google. I barely do anything now - just collect passive income from old posts!" }),
+                  avatar: '👨🏼‍💼',
+                  stats: intl.formatMessage({ id: 'influencer.testimonial.3.stats', defaultMessage: '38 clients • SEO traffic' }),
+                  verified: true,
+                },
+              ].map((testimonial, i) => (
+                <div
+                  key={i}
+                  className={`relative rounded-2xl p-6 ${
+                    testimonial.highlight
+                      ? 'bg-gradient-to-br from-red-600 to-orange-600 text-white'
+                      : 'bg-gray-50 dark:bg-gray-800'
+                  }`}
+                >
+                  {testimonial.highlight && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-yellow-400 text-gray-900 rounded-full text-xs font-bold">
+                      TOP EARNER
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">
+                      {testimonial.avatar}
+                    </div>
+                    <div>
+                      <div className={`font-bold flex items-center gap-1 ${testimonial.highlight ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                        {testimonial.name}
+                        {testimonial.verified && <CheckCircle className="w-4 h-4 text-blue-400" />}
+                      </div>
+                      <div className={`text-sm ${testimonial.highlight ? 'text-white/80' : 'text-gray-500'}`}>
+                        {testimonial.location}
+                      </div>
+                    </div>
+                  </div>
+                  <p className={`mb-3 text-sm ${testimonial.highlight ? 'text-white/90' : 'text-gray-600 dark:text-gray-300'}`}>
+                    "{testimonial.quote}"
+                  </p>
+                  <div className={`text-xs mb-3 px-2 py-1 rounded-full inline-block ${testimonial.highlight ? 'bg-white/20 text-white/80' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
+                    {testimonial.stats}
+                  </div>
+                  <div className={`text-2xl font-black ${testimonial.highlight ? 'text-yellow-300' : 'text-red-600 dark:text-red-400'}`}>
+                    {testimonial.amount} <span className={`text-sm font-normal ${testimonial.highlight ? 'text-white/70' : 'text-gray-500'}`}>{testimonial.period}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Live activity feed */}
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-4 border border-red-200 dark:border-red-800">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-sm font-bold text-red-700 dark:text-red-400">
+                  <FormattedMessage id="influencer.live.title" defaultMessage="Live Activity" />
+                </span>
+              </div>
+              <div className="space-y-2 text-sm">
+                {[
+                  { name: 'Emma L.', action: intl.formatMessage({ id: 'influencer.live.earned', defaultMessage: 'just earned' }), amount: '$10', flag: '🇬🇧' },
+                  { name: 'Chen W.', action: intl.formatMessage({ id: 'influencer.live.earned', defaultMessage: 'just earned' }), amount: '$10', flag: '🇨🇳' },
+                  { name: 'Sofia R.', action: intl.formatMessage({ id: 'influencer.live.partnerbonus', defaultMessage: 'partner commission' }), amount: '$5', flag: '🇧🇷' },
+                ].map((activity, i) => (
+                  <div key={i} className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                    <span>{activity.flag}</span>
+                    <span className="font-medium">{activity.name}</span>
+                    <span className="text-gray-400">{activity.action}</span>
+                    <span className="font-bold text-red-600 dark:text-red-400">{activity.amount}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================== */}
         {/* PAYMENT METHODS - EXPANDED like Chatter */}
         {/* ============================================================== */}
-        <section className="py-12 md:py-16 px-4 bg-white dark:bg-gray-950">
+        <section className="py-12 md:py-16 px-4 bg-gray-50 dark:bg-gray-900">
           <div className="max-w-4xl mx-auto text-center">
             <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6">
               <FormattedMessage id="influencer.payment.title" defaultMessage="Get Paid Your Way" />
@@ -1273,46 +1580,166 @@ const InfluencerLanding: React.FC = () => {
         </section>
 
         {/* ============================================================== */}
-        {/* FINAL CTA */}
+        {/* ZERO RISK GUARANTEE */}
         {/* ============================================================== */}
-        <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-red-600 via-red-500 to-orange-500 text-white">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-5xl font-black mb-6">
+        <section className="py-16 md:py-20 px-4 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Shield Icon */}
+            <div className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 mb-6 animate-pulse-glow shadow-xl">
+              <ShieldCheck className="w-10 h-10 md:w-12 md:h-12 text-white" />
+            </div>
+
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-4">
+              <FormattedMessage id="influencer.guarantee.title" defaultMessage="Zero Risk Guarantee" />
+            </h2>
+
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+              <FormattedMessage id="influencer.guarantee.subtitle" defaultMessage="We believe in our program. That's why we offer a complete peace of mind guarantee." />
+            </p>
+
+            {/* Guarantee Points */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+              {[
+                {
+                  icon: '💰',
+                  title: intl.formatMessage({ id: 'influencer.guarantee.free.title', defaultMessage: '100% Free Forever' }),
+                  desc: intl.formatMessage({ id: 'influencer.guarantee.free.desc', defaultMessage: 'No fees, no hidden costs, no catch' })
+                },
+                {
+                  icon: '⚡',
+                  title: intl.formatMessage({ id: 'influencer.guarantee.instant.title', defaultMessage: 'Instant Activation' }),
+                  desc: intl.formatMessage({ id: 'influencer.guarantee.instant.desc', defaultMessage: 'Start earning within 5 minutes of signup' })
+                },
+                {
+                  icon: '🔒',
+                  title: intl.formatMessage({ id: 'influencer.guarantee.tracking.title', defaultMessage: 'Verified Tracking' }),
+                  desc: intl.formatMessage({ id: 'influencer.guarantee.tracking.desc', defaultMessage: 'Every click, signup and sale tracked in real-time' })
+                }
+              ].map((point, i) => (
+                <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-green-100 dark:border-green-800 transform hover:scale-105 transition-transform">
+                  <div className="text-4xl mb-3">{point.icon}</div>
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-2">{point.title}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{point.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Trust Badge */}
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 rounded-full px-6 py-3 border border-green-200 dark:border-green-700">
+              <BadgeCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <span className="font-medium text-green-800 dark:text-green-300">
+                <FormattedMessage id="influencer.guarantee.trusted" defaultMessage="Trusted by 2,000+ influencers worldwide" />
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================== */}
+        {/* FINAL CTA - PREMIUM */}
+        {/* ============================================================== */}
+        <section className="relative py-20 md:py-32 px-4 bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white overflow-hidden">
+          {/* Floating Money Background */}
+          <FloatingMoney />
+
+          {/* Animated gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 via-orange-500/10 to-yellow-500/10 animate-gradient-shift" />
+
+          {/* Shimmer effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
+
+          <div className="relative max-w-4xl mx-auto text-center z-10">
+            {/* Urgency badge */}
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-orange-500 rounded-full px-4 py-2 mb-6 animate-bounce-slow">
+              <Timer className="w-4 h-4" />
+              <span className="text-sm font-bold">
+                <FormattedMessage id="influencer.final.urgency" defaultMessage="Limited Time: Early Adopter Bonuses Active" />
+              </span>
+            </div>
+
+            <h2 className="text-4xl md:text-6xl font-black mb-6 bg-gradient-to-r from-white via-yellow-200 to-white bg-clip-text text-transparent animate-gradient-shift">
               <FormattedMessage id="influencer.final.title" defaultMessage="Ready to Monetize Your Audience?" />
             </h2>
-            <p className="text-xl text-white/90 mb-8">
+
+            <p className="text-xl md:text-2xl text-white/80 mb-4 max-w-2xl mx-auto">
               <FormattedMessage id="influencer.final.subtitle" defaultMessage="It's free, instant activation, promo tools included, works worldwide." />
             </p>
 
+            {/* Earnings highlight */}
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-full px-6 py-3 mb-10 border border-yellow-500/30">
+              <span className="text-3xl">💰</span>
+              <span className="text-lg font-bold text-yellow-300">
+                <FormattedMessage id="influencer.final.earnings" defaultMessage="$10/client + $5/call partner bonus" />
+              </span>
+            </div>
+
+            {/* CTA Button - Premium */}
             <button
               onClick={() => navigate(registerRoute)}
-              className="group bg-white text-red-600 font-bold px-10 py-6 rounded-2xl text-xl inline-flex items-center gap-3 hover:bg-gray-100 transition-all shadow-2xl animate-pulse-glow"
+              className="group relative bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white font-black px-12 py-7 rounded-2xl text-xl md:text-2xl inline-flex items-center gap-4 hover:scale-105 transition-all shadow-2xl animate-pulse-glow-red overflow-hidden"
             >
-              <Rocket className="w-8 h-8" />
-              <FormattedMessage id="influencer.final.cta" defaultMessage="Become an Influencer Now" />
-              <ArrowRight className="w-7 h-7 group-hover:translate-x-1 transition-transform" />
+              {/* Button shimmer */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+              <Rocket className="w-8 h-8 relative z-10" />
+              <span className="relative z-10">
+                <FormattedMessage id="influencer.final.cta" defaultMessage="Become an Influencer Now" />
+              </span>
+              <ArrowRight className="w-8 h-8 group-hover:translate-x-2 transition-transform relative z-10" />
             </button>
 
-            <div className="flex flex-wrap justify-center gap-4 mt-8 text-sm">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-300" />
-                <FormattedMessage id="influencer.final.trust.1" defaultMessage="100% Free" />
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-300" />
-                <FormattedMessage id="influencer.final.trust.2" defaultMessage="No Min Followers" />
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-300" />
-                <FormattedMessage id="influencer.final.trust.3" defaultMessage="All Countries" />
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-300" />
-                <FormattedMessage id="influencer.final.trust.4" defaultMessage="Promo Tools Included" />
+            {/* Trust badges */}
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6 mt-10">
+              {[
+                { icon: <CheckCircle className="w-5 h-5 text-green-400" />, text: intl.formatMessage({ id: 'influencer.final.trust.1', defaultMessage: '100% Free' }) },
+                { icon: <CheckCircle className="w-5 h-5 text-green-400" />, text: intl.formatMessage({ id: 'influencer.final.trust.2', defaultMessage: 'No Min Followers' }) },
+                { icon: <CheckCircle className="w-5 h-5 text-green-400" />, text: intl.formatMessage({ id: 'influencer.final.trust.3', defaultMessage: 'All Countries' }) },
+                { icon: <CheckCircle className="w-5 h-5 text-green-400" />, text: intl.formatMessage({ id: 'influencer.final.trust.4', defaultMessage: 'Promo Tools Included' }) },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm md:text-base text-white/80">
+                  {item.icon}
+                  <span>{item.text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Social proof */}
+            <div className="mt-10 pt-8 border-t border-white/10">
+              <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-white/60">
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-2">
+                    {['🇺🇸', '🇫🇷', '🇧🇷', '🇯🇵', '🇳🇬'].map((flag, i) => (
+                      <span key={i} className="text-lg">{flag}</span>
+                    ))}
+                  </div>
+                  <span><FormattedMessage id="influencer.final.countries" defaultMessage="190+ countries" /></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-yellow-400" />
+                  <span><FormattedMessage id="influencer.final.rating" defaultMessage="4.9/5 influencer rating" /></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-orange-400" />
+                  <span><FormattedMessage id="influencer.final.payouts" defaultMessage="$500K+ paid out" /></span>
+                </div>
               </div>
             </div>
           </div>
         </section>
+
+        {/* ============================================================== */}
+        {/* STICKY MOBILE CTA */}
+        {/* ============================================================== */}
+        {showStickyBar && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-gradient-to-r from-gray-900 via-black to-gray-900 border-t border-red-500/30 p-3 safe-area-inset-bottom">
+            <button
+              onClick={() => navigate(registerRoute)}
+              className="w-full bg-gradient-to-r from-red-600 to-orange-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 shadow-lg animate-pulse-glow-red"
+            >
+              <Rocket className="w-5 h-5" />
+              <span><FormattedMessage id="influencer.sticky.cta" defaultMessage="Start Earning Now" /></span>
+              <span className="bg-white/20 px-2 py-0.5 rounded text-xs">$10/client</span>
+            </button>
+          </div>
+        )}
       </div>
     </Layout>
   );

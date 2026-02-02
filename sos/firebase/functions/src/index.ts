@@ -128,6 +128,13 @@ export {
 // backup - Isolated Gen2 function for faster cold start
 export { adminGetRestoreConfirmationCode } from "./admin/restoreConfirmationCode";
 
+// Local backup registry - Track local PC backups in admin console
+export {
+  registerLocalBackup,
+  listLocalBackups,
+  deleteLocalBackupRecord,
+} from "./admin/localBackupRegistry";
+
 // P2-3 FIX: GDPR Recording Cleanup - SUPPRIME (recording desactive pour RGPD)
 // Les fonctions rgpdRecordingCleanup et triggerRgpdCleanup ont ete supprimees
 // car l'enregistrement des appels est desactive (commit 12a83a9)
@@ -5811,3 +5818,49 @@ export {
   paymentWebhookWise,
   paymentWebhookFlutterwave,
 } from './payment';
+
+// ========== GROUPADMIN SYSTEM ==========
+// Facebook Group Administrator affiliate program with client referrals and admin recruitment
+// Supports: $15 per client, $5 per recruited admin, ready-to-use posts/resources
+export {
+  // User callables
+  registerGroupAdmin,
+  getGroupAdminDashboard,
+  getGroupAdminLeaderboard,
+  updateGroupAdminProfile,
+  requestGroupAdminWithdrawal,
+  // Resource callables
+  getGroupAdminResources,
+  getGroupAdminResourceContent,
+  getGroupAdminProcessedResourceContent,
+  trackGroupAdminResourceUsage,
+  // Post callables
+  getGroupAdminPosts,
+  getGroupAdminPostContent,
+  getGroupAdminProcessedPost,
+  trackGroupAdminPostUsage,
+  // Admin callables
+  adminGetGroupAdminsList,
+  adminGetGroupAdminDetail,
+  adminUpdateGroupAdminStatus,
+  adminVerifyGroup,
+  adminProcessWithdrawal as adminProcessGroupAdminWithdrawal,
+  adminGetWithdrawalsList as adminGetGroupAdminWithdrawalsList,
+  adminExportGroupAdmins,
+  adminCreateResource as adminCreateGroupAdminResource,
+  adminUpdateResource as adminUpdateGroupAdminResource,
+  adminDeleteResource as adminDeleteGroupAdminResource,
+  adminGetResourcesList as adminGetGroupAdminResourcesList,
+  adminCreatePost as adminCreateGroupAdminPost,
+  adminUpdatePost as adminUpdateGroupAdminPost,
+  adminDeletePost as adminDeleteGroupAdminPost,
+  adminGetPostsList as adminGetGroupAdminPostsList,
+  adminUpdateGroupAdminConfig,
+  adminGetGroupAdminConfig,
+  // Triggers
+  onCallCompletedGroupAdmin,
+  onGroupAdminCreated,
+  // Scheduled
+  validatePendingGroupAdminCommissions,
+  releaseValidatedGroupAdminCommissions,
+} from './groupAdmin';

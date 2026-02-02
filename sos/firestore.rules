@@ -2387,6 +2387,170 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= GROUP ADMINS (Administrateurs Groupes Facebook) =================
+    // Programme affilié pour admins de groupes FB: $15/client, $5/admin recruté
+    // Posts et ressources prêts à l'emploi, gamification (badges, leaderboard)
+
+    // Helper: est un GroupAdmin actif
+    function isGroupAdmin() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/group_admins/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/group_admins/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // Helper: est le propriétaire du profil GroupAdmin
+    function isGroupAdminOwner(groupAdminId) {
+      return isAuthenticated() && request.auth.uid == groupAdminId;
+    }
+
+    // Helper: a un profil GroupAdmin (peu importe le status)
+    function hasGroupAdminProfile() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/group_admins/$(request.auth.uid));
+    }
+
+    // Profils des GroupAdmins
+    match /group_admins/{groupAdminId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isGroupAdminOwner(groupAdminId) || isAdmin() || isDev();
+      // Création: propriétaire uniquement (lors de l'inscription)
+      allow create: if isGroupAdminOwner(groupAdminId);
+      // Mise à jour: propriétaire pour certains champs, admin pour tous
+      // Le propriétaire ne peut PAS modifier: status, codes, balances, stats, ranks, adminNotes
+      allow update: if (isGroupAdminOwner(groupAdminId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['status', 'affiliateCodeClient', 'affiliateCodeRecruitment',
+                                   'totalEarned', 'availableBalance', 'pendingBalance',
+                                   'validatedBalance', 'totalWithdrawn', 'totalClients',
+                                   'totalRecruits', 'totalCommissions', 'currentMonthStats',
+                                   'currentMonthRank', 'bestRank', 'badges', 'adminNotes',
+                                   'isGroupVerified', 'groupVerifiedAt', 'suspensionReason']))
+                       || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // Commissions GroupAdmins
+    match /group_admin_commissions/{commissionId} {
+      // Lecture: propriétaire de la commission ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.groupAdminId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Retraits GroupAdmins
+    match /group_admin_withdrawals/{withdrawalId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.groupAdminId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Création: GroupAdmin actif pour lui-même
+      allow create: if isGroupAdmin() &&
+                    request.resource.data.groupAdminId == request.auth.uid;
+      // Mise à jour: admin uniquement (approbation/rejet)
+      allow update: if isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // Admins recrutés par GroupAdmins
+    match /group_admin_recruited_admins/{recruitId} {
+      // Lecture: propriétaire (recruteur) ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.recruiterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Tracking clics affiliés GroupAdmins
+    match /group_admin_clicks/{clickId} {
+      // Lecture: admin uniquement (données sensibles)
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Notifications GroupAdmins
+    match /group_admin_notifications/{notificationId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.groupAdminId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Mise à jour: le propriétaire peut marquer comme lu
+      allow update: if isAuthenticated() &&
+                    resource.data.groupAdminId == request.auth.uid &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
+      // Création/suppression: Cloud Functions uniquement
+      allow create, delete: if false;
+    }
+
+    // Ressources GroupAdmins (images, bannières, etc.)
+    match /group_admin_resources/{resourceId} {
+      // Lecture: GroupAdmins actifs et admin
+      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Textes des ressources GroupAdmins
+    match /group_admin_resource_texts/{textId} {
+      // Lecture: GroupAdmins actifs et admin
+      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Posts Facebook prêts à l'emploi
+    match /group_admin_posts/{postId} {
+      // Lecture: GroupAdmins actifs et admin
+      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Définitions des badges GroupAdmins
+    match /group_admin_badges/{badgeId} {
+      // Lecture: GroupAdmins et admin
+      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Attribution des badges GroupAdmins
+    match /group_admin_badge_awards/{awardId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.groupAdminId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Classements mensuels GroupAdmins
+    match /group_admin_monthly_rankings/{monthId} {
+      // Lecture: tous les GroupAdmins et admin
+      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Configuration du système GroupAdmin
+    match /group_admin_config/{docId} {
+      // Lecture: GroupAdmins actifs ou admin (contient les paramètres de commission)
+      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Logs d'utilisation GroupAdmins (tracking ressources/posts)
+    match /group_admin_usage_log/{logId} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production

@@ -938,7 +938,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       cancelBtn.textContent = I18N[locale].ui.cancel;
 
       const cleanup = () => { if (modal.parentNode) document.body.removeChild(modal); };
-      cameraBtn.onclick = () => { cleanup(); openCameraCapture('user'); };
+      // Utilise l'app caméra native du téléphone (plus fiable que getUserMedia sur mobile)
+      cameraBtn.onclick = () => { cleanup(); openFileSelector('image/*', 'user'); };
       galleryBtn.onclick = () => { cleanup(); openFileSelector('image/*'); };
       cancelBtn.onclick = cleanup;
 
@@ -951,7 +952,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       // If camera not supported, just open file selector
       openFileSelector('image/*');
     }
-  }, [isUploading, disabled, isCameraSupported, openCameraCapture, openFileSelector, locale]);
+  }, [isUploading, disabled, isCameraSupported, openFileSelector, locale]);
 
   return (
     <div className={`w-full ${className}`}>

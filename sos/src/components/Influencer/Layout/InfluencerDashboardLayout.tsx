@@ -73,7 +73,7 @@ const InfluencerDashboardLayout: React.FC<InfluencerDashboardLayoutProps> = ({ c
       label: intl.formatMessage({ id: 'influencer.menu.tools', defaultMessage: 'Outils promo' }),
       icon: <Image className="w-5 h-5" />,
       path: `/influencer/outils`,
-      routeKey: 'influencer-tools' as RouteKey,
+      routeKey: 'influencer-promo-tools' as RouteKey,
     },
     {
       id: 'training',

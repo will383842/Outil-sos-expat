@@ -14,6 +14,19 @@
  */
 
 // ============================================================================
+// CORS CONFIGURATION
+// ============================================================================
+
+const ALLOWED_ORIGINS = [
+  "https://sos-expat.com",
+  "https://www.sos-expat.com",
+  "https://ia.sos-expat.com",
+  "https://outil-sos-expat.pages.dev",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
+// ============================================================================
 // BASE CONFIGURATIONS
 // ============================================================================
 
@@ -31,6 +44,7 @@ export const emergencyConfig = {
   maxInstances: 3,
   minInstances: 0,
   concurrency: 1,
+  cors: ALLOWED_ORIGINS,
 };
 
 /**
@@ -46,6 +60,7 @@ export const adminConfig = {
   maxInstances: 5,
   minInstances: 0,
   concurrency: 1,
+  cors: ALLOWED_ORIGINS,
 };
 
 /**
@@ -61,6 +76,7 @@ export const userConfig = {
   maxInstances: 20,
   minInstances: 0,
   concurrency: 10,
+  cors: ALLOWED_ORIGINS,
 };
 
 /**
@@ -75,6 +91,7 @@ export const highTrafficConfig = {
   maxInstances: 50,
   minInstances: 1, // Keep 1 warm for low latency
   concurrency: 40,
+  cors: ALLOWED_ORIGINS,
 };
 
 /**
@@ -89,6 +106,7 @@ export const webhookConfig = {
   maxInstances: 30,
   minInstances: 0,
   concurrency: 1, // Important: one webhook at a time per instance
+  cors: ALLOWED_ORIGINS,
 };
 
 /**
@@ -103,6 +121,7 @@ export const scheduledConfig = {
   maxInstances: 1,
   minInstances: 0,
   concurrency: 1,
+  cors: ALLOWED_ORIGINS,
 };
 
 /**
@@ -117,6 +136,7 @@ export const triggerConfig = {
   maxInstances: 10,
   minInstances: 0,
   concurrency: 1,
+  cors: ALLOWED_ORIGINS,
 };
 
 /**
@@ -131,6 +151,7 @@ export const heavyProcessingConfig = {
   maxInstances: 5,
   minInstances: 0,
   concurrency: 1,
+  cors: ALLOWED_ORIGINS,
 };
 
 // ============================================================================

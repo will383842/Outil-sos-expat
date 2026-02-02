@@ -399,6 +399,26 @@ const AdminBloggersWidgets = lazy(
   () => import("../../pages/admin/Bloggers/AdminBloggersWidgets")
 );
 
+// ===== LAZY IMPORTS - GROUPADMIN =====
+const AdminGroupAdminsList = lazy(
+  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsList")
+);
+const AdminGroupAdminDetail = lazy(
+  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminDetail")
+);
+const AdminGroupAdminsPayments = lazy(
+  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsPayments")
+);
+const AdminGroupAdminsConfig = lazy(
+  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsConfig")
+);
+const AdminGroupAdminsResources = lazy(
+  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsResources")
+);
+const AdminGroupAdminsPosts = lazy(
+  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsPosts")
+);
+
 // ===== LAZY IMPORTS - CENTRALIZED PAYMENTS =====
 const AdminPaymentsDashboard = lazy(
   () => import("../../pages/admin/Payments/AdminPaymentsDashboard")
@@ -1227,6 +1247,56 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
+      {/* 👥 GROUPADMINS (Facebook Group Administrators) */}
+      <Route
+        path="groupadmins"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminsList />
+          </Suspense>
+        }
+      />
+      <Route
+        path="groupadmins/:groupAdminId"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminDetail />
+          </Suspense>
+        }
+      />
+      <Route
+        path="groupadmins/payments"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminsPayments />
+          </Suspense>
+        }
+      />
+      <Route
+        path="groupadmins/resources"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminsResources />
+          </Suspense>
+        }
+      />
+      <Route
+        path="groupadmins/posts"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminsPosts />
+          </Suspense>
+        }
+      />
+      <Route
+        path="groupadmins/config"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminsConfig />
+          </Suspense>
+        }
+      />
+
       {/* 📚 TRAINING MODULES */}
       <Route
         path="training"
@@ -1668,6 +1738,12 @@ export const useAdminRouteValidation = () => {
       "/admin/bloggers/resources",
       "/admin/bloggers/guide",
       "/admin/bloggers/config",
+      "/admin/groupadmins",
+      "/admin/groupadmins/:groupAdminId",
+      "/admin/groupadmins/payments",
+      "/admin/groupadmins/resources",
+      "/admin/groupadmins/posts",
+      "/admin/groupadmins/config",
       "/admin/payments",
       "/admin/payments/withdrawals",
       "/admin/payments/:userType/:withdrawalId",

@@ -43,7 +43,7 @@ import { db } from "@/config/firebase";
 // -------------------------
 // Types
 // -------------------------
-type BackupStatus = "pending" | "completed" | "failed" | "in_progress";
+type BackupStatus = "pending" | "completed" | "failed" | "in_progress" | "partial";
 
 interface BackupRow {
   id: string;
@@ -60,6 +60,29 @@ interface BackupRow {
   containsFinancialData?: boolean;
   retentionDays?: number;
   error?: string;
+}
+
+interface LocalBackupRow {
+  id: string;
+  backupDate: string;
+  backupPath: string;
+  machineName: string;
+  status: "completed" | "failed" | "partial";
+  sizeMB: number;
+  components: {
+    firestore: boolean;
+    storage: boolean;
+    auth: boolean;
+    secrets: boolean;
+    rules: boolean;
+    code: boolean;
+  };
+  stats?: {
+    firestoreCollections?: number;
+    storageFiles?: number;
+    authUsers?: number;
+  };
+  createdAt?: Timestamp | Date;
 }
 
 interface BackupsByDate {
@@ -226,6 +249,7 @@ const AdminBackups: React.FC = () => {
   const intl = useIntl();
   const [rows, setRows] = useState<BackupRow[]>([]);
   const [authBackups, setAuthBackups] = useState<BackupRow[]>([]);
+  const [localBackups, setLocalBackups] = useState<LocalBackupRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
@@ -245,7 +269,7 @@ const AdminBackups: React.FC = () => {
   const [codeError, setCodeError] = useState("");
 
   // UI state
-  const [activeTab, setActiveTab] = useState<"overview" | "restore" | "history">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "restore" | "history" | "local">("overview");
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 
   const functions = getFunctions(undefined, "europe-west1");
@@ -269,6 +293,13 @@ const AdminBackups: React.FC = () => {
         );
         if (!isMounted) return;
         setAuthBackups(authSnap.docs.map(d => ({ id: d.id, ...d.data() } as BackupRow)));
+
+        // Load Local backups (PC backups)
+        const localSnap = await getDocs(
+          query(collection(db, "local_backups"), orderBy("createdAt", "desc"), limit(50))
+        );
+        if (!isMounted) return;
+        setLocalBackups(localSnap.docs.map(d => ({ id: d.id, ...d.data() } as LocalBackupRow)));
       } catch (error) {
         console.error("Error loading backups:", error);
       }
@@ -582,6 +613,7 @@ const AdminBackups: React.FC = () => {
               { id: "overview", label: intl.formatMessage({ id: "admin.backups.tabs.overview" }), icon: BarChart },
               { id: "restore", label: intl.formatMessage({ id: "admin.backups.tabs.restore" }), icon: RotateCcw },
               { id: "history", label: intl.formatMessage({ id: "admin.backups.tabs.history" }), icon: Clock },
+              { id: "local", label: "Backups Locaux", icon: HardDrive },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -1009,6 +1041,184 @@ const AdminBackups: React.FC = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "local" && (
+          <div className="space-y-6">
+            {/* Info Banner Local */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <HardDrive className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-medium text-green-900">Sauvegardes Locales (PC)</h3>
+                  <p className="text-sm text-green-700 mt-1">
+                    Ces sauvegardes sont stockées sur votre ordinateur local dans <code className="bg-green-100 px-1 rounded">C:\Users\willi\Documents\BACKUP_SOS-Expat</code>.
+                    Elles sont indépendantes de Google Cloud et vous protègent en cas de bannissement ou de perte d'accès.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Local Backups Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white rounded-lg border p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <HardDrive className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-semibold">{localBackups.length}</p>
+                    <p className="text-xs text-gray-500">Backups Locaux</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg border p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Database className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-semibold">
+                      {localBackups.reduce((acc, b) => acc + (b.sizeMB || 0), 0).toFixed(1)} MB
+                    </p>
+                    <p className="text-xs text-gray-500">Taille Totale</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg border p-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${localBackups[0] ? "bg-green-100" : "bg-gray-100"}`}>
+                    <Clock className={`h-5 w-5 ${localBackups[0] ? "text-green-600" : "text-gray-400"}`} />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-semibold">
+                      {localBackups[0] ? formatDate(localBackups[0].createdAt, intl.locale).split(" ")[0] : "-"}
+                    </p>
+                    <p className="text-xs text-gray-500">Dernier Backup Local</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Local Backups Table */}
+            <div className="bg-white border rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
+                <h3 className="font-medium">Historique des Backups Locaux</h3>
+                <span className="text-sm text-gray-500">Rétention: 30 jours</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Machine</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Composants</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Taille</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chemin</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {localBackups.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                          <HardDrive className="mx-auto h-12 w-12 text-gray-300 mb-2" />
+                          <p>Aucun backup local enregistré</p>
+                          <p className="text-sm mt-1">Lancez <code className="bg-gray-100 px-1 rounded">BACKUP-QUOTIDIEN.bat</code> pour créer un backup</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      localBackups.map((backup) => (
+                        <tr key={backup.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-3 text-sm font-medium">
+                            {backup.backupDate}
+                          </td>
+                          <td className="px-6 py-3 text-sm text-gray-500">
+                            {backup.machineName}
+                          </td>
+                          <td className="px-6 py-3">
+                            <div className="flex gap-1 flex-wrap">
+                              {backup.components?.firestore && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">
+                                  <Database size={10} className="mr-1" />DB
+                                </span>
+                              )}
+                              {backup.components?.storage && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-purple-100 text-purple-800">
+                                  <HardDrive size={10} className="mr-1" />Storage
+                                </span>
+                              )}
+                              {backup.components?.auth && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">
+                                  <Users size={10} className="mr-1" />Auth
+                                </span>
+                              )}
+                              {backup.components?.secrets && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-red-100 text-red-800">
+                                  <Shield size={10} className="mr-1" />Secrets
+                                </span>
+                              )}
+                              {backup.components?.code && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-800">
+                                  <FileText size={10} className="mr-1" />Code
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-3 text-sm">
+                            {backup.sizeMB?.toFixed(1)} MB
+                          </td>
+                          <td className="px-6 py-3">
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${
+                              backup.status === "completed" ? "bg-green-100 text-green-800" :
+                              backup.status === "partial" ? "bg-yellow-100 text-yellow-800" :
+                              "bg-red-100 text-red-800"
+                            }`}>
+                              {backup.status === "completed" && <CheckCircle size={12} className="mr-1" />}
+                              {backup.status === "partial" && <AlertTriangle size={12} className="mr-1" />}
+                              {backup.status === "failed" && <AlertCircle size={12} className="mr-1" />}
+                              {backup.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 text-xs font-mono text-gray-500 max-w-xs truncate" title={backup.backupPath}>
+                            {backup.backupPath}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Instructions */}
+            <div className="bg-white border rounded-lg p-6">
+              <h3 className="font-medium mb-4 flex items-center gap-2">
+                <Info className="h-5 w-5 text-gray-400" />
+                Comment utiliser les backups locaux
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6 text-sm">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Lancer un backup manuel</h4>
+                  <ol className="list-decimal list-inside space-y-1 text-gray-600">
+                    <li>Ouvrez le dossier du projet <code className="bg-gray-100 px-1 rounded">sos/</code></li>
+                    <li>Double-cliquez sur <code className="bg-gray-100 px-1 rounded">BACKUP-QUOTIDIEN.bat</code></li>
+                    <li>Attendez la fin de l'exécution</li>
+                  </ol>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Activer le backup automatique</h4>
+                  <ol className="list-decimal list-inside space-y-1 text-gray-600">
+                    <li>Clic droit sur <code className="bg-gray-100 px-1 rounded">CONFIGURER-AUTO-BACKUP.bat</code></li>
+                    <li>Sélectionnez "Exécuter en tant qu'administrateur"</li>
+                    <li>Le backup s'exécutera chaque nuit à 03:00</li>
+                  </ol>
+                </div>
+              </div>
             </div>
           </div>
         )}

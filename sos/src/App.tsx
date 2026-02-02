@@ -184,6 +184,18 @@ const BloggerPromoTools = lazy(() => import('./pages/Blogger/BloggerPromoTools')
 const BloggerProfile = lazy(() => import('./pages/Blogger/BloggerProfile'));
 const BloggerSuspended = lazy(() => import('./pages/Blogger/BloggerSuspended'));
 
+// GroupAdmin System (Facebook Group Administrators)
+const GroupAdminLanding = lazy(() => import('./pages/GroupAdmin/GroupAdminLanding'));
+const GroupAdminRegister = lazy(() => import('./pages/GroupAdmin/GroupAdminRegister'));
+const GroupAdminDashboard = lazy(() => import('./pages/GroupAdmin/GroupAdminDashboard'));
+const GroupAdminResources = lazy(() => import('./pages/GroupAdmin/GroupAdminResources'));
+const GroupAdminPosts = lazy(() => import('./pages/GroupAdmin/GroupAdminPosts'));
+const GroupAdminPayments = lazy(() => import('./pages/GroupAdmin/GroupAdminPayments'));
+const GroupAdminReferrals = lazy(() => import('./pages/GroupAdmin/GroupAdminReferrals'));
+const GroupAdminLeaderboard = lazy(() => import('./pages/GroupAdmin/GroupAdminLeaderboard'));
+const GroupAdminGuide = lazy(() => import('./pages/GroupAdmin/GroupAdminGuide'));
+const GroupAdminSuspended = lazy(() => import('./pages/GroupAdmin/GroupAdminSuspended'));
+
 // -------------------------------------------
 // Laguage config
 // -------------------------------------------
@@ -291,6 +303,9 @@ const routeConfigs: RouteConfig[] = [
 
   // Blogger Landing Page (public)
   { path: "/devenir-blogger", component: BloggerLanding, translated: "blogger-landing" },
+
+  // GroupAdmin Landing Page (public) - for Facebook group administrators
+  { path: "/devenir-admin-groupe", component: GroupAdminLanding, translated: "groupadmin-landing" },
 ];
 
 // Protégées (utilisateur)
@@ -387,6 +402,20 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/blogger/outils", component: BloggerPromoTools, protected: true, role: 'blogger', translated: "blogger-promo-tools" },
   { path: "/blogger/profil", component: BloggerProfile, protected: true, role: 'blogger', translated: "blogger-profile" },
   { path: "/blogger/suspendu", component: BloggerSuspended, protected: true, role: 'blogger', translated: "blogger-suspended" },
+
+  // GroupAdmin System Routes - Protected routes for Facebook group administrators
+  // IMPORTANT: Les rôles sont mutuellement exclusifs. Un groupAdmin ne peut pas être client/lawyer/expat/chatter/influencer/blogger.
+  // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
+  { path: "/group-admin/inscription", component: GroupAdminRegister, translated: "groupadmin-register" },
+  // Après inscription, l'utilisateur a role="groupAdmin" - toutes les autres routes sont réservées aux groupAdmins
+  { path: "/group-admin/tableau-de-bord", component: GroupAdminDashboard, protected: true, role: 'groupAdmin', translated: "groupadmin-dashboard" },
+  { path: "/group-admin/ressources", component: GroupAdminResources, protected: true, role: 'groupAdmin', translated: "groupadmin-resources" },
+  { path: "/group-admin/posts", component: GroupAdminPosts, protected: true, role: 'groupAdmin', translated: "groupadmin-posts" },
+  { path: "/group-admin/paiements", component: GroupAdminPayments, protected: true, role: 'groupAdmin', translated: "groupadmin-payments" },
+  { path: "/group-admin/filleuls", component: GroupAdminReferrals, protected: true, role: 'groupAdmin', translated: "groupadmin-referrals" },
+  { path: "/group-admin/classement", component: GroupAdminLeaderboard, protected: true, role: 'groupAdmin', translated: "groupadmin-leaderboard" },
+  { path: "/group-admin/guide", component: GroupAdminGuide, protected: true, role: 'groupAdmin', translated: "groupadmin-guide" },
+  { path: "/group-admin/suspendu", component: GroupAdminSuspended, protected: true, role: 'groupAdmin', translated: "groupadmin-suspended" },
 ];
 
 // ====================================

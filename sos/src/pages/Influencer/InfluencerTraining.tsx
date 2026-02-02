@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import Layout from '@/components/layout/Layout';
+// Layout removed - InfluencerDashboardLayout already wraps in Layout
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
 import { useInfluencerTraining } from '@/hooks/useInfluencerTraining';
 import {
@@ -159,13 +159,11 @@ const InfluencerTraining: React.FC = () => {
   // Loading state
   if (isLoading && modules.length === 0) {
     return (
-      <Layout showFooter={false}>
-        <InfluencerDashboardLayout>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
-          </div>
-        </InfluencerDashboardLayout>
-      </Layout>
+      <InfluencerDashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+        </div>
+      </InfluencerDashboardLayout>
     );
   }
 
@@ -175,130 +173,127 @@ const InfluencerTraining: React.FC = () => {
     const progress = ((currentSlide + 1) / currentModule.slides.length) * 100;
 
     return (
-      <Layout showFooter={false}>
-        <InfluencerDashboardLayout>
-          <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <button
-                onClick={handleBackToList}
-                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-purple-600"
-              >
-                <ChevronLeft className="w-5 h-5" />
-                <FormattedMessage id="common.back" defaultMessage="Retour" />
-              </button>
-              <span className="text-sm text-gray-500">
-                {currentSlide + 1} / {currentModule.slides.length}
-              </span>
-            </div>
+      <InfluencerDashboardLayout>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handleBackToList}
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-purple-600"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <FormattedMessage id="common.back" defaultMessage="Retour" />
+            </button>
+            <span className="text-sm text-gray-500">
+              {currentSlide + 1} / {currentModule.slides.length}
+            </span>
+          </div>
 
-            {/* Progress bar */}
-            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+          {/* Progress bar */}
+          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
 
-            {/* Slide content */}
-            <div className={`${UI.card} p-8`}>
-              {isLoadingModule ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+          {/* Slide content */}
+          <div className={`${UI.card} p-8`}>
+            {isLoadingModule ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+              </div>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                  {slide?.title}
+                </h2>
+
+                {slide?.type === 'video' && slide.mediaUrl && (
+                  <div className="aspect-video bg-gray-900 rounded-xl mb-6 overflow-hidden">
+                    <iframe
+                      src={slide.mediaUrl}
+                      className="w-full h-full"
+                      allowFullScreen
+                    />
+                  </div>
+                )}
+
+                {slide?.type === 'image' && slide.mediaUrl && (
+                  <img
+                    src={slide.mediaUrl}
+                    alt={slide.title}
+                    className="w-full rounded-xl mb-6"
+                  />
+                )}
+
+                <div className="prose dark:prose-invert max-w-none">
+                  <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                    {slide?.content}
+                  </p>
                 </div>
+
+                {slide?.type === 'checklist' && slide.checklistItems && (
+                  <ul className="mt-6 space-y-3">
+                    {slide.checklistItems.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                        <span className="text-gray-700 dark:text-gray-300">{item.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {slide?.type === 'tips' && slide.tips && (
+                  <div className="mt-6 grid gap-3">
+                    {slide.tips.map((tip, idx) => (
+                      <div key={idx} className="flex items-start gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                        <Lightbulb className="w-5 h-5 text-purple-500 mt-0.5" />
+                        <span className="text-gray-700 dark:text-gray-300">{tip.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex gap-4">
+            <button
+              onClick={handlePrevSlide}
+              disabled={currentSlide === 0}
+              className={`${UI.button.secondary} px-6 py-3 flex items-center gap-2`}
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <FormattedMessage id="common.previous" defaultMessage="Precedent" />
+            </button>
+            <button
+              onClick={handleNextSlide}
+              className={`${UI.button.primary} flex-1 py-3 flex items-center justify-center gap-2`}
+            >
+              {currentSlide < currentModule.slides.length - 1 ? (
+                <>
+                  <FormattedMessage id="common.next" defaultMessage="Suivant" />
+                  <ChevronRight className="w-5 h-5" />
+                </>
               ) : (
                 <>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    {slide?.title}
-                  </h2>
-
-                  {slide?.type === 'video' && slide.mediaUrl && (
-                    <div className="aspect-video bg-gray-900 rounded-xl mb-6 overflow-hidden">
-                      <iframe
-                        src={slide.mediaUrl}
-                        className="w-full h-full"
-                        allowFullScreen
-                      />
-                    </div>
-                  )}
-
-                  {slide?.type === 'image' && slide.mediaUrl && (
-                    <img
-                      src={slide.mediaUrl}
-                      alt={slide.title}
-                      className="w-full rounded-xl mb-6"
-                    />
-                  )}
-
-                  <div className="prose dark:prose-invert max-w-none">
-                    <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-                      {slide?.content}
-                    </p>
-                  </div>
-
-                  {slide?.type === 'checklist' && slide.checklistItems && (
-                    <ul className="mt-6 space-y-3">
-                      {slide.checklistItems.map((item, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
-                          <span className="text-gray-700 dark:text-gray-300">{item.text}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {slide?.type === 'tips' && slide.tips && (
-                    <div className="mt-6 grid gap-3">
-                      {slide.tips.map((tip, idx) => (
-                        <div key={idx} className="flex items-start gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                          <Lightbulb className="w-5 h-5 text-purple-500 mt-0.5" />
-                          <span className="text-gray-700 dark:text-gray-300">{tip.text}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <FormattedMessage id="training.startQuiz" defaultMessage="Passer le quiz" />
+                  <Award className="w-5 h-5" />
                 </>
               )}
-            </div>
-
-            {/* Navigation */}
-            <div className="flex gap-4">
-              <button
-                onClick={handlePrevSlide}
-                disabled={currentSlide === 0}
-                className={`${UI.button.secondary} px-6 py-3 flex items-center gap-2`}
-              >
-                <ChevronLeft className="w-5 h-5" />
-                <FormattedMessage id="common.previous" defaultMessage="Precedent" />
-              </button>
-              <button
-                onClick={handleNextSlide}
-                className={`${UI.button.primary} flex-1 py-3 flex items-center justify-center gap-2`}
-              >
-                {currentSlide < currentModule.slides.length - 1 ? (
-                  <>
-                    <FormattedMessage id="common.next" defaultMessage="Suivant" />
-                    <ChevronRight className="w-5 h-5" />
-                  </>
-                ) : (
-                  <>
-                    <FormattedMessage id="training.startQuiz" defaultMessage="Passer le quiz" />
-                    <Award className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-            </div>
+            </button>
           </div>
-        </InfluencerDashboardLayout>
-      </Layout>
+        </div>
+      </InfluencerDashboardLayout>
     );
   }
 
   // Quiz view
   if (viewMode === 'quiz' && currentModule) {
     return (
-      <Layout showFooter={false}>
-        <InfluencerDashboardLayout>
+      <InfluencerDashboardLayout>
           <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -434,14 +429,12 @@ const InfluencerTraining: React.FC = () => {
             </div>
           </div>
         </InfluencerDashboardLayout>
-      </Layout>
     );
   }
 
   // Module list view
   return (
-    <Layout showFooter={false}>
-      <InfluencerDashboardLayout>
+    <InfluencerDashboardLayout>
         <div className="space-y-6">
           {/* Header */}
           <div>
@@ -670,7 +663,6 @@ const InfluencerTraining: React.FC = () => {
           </div>
         </div>
       </InfluencerDashboardLayout>
-    </Layout>
   );
 };
 

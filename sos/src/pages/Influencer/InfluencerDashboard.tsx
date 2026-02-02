@@ -1,9 +1,19 @@
 /**
- * InfluencerDashboard - Main dashboard for influencers
- * Shows stats, recent commissions, quick actions
+ * InfluencerDashboard - Premium Elite Dashboard for Influencers
+ *
+ * Features:
+ * - React.lazy for code splitting
+ * - React.memo for pure components
+ * - useMemo/useCallback for optimization
+ * - Staggered entrance animations
+ * - Skeleton loading states
+ * - Pull-to-refresh (mobile)
+ * - Auto-refresh every 60s
+ * - Mobile-first responsive design
+ * - Glassmorphism UI
  */
 
-import React, { useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef, lazy, Suspense, memo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
@@ -11,28 +21,173 @@ import { useApp } from '@/contexts/AppContext';
 import { useInfluencer } from '@/hooks/useInfluencer';
 import type { InfluencerCommission } from '@/types/influencer';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
+
+// ============================================================================
+// CRITICAL ABOVE-FOLD COMPONENTS - Loaded synchronously
+// ============================================================================
 import InfluencerBalanceCard from '@/components/Influencer/Cards/InfluencerBalanceCard';
 import InfluencerStatsCard from '@/components/Influencer/Cards/InfluencerStatsCard';
-import InfluencerAffiliateLinks from '@/components/Influencer/Links/InfluencerAffiliateLinks';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
+
+// ============================================================================
+// LAZY-LOADED BELOW-FOLD COMPONENTS - Code splitting
+// ============================================================================
+const InfluencerLevelCard = lazy(() =>
+  import('@/components/Influencer/Cards/InfluencerLevelCard').then(m => ({ default: m.InfluencerLevelCard }))
+);
+const InfluencerMotivationWidget = lazy(() =>
+  import('@/components/Influencer/Cards/InfluencerMotivationWidget').then(m => ({ default: m.InfluencerMotivationWidget }))
+);
+const InfluencerLiveActivityFeed = lazy(() =>
+  import('@/components/Influencer/Cards/InfluencerLiveActivityFeed').then(m => ({ default: m.InfluencerLiveActivityFeed }))
+);
+const InfluencerEarningsBreakdownCard = lazy(() =>
+  import('@/components/Influencer/Cards/InfluencerEarningsBreakdownCard').then(m => ({ default: m.InfluencerEarningsBreakdownCard }))
+);
+const InfluencerTeamCard = lazy(() =>
+  import('@/components/Influencer/Cards/InfluencerTeamCard').then(m => ({ default: m.InfluencerTeamCard }))
+);
+const InfluencerAffiliateLinks = lazy(() =>
+  import('@/components/Influencer/Links/InfluencerAffiliateLinks')
+);
+const PWAInstallPrompt = lazy(() =>
+  import('@/components/pwa').then(m => ({ default: m.PWAInstallPrompt }))
+);
+
+// Icons
 import {
   DollarSign,
   Users,
   TrendingUp,
   ArrowRight,
   Bell,
-  Copy,
-  ExternalLink,
+  RefreshCw,
+  Rocket,
+  Share2,
+  Trophy,
+  Zap,
+  CheckCircle,
+  Clock,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 
+// ============================================================================
+// SKELETON COMPONENTS FOR SUSPENSE
+// ============================================================================
+const CardSkeleton = memo<{ height?: string; className?: string }>(({
+  height = 'h-48',
+  className = '',
+}) => (
+  <div className={`bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg animate-pulse ${height} ${className}`}>
+    <div className="p-4 sm:p-6 space-y-3">
+      <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/3" />
+      <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-2/3" />
+      <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/2" />
+    </div>
+  </div>
+));
+CardSkeleton.displayName = 'CardSkeleton';
+
+const FullSkeleton = memo(() => (
+  <div className="space-y-6 animate-pulse">
+    <div className="h-12 bg-gray-200 dark:bg-white/10 rounded-xl w-1/2" />
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-28 bg-gray-200 dark:bg-white/10 rounded-2xl" />
+      ))}
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <CardSkeleton height="h-64" />
+      <CardSkeleton height="h-64" />
+    </div>
+  </div>
+));
+FullSkeleton.displayName = 'FullSkeleton';
+
+// ============================================================================
+// MEMOIZED SUB-COMPONENTS
+// ============================================================================
+interface CommissionItemProps {
+  commission: InfluencerCommission;
+  formatAmount: (cents: number) => string;
+  intl: ReturnType<typeof useIntl>;
+  index: number;
+}
+
+const CommissionItem = memo<CommissionItemProps>(({ commission, formatAmount, intl, index }) => (
+  <div
+    className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+    style={{
+      animationDelay: `${index * 80}ms`,
+      animation: 'fade-in-up 0.4s ease-out forwards',
+      opacity: 0,
+    }}
+  >
+    <div className="flex items-center gap-3">
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+        commission.status === 'available'
+          ? 'bg-green-100 dark:bg-green-900/30'
+          : commission.status === 'validated'
+            ? 'bg-blue-100 dark:bg-blue-900/30'
+            : 'bg-yellow-100 dark:bg-yellow-900/30'
+      }`}>
+        {commission.status === 'available' ? (
+          <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+        ) : (
+          <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-gray-900 dark:text-white">
+          {commission.type === 'client_referral'
+            ? intl.formatMessage({ id: 'influencer.commissionType.client_referral', defaultMessage: 'Client référé' })
+            : commission.type === 'recruitment'
+            ? intl.formatMessage({ id: 'influencer.commissionType.provider_recruitment', defaultMessage: 'Recrutement' })
+            : intl.formatMessage({ id: 'influencer.commissionType.manual_adjustment', defaultMessage: 'Ajustement' })}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {new Date(commission.createdAt).toLocaleDateString()}
+        </p>
+      </div>
+    </div>
+    <div className="text-right">
+      <p className="text-sm font-bold text-green-600 dark:text-green-400">
+        +{formatAmount(commission.finalAmount)}
+      </p>
+      <span className={`text-xs px-2 py-0.5 rounded-full ${
+        commission.status === 'available'
+          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+          : commission.status === 'validated'
+          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+          : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+      }`}>
+        {commission.status === 'available'
+          ? intl.formatMessage({ id: 'influencer.status.available', defaultMessage: 'Disponible' })
+          : commission.status === 'validated'
+          ? intl.formatMessage({ id: 'influencer.status.validated', defaultMessage: 'Validé' })
+          : intl.formatMessage({ id: 'influencer.status.pending', defaultMessage: 'En attente' })}
+      </span>
+    </div>
+  </div>
+));
+CommissionItem.displayName = 'CommissionItem';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
+  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg transition-all hover:shadow-xl",
   button: {
-    primary: "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-xl transition-all",
-    secondary: "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-xl transition-all active:scale-[0.98]",
+    secondary: "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all active:scale-[0.98]",
   },
 } as const;
 
+const REFRESH_INTERVAL = 60000; // 60 seconds
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 const InfluencerDashboard: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
@@ -41,36 +196,181 @@ const InfluencerDashboard: React.FC = () => {
 
   const { dashboardData: dashboard, isLoading: loading, error, refreshDashboard } = useInfluencer();
 
+  // ============================================================================
+  // STATE
+  // ============================================================================
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pullStartY = useRef<number | null>(null);
+
+  // ============================================================================
+  // MEMOIZED ROUTES
+  // ============================================================================
+  const routes = useMemo(() => ({
+    tools: `/${getTranslatedRouteSlug('influencer-tools' as RouteKey, langCode)}`,
+    payments: `/${getTranslatedRouteSlug('influencer-payments' as RouteKey, langCode)}`,
+    referrals: `/${getTranslatedRouteSlug('influencer-referrals' as RouteKey, langCode)}`,
+    earnings: `/${getTranslatedRouteSlug('influencer-earnings' as RouteKey, langCode)}`,
+    leaderboard: `/${getTranslatedRouteSlug('influencer-leaderboard' as RouteKey, langCode)}`,
+    suspended: `/${getTranslatedRouteSlug('influencer-suspended' as RouteKey, langCode)}`,
+  }), [langCode]);
+
+  // ============================================================================
+  // MEMOIZED FORMATTERS
+  // ============================================================================
+  const formatAmount = useCallback((cents: number) => {
+    return new Intl.NumberFormat(intl.locale, {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(cents / 100);
+  }, [intl.locale]);
+
+  // ============================================================================
+  // MEMOIZED COMPUTED VALUES
+  // ============================================================================
+  const influencer = dashboard?.influencer;
+  const config = dashboard?.config;
+
+  const recentCommissions = useMemo(() =>
+    (dashboard?.recentCommissions || []).slice(0, 5),
+    [dashboard?.recentCommissions]
+  );
+
+  const unreadCount = useMemo(() =>
+    (dashboard?.recentNotifications || []).filter(n => !n.readAt).length,
+    [dashboard?.recentNotifications]
+  );
+
+  const thisMonthCommissions = useMemo(() => {
+    const comms = dashboard?.recentCommissions || [];
+    const now = new Date();
+    return comms.filter(c => {
+      const date = new Date(c.createdAt);
+      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    });
+  }, [dashboard?.recentCommissions]);
+
+  const earningsBreakdown = useMemo(() => ({
+    clientReferrals: thisMonthCommissions
+      .filter(c => c.type === 'client_referral')
+      .reduce((sum, c) => sum + c.finalAmount, 0),
+    recruitmentCommissions: thisMonthCommissions
+      .filter(c => c.type === 'recruitment')
+      .reduce((sum, c) => sum + c.finalAmount, 0),
+  }), [thisMonthCommissions]);
+
+  const activityFeedItems = useMemo(() =>
+    recentCommissions.map(c => ({
+      id: c.id,
+      type: c.type as 'client_referral' | 'recruitment' | 'withdrawal' | 'badge_earned',
+      amount: c.finalAmount,
+      createdAt: c.createdAt,
+    })),
+    [recentCommissions]
+  );
+
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshDashboard();
+      setLastUpdated(Date.now());
+    } finally {
+      setIsRefreshing(false);
+      setPullDistance(0);
+      setIsPulling(false);
+    }
+  }, [refreshDashboard]);
+
+  // Pull-to-refresh handlers for mobile
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (containerRef.current && containerRef.current.scrollTop === 0) {
+      pullStartY.current = e.touches[0].clientY;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (pullStartY.current === null || isRefreshing) return;
+    const currentY = e.touches[0].clientY;
+    const distance = currentY - pullStartY.current;
+    if (distance > 0 && containerRef.current?.scrollTop === 0) {
+      setIsPulling(true);
+      setPullDistance(Math.min(distance * 0.5, 100));
+    }
+  }, [isRefreshing]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (pullDistance > 60 && !isRefreshing) {
+      handleRefresh();
+    } else {
+      setPullDistance(0);
+      setIsPulling(false);
+    }
+    pullStartY.current = null;
+  }, [pullDistance, isRefreshing, handleRefresh]);
+
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+
+  // Initial load
   useEffect(() => {
     refreshDashboard();
   }, []);
 
-  // Redirect to suspended page if suspended
+  // Auto-refresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshDashboard();
+      setLastUpdated(Date.now());
+    }, REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, [refreshDashboard]);
+
+  // Redirect if suspended
   useEffect(() => {
     if (dashboard?.influencer?.status === 'suspended') {
-      navigate(`/${getTranslatedRouteSlug('influencer-suspended' as RouteKey, langCode)}`);
+      navigate(routes.suspended);
     }
-  }, [dashboard?.influencer?.status]);
+  }, [dashboard?.influencer?.status, navigate, routes.suspended]);
 
+  // ============================================================================
+  // RENDER - LOADING
+  // ============================================================================
   if (loading && !dashboard) {
     return (
       <InfluencerDashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <LoadingSpinner size="large" color="red" />
-        </div>
+        <FullSkeleton />
       </InfluencerDashboardLayout>
     );
   }
 
+  // ============================================================================
+  // RENDER - ERROR
+  // ============================================================================
   if (error) {
     return (
       <InfluencerDashboardLayout>
-        <div className="text-center py-12">
-          <p className="text-red-500">{error}</p>
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-4">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+            <Zap className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            <FormattedMessage id="common.error.title" defaultMessage="Oops! Une erreur est survenue" />
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">{error}</p>
           <button
-            onClick={refreshDashboard}
-            className={`${UI.button.primary} mt-4 px-6 py-2`}
+            onClick={handleRefresh}
+            className={`${UI.button.primary} px-6 py-3 flex items-center gap-2`}
           >
+            <RefreshCw className="w-5 h-5" />
             <FormattedMessage id="common.retry" defaultMessage="Réessayer" />
           </button>
         </div>
@@ -78,244 +378,270 @@ const InfluencerDashboard: React.FC = () => {
     );
   }
 
-  const influencer = dashboard?.influencer;
-  const config = dashboard?.config;
-  const recentCommissions: InfluencerCommission[] = dashboard?.recentCommissions || [];
-  const recentNotifications = dashboard?.recentNotifications || [];
-  const unreadCount = recentNotifications.filter(n => !n.readAt).length;
-
-  const formatCurrency = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`;
-  };
-
-  // V2: Format commission rate based on calculation type
-  const formatCommissionRate = (rate: {
-    calculationType: string;
-    fixedAmount: number;
-    percentageRate: number;
-  }) => {
-    if (rate.calculationType === 'fixed') {
-      return formatCurrency(rate.fixedAmount);
-    } else if (rate.calculationType === 'percentage') {
-      return `${(rate.percentageRate * 100).toFixed(0)}%`;
-    } else if (rate.calculationType === 'hybrid') {
-      return `${formatCurrency(rate.fixedAmount)} + ${(rate.percentageRate * 100).toFixed(0)}%`;
-    }
-    return formatCurrency(rate.fixedAmount);
-  };
-
+  // ============================================================================
+  // RENDER - MAIN
+  // ============================================================================
   return (
     <InfluencerDashboardLayout>
-      <div className="space-y-6">
-        {/* Welcome Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div
+        ref={containerRef}
+        className="space-y-6 pb-20 md:pb-6 relative"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          transform: isPulling ? `translateY(${pullDistance}px)` : 'translateY(0)',
+          transition: isPulling ? 'none' : 'transform 0.3s ease-out'
+        }}
+      >
+        {/* Pull-to-refresh indicator */}
+        {isPulling && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center"
+            style={{ top: -50 + pullDistance * 0.5 }}
+          >
+            <div className={`w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center shadow-lg ${pullDistance > 60 ? 'scale-110' : ''} transition-transform`}>
+              <RefreshCw className={`w-5 h-5 text-white ${isRefreshing ? 'animate-spin' : ''}`} style={{ transform: `rotate(${pullDistance * 3}deg)` }} />
+            </div>
+          </div>
+        )}
+
+        {/* CSS Animations */}
+        <style>{`
+          @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fade-in-up {
+            animation: fade-in-up 0.5s ease-out forwards;
+          }
+        `}</style>
+
+        {/* ================================================================ */}
+        {/* HEADER - Welcome + Refresh */}
+        {/* ================================================================ */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
               <FormattedMessage
                 id="influencer.dashboard.welcome"
                 defaultMessage="Bonjour {name} !"
-                values={{ name: influencer?.firstName }}
+                values={{ name: influencer?.firstName || 'Influencer' }}
               />
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              <FormattedMessage
-                id="influencer.dashboard.subtitle"
-                defaultMessage="Voici un aperçu de vos performances"
-              />
+            <p className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
+              <FormattedMessage id="influencer.dashboard.subtitle" defaultMessage="Voici un aperçu de vos performances" />
+              {isRefreshing && <RefreshCw className="w-4 h-4 animate-spin" />}
             </p>
           </div>
 
-          {unreadCount > 0 && (
+          <div className="flex items-center gap-3">
+            {unreadCount > 0 && (
+              <button className="relative p-2 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              </button>
+            )}
             <button
-              onClick={() => navigate(`/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`)}
-              className={`${UI.button.secondary} px-4 py-2 flex items-center gap-2`}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className={`${UI.button.secondary} p-2 sm:px-4 sm:py-2 flex items-center gap-2`}
             >
-              <Bell className="w-4 h-4" />
-              {unreadCount}
-              <FormattedMessage
-                id="influencer.dashboard.notifications"
-                defaultMessage="nouvelles notifications"
-              />
+              <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">
+                <FormattedMessage id="common.refresh" defaultMessage="Actualiser" />
+              </span>
             </button>
+          </div>
+        </div>
+
+        {/* ================================================================ */}
+        {/* MOTIVATION WIDGET */}
+        {/* ================================================================ */}
+        <Suspense fallback={<CardSkeleton height="h-24" />}>
+          <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+            <InfluencerMotivationWidget />
+          </div>
+        </Suspense>
+
+        {/* ================================================================ */}
+        {/* BALANCE CARDS - 4 columns */}
+        {/* ================================================================ */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {[
+            { label: intl.formatMessage({ id: 'influencer.dashboard.balance.total', defaultMessage: 'Total gagné' }), amount: influencer?.totalEarned || 0, color: 'gray' as const, icon: <DollarSign className="w-5 h-5" />, delay: 150 },
+            { label: intl.formatMessage({ id: 'influencer.dashboard.balance.available', defaultMessage: 'Disponible' }), amount: influencer?.availableBalance || 0, color: 'green' as const, icon: <DollarSign className="w-5 h-5" />, highlight: true, delay: 200 },
+            { label: intl.formatMessage({ id: 'influencer.dashboard.balance.pending', defaultMessage: 'En attente' }), amount: (influencer?.pendingBalance || 0) + (influencer?.validatedBalance || 0), color: 'yellow' as const, icon: <Clock className="w-5 h-5" />, delay: 250 },
+            { label: intl.formatMessage({ id: 'influencer.dashboard.balance.withdrawn', defaultMessage: 'Déjà retiré' }), amount: influencer?.totalWithdrawn || 0, color: 'gray' as const, icon: <CheckCircle className="w-5 h-5" />, delay: 300 },
+          ].map((card, i) => (
+            <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${card.delay}ms` }}>
+              <InfluencerBalanceCard
+                label={card.label}
+                amount={card.amount}
+                color={card.color}
+                icon={card.icon}
+                highlight={card.highlight}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* ================================================================ */}
+        {/* LEVEL + STATS ROW */}
+        {/* ================================================================ */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* Level Card */}
+          <Suspense fallback={<CardSkeleton height="h-48" />}>
+            <div className="lg:col-span-1 animate-fade-in-up" style={{ animationDelay: '350ms' }}>
+              <InfluencerLevelCard totalEarned={influencer?.totalEarned || 0} />
+            </div>
+          </Suspense>
+
+          {/* Monthly Stats */}
+          <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            {[
+              { label: intl.formatMessage({ id: 'influencer.dashboard.stats.monthlyEarnings', defaultMessage: 'Ce mois' }), value: formatAmount(influencer?.currentMonthEarnings || 0), icon: <DollarSign className="w-5 h-5" />, color: 'green' as const, delay: 400 },
+              { label: intl.formatMessage({ id: 'influencer.dashboard.stats.clients', defaultMessage: 'Clients' }), value: (influencer?.totalClientsReferred || 0).toString(), icon: <Users className="w-5 h-5" />, color: 'red' as const, delay: 450 },
+              { label: intl.formatMessage({ id: 'influencer.dashboard.stats.recruits', defaultMessage: 'Recrutés' }), value: (influencer?.totalProvidersRecruited || 0).toString(), icon: <Users className="w-5 h-5" />, color: 'purple' as const, delay: 500 },
+              { label: intl.formatMessage({ id: 'influencer.dashboard.stats.rank', defaultMessage: 'Classement' }), value: influencer?.currentMonthRank ? `#${influencer.currentMonthRank}` : '-', icon: <Trophy className="w-5 h-5" />, color: 'yellow' as const, delay: 550 },
+            ].map((stat, i) => (
+              <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${stat.delay}ms` }}>
+                <InfluencerStatsCard
+                  label={stat.label}
+                  value={stat.value}
+                  icon={stat.icon}
+                  color={stat.color}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ================================================================ */}
+        {/* QUICK ACTIONS - Mobile-optimized grid */}
+        {/* ================================================================ */}
+        <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '600ms' }}>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <Rocket className="w-5 h-5 text-red-500" />
+            <FormattedMessage id="influencer.dashboard.actions.title" defaultMessage="Actions rapides" />
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: intl.formatMessage({ id: 'influencer.dashboard.actions.tools', defaultMessage: 'Outils promo' }), icon: <Share2 className="w-6 h-6" />, route: routes.tools, color: 'from-red-500 to-orange-500' },
+              { label: intl.formatMessage({ id: 'influencer.dashboard.actions.withdraw', defaultMessage: 'Retrait' }), icon: <DollarSign className="w-6 h-6" />, route: routes.payments, color: 'from-green-500 to-emerald-500' },
+              { label: intl.formatMessage({ id: 'influencer.dashboard.actions.referrals', defaultMessage: 'Mon équipe' }), icon: <Users className="w-6 h-6" />, route: routes.referrals, color: 'from-purple-500 to-pink-500' },
+              { label: intl.formatMessage({ id: 'influencer.dashboard.actions.leaderboard', defaultMessage: 'Classement' }), icon: <Trophy className="w-6 h-6" />, route: routes.leaderboard, color: 'from-yellow-500 to-amber-500' },
+            ].map((action, i) => (
+              <button
+                key={i}
+                onClick={() => navigate(action.route)}
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl bg-gradient-to-br ${action.color} text-white transition-all hover:scale-105 active:scale-95 shadow-lg min-h-[100px]`}
+              >
+                {action.icon}
+                <span className="mt-2 text-sm font-medium text-center">{action.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ================================================================ */}
+        {/* AFFILIATE LINKS */}
+        {/* ================================================================ */}
+        <Suspense fallback={<CardSkeleton height="h-48" />}>
+          <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '650ms' }}>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-yellow-500" />
+              <FormattedMessage id="influencer.dashboard.links.title" defaultMessage="Vos liens de parrainage" />
+            </h2>
+            <InfluencerAffiliateLinks
+              clientCode={influencer?.affiliateCodeClient || ''}
+              recruitmentCode={influencer?.affiliateCodeRecruitment || ''}
+              clientDiscount={config?.clientDiscountPercent || 5}
+            />
+          </div>
+        </Suspense>
+
+        {/* ================================================================ */}
+        {/* EARNINGS BREAKDOWN + ACTIVITY FEED */}
+        {/* ================================================================ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* Earnings Breakdown */}
+          <Suspense fallback={<CardSkeleton height="h-72" />}>
+            <div className="animate-fade-in-up" style={{ animationDelay: '700ms' }}>
+              <InfluencerEarningsBreakdownCard breakdown={earningsBreakdown} />
+            </div>
+          </Suspense>
+
+          {/* Live Activity Feed */}
+          <Suspense fallback={<CardSkeleton height="h-72" />}>
+            <div className="animate-fade-in-up" style={{ animationDelay: '750ms' }}>
+              <InfluencerLiveActivityFeed
+                activities={activityFeedItems}
+                isLoading={loading}
+              />
+            </div>
+          </Suspense>
+        </div>
+
+        {/* ================================================================ */}
+        {/* RECENT COMMISSIONS */}
+        {/* ================================================================ */}
+        <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '800ms' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              <FormattedMessage id="influencer.dashboard.commissions.title" defaultMessage="Dernières commissions" />
+            </h2>
+            <button
+              onClick={() => navigate(routes.earnings)}
+              className="text-sm text-red-500 hover:text-red-600 flex items-center gap-1"
+            >
+              <FormattedMessage id="influencer.dashboard.commissions.viewAll" defaultMessage="Voir tout" />
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {recentCommissions.length > 0 ? (
+            <div className="space-y-3">
+              {recentCommissions.map((commission, i) => (
+                <CommissionItem
+                  key={commission.id}
+                  commission={commission}
+                  formatAmount={formatAmount}
+                  intl={intl}
+                  index={i}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <DollarSign className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                <FormattedMessage
+                  id="influencer.dashboard.commissions.empty"
+                  defaultMessage="Pas encore de commissions"
+                />
+              </p>
+              <button
+                onClick={() => navigate(routes.tools)}
+                className={`${UI.button.primary} px-6 py-3 inline-flex items-center gap-2`}
+              >
+                <Share2 className="w-5 h-5" />
+                <FormattedMessage id="influencer.dashboard.startSharing" defaultMessage="Commencer à partager" />
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Balance Cards - V2: 4 cards with withdrawn */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <InfluencerBalanceCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.balance.total', defaultMessage: 'Total gagné' })}
-            amount={influencer?.totalEarned || 0}
-            color="gray"
-            icon={<DollarSign className="w-5 h-5" />}
-          />
-          <InfluencerBalanceCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.balance.available', defaultMessage: 'Disponible' })}
-            amount={influencer?.availableBalance || 0}
-            color="green"
-            icon={<DollarSign className="w-5 h-5" />}
-            highlight
-          />
-          <InfluencerBalanceCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.balance.pending', defaultMessage: 'En attente' })}
-            amount={(influencer?.pendingBalance || 0) + (influencer?.validatedBalance || 0)}
-            color="yellow"
-            icon={<TrendingUp className="w-5 h-5" />}
-          />
-          <InfluencerBalanceCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.balance.withdrawn', defaultMessage: 'Déjà retiré' })}
-            amount={influencer?.totalWithdrawn || 0}
-            color="gray"
-            icon={<DollarSign className="w-5 h-5" />}
-          />
-        </div>
-
-        {/* Monthly Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <InfluencerStatsCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.stats.monthlyEarnings', defaultMessage: 'Gains ce mois' })}
-            value={formatCurrency(influencer?.currentMonthEarnings || 0)}
-            icon={<DollarSign className="w-5 h-5" />}
-            color="green"
-          />
-          <InfluencerStatsCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.stats.clients', defaultMessage: 'Clients référés' })}
-            value={influencer?.totalClientsReferred?.toString() || '0'}
-            icon={<Users className="w-5 h-5" />}
-            color="blue"
-          />
-          <InfluencerStatsCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.stats.recruits', defaultMessage: 'Prestataires recrutés' })}
-            value={influencer?.totalProvidersRecruited?.toString() || '0'}
-            icon={<Users className="w-5 h-5" />}
-            color="purple"
-          />
-          <InfluencerStatsCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.stats.rank', defaultMessage: 'Classement mensuel' })}
-            value={influencer?.currentMonthRank ? `#${influencer.currentMonthRank}` : '-'}
-            icon={<TrendingUp className="w-5 h-5" />}
-            color="yellow"
-          />
-        </div>
-
-        {/* Affiliate Links */}
-        <div className={`${UI.card} p-6`}>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            <FormattedMessage id="influencer.dashboard.links.title" defaultMessage="Vos liens de parrainage" />
-          </h2>
-          <InfluencerAffiliateLinks
-            clientCode={influencer?.affiliateCodeClient || ''}
-            recruitmentCode={influencer?.affiliateCodeRecruitment || ''}
-            clientDiscount={config?.clientDiscountPercent || 5}
-          />
-        </div>
-
-        {/* Quick Actions + Recent Commissions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Quick Actions */}
-          <div className={`${UI.card} p-6`}>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              <FormattedMessage id="influencer.dashboard.actions.title" defaultMessage="Actions rapides" />
-            </h2>
-            <div className="space-y-3">
-              <button
-                onClick={() => navigate(`/${getTranslatedRouteSlug('influencer-tools' as RouteKey, langCode)}`)}
-                className="w-full flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                <span className="text-gray-700 dark:text-gray-300">
-                  <FormattedMessage id="influencer.dashboard.actions.tools" defaultMessage="Outils promotionnels" />
-                </span>
-                <ArrowRight className="w-5 h-5 text-gray-400" />
-              </button>
-              <button
-                onClick={() => navigate(`/${getTranslatedRouteSlug('influencer-payments' as RouteKey, langCode)}`)}
-                className="w-full flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                <span className="text-gray-700 dark:text-gray-300">
-                  <FormattedMessage id="influencer.dashboard.actions.withdraw" defaultMessage="Demander un retrait" />
-                </span>
-                <ArrowRight className="w-5 h-5 text-gray-400" />
-              </button>
-              <button
-                onClick={() => navigate(`/${getTranslatedRouteSlug('influencer-referrals' as RouteKey, langCode)}`)}
-                className="w-full flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                <span className="text-gray-700 dark:text-gray-300">
-                  <FormattedMessage id="influencer.dashboard.actions.referrals" defaultMessage="Voir mes filleuls" />
-                </span>
-                <ArrowRight className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-          </div>
-
-          {/* Recent Commissions */}
-          <div className={`${UI.card} p-6`}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                <FormattedMessage id="influencer.dashboard.commissions.title" defaultMessage="Dernières commissions" />
-              </h2>
-              <button
-                onClick={() => navigate(`/${getTranslatedRouteSlug('influencer-earnings' as RouteKey, langCode)}`)}
-                className="text-sm text-red-500 hover:text-red-600"
-              >
-                <FormattedMessage id="influencer.dashboard.commissions.viewAll" defaultMessage="Voir tout" />
-              </button>
-            </div>
-
-            {recentCommissions.length > 0 ? (
-              <div className="space-y-3">
-                {recentCommissions.slice(0, 5).map((commission) => (
-                  <div
-                    key={commission.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {commission.type === 'client_referral'
-                          ? intl.formatMessage({ id: 'influencer.commissionType.client_referral', defaultMessage: 'Client référé' })
-                          : commission.type === 'recruitment'
-                          ? intl.formatMessage({ id: 'influencer.commissionType.provider_recruitment', defaultMessage: 'Recrutement' })
-                          : intl.formatMessage({ id: 'influencer.commissionType.manual_adjustment', defaultMessage: 'Ajustement' })}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(commission.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(commission.finalAmount)}
-                      </p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        commission.status === 'available'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                          : commission.status === 'validated'
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                          : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                      }`}>
-                        {commission.status === 'available'
-                          ? intl.formatMessage({ id: 'influencer.status.available', defaultMessage: 'Disponible' })
-                          : commission.status === 'validated'
-                          ? intl.formatMessage({ id: 'influencer.status.validated', defaultMessage: 'Validé' })
-                          : intl.formatMessage({ id: 'influencer.status.pending', defaultMessage: 'En attente' })}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <FormattedMessage
-                  id="influencer.dashboard.commissions.empty"
-                  defaultMessage="Pas encore de commissions. Partagez votre lien pour commencer !"
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Commission Info - V2: Show captured rates if available */}
-        <div className={`${UI.card} p-6`}>
+        {/* ================================================================ */}
+        {/* COMMISSION INFO */}
+        {/* ================================================================ */}
+        <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '850ms' }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
               <FormattedMessage id="influencer.dashboard.info.title" defaultMessage="Vos commissions" />
             </h2>
             {influencer?.capturedRates && (
@@ -325,76 +651,30 @@ const InfluencerDashboard: React.FC = () => {
             )}
           </div>
 
-          {/* V2: Display captured rates if available */}
-          {influencer?.capturedRates ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                {influencer.capturedRates.rules.client_referral && (
-                  <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20">
-                    <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                      {formatCommissionRate(influencer.capturedRates.rules.client_referral)}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      <FormattedMessage id="influencer.dashboard.info.client" defaultMessage="par client référé" />
-                    </p>
-                  </div>
-                )}
-                {influencer.capturedRates.rules.recruitment && (
-                  <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20">
-                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {formatCommissionRate(influencer.capturedRates.rules.recruitment)}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      <FormattedMessage id="influencer.dashboard.info.recruit" defaultMessage="par appel recruté (6 mois)" />
-                    </p>
-                  </div>
-                )}
-                <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20">
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {formatCurrency(config?.minimumWithdrawalAmount || 5000)}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <FormattedMessage id="influencer.dashboard.info.minWithdraw" defaultMessage="minimum de retrait" />
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-                <FormattedMessage
-                  id="influencer.dashboard.info.capturedAt"
-                  defaultMessage="Taux capturés le {date}"
-                  values={{ date: new Date(influencer.capturedRates.capturedAt).toLocaleDateString() }}
-                />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-100 dark:border-red-800">
+              <p className="text-3xl font-black text-red-600 dark:text-red-400">$10</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <FormattedMessage id="influencer.dashboard.info.client" defaultMessage="par client référé" />
               </p>
-            </>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20">
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                  {formatCurrency(config?.clientReferralCommission || 1000)}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="influencer.dashboard.info.client" defaultMessage="par client référé" />
-                </p>
-              </div>
-              <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20">
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {formatCurrency(config?.providerRecruitmentCommission || 500)}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="influencer.dashboard.info.recruit" defaultMessage="par appel recruté (6 mois)" />
-                </p>
-              </div>
-              <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20">
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(config?.minimumWithdrawalAmount || 5000)}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="influencer.dashboard.info.minWithdraw" defaultMessage="minimum de retrait" />
-                </p>
-              </div>
             </div>
-          )}
+            <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-100 dark:border-purple-800">
+              <p className="text-3xl font-black text-purple-600 dark:text-purple-400">$5<span className="text-lg">/call</span></p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <FormattedMessage id="influencer.dashboard.info.partner" defaultMessage="par appel de vos partenaires (6 mois)" />
+              </p>
+            </div>
+          </div>
         </div>
+
+        {/* ================================================================ */}
+        {/* PWA INSTALL PROMPT */}
+        {/* ================================================================ */}
+        <Suspense fallback={null}>
+          <div className="animate-fade-in-up" style={{ animationDelay: '900ms' }}>
+            <PWAInstallPrompt />
+          </div>
+        </Suspense>
       </div>
     </InfluencerDashboardLayout>
   );

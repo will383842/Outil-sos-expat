@@ -9,7 +9,7 @@ import { Timestamp } from 'firebase/firestore';
 export type SupportedLanguage = "fr" | "en" | "es" | "de" | "ru" | "hi" | "pt" | "ch" | "ar";
 
 // Rôles d'utilisateur dans l'application
-export type UserRole = "client" | "lawyer" | "expat" | "admin" | "chatter" | "influencer" | "blogger";
+export type UserRole = "client" | "lawyer" | "expat" | "admin" | "chatter" | "influencer" | "blogger" | "groupAdmin";
 
 // Types de service disponibles
 export type ServiceType = "lawyer_call" | "expat_call";
@@ -145,6 +145,10 @@ export interface User {
   chatterLevel?: 1 | 2 | 3 | 4 | 5;
   affiliateCodeClient?: string;
   affiliateCodeRecruitment?: string;
+
+  // GroupAdmin-specific fields
+  isGroupAdmin?: boolean;
+  groupAdminStatus?: 'active' | 'suspended' | 'blocked';
   registrationIP?: string;
   userAgent?: string;
   deviceInfo?: {

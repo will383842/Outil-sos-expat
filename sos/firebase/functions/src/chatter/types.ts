@@ -2226,7 +2226,7 @@ export const REFERRAL_CONFIG = {
   /** Early adopter settings */
   EARLY_ADOPTER: {
     MULTIPLIER: 1.5,              // +50% bonus
-    TOTAL_SLOTS: 50,              // 50 first chatters globally (not per country)
+    TOTAL_SLOTS: 50,              // 50 first chatters globally
   },
 
   /** Anti-fraud thresholds */
