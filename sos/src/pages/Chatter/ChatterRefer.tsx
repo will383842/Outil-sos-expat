@@ -199,19 +199,19 @@ export default function ChatterRefer() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                   {tierBonuses.map((tier) => (
                     <div
                       key={tier.filleuls}
-                      className="text-center p-3 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200"
+                      className="text-center p-3 sm:p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200"
                     >
-                      <p className="text-2xl font-bold text-yellow-600">
+                      <p className="text-xl sm:text-2xl font-bold text-yellow-600">
                         {tier.filleuls}
                       </p>
                       <p className="text-xs text-gray-500">
                         {t("chatter.referrals.filleuls")}
                       </p>
-                      <Badge className="mt-2 bg-yellow-500">
+                      <Badge className="mt-2 bg-yellow-500 text-xs sm:text-sm">
                         ${tier.bonus}
                       </Badge>
                     </div>

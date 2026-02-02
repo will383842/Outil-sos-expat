@@ -1714,10 +1714,10 @@ const ChatterLanding: React.FC = () => {
             <div className="bg-gray-900 border-t border-amber-500/30 px-4 py-3 shadow-2xl">
               <button
                 onClick={() => navigate(registerRoute)}
-                className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 text-gray-900 font-bold py-4 rounded-xl flex items-center justify-center gap-3 text-lg shadow-lg"
+                className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 text-gray-900 font-bold py-5 rounded-xl flex items-center justify-center gap-2 sm:gap-3 shadow-lg min-h-[56px] touch-manipulation"
               >
-                <DollarSign className="w-6 h-6" />
-                <FormattedMessage id="chatter.sticky.cta" defaultMessage="Earn $10/call - Start Free" />
+                <DollarSign className="w-5 h-5" />
+                <span className="text-base sm:text-lg"><FormattedMessage id="chatter.sticky.cta" defaultMessage="Earn $10/call - Start Free" /></span>
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>

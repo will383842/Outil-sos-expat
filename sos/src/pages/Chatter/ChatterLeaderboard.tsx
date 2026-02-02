@@ -330,24 +330,24 @@ const ChatterLeaderboard: React.FC = () => {
               <FormattedMessage id="chatter.leaderboard.bonusTitle" defaultMessage="TOP 3 DU MOIS - Gains bonus" />
             </h2>
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="flex items-center gap-2 p-3 bg-white/60 dark:bg-white/5 rounded-xl">
-              <span className="text-2xl">🥇</span>
-              <div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 p-3 sm:p-4 bg-white/60 dark:bg-white/5 rounded-xl">
+              <span className="text-2xl sm:text-3xl">🥇</span>
+              <div className="flex-1 sm:flex-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">1er</p>
                 <p className="font-bold text-yellow-600 dark:text-yellow-400">200$ bonus</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-3 bg-white/60 dark:bg-white/5 rounded-xl">
-              <span className="text-2xl">🥈</span>
-              <div>
+            <div className="flex items-center gap-3 p-3 sm:p-4 bg-white/60 dark:bg-white/5 rounded-xl">
+              <span className="text-2xl sm:text-3xl">🥈</span>
+              <div className="flex-1 sm:flex-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">2eme</p>
                 <p className="font-bold text-gray-600 dark:text-gray-300">100$ bonus</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-3 bg-white/60 dark:bg-white/5 rounded-xl">
-              <span className="text-2xl">🥉</span>
-              <div>
+            <div className="flex items-center gap-3 p-3 sm:p-4 bg-white/60 dark:bg-white/5 rounded-xl">
+              <span className="text-2xl sm:text-3xl">🥉</span>
+              <div className="flex-1 sm:flex-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">3eme</p>
                 <p className="font-bold text-amber-600 dark:text-amber-400">50$ bonus</p>
               </div>
