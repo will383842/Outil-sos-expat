@@ -1264,6 +1264,54 @@ export class PayPalManager {
     if (!capture) {
       throw new Error("No capture data in PayPal response");
     }
+
+    // ========================================
+    // P0 CRITICAL FIX 2026-02-02: Verify capture status
+    // Just like authorizeOrder(), we must verify the capture was successful
+    // PayPal can return HTTP 200 with status DECLINED, PENDING, FAILED, etc.
+    // Only "COMPLETED" means the funds were actually captured
+    // ========================================
+    const captureStatus = capture.status;
+    console.log(`💳 [PAYPAL] Capture status: ${captureStatus}`);
+
+    if (captureStatus !== "COMPLETED") {
+      console.error(`❌ [PAYPAL] Capture NOT successful! Status: ${captureStatus}`);
+      console.error(`❌ [PAYPAL] Expected: COMPLETED, Got: ${captureStatus}`);
+      console.error(`❌ [PAYPAL] Order ${orderId} capture FAILED`);
+
+      // Update order with failure status
+      await this.db.collection("paypal_orders").doc(orderId).update({
+        status: "CAPTURE_FAILED",
+        captureStatus,
+        captureFailedAt: admin.firestore.FieldValue.serverTimestamp(),
+        captureFailureReason: `Capture status: ${captureStatus}`,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Update call_session with failure status
+      if (orderData.callSessionId) {
+        await this.db.collection("call_sessions").doc(orderData.callSessionId).update({
+          "payment.status": "capture_failed",
+          "payment.captureStatus": captureStatus,
+          "payment.failureReason": `PayPal capture status: ${captureStatus}`,
+          "payment.failedAt": admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+
+      return {
+        success: false,
+        captureId: capture.id || "",
+        status: captureStatus,
+        providerAmount: 0,
+        connectionFee: 0,
+        grossAmount: 0,
+        payoutTriggered: false,
+      };
+    }
+
+    console.log(`✅ [PAYPAL] Capture VERIFIED - Status: COMPLETED`);
+
     const captureAmount = capture?.amount?.value ? parseFloat(capture.amount.value) : 0;
     const captureCurrency = capture?.amount?.currency_code || "EUR";
 

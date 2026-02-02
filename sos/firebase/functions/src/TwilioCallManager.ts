@@ -2345,10 +2345,27 @@ export class TwilioCallManager {
       const seconds = duration % 60;
       console.log(`[TwilioCallManager] Call completed notification skipped (SMS/WhatsApp disabled), duration: ${minutes}m${seconds}s`);
 
-      console.log(`📄 Should capture payment: ${this.shouldCapturePayment(callSession, duration)}`);
+      // P0 DEBUG 2026-02-02: Enhanced PayPal logging
+      const isPayPalPayment = !!callSession.payment?.paypalOrderId;
+      if (isPayPalPayment) {
+        console.log(`💳 [PAYPAL DEBUG] Session ${sessionId}:`);
+        console.log(`💳 [PAYPAL DEBUG]   paypalOrderId: ${callSession.payment.paypalOrderId}`);
+        console.log(`💳 [PAYPAL DEBUG]   payment.status: ${callSession.payment.status}`);
+        console.log(`💳 [PAYPAL DEBUG]   payment.gateway: ${callSession.payment.gateway}`);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const paymentAny = callSession.payment as any;
+        console.log(`💳 [PAYPAL DEBUG]   authorizationId: ${paymentAny.authorizationId || 'NOT SET'}`);
+        console.log(`💳 [PAYPAL DEBUG]   duration: ${duration}s (min: ${CALL_CONFIG.MIN_CALL_DURATION}s)`);
+      }
 
-      if (this.shouldCapturePayment(callSession, duration)) {
+      const shouldCapture = this.shouldCapturePayment(callSession, duration);
+      console.log(`📄 Should capture payment: ${shouldCapture}`);
+
+      if (shouldCapture) {
         console.log(`📄 Capturing payment for session: ${sessionId}`);
+        if (isPayPalPayment) {
+          console.log(`💳 [PAYPAL] Initiating PayPal capture for order: ${callSession.payment.paypalOrderId}`);
+        }
         await this.capturePaymentForSession(sessionId);
       } else {
         // Call duration < 120 seconds or payment not authorized - refund the payment

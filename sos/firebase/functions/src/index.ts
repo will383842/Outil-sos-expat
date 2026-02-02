@@ -5413,10 +5413,10 @@ export const createUserDocument = onCall(
         const lastName = request.data.lastName || (request.data.displayName?.split(' ').slice(1).join(' ')) || '';
         const fullName = request.data.fullName || `${firstName} ${lastName}`.trim() || request.data.displayName || '';
 
-        // Auto-approve Google client accounts
-        const isGoogleProvider = provider === 'google.com';
+        // Auto-approve ALL client accounts (Google AND email/password)
+        // Lawyers/expats still require manual approval
         const isClientRole = role === 'client';
-        const shouldAutoApprove = isClientRole && isGoogleProvider;
+        const shouldAutoApprove = isClientRole;
 
         const approvalFields = shouldAutoApprove
           ? {

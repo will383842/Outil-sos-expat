@@ -6,12 +6,18 @@
  * Callable function to validate dashboard password securely.
  * Password is stored in Google Cloud Secret Manager for security.
  * Returns a session token on success.
+ *
+ * Security features:
+ * - Timing-safe password comparison (prevents timing attacks)
+ * - Cryptographically secure token generation
+ * - Rate limiting per IP (prevents brute force)
  */
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
+import { timingSafeEqual, randomBytes } from "crypto";
 
 // Secret for dashboard password (stored in Google Cloud Secret Manager)
 const MULTI_DASHBOARD_PASSWORD = defineSecret("MULTI_DASHBOARD_PASSWORD");
@@ -76,6 +82,40 @@ export const validateDashboardPassword = onCall<
     try {
       const db = admin.firestore();
 
+      // =========================================================
+      // RATE LIMITING - Prevent brute force attacks
+      // =========================================================
+      const rateLimitRef = db.collection("dashboard_rate_limits").doc(clientIp);
+      const rateLimitDoc = await rateLimitRef.get();
+      const now = Date.now();
+      const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+      const MAX_ATTEMPTS = 5;
+
+      if (rateLimitDoc.exists) {
+        const rateLimitData = rateLimitDoc.data();
+        const windowStart = rateLimitData?.windowStart || 0;
+        const attempts = rateLimitData?.attempts || 0;
+
+        // Check if we're still in the rate limit window
+        if (now - windowStart < RATE_LIMIT_WINDOW_MS) {
+          if (attempts >= MAX_ATTEMPTS) {
+            const retryAfterMs = RATE_LIMIT_WINDOW_MS - (now - windowStart);
+            const retryAfterMinutes = Math.ceil(retryAfterMs / 60000);
+
+            logger.warn("[validateDashboardPassword] Rate limited", {
+              ip: clientIp,
+              attempts,
+              retryAfterMinutes,
+            });
+
+            return {
+              success: false,
+              error: `Trop de tentatives. Réessayez dans ${retryAfterMinutes} minute${retryAfterMinutes > 1 ? "s" : ""}.`,
+            };
+          }
+        }
+      }
+
       // Get dashboard config (for enabled flag only)
       const configDoc = await db.doc("admin_config/multi_dashboard").get();
       const config = configDoc.exists ? configDoc.data() : { enabled: true };
@@ -94,8 +134,26 @@ export const validateDashboardPassword = onCall<
         throw new HttpsError("internal", "Dashboard not configured");
       }
 
-      if (password !== storedPassword) {
+      // Timing-safe password comparison to prevent timing attacks
+      const passwordBuffer = Buffer.from(password.trim());
+      const storedPasswordBuffer = Buffer.from(storedPassword);
+
+      const passwordsMatch = passwordBuffer.length === storedPasswordBuffer.length &&
+        timingSafeEqual(passwordBuffer, storedPasswordBuffer);
+
+      if (!passwordsMatch) {
         logger.warn("[validateDashboardPassword] Invalid password", { ip: clientIp });
+
+        // Update rate limit counter for failed attempt
+        const currentRateLimit = rateLimitDoc.exists ? rateLimitDoc.data() : null;
+        const windowStillValid = currentRateLimit &&
+          (now - (currentRateLimit.windowStart || 0)) < RATE_LIMIT_WINDOW_MS;
+
+        await rateLimitRef.set({
+          windowStart: windowStillValid ? currentRateLimit.windowStart : now,
+          attempts: windowStillValid ? (currentRateLimit.attempts || 0) + 1 : 1,
+          lastAttempt: now,
+        });
 
         // Log failed attempt for security
         await db.collection("auditLogs").add({
@@ -110,8 +168,13 @@ export const validateDashboardPassword = onCall<
         };
       }
 
-      // Generate session token
-      const token = `mds_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+      // Reset rate limit on successful authentication
+      await rateLimitRef.delete().catch(() => {
+        // Ignore deletion errors
+      });
+
+      // Generate cryptographically secure session token
+      const token = `mds_${Date.now()}_${randomBytes(24).toString("hex")}`;
       const sessionDuration = (config.sessionDurationHours || 24) * 60 * 60 * 1000;
       const expiresAt = Date.now() + sessionDuration;
 

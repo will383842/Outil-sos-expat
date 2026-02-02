@@ -537,9 +537,10 @@ const createUserDocumentInFirestore = async (
   
   const fullName = additionalData.fullName || `${firstName} ${lastName}`.trim() || firebaseUser.displayName || '';
 
+  // Auto-approve ALL client accounts (Google AND email/password)
+  // Lawyers/expats still require manual approval
   const isClientRole = additionalData.role === 'client';
-  const isGoogleProvider = additionalData.provider === 'google.com';
-  const shouldAutoApprove = isClientRole && isGoogleProvider;
+  const shouldAutoApprove = isClientRole;
   
   const approvalFields = shouldAutoApprove 
     ? {

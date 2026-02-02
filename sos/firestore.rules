@@ -512,6 +512,14 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ================= DASHBOARD RATE LIMITS COLLECTION =================
+    // Rate limiting pour les tentatives de connexion au multi-dashboard
+    // Géré uniquement par Cloud Functions (Admin SDK)
+    match /dashboard_rate_limits/{ipAddress} {
+      allow read: if isAdmin();
+      allow write: if false; // Cloud Functions uniquement via Admin SDK
+    }
+
     // ================= DISPUTES COLLECTION (Chargebacks) =================
     // P0 FIX: Permettre les mises à jour admin pour la gestion des litiges
     match /disputes/{disputeId} {

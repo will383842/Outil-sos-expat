@@ -1612,15 +1612,43 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
       const errorCode = err?.code;
       if (errorCode === 'auth/email-already-in-use') {
         // FIX: L'email existe déjà (non détecté par fetchSignInMethodsForEmail
-        // à cause de l'Email Enumeration Protection). Basculer vers login.
-        console.log("[EmailFirstAuth] Email already exists, switching to login step");
-        setAuthStep("password-login");
-        setPassword(""); // Reset le mot de passe pour que l'utilisateur saisisse son vrai mot de passe
-        setConfirmPassword("");
-        setError(intl.formatMessage({
-          id: "auth.emailAlreadyExists",
-          defaultMessage: "Ce compte existe déjà. Entrez votre mot de passe pour vous connecter."
-        }));
+        // à cause de l'Email Enumeration Protection).
+        // AMÉLIORATION: Tenter auto-connexion avec le mot de passe saisi
+        console.log("[EmailFirstAuth] Email already exists, attempting auto-login...");
+
+        try {
+          // Tenter la connexion automatique avec le mot de passe que l'utilisateur vient de saisir
+          await login(email.trim().toLowerCase(), password, true);
+          console.log("[EmailFirstAuth] Auto-login successful!");
+          onAuthSuccess();
+          return; // Succès - ne pas continuer
+        } catch (loginErr: any) {
+          // Auto-login échoué - le mot de passe est différent de celui du compte existant
+          console.log("[EmailFirstAuth] Auto-login failed, password mismatch");
+          const loginErrorCode = loginErr?.code;
+
+          if (loginErrorCode === 'auth/invalid-credential' || loginErrorCode === 'auth/wrong-password') {
+            // Mot de passe incorrect - basculer vers login pour que l'user saisisse le bon
+            setAuthStep("password-login");
+            setPassword("");
+            setConfirmPassword("");
+            setError(intl.formatMessage({
+              id: "auth.emailAlreadyExistsWrongPassword",
+              defaultMessage: "Ce compte existe déjà mais le mot de passe est différent. Entrez votre mot de passe habituel."
+            }));
+          } else if (loginErrorCode === 'auth/too-many-requests') {
+            setError(intl.formatMessage({ id: "auth.wizard.tooManyAttempts", defaultMessage: "Trop de tentatives. Réessayez plus tard." }));
+          } else {
+            // Autre erreur - basculer vers login
+            setAuthStep("password-login");
+            setPassword("");
+            setConfirmPassword("");
+            setError(intl.formatMessage({
+              id: "auth.emailAlreadyExists",
+              defaultMessage: "Ce compte existe déjà. Entrez votre mot de passe pour vous connecter."
+            }));
+          }
+        }
       } else if (errorCode === 'auth/weak-password') {
         setError(intl.formatMessage({ id: "auth.wizard.weakPassword", defaultMessage: "Mot de passe trop faible" }));
       } else {
