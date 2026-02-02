@@ -353,7 +353,7 @@ const ChatterLanding: React.FC = () => {
                   <FormattedMessage id="chatter.hero.earn" defaultMessage="Earn" /> $10
                 </span>
                 <span className="block text-white text-3xl md:text-5xl lg:text-6xl mt-2 font-bold">
-                  <FormattedMessage id="chatter.hero.perClient" defaultMessage="Per Client You Refer" />
+                  <FormattedMessage id="chatter.hero.perClient" defaultMessage="Per Call" />
                 </span>
               </h1>
             </div>
@@ -508,7 +508,7 @@ const ChatterLanding: React.FC = () => {
                 <div className="inline-flex items-center gap-3 bg-white dark:bg-gray-800 rounded-2xl px-6 py-4 shadow-lg">
                   <div className="text-4xl">🌍</div>
                   <div className="text-left">
-                    <div className="text-2xl font-black text-gray-900 dark:text-white">281 million</div>
+                    <div className="text-2xl font-black text-gray-900 dark:text-white">304 million</div>
                     <div className="text-sm text-gray-500">
                       <FormattedMessage id="chatter.what.stat" defaultMessage="people live outside their home country" />
                     </div>

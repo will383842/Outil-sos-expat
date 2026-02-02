@@ -877,7 +877,7 @@ const Footer: React.FC = () => {
                       className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
                       itemProp="name"
                     >
-                      SOS Urgently
+                      SOS-Expat
                     </span>
                     <div
                       className="h-0.5 w-12 bg-gradient-to-r from-red-500 to-red-600 mt-1"
@@ -949,7 +949,7 @@ const Footer: React.FC = () => {
           <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
             <div className="text-gray-400 text-sm text-center lg:text-left order-2 lg:order-1">
               <span className="font-medium text-white">
-                © {currentYear} SOS Urgently.
+                © {currentYear} SOS-Expat.
               </span>
               <span className="ml-1">
                 {intl.formatMessage({ id: "footer.copyright" })}
