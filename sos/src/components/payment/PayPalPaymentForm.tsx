@@ -153,6 +153,29 @@ const CardFieldsSubmitButton: React.FC<{
   onError?: (error: unknown) => void;
 }> = ({ isProcessing, disabled, onSubmit, onError }) => {
   const { cardFieldsForm } = usePayPalCardFields();
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  // Check form validity periodically when fields might have changed
+  useEffect(() => {
+    if (!cardFieldsForm) return;
+
+    const checkValidity = async () => {
+      try {
+        const formState = await cardFieldsForm.getState();
+        setIsFormValid(formState.isFormValid);
+      } catch {
+        // Ignore errors during validity check
+      }
+    };
+
+    // Check immediately
+    checkValidity();
+
+    // Check every 500ms while user is filling the form
+    const interval = setInterval(checkValidity, 500);
+
+    return () => clearInterval(interval);
+  }, [cardFieldsForm]);
 
   const handleClick = async () => {
     if (!cardFieldsForm) {
@@ -176,16 +199,18 @@ const CardFieldsSubmitButton: React.FC<{
     });
   };
 
+  const isButtonDisabled = disabled || isProcessing || !isFormValid;
+
   return (
     <button
       type="button"
       onClick={handleClick}
-      disabled={disabled || isProcessing}
+      disabled={isButtonDisabled}
       className={`w-full py-3 rounded-xl font-semibold text-white
         transition-all duration-200 flex items-center justify-center gap-2
         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500
         active:scale-[0.98] touch-manipulation
-        ${disabled || isProcessing
+        ${isButtonDisabled
           ? "bg-gray-400 cursor-not-allowed opacity-60"
           : "bg-gradient-to-r from-red-500 to-orange-500 shadow-md shadow-red-500/25"
         }`}
