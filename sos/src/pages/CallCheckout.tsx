@@ -3277,6 +3277,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         description: parsed.description || "",
         clientPhone: storedClientPhone || user?.phone || "",
         currentCountry: parsed.country || "",
+        // P2 FIX: Include clientLanguages for SMS notifications
+        clientLanguages: parsed.clientLanguages || [],
       };
     } catch {
       return undefined;
@@ -3793,7 +3795,10 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     [persistPayPalDocs, handlePaymentSuccess, paypalCallSessionId]
   );
 
-  const handlePaymentError = useCallback((msg: string) => setError(msg), []);
+  const handlePaymentError = useCallback((msg: string) => {
+    console.error("[Payment] Error received:", msg);
+    setError(msg);
+  }, []);
 
   useEffect(() => {
     if (currentStep === "calling" && callProgress < 5) {
@@ -4116,13 +4121,16 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                   serviceType={providerRole === "lawyer" ? "lawyer" : "expat"}
                   clientPhone={service?.clientPhone || ""}
                   providerPhone={provider?.phone || ""}
-                  clientLanguages={[language]}
+                  // P2 FIX: Use client languages from booking form, fallback to interface language
+                  clientLanguages={bookingDataForValidation?.clientLanguages?.length ? bookingDataForValidation.clientLanguages : [language]}
                   providerLanguages={provider?.languagesSpoken || provider?.languages || ["fr"]}
                   bookingData={bookingDataForValidation}
                   onSuccess={handlePayPalPaymentSuccess}
-                  onError={() => {
-                    // PayPalPaymentForm handles error display internally
-                    // Don't set parent error to avoid duplicate messages
+                  onError={(err) => {
+                    // PayPalPaymentForm handles error display internally,
+                    // but we also set parent error as fallback for edge cases
+                    console.error("[PayPal] Payment error:", err);
+                    handlePaymentError(err instanceof Error ? err.message : String(err));
                   }}
                   onCancel={() => console.log("PayPal cancelled")}
                   disabled={isProcessing}

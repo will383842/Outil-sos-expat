@@ -97,8 +97,8 @@ const ACTIVITY_CONFIG: Record<
   },
   signup: {
     icon: UserPlus,
-    color: "text-purple-600 dark:text-purple-400",
-    bgColor: "bg-purple-100 dark:bg-purple-900/30",
+    color: "text-red-600 dark:text-red-400",
+    bgColor: "bg-red-100 dark:bg-red-900/30",
     messageKey: "chatter.activityFeed.signup",
     defaultMessage: "just joined the team!",
     emoji: "🎉",

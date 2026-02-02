@@ -128,9 +128,9 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
       icon: <Crown className="w-6 h-6" />,
       title: 'Grande Équipe',
       subtitle: '50+ filleuls qualifiés',
-      color: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-      borderColor: 'border-purple-200 dark:border-purple-800',
+      color: 'from-red-500 to-pink-500',
+      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      borderColor: 'border-red-200 dark:border-red-800',
       timeline: '3-6 mois',
       monthlyTarget: '$1,000+/mois',
       steps: [
@@ -148,9 +148,9 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
   // Compact version for dashboard
   if (variant === 'compact') {
     return (
-      <div className={`bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-4 ${className}`}>
+      <div className={`bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-2xl p-4 ${className}`}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
             <Rocket className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -162,7 +162,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
         {/* Progress bar */}
         <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-2">
           <div
-            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+            className="h-full bg-gradient-to-r from-red-500 to-pink-500 transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -178,14 +178,14 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
     <div className={`${className}`}>
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full mb-4">
-          <Rocket className="w-5 h-5 text-purple-600" />
-          <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500/10 to-pink-500/10 rounded-full mb-4">
+          <Rocket className="w-5 h-5 text-red-600" />
+          <span className="text-sm font-semibold text-red-600 dark:text-red-400">
             Plan d'Action
           </span>
         </div>
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          🚀 Comment Atteindre <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">$5,000</span>
+          🚀 Comment Atteindre <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-pink-600">$5,000</span>
         </h2>
         <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
           3 chemins possibles selon votre style. Choisissez celui qui vous convient le mieux.
@@ -197,11 +197,11 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
         <div className="mb-8 p-4 bg-white/80 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/10">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Votre progression</span>
-            <span className="text-sm font-bold text-purple-600">{progressPercent.toFixed(1)}%</span>
+            <span className="text-sm font-bold text-red-600">{progressPercent.toFixed(1)}%</span>
           </div>
           <div className="h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-3">
             <div
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-1000 relative"
+              className="h-full bg-gradient-to-r from-red-500 to-pink-500 transition-all duration-1000 relative"
               style={{ width: `${progressPercent}%` }}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
@@ -213,7 +213,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
               <div
                 key={idx}
                 className={`flex flex-col items-center ${
-                  currentEarnings >= milestone.amount ? 'text-purple-600' : 'text-gray-400'
+                  currentEarnings >= milestone.amount ? 'text-red-600' : 'text-gray-400'
                 }`}
               >
                 <span className="text-lg">{milestone.emoji}</span>
@@ -354,7 +354,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
         <div className="text-center">
           <button
             onClick={onCTAClick}
-            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-500/30 transition-all hover:scale-105 active:scale-95"
+            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-red-500/30 transition-all hover:scale-105 active:scale-95"
           >
             <Sparkles className="w-5 h-5" />
             Commencer Mon Chemin vers $5,000

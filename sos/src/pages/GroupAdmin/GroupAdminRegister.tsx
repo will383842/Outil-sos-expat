@@ -520,7 +520,7 @@ const GroupAdminRegister: React.FC = () => {
                       defaultMessage="I accept the {terms} and {privacy}"
                       values={{
                         terms: <a href="/terms" className="text-indigo-600 hover:underline">Terms of Service</a>,
-                        privacy: <a href="/privacy" className="text-indigo-600 hover:underline">Privacy Policy</a>,
+                        privacy: <a href="/privacy-policy" className="text-indigo-600 hover:underline">Privacy Policy</a>,
                       }}
                     />
                   </span>

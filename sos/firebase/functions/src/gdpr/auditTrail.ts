@@ -837,7 +837,15 @@ async function collectUserData(userId: string): Promise<Record<string, unknown>>
     payments,
     invoices,
     reviews,
-    messages
+    messages,
+    // Chatter-specific collections
+    chatterDoc,
+    chatterCommissions,
+    chatterWithdrawals,
+    chatterNotifications,
+    chatterQuizAttempts,
+    chatterCallCounts,
+    chatterSocialLikes
   ] = await Promise.all([
     db.collection('users').doc(userId).get(),
     db.collection('call_sessions')
@@ -854,6 +862,24 @@ async function collectUserData(userId: string): Promise<Record<string, unknown>>
       .get(),
     db.collection('messages')
       .where('participants', 'array-contains', userId)
+      .get(),
+    // Chatter data
+    db.collection('chatters').doc(userId).get(),
+    db.collection('chatter_commissions')
+      .where('chatterId', '==', userId)
+      .get(),
+    db.collection('chatter_withdrawals')
+      .where('chatterId', '==', userId)
+      .get(),
+    db.collection('chatter_notifications')
+      .where('chatterId', '==', userId)
+      .get(),
+    db.collection('chatter_quiz_attempts')
+      .where('chatterId', '==', userId)
+      .get(),
+    db.collection('chatter_call_counts').doc(userId).get(),
+    db.collection('chatter_social_likes')
+      .where('chatterId', '==', userId)
       .get()
   ]);
 
@@ -865,7 +891,15 @@ async function collectUserData(userId: string): Promise<Record<string, unknown>>
     payments: payments.docs.map(d => sanitizeForExport(d.data())),
     invoices: invoices.docs.map(d => sanitizeForExport(d.data())),
     reviews: reviews.docs.map(d => sanitizeForExport(d.data())),
-    messages: messages.docs.map(d => sanitizeForExport(d.data()))
+    messages: messages.docs.map(d => sanitizeForExport(d.data())),
+    // Chatter data
+    chatterProfile: chatterDoc.exists ? sanitizeForExport(chatterDoc.data()) : null,
+    chatterCommissions: chatterCommissions.docs.map(d => sanitizeForExport(d.data())),
+    chatterWithdrawals: chatterWithdrawals.docs.map(d => sanitizeForExport(d.data())),
+    chatterNotifications: chatterNotifications.docs.map(d => sanitizeForExport(d.data())),
+    chatterQuizAttempts: chatterQuizAttempts.docs.map(d => sanitizeForExport(d.data())),
+    chatterCallCounts: chatterCallCounts.exists ? sanitizeForExport(chatterCallCounts.data()) : null,
+    chatterSocialLikes: chatterSocialLikes.docs.map(d => sanitizeForExport(d.data()))
   };
 }
 
@@ -889,8 +923,38 @@ async function anonymizeUserData(userId: string): Promise<void> {
     isDeleted: true
   });
 
-  // Note: Les factures sont conservées (obligation légale 10 ans)
-  // mais les données personnelles sont anonymisées
+  // Anonymiser le profil Chatter si existant
+  const chatterRef = db.collection('chatters').doc(userId);
+  const chatterDoc = await chatterRef.get();
+  if (chatterDoc.exists) {
+    batch.update(chatterRef, {
+      email: `deleted_${userId}@anonymized.local`,
+      firstName: 'Supprimé',
+      lastName: 'Supprimé',
+      phone: null,
+      bio: null,
+      photoUrl: null,
+      paymentDetails: null,
+      status: 'deleted',
+      deletedAt: admin.firestore.Timestamp.now(),
+      isDeleted: true
+    });
+  }
+
+  // Supprimer les notifications Chatter (non nécessaires légalement)
+  const notificationsQuery = await db.collection('chatter_notifications')
+    .where('chatterId', '==', userId)
+    .get();
+  notificationsQuery.docs.forEach(doc => batch.delete(doc.ref));
+
+  // Supprimer les IP registry (données sensibles)
+  const ipRegistryQuery = await db.collection('chatter_ip_registry')
+    .where('chatterId', '==', userId)
+    .get();
+  ipRegistryQuery.docs.forEach(doc => batch.delete(doc.ref));
+
+  // Note: Les commissions et retraits sont conservés (obligation comptable)
+  // mais les données personnelles dans chatters sont anonymisées
 
   await batch.commit();
 

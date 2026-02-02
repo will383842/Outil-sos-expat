@@ -93,7 +93,7 @@ export default function ChatterRefer() {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <Users className="h-6 w-6 mx-auto text-purple-500 mb-2" />
+                <Users className="h-6 w-6 mx-auto text-red-500 mb-2" />
                 <p className="text-2xl font-bold">{stats.qualifiedFilleulsN1}</p>
                 <p className="text-xs text-gray-500">
                   {t("chatter.referrals.qualified")}

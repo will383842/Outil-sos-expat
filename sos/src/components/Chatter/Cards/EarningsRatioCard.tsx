@@ -79,7 +79,7 @@ export function EarningsRatioCard({
         <div>
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-purple-600" />
+              <Users className="h-4 w-4 text-red-600" />
               <span className="text-sm font-medium">
                 {t("chatter.referrals.referralEarnings")}
               </span>
@@ -90,7 +90,7 @@ export function EarningsRatioCard({
           </div>
           <Progress
             value={referralPercent}
-            className="h-2 bg-gray-100 [&>div]:bg-purple-600"
+            className="h-2 bg-gray-100 [&>div]:bg-red-600"
           />
         </div>
 

@@ -1,12 +1,14 @@
 // firebase/functions/src/utils/paymentSync.ts
 /**
- * P1-13 FIX: Synchronisation atomique call_sessions.payment <-> payments collection
+ * P1-13 FIX: Synchronisation atomique call_sessions.payment <-> payments/paypal_orders collection
  *
  * Problème: Double source of truth entre:
  * - call_sessions.payment.* (embedded document)
- * - payments/{paymentId} (separate collection)
+ * - payments/{paymentId} (Stripe payments)
+ * - paypal_orders/{orderId} (PayPal payments)
  *
  * Solution: Toujours mettre à jour les deux via transaction Firestore.
+ * La fonction syncPaymentStatus vérifie d'abord payments, puis paypal_orders.
  */
 
 import * as admin from "firebase-admin";
@@ -20,6 +22,7 @@ export interface PaymentStatusUpdate {
   status?: string;
   capturedAt?: FieldValue | Date;
   refundedAt?: FieldValue | Date;
+  voidedAt?: FieldValue | Date;
   refundAmount?: number;
   refundReason?: string;
   transferId?: string;
@@ -43,7 +46,7 @@ export interface PaymentStatusUpdate {
  * Met à jour atomiquement le paiement dans les deux collections.
  *
  * @param db - Firestore instance
- * @param paymentId - ID du paiement (= PaymentIntent ID pour Stripe)
+ * @param paymentId - ID du paiement (= PaymentIntent ID pour Stripe, ou PayPal order ID)
  * @param callSessionId - ID de la session d'appel (optionnel si inconnu)
  * @param updates - Champs à mettre à jour
  * @returns Promise<void>
@@ -73,8 +76,13 @@ export async function syncPaymentStatus(
     // P0 FIX: ALL reads MUST happen BEFORE any writes in Firestore transactions
 
     // === STEP 1: ALL READS FIRST ===
+    // Check payments collection first (Stripe)
     const paymentRef = db.collection("payments").doc(paymentId);
     const paymentDoc = await transaction.get(paymentRef);
+
+    // P0 FIX: Also check paypal_orders collection for PayPal payments
+    const paypalOrderRef = db.collection("paypal_orders").doc(paymentId);
+    const paypalOrderDoc = await transaction.get(paypalOrderRef);
 
     let sessionDoc: DocumentSnapshot | null = null;
     let sessionRef: DocumentReference | null = null;
@@ -85,11 +93,25 @@ export async function syncPaymentStatus(
     }
 
     // === STEP 2: ALL WRITES AFTER ===
+    // Update whichever payment collection contains the document
     if (paymentDoc.exists) {
+      // Stripe payment - update payments collection
       transaction.update(paymentRef, {
         ...updates,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+    } else if (paypalOrderDoc.exists) {
+      // PayPal payment - update paypal_orders collection
+      transaction.update(paypalOrderRef, {
+        ...updates,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } else {
+      // Neither collection has this payment - log warning
+      console.warn(
+        `[syncPaymentStatus] Payment ${paymentId} not found in payments or paypal_orders collections. ` +
+        `Only call_sessions will be updated if callSessionId is provided.`
+      );
     }
 
     if (callSessionId && sessionRef && sessionDoc?.exists) {
@@ -177,6 +199,22 @@ export async function syncPaymentRefunded(
     refundedAt: admin.firestore.FieldValue.serverTimestamp(),
     refundAmount,
     refundReason,
+  });
+}
+
+/**
+ * Helper pour mettre à jour le statut d'annulation (void) d'une autorisation PayPal.
+ */
+export async function syncPaymentVoided(
+  db: Firestore,
+  paymentId: string,
+  callSessionId: string | null,
+  voidReason: string
+): Promise<void> {
+  await syncPaymentStatus(db, paymentId, callSessionId, {
+    status: "voided",
+    voidedAt: admin.firestore.FieldValue.serverTimestamp(),
+    refundReason: voidReason,
   });
 }
 

@@ -100,9 +100,9 @@ const SEGMENT_CONFIG: SegmentConfig[] = [
     key: 'tierBonuses',
     labelKey: 'chatter.earnings.tierBonuses',
     defaultLabel: 'Tier Bonuses',
-    color: '#A855F7', // purple-500
-    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
-    textColor: 'text-purple-600 dark:text-purple-400',
+    color: '#EF4444', // red-500
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    textColor: 'text-red-600 dark:text-red-400',
     icon: Award,
     commissionTypes: ['tier_bonus', 'bonus_top3'],
   },
@@ -577,7 +577,7 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
       {/* Header */}
       <div className="p-4 sm:p-6 pb-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20">
             <PieChart className="w-5 h-5 text-white" />
           </div>
           <div>

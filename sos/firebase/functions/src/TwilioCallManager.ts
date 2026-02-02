@@ -113,10 +113,12 @@ export interface CallSessionState {
   payment: {
     intentId: string;
     // P0 FIX: Added "requires_action" for 3D Secure payments
-    status: "pending" | "authorized" | "captured" | "refunded" | "cancelled" | "failed" | "requires_action";
+    // P0 FIX 2026-02-02: Added "voided" for PayPal authorization void
+    status: "pending" | "authorized" | "captured" | "refunded" | "cancelled" | "failed" | "requires_action" | "voided";
     amount: number;
     capturedAt?: admin.firestore.Timestamp;
     refundedAt?: admin.firestore.Timestamp;
+    voidedAt?: admin.firestore.Timestamp;
     refundReason?: string;
     refundId?: string;
     failureReason?: string;
@@ -2159,7 +2161,8 @@ export class TwilioCallManager {
 
       // P0 FIX 2026-01-20: IDEMPOTENCY CHECK - Prevent race condition where multiple webhooks
       // all try to cancel the payment simultaneously (causing 3x cancel attempts like we saw in Stripe logs)
-      const finalPaymentStatuses = ['cancelled', 'refunded'];
+      // P0 FIX 2026-02-02: Added "voided" as final state for PayPal
+      const finalPaymentStatuses = ['cancelled', 'refunded', 'voided'];
       if (finalPaymentStatuses.includes(callSession.payment.status)) {
         console.log(`💸 [${refundDebugId}] ⚠️ IDEMPOTENCY: Payment already in final state: ${callSession.payment.status}`);
         console.log(`💸 [${refundDebugId}]   Skipping processRefund to prevent duplicate Stripe API calls`);
@@ -2254,13 +2257,22 @@ export class TwilioCallManager {
       }
 
       if (result.success) {
-        const newStatus = paymentStatus === "authorized" ? "cancelled" : "refunded";
+        // P0 FIX 2026-02-02: Proper status for PayPal void vs Stripe cancel
+        // PayPal authorized → "voided" (we called voidAuthorization)
+        // Stripe authorized → "cancelled" (we called cancelPayment)
+        // Both captured → "refunded"
+        const newStatus = paymentStatus === "authorized"
+          ? (isPayPal ? "voided" : "cancelled")
+          : "refunded";
+
         // P1-13 FIX: Sync atomique payments <-> call_sessions
         const paymentId = callSession.paymentId || callSession.payment.intentId || callSession.payment.paypalOrderId;
         if (paymentId) {
+          // P0 FIX 2026-02-02: Use voidedAt for voided, refundedAt for cancelled/refunded
+          const timestampField = newStatus === "voided" ? "voidedAt" : "refundedAt";
           await syncPaymentStatus(this.db, paymentId, sessionId, {
             status: newStatus,
-            refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+            [timestampField]: admin.firestore.FieldValue.serverTimestamp(),
             refundReason: reason,
           });
         }
@@ -2307,7 +2319,8 @@ export class TwilioCallManager {
 
       // P0 FIX 2026-01-20: IDEMPOTENCY CHECK - Prevent race condition where multiple webhooks
       // all try to process the payment simultaneously (causing 3x cancel attempts like we saw in logs)
-      const finalPaymentStatuses = ['captured', 'cancelled', 'refunded'];
+      // P0 FIX 2026-02-02: Added "voided" as final state for PayPal
+      const finalPaymentStatuses = ['captured', 'cancelled', 'refunded', 'voided'];
       if (finalPaymentStatuses.includes(callSession.payment?.status)) {
         console.log(`✅ [${completionId}] ⚠️ IDEMPOTENCY: Payment already in final state: ${callSession.payment?.status}`);
         console.log(`✅ [${completionId}]   Skipping handleCallCompletion to prevent duplicate processing`);
@@ -2678,9 +2691,11 @@ export class TwilioCallManager {
               return false;
             } else if (stripeStatus.status === 'succeeded') {
               // Already captured (shouldn't happen but handle it)
+              // CHATTER FIX: Set isPaid: true at root level to trigger chatterOnCallCompleted
               console.log(`📄 [${captureId}] ⚠️ PaymentIntent already succeeded - updating local status`);
               await this.db.collection("call_sessions").doc(sessionId).update({
                 "payment.status": "captured",
+                "isPaid": true,
                 "metadata.updatedAt": admin.firestore.Timestamp.now(),
               });
               return true;
@@ -2878,11 +2893,14 @@ export class TwilioCallManager {
       if (paymentId) {
         await syncPaymentStatus(this.db, paymentId, sessionId, captureData);
       }
-      // Mise à jour metadata séparément
+      // CHATTER FIX: Set isPaid: true at root level to trigger chatterOnCallCompleted
+      // The trigger checks: afterData.status === "completed" && afterData.isPaid
+      // This was missing - commissions were never triggered after payment capture!
       await this.db.collection("call_sessions").doc(sessionId).update({
+        "isPaid": true,
         "metadata.updatedAt": admin.firestore.Timestamp.now(),
       });
-      console.log(`📄 Updated call session with capture info: ${sessionId}`);
+      console.log(`📄 Updated call session with capture info and isPaid=true: ${sessionId}`);
 
       // Create review request
       await this.createReviewRequest(session);

@@ -168,7 +168,7 @@ const ChatterTraining: React.FC = () => {
         );
       case 'advanced':
         return (
-          <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full text-xs font-medium">
+          <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-medium">
             <FormattedMessage id="chatter.training.level.advanced" defaultMessage="Avancé" />
           </span>
         );
@@ -182,7 +182,7 @@ const ChatterTraining: React.FC = () => {
       case 'article':
         return <FileText className="w-4 h-4 text-green-500" />;
       case 'quiz':
-        return <Award className="w-4 h-4 text-purple-500" />;
+        return <Award className="w-4 h-4 text-red-500" />;
     }
   };
 
@@ -333,7 +333,7 @@ const ChatterTraining: React.FC = () => {
               </a>
               <a href="#" className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-purple-500" />
+                  <FileText className="w-5 h-5 text-red-500" />
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white text-sm">
                       <FormattedMessage id="chatter.training.resources.images" defaultMessage="Kit d'images promotionnelles" />

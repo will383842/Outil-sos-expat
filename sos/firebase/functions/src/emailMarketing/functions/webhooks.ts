@@ -1,5 +1,6 @@
 import { onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
+import * as crypto from "crypto";
 import { MailwizzAPI } from "../utils/mailwizz";
 import { logGA4Event, logEmailEvent, logTrustpilotEvent } from "../utils/analytics";
 import { getMailWizzWebhookSecret } from "../config";
@@ -8,6 +9,7 @@ import { getMailWizzWebhookSecret } from "../config";
 
 /**
  * Verify webhook secret from request headers
+ * SECURITY: Uses timing-safe comparison to prevent timing attacks
  * Returns true if secret matches, false otherwise
  */
 function verifyWebhookSecret(req: any): boolean {
@@ -20,7 +22,19 @@ function verifyWebhookSecret(req: any): boolean {
       return false;
     }
 
-    if (receivedSecret !== expectedSecret) {
+    // SECURITY: Use timing-safe comparison to prevent timing attacks
+    const receivedBuffer = Buffer.from(receivedSecret, "utf-8");
+    const expectedBuffer = Buffer.from(expectedSecret, "utf-8");
+
+    // If lengths differ, secrets don't match (but still use constant time)
+    if (receivedBuffer.length !== expectedBuffer.length) {
+      console.warn("⚠️ Webhook secret length mismatch");
+      return false;
+    }
+
+    const isValid = crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
+
+    if (!isValid) {
       console.warn("⚠️ Webhook secret mismatch");
       return false;
     }

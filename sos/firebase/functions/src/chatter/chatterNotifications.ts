@@ -15,7 +15,7 @@
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, WriteBatch } from "firebase-admin/firestore";
 import { getMessaging, MulticastMessage } from "firebase-admin/messaging";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
@@ -837,7 +837,7 @@ export const chatterNotifyFlashBonusStart = onCall(
 
       // Store notification for each chatter (batch write)
       const now = Timestamp.now();
-      const batches: FirebaseFirestore.WriteBatch[] = [];
+      const batches: WriteBatch[] = [];
       let currentBatch = db.batch();
       let operationCount = 0;
 

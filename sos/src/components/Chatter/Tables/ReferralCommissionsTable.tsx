@@ -54,7 +54,7 @@ function getCommissionTypeInfo(type: ChatterCommissionType) {
     case "threshold_50_n2":
       return {
         label: "Seuil $50 (N2)",
-        color: "bg-purple-100 text-purple-800",
+        color: "bg-red-100 text-red-800",
         icon: Users,
       };
     case "recurring_5pct":

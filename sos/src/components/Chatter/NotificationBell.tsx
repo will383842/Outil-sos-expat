@@ -78,10 +78,10 @@ const NOTIFICATION_CONFIG: Record<NotificationType, {
   },
   team: {
     icon: Users,
-    bgColor: 'bg-purple-100',
-    iconColor: 'text-purple-600',
-    darkBgColor: 'dark:bg-purple-900/30',
-    darkIconColor: 'dark:text-purple-400',
+    bgColor: 'bg-red-100',
+    iconColor: 'text-red-600',
+    darkBgColor: 'dark:bg-red-900/30',
+    darkIconColor: 'dark:text-red-400',
   },
   system: {
     icon: AlertCircle,

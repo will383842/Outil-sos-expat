@@ -20,7 +20,7 @@ import {
   calculateLevelFromEarnings,
   getLevelBonus,
   getTop3Bonus,
-  getZoomBonus,
+  // getZoomBonus, // DISABLED: Zoom bonus feature removed
   getStreakBonusMultiplier,
   calculateCommissionWithBonuses,
   getValidationDelayMs,
@@ -178,6 +178,10 @@ export async function createCommission(
         case "n1_recruit_bonus":
           baseAmount = config.commissionN1RecruitBonusAmount || 100;
           break;
+        case "provider_call":
+          // $5 per call for providers recruited by this chatter (6 months window)
+          baseAmount = config.commissionProviderCallAmount || 500;
+          break;
         // LEGACY types (kept for backward compatibility)
         case "client_referral":
           baseAmount = config.commissionClientAmount || config.commissionClientCallAmount || 1000;
@@ -193,7 +197,8 @@ export async function createCommission(
     // 6. Calculate bonuses
     const levelBonus = getLevelBonus(chatter.level, config);
     const top3Bonus = getTop3Bonus(chatter.currentMonthRank, config);
-    const zoomBonus = getZoomBonus(chatter.lastZoomAttendance, config);
+    // DISABLED: Zoom bonus feature removed - always 0
+    const zoomBonus = 0;
     const streakBonus = getStreakBonusMultiplier(chatter.currentStreak || 0, config);
 
     // 6b. Check for monthly top multiplier (reward for being top 3 previous month)
@@ -377,6 +382,8 @@ function getDefaultDescription(
       return `Bonus activation${details?.providerEmail ? ` (${maskEmail(details.providerEmail)})` : ""}`;
     case "n1_recruit_bonus":
       return `Bonus recrutement N1${details?.providerEmail ? ` (${maskEmail(details.providerEmail)})` : ""}`;
+    case "provider_call":
+      return `Commission appel prestataire recruté${details?.providerEmail ? ` (${maskEmail(details.providerEmail)})` : ""}`;
     // LEGACY types (kept for backward compatibility)
     case "client_referral":
       return `Commission client referral${details?.clientEmail ? ` (${maskEmail(details.clientEmail)})` : ""}`;

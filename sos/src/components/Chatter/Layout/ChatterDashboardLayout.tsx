@@ -194,12 +194,13 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       route: translatedRoutes.posts,
       labels: { fr: "Mes posts", en: "My posts", es: "Mis posts", de: "Meine Beiträge", ru: "Мои посты", pt: "Meus posts", ch: "我的帖子", hi: "मेरे पोस्ट", ar: "منشوراتي" },
     },
-    {
-      key: "zoom",
-      icon: <Video className="mr-3 h-5 w-5" />,
-      route: translatedRoutes.zoom,
-      labels: { fr: "Réunions Zoom", en: "Zoom meetings", es: "Reuniones Zoom", de: "Zoom-Meetings", ru: "Zoom-встречи", pt: "Reuniões Zoom", ch: "Zoom会议", hi: "ज़ूम मीटिंग", ar: "اجتماعات زووم" },
-    },
+    // DISABLED: Zoom bonus feature removed - not implemented
+    // {
+    //   key: "zoom",
+    //   icon: <Video className="mr-3 h-5 w-5" />,
+    //   route: translatedRoutes.zoom,
+    //   labels: { fr: "Réunions Zoom", en: "Zoom meetings", es: "Reuniones Zoom", de: "Zoom-Meetings", ru: "Zoom-встречи", pt: "Reuniões Zoom", ch: "Zoom会议", hi: "ज़ूम मीटिंग", ar: "اجتماعات زووم" },
+    // },
     {
       key: "training",
       icon: <BookOpen className="mr-3 h-5 w-5" />,

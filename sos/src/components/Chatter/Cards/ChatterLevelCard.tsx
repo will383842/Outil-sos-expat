@@ -44,7 +44,7 @@ const LEVEL_CONFIG = {
   2: { name: 'Silver', color: 'from-gray-400 to-gray-500', icon: Star, minEarned: 10000 },
   3: { name: 'Gold', color: 'from-yellow-400 to-yellow-500', icon: Trophy, minEarned: 50000 },
   4: { name: 'Platinum', color: 'from-cyan-400 to-cyan-500', icon: Trophy, minEarned: 200000 },
-  5: { name: 'Diamond', color: 'from-purple-400 to-pink-400', icon: Zap, minEarned: 500000 },
+  5: { name: 'Diamond', color: 'from-red-400 to-pink-400', icon: Zap, minEarned: 500000 },
 } as const;
 
 // Level bonus percentages
@@ -213,8 +213,8 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
 
       {/* Max Level Reached */}
       {!nextLevel && (
-        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg sm:rounded-xl text-center animate-pulse-subtle">
-          <p className="text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300">
+        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg sm:rounded-xl text-center animate-pulse-subtle">
+          <p className="text-xs sm:text-sm font-medium text-red-700 dark:text-red-300">
             <FormattedMessage id="chatter.level.maxReached" defaultMessage="Niveau maximum atteint !" />
           </p>
         </div>

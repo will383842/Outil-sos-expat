@@ -656,7 +656,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
                   id="auth.wizard.terms"
                   values={{
                     terms: (chunks) => <a href="/terms-clients" className="text-red-400 hover:underline">{chunks}</a>,
-                    privacy: (chunks) => <a href="/privacy" className="text-red-400 hover:underline">{chunks}</a>,
+                    privacy: (chunks) => <a href="/privacy-policy" className="text-red-400 hover:underline">{chunks}</a>,
                   }}
                 />
               </p>

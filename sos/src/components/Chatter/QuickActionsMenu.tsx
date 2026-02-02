@@ -155,8 +155,8 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
       icon: <Users className="w-5 h-5" />,
       labelId: 'quickActions.inviteTeam',
       defaultLabel: 'Inviter un membre',
-      color: 'text-purple-600 dark:text-purple-400',
-      bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+      color: 'text-red-600 dark:text-red-400',
+      bgColor: 'bg-red-100 dark:bg-red-900/30',
       onClick: () => {
         setIsOpen(false);
         onInviteTeam?.();
@@ -346,7 +346,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
           onClick={() => setIsOpen(!isOpen)}
           className={`
             relative w-14 h-14 rounded-full shadow-xl
-            bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500
+            bg-gradient-to-br from-pink-500 via-red-500 to-indigo-500
             flex items-center justify-center
             text-white
             hover:shadow-2xl hover:shadow-pink-500/30
@@ -487,7 +487,7 @@ const MessageTemplatesModal: React.FC<MessageTemplatesModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-pink-500/10 to-purple-500/10">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-pink-500/10 to-red-500/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-xl">

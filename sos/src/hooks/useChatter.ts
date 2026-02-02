@@ -183,13 +183,18 @@ export function useChatter(): UseChatterReturn {
     async (notificationId: string): Promise<void> => {
       if (!user?.uid) return;
 
-      // Update directly in Firestore (allowed by rules)
-      const { doc, updateDoc, Timestamp } = await import("firebase/firestore");
-      const notificationRef = doc(db, "chatter_notifications", notificationId);
-      await updateDoc(notificationRef, {
-        isRead: true,
-        readAt: Timestamp.now(),
-      });
+      try {
+        // Update directly in Firestore (allowed by rules)
+        const { doc, updateDoc, Timestamp } = await import("firebase/firestore");
+        const notificationRef = doc(db, "chatter_notifications", notificationId);
+        await updateDoc(notificationRef, {
+          isRead: true,
+          readAt: Timestamp.now(),
+        });
+      } catch (error) {
+        console.error("[useChatter] Failed to mark notification as read:", error);
+        // Silently fail - notification read status is not critical
+      }
     },
     [user?.uid, db]
   );
@@ -199,24 +204,29 @@ export function useChatter(): UseChatterReturn {
     async (): Promise<void> => {
       if (!user?.uid) return;
 
-      const { doc, updateDoc, Timestamp, writeBatch } = await import("firebase/firestore");
-      const batch = writeBatch(db);
-      const now = Timestamp.now();
+      try {
+        const { doc, Timestamp, writeBatch } = await import("firebase/firestore");
+        const batch = writeBatch(db);
+        const now = Timestamp.now();
 
-      // Get unread notifications and update them in a batch
-      const unreadNotifications = notifications.filter((n) => !n.isRead);
+        // Get unread notifications and update them in a batch
+        const unreadNotifications = notifications.filter((n) => !n.isRead);
 
-      if (unreadNotifications.length === 0) return;
+        if (unreadNotifications.length === 0) return;
 
-      for (const notification of unreadNotifications) {
-        const notificationRef = doc(db, "chatter_notifications", notification.id);
-        batch.update(notificationRef, {
-          isRead: true,
-          readAt: now,
-        });
+        for (const notification of unreadNotifications) {
+          const notificationRef = doc(db, "chatter_notifications", notification.id);
+          batch.update(notificationRef, {
+            isRead: true,
+            readAt: now,
+          });
+        }
+
+        await batch.commit();
+      } catch (error) {
+        console.error("[useChatter] Failed to mark all notifications as read:", error);
+        // Silently fail - notification read status is not critical
       }
-
-      await batch.commit();
     },
     [user?.uid, db, notifications]
   );

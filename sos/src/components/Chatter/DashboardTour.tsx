@@ -115,7 +115,7 @@ const TOUR_STEPS: TourStep[] = [
     titleFr: 'Construisez votre Equipe',
     description: 'Recruit other chatters and earn passive income! Get $1 for every call your N1 recruits make, and $0.50 for N2.',
     descriptionFr: 'Recrutez d\'autres chatters et gagnez des revenus passifs ! Gagnez 1$ pour chaque appel de vos filleuls N1, et 0.50$ pour les N2.',
-    icon: <Users className="w-6 h-6 text-purple-500" />,
+    icon: <Users className="w-6 h-6 text-red-500" />,
     position: 'top',
   },
   {

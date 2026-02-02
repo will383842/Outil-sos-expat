@@ -110,8 +110,8 @@ const NODE_COLORS = {
   },
   n2: {
     active: {
-      bg: 'from-purple-500 to-pink-500',
-      ring: 'ring-purple-300 dark:ring-purple-700',
+      bg: 'from-red-500 to-pink-500',
+      ring: 'ring-red-300 dark:ring-red-700',
       text: 'text-white',
     },
     inactive: {
@@ -197,7 +197,7 @@ const NodeTooltip: React.FC<NodeTooltipProps> = ({ data, onClose, onView }) => {
             {node.name}
           </h4>
           <div className="flex items-center gap-2">
-            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${node.level === 1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'}`}>
+            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${node.level === 1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'}`}>
               N{node.level}
             </span>
             {node.isQualified && (
@@ -380,7 +380,7 @@ const MobileCard: React.FC<MobileCardProps> = ({ node, onClick }) => {
         </span>
 
         {/* Level badge */}
-        <span className={`mt-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${node.level === 1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'}`}>
+        <span className={`mt-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${node.level === 1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'}`}>
           N{node.level}
         </span>
 
@@ -429,12 +429,12 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
       </div>
 
       {/* Total N2 */}
-      <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+      <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
         <div className="flex items-center gap-2 mb-1">
-          <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          <Users className="w-4 h-4 text-red-600 dark:text-red-400" />
           <span className="text-xs text-gray-600 dark:text-gray-400">N2</span>
         </div>
-        <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+        <p className="text-xl font-bold text-red-600 dark:text-red-400">
           {totalN2}
         </p>
         <p className="text-[10px] text-gray-500 dark:text-gray-500">
@@ -612,7 +612,7 @@ const TreeVisualization: React.FC<TreeVisualizationProps> = ({
           </linearGradient>
           <linearGradient id="lineGradientN2" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#EF4444" stopOpacity="0.4" />
           </linearGradient>
 
           {/* Glow effect */}
@@ -1146,7 +1146,7 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
               <span>N1</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <div className="w-3 h-3 rounded-full bg-red-500" />
               <span>N2</span>
             </div>
           </div>

@@ -271,7 +271,7 @@ const ForecastCard = memo(function ForecastCard({
         {/* Next Level */}
         <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
           <div className="flex items-center gap-1.5 mb-1">
-            <Calendar className="w-3.5 h-3.5 text-purple-500" />
+            <Calendar className="w-3.5 h-3.5 text-red-500" />
             <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
               <FormattedMessage
                 id="chatter.forecast.nextLevel"
@@ -303,7 +303,7 @@ const ForecastCard = memo(function ForecastCard({
               )}
             </>
           ) : (
-            <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+            <p className="text-sm font-semibold text-red-600 dark:text-red-400">
               <FormattedMessage
                 id="chatter.forecast.maxLevel"
                 defaultMessage="Niveau max !"

@@ -255,7 +255,7 @@ const InputSlider: React.FC<InputSliderProps> = ({
             [&::-webkit-slider-thumb]:rounded-full
             [&::-webkit-slider-thumb]:bg-gradient-to-r
             [&::-webkit-slider-thumb]:from-blue-500
-            [&::-webkit-slider-thumb]:to-purple-500
+            [&::-webkit-slider-thumb]:to-red-500
             [&::-webkit-slider-thumb]:shadow-lg
             [&::-webkit-slider-thumb]:cursor-pointer
             [&::-webkit-slider-thumb]:transition-transform
@@ -265,11 +265,11 @@ const InputSlider: React.FC<InputSliderProps> = ({
             [&::-moz-range-thumb]:rounded-full
             [&::-moz-range-thumb]:bg-gradient-to-r
             [&::-moz-range-thumb]:from-blue-500
-            [&::-moz-range-thumb]:to-purple-500
+            [&::-moz-range-thumb]:to-red-500
             [&::-moz-range-thumb]:border-0
             [&::-moz-range-thumb]:cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #3B82F6 0%, #8B5CF6 ${percentage}%, #E5E7EB ${percentage}%, #E5E7EB 100%)`,
+            background: `linear-gradient(to right, #3B82F6 0%, #EF4444 ${percentage}%, #E5E7EB ${percentage}%, #E5E7EB 100%)`,
           }}
         />
       </div>
@@ -315,7 +315,7 @@ const GoalInput: React.FC<GoalInputProps> = ({ value, onChange }) => {
             onClick={() => onChange(preset)}
             className={`min-h-[44px] px-4 py-2 rounded-full text-sm font-medium transition-all touch-manipulation active:scale-95 ${
               value === preset
-                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-blue-500 to-red-500 text-white shadow-lg'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
@@ -692,7 +692,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
             icon={<UserPlus className="w-5 h-5" />}
             title={<FormattedMessage id="calculator.simulation.title" defaultMessage="If You Recruit More" />}
             subtitle={<FormattedMessage id="calculator.simulation.subtitle" defaultMessage="Simulate your growth" />}
-            gradient="from-purple-500 to-pink-600"
+            gradient="from-red-500 to-pink-600"
             isExpanded={expandedSections.simulation}
             onToggle={() => toggleSection('simulation')}
             collapsible
@@ -711,10 +711,10 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                 onChange={setRecruitSimulation}
                 min={1}
                 max={50}
-                gradient="from-purple-500 to-pink-500"
+                gradient="from-red-500 to-pink-500"
               />
 
-              <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl space-y-3">
+              <div className="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl space-y-3">
                 <StatLine
                   label={
                     <FormattedMessage
@@ -723,7 +723,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                     />
                   }
                   value={`${recruitSimulation} x $5 = ${formatCents(simulationResults.activationBonus)}`}
-                  icon={<Gift className="w-4 h-4 text-purple-500" />}
+                  icon={<Gift className="w-4 h-4 text-red-500" />}
                 />
 
                 {/* Tier Bonuses */}
@@ -758,7 +758,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                   icon={<TrendingUp className="w-4 h-4 text-green-500" />}
                 />
 
-                <div className="h-px bg-purple-200 dark:bg-purple-800/50" />
+                <div className="h-px bg-red-200 dark:bg-red-800/50" />
 
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-gray-900 dark:text-white">
@@ -768,7 +768,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                     />
                   </span>
                   <div className="text-right">
-                    <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <p className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
                       {formatCents(simulationResults.newMonthlyEstimate)}/month
                     </p>
                     {simulationResults.oneTimeBonus > 0 && (
@@ -842,7 +842,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                       value: `${goalOptions.smallTeam.ownCalls}/month`,
                     },
                   ]}
-                  gradient="from-purple-500 to-pink-500"
+                  gradient="from-red-500 to-pink-500"
                   icon={<Users className="w-5 h-5" />}
                   recommended
                 />
@@ -879,7 +879,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
         {onRecruit && (
           <button
             onClick={onRecruit}
-            className="w-full flex items-center justify-center gap-2 sm:gap-3 min-h-[56px] p-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-2xl font-bold text-base sm:text-lg shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 active:scale-[0.98] transition-all touch-manipulation group"
+            className="w-full flex items-center justify-center gap-2 sm:gap-3 min-h-[56px] p-4 bg-gradient-to-r from-blue-500 via-red-500 to-pink-500 text-white rounded-2xl font-bold text-base sm:text-lg shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 active:scale-[0.98] transition-all touch-manipulation group"
           >
             <Rocket className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-bounce flex-shrink-0" />
             <span className="truncate">

@@ -16,20 +16,18 @@
  */
 
 import { memo } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth, useSubscription } from "../contexts/UnifiedUserContext";
 import { BlockedScreen } from "./guards";
 import { useLanguage } from "../hooks/useLanguage";
 
 // =============================================================================
 // DEV MODE: Bypass d'authentification pour les tests
-// Activer via ?dev=true dans l'URL ou via VITE_DEV_BYPASS=true
+// SÉCURITÉ: Activé UNIQUEMENT via variable d'environnement en mode développement
+// NE JAMAIS activer via URL en production - risque de sécurité
 // =============================================================================
 
-const DEV_BYPASS_ENABLED = import.meta.env.DEV && (
-  import.meta.env.VITE_DEV_BYPASS === "true" ||
-  typeof window !== "undefined" && window.location.search.includes("dev=true")
-);
+const DEV_BYPASS_ENABLED = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS === "true";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -69,34 +67,16 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
     loading: subLoading,
     error,
   } = useSubscription();
-  const [searchParams] = useSearchParams();
-
-  // P0 DEBUG: Log protection checks on every render
-  console.log("[ProtectedRoute] 🛡️ Access check:", {
-    user: user?.email,
-    authLoading,
-    subLoading,
-    isAdmin,
-    hasActiveSubscription,
-    hasAllowedRole,
-    role,
-    error,
-  });
 
   // ─────────────────────────────────────────────────────────────────────────
-  // DEV MODE BYPASS: Accès direct pour tests (uniquement en développement)
-  // Usage: ajouter ?dev=true à l'URL (sera mémorisé dans sessionStorage)
+  // DEV MODE BYPASS: Accès direct pour tests (UNIQUEMENT via env variable)
+  // SÉCURITÉ: Ne JAMAIS activer via URL - utiliser VITE_DEV_BYPASS=true dans .env.local
   // ─────────────────────────────────────────────────────────────────────────
-  const isDev = import.meta.env.DEV || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-
-  // Stocker le mode dev dans sessionStorage pour le conserver pendant la navigation
-  if (isDev && searchParams.get("dev") === "true") {
-    sessionStorage.setItem("devMode", "true");
-  }
-
-  const devBypass = isDev && (searchParams.get("dev") === "true" || sessionStorage.getItem("devMode") === "true");
-  if (devBypass) {
-    console.warn("⚠️ [DEV MODE] Bypass d'authentification activé - NE PAS UTILISER EN PRODUCTION");
+  if (DEV_BYPASS_ENABLED) {
+    // Only log in development, never in production
+    if (import.meta.env.DEV) {
+      console.warn("⚠️ [DEV MODE] Bypass d'authentification activé via VITE_DEV_BYPASS");
+    }
     return <>{children}</>;
   }
 

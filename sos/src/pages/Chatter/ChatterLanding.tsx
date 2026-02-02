@@ -216,7 +216,7 @@ const ChatterLanding: React.FC = () => {
       <SEOHead
         title={seoTitle}
         description={seoDescription}
-        ogImage="/og-chatter-2026.jpg"
+        ogImage="/og-image.png"
         ogType="website"
         contentType="LandingPage"
       />
@@ -315,16 +315,16 @@ const ChatterLanding: React.FC = () => {
         {/* HERO - ULTRA IMPACTANT - 3 SECONDS TO UNDERSTAND */}
         {/* ============================================================== */}
         <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
-          {/* Animated gradient background - PREMIUM PURPLE/GOLD */}
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-900 via-purple-800 to-fuchsia-700 animate-gradient" />
+          {/* Animated gradient background - CHATTER RED THEME */}
+          <div className="absolute inset-0 bg-gradient-to-br from-red-900 via-red-700 to-rose-600 animate-gradient" />
 
           {/* Floating money decorations */}
           <FloatingMoney />
 
-          {/* Glassmorphism overlays - Gold accents */}
+          {/* Glassmorphism overlays - Gold/Red accents */}
           <div className="absolute top-10 -left-20 w-72 h-72 bg-amber-400/20 rounded-full blur-3xl" />
           <div className="absolute bottom-10 -right-20 w-96 h-96 bg-yellow-400/30 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-fuchsia-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/10 rounded-full blur-3xl" />
 
           <div className="relative z-10 max-w-5xl mx-auto px-4 py-8 text-center text-white">
             {/* Badge - Social proof */}
@@ -348,11 +348,11 @@ const ChatterLanding: React.FC = () => {
                 </div>
               </div>
 
-              <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-black mb-4 leading-none tracking-tight">
-                <span className="block text-yellow-300 drop-shadow-lg">
+              <h1 className="hero-title font-black mb-4 leading-none tracking-tight">
+                <span className="block text-yellow-300 drop-shadow-lg text-6xl md:text-8xl lg:text-9xl">
                   <FormattedMessage id="chatter.hero.earn" defaultMessage="Earn" /> $10
                 </span>
-                <span className="block text-white text-3xl md:text-5xl lg:text-6xl mt-2 font-bold">
+                <span className="block text-white text-4xl md:text-6xl lg:text-7xl mt-3 font-bold">
                   <FormattedMessage id="chatter.hero.perClient" defaultMessage="Per Call" />
                 </span>
               </h1>
@@ -456,7 +456,7 @@ const ChatterLanding: React.FC = () => {
                 <FormattedMessage id="chatter.what.title" defaultMessage="What is SOS-Expat?" />
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                <FormattedMessage id="chatter.what.subtitle" defaultMessage="A premium legal helpline for people living abroad. They call, pay $29, talk to a lawyer. Simple." />
+                <FormattedMessage id="chatter.what.subtitle" defaultMessage="A premium legal helpline for expatriates worldwide. They call, speak with lawyers or experienced expatriate helpers. Available in all languages, for all nationalities, in every country." />
               </p>
             </div>
 
@@ -478,7 +478,7 @@ const ChatterLanding: React.FC = () => {
 
                 {/* What problems */}
                 <div className="space-y-3">
-                  <div className="w-16 h-16 mx-auto bg-purple-500 rounded-2xl flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto bg-red-500 rounded-2xl flex items-center justify-center">
                     <Scale className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="font-bold text-gray-900 dark:text-white">
@@ -498,7 +498,7 @@ const ChatterLanding: React.FC = () => {
                     <FormattedMessage id="chatter.what.solution.title" defaultMessage="Our Solution" />
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <FormattedMessage id="chatter.what.solution.desc" defaultMessage="30-min call with a specialized lawyer for just $29. Instant booking, no waiting." />
+                    <FormattedMessage id="chatter.what.solution.desc" defaultMessage="Quick call with lawyers or experienced expatriate helpers. Instant booking, no waiting." />
                   </p>
                 </div>
               </div>
@@ -521,9 +521,9 @@ const ChatterLanding: React.FC = () => {
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 { icon: '✅', text: intl.formatMessage({ id: 'chatter.what.easy1', defaultMessage: 'Real need, real solution' }) },
-                { icon: '💰', text: intl.formatMessage({ id: 'chatter.what.easy2', defaultMessage: 'Affordable $29 price' }) },
+                { icon: '💰', text: intl.formatMessage({ id: 'chatter.what.easy2', defaultMessage: '$10 per referred client' }) },
                 { icon: '⚡', text: intl.formatMessage({ id: 'chatter.what.easy3', defaultMessage: 'Instant booking' }) },
-                { icon: '🌐', text: intl.formatMessage({ id: 'chatter.what.easy4', defaultMessage: '15+ languages' }) },
+                { icon: '🌐', text: intl.formatMessage({ id: 'chatter.what.easy4', defaultMessage: 'All languages & countries' }) },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3">
                   <span className="text-xl">{item.icon}</span>
@@ -566,8 +566,8 @@ const ChatterLanding: React.FC = () => {
                     <h3 className="text-xl font-bold text-amber-400">
                       <FormattedMessage id="chatter.calc.direct" defaultMessage="Your Direct Earnings" />
                     </h3>
-                    <p className="text-gray-400 text-sm">
-                      <FormattedMessage id="chatter.calc.direct.sub" defaultMessage="$10 per client you refer" />
+                    <p className="text-amber-200 text-sm">
+                      <FormattedMessage id="chatter.calc.direct.sub" defaultMessage="$10 per referred client - your link works unlimited times!" />
                     </p>
                   </div>
                 </div>
@@ -602,7 +602,7 @@ const ChatterLanding: React.FC = () => {
                     <h3 className="text-xl font-bold text-orange-400">
                       <FormattedMessage id="chatter.calc.team" defaultMessage="+ Team Passive Income" />
                     </h3>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-orange-200 text-sm">
                       <FormattedMessage id="chatter.calc.team.sub" defaultMessage="$1/call N1, $0.50/call N2" />
                     </p>
                   </div>
@@ -610,7 +610,7 @@ const ChatterLanding: React.FC = () => {
 
                 {/* Interactive slider */}
                 <div className="mb-6">
-                  <label className="block text-sm text-gray-400 mb-2">
+                  <label className="block text-sm text-orange-300 font-medium mb-2">
                     <FormattedMessage id="chatter.calc.team.size" defaultMessage="Your team size" />
                   </label>
                   <input
@@ -621,7 +621,7 @@ const ChatterLanding: React.FC = () => {
                     onChange={(e) => setTeamSize(Number(e.target.value))}
                     className="w-full h-3 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
                   />
-                  <div className="flex justify-between text-sm text-gray-500 mt-1">
+                  <div className="flex justify-between text-sm text-gray-300 mt-1">
                     <span>1</span>
                     <span className="text-orange-400 font-bold">{teamSize} <FormattedMessage id="chatter.calc.chatters" defaultMessage="chatters" /></span>
                     <span>50+</span>
@@ -630,7 +630,7 @@ const ChatterLanding: React.FC = () => {
 
                 {/* Calculation display */}
                 <div className="bg-white/5 rounded-2xl p-6 text-center">
-                  <p className="text-gray-400 mb-2">
+                  <p className="text-amber-300 mb-2 font-medium">
                     <FormattedMessage id="chatter.calc.if" defaultMessage="If each brings 10 calls/month" />
                   </p>
                   <div className="text-4xl md:text-5xl font-black text-orange-400 mb-2">
@@ -641,7 +641,7 @@ const ChatterLanding: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="mt-4 text-center text-sm text-gray-500">
+                <div className="mt-4 text-center text-sm text-orange-300 font-medium">
                   <FormattedMessage id="chatter.calc.nolimit" defaultMessage="No limit on team size!" />
                 </div>
               </div>
@@ -684,7 +684,7 @@ const ChatterLanding: React.FC = () => {
             {/* Steps - Horizontal on desktop, vertical on mobile */}
             <div className="relative">
               {/* Connection line */}
-              <div className="hidden md:block absolute top-24 left-[16%] right-[16%] h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 rounded-full" />
+              <div className="hidden md:block absolute top-24 left-[16%] right-[16%] h-1 bg-gradient-to-r from-blue-500 via-red-500 to-green-500 rounded-full" />
 
               <div className="grid md:grid-cols-3 gap-8">
                 {/* Step 1 */}
@@ -711,9 +711,9 @@ const ChatterLanding: React.FC = () => {
 
                 {/* Step 2 */}
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl blur opacity-25 group-hover:opacity-50 transition-opacity" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-red-500 to-rose-500 rounded-3xl blur opacity-25 group-hover:opacity-50 transition-opacity" />
                   <div className="relative bg-white dark:bg-gray-900 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 h-full">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl mb-6 mx-auto shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl mb-6 mx-auto shadow-lg">
                       2
                     </div>
                     <div className="text-6xl text-center mb-4">📤</div>
@@ -724,7 +724,7 @@ const ChatterLanding: React.FC = () => {
                       <FormattedMessage id="chatter.step2.desc" defaultMessage="Share your unique affiliate link" />
                     </p>
                     <div className="mt-4 bg-gray-100 dark:bg-gray-800 rounded-xl p-3 text-center">
-                      <code className="text-sm text-purple-600 dark:text-purple-400">sos-expat.com/r/YOU</code>
+                      <code className="text-sm text-red-600 dark:text-red-400">sos-expat.com/r/YOU</code>
                     </div>
                   </div>
                 </div>
@@ -760,7 +760,7 @@ const ChatterLanding: React.FC = () => {
         <section className="py-12 md:py-16 px-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full text-sm font-bold mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-sm font-bold mb-4">
                 <Users className="w-4 h-4" />
                 <FormattedMessage id="chatter.who.badge" defaultMessage="Is This For You?" />
               </div>
@@ -778,7 +778,7 @@ const ChatterLanding: React.FC = () => {
                 { icon: <GraduationCap className="w-7 h-7" />, title: intl.formatMessage({ id: 'chatter.who.student', defaultMessage: 'Students' }), desc: intl.formatMessage({ id: 'chatter.who.student.desc', defaultMessage: 'Earn between classes' }), color: 'from-blue-500 to-indigo-500' },
                 { icon: <Home className="w-7 h-7" />, title: intl.formatMessage({ id: 'chatter.who.parent', defaultMessage: 'Stay-at-home Parents' }), desc: intl.formatMessage({ id: 'chatter.who.parent.desc', defaultMessage: 'Work from home' }), color: 'from-pink-500 to-rose-500' },
                 { icon: <Briefcase className="w-7 h-7" />, title: intl.formatMessage({ id: 'chatter.who.sidehustle', defaultMessage: 'Side Hustlers' }), desc: intl.formatMessage({ id: 'chatter.who.sidehustle.desc', defaultMessage: 'Extra income stream' }), color: 'from-green-500 to-emerald-500' },
-                { icon: <MessageCircle className="w-7 h-7" />, title: intl.formatMessage({ id: 'chatter.who.influencer', defaultMessage: 'Social Media Users' }), desc: intl.formatMessage({ id: 'chatter.who.influencer.desc', defaultMessage: 'Monetize your network' }), color: 'from-purple-500 to-violet-500' },
+                { icon: <MessageCircle className="w-7 h-7" />, title: intl.formatMessage({ id: 'chatter.who.influencer', defaultMessage: 'Social Media Users' }), desc: intl.formatMessage({ id: 'chatter.who.influencer.desc', defaultMessage: 'Monetize your network' }), color: 'from-red-500 to-rose-500' },
               ].map((profile, i) => (
                 <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
                   <div className={`w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${profile.color} flex items-center justify-center text-white`}>
@@ -848,8 +848,8 @@ const ChatterLanding: React.FC = () => {
               </div>
 
               {/* Tool 2: Dashboard */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
-                <div className="w-14 h-14 bg-purple-500 rounded-2xl flex items-center justify-center mb-4">
+              <div className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 rounded-2xl p-6 border border-red-200 dark:border-red-800">
+                <div className="w-14 h-14 bg-red-500 rounded-2xl flex items-center justify-center mb-4">
                   <TrendingUp className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="font-bold text-gray-900 dark:text-white mb-2">
@@ -859,8 +859,8 @@ const ChatterLanding: React.FC = () => {
                   <FormattedMessage id="chatter.tools.dashboard.desc" defaultMessage="Real-time earnings, team stats, leaderboard, withdrawal requests. All on mobile." />
                 </p>
                 <div className="flex gap-2">
-                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-300 rounded text-xs">Live stats</span>
-                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-300 rounded text-xs">Mobile-first</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-300 rounded text-xs">Live stats</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-300 rounded text-xs">Mobile-first</span>
                 </div>
               </div>
 
@@ -1066,14 +1066,13 @@ const ChatterLanding: React.FC = () => {
                 </h3>
               </div>
 
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
                 {[
                   { recruits: 5, bonus: 15 },
                   { recruits: 10, bonus: 35 },
                   { recruits: 20, bonus: 75 },
                   { recruits: 50, bonus: 250 },
                   { recruits: 100, bonus: 600 },
-                  { recruits: 500, bonus: 4000 },
                 ].map((tier, i) => (
                   <div
                     key={i}
@@ -1085,13 +1084,13 @@ const ChatterLanding: React.FC = () => {
                   >
                     <div className="text-2xl mb-1">{tier.bonus >= 600 ? '🏆' : tier.bonus >= 250 ? '⭐' : '🎯'}</div>
                     <div className="font-bold text-yellow-300">${tier.bonus.toLocaleString()}</div>
-                    <div className="text-xs text-white/60">{tier.recruits} <FormattedMessage id="chatter.tiers.recruits" defaultMessage="recruits" /></div>
+                    <div className="text-xs text-white/60">{tier.recruits} <FormattedMessage id="chatter.tiers.recruits" defaultMessage="filleuls qualifiés" /></div>
                   </div>
                 ))}
               </div>
 
               <p className="text-center text-sm text-white/60 mt-4">
-                <FormattedMessage id="chatter.tiers.note" defaultMessage="One-time bonuses paid when you hit each milestone" />
+                <FormattedMessage id="chatter.tiers.note" defaultMessage="Primes uniques versées quand ton filleul atteint $20 de gains directs" />
               </p>
             </div>
 
@@ -1120,6 +1119,154 @@ const ChatterLanding: React.FC = () => {
                 <FormattedMessage id="chatter.team.cta" defaultMessage="Start Building Your Empire" />
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
               </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================== */}
+        {/* PROVIDER RECRUITMENT - SECOND INCOME STREAM */}
+        {/* ============================================================== */}
+        <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 text-white relative overflow-hidden">
+          {/* Background decorations */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-20 -left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-20 -right-20 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl" />
+          </div>
+
+          <div className="max-w-5xl mx-auto relative z-10">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-bold mb-4">
+                <Scale className="w-4 h-4" />
+                <FormattedMessage id="chatter.provider.badge" defaultMessage="Your 2nd Affiliate Link" />
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black mb-4">
+                <FormattedMessage id="chatter.provider.title" defaultMessage="Recruit Lawyers & Helpers" />
+              </h2>
+              <p className="text-xl text-white/90 max-w-2xl mx-auto">
+                <FormattedMessage id="chatter.provider.subtitle" defaultMessage="Earn $5 for EVERY call your recruited provider receives. For 6 months!" />
+              </p>
+            </div>
+
+            {/* Visual explanation */}
+            <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-white/20 max-w-3xl mx-auto mb-10">
+              {/* You at the top */}
+              <div className="flex flex-col items-center">
+                <div className="relative">
+                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl">
+                    <Crown className="w-10 h-10 text-emerald-500" />
+                  </div>
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-500 rounded-full text-xs font-bold whitespace-nowrap">
+                    <FormattedMessage id="chatter.provider.you" defaultMessage="YOU" />
+                  </div>
+                </div>
+
+                {/* Connection lines */}
+                <div className="w-0.5 h-8 bg-white/30 mt-4" />
+                <div className="w-48 h-0.5 bg-white/30" />
+                <div className="flex justify-between w-48">
+                  <div className="w-0.5 h-8 bg-white/30" />
+                  <div className="w-0.5 h-8 bg-white/30" />
+                </div>
+
+                {/* Recruited Providers */}
+                <div className="flex justify-center gap-12 md:gap-20 mb-6">
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                      <Scale className="w-8 h-8" />
+                    </div>
+                    <span className="mt-2 text-sm font-medium opacity-80">
+                      <FormattedMessage id="chatter.provider.lawyer" defaultMessage="Lawyer" />
+                    </span>
+                    <span className="text-emerald-300 font-bold">~22 calls/mo</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                      <Users className="w-8 h-8" />
+                    </div>
+                    <span className="mt-2 text-sm font-medium opacity-80">
+                      <FormattedMessage id="chatter.provider.helper" defaultMessage="Helper" />
+                    </span>
+                    <span className="text-emerald-300 font-bold">~22 calls/mo</span>
+                  </div>
+                </div>
+
+                {/* Commission label */}
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="h-px w-12 bg-white/30" />
+                  <span className="px-4 py-2 bg-emerald-400/30 rounded-full text-sm font-bold text-emerald-300">
+                    $5/call × 6 months
+                  </span>
+                  <div className="h-px w-12 bg-white/30" />
+                </div>
+              </div>
+
+              {/* Example calculation */}
+              <div className="mt-8 bg-white/10 rounded-2xl p-6">
+                <p className="font-semibold mb-4 text-center">
+                  <FormattedMessage id="chatter.provider.example.title" defaultMessage="Example: 1 Recruited Provider" />
+                </p>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="bg-emerald-500/20 rounded-xl p-4">
+                    <div className="text-sm text-emerald-300 mb-1">
+                      <FormattedMessage id="chatter.provider.monthly" defaultMessage="Per Month" />
+                    </div>
+                    <div className="text-2xl font-black text-emerald-300">$110</div>
+                    <div className="text-xs text-white/60">22 × $5</div>
+                  </div>
+                  <div className="bg-emerald-500/20 rounded-xl p-4">
+                    <div className="text-sm text-emerald-300 mb-1">
+                      <FormattedMessage id="chatter.provider.duration" defaultMessage="Duration" />
+                    </div>
+                    <div className="text-2xl font-black text-emerald-300">6</div>
+                    <div className="text-xs text-white/60"><FormattedMessage id="chatter.provider.months" defaultMessage="months" /></div>
+                  </div>
+                  <div className="bg-gradient-to-br from-emerald-400/30 to-teal-400/30 rounded-xl p-4 border border-emerald-400/40">
+                    <div className="text-sm text-emerald-300 mb-1">
+                      <FormattedMessage id="chatter.provider.total" defaultMessage="Total" />
+                    </div>
+                    <div className="text-2xl font-black text-white">$660</div>
+                    <div className="text-xs text-emerald-300"><FormattedMessage id="chatter.provider.perProvider" defaultMessage="per provider!" /></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Key benefits */}
+            <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-10">
+              {[
+                { icon: '⚖️', title: intl.formatMessage({ id: 'chatter.provider.benefit1.title', defaultMessage: 'Recruit Lawyers' }), desc: intl.formatMessage({ id: 'chatter.provider.benefit1.desc', defaultMessage: 'Attorneys needing clients' }) },
+                { icon: '🤝', title: intl.formatMessage({ id: 'chatter.provider.benefit2.title', defaultMessage: 'Recruit Helpers' }), desc: intl.formatMessage({ id: 'chatter.provider.benefit2.desc', defaultMessage: 'Expat experts & consultants' }) },
+                { icon: '💵', title: intl.formatMessage({ id: 'chatter.provider.benefit3.title', defaultMessage: '$5 × Every Call' }), desc: intl.formatMessage({ id: 'chatter.provider.benefit3.desc', defaultMessage: '6 months of passive income' }) },
+              ].map((benefit, i) => (
+                <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center border border-white/10">
+                  <div className="text-4xl mb-3">{benefit.icon}</div>
+                  <h4 className="font-bold mb-1">{benefit.title}</h4>
+                  <p className="text-sm text-white/70">{benefit.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Your 2 links */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 max-w-2xl mx-auto text-center">
+              <h4 className="font-bold mb-4">
+                <FormattedMessage id="chatter.provider.links.title" defaultMessage="You Get 2 Affiliate Links" />
+              </h4>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-amber-500/20 rounded-xl p-4 border border-amber-400/30">
+                  <div className="text-xs text-amber-300 mb-1">
+                    <FormattedMessage id="chatter.provider.link1.label" defaultMessage="Link 1: For Clients" />
+                  </div>
+                  <code className="text-sm text-white">sos-expat.com/r/<span className="text-amber-300">CODE</span></code>
+                  <div className="text-xs text-white/60 mt-2">$10/call</div>
+                </div>
+                <div className="bg-emerald-500/20 rounded-xl p-4 border border-emerald-400/30">
+                  <div className="text-xs text-emerald-300 mb-1">
+                    <FormattedMessage id="chatter.provider.link2.label" defaultMessage="Link 2: For Providers" />
+                  </div>
+                  <code className="text-sm text-white">sos-expat.com/become-provider?ref=<span className="text-emerald-300">CODE</span></code>
+                  <div className="text-xs text-white/60 mt-2">$5/call × 6 mo</div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -1182,7 +1329,7 @@ const ChatterLanding: React.FC = () => {
                 { name: 'Reddit', icon: '🔴', color: 'from-orange-500 to-red-500' },
                 { name: 'Telegram', icon: '✈️', color: 'from-blue-400 to-cyan-500' },
                 { name: 'Quora', icon: '❓', color: 'from-red-500 to-rose-500' },
-                { name: intl.formatMessage({ id: 'chatter.platform.forums.name', defaultMessage: 'Forums' }), icon: '🌐', color: 'from-purple-500 to-pink-500' },
+                { name: intl.formatMessage({ id: 'chatter.platform.forums.name', defaultMessage: 'Forums' }), icon: '🌐', color: 'from-red-500 to-rose-500' },
               ].map((platform, i) => (
                 <div
                   key={i}
@@ -1195,6 +1342,39 @@ const ChatterLanding: React.FC = () => {
                 </div>
               ))}
             </div>
+
+            {/* Content Creation Section */}
+            <div className="mt-8 bg-gradient-to-r from-rose-50 to-red-50 dark:from-rose-900/20 dark:to-red-900/20 rounded-3xl p-6 md:p-8 border border-pink-200 dark:border-pink-800">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-full text-sm font-bold mb-3">
+                  <Sparkles className="w-4 h-4" />
+                  <FormattedMessage id="chatter.content.badge" defaultMessage="Create Content!" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                  <FormattedMessage id="chatter.content.title" defaultMessage="Share Everywhere, Earn Forever" />
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">
+                  <FormattedMessage id="chatter.content.subtitle" defaultMessage="Your link works unlimited times - create once, earn forever!" />
+                </p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { name: 'TikTok', icon: '🎵', desc: intl.formatMessage({ id: 'chatter.content.tiktok', defaultMessage: 'Short videos' }) },
+                  { name: 'Instagram', icon: '📸', desc: intl.formatMessage({ id: 'chatter.content.instagram', defaultMessage: 'Reels & Stories' }) },
+                  { name: 'YouTube', icon: '🎬', desc: intl.formatMessage({ id: 'chatter.content.youtube', defaultMessage: 'Tutorials & vlogs' }) },
+                  { name: intl.formatMessage({ id: 'chatter.content.blog.name', defaultMessage: 'Blog/Articles' }), icon: '✍️', desc: intl.formatMessage({ id: 'chatter.content.blog', defaultMessage: 'SEO content' }) },
+                ].map((platform, i) => (
+                  <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-4 text-center border border-gray-100 dark:border-gray-700">
+                    <span className="text-3xl block mb-2">{platform.icon}</span>
+                    <div className="font-bold text-gray-900 dark:text-white">{platform.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{platform.desc}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-center text-sm text-pink-700 dark:text-pink-400 font-medium mt-4">
+                <FormattedMessage id="chatter.content.note" defaultMessage="Create tutorials, share tips, make videos - your link = unlimited earning potential!" />
+              </p>
+            </div>
           </div>
         </section>
 
@@ -1204,7 +1384,7 @@ const ChatterLanding: React.FC = () => {
         <section className="py-16 md:py-20 px-4 bg-white dark:bg-gray-950">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full text-sm font-bold mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-sm font-bold mb-4">
                 <Sparkles className="w-4 h-4" />
                 <FormattedMessage id="chatter.social.badge" defaultMessage="Real Success Stories" />
               </div>
@@ -1271,7 +1451,7 @@ const ChatterLanding: React.FC = () => {
                   key={i}
                   className={`relative rounded-2xl p-6 ${
                     testimonial.highlight
-                      ? 'bg-gradient-to-br from-violet-600 to-purple-700 text-white'
+                      ? 'bg-gradient-to-br from-red-600 to-red-700 text-white'
                       : 'bg-gray-50 dark:bg-gray-800'
                   }`}
                 >
@@ -1403,7 +1583,7 @@ const ChatterLanding: React.FC = () => {
                     onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                     className="w-full flex items-center gap-4 p-5 text-left"
                   >
-                    <div className="w-10 h-10 bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 rounded-xl flex items-center justify-center text-violet-600 dark:text-violet-400 flex-shrink-0">
+                    <div className="w-10 h-10 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 rounded-xl flex items-center justify-center text-red-600 dark:text-red-400 flex-shrink-0">
                       {faq.icon}
                     </div>
                     <h3 className="font-bold text-gray-900 dark:text-white flex-1 pr-4">

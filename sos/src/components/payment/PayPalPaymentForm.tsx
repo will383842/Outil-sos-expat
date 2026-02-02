@@ -24,6 +24,8 @@ interface BookingData {
   description?: string;
   clientPhone?: string;
   currentCountry?: string;
+  // P2 FIX: Client languages for SMS notifications
+  clientLanguages?: string[];
 }
 
 interface PayPalPaymentFormProps {

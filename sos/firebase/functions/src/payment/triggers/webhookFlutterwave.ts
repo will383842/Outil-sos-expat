@@ -12,6 +12,7 @@ import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import * as crypto from "crypto";
 
 import { WithdrawalRequest, WithdrawalStatus } from "../types";
 import {
@@ -76,6 +77,7 @@ interface FlutterwaveWebhookPayload {
  * Verify Flutterwave webhook signature
  *
  * Flutterwave uses a simple secret hash comparison via verif-hash header
+ * SECURITY: Uses timing-safe comparison to prevent timing attacks
  */
 function verifyFlutterwaveSignature(
   verifHash: string,
@@ -86,15 +88,35 @@ function verifyFlutterwaveSignature(
     return false;
   }
 
-  // Flutterwave simply compares the verif-hash header with the secret
-  const isValid = verifHash === webhookSecret;
+  if (!verifHash) {
+    logger.error("[webhookFlutterwave] Missing verif-hash header");
+    return false;
+  }
 
-  logger.info("[webhookFlutterwave] Signature verification", {
-    isValid,
-    hashLength: verifHash?.length || 0,
-  });
+  // SECURITY: Use timing-safe comparison to prevent timing attacks
+  // Convert strings to buffers of equal length for comparison
+  try {
+    const verifHashBuffer = Buffer.from(verifHash, "utf-8");
+    const webhookSecretBuffer = Buffer.from(webhookSecret, "utf-8");
 
-  return isValid;
+    // If lengths differ, create a buffer of matching length to maintain constant time
+    if (verifHashBuffer.length !== webhookSecretBuffer.length) {
+      logger.warn("[webhookFlutterwave] Hash length mismatch");
+      return false;
+    }
+
+    const isValid = crypto.timingSafeEqual(verifHashBuffer, webhookSecretBuffer);
+
+    logger.info("[webhookFlutterwave] Signature verification", {
+      isValid,
+      hashLength: verifHash?.length || 0,
+    });
+
+    return isValid;
+  } catch (error) {
+    logger.error("[webhookFlutterwave] Signature verification error", { error });
+    return false;
+  }
 }
 
 /**

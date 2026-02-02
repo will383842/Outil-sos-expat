@@ -166,7 +166,7 @@ export default function ChatterReferralEarnings() {
                     <p className="text-sm text-gray-500 mb-1">
                       {t("chatter.referrals.multiplier")}
                     </p>
-                    <p className="text-3xl font-bold text-purple-600">
+                    <p className="text-3xl font-bold text-red-600">
                       x{earlyAdopter?.multiplier?.toFixed(1) || "1.0"}
                     </p>
                     {earlyAdopter?.isEarlyAdopter && (

@@ -101,7 +101,7 @@ const MILESTONE_REWARDS = {
   5: { label: 'Bronze', bonus: 25, color: 'from-amber-600 to-amber-700' },
   10: { label: 'Silver', bonus: 75, color: 'from-gray-400 to-gray-500' },
   25: { label: 'Gold', bonus: 200, color: 'from-yellow-400 to-yellow-600' },
-  50: { label: 'Platinum', bonus: 500, color: 'from-purple-400 to-purple-600' },
+  50: { label: 'Platinum', bonus: 500, color: 'from-red-400 to-red-600' },
 } as const;
 
 const GROWTH_TIPS = [
@@ -381,7 +381,7 @@ const TeamTree: React.FC<TeamTreeProps> = ({ members, onViewMember }) => {
           {/* Gradient for connections */}
           <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#EF4444" stopOpacity="0.4" />
           </linearGradient>
 
           {/* Glow filter */}
@@ -551,7 +551,7 @@ const TeamTree: React.FC<TeamTreeProps> = ({ members, onViewMember }) => {
               onClick={() => onViewMember?.(member.id)}
             >
               {/* Avatar circle (smaller) */}
-              <circle r="18" className="fill-white dark:fill-gray-700 stroke-purple-400 stroke-2" />
+              <circle r="18" className="fill-white dark:fill-gray-700 stroke-red-400 stroke-2" />
 
               {/* Status indicator */}
               <circle
@@ -577,7 +577,7 @@ const TeamTree: React.FC<TeamTreeProps> = ({ members, onViewMember }) => {
                 width="20"
                 height="12"
                 rx="6"
-                className="fill-purple-500"
+                className="fill-red-500"
               />
               <text
                 y="29"
@@ -779,7 +779,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
             className="w-12 h-12 rounded-full object-cover ring-2 ring-white dark:ring-gray-700 shadow-md"
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold ring-2 ring-white dark:ring-gray-700 shadow-md">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-red-500 flex items-center justify-center text-white font-bold ring-2 ring-white dark:ring-gray-700 shadow-md">
             {member.name.charAt(0).toUpperCase()}
           </div>
         )}
@@ -787,7 +787,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
         <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ${config.dot} ring-2 ring-white dark:ring-gray-800`} />
 
         {/* Level badge */}
-        <div className={`absolute -top-1 -left-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white ${member.level === 1 ? 'bg-blue-500' : 'bg-purple-500'}`}>
+        <div className={`absolute -top-1 -left-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white ${member.level === 1 ? 'bg-blue-500' : 'bg-red-500'}`}>
           N{member.level}
         </div>
       </div>
@@ -879,7 +879,7 @@ const GoalProgress: React.FC<GoalProgressProps> = ({ current, paidTiers, onCeleb
   }, [current, paidTiers, onCelebrate]);
 
   return (
-    <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl">
+    <div className="p-4 bg-gradient-to-r from-blue-50 to-red-50 dark:from-blue-900/20 dark:to-red-900/20 rounded-2xl">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -898,7 +898,7 @@ const GoalProgress: React.FC<GoalProgressProps> = ({ current, paidTiers, onCeleb
       {/* Progress bar */}
       <div className="relative h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
         <div
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-1000 ease-out"
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-red-500 rounded-full transition-all duration-1000 ease-out"
           style={{ width: `${progress}%` }}
         />
         {/* Milestone markers */}
@@ -1570,7 +1570,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
         <div className="p-4 sm:p-6 border-b border-gray-200/50 dark:border-white/10">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-red-600 rounded-xl shadow-lg">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -1599,7 +1599,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
               {onInvite && (
                 <button
                   onClick={onInvite}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98]"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-red-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98]"
                 >
                   <UserPlus className="w-5 h-5" />
                   <span className="hidden sm:inline">
@@ -1664,7 +1664,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
                   label={intl.formatMessage({ id: 'team.stats.thisMonth', defaultMessage: 'This Month' })}
                   value={(stats?.monthlyReferralEarnings || 0) / 100}
                   prefix="$"
-                  gradient="from-purple-500 to-pink-600"
+                  gradient="from-red-500 to-pink-600"
                 />
               </div>
             )}
@@ -1686,7 +1686,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-500" />
+                <Sparkles className="w-5 h-5 text-red-500" />
                 <FormattedMessage id="team.network.title" defaultMessage="Your Network" />
               </h3>
               <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
@@ -1767,7 +1767,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
           <div className="sm:hidden">
             <button
               onClick={onInvite}
-              className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-purple-500/30 active:scale-[0.98] transition-transform"
+              className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-blue-500 via-red-500 to-pink-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-red-500/30 active:scale-[0.98] transition-transform"
             >
               <Gift className="w-6 h-6" />
               <FormattedMessage id="team.cta.growTeam" defaultMessage="Grow Your Team" />

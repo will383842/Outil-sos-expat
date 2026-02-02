@@ -50,7 +50,7 @@ const ChatterPresentation: React.FC = () => {
       icon: <Users className="w-12 h-12" />,
       title: intl.formatMessage({ id: 'chatter.presentation.slide2.title', defaultMessage: 'Simple comme 1-2-3' }),
       content: intl.formatMessage({ id: 'chatter.presentation.slide2.content', defaultMessage: '1. Trouvez des expatriés sur Facebook, WhatsApp, etc. 2. Partagez votre lien unique. 3. Gagnez $10 par client qui appelle !' }),
-      color: 'from-purple-500 to-pink-500',
+      color: 'from-red-500 to-pink-500',
     },
     {
       icon: <Wallet className="w-12 h-12" />,

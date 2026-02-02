@@ -358,6 +358,9 @@ const AdminChatterPromotions = lazy(
 const AdminChatterFraud = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterFraud")
 );
+const AdminCommissionTracker = lazy(
+  () => import("../../pages/admin/Chatter/AdminCommissionTracker")
+);
 
 // ===== LAZY IMPORTS - INFLUENCER =====
 const AdminInfluencersList = lazy(
@@ -1146,6 +1149,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="chatters/commissions"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminCommissionTracker />
+          </Suspense>
+        }
+      />
 
       {/* 📢 INFLUENCERS */}
       <Route
@@ -1727,6 +1738,7 @@ export const useAdminRouteValidation = () => {
       "/admin/chatters/:chatterId",
       "/admin/chatters/payments",
       "/admin/chatters/config",
+      "/admin/chatters/commissions",
       "/admin/influencers",
       "/admin/influencers/:influencerId",
       "/admin/influencers/payments",

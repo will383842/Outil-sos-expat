@@ -144,7 +144,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         <p className="text-sm text-gray-500 dark:text-gray-400 bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-2">
           💰 <FormattedMessage
             id="chatter.links.client.commission"
-            defaultMessage="Commission : $2 par appel payé"
+            defaultMessage="Commission : $10 par appel payé"
           />
         </p>
       </div>
@@ -153,7 +153,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
       <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center shadow-lg shadow-red-500/30 flex-shrink-0">
               <UserPlus className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -165,8 +165,8 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4 sm:block sm:text-right bg-purple-50 dark:bg-purple-900/20 sm:bg-transparent rounded-xl p-3 sm:p-0">
-            <p className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">
+          <div className="flex items-center gap-4 sm:block sm:text-right bg-red-50 dark:bg-red-900/20 sm:bg-transparent rounded-xl p-3 sm:p-0">
+            <p className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-400">
               {totalRecruitmentConversions}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -176,11 +176,11 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         </div>
 
         {/* Code Display - Prominent */}
-        <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200/50 dark:border-purple-800/30">
+        <div className="mb-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl border border-red-200/50 dark:border-red-800/30">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
             <FormattedMessage id="chatter.links.yourCode" defaultMessage="Votre code" />
           </p>
-          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 tracking-wider">
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400 tracking-wider">
             {affiliateCodeRecruitment}
           </p>
         </div>
@@ -215,7 +215,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
                   intl.formatMessage({ id: 'chatter.links.recruitment.share.title', defaultMessage: 'Devenez prestataire SOS-Expat' }),
                   intl.formatMessage({ id: 'chatter.links.recruitment.share.text', defaultMessage: 'Rejoignez notre réseau et aidez les expatriés' })
                 )}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-xl min-h-[48px] min-w-[48px] flex items-center justify-center active:scale-[0.98] transition-all"
+                className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-medium rounded-xl min-h-[48px] min-w-[48px] flex items-center justify-center active:scale-[0.98] transition-all"
                 title={intl.formatMessage({ id: 'common.share' })}
               >
                 <Share2 className="w-5 h-5" />
@@ -225,10 +225,10 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         </div>
 
         {/* Commission Info */}
-        <p className="text-sm text-gray-500 dark:text-gray-400 bg-purple-50 dark:bg-purple-900/20 rounded-lg px-3 py-2">
+        <p className="text-sm text-gray-500 dark:text-gray-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
           💰 <FormattedMessage
             id="chatter.links.recruitment.commission"
-            defaultMessage="Commission : $1 par appel du prestataire recruté (pendant 6 mois)"
+            defaultMessage="Commission : $5 par appel du prestataire recruté (pendant 6 mois)"
           />
         </p>
       </div>

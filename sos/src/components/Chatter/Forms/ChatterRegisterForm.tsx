@@ -549,7 +549,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                 ),
                 privacyLink: (
                   <Link
-                    to="/privacy"
+                    to="/privacy-policy"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-red-500 hover:text-red-600 underline underline-offset-2 font-medium"

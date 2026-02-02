@@ -3,7 +3,7 @@
  * Shows top performers with country flags, earnings, and conversions
  *
  * Features:
- * - Top 3 podium with bonus display ($200, $100, $50)
+ * - Top 3 podium with multiplier display (2x, 1.5x, 1.15x)
  * - Team-based ranking (N1 + N2 calls)
  * - Monthly countdown timer
  * - Motivational messages for climbing ranks
@@ -49,10 +49,10 @@ const LEVEL_CONFIG: Record<ChatterLevel, { name: string; color: string; gradient
   2: { name: 'Silver', color: 'text-gray-400', gradient: 'from-gray-300 to-gray-500' },
   3: { name: 'Gold', color: 'text-yellow-500', gradient: 'from-yellow-400 to-yellow-600' },
   4: { name: 'Platinum', color: 'text-cyan-400', gradient: 'from-cyan-300 to-cyan-500' },
-  5: { name: 'Diamond', color: 'text-purple-400', gradient: 'from-purple-400 to-pink-500' },
+  5: { name: 'Diamond', color: 'text-red-400', gradient: 'from-red-400 to-pink-500' },
 };
 
-// Top 3 podium styles with bonus amounts
+// Top 3 podium styles with commission multipliers (applied next month)
 const PODIUM_STYLES = {
   1: {
     icon: Crown,
@@ -60,7 +60,9 @@ const PODIUM_STYLES = {
     ring: 'ring-4 ring-yellow-400/50',
     size: 'w-20 h-20 sm:w-24 sm:h-24',
     badge: 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white',
-    bonus: 200,
+    multiplier: '2x',
+    multiplierValue: 2.0,
+    bonusPercent: '+100%',
     emoji: '🥇',
     glowColor: 'shadow-yellow-400/50',
   },
@@ -70,7 +72,9 @@ const PODIUM_STYLES = {
     ring: 'ring-4 ring-gray-400/50',
     size: 'w-16 h-16 sm:w-20 sm:h-20',
     badge: 'bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800',
-    bonus: 100,
+    multiplier: '1.5x',
+    multiplierValue: 1.5,
+    bonusPercent: '+50%',
     emoji: '🥈',
     glowColor: 'shadow-gray-400/50',
   },
@@ -80,7 +84,9 @@ const PODIUM_STYLES = {
     ring: 'ring-4 ring-amber-600/50',
     size: 'w-16 h-16 sm:w-20 sm:h-20',
     badge: 'bg-gradient-to-r from-amber-600 to-orange-600 text-white',
-    bonus: 50,
+    multiplier: '1.15x',
+    multiplierValue: 1.15,
+    bonusPercent: '+15%',
     emoji: '🥉',
     glowColor: 'shadow-orange-400/50',
   },
@@ -485,8 +491,8 @@ const ChatterLeaderboard: React.FC = () => {
                     <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-0.5">
                       <FormattedMessage
                         id="chatter.leaderboard.bonusEligible"
-                        defaultMessage="Tu recevras {bonus}$ de bonus a la fin du mois!"
-                        values={{ bonus: PODIUM_STYLES[myRank as 1 | 2 | 3].bonus }}
+                        defaultMessage="Tes commissions seront multipliées par {multiplier} le mois prochain!"
+                        values={{ multiplier: PODIUM_STYLES[myRank as 1 | 2 | 3].multiplier }}
                       />
                     </p>
                   </div>
@@ -564,9 +570,9 @@ const ChatterLeaderboard: React.FC = () => {
                           {formatTeamCalls(top3[1]).total} appels
                         </p>
                       )}
-                      {/* Bonus badge */}
+                      {/* Multiplier badge */}
                       <div className="mt-2 px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full">
-                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">+{PODIUM_STYLES[2].bonus}$</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{PODIUM_STYLES[2].multiplier}</span>
                       </div>
                       <div className="h-20 w-16 sm:w-20 bg-gradient-to-t from-gray-300 to-gray-200 dark:from-gray-600 dark:to-gray-500 rounded-t-lg mt-3 shadow-inner" />
                     </div>
@@ -606,9 +612,9 @@ const ChatterLeaderboard: React.FC = () => {
                           {formatTeamCalls(top3[0]).total} appels
                         </p>
                       )}
-                      {/* Bonus badge */}
+                      {/* Multiplier badge */}
                       <div className="mt-2 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-full shadow-md">
-                        <span className="text-sm font-bold text-yellow-900">+{PODIUM_STYLES[1].bonus}$</span>
+                        <span className="text-sm font-bold text-yellow-900">{PODIUM_STYLES[1].multiplier}</span>
                       </div>
                       <div className="h-28 w-16 sm:w-20 bg-gradient-to-t from-yellow-500 to-amber-400 dark:from-yellow-600 dark:to-amber-500 rounded-t-lg mt-3 shadow-lg" />
                     </div>
@@ -647,9 +653,9 @@ const ChatterLeaderboard: React.FC = () => {
                           {formatTeamCalls(top3[2]).total} appels
                         </p>
                       )}
-                      {/* Bonus badge */}
+                      {/* Multiplier badge */}
                       <div className="mt-2 px-2 py-1 bg-amber-200 dark:bg-amber-800 rounded-full">
-                        <span className="text-xs font-semibold text-amber-800 dark:text-amber-200">+{PODIUM_STYLES[3].bonus}$</span>
+                        <span className="text-xs font-semibold text-amber-800 dark:text-amber-200">{PODIUM_STYLES[3].multiplier}</span>
                       </div>
                       <div className="h-14 w-16 sm:w-20 bg-gradient-to-t from-amber-600 to-orange-500 dark:from-amber-700 dark:to-orange-600 rounded-t-lg mt-3 shadow-md" />
                     </div>
@@ -784,8 +790,8 @@ const ChatterLeaderboard: React.FC = () => {
         {previousMonthWinners && (previousMonthWinners.first || previousMonthWinners.second || previousMonthWinners.third) && (
           <div className={`${UI.card} p-4 sm:p-6`}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
-                <Award className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-xl">
+                <Award className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
                 <FormattedMessage id="chatter.leaderboard.previousWinners" defaultMessage="Gagnants du mois dernier" />
@@ -849,7 +855,7 @@ const ChatterLeaderboard: React.FC = () => {
           </div>
         )}
 
-        {/* Info Cards */}
+        {/* Info Cards - Commission multipliers for next month */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className={`${UI.card} p-4 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/10`}>
             <div className="flex items-center gap-3">
@@ -859,10 +865,10 @@ const ChatterLeaderboard: React.FC = () => {
               <div>
                 <p className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   Top 1
-                  <span className="text-yellow-600 dark:text-yellow-400 text-sm">+200$</span>
+                  <span className="text-yellow-600 dark:text-yellow-400 text-sm">2x</span>
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  <FormattedMessage id="chatter.leaderboard.bonus.top1" defaultMessage="+100% bonus commissions" />
+                  <FormattedMessage id="chatter.leaderboard.bonus.top1" defaultMessage="Commissions doublées le mois suivant" />
                 </p>
               </div>
             </div>
@@ -876,10 +882,10 @@ const ChatterLeaderboard: React.FC = () => {
               <div>
                 <p className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   Top 2
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">+100$</span>
+                  <span className="text-gray-600 dark:text-gray-400 text-sm">1.5x</span>
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  <FormattedMessage id="chatter.leaderboard.bonus.top2" defaultMessage="+50% bonus commissions" />
+                  <FormattedMessage id="chatter.leaderboard.bonus.top2" defaultMessage="+50% sur tes commissions le mois suivant" />
                 </p>
               </div>
             </div>
@@ -893,10 +899,10 @@ const ChatterLeaderboard: React.FC = () => {
               <div>
                 <p className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   Top 3
-                  <span className="text-amber-600 dark:text-amber-400 text-sm">+50$</span>
+                  <span className="text-amber-600 dark:text-amber-400 text-sm">1.15x</span>
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  <FormattedMessage id="chatter.leaderboard.bonus.top3" defaultMessage="+15% bonus commissions" />
+                  <FormattedMessage id="chatter.leaderboard.bonus.top3" defaultMessage="+15% sur tes commissions le mois suivant" />
                 </p>
               </div>
             </div>

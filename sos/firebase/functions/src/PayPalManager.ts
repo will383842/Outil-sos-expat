@@ -235,6 +235,8 @@ interface CreateSimpleOrderData {
   title?: string;
   // P1 FIX: Client country for SMS notifications to provider
   clientCurrentCountry?: string;
+  // P2 FIX: Provider country = intervention country for SMS notifications
+  providerCountry?: string;
   // P0 FIX: Phone numbers required for Twilio call
   clientPhone: string;
   providerPhone: string;
@@ -797,6 +799,8 @@ export class PayPalManager {
       title: data.title || data.description || "Consultation",
       description: data.description || "Consultation",
       clientCurrentCountry: data.clientCurrentCountry || "",
+      // P2 FIX: Provider country = intervention country for SMS notifications
+      providerCountry: data.providerCountry || "",
       metadata: {
         providerId: data.providerId,
         clientId: data.clientId,
@@ -1832,22 +1836,50 @@ export class PayPalManager {
       const paypalStatus = orderDetails.status;
       console.log(`📋 [PAYPAL] Current order status: ${paypalStatus}`);
 
-      // Si l'ordre est APPROVED (autorisé mais non capturé), on peut l'annuler
-      if (paypalStatus === "APPROVED" || paypalStatus === "CREATED") {
-        // PayPal Orders API: Pour annuler un ordre non capturé, on utilise
-        // l'endpoint /v2/checkout/orders/{id} avec la méthode POST et action=void
-        // Mais en réalité, PayPal n'a pas de "void" direct pour les ordres.
-        // La méthode correcte est de ne PAS capturer et laisser expirer,
-        // OU d'utiliser l'API authorizations si on avait fait une autorisation explicite.
-
-        // Pour les ordres PAY_NOW (capture immédiate après approval), ils sont auto-capturés.
-        // Pour les ordres AUTHORIZE (capture différée), on peut void l'autorisation.
-
+      // P0 FIX 2026-02-02: Corriger la logique de void PayPal
+      // Le statut "COMPLETED" pour l'ordre PayPal signifie que l'autorisation a été CRÉÉE,
+      // pas que les fonds ont été capturés ! Il faut distinguer:
+      // - Order status: COMPLETED = autorisation créée avec succès
+      // - Authorization status: CREATED = fonds autorisés mais pas capturés
+      // - Authorization status: CAPTURED = fonds capturés (là on ne peut pas void)
+      //
+      // Donc on peut void quand: APPROVED, CREATED, ou COMPLETED (avec auth non capturée)
+      if (paypalStatus === "APPROVED" || paypalStatus === "CREATED" || paypalStatus === "COMPLETED") {
         // Vérifier s'il y a une autorisation à annuler
-        const purchaseUnit = orderDetails.purchase_units?.[0];
-        const authorizationId = purchaseUnit?.payments?.authorizations?.[0]?.id;
+        // D'abord essayer depuis Firestore (stocké lors de authorizeOrder)
+        // puis fallback sur l'API PayPal
+        let authorizationId = orderData.authorizationId;
+        let authorizationStatus = orderData.authorizationStatus;
+
+        if (!authorizationId) {
+          // Fallback: récupérer depuis l'API PayPal
+          const purchaseUnit = orderDetails.purchase_units?.[0];
+          const apiAuth = purchaseUnit?.payments?.authorizations?.[0];
+          authorizationId = apiAuth?.id;
+          authorizationStatus = apiAuth?.status;
+        }
+
+        console.log(`📋 [PAYPAL] Authorization lookup: id=${authorizationId}, status=${authorizationStatus}`);
 
         if (authorizationId) {
+          // Vérifier que l'autorisation n'est pas déjà capturée
+          if (authorizationStatus === "CAPTURED") {
+            console.warn(`⚠️ [PAYPAL] Authorization ${authorizationId} already captured - cannot void`);
+            return {
+              success: false,
+              status: "ALREADY_CAPTURED",
+              message: "L'autorisation a déjà été capturée",
+            };
+          }
+
+          if (authorizationStatus === "VOIDED") {
+            console.log(`✅ [PAYPAL] Authorization ${authorizationId} already voided`);
+            return {
+              success: true,
+              status: "ALREADY_VOIDED",
+              message: "L'autorisation était déjà annulée",
+            };
+          }
           // Annuler l'autorisation explicitement
           console.log(`🚫 [PAYPAL] Voiding authorization: ${authorizationId}`);
           await this.apiRequest<any>(
@@ -1869,7 +1901,7 @@ export class PayPalManager {
           if (orderData.callSessionId) {
             await syncPaymentStatus(this.db, orderId, orderData.callSessionId, {
               status: "voided",
-              refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+              voidedAt: admin.firestore.FieldValue.serverTimestamp(),
               refundReason: reason || "PayPal authorization voided",
             });
           }
@@ -1896,7 +1928,7 @@ export class PayPalManager {
           if (orderData.callSessionId) {
             await syncPaymentStatus(this.db, orderId, orderData.callSessionId, {
               status: "cancelled",
-              refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+              voidedAt: admin.firestore.FieldValue.serverTimestamp(),
               refundReason: reason || "Order cancelled - will expire automatically",
             });
           }
@@ -1907,17 +1939,19 @@ export class PayPalManager {
             message: "Ordre marqué comme annulé - expirera automatiquement",
           };
         }
-      } else if (paypalStatus === "COMPLETED") {
-        // L'ordre a été capturé entre-temps
-        console.warn(`⚠️ [PAYPAL] Order ${orderId} was captured in the meantime`);
-        return {
-          success: false,
-          status: "ALREADY_CAPTURED",
-          message: "L'ordre a été capturé entre-temps",
-        };
       } else {
-        // Statut inconnu ou déjà terminé
-        console.log(`⚠️ [PAYPAL] Order ${orderId} in unexpected state: ${paypalStatus}`);
+        // Statut inconnu ou déjà terminé (ex: VOIDED, EXPIRED)
+        console.log(`⚠️ [PAYPAL] Order ${orderId} in unexpected/final state: ${paypalStatus}`);
+
+        // Si déjà voided ou expiré, considérer comme succès
+        if (paypalStatus === "VOIDED" || paypalStatus === "EXPIRED") {
+          return {
+            success: true,
+            status: paypalStatus,
+            message: `Ordre déjà dans un état final: ${paypalStatus}`,
+          };
+        }
+
         return {
           success: false,
           status: paypalStatus,
@@ -2405,6 +2439,8 @@ export const createPayPalOrderHttp = onRequest(
         title: title || description || "Consultation",
         // P1 FIX: Client country for SMS notifications to provider
         clientCurrentCountry: clientCurrentCountry || "",
+        // P2 FIX: Provider country = intervention country for SMS notifications
+        providerCountry: providerData.country || "",
         // P0 FIX: Phone numbers required for Twilio call
         clientPhone: clientPhone || "",
         providerPhone: providerPhone || providerData.phone || providerData.encryptedPhone || "",
@@ -2842,6 +2878,8 @@ export const createPayPalOrder = onCall(
         // Legacy onCall: phone numbers will be empty (use HTTP function instead)
         clientPhone: "",
         providerPhone: providerData.phone || providerData.encryptedPhone || "",
+        // P2 FIX: Provider country = intervention country for SMS notifications
+        providerCountry: providerData.country || "",
         // Pass tracking metadata for attribution (UTM, Meta identifiers)
         trackingMetadata: trackingMetadata as Record<string, string> | undefined,
       });
@@ -3266,9 +3304,11 @@ export const paypalWebhook = onRequest(
 
             if (orderData?.callSessionId) {
               // Update call session
+              // CHATTER FIX: Set isPaid: true at root level to trigger chatterOnCallCompleted
               await db.collection("call_sessions").doc(orderData.callSessionId).update({
                 "payment.status": "captured",
                 "payment.capturedAt": admin.firestore.FieldValue.serverTimestamp(),
+                "isPaid": true,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
               });
 

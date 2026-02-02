@@ -2089,6 +2089,42 @@ service cloud.firestore {
       allow write: if isAdmin() || isDev();
     }
 
+    // Commissions de parrainage des chatters (N1/N2)
+    match /chatter_referral_commissions/{commissionId} {
+      // Lecture: le propriétaire (parrainId) ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.parrainId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Historique des bonus de palier
+    match /chatter_tier_bonuses_history/{historyId} {
+      // Lecture: le propriétaire (chatterId) ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Compteurs early adopter par pays
+    match /chatter_early_adopter_counters/{counterId} {
+      // Lecture: tous les chatters actifs et admin (afficher les places restantes)
+      allow read: if isChatter() || isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Promotions et multiplicateurs
+    match /chatter_promotions/{promoId} {
+      // Lecture: tous les chatters actifs et admin
+      allow read: if isChatter() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
     // ================= INFLUENCER SYSTEM =================
     // Règles pour le programme influenceurs (parrainage clients + recrutement prestataires)
     // NOTE: Différent des Chatters - pas de quiz, pas de niveaux, commissions fixes

@@ -360,10 +360,9 @@ export const sendPaymentNotifications = traceFunction(
         console.log(`📨 [${debugId}] Creating PROVIDER notification (booking_paid_provider - SMS ENABLED)...`);
 
         const clientName = cs?.participants?.client?.name ?? cs?.participants?.client?.firstName ?? cs?.clientName ?? "Client";
-        // P2 FIX: Use providerCountry as intervention country (where client needs help)
-        // providerCountry = country of the provider = intervention country (e.g., Thailand)
-        // clientCurrentCountry = where the client is located (e.g., France)
-        const interventionCountry = cs?.providerCountry ?? cs?.metadata?.providerCountry ?? cs?.clientCurrentCountry ?? "N/A";
+        // P2 FIX: Use clientCurrentCountry as intervention country (selected by client in wizard)
+        // clientCurrentCountry = where the client needs help (intervention country from wizard/booking form)
+        const interventionCountry = cs?.clientCurrentCountry ?? cs?.metadata?.clientCountry ?? "N/A";
         const amount = cs?.payment?.amount ?? cs?.metadata?.amount ?? 0;
         const currency = cs?.payment?.currency ?? cs?.currency ?? "EUR";
         const serviceType = cs?.metadata?.serviceType ?? cs?.serviceType ?? "consultation";

@@ -47,7 +47,7 @@ export function PromoAlertCard({ promotion, onDismiss }: PromoAlertCardProps) {
   const multiplierDisplay = `x${promotion.multiplier}`;
 
   return (
-    <Card className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-0 overflow-hidden relative">
+    <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 overflow-hidden relative">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-20 h-20 bg-white rounded-full -translate-x-10 -translate-y-10"></div>
@@ -113,7 +113,7 @@ export function PromoAlertBanner({
   if (!promotion) return null;
 
   return (
-    <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-lg flex items-center justify-between">
+    <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg flex items-center justify-between">
       <div className="flex items-center gap-2">
         <Zap className="h-4 w-4" />
         <span className="font-medium">{promotion.name}</span>

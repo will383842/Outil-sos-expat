@@ -418,9 +418,9 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
       )}
     >
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+      <div className="absolute inset-0 bg-gradient-to-br from-red-900 via-indigo-900 to-blue-900">
         {/* Animated gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/30 via-pink-500/20 to-orange-500/30 animate-gradient-x" />
+        <div className="absolute inset-0 bg-gradient-to-r from-red-600/30 via-pink-500/20 to-orange-500/30 animate-gradient-x" />
 
         {/* Floating coins animation */}
         {[...Array(8)].map((_, i) => (

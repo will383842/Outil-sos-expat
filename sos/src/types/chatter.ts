@@ -31,6 +31,7 @@ export type ChatterCommissionType =
   | "n2_call"            // $0.50 - N2 filleul's client call
   | "activation_bonus"   // $5 - When filleul activates (after 2nd call)
   | "n1_recruit_bonus"   // $1 - When N1 recruits someone who activates
+  | "provider_call"      // $5 - Recruited provider received a call (6 months window)
   // Tier bonuses
   | "tier_bonus"         // Milestone bonus (5→$25, 10→$75, etc.)
   // Monthly rewards
@@ -39,6 +40,7 @@ export type ChatterCommissionType =
   | "bonus_level"        // Level-up bonus
   | "bonus_streak"       // Streak bonus
   | "bonus_zoom"         // Zoom attendance bonus
+  | "bonus_social"       // Social media likes bonus
   | "manual_adjustment"  // Admin manual adjustment
   // LEGACY (kept for backward compatibility)
   | "client_referral"    // @deprecated - Use client_call

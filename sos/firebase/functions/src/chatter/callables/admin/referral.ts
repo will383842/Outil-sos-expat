@@ -31,6 +31,23 @@ function ensureInitialized() {
   }
 }
 
+/**
+ * SECURITY: Assert admin access
+ * Checks both admin custom claim and role field
+ */
+function assertAdmin(request: { auth?: { uid?: string; token?: Record<string, unknown> } }) {
+  const uid = request?.auth?.uid;
+  const claims = request?.auth?.token as { admin?: boolean; role?: string } | undefined;
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "Authentication required");
+  }
+  const isAdmin = claims?.admin === true || claims?.role === "admin" || claims?.role === "dev";
+  if (!isAdmin) {
+    throw new HttpsError("permission-denied", "Admin access required");
+  }
+  return uid;
+}
+
 // ============================================================================
 // ADMIN: GET REFERRAL STATS
 // ============================================================================
@@ -58,15 +75,8 @@ export const adminGetReferralStats = onCall(
   async (request): Promise<GetReferralStatsResponse> => {
     ensureInitialized();
 
-    // Verify admin auth
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
-
-    // TODO: Check admin role from custom claims
-    // if (!request.auth.token.admin) {
-    //   throw new HttpsError("permission-denied", "Admin access required");
-    // }
+    // SECURITY: Verify admin auth
+    assertAdmin(request);
 
     const db = getFirestore();
 
@@ -189,60 +199,59 @@ export const adminGetReferralTree = onCall(
   async (request): Promise<GetReferralTreeResponse> => {
     ensureInitialized();
 
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    // SECURITY: Verify admin auth
+    assertAdmin(request);
 
     const input = request.data as GetReferralTreeInput;
     const maxDepth = input.maxDepth || 3;
     const db = getFirestore();
 
-    try {
-      // Helper to build tree recursively
-      async function buildTree(chatterId: string, depth: number): Promise<ReferralTreeNode | null> {
-        if (depth > maxDepth) return null;
+    // Helper to build tree recursively
+    const buildTree = async (chatterId: string, depth: number): Promise<ReferralTreeNode | null> => {
+      if (depth > maxDepth) return null;
 
-        const chatterDoc = await db.collection("chatters").doc(chatterId).get();
-        if (!chatterDoc.exists) return null;
+      const chatterDoc = await db.collection("chatters").doc(chatterId).get();
+      if (!chatterDoc.exists) return null;
 
-        const chatter = chatterDoc.data() as Chatter;
+      const chatter = chatterDoc.data() as Chatter;
 
-        const node: ReferralTreeNode = {
-          id: chatterId,
-          email: chatter.email,
-          name: `${chatter.firstName} ${chatter.lastName}`,
-          level: depth,
-          clientEarnings: chatter.totalEarned - (chatter.referralEarnings || 0),
-          referralEarnings: chatter.referralEarnings || 0,
-          isQualified: chatter.threshold50Reached || false,
-          isEarlyAdopter: chatter.isEarlyAdopter || false,
-          filleuls: [],
-        };
+      const node: ReferralTreeNode = {
+        id: chatterId,
+        email: chatter.email,
+        name: `${chatter.firstName} ${chatter.lastName}`,
+        level: depth,
+        clientEarnings: chatter.totalEarned - (chatter.referralEarnings || 0),
+        referralEarnings: chatter.referralEarnings || 0,
+        isQualified: chatter.threshold50Reached || false,
+        isEarlyAdopter: chatter.isEarlyAdopter || false,
+        filleuls: [],
+      };
 
-        // Get filleuls
-        const filleulsQuery = await db
-          .collection("chatters")
-          .where("recruitedBy", "==", chatterId)
-          .get();
+      // Get filleuls
+      const filleulsQuery = await db
+        .collection("chatters")
+        .where("recruitedBy", "==", chatterId)
+        .get();
 
-        for (const filleulDoc of filleulsQuery.docs) {
-          const filleulNode = await buildTree(filleulDoc.id, depth + 1);
-          if (filleulNode) {
-            node.filleuls.push(filleulNode);
-          }
+      for (const filleulDoc of filleulsQuery.docs) {
+        const filleulNode = await buildTree(filleulDoc.id, depth + 1);
+        if (filleulNode) {
+          node.filleuls.push(filleulNode);
         }
-
-        return node;
       }
 
+      return node;
+    };
+
+    // Count total nodes
+    const countNodes = (node: ReferralTreeNode): number => {
+      return 1 + node.filleuls.reduce((sum, child) => sum + countNodes(child), 0);
+    };
+
+    try {
       const root = await buildTree(input.chatterId, 0);
       if (!root) {
         throw new HttpsError("not-found", "Chatter not found");
-      }
-
-      // Count total nodes
-      function countNodes(node: ReferralTreeNode): number {
-        return 1 + node.filleuls.reduce((sum, child) => sum + countNodes(child), 0);
       }
 
       return {
@@ -290,9 +299,8 @@ export const adminGetEarlyAdopters = onCall(
   async (request): Promise<GetEarlyAdoptersResponse> => {
     ensureInitialized();
 
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    // SECURITY: Verify admin auth
+    assertAdmin(request);
 
     const input = request.data as GetEarlyAdoptersInput;
     const db = getFirestore();
@@ -363,9 +371,8 @@ export const adminUpdateEarlyAdopterQuota = onCall(
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
 
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    // SECURITY: Verify admin auth
+    assertAdmin(request);
 
     const input = request.data as UpdateEarlyAdopterQuotaInput;
     const db = getFirestore();
@@ -555,9 +562,8 @@ export const adminInitializeAllEarlyAdopterCounters = onCall(
   async (request): Promise<InitializeCountersResponse> => {
     ensureInitialized();
 
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    // SECURITY: Verify admin auth
+    assertAdmin(request);
 
     const db = getFirestore();
     const result: InitializeCountersResponse = {
@@ -638,9 +644,8 @@ export const adminGetReferralFraudAlerts = onCall(
   async (request): Promise<GetFraudAlertsResponse> => {
     ensureInitialized();
 
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    // SECURITY: Verify admin auth
+    assertAdmin(request);
 
     const input = request.data as GetFraudAlertsInput;
     const db = getFirestore();
@@ -694,9 +699,8 @@ export const adminReviewFraudAlert = onCall(
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
 
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    // SECURITY: Verify admin auth
+    assertAdmin(request);
 
     const input = request.data as ReviewFraudAlertInput;
 
@@ -704,7 +708,7 @@ export const adminReviewFraudAlert = onCall(
       const result = await reviewFraudAlert(input.alertId, {
         status: input.status,
         actionTaken: input.actionTaken,
-        reviewedBy: request.auth.uid,
+        reviewedBy: request.auth!.uid,
         reviewNotes: input.reviewNotes,
       });
 
@@ -744,9 +748,8 @@ export const adminGetReferralCommissions = onCall(
   async (request): Promise<GetReferralCommissionsResponse> => {
     ensureInitialized();
 
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    // SECURITY: Verify admin auth
+    assertAdmin(request);
 
     const input = request.data as GetReferralCommissionsInput;
     const db = getFirestore();

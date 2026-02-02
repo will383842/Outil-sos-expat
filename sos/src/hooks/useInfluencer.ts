@@ -206,13 +206,18 @@ export function useInfluencer(): UseInfluencerReturn {
     async (notificationId: string): Promise<void> => {
       if (!user?.uid) return;
 
-      // Update directly in Firestore (allowed by rules)
-      const { doc, updateDoc, Timestamp } = await import("firebase/firestore");
-      const notificationRef = doc(db, "influencer_notifications", notificationId);
-      await updateDoc(notificationRef, {
-        isRead: true,
-        readAt: Timestamp.now(),
-      });
+      try {
+        // Update directly in Firestore (allowed by rules)
+        const { doc, updateDoc, Timestamp } = await import("firebase/firestore");
+        const notificationRef = doc(db, "influencer_notifications", notificationId);
+        await updateDoc(notificationRef, {
+          isRead: true,
+          readAt: Timestamp.now(),
+        });
+      } catch (error) {
+        console.error("[useInfluencer] Failed to mark notification as read:", error);
+        // Silently fail - notification read status is not critical
+      }
     },
     [user?.uid, db]
   );

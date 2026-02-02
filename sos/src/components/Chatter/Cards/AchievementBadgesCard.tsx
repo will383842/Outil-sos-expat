@@ -104,9 +104,9 @@ const BADGE_CONFIG: BadgeConfig[] = [
     defaultName: 'Premier Recrutement',
     descriptionKey: 'chatter.badges.firstRecruit.desc',
     defaultDescription: 'Premier membre recrute dans ton equipe',
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
-    glowColor: 'shadow-purple-500/30',
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    glowColor: 'shadow-red-500/30',
     rarity: 'common',
     category: 'milestone',
     requirement: { type: 'recruits', target: 1 },
@@ -217,9 +217,9 @@ const BADGE_CONFIG: BadgeConfig[] = [
     defaultName: 'Niveau Diamond',
     descriptionKey: 'chatter.badges.level5.desc',
     defaultDescription: 'Atteint le niveau 5 - Elite',
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30',
-    glowColor: 'shadow-purple-500/40',
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30',
+    glowColor: 'shadow-red-500/40',
     rarity: 'legendary',
     category: 'level',
     requirement: { type: 'level', target: 5 },
@@ -304,9 +304,9 @@ const BADGE_CONFIG: BadgeConfig[] = [
     defaultName: 'Leader Emergent',
     descriptionKey: 'chatter.badges.recruits5.desc',
     defaultDescription: '5 membres recrutes',
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
-    glowColor: 'shadow-purple-500/30',
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    glowColor: 'shadow-red-500/30',
     rarity: 'uncommon',
     category: 'milestone',
     requirement: { type: 'recruits', target: 5 },
@@ -318,9 +318,9 @@ const BADGE_CONFIG: BadgeConfig[] = [
     defaultName: 'Chef d\'Equipe',
     descriptionKey: 'chatter.badges.recruits10.desc',
     defaultDescription: '10 membres recrutes',
-    color: 'text-violet-600 dark:text-violet-400',
-    bgColor: 'bg-violet-100 dark:bg-violet-900/30',
-    glowColor: 'shadow-violet-500/30',
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    glowColor: 'shadow-red-500/30',
     rarity: 'rare',
     category: 'milestone',
     requirement: { type: 'recruits', target: 10 },
@@ -415,9 +415,9 @@ const RARITY_CONFIG = {
     labelColor: 'text-blue-600 dark:text-blue-400',
   },
   epic: {
-    border: 'border-purple-400 dark:border-purple-600',
+    border: 'border-red-400 dark:border-red-600',
     label: 'Epique',
-    labelColor: 'text-purple-600 dark:text-purple-400',
+    labelColor: 'text-red-600 dark:text-red-400',
   },
   legendary: {
     border: 'border-yellow-400 dark:border-yellow-500',
@@ -740,7 +740,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                 <div
                   className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
                     badge.rarity === 'legendary' ? 'bg-yellow-400' :
-                    badge.rarity === 'epic' ? 'bg-purple-400' :
+                    badge.rarity === 'epic' ? 'bg-red-400' :
                     badge.rarity === 'rare' ? 'bg-blue-400' :
                     badge.rarity === 'uncommon' ? 'bg-green-400' :
                     'bg-gray-400'

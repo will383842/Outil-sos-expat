@@ -99,8 +99,8 @@ const DAILY_TASKS: DailyTask[] = [
     descriptionKey: 'chatter.dailyMissions.message.desc',
     defaultDescription: 'Motive ton equipe avec un message',
     xp: 30,
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
   },
   {
     id: 'watch_video',
@@ -425,7 +425,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
             {/* Bonus Indicator */}
             {!allCompleted && (
               <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                <Gift className="w-3.5 h-3.5 text-purple-500" />
+                <Gift className="w-3.5 h-3.5 text-red-500" />
                 <FormattedMessage
                   id="chatter.dailyMissions.bonusHint"
                   defaultMessage="Complete all for +{xp} XP bonus!"
@@ -619,7 +619,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               </div>
               <div className="h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300"
+                  className="h-full bg-gradient-to-r from-blue-500 to-red-500 rounded-full transition-all duration-300"
                   style={{ width: `${(current / target) * 100}%` }}
                 />
               </div>

@@ -1211,7 +1211,11 @@ const RegisterLawyer: React.FC = () => {
           acceptanceMethod: "checkbox_click",
         },
         // AFFILIATE: Include referral code and tracking data if present
-        ...(referralCode && { pendingReferralCode: referralCode.toUpperCase().trim() }),
+        ...(referralCode && {
+          pendingReferralCode: referralCode.toUpperCase().trim(),
+          // Provider recruitment by chatter - triggers commission on calls
+          providerRecruitedByChatter: referralCode.toUpperCase().trim(),
+        }),
         // AFFILIATE: Include UTM tracking data for analytics
         ...((() => {
           const tracking = getStoredReferralTracking();

@@ -36,7 +36,7 @@ export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-purple-600" />
+            <Users className="h-5 w-5 text-red-600" />
             {t("chatter.referrals.filleulsN2")}
           </CardTitle>
         </CardHeader>
@@ -56,7 +56,7 @@ export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-purple-600" />
+            <Users className="h-5 w-5 text-red-600" />
             {t("chatter.referrals.filleulsN2")}
           </CardTitle>
         </CardHeader>
@@ -76,9 +76,9 @@ export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-purple-600" />
+          <Users className="h-5 w-5 text-red-600" />
           {t("chatter.referrals.filleulsN2")}
-          <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+          <Badge variant="secondary" className="bg-red-100 text-red-800">
             {filleuls.length}
           </Badge>
         </CardTitle>

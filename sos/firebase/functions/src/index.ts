@@ -2270,10 +2270,12 @@ export const stripeWebhook = onRequest(
                       console.log(`💳 Payment ${paymentIntentId} marked as captured via webhook`);
 
                       // Update call_session if exists
+                      // CHATTER FIX: Set isPaid: true at root level to trigger chatterOnCallCompleted
                       if (paymentData?.callSessionId) {
                         await database.collection("call_sessions").doc(paymentData.callSessionId).update({
                           "payment.status": "captured",
                           "payment.capturedAt": admin.firestore.FieldValue.serverTimestamp(),
+                          "isPaid": true,
                           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                         });
                       }
@@ -5662,6 +5664,10 @@ export {
   adminGetReferralFraudAlerts,
   adminReviewFraudAlert,
   adminGetReferralCommissions,
+  // Admin Commissions Tracker
+  adminGetCommissionsDetailed,
+  adminGetCommissionStats,
+  adminExportCommissionsCSV,
   // Admin Promotions
   adminGetPromotions,
   adminCreatePromotion,

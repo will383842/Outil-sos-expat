@@ -150,7 +150,8 @@ const ChatterSuspended = lazy(() => import('./pages/Chatter/ChatterSuspended'));
 // DISABLED: Country selection feature - kept for potential future use
 // const ChatterCountrySelection = lazy(() => import('./pages/Chatter/ChatterCountrySelection'));
 const ChatterPosts = lazy(() => import('./pages/Chatter/ChatterPosts'));
-const ChatterZoom = lazy(() => import('./pages/Chatter/ChatterZoom'));
+// DISABLED: Zoom bonus feature removed - not implemented
+// const ChatterZoom = lazy(() => import('./pages/Chatter/ChatterZoom'));
 const ChatterTraining = lazy(() => import('./pages/Chatter/ChatterTraining'));
 const ChatterReferrals = lazy(() => import('./pages/Chatter/ChatterReferrals'));
 const ChatterReferralEarnings = lazy(() => import('./pages/Chatter/ChatterReferralEarnings'));
@@ -363,7 +364,8 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/chatter/paiements", component: ChatterPayments, protected: true, role: 'chatter', translated: "chatter-payments" },
   { path: "/chatter/suspendu", component: ChatterSuspended, protected: true, role: 'chatter', translated: "chatter-suspended" },
   { path: "/chatter/posts", component: ChatterPosts, protected: true, role: 'chatter', translated: "chatter-posts" },
-  { path: "/chatter/zoom", component: ChatterZoom, protected: true, role: 'chatter', translated: "chatter-zoom" },
+  // DISABLED: Zoom bonus feature removed - not implemented
+  // { path: "/chatter/zoom", component: ChatterZoom, protected: true, role: 'chatter', translated: "chatter-zoom" },
   { path: "/chatter/formation", component: ChatterTraining, protected: true, role: 'chatter', translated: "chatter-training" },
   { path: "/chatter/filleuls", component: ChatterReferrals, protected: true, role: 'chatter', translated: "chatter-referrals" },
   { path: "/chatter/gains-parrainage", component: ChatterReferralEarnings, protected: true, role: 'chatter', translated: "chatter-referral-earnings" },
