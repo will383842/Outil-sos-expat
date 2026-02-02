@@ -72,7 +72,8 @@ function isValidFacebookGroupUrl(url: string): boolean {
 export const registerGroupAdmin = onCall(
   {
     region: "europe-west1",
-    memory: "512MiB",
+    memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 60,
     cors: [
       "https://sos-expat.com",
