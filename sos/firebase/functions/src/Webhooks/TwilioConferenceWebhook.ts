@@ -7,7 +7,7 @@ import * as admin from 'firebase-admin';
 import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET } from '../lib/twilio';
 import { STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST } from '../lib/stripe';
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
-import { TASKS_AUTH_SECRET } from '../lib/secrets';
+import { TASKS_AUTH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } from '../lib/secrets';
 
 // Ensure TypeScript recognizes the secrets are used in the secrets array
 void TWILIO_AUTH_TOKEN_SECRET;
@@ -15,6 +15,8 @@ void TWILIO_ACCOUNT_SID_SECRET;
 void STRIPE_SECRET_KEY_LIVE;
 void STRIPE_SECRET_KEY_TEST;
 void TASKS_AUTH_SECRET;
+void PAYPAL_CLIENT_ID;
+void PAYPAL_CLIENT_SECRET;
 
 interface TwilioConferenceWebhookBody {
   ConferenceSid: string;
@@ -54,7 +56,8 @@ export const twilioConferenceWebhook = onRequest(
     concurrency: 1,
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + Stripe secrets for payment capture
     // P0 FIX 2026-01-18: Added TASKS_AUTH_SECRET for scheduleProviderAvailableTask (provider cooldown)
-    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST, TASKS_AUTH_SECRET]
+    // P0 FIX 2026-02-02: Added PAYPAL secrets for PayPal payment capture/void operations
+    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST, TASKS_AUTH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET]
   },
   async (req: Request, res: Response) => {
     const confWebhookId = `conf_${Date.now().toString(36)}`;

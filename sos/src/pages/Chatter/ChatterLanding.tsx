@@ -340,6 +340,16 @@ const ChatterLanding: React.FC = () => {
               </span>
             </div>
 
+            {/* BECOME A CHATTER SOS - Clear message */}
+            <div className="mb-4">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 drop-shadow-lg">
+                <FormattedMessage id="chatter.hero.become" defaultMessage="Become a Chatter SOS" />
+              </h1>
+              <p className="text-lg md:text-xl text-white/90 font-medium">
+                <FormattedMessage id="chatter.hero.become.sub" defaultMessage="Join our affiliate program and earn money from home" />
+              </p>
+            </div>
+
             {/* MAIN VALUE PROP - THE MONEY */}
             <div className="mb-6">
               <div className="inline-flex items-center justify-center gap-3 mb-4">
@@ -348,14 +358,14 @@ const ChatterLanding: React.FC = () => {
                 </div>
               </div>
 
-              <h1 className="hero-title font-black mb-4 leading-none tracking-tight">
-                <span className="block text-yellow-300 drop-shadow-lg text-6xl md:text-8xl lg:text-9xl">
+              <div className="hero-title font-black mb-4 leading-none tracking-tight">
+                <span className="block text-yellow-300 drop-shadow-lg text-5xl md:text-7xl lg:text-8xl">
                   <FormattedMessage id="chatter.hero.earn" defaultMessage="Earn" /> $10
                 </span>
-                <span className="block text-white text-4xl md:text-6xl lg:text-7xl mt-3 font-bold">
+                <span className="block text-white text-3xl md:text-5xl lg:text-6xl mt-3 font-bold">
                   <FormattedMessage id="chatter.hero.perClient" defaultMessage="Per Call" />
                 </span>
-              </h1>
+              </div>
             </div>
 
             {/* ULTRA SIMPLE explanation */}
@@ -659,6 +669,63 @@ const ChatterLanding: React.FC = () => {
               <p className="text-gray-800 relative z-10">
                 <FormattedMessage id="chatter.calc.combining" defaultMessage="Combining direct clients + team earnings" />
               </p>
+            </div>
+
+            {/* CONCRETE EXAMPLE - Average Chatter with Team */}
+            <div className="mt-10 bg-white/10 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-white/20">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-400/20 rounded-full mb-3">
+                  <Star className="w-4 h-4 text-green-400" />
+                  <span className="text-sm font-bold text-green-400">
+                    <FormattedMessage id="chatter.calc.example.badge" defaultMessage="Real Example" />
+                  </span>
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-white">
+                  <FormattedMessage id="chatter.calc.example.title" defaultMessage="Marie, active Chatter for 6 months" />
+                </h3>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-4 mb-6">
+                {/* Direct clients */}
+                <div className="bg-amber-500/20 rounded-2xl p-4 text-center border border-amber-400/30">
+                  <div className="text-amber-300 text-sm mb-1">
+                    <FormattedMessage id="chatter.calc.example.direct" defaultMessage="Direct clients" />
+                  </div>
+                  <div className="text-white text-lg font-medium mb-1">25 <FormattedMessage id="chatter.calc.clients" defaultMessage="clients" />/mo</div>
+                  <div className="text-2xl font-black text-amber-400">$250</div>
+                </div>
+
+                {/* Team N1+N2 */}
+                <div className="bg-orange-500/20 rounded-2xl p-4 text-center border border-orange-400/30">
+                  <div className="text-orange-300 text-sm mb-1">
+                    <FormattedMessage id="chatter.calc.example.team" defaultMessage="Team N1 (15) + N2 (30)" />
+                  </div>
+                  <div className="text-white text-lg font-medium mb-1">200 <FormattedMessage id="chatter.calc.calls" defaultMessage="calls" />/mo</div>
+                  <div className="text-2xl font-black text-orange-400">$225</div>
+                </div>
+
+                {/* Recruitment bonus */}
+                <div className="bg-purple-500/20 rounded-2xl p-4 text-center border border-purple-400/30">
+                  <div className="text-purple-300 text-sm mb-1">
+                    <FormattedMessage id="chatter.calc.example.bonus" defaultMessage="Milestone bonus (20 recruits)" />
+                  </div>
+                  <div className="text-white text-lg font-medium mb-1"><FormattedMessage id="chatter.calc.example.onetime" defaultMessage="One-time bonus" /></div>
+                  <div className="text-2xl font-black text-purple-400">$75</div>
+                </div>
+              </div>
+
+              {/* Total example */}
+              <div className="bg-gradient-to-r from-green-500/30 to-emerald-500/30 rounded-2xl p-5 text-center border border-green-400/40">
+                <div className="text-green-300 text-sm mb-1">
+                  <FormattedMessage id="chatter.calc.example.total" defaultMessage="Marie's monthly earnings" />
+                </div>
+                <div className="text-4xl md:text-5xl font-black text-green-400">
+                  $475 - $550<span className="text-xl text-white/60">/mo</span>
+                </div>
+                <p className="text-white/70 text-sm mt-2">
+                  <FormattedMessage id="chatter.calc.example.note" defaultMessage="Working part-time from home, with bonuses when reaching new milestones!" />
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -1388,7 +1455,7 @@ const ChatterLanding: React.FC = () => {
                 <Sparkles className="w-4 h-4" />
                 <FormattedMessage id="chatter.social.badge" defaultMessage="Real Success Stories" />
               </div>
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white">
+              <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white">
                 <FormattedMessage id="chatter.social.title" defaultMessage="Chatters Are Earning Every Day" />
               </h2>
             </div>
@@ -1664,7 +1731,7 @@ const ChatterLanding: React.FC = () => {
               </span>
             </div>
 
-            <h2 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
+            <h2 className="text-4xl md:text-6xl font-black mb-6 leading-tight text-white">
               <FormattedMessage id="chatter.final.title" defaultMessage="Ready to Change Your Life?" />
             </h2>
 
