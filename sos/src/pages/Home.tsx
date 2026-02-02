@@ -43,7 +43,7 @@ import { useAggregateRatingWithDefault } from "../hooks/useAggregateRating";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useApp } from "../contexts/AppContext";
 import { formatCurrency } from "../utils/localeFormatters";
-import { getTranslatedRouteSlug } from "../multilingual-system/core/routing/localeRoutes";
+import { getTranslatedRouteSlug, getLocaleString } from "../multilingual-system/core/routing/localeRoutes";
 
 /* ================================
    CONSTANTES SEO (NE PAS TRADUIRE)
@@ -449,8 +449,10 @@ const OptimizedHomePage: React.FC = () => {
   const aggregateRating = useAggregateRatingWithDefault({ minRating: 4 });
 
   // ======= URL Construction =======
+  // Use default locale (fr-fr, en-us, etc.) for canonical to avoid duplicate content issues
+  const defaultLocale = getLocaleString(language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
   const currentPath = "/";
-  const canonicalUrl = `${SEO_CONSTANTS.BASE_URL}/${language}${currentPath === "/" ? "" : currentPath}`;
+  const canonicalUrl = `${SEO_CONSTANTS.BASE_URL}/${defaultLocale}${currentPath === "/" ? "" : currentPath}`;
 
   const stats: Stat[] = useMemo(() => [
     {
@@ -1156,16 +1158,16 @@ const OptimizedHomePage: React.FC = () => {
         {/* Canonical - CONSTRUIT DYNAMIQUEMENT */}
         <link rel="canonical" href={canonicalUrl} />
         
-        {/* Hreflang - URLs CONSTANTES */}
+        {/* Hreflang - URLs avec locale complète (fr-fr, en-us, etc.) */}
         {SUPPORTED_LANGS.map((lang) => (
           <link
             key={lang}
             rel="alternate"
             hrefLang={lang}
-            href={`${SEO_CONSTANTS.BASE_URL}/${lang}`}
+            href={`${SEO_CONSTANTS.BASE_URL}/${getLocaleString(lang as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar")}`}
           />
         ))}
-        <link rel="alternate" hrefLang="x-default" href={SEO_CONSTANTS.BASE_URL} />
+        <link rel="alternate" hrefLang="x-default" href={`${SEO_CONSTANTS.BASE_URL}/fr-fr`} />
 
         {/* Open Graph - URLs CONSTANTES */}
         <meta property="og:type" content="website" />

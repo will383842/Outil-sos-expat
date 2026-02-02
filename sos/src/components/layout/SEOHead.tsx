@@ -67,14 +67,25 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   // Ex: /fr-us/tarifs -> canonical: /fr-fr/tarifs (pays par défaut pour le français)
   // Cela évite les problèmes de contenu dupliqué dans Google Search Console
   const buildCanonicalUrl = (): string => {
+    // Helper: Remove trailing slash (except for root)
+    const removeTrailingSlash = (url: string): string => {
+      if (url.length > 1 && url.endsWith('/')) {
+        return url.slice(0, -1);
+      }
+      return url;
+    };
+
     if (canonicalUrl?.startsWith('http')) {
-      return canonicalUrl;
+      return removeTrailingSlash(canonicalUrl);
     }
 
     if (typeof window !== 'undefined') {
       const baseUrl = window.location.origin;
       const path = canonicalUrl || window.location.pathname;
-      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+      let cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+      // Remove trailing slash from path
+      cleanPath = removeTrailingSlash(cleanPath);
 
       // Parse the locale from the current path
       const { lang, pathWithoutLocale } = parseLocaleFromPath(cleanPath);
@@ -82,15 +93,16 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       if (lang) {
         // Get the default locale for this language (e.g., 'fr' -> 'fr-fr', 'en' -> 'en-us')
         const defaultLocale = getLocaleString(lang as any);
-        // Build canonical URL with default locale
-        return `${baseUrl}/${defaultLocale}${pathWithoutLocale}`;
+        // Build canonical URL with default locale (no trailing slash)
+        const normalizedPathWithoutLocale = removeTrailingSlash(pathWithoutLocale);
+        return `${baseUrl}/${defaultLocale}${normalizedPathWithoutLocale}`;
       }
 
       return `${baseUrl}${cleanPath}`;
     }
 
     // Fallback pour SSR
-    return canonicalUrl ? `https://sos-expat.com${canonicalUrl}` : '';
+    return canonicalUrl ? removeTrailingSlash(`https://sos-expat.com${canonicalUrl}`) : '';
   };
 
   const fullCanonicalUrl = buildCanonicalUrl();

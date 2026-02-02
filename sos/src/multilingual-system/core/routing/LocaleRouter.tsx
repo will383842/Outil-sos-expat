@@ -64,6 +64,14 @@ function computeRedirectPath(
     return { redirectTo: `/${locale}`, newLang: null };
   }
 
+  // TRAILING SLASH NORMALIZATION: Remove trailing slashes (except root)
+  // This prevents Google from indexing /en-us/ and /en-us as separate pages
+  if (decodedPathname.length > 1 && decodedPathname.endsWith('/')) {
+    const normalizedPath = decodedPathname.slice(0, -1);
+    console.log("🔷 [LocaleRouter] Removing trailing slash:", decodedPathname, "->", normalizedPath);
+    return { redirectTo: normalizedPath, newLang: null };
+  }
+
   // LEGACY URL SUPPORT: Handle old URLs like /es/cookies, /zh/appel-expatrie
   // These were indexed by Google before the lang-country format was introduced
   if (hasLegacyLocalePrefix(decodedPathname)) {

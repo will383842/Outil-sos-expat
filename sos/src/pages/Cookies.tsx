@@ -27,6 +27,7 @@ const Cookies: React.FC = () => {
 
   const [content, setContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [hasError, setHasError] = useState<boolean>(false);
 
   const [selectedLanguage, setSelectedLanguage] = useState<
     "fr" | "en" | "es" | "de" | "ru" | "hi" | "ch" | "pt" | "ar"
@@ -43,6 +44,7 @@ const Cookies: React.FC = () => {
     const fetchCookiesPolicy = async () => {
       try {
         setIsLoading(true);
+        setHasError(false);
         const q = query(
           collection(db, "legal_documents"),
           where("type", "==", "cookies"),
@@ -61,6 +63,8 @@ const Cookies: React.FC = () => {
         }
       } catch (error) {
         console.error("Error fetching cookies policy:", error);
+        setHasError(true);
+        setContent(""); // Fallback to default content
       } finally {
         setIsLoading(false);
       }
@@ -488,7 +492,7 @@ Un **cookie** est un petit fichier texte déposé sur votre terminal (ordinateur
 ## 4. Base légale et durée
 
 4.1. **Essentiels** : intérêt légitime (fournir le service demandé).  
-4.2. **Anlaytiques/Performance** : **votre consentement** via la bannière.  
+4.2. **Analytiques/Performance** : **votre consentement** via la bannière.  
 4.3. **Durées** : session (effacés à la fermeture) ou persistants (quelques heures à 13 mois max selon la finalité).
 
 ---
@@ -903,7 +907,7 @@ Podemos modificar esta política para refletir evoluções regulatórias ou téc
 
 ## 10. Contato
 
-Para qualquer pergunta relacionada a cookies ou proteção de dados, entre em contato conosco: [[**/contact**](/contact)](/contact)
+Para qualquer pergunta relacionada a cookies ou proteção de dados, entre em contato conosco: [**/contact**](/contact)
 `;
 
 
