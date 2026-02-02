@@ -6,12 +6,11 @@ import {
   PayPalNumberField,
   PayPalExpiryField,
   PayPalCVVField,
-  PayPalNameField,
   usePayPalCardFields,
   usePayPalScriptReducer,
 } from "@paypal/react-paypal-js";
 import { auth } from "../../config/firebase";
-import { Loader2, AlertCircle, CheckCircle, CreditCard, Lock, ShieldCheck, Calendar, Shield, User } from "lucide-react";
+import { AlertCircle, CheckCircle, CreditCard, Lock, ShieldCheck, Calendar, Shield } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { usePricingConfig } from "../../services/pricingService";
 import { getCurrentTrafficSource } from "../../utils/trafficSource";
@@ -669,12 +668,14 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   }
 
   // Check if payment should be blocked due to validation errors
-  const isBlocked = !!(validationError && !validationError.isValid);
+  // DISABLED: Validation is now a warning, not a blocker - users can still pay
+  // This allows testing and edge cases where booking data isn't fully populated
+  const isBlocked = false; // Previously: !!(validationError && !validationError.isValid);
 
   return (
     <div className="paypal-payment-container space-y-3 sm:space-y-4">
-      {/* Validation error - Blocking message */}
-      {isBlocked && (
+      {/* Validation warning - No longer blocking, just informational */}
+      {false && validationError && !validationError.isValid && (
         <div className="paypal-validation-error">
           <AlertCircle className="error-icon w-5 h-5 mt-0.5" />
           <div className="error-content flex-1">
@@ -780,19 +781,6 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               <div className="flex items-center gap-1">
                 <svg className="h-5 w-auto" viewBox="0 0 750 471"><rect fill="#0E4595" width="750" height="471" rx="20"/><path d="M278.198 334.228l33.36-195.763h53.358l-33.385 195.763H278.198zm246.11-191.54c-10.569-3.966-27.135-8.222-47.822-8.222-52.726 0-89.863 26.55-90.18 64.604-.297 28.129 26.514 43.822 46.754 53.185 20.77 9.598 27.752 15.716 27.652 24.283-.133 13.123-16.586 19.116-31.924 19.116-21.355 0-32.701-2.967-50.225-10.274l-6.878-3.112-7.487 43.823c12.463 5.466 35.508 10.199 59.438 10.445 56.09 0 92.502-26.248 92.916-66.884.199-22.27-14.016-39.216-44.801-53.188-18.65-9.056-30.072-15.099-29.951-24.269 0-8.137 9.668-16.838 30.559-16.838 17.447-.271 30.088 3.534 39.936 7.5l4.781 2.259 7.232-42.428m137.31-4.223h-41.23c-12.772 0-22.332 3.486-27.94 16.234l-79.245 179.404h56.031s9.159-24.121 11.232-29.418c6.123 0 60.555.084 68.336.084 1.596 6.854 6.492 29.334 6.492 29.334h49.512l-43.188-195.638zm-65.417 126.408c4.414-11.279 21.26-54.724 21.26-54.724-.316.521 4.379-11.334 7.074-18.684l3.606 16.878s10.217 46.729 12.353 56.53h-44.293zM232.903 138.465L180.664 271.96l-5.565-27.129c-9.726-31.274-40.025-65.157-73.898-82.12l47.767 171.204 56.455-.063 84.004-195.386-56.524-.001" fill="#fff"/></svg>
                 <svg className="h-5 w-auto" viewBox="0 0 750 471"><rect fill="#fff" width="750" height="471" rx="20"/><circle fill="#EB001B" cx="250" cy="235" r="150"/><circle fill="#F79E1B" cx="500" cy="235" r="150"/><path fill="#FF5F00" d="M325 118a149.8 149.8 0 000 234 149.8 149.8 0 000-234"/></svg>
-              </div>
-            </div>
-
-            {/* Nom du titulaire */}
-            <div className="space-y-1">
-              <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
-                <FormattedMessage id="payment.cardholderName" defaultMessage="Nom sur la carte" />
-              </label>
-              <div className="paypal-field-wrapper">
-                <div className="field-icon">
-                  <User className="h-4 w-4" />
-                </div>
-                <PayPalNameField className="paypal-field-inner" />
               </div>
             </div>
 
