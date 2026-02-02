@@ -44,7 +44,7 @@ const GroupAdminLanding: React.FC = () => {
   };
 
   return (
-    <Layout hideFooter={false}>
+    <Layout>
       <SEOHead
         title={intl.formatMessage({ id: 'groupAdmin.landing.seo.title', defaultMessage: 'Become a Group Admin Partner - Earn $15 per Client | SOS-Expat' })}
         description={intl.formatMessage({ id: 'groupAdmin.landing.seo.description', defaultMessage: 'Monetize your Facebook group. Earn $15 for each client referred, plus $5 for each admin recruited. Ready-to-use tools in 9 languages.' })}

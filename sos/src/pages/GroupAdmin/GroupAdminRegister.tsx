@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/firebase';
+import { functions } from '@/config/firebase';
 import {
   User,
   Mail,
@@ -218,7 +218,7 @@ const GroupAdminRegister: React.FC = () => {
   // Success screen
   if (success && affiliateCodes) {
     return (
-      <Layout hideFooter>
+      <Layout>
         <SEOHead title={intl.formatMessage({ id: 'groupadmin.register.success.title', defaultMessage: 'Welcome to SOS-Expat!' })} />
         <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
@@ -261,7 +261,7 @@ const GroupAdminRegister: React.FC = () => {
   }
 
   return (
-    <Layout hideFooter>
+    <Layout>
       <SEOHead title={intl.formatMessage({ id: 'groupadmin.register.seo.title', defaultMessage: 'Register as Group Admin | SOS-Expat' })} />
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4">

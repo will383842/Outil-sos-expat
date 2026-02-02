@@ -524,7 +524,7 @@ const AdminGroupAdminsList: React.FC = () => {
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-2">
                             {admin.isGroupVerified && (
-                              <Shield className="w-4 h-4 text-cyan-500" title="Verified" />
+                              <span title="Verified"><Shield className="w-4 h-4 text-cyan-500" /></span>
                             )}
                             <div>
                               <p className="font-medium text-gray-900 dark:text-white truncate max-w-[200px]">

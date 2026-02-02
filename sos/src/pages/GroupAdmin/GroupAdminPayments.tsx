@@ -7,7 +7,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/firebase';
+import { functions } from '@/config/firebase';
 import { DollarSign, CreditCard, Clock, CheckCircle, XCircle, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import {
   GroupAdmin,

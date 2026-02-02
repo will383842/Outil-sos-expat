@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/firebase';
+import { functions } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   GroupAdminPaymentMethod,

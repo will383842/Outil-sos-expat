@@ -329,7 +329,18 @@ export type RouteKey =
   | "blogger-guide"           // /blogger/guide -> /blogger/guide, etc.
   | "blogger-promo-tools"     // /blogger/outils -> /blogger/promo-tools, etc.
   | "blogger-profile"         // /blogger/profil -> /blogger/profile, etc.
-  | "blogger-suspended";      // /blogger/suspendu -> /blogger/suspended, etc.
+  | "blogger-suspended"       // /blogger/suspendu -> /blogger/suspended, etc.
+  // GroupAdmin routes
+  | "groupadmin-landing"      // /devenir-admin-groupe -> /become-group-admin, etc.
+  | "groupadmin-register"     // /groupadmin/inscription -> /groupadmin/register, etc.
+  | "groupadmin-dashboard"    // /groupadmin/tableau-de-bord -> /groupadmin/dashboard, etc.
+  | "groupadmin-resources"    // /groupadmin/ressources -> /groupadmin/resources, etc.
+  | "groupadmin-posts"        // /groupadmin/posts -> /groupadmin/posts, etc.
+  | "groupadmin-payments"     // /groupadmin/paiements -> /groupadmin/payments, etc.
+  | "groupadmin-referrals"    // /groupadmin/filleuls -> /groupadmin/referrals, etc.
+  | "groupadmin-leaderboard"  // /groupadmin/classement -> /groupadmin/leaderboard, etc.
+  | "groupadmin-guide"        // /groupadmin/guide -> /groupadmin/guide, etc.
+  | "groupadmin-suspended";   // /groupadmin/suspendu -> /groupadmin/suspended, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -1280,6 +1291,117 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "blogger/zanting",
     hi: "blogger/nilambit",
     ar: "مدون/معلق",
+  },
+  // GroupAdmin routes
+  "groupadmin-landing": {
+    fr: "devenir-admin-groupe",
+    en: "become-group-admin",
+    es: "convertirse-admin-grupo",
+    de: "gruppenadmin-werden",
+    ru: "stat-admin-gruppy",
+    pt: "tornar-se-admin-grupo",
+    ch: "chengwei-qunzhu",
+    hi: "group-admin-bane",
+    ar: "كن-مسؤول-مجموعة",
+  },
+  "groupadmin-register": {
+    fr: "groupadmin/inscription",
+    en: "groupadmin/register",
+    es: "groupadmin/registro",
+    de: "groupadmin/registrieren",
+    ru: "groupadmin/registratsiya",
+    pt: "groupadmin/registro",
+    ch: "groupadmin/zhuce",
+    hi: "groupadmin/panjikaran",
+    ar: "مسؤول-مجموعة/التسجيل",
+  },
+  "groupadmin-dashboard": {
+    fr: "groupadmin/tableau-de-bord",
+    en: "groupadmin/dashboard",
+    es: "groupadmin/panel",
+    de: "groupadmin/dashboard",
+    ru: "groupadmin/panel",
+    pt: "groupadmin/painel",
+    ch: "groupadmin/yibiaopan",
+    hi: "groupadmin/dashboard",
+    ar: "مسؤول-مجموعة/لوحة-التحكم",
+  },
+  "groupadmin-resources": {
+    fr: "groupadmin/ressources",
+    en: "groupadmin/resources",
+    es: "groupadmin/recursos",
+    de: "groupadmin/ressourcen",
+    ru: "groupadmin/resursy",
+    pt: "groupadmin/recursos",
+    ch: "groupadmin/ziyuan",
+    hi: "groupadmin/sansadhan",
+    ar: "مسؤول-مجموعة/الموارد",
+  },
+  "groupadmin-posts": {
+    fr: "groupadmin/publications",
+    en: "groupadmin/posts",
+    es: "groupadmin/publicaciones",
+    de: "groupadmin/beitraege",
+    ru: "groupadmin/publikatsii",
+    pt: "groupadmin/publicacoes",
+    ch: "groupadmin/fabu",
+    hi: "groupadmin/post",
+    ar: "مسؤول-مجموعة/المنشورات",
+  },
+  "groupadmin-payments": {
+    fr: "groupadmin/paiements",
+    en: "groupadmin/payments",
+    es: "groupadmin/pagos",
+    de: "groupadmin/zahlungen",
+    ru: "groupadmin/platezhi",
+    pt: "groupadmin/pagamentos",
+    ch: "groupadmin/zhifu",
+    hi: "groupadmin/bhugtan",
+    ar: "مسؤول-مجموعة/المدفوعات",
+  },
+  "groupadmin-referrals": {
+    fr: "groupadmin/filleuls",
+    en: "groupadmin/referrals",
+    es: "groupadmin/referidos",
+    de: "groupadmin/empfehlungen",
+    ru: "groupadmin/referal",
+    pt: "groupadmin/indicacoes",
+    ch: "groupadmin/tuijian",
+    hi: "groupadmin/referral",
+    ar: "مسؤول-مجموعة/الإحالات",
+  },
+  "groupadmin-leaderboard": {
+    fr: "groupadmin/classement",
+    en: "groupadmin/leaderboard",
+    es: "groupadmin/clasificacion",
+    de: "groupadmin/rangliste",
+    ru: "groupadmin/liderboard",
+    pt: "groupadmin/classificacao",
+    ch: "groupadmin/paihangbang",
+    hi: "groupadmin/leaderboard",
+    ar: "مسؤول-مجموعة/الترتيب",
+  },
+  "groupadmin-guide": {
+    fr: "groupadmin/guide",
+    en: "groupadmin/guide",
+    es: "groupadmin/guia",
+    de: "groupadmin/anleitung",
+    ru: "groupadmin/rukovodstvo",
+    pt: "groupadmin/guia",
+    ch: "groupadmin/zhinan",
+    hi: "groupadmin/guide",
+    ar: "مسؤول-مجموعة/الدليل",
+  },
+  "groupadmin-suspended": {
+    fr: "groupadmin/suspendu",
+    en: "groupadmin/suspended",
+    es: "groupadmin/suspendido",
+    de: "groupadmin/gesperrt",
+    ru: "groupadmin/priostanovlen",
+    pt: "groupadmin/suspenso",
+    ch: "groupadmin/zanting",
+    hi: "groupadmin/nilambit",
+    ar: "مسؤول-مجموعة/معلق",
   },
 };
 

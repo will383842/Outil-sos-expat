@@ -7,7 +7,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/firebase';
+import { functions } from '@/config/firebase';
 import { Users, Copy, CheckCircle, Loader2, ExternalLink, DollarSign, Clock, AlertTriangle, Info } from 'lucide-react';
 import { GroupAdminRecruit, getGroupAdminRecruitmentLink, formatGroupAdminAmount, FirebaseDate } from '@/types/groupAdmin';
 

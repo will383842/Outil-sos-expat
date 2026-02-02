@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/firebase';
+import { functions } from '@/config/firebase';
 import { Copy, CheckCircle, FileText, Filter, Loader2, AlertCircle, Clock, Pin } from 'lucide-react';
 import { GroupAdminPost, GroupAdminPostCategory, POST_CATEGORY_LABELS } from '@/types/groupAdmin';
 

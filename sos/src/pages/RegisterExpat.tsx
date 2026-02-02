@@ -65,16 +65,6 @@ const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LcXXXXXX
 // Temps minimum pour remplir le formulaire (en secondes)
 const MIN_FORM_FILL_TIME = 15;
 
-// Déclaration TypeScript pour grecaptcha
-declare global {
-  interface Window {
-    grecaptcha: {
-      ready: (callback: () => void) => Promise<void>;
-      execute: (siteKey: string, options: { action: string }) => Promise<string>;
-    };
-  }
-}
-
 // 🤖 HOOK ANTI-BOT - reCAPTCHA v3 + Honeypot + Time Check + Behavior Tracking
 const useAntiBot = () => {
   const formStartTime = useRef<number>(Date.now());

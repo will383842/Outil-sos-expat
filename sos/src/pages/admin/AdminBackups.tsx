@@ -148,11 +148,12 @@ function formatDateOnly(d: Date): string {
 // Components
 // -------------------------
 const StatusBadge: React.FC<{ status: BackupStatus; intl: ReturnType<typeof useIntl> }> = ({ status, intl }) => {
-  const configs = {
+  const configs: Record<BackupStatus, { bg: string; text: string; icon: typeof CheckCircle; label: string }> = {
     completed: { bg: "bg-green-100", text: "text-green-800", icon: CheckCircle, label: intl.formatMessage({ id: "admin.backups.status.completed" }) },
     failed: { bg: "bg-red-100", text: "text-red-800", icon: AlertTriangle, label: intl.formatMessage({ id: "admin.backups.status.failed" }) },
     pending: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock, label: intl.formatMessage({ id: "admin.backups.status.pending" }) },
     in_progress: { bg: "bg-blue-100", text: "text-blue-800", icon: RefreshCw, label: intl.formatMessage({ id: "admin.backups.status.inProgress" }) },
+    partial: { bg: "bg-orange-100", text: "text-orange-800", icon: AlertTriangle, label: intl.formatMessage({ id: "admin.backups.status.partial", defaultMessage: "Partiel" }) },
   };
   const config = configs[status] || configs.pending;
   const Icon = config.icon;
