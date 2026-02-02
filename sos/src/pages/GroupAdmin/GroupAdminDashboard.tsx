@@ -92,7 +92,7 @@ const GroupAdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <Layout>
-        <SEOHead title={intl.formatMessage({ id: 'groupAdmin.dashboard.loading', defaultMessage: 'Loading Dashboard...' })} />
+        <SEOHead title={intl.formatMessage({ id: 'groupAdmin.dashboard.loading', defaultMessage: 'Loading Dashboard...' })} description="Group Admin Dashboard - SOS-Expat" />
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -134,7 +134,7 @@ const GroupAdminDashboard: React.FC = () => {
 
   return (
     <Layout>
-      <SEOHead title={intl.formatMessage({ id: 'groupAdmin.dashboard.title', defaultMessage: 'Dashboard | SOS-Expat Group Admin' })} />
+      <SEOHead title={intl.formatMessage({ id: 'groupAdmin.dashboard.title', defaultMessage: 'Dashboard | SOS-Expat Group Admin' })} description="Manage your Facebook group and earn commissions with SOS-Expat" />
 
       <div className="min-h-screen bg-gray-50 p-4 md:p-8">
         <div className="max-w-6xl mx-auto">

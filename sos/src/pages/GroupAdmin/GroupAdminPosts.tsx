@@ -104,7 +104,7 @@ const GroupAdminPosts: React.FC = () => {
 
   return (
     <Layout>
-      <SEOHead title={intl.formatMessage({ id: 'groupAdmin.posts.title', defaultMessage: 'Posts | SOS-Expat Group Admin' })} />
+      <SEOHead description="Manage your Facebook group with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.posts.title', defaultMessage: 'Posts | SOS-Expat Group Admin' })} />
 
       <div className="min-h-screen bg-gray-50 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">

@@ -219,7 +219,7 @@ const GroupAdminRegister: React.FC = () => {
   if (success && affiliateCodes) {
     return (
       <Layout>
-        <SEOHead title={intl.formatMessage({ id: 'groupadmin.register.success.title', defaultMessage: 'Welcome to SOS-Expat!' })} />
+        <SEOHead title={intl.formatMessage({ id: 'groupadmin.register.success.title', defaultMessage: 'Welcome to SOS-Expat!' })} description="Registration complete - Start earning with SOS-Expat" />
         <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -262,7 +262,7 @@ const GroupAdminRegister: React.FC = () => {
 
   return (
     <Layout>
-      <SEOHead title={intl.formatMessage({ id: 'groupadmin.register.seo.title', defaultMessage: 'Register as Group Admin | SOS-Expat' })} />
+      <SEOHead title={intl.formatMessage({ id: 'groupadmin.register.seo.title', defaultMessage: 'Register as Group Admin | SOS-Expat' })} description="Join SOS-Expat as a Group Admin and earn commissions" />
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4">
         <div className="max-w-xl mx-auto">
