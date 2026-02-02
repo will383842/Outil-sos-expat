@@ -1329,9 +1329,9 @@ const OptimizedHomePage: React.FC = () => {
         </header>
 
         {/* ================= EXPERTS ================= */}
-        {/* ✅ FIX 2026: Pas de overflow-hidden ici pour permettre le scroll du carousel */}
+        {/* ✅ FIX 2026-02-02: Supprimé touch-manipulation qui causait le scale de toute la section au clic */}
         <section
-          className="py-16 sm:py-28 bg-gradient-to-b from-white via-rose-50 to-white relative touch-manipulation"
+          className="py-16 sm:py-28 bg-gradient-to-b from-white via-rose-50 to-white relative"
           aria-labelledby="experts-heading"
         >
           {/* Éléments décoratifs dans leur propre conteneur avec overflow-hidden */}

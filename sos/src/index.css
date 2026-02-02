@@ -43,11 +43,13 @@
   }
 
   /* ✅ FIX 2026-02-02: Exception pour les éléments dans les carousels - permettre scroll horizontal */
+  /* IMPORTANT: Ces règles doivent être plus spécifiques que la règle globale touch-action: manipulation */
+  .carousel-scroll-container,
+  .carousel-scroll-container *,
   .carousel-scroll-container [role="button"],
   .carousel-scroll-container [tabindex],
-  [class*="overflow-x-auto"] [role="button"],
-  [class*="overflow-x-auto"] [tabindex] {
-    touch-action: pan-x;
+  .carousel-scroll-container article {
+    touch-action: pan-x !important;
   }
 
   /* iOS: Prevent long-press menu on images and links */
@@ -590,10 +592,19 @@
     transform: none !important;
   }
 
-  /* Keep active transforms working for visual feedback */
-  a:active, button:active, [role="button"]:active,
-  .touch-manipulation:active {
+  /* ✅ FIX 2026-02-02: Active transforms SAUF dans les carousels (cause problème de scroll) */
+  /* Exclure: .carousel-scroll-container, .card-hover-effect, et leurs enfants */
+  a:active:not(.carousel-scroll-container *):not(.card-hover-effect),
+  button:active:not(.carousel-scroll-container *):not(.card-hover-effect),
+  .touch-manipulation:active:not(.carousel-scroll-container):not([aria-labelledby]) {
     transform: scale(0.98) !important;
+  }
+
+  /* ✅ FIX 2026-02-02: Les cartes du carousel ne doivent PAS avoir de transform au active */
+  .carousel-scroll-container [role="button"]:active,
+  .carousel-scroll-container article:active,
+  .card-hover-effect:active {
+    transform: none !important;
   }
 
   /* Force immediate response - no transition delays */

@@ -402,7 +402,6 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
             w-[280px] sm:w-[300px] h-[520px] max-w-[calc(100vw-32px)]
             ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
             focus:outline-none focus:ring-4 focus:ring-blue-500/50
-            touch-manipulation
             card-hover-effect
           `}
           onClick={handleClick}
@@ -592,12 +591,11 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               <button
                 className={`
                   w-full rounded-xl font-bold text-white
-                  transition-all duration-200 flex items-center justify-center gap-2
+                  transition-colors duration-200 flex items-center justify-center gap-2
                   border-2 shadow-lg
                   ${statusColors.button}
-                  active:scale-[0.98]
                   focus:outline-none focus:ring-4 focus:ring-blue-500/50
-                  touch-manipulation
+                  carousel-card-button
                 `}
                 style={{
                   minHeight: `${TOUCH_TARGETS.button}px`,
@@ -707,6 +705,17 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
         @media (hover: none), (pointer: coarse) {
           .profile-card-image[data-hovered="true"] {
             transform: none;
+          }
+        }
+
+        /* Bouton dans le carousel - pas de transform pour ne pas interférer avec le scroll */
+        .carousel-card-button {
+          touch-action: pan-x;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+          .carousel-card-button:active {
+            transform: scale(0.98);
           }
         }
       `}</style>
