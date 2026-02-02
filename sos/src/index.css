@@ -37,19 +37,10 @@
   }
 
   /* Mobile 2026: All interactive elements instant tap response */
-  a, button, [role="button"], input, select, textarea, label, [tabindex] {
+  /* ✅ FIX 2026-02-02: Retiré [role="button"] et [tabindex] de cette règle car ça bloque le scroll des carousels */
+  a, button, input, select, textarea, label {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-  }
-
-  /* ✅ FIX 2026-02-02: Exception pour les éléments dans les carousels - permettre scroll horizontal */
-  /* IMPORTANT: Ces règles doivent être plus spécifiques que la règle globale touch-action: manipulation */
-  .carousel-scroll-container,
-  .carousel-scroll-container *,
-  .carousel-scroll-container [role="button"],
-  .carousel-scroll-container [tabindex],
-  .carousel-scroll-container article {
-    touch-action: pan-x !important;
   }
 
   /* iOS: Prevent long-press menu on images and links */
@@ -592,23 +583,15 @@
     transform: none !important;
   }
 
-  /* ✅ FIX 2026-02-02: Active transforms SAUF dans les carousels (cause problème de scroll) */
-  /* Exclure: .carousel-scroll-container, .card-hover-effect, et leurs enfants */
-  a:active:not(.carousel-scroll-container *):not(.card-hover-effect),
-  button:active:not(.carousel-scroll-container *):not(.card-hover-effect),
-  .touch-manipulation:active:not(.carousel-scroll-container):not([aria-labelledby]) {
+  /* ✅ FIX 2026-02-02: Active transforms UNIQUEMENT sur les vrais boutons */
+  /* SUPPRIMÉ: [role="button"]:active car cela affecte les cartes du carousel */
+  /* SUPPRIMÉ: .touch-manipulation:active car cela affecte les sections */
+  button:active:not(.carousel-card-button):not(.card-hover-effect) {
     transform: scale(0.98) !important;
   }
 
-  /* ✅ FIX 2026-02-02: Les cartes du carousel ne doivent PAS avoir de transform au active */
-  .carousel-scroll-container [role="button"]:active,
-  .carousel-scroll-container article:active,
-  .card-hover-effect:active {
-    transform: none !important;
-  }
-
   /* Force immediate response - no transition delays */
-  a, button, [role="button"], .touch-manipulation {
+  a, button {
     transition-duration: 0.1s !important;
     transition-property: background-color, border-color, color, opacity !important;
   }
