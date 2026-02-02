@@ -2,6 +2,7 @@
  * ReferralCommissionsTable
  *
  * Table displaying referral commission history.
+ * Includes pagination for large datasets.
  */
 
 import React from "react";
@@ -18,6 +19,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, Users, Trophy, Calendar } from "lucide-react";
 import { ChatterCommissionType } from "@/types/chatter";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Pagination, usePagination } from "@/components/ui/pagination";
+
+const PAGE_SIZE = 10;
 
 interface ReferralCommission {
   id: string;
@@ -79,6 +83,14 @@ export function ReferralCommissionsTable({
   isLoading,
 }: ReferralCommissionsTableProps) {
   const { t } = useTranslation();
+  const {
+    paginatedItems,
+    currentPage,
+    totalPages,
+    pageSize,
+    totalItems,
+    goToPage,
+  } = usePagination(commissions, PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -141,7 +153,7 @@ export function ReferralCommissionsTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {commissions.map((commission) => {
+              {paginatedItems.map((commission) => {
                 const typeInfo = getCommissionTypeInfo(commission.type);
                 const TypeIcon = typeInfo.icon;
 
@@ -170,6 +182,19 @@ export function ReferralCommissionsTable({
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-4 pt-4 border-t">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              pageSize={pageSize}
+              totalItems={totalItems}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

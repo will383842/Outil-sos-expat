@@ -2,6 +2,7 @@
  * ReferralN1Table
  *
  * Table displaying N1 filleuls (direct referrals) with their progression.
+ * Includes pagination for large datasets.
  */
 
 import React from "react";
@@ -20,6 +21,9 @@ import { Users, Check, Clock, TrendingUp } from "lucide-react";
 import { ChatterFilleulN1 } from "@/types/chatter";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getFilleulProgressPercent } from "@/hooks/useChatterReferrals";
+import { Pagination, usePagination } from "@/components/ui/pagination";
+
+const PAGE_SIZE = 10;
 
 interface ReferralN1TableProps {
   filleuls: ChatterFilleulN1[];
@@ -28,6 +32,14 @@ interface ReferralN1TableProps {
 
 export function ReferralN1Table({ filleuls, isLoading }: ReferralN1TableProps) {
   const { t } = useTranslation();
+  const {
+    paginatedItems,
+    currentPage,
+    totalPages,
+    pageSize,
+    totalItems,
+    goToPage,
+  } = usePagination(filleuls, PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -93,7 +105,7 @@ export function ReferralN1Table({ filleuls, isLoading }: ReferralN1TableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filleuls.map((filleul) => {
+              {paginatedItems.map((filleul) => {
                 const progress = getFilleulProgressPercent(
                   filleul.clientEarnings
                 );
@@ -169,6 +181,19 @@ export function ReferralN1Table({ filleuls, isLoading }: ReferralN1TableProps) {
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-4 pt-4 border-t">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              pageSize={pageSize}
+              totalItems={totalItems}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

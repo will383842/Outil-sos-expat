@@ -27,6 +27,7 @@ import {
   FormButton,
   formStyles,
 } from '@/components/forms/FormElements';
+import { useAntiBot } from '@/hooks/useAntiBot';
 
 // Get country name based on locale
 const getCountryName = (entry: PhoneCodeEntry, locale: string): string => {
@@ -67,6 +68,15 @@ export interface ChatterRegistrationData {
     acceptanceMethod: string;
     ipAddress?: string;
   };
+  // Security metadata for anti-bot validation
+  _securityMeta?: {
+    formFillTime: number;
+    mouseMovements: number;
+    keystrokes: number;
+    userAgent: string;
+    timestamp: number;
+    recaptchaToken?: string | null;
+  };
 }
 
 interface ChatterRegisterFormProps {
@@ -104,6 +114,10 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
+  const [antiBotError, setAntiBotError] = useState<string | null>(null);
+
+  // Anti-bot protection
+  const { honeypotValue, setHoneypotValue, validateHuman, recaptchaEnabled } = useAntiBot();
 
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
@@ -240,9 +254,17 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAntiBotError(null);
     if (!validate()) return;
 
-    // ✅ Ajouter les métadonnées d'acceptation CGU
+    // Anti-bot validation
+    const botCheck = await validateHuman('chatter_register');
+    if (!botCheck.isValid) {
+      setAntiBotError(botCheck.reason || 'Validation failed. Please try again.');
+      return;
+    }
+
+    // ✅ Ajouter les métadonnées d'acceptation CGU + sécurité
     const dataWithTerms: ChatterRegistrationData = {
       ...formData,
       termsAcceptedAt: new Date().toISOString(),
@@ -254,6 +276,8 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         timestamp: Date.now(),
         acceptanceMethod: "checkbox_click",
       },
+      // Security metadata for backend analysis
+      _securityMeta: botCheck.securityMeta,
     };
 
     await onSubmit(dataWithTerms);
@@ -271,7 +295,19 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <FormError error={error || null} />
+      <FormError error={error || antiBotError || null} />
+
+      {/* Honeypot field - hidden from humans, bots will fill it */}
+      <input
+        type="text"
+        name="website"
+        value={honeypotValue}
+        onChange={(e) => setHoneypotValue(e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+        aria-hidden="true"
+      />
 
       {/* Name Fields */}
       <FormSection>

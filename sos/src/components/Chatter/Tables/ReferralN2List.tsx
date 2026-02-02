@@ -2,6 +2,7 @@
  * ReferralN2List
  *
  * Simplified list of N2 filleuls (filleuls of filleuls).
+ * Includes pagination for large datasets.
  */
 
 import React from "react";
@@ -10,6 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Check, Clock } from "lucide-react";
 import { ChatterFilleulN2 } from "@/types/chatter";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Pagination, usePagination } from "@/components/ui/pagination";
+
+const PAGE_SIZE = 10;
 
 interface ReferralN2ListProps {
   filleuls: ChatterFilleulN2[];
@@ -18,6 +22,14 @@ interface ReferralN2ListProps {
 
 export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
   const { t } = useTranslation();
+  const {
+    paginatedItems,
+    currentPage,
+    totalPages,
+    pageSize,
+    totalItems,
+    goToPage,
+  } = usePagination(filleuls, PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -72,8 +84,8 @@ export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {filleuls.map((filleul) => (
+        <div className="space-y-2">
+          {paginatedItems.map((filleul) => (
             <div
               key={filleul.id}
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -100,6 +112,19 @@ export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
             </div>
           ))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-4 pt-4 border-t">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              pageSize={pageSize}
+              totalItems={totalItems}
+            />
+          </div>
+        )}
 
         {/* Info */}
         <p className="text-xs text-gray-500 mt-3 text-center">
