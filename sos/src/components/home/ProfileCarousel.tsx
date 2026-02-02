@@ -484,20 +484,22 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
       )}
 
       {/* Mobile & Tablet - Scroll horizontal avec snap - CENTRÉ */}
-      {/* ✅ FIX 2026-02-01: Structure simplifiée (single div) comme TestimonialsSection qui fonctionne */}
+      {/* ✅ FIX 2026-02-02: touch-action pan-x pour permettre le scroll horizontal natif */}
       <div
-        className="lg:hidden flex gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+        className="lg:hidden flex gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide carousel-scroll-container"
         style={{
           scrollPaddingInline: 'calc(50vw - 150px)',
           paddingLeft: 'calc(50vw - 150px)',
           paddingRight: 'calc(50vw - 150px)',
           WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-x', // ✅ FIX: Permettre le scroll horizontal natif
         }}
       >
         {displayProviders.map((provider, index) => (
           <div
             key={`${provider.id}-${rotationIndex}`}
             className="flex-shrink-0 w-[300px] sm:w-[340px] snap-center"
+            style={{ touchAction: 'pan-x' }} // ✅ FIX: Propager touch-action
           >
             <ModernProfileCard
               provider={provider}
@@ -540,11 +542,20 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-        /* Amélioration tactile mobile */
+        /* ✅ FIX 2026-02-02: Amélioration scroll tactile mobile */
         @media (max-width: 1023px) {
-          .scrollbar-hide {
+          .carousel-scroll-container {
             scroll-snap-type: x mandatory;
             overscroll-behavior-x: contain;
+            /* Permettre le scroll horizontal natif */
+            touch-action: pan-x;
+            /* Éviter le "pull to refresh" accidentel */
+            overscroll-behavior-y: none;
+          }
+
+          /* S'assurer que les enfants ne bloquent pas le scroll */
+          .carousel-scroll-container > * {
+            touch-action: pan-x;
           }
         }
       `}</style>

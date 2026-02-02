@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useIntl } from "react-intl";
 import {
   Star,
@@ -221,6 +221,10 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
 
+    // ✅ FIX 2026-02-02: Distinguer clic vs swipe pour permettre le scroll horizontal
+    const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+    const isDraggingRef = useRef(false);
+
     // Déterminer le statut de disponibilité
     const availability: AvailabilityStatus = useMemo(() => {
       if (provider.availability === 'busy') return 'busy';
@@ -308,7 +312,39 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
       [imageError]
     );
 
-    const handleClick = useCallback(() => {
+    // ✅ FIX 2026-02-02: Handlers pour distinguer clic vs swipe
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+      const touch = e.touches[0];
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+      isDraggingRef.current = false;
+    }, []);
+
+    const handleTouchMove = useCallback((e: React.TouchEvent) => {
+      if (!touchStartRef.current) return;
+      const touch = e.touches[0];
+      const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+      const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+      // Si mouvement horizontal > 10px, c'est un swipe, pas un clic
+      if (deltaX > 10 || deltaY > 10) {
+        isDraggingRef.current = true;
+      }
+    }, []);
+
+    const handleTouchEnd = useCallback(() => {
+      // Reset après un court délai pour permettre le click event de se propager si nécessaire
+      setTimeout(() => {
+        touchStartRef.current = null;
+      }, 100);
+    }, []);
+
+    const handleClick = useCallback((e: React.MouseEvent) => {
+      // ✅ Si c'était un swipe, ignorer le clic
+      if (isDraggingRef.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        isDraggingRef.current = false;
+        return;
+      }
       onProfileClick(provider);
     }, [provider, onProfileClick]);
 
@@ -362,26 +398,29 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
         <article
           className={`
             relative bg-white rounded-2xl overflow-hidden cursor-pointer
-            transition-all duration-300 ease-out border-2 shadow-lg
+            border-2 shadow-lg
             w-[280px] sm:w-[300px] h-[520px] max-w-[calc(100vw-32px)]
             ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
-            ${isHovered ? `scale-[1.02] ${statusColors.glow} shadow-xl` : ""}
             focus:outline-none focus:ring-4 focus:ring-blue-500/50
-            hover:shadow-xl
             touch-manipulation
+            card-hover-effect
           `}
           onClick={handleClick}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              handleClick();
+              onProfileClick(provider);
             }
           }}
           tabIndex={0}
           role="button"
           aria-label={ariaLabels.card}
+          data-hovered={isHovered ? "true" : "false"}
           style={{
             animationDelay: `${index * 100}ms`,
             WebkitTapHighlightColor: 'transparent',
@@ -395,10 +434,11 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               src={provider.avatar || provider.profilePhoto || DEFAULT_AVATAR}
               alt={`Photo de profil de ${provider.name}`}
               className={`
-              w-full h-full object-cover transition-all duration-300
+              w-full h-full object-cover
               ${imageLoaded ? "opacity-100" : "opacity-0"}
-              ${isHovered ? "scale-105" : ""}
+              profile-card-image
             `}
+              data-hovered={isHovered ? "true" : "false"}
               onLoad={() => setImageLoaded(true)}
               onError={handleImageError}
               loading="lazy"
@@ -566,7 +606,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleClick();
+                  onProfileClick(provider);
                 }}
                 type="button"
                 aria-label={ariaLabels.viewProfile}
@@ -581,39 +621,93 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
           </div>
         </article>
 
-        {/* Styles optimisés avec prefers-reduced-motion */}
+        {/* ✅ FIX 2026-02-02: Styles optimisés - hover UNIQUEMENT sur desktop */}
         <style>{`
-        article {
+        /* Animation d'entrée */
+        article.card-hover-effect {
           animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           opacity: 0;
           transform: translateY(20px);
         }
-        
+
         @keyframes slideInUp {
           to {
             opacity: 1;
             transform: translateY(0);
           }
         }
-        
+
+        /* ✅ Desktop SEULEMENT: effets hover avec scale */
+        @media (hover: hover) and (pointer: fine) {
+          article.card-hover-effect {
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+          }
+
+          article.card-hover-effect:hover,
+          article.card-hover-effect[data-hovered="true"] {
+            transform: scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+          }
+        }
+
+        /* ✅ Mobile/Tactile: PAS de scale, PAS de transition transform */
+        @media (hover: none), (pointer: coarse) {
+          article.card-hover-effect {
+            /* Transition uniquement sur les couleurs, pas sur transform */
+            transition: box-shadow 0.2s ease-out;
+          }
+
+          article.card-hover-effect:hover,
+          article.card-hover-effect[data-hovered="true"] {
+            /* Pas de scale sur mobile - évite le "mouvement" de la section */
+            transform: none;
+          }
+
+          /* Active state léger pour feedback tactile */
+          article.card-hover-effect:active {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
-          article {
+          article.card-hover-effect {
             animation: none;
             opacity: 1;
             transform: none;
           }
-          
+
           *, *::before, *::after {
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
           }
         }
-        
+
         /* Optimisation focus pour navigation clavier */
         article:focus-visible {
           outline: 2px solid #3b82f6;
           outline-offset: 2px;
+        }
+
+        /* Image hover - Desktop uniquement */
+        .profile-card-image {
+          transition: opacity 0.3s ease-out;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+          .profile-card-image {
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+          }
+
+          .profile-card-image[data-hovered="true"] {
+            transform: scale(1.05);
+          }
+        }
+
+        @media (hover: none), (pointer: coarse) {
+          .profile-card-image[data-hovered="true"] {
+            transform: none;
+          }
         }
       `}</style>
       </div>

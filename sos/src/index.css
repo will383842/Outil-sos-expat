@@ -42,6 +42,14 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* ✅ FIX 2026-02-02: Exception pour les éléments dans les carousels - permettre scroll horizontal */
+  .carousel-scroll-container [role="button"],
+  .carousel-scroll-container [tabindex],
+  [class*="overflow-x-auto"] [role="button"],
+  [class*="overflow-x-auto"] [tabindex] {
+    touch-action: pan-x;
+  }
+
   /* iOS: Prevent long-press menu on images and links */
   img, a, button, [role="button"] {
     -webkit-touch-callout: none;
