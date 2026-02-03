@@ -155,6 +155,15 @@ export const OUTIL_API_KEY = defineSecret("OUTIL_API_KEY");
 export const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
 
 // ============================================================================
+// TELEGRAM SECRETS
+// ============================================================================
+
+export const TELEGRAM_BOT_TOKEN = defineSecret("TELEGRAM_BOT_TOKEN");
+
+/** All Telegram secrets for function config */
+export const TELEGRAM_SECRETS = [TELEGRAM_BOT_TOKEN];
+
+// ============================================================================
 // GETTERS WITH FALLBACK TO process.env (for emulator/local dev)
 // ============================================================================
 
@@ -728,6 +737,29 @@ export function getFlutterwaveBaseUrl(): string {
   return 'https://api.flutterwave.com/v3';
 }
 
+// --- TELEGRAM GETTERS ---
+
+export function getTelegramBotToken(): string {
+  try {
+    const secretValue = TELEGRAM_BOT_TOKEN.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`[Secrets] TELEGRAM_BOT_TOKEN loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available, try process.env
+  }
+
+  const envValue = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] TELEGRAM_BOT_TOKEN loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] TELEGRAM_BOT_TOKEN NOT FOUND`);
+  return "";
+}
+
 // ============================================================================
 // COMBINED ARRAYS FOR FUNCTION CONFIG
 // ============================================================================
@@ -761,6 +793,11 @@ export const FLUTTERWAVE_PAYOUT_SECRETS = [
   ENCRYPTION_KEY,
 ];
 
+/** All secrets for Telegram notification functions */
+export const TELEGRAM_NOTIFICATION_SECRETS = [
+  ...TELEGRAM_SECRETS,
+];
+
 /** All secrets - use sparingly, prefer specific arrays */
 export const ALL_SECRETS = [
   ...TWILIO_SECRETS,
@@ -768,6 +805,7 @@ export const ALL_SECRETS = [
   ...PAYPAL_SECRETS,
   ...WISE_SECRETS,
   ...FLUTTERWAVE_SECRETS,
+  ...TELEGRAM_SECRETS,
   ...EMAIL_SECRETS,
   ENCRYPTION_KEY,
   TASKS_AUTH_SECRET,

@@ -28,6 +28,7 @@ import {
   Sparkles,
   UserCog,
   Building2,
+  Send,
 } from "lucide-react";
 import { useState, memo } from "react";
 import LanguageSelector from "./LanguageSelector";
@@ -107,6 +108,11 @@ const getNavSections = (t: (key: string) => string): NavSection[] => [
         to: "/admin/ia",
         label: t("admin:sidebar.nav.aiSettings"),
         icon: Sparkles,
+      },
+      {
+        to: "/admin/telegram",
+        label: t("admin:sidebar.nav.telegram") || "Telegram",
+        icon: Send,
       },
       {
         to: "/admin/parametres",

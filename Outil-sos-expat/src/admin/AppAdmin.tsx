@@ -42,6 +42,7 @@ const Pays = lazy(() => import("./pages/Pays"));
 const AIConfig = lazy(() => import("./pages/AIConfig"));
 const Parametres = lazy(() => import("./pages/Parametres"));
 const AuditLogs = lazy(() => import("./pages/AuditLogs"));
+const TelegramConfig = lazy(() => import("./pages/TelegramConfig"));
 
 // =============================================================================
 // PAGE LOADER COMPONENT
@@ -169,6 +170,7 @@ export default function AdminApp() {
                 <Route path="utilisateurs" element={<Utilisateurs />} />
                 <Route path="pays" element={<Pays />} />
                 <Route path="ia" element={<AIConfig />} />
+                <Route path="telegram" element={<TelegramConfig />} />
                 <Route path="parametres" element={<Parametres />} />
                 <Route path="audit" element={<AuditLogs />} />
                 <Route path="*" element={<Navigate to="/admin" replace />} />
@@ -216,6 +218,7 @@ export default function AdminApp() {
               {/* Configuration */}
               <Route path="pays" element={<Pays />} />
               <Route path="ia" element={<AIConfig />} />
+              <Route path="telegram" element={<TelegramConfig />} />
               <Route path="parametres" element={<Parametres />} />
 
               {/* Sécurité */}
