@@ -1246,8 +1246,8 @@ const OptimizedHomePage: React.FC = () => {
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
           </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center py-8 md:py-0">
-            <div className="text-center mb-8 md:mb-12 lg:mb-16 xl:mb-20">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-between md:justify-center py-6 md:py-0">
+            <div className="text-center pt-4 md:pt-0 md:mb-12 lg:mb-16 xl:mb-20">
               <h1
                 id="main-heading"
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl font-black mb-6 sm:mb-8 leading-tight break-words"
@@ -1269,42 +1269,44 @@ const OptimizedHomePage: React.FC = () => {
                 <FormattedMessage id="hero.description" />
               </p>
 
-              <nav 
-                className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6"
-                aria-label={intl.formatMessage({ id: "aria.mainActions" })}
-              >
-                {/* Bouton principal d'appel - "Appeler maintenant" avec icône téléphone */}
-                {/* Mobile fix: hover:scale only on desktop (md:), active states for touch feedback */}
-                <Link
-                  to="/sos-appel"
-                  className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 active:scale-[0.98] text-white px-6 sm:px-10 md:px-12 py-4 sm:py-5 md:py-6 rounded-2xl sm:rounded-3xl font-black text-base sm:text-lg md:text-xl transition-colors duration-150 md:transition-all md:duration-200 md:hover:scale-105 md:hover:shadow-2xl md:hover:shadow-red-500/50 flex items-center justify-center space-x-2 sm:space-x-3 md:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent] w-full sm:w-auto max-w-xs sm:max-w-none"
-                  aria-label={intl.formatMessage({ id: "aria.urgentCall" })}
-                  style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
-                >
-                  <Phone className="w-7 h-7 sm:w-8 sm:h-8 animate-pulse pointer-events-none" aria-hidden="true" />
-                  <span className="pointer-events-none">
-                    <FormattedMessage id="cta.callNow" />
-                  </span>
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-500/30 to-red-600/30 opacity-0 md:group-hover:opacity-100 transition-opacity duration-200" aria-hidden="true" />
-                </Link>
-
-                {/* Bouton "Voir les experts" - masqué sur mobile, visible sur desktop */}
-                <Link
-                  to="/sos-appel"
-                  className="group hidden md:flex items-center space-x-3 px-10 py-6 rounded-3xl bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-105 backdrop-blur-sm font-bold text-lg touch-manipulation"
-                  aria-label={intl.formatMessage({ id: "aria.viewExperts" })}
-                >
-                  <Play className="w-6 h-6" aria-hidden="true" />
-                  <span>
-                    <FormattedMessage id="cta.seeExperts" />
-                  </span>
-                </Link>
-              </nav>
             </div>
 
-            {/* Stats */}
+            {/* Navigation CTA - En bas sur mobile, centré sur desktop */}
+            <nav
+              className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 pb-8 md:pb-0"
+              aria-label={intl.formatMessage({ id: "aria.mainActions" })}
+            >
+              {/* Bouton principal d'appel - "Appeler maintenant" avec icône téléphone */}
+              {/* Mobile: texte plus gros (text-xl), padding plus grand (py-5 px-8) */}
+              <Link
+                to="/sos-appel"
+                className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 active:scale-[0.98] text-white px-8 sm:px-10 md:px-12 py-5 sm:py-5 md:py-6 rounded-2xl sm:rounded-3xl font-black text-xl sm:text-lg md:text-xl transition-colors duration-150 md:transition-all md:duration-200 md:hover:scale-105 md:hover:shadow-2xl md:hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-3 md:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent] w-full sm:w-auto max-w-sm sm:max-w-none"
+                aria-label={intl.formatMessage({ id: "aria.urgentCall" })}
+                style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
+              >
+                <Phone className="w-8 h-8 sm:w-8 sm:h-8 animate-pulse pointer-events-none" aria-hidden="true" />
+                <span className="pointer-events-none">
+                  <FormattedMessage id="cta.callNow" />
+                </span>
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-500/30 to-red-600/30 opacity-0 md:group-hover:opacity-100 transition-opacity duration-200" aria-hidden="true" />
+              </Link>
+
+              {/* Bouton "Voir les experts" - masqué sur mobile, visible sur desktop */}
+              <Link
+                to="/sos-appel"
+                className="group hidden md:flex items-center space-x-3 px-10 py-6 rounded-3xl bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-105 backdrop-blur-sm font-bold text-lg touch-manipulation"
+                aria-label={intl.formatMessage({ id: "aria.viewExperts" })}
+              >
+                <Play className="w-6 h-6" aria-hidden="true" />
+                <span>
+                  <FormattedMessage id="cta.seeExperts" />
+                </span>
+              </Link>
+            </nav>
+
+            {/* Stats - Masqués sur mobile pour garder le bouton en bas */}
             <section
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
+              className="hidden md:grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 mt-8"
               aria-label={intl.formatMessage({ id: "aria.keyStats" })}
             >
               {stats.map((stat, index) => (
