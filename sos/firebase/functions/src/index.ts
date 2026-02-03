@@ -248,7 +248,7 @@ export {
 // Early Disconnect Refund Templates Seed (9 langues)
 // P0 FIX 2026-02-03: Templates for notifying client & provider when call ends early and is refunded
 // SEEDED 2026-02-03 via scripts/seedEarlyDisconnectTemplates.js
-// export { initEarlyDisconnectTemplates } from "./seeds/earlyDisconnectTemplates";
+// Template file removed after seeding to reduce bundle size
 
 // Country Fiscal Configs Seed (200 countries + 64 USA/Canada subdivisions)
 // NOTE: Data already seeded via local script (scripts/seedCountryData.js)
