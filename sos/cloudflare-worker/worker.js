@@ -706,7 +706,17 @@ async function handleRequest(request, env, ctx) {
   }
 
   // For non-bots or non-SSR pages, fetch from Cloudflare Pages origin
-  const pagesUrl = new URL(pathname, PAGES_ORIGIN);
+  // For SPA routes (non-assets), fetch the root index.html and serve with 200
+  const isAsset = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|webp|json|xml|txt|webmanifest)$/i.test(pathname);
+
+  let pagesUrl;
+  if (isAsset) {
+    // Static assets: fetch the exact path
+    pagesUrl = new URL(pathname, PAGES_ORIGIN);
+  } else {
+    // SPA routes: fetch root index.html (React Router handles routing)
+    pagesUrl = new URL('/', PAGES_ORIGIN);
+  }
   pagesUrl.search = url.search; // Preserve query parameters
 
   const originResponse = await fetch(pagesUrl.toString(), {
