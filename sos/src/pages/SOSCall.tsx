@@ -3934,7 +3934,7 @@ const SOSCall: React.FC = () => {
                     📱 Version Mobile - Grille verticale 1 colonne
                 ======================================== */}
                 <div
-                  className="lg:hidden space-y-4 pt-4 pb-24 relative z-10 w-full overflow-x-hidden"
+                  className="lg:hidden space-y-4 pt-16 pb-24 relative z-10 w-full overflow-x-hidden"
                   role="list"
                   aria-label={intl.formatMessage({ id: "sosCall.providerList.mobileAriaLabel" })}
                 >

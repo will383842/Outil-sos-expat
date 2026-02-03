@@ -1234,7 +1234,7 @@ const OptimizedHomePage: React.FC = () => {
       <div className="min-h-screen bg-gray-950 overflow-x-hidden max-w-full">
         {/* ================= HERO ================= */}
         <header
-          className="relative min-h-[calc(100dvh-80px)] md:min-h-0 md:pt-20 md:pb-32 flex flex-col overflow-hidden"
+          className="relative h-[calc(100dvh-80px)] md:h-auto md:min-h-0 md:pt-20 md:pb-32 flex flex-col overflow-hidden"
           role="banner"
           aria-labelledby="main-heading"
         >
