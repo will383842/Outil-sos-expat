@@ -1265,9 +1265,22 @@ const OptimizedHomePage: React.FC = () => {
                 <FormattedMessage id="hero.subtitle" />
               </h2>
 
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto mb-8 sm:mb-12 leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto mb-6 sm:mb-12 leading-relaxed">
                 <FormattedMessage id="hero.description" />
               </p>
+
+              {/* Mini stats mobile - 197 pays, 24/7, <5 min */}
+              <div className="flex md:hidden items-center justify-center gap-3 text-sm font-bold">
+                <span className="bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full text-white border border-white/20">
+                  🌍 197 <FormattedMessage id="hero.stats.countries" defaultMessage="pays" />
+                </span>
+                <span className="bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full text-white border border-white/20">
+                  ⏰ 24/7
+                </span>
+                <span className="bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full text-green-400 border border-green-400/30">
+                  ⚡ &lt;5 min
+                </span>
+              </div>
 
             </div>
 
