@@ -201,6 +201,9 @@ const SuccessPayment: React.FC = () => {
   // P0 FIX: État d'initialisation pour éviter le flash d'erreur "serviceNotFound"
   // On attend que initializeServiceData() ait fini avant d'afficher quoi que ce soit
   const [isInitializing, setIsInitializing] = useState(true);
+  // P0 FIX 2026-02-03: Track si les données de service sont effectivement chargées
+  // pour éviter le flash d'erreur entre isInitializing=false et les états mis à jour
+  const [serviceDataLoaded, setServiceDataLoaded] = useState(false);
 
   // UI state (appel)
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -461,9 +464,17 @@ const SuccessPayment: React.FC = () => {
   /* =========================
      Init données
      P0 FIX: Marquer l'initialisation comme terminée après avoir chargé les données
+     P0 FIX 2026-02-03: Utiliser setServiceDataLoaded pour éviter le flash d'erreur
      ========================= */
   useEffect(() => {
     const success = initializeServiceData();
+
+    // P0 FIX 2026-02-03: Mettre à jour serviceDataLoaded AVANT isInitializing
+    // pour éviter le flash où isInitializing=false mais les données ne sont pas encore visibles
+    if (success) {
+      setServiceDataLoaded(true);
+    }
+
     // Même si pas de données trouvées, on termine l'initialisation
     // pour éviter un loader infini - le guard affichera le message d'erreur
     setIsInitializing(false);
@@ -1074,8 +1085,14 @@ const SuccessPayment: React.FC = () => {
   /* =========================
      Rendu
      ========================= */
-  // P0 FIX: Afficher un loader pendant l'initialisation pour éviter le flash "serviceNotFound"
-  if (isInitializing) {
+  // P0 FIX 2026-02-03: Afficher un loader pendant l'initialisation pour éviter le flash "serviceNotFound"
+  // Le loader reste visible tant que:
+  // 1. isInitializing est vrai (première phase)
+  // 2. OU serviceDataLoaded est faux ET paymentData existe (données attendues mais pas encore chargées)
+  // Cela évite le flash d'erreur entre le moment où isInitializing devient false et les états sont mis à jour
+  const shouldShowLoader = isInitializing || (!serviceDataLoaded && paymentData !== null);
+
+  if (shouldShowLoader) {
     return (
       <Layout>
         <div className="min-h-screen bg-gray-950 flex items-center justify-center">
@@ -1092,7 +1109,10 @@ const SuccessPayment: React.FC = () => {
     );
   }
 
-  if (!paidAmount && !paidServiceType) {
+  // P0 FIX 2026-02-03: Garde-fou plus robuste - ne s'affiche que si
+  // serviceDataLoaded est explicitement false ET que paymentData est null
+  // (indiquant qu'il n'y a vraiment aucune donnée, pas juste un délai de chargement)
+  if (!serviceDataLoaded && !paidAmount && !paidServiceType) {
     // Garde-fou si jamais pas d'info service (cohérent avec ton ancien rendu)
     return (
       <Layout>
