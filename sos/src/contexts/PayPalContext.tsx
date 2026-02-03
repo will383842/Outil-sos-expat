@@ -45,7 +45,12 @@ export const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
     currency: "EUR",
     intent: "authorize",
     components: "buttons,card-fields",
+    // Enable additional funding sources for better UX
+    "enable-funding": "venmo,paylater",
+    // Only disable credit (Buy Now Pay Later is separate from credit)
     "disable-funding": "credit",
+    // Vault for returning customers (save payment methods)
+    vault: true,
   }), [clientId]);
 
   const contextValue = useMemo(() => ({

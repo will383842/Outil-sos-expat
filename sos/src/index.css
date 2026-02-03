@@ -920,6 +920,20 @@
   z-index: 1;
 }
 
+/* Remove PayPal's internal wrapper borders - keep only our custom wrapper border */
+/* PayPal SDK generates a div.card-field-group around the iframe with its own border */
+.paypal-field-inner > div,
+.paypal-field-inner > div > div,
+.paypal-field-inner [class*="card-field"],
+.paypal-field-inner [class*="paypal-card"] {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
 .paypal-field-inner iframe,
 .paypal-field-wrapper iframe {
   border: none !important;

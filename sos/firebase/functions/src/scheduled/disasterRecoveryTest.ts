@@ -363,6 +363,201 @@ async function testStorageAccess(): Promise<DRTestResult> {
 }
 
 /**
+ * Test 5b: Vérifier l'accessibilité du bucket DR (Disaster Recovery)
+ */
+async function testDRBucketAccess(): Promise<DRTestResult> {
+  const startTime = Date.now();
+  const DR_BUCKET_NAME = process.env.DR_BACKUP_BUCKET || 'sos-expat-backup-dr';
+
+  try {
+    const { Storage } = await import('@google-cloud/storage');
+    const storage = new Storage();
+    const drBucket = storage.bucket(DR_BUCKET_NAME);
+
+    // 1. Vérifier que le bucket existe
+    const [exists] = await drBucket.exists();
+
+    if (!exists) {
+      return {
+        testName: 'DR Bucket Access',
+        status: 'failed',
+        message: `Bucket DR "${DR_BUCKET_NAME}" n'existe pas! Créer le bucket dans une région différente (europe-west3 recommandé)`,
+        details: {
+          bucketName: DR_BUCKET_NAME,
+          expectedRegion: 'europe-west3'
+        },
+        duration: Date.now() - startTime
+      };
+    }
+
+    // 2. Vérifier qu'on peut lister les fichiers
+    const [files] = await drBucket.getFiles({ maxResults: 10 });
+
+    // 3. Vérifier qu'on peut écrire (test write access)
+    const testFileName = `_dr_test_${Date.now()}.txt`;
+    const testFile = drBucket.file(testFileName);
+
+    try {
+      await testFile.save('DR access test - delete me', {
+        metadata: { contentType: 'text/plain' }
+      });
+
+      // Nettoyer immédiatement
+      await testFile.delete();
+
+    } catch (writeError) {
+      return {
+        testName: 'DR Bucket Access',
+        status: 'failed',
+        message: `Bucket DR existe mais pas d'accès en écriture: ${writeError instanceof Error ? writeError.message : 'Unknown'}`,
+        details: {
+          bucketName: DR_BUCKET_NAME,
+          readAccess: true,
+          writeAccess: false
+        },
+        duration: Date.now() - startTime
+      };
+    }
+
+    // 4. Vérifier la fraîcheur des backups DR
+    let hasRecentBackups = false;
+    let oldestBackupDate: Date | null = null;
+
+    for (const file of files) {
+      if (file.name.includes('scheduled-backups/') || file.name.includes('auth_backups/')) {
+        const [metadata] = await file.getMetadata();
+        const fileDate = new Date(metadata.timeCreated as string);
+
+        if (!oldestBackupDate || fileDate < oldestBackupDate) {
+          oldestBackupDate = fileDate;
+        }
+
+        const ageHours = (Date.now() - fileDate.getTime()) / (1000 * 60 * 60);
+        if (ageHours < 168) { // Moins de 7 jours (backup hebdomadaire)
+          hasRecentBackups = true;
+        }
+      }
+    }
+
+    if (files.length === 0) {
+      return {
+        testName: 'DR Bucket Access',
+        status: 'warning',
+        message: 'Bucket DR accessible mais vide. Vérifier que crossRegionBackup s\'exécute.',
+        details: {
+          bucketName: DR_BUCKET_NAME,
+          filesCount: 0,
+          readAccess: true,
+          writeAccess: true
+        },
+        duration: Date.now() - startTime
+      };
+    }
+
+    if (!hasRecentBackups) {
+      return {
+        testName: 'DR Bucket Access',
+        status: 'warning',
+        message: 'Bucket DR accessible mais aucun backup récent (<7 jours)',
+        details: {
+          bucketName: DR_BUCKET_NAME,
+          filesCount: files.length,
+          oldestBackup: oldestBackupDate?.toISOString()
+        },
+        duration: Date.now() - startTime
+      };
+    }
+
+    return {
+      testName: 'DR Bucket Access',
+      status: 'passed',
+      message: `Bucket DR opérationnel: ${files.length}+ fichiers, backups récents présents`,
+      details: {
+        bucketName: DR_BUCKET_NAME,
+        filesCount: files.length,
+        readAccess: true,
+        writeAccess: true,
+        hasRecentBackups: true
+      },
+      duration: Date.now() - startTime
+    };
+
+  } catch (error) {
+    return {
+      testName: 'DR Bucket Access',
+      status: 'failed',
+      message: `Erreur accès bucket DR: ${error instanceof Error ? error.message : 'Unknown'}`,
+      details: {
+        bucketName: DR_BUCKET_NAME
+      },
+      duration: Date.now() - startTime
+    };
+  }
+}
+
+/**
+ * Test 5c: Vérifier les secrets et configurations
+ */
+async function testSecretsConfig(): Promise<DRTestResult> {
+  const startTime = Date.now();
+
+  const CRITICAL_SECRETS = [
+    'STRIPE_SECRET_KEY',
+    'STRIPE_WEBHOOK_SECRET',
+    'TWILIO_ACCOUNT_SID',
+    'TWILIO_AUTH_TOKEN',
+    'ENCRYPTION_KEY'
+  ];
+
+  try {
+    const missingSecrets: string[] = [];
+    const setSecrets: string[] = [];
+
+    for (const secretName of CRITICAL_SECRETS) {
+      const value = process.env[secretName];
+      if (value && value.length > 0) {
+        setSecrets.push(secretName);
+      } else {
+        missingSecrets.push(secretName);
+      }
+    }
+
+    if (missingSecrets.length > 0) {
+      return {
+        testName: 'Secrets Configuration',
+        status: 'failed',
+        message: `${missingSecrets.length} secrets critiques manquants: ${missingSecrets.join(', ')}`,
+        details: {
+          total: CRITICAL_SECRETS.length,
+          configured: setSecrets.length,
+          missing: missingSecrets
+        },
+        duration: Date.now() - startTime
+      };
+    }
+
+    return {
+      testName: 'Secrets Configuration',
+      status: 'passed',
+      message: `Tous les ${CRITICAL_SECRETS.length} secrets critiques sont configurés`,
+      details: {
+        total: CRITICAL_SECRETS.length,
+        configured: setSecrets.length
+      },
+      duration: Date.now() - startTime
+    };
+
+  } catch (error) {
+    return {
+      testName: 'Secrets Configuration',
+      status: 'failed',
+      message: `Erreur vérification secrets: ${error instanceof Error ? error.message : 'Unknown'}`,
+      duration: Date.now() - startTime
+    };
+  }
+}
+
+/**
  * Test 6: Vérifier la DLQ (pas d'accumulation)
  */
 async function testDLQHealth(): Promise<DRTestResult> {
@@ -517,6 +712,13 @@ function generateRecommendations(tests: DRTestResult[]): string[] {
         case 'DLQ Health':
           recommendations.push('URGENT: Investiguer les événements DLQ en échec permanent');
           break;
+        case 'DR Bucket Access':
+          recommendations.push('CRITIQUE: Créer le bucket DR sos-expat-backup-dr dans europe-west3 via GCP Console');
+          recommendations.push('Vérifier les permissions IAM pour le service account Firebase');
+          break;
+        case 'Secrets Configuration':
+          recommendations.push('CRITIQUE: Configurer les secrets manquants via Firebase Console > Functions > Secret Manager');
+          break;
         default:
           if (test.testName.startsWith('Collection')) {
             recommendations.push(`Vérifier l'intégrité de la collection ${test.testName.replace('Collection ', '')}`);
@@ -527,6 +729,8 @@ function generateRecommendations(tests: DRTestResult[]): string[] {
         recommendations.push('Exécuter la migration de chiffrement: migratePhoneEncryption');
       } else if (test.testName === 'Twilio Backup') {
         recommendations.push('Vérifier les enregistrements Twilio en échec de backup');
+      } else if (test.testName === 'DR Bucket Access') {
+        recommendations.push('Vérifier que crossRegionBackup s\'exécute correctement (dimanche 04:00)');
       }
     }
   }
@@ -579,6 +783,12 @@ export const runMonthlyDRTest = onSchedule(
 
       logger.info('[DR Test] Running Storage access test...');
       allTests.push(await testStorageAccess());
+
+      logger.info('[DR Test] Running DR Bucket access test...');
+      allTests.push(await testDRBucketAccess());
+
+      logger.info('[DR Test] Running Secrets configuration test...');
+      allTests.push(await testSecretsConfig());
 
       logger.info('[DR Test] Running DLQ health test...');
       allTests.push(await testDLQHealth());
@@ -695,6 +905,8 @@ export const runDRTestManual = functions
       allTests.push(...await testCollectionIntegrity());
       allTests.push(await testTwilioBackups());
       allTests.push(await testStorageAccess());
+      allTests.push(await testDRBucketAccess());
+      allTests.push(await testSecretsConfig());
       allTests.push(await testDLQHealth());
       allTests.push(await testEncryption());
 

@@ -146,29 +146,33 @@
 
 | Element | Sauvegarde |
 |---------|------------|
-| Cles API (references) | NON |
-| Webhooks configures | NON |
-| Produits definis | NON |
-| Prix configures | NON |
-| Configuration Connect | NON |
+| Cles API (references) | OUI (Secret Manager + doc) |
+| Webhooks configures | OUI (documenté) |
+| Produits definis | OUI (script export) |
+| Prix configures | OUI (script export) |
+| Configuration Connect | OUI (documenté) |
+
+**Documentation:** `All_Explains/backup-system/third-party-config-backup.md`
 
 #### PayPal
 
 | Element | Sauvegarde |
 |---------|------------|
-| Client ID (reference) | NON |
-| Webhooks | NON |
-| Configuration vendeur | NON |
+| Client ID (reference) | OUI (documenté) |
+| Webhooks | OUI (documenté) |
+| Configuration vendeur | OUI (documenté) |
 
 #### Twilio
 
 | Element | Sauvegarde |
 |---------|------------|
-| Account SID | NON |
-| Auth Token (reference) | NON |
-| Numeros telephoniques | NON |
-| TwiML applications | NON |
-| Webhooks | NON |
+| Account SID | OUI (Secret Manager) |
+| Auth Token (reference) | OUI (Secret Manager) |
+| Numeros telephoniques | OUI (script export) |
+| TwiML applications | OUI (script export) |
+| Webhooks | OUI (documenté) |
+
+**Script d'export:** Voir `third-party-config-backup.md`
 
 ---
 
@@ -176,11 +180,14 @@
 
 | Element | Stockage Actuel | Sauvegarde |
 |---------|-----------------|------------|
-| **Cles API Stripe** | Firebase Functions Config | NON |
-| **Cles API PayPal** | Firebase Functions Config | NON |
-| **Cles API Twilio** | Firebase Functions Config | NON |
-| **Cle chiffrement** | Firebase Functions Config | NON |
-| **SMTP credentials** | Firebase Functions Config | NON |
+| **Cles API Stripe** | Firebase Secret Manager | OUI (audit mensuel) |
+| **Cles API PayPal** | Firebase Secret Manager | OUI (audit mensuel) |
+| **Cles API Twilio** | Firebase Secret Manager | OUI (audit mensuel) |
+| **Cle chiffrement** | Firebase Secret Manager | OUI (audit mensuel) |
+| **SMTP credentials** | Firebase Secret Manager | OUI (audit mensuel) |
+
+**Fonction automatique:** `monthlySecretsConfigBackup` (1er du mois à 02:00)
+**Audit manuel:** `triggerSecretsAudit` (callable par admin)
 
 ---
 
@@ -188,11 +195,15 @@
 
 | Service | Element | Sauvegarde |
 |---------|---------|------------|
-| **Cloud Tasks** | Queues configurees | NON |
-| **Cloud Scheduler** | Cron jobs | NON (code versionne) |
-| **IAM** | Roles/permissions | NON |
-| **Service Accounts** | Cles JSON | NON |
-| **Billing** | Configuration | NON |
+| **Cloud Tasks** | Queues configurees | OUI (script export) |
+| **Cloud Scheduler** | Cron jobs | OUI (code versionne) |
+| **IAM** | Roles/permissions | OUI (script export) |
+| **Service Accounts** | Cles JSON | OUI (documenté) |
+| **Secret Manager** | Secrets | OUI (audit mensuel) |
+| **Cloud Run** | Services Twilio | OUI (script export) |
+
+**Documentation:** `All_Explains/backup-system/gcp-cloud-tasks-iam-backup.md`
+**Script d'export:** `gcp-full-export.sh`
 
 ---
 
@@ -208,13 +219,15 @@
 
 ---
 
-### 10. FRONTEND (DIGITAL OCEAN)
+### 10. FRONTEND (CLOUDFLARE PAGES)
 
 | Element | Sauvegarde |
 |---------|------------|
 | **Build artifacts** | Non (regenerables) |
-| **Configuration DO** | NON |
-| **Variables env DO** | NON |
+| **Configuration Cloudflare** | OUI (documenté) |
+| **Variables env (VITE_*)** | OUI (documenté) |
+
+**Documentation:** `All_Explains/backup-system/cloudflare-pages-config.md`
 
 ---
 
@@ -236,14 +249,21 @@
 | Functions | Config runtime |
 | Tests | Donnees test |
 
-### Non Sauvegarde
+### Nouvellement Documenté (2026-02-03)
 
 | Categorie | Elements |
 |-----------|----------|
-| ~~Regles securite~~ | ~~firestore.rules, storage.rules~~ RESOLU |
-| Secrets | Cles API tierces (script disponible) |
-| GCP Config | Cloud Tasks, IAM |
-| Integrations | Stripe, PayPal, Twilio config (template disponible) |
+| ✅ Secrets | Audit automatique mensuel (`monthlySecretsConfigBackup`) |
+| ✅ GCP Config | Cloud Tasks, IAM, Cloud Run (scripts export) |
+| ✅ Integrations | Stripe, PayPal, Twilio (documentation complète) |
+| ✅ Cloudflare | Variables env, Build settings, Domaines |
+
+### Tests DR Améliorés
+
+| Test | Statut |
+|------|--------|
+| ✅ Bucket DR Access | Vérifie existence et accès |
+| ✅ Secrets Configuration | Vérifie tous les secrets critiques |
 
 ---
 
@@ -262,10 +282,12 @@
 - [ ] Extensions - Si installees
 
 ### Google Cloud
-- [ ] Cloud Tasks - Queues
+- [x] Cloud Tasks - Queues (script export)
 - [x] Cloud Scheduler - Via code
-- [ ] IAM - Roles
-- [ ] Service Accounts - Cles
+- [x] IAM - Roles (script export)
+- [x] Service Accounts - Documenté
+- [x] Secret Manager - Audit mensuel
+- [x] Cloud Run - Script export
 
 ### Code Source
 - [x] Frontend React
@@ -274,18 +296,37 @@
 - [x] Git repository
 
 ### Integrations Tierces
-- [ ] Stripe - Configuration complete
-- [ ] PayPal - Configuration complete
-- [ ] Twilio - Configuration complete
-- [ ] Zoho Mail - Templates
+- [x] Stripe - Documentation complète + scripts
+- [x] PayPal - Documentation complète
+- [x] Twilio - Documentation complète + scripts
+- [x] Cloudflare Pages - Documentation complète
 
 ### Donnees Sensibles
-- [ ] Cles API
-- [ ] Secrets Functions
-- [ ] Certificats SSL
-- [ ] Configuration DNS
+- [x] Cles API - Secret Manager + audit mensuel
+- [x] Secrets Functions - Audit automatique
+- [x] Configuration DNS - Documenté (Cloudflare)
 
 ---
 
 **Document genere:** 2026-01-11
-**Version:** 1.0
+**Mis à jour:** 2026-02-03
+**Version:** 2.0
+
+---
+
+## NOUVELLES FONCTIONNALITÉS (v2.0)
+
+### Cloud Functions Ajoutées
+- `monthlySecretsConfigBackup` - Audit automatique mensuel des secrets
+- `triggerSecretsAudit` - Audit manuel (admin)
+- `listSecretsAudits` - Liste des audits
+- `getSecretsRestoreGuide` - Guide de restauration
+
+### Tests DR Améliorés
+- `testDRBucketAccess` - Vérifie bucket DR existe et accessible
+- `testSecretsConfig` - Vérifie secrets critiques configurés
+
+### Documentation Ajoutée
+- `third-party-config-backup.md` - Stripe, PayPal, Twilio
+- `cloudflare-pages-config.md` - Hosting frontend
+- `gcp-cloud-tasks-iam-backup.md` - Configuration GCP

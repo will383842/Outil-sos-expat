@@ -165,13 +165,22 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         </div>
       </div>
 
-      {/* Payment Element */}
+      {/* Payment Element - With Apple Pay, Google Pay, and Link enabled */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-3">
           {intl.formatMessage({ id: 'subscription.checkout.paymentInfo' })}
         </label>
         <div className="border border-gray-300 rounded-lg p-4 bg-white">
-          <PaymentElement />
+          <PaymentElement
+            options={{
+              layout: 'tabs',
+              wallets: {
+                applePay: 'auto',
+                googlePay: 'auto'
+              },
+              paymentMethodOrder: ['apple_pay', 'google_pay', 'card']
+            }}
+          />
         </div>
       </div>
 
@@ -439,11 +448,13 @@ export const PlansPage: React.FC = () => {
     return selectedPlan.pricing[selectedCurrency];
   };
 
-  // Stripe options
+  // Stripe options - Optimized for best UX with all payment methods
   const stripeOptions = {
     mode: 'subscription' as const,
     amount: Math.round(getDisplayPrice() * 100),
     currency: selectedCurrency.toLowerCase(),
+    // Enable all modern payment methods: Apple Pay, Google Pay, Link (1-click checkout)
+    paymentMethodTypes: ['card', 'link'],
     appearance: {
       theme: 'stripe' as const,
       variables: {

@@ -165,6 +165,28 @@ export {
 // - Stripe balance check
 export { escrowMonitoringDaily } from "./scheduled/escrowMonitoring";
 
+// ADMIN ALERTS DIGEST: Daily email summary to admins
+// - Aggregates unread admin_alerts by priority (critical, high, medium, low)
+// - Includes pending_transfers status summary
+// - Sends at 9:00 AM Paris time daily
+export {
+  adminAlertsDigestDaily,
+  triggerAdminAlertsDigest,
+  getAdminAlertsDigestPreview,
+} from "./scheduled/adminAlertsDigest";
+
+// PENDING TRANSFERS MONITOR: Proactive monitoring every 6 hours
+// - Creates alerts for high amounts, old transfers, failures
+// - Sends KYC reminders at day 1, 3, 7, 14, 30, 60, 90
+// - Recovers stuck "processing" transfers
+// - Queues failed transfers for retry
+export {
+  pendingTransfersMonitorScheduled,
+  getDetailedPendingTransfersStats,
+  triggerPendingTransfersMonitor,
+  forceRetryPendingTransfer,
+} from "./scheduled/pendingTransfersMonitor";
+
 // Budget Alert Notifications - Email alerts when costs exceed thresholds
 // - Warning email at 80% of budget
 // - Urgent email at 100% of budget
@@ -4728,6 +4750,14 @@ export {
   runDRTestManual,
   listDRReports
 } from './scheduled/disasterRecoveryTest';
+
+// ========== SECRETS & CONFIG BACKUP ==========
+export {
+  monthlySecretsConfigBackup,
+  triggerSecretsAudit,
+  listSecretsAudits,
+  getSecretsRestoreGuide
+} from './scheduled/backupSecretsAndConfig';
 
 // ========== GDPR AUDIT TRAIL ==========
 export {
