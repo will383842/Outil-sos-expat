@@ -921,17 +921,33 @@
 }
 
 /* Remove PayPal's internal wrapper borders - keep only our custom wrapper border */
-/* PayPal SDK generates a div.card-field-group around the iframe with its own border */
+/* PayPal SDK generates various wrapper divs with their own borders that create double-border effect */
 .paypal-field-inner > div,
 .paypal-field-inner > div > div,
+.paypal-field-inner > div > div > div,
 .paypal-field-inner [class*="card-field"],
-.paypal-field-inner [class*="paypal-card"] {
+.paypal-field-inner [class*="paypal-card"],
+.paypal-field-inner [class*="eligible"],
+.paypal-field-inner [class*="container"],
+.paypal-field-inner [class*="wrapper"],
+.paypal-field-wrapper > div,
+.paypal-field-wrapper > div > div {
   border: none !important;
+  border-width: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 !important;
   margin: 0 !important;
+  outline: none !important;
+}
+
+/* Target all descendant divs inside paypal fields to remove any borders */
+.paypal-field-inner div,
+.paypal-field-wrapper div:not(.field-icon) {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .paypal-field-inner iframe,
@@ -944,6 +960,7 @@
   width: 100% !important;
   height: 100% !important;
   min-height: 44px !important;
+  outline: none !important;
 }
 
 /* Ensure PayPal card fields container allows interaction */
