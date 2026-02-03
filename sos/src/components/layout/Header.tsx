@@ -670,7 +670,7 @@ const HeaderAvailabilityToggle = memo<HeaderAvailabilityToggleProps>(
         {/* 🔒 Message permanent pour prestataire en attente d'approbation */}
         {isLockedPendingApproval && (
           <div
-            className="absolute top-full left-0 right-0 mt-2 z-50 min-w-[280px]"
+            className="absolute top-full left-0 right-0 mt-2 z-[70] min-w-[280px]"
             role="status"
           >
             <div className="bg-amber-500 text-white px-4 py-3 rounded-xl shadow-xl border border-amber-400 flex items-start gap-2">
@@ -685,7 +685,7 @@ const HeaderAvailabilityToggle = memo<HeaderAvailabilityToggleProps>(
         {/* Message d'erreur temporaire (seulement si approuvé et erreur) */}
         {!isLockedPendingApproval && errorMessage && (
           <div
-            className="absolute top-full left-0 right-0 mt-2 z-50 min-w-[280px]"
+            className="absolute top-full left-0 right-0 mt-2 z-[70] min-w-[280px]"
             role="alert"
             aria-live="assertive"
           >
@@ -917,7 +917,7 @@ const LanguageDropdown = memo<LanguageDropdownProps>(function LanguageDropdown({
 
         {open && (
           <div
-            className="absolute left-0 right-0 mt-2 rounded-xl shadow-2xl py-1 z-50
+            className="absolute left-0 right-0 mt-2 rounded-xl shadow-2xl py-1 z-[70]
               max-h-60 overflow-y-auto bg-gray-900/95 backdrop-blur-xl border border-white/10"
             role="listbox"
             aria-label={selectLanguageLabel}
@@ -975,7 +975,7 @@ const LanguageDropdown = memo<LanguageDropdownProps>(function LanguageDropdown({
       {open && (
         <div
           className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl
-            rounded-2xl shadow-2xl py-2 z-50 border border-gray-100"
+            rounded-2xl shadow-2xl py-2 z-[70] border border-gray-100"
           role="listbox"
           aria-label={selectLanguageLabel}
         >
@@ -1395,7 +1395,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
       {open && (
         <div
           className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl
-            rounded-2xl shadow-2xl py-2 z-50 border border-gray-100"
+            rounded-2xl shadow-2xl py-2 z-[70] border border-gray-100"
           role="menu"
           aria-label={t.userMenu}
         >
@@ -1584,7 +1584,7 @@ const Header: React.FC = () => {
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-50 md:select-none"
+        className="fixed top-0 left-0 right-0 z-[60] md:select-none"
         role="banner"
       >
         {/* ============================================================ */}
@@ -1724,7 +1724,7 @@ const Header: React.FC = () => {
         {/* ============================================================ */}
         {/* MOBILE HEADER */}
         {/* ============================================================ */}
-        {/* z-[70] ensures header stays above all overlays (wizard z-30, modals z-50, sidedrawer z-60) */}
+        {/* z-[70] ensures mobile header stays above all overlays (wizard z-30, modals z-50, sidedrawer z-60, desktop header z-60) */}
         <div className="lg:hidden bg-gray-900 shadow-xl relative z-[70]">
           <div className="px-4 py-3 flex items-center justify-between">
             <PWAIconButton />

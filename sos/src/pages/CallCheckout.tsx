@@ -1471,16 +1471,16 @@ const ConfirmModal: React.FC<{
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-x-0 top-20 bottom-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
     >
-      {/* Backdrop - clickable to close */}
+      {/* Backdrop - clickable to close - starts below header to not block header interactions */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm touch-manipulation"
         onClick={onCancel}
-        onTouchEnd={(e) => { e.preventDefault(); onCancel(); }}
+        onTouchEnd={(e) => { e.stopPropagation(); onCancel(); }}
         role="button"
         aria-label="Close dialog"
         tabIndex={-1}
