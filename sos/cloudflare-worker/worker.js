@@ -10,6 +10,9 @@
 // Firebase Cloud Function URL for server-side rendering
 const SSR_FUNCTION_URL = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2';
 
+// Cloudflare Pages origin URL (instead of DigitalOcean)
+const PAGES_ORIGIN = 'https://sos-expat.pages.dev';
+
 // Comprehensive list of bot user-agents to detect
 const BOT_USER_AGENTS = [
   // Search Engine Crawlers
@@ -611,8 +614,8 @@ async function handleRequest(request, env, ctx) {
     console.log(`[WORKER] Multi-dashboard path detected: ${pathname}`);
 
     try {
-      // Fetch the root index.html (SPA entry point)
-      const indexUrl = new URL('/', url.origin);
+      // Fetch the root index.html from Cloudflare Pages (SPA entry point)
+      const indexUrl = new URL('/', PAGES_ORIGIN);
       const indexResponse = await fetch(indexUrl.toString(), {
         method: 'GET',
         headers: request.headers,
@@ -692,13 +695,25 @@ async function handleRequest(request, env, ctx) {
     } catch (error) {
       console.error(`[SOS Expat Bot Detection] Error fetching SSR: ${error.message}`);
 
-      // On error, fall back to origin
-      return fetch(request);
+      // On error, fall back to Cloudflare Pages origin
+      const fallbackUrl = new URL(pathname, PAGES_ORIGIN);
+      fallbackUrl.search = url.search;
+      return fetch(fallbackUrl.toString(), {
+        method: request.method,
+        headers: request.headers,
+      });
     }
   }
 
-  // For non-bots or non-SSR pages, pass through to origin
-  const originResponse = await fetch(request);
+  // For non-bots or non-SSR pages, fetch from Cloudflare Pages origin
+  const pagesUrl = new URL(pathname, PAGES_ORIGIN);
+  pagesUrl.search = url.search; // Preserve query parameters
+
+  const originResponse = await fetch(pagesUrl.toString(), {
+    method: request.method,
+    headers: request.headers,
+    redirect: 'follow',
+  });
   const newHeaders = new Headers(originResponse.headers);
   newHeaders.set('X-Worker-Active', 'true');
   newHeaders.set('X-Worker-Bot-Detected', botDetected ? 'true' : 'false');
