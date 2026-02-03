@@ -184,11 +184,13 @@ export const forceEndCallTask = onRequest(
       });
 
       // STEP 7: Free up the provider if they were in this call
-      if (session?.metadata?.providerId) {
+      // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
+      const providerId = session?.providerId || session?.metadata?.providerId;
+      if (providerId) {
         try {
           const { setProviderAvailable } = await import('../callables/providerStatusManager');
-          await setProviderAvailable(session.metadata.providerId, 'force_end_call');
-          console.log(`🛑 [${debugId}] ✅ Provider ${session.metadata.providerId} freed`);
+          await setProviderAvailable(providerId, 'force_end_call');
+          console.log(`🛑 [${debugId}] ✅ Provider ${providerId} freed`);
         } catch (providerError) {
           console.warn(`🛑 [${debugId}] ⚠️ Failed to free provider:`, providerError);
         }

@@ -928,7 +928,8 @@ async function handleCallFailed(
 
           console.log(`[BONUS] Session définitivement échouée (status: ${session.status}), checking if provider should be set offline`);
 
-          const providerId = session.metadata?.providerId;
+          // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
+          const providerId = session.providerId || session.metadata?.providerId;
 
           if (!providerId) {
             console.log(`[BONUS] ProviderId non trouvé dans session: ${sessionId}`);

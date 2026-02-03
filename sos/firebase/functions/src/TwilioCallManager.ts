@@ -1893,7 +1893,8 @@ export class TwilioCallManager {
         // By doing it here, we guarantee the provider is set offline regardless of webhook timing
         // P2-2 FIX: Use transaction instead of batch to prevent race condition with webhook
         try {
-          const providerId = callSession.metadata?.providerId;
+          // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
+          const providerId = callSession.providerId || callSession.metadata?.providerId;
           if (providerId) {
             // ✅ EXEMPTION AAA: Les profils AAA ne doivent JAMAIS être mis hors ligne automatiquement
             const providerDoc = await this.db.collection('sos_profiles').doc(providerId).get();
@@ -2024,7 +2025,8 @@ export class TwilioCallManager {
 
         // P0 FIX: Remettre le provider AVAILABLE immédiatement (pas sa faute si client ne répond pas)
         try {
-          const providerId = callSession.metadata?.providerId;
+          // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
+          const providerId = callSession.providerId || callSession.metadata?.providerId;
           if (providerId) {
             console.log(`🟢 [handleCallFailure] Setting provider ${providerId} back to AVAILABLE (client_no_answer)`);
             const availableResult = await setProviderAvailable(providerId, 'client_no_answer');
@@ -2057,11 +2059,17 @@ export class TwilioCallManager {
       // P0 FIX: Skip cooldown pour client_no_answer (provider déjà remis available ci-dessus)
       if (reason !== "client_no_answer") {
         try {
-          const taskId = await scheduleProviderAvailableTask(
-            callSession.metadata.providerId,
-            `call_failed_${reason}`
-          );
-          console.log(`🕐 Provider ${callSession.metadata.providerId} will be AVAILABLE in 5 min (task: ${taskId})`);
+          // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
+          const providerIdForCooldown = callSession.providerId || callSession.metadata?.providerId;
+          if (!providerIdForCooldown) {
+            console.warn(`⚠️ [handleCallFailure] No providerId found, skipping cooldown task`);
+          } else {
+            const taskId = await scheduleProviderAvailableTask(
+              providerIdForCooldown,
+              `call_failed_${reason}`
+            );
+            console.log(`🕐 Provider ${providerIdForCooldown} will be AVAILABLE in 5 min (task: ${taskId})`);
+          }
         } catch (availableError) {
           console.error(`⚠️ Failed to schedule provider available task after failure (non-blocking):`, availableError);
           await logError('TwilioCallManager:handleCallFailure:scheduleAvailable', availableError as unknown);
@@ -2464,11 +2472,17 @@ export class TwilioCallManager {
 
       // ===== COOLDOWN: Schedule provider to become available in 5 minutes =====
       try {
-        const taskId = await scheduleProviderAvailableTask(
-          callSession.metadata.providerId,
-          'call_completed'
-        );
-        console.log(`🕐 Provider ${callSession.metadata.providerId} will be AVAILABLE in 5 min (task: ${taskId})`);
+        // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
+        const providerIdForCooldown = callSession.providerId || callSession.metadata?.providerId;
+        if (!providerIdForCooldown) {
+          console.warn(`⚠️ [handleCallCompletion] No providerId found, skipping cooldown task`);
+        } else {
+          const taskId = await scheduleProviderAvailableTask(
+            providerIdForCooldown,
+            'call_completed'
+          );
+          console.log(`🕐 Provider ${providerIdForCooldown} will be AVAILABLE in 5 min (task: ${taskId})`);
+        }
       } catch (availableError) {
         console.error(`⚠️ Failed to schedule provider available task (non-blocking):`, availableError);
         await logError('TwilioCallManager:handleCallCompletion:scheduleAvailable', availableError as unknown);

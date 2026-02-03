@@ -116,15 +116,17 @@ export const adminCleanupOrphanedSessions = onCall<{ dryRun?: boolean }, Promise
               });
 
               // Libérer le prestataire
-              if (session.metadata?.providerId) {
+              // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
+              const providerId = session.providerId || session.metadata?.providerId;
+              if (providerId) {
                 try {
                   await setProviderAvailable(
-                    session.metadata.providerId,
+                    providerId,
                     'admin_manual_cleanup'
                   );
                   result.providersFreed++;
                 } catch (providerError) {
-                  console.error(`Error freeing provider ${session.metadata.providerId}:`, providerError);
+                  console.error(`Error freeing provider ${providerId}:`, providerError);
                 }
               }
 

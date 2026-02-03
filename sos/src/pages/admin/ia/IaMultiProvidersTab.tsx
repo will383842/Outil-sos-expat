@@ -36,6 +36,8 @@ import {
   Power,
   PowerOff,
   MapPin,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 import { CountryCoverageTab } from './CountryCoverageTab';
 import {
@@ -80,6 +82,8 @@ interface Provider {
   interventionCountries?: string[];
   // 🆕 Couplage individuel - si false, ce prestataire ne passe pas en busy quand un sibling est en appel
   receiveBusyFromSiblings?: boolean;
+  // 🆕 Verrouillage hors ligne - si true, ce prestataire reste TOUJOURS hors ligne (même avec "Tous en ligne")
+  lockedOffline?: boolean;
 }
 
 // External payout account
@@ -327,6 +331,8 @@ export const IaMultiProvidersTab: React.FC = () => {
               interventionCountries,
               // 🆕 Couplage individuel - default true si non défini
               receiveBusyFromSiblings: cachedProfile.receiveBusyFromSiblings !== false,
+              // 🆕 Verrouillage hors ligne - default false si non défini
+              lockedOffline: cachedProfile.lockedOffline === true,
             });
           } else {
             // Fallback: chercher dans usersMap (cache)
@@ -361,6 +367,8 @@ export const IaMultiProvidersTab: React.FC = () => {
                 interventionCountries,
                 // 🆕 Couplage individuel - default true si non défini
                 receiveBusyFromSiblings: cachedUser.receiveBusyFromSiblings !== false,
+                // 🆕 Verrouillage hors ligne - default false si non défini
+                lockedOffline: cachedUser.lockedOffline === true,
               });
             }
           }
@@ -533,23 +541,115 @@ export const IaMultiProvidersTab: React.FC = () => {
   };
 
   // 🆕 Toggle shareBusyStatus for an account
+  // ✅ BUG FIX: Synchronise maintenant immédiatement les statuts si activé
   const toggleShareBusyStatus = async (account: MultiProviderAccount) => {
     setSaving(account.userId);
     const newValue = !account.shareBusyStatus;
+    const now = serverTimestamp();
 
     try {
+      // 1. Mettre à jour le flag shareBusyStatus
       await updateDoc(doc(db, 'users', account.userId), {
         shareBusyStatus: newValue,
-        updatedAt: serverTimestamp()
+        updatedAt: now
       });
 
-      setAccounts(prev => prev.map(a => {
-        if (a.userId !== account.userId) return a;
-        return { ...a, shareBusyStatus: newValue };
-      }));
+      let siblingsUpdated = 0;
 
+      // 2. ✅ BUG FIX: Si on ACTIVE la synchronisation, propager le statut busy existant
+      if (newValue) {
+        // Trouver si un provider est actuellement busy (pas busyBySibling)
+        const busyProvider = account.providers.find(
+          p => p.availability === 'busy' && p.busyBySibling !== true
+        );
+
+        if (busyProvider) {
+          console.log(`[toggleShareBusyStatus] Found busy provider ${busyProvider.id}, propagating to siblings...`);
+
+          // Propager le busy aux autres providers qui ont receiveBusyFromSiblings !== false
+          // 🔒 Ignorer les prestataires verrouillés hors ligne
+          const siblingsToUpdate = account.providers.filter(
+            p => p.id !== busyProvider.id &&
+                 p.availability !== 'busy' &&
+                 p.receiveBusyFromSiblings !== false &&
+                 p.lockedOffline !== true
+          );
+
+          const siblingUpdateData = {
+            availability: 'busy',
+            isOnline: true,
+            lastActivity: now,
+            busyReason: 'sibling_in_call',
+            busySince: now,
+            busyBySibling: true,
+            busySiblingProviderId: busyProvider.id,
+            busySiblingCallSessionId: busyProvider.currentCallSessionId || null,
+            lastStatusChange: now,
+            updatedAt: now
+          };
+
+          for (const sibling of siblingsToUpdate) {
+            try {
+              await Promise.all([
+                updateDoc(doc(db, 'sos_profiles', sibling.id), siblingUpdateData).catch(() => {}),
+                updateDoc(doc(db, 'users', sibling.id), siblingUpdateData).catch(() => {})
+              ]);
+              siblingsUpdated++;
+              console.log(`[toggleShareBusyStatus] ✅ Sibling ${sibling.id} set to busy`);
+            } catch (sibErr) {
+              console.warn(`[toggleShareBusyStatus] Failed to update sibling ${sibling.id}:`, sibErr);
+            }
+          }
+
+          // Mettre à jour l'état local pour les siblings
+          if (siblingsUpdated > 0) {
+            setAccounts(prev => prev.map(a => {
+              if (a.userId !== account.userId) return a;
+              return {
+                ...a,
+                shareBusyStatus: newValue,
+                providers: a.providers.map(p => {
+                  if (p.id === busyProvider.id) return p;
+                  if (siblingsToUpdate.some(s => s.id === p.id)) {
+                    return {
+                      ...p,
+                      availability: 'busy',
+                      isOnline: true,
+                      busyReason: 'sibling_in_call',
+                      busyBySibling: true,
+                      busySiblingProviderId: busyProvider.id,
+                    };
+                  }
+                  return p;
+                })
+              };
+            }));
+          } else {
+            setAccounts(prev => prev.map(a => {
+              if (a.userId !== account.userId) return a;
+              return { ...a, shareBusyStatus: newValue };
+            }));
+          }
+        } else {
+          // Pas de provider busy, juste mettre à jour le flag
+          setAccounts(prev => prev.map(a => {
+            if (a.userId !== account.userId) return a;
+            return { ...a, shareBusyStatus: newValue };
+          }));
+        }
+      } else {
+        // Désactivation: juste mettre à jour le flag local
+        setAccounts(prev => prev.map(a => {
+          if (a.userId !== account.userId) return a;
+          return { ...a, shareBusyStatus: newValue };
+        }));
+      }
+
+      const syncText = siblingsUpdated > 0
+        ? ` (${siblingsUpdated} sibling(s) synchronisé(s) immédiatement)`
+        : '';
       setSuccess(newValue
-        ? '✅ Synchronisation du statut activée - tous les prestataires liés seront marqués occupés ensemble'
+        ? `✅ Synchronisation du statut activée${syncText}`
         : '⚠️ Synchronisation désactivée - chaque prestataire garde son propre statut'
       );
       setTimeout(() => setSuccess(null), 4000);
@@ -562,6 +662,7 @@ export const IaMultiProvidersTab: React.FC = () => {
   };
 
   // 🆕 Force a provider to busy or available status
+  // ✅ BUG FIX: Propage maintenant le statut aux siblings si shareBusyStatus est activé
   const forceProviderStatus = async (
     providerId: string,
     newStatus: 'available' | 'busy',
@@ -571,6 +672,18 @@ export const IaMultiProvidersTab: React.FC = () => {
     const now = serverTimestamp();
 
     try {
+      // 1. Trouver le compte qui contient ce provider pour vérifier shareBusyStatus
+      const parentAccount = accounts.find(a => a.providers.some(p => p.id === providerId));
+      const shouldPropagate = parentAccount?.shareBusyStatus === true;
+      // 🔒 Ignorer les prestataires verrouillés hors ligne
+      const siblingIds = shouldPropagate
+        ? parentAccount.providers
+            .filter(p => p.id !== providerId && p.receiveBusyFromSiblings !== false && p.lockedOffline !== true)
+            .map(p => p.id)
+        : [];
+
+      console.log(`[forceProviderStatus] Provider: ${providerId}, Status: ${newStatus}, Propagate: ${shouldPropagate}, Siblings: ${siblingIds.length}`);
+
       const updateData = newStatus === 'busy'
         ? {
             availability: 'busy',
@@ -598,7 +711,33 @@ export const IaMultiProvidersTab: React.FC = () => {
             updatedAt: now
           };
 
-      // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
+      // 2. Préparer les données de mise à jour pour les siblings
+      const siblingUpdateData = newStatus === 'busy'
+        ? {
+            availability: 'busy',
+            isOnline: true,
+            lastActivity: now,
+            busyReason: 'sibling_manually_disabled',
+            busySince: now,
+            busyBySibling: true,
+            busySiblingProviderId: providerId,
+            lastStatusChange: now,
+            updatedAt: now
+          }
+        : {
+            availability: 'available',
+            isOnline: true,
+            lastActivity: now,
+            busyReason: null,
+            busySince: null,
+            busyBySibling: null,
+            busySiblingProviderId: null,
+            busySiblingCallSessionId: null,
+            lastStatusChange: now,
+            updatedAt: now
+          };
+
+      // 3. Update le provider principal
       let profileUpdated = false;
       let userUpdated = false;
 
@@ -619,24 +758,77 @@ export const IaMultiProvidersTab: React.FC = () => {
         throw new Error(`Impossible de forcer le statut: aucun document trouvé pour ce prestataire`);
       }
 
-      // Update local state
+      // 4. ✅ BUG FIX: Propager aux siblings si shareBusyStatus est activé
+      let siblingsUpdated = 0;
+      if (siblingIds.length > 0) {
+        console.log(`[forceProviderStatus] Propagating ${newStatus} to ${siblingIds.length} siblings...`);
+
+        for (const siblingId of siblingIds) {
+          // Pour "available", ne libérer QUE si le sibling était busy par CE provider
+          if (newStatus === 'available') {
+            const siblingProvider = parentAccount?.providers.find(p => p.id === siblingId);
+            // Si le sibling n'était pas busy par propagation de CE provider, ne pas le modifier
+            if (siblingProvider?.busyBySibling !== true || siblingProvider?.busySiblingProviderId !== providerId) {
+              console.log(`[forceProviderStatus] Sibling ${siblingId} not busy by this provider, skipping`);
+              continue;
+            }
+          }
+
+          try {
+            await Promise.all([
+              updateDoc(doc(db, 'sos_profiles', siblingId), siblingUpdateData).catch(() => {}),
+              updateDoc(doc(db, 'users', siblingId), siblingUpdateData).catch(() => {})
+            ]);
+            siblingsUpdated++;
+            console.log(`[forceProviderStatus] ✅ Sibling ${siblingId} updated to ${newStatus}`);
+          } catch (sibErr) {
+            console.warn(`[forceProviderStatus] Failed to update sibling ${siblingId}:`, sibErr);
+          }
+        }
+      }
+
+      // 5. Update local state - inclure les siblings mis à jour
       setAccounts(prev => prev.map(a => ({
         ...a,
         providers: a.providers.map(p => {
-          if (p.id !== providerId) return p;
-          return {
-            ...p,
-            availability: newStatus,
-            isOnline: true,
-            busyReason: newStatus === 'busy' ? (reason || 'manually_disabled') : undefined,
-            busyBySibling: false,
-            busySiblingProviderId: undefined,
-            currentCallSessionId: undefined
-          };
+          // Provider principal
+          if (p.id === providerId) {
+            return {
+              ...p,
+              availability: newStatus,
+              isOnline: true,
+              busyReason: newStatus === 'busy' ? (reason || 'manually_disabled') : undefined,
+              busyBySibling: false,
+              busySiblingProviderId: undefined,
+              currentCallSessionId: undefined
+            };
+          }
+          // Siblings mis à jour (si propagation activée)
+          if (shouldPropagate && siblingIds.includes(p.id)) {
+            // Pour "available", vérifier si le sibling était bien busy par ce provider
+            if (newStatus === 'available') {
+              if (p.busyBySibling !== true || p.busySiblingProviderId !== providerId) {
+                return p; // Ne pas modifier
+              }
+            }
+            return {
+              ...p,
+              availability: newStatus,
+              isOnline: true,
+              busyReason: newStatus === 'busy' ? 'sibling_manually_disabled' : undefined,
+              busyBySibling: newStatus === 'busy',
+              busySiblingProviderId: newStatus === 'busy' ? providerId : undefined,
+            };
+          }
+          return p;
         })
       })));
 
-      setSuccess(`Statut forcé: ${newStatus === 'busy' ? 'Occupé' : 'Disponible'}`);
+      const statusText = newStatus === 'busy' ? 'Occupé' : 'Disponible';
+      const propagationText = siblingsUpdated > 0
+        ? ` + ${siblingsUpdated} sibling(s) synchronisé(s)`
+        : '';
+      setSuccess(`Statut forcé: ${statusText}${propagationText}`);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error forcing provider status:', err);
@@ -699,6 +891,7 @@ export const IaMultiProvidersTab: React.FC = () => {
   };
 
   // 🆕 Set all providers in an account online or offline
+  // ✅ Respecte le verrouillage: les prestataires avec lockedOffline=true restent hors ligne
   const setAllProvidersStatus = async (account: MultiProviderAccount, online: boolean) => {
     setSaving(account.userId);
     const now = serverTimestamp();
@@ -706,8 +899,16 @@ export const IaMultiProvidersTab: React.FC = () => {
     try {
       let successCount = 0;
       let failCount = 0;
+      let lockedCount = 0;
 
       const updatePromises = account.providers.map(async (provider) => {
+        // 🔒 Si verrouillé et qu'on essaie de mettre en ligne → ignorer
+        if (online && provider.lockedOffline === true) {
+          console.log(`[setAllProvidersStatus] 🔒 Provider ${provider.id} is locked offline, skipping`);
+          lockedCount++;
+          return;
+        }
+
         const updateData = online
           ? {
               availability: 'available',
@@ -762,21 +963,28 @@ export const IaMultiProvidersTab: React.FC = () => {
         throw new Error(`Aucun prestataire n'a pu être mis à jour`);
       }
 
-      // Update local state
+      // Update local state (respecter les verrouillés)
       setAccounts(prev => prev.map(a => {
         if (a.userId !== account.userId) return a;
         return {
           ...a,
-          providers: a.providers.map(p => ({
-            ...p,
-            availability: online ? 'available' : 'offline',
-            isOnline: online,
-            busyReason: online ? undefined : 'offline',
-          }))
+          providers: a.providers.map(p => {
+            // 🔒 Ne pas modifier les prestataires verrouillés quand on met en ligne
+            if (online && p.lockedOffline === true) {
+              return p;
+            }
+            return {
+              ...p,
+              availability: online ? 'available' : 'offline',
+              isOnline: online,
+              busyReason: online ? undefined : 'offline',
+            };
+          })
         };
       }));
 
-      setSuccess(`Tous les prestataires sont maintenant ${online ? 'en ligne' : 'hors ligne'}`);
+      const lockedText = lockedCount > 0 ? ` (${lockedCount} verrouillé(s) ignoré(s) 🔒)` : '';
+      setSuccess(`Tous les prestataires sont maintenant ${online ? 'en ligne' : 'hors ligne'}${lockedText}`);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error setting all providers status:', err);
@@ -912,6 +1120,88 @@ export const IaMultiProvidersTab: React.FC = () => {
     } catch (err) {
       console.error('Error toggling provider coupling:', err);
       setError('Erreur lors de la modification du couplage');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  // 🆕 Toggle provider lock (lockedOffline) - Verrouille un prestataire en mode hors ligne
+  const toggleProviderLock = async (providerId: string, currentlyLocked: boolean) => {
+    setSaving(providerId);
+    const newValue = !currentlyLocked;
+    const now = serverTimestamp();
+
+    try {
+      // Si on verrouille, mettre aussi hors ligne
+      const updateData = newValue
+        ? {
+            lockedOffline: true,
+            availability: 'offline',
+            isOnline: false,
+            busyReason: 'locked_offline',
+            lastStatusChange: now,
+            updatedAt: now,
+          }
+        : {
+            lockedOffline: false,
+            // Ne pas changer le statut online/offline quand on déverrouille
+            // L'admin devra manuellement remettre en ligne si souhaité
+            updatedAt: now,
+          };
+
+      // Update sos_profiles (primary) and users (optional)
+      let profileUpdated = false;
+      let userUpdated = false;
+
+      await Promise.all([
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData)
+          .then(() => { profileUpdated = true; })
+          .catch((err) => {
+            console.warn(`[toggleProviderLock] Failed to update sos_profiles/${providerId}:`, err.message);
+          }),
+        updateDoc(doc(db, 'users', providerId), updateData)
+          .then(() => { userUpdated = true; })
+          .catch((err) => {
+            console.warn(`[toggleProviderLock] Failed to update users/${providerId}:`, err.message);
+          })
+      ]);
+
+      if (!profileUpdated && !userUpdated) {
+        throw new Error(`Impossible de modifier le verrouillage: aucun document trouvé pour ce prestataire`);
+      }
+
+      // Update local state
+      setAccounts(prev => prev.map(a => ({
+        ...a,
+        providers: a.providers.map(p => {
+          if (p.id !== providerId) return p;
+          if (newValue) {
+            // Verrouillage: mettre aussi hors ligne
+            return {
+              ...p,
+              lockedOffline: true,
+              availability: 'offline',
+              isOnline: false,
+              busyReason: 'locked_offline',
+            };
+          } else {
+            // Déverrouillage: juste enlever le verrou
+            return {
+              ...p,
+              lockedOffline: false,
+            };
+          }
+        })
+      })));
+
+      setSuccess(newValue
+        ? '🔒 Prestataire verrouillé hors ligne - restera hors ligne même avec "Tous en ligne"'
+        : '🔓 Prestataire déverrouillé - peut maintenant être mis en ligne'
+      );
+      setTimeout(() => setSuccess(null), 4000);
+    } catch (err) {
+      console.error('Error toggling provider lock:', err);
+      setError('Erreur lors du verrouillage');
     } finally {
       setSaving(null);
     }
@@ -1772,32 +2062,68 @@ export const IaMultiProvidersTab: React.FC = () => {
                           {provider.receiveBusyFromSiblings !== false ? 'BusyOn' : 'BusyOff'}
                         </button>
 
+                        {/* 🆕 Bouton Cadenas - Verrouillage hors ligne */}
+                        <button
+                          onClick={() => toggleProviderLock(provider.id, provider.lockedOffline === true)}
+                          disabled={saving === provider.id}
+                          className={cn(
+                            "flex items-center justify-center w-8 h-8 rounded-lg transition-colors",
+                            provider.lockedOffline === true
+                              ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          )}
+                          title={provider.lockedOffline === true
+                            ? "🔒 Verrouillé hors ligne - Cliquer pour déverrouiller"
+                            : "🔓 Déverrouillé - Cliquer pour verrouiller hors ligne"
+                          }
+                        >
+                          {provider.lockedOffline === true ? (
+                            <Lock className="w-4 h-4" />
+                          ) : (
+                            <Unlock className="w-4 h-4" />
+                          )}
+                        </button>
+
                         {/* 🆕 Toggle Online/Offline - individual control */}
                         <button
                           onClick={() => toggleProviderOnline(provider.id, provider.isOnline && provider.availability !== 'offline')}
-                          disabled={saving === provider.id}
+                          disabled={saving === provider.id || provider.lockedOffline === true}
                           className={cn(
                             "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50",
-                            provider.isOnline && provider.availability !== 'offline'
-                              ? "bg-green-500 focus:ring-green-500"
-                              : "bg-gray-300 dark:bg-gray-600 focus:ring-gray-500"
+                            provider.lockedOffline === true
+                              ? "bg-amber-400 cursor-not-allowed"
+                              : provider.isOnline && provider.availability !== 'offline'
+                                ? "bg-green-500 focus:ring-green-500"
+                                : "bg-gray-300 dark:bg-gray-600 focus:ring-gray-500"
                           )}
-                          title={provider.isOnline && provider.availability !== 'offline' ? "Mettre hors ligne" : "Mettre en ligne"}
+                          title={provider.lockedOffline === true
+                            ? "🔒 Verrouillé - Déverrouillez d'abord pour mettre en ligne"
+                            : provider.isOnline && provider.availability !== 'offline'
+                              ? "Mettre hors ligne"
+                              : "Mettre en ligne"
+                          }
                         >
                           <span
                             className={cn(
                               "inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm",
-                              provider.isOnline && provider.availability !== 'offline' ? "translate-x-6" : "translate-x-1"
+                              provider.isOnline && provider.availability !== 'offline' && !provider.lockedOffline ? "translate-x-6" : "translate-x-1"
                             )}
                           />
                         </button>
                         <span className={cn(
                           "text-xs font-medium min-w-[50px]",
-                          provider.isOnline && provider.availability !== 'offline'
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-gray-500 dark:text-gray-400"
+                          provider.lockedOffline === true
+                            ? "text-amber-600 dark:text-amber-400"
+                            : provider.isOnline && provider.availability !== 'offline'
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-gray-500 dark:text-gray-400"
                         )}>
-                          {provider.isOnline && provider.availability !== 'offline' ? 'En ligne' : 'Hors ligne'}
+                          {provider.lockedOffline === true
+                            ? '🔒 Verrouillé'
+                            : provider.isOnline && provider.availability !== 'offline'
+                              ? 'En ligne'
+                              : 'Hors ligne'
+                          }
                         </span>
 
                         {/* Separator */}

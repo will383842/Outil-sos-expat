@@ -319,6 +319,13 @@ async function propagateBusyToSiblings(
         continue;
       }
 
+      // 🔒 Vérifier si ce prestataire est verrouillé hors ligne
+      // lockedOffline: true = ne jamais mettre en ligne ou propager le busy
+      if (siblingData?.lockedOffline === true) {
+        console.log(`[ProviderStatusManager] Sibling ${siblingId} is locked offline 🔒, skipping propagation`);
+        continue;
+      }
+
       const siblingUpdateData = {
         availability: 'busy',
         isOnline: true,
