@@ -130,8 +130,9 @@ const MultiProviderDashboard: React.FC = () => {
   // Helper to check if a booking is "active" (needs attention)
   const isActiveBooking = useCallback((booking: { status: string; createdAt: Date }) => {
     const age = Date.now() - booking.createdAt.getTime();
-    // Active = pending AND less than 24h old
-    return booking.status === 'pending' && age < TWENTY_FOUR_HOURS;
+    // Active = (pending OR in_progress) AND less than 24h old
+    // in_progress = AI has responded but provider hasn't closed the conversation yet
+    return (booking.status === 'pending' || booking.status === 'in_progress') && age < TWENTY_FOUR_HOURS;
   }, []);
 
   // Helper to check if booking is "new" (< 5 min)
@@ -140,13 +141,13 @@ const MultiProviderDashboard: React.FC = () => {
     return age < FIVE_MINUTES;
   }, []);
 
-  // Helper to check if booking is "expired" (pending > 24h) or completed/cancelled
+  // Helper to check if booking is "expired" (pending/in_progress > 24h) or completed/cancelled
   const isHistoryBooking = useCallback((booking: { status: string; createdAt: Date }) => {
     const age = Date.now() - booking.createdAt.getTime();
-    // History = completed, cancelled, OR pending > 24h (expired)
+    // History = completed, cancelled, OR (pending/in_progress) > 24h (expired)
     return booking.status === 'completed' ||
            booking.status === 'cancelled' ||
-           (booking.status === 'pending' && age >= TWENTY_FOUR_HOURS);
+           ((booking.status === 'pending' || booking.status === 'in_progress') && age >= TWENTY_FOUR_HOURS);
   }, []);
 
   // ============================================================================
@@ -169,11 +170,11 @@ const MultiProviderDashboard: React.FC = () => {
     }));
   }, [accounts, isHistoryBooking]);
 
-  // Count expired pending (for info)
+  // Count expired pending/in_progress (for info)
   const expiredPendingCount = useMemo(() => {
     return accounts.flatMap(a => a.bookingRequests).filter(b => {
       const age = Date.now() - b.createdAt.getTime();
-      return b.status === 'pending' && age >= TWENTY_FOUR_HOURS;
+      return (b.status === 'pending' || b.status === 'in_progress') && age >= TWENTY_FOUR_HOURS;
     }).length;
   }, [accounts]);
 
@@ -181,7 +182,7 @@ const MultiProviderDashboard: React.FC = () => {
   const newRequests = useMemo(() => {
     return accounts.flatMap(account =>
       account.bookingRequests
-        .filter(booking => isNewBooking(booking) && booking.status === 'pending')
+        .filter(booking => isNewBooking(booking) && (booking.status === 'pending' || booking.status === 'in_progress'))
         .map(booking => ({
           ...booking,
           accountName: account.displayName,
@@ -191,13 +192,13 @@ const MultiProviderDashboard: React.FC = () => {
     ).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }, [accounts, isNewBooking]);
 
-  // À TRAITER: Pending requests between 5 min and 24h old
+  // À TRAITER: Pending/in_progress requests between 5 min and 24h old
   const pendingRequests = useMemo(() => {
     return accounts.flatMap(account =>
       account.bookingRequests
         .filter(booking => {
           const age = Date.now() - booking.createdAt.getTime();
-          return booking.status === 'pending' &&
+          return (booking.status === 'pending' || booking.status === 'in_progress') &&
                  age >= FIVE_MINUTES &&
                  age < TWENTY_FOUR_HOURS;
         })
@@ -305,7 +306,7 @@ const MultiProviderDashboard: React.FC = () => {
                         Accès rapide
                       </p>
                       {accounts.map((account) => {
-                        const hasPending = account.bookingRequests.some(b => b.status === 'pending');
+                        const hasPending = account.bookingRequests.some(b => b.status === 'pending' || b.status === 'in_progress');
                         return (
                           <button
                             key={account.userId}
@@ -773,7 +774,7 @@ const MultiProviderDashboard: React.FC = () => {
                       providerInfo: account.providers.find(p => p.id === booking.providerId),
                     }))
                   ).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 50).map((request) => {
-                    const isExpired = request.status === 'pending';
+                    const isExpired = request.status === 'pending' || request.status === 'in_progress';
                     const dateStr = request.createdAt.toLocaleDateString('fr-FR', {
                       day: 'numeric',
                       month: 'short',
