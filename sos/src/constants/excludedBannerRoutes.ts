@@ -15,6 +15,18 @@
  * IMPORTANT: Each route includes ALL translations (fr, en, es, de, ru, pt, ch, hi, ar)
  */
 export const EXCLUDED_BANNER_ROUTE_PATTERNS: string[] = [
+  // === HOME PAGE (root) ===
+  '/',                      // Root home page
+  '/accueil',               // fr
+  '/home',                  // en
+  '/inicio',                // es
+  '/startseite',            // de
+  '/glavnaya',              // ru
+  '/pagina-inicial',        // pt
+  '/shouye',                // ch
+  '/mukhya-prishth',        // hi
+  '/الرئيسية',              // ar
+
   // === SOS CALL / EMERGENCY CALL PAGES (all translations) ===
   '/sos-appel',           // fr
   '/emergency-call',      // en
@@ -150,6 +162,13 @@ export function shouldHideBannersOnRoute(pathname: string): boolean {
 
   // Normalize pathname (remove trailing slash except for root)
   const normalizedPath = pathname.replace(/\/$/, '') || '/';
+
+  // Check if this is the home page (root or just locale prefix)
+  // Matches: /, /fr-fr, /en-us, /es-es, etc.
+  const isHomePage = normalizedPath === '/' || /^\/[a-z]{2}(-[a-z]{2})?$/i.test(normalizedPath);
+  if (isHomePage) {
+    return true;
+  }
 
   // Check for provider profile routes with lang-locale prefix
   // e.g., /fr-fr/avocat-thailande/julien-visa-k7m2p9
