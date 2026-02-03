@@ -245,6 +245,11 @@ export {
 // DISABLED 2026-01-30: One-time seed functions - removed to free Cloud Run quota
 // export { initPayPalWelcomeTemplates } from "./seeds/paypalWelcomeTemplates";
 
+// Early Disconnect Refund Templates Seed (9 langues)
+// P0 FIX 2026-02-03: Templates for notifying client & provider when call ends early and is refunded
+// SEEDED 2026-02-03 via scripts/seedEarlyDisconnectTemplates.js
+// export { initEarlyDisconnectTemplates } from "./seeds/earlyDisconnectTemplates";
+
 // Country Fiscal Configs Seed (200 countries + 64 USA/Canada subdivisions)
 // NOTE: Data already seeded via local script (scripts/seedCountryData.js)
 // Commented out to avoid Cloud Run CPU quota issues on deployment

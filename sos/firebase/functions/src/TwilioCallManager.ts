@@ -12,6 +12,8 @@ import { scheduleProviderAvailableTask } from "./lib/tasks";
 import { setProviderAvailable } from "./callables/providerStatusManager";
 // 🔒 Phone number encryption
 import { encryptPhoneNumber, decryptPhoneNumber } from "./utils/encryption";
+// 🌐 i18n for notification language resolution
+import { resolveLang } from "./notificationPipeline/i18n";
 // P1-13: Sync atomique payments <-> call_sessions
 import { syncPaymentStatus } from "./utils/paymentSync";
 // Production logger
@@ -2281,6 +2283,76 @@ export class TwilioCallManager {
           "metadata.updatedAt": admin.firestore.Timestamp.now(),
         });
         console.log(`✅ Paiement ${sessionId} traité avec succès: ${newStatus}`);
+
+        // =====================================================
+        // P0 FIX 2026-02-03: Send notifications for early disconnect refunds
+        // Notify both CLIENT (refund confirmation) and PROVIDER (call failed)
+        // =====================================================
+        try {
+          const clientId = callSession.metadata?.clientId || callSession.clientId;
+          const providerId = callSession.metadata?.providerId || callSession.providerId;
+          const clientLanguage = resolveLang(callSession.metadata?.clientLanguages?.[0]);
+          const providerLanguage = resolveLang(callSession.metadata?.providerLanguages?.[0]);
+
+          // Format amount for display (e.g., "15,00 €" or "$15.00")
+          const amount = callSession.payment?.amount || 0;
+          const currency = isPayPal ? "EUR" : "EUR"; // Default to EUR, could be extended
+          const formattedAmount = new Intl.NumberFormat(clientLanguage === "en" ? "en-US" : clientLanguage, {
+            style: "currency",
+            currency: currency,
+          }).format(amount);
+
+          // 1. Notify CLIENT about refund
+          if (clientId) {
+            const clientNotification = {
+              eventId: "call.refund.early_disconnect",
+              locale: clientLanguage,
+              to: {
+                uid: clientId,
+              },
+              context: {
+                sessionId,
+                AMOUNT: formattedAmount,
+                reason: reason,
+              },
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              status: "pending",
+            };
+            const clientNotifRef = await this.db.collection("message_events").add(clientNotification);
+            console.log(`📨 [processRefund] Client notification created: ${clientNotifRef.id}`);
+            console.log(`📨   → Client ${clientId} will be notified of refund: ${formattedAmount}`);
+          }
+
+          // 2. Notify PROVIDER about failed call
+          if (providerId) {
+            const providerPhone = callSession.participants?.provider?.phone
+              ? decryptPhoneNumber(callSession.participants.provider.phone)
+              : null;
+
+            const providerNotification = {
+              eventId: "call.failed.early_disconnect.provider",
+              locale: providerLanguage,
+              to: {
+                uid: providerId,
+                phone: providerPhone,
+              },
+              context: {
+                sessionId,
+                AMOUNT: formattedAmount,
+                reason: reason,
+              },
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              status: "pending",
+            };
+            const providerNotifRef = await this.db.collection("message_events").add(providerNotification);
+            console.log(`📨 [processRefund] Provider notification created: ${providerNotifRef.id}`);
+            console.log(`📨   → Provider ${providerId} will be notified of early disconnect`);
+          }
+        } catch (notifError) {
+          // Non-blocking: don't fail the refund if notification fails
+          console.error(`⚠️ [processRefund] Failed to send refund notifications (non-blocking):`, notifError);
+          await logError("TwilioCallManager:processRefund:notifications", notifError as unknown);
+        }
       } else {
         console.error(`❌ Échec traitement paiement ${sessionId}:`, result.error);
       }

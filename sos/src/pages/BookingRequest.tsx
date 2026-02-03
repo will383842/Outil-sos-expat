@@ -1968,7 +1968,7 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {intl.formatMessage({ id: "auth.passwordHint", defaultMessage: "Minimum 6 caractères" })}
+                {intl.formatMessage({ id: "auth.passwordHint", defaultMessage: "Minimum 8 caractères" })}
               </p>
             </div>
 

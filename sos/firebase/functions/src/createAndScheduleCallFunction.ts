@@ -133,7 +133,7 @@ export const createAndScheduleCallHTTPS = onCall(
     memory: '256MiB',
     cpu: 0.25,
     maxInstances: 3,
-    minInstances: 0,
+    minInstances: 1,
     concurrency: 1,
     timeoutSeconds: 60,
     cors: true,

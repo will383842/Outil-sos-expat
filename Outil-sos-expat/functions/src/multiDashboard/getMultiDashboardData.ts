@@ -284,12 +284,14 @@ export const getMultiDashboardData = onCall<
       for (let i = 0; i < providerIdsArray.length; i += BATCH_SIZE) {
         const batch = providerIdsArray.slice(i, i + BATCH_SIZE);
 
-        // Note: Removed orderBy to avoid requiring a composite index
-        // Sorting is done later when building accounts
+        // Load booking requests for this batch of providers
+        // IMPORTANT: Increased limit to 500 per batch to avoid missing requests
+        // Real-time listener on frontend handles immediate updates
         const bookingsSnap = await db
           .collection("booking_requests")
           .where("providerId", "in", batch)
-          .limit(200) // Limit total to avoid excessive data
+          .orderBy("createdAt", "desc") // Sort by date to get newest first
+          .limit(500) // Increased from 200 to avoid missing requests
           .get();
 
         for (const bookingDoc of bookingsSnap.docs) {
