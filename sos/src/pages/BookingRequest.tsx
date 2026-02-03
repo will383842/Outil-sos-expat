@@ -2170,6 +2170,18 @@ const BookingRequest: React.FC = () => {
   const lang = (language as LangKey) || "fr";
   const t = I18N[lang];
 
+  // 🔍 [BOOKING_AUTH_DEBUG] Log BookingRequest component mount
+  console.log('[BOOKING_AUTH_DEBUG] 📅 BookingRequest PAGE RENDER', {
+    providerId,
+    user: user ? { id: user.id, email: user.email, role: user.role } : null,
+    authLoading,
+    selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
+      JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
+    selectedProviderName: sessionStorage.getItem('selectedProvider') ?
+      JSON.parse(sessionStorage.getItem('selectedProvider')!).name : 'NULL',
+    loginRedirectInSession: sessionStorage.getItem('loginRedirect') || 'NULL',
+  });
+
   const [provider, setProvider] = useState<Provider | null>(null);
   const [providerLoading, setProviderLoading] = useState<boolean>(true);
 
@@ -2304,16 +2316,37 @@ const BookingRequest: React.FC = () => {
   providerIdRef.current = providerId;
 
   const readProviderFromSession = useCallback((): Provider | null => {
+    // 🔍 [BOOKING_AUTH_DEBUG] Log reading provider from sessionStorage
+    console.log('[BOOKING_AUTH_DEBUG] 📖 BookingRequest readProviderFromSession() CALLED', {
+      providerIdFromUrl: providerIdRef.current,
+    });
+
     try {
       const saved = sessionStorage.getItem("selectedProvider");
-      if (!saved) return null;
+      console.log('[BOOKING_AUTH_DEBUG] 📖 BookingRequest sessionStorage.getItem("selectedProvider"):', saved ? 'EXISTS' : 'NULL');
+
+      if (!saved) {
+        console.log('[BOOKING_AUTH_DEBUG] ❌ BookingRequest NO selectedProvider in sessionStorage');
+        return null;
+      }
+
       const parsed = JSON.parse(saved) as Partial<Provider> & { id?: string };
+      console.log('[BOOKING_AUTH_DEBUG] 📖 BookingRequest parsed provider:', {
+        parsedId: parsed?.id,
+        parsedName: parsed?.name,
+        expectedProviderId: providerIdRef.current,
+        idsMatch: parsed?.id === providerIdRef.current,
+      });
+
       // Use ref to get current providerId without adding it as dependency
       if (parsed && parsed.id && parsed.id === providerIdRef.current) {
+        console.log('[BOOKING_AUTH_DEBUG] ✅ BookingRequest provider IDs MATCH - returning provider');
         return normalizeProvider(parsed as Partial<Provider> & { id: string });
+      } else {
+        console.log('[BOOKING_AUTH_DEBUG] ⚠️ BookingRequest provider IDs DO NOT MATCH or invalid');
       }
     } catch (error) {
-      console.warn("Failed to read provider from sessionStorage", error);
+      console.warn("[BOOKING_AUTH_DEBUG] ❌ BookingRequest Failed to read provider from sessionStorage", error);
     }
     return null;
   }, []); // P0 FIX: Empty deps = stable function reference
@@ -2323,8 +2356,18 @@ const BookingRequest: React.FC = () => {
 
   // Chargement live du provider
   useEffect(() => {
+    // 🔍 [BOOKING_AUTH_DEBUG] Log provider loading useEffect start
+    console.log('[BOOKING_AUTH_DEBUG] ⚡ BookingRequest PROVIDER LOAD useEffect START', {
+      providerId,
+      providerLoadedRef: providerLoadedRef.current,
+      currentProvider: provider ? provider.id : 'NULL',
+      selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
+        JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
+    });
+
     // P0 FIX: Skip if already loaded (prevents re-mount issues)
     if (providerLoadedRef.current && provider) {
+      console.log('[BOOKING_AUTH_DEBUG] ⏭️ BookingRequest SKIPPING - already loaded');
       return;
     }
 
@@ -2335,7 +2378,14 @@ const BookingRequest: React.FC = () => {
     const boot = async () => {
       setProviderLoading(true);
       const fromSession = readProviderFromSession();
+
+      console.log('[BOOKING_AUTH_DEBUG] 📖 BookingRequest fromSession result:', fromSession ? {
+        id: fromSession.id,
+        name: fromSession.name,
+      } : 'NULL');
+
       if (fromSession) {
+        console.log('[BOOKING_AUTH_DEBUG] ✅ BookingRequest USING provider from sessionStorage');
         setProvider(fromSession);
         setProviderLoading(false);
         providerLoadedRef.current = true; // P0 FIX: Mark as loaded

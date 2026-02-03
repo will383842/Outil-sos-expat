@@ -892,10 +892,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
    * car il garantit que toutes les données utilisateur sont chargées */
   const isFullyReady = useMemo(() => {
     // Not ready if auth not initialized
-    if (!authInitialized) return false;
+    if (!authInitialized) {
+      console.log('[BOOKING_AUTH_DEBUG] ⏳ isFullyReady=false (authInitialized=false)');
+      return false;
+    }
     // If loading user data, not ready
-    if (isLoading) return false;
+    if (isLoading) {
+      console.log('[BOOKING_AUTH_DEBUG] ⏳ isFullyReady=false (isLoading=true)');
+      return false;
+    }
     // Ready: either we have a user, or there's no authUser (no login)
+    console.log('[BOOKING_AUTH_DEBUG] ✅ isFullyReady=true');
     return true;
   }, [authInitialized, isLoading]);
   const [authMetrics, setAuthMetrics] = useState<AuthMetrics>({
@@ -940,10 +947,25 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       authStateReceivedRef.current = true;
       clearTimeout(safetyTimeoutId);
 
+      // 🔍 [BOOKING_AUTH_DEBUG] Log onAuthStateChanged
+      console.log('[BOOKING_AUTH_DEBUG] 🔔 AuthContext onAuthStateChanged FIRED', {
+        newUser: u ? { uid: u.uid, email: u.email } : null,
+        previousUid: previousAuthUserUidRef.current,
+        selectedProviderInSession: typeof sessionStorage !== 'undefined' ?
+          (sessionStorage.getItem('selectedProvider') ?
+            JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL') : 'SSR',
+      });
+
       // Si l'utilisateur change (login après logout ou nouveau login),
       // reset les refs de subscription pour que le nouveau listener démarre proprement
       const isNewUser = u && u.uid !== previousAuthUserUidRef.current;
       const isSameUser = u && u.uid === previousAuthUserUidRef.current;
+
+      console.log('[BOOKING_AUTH_DEBUG] 🔔 AuthContext onAuthStateChanged user state:', {
+        isNewUser,
+        isSameUser,
+        willResetSubscriptions: isNewUser,
+      });
 
       if (isNewUser) {
         subscribed.current = false;
@@ -962,6 +984,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       setFirebaseUser(u ?? null);
       if (!u) {
         // Pas d'utilisateur → on nettoie l'état applicatif
+        console.log('[BOOKING_AUTH_DEBUG] ❌ AuthContext onAuthStateChanged NO USER - clearing state');
         setUser(null);
         signingOutRef.current = false;
         setIsLoading(false);
@@ -982,13 +1005,26 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const firstSnapArrived = useRef(false);
 
   useEffect(() => {
+    // 🔍 [BOOKING_AUTH_DEBUG] Log Firestore user subscription useEffect
+    console.log('[BOOKING_AUTH_DEBUG] 📂 AuthContext Firestore USER SUBSCRIPTION useEffect', {
+      hasAuthUser: !!authUser,
+      authUserUid: authUser?.uid || null,
+      alreadySubscribed: subscribed.current,
+      selectedProviderInSession: typeof sessionStorage !== 'undefined' ?
+        (sessionStorage.getItem('selectedProvider') ?
+          JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL') : 'SSR',
+    });
+
     if (!authUser) {
+      console.log('[BOOKING_AUTH_DEBUG] ⏳ AuthContext waiting for authUser...');
       return;               // attendre l'auth
     }
     if (subscribed.current) {
+      console.log('[BOOKING_AUTH_DEBUG] ⏭️ AuthContext already subscribed, skipping...');
       return;      // éviter double abonnement en StrictMode
     }
 
+    console.log('[BOOKING_AUTH_DEBUG] 🔌 AuthContext SUBSCRIBING to Firestore user document');
     subscribed.current = true;
     firstSnapArrived.current = false;
     setIsLoading(true);
@@ -1160,7 +1196,19 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     unsubUser = onSnapshot(
       refUser,
       async (docSnap) => {
+        // 🔍 [BOOKING_AUTH_DEBUG] Log Firestore onSnapshot callback
+        console.log('[BOOKING_AUTH_DEBUG] 📥 AuthContext onSnapshot CALLBACK received', {
+          docExists: docSnap.exists(),
+          docId: docSnap.id,
+          signingOut: signingOutRef.current,
+          cancelled,
+          selectedProviderInSession: typeof sessionStorage !== 'undefined' ?
+            (sessionStorage.getItem('selectedProvider') ?
+              JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL') : 'SSR',
+        });
+
         if (signingOutRef.current || cancelled) {
+          console.log('[BOOKING_AUTH_DEBUG] ⏭️ AuthContext onSnapshot SKIPPED (signing out or cancelled)');
           return;
         }
 
@@ -1308,6 +1356,20 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         if (!firstSnapArrived.current) {
           console.log(`✅ [AuthContext] First snapshot for users/${uid}`);
+
+          // 🔍 [BOOKING_AUTH_DEBUG] Log user fully loaded
+          console.log('[BOOKING_AUTH_DEBUG] ✅ AuthContext USER FULLY LOADED', {
+            uid,
+            email: data.email || authUser.email,
+            role: data.role,
+            selectedProviderInSession: typeof sessionStorage !== 'undefined' ?
+              (sessionStorage.getItem('selectedProvider') ?
+                JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL') : 'SSR',
+            loginRedirectInSession: typeof sessionStorage !== 'undefined' ?
+              (sessionStorage.getItem('loginRedirect') || 'NULL') : 'SSR',
+          });
+          console.log('[BOOKING_AUTH_DEBUG] 🏁 AuthContext setting isLoading=false, authInitialized=true');
+
           firstSnapArrived.current = true;
           setIsLoading(false);
           setAuthInitialized(true);
@@ -1416,6 +1478,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     // VERSION 8 - DEBUG AUTH
     console.log("[DEBUG] " + "🔐 LOGIN: Début\n\nEmail: " + email + "\nRemember: " + rememberMe);
 
+    // 🔍 [BOOKING_AUTH_DEBUG] Log AuthContext login() start
+    console.log('[BOOKING_AUTH_DEBUG] 🔐 AuthContext.login() START', {
+      email,
+      rememberMe,
+      selectedProviderInSession: typeof sessionStorage !== 'undefined' ?
+        (sessionStorage.getItem('selectedProvider') ?
+          JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL') : 'SSR',
+      loginRedirectInSession: typeof sessionStorage !== 'undefined' ?
+        (sessionStorage.getItem('loginRedirect') || 'NULL') : 'SSR',
+    });
+
     setIsLoading(true);
     setError(null);
     setAuthMetrics((m) => ({ ...m, loginAttempts: m.loginAttempts + 1, lastAttempt: new Date() }));
@@ -1423,6 +1496,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     if (!email || !password) {
       const msg = 'Email et mot de passe sont obligatoires';
       console.log("[DEBUG] " + "❌ LOGIN: Email ou mot de passe manquant");
+      console.log('[BOOKING_AUTH_DEBUG] ❌ AuthContext.login() MISSING credentials');
       setError(msg);
       setIsLoading(false);
       setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
@@ -1443,6 +1517,18 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       ]);
 
       console.log("[DEBUG] " + "✅ LOGIN RÉUSSI!\n\nUID: " + cred.user.uid + "\nEmail: " + cred.user.email);
+
+      // 🔍 [BOOKING_AUTH_DEBUG] Log successful login
+      console.log('[BOOKING_AUTH_DEBUG] ✅ AuthContext.login() SUCCESS', {
+        uid: cred.user.uid,
+        email: cred.user.email,
+        selectedProviderInSession: typeof sessionStorage !== 'undefined' ?
+          (sessionStorage.getItem('selectedProvider') ?
+            JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL') : 'SSR',
+        loginRedirectInSession: typeof sessionStorage !== 'undefined' ?
+          (sessionStorage.getItem('loginRedirect') || 'NULL') : 'SSR',
+      });
+
       logAuthEvent('successful_login', {
         userId: cred.user.uid,
         provider: 'email',
@@ -1974,6 +2060,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const register = useCallback(async (userData: Partial<User>, password: string): Promise<void> => {
     console.log("[DEBUG] " + "🔵 REGISTER: Début\n\nEmail: " + userData.email + "\nRole: " + userData.role);
 
+    // 🔍 [BOOKING_AUTH_DEBUG] Log AuthContext register() start
+    console.log('[BOOKING_AUTH_DEBUG] 📝 AuthContext.register() START', {
+      email: userData.email,
+      role: userData.role,
+      selectedProviderInSession: typeof sessionStorage !== 'undefined' ?
+        (sessionStorage.getItem('selectedProvider') ?
+          JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL') : 'SSR',
+      loginRedirectInSession: typeof sessionStorage !== 'undefined' ?
+        (sessionStorage.getItem('loginRedirect') || 'NULL') : 'SSR',
+    });
+
     setIsLoading(true);
     setError(null);
 
@@ -2008,6 +2105,15 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       console.log("[DEBUG] " + "🔵 REGISTER: createUserWithEmailAndPassword...");
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       console.log("[DEBUG] " + "✅ REGISTER: User créé!\n\nUID: " + cred.user.uid);
+
+      // 🔍 [BOOKING_AUTH_DEBUG] Log successful user creation
+      console.log('[BOOKING_AUTH_DEBUG] ✅ AuthContext.register() USER CREATED', {
+        uid: cred.user.uid,
+        email: cred.user.email,
+        selectedProviderInSession: typeof sessionStorage !== 'undefined' ?
+          (sessionStorage.getItem('selectedProvider') ?
+            JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL') : 'SSR',
+      });
 
       let finalProfilePhotoURL = '/default-avatar.png';
       if (userData.profilePhoto?.startsWith('data:image')) {

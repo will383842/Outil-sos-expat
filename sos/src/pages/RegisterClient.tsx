@@ -419,6 +419,23 @@ const RegisterClient: React.FC = () => {
   const referralCode = searchParams.get("ref") || "";
 
   const { register, loginWithGoogle, isLoading, error, user, authInitialized, isFullyReady } = useAuth();
+
+  // 🔍 [BOOKING_AUTH_DEBUG] Log RegisterClient component mount
+  console.log('[BOOKING_AUTH_DEBUG] 📝 RegisterClient PAGE RENDER', {
+    locationPathname: location.pathname,
+    locationSearch: location.search,
+    locationState: location.state,
+    rawRedirect,
+    redirect,
+    prefillEmail,
+    selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
+      JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
+    loginRedirectInSession: sessionStorage.getItem('loginRedirect') || 'NULL',
+    user: user ? { id: user.id, email: user.email } : null,
+    isLoading,
+    authInitialized,
+    isFullyReady,
+  });
   const { language } = useApp();
   const currentLang = (language || "fr") as "fr" | "en" | "es" | "de" | "ru" | "hi" | "pt" | "ch" | "ar";
 
@@ -687,10 +704,24 @@ const RegisterClient: React.FC = () => {
     const rawState: unknown = location.state;
     const state = (rawState ?? null) as NavState | null;
     const sp = state?.selectedProvider;
+
+    // 🔍 [BOOKING_AUTH_DEBUG] Log provider storage from location.state
+    console.log('[BOOKING_AUTH_DEBUG] 📦 RegisterClient STORE_PROVIDER useEffect', {
+      hasLocationState: !!location.state,
+      rawState: rawState,
+      selectedProviderFromState: sp ? { id: sp.id, name: sp.name, type: sp.type } : 'NULL',
+      isProviderLike: isProviderLike(sp),
+      currentSessionStorageProvider: sessionStorage.getItem('selectedProvider') ?
+        JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
+    });
+
     if (isProviderLike(sp)) {
       try {
         sessionStorage.setItem("selectedProvider", JSON.stringify(sp));
-      } catch {}
+        console.log('[BOOKING_AUTH_DEBUG] ✅ RegisterClient STORED selectedProvider in sessionStorage:', sp.id);
+      } catch (e) {
+        console.error('[BOOKING_AUTH_DEBUG] ❌ RegisterClient FAILED to store selectedProvider:', e);
+      }
     }
   }, [location.state]);
 
@@ -724,7 +755,18 @@ const RegisterClient: React.FC = () => {
   // Redirect if already logged in
   // ✅ FIX FLASH P0: Utiliser isFullyReady pour s'assurer que tout est chargé
   useEffect(() => {
+    // 🔍 [BOOKING_AUTH_DEBUG] Log redirect check
+    console.log('[BOOKING_AUTH_DEBUG] 🔄 RegisterClient REDIRECT useEffect', {
+      isFullyReady,
+      user: user ? { id: user.id, email: user.email } : null,
+      willRedirect: isFullyReady && user,
+      redirect,
+      selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
+        JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
+    });
+
     if (isFullyReady && user) {
+      console.log('[BOOKING_AUTH_DEBUG] 🚀 RegisterClient NAVIGATING to:', redirect);
       navigate(redirect, { replace: true });
     }
   }, [isFullyReady, user, navigate, redirect]);
@@ -944,6 +986,15 @@ const RegisterClient: React.FC = () => {
     async (e: React.FormEvent) => {
       e.preventDefault();
 
+      // 🔍 [BOOKING_AUTH_DEBUG] Log form submission start
+      console.log('[BOOKING_AUTH_DEBUG] 📝 RegisterClient FORM SUBMIT START', {
+        email: formData.email,
+        selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
+          JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
+        redirect,
+        isSubmitting,
+      });
+
       // Mark all fields as touched
       setTouched({
         firstName: true,
@@ -1056,6 +1107,14 @@ const RegisterClient: React.FC = () => {
         trackAdRegistration({
           contentName: 'client_registration',
         });
+
+        // 🔍 [BOOKING_AUTH_DEBUG] Log navigation after registration
+        console.log('[BOOKING_AUTH_DEBUG] ✅ RegisterClient REGISTRATION SUCCESS', {
+          redirect,
+          selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
+            JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
+        });
+        console.log('[BOOKING_AUTH_DEBUG] 🚀 RegisterClient NAVIGATING to:', redirect);
 
         navigate(redirect, {
           replace: true,

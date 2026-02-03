@@ -72,6 +72,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // P0 FIX: Utiliser isFullyReady au lieu de authInitialized pour éviter les redirections prématurées
   const { user, isLoading, authInitialized, isFullyReady, error: authError } = useAuth();
 
+  // 🔍 [BOOKING_AUTH_DEBUG] Log initial state
+  console.log('[BOOKING_AUTH_DEBUG] 🛡️ ProtectedRoute RENDER', {
+    path: location.pathname,
+    search: location.search,
+    user: user ? { id: user.id, email: user.email, role: user.role } : null,
+    isLoading,
+    authInitialized,
+    isFullyReady,
+    authError: authError || null,
+    selectedProviderInSession: sessionStorage.getItem('selectedProvider') ? 'EXISTS' : 'NULL',
+    loginRedirectInSession: sessionStorage.getItem('loginRedirect') || 'NULL',
+  });
+
   const [authState, setAuthState] = useState<AuthState>('loading');
   const [error, setError] = useState<string | null>(null);
 
@@ -244,6 +257,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         );
 
       case 'unauthorized':
+        // 🔍 [BOOKING_AUTH_DEBUG] Log redirection vers login
+        console.log('[BOOKING_AUTH_DEBUG] 🔀 ProtectedRoute → REDIRECT to login', {
+          computedFallbackPath,
+          safeRedirectParam,
+          fullRedirectUrl: `${computedFallbackPath}?redirect=${encodeURIComponent(safeRedirectParam)}`,
+          selectedProviderInSession: sessionStorage.getItem('selectedProvider') ? JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
+          loginRedirectInSession: sessionStorage.getItem('loginRedirect') || 'NULL',
+        });
         return (
           <Navigate
             to={`${computedFallbackPath}?redirect=${encodeURIComponent(safeRedirectParam)}`}
