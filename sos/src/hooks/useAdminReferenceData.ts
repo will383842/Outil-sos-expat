@@ -52,6 +52,8 @@ export interface UserReference {
   practiceCountries?: string[];
   // 🆕 Individual busy coupling
   receiveBusyFromSiblings?: boolean;
+  // 🆕 Lock offline - if true, provider stays always offline
+  lockedOffline?: boolean;
 }
 
 export interface ProfileReference {
@@ -80,6 +82,8 @@ export interface ProfileReference {
   practiceCountries?: string[];
   // 🆕 Individual busy coupling
   receiveBusyFromSiblings?: boolean;
+  // 🆕 Lock offline - if true, provider stays always offline
+  lockedOffline?: boolean;
 }
 
 export interface SubscriptionPlanReference {
