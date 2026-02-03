@@ -7,14 +7,23 @@
  * - Chargement des booking requests en QUASI TEMPS RÉEL
  * - Gestion des réponses IA auto-générées
  *
- * SMART POLLING (2025-02) - Optimisé pour les coûts:
- * - Polling toutes les 10 secondes SEULEMENT quand l'onglet est visible
- * - ARRÊT COMPLET du polling quand l'onglet est en arrière-plan
- * - Refresh immédiat quand l'onglet redevient visible
- * - Notification sonore + browser pour les nouvelles demandes
- * - Économie de 50%+ par rapport au polling constant
+ * ADAPTIVE SMART POLLING (2025-02) - Optimisé pour PWA/usage permanent:
  *
- * Coût estimé: ~2,880 appels/jour (8h d'utilisation active)
+ * Stratégie de polling adaptatif:
+ * - Heures de bureau (8h-20h) avec activité: 30 secondes
+ * - Heures de bureau sans activité récente: 1 minute
+ * - Nuit (20h-8h): 2 minutes
+ * - Onglet caché/minimisé: ARRÊT COMPLET
+ *
+ * Coûts estimés (page ouverte 24h/24):
+ * - Ancien système (10s constant): ~8,640 appels/jour
+ * - Nouveau système adaptatif: ~1,500-2,500 appels/jour
+ * - Économie: 70-80%
+ *
+ * Fonctionnalités:
+ * - Notification sonore pour nouvelles demandes
+ * - Notification browser (si autorisé)
+ * - Accélération automatique quand nouvelle activité détectée
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -467,25 +476,54 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
   // ============================================================================
   const prevBookingIdsRef = useRef<Set<string>>(new Set());
   const lastPollTimeRef = useRef<number>(0);
+  const lastNewBookingTimeRef = useRef<number>(Date.now());
+  const currentIntervalRef = useRef<number>(30000);
 
   // ============================================================================
-  // SMART POLLING - Only polls when tab is visible, adapts to activity
+  // ADAPTIVE SMART POLLING - Économique pour usage permanent (PWA)
   //
-  // COST OPTIMIZATION:
-  // - Only polls when tab is VISIBLE (stops when minimized/background)
-  // - 10 seconds when active, 60 seconds when idle
-  // - Estimated cost: ~2,880 calls/day (vs 5,760 with constant 5s polling)
-  // - 50%+ cost reduction while maintaining responsiveness
+  // STRATÉGIE DE COÛTS:
+  // - Heures de bureau (8h-20h): polling toutes les 30s
+  // - Nuit (20h-8h): polling toutes les 2 minutes
+  // - Pas d'activité depuis 30 min: ralentit à 2 minutes
+  // - Onglet caché: ARRÊT COMPLET
+  //
+  // COÛTS ESTIMÉS (page ouverte 24h/24):
+  // - Ancien système (10s): ~8,640 appels/jour
+  // - Nouveau système adaptatif: ~1,500-2,500 appels/jour (70-80% d'économie)
   // ============================================================================
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // Polling intervals
-    const ACTIVE_POLLING_INTERVAL = 10000; // 10 seconds when tab is visible
-    const BACKGROUND_POLLING_INTERVAL = 60000; // 60 seconds (backup, rarely used)
+    // Polling intervals based on context
+    const FAST_INTERVAL = 30000;      // 30 seconds - heures de bureau avec activité
+    const MEDIUM_INTERVAL = 60000;    // 1 minute - heures de bureau sans activité récente
+    const SLOW_INTERVAL = 120000;     // 2 minutes - nuit ou longue inactivité
 
     let intervalId: ReturnType<typeof setInterval> | null = null;
     let isTabVisible = !document.hidden;
+
+    // Determine optimal polling interval based on time and activity
+    const getOptimalInterval = (): number => {
+      const now = new Date();
+      const hour = now.getHours();
+      const isBusinessHours = hour >= 8 && hour < 20; // 8h-20h
+      const timeSinceLastNewBooking = Date.now() - lastNewBookingTimeRef.current;
+      const hasRecentActivity = timeSinceLastNewBooking < 30 * 60 * 1000; // 30 minutes
+
+      if (!isBusinessHours) {
+        // Night time - slow polling
+        return SLOW_INTERVAL;
+      }
+
+      if (hasRecentActivity) {
+        // Business hours with recent activity - fast polling
+        return FAST_INTERVAL;
+      }
+
+      // Business hours but no recent activity - medium polling
+      return MEDIUM_INTERVAL;
+    };
 
     const checkForNewBookings = async () => {
       // Skip if tab is not visible (major cost saver!)
@@ -497,14 +535,22 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
       // Skip if already loading or component unmounted
       if (isLoading || !isMounted.current) return;
 
-      // Throttle: minimum 8 seconds between polls
+      // Throttle: minimum 25 seconds between polls
       const now = Date.now();
-      if (now - lastPollTimeRef.current < 8000) {
+      if (now - lastPollTimeRef.current < 25000) {
         return;
       }
       lastPollTimeRef.current = now;
 
-      console.log('[useMultiProviderDashboard] ⚡ Smart polling check...');
+      // Check if we need to adjust polling interval
+      const optimalInterval = getOptimalInterval();
+      if (optimalInterval !== currentIntervalRef.current) {
+        currentIntervalRef.current = optimalInterval;
+        startPolling(optimalInterval);
+        console.log(`[useMultiProviderDashboard] 📊 Adjusted polling to ${optimalInterval/1000}s`);
+      }
+
+      console.log(`[useMultiProviderDashboard] ⚡ Polling check (interval: ${currentIntervalRef.current/1000}s)...`);
 
       try {
         const session = getSession();
@@ -545,24 +591,34 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
         if (prevBookingIdsRef.current.size > 0) {
           const newBookingIds = Array.from(currentBookingIds).filter(id => !prevBookingIdsRef.current.has(id));
 
-          // Check if any new bookings are recent (created in last 2 minutes)
-          const twoMinutesAgo = Date.now() - 2 * 60 * 1000;
+          // Check if any new bookings are recent (created in last 5 minutes)
+          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
           const recentNewBookings = newAccounts
             .flatMap(a => a.bookingRequests)
             .filter(b =>
               newBookingIds.includes(b.id) &&
               b.status === 'pending' &&
-              b.createdAt.getTime() > twoMinutesAgo
+              b.createdAt.getTime() > fiveMinutesAgo
             );
 
           if (recentNewBookings.length > 0) {
             console.log('[useMultiProviderDashboard] 🚨 NEW REQUEST(S) DETECTED!', recentNewBookings.length);
+
+            // Update last activity time - this will speed up polling
+            lastNewBookingTimeRef.current = Date.now();
 
             // Play notification sound
             playNotificationSound();
 
             // Show browser notification
             showBrowserNotification(recentNewBookings.length);
+
+            // Speed up polling after detecting new booking
+            if (currentIntervalRef.current > FAST_INTERVAL) {
+              currentIntervalRef.current = FAST_INTERVAL;
+              startPolling(FAST_INTERVAL);
+              console.log('[useMultiProviderDashboard] ⚡ Accelerated polling to 30s due to new activity');
+            }
           }
         }
 
@@ -596,8 +652,10 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
       isTabVisible = !document.hidden;
 
       if (isTabVisible) {
-        // Tab became visible - start active polling and do immediate check
-        startPolling(ACTIVE_POLLING_INTERVAL);
+        // Tab became visible - start polling with optimal interval
+        const interval = getOptimalInterval();
+        currentIntervalRef.current = interval;
+        startPolling(interval);
         checkForNewBookings(); // Immediate refresh when tab becomes visible
       } else {
         // Tab hidden - stop polling completely
@@ -610,7 +668,9 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
 
     // Start polling only if tab is visible
     if (isTabVisible) {
-      startPolling(ACTIVE_POLLING_INTERVAL);
+      const initialInterval = getOptimalInterval();
+      currentIntervalRef.current = initialInterval;
+      startPolling(initialInterval);
     }
 
     // Request notification permission on mount
