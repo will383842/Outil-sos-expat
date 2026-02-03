@@ -580,6 +580,39 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      {/* Nouveaux rôles - utilise AdminUsers avec filtrage */}
+      <Route
+        path="users/chatters"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminUsers />
+          </Suspense>
+        }
+      />
+      <Route
+        path="users/influencers"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminUsers />
+          </Suspense>
+        }
+      />
+      <Route
+        path="users/bloggers"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminUsers />
+          </Suspense>
+        }
+      />
+      <Route
+        path="users/group-admins"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminUsers />
+          </Suspense>
+        }
+      />
       <Route
         path="aaaprofiles"
         element={

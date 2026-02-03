@@ -1,37 +1,29 @@
-// src/pages/admin/AdminDashboard.tsx - VERSION REFACTORISÉE AVEC GRAPHIQUES
+// src/pages/admin/AdminDashboard.tsx - PROFESSIONAL DASHBOARD
 // =============================================================================
 // CHANGEMENTS :
-// 1. Intégration du composant DashboardCharts avec graphiques recharts
-// 2. Paramètres Twilio et Notifications déplacés vers AdminSettings
-// 3. Interface épurée focalisée sur les KPIs et la visualisation
+// 1. Remplacement de ExternalServicesWidget et DomainAuthorityWidget
+// 2. Intégration du nouveau ProfessionalDashboard avec métriques complètes
+// 3. KPIs Hero: Total inscrits, Connectés, CA, Appels, Taux succès, Durée
+// 4. Graphiques professionnels: Inscriptions, Revenus (Stripe/PayPal), Appels
+// 5. Filtres par période, pays, rôle, méthode de paiement
 // =============================================================================
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useIntl } from "react-intl";
 import {
-  Settings,
   Shield,
   Trash,
   CheckCircle,
   AlertTriangle,
   UserCheck,
-  Activity,
   Cog,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout";
-import DashboardCharts from "../../components/admin/DashboardCharts";
-import ExternalServicesWidget from "../../components/admin/ExternalServicesWidget";
-import DomainAuthorityWidget from "../../components/admin/DomainAuthorityWidget";
+import ProfessionalDashboard from "../../components/admin/ProfessionalDashboard";
 import Button from "../../components/common/Button";
 import { useAuth } from "../../contexts/AuthContext";
-import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
-} from "firebase/firestore";
-import { db, functions } from "../../config/firebase";
+import { functions } from "../../config/firebase";
 import { httpsCallable } from "firebase/functions";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
 import { logError } from "../../utils/logging";
@@ -393,18 +385,8 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* External Services Balances Widget */}
-            <div className="mb-6">
-              <ExternalServicesWidget />
-            </div>
-
-            {/* Domain Authority Widget */}
-            <div className="mb-6">
-              <DomainAuthorityWidget />
-            </div>
-
-            {/* Dashboard Charts Component */}
-            <DashboardCharts />
+            {/* Professional Dashboard with comprehensive business metrics */}
+            <ProfessionalDashboard />
           </div>
 
           {/* Integrity Check Modal */}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAdminTranslations } from '../../utils/adminTranslations';
 import {
   User,
@@ -28,6 +28,12 @@ import {
   Languages,
   MoreHorizontal,
   X,
+  MessageCircle,
+  Megaphone,
+  FileText,
+  Users as UsersIcon,
+  ExternalLink,
+  ShieldCheck,
 } from 'lucide-react';
 
 import {
@@ -55,7 +61,7 @@ import Modal from '../../components/common/Modal';
 import { logError } from '../../utils/logging';
 import { getCountryName, getCountryFlag } from '../../utils/formatters';
 
-type Role = 'client' | 'lawyer' | 'expat' | 'admin';
+type Role = 'client' | 'lawyer' | 'expat' | 'admin' | 'chatter' | 'influencer' | 'blogger' | 'groupAdmin';
 type Availability = 'available' | 'offline';
 
 type FirestoreUser = {
@@ -187,6 +193,9 @@ const AdminUsers: React.FC = () => {
   const [editMode, setEditMode] = useState<boolean>(false);
   const [editedUser, setEditedUser] = useState<Partial<AdminUser>>({});
 
+  // Roles that have profiles in sos_profiles collection
+  const providerRoles: Role[] = ['lawyer', 'expat', 'chatter', 'influencer', 'blogger'];
+
   useEffect(() => {
     // Vérification d’accès admin
     if (!currentUser || currentUser.role !== 'admin') {
@@ -268,6 +277,60 @@ const AdminUsers: React.FC = () => {
     navigate(`/admin/users/${userId}/edit`);
   };
 
+  const handleViewDashboard = (user: AdminUser) => {
+    // Navigate to the appropriate dashboard based on role
+    switch (user.role) {
+      case 'lawyer':
+        navigate(`/lawyer/dashboard?userId=${user.id}`);
+        break;
+      case 'expat':
+        navigate(`/expat/dashboard?userId=${user.id}`);
+        break;
+      case 'chatter':
+        navigate(`/chatter/dashboard?userId=${user.id}`);
+        break;
+      case 'influencer':
+        navigate(`/influencer/dashboard?userId=${user.id}`);
+        break;
+      case 'blogger':
+        navigate(`/blogger/dashboard?userId=${user.id}`);
+        break;
+      case 'client':
+        navigate(`/client/dashboard?userId=${user.id}`);
+        break;
+      default:
+        navigate(`/admin/users/${user.id}/edit`);
+    }
+  };
+
+  const getRoleLabel = (role: Role): string => {
+    const roleLabels: Record<Role, string> = {
+      client: 'Client',
+      lawyer: 'Avocat',
+      expat: 'Expatrié',
+      admin: 'Admin',
+      chatter: 'Chatter',
+      influencer: 'Influenceur',
+      blogger: 'Blogueur',
+      groupAdmin: 'Groupe Admin',
+    };
+    return roleLabels[role] || role;
+  };
+
+  const getRoleBadgeColor = (role: Role): string => {
+    const colors: Record<Role, string> = {
+      client: 'bg-blue-100 text-blue-800',
+      lawyer: 'bg-purple-100 text-purple-800',
+      expat: 'bg-green-100 text-green-800',
+      admin: 'bg-yellow-100 text-yellow-800',
+      chatter: 'bg-pink-100 text-pink-800',
+      influencer: 'bg-orange-100 text-orange-800',
+      blogger: 'bg-teal-100 text-teal-800',
+      groupAdmin: 'bg-indigo-100 text-indigo-800',
+    };
+    return colors[role] || 'bg-gray-100 text-gray-800';
+  };
+
   const handleDeleteUser = (user: AdminUser) => {
     setSelectedUser(user);
     setShowDeleteModal(true);
@@ -285,7 +348,7 @@ const AdminUsers: React.FC = () => {
     setIsActionLoading(true);
 
     try {
-      if (selectedUser.role === 'lawyer' || selectedUser.role === 'expat') {
+      if (providerRoles.includes(selectedUser.role)) {
         await deleteDoc(doc(db, 'sos_profiles', selectedUser.id));
       }
 
@@ -328,7 +391,7 @@ const AdminUsers: React.FC = () => {
         updatedAt: serverTimestamp(),
       });
 
-      if (selectedUser.role === 'lawyer' || selectedUser.role === 'expat') {
+      if (providerRoles.includes(selectedUser.role)) {
         await updateDoc(doc(db, 'sos_profiles', selectedUser.id), {
           isBanned: true,
           isVisible: false,
@@ -380,7 +443,7 @@ const AdminUsers: React.FC = () => {
 
       const userDoc = await getDoc(doc(db, 'users', userId));
       const role = (userDoc.data()?.role ?? '') as Role;
-      if (role === 'lawyer' || role === 'expat') {
+      if (providerRoles.includes(role)) {
         await updateDoc(doc(db, 'sos_profiles', userId), {
           isBanned: false,
           isVisible: true,
@@ -429,7 +492,7 @@ const AdminUsers: React.FC = () => {
 
       const userDoc = await getDoc(doc(db, 'users', userId));
       const role = (userDoc.data()?.role ?? '') as Role;
-      if (role === 'lawyer' || role === 'expat') {
+      if (providerRoles.includes(role)) {
         await updateDoc(doc(db, 'sos_profiles', userId), {
           isOnline: !isCurrentlyOnline,
           availability: newAvailability,
@@ -621,6 +684,10 @@ const AdminUsers: React.FC = () => {
       lawyer: users.filter((u) => u.role === 'lawyer').length,
       expat: users.filter((u) => u.role === 'expat').length,
       admin: users.filter((u) => u.role === 'admin').length,
+      chatter: users.filter((u) => u.role === 'chatter').length,
+      influencer: users.filter((u) => u.role === 'influencer').length,
+      blogger: users.filter((u) => u.role === 'blogger').length,
+      groupAdmin: users.filter((u) => u.role === 'groupAdmin').length,
     }),
     [users]
   );
@@ -717,8 +784,8 @@ const AdminUsers: React.FC = () => {
           </div>
         </div>
 
-        {/* Cards synthèse */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* Cards synthèse - Ligne 1: Principaux */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className="p-2 bg-gray-100 rounded-lg">
@@ -780,6 +847,57 @@ const AdminUsers: React.FC = () => {
           </div>
         </div>
 
+        {/* Cards synthèse - Ligne 2: Nouveaux rôles */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-pink-100 rounded-lg">
+                <MessageCircle className="w-5 h-5 text-pink-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-xs font-medium text-gray-500">Chatters</h3>
+                <p className="text-xl font-bold text-gray-900">{userCounts.chatter}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Megaphone className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-xs font-medium text-gray-500">Influenceurs</h3>
+                <p className="text-xl font-bold text-gray-900">{userCounts.influencer}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-teal-100 rounded-lg">
+                <FileText className="w-5 h-5 text-teal-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-xs font-medium text-gray-500">Blogueurs</h3>
+                <p className="text-xl font-bold text-gray-900">{userCounts.blogger}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <ShieldCheck className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-xs font-medium text-gray-500">Groupe Admin</h3>
+                <p className="text-xl font-bold text-gray-900">{userCounts.groupAdmin}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Barre de recherche et filtres rapides */}
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <div className="flex flex-wrap items-center gap-4">
@@ -834,6 +952,38 @@ const AdminUsers: React.FC = () => {
                 }`}
               >
                 Admins
+              </button>
+              <button
+                onClick={() => setSelectedRole('chatter')}
+                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                  selectedRole === 'chatter' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Chatters
+              </button>
+              <button
+                onClick={() => setSelectedRole('influencer')}
+                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                  selectedRole === 'influencer' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Influenceurs
+              </button>
+              <button
+                onClick={() => setSelectedRole('blogger')}
+                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                  selectedRole === 'blogger' ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Blogueurs
+              </button>
+              <button
+                onClick={() => setSelectedRole('groupAdmin')}
+                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                  selectedRole === 'groupAdmin' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Groupe Admin
               </button>
             </div>
           </div>
@@ -1147,7 +1297,11 @@ const AdminUsers: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{u.role}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(u.role)}`}>
+                          {getRoleLabel(u.role)}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-sm text-gray-900">{u.status ?? (u.isBanned ? 'Banni' : u.isOnline ? 'En ligne' : 'Hors ligne')}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{u.country ?? u.currentCountry ?? '—'}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{formatDate(u.createdAt)}</td>
@@ -1163,6 +1317,18 @@ const AdminUsers: React.FC = () => {
                           >
                             Voir
                           </Button>
+                          {/* Bouton Dashboard - Accès au dashboard du profil */}
+                          {u.role !== 'admin' && u.role !== 'groupAdmin' && (
+                            <Button
+                              size="small"
+                              variant="outline"
+                              className="border-cyan-500 text-cyan-700 hover:bg-cyan-50"
+                              onClick={() => handleViewDashboard(u)}
+                            >
+                              <ExternalLink size={14} className="mr-1" />
+                              Dashboard
+                            </Button>
+                          )}
                           <Button
                             size="small"
                             className="bg-green-600 hover:bg-green-700"
@@ -1191,7 +1357,7 @@ const AdminUsers: React.FC = () => {
                           >
                             Supprimer
                           </Button>
-                          {/* Exemples d’actions directes */}
+                          {/* Exemples d'actions directes */}
                           <Button
                             size="small"
                             variant="outline"
@@ -1199,7 +1365,7 @@ const AdminUsers: React.FC = () => {
                           >
                             {u.isOnline ? 'Mettre hors ligne' : 'Mettre en ligne'}
                           </Button>
-                          {(u.role === 'lawyer' || u.role === 'expat') && (
+                          {(u.role === 'lawyer' || u.role === 'expat' || u.role === 'chatter' || u.role === 'influencer' || u.role === 'blogger') && (
                             <>
                               <Button
                                 size="small"
@@ -1213,7 +1379,7 @@ const AdminUsers: React.FC = () => {
                                 variant="outline"
                                 onClick={() => void handleToggleFeatured(u.id, Boolean(u.featured))}
                               >
-                                {u.featured ? 'Retirer “à la une”' : 'Mettre “à la une”'}
+                                {u.featured ? 'Retirer "à la une"' : 'Mettre "à la une"'}
                               </Button>
                             </>
                           )}
@@ -1273,14 +1439,8 @@ const AdminUsers: React.FC = () => {
                   {selectedUser.firstName} {selectedUser.lastName}
                 </h3>
                 <div className="flex items-center space-x-2 mt-1">
-                  <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                    {selectedUser.role === 'lawyer'
-                      ? 'Avocat'
-                      : selectedUser.role === 'expat'
-                      ? 'Expatrié'
-                      : selectedUser.role === 'admin'
-                      ? 'Admin'
-                      : 'Client'}
+                  <span className={`px-2 py-1 text-xs rounded-full ${getRoleBadgeColor(selectedUser.role)}`}>
+                    {getRoleLabel(selectedUser.role)}
                   </span>
                   {selectedUser.isBanned && (
                     <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
@@ -1371,7 +1531,7 @@ const AdminUsers: React.FC = () => {
                     </span>
                   </div>
 
-                  {(selectedUser.role === 'lawyer' || selectedUser.role === 'expat') && (
+                  {(selectedUser.role === 'lawyer' || selectedUser.role === 'expat' || selectedUser.role === 'chatter' || selectedUser.role === 'influencer' || selectedUser.role === 'blogger') && (
                     <>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700">Visible sur la carte</span>
@@ -1411,6 +1571,19 @@ const AdminUsers: React.FC = () => {
               <Button onClick={() => setShowUserModal(false)} variant="outline">
                 Fermer
               </Button>
+
+              {selectedUser.role !== 'admin' && selectedUser.role !== 'groupAdmin' && (
+                <Button
+                  onClick={() => {
+                    setShowUserModal(false);
+                    handleViewDashboard(selectedUser);
+                  }}
+                  className="bg-cyan-600 hover:bg-cyan-700"
+                >
+                  <ExternalLink size={16} className="mr-2" />
+                  Dashboard
+                </Button>
+              )}
 
               <Button
                 onClick={() => {
