@@ -59,6 +59,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   // FIX: Refs pour avoir les valeurs actuelles dans le polling (éviter stale closures)
   const userRef = useRef(user);
   const authInitializedRef = useRef(authInitialized);
+  const isOpenRef = useRef(isOpen);
   // FIX: Track previous user state to detect authentication transition
   const prevUserRef = useRef<typeof user>(null);
   // FIX: Flag to prevent multiple onSuccess calls
@@ -93,7 +94,8 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   useEffect(() => {
     userRef.current = user;
     authInitializedRef.current = authInitialized;
-  }, [user, authInitialized]);
+    isOpenRef.current = isOpen;
+  }, [user, authInitialized, isOpen]);
 
   // Cleanup: Clear authAttempted flag when modal closes without successful auth
   // FIX: Ne PAS effacer le flag si l'utilisateur est déjà authentifié
@@ -238,6 +240,12 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     const pollInterval = setInterval(() => {
       // Check if success was already called by another effect
       if (successCalledRef.current) {
+        clearInterval(pollInterval);
+        return;
+      }
+
+      // FIX: Arrêter le polling si le modal est fermé
+      if (!isOpenRef.current) {
         clearInterval(pollInterval);
         return;
       }
