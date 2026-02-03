@@ -96,12 +96,16 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   }, [user, authInitialized]);
 
   // Cleanup: Clear authAttempted flag when modal closes without successful auth
+  // FIX: Ne PAS effacer le flag si l'utilisateur est déjà authentifié
+  // Cela évite le reset du wizard si l'auth a réussi mais le modal s'est fermé prématurément
   useEffect(() => {
     if (!isOpen) {
       // Modal is closing - clean up the sessionStorage flag if auth wasn't successful
       // This prevents stale flags from affecting future modal opens
+      // FIX: Vérifier aussi que l'utilisateur n'est PAS authentifié avant de nettoyer
       const wasAuthAttempted = getAuthAttempted();
-      if (wasAuthAttempted && !successCalledRef.current) {
+      const isUserAuthenticated = !!userRef.current;
+      if (wasAuthAttempted && !successCalledRef.current && !isUserAuthenticated) {
         setAuthAttempted(false);
       }
     }
@@ -118,7 +122,19 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     // (the component can remount during Google popup, which would falsely trigger a reset)
     const authAttemptedFlag = getAuthAttempted();
 
-    if (isOpen && !wasOpen && !authAttemptedFlag) {
+    // FIX: Si l'utilisateur est déjà authentifié, appeler onSuccess directement
+    // Cela gère le cas où l'auth a réussi pendant que le modal était fermé
+    if (isOpen && !wasOpen && user && authInitialized && !successCalledRef.current) {
+      successCalledRef.current = true;
+      setAuthAttempted(false);
+      setTimeout(() => {
+        onSuccess();
+      }, 100);
+      return; // Ne pas reset le wizard
+    }
+
+    // FIX: Ne PAS reset si une auth était en cours OU si l'utilisateur est authentifié
+    if (isOpen && !wasOpen && !authAttemptedFlag && !user) {
       setStep('email');
       setEmail('');
       setPassword('');
@@ -144,7 +160,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
         clearTimeout(successTimeoutRef.current);
       }
     };
-  }, [isOpen, user, getAuthAttempted, setAuthAttempted]);
+  }, [isOpen, user, authInitialized, onSuccess, getAuthAttempted, setAuthAttempted]);
 
   // ✅ FIX PRINCIPAL: Détecter quand user passe de null à truthy pendant que le modal est ouvert
   // Cette approche est plus robuste car elle ne dépend pas de isGoogleLoading ou pendingSuccess
@@ -213,7 +229,11 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     }
 
     let attempts = 0;
-    const maxAttempts = 20; // 10 secondes max
+    // FIX: Augmenter le timeout à 60 secondes (120 attempts * 500ms)
+    // AuthContext peut prendre jusqu'à 30s pour charger le document Firestore
+    // (fallbacks: 5s getDoc, 10s REST API, 30s timeout max)
+    // On double pour avoir une marge de sécurité
+    const maxAttempts = 120;
 
     const pollInterval = setInterval(() => {
       // Check if success was already called by another effect
@@ -233,17 +253,20 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
         setPendingSuccess(false);
         onSuccess();
       } else if (attempts >= maxAttempts) {
+        // FIX: Ne PAS fermer le modal sur timeout - revenir à l'étape password
+        // pour permettre à l'utilisateur de réessayer ou voir l'erreur
         clearInterval(pollInterval);
         setPendingSuccess(false);
-        // Fermer le popup même en cas de timeout pour éviter qu'il reste bloqué
-        onClose();
+        setStep('password');
+        setError(intl.formatMessage({ id: 'auth.wizard.error.timeout' }));
+        // NE PAS appeler onClose() - cela causait le reset du wizard
       }
     }, 500);
 
     return () => {
       clearInterval(pollInterval);
     };
-  }, [pendingSuccess, step, onSuccess, onClose]);
+  }, [pendingSuccess, step, onSuccess, intl]);
 
   // Email validation
   const isValidEmail = (email: string): boolean => {
