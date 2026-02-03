@@ -1246,43 +1246,44 @@ const OptimizedHomePage: React.FC = () => {
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
           </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-between md:justify-center py-6 md:py-0">
-            <div className="text-center pt-4 md:pt-0 md:mb-12 lg:mb-16 xl:mb-20">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-evenly md:justify-center py-4 md:py-0">
+            {/* Contenu principal - espacé uniformément sur mobile */}
+            <div className="text-center md:mb-12 lg:mb-16 xl:mb-20">
               <h1
                 id="main-heading"
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl font-black mb-6 sm:mb-8 leading-tight break-words"
+                className="text-5xl sm:text-5xl md:text-5xl lg:text-7xl xl:text-8xl font-black mb-4 sm:mb-8 leading-none break-words"
               >
-                <span className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
+                <span className="text-5xl sm:text-5xl md:text-5xl lg:text-7xl xl:text-8xl bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
                   <FormattedMessage id="hero.title.line1" />
                 </span>
                 <br />
-                <span className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
+                <span className="text-4xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
                   <FormattedMessage id="hero.title.line2" />
                 </span>
               </h1>
 
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white font-semibold max-w-4xl mx-auto mb-3 leading-relaxed">
+              <h2 className="text-xl sm:text-xl md:text-2xl lg:text-3xl text-white font-semibold max-w-4xl mx-auto mb-2 leading-snug">
                 <FormattedMessage id="hero.subtitle" />
               </h2>
 
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto mb-6 sm:mb-12 leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
                 <FormattedMessage id="hero.description" />
               </p>
-
-              {/* Mini stats mobile - 197 pays, 24/7, <5 min */}
-              <div className="flex md:hidden items-center justify-center gap-3 text-sm font-bold">
-                <span className="bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full text-white border border-white/20">
-                  🌍 197 <FormattedMessage id="hero.stats.countries" defaultMessage="pays" />
-                </span>
-                <span className="bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full text-white border border-white/20">
-                  ⏰ 24/7
-                </span>
-                <span className="bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full text-green-400 border border-green-400/30">
-                  ⚡ &lt;5 min
-                </span>
-              </div>
-
             </div>
+
+            {/* Mini stats mobile - 197 pays, 24/7, <5 min */}
+            <div className="flex md:hidden items-center justify-center gap-2 text-xs font-bold py-2">
+              <span className="bg-white/10 backdrop-blur-sm px-3 py-2 rounded-full text-white border border-white/20">
+                🌍 197 <FormattedMessage id="hero.stats.countries" defaultMessage="pays" />
+              </span>
+              <span className="bg-white/10 backdrop-blur-sm px-3 py-2 rounded-full text-white border border-white/20">
+                ⏰ 24/7
+              </span>
+              <span className="bg-green-500/20 backdrop-blur-sm px-3 py-2 rounded-full text-green-400 border border-green-400/30">
+                ⚡ &lt;5 min
+              </span>
+            </div>
+
 
             {/* Navigation CTA - En bas sur mobile, centré sur desktop */}
             <nav
