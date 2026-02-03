@@ -677,7 +677,7 @@ const Providers: React.FC = () => {
       />
       <div className="min-h-screen bg-gray-50 overflow-x-hidden">
         {/* Header - FIX: Tailles responsives pour mobile */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-10 sm:py-16 overflow-hidden">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-6 sm:py-12 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full">
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4">{t.title}</h1>
             <p className="text-base sm:text-xl text-red-100 max-w-2xl mx-auto mb-6 sm:mb-8">{t.subtitle}</p>
@@ -769,7 +769,7 @@ const Providers: React.FC = () => {
         </div>
 
         {/* Results */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 pb-8 sm:pb-12 w-full overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-12 pb-8 sm:pb-12 w-full overflow-x-hidden">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
               {filteredProviders.length} {t.expertsFound}
