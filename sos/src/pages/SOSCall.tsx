@@ -165,7 +165,7 @@ interface FAQItem {
 /* =========================
    Constants
 ========================= */
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 16;
 const BASE_URL = "https://sos-expat.com";
 const PAGE_PATH = "/sos-appel";
 
@@ -3907,8 +3907,8 @@ const SOSCall: React.FC = () => {
                 </div>
                 
                 {/* Skeleton Desktop */}
-                <div 
-                  className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6 justify-items-center"
+                <div
+                  className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-4 gap-5 lg:gap-6 justify-items-center"
                   aria-label={intl.formatMessage({ id: "sosCall.loading.ariaLabel", defaultMessage: "Chargement des experts" })}
                   aria-busy="true"
                 >
@@ -3954,7 +3954,7 @@ const SOSCall: React.FC = () => {
 
                 {/* Version Desktop - Grille */}
                 <div
-                  className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6 justify-items-center relative z-10"
+                  className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-4 gap-5 lg:gap-6 justify-items-center relative z-10"
                   role="list"
                   aria-label={intl.formatMessage({ id: "sosCall.providerList.desktopAriaLabel" })}
                 >
