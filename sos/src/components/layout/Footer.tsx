@@ -22,7 +22,7 @@ import { useIntl } from "react-intl";
 import { useApp } from "../../contexts/AppContext";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebase";
-import { getLocaleString, LocaleLink } from "../../multilingual-system";
+import { LocaleLink, getTranslatedRouteSlug } from "../../multilingual-system";
 
 // ============================================================================
 // TYPES
@@ -588,34 +588,34 @@ const Footer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Default legal links (fallback)
+  // Default legal links (fallback) - avec routes traduites selon la langue
   const defaultLegalLinks = useMemo<LegalLink[]>(
     () => [
       {
         label: intl.formatMessage({ id: "footer.legal.privacy" }),
-        href: "/politique-confidentialite",
+        href: `/${getTranslatedRouteSlug("privacy-policy", resolvedLang)}`,
         order: 10,
       },
       {
         label: intl.formatMessage({ id: "footer.legal.termsClients" }),
-        href: "/cgu-clients",
+        href: `/${getTranslatedRouteSlug("terms-clients", resolvedLang)}`,
         order: 20,
       },
       {
         label: intl.formatMessage({ id: "footer.legal.cookies" }),
-        href: "/cookies",
+        href: `/${getTranslatedRouteSlug("cookies", resolvedLang)}`,
         order: 50,
       },
       {
         label: intl.formatMessage({ id: "footer.legal.consumers" }),
-        href: "/consommateurs",
+        href: `/${getTranslatedRouteSlug("consumers", resolvedLang)}`,
         order: 60,
       },
     ],
-    [intl]
+    [intl, resolvedLang]
   );
 
-  // Footer sections - SANS le lien "appel-expatrie"
+  // Footer sections - SANS le lien "appel-expatrie" - avec routes traduites
   const footerSections = useMemo<Record<string, FooterSection>>(
     () => ({
       services: {
@@ -623,19 +623,19 @@ const Footer: React.FC = () => {
         links: [
           {
             label: intl.formatMessage({ id: "footer.services.sosCall" }),
-            href: "/sos-appel",
+            href: `/${getTranslatedRouteSlug("sos-call", resolvedLang)}`,
           },
           {
             label: intl.formatMessage({ id: "footer.services.pricing" }),
-            href: "/tarifs",
+            href: `/${getTranslatedRouteSlug("pricing", resolvedLang)}`,
           },
           {
             label: intl.formatMessage({ id: "footer.services.experts" }),
-            href: "/nos-experts",
+            href: `/${getTranslatedRouteSlug("providers", resolvedLang)}`,
           },
           {
             label: intl.formatMessage({ id: "footer.services.testimonials" }),
-            href: "/temoignages",
+            href: `/${getTranslatedRouteSlug("testimonials", resolvedLang)}`,
           },
         ],
       },
@@ -644,19 +644,19 @@ const Footer: React.FC = () => {
         links: [
           {
             label: intl.formatMessage({ id: "footer.support.faq" }),
-            href: `/${getLocaleString(resolvedLang)}/faq`,
+            href: `/${getTranslatedRouteSlug("faq", resolvedLang)}`,
           },
           {
             label: intl.formatMessage({ id: "footer.support.contact" }),
-            href: "/contact",
+            href: `/${getTranslatedRouteSlug("contact", resolvedLang)}`,
           },
           {
             label: intl.formatMessage({ id: "footer.support.helpCenter" }),
-            href: "/centre-aide",
+            href: `/${getTranslatedRouteSlug("help-center", resolvedLang)}`,
           },
           {
             label: intl.formatMessage({ id: "footer.support.serviceStatus" }),
-            href: "/statut-service",
+            href: `/${getTranslatedRouteSlug("service-status", resolvedLang)}`,
           },
         ],
       },
@@ -664,7 +664,7 @@ const Footer: React.FC = () => {
     [intl, resolvedLang]
   );
 
-  // Contact info
+  // Contact info - avec routes traduites
   const contactInfo = useMemo<ContactInfo[]>(
     () => [
       {
@@ -675,7 +675,7 @@ const Footer: React.FC = () => {
       {
         icon: Phone,
         text: intl.formatMessage({ id: "footer.contact.callUs" }),
-        href: "/contact",
+        href: `/${getTranslatedRouteSlug("contact", resolvedLang)}`,
         ariaLabel: intl.formatMessage({ id: "footer.contact.phoneAria" }),
       },
       {
@@ -686,7 +686,7 @@ const Footer: React.FC = () => {
         isExternal: true,
       },
     ],
-    [intl]
+    [intl, resolvedLang]
   );
 
   // Social links
@@ -948,10 +948,10 @@ const Footer: React.FC = () => {
               influencerLabel={intl.formatMessage({ id: "footer.joinUs.influencer", defaultMessage: "Devenir Influenceur" })}
               bloggerLabel={intl.formatMessage({ id: "footer.joinUs.blogger", defaultMessage: "Devenir Blogger" })}
               groupAdminLabel={intl.formatMessage({ id: "footer.joinUs.groupAdmin", defaultMessage: "Admin Groupe" })}
-              chatterHref="/devenir-chatter"
-              influencerHref="/devenir-influenceur"
-              bloggerHref="/devenir-blogger"
-              groupAdminHref="/devenir-admin-groupe"
+              chatterHref={`/${getTranslatedRouteSlug("chatter-landing", resolvedLang)}`}
+              influencerHref={`/${getTranslatedRouteSlug("influencer-landing", resolvedLang)}`}
+              bloggerHref={`/${getTranslatedRouteSlug("blogger-landing", resolvedLang)}`}
+              groupAdminHref={`/${getTranslatedRouteSlug("groupadmin-landing", resolvedLang)}`}
             />
           </div>
 
