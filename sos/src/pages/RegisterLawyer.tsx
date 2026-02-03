@@ -525,7 +525,7 @@ const computePasswordStrength = (pw: string) => {
   
   let color = "bg-green-500";
   let label = "strong";
-  if (pw.length < 6) {
+  if (pw.length < 8) {
     color = "bg-red-500";
     label = "weak";
   } else if (clamp < 40) {

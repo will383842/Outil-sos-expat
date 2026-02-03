@@ -234,11 +234,11 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       errors.email = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' });
     }
 
-    // Password validation - minimum 6 characters (Firebase requirement)
+    // Password validation - minimum 8 characters
     if (!formData.password) {
       errors.password = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
-    } else if (formData.password.length < 6) {
-      errors.password = intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Password must be at least 6 characters' });
+    } else if (formData.password.length < 8) {
+      errors.password = intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Password must be at least 8 characters' });
     }
 
     if (!formData.country) {

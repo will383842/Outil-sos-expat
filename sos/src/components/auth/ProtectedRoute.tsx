@@ -55,6 +55,12 @@ type AuthState = 'loading' | 'checking' | 'authorized' | 'unauthorized' | 'error
  */
 const MIN_AUTH_WAIT_MS = 150;
 
+/**
+ * P0 FIX: Timeout de sécurité maximum pour éviter page blanche infinie
+ * Si l'auth n'est toujours pas prête après ce délai, on redirige vers login
+ */
+const MAX_AUTH_WAIT_MS = 5000;
+
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   allowedRoles,
@@ -72,6 +78,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // P0 FIX: Track time since component mounted to prevent premature redirects
   const mountTimeRef = useRef<number>(Date.now());
   const [hasWaitedMinTime, setHasWaitedMinTime] = useState(false);
+  const [hasExceededMaxWait, setHasExceededMaxWait] = useState(false);
 
   // P0 FIX: Track if user was ever authorized to prevent unmounting during auth rechecks
   // Once authorized, keep children mounted even if auth briefly goes to loading state
@@ -84,6 +91,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }, MIN_AUTH_WAIT_MS);
     return () => clearTimeout(timer);
   }, []);
+
+  // P0 FIX: Timeout de sécurité pour éviter page blanche infinie
+  // Si l'auth n'est pas prête après MAX_AUTH_WAIT_MS, on force la redirection
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isFullyReady) {
+        console.warn('🔐 [ProtectedRoute] ⚠️ Timeout sécurité atteint - forçage redirection login');
+        setHasExceededMaxWait(true);
+      }
+    }, MAX_AUTH_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, [isFullyReady]);
 
   // ⚠️ Fallback robuste : admin → /admin/login, sinon → /login
   // FIX: Only check pathname, not allowedRoles - prevents redirect to /admin/login
@@ -98,10 +117,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }, [fallbackPath, location.pathname]);
 
   // P0 FIX: Ne check l'auth que si isFullyReady ET on a attendu le temps minimum
-  // Cela évite les redirections prématurées vers login
+  // OU si on a dépassé le timeout de sécurité maximum (évite page blanche infinie)
   const shouldCheckAuth = useMemo(
-    () => isFullyReady && !authError && hasWaitedMinTime,
-    [isFullyReady, authError, hasWaitedMinTime]
+    () => (isFullyReady && !authError && hasWaitedMinTime) || hasExceededMaxWait,
+    [isFullyReady, authError, hasWaitedMinTime, hasExceededMaxWait]
   );
 
   const checkAuthorization = useCallback(async () => {

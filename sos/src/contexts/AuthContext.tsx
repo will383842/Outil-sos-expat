@@ -918,9 +918,28 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   // Garder trace de l'ancien uid pour détecter les changements d'utilisateur
   const previousAuthUserUidRef = useRef<string | null>(null);
 
+  // Ref pour tracker si onAuthStateChanged a répondu (évite problème de closure)
+  const authStateReceivedRef = useRef(false);
+
   // onAuthStateChanged → ne fait que stocker l'utilisateur auth
   useEffect(() => {
+    authStateReceivedRef.current = false;
+
+    // Timeout de sécurité: si onAuthStateChanged ne répond pas en 3s,
+    // on considère l'utilisateur comme déconnecté pour éviter une page blanche infinie
+    const safetyTimeoutId = setTimeout(() => {
+      if (!authStateReceivedRef.current) {
+        console.warn('🔐 [AuthContext] ⚠️ onAuthStateChanged timeout (3s) - forçant authInitialized=true');
+        setUser(null);
+        setIsLoading(false);
+        setAuthInitialized(true);
+      }
+    }, 3000);
+
     const unsubAuth = onAuthStateChanged(auth, (u) => {
+      authStateReceivedRef.current = true;
+      clearTimeout(safetyTimeoutId);
+
       // Si l'utilisateur change (login après logout ou nouveau login),
       // reset les refs de subscription pour que le nouveau listener démarre proprement
       const isNewUser = u && u.uid !== previousAuthUserUidRef.current;
@@ -949,7 +968,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         setAuthInitialized(true);
       }
     });
-    return unsubAuth;
+    return () => {
+      clearTimeout(safetyTimeoutId);
+      unsubAuth();
+    };
   }, []);
 
   /** ============================================================
@@ -2059,7 +2081,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           msg = 'Adresse email invalide.';
           break;
         case 'auth/weak-password':
-          msg = 'Le mot de passe doit contenir au moins 6 caractères.';
+          msg = 'Le mot de passe doit contenir au moins 8 caractères.';
           break;
         case 'sos/invalid-role':
         case 'sos/missing-credentials':

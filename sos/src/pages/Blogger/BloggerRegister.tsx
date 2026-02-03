@@ -98,7 +98,7 @@ interface BloggerFormData {
   referralCode: string;
 }
 
-const MIN_PASSWORD_LENGTH = 6;
+const MIN_PASSWORD_LENGTH = 8;
 
 const BloggerRegister: React.FC = () => {
   const intl = useIntl();

@@ -476,10 +476,16 @@ const SuccessPayment: React.FC = () => {
   /* =========================
      Écoute Firestore : état de l'appel
      P1 FIX: Ajout de retry si le document n'existe pas encore
+     P0 PERF FIX: Backoff exponentiel pour réduire le délai perçu
      ========================= */
   const [sessionRetryCount, setSessionRetryCount] = useState(0);
   const [sessionLoadError, setSessionLoadError] = useState(false);
-  const MAX_SESSION_RETRIES = 10; // 10 retries x 2s = 20s max wait
+  const MAX_SESSION_RETRIES = 12; // 12 retries avec backoff = ~12s max wait (au lieu de 20s)
+
+  // P0 PERF FIX: Backoff exponentiel - délais progressifs (ms)
+  // Total: 300+500+800+1000+1200+1500+1500+1500+1500+1500+1500+1500 = ~12.8s
+  const SESSION_RETRY_DELAYS = [300, 500, 800, 1000, 1200, 1500, 1500, 1500, 1500, 1500, 1500, 1500];
+  const getSessionRetryDelay = (retryCount: number) => SESSION_RETRY_DELAYS[Math.min(retryCount, SESSION_RETRY_DELAYS.length - 1)];
 
   useEffect(() => {
     // P0 FIX: Attendre que l'auth soit prête avant d'écouter Firestore
@@ -504,17 +510,19 @@ const SuccessPayment: React.FC = () => {
           retryCount: sessionRetryCount + 1
         });
 
+        // P0 PERF FIX: Utiliser backoff exponentiel
+        const nextDelay = getSessionRetryDelay(sessionRetryCount);
         console.log(`⏳ [SUCCESS_PAGE_DEBUG] call_sessions/${callId} not found`, {
           retryCount: sessionRetryCount + 1,
           maxRetries: MAX_SESSION_RETRIES,
-          waitTime: '2000ms',
+          waitTime: `${nextDelay}ms (backoff)`,
           timestamp: new Date().toISOString()
         });
 
         if (sessionRetryCount < MAX_SESSION_RETRIES) {
           retryTimeout = setTimeout(() => {
             setSessionRetryCount(prev => prev + 1);
-          }, 2000); // Retry every 2 seconds
+          }, nextDelay); // P0 PERF FIX: Backoff exponentiel (300ms → 1.5s)
         } else {
           console.error(`❌ [SUCCESS_PAGE_DEBUG] Max retries reached for call_sessions/${callId}`);
           setSessionLoadError(true);
@@ -627,10 +635,12 @@ const SuccessPayment: React.FC = () => {
       });
 
       if (sessionRetryCount < MAX_SESSION_RETRIES) {
-        console.log(`🔄 [SUCCESS_PAGE_DEBUG] Retrying onSnapshot in 3s...`);
+        // P0 PERF FIX: Utiliser le même backoff exponentiel pour les erreurs
+        const nextDelay = getSessionRetryDelay(sessionRetryCount);
+        console.log(`🔄 [SUCCESS_PAGE_DEBUG] Retrying onSnapshot in ${nextDelay}ms (backoff)...`);
         retryTimeout = setTimeout(() => {
           setSessionRetryCount(prev => prev + 1);
-        }, 3000);
+        }, nextDelay);
       } else {
         console.error(`❌ [SUCCESS_PAGE_DEBUG] Max retries reached, giving up on call_sessions/${callId}`);
         setSessionLoadError(true);
@@ -658,11 +668,16 @@ const SuccessPayment: React.FC = () => {
   /* =========================
      >>> PARTIE "ORDER" pour Total payé + Économies
      P1 FIX: Ajout de retry si le document n'existe pas encore
+     P0 PERF FIX: Backoff exponentiel pour réduire le délai perçu
      ========================= */
   const [order, setOrder] = useState<OrderDoc | null>(null);
   const [orderLoading, setOrderLoading] = useState<boolean>(true);
   const [orderRetryCount, setOrderRetryCount] = useState(0);
-  const MAX_ORDER_RETRIES = 8; // 8 retries x 2s = 16s max wait
+  const MAX_ORDER_RETRIES = 10; // 10 retries avec backoff = ~10s max wait (au lieu de 16s)
+
+  // P0 PERF FIX: Backoff exponentiel pour orders
+  const ORDER_RETRY_DELAYS = [300, 500, 800, 1000, 1200, 1500, 1500, 1500, 1500, 1500];
+  const getOrderRetryDelay = (retryCount: number) => ORDER_RETRY_DELAYS[Math.min(retryCount, ORDER_RETRY_DELAYS.length - 1)];
 
   useEffect(() => {
     if (!orderId) {
@@ -713,17 +728,19 @@ const SuccessPayment: React.FC = () => {
             maxAttempts: MAX_ORDER_RETRIES
           });
 
+          // P0 PERF FIX: Utiliser backoff exponentiel
+          const nextDelay = getOrderRetryDelay(orderRetryCount);
           console.log(`⏳ [SUCCESS_PAGE_DEBUG] orders/${orderId} not found`, {
             retryCount: orderRetryCount + 1,
             maxRetries: MAX_ORDER_RETRIES,
-            waitTime: '2000ms',
+            waitTime: `${nextDelay}ms (backoff)`,
             timestamp: new Date().toISOString()
           });
 
           if (orderRetryCount < MAX_ORDER_RETRIES) {
             retryTimeout = setTimeout(() => {
               setOrderRetryCount(prev => prev + 1);
-            }, 2000);
+            }, nextDelay); // P0 PERF FIX: Backoff exponentiel
           } else {
             console.warn(`⚠️ [SUCCESS_PAGE_DEBUG] Max retries reached for orders/${orderId}, giving up`);
             setOrderLoading(false);
@@ -1191,6 +1208,16 @@ const SuccessPayment: React.FC = () => {
                     {intl.formatMessage({ id: "success.countdownTitle" })}
                   </span>
                 </h1>
+
+                {/* P0 PERF FIX: Message informatif pendant la préparation (premiers retries) */}
+                {sessionRetryCount > 0 && sessionRetryCount <= 4 && (
+                  <div className="mb-6 inline-flex items-center space-x-3 bg-blue-500/20 backdrop-blur-sm rounded-full px-6 py-3 border border-blue-400/30">
+                    <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-blue-300 font-medium">
+                      {intl.formatMessage({ id: "success.preparingCall", defaultMessage: "Préparation de votre appel en cours..." })}
+                    </span>
+                  </div>
+                )}
 
                 <div className="mb-8">
                   {paymentTimestamp ? (

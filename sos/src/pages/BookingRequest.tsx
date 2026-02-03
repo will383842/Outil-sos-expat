@@ -1478,6 +1478,8 @@ type AuthFlowStep = "email" | "password-login" | "password-register" | "google-l
 
 interface EmailFirstAuthProps {
   onAuthSuccess: () => void;
+  onAuthStart: () => void;
+  onAuthFailed: () => void;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   loginWithGoogle: (rememberMe?: boolean) => Promise<void>;
   register: (userData: { email: string; role: "client" | "lawyer" | "expat" | "admin"; firstName?: string; lastName?: string }, password: string) => Promise<void>;
@@ -1487,6 +1489,8 @@ interface EmailFirstAuthProps {
 
 const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
   onAuthSuccess,
+  onAuthStart,
+  onAuthFailed,
   login,
   loginWithGoogle,
   register,
@@ -1547,11 +1551,16 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
     setIsLoading(true);
     setError(null);
 
+    // FIX: Appeler onAuthStart AVANT le login pour éviter le démontage du composant
+    onAuthStart();
+
     try {
       await loginWithGoogle(true);
       onAuthSuccess();
     } catch (err: any) {
       console.error("[EmailFirstAuth] Google login error:", err);
+      // FIX: Reset authPending si le login échoue
+      onAuthFailed();
       setError(err.message || intl.formatMessage({ id: "auth.googleError", defaultMessage: "Erreur de connexion Google" }));
     } finally {
       setIsLoading(false);
@@ -1567,11 +1576,17 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
     setIsLoading(true);
     setError(null);
 
+    // FIX: Appeler onAuthStart AVANT le login pour éviter le démontage du composant
+    // pendant la transition authLoading → false
+    onAuthStart();
+
     try {
       await login(email.trim().toLowerCase(), password, true);
       onAuthSuccess();
     } catch (err: any) {
       console.error("[EmailFirstAuth] login error:", err);
+      // FIX: Reset authPending si le login échoue
+      onAuthFailed();
       const errorCode = err?.code;
       if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/wrong-password') {
         setError(intl.formatMessage({ id: "auth.wizard.wrongPassword", defaultMessage: "Mot de passe incorrect" }));
@@ -1597,6 +1612,9 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
 
     setIsLoading(true);
     setError(null);
+
+    // FIX: Appeler onAuthStart AVANT le register pour éviter le démontage du composant
+    onAuthStart();
 
     try {
       await register(
@@ -1625,6 +1643,8 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
         } catch (loginErr: any) {
           // Auto-login échoué - le mot de passe est différent de celui du compte existant
           console.log("[EmailFirstAuth] Auto-login failed, password mismatch");
+          // FIX: Reset authPending si l'auto-login échoue
+          onAuthFailed();
           const loginErrorCode = loginErr?.code;
 
           if (loginErrorCode === 'auth/invalid-credential' || loginErrorCode === 'auth/wrong-password') {
@@ -1650,8 +1670,12 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
           }
         }
       } else if (errorCode === 'auth/weak-password') {
+        // FIX: Reset authPending si l'inscription échoue
+        onAuthFailed();
         setError(intl.formatMessage({ id: "auth.wizard.weakPassword", defaultMessage: "Mot de passe trop faible" }));
       } else {
+        // FIX: Reset authPending si l'inscription échoue
+        onAuthFailed();
         setError(err.message || intl.formatMessage({ id: "auth.registerError", defaultMessage: "Erreur lors de l'inscription" }));
       }
     } finally {
@@ -3168,10 +3192,20 @@ const BookingRequest: React.FC = () => {
           {/* Auth form */}
           <div className="max-w-xl mx-auto">
             <EmailFirstAuth
-              onAuthSuccess={() => {
-                // Signal that auth succeeded - prevents form from flashing while user loads from Firestore
-                console.log('[BookingRequest] onAuthSuccess called, setting authPending=true');
+              onAuthStart={() => {
+                // FIX: Signal that auth is starting - prevents component unmount during login
+                console.log('[BookingRequest] onAuthStart called, setting authPending=true');
                 setAuthPending(true);
+              }}
+              onAuthSuccess={() => {
+                // Signal that auth succeeded - keeps authPending=true while user loads from Firestore
+                console.log('[BookingRequest] onAuthSuccess called, keeping authPending=true');
+                // authPending is already true from onAuthStart, no need to set again
+              }}
+              onAuthFailed={() => {
+                // FIX: Reset authPending if auth fails - allows form to be shown again
+                console.log('[BookingRequest] onAuthFailed called, setting authPending=false');
+                setAuthPending(false);
               }}
               login={login}
               loginWithGoogle={loginWithGoogle}

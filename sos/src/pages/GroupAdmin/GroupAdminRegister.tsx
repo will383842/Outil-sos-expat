@@ -128,8 +128,8 @@ const GroupAdminRegister: React.FC = () => {
     }
     // Validate password only if user is not already logged in
     if (!user) {
-      if (!formData.password || formData.password.length < 6) {
-        setError(intl.formatMessage({ id: 'groupadmin.register.error.passwordMin', defaultMessage: 'Password must be at least 6 characters' }));
+      if (!formData.password || formData.password.length < 8) {
+        setError(intl.formatMessage({ id: 'groupadmin.register.error.passwordMin', defaultMessage: 'Password must be at least 8 characters' }));
         return false;
       }
     }
