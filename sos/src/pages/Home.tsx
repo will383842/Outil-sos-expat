@@ -1294,7 +1294,7 @@ const OptimizedHomePage: React.FC = () => {
               {/* Mobile: texte plus gros (text-xl), padding plus grand (py-5 px-8) */}
               <Link
                 to="/sos-appel"
-                className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 active:scale-[0.98] text-white px-8 sm:px-10 md:px-12 py-5 sm:py-5 md:py-6 rounded-2xl sm:rounded-3xl font-black text-xl sm:text-lg md:text-xl transition-colors duration-150 md:transition-all md:duration-200 md:hover:scale-105 md:hover:shadow-2xl md:hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-3 md:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent] w-full sm:w-auto max-w-sm sm:max-w-none"
+                className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 active:scale-[0.98] text-white px-8 sm:px-10 md:px-12 py-5 sm:py-5 md:py-6 rounded-2xl sm:rounded-3xl transition-colors duration-150 md:transition-all md:duration-200 md:hover:scale-105 md:hover:shadow-2xl md:hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-3 md:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent] w-full sm:w-auto max-w-sm sm:max-w-none"
                 aria-label={intl.formatMessage({ id: "aria.urgentCall" })}
                 style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
               >
