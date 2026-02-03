@@ -4,6 +4,19 @@
  */
 
 const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+// Copy index.html to 404.html for Cloudflare Pages SPA routing
+// Cloudflare Pages serves 404.html for any route that doesn't match a file
+const distDir = path.join(__dirname, '..', 'dist');
+const indexPath = path.join(distDir, 'index.html');
+const notFoundPath = path.join(distDir, '404.html');
+
+if (fs.existsSync(indexPath)) {
+  fs.copyFileSync(indexPath, notFoundPath);
+  console.log('✅ Copied index.html to 404.html for SPA routing');
+}
 
 // Copy sitemaps
 console.log('Copying sitemaps to dist...');

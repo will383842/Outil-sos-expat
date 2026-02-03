@@ -1,13 +1,3 @@
-# SPA Fallback - All routes should be handled by index.html
-# This is required for client-side routing to work on Cloudflare Pages
-
-# Admin routes
-/admin/*  /index.html  200
-
-# Multi-provider dashboard (handle with and without trailing slash)
-/multi-dashboard   /index.html  200
-/multi-dashboard/  /index.html  200
-/multi-dashboard/* /index.html  200
-
-# All other routes - SPA fallback
-/*  /index.html  200
+# Cloudflare Pages SPA routing
+# The 404.html file (copy of index.html) handles all SPA routes automatically
+# No explicit redirects needed - Cloudflare Pages serves 404.html for missing routes
