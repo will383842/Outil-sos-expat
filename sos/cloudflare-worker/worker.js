@@ -349,6 +349,234 @@ const LANDING_PAGE_PATTERNS = [
   /^\/[a-z]{2}(-[a-z]{2})?\/upbhokta\/?$/i,              // HI
   /^\/[a-z]{2}(-[a-z]{2})?\/المستهلكين\/?$/i,            // AR (native)
 
+  // ========== TERMS CHATTERS - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/cgu-chatters\/?$/i,          // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/terms-chatters\/?$/i,        // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/terminos-chatters\/?$/i,     // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/agb-chatters\/?$/i,          // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/usloviya-chattery\/?$/i,     // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/termos-chatters\/?$/i,       // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/tiaokuan-chatters\/?$/i,     // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/shartein-chatters\/?$/i,     // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/شروط-المروجين\/?$/i,         // AR (native)
+
+  // ========== SERVICE STATUS - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/statut-service\/?$/i,        // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/service-status\/?$/i,        // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/estado-servicio\/?$/i,       // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/dienststatus\/?$/i,          // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/status-servisa\/?$/i,        // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/status-servico\/?$/i,        // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/fuwu-zhuangtai\/?$/i,        // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/seva-sthiti\/?$/i,           // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/حالة-الخدمة\/?$/i,           // AR (native)
+
+  // ========== SEO PAGE - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/referencement\/?$/i,         // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/seo\/?$/i,                   // EN/ES/DE/PT/RU/ZH/HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/تحسين-محركات-البحث\/?$/i,    // AR (native)
+
+  // ========== LOGIN - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/connexion\/?$/i,             // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/login\/?$/i,                 // EN/HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/iniciar-sesion\/?$/i,        // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/anmeldung\/?$/i,             // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/vkhod\/?$/i,                 // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/entrar\/?$/i,                // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/denglu\/?$/i,                // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/تسجيل-الدخول\/?$/i,          // AR (native)
+
+  // ========== REGISTER - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/inscription\/?$/i,           // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/register\/?$/i,              // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/registro\/?$/i,              // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/registrierung\/?$/i,         // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/registratsiya\/?$/i,         // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/cadastro\/?$/i,              // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/zhuce\/?$/i,                 // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/panjikaran\/?$/i,            // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/التسجيل\/?$/i,               // AR (native)
+
+  // ========== REGISTER CLIENT - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/inscription\/client\/?$/i,   // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/register\/client\/?$/i,      // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/registro\/cliente\/?$/i,     // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/registrierung\/kunde\/?$/i,  // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/registratsiya\/klient\/?$/i, // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/registro\/cliente\/?$/i,     // PT (same as ES)
+  /^\/[a-z]{2}(-[a-z]{2})?\/zhuce\/kehu\/?$/i,           // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/panjikaran\/grahak\/?$/i,    // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/تسجيل\/عميل\/?$/i,           // AR (native)
+
+  // ========== REGISTER LAWYER - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/inscription\/avocat\/?$/i,   // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/register\/lawyer\/?$/i,      // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/registro\/abogado\/?$/i,     // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/registrierung\/anwalt\/?$/i, // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/registratsiya\/advokat\/?$/i, // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/registro\/advogado\/?$/i,    // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/zhuce\/lushi\/?$/i,          // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/panjikaran\/vakil\/?$/i,     // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/تسجيل\/محام\/?$/i,           // AR (native)
+
+  // ========== REGISTER EXPAT - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/inscription\/expatrie\/?$/i, // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/register\/expat\/?$/i,       // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/registro\/expatriado\/?$/i,  // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/registrierung\/expatriate\/?$/i, // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/registratsiya\/expatriant\/?$/i, // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/registro\/expatriado\/?$/i,  // PT (same as ES)
+  /^\/[a-z]{2}(-[a-z]{2})?\/zhuce\/waipai\/?$/i,         // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/panjikaran\/pravasi\/?$/i,   // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/تسجيل\/مغترب\/?$/i,          // AR (native)
+
+  // ========== PASSWORD RESET - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/reinitialisation-mot-de-passe\/?$/i, // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/password-reset\/?$/i,        // EN/HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/restablecer-contrasena\/?$/i, // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/passwort-zurucksetzen\/?$/i, // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/sbros-parolya\/?$/i,         // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/redefinir-senha\/?$/i,       // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/chongzhi-mima\/?$/i,         // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/إعادة-تعيين-كلمة-المرور\/?$/i, // AR (native)
+
+  // ========== CHATTER LANDING - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/devenir-chatter\/?$/i,       // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/become-chatter\/?$/i,        // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/ser-chatter\/?$/i,           // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter-werden\/?$/i,        // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/stat-chatterom\/?$/i,        // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/tornar-se-chatter\/?$/i,     // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/chengwei-chatter\/?$/i,      // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter-bane\/?$/i,          // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/كن-مسوقا\/?$/i,              // AR (native)
+
+  // ========== CHATTER REGISTER - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/inscription\/?$/i,  // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/register\/?$/i,     // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/registro\/?$/i,     // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/registrierung\/?$/i, // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/registratsiya\/?$/i, // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/cadastro\/?$/i,     // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/zhuce\/?$/i,        // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/panjikaran\/?$/i,   // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/مسوق\/تسجيل\/?$/i,           // AR (native)
+
+  // ========== CHATTER PRESENTATION - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/presentation\/?$/i, // FR/EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/presentacion\/?$/i, // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/praesentation\/?$/i, // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/prezentatsiya\/?$/i, // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/apresentacao\/?$/i, // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/jieshao\/?$/i,      // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/parichay\/?$/i,     // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/مسوق\/عرض\/?$/i,             // AR (native)
+
+  // ========== INFLUENCER LANDING - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/devenir-influenceur\/?$/i,   // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/become-influencer\/?$/i,     // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/ser-influencer\/?$/i,        // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/influencer-werden\/?$/i,     // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/stat-influentserom\/?$/i,    // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/tornar-se-influenciador\/?$/i, // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/chengwei-yingxiangli\/?$/i,  // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/influencer-bane\/?$/i,       // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/كن-مؤثرا\/?$/i,              // AR (native)
+
+  // ========== INFLUENCER REGISTER - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/influencer\/inscription\/?$/i, // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/influencer\/register\/?$/i, // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/influencer\/registro\/?$/i, // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/influencer\/registrierung\/?$/i, // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/influencer\/registratsiya\/?$/i, // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/influencer\/cadastro\/?$/i, // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/influencer\/zhuce\/?$/i,    // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/influencer\/panjikaran\/?$/i, // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/مؤثر\/تسجيل\/?$/i,          // AR (native)
+
+  // ========== BLOGGER LANDING - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/devenir-blogger\/?$/i,       // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/become-blogger\/?$/i,        // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/ser-blogger\/?$/i,           // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/blogger-werden\/?$/i,        // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/stat-bloggerom\/?$/i,        // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/tornar-se-blogger\/?$/i,     // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/chengwei-boke\/?$/i,         // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/blogger-banen\/?$/i,         // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/كن-مدون\/?$/i,               // AR (native)
+
+  // ========== BLOGGER REGISTER - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/blogger\/inscription\/?$/i,  // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/blogger\/register\/?$/i,     // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/blogger\/registro\/?$/i,     // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/blogger\/registrieren\/?$/i, // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/blogger\/registratsiya\/?$/i, // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/blogger\/registro\/?$/i,     // PT (same as ES)
+  /^\/[a-z]{2}(-[a-z]{2})?\/blogger\/zhuce\/?$/i,        // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/blogger\/panjikaran\/?$/i,   // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/مدون\/تسجيل\/?$/i,           // AR (native)
+
+  // ========== GROUPADMIN LANDING - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/devenir-admin-groupe\/?$/i,  // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/become-group-admin\/?$/i,    // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/convertirse-admin-grupo\/?$/i, // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/gruppenadmin-werden\/?$/i,   // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/stat-admin-gruppy\/?$/i,     // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/tornar-se-admin-grupo\/?$/i, // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/chengwei-qunzhu\/?$/i,       // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/group-admin-bane\/?$/i,      // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/كن-مسؤول-مجموعة\/?$/i,       // AR (native)
+
+  // ========== GROUPADMIN REGISTER - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/groupadmin\/inscription\/?$/i, // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/groupadmin\/register\/?$/i, // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/groupadmin\/registro\/?$/i, // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/groupadmin\/registrieren\/?$/i, // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/groupadmin\/registratsiya\/?$/i, // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/groupadmin\/registro\/?$/i, // PT (same as ES)
+  /^\/[a-z]{2}(-[a-z]{2})?\/groupadmin\/zhuce\/?$/i,    // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/groupadmin\/panjikaran\/?$/i, // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/مسؤول-مجموعة\/التسجيل\/?$/i, // AR (native)
+
+  // ========== PIONEERS - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/pioneers\/?$/i,              // FR/EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/pioneros\/?$/i,              // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/pioniere\/?$/i,              // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/pionery\/?$/i,               // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/pioneiros\/?$/i,             // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/xianquzhe\/?$/i,             // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/agranee\/?$/i,               // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/الرواد\/?$/i,                // AR (native)
+
+  // ========== FIND LAWYER - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/trouver-avocat\/?$/i,        // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/find-lawyer\/?$/i,           // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/buscar-abogado\/?$/i,        // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/anwalt-finden\/?$/i,         // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/nayti-advokata\/?$/i,        // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/encontrar-advogado\/?$/i,    // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/zhaodao-lushi\/?$/i,         // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/vakil-khoje\/?$/i,           // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/ابحث-عن-محامي\/?$/i,         // AR (native)
+
+  // ========== FIND EXPAT - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/trouver-expatrie\/?$/i,      // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/find-expat\/?$/i,            // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/buscar-expatriado\/?$/i,     // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/expatriate-finden\/?$/i,     // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/nayti-expatrianta\/?$/i,     // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/encontrar-expatriado\/?$/i,  // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/zhaodao-waipai\/?$/i,        // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/pravasi-khoje\/?$/i,         // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/ابحث-عن-مغترب\/?$/i,         // AR (native)
+
+  // ========== TESTIMONIAL DETAIL (with dynamic segments) ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/temoignages\/[^\/]+\/[^\/]+\/[^\/]+\/?$/i,     // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/testimonials\/[^\/]+\/[^\/]+\/[^\/]+\/?$/i,    // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/testimonios\/[^\/]+\/[^\/]+\/[^\/]+\/?$/i,     // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/depoimentos\/[^\/]+\/[^\/]+\/[^\/]+\/?$/i,     // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/otzyvy\/[^\/]+\/[^\/]+\/[^\/]+\/?$/i,          // RU
+
   // ==========================================================================
   // DYNAMIC PATTERNS FOR NEW PAGES (automatically prerendered)
   // Supports: Latin, Arabic (\u0600-\u06FF), Hindi/Devanagari (\u0900-\u097F),

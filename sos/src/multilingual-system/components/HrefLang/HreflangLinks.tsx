@@ -74,7 +74,9 @@ const HreflangLinks: React.FC<Props> = ({ pathname }) => {
         // SEO 2026: Always use the DEFAULT country for each language
         // This ensures hreflang links match what's in the sitemap
         const defaultCountry = LANGUAGE_TO_DEFAULT_COUNTRY[prefix] || prefix;
-        const targetSeg = `${prefix}-${defaultCountry}`;
+        // Convert 'ch' to 'zh' for Chinese URLs (ISO 639-1 standard)
+        const urlLang = prefix === 'ch' ? 'zh' : prefix;
+        const targetSeg = `${urlLang}-${defaultCountry}`;
 
         // If we matched a known route key, replace the matched slug with the translated slug for this language
         let translatedSlugSegments: string[] = [];
