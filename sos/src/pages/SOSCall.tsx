@@ -3435,7 +3435,7 @@ const SOSCall: React.FC = () => {
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pt-0 pt-8 w-full overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pt-0 pt-4 w-full overflow-hidden">
             {/* ===== H2 - Titre de section (Desktop uniquement) ===== */}
             <div className="text-center mb-5 sm:mb-8">
               <h2
