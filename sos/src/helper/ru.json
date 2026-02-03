@@ -2473,7 +2473,7 @@
   "auth.googleLogin.subtitle": "Войдите через Google для продолжения",
   "auth.invalidEmail": "Неверный адрес электронной почты",
   "auth.loadingProfile": "Загрузка вашего профиля...",
-  "auth.login.title": "С возвращением\!",
+  "auth.login.title": "С возвращением!",
   "auth.login.subtitle": "Введите ваш пароль",
   "auth.loginError": "Ошибка входа. Проверьте ваши данные.",
   "auth.or": "или",
