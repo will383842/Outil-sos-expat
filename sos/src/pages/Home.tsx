@@ -1299,7 +1299,7 @@ const OptimizedHomePage: React.FC = () => {
                 style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
               >
                 <Phone className="w-8 h-8 sm:w-8 sm:h-8 animate-pulse pointer-events-none" aria-hidden="true" />
-                <span className="pointer-events-none">
+                <span className="pointer-events-none text-2xl sm:text-3xl md:text-4xl text-white font-black">
                   <FormattedMessage id="cta.callNow" />
                 </span>
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-500/30 to-red-600/30 opacity-0 md:group-hover:opacity-100 transition-opacity duration-200" aria-hidden="true" />

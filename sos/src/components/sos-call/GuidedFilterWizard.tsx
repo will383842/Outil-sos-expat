@@ -47,14 +47,26 @@ const PRIORITY_COUNTRY_CODES = [
 // Priority languages codes (in order)
 const PRIORITY_LANGUAGE_CODES = ["fr", "en", "de", "ru", "zh", "es", "pt", "ar", "hi"];
 
-// Flag mappings for languages
+// Flag mappings for languages (ISO 639-1 language code -> ISO 3166-1 country code)
 const LANGUAGE_FLAG_MAP: Record<string, string> = {
-  fr: "FR", en: "GB", de: "DE", ru: "RU", zh: "CN", es: "ES", pt: "PT", ar: "SA", hi: "IN",
-  it: "IT", nl: "NL", pl: "PL", tr: "TR", ja: "JP", ko: "KR",
-  vi: "VN", th: "TH", id: "ID", ms: "MY", sv: "SE", no: "NO",
-  da: "DK", fi: "FI", cs: "CZ", el: "GR", hu: "HU", ro: "RO",
-  uk: "UA", he: "IL", fa: "IR", bn: "BD", ta: "IN", te: "IN",
-  ur: "PK", sw: "KE", af: "ZA", tl: "PH",
+  // Top 20 world languages
+  zh: "CN", en: "GB", hi: "IN", es: "ES", fr: "FR", ar: "SA", bn: "BD", pt: "PT",
+  ru: "RU", ja: "JP", pa: "IN", de: "DE", jv: "ID", ko: "KR", vi: "VN", tr: "TR",
+  it: "IT", th: "TH", pl: "PL", uk: "UA",
+  // European languages
+  nl: "NL", sv: "SE", no: "NO", da: "DK", fi: "FI", cs: "CZ", sk: "SK", hu: "HU",
+  ro: "RO", bg: "BG", hr: "HR", sr: "RS", sl: "SI", el: "GR", ca: "ES", eu: "ES",
+  ga: "IE", cy: "GB", is: "IS", et: "EE", lv: "LV", lt: "LT", sq: "AL", mk: "MK", mt: "MT",
+  // Asian languages
+  ur: "PK", ta: "IN", te: "IN", mr: "IN", gu: "IN", kn: "IN", ml: "IN", si: "LK",
+  ne: "NP", id: "ID", ms: "MY", tl: "PH", my: "MM", km: "KH", lo: "LA", mn: "MN",
+  ka: "GE", hy: "AM", az: "AZ", kk: "KZ", uz: "UZ", tg: "TJ", ky: "KG", tk: "TM",
+  ps: "AF", fa: "IR", he: "IL",
+  // African languages
+  sw: "KE", am: "ET", ha: "NG", yo: "NG", ig: "NG", zu: "ZA", xh: "ZA", af: "ZA",
+  so: "SO", rw: "RW",
+  // Other
+  eo: "EU",
 };
 
 // Country flag component

@@ -6,7 +6,7 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import { collection, getDocs, query, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { Service, AppSettings, Notification, EnhancedSettings } from "./types";
 import { ensureCollectionsExist } from "../utils/firestore";
@@ -101,6 +101,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [countriesLoading, setCountriesLoading] = useState(true);
 
   // Load enabled countries from Firestore on app startup
+  // Uses 'country_settings' collection (same as admin dashboard AdminCountries.tsx)
   useEffect(() => {
     const loadEnabledCountries = async () => {
       try {
@@ -108,37 +109,29 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const countrySettingsQuery = query(collection(db, "country_settings"));
         const snapshot = await getDocs(countrySettingsQuery);
 
-        // Si collection vide, initialiser avec les pays par defaut
+        console.log(`[AppContext] country_settings: ${snapshot.size} documents trouvés`);
+
         if (snapshot.empty) {
-          const defaultCountries = ["FR", "GB", "DE", "ES", "IT", "BE", "CH", "PT", "NL", "PL"];
-
-          for (const code of defaultCountries) {
-            await setDoc(doc(db, "country_settings", code.toLowerCase()), {
-              code: code.toUpperCase(),
-              isActive: true,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            });
-          }
-
-          setSupportedCountries(defaultCountries);
+          // No countries in Firestore = show ALL countries (fallback)
+          console.log("[AppContext] Collection vide, affichage de tous les pays");
+          setSupportedCountries([]);
         } else {
           const enabledCountries: string[] = [];
           snapshot.docs.forEach((docSnap) => {
             const data = docSnap.data();
+            // Only include countries with isActive === true
             if (data.isActive === true) {
-              // Use the code from the document (uppercase)
               enabledCountries.push(data.code?.toUpperCase() || docSnap.id.toUpperCase());
             }
           });
 
+          console.log(`[AppContext] ${enabledCountries.length} pays actifs chargés:`, enabledCountries.slice(0, 10), '...');
           setSupportedCountries(enabledCountries);
         }
       } catch (error) {
-        if (import.meta.env.DEV) console.error("[AppContext] Error loading country settings:", error);
-        // Fallback to default countries if Firestore fails
-        const fallbackCountries = ["FR", "GB", "DE", "ES", "IT", "PT", "NL", "PL"];
-        setSupportedCountries(fallbackCountries);
+        console.error("[AppContext] Error loading country_settings:", error);
+        // Fallback: empty array = show ALL countries (see SOSCall.tsx countryOptions logic)
+        setSupportedCountries([]);
       } finally {
         setCountriesLoading(false);
       }
