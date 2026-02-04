@@ -1,20 +1,19 @@
 /**
- * onPaymentReceived.ts
+ * onPayPalPaymentReceived.ts
  *
- * Telegram notification trigger for successful payments.
+ * Telegram notification trigger for successful PayPal payments.
  *
- * This trigger listens to the "payments/{paymentId}" collection and sends
- * a Telegram notification when a successful payment is received.
+ * This trigger listens to the "paypal_orders/{orderId}" collection and sends
+ * a Telegram notification when a PayPal payment is captured.
  *
- * IMPORTANT: Uses onDocumentWritten to catch both:
- * - New payments created with status "succeeded" (rare)
- * - Existing payments updated to status "succeeded/completed/captured" (common)
+ * Uses onDocumentWritten to catch:
+ * - PayPal orders that are captured (status changes to COMPLETED)
  *
  * Features:
- * - Filters for successful/completed/captured payments only
- * - Prevents duplicate notifications using notificationSent flag
+ * - Filters for captured payments only (status = COMPLETED)
+ * - Prevents duplicate notifications using telegramNotificationSent flag
  * - Configurable minimum amount threshold
- * - Calculates commission (20% platform fee or from payment data)
+ * - Calculates commission from capturedConnectionFee
  * - Paris timezone for date/time formatting
  * - Graceful error handling
  */
@@ -32,10 +31,7 @@ import type { PaymentReceivedVars } from "../types";
 // CONSTANTS
 // ============================================================================
 
-const LOG_PREFIX = "[telegramOnPaymentReceived]";
-
-/** Default platform commission percentage (20%) */
-const DEFAULT_COMMISSION_RATE = 0.20;
+const LOG_PREFIX = "[telegramOnPayPalPaymentReceived]";
 
 /** Default minimum amount in EUR to trigger notification (0 = all payments) */
 const DEFAULT_MIN_AMOUNT_EUR = 0;
@@ -43,28 +39,26 @@ const DEFAULT_MIN_AMOUNT_EUR = 0;
 /** Paris timezone for date/time formatting */
 const PARIS_TIMEZONE = "Europe/Paris";
 
-/** Valid payment statuses that should trigger notification */
-const VALID_PAYMENT_STATUSES = ["succeeded", "completed", "captured"];
+/** Valid PayPal order statuses that indicate successful capture */
+const VALID_PAYPAL_STATUSES = ["COMPLETED"];
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 /**
- * Payment document structure from Firestore
+ * PayPal order document structure from Firestore
  */
-interface PaymentDocument {
+interface PayPalOrderDocument {
   status?: string;
+  orderId?: string;
   amount?: number;
-  amountInCents?: number;
-  currency?: string;
-  platformFee?: number;
-  platformFeeInCents?: number;
-  commissionRate?: number;
+  capturedGrossAmount?: number;
+  capturedConnectionFee?: number;
+  capturedProviderAmount?: number;
+  capturedCurrency?: string;
+  capturedAt?: FirebaseFirestore.Timestamp;
   createdAt?: FirebaseFirestore.Timestamp;
-  metadata?: {
-    [key: string]: unknown;
-  };
   // Telegram notification tracking
   telegramNotificationSent?: boolean;
   telegramNotificationSentAt?: Date;
@@ -151,67 +145,15 @@ function formatAmount(amount: number): string {
   return amount.toFixed(2);
 }
 
-/**
- * Get amount in EUR from payment data
- * Handles both cents and euros formats
- */
-function getAmountInEur(payment: PaymentDocument): number {
-  // If amount is in cents
-  if (payment.amountInCents !== undefined) {
-    return payment.amountInCents / 100;
-  }
-
-  // If amount is provided directly (check if it looks like cents - > 1000 = likely cents)
-  if (payment.amount !== undefined) {
-    // Heuristic: if amount > 1000, it's probably in cents
-    if (payment.amount > 1000) {
-      return payment.amount / 100;
-    }
-    return payment.amount;
-  }
-
-  return 0;
-}
-
-/**
- * Calculate commission amount
- * Uses rate from payment data if available, otherwise uses default 20%
- */
-function calculateCommission(
-  totalAmountEur: number,
-  payment: PaymentDocument
-): number {
-  // First, check if platform fee is directly available
-  if (payment.platformFee !== undefined) {
-    // If > 100, assume it's in cents
-    if (payment.platformFee > 100) {
-      return payment.platformFee / 100;
-    }
-    return payment.platformFee;
-  }
-
-  if (payment.platformFeeInCents !== undefined) {
-    return payment.platformFeeInCents / 100;
-  }
-
-  // Calculate from commission rate if available
-  const commissionRate = payment.commissionRate ?? DEFAULT_COMMISSION_RATE;
-  return totalAmountEur * commissionRate;
-}
-
 // ============================================================================
 // MAIN TRIGGER
 // ============================================================================
 
 /**
- * Telegram notification trigger for successful payments
+ * Telegram notification trigger for successful PayPal payments
  *
- * Listens to: payments/{paymentId}
- * Triggers on: Document creation OR update when status becomes "succeeded", "completed", or "captured"
- *
- * This uses onDocumentWritten to catch:
- * - New payments created directly with success status (rare)
- * - Existing payments updated to success status after capture (common)
+ * Listens to: paypal_orders/{orderId}
+ * Triggers on: Document update when status becomes "COMPLETED" (capture successful)
  *
  * Notification template variables:
  * - TOTAL_AMOUNT: Total payment amount in EUR (2 decimal places)
@@ -219,10 +161,10 @@ function calculateCommission(
  * - DATE: Payment date (DD/MM/YYYY, Paris timezone)
  * - TIME: Payment time (HH:MM, Paris timezone)
  */
-export const telegramOnPaymentReceived = onDocumentWritten(
+export const telegramOnPayPalPaymentReceived = onDocumentWritten(
   {
     region: "europe-west1",
-    document: "payments/{paymentId}",
+    document: "paypal_orders/{orderId}",
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -230,44 +172,44 @@ export const telegramOnPaymentReceived = onDocumentWritten(
   async (event) => {
     ensureInitialized();
 
-    const paymentId = event.params.paymentId;
+    const orderId = event.params.orderId;
     const afterSnapshot = event.data?.after;
     const beforeSnapshot = event.data?.before;
 
-    logger.info(`${LOG_PREFIX} Processing payment write: ${paymentId}`);
+    logger.info(`${LOG_PREFIX} Processing PayPal order write: ${orderId}`);
 
     // Check if document exists (not a delete)
     if (!afterSnapshot?.exists) {
-      logger.info(`${LOG_PREFIX} Payment ${paymentId} was deleted - skipping`);
+      logger.info(`${LOG_PREFIX} PayPal order ${orderId} was deleted - skipping`);
       return;
     }
 
-    const paymentData = afterSnapshot.data() as PaymentDocument;
-    const previousData = beforeSnapshot?.exists ? beforeSnapshot.data() as PaymentDocument : null;
+    const orderData = afterSnapshot.data() as PayPalOrderDocument;
+    const previousData = beforeSnapshot?.exists ? beforeSnapshot.data() as PayPalOrderDocument : null;
 
     try {
-      // 1. Check if payment status is successful
-      const status = paymentData.status?.toLowerCase();
-      if (!status || !VALID_PAYMENT_STATUSES.includes(status)) {
+      // 1. Check if payment status indicates successful capture
+      const status = orderData.status?.toUpperCase();
+      if (!status || !VALID_PAYPAL_STATUSES.includes(status)) {
         logger.info(
-          `${LOG_PREFIX} Payment ${paymentId} status is "${status}", not successful - skipping notification`
+          `${LOG_PREFIX} PayPal order ${orderId} status is "${status}", not completed - skipping notification`
         );
         return;
       }
 
       // 2. Check if notification was already sent (prevent duplicates)
-      if (paymentData.telegramNotificationSent === true) {
+      if (orderData.telegramNotificationSent === true) {
         logger.info(
-          `${LOG_PREFIX} Payment ${paymentId} notification already sent - skipping duplicate`
+          `${LOG_PREFIX} PayPal order ${orderId} notification already sent - skipping duplicate`
         );
         return;
       }
 
-      // 3. Check if this is a status change TO a successful status (not already successful)
-      const previousStatus = previousData?.status?.toLowerCase();
-      if (previousStatus && VALID_PAYMENT_STATUSES.includes(previousStatus)) {
+      // 3. Check if this is a status change TO COMPLETED (not already completed)
+      const previousStatus = previousData?.status?.toUpperCase();
+      if (previousStatus && VALID_PAYPAL_STATUSES.includes(previousStatus)) {
         logger.info(
-          `${LOG_PREFIX} Payment ${paymentId} was already in successful status "${previousStatus}" - skipping`
+          `${LOG_PREFIX} PayPal order ${orderId} was already in completed status "${previousStatus}" - skipping`
         );
         return;
       }
@@ -282,21 +224,23 @@ export const telegramOnPaymentReceived = onDocumentWritten(
       }
 
       // 5. Calculate amounts
-      const totalAmountEur = getAmountInEur(paymentData);
+      // Use capturedGrossAmount if available, otherwise fall back to amount
+      const totalAmountEur = orderData.capturedGrossAmount ?? orderData.amount ?? 0;
 
       // Check minimum amount threshold
       const minAmount = config.minAmountEur ?? DEFAULT_MIN_AMOUNT_EUR;
       if (totalAmountEur < minAmount) {
         logger.info(
-          `${LOG_PREFIX} Payment amount ${totalAmountEur}EUR < minimum ${minAmount}EUR - skipping notification`
+          `${LOG_PREFIX} PayPal order amount ${totalAmountEur}EUR < minimum ${minAmount}EUR - skipping notification`
         );
         return;
       }
 
-      const commissionAmountEur = calculateCommission(totalAmountEur, paymentData);
+      // Commission is the connection fee (platform fee)
+      const commissionAmountEur = orderData.capturedConnectionFee ?? 0;
 
       // 6. Get date/time in Paris timezone
-      const paymentDate = paymentData.createdAt?.toDate() ?? new Date();
+      const paymentDate = orderData.capturedAt?.toDate() ?? orderData.createdAt?.toDate() ?? new Date();
 
       // 7. Build notification variables
       const variables: PaymentReceivedVars = {
@@ -306,12 +250,13 @@ export const telegramOnPaymentReceived = onDocumentWritten(
         TIME: formatTimeParis(paymentDate),
       };
 
-      logger.info(`${LOG_PREFIX} Sending notification for payment ${paymentId}`, {
+      logger.info(`${LOG_PREFIX} Sending notification for PayPal order ${orderId}`, {
         totalAmount: variables.TOTAL_AMOUNT,
         commission: variables.COMMISSION_AMOUNT,
         date: variables.DATE,
         time: variables.TIME,
         statusChanged: `${previousStatus || "new"} -> ${status}`,
+        paymentMethod: "PayPal",
       });
 
       // 8. Send notification via TelegramNotificationService
@@ -322,20 +267,20 @@ export const telegramOnPaymentReceived = onDocumentWritten(
       );
 
       if (success) {
-        logger.info(`${LOG_PREFIX} Notification sent successfully for payment ${paymentId}`);
+        logger.info(`${LOG_PREFIX} Notification sent successfully for PayPal order ${orderId}`);
 
         // 9. Mark notification as sent to prevent duplicates
         const db = getFirestore();
-        await db.collection("payments").doc(paymentId).update({
+        await db.collection("paypal_orders").doc(orderId).update({
           telegramNotificationSent: true,
           telegramNotificationSentAt: new Date(),
         });
       } else {
-        logger.warn(`${LOG_PREFIX} Failed to send notification for payment ${paymentId}`);
+        logger.warn(`${LOG_PREFIX} Failed to send notification for PayPal order ${orderId}`);
       }
     } catch (error) {
       // Log error but don't throw - we don't want to retry the trigger
-      logger.error(`${LOG_PREFIX} Error processing payment ${paymentId}:`, {
+      logger.error(`${LOG_PREFIX} Error processing PayPal order ${orderId}:`, {
         error: error instanceof Error ? error.message : "Unknown error",
         stack: error instanceof Error ? error.stack : undefined,
       });

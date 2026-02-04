@@ -520,7 +520,13 @@ export const PlansPage: React.FC = () => {
               </h2>
 
               {selectedPlan && (
-                <Elements stripe={stripePromise} options={stripeOptions}>
+                // IMPORTANT: key unique force un remount propre de Elements quand le plan/devise/période change
+                // Cela évite l'erreur "Unsupported prop change on Elements" et les problèmes Apple Pay
+                <Elements
+                  key={`${selectedPlan.id}-${selectedCurrency}-${selectedBillingPeriod}`}
+                  stripe={stripePromise}
+                  options={stripeOptions}
+                >
                   <CheckoutForm
                     selectedPlan={selectedPlan}
                     currency={selectedCurrency}

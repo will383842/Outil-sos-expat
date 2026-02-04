@@ -12,6 +12,8 @@ import { setProviderBusy } from '../callables/providerStatusManager';
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import { TASKS_AUTH_SECRET, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST } from '../lib/secrets';
 import voicePromptsJson from '../content/voicePrompts.json';
+// P0 FIX: Import call region from centralized config - dedicated region for call functions
+import { CALL_FUNCTIONS_REGION } from '../configs/callRegion';
 
 // Helper function to get intro text based on participant type and language
 function getIntroText(participant: "provider" | "client", langKey: string): string {
@@ -72,7 +74,8 @@ interface TwilioCallWebhookBody {
  */
 export const twilioCallWebhook = onRequest(
   {
-    region: 'europe-west1',
+    // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
+    region: CALL_FUNCTIONS_REGION,
     memory: '256MiB',
     cpu: 0.25,
     maxInstances: 10,  // P1 FIX: Increased from 3 for better scalability
@@ -1199,7 +1202,8 @@ export const twilioRecordingWebhook = onRequest(
  */
 export const twilioAmdTwiml = onRequest(
   {
-    region: 'europe-west1',
+    // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
+    region: CALL_FUNCTIONS_REGION,
     memory: '256MiB',  // P0 FIX: 128MiB was too low (firebase-admin requires ~150MB)
     cpu: 0.25,
     maxInstances: 10,
@@ -1897,7 +1901,8 @@ export const twilioAmdTwiml = onRequest(
  */
 export const twilioGatherResponse = onRequest(
   {
-    region: 'europe-west1',
+    // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
+    region: CALL_FUNCTIONS_REGION,
     memory: '256MiB',
     cpu: 0.25,
     maxInstances: 10,

@@ -412,7 +412,11 @@ const RegisterClient: React.FC = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   // SECURITY: Validate redirect URL to prevent Open Redirect attacks
-  const rawRedirect = searchParams.get("redirect") || "/dashboard";
+  // FIX: Check sessionStorage first (like Login.tsx) to handle cases where
+  // the redirect query param is lost during navigation (e.g., booking flow)
+  const redirectFromStorage = sessionStorage.getItem("loginRedirect");
+  const redirectFromParams = searchParams.get("redirect");
+  const rawRedirect = redirectFromStorage || redirectFromParams || "/dashboard";
   const redirect = isAllowedRedirect(rawRedirect) ? rawRedirect : "/dashboard";
   const prefillEmail = searchParams.get("email") || "";
   // AFFILIATE: Capture referral code from URL (?ref=CODE)
@@ -766,6 +770,8 @@ const RegisterClient: React.FC = () => {
     });
 
     if (isFullyReady && user) {
+      // Clear the stored redirect after using it (important to prevent reusing old redirects)
+      sessionStorage.removeItem("loginRedirect");
       console.log('[BOOKING_AUTH_DEBUG] 🚀 RegisterClient NAVIGATING to:', redirect);
       navigate(redirect, { replace: true });
     }

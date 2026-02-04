@@ -5485,6 +5485,12 @@ export const createUserDocument = onCall(
           isVerifiedEmail: request.data.isVerified ?? false,
           isActive: true,
           preferredLanguage: request.data.preferredLanguage || 'fr',
+          // Phone and country for Telegram notifications
+          phone: request.data.phone || null,
+          phoneNumber: request.data.phone || null,
+          phoneCountryCode: request.data.phoneCountryCode || null,
+          country: request.data.country || request.data.currentCountry || null,
+          currentCountry: request.data.currentCountry || request.data.country || null,
           createdAt: now,
           updatedAt: now,
           lastLoginAt: now,

@@ -8,6 +8,8 @@ import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUN
 import { STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST } from '../lib/stripe';
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import { TASKS_AUTH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } from '../lib/secrets';
+// P0 FIX: Import call region from centralized config - dedicated region for call functions
+import { CALL_FUNCTIONS_REGION } from '../configs/callRegion';
 
 // Ensure TypeScript recognizes the secrets are used in the secrets array
 void TWILIO_AUTH_TOKEN_SECRET;
@@ -47,7 +49,8 @@ interface TwilioConferenceWebhookBody {
  */
 export const twilioConferenceWebhook = onRequest(
   {
-    region: 'europe-west1',
+    // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
+    region: CALL_FUNCTIONS_REGION,
     memory: '512MiB',  // P0 FIX: Increased for payment capture operations
     cpu: 0.25,         // P0 FIX: Reduced to save quota (function mostly waits for API responses)
     timeoutSeconds: 300, // P0 FIX: 5 minutes timeout for payment capture

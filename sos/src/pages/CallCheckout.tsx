@@ -1681,12 +1681,33 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     // Payment Request (Apple Pay / Google Pay)
     const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
     const [canMakePaymentRequest, setCanMakePaymentRequest] = useState(false);
+    // Ref pour tracker si le PaymentRequest a déjà été initialisé (évite les re-créations)
+    const paymentRequestInitializedRef = useRef(false);
+    // Ref pour stocker le montant actuel et le mettre à jour sans recréer le PaymentRequest
+    const currentAmountRef = useRef<number>(0);
 
     // P0-1 FIX: callSessionId stable généré UNE SEULE FOIS pour garantir l'idempotence
     // NE PAS utiliser Date.now() dans actuallySubmitPayment car cela crée une nouvelle clé à chaque retry
     const [stableCallSessionId] = useState(() =>
       `call_session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
     );
+
+    // Ref pour accéder aux valeurs actuelles dans le handler sans re-attacher le listener
+    // Initialisé avec une valeur vide, sera mis à jour par le useEffect ci-dessous
+    const paymentDataRef = useRef<{
+      user: typeof user;
+      provider: typeof provider;
+      service: typeof service;
+      adminPricing: typeof adminPricing;
+      serviceCurrency: typeof serviceCurrency;
+      stripeCurrency: typeof stripeCurrency;
+      stableCallSessionId: string;
+      intl: typeof intl;
+      t: typeof t;
+      onSuccess: typeof onSuccess;
+      onError: typeof onError;
+      persistPaymentDocs: (paymentIntentId: string) => Promise<string>;
+    } | null>(null);
 
     const { watch, setError } = useForm<PhoneFormValues>({
       defaultValues: {
@@ -1821,43 +1842,101 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       ]
     );
 
-    // Initialiser Payment Request (Apple Pay / Google Pay)
+    // Initialiser Payment Request (Apple Pay / Google Pay) - UNE SEULE FOIS
+    // Puis utiliser .update() pour changer le montant si nécessaire
     useEffect(() => {
       if (!stripe || !adminPricing.totalAmount) return;
 
       const amountInCents = Math.round(adminPricing.totalAmount * 100);
+      const label = `SOS Expats - ${service.serviceType === "lawyer_call" ? "Avocat" : "Expert"}`;
 
+      // Si le PaymentRequest existe déjà, mettre à jour le montant au lieu de recréer
+      if (paymentRequestInitializedRef.current && paymentRequest) {
+        // Seulement mettre à jour si le montant a changé
+        if (currentAmountRef.current !== amountInCents) {
+          console.log("[PaymentRequest] 🔄 Mise à jour du montant:", currentAmountRef.current, "→", amountInCents);
+          currentAmountRef.current = amountInCents;
+          // Note: PaymentRequest.update() n'est appelé qu'au moment du clic sur le bouton
+          // Le bouton utilisera automatiquement le dernier état du PaymentRequest
+          paymentRequest.update({
+            total: {
+              label,
+              amount: amountInCents,
+            },
+          });
+        }
+        return;
+      }
+
+      // Première initialisation seulement
+      console.log("[PaymentRequest] 🆕 Initialisation du PaymentRequest...");
       const pr = stripe.paymentRequest({
         country: "FR",
         currency: serviceCurrency,
         total: {
-          label: `SOS Expats - ${service.serviceType === "lawyer_call" ? "Avocat" : "Expert"}`,
+          label,
           amount: amountInCents,
         },
         requestPayerName: true,
         requestPayerEmail: true,
       });
 
+      currentAmountRef.current = amountInCents;
+
+      // Gérer l'événement cancel (utilisateur ferme Apple Pay sans payer)
+      pr.on("cancel", () => {
+        console.log("[PaymentRequest] ❌ Utilisateur a annulé Apple Pay / Google Pay");
+        setIsProcessing(false);
+      });
+
       // Vérifier si Apple Pay / Google Pay est disponible
       pr.canMakePayment().then((result) => {
         if (result) {
           console.log("[PaymentRequest] ✅ Apple Pay / Google Pay disponible:", result);
+          paymentRequestInitializedRef.current = true;
           setPaymentRequest(pr);
           setCanMakePaymentRequest(true);
         } else {
           console.log("[PaymentRequest] ❌ Apple Pay / Google Pay non disponible");
           setCanMakePaymentRequest(false);
         }
+      }).catch((err) => {
+        console.error("[PaymentRequest] Erreur canMakePayment:", err);
+        setCanMakePaymentRequest(false);
       });
 
-      // Cleanup: on ne peut pas annuler un PaymentRequest, mais on reset l'état
+      // Cleanup: reset les refs et l'état lors du démontage complet du composant
       return () => {
+        paymentRequestInitializedRef.current = false;
+        currentAmountRef.current = 0;
         setPaymentRequest(null);
         setCanMakePaymentRequest(false);
       };
-    }, [stripe, adminPricing.totalAmount, serviceCurrency, service.serviceType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [stripe, serviceCurrency, service.serviceType]);
+
+    // Mettre à jour le montant du PaymentRequest quand le prix change
+    useEffect(() => {
+      if (!paymentRequest || !adminPricing.totalAmount) return;
+
+      const amountInCents = Math.round(adminPricing.totalAmount * 100);
+      const label = `SOS Expats - ${service.serviceType === "lawyer_call" ? "Avocat" : "Expert"}`;
+
+      if (currentAmountRef.current !== amountInCents) {
+        console.log("[PaymentRequest] 💰 Mise à jour du montant:", currentAmountRef.current / 100, "€ →", amountInCents / 100, "€");
+        currentAmountRef.current = amountInCents;
+        paymentRequest.update({
+          total: {
+            label,
+            amount: amountInCents,
+          },
+        });
+      }
+    }, [paymentRequest, adminPricing.totalAmount, service.serviceType]);
 
     // Gestionnaire du paiement via Apple Pay / Google Pay
+    // IMPORTANT: Utilise paymentDataRef pour éviter de détacher/rattacher le handler
+    // à chaque changement de données (ce qui causait des paiements perdus)
     useEffect(() => {
       if (!paymentRequest || !stripe) return;
 
@@ -1868,12 +1947,26 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         console.log("[PaymentRequest] 🍎 Paiement Apple Pay / Google Pay reçu");
         setIsProcessing(true);
 
+        // Récupérer les valeurs actuelles depuis le ref (toujours à jour)
+        const {
+          user: currentUser,
+          provider: currentProvider,
+          service: currentService,
+          adminPricing: currentPricing,
+          serviceCurrency: currentServiceCurrency,
+          stripeCurrency: currentStripeCurrency,
+          stableCallSessionId: currentCallSessionId,
+          intl: currentIntl,
+          t: currentT,
+          onSuccess: currentOnSuccess,
+          onError: currentOnError,
+          persistPaymentDocs: currentPersistPaymentDocs,
+        } = paymentDataRef.current;
+
         try {
           // Valider les données de base
-          if (!user?.uid) throw new Error(t("err.unauth"));
-          if (adminPricing.totalAmount < 0.5) throw new Error(t("err.minAmount"));
-
-          const callSessionId = stableCallSessionId;
+          if (!currentUser?.uid) throw new Error(currentT("err.unauth"));
+          if (currentPricing.totalAmount < 0.5) throw new Error(currentT("err.minAmount"));
 
           // Créer le PaymentIntent
           const createPaymentIntent: HttpsCallable<
@@ -1882,29 +1975,29 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           > = httpsCallable(functions, "createPaymentIntent");
 
           const paymentData: PaymentIntentData = {
-            amount: adminPricing.totalAmount,
-            commissionAmount: adminPricing.connectionFeeAmount,
-            providerAmount: adminPricing.providerAmount,
-            currency: stripeCurrency,
-            serviceType: service.serviceType,
-            providerId: provider.id,
-            clientId: user.uid,
-            clientEmail: user.email || "",
-            providerName: provider.fullName || provider.name || "",
-            callSessionId: callSessionId,
+            amount: currentPricing.totalAmount,
+            commissionAmount: currentPricing.connectionFeeAmount,
+            providerAmount: currentPricing.providerAmount,
+            currency: currentStripeCurrency,
+            serviceType: currentService.serviceType,
+            providerId: currentProvider.id,
+            clientId: currentUser.uid,
+            clientEmail: currentUser.email || "",
+            providerName: currentProvider.fullName || currentProvider.name || "",
+            callSessionId: currentCallSessionId,
             description:
-              service.serviceType === "lawyer_call"
-                ? intl.formatMessage({ id: "checkout.consultation.lawyer" })
-                : intl.formatMessage({ id: "checkout.consultation.expat" }),
+              currentService.serviceType === "lawyer_call"
+                ? currentIntl.formatMessage({ id: "checkout.consultation.lawyer" })
+                : currentIntl.formatMessage({ id: "checkout.consultation.expat" }),
             metadata: {
-              providerType: provider.role || provider.type || "expat",
-              duration: String(adminPricing.duration),
-              clientName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-              clientPhone: service.clientPhone || "",
+              providerType: currentProvider.role || currentProvider.type || "expat",
+              duration: String(currentPricing.duration),
+              clientName: `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim(),
+              clientPhone: currentService.clientPhone || "",
               clientWhatsapp: "",
-              currency: serviceCurrency,
+              currency: currentServiceCurrency,
               timestamp: new Date().toISOString(),
-              callSessionId: callSessionId,
+              callSessionId: currentCallSessionId,
               paymentMethod: "apple_pay_google_pay",
             },
           };
@@ -1913,7 +2006,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           const resData = res.data as PaymentIntentResponse;
 
           if (!resData?.clientSecret) {
-            throw new Error(t("err.noClientSecret"));
+            throw new Error(currentT("err.noClientSecret"));
           }
 
           // Confirmer le paiement avec le payment method de Apple Pay / Google Pay
@@ -1926,22 +2019,23 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           if (confirmError) {
             console.error("[PaymentRequest] ❌ Erreur confirmation:", confirmError);
             ev.complete("fail");
-            onError(confirmError.message || t("err.stripe"));
+            currentOnError(confirmError.message || currentT("err.stripe"));
             return;
           }
 
           if (!paymentIntent) {
             ev.complete("fail");
-            onError(t("err.paymentFailed"));
+            currentOnError(currentT("err.paymentFailed"));
             return;
           }
 
           // Gérer 3D Secure si nécessaire
           if (paymentIntent.status === "requires_action") {
+            console.log("[PaymentRequest] 🔐 3D Secure requis...");
             const { error: actionError } = await stripe.confirmCardPayment(resData.clientSecret);
             if (actionError) {
               ev.complete("fail");
-              onError(actionError.message || t("err.actionRequired"));
+              currentOnError(actionError.message || currentT("err.actionRequired"));
               return;
             }
           }
@@ -1951,9 +2045,9 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           console.log("[PaymentRequest] ✅ Paiement Apple Pay / Google Pay réussi!");
 
           // Persister les documents et appeler onSuccess
-          const orderId = await persistPaymentDocs(paymentIntent.id);
+          const orderId = await currentPersistPaymentDocs(paymentIntent.id);
 
-          onSuccess({
+          currentOnSuccess({
             paymentIntentId: paymentIntent.id,
             call: "skipped", // L'appel sera planifié côté serveur
             orderId: orderId,
@@ -1961,34 +2055,22 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         } catch (err) {
           console.error("[PaymentRequest] ❌ Erreur:", err);
           ev.complete("fail");
-          onError(err instanceof Error ? err.message : String(err));
+          paymentDataRef.current.onError(err instanceof Error ? err.message : String(err));
         } finally {
           setIsProcessing(false);
         }
       };
 
+      // Attacher le handler UNE SEULE FOIS (pas de détachement/rattachement)
       paymentRequest.on("paymentmethod", handlePaymentMethod);
 
       return () => {
         paymentRequest.off("paymentmethod", handlePaymentMethod);
       };
-    }, [
-      paymentRequest,
-      stripe,
-      user,
-      provider,
-      service,
-      adminPricing,
-      serviceCurrency,
-      stripeCurrency,
-      stableCallSessionId,
-      intl,
-      t,
-      onSuccess,
-      onError,
-      setIsProcessing,
-      persistPaymentDocs,
-    ]);
+    // Dépendances minimales: seulement paymentRequest et stripe
+    // Les autres valeurs sont lues depuis paymentDataRef.current
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [paymentRequest, stripe]);
 
     const sendProviderNotifications = useCallback(
       async (
@@ -2476,10 +2558,15 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         setTimeout(() => {
           console.log("🚀 [STRIPE_DEBUG] 500ms timeout complete, calling onSuccess now...");
           try {
+            // P0 FIX: Toujours passer un callId valide (fallback sur callSessionId)
+            // pour éviter que PaymentSuccess.tsx ne reçoive undefined
+            const finalCallId = callId || callSessionId;
+            console.log("🔵 [STRIPE_DEBUG] callId resolution:", { callId, callSessionId, finalCallId });
+
             onSuccess({
               paymentIntentId: paymentIntent.id,
               call: callStatus,
-              callId: callId,
+              callId: finalCallId,
               orderId: orderId,
             });
             console.log("✅ [STRIPE_DEBUG] onSuccess called successfully");

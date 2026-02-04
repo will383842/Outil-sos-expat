@@ -2,6 +2,8 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { Request, Response } from 'express';
 import { twilioCallManager } from '../TwilioCallManager';
 import { logError } from '../utils/logs/logError';
+// P0 FIX: Import call region from centralized config - dedicated region for call functions
+import { CALL_FUNCTIONS_REGION } from '../configs/callRegion';
 
 // Helper to escape XML
 function escapeXml(s: string): string {
@@ -44,7 +46,8 @@ const VOICE_LOCALES: Record<string, string> = {
  */
 export const providerNoAnswerTwiML = onRequest(
   {
-    region: 'europe-west1',
+    // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
+    region: CALL_FUNCTIONS_REGION,
     memory: '256MiB',
     cpu: 0.25,
     maxInstances: 3,

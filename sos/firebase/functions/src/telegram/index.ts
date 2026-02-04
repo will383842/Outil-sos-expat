@@ -2,6 +2,7 @@
 export { telegramOnUserRegistration } from "./triggers/onUserRegistration";
 export { telegramOnCallCompleted } from "./triggers/onCallCompleted";
 export { telegramOnPaymentReceived } from "./triggers/onPaymentReceived";
+export { telegramOnPayPalPaymentReceived } from "./triggers/onPayPalPaymentReceived";
 export { telegramOnNewProvider } from "./triggers/onNewProvider";
 export { telegramOnNewContactMessage } from "./triggers/onNewContactMessage";
 export { telegramOnSecurityAlert } from "./triggers/onSecurityAlert";
