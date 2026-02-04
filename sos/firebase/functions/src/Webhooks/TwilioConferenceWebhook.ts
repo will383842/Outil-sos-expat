@@ -51,6 +51,8 @@ export const twilioConferenceWebhook = onRequest(
   {
     // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
     region: CALL_FUNCTIONS_REGION,
+    // P0 CRITICAL FIX 2026-02-04: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
+    invoker: "public",
     memory: '512MiB',  // P0 FIX: Increased for payment capture operations
     cpu: 0.25,         // P0 FIX: Reduced to save quota (function mostly waits for API responses)
     timeoutSeconds: 300, // P0 FIX: 5 minutes timeout for payment capture
