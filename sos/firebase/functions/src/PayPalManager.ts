@@ -31,6 +31,8 @@ import { META_CAPI_TOKEN, trackCAPIPurchase, UserData } from "./metaConversionsA
 import { sendPaymentNotifications, ENCRYPTION_KEY, OUTIL_SYNC_API_KEY } from "./notifications/paymentNotifications";
 // P0 FIX: Import encryptPhoneNumber for Twilio call compatibility (phones must be encrypted in call_sessions)
 import { encryptPhoneNumber } from "./utils/encryption";
+// P0 FIX: Import setProviderBusy to reserve provider immediately after payment authorization
+import { setProviderBusy } from "./callables/providerStatusManager";
 
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import {
@@ -1141,6 +1143,27 @@ export class PayPalManager {
     }
 
     // ========================================
+    // P0 FIX: RÉSERVER LE PROVIDER IMMÉDIATEMENT APRÈS AUTORISATION
+    // ========================================
+    // Mettre le provider en busy dès maintenant pour éviter le double-booking
+    // pendant les 1-4 minutes avant qu'il réponde au téléphone
+    if (orderData.callSessionId && orderData.providerId) {
+      try {
+        console.log(`🔶 [PAYPAL] Setting provider ${orderData.providerId} to BUSY (pending_call)...`);
+        const busyResult = await setProviderBusy(orderData.providerId, orderData.callSessionId, 'pending_call');
+
+        if (busyResult.success) {
+          console.log(`✅ [PAYPAL] Provider ${orderData.providerId} marked as BUSY (pending_call)`);
+        } else {
+          console.warn(`⚠️ [PAYPAL] Failed to set provider busy: ${busyResult.error}`);
+        }
+      } catch (busyError) {
+        console.error(`⚠️ [PAYPAL] Error setting provider busy (non-blocking):`, busyError);
+        // Non-blocking: on continue même si le provider n'est pas marqué busy
+      }
+    }
+
+    // ========================================
     // P0 FIX: PLANIFIER L'APPEL TWILIO APRÈS AUTORISATION PAYPAL
     // Comme Stripe avec capture_method: 'manual', l'appel démarre après autorisation
     // La capture se fait après 2 minutes d'appel
@@ -1596,7 +1619,24 @@ export class PayPalManager {
       // Pour le flux AUTHORIZE, l'appel est déjà planifié dans authorizeOrder()
       // La fonction scheduleCallTaskWithIdempotence vérifie les doublons
       if (!isAuthorizeFlow) {
-        // LEGACY: Ancien flux CAPTURE - planifier l'appel après capture
+        // LEGACY: Ancien flux CAPTURE - réserver le provider et planifier l'appel après capture
+
+        // P0 FIX: Réserver le provider immédiatement
+        if (orderData.providerId) {
+          try {
+            console.log(`🔶 [PAYPAL] LEGACY CAPTURE - Setting provider ${orderData.providerId} to BUSY (pending_call)...`);
+            const busyResult = await setProviderBusy(orderData.providerId, orderData.callSessionId, 'pending_call');
+
+            if (busyResult.success) {
+              console.log(`✅ [PAYPAL] LEGACY CAPTURE - Provider ${orderData.providerId} marked as BUSY`);
+            } else {
+              console.warn(`⚠️ [PAYPAL] LEGACY CAPTURE - Failed to set provider busy: ${busyResult.error}`);
+            }
+          } catch (busyError) {
+            console.error(`⚠️ [PAYPAL] LEGACY CAPTURE - Error setting provider busy (non-blocking):`, busyError);
+          }
+        }
+
         try {
           const { scheduleCallTaskWithIdempotence } = await import("./lib/tasks");
           const CALL_DELAY_SECONDS = 240; // 4 minutes de délai
@@ -2334,6 +2374,11 @@ async function verifyAuthToken(req: { headers: { authorization?: string } }): Pr
 export const createPayPalOrderHttp = onRequest(
   {
     region: "europe-west1",
+    // P0 FIX: Keep instance warm to avoid CORS errors on cold start
+    minInstances: 1,
+    // P0 FIX: Increased maxInstances and memory to prevent rate limiting
+    maxInstances: 15,
+    memory: "512MiB",
     // P0 FIX: Added ENCRYPTION_KEY for phone number encryption (Twilio compatibility)
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID, ENCRYPTION_KEY],
     cors: true, // Gère automatiquement les preflight OPTIONS
@@ -2551,6 +2596,11 @@ export const createPayPalOrderHttp = onRequest(
 export const capturePayPalOrderHttp = onRequest(
   {
     region: "europe-west1",
+    // P0 FIX: Keep instance warm to avoid CORS errors on cold start
+    minInstances: 1,
+    // P0 FIX: Increased maxInstances and memory to prevent rate limiting
+    maxInstances: 15,
+    memory: "512MiB",
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
     cors: true,
   },
@@ -2664,6 +2714,11 @@ export const capturePayPalOrderHttp = onRequest(
 export const authorizePayPalOrderHttp = onRequest(
   {
     region: "europe-west1",
+    // P0 FIX: Keep instance warm to avoid CORS errors on cold start
+    minInstances: 1,
+    // P0 FIX: Increased maxInstances and memory to prevent rate limiting
+    maxInstances: 15,
+    memory: "512MiB",
     // P0 FIX: Added ENCRYPTION_KEY and OUTIL_SYNC_API_KEY for sendPaymentNotifications
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, TASKS_AUTH_SECRET, ENCRYPTION_KEY, OUTIL_SYNC_API_KEY],
     cors: true,

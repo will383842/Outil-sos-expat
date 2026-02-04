@@ -1994,11 +1994,14 @@ export const twilioGatherResponse = onRequest(
             if (participantType === 'provider') {
               try {
                 const session = await twilioCallManager.getCallSession(sessionId);
-                const providerId = session?.metadata?.providerId;
+                // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
+                const providerId = session?.providerId || session?.metadata?.providerId;
                 if (providerId) {
                   console.log(`🎤 [${gatherId}]   🔶 Setting provider ${providerId} to BUSY...`);
                   await setProviderBusy(providerId, sessionId, 'in_call');
                   console.log(`🎤 [${gatherId}]   ✅ Provider ${providerId} marked as BUSY`);
+                } else {
+                  console.warn(`🎤 [${gatherId}]   ⚠️ Cannot set provider busy - providerId not found in session`);
                 }
               } catch (busyError) {
                 console.error(`🎤 [${gatherId}]   ⚠️ Failed to set provider busy (non-blocking):`, busyError);
