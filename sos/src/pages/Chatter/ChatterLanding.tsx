@@ -4,7 +4,7 @@
  * CORRECTIONS V3:
  * - Contraste amélioré (plus de ton sur ton)
  * - Tailles de texte augmentées
- * - Montant réaliste: 50$ à 5000$/mois
+ * - Revenus illimités avec modèle agence
  * - 3 sources de revenus: clients + équipe + recrutement providers
  * - International: 197 pays, toutes nationalités, toutes langues
  * - Équipe ILLIMITÉE mise en avant
@@ -110,8 +110,8 @@ const ChatterLanding: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Devenir Chatter | Gagnez 50$ à 5000$/mois depuis votre téléphone</title>
-        <meta name="description" content="Rejoignez 2800+ chatters dans 197 pays. 3 sources de revenus illimités. Toutes nationalités, toutes langues. 100% gratuit." />
+        <title>Devenir Chatter | Créez votre agence - Revenus illimités</title>
+        <meta name="description" content="Créez votre agence de chatters. Recrutez sans limite, gagnez sur chaque appel. 197 pays, toutes langues. 100% gratuit." />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#991B1B" />
       </Helmet>
@@ -134,11 +134,11 @@ const ChatterLanding: React.FC = () => {
               <span className="text-sm font-semibold text-white">197 pays • Toutes nationalités</span>
             </div>
 
-            {/* HEADLINE - Montant réaliste */}
+            {/* HEADLINE - Revenus illimités */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-[1.05] mb-5">
               <span className="text-white">Gagnez</span>
               <br />
-              <span className="text-amber-400">50$ à 5 000$</span>
+              <span className="text-amber-400">500$ à 10 000$+</span>
               <br />
               <span className="text-white">/mois</span>
             </h1>
@@ -270,11 +270,12 @@ const ChatterLanding: React.FC = () => {
             </div>
 
             {/* Récap */}
-            <div className="mt-6 bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-              <p className="text-gray-400 text-sm mb-1">Les top chatters combinent les 3 sources</p>
+            <div className="mt-6 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 border border-amber-500/30 rounded-xl p-4 text-center">
+              <p className="text-gray-300 text-sm mb-1">Avec une agence de 50 chatters + recrutement providers</p>
               <p className="text-2xl font-black text-white">
-                = <span className="text-amber-400">2 000$ à 5 000$/mois</span>
+                = <span className="text-amber-400">10 000$+/mois</span> possibles
               </p>
+              <p className="text-xs text-gray-500 mt-1">Aucun plafond. Votre agence, vos revenus.</p>
             </div>
           </div>
 
@@ -390,35 +391,46 @@ const ChatterLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
-            SECTION 4 - ÉQUIPE ILLIMITÉE
+            SECTION 4 - CRÉEZ VOTRE AGENCE
         ================================================================ */}
         <section className="section-screen bg-gradient-to-b from-gray-950 via-green-950/30 to-gray-950">
           <div className="max-w-lg mx-auto px-4">
 
+            {/* Badge */}
             <div className="flex items-center justify-center gap-2 mb-4">
-              <Infinity className="w-6 h-6 text-green-400" />
-              <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-bold">
-                Équipe ILLIMITÉE
+              <span className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 px-4 py-1.5 rounded-full text-sm font-bold border border-green-500/30">
+                🏢 Modèle Agence
               </span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-black text-center text-white mb-3">
-              Créez votre empire
+              Créez votre <span className="text-green-400">agence</span>
             </h2>
             <p className="text-gray-400 text-center text-lg mb-6">
-              Pas de limite. Recrutez autant que vous voulez.
+              Recrutez des chatters. Gagnez sur leur activité. Sans limite.
             </p>
 
-            {/* Schéma simplifié */}
+            {/* Évolution: Solo → Agence */}
+            <div className="flex items-center justify-center gap-2 mb-5">
+              <div className="bg-white/10 rounded-full px-3 py-1.5 text-sm">
+                <span className="text-gray-400">Chatter solo</span>
+              </div>
+              <ArrowRight className="w-4 h-4 text-green-400" />
+              <div className="bg-green-500/20 border border-green-500/40 rounded-full px-3 py-1.5 text-sm">
+                <span className="text-green-400 font-bold">Directeur d'agence</span>
+              </div>
+            </div>
+
+            {/* Structure agence */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-5">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg font-black text-black">VOUS</span>
+                    <span className="text-sm font-black text-black">BOSS</span>
                   </div>
                   <div>
-                    <div className="text-gray-400">Vos clients directs</div>
-                    <div className="text-xl font-bold text-amber-400">10$ / appel</div>
+                    <div className="text-white font-bold">Vous = Le directeur</div>
+                    <div className="text-xl font-bold text-amber-400">10$ / appel perso</div>
                   </div>
                 </div>
 
@@ -429,8 +441,8 @@ const ChatterLanding: React.FC = () => {
                     <Users className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <div className="text-gray-400">Vos recrues (N1) — <span className="text-green-400">illimité</span></div>
-                    <div className="text-xl font-bold text-green-400">+1$ / appel</div>
+                    <div className="text-white font-medium">Votre équipe <span className="text-green-400">(∞ chatters)</span></div>
+                    <div className="text-xl font-bold text-green-400">+1$ sur chaque appel</div>
                   </div>
                 </div>
 
@@ -441,17 +453,17 @@ const ChatterLanding: React.FC = () => {
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <div className="text-gray-400">Leurs recrues (N2) — <span className="text-cyan-400">illimité</span></div>
-                    <div className="text-xl font-bold text-cyan-400">+0,50$ / appel</div>
+                    <div className="text-white font-medium">Leurs recrues <span className="text-cyan-400">(∞)</span></div>
+                    <div className="text-xl font-bold text-cyan-400">+0,50$ sur chaque appel</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Calculateur */}
+            {/* Calculateur agence */}
             <div className="bg-gradient-to-r from-green-500/15 to-emerald-500/10 border border-green-500/40 rounded-2xl p-5">
               <label className="text-base text-gray-300 block mb-3 text-center">
-                Avec <span className="text-green-400 font-bold text-xl">{teamSize}</span> chatters dans votre équipe :
+                Votre agence avec <span className="text-green-400 font-bold text-xl">{teamSize}</span> chatters :
               </label>
               <input
                 type="range"
@@ -464,16 +476,18 @@ const ChatterLanding: React.FC = () => {
                   [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
               />
               <div className="text-center">
-                <p className="text-sm text-gray-500 mb-1">Revenus passifs mensuels estimés</p>
+                <p className="text-sm text-gray-500 mb-1">Revenus passifs de votre agence</p>
                 <p className="text-5xl font-black text-green-400">
-                  +{teamEarnings}$
+                  +{teamEarnings}$/mois
                 </p>
-                <p className="text-sm text-gray-500 mt-1">En plus de vos clients directs</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Sans rien faire. Juste parce qu'ils travaillent.
+                </p>
               </div>
             </div>
 
             <p className="text-center text-gray-500 text-sm mt-4">
-              <span className="text-green-400 font-semibold">À vie.</span> Tant qu'ils sont actifs, vous gagnez.
+              <span className="text-green-400 font-semibold">Revenus à vie.</span> Tant que votre agence tourne.
             </p>
           </div>
 
