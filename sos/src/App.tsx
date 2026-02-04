@@ -140,6 +140,7 @@ const MultiProviderDashboard = lazy(() => import('./pages/MultiProviderDashboard
 
 // Chatter System
 const ChatterLanding = lazy(() => import('./pages/Chatter/ChatterLanding'));
+const ChatterLandingOld = lazy(() => import('./pages/Chatter/ChatterLandingOld'));
 const ChatterRegister = lazy(() => import('./pages/Chatter/ChatterRegister'));
 const ChatterPresentation = lazy(() => import('./pages/Chatter/ChatterPresentation'));
 const ChatterQuiz = lazy(() => import('./pages/Chatter/ChatterQuiz'));
@@ -296,8 +297,10 @@ const routeConfigs: RouteConfig[] = [
   // PWA Share Target
   { path: "/share-target", component: ShareTarget },
 
-  // Chatter Landing Page (public)
+  // Chatter Landing Page (public) - Nouvelle version optimisée
   { path: "/devenir-chatter", component: ChatterLanding, translated: "chatter-landing" },
+  // Ancienne version (backup)
+  { path: "/devenir-chatter-old", component: ChatterLandingOld },
 
   // Influencer Landing Page (public)
   { path: "/devenir-influenceur", component: InfluencerLanding, translated: "influencer-landing" },
