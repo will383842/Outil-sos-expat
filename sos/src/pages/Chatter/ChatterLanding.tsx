@@ -113,30 +113,41 @@ const ChatterLanding: React.FC = () => {
       <div className="bg-black text-white">
 
         {/* ================================================================
-            HERO - ACCROCHE SIMPLE ET PERCUTANTE
+            HERO - ACCROCHE EXPLICITE ET PERCUTANTE
         ================================================================ */}
         <section className="min-h-screen flex flex-col justify-center items-center relative bg-gradient-to-b from-red-950 via-red-900 to-black overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(251,191,36,0.12),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(251,191,36,0.15),transparent_50%)]" />
 
-          <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
+          <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
             {/* Accroche principale */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.95] mb-8">
-              <span className="text-white">Aidez.</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.1] mb-6">
+              <span className="text-white">Gagnez de l'argent</span>
               <br />
-              <span className="text-white">Partagez.</span>
-              <br />
-              <span className="text-amber-400">Gagnez.</span>
+              <span className="text-white">en aidant les </span>
+              <span className="text-amber-400">voyageurs</span>
             </h1>
 
-            {/* Sous-accroche simple */}
-            <p className="text-2xl sm:text-3xl lg:text-4xl text-white/90 font-medium mb-12">
-              <span className="text-amber-400 font-bold">10$</span> à chaque appel passé via votre lien.
+            {/* Proposition de valeur claire */}
+            <p className="text-2xl sm:text-3xl lg:text-4xl text-white font-bold mb-4">
+              <span className="text-amber-400">10$</span> pour vous à chaque appel
+            </p>
+
+            {/* Explication simple */}
+            <p className="text-xl sm:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto">
+              Partagez votre lien aux expatriés qui ont besoin d'aide juridique.
+              <br className="hidden sm:block" />
+              Quand ils appellent, vous gagnez.
             </p>
 
             {/* CTA */}
             <CTAButton onClick={goToRegister} size="large" className="w-full max-w-md mx-auto">
               Commencer gratuitement
             </CTAButton>
+
+            {/* Réassurance */}
+            <p className="text-gray-400 mt-6 text-lg">
+              100% gratuit • Aucun investissement • 197 pays
+            </p>
           </div>
 
           <ScrollIndicator />
