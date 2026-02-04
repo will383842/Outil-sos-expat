@@ -1,10 +1,23 @@
 // src/components/feedback/FeedbackButton.tsx
 // Bouton de feedback flottant adaptatif (mobile-first)
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { MessageSquarePlus, X } from 'lucide-react';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import { useIntl } from 'react-intl';
 import FeedbackModal from './FeedbackModal';
+
+// Landing pages où le bouton feedback ne doit pas s'afficher
+const HIDDEN_LANDING_PAGES = [
+  '/devenir-chatter',
+  '/devenir-influenceur',
+  '/devenir-blogger',
+  '/devenir-admin-groupe',
+  '/become-chatter',
+  '/become-influencer',
+  '/become-blogger',
+  '/become-group-admin',
+];
 
 interface FeedbackButtonProps {
   /** Position du bouton */
@@ -22,6 +35,7 @@ const FeedbackButton: React.FC<FeedbackButtonProps> = ({
 }) => {
   const { isMobile, isTablet } = useDeviceDetection();
   const intl = useIntl();
+  const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPulse, setShowPulse] = useState(true);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -34,8 +48,13 @@ const FeedbackButton: React.FC<FeedbackButtonProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // Ne pas afficher si hidden
-  if (hidden) return null;
+  // Vérifier si on est sur une landing page qui ne doit pas afficher le bouton
+  const isOnHiddenLandingPage = HIDDEN_LANDING_PAGES.some(page =>
+    location.pathname.includes(page)
+  );
+
+  // Ne pas afficher si hidden ou sur une landing page affiliée
+  if (hidden || isOnHiddenLandingPage) return null;
 
   const positionClasses = {
     'bottom-right': 'right-4 sm:right-6',
