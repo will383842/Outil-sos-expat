@@ -117,41 +117,79 @@ const ChatterLanding: React.FC = () => {
       <div className="bg-black text-white">
 
         {/* ================================================================
-            HERO - ACCROCHE EXPLICITE ET PERCUTANTE
+            HERO - MOBILE-FIRST IMPACTANT
         ================================================================ */}
         <section className="min-h-screen flex flex-col justify-center items-center relative bg-gradient-to-b from-red-950 via-red-900 to-black overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(251,191,36,0.15),transparent_50%)]" />
 
-          <div className="relative z-10 text-center px-5 sm:px-6 max-w-5xl mx-auto">
-            {/* Accroche principale */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] mb-4 sm:mb-6">
-              <span className="text-white">Gagnez de l'argent</span>
-              <br />
-              <span className="text-white">en aidant les </span>
-              <span className="text-amber-400">voyageurs</span>
-            </h1>
+          <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
 
-            {/* Proposition de valeur claire */}
-            <p className="text-xl sm:text-2xl lg:text-3xl text-white font-bold mb-3 sm:mb-4">
-              <span className="text-amber-400">10$</span> pour vous à chaque appel
-            </p>
+            {/* MOBILE: Accroche ultra-impactante */}
+            <div className="sm:hidden">
+              {/* Headline principale - TRÈS GRAND */}
+              <h1 className="text-[2.5rem] font-black leading-[1.05] mb-3 tracking-tight">
+                <span className="text-white">Gagnez de l'</span>
+                <span className="text-amber-400">argent</span>
+              </h1>
 
-            {/* Explication simple */}
-            <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-8 sm:mb-10 max-w-2xl mx-auto">
-              Partagez votre lien aux expatriés qui ont besoin d'aide juridique.
-              <br className="hidden sm:block" />
-              Quand ils appellent, vous gagnez.
-            </p>
+              {/* Sous-titre */}
+              <p className="text-lg font-semibold text-white/90 mb-5">
+                en aidant les voyageurs
+              </p>
 
-            {/* CTA */}
-            <CTAButton onClick={goToRegister} size="large" className="w-full max-w-sm sm:max-w-md mx-auto">
-              Commencer gratuitement
-            </CTAButton>
+              {/* MONTANT - Ultra visible */}
+              <div className="bg-amber-400/10 border-2 border-amber-400/50 rounded-2xl py-4 px-5 mb-5 inline-block">
+                <span className="text-5xl font-black text-amber-400">10$</span>
+                <span className="text-lg font-bold text-white ml-2">/ appel</span>
+              </div>
 
-            {/* Réassurance */}
-            <p className="text-gray-400 mt-5 sm:mt-6 text-sm sm:text-base">
-              100% gratuit • Aucun investissement • 197 pays
-            </p>
+              {/* Explication courte */}
+              <p className="text-sm text-gray-300 mb-6 px-2 leading-relaxed">
+                Partagez votre lien. Quand ils appellent, vous gagnez.
+              </p>
+
+              {/* CTA Mobile */}
+              <button
+                onClick={goToRegister}
+                className="w-full bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-4 px-6 rounded-2xl text-lg shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2"
+              >
+                Commencer gratuitement
+                <ArrowRight className="w-5 h-5" />
+              </button>
+
+              {/* Réassurance compacte */}
+              <p className="text-gray-400 mt-4 text-xs">
+                100% gratuit • Aucun investissement • 197 pays
+              </p>
+            </div>
+
+            {/* DESKTOP: Version existante améliorée */}
+            <div className="hidden sm:block">
+              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] mb-6">
+                <span className="text-white">Gagnez de l'argent</span>
+                <br />
+                <span className="text-white">en aidant les </span>
+                <span className="text-amber-400">voyageurs</span>
+              </h1>
+
+              <p className="text-2xl lg:text-3xl text-white font-bold mb-4">
+                <span className="text-amber-400">10$</span> pour vous à chaque appel
+              </p>
+
+              <p className="text-lg lg:text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+                Partagez votre lien aux expatriés qui ont besoin d'aide juridique.
+                <br />
+                Quand ils appellent, vous gagnez.
+              </p>
+
+              <CTAButton onClick={goToRegister} size="large" className="max-w-md mx-auto">
+                Commencer gratuitement
+              </CTAButton>
+
+              <p className="text-gray-400 mt-6 text-base">
+                100% gratuit • Aucun investissement • 197 pays
+              </p>
+            </div>
           </div>
 
           <ScrollIndicator />
