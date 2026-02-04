@@ -118,6 +118,8 @@ export interface CallSessionState {
     // P0 FIX 2026-02-02: Added "voided" for PayPal authorization void
     status: "pending" | "authorized" | "captured" | "refunded" | "cancelled" | "failed" | "requires_action" | "voided";
     amount: number;
+    // P0 FIX 2026-02-04: Track when payment was authorized for cleanup query
+    authorizedAt?: admin.firestore.Timestamp;
     capturedAt?: admin.firestore.Timestamp;
     refundedAt?: admin.firestore.Timestamp;
     voidedAt?: admin.firestore.Timestamp;
@@ -562,6 +564,9 @@ export class TwilioCallManager {
           gateway: "stripe" as const,
           status: "authorized",
           amount: params.amount,
+          // P0 FIX 2026-02-04: Add authorizedAt for cleanupOrphanedSessions to find Stripe payments
+          // Without this field, the Firestore query cannot match Stripe payments and they never get refunded
+          authorizedAt: admin.firestore.Timestamp.now(),
         },
         metadata: {
           providerId: params.providerId,

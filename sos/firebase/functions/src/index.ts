@@ -3541,6 +3541,9 @@ const handlePaymentIntentAmountCapturableUpdated = traceFunction(
                 ...(statusUpdateRequired ? { status: "scheduled" } : {}),
                 "payment.status": "authorized", // CRITIQUE: permet shouldCapturePayment() de retourner true
                 "payment.threeDSecureCompleted": true,
+                // P0 FIX 2026-02-04: Add authorizedAt for cleanupOrphanedSessions to find Stripe 3DS payments
+                // Without this field, the Firestore query cannot match these payments and they never get refunded
+                "payment.authorizedAt": admin.firestore.FieldValue.serverTimestamp(),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
               });
 

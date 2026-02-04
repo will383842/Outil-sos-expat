@@ -434,7 +434,35 @@ export const cleanupOrphanedSessions = scheduler.onSchedule(
         }
       }
 
-      // Requête 2: Backup - Sessions "pending" anciennes (au cas où authorizedAt manque)
+      // Requête 2: P0 FIX 2026-02-04 - Backup for Stripe payments without authorizedAt field
+      // Sessions Stripe created before 2026-02-04 don't have payment.authorizedAt set
+      // This query uses metadata.createdAt as fallback to find old authorized payments
+      const stripeBackupSessions = await db
+        .collection('call_sessions')
+        .where('payment.status', '==', 'authorized')
+        .where('payment.gateway', '==', 'stripe')
+        .where('metadata.createdAt', '<', paymentCutoff)
+        .limit(50)
+        .get();
+
+      console.log(`Found ${stripeBackupSessions.size} Stripe sessions with authorized payment > 1h (backup for missing authorizedAt)`);
+
+      for (const doc of stripeBackupSessions.docs) {
+        try {
+          // Skip if already processed by query 1 (has authorizedAt and was already processed)
+          const sessionData = doc.data();
+          if (sessionData.payment?.authorizedAt) {
+            console.log(`   SKIP ${doc.id}: already has authorizedAt (handled by query 1)`);
+            continue;
+          }
+          await processOrphanedSession(doc, db, now, results);
+        } catch (sessionError) {
+          results.errorCount++;
+          await logError(`cleanupOrphanedSessions:stripeBackup:${doc.id}`, sessionError);
+        }
+      }
+
+      // Requête 3: Backup - Sessions "pending" anciennes (au cas où authorizedAt manque)
       const pendingCutoff = admin.firestore.Timestamp.fromMillis(
         now - THRESHOLDS.SESSION_PENDING_TIMEOUT
       );
