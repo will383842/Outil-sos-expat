@@ -1685,6 +1685,10 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const paymentRequestInitializedRef = useRef(false);
     // Ref pour stocker le montant actuel et le mettre à jour sans recréer le PaymentRequest
     const currentAmountRef = useRef<number>(0);
+    // Ref pour tracker isProcessing dans le handler Apple Pay (évite double paiement)
+    const isProcessingRef = useRef(false);
+    // État pour afficher le message 3D Secure
+    const [show3DSMessage, setShow3DSMessage] = useState(false);
 
     // P0-1 FIX: callSessionId stable généré UNE SEULE FOIS pour garantir l'idempotence
     // NE PAS utiliser Date.now() dans actuallySubmitPayment car cela crée une nouvelle clé à chaque retry
@@ -1842,6 +1846,38 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       ]
     );
 
+    // Mettre à jour paymentDataRef avec les valeurs actuelles
+    // Cela permet au handler Apple Pay d'accéder aux données à jour sans re-attacher le listener
+    useEffect(() => {
+      paymentDataRef.current = {
+        user,
+        provider,
+        service,
+        adminPricing,
+        serviceCurrency,
+        stripeCurrency,
+        stableCallSessionId,
+        intl,
+        t,
+        onSuccess,
+        onError,
+        persistPaymentDocs,
+      };
+    }, [
+      user,
+      provider,
+      service,
+      adminPricing,
+      serviceCurrency,
+      stripeCurrency,
+      stableCallSessionId,
+      intl,
+      t,
+      onSuccess,
+      onError,
+      persistPaymentDocs,
+    ]);
+
     // Initialiser Payment Request (Apple Pay / Google Pay) - UNE SEULE FOIS
     // Puis utiliser .update() pour changer le montant si nécessaire
     useEffect(() => {
@@ -1870,8 +1906,19 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
       // Première initialisation seulement
       console.log("[PaymentRequest] 🆕 Initialisation du PaymentRequest...");
+
+      // Détecter le pays de l'utilisateur (FR par défaut pour zone euro)
+      const detectUserCountry = (): string => {
+        // Utiliser la locale du navigateur pour détecter le pays
+        const locale = navigator.language || "fr-FR";
+        const countryCode = locale.split("-")[1]?.toUpperCase();
+        // Liste des pays supportés par Stripe Payment Request API
+        const supportedCountries = ["AT", "AU", "BE", "BR", "CA", "CH", "DE", "DK", "EE", "ES", "FI", "FR", "GB", "GR", "HK", "IE", "IN", "IT", "JP", "LT", "LU", "LV", "MX", "MY", "NL", "NO", "NZ", "PH", "PL", "PT", "RO", "SE", "SG", "SI", "SK", "US"];
+        return supportedCountries.includes(countryCode) ? countryCode : "FR";
+      };
+
       const pr = stripe.paymentRequest({
-        country: "FR",
+        country: detectUserCountry(),
         currency: serviceCurrency,
         total: {
           label,
@@ -1879,14 +1926,21 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         },
         requestPayerName: true,
         requestPayerEmail: true,
+        requestPayerPhone: true, // Récupérer le téléphone si disponible
       });
 
       currentAmountRef.current = amountInCents;
 
-      // Gérer l'événement cancel (utilisateur ferme Apple Pay sans payer)
+      // Gérer l'événement cancel (utilisateur ferme Apple Pay sans payer ou change de carte)
+      // IMPORTANT: Réinitialiser TOUS les états pour permettre un retry immédiat
       pr.on("cancel", () => {
         console.log("[PaymentRequest] ❌ Utilisateur a annulé Apple Pay / Google Pay");
+        // CRITICAL: Réinitialiser le ref AVANT l'état React (évite race condition)
+        isProcessingRef.current = false;
+        setShow3DSMessage(false);
         setIsProcessing(false);
+        // Message clair - l'utilisateur peut changer de carte et réessayer
+        onError(t("err.canceled"));
       });
 
       // Vérifier si Apple Pay / Google Pay est disponible
@@ -1944,8 +1998,40 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         paymentMethod: { id: string };
         complete: (status: "success" | "fail") => void;
       }) => {
+        // P0 FIX: Protection anti-double-clic (synchrone, avant tout état React)
+        if (isProcessingRef.current) {
+          console.warn("[PaymentRequest] ⚠️ Paiement déjà en cours, ignoré");
+          ev.complete("fail");
+          return;
+        }
+
+        // IMPORTANT: Verrouiller IMMÉDIATEMENT avant toute opération async
+        isProcessingRef.current = true;
+
         console.log("[PaymentRequest] 🍎 Paiement Apple Pay / Google Pay reçu");
+        console.log("[PaymentRequest] 💳 Carte utilisée:", ev.paymentMethod.id.substring(0, 10) + "...");
         setIsProcessing(true);
+
+        // Timeout de sécurité: 2 minutes max pour éviter tout blocage permanent
+        const PAYMENT_TIMEOUT_MS = 2 * 60 * 1000;
+        const timeoutId = setTimeout(() => {
+          if (isProcessingRef.current) {
+            console.error("[PaymentRequest] ⏱️ Timeout atteint, réinitialisation forcée");
+            isProcessingRef.current = false;
+            setShow3DSMessage(false);
+            setIsProcessing(false);
+          }
+        }, PAYMENT_TIMEOUT_MS);
+
+        // Vérifier que le ref est initialisé
+        if (!paymentDataRef.current) {
+          console.error("[PaymentRequest] ❌ paymentDataRef non initialisé");
+          clearTimeout(timeoutId);
+          ev.complete("fail");
+          isProcessingRef.current = false;
+          setIsProcessing(false);
+          return;
+        }
 
         // Récupérer les valeurs actuelles depuis le ref (toujours à jour)
         const {
@@ -2032,9 +2118,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           // Gérer 3D Secure si nécessaire
           if (paymentIntent.status === "requires_action") {
             console.log("[PaymentRequest] 🔐 3D Secure requis...");
+            // P0 FIX: Afficher un message visible à l'utilisateur pendant 3D Secure
+            setShow3DSMessage(true);
             const { error: actionError } = await stripe.confirmCardPayment(resData.clientSecret);
+            setShow3DSMessage(false);
             if (actionError) {
               ev.complete("fail");
+              isProcessingRef.current = false;
               currentOnError(actionError.message || currentT("err.actionRequired"));
               return;
             }
@@ -2055,9 +2145,14 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         } catch (err) {
           console.error("[PaymentRequest] ❌ Erreur:", err);
           ev.complete("fail");
-          paymentDataRef.current.onError(err instanceof Error ? err.message : String(err));
+          currentOnError(err instanceof Error ? err.message : String(err));
         } finally {
+          // CRITICAL: Nettoyer le timeout et réinitialiser TOUS les états
+          clearTimeout(timeoutId);
+          isProcessingRef.current = false;
+          setShow3DSMessage(false);
           setIsProcessing(false);
+          console.log("[PaymentRequest] 🔄 États réinitialisés, prêt pour nouveau paiement");
         }
       };
 
@@ -2709,8 +2804,21 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       <>
         <form onSubmit={(e) => { e.preventDefault(); console.log("[Form] onSubmit intercepted"); handlePaymentSubmit(e); }} className="space-y-4" noValidate>
           <div className="space-y-4">
+            {/* Message 3D Secure visible pendant l'authentification */}
+            {show3DSMessage && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center space-x-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent" />
+                <span className="text-blue-700 font-medium">
+                  {language === "fr" ? "Vérification de sécurité en cours (3D Secure)..." :
+                   language === "es" ? "Verificación de seguridad en curso (3D Secure)..." :
+                   language === "de" ? "Sicherheitsüberprüfung läuft (3D Secure)..." :
+                   "Security verification in progress (3D Secure)..."}
+                </span>
+              </div>
+            )}
+
             {/* Apple Pay / Google Pay Button */}
-            {canMakePaymentRequest && paymentRequest && (
+            {canMakePaymentRequest && paymentRequest && !isProcessing && (
               <div className="space-y-3">
                 <PaymentRequestButtonElement
                   options={{

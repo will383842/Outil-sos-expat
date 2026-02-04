@@ -8,6 +8,8 @@ import { logCallRecord } from "../utils/logs/logCallRecord";
 import { logger as prodLogger } from "../utils/productionLogger";
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import { TASKS_AUTH_SECRET } from "../lib/secrets";
+// P0 FIX: Import call region from centralized config - dedicated region for call functions
+import { CALL_FUNCTIONS_REGION } from "../configs/callRegion";
 
 interface ForceEndCallPayload {
   sessionId: string;
@@ -28,7 +30,8 @@ interface ForceEndCallPayload {
  */
 export const forceEndCallTask = onRequest(
   {
-    region: "europe-west1",
+    // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
+    region: CALL_FUNCTIONS_REGION,
     memory: "256MiB",
     cpu: 0.25,
     maxInstances: 5,

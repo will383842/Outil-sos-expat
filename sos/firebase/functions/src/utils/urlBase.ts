@@ -1,7 +1,10 @@
 // firebase/functions/src/utils/urlBase.ts
 import { defineString } from "firebase-functions/params";
+// P0 FIX 2026-02-04: Import call region from centralized config
+import { CALL_FUNCTIONS_REGION } from "../configs/callRegion";
 
-const CLOUD_TASKS_LOCATION = defineString("CLOUD_TASKS_LOCATION", { default: "europe-west1" });
+// P0 FIX 2026-02-04: Default to europe-west3 for call-related functions (dedicated region)
+const CLOUD_TASKS_LOCATION = defineString("CLOUD_TASKS_LOCATION", { default: CALL_FUNCTIONS_REGION });
 const FUNCTIONS_BASE_URL_PARAM = defineString("FUNCTIONS_BASE_URL");
 
 // P0 CRITICAL FIX: Firebase Functions v2 uses Cloud Run with individual URLs per function

@@ -5,6 +5,8 @@ import { logError } from "../utils/logs/logError";
 import { logger as prodLogger } from "../utils/productionLogger";
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import { TASKS_AUTH_SECRET } from "./secrets";
+// P0 FIX 2026-02-04: Import call region from centralized config
+import { CALL_FUNCTIONS_REGION } from "../configs/callRegion";
 
 // Types pour améliorer la sécurité du code
 interface TaskPayload {
@@ -30,18 +32,21 @@ interface QueueStats {
 // ------------------------------------------------------
 // Configuration via params + fallback ENV (sûr et flexible)
 // ------------------------------------------------------
-const CLOUD_TASKS_LOCATION = defineString("CLOUD_TASKS_LOCATION", { default: "europe-west1" });
+// P0 FIX 2026-02-04: Default to europe-west3 for call-related Cloud Tasks (dedicated region)
+const CLOUD_TASKS_LOCATION = defineString("CLOUD_TASKS_LOCATION", { default: CALL_FUNCTIONS_REGION });
 const CLOUD_TASKS_QUEUE = defineString("CLOUD_TASKS_QUEUE", { default: "call-scheduler-queue" });
 const FUNCTIONS_BASE_URL_PARAM = defineString("FUNCTIONS_BASE_URL"); // optionnel
 // P1-4 FIX: Cloud Run URL now configurable via environment variable
 // Firebase Functions v2 uses Cloud Run with different URL format than v1
+// P0 FIX 2026-02-04: Updated default URL to europe-west3 (ey = europe-west3 shortcode)
+// NOTE: This default will be overridden by Firebase params after first deployment to europe-west3
 const EXECUTE_CALL_TASK_URL = defineString("EXECUTE_CALL_TASK_URL", {
-  default: "https://executecalltask-5tfnuxa2hq-ew.a.run.app"
+  default: "" // Will be set via Firebase params after deployment to europe-west3
 });
 
 // Provider availability cooldown task URL
 const SET_PROVIDER_AVAILABLE_TASK_URL = defineString("SET_PROVIDER_AVAILABLE_TASK_URL", {
-  default: "" // Will be set after deployment
+  default: "" // Will be set via Firebase params after deployment to europe-west3
 });
 
 // Cooldown duration in seconds (5 minutes)
@@ -49,7 +54,7 @@ const PROVIDER_COOLDOWN_SECONDS = 5 * 60;
 
 // Busy safety timeout task URL - releases provider if stuck in busy state
 const BUSY_SAFETY_TIMEOUT_TASK_URL = defineString("BUSY_SAFETY_TIMEOUT_TASK_URL", {
-  default: "" // Will be set after deployment
+  default: "" // Will be set via Firebase params after deployment to europe-west3
 });
 
 // Busy safety timeout duration in seconds (10 minutes)

@@ -44,6 +44,9 @@ import {
   OUTIL_SYNC_API_KEY,
 } from "./lib/secrets";
 
+// P0 FIX 2026-02-04: Import call region from centralized config - dedicated region for call functions
+import { CALL_FUNCTIONS_REGION } from "./configs/callRegion";
+
 // Re-export for backwards compatibility
 export {
   EMAIL_USER,
@@ -1025,7 +1028,8 @@ ultraLogger.info("EXPORTS", "Exports directs configurés");
 // ========================================
 export const executeCallTask = onRequest(
   {
-    region: "europe-west1",
+    // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
+    region: CALL_FUNCTIONS_REGION,
     // P0 FIX: Timeout increased from 120s to 540s (9 minutes)
     // Each provider retry: ~150s (60s call + 90s wait) + 15s backoff
     // 3 retries: 3*150 + 2*15 = 480s minimum
@@ -1037,7 +1041,7 @@ export const executeCallTask = onRequest(
     // 0.25 CPU is sufficient since function mostly waits for Twilio API responses
     cpu: 0.25,
     maxInstances: 10,
-    minInstances: 0,  // Temporarily set to 0 to free quota - TODO: restore to 1 after quota increase
+    minInstances: 1,  // P0 FIX 2026-02-04: Restored to 1 since we now have dedicated region with separate quota
     concurrency: 1,   // P0 FIX: Set to 1 to allow fractional CPU (concurrency > 1 requires cpu >= 1)
     // Secrets: TASKS_AUTH_SECRET for Cloud Tasks auth + Twilio + ENCRYPTION_KEY + Stripe/PayPal (for refunds/voids)
     secrets: [TASKS_AUTH_SECRET, ENCRYPTION_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
@@ -1050,7 +1054,8 @@ export const executeCallTask = onRequest(
 // ========================================
 export const setProviderAvailableTask = onRequest(
   {
-    region: "europe-west1",
+    // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
+    region: CALL_FUNCTIONS_REGION,
     timeoutSeconds: 30,
     memory: "256MiB" as const,
     maxInstances: 10,
@@ -5913,4 +5918,6 @@ export {
 } from './groupAdmin';
 
 // ========== TELEGRAM NOTIFICATIONS ==========
-export * from './telegram';
+// TEMPORAIREMENT DÉSACTIVÉ - cause timeout de déploiement
+// TODO: Optimiser le chargement du module Telegram (lazy loading)
+// export * from './telegram';
