@@ -1569,7 +1569,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         email: normalizeEmail(email),
         deviceInfo
       }).catch(() => { /* ignoré */ });
-      throw new Error(msg);
+      // 🔍 [BOOKING_AUTH_DEBUG] Preserve Firebase error code for QuickAuthWizard
+      console.log('[BOOKING_AUTH_DEBUG] ❌ AuthContext.login() throwing error with code:', errorCode);
+      // ✅ FIX: Conserver le code d'erreur Firebase pour que QuickAuthWizard puisse le lire
+      const authError = new Error(msg) as Error & { code?: string };
+      authError.code = errorCode;
+      throw authError;
     } finally {
       setIsLoading(false);
     }
