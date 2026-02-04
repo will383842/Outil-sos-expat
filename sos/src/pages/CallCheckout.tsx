@@ -1689,6 +1689,9 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const isProcessingRef = useRef(false);
     // État pour afficher le message 3D Secure
     const [show3DSMessage, setShow3DSMessage] = useState(false);
+    // UX: Progressive disclosure - cacher les champs carte si Apple Pay disponible
+    // Afficher seulement si: pas d'Apple Pay OU utilisateur clique "Saisir une carte"
+    const [showCardFields, setShowCardFields] = useState(false);
 
     // P0-1 FIX: callSessionId stable généré UNE SEULE FOIS pour garantir l'idempotence
     // NE PAS utiliser Date.now() dans actuallySubmitPayment car cela crée une nouvelle clé à chaque retry
@@ -1711,6 +1714,9 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       onSuccess: typeof onSuccess;
       onError: typeof onError;
       persistPaymentDocs: (paymentIntentId: string) => Promise<string>;
+      // P0 FIX 2026-02-04: Add bookingMeta and language for Apple Pay call scheduling
+      bookingMeta: typeof bookingMeta;
+      language: typeof language;
     } | null>(null);
 
     const { watch, setError } = useForm<PhoneFormValues>({
@@ -1862,6 +1868,9 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         onSuccess,
         onError,
         persistPaymentDocs,
+        // P0 FIX 2026-02-04: Add bookingMeta and language for Apple Pay call scheduling
+        bookingMeta,
+        language,
       };
     }, [
       user,
@@ -1876,6 +1885,8 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       onSuccess,
       onError,
       persistPaymentDocs,
+      bookingMeta,
+      language,
     ]);
 
     // Initialiser Payment Request (Apple Pay / Google Pay) - UNE SEULE FOIS
@@ -1931,16 +1942,17 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
       currentAmountRef.current = amountInCents;
 
-      // Gérer l'événement cancel (utilisateur ferme Apple Pay sans payer ou change de carte)
-      // IMPORTANT: Réinitialiser TOUS les états pour permettre un retry immédiat
+      // Gérer l'événement cancel (utilisateur ferme Apple Pay sans payer)
+      // UX: Pas de message d'erreur pour une annulation simple - l'utilisateur peut:
+      // 1. Recliquer sur Apple Pay pour changer de carte
+      // 2. Cliquer sur "Saisir une carte manuellement"
       pr.on("cancel", () => {
-        console.log("[PaymentRequest] ❌ Utilisateur a annulé Apple Pay / Google Pay");
+        console.log("[PaymentRequest] 🔄 Utilisateur a fermé Apple Pay (peut réessayer ou saisir carte)");
         // CRITICAL: Réinitialiser le ref AVANT l'état React (évite race condition)
         isProcessingRef.current = false;
         setShow3DSMessage(false);
         setIsProcessing(false);
-        // Message clair - l'utilisateur peut changer de carte et réessayer
-        onError(t("err.canceled"));
+        // PAS de message d'erreur - juste prêt pour réessayer
       });
 
       // Vérifier si Apple Pay / Google Pay est disponible
@@ -2047,6 +2059,9 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           onSuccess: currentOnSuccess,
           onError: currentOnError,
           persistPaymentDocs: currentPersistPaymentDocs,
+          // P0 FIX 2026-02-04: Get bookingMeta and language for call scheduling
+          bookingMeta: currentBookingMeta,
+          language: currentLanguage,
         } = paymentDataRef.current;
 
         try {
@@ -2134,18 +2149,88 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           ev.complete("success");
           console.log("[PaymentRequest] ✅ Paiement Apple Pay / Google Pay réussi!");
 
+          // P0 FIX 2026-02-04: Schedule the call for Apple Pay (was missing!)
+          const clientPhoneE164 = toE164(currentService.clientPhone || "");
+          const providerPhoneE164 = toE164(
+            currentProvider.phoneNumber || currentProvider.phone || ""
+          );
+
+          let callStatus: "scheduled" | "skipped" = "skipped";
+          let callId: string | undefined;
+
+          // Planifier l'appel si les numéros sont valides
+          if (
+            /^\+[1-9]\d{8,14}$/.test(clientPhoneE164) &&
+            /^\+[1-9]\d{8,14}$/.test(providerPhoneE164)
+          ) {
+            const createAndScheduleCall: HttpsCallable<
+              CreateAndScheduleCallData,
+              { success: boolean; callId?: string }
+            > = httpsCallable(functions, "createAndScheduleCall");
+
+            const callData: CreateAndScheduleCallData = {
+              providerId: currentProvider.id,
+              clientId: currentUser.uid!,
+              providerPhone: providerPhoneE164,
+              clientPhone: clientPhoneE164,
+              clientWhatsapp: "",
+              serviceType: currentService.serviceType,
+              providerType: (currentProvider.role ||
+                currentProvider.type ||
+                "expat") as ServiceKind,
+              paymentIntentId: paymentIntent.id,
+              amount: currentPricing.totalAmount,
+              currency: currentServiceCurrency.toUpperCase() as "EUR" | "USD",
+              delayMinutes: 5,
+              clientLanguages: [currentLanguage],
+              providerLanguages: currentProvider.languagesSpoken ||
+                currentProvider.languages || ["fr"],
+              callSessionId: currentCallSessionId,
+              // P0 FIX: Pass booking form data for SMS notifications to provider
+              bookingTitle: currentBookingMeta?.title || "",
+              bookingDescription: currentBookingMeta?.description || "",
+              clientCurrentCountry: currentBookingMeta?.country || "",
+              clientFirstName: currentBookingMeta?.clientFirstName || currentUser?.firstName || currentUser?.fullName?.split(" ")[0] || "",
+              clientNationality: currentBookingMeta?.clientNationality || "",
+            };
+
+            console.log("[PaymentRequest] [createAndScheduleCall] data", callData);
+
+            try {
+              const callResult = await createAndScheduleCall(callData);
+              console.log("[PaymentRequest] callResult:", callResult);
+              if (callResult && callResult.data && callResult.data.success) {
+                console.log("[PaymentRequest] [createAndScheduleCall] success");
+                callStatus = "scheduled";
+                callId = callResult.data.callId || currentCallSessionId;
+              }
+            } catch (cfErr: unknown) {
+              console.error("[PaymentRequest] createAndScheduleCall error:", cfErr);
+              // Continue even if call scheduling fails - payment is still successful
+            }
+          } else {
+            console.warn("[PaymentRequest] Missing/invalid phone(s). Skipping call scheduling.", {
+              clientPhoneE164,
+              providerPhoneE164,
+            });
+          }
+
           // Persister les documents et appeler onSuccess
           const orderId = await currentPersistPaymentDocs(paymentIntent.id);
 
           currentOnSuccess({
             paymentIntentId: paymentIntent.id,
-            call: "skipped", // L'appel sera planifié côté serveur
+            call: callStatus,
             orderId: orderId,
+            callId: callId,
           });
         } catch (err) {
           console.error("[PaymentRequest] ❌ Erreur:", err);
           ev.complete("fail");
           currentOnError(err instanceof Error ? err.message : String(err));
+          // UX: Si Apple Pay échoue, afficher automatiquement les champs carte
+          // pour que l'utilisateur puisse saisir une autre carte manuellement
+          setShowCardFields(true);
         } finally {
           // CRITICAL: Nettoyer le timeout et réinitialiser TOUS les états
           clearTimeout(timeoutId);
@@ -2804,65 +2889,99 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       <>
         <form onSubmit={(e) => { e.preventDefault(); console.log("[Form] onSubmit intercepted"); handlePaymentSubmit(e); }} className="space-y-4" noValidate>
           <div className="space-y-4">
-            {/* Message 3D Secure visible pendant l'authentification */}
+            {/* Message 3D Secure - Overlay semi-bloquant pour clarté */}
             {show3DSMessage && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center space-x-3">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center space-x-3 shadow-sm">
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent" />
                 <span className="text-blue-700 font-medium">
-                  {language === "fr" ? "Vérification de sécurité en cours (3D Secure)..." :
-                   language === "es" ? "Verificación de seguridad en curso (3D Secure)..." :
-                   language === "de" ? "Sicherheitsüberprüfung läuft (3D Secure)..." :
-                   "Security verification in progress (3D Secure)..."}
+                  {language === "fr" ? "Vérification bancaire en cours..." :
+                   language === "es" ? "Verificación bancaria en curso..." :
+                   language === "de" ? "Bankverifizierung läuft..." :
+                   "Bank verification in progress..."}
                 </span>
               </div>
             )}
 
-            {/* Apple Pay / Google Pay Button */}
+            {/* ========== PROGRESSIVE DISCLOSURE: UX SIMPLIFIÉE ========== */}
+
+            {/* OPTION 1: Apple Pay / Google Pay (si disponible) */}
             {canMakePaymentRequest && paymentRequest && !isProcessing && (
-              <div className="space-y-3">
-                <PaymentRequestButtonElement
-                  options={{
-                    paymentRequest,
-                    style: {
-                      paymentRequestButton: {
-                        type: "default",
-                        theme: "dark",
-                        height: "48px",
+              <div className="space-y-4">
+                {/* Bouton Apple Pay / Google Pay - PRINCIPAL */}
+                <div>
+                  <p className="text-sm text-gray-600 mb-2 text-center">
+                    {language === "fr" ? "Paiement rapide et sécurisé" :
+                     language === "es" ? "Pago rápido y seguro" :
+                     language === "de" ? "Schnelle und sichere Zahlung" :
+                     "Fast and secure payment"}
+                  </p>
+                  <PaymentRequestButtonElement
+                    options={{
+                      paymentRequest,
+                      style: {
+                        paymentRequestButton: {
+                          type: "default",
+                          theme: "dark",
+                          height: "52px",
+                        },
                       },
-                    },
-                  }}
-                />
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-500">
-                      {language === "fr" ? "ou payer par carte" :
-                       language === "es" ? "o pagar con tarjeta" :
-                       language === "de" ? "oder mit Karte bezahlen" :
-                       "or pay with card"}
-                    </span>
-                  </div>
+                    }}
+                  />
                 </div>
+
+                {/* Toggle pour afficher les champs carte manuellement */}
+                {!showCardFields && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCardFields(true)}
+                    className="w-full py-3 text-sm text-gray-600 hover:text-gray-800 flex items-center justify-center space-x-2 transition-colors"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>
+                      {language === "fr" ? "Saisir une carte manuellement" :
+                       language === "es" ? "Introducir tarjeta manualmente" :
+                       language === "de" ? "Karte manuell eingeben" :
+                       "Enter card manually"}
+                    </span>
+                  </button>
+                )}
               </div>
             )}
 
-            <label className="block text-sm font-semibold text-gray-700">
-              <div className="flex items-center space-x-2">
-                <CreditCard
-                  className="w-4 h-4 text-blue-600"
-                  aria-hidden="true"
-                />
-                <span className="sr-only">{t("card.title")}</span>
-              </div>
-            </label>
+            {/* OPTION 2: Champs de carte (visible si pas d'Apple Pay OU si toggle activé) */}
+            {(!canMakePaymentRequest || showCardFields) && (
+              <>
+                {/* Bouton retour si on a Apple Pay disponible */}
+                {canMakePaymentRequest && showCardFields && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCardFields(false)}
+                    className="flex items-center text-sm text-blue-600 hover:text-blue-800 mb-2"
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    {language === "fr" ? "Revenir à Apple Pay" :
+                     language === "es" ? "Volver a Apple Pay" :
+                     language === "de" ? "Zurück zu Apple Pay" :
+                     "Back to Apple Pay"}
+                  </button>
+                )}
+
+                {/* Label simple et clair */}
+                <div className="flex items-center space-x-2 mb-3">
+                  <CreditCard className="w-5 h-5 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {language === "fr" ? "Informations de carte" :
+                     language === "es" ? "Información de tarjeta" :
+                     language === "de" ? "Karteninformationen" :
+                     "Card information"}
+                  </span>
+                </div>
 
             {isMobile ? (
+              /* Mobile: Un seul champ unifié (numéro + date + CVC) */
               <div className="space-y-2" aria-live="polite">
-                <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide">
-                  {t("card.number")}
-                </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <CreditCard
@@ -2873,15 +2992,12 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                   <div className="pl-10 pr-3 py-3.5 border-2 border-gray-200 rounded-lg bg-white focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 hover:border-gray-300">
                     <CardElement options={singleCardElementOptions} />
                   </div>
-                  <p className="mt-2 text-xs text-gray-500">
-                    {t("callCheckout.mobileNote")}
-                  </p>
                 </div>
               </div>
             ) : (
               <>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide">
+                  <label className="block text-sm font-medium text-gray-600">
                     {t("card.number")}
                   </label>
                   <div className="relative">
@@ -2899,7 +3015,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide">
+                    <label className="block text-sm font-medium text-gray-600">
                       {t("card.expiry")}
                     </label>
                     <div className="relative">
@@ -2915,7 +3031,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide">
+                    <label className="block text-sm font-medium text-gray-600">
                       {t("card.cvc")}
                     </label>
                     <div className="relative">
@@ -2933,6 +3049,9 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                 </div>
               </>
             )}
+              </>
+            )}
+            {/* ========== FIN PROGRESSIVE DISCLOSURE ========== */}
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
