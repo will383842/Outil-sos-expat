@@ -3254,7 +3254,9 @@ const SOSCall: React.FC = () => {
       <div className="min-h-screen bg-gray-950 overflow-x-hidden max-w-full">
         {/* ========================================
             📱 HERO MOBILE COMPACT (sticky)
+            Caché quand le wizard est ouvert pour éviter conflit z-index
         ======================================== */}
+        {!showWizard && (
         <header className="lg:hidden sticky top-[80px] z-40 bg-gray-950/95 backdrop-blur-xl border-b border-white/10 safe-area-top" role="banner">
           <div className="px-4 py-3 flex items-center justify-between">
             <div className="flex-1 min-w-0">
@@ -3292,6 +3294,7 @@ const SOSCall: React.FC = () => {
             </div>
           </div>
         </header>
+        )}
 
         {/* ========================================
             🖥️ HERO DESKTOP (inchangé)

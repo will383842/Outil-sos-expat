@@ -583,10 +583,10 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
 
   if (!isOpen) return null;
 
-  // z-30 keeps wizard below header (z-60) and mobile menu (z-55)
+  // z-50 ensures wizard is above SOSCall mobile header (z-40) but below main header (z-60) and mobile menu (z-55)
   // top-[76px] matches the mobile header height (py-3 padding + 64px icon = ~76px)
   return (
-    <div className="fixed inset-x-0 top-[76px] lg:top-[80px] bottom-0 z-30 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col">
+    <div className="fixed inset-x-0 top-[76px] lg:top-[80px] bottom-0 z-50 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col">
 
       {/* ===== HEADER FIXE : Progress Bar ===== */}
       <div className="flex-shrink-0 px-5 pt-8 pb-5 bg-gray-900/90 backdrop-blur-sm border-b border-white/5">
@@ -618,9 +618,10 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
       </div>
 
       {/* ===== FOOTER FIXE : Boutons Navigation ===== */}
+      {/* Fallback padding pour Android sans safe-area support */}
       <div
-        className="flex-shrink-0 px-5 py-4 bg-gray-900/95 backdrop-blur-md border-t border-white/10 max-w-md mx-auto w-full"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 16px)' }}
+        className="flex-shrink-0 px-5 py-4 pb-8 bg-gray-900/95 backdrop-blur-md border-t border-white/10 max-w-md mx-auto w-full"
+        style={{ paddingBottom: 'max(32px, calc(env(safe-area-inset-bottom, 16px) + 16px))' }}
       >
         {step === 1 && (
           // Step 1: Next button only
