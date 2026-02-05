@@ -1,4 +1,9 @@
 # ================================
+# Separate repos (not part of this deployment)
+# ================================
+Outils d'emailing/
+
+# ================================
 # Dependencies
 # ================================
 node_modules/
