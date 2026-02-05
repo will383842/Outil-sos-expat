@@ -1575,12 +1575,30 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= FIRESTORE BACKUPS =================
+    // Metadonnees des sauvegardes Firestore (morningBackup, manual, etc.)
+    match /backups/{backupId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement (Admin SDK)
+      allow write: if false;
+    }
+
     // ================= AUTH BACKUPS =================
     // Metadonnees des backups Firebase Auth
     match /auth_backups/{backupId} {
       // Lecture: Admin uniquement
       allow read: if isAdmin();
       // Ecriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // ================= LOCAL BACKUPS =================
+    // Registre des sauvegardes locales (PC)
+    match /local_backups/{backupId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement (registerLocalBackup)
       allow write: if false;
     }
 
