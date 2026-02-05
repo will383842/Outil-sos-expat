@@ -3258,9 +3258,9 @@ const SOSCall: React.FC = () => {
         ======================================== */}
         {!showWizard && (
         <header className="lg:hidden sticky top-[80px] z-40 bg-gray-950/95 backdrop-blur-xl border-b border-white/10 safe-area-top" role="banner">
-          <div className="px-4 py-3 flex items-center justify-between">
+          <div className="px-4 py-2 flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold text-white truncate">
+              <h1 className="text-base font-bold text-white truncate">
                 <FormattedMessage id="sosCall.hero.title.short" defaultMessage="SOS Expat" />
               </h1>
               <p className="text-xs text-gray-400 truncate">
@@ -3374,9 +3374,9 @@ const SOSCall: React.FC = () => {
           {/* ========================================
               📱 FILTRES CHIPS MOBILE (sticky)
           ======================================== */}
-          <div className="lg:hidden sticky top-[140px] z-30 bg-gray-900/95 backdrop-blur-md border-b border-white/10 w-full overflow-hidden">
+          <div className="lg:hidden sticky top-[136px] z-30 bg-gray-900/95 backdrop-blur-md border-b border-white/10 w-full overflow-hidden">
             <div className="overflow-x-auto scrollbar-hide w-full">
-              <div className="flex gap-2 px-4 py-2.5 w-max min-w-full justify-center">
+              <div className="flex gap-2 px-4 py-1.5 w-max min-w-full justify-center">
                 {/* Chip Type: All */}
                 <button
                   onClick={() => setSelectedType("all")}
@@ -3438,9 +3438,9 @@ const SOSCall: React.FC = () => {
             </div>
           </div>
 
-          <div className="max-w-7xl xl:max-w-[1500px] mx-auto px-4 sm:px-6 lg:pt-0 pt-4 w-full overflow-hidden">
+          <div className="max-w-7xl xl:max-w-[1500px] mx-auto px-4 sm:px-6 lg:pt-0 pt-1 w-full overflow-hidden">
             {/* ===== H2 - Titre de section (Desktop uniquement) ===== */}
-            <div className="text-center mb-5 sm:mb-8">
+            <div className="text-center mb-1 lg:mb-8">
               <h2
                 className="hidden lg:block text-lg sm:text-xl lg:text-2xl xl:text-3xl font-black text-white mb-4"
                 id="section-title"
@@ -3937,7 +3937,7 @@ const SOSCall: React.FC = () => {
                     📱 Version Mobile - Grille verticale 1 colonne
                 ======================================== */}
                 <div
-                  className="lg:hidden space-y-4 pt-16 pb-24 relative z-10 w-full overflow-x-hidden"
+                  className="lg:hidden space-y-4 pt-2 pb-24 relative z-10 w-full overflow-x-hidden"
                   role="list"
                   aria-label={intl.formatMessage({ id: "sosCall.providerList.mobileAriaLabel" })}
                 >
