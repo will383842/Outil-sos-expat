@@ -194,24 +194,23 @@ const isInAppBrowser = (): boolean => {
 /**
  * Détecte si on doit forcer le mode redirect au lieu de popup
  *
- * IMPORTANT: iOS Safari standard supporte mieux les POPUPS que les redirects
- * à cause d'ITP (Intelligent Tracking Prevention) qui bloque les cookies après redirect.
- * On ne force donc le redirect QUE sur les WebViews iOS (Chrome, Firefox, Edge sur iOS)
- * et les autres navigateurs problématiques.
+ * Avec le custom authDomain (www.sosexpats.com), le redirect OAuth reste sur
+ * le même domaine, ce qui élimine les problèmes ITP de Safari.
+ * On force donc le redirect pour TOUS les appareils iOS (Safari inclus)
+ * et les autres navigateurs mobiles problématiques.
+ * Les popups sur mobile sont globalement peu fiables (bloqués par Safari,
+ * problèmes de focus, etc.), le redirect est la méthode recommandée.
  */
 const shouldForceRedirectAuth = (): boolean => {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent;
 
+  // Tous les appareils iOS → redirect (Safari, Chrome iOS, Firefox iOS, etc.)
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
-
-  // Détecter si on est sur un navigateur iOS autre que Safari natif
-  // CriOS = Chrome iOS, FxiOS = Firefox iOS, EdgiOS = Edge iOS, OPiOS = Opera iOS
-  const isIOSWebView = isIOS && /CriOS|FxiOS|EdgiOS|OPiOS|GSA/i.test(ua);
-
-  // Safari iOS standard: NE PAS forcer redirect, le popup fonctionne mieux
-  // grâce à l'absence de problèmes ITP (même domaine)
-  const isIOSSafari = isIOS && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA/i.test(ua);
+  if (isIOS) {
+    console.log('[Auth] iOS détecté - mode REDIRECT (custom authDomain, pas de problème ITP)');
+    return true;
+  }
 
   // Les WebViews Android peuvent aussi avoir des problèmes
   const isAndroidWebView = /wv/.test(ua) && /Android/i.test(ua);
@@ -222,14 +221,7 @@ const shouldForceRedirectAuth = (): boolean => {
   // UC Browser et autres navigateurs alternatifs
   const isAlternativeBrowser = /UCBrowser|Opera Mini|OPR/i.test(ua);
 
-  // iOS Safari standard → popup (retourne false)
-  // Tous les autres cas problématiques → redirect (retourne true)
-  if (isIOSSafari) {
-    console.log('[Auth] iOS Safari détecté - mode POPUP (meilleur pour ITP)');
-    return false;
-  }
-
-  return isInAppBrowser() || isIOSWebView || isAndroidWebView || isSamsungBrowser || isAlternativeBrowser;
+  return isInAppBrowser() || isAndroidWebView || isSamsungBrowser || isAlternativeBrowser;
 };
 
 /**
@@ -1612,15 +1604,20 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: forceRedirect=" + forceRedirect + " (iOS/WebView/Samsung)");
 
     try {
-      console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: setPersistence...");
-      const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-      await setPersistence(auth, persistenceType);
-
       console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Création provider...");
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
       provider.addScope('profile');
       provider.setCustomParameters({ prompt: 'select_account' });
+
+      // FIX iOS Safari: setPersistence SANS await pour ne pas casser le lien
+      // avec le geste utilisateur (tap). Safari bloque les popups si un await
+      // asynchrone s'intercale entre le tap et le window.open() interne.
+      // setPersistence est fire-and-forget: Firebase l'applique avant le prochain signIn.
+      const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+      setPersistence(auth, persistenceType).catch((err) =>
+        console.warn("[DEBUG] setPersistence error (non-blocking):", err)
+      );
 
       // 📱 Sur iOS et navigateurs problématiques: forcer redirect directement
       if (forceRedirect) {

@@ -10,6 +10,11 @@
 // Firebase Cloud Function URL for server-side rendering
 const SSR_FUNCTION_URL = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2';
 
+// Firebase Auth handler origin (used for /__/auth/* proxy)
+// This allows using a custom authDomain (www.sosexpats.com) instead of firebaseapp.com,
+// which fixes Google OAuth on iOS Safari where ITP blocks cross-site cookies/storage.
+const FIREBASE_AUTH_ORIGIN = 'https://sos-urgently-ac307.firebaseapp.com';
+
 // Cloudflare Pages origin URL (instead of DigitalOcean)
 const PAGES_ORIGIN = 'https://sos-expat.pages.dev';
 
@@ -834,6 +839,34 @@ async function handleRequest(request, env, ctx) {
   const pathname = url.pathname;
 
   console.log(`[WORKER DEBUG] UA: ${userAgent.substring(0, 50)}, Path: ${pathname}`);
+
+  // =========================================================================
+  // Firebase Auth handler proxy (custom authDomain for iOS Safari ITP fix)
+  // Proxies /__/auth/* requests to Firebase so OAuth stays on the same domain.
+  // =========================================================================
+  if (pathname.startsWith('/__/auth/')) {
+    const firebaseAuthUrl = `${FIREBASE_AUTH_ORIGIN}${pathname}${url.search}`;
+    console.log(`[WORKER] Firebase Auth proxy: ${pathname} -> ${firebaseAuthUrl}`);
+
+    const authResponse = await fetch(firebaseAuthUrl, {
+      method: request.method,
+      headers: request.headers,
+      body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
+      redirect: 'manual', // Don't follow redirects - pass them through as-is
+    });
+
+    const proxyHeaders = new Headers(authResponse.headers);
+    // Remove headers that Cloudflare should not forward
+    proxyHeaders.delete('set-cookie');
+    proxyHeaders.set('X-Worker-Active', 'true');
+    proxyHeaders.set('X-Worker-Auth-Proxy', 'true');
+
+    return new Response(authResponse.body, {
+      status: authResponse.status,
+      statusText: authResponse.statusText,
+      headers: proxyHeaders,
+    });
+  }
 
   // Handle multi-dashboard specially - fetch index.html without following redirects
   // This is needed because the origin server redirects /multi-dashboard to /
