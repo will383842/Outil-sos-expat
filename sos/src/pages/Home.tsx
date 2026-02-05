@@ -264,7 +264,7 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-x',
+          touchAction: 'pan-x pan-y',
           WebkitUserSelect: 'none',
           userSelect: 'none',
           cursor: 'grab',

@@ -492,14 +492,14 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
           paddingLeft: 'calc(50vw - 150px)',
           paddingRight: 'calc(50vw - 150px)',
           WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-x', // ✅ FIX: Permettre le scroll horizontal natif
+          touchAction: 'pan-x pan-y', // ✅ FIX: Permettre scroll horizontal ET vertical (page)
         }}
       >
         {displayProviders.map((provider, index) => (
           <div
             key={`${provider.id}-${rotationIndex}`}
             className="flex-shrink-0 w-[300px] sm:w-[340px] snap-center"
-            style={{ touchAction: 'pan-x' }} // ✅ FIX: Propager touch-action
+            style={{ touchAction: 'pan-x pan-y' }} // ✅ FIX: Propager touch-action
           >
             <ModernProfileCard
               provider={provider}
@@ -547,15 +547,13 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
           .carousel-scroll-container {
             scroll-snap-type: x mandatory;
             overscroll-behavior-x: contain;
-            /* Permettre le scroll horizontal natif */
-            touch-action: pan-x;
-            /* Éviter le "pull to refresh" accidentel */
-            overscroll-behavior-y: none;
+            /* Permettre scroll horizontal ET vertical (page) */
+            touch-action: pan-x pan-y;
           }
 
           /* S'assurer que les enfants ne bloquent pas le scroll */
           .carousel-scroll-container > * {
-            touch-action: pan-x;
+            touch-action: pan-x pan-y;
           }
         }
       `}</style>
