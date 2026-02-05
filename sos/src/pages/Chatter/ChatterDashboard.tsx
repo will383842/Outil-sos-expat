@@ -90,11 +90,11 @@ const ChatterAffiliateLinks = lazy(() =>
 const NotificationBell = lazy(() =>
   import('@/components/Chatter/NotificationBell').then(m => ({ default: m.NotificationBell }))
 );
-const PWAInstallPrompt = lazy(() =>
-  import('@/components/pwa').then(m => ({ default: m.PWAInstallPrompt }))
-);
+// PWAInstallPrompt removed — now handled by PWAInstallCards in dashboard content
 const QuickActionsMenu = lazy(() => import('@/components/Chatter/QuickActionsMenu'));
 const DashboardTour = lazy(() => import('@/components/Chatter/DashboardTour'));
+
+import PWAInstallCards from '@/components/dashboard/PWAInstallCards';
 
 // Icons - imported synchronously as they're small and used everywhere
 import {
@@ -1621,13 +1621,10 @@ const ChatterDashboard: React.FC = () => {
           </Suspense>
         )}
 
-        {/* PWA Install Prompt - Lazy loaded */}
-        <Suspense fallback={null}>
-          <PWAInstallPrompt
-            onInstall={handlePwaInstall}
-            onDismiss={handlePwaDismiss}
-          />
-        </Suspense>
+        {/* PWA Install Cards - inline in dashboard */}
+        <div className="px-4 sm:px-6 py-3">
+          <PWAInstallCards showOutilIA />
+        </div>
       </div>
 
       {/* Success Feedback */}

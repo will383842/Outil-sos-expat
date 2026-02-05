@@ -28,6 +28,7 @@ import {
 import { useMultiProviderDashboard } from '../../hooks/useMultiProviderDashboard';
 import PasswordGate from './PasswordGate';
 import ChatPanel from './ChatPanel';
+import PWAInstallCards from '../../components/dashboard/PWAInstallCards';
 import { cn } from '../../utils/cn';
 
 // Chat state type
@@ -386,6 +387,11 @@ const MultiProviderDashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* PWA Install Cards */}
+        <div className="mb-6">
+          <PWAInstallCards showOutilIA />
+        </div>
+
         {/* Stats Cards - Simplified and action-oriented */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatCard

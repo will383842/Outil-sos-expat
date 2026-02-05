@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
 import { useWizard } from '../../contexts/WizardContext';
 import LoadingSpinner from '../common/LoadingSpinner';
-import InstallBanner from '../common/InstallBanner';
+// InstallBanner removed — PWA install now handled via PWAInstallCards in dashboards
 import CookieBanner from '../common/CookieBanner';
 import { shouldHideBannersOnRoute } from '../../constants/excludedBannerRoutes';
 
@@ -236,9 +236,7 @@ const Layout: React.FC<LayoutProps> = ({
         />
       )}
 
-      {/* Snackbar PWA discret — bas-droite */}
-      {/* Hidden during wizard steps and on booking workflow pages to avoid distracting the user */}
-      {!isWizardOpen && !hideBannersOnRoute && <InstallBanner />}
+      {/* PWA install moved to dashboard cards — no more popup */}
       </div>
     </>
   );

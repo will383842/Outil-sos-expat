@@ -48,6 +48,7 @@ import MobileSideDrawer from "../components/dashboard/MobileSideDrawer";
 import KYCBannerCompact from "../components/dashboard/KYCBannerCompact";
 import DashboardStats from "../components/dashboard/DashboardStats";
 import QuickActions from "../components/dashboard/QuickActions";
+import PWAInstallCards from "../components/dashboard/PWAInstallCards";
 // RecentActivity removed - was causing layout issues
 
 import { useAuth } from "../contexts/AuthContext";
@@ -1609,6 +1610,15 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       {user && (user.role === 'lawyer' || user.role === 'expat') ? (
         <ProfileStatusAlert user={user} />
       ) : null}
+
+      {/* ========================================== */}
+      {/* PWA INSTALL CARDS */}
+      {/* ========================================== */}
+      {userDataReady && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <PWAInstallCards showOutilIA={user?.role === 'lawyer' || user?.role === 'expat'} />
+        </div>
+      )}
 
       {/* ========================================== */}
       {/* LOADING STATE (while fetching user data) */}
