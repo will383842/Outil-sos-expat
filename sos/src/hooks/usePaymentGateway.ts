@@ -1,7 +1,7 @@
 // src/hooks/usePaymentGateway.ts
 import { useState, useEffect, useCallback } from "react";
 import { httpsCallable } from "firebase/functions";
-import { functions } from "../config/firebase";
+import { functionsPayment } from "../config/firebase";
 
 type PaymentGateway = "stripe" | "paypal";
 
@@ -106,7 +106,7 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
       const getRecommendedPaymentGateway = httpsCallable<
         { countryCode: string },
         GatewayResult
-      >(functions, "getRecommendedPaymentGateway");
+      >(functionsPayment, "getRecommendedPaymentGateway");
 
       const result = await Promise.race([
         getRecommendedPaymentGateway({ countryCode }),

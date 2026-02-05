@@ -1,8 +1,5 @@
-import { auth } from '../config/firebase';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-
-// Initialiser Firebase Functions
-const functions = getFunctions();
+import { auth, functionsPayment } from '../config/firebase';
+import { httpsCallable } from 'firebase/functions';
 
 /**
  * Interface pour les résultats des fonctions Cloud
@@ -144,7 +141,7 @@ export async function createPaymentIntent(data: PaymentData) {
     checkUserAuth();
     validatePaymentData(data);
 
-    const createPaymentIntentFn = httpsCallable(functions, 'createPaymentIntent');
+    const createPaymentIntentFn = httpsCallable(functionsPayment, 'createPaymentIntent');
     const result = await createPaymentIntentFn({
       amount: data.amount,
       currency: data.currency || 'eur',

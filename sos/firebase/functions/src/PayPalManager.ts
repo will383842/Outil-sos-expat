@@ -4106,7 +4106,7 @@ export const checkPayPalPayoutStatus = onCall(
  */
 export const getRecommendedPaymentGateway = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     cors: true,
   },
   async (request) => {

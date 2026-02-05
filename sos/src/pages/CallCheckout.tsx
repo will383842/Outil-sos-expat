@@ -32,7 +32,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import type { PaymentRequest } from "@stripe/stripe-js";
-import { functions, db } from "../config/firebase";
+import { functions, functionsPayment, db } from "../config/firebase";
 import { httpsCallable, HttpsCallable } from "firebase/functions";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { Provider, normalizeProvider } from "../types/provider";
@@ -2070,7 +2070,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           const createPaymentIntent: HttpsCallable<
             PaymentIntentData,
             PaymentIntentResponse
-          > = httpsCallable(functions, "createPaymentIntent");
+          > = httpsCallable(functionsPayment, "createPaymentIntent");
 
           const paymentData: PaymentIntentData = {
             amount: currentPricing.totalAmount,
@@ -2419,7 +2419,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         const createPaymentIntent: HttpsCallable<
           PaymentIntentData,
           PaymentIntentResponse
-        > = httpsCallable(functions, "createPaymentIntent");
+        > = httpsCallable(functionsPayment, "createPaymentIntent");
 
         // Prepare coupon data
         const couponData = activePromo

@@ -75,7 +75,7 @@ function getLimits() {
    Config & Params
    ──────────────────────────────────────────────────────────────────────────── */
 const FUNCTION_OPTIONS = {
-  region: 'europe-west1',
+  region: 'europe-west3',
   memory: '256MiB' as const,
   concurrency: 1,
   timeoutSeconds: 60,
