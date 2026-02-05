@@ -3,7 +3,9 @@
     "home": "Главная",
     "requests": "Заявки",
     "team": "Команда",
-    "dashboard": "Панель"
+    "dashboard": "Панель",
+    "stats": "Статистика",
+    "billing": "Оплата"
   },
   "header": {
     "dashboard_title": "Панель",
@@ -12,11 +14,15 @@
     "requests_subtitle": "Управляйте заявками клиентов",
     "team_title": "Управление командой",
     "team_subtitle": "Управляйте своими провайдерами",
+    "stats_title": "Статистика",
+    "stats_subtitle": "Показатели вашей команды",
+    "billing_title": "Оплата",
+    "billing_subtitle": "Управляйте вашей подпиской",
     "logout": "Выйти",
     "user_default": "Пользователь"
   },
   "login": {
-    "title": "Мульти Панель",
+    "title": "Dashboard Multi",
     "subtitle": "Управление командой SOS Expats",
     "heading": "Вход",
     "email_label": "Эл. почта",
@@ -126,6 +132,9 @@
     "install": "Установить",
     "install_app": "Установить приложение",
     "install_title": "Установить SOS Multi",
+    "quick_access": "Быстрый доступ с главного экрана",
+    "how_to": "Как это сделать?",
+    "later": "Позже",
     "ios_instructions": "Чтобы установить приложение на iPhone или iPad:",
     "ios_step1_title": "Нажмите кнопку «Поделиться»",
     "ios_step1_hint": "внизу экрана",
@@ -144,6 +153,141 @@
   "common": {
     "logout_success": "Выход выполнен успешно",
     "logout_error": "Ошибка при выходе",
-    "notification_title": "Новая заявка SOS-Expat!"
+    "notification_title": "Новая заявка SOS-Expat!",
+    "loading": "Загрузка...",
+    "no_data": "Нет доступных данных",
+    "yes": "Да",
+    "no": "Нет",
+    "close": "Закрыть",
+    "modify": "Изменить",
+    "view": "Просмотр",
+    "contact_support": "Связаться с поддержкой"
+  },
+  "status_badge": {
+    "available": "Доступен",
+    "busy": "Занят",
+    "offline": "Не в сети",
+    "active": "Активный",
+    "inactive": "Неактивный",
+    "compliant": "Соответствует",
+    "non_compliant": "Не соответствует",
+    "online_title": "В сети",
+    "offline_title": "Не в сети"
+  },
+  "provider_list": {
+    "search_placeholder": "Поиск провайдера...",
+    "all_statuses": "Все статусы",
+    "result_count_one": "{{count}} провайдер",
+    "result_count_other": "{{count}} провайдеров",
+    "filtered": "(отфильтровано)",
+    "no_results": "Провайдеры не найдены",
+    "th_provider": "Провайдер",
+    "th_type": "Тип",
+    "th_status": "Статус",
+    "th_calls": "Звонки",
+    "th_hours": "Часы",
+    "th_actions": "Действия"
+  },
+  "add_provider": {
+    "title": "Добавить провайдера",
+    "heading": "Управление провайдерами",
+    "description": "Добавление и управление провайдерами осуществляется через портал SOS Expats Admin. Свяжитесь с администратором для добавления новых участников в вашу команду.",
+    "how_to_title": "Чтобы добавить провайдера:",
+    "step1": "Свяжитесь с администратором SOS Expats",
+    "step2": "Предоставьте информацию о новом провайдере",
+    "step3": "После добавления он автоматически появится в вашей команде"
+  },
+  "error_boundary": {
+    "title": "Произошла ошибка",
+    "description": "Приложение столкнулось с непредвиденной проблемой. Пожалуйста, обновите страницу.",
+    "back_home": "На главную"
+  },
+  "blocked": {
+    "title": "Доступ заблокирован",
+    "default_message": "Ваш аккаунт был приостановлен или не имеет доступа к этому приложению.",
+    "connected_account": "Подключённый аккаунт",
+    "contact_support": "Связаться с поддержкой",
+    "change_account": "Сменить аккаунт"
+  },
+  "stats": {
+    "export_csv": "Экспорт CSV",
+    "no_data_title": "Нет данных за {{month}}",
+    "no_data_hint": "Статистика будет доступна, когда ваши провайдеры будут активны.",
+    "providers": "Провайдеры",
+    "total_hours": "Всего часов",
+    "calls_received": "Принятые звонки",
+    "avg_duration": "Сред. продолж.",
+    "details_title": "Детали по провайдеру",
+    "th_provider": "Провайдер",
+    "th_hours": "Часы",
+    "th_calls": "Звонки",
+    "th_missed": "Пропущенные",
+    "th_compliance": "Соответствие",
+    "csv_no_data": "Нет данных для экспорта",
+    "csv_downloaded": "CSV-экспорт загружен",
+    "csv_provider": "Провайдер",
+    "csv_email": "Email",
+    "csv_hours_online": "Часы онлайн",
+    "csv_hours_target": "Цель часов",
+    "csv_hours_compliant": "Часы соответствуют",
+    "csv_calls_received": "Принятые звонки",
+    "csv_calls_missed": "Пропущенные звонки",
+    "csv_missed_target": "Макс. цель пропущенных",
+    "csv_missed_compliant": "Пропущенные соответствуют",
+    "csv_compliant_global": "Общее соответствие"
+  },
+  "billing": {
+    "payment_method": "Способ оплаты",
+    "expires": "Истекает",
+    "modify_payment_toast": "Свяжитесь с поддержкой для изменения способа оплаты",
+    "invoice_history": "История счетов",
+    "help_title": "Нужна помощь с оплатой?",
+    "help_description": "Наша команда готова ответить на ваши вопросы о подписке или счетах.",
+    "change_plan_toast": "Свяжитесь с нами для смены плана"
+  },
+  "invoice": {
+    "paid": "Оплачен",
+    "pending": "Ожидание",
+    "overdue": "Просрочен",
+    "no_invoices": "Нет доступных счетов",
+    "th_invoice": "Счёт",
+    "th_date": "Дата",
+    "th_amount": "Сумма",
+    "th_status": "Статус",
+    "th_actions": "Действия",
+    "download_unavailable": "Скачивание недоступно"
+  },
+  "plan": {
+    "current": "Текущий план",
+    "up_to_providers": "До {{count}} провайдеров",
+    "per_month": "месяц",
+    "per_year": "год",
+    "change": "Сменить план"
+  },
+  "calls_chart": {
+    "title": "Звонки",
+    "per_provider": "Звонки по провайдеру",
+    "answered": "Отвеченные",
+    "missed": "Пропущенные",
+    "total": "Всего звонков"
+  },
+  "hours_chart": {
+    "title": "Часы онлайн",
+    "hours": "Часы",
+    "hours_online": "Часы онлайн",
+    "target": "Цель"
+  },
+  "compliance_chart": {
+    "title": "Уровень соответствия",
+    "compliant": "Соответствующие",
+    "non_compliant": "Несоответствующие",
+    "providers": "Провайдеры",
+    "global_rate": "общего соответствия"
+  },
+  "auth": {
+    "unauthorized": "Несанкционированный доступ. У этого аккаунта нет необходимых разрешений.",
+    "login_error": "Ошибка входа",
+    "wrong_credentials": "Неверный email или пароль",
+    "loading_providers": "Ошибка при загрузке провайдеров"
   }
 }

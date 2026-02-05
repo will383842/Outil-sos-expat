@@ -4,6 +4,7 @@
  */
 import { useState } from 'react';
 import { Plus, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAgencyProviders } from '../hooks';
 import { ProviderList, AddProviderModal } from '../components/team';
 import { Button, LoadingSpinner } from '../components/ui';
@@ -11,9 +12,10 @@ import { Button, LoadingSpinner } from '../components/ui';
 export default function Team() {
   const { providers, isLoading, error, activeCount, onlineCount } = useAgencyProviders();
   const [showAddModal, setShowAddModal] = useState(false);
+  const { t } = useTranslation();
 
   return (
-    <div className="max-w-7xl mx-auto px-1">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4">
       {/* Action bar */}
       <div className="flex items-center justify-end mb-6">
         <Button
@@ -21,7 +23,7 @@ export default function Team() {
           leftIcon={<Plus className="w-5 h-5" />}
           onClick={() => setShowAddModal(true)}
         >
-          Ajouter
+          {t('team.add')}
         </Button>
       </div>
 
@@ -34,7 +36,7 @@ export default function Team() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{providers.length}</p>
-              <p className="text-sm text-gray-500">Total</p>
+              <p className="text-sm text-gray-500">{t('team.total')}</p>
             </div>
           </div>
         </div>
@@ -46,7 +48,7 @@ export default function Team() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{onlineCount}</p>
-              <p className="text-sm text-gray-500">En ligne</p>
+              <p className="text-sm text-gray-500">{t('team.online')}</p>
             </div>
           </div>
         </div>
@@ -58,7 +60,7 @@ export default function Team() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{activeCount}</p>
-              <p className="text-sm text-gray-500">Actifs</p>
+              <p className="text-sm text-gray-500">{t('team.active')}</p>
             </div>
           </div>
         </div>
@@ -82,17 +84,17 @@ export default function Team() {
             <Users className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Aucun prestataire
+            {t('team.no_providers')}
           </h3>
           <p className="text-gray-500 mb-4">
-            Votre équipe n'a pas encore de prestataires assignés.
+            {t('team.no_providers_hint')}
           </p>
           <Button
             variant="primary"
             leftIcon={<Plus className="w-5 h-5" />}
             onClick={() => setShowAddModal(true)}
           >
-            Ajouter un prestataire
+            {t('team.add_provider')}
           </Button>
         </div>
       ) : (

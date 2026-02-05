@@ -1,8 +1,9 @@
 /**
  * Requests Page
- * Booking request management with tabs (À traiter / Historique)
+ * Booking request management with tabs
  */
 import { Inbox, Bell, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useBookingRequests } from '../hooks';
 import { BookingTabs } from '../components/bookings';
 import { LoadingSpinner } from '../components/ui';
@@ -17,6 +18,7 @@ export default function Requests() {
     isLoading,
     error,
   } = useBookingRequests();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -28,11 +30,11 @@ export default function Requests() {
 
   if (error) {
     return (
-      <div className="max-w-3xl mx-auto px-1 py-8">
+      <div className="max-w-3xl mx-auto px-3 sm:px-4 py-8">
         <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <p className="text-red-600 font-medium">{error}</p>
+          <p className="text-red-600 font-medium">{t('requests.error_loading')}</p>
           <p className="text-sm text-red-500 mt-1">
-            Vérifiez votre connexion et réessayez
+            {t('requests.error_retry')}
           </p>
         </div>
       </div>
@@ -40,36 +42,34 @@ export default function Requests() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-1">
+    <div className="max-w-3xl mx-auto px-3 sm:px-4">
       {/* Summary counters */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 sm:p-4 text-center">
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4 text-center">
           <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mx-auto mb-0.5" />
           <p className="text-lg sm:text-2xl font-bold text-gray-900">{newBookings.length}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500">Nouvelles</p>
+          <p className="text-xs text-gray-500">{t('requests.new_label')}</p>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 sm:p-4 text-center">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4 text-center">
           <Inbox className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 mx-auto mb-0.5" />
           <p className="text-lg sm:text-2xl font-bold text-gray-900">{pendingCount}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500">À traiter</p>
+          <p className="text-xs text-gray-500">{t('requests.to_process')}</p>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 sm:p-4 text-center">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4 text-center">
           <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mx-auto mb-0.5" />
           <p className="text-lg sm:text-2xl font-bold text-gray-900">{historyBookings.length}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500">Historique</p>
+          <p className="text-xs text-gray-500">{t('requests.history')}</p>
         </div>
       </div>
 
       {/* Booking tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-4">
-        <BookingTabs
-          newBookings={newBookings}
-          activeBookings={activeBookings}
-          historyBookings={historyBookings}
-          isLoading={isLoading}
-          onDelete={deleteBooking}
-        />
-      </div>
+      <BookingTabs
+        newBookings={newBookings}
+        activeBookings={activeBookings}
+        historyBookings={historyBookings}
+        isLoading={isLoading}
+        onDelete={deleteBooking}
+      />
     </div>
   );
 }

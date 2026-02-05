@@ -17,6 +17,7 @@ import {
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { classifyBooking, FIVE_MINUTES, ONE_HOUR, type BookingRequest } from '../types';
+import i18n from '../i18n/config';
 
 interface UseBookingRequestsResult {
   bookings: BookingRequest[];
@@ -85,7 +86,7 @@ function requestNotificationPermission() {
 /** Show browser notification */
 function showBrowserNotification(booking: BookingRequest) {
   if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification('Nouvelle demande SOS-Expat!', {
+    new Notification(i18n.t('common.notification_title'), {
       body: `${booking.clientName} — ${booking.serviceType}`,
       icon: '/icons/icon-192x192.png',
       requireInteraction: true,
@@ -144,7 +145,7 @@ export function useBookingRequests(): UseBookingRequestsResult {
         providerName: data.providerName as string | undefined,
         providerType: data.providerType as BookingRequest['providerType'],
         clientId: (data.clientId as string) || '',
-        clientName: (data.clientName as string) || 'Client inconnu',
+        clientName: (data.clientName as string) || i18n.t('booking.client_unknown'),
         clientEmail: data.clientEmail as string | undefined,
         clientPhone: data.clientPhone as string | undefined,
         clientWhatsapp: data.clientWhatsapp as string | undefined,
@@ -230,7 +231,7 @@ export function useBookingRequests(): UseBookingRequestsResult {
         },
         (err) => {
           console.error('Error fetching booking requests:', err);
-          setError('Erreur lors du chargement des demandes');
+          setError(i18n.t('requests.error_loading'));
           setIsLoading(false);
         }
       );

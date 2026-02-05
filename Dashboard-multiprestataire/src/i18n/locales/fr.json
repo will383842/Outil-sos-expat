@@ -3,7 +3,9 @@
     "home": "Accueil",
     "requests": "Demandes",
     "team": "Équipe",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "stats": "Statistiques",
+    "billing": "Facturation"
   },
   "header": {
     "dashboard_title": "Dashboard",
@@ -12,6 +14,10 @@
     "requests_subtitle": "Gérez les demandes de vos clients",
     "team_title": "Gestion de l'équipe",
     "team_subtitle": "Gérez vos prestataires",
+    "stats_title": "Statistiques",
+    "stats_subtitle": "Performances de votre équipe",
+    "billing_title": "Facturation",
+    "billing_subtitle": "Gérez votre abonnement",
     "logout": "Déconnexion",
     "user_default": "Utilisateur"
   },
@@ -126,6 +132,9 @@
     "install": "Installer",
     "install_app": "Installer l'application",
     "install_title": "Installer SOS Multi",
+    "quick_access": "Accès rapide depuis votre écran d'accueil",
+    "how_to": "Comment faire ?",
+    "later": "Plus tard",
     "ios_instructions": "Pour installer l'application sur votre iPhone ou iPad :",
     "ios_step1_title": "Appuyez sur le bouton Partager",
     "ios_step1_hint": "en bas de l'écran",
@@ -144,6 +153,141 @@
   "common": {
     "logout_success": "Déconnexion réussie",
     "logout_error": "Erreur lors de la déconnexion",
-    "notification_title": "Nouvelle demande SOS-Expat!"
+    "notification_title": "Nouvelle demande SOS-Expat!",
+    "loading": "Chargement...",
+    "no_data": "Aucune donnée disponible",
+    "yes": "Oui",
+    "no": "Non",
+    "close": "Fermer",
+    "modify": "Modifier",
+    "view": "Voir",
+    "contact_support": "Contacter le support"
+  },
+  "status_badge": {
+    "available": "Disponible",
+    "busy": "Occupé",
+    "offline": "Hors ligne",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "compliant": "Conforme",
+    "non_compliant": "Non conforme",
+    "online_title": "En ligne",
+    "offline_title": "Hors ligne"
+  },
+  "provider_list": {
+    "search_placeholder": "Rechercher un prestataire...",
+    "all_statuses": "Tous les statuts",
+    "result_count_one": "{{count}} prestataire",
+    "result_count_other": "{{count}} prestataires",
+    "filtered": "(filtré)",
+    "no_results": "Aucun prestataire trouvé",
+    "th_provider": "Prestataire",
+    "th_type": "Type",
+    "th_status": "Statut",
+    "th_calls": "Appels",
+    "th_hours": "Heures",
+    "th_actions": "Actions"
+  },
+  "add_provider": {
+    "title": "Ajouter un prestataire",
+    "heading": "Gestion des prestataires",
+    "description": "L'ajout et la gestion des prestataires se fait via le portail SOS Expats Admin. Contactez l'administrateur pour ajouter de nouveaux membres à votre équipe.",
+    "how_to_title": "Pour ajouter un prestataire :",
+    "step1": "Contactez l'administrateur SOS Expats",
+    "step2": "Fournissez les informations du nouveau prestataire",
+    "step3": "Une fois ajouté, il apparaîtra automatiquement dans votre équipe"
+  },
+  "error_boundary": {
+    "title": "Une erreur est survenue",
+    "description": "L'application a rencontré un problème inattendu. Veuillez rafraîchir la page.",
+    "back_home": "Retour à l'accueil"
+  },
+  "blocked": {
+    "title": "Accès bloqué",
+    "default_message": "Votre compte a été suspendu ou n'a pas accès à cette application.",
+    "connected_account": "Compte connecté",
+    "contact_support": "Contacter le support",
+    "change_account": "Changer de compte"
+  },
+  "stats": {
+    "export_csv": "Exporter CSV",
+    "no_data_title": "Pas de données pour {{month}}",
+    "no_data_hint": "Les statistiques seront disponibles une fois que vos prestataires auront été actifs.",
+    "providers": "Prestataires",
+    "total_hours": "Heures totales",
+    "calls_received": "Appels reçus",
+    "avg_duration": "Durée moy.",
+    "details_title": "Détails par prestataire",
+    "th_provider": "Prestataire",
+    "th_hours": "Heures",
+    "th_calls": "Appels",
+    "th_missed": "Manqués",
+    "th_compliance": "Conformité",
+    "csv_no_data": "Aucune donnée à exporter",
+    "csv_downloaded": "Export CSV téléchargé",
+    "csv_provider": "Prestataire",
+    "csv_email": "Email",
+    "csv_hours_online": "Heures en ligne",
+    "csv_hours_target": "Objectif heures",
+    "csv_hours_compliant": "Heures conforme",
+    "csv_calls_received": "Appels reçus",
+    "csv_calls_missed": "Appels manqués",
+    "csv_missed_target": "Objectif manqués max",
+    "csv_missed_compliant": "Manqués conforme",
+    "csv_compliant_global": "Conforme global"
+  },
+  "billing": {
+    "payment_method": "Moyen de paiement",
+    "expires": "Expire",
+    "modify_payment_toast": "Contactez le support pour modifier votre moyen de paiement",
+    "invoice_history": "Historique des factures",
+    "help_title": "Besoin d'aide avec la facturation ?",
+    "help_description": "Notre équipe est disponible pour répondre à vos questions concernant votre abonnement ou vos factures.",
+    "change_plan_toast": "Contactez-nous pour changer de plan"
+  },
+  "invoice": {
+    "paid": "Payée",
+    "pending": "En attente",
+    "overdue": "En retard",
+    "no_invoices": "Aucune facture disponible",
+    "th_invoice": "Facture",
+    "th_date": "Date",
+    "th_amount": "Montant",
+    "th_status": "Statut",
+    "th_actions": "Actions",
+    "download_unavailable": "Téléchargement non disponible"
+  },
+  "plan": {
+    "current": "Plan actuel",
+    "up_to_providers": "Jusqu'à {{count}} prestataires",
+    "per_month": "mois",
+    "per_year": "an",
+    "change": "Changer de plan"
+  },
+  "calls_chart": {
+    "title": "Appels",
+    "per_provider": "Appels par prestataire",
+    "answered": "Répondus",
+    "missed": "Manqués",
+    "total": "Total appels"
+  },
+  "hours_chart": {
+    "title": "Heures en ligne",
+    "hours": "Heures",
+    "hours_online": "Heures en ligne",
+    "target": "Objectif"
+  },
+  "compliance_chart": {
+    "title": "Taux de conformité",
+    "compliant": "Conformes",
+    "non_compliant": "Non conformes",
+    "providers": "Prestataires",
+    "global_rate": "de conformité globale"
+  },
+  "auth": {
+    "unauthorized": "Accès non autorisé. Ce compte n'a pas les permissions requises.",
+    "login_error": "Erreur de connexion",
+    "wrong_credentials": "Email ou mot de passe incorrect",
+    "loading_providers": "Erreur lors du chargement des prestataires"
   }
 }

@@ -3,6 +3,7 @@
  * Displays a single provider with status and quick actions
  */
 import { Phone, Mail, MoreVertical } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card, StatusBadge, OnlineIndicator } from '../ui';
 import type { Provider } from '../../types';
 
@@ -12,6 +13,7 @@ interface ProviderCardProps {
 }
 
 export default function ProviderCard({ provider, onEdit }: ProviderCardProps) {
+  const { t } = useTranslation();
   const initials = provider.name
     .split(' ')
     .map((n) => n[0])
@@ -45,7 +47,7 @@ export default function ProviderCard({ provider, onEdit }: ProviderCardProps) {
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-medium text-gray-900 truncate">{provider.name}</h3>
             <span className="text-xs text-gray-500 capitalize">
-              {provider.type === 'lawyer' ? 'Avocat' : 'Expat'}
+              {provider.type === 'lawyer' ? t('team.lawyer') : t('team.expat')}
             </span>
           </div>
 
@@ -95,19 +97,19 @@ export default function ProviderCard({ provider, onEdit }: ProviderCardProps) {
           <p className="text-lg font-semibold text-gray-900">
             {provider.totalCalls || 0}
           </p>
-          <p className="text-xs text-gray-500">Appels</p>
+          <p className="text-xs text-gray-500">{t('team.calls')}</p>
         </div>
         <div>
           <p className="text-lg font-semibold text-gray-900">
             {provider.totalHoursOnline || 0}h
           </p>
-          <p className="text-xs text-gray-500">En ligne</p>
+          <p className="text-xs text-gray-500">{t('team.hours_online')}</p>
         </div>
         <div>
           <p className="text-lg font-semibold text-gray-900">
             {provider.rating ? provider.rating.toFixed(1) : '-'}
           </p>
-          <p className="text-xs text-gray-500">Note</p>
+          <p className="text-xs text-gray-500">{t('team.rating')}</p>
         </div>
       </div>
     </Card>

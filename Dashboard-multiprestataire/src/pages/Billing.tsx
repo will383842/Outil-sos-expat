@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { PlanCard, InvoiceList, type Invoice } from '../components/billing';
 import { Button } from '../components/ui';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 // Mock data - In production, this would come from Stripe/billing API
 const MOCK_INVOICES: Invoice[] = [
@@ -33,17 +34,18 @@ const MOCK_INVOICES: Invoice[] = [
   },
 ];
 
-const PLAN_FEATURES = [
-  'Dashboard temps réel',
-  'Statistiques détaillées',
-  'Rapports mensuels',
-  'Support prioritaire',
-  'Export CSV',
-  'API access',
-];
-
 export default function Billing() {
+  const { t } = useTranslation();
   const { user } = useAuth();
+
+  const PLAN_FEATURES = [
+    t('billing.feature_dashboard'),
+    t('billing.feature_stats'),
+    t('billing.feature_reports'),
+    t('billing.feature_support'),
+    t('billing.feature_csv'),
+    t('billing.feature_api'),
+  ];
 
   // In production, this would be fetched based on the user's subscription
   const maxProviders = user?.linkedProviderIds?.length || 0;
@@ -61,7 +63,7 @@ export default function Billing() {
           maxProviders={maxProviders <= 5 ? 5 : maxProviders <= 20 ? 20 : 50}
           features={PLAN_FEATURES}
           onChangePlan={() => {
-            toast('Contactez-nous pour changer de plan', { icon: 'i' });
+            toast(t('billing.change_plan_toast'), { icon: 'i' });
           }}
         />
       </div>
@@ -69,7 +71,7 @@ export default function Billing() {
       {/* Payment Method */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Moyen de paiement
+          {t('billing.payment_method')}
         </h2>
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between">
@@ -79,15 +81,15 @@ export default function Billing() {
               </div>
               <div>
                 <p className="font-medium text-gray-900">---- ---- ---- 4242</p>
-                <p className="text-sm text-gray-500">Expire 12/26</p>
+                <p className="text-sm text-gray-500">{t('billing.expires')} 12/26</p>
               </div>
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toast('Contactez le support pour modifier votre moyen de paiement', { icon: 'i' })}
+              onClick={() => toast(t('billing.modify_payment_toast'), { icon: 'i' })}
             >
-              Modifier
+              {t('common.modify')}
             </Button>
           </div>
         </div>
@@ -96,7 +98,7 @@ export default function Billing() {
       {/* Invoice History */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Historique des factures
+          {t('billing.invoice_history')}
         </h2>
         <InvoiceList invoices={MOCK_INVOICES} />
       </div>
@@ -104,18 +106,17 @@ export default function Billing() {
       {/* Support */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h3 className="font-semibold text-gray-900 mb-2">
-          Besoin d'aide avec la facturation ?
+          {t('billing.help_title')}
         </h3>
         <p className="text-gray-600 mb-4">
-          Notre équipe est disponible pour répondre à vos questions concernant
-          votre abonnement ou vos factures.
+          {t('billing.help_description')}
         </p>
         <Button
           variant="outline"
           leftIcon={<Mail className="w-4 h-4" />}
           onClick={() => window.open('mailto:billing@sos-expat.com', '_blank')}
         >
-          Contacter le support
+          {t('common.contact_support')}
         </Button>
       </div>
     </div>

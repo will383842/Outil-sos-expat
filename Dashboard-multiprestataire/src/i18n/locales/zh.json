@@ -3,7 +3,9 @@
     "home": "首页",
     "requests": "请求",
     "team": "团队",
-    "dashboard": "仪表板"
+    "dashboard": "仪表板",
+    "stats": "统计",
+    "billing": "账单"
   },
   "header": {
     "dashboard_title": "仪表板",
@@ -12,11 +14,15 @@
     "requests_subtitle": "管理客户请求",
     "team_title": "团队管理",
     "team_subtitle": "管理您的服务商",
+    "stats_title": "统计",
+    "stats_subtitle": "团队绩效",
+    "billing_title": "账单",
+    "billing_subtitle": "管理您的订阅",
     "logout": "退出",
     "user_default": "用户"
   },
   "login": {
-    "title": "多人仪表板",
+    "title": "Dashboard Multi",
     "subtitle": "管理您的SOS Expats团队",
     "heading": "登录",
     "email_label": "邮箱",
@@ -126,6 +132,9 @@
     "install": "安装",
     "install_app": "安装应用",
     "install_title": "安装SOS Multi",
+    "quick_access": "从主屏幕快速访问",
+    "how_to": "如何操作？",
+    "later": "稍后",
     "ios_instructions": "在您的iPhone或iPad上安装应用：",
     "ios_step1_title": "点击分享按钮",
     "ios_step1_hint": "在屏幕底部",
@@ -144,6 +153,141 @@
   "common": {
     "logout_success": "已成功退出",
     "logout_error": "退出时出错",
-    "notification_title": "新的SOS-Expat请求！"
+    "notification_title": "新的SOS-Expat请求！",
+    "loading": "加载中...",
+    "no_data": "暂无可用数据",
+    "yes": "是",
+    "no": "否",
+    "close": "关闭",
+    "modify": "修改",
+    "view": "查看",
+    "contact_support": "联系客服"
+  },
+  "status_badge": {
+    "available": "可用",
+    "busy": "忙碌",
+    "offline": "离线",
+    "active": "活跃",
+    "inactive": "不活跃",
+    "compliant": "合规",
+    "non_compliant": "不合规",
+    "online_title": "在线",
+    "offline_title": "离线"
+  },
+  "provider_list": {
+    "search_placeholder": "搜索服务商...",
+    "all_statuses": "所有状态",
+    "result_count_one": "{{count}}个服务商",
+    "result_count_other": "{{count}}个服务商",
+    "filtered": "(已筛选)",
+    "no_results": "未找到服务商",
+    "th_provider": "服务商",
+    "th_type": "类型",
+    "th_status": "状态",
+    "th_calls": "通话",
+    "th_hours": "小时",
+    "th_actions": "操作"
+  },
+  "add_provider": {
+    "title": "添加服务商",
+    "heading": "服务商管理",
+    "description": "服务商的添加和管理通过SOS Expats管理门户进行。请联系管理员将新成员添加到您的团队。",
+    "how_to_title": "添加服务商的步骤：",
+    "step1": "联系SOS Expats管理员",
+    "step2": "提供新服务商的信息",
+    "step3": "添加后，他们将自动出现在您的团队中"
+  },
+  "error_boundary": {
+    "title": "发生错误",
+    "description": "应用程序遇到了意外问题。请刷新页面。",
+    "back_home": "返回首页"
+  },
+  "blocked": {
+    "title": "访问被阻止",
+    "default_message": "您的账户已被暂停或无权访问此应用程序。",
+    "connected_account": "已连接的账户",
+    "contact_support": "联系客服",
+    "change_account": "更换账户"
+  },
+  "stats": {
+    "export_csv": "导出CSV",
+    "no_data_title": "{{month}}暂无数据",
+    "no_data_hint": "一旦您的服务商开始活跃，统计数据将可用。",
+    "providers": "服务商",
+    "total_hours": "总小时数",
+    "calls_received": "接听来电",
+    "avg_duration": "平均时长",
+    "details_title": "按服务商详情",
+    "th_provider": "服务商",
+    "th_hours": "小时",
+    "th_calls": "通话",
+    "th_missed": "未接",
+    "th_compliance": "合规性",
+    "csv_no_data": "无数据可导出",
+    "csv_downloaded": "CSV导出已下载",
+    "csv_provider": "服务商",
+    "csv_email": "邮箱",
+    "csv_hours_online": "在线小时数",
+    "csv_hours_target": "小时目标",
+    "csv_hours_compliant": "小时合规",
+    "csv_calls_received": "接听来电",
+    "csv_calls_missed": "未接来电",
+    "csv_missed_target": "最大未接目标",
+    "csv_missed_compliant": "未接合规",
+    "csv_compliant_global": "整体合规"
+  },
+  "billing": {
+    "payment_method": "支付方式",
+    "expires": "到期",
+    "modify_payment_toast": "请联系客服修改您的支付方式",
+    "invoice_history": "发票历史",
+    "help_title": "需要账单方面的帮助？",
+    "help_description": "我们的团队随时为您解答关于订阅或发票的问题。",
+    "change_plan_toast": "请联系我们更换套餐"
+  },
+  "invoice": {
+    "paid": "已支付",
+    "pending": "待处理",
+    "overdue": "逾期",
+    "no_invoices": "暂无可用发票",
+    "th_invoice": "发票",
+    "th_date": "日期",
+    "th_amount": "金额",
+    "th_status": "状态",
+    "th_actions": "操作",
+    "download_unavailable": "暂不支持下载"
+  },
+  "plan": {
+    "current": "当前套餐",
+    "up_to_providers": "最多{{count}}个服务商",
+    "per_month": "月",
+    "per_year": "年",
+    "change": "更换套餐"
+  },
+  "calls_chart": {
+    "title": "通话",
+    "per_provider": "按服务商通话",
+    "answered": "已接听",
+    "missed": "未接",
+    "total": "总通话数"
+  },
+  "hours_chart": {
+    "title": "在线时长",
+    "hours": "小时",
+    "hours_online": "在线时长",
+    "target": "目标"
+  },
+  "compliance_chart": {
+    "title": "合规率",
+    "compliant": "合规",
+    "non_compliant": "不合规",
+    "providers": "服务商",
+    "global_rate": "整体合规率"
+  },
+  "auth": {
+    "unauthorized": "未授权访问。此账户没有所需的权限。",
+    "login_error": "登录错误",
+    "wrong_credentials": "邮箱或密码不正确",
+    "loading_providers": "加载服务商时出错"
   }
 }

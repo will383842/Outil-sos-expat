@@ -4,6 +4,7 @@
  */
 import { Download, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 export interface Invoice {
   id: string;
@@ -19,32 +20,33 @@ interface InvoiceListProps {
   isLoading?: boolean;
 }
 
-const statusConfig = {
-  paid: {
-    label: 'Payée',
-    icon: CheckCircle,
-    className: 'bg-green-100 text-green-700',
-    iconClass: 'text-green-600',
-  },
-  pending: {
-    label: 'En attente',
-    icon: Clock,
-    className: 'bg-yellow-100 text-yellow-700',
-    iconClass: 'text-yellow-600',
-  },
-  overdue: {
-    label: 'En retard',
-    icon: AlertCircle,
-    className: 'bg-red-100 text-red-700',
-    iconClass: 'text-red-600',
-  },
-};
-
 export default function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
+  const { t } = useTranslation();
+
+  const statusConfig = {
+    paid: {
+      label: t('invoice.paid'),
+      icon: CheckCircle,
+      className: 'bg-green-100 text-green-700',
+      iconClass: 'text-green-600',
+    },
+    pending: {
+      label: t('invoice.pending'),
+      icon: Clock,
+      className: 'bg-yellow-100 text-yellow-700',
+      iconClass: 'text-yellow-600',
+    },
+    overdue: {
+      label: t('invoice.overdue'),
+      icon: AlertCircle,
+      className: 'bg-red-100 text-red-700',
+      iconClass: 'text-red-600',
+    },
+  };
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-        <p className="text-gray-500">Chargement...</p>
+        <p className="text-gray-500">{t('common.loading')}</p>
       </div>
     );
   }
@@ -53,7 +55,7 @@ export default function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
         <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-500">Aucune facture disponible</p>
+        <p className="text-gray-500">{t('invoice.no_invoices')}</p>
       </div>
     );
   }
@@ -64,19 +66,19 @@ export default function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Facture
+              {t('invoice.th_invoice')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Date
+              {t('invoice.th_date')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Montant
+              {t('invoice.th_amount')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Statut
+              {t('invoice.th_status')}
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
+              {t('invoice.th_actions')}
             </th>
           </tr>
         </thead>
@@ -113,7 +115,7 @@ export default function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
                       if (invoice.downloadUrl) {
                         window.open(invoice.downloadUrl, '_blank');
                       } else {
-                        toast('Téléchargement non disponible', { icon: 'i' });
+                        toast(t('invoice.download_unavailable'), { icon: 'i' });
                       }
                     }}
                     className="text-primary-600 hover:text-primary-800 text-sm font-medium inline-flex items-center gap-1"

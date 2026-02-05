@@ -2,15 +2,18 @@
  * App Component
  * Main application with routing and providers
  */
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AppLayout } from './components/layout';
 import { InstallPrompt } from './components/pwa';
 import { Login, Dashboard, Team, Requests, NotFound } from './pages';
+import { LANGUAGES } from './i18n/config';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -24,6 +27,16 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const { i18n } = useTranslation();
+
+  // Set RTL direction for Arabic
+  useEffect(() => {
+    const lang = LANGUAGES.find((l) => l.code === i18n.language);
+    const dir = lang && 'dir' in lang ? lang.dir : 'ltr';
+    document.documentElement.dir = dir;
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

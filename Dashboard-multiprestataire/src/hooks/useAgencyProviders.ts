@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import i18n from '../i18n/config';
 import { normalizeProvider, type Provider, type ProviderSummary, toProviderSummary } from '../types';
 
 interface UseAgencyProvidersResult {
@@ -73,7 +74,7 @@ export function useAgencyProviders(): UseAgencyProvidersResult {
         },
         (err) => {
           console.error('Error fetching providers:', err);
-          setError('Erreur lors du chargement des prestataires');
+          setError(i18n.t('auth.loading_providers'));
           setIsLoading(false);
         }
       );

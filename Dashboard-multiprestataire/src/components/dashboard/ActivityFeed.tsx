@@ -2,6 +2,7 @@
  * Activity Feed Component
  * Shows recent provider activity
  */
+import { useTranslation } from 'react-i18next';
 import type { Provider } from '../../types';
 import { OnlineIndicator } from '../ui';
 
@@ -11,6 +12,7 @@ interface ActivityItem {
   providerInitials: string;
   action: string;
   time: string;
+  isOnline: boolean;
 }
 
 interface ActivityFeedProps {
@@ -26,21 +28,23 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-function getRelativeTime(date: Date): string {
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (minutes < 1) return "À l'instant";
-  if (minutes < 60) return `Il y a ${minutes} min`;
-  if (hours < 24) return `Il y a ${hours}h`;
-  if (days < 7) return `Il y a ${days}j`;
-  return date.toLocaleDateString('fr-FR');
-}
-
 export default function ActivityFeed({ providers }: ActivityFeedProps) {
+  const { t } = useTranslation();
+
+  function getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return t('activity.time_now');
+    if (minutes < 60) return t('activity.time_minutes', { count: minutes });
+    if (hours < 24) return t('activity.time_hours', { count: hours });
+    if (days < 7) return t('activity.time_days', { count: days });
+    return date.toLocaleDateString();
+  }
+
   // Generate activity items from providers
   const activities: ActivityItem[] = providers
     .filter((p) => p.lastOnlineAt)
@@ -59,15 +63,16 @@ export default function ActivityFeed({ providers }: ActivityFeedProps) {
         id: p.id,
         providerName: p.name,
         providerInitials: getInitials(p.name),
-        action: p.isOnline ? 'est en ligne' : 's\'est déconnecté',
+        action: p.isOnline ? t('activity.is_online') : t('activity.disconnected'),
         time: getRelativeTime(lastOnline),
+        isOnline: p.isOnline,
       };
     });
 
   if (activities.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-        <p className="text-gray-500">Aucune activité récente</p>
+        <p className="text-gray-500">{t('dashboard.no_activity')}</p>
       </div>
     );
   }
@@ -88,9 +93,7 @@ export default function ActivityFeed({ providers }: ActivityFeedProps) {
                   </span>
                 </div>
                 <div className="absolute -bottom-0.5 -right-0.5">
-                  <OnlineIndicator
-                    isOnline={activity.action === 'est en ligne'}
-                  />
+                  <OnlineIndicator isOnline={activity.isOnline} />
                 </div>
               </div>
               <div>

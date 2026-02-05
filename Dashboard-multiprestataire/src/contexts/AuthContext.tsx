@@ -18,6 +18,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import i18n from '../i18n/config';
 import type { AuthUser, AuthState } from '../types';
 
 interface AuthContextValue extends AuthState {
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             user: null,
             isLoading: false,
             isAuthenticated: false,
-            error: 'Accès non autorisé. Ce compte n\'a pas les permissions requises.',
+            error: i18n.t('auth.unauthorized'),
           });
         }
       } else {
@@ -141,12 +142,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signInWithEmailAndPassword(auth, email, password);
       // Auth state change will handle the rest
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Erreur de connexion';
+      const message = error instanceof Error ? error.message : i18n.t('auth.login_error');
       setState((prev) => ({
         ...prev,
         isLoading: false,
         error: message.includes('auth/')
-          ? 'Email ou mot de passe incorrect'
+          ? i18n.t('auth.wrong_credentials')
           : message,
       }));
       throw error;

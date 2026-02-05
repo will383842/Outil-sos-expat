@@ -38,8 +38,6 @@ export {
   FIVE_MINUTES,
   ONE_HOUR,
   classifyBooking,
-  SERVICE_TYPE_LABELS,
-  BOOKING_STATUS_LABELS,
 } from './booking';
 
 // Auth types

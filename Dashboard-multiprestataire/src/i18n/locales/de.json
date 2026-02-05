@@ -3,7 +3,9 @@
     "home": "Startseite",
     "requests": "Anfragen",
     "team": "Team",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "stats": "Statistiken",
+    "billing": "Abrechnung"
   },
   "header": {
     "dashboard_title": "Dashboard",
@@ -12,11 +14,15 @@
     "requests_subtitle": "Verwalten Sie die Anfragen Ihrer Kunden",
     "team_title": "Teamverwaltung",
     "team_subtitle": "Verwalten Sie Ihre Dienstleister",
+    "stats_title": "Statistiken",
+    "stats_subtitle": "Leistung Ihres Teams",
+    "billing_title": "Abrechnung",
+    "billing_subtitle": "Verwalten Sie Ihr Abonnement",
     "logout": "Abmelden",
     "user_default": "Benutzer"
   },
   "login": {
-    "title": "Multi Dashboard",
+    "title": "Dashboard Multi",
     "subtitle": "Verwalten Sie Ihr SOS Expats Team",
     "heading": "Anmeldung",
     "email_label": "E-Mail",
@@ -126,6 +132,9 @@
     "install": "Installieren",
     "install_app": "App installieren",
     "install_title": "SOS Multi installieren",
+    "quick_access": "Schnellzugriff von Ihrem Startbildschirm",
+    "how_to": "Wie geht das?",
+    "later": "Später",
     "ios_instructions": "Um die App auf Ihrem iPhone oder iPad zu installieren:",
     "ios_step1_title": "Tippen Sie auf den Teilen-Button",
     "ios_step1_hint": "am unteren Bildschirmrand",
@@ -144,6 +153,141 @@
   "common": {
     "logout_success": "Erfolgreich abgemeldet",
     "logout_error": "Fehler beim Abmelden",
-    "notification_title": "Neue SOS-Expat Anfrage!"
+    "notification_title": "Neue SOS-Expat Anfrage!",
+    "loading": "Laden...",
+    "no_data": "Keine Daten verfügbar",
+    "yes": "Ja",
+    "no": "Nein",
+    "close": "Schließen",
+    "modify": "Bearbeiten",
+    "view": "Ansehen",
+    "contact_support": "Support kontaktieren"
+  },
+  "status_badge": {
+    "available": "Verfügbar",
+    "busy": "Beschäftigt",
+    "offline": "Offline",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "compliant": "Konform",
+    "non_compliant": "Nicht konform",
+    "online_title": "Online",
+    "offline_title": "Offline"
+  },
+  "provider_list": {
+    "search_placeholder": "Dienstleister suchen...",
+    "all_statuses": "Alle Status",
+    "result_count_one": "{{count}} Dienstleister",
+    "result_count_other": "{{count}} Dienstleister",
+    "filtered": "(gefiltert)",
+    "no_results": "Keine Dienstleister gefunden",
+    "th_provider": "Dienstleister",
+    "th_type": "Typ",
+    "th_status": "Status",
+    "th_calls": "Anrufe",
+    "th_hours": "Stunden",
+    "th_actions": "Aktionen"
+  },
+  "add_provider": {
+    "title": "Dienstleister hinzufügen",
+    "heading": "Dienstleisterverwaltung",
+    "description": "Das Hinzufügen und Verwalten von Dienstleistern erfolgt über das SOS Expats Admin-Portal. Kontaktieren Sie den Administrator, um neue Mitglieder zu Ihrem Team hinzuzufügen.",
+    "how_to_title": "Um einen Dienstleister hinzuzufügen:",
+    "step1": "Kontaktieren Sie den SOS Expats Administrator",
+    "step2": "Geben Sie die Informationen des neuen Dienstleisters an",
+    "step3": "Nach dem Hinzufügen erscheint er automatisch in Ihrem Team"
+  },
+  "error_boundary": {
+    "title": "Ein Fehler ist aufgetreten",
+    "description": "Die Anwendung hat ein unerwartetes Problem festgestellt. Bitte aktualisieren Sie die Seite.",
+    "back_home": "Zurück zur Startseite"
+  },
+  "blocked": {
+    "title": "Zugang gesperrt",
+    "default_message": "Ihr Konto wurde gesperrt oder hat keinen Zugang zu dieser Anwendung.",
+    "connected_account": "Verbundenes Konto",
+    "contact_support": "Support kontaktieren",
+    "change_account": "Konto wechseln"
+  },
+  "stats": {
+    "export_csv": "CSV exportieren",
+    "no_data_title": "Keine Daten für {{month}}",
+    "no_data_hint": "Statistiken werden verfügbar, sobald Ihre Dienstleister aktiv waren.",
+    "providers": "Dienstleister",
+    "total_hours": "Gesamtstunden",
+    "calls_received": "Empfangene Anrufe",
+    "avg_duration": "Durchschn. Dauer",
+    "details_title": "Details pro Dienstleister",
+    "th_provider": "Dienstleister",
+    "th_hours": "Stunden",
+    "th_calls": "Anrufe",
+    "th_missed": "Verpasste",
+    "th_compliance": "Konformität",
+    "csv_no_data": "Keine Daten zum Exportieren",
+    "csv_downloaded": "CSV-Export heruntergeladen",
+    "csv_provider": "Dienstleister",
+    "csv_email": "E-Mail",
+    "csv_hours_online": "Online-Stunden",
+    "csv_hours_target": "Stundenziel",
+    "csv_hours_compliant": "Stunden konform",
+    "csv_calls_received": "Empfangene Anrufe",
+    "csv_calls_missed": "Verpasste Anrufe",
+    "csv_missed_target": "Max. verpasste Ziel",
+    "csv_missed_compliant": "Verpasste konform",
+    "csv_compliant_global": "Gesamt konform"
+  },
+  "billing": {
+    "payment_method": "Zahlungsmethode",
+    "expires": "Läuft ab",
+    "modify_payment_toast": "Kontaktieren Sie den Support, um Ihre Zahlungsmethode zu ändern",
+    "invoice_history": "Rechnungsverlauf",
+    "help_title": "Brauchen Sie Hilfe bei der Abrechnung?",
+    "help_description": "Unser Team steht Ihnen für Fragen zu Ihrem Abonnement oder Ihren Rechnungen zur Verfügung.",
+    "change_plan_toast": "Kontaktieren Sie uns, um Ihren Plan zu ändern"
+  },
+  "invoice": {
+    "paid": "Bezahlt",
+    "pending": "Ausstehend",
+    "overdue": "Überfällig",
+    "no_invoices": "Keine Rechnungen verfügbar",
+    "th_invoice": "Rechnung",
+    "th_date": "Datum",
+    "th_amount": "Betrag",
+    "th_status": "Status",
+    "th_actions": "Aktionen",
+    "download_unavailable": "Download nicht verfügbar"
+  },
+  "plan": {
+    "current": "Aktueller Plan",
+    "up_to_providers": "Bis zu {{count}} Dienstleister",
+    "per_month": "Monat",
+    "per_year": "Jahr",
+    "change": "Plan wechseln"
+  },
+  "calls_chart": {
+    "title": "Anrufe",
+    "per_provider": "Anrufe pro Dienstleister",
+    "answered": "Beantwortet",
+    "missed": "Verpasst",
+    "total": "Anrufe gesamt"
+  },
+  "hours_chart": {
+    "title": "Online-Stunden",
+    "hours": "Stunden",
+    "hours_online": "Online-Stunden",
+    "target": "Ziel"
+  },
+  "compliance_chart": {
+    "title": "Konformitätsrate",
+    "compliant": "Konform",
+    "non_compliant": "Nicht konform",
+    "providers": "Dienstleister",
+    "global_rate": "Gesamtkonformität"
+  },
+  "auth": {
+    "unauthorized": "Nicht autorisierter Zugang. Dieses Konto hat nicht die erforderlichen Berechtigungen.",
+    "login_error": "Anmeldefehler",
+    "wrong_credentials": "Falsche E-Mail oder falsches Passwort",
+    "loading_providers": "Fehler beim Laden der Dienstleister"
   }
 }

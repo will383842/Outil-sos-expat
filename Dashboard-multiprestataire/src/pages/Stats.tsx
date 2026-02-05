@@ -9,6 +9,8 @@ import { Button, LoadingSpinner, StatusBadge } from '../components/ui';
 import { format, parse } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n/config';
 import type { ProviderMonthlyStats } from '../types';
 
 /**
@@ -16,16 +18,16 @@ import type { ProviderMonthlyStats } from '../types';
  */
 function generateCSV(stats: ProviderMonthlyStats[]): string {
   const headers = [
-    'Prestataire',
-    'Email',
-    'Heures en ligne',
-    'Objectif heures',
-    'Heures conforme',
-    'Appels reçus',
-    'Appels manqués',
-    'Objectif manqués max',
-    'Manqués conforme',
-    'Conforme global',
+    i18n.t('stats.csv_provider'),
+    i18n.t('stats.csv_email'),
+    i18n.t('stats.csv_hours_online'),
+    i18n.t('stats.csv_hours_target'),
+    i18n.t('stats.csv_hours_compliant'),
+    i18n.t('stats.csv_calls_received'),
+    i18n.t('stats.csv_calls_missed'),
+    i18n.t('stats.csv_missed_target'),
+    i18n.t('stats.csv_missed_compliant'),
+    i18n.t('stats.csv_compliant_global'),
   ];
 
   const rows = stats.map((s) => [
@@ -33,12 +35,12 @@ function generateCSV(stats: ProviderMonthlyStats[]): string {
     `"${s.providerEmail}"`,
     String(Math.round(s.hoursOnline * 10) / 10),
     String(s.hoursOnlineTarget),
-    s.hoursCompliant ? 'Oui' : 'Non',
+    s.hoursCompliant ? i18n.t('common.yes') : i18n.t('common.no'),
     String(s.callsReceived),
     String(s.callsMissed),
     String(s.missedCallsTarget),
-    s.missedCallsCompliant ? 'Oui' : 'Non',
-    s.isCompliant ? 'Oui' : 'Non',
+    s.missedCallsCompliant ? i18n.t('common.yes') : i18n.t('common.no'),
+    s.isCompliant ? i18n.t('common.yes') : i18n.t('common.no'),
   ]);
 
   const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -50,7 +52,7 @@ function generateCSV(stats: ProviderMonthlyStats[]): string {
  */
 function downloadCSV(stats: ProviderMonthlyStats[], month: string) {
   if (stats.length === 0) {
-    toast.error('Aucune donnée à exporter');
+    toast.error(i18n.t('stats.csv_no_data'));
     return;
   }
 
@@ -64,10 +66,11 @@ function downloadCSV(stats: ProviderMonthlyStats[], month: string) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  toast.success('Export CSV téléchargé');
+  toast.success(i18n.t('stats.csv_downloaded'));
 }
 
 export default function Stats() {
+  const { t } = useTranslation();
   const {
     stats,
     agencyStats,
@@ -114,7 +117,7 @@ export default function Stats() {
           onClick={() => downloadCSV(stats, selectedMonth)}
           disabled={stats.length === 0}
         >
-          Exporter CSV
+          {t('stats.export_csv')}
         </Button>
       </div>
 
@@ -136,10 +139,10 @@ export default function Stats() {
             <Calendar className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Pas de données pour {formatMonth(selectedMonth)}
+            {t('stats.no_data_title', { month: formatMonth(selectedMonth) })}
           </h3>
           <p className="text-gray-500">
-            Les statistiques seront disponibles une fois que vos prestataires auront été actifs.
+            {t('stats.no_data_hint')}
           </p>
         </div>
       ) : (
@@ -148,25 +151,25 @@ export default function Stats() {
           {agencyStats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-white rounded-xl p-4 border border-gray-100">
-                <p className="text-sm text-gray-500">Prestataires</p>
+                <p className="text-sm text-gray-500">{t('stats.providers')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {agencyStats.totalProviders}
                 </p>
               </div>
               <div className="bg-white rounded-xl p-4 border border-gray-100">
-                <p className="text-sm text-gray-500">Heures totales</p>
+                <p className="text-sm text-gray-500">{t('stats.total_hours')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {Math.round(agencyStats.totalHoursOnline)}h
                 </p>
               </div>
               <div className="bg-white rounded-xl p-4 border border-gray-100">
-                <p className="text-sm text-gray-500">Appels reçus</p>
+                <p className="text-sm text-gray-500">{t('stats.calls_received')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {agencyStats.totalCallsReceived}
                 </p>
               </div>
               <div className="bg-white rounded-xl p-4 border border-gray-100">
-                <p className="text-sm text-gray-500">Durée moy.</p>
+                <p className="text-sm text-gray-500">{t('stats.avg_duration')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {Math.round(agencyStats.avgCallDuration / 60)}min
                 </p>
@@ -186,7 +189,7 @@ export default function Stats() {
 
           {/* Detailed table */}
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Détails par prestataire
+            {t('stats.details_title')}
           </h2>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
@@ -194,19 +197,19 @@ export default function Stats() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Prestataire
+                      {t('stats.th_provider')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Heures
+                      {t('stats.th_hours')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Appels
+                      {t('stats.th_calls')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Manqués
+                      {t('stats.th_missed')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Conformité
+                      {t('stats.th_compliance')}
                     </th>
                   </tr>
                 </thead>

@@ -66,32 +66,3 @@ export function classifyBooking(booking: BookingRequest): BookingCategory {
   // Between 5 min and 1 hour → active
   return 'active';
 }
-
-/**
- * Service type labels in French
- */
-export const SERVICE_TYPE_LABELS: Record<string, string> = {
-  immigration: 'Immigration',
-  legal: 'Juridique',
-  tax: 'Fiscalité',
-  housing: 'Logement',
-  health: 'Santé',
-  education: 'Éducation',
-  employment: 'Emploi',
-  banking: 'Banque',
-  insurance: 'Assurance',
-  relocation: 'Relocation',
-  translation: 'Traduction',
-  other: 'Autre',
-};
-
-/**
- * Booking status labels in French
- */
-export const BOOKING_STATUS_LABELS: Record<BookingRequest['status'], string> = {
-  pending: 'En attente',
-  confirmed: 'Confirmée',
-  in_progress: 'En cours',
-  completed: 'Terminée',
-  cancelled: 'Annulée',
-};

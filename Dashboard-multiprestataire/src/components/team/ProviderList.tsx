@@ -3,6 +3,7 @@
  * Table view of all providers with search and filter
  */
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, Filter } from 'lucide-react';
 import { StatusBadge, OnlineIndicator, LoadingSpinner } from '../ui';
 import type { Provider, AvailabilityStatus } from '../../types';
@@ -16,6 +17,7 @@ interface ProviderListProps {
 type FilterStatus = 'all' | AvailabilityStatus;
 
 export default function ProviderList({ providers, isLoading, onEdit }: ProviderListProps) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
 
@@ -52,7 +54,7 @@ export default function ProviderList({ providers, isLoading, onEdit }: ProviderL
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Rechercher un prestataire..."
+            placeholder={t('provider_list.search_placeholder')}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
         </div>
@@ -65,24 +67,24 @@ export default function ProviderList({ providers, isLoading, onEdit }: ProviderL
             onChange={(e) => setStatusFilter(e.target.value as FilterStatus)}
             className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 appearance-none bg-white"
           >
-            <option value="all">Tous les statuts</option>
-            <option value="available">Disponible</option>
-            <option value="busy">Occupé</option>
-            <option value="offline">Hors ligne</option>
+            <option value="all">{t('provider_list.all_statuses')}</option>
+            <option value="available">{t('status_badge.available')}</option>
+            <option value="busy">{t('status_badge.busy')}</option>
+            <option value="offline">{t('status_badge.offline')}</option>
           </select>
         </div>
       </div>
 
       {/* Results count */}
       <p className="text-sm text-gray-500 mb-4">
-        {filteredProviders.length} prestataire{filteredProviders.length !== 1 ? 's' : ''}
-        {searchTerm || statusFilter !== 'all' ? ' (filtré)' : ''}
+        {t('provider_list.result_count', { count: filteredProviders.length })}
+        {searchTerm || statusFilter !== 'all' ? ` ${t('provider_list.filtered')}` : ''}
       </p>
 
       {/* Table */}
       {filteredProviders.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
-          <p className="text-gray-500">Aucun prestataire trouvé</p>
+          <p className="text-gray-500">{t('provider_list.no_results')}</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -91,22 +93,22 @@ export default function ProviderList({ providers, isLoading, onEdit }: ProviderL
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prestataire
+                    {t('provider_list.th_provider')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
+                    {t('provider_list.th_type')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
+                    {t('provider_list.th_status')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Appels
+                    {t('provider_list.th_calls')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Heures
+                    {t('provider_list.th_hours')}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t('provider_list.th_actions')}
                   </th>
                 </tr>
               </thead>
@@ -133,6 +135,7 @@ interface ProviderRowProps {
 }
 
 function ProviderRow({ provider, onEdit }: ProviderRowProps) {
+  const { t } = useTranslation();
   const initials = provider.name
     .split(' ')
     .map((n) => n[0])
@@ -167,7 +170,7 @@ function ProviderRow({ provider, onEdit }: ProviderRowProps) {
         </div>
       </td>
       <td className="px-6 py-4 text-gray-600">
-        {provider.type === 'lawyer' ? 'Avocat' : 'Expat'}
+        {provider.type === 'lawyer' ? t('team.lawyer') : t('team.expat')}
       </td>
       <td className="px-6 py-4">
         <StatusBadge status={provider.availability} />
@@ -184,7 +187,7 @@ function ProviderRow({ provider, onEdit }: ProviderRowProps) {
             onClick={() => onEdit(provider)}
             className="text-primary-600 hover:text-primary-800 text-sm font-medium"
           >
-            Voir
+            {t('common.view')}
           </button>
         )}
       </td>

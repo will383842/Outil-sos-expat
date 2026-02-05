@@ -16,6 +16,7 @@ import {
   aggregateAgencyStats,
 } from '../types';
 import { format, subMonths } from 'date-fns';
+import i18n from '../i18n/config';
 
 interface UseProviderStatsResult {
   stats: ProviderMonthlyStats[];
@@ -96,7 +97,7 @@ export function useProviderStats(): UseProviderStatsResult {
         setStats(statsList);
       } catch (err) {
         console.error('Error fetching stats:', err);
-        setError('Erreur lors du chargement des statistiques');
+        setError(i18n.t('auth.loading_providers'));
       } finally {
         setIsLoading(false);
       }

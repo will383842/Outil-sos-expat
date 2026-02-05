@@ -5,6 +5,7 @@
  */
 import type { ReactNode } from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoadingSpinner } from '../ui';
 import BlockedScreen from './BlockedScreen';
@@ -16,13 +17,14 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, isLoading, isAuthenticated, error } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
 
   // Show loading while checking auth
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 safe-top">
         <LoadingSpinner size="lg" />
-        <p className="mt-4 text-sm text-gray-600">Chargement...</p>
+        <p className="mt-4 text-sm text-gray-600">{t('common.loading')}</p>
       </div>
     );
   }

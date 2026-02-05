@@ -3,7 +3,9 @@
     "home": "الرئيسية",
     "requests": "الطلبات",
     "team": "الفريق",
-    "dashboard": "لوحة التحكم"
+    "dashboard": "لوحة التحكم",
+    "stats": "الإحصائيات",
+    "billing": "الفواتير"
   },
   "header": {
     "dashboard_title": "لوحة التحكم",
@@ -12,11 +14,15 @@
     "requests_subtitle": "إدارة طلبات عملائك",
     "team_title": "إدارة الفريق",
     "team_subtitle": "إدارة مقدمي الخدمات",
+    "stats_title": "الإحصائيات",
+    "stats_subtitle": "أداء فريقك",
+    "billing_title": "الفواتير",
+    "billing_subtitle": "إدارة اشتراكك",
     "logout": "تسجيل الخروج",
     "user_default": "مستخدم"
   },
   "login": {
-    "title": "لوحة متعددة",
+    "title": "Dashboard Multi",
     "subtitle": "إدارة فريق SOS Expats",
     "heading": "تسجيل الدخول",
     "email_label": "البريد الإلكتروني",
@@ -126,6 +132,9 @@
     "install": "تثبيت",
     "install_app": "تثبيت التطبيق",
     "install_title": "تثبيت SOS Multi",
+    "quick_access": "وصول سريع من شاشتك الرئيسية",
+    "how_to": "كيف يتم ذلك؟",
+    "later": "لاحقاً",
     "ios_instructions": "لتثبيت التطبيق على جهاز iPhone أو iPad:",
     "ios_step1_title": "اضغط على زر المشاركة",
     "ios_step1_hint": "أسفل الشاشة",
@@ -144,6 +153,141 @@
   "common": {
     "logout_success": "تم تسجيل الخروج بنجاح",
     "logout_error": "خطأ أثناء تسجيل الخروج",
-    "notification_title": "طلب جديد SOS-Expat!"
+    "notification_title": "طلب جديد SOS-Expat!",
+    "loading": "جاري التحميل...",
+    "no_data": "لا توجد بيانات متاحة",
+    "yes": "نعم",
+    "no": "لا",
+    "close": "إغلاق",
+    "modify": "تعديل",
+    "view": "عرض",
+    "contact_support": "الاتصال بالدعم"
+  },
+  "status_badge": {
+    "available": "متاح",
+    "busy": "مشغول",
+    "offline": "غير متصل",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "compliant": "متوافق",
+    "non_compliant": "غير متوافق",
+    "online_title": "متصل",
+    "offline_title": "غير متصل"
+  },
+  "provider_list": {
+    "search_placeholder": "البحث عن مقدم خدمة...",
+    "all_statuses": "جميع الحالات",
+    "result_count_one": "{{count}} مقدم خدمة",
+    "result_count_other": "{{count}} مقدمي خدمات",
+    "filtered": "(تمت التصفية)",
+    "no_results": "لم يتم العثور على مقدمي خدمات",
+    "th_provider": "مقدم الخدمة",
+    "th_type": "النوع",
+    "th_status": "الحالة",
+    "th_calls": "المكالمات",
+    "th_hours": "الساعات",
+    "th_actions": "الإجراءات"
+  },
+  "add_provider": {
+    "title": "إضافة مقدم خدمة",
+    "heading": "إدارة مقدمي الخدمات",
+    "description": "تتم إضافة وإدارة مقدمي الخدمات عبر بوابة SOS Expats Admin. اتصل بالمسؤول لإضافة أعضاء جدد إلى فريقك.",
+    "how_to_title": "لإضافة مقدم خدمة:",
+    "step1": "اتصل بمسؤول SOS Expats",
+    "step2": "قدم معلومات مقدم الخدمة الجديد",
+    "step3": "بمجرد إضافته، سيظهر تلقائياً في فريقك"
+  },
+  "error_boundary": {
+    "title": "حدث خطأ",
+    "description": "واجه التطبيق مشكلة غير متوقعة. يرجى تحديث الصفحة.",
+    "back_home": "العودة إلى الرئيسية"
+  },
+  "blocked": {
+    "title": "تم حظر الوصول",
+    "default_message": "تم تعليق حسابك أو ليس لديه صلاحية الوصول إلى هذا التطبيق.",
+    "connected_account": "الحساب المتصل",
+    "contact_support": "الاتصال بالدعم",
+    "change_account": "تغيير الحساب"
+  },
+  "stats": {
+    "export_csv": "تصدير CSV",
+    "no_data_title": "لا توجد بيانات لـ {{month}}",
+    "no_data_hint": "ستكون الإحصائيات متاحة بمجرد أن يكون مقدمو الخدمات نشطين.",
+    "providers": "مقدمو الخدمات",
+    "total_hours": "إجمالي الساعات",
+    "calls_received": "المكالمات المستلمة",
+    "avg_duration": "متوسط المدة",
+    "details_title": "التفاصيل حسب مقدم الخدمة",
+    "th_provider": "مقدم الخدمة",
+    "th_hours": "الساعات",
+    "th_calls": "المكالمات",
+    "th_missed": "الفائتة",
+    "th_compliance": "التوافق",
+    "csv_no_data": "لا توجد بيانات للتصدير",
+    "csv_downloaded": "تم تنزيل تصدير CSV",
+    "csv_provider": "مقدم الخدمة",
+    "csv_email": "البريد الإلكتروني",
+    "csv_hours_online": "ساعات الاتصال",
+    "csv_hours_target": "هدف الساعات",
+    "csv_hours_compliant": "الساعات متوافقة",
+    "csv_calls_received": "المكالمات المستلمة",
+    "csv_calls_missed": "المكالمات الفائتة",
+    "csv_missed_target": "الحد الأقصى للفائتة",
+    "csv_missed_compliant": "الفائتة متوافقة",
+    "csv_compliant_global": "التوافق الشامل"
+  },
+  "billing": {
+    "payment_method": "طريقة الدفع",
+    "expires": "تنتهي",
+    "modify_payment_toast": "اتصل بالدعم لتعديل طريقة الدفع",
+    "invoice_history": "سجل الفواتير",
+    "help_title": "تحتاج مساعدة في الفواتير؟",
+    "help_description": "فريقنا متاح للإجابة على أسئلتك حول اشتراكك أو فواتيرك.",
+    "change_plan_toast": "اتصل بنا لتغيير الخطة"
+  },
+  "invoice": {
+    "paid": "مدفوعة",
+    "pending": "قيد الانتظار",
+    "overdue": "متأخرة",
+    "no_invoices": "لا توجد فواتير متاحة",
+    "th_invoice": "الفاتورة",
+    "th_date": "التاريخ",
+    "th_amount": "المبلغ",
+    "th_status": "الحالة",
+    "th_actions": "الإجراءات",
+    "download_unavailable": "التنزيل غير متاح"
+  },
+  "plan": {
+    "current": "الخطة الحالية",
+    "up_to_providers": "حتى {{count}} مقدم خدمة",
+    "per_month": "شهر",
+    "per_year": "سنة",
+    "change": "تغيير الخطة"
+  },
+  "calls_chart": {
+    "title": "المكالمات",
+    "per_provider": "المكالمات لكل مقدم خدمة",
+    "answered": "مجاب عليها",
+    "missed": "فائتة",
+    "total": "إجمالي المكالمات"
+  },
+  "hours_chart": {
+    "title": "ساعات الاتصال",
+    "hours": "الساعات",
+    "hours_online": "ساعات الاتصال",
+    "target": "الهدف"
+  },
+  "compliance_chart": {
+    "title": "معدل التوافق",
+    "compliant": "متوافقون",
+    "non_compliant": "غير متوافقين",
+    "providers": "مقدمو الخدمات",
+    "global_rate": "التوافق الشامل"
+  },
+  "auth": {
+    "unauthorized": "وصول غير مصرح به. هذا الحساب لا يملك الصلاحيات المطلوبة.",
+    "login_error": "خطأ في تسجيل الدخول",
+    "wrong_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "loading_providers": "خطأ أثناء تحميل مقدمي الخدمات"
   }
 }

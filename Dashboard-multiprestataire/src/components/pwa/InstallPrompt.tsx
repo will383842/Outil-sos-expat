@@ -3,11 +3,13 @@
  * Shows install banner and iOS instructions
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download, X, Share, Plus } from 'lucide-react';
 import { useInstallPWA } from '../../hooks/useInstallPWA';
 import { Button } from '../ui';
 
 export default function InstallPrompt() {
+  const { t } = useTranslation();
   const { canInstall, isIOS, isInstalled, install } = useInstallPWA();
   const [dismissed, setDismissed] = useState(() => {
     // Check if user dismissed recently (within 7 days)
@@ -51,7 +53,7 @@ export default function InstallPrompt() {
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                Installer SOS Multi
+                {t('pwa.install_title')}
               </h3>
               <button
                 onClick={() => setShowIOSInstructions(false)}
@@ -62,7 +64,7 @@ export default function InstallPrompt() {
             </div>
 
             <p className="text-gray-600 mb-6">
-              Pour installer l'application sur votre iPhone ou iPad :
+              {t('pwa.ios_instructions')}
             </p>
 
             <div className="space-y-4">
@@ -72,11 +74,11 @@ export default function InstallPrompt() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    Appuyez sur le bouton Partager
+                    {t('pwa.ios_step1_title')}
                   </p>
                   <div className="flex items-center gap-2 mt-1 text-gray-500">
                     <Share className="w-5 h-5" />
-                    <span className="text-sm">en bas de l'écran</span>
+                    <span className="text-sm">{t('pwa.ios_step1_hint')}</span>
                   </div>
                 </div>
               </div>
@@ -87,11 +89,11 @@ export default function InstallPrompt() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    Sélectionnez "Sur l'écran d'accueil"
+                    {t('pwa.ios_step2_title')}
                   </p>
                   <div className="flex items-center gap-2 mt-1 text-gray-500">
                     <Plus className="w-5 h-5" />
-                    <span className="text-sm">dans le menu</span>
+                    <span className="text-sm">{t('pwa.ios_step2_hint')}</span>
                   </div>
                 </div>
               </div>
@@ -102,10 +104,10 @@ export default function InstallPrompt() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    Appuyez sur "Ajouter"
+                    {t('pwa.ios_step3_title')}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    L'app sera ajoutée à votre écran d'accueil
+                    {t('pwa.ios_step3_hint')}
                   </p>
                 </div>
               </div>
@@ -118,7 +120,7 @@ export default function InstallPrompt() {
               className="w-full"
               onClick={() => setShowIOSInstructions(false)}
             >
-              J'ai compris
+              {t('pwa.understood')}
             </Button>
           </div>
         </div>
@@ -137,9 +139,9 @@ export default function InstallPrompt() {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900">Installer SOS Multi</h3>
+          <h3 className="font-semibold text-gray-900">{t('pwa.install_title')}</h3>
           <p className="text-sm text-gray-500 mt-0.5">
-            Accès rapide depuis votre écran d'accueil
+            {t('pwa.quick_access')}
           </p>
 
           {/* Actions */}
@@ -150,7 +152,7 @@ export default function InstallPrompt() {
                 size="sm"
                 onClick={() => setShowIOSInstructions(true)}
               >
-                Comment faire ?
+                {t('pwa.how_to')}
               </Button>
             ) : (
               <Button
@@ -159,11 +161,11 @@ export default function InstallPrompt() {
                 leftIcon={<Download className="w-4 h-4" />}
                 onClick={handleInstall}
               >
-                Installer
+                {t('pwa.install')}
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={handleDismiss}>
-              Plus tard
+              {t('pwa.later')}
             </Button>
           </div>
         </div>

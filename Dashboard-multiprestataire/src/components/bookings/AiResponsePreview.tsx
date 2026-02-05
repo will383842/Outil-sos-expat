@@ -4,6 +4,7 @@
  */
 import { useState } from 'react';
 import { Sparkles, Copy, Check, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AiResponsePreviewProps {
   content: string;
@@ -22,6 +23,7 @@ export default function AiResponsePreview({
 }: AiResponsePreviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation();
 
   const handleCopy = async () => {
     try {
@@ -46,11 +48,11 @@ export default function AiResponsePreview({
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-full px-3 py-2 min-h-[44px]"
+        className="flex items-center justify-between w-full px-4 py-2 min-h-[44px]"
       >
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-600" />
-          <span className="text-sm font-medium text-purple-700">Réponse IA</span>
+          <span className="text-sm font-medium text-purple-700">{t('booking.ai_response')}</span>
         </div>
         {isExpanded ? (
           <ChevronUp className="w-4 h-4 text-purple-500" />
@@ -61,7 +63,7 @@ export default function AiResponsePreview({
 
       {/* Content */}
       {isExpanded && (
-        <div className="px-3 pb-3 border-t border-purple-200">
+        <div className="px-4 pb-3 border-t border-purple-200">
           {/* Response text */}
           <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
             {content}
@@ -72,22 +74,22 @@ export default function AiResponsePreview({
             <div className="flex items-center gap-3 text-xs text-purple-500">
               <span>{model}</span>
               {tokensUsed && <span>{tokensUsed} tokens</span>}
-              <span>{generatedAt.toLocaleDateString('fr-FR')}</span>
+              <span>{generatedAt.toLocaleDateString()}</span>
               {source && <span>{source}</span>}
             </div>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 min-h-[36px] text-xs font-medium text-purple-600 bg-purple-100 rounded-lg hover:bg-purple-200 transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 min-h-[44px] text-xs font-medium text-purple-600 bg-purple-100 rounded-lg hover:bg-purple-200 transition-colors"
             >
               {copied ? (
                 <>
                   <Check className="w-3.5 h-3.5" />
-                  Copié
+                  {t('booking.copied')}
                 </>
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5" />
-                  Copier
+                  {t('booking.copy')}
                 </>
               )}
             </button>

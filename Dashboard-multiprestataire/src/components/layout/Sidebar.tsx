@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, Inbox, X, Download, Share, Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useInstallPWA, useBookingRequests } from '../../hooks';
 import { Button } from '../ui';
 
@@ -12,16 +13,17 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/requests', icon: Inbox, label: 'Demandes', hasBadge: true },
-  { to: '/team', icon: Users, label: 'Équipe' },
-];
-
 export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const { canInstall, isIOS, isInstalled, install } = useInstallPWA();
   const { pendingCount } = useBookingRequests();
+  const { t } = useTranslation();
   const [showIOSModal, setShowIOSModal] = useState(false);
+
+  const navItems = [
+    { to: '/', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { to: '/requests', icon: Inbox, label: t('nav.requests'), hasBadge: true },
+    { to: '/team', icon: Users, label: t('nav.team') },
+  ];
 
   const showInstallOption = !isInstalled && (canInstall || isIOS);
 
@@ -108,7 +110,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
               className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium bg-primary-50 text-primary-700 hover:bg-primary-100 transition-colors"
             >
               <Download className="w-5 h-5" />
-              Installer l'application
+              {t('pwa.install_app')}
             </button>
           </div>
         )}
@@ -121,7 +123,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Installer SOS Multi
+                  {t('pwa.install_title')}
                 </h3>
                 <button
                   onClick={() => setShowIOSModal(false)}
@@ -132,7 +134,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
               </div>
 
               <p className="text-gray-600 mb-6">
-                Pour installer l'application sur votre iPhone ou iPad :
+                {t('pwa.ios_instructions')}
               </p>
 
               <div className="space-y-4">
@@ -142,11 +144,11 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">
-                      Appuyez sur le bouton Partager
+                      {t('pwa.ios_step1_title')}
                     </p>
                     <div className="flex items-center gap-2 mt-1 text-gray-500">
                       <Share className="w-5 h-5" />
-                      <span className="text-sm">en bas de l'écran</span>
+                      <span className="text-sm">{t('pwa.ios_step1_hint')}</span>
                     </div>
                   </div>
                 </div>
@@ -157,11 +159,11 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">
-                      Sélectionnez "Sur l'écran d'accueil"
+                      {t('pwa.ios_step2_title')}
                     </p>
                     <div className="flex items-center gap-2 mt-1 text-gray-500">
                       <Plus className="w-5 h-5" />
-                      <span className="text-sm">dans le menu</span>
+                      <span className="text-sm">{t('pwa.ios_step2_hint')}</span>
                     </div>
                   </div>
                 </div>
@@ -172,10 +174,10 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">
-                      Appuyez sur "Ajouter"
+                      {t('pwa.ios_step3_title')}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      L'app sera ajoutée à votre écran d'accueil
+                      {t('pwa.ios_step3_hint')}
                     </p>
                   </div>
                 </div>
@@ -188,7 +190,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                 className="w-full"
                 onClick={() => setShowIOSModal(false)}
               >
-                J'ai compris
+                {t('pwa.understood')}
               </Button>
             </div>
           </div>

@@ -3,6 +3,7 @@
  */
 import { useState, type FormEvent } from 'react';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => Promise<void>;
@@ -15,18 +16,19 @@ export default function LoginForm({ onSubmit, error, isLoading }: LoginFormProps
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLocalError(null);
 
     if (!email.trim()) {
-      setLocalError('Veuillez entrer votre email');
+      setLocalError(t('login.error_email'));
       return;
     }
 
     if (!password) {
-      setLocalError('Veuillez entrer votre mot de passe');
+      setLocalError(t('login.error_password'));
       return;
     }
 
@@ -50,7 +52,7 @@ export default function LoginForm({ onSubmit, error, isLoading }: LoginFormProps
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email
+          {t('login.email_label')}
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -61,7 +63,7 @@ export default function LoginForm({ onSubmit, error, isLoading }: LoginFormProps
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="votre@email.com"
+            placeholder={t('login.email_placeholder')}
             className="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
             disabled={isLoading}
             autoComplete="email"
@@ -71,7 +73,7 @@ export default function LoginForm({ onSubmit, error, isLoading }: LoginFormProps
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-          Mot de passe
+          {t('login.password_label')}
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -82,7 +84,7 @@ export default function LoginForm({ onSubmit, error, isLoading }: LoginFormProps
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Votre mot de passe"
+            placeholder={t('login.password_placeholder')}
             className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
             disabled={isLoading}
             autoComplete="current-password"
@@ -106,10 +108,10 @@ export default function LoginForm({ onSubmit, error, isLoading }: LoginFormProps
         {isLoading ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            Connexion...
+            {t('login.loading')}
           </>
         ) : (
-          'Se connecter'
+          t('login.submit')
         )}
       </button>
     </form>

@@ -14,9 +14,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
+import { useTranslation } from 'react-i18next';
 import {
-  SERVICE_TYPE_LABELS,
-  BOOKING_STATUS_LABELS,
   FIVE_MINUTES,
   type BookingRequest,
 } from '../../types';
@@ -38,26 +37,14 @@ const STATUS_COLORS: Record<BookingRequest['status'], { bg: string; text: string
   cancelled: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
 };
 
-/** Format relative time in French */
-function formatRelativeTime(date: Date): string {
-  const diff = Date.now() - date.getTime();
-  const minutes = Math.floor(diff / 60_000);
-  const hours = Math.floor(diff / 3_600_000);
-  const days = Math.floor(diff / 86_400_000);
-
-  if (minutes < 1) return "À l'instant";
-  if (minutes < 60) return `Il y a ${minutes}min`;
-  if (hours < 24) return `Il y a ${hours}h`;
-  if (days < 7) return `Il y a ${days}j`;
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-}
-
 export default function BookingRequestCard({ booking, isNew, onDelete }: BookingRequestCardProps) {
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [isSsoLoading, setIsSsoLoading] = useState(false);
+  const { t } = useTranslation();
   const statusColor = STATUS_COLORS[booking.status];
   const isHistory = booking.status === 'completed' || booking.status === 'cancelled';
-  const serviceLabel = SERVICE_TYPE_LABELS[booking.serviceType] || booking.serviceType;
+  const serviceLabel = t(`service.${booking.serviceType}`, { defaultValue: booking.serviceType });
+  const statusLabel = t(`status.${booking.status}`);
 
   const showNewBadge = isNew || (booking.status === 'pending' && Date.now() - booking.createdAt.getTime() < FIVE_MINUTES);
 
@@ -65,6 +52,20 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
   const displayDescription = isDescExpanded
     ? booking.description
     : booking.description.slice(0, 150) + (descriptionTruncated ? '...' : '');
+
+  /** Format relative time */
+  function formatRelativeTime(date: Date): string {
+    const diff = Date.now() - date.getTime();
+    const minutes = Math.floor(diff / 60_000);
+    const hours = Math.floor(diff / 3_600_000);
+    const days = Math.floor(diff / 86_400_000);
+
+    if (minutes < 1) return t('booking.time_now');
+    if (minutes < 60) return t('booking.time_minutes', { count: minutes });
+    if (hours < 24) return t('booking.time_hours', { count: hours });
+    if (days < 7) return t('booking.time_days', { count: days });
+    return date.toLocaleDateString();
+  }
 
   const handleRespond = async () => {
     // Open window BEFORE async to avoid popup blockers on mobile
@@ -74,7 +75,7 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) {
-        toast.error('Session expirée. Reconnectez-vous.');
+        toast.error(t('booking.session_expired'));
         newWindow?.close();
         return;
       }
@@ -101,13 +102,13 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
         }
       } else {
         newWindow?.close();
-        toast.error(result.data.error || 'Erreur SSO');
+        toast.error(result.data.error || t('booking.sso_error'));
       }
     } catch (err) {
       console.error('SSO error:', err);
       newWindow?.close();
       // Fallback: open ia.sos-expat.com without SSO
-      toast.error('Connexion auto impossible. Ouverture manuelle...');
+      toast.error(t('booking.sso_fallback'));
       window.open('https://ia.sos-expat.com', '_blank', 'noopener');
     } finally {
       setIsSsoLoading(false);
@@ -116,7 +117,7 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-sm border p-3 sm:p-4 transition-all ${
+      className={`bg-white rounded-xl shadow-sm border p-4 sm:p-5 transition-all ${
         showNewBadge
           ? 'border-green-300 ring-1 ring-green-200'
           : 'border-gray-100'
@@ -124,7 +125,7 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
     >
       {/* Top row: client info + status + time */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-start gap-2.5 min-w-0">
+        <div className="flex items-start gap-3 min-w-0">
           {/* Avatar */}
           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
             <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
@@ -138,7 +139,7 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
               </span>
               {showNewBadge && (
                 <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-green-500 text-white rounded-full animate-pulse">
-                  Nouveau
+                  {t('booking.new_badge')}
                 </span>
               )}
             </div>
@@ -167,9 +168,9 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
             className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-full ${statusColor.bg} ${statusColor.text}`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${statusColor.dot}`} />
-            {BOOKING_STATUS_LABELS[booking.status]}
+            {statusLabel}
           </span>
-          <span className="text-[11px] text-gray-400">
+          <span className="text-xs text-gray-400">
             {formatRelativeTime(booking.createdAt)}
           </span>
         </div>
@@ -195,12 +196,12 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
         {descriptionTruncated && (
           <button
             onClick={() => setIsDescExpanded(!isDescExpanded)}
-            className="flex items-center gap-1 mt-1 text-xs text-primary-600 hover:text-primary-700 min-h-[36px]"
+            className="flex items-center gap-1 mt-1 text-xs text-primary-600 hover:text-primary-700 min-h-[44px]"
           >
             {isDescExpanded ? (
-              <>Voir moins <ChevronUp className="w-3 h-3" /></>
+              <>{t('booking.see_less')} <ChevronUp className="w-3 h-3" /></>
             ) : (
-              <>Voir plus <ChevronDown className="w-3 h-3" /></>
+              <>{t('booking.see_more')} <ChevronDown className="w-3 h-3" /></>
             )}
           </button>
         )}
@@ -227,9 +228,9 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
             className="flex items-center justify-center gap-2 flex-1 py-2.5 min-h-[44px] text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {isSsoLoading ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Connexion...</>
+              <><Loader2 className="w-4 h-4 animate-spin" /> {t('booking.connecting')}</>
             ) : (
-              <><ExternalLink className="w-4 h-4" /> Répondre</>
+              <><ExternalLink className="w-4 h-4" /> {t('booking.respond')}</>
             )}
           </button>
         )}
@@ -239,7 +240,7 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
             className="flex items-center justify-center gap-2 flex-1 py-2.5 min-h-[44px] text-sm font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 active:scale-[0.98] transition-all"
           >
             <Trash2 className="w-4 h-4" />
-            Supprimer
+            {t('booking.delete')}
           </button>
         )}
       </div>

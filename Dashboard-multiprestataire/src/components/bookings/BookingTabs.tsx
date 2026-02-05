@@ -1,9 +1,10 @@
 /**
  * Booking Tabs Component
- * Two tabs: "À traiter" (pending) and "Historique" (completed/cancelled)
+ * Two tabs: pending and history
  */
 import { useState } from 'react';
 import { Inbox, History, Bell } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { BookingRequest } from '../../types';
 import BookingRequestCard from './BookingRequestCard';
 
@@ -25,12 +26,13 @@ export default function BookingTabs({
   onDelete,
 }: BookingTabsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('pending');
+  const { t } = useTranslation();
 
   const pendingCount = newBookings.length + activeBookings.length;
 
   const tabs: { id: Tab; label: string; icon: typeof Inbox; count?: number }[] = [
-    { id: 'pending', label: 'À traiter', icon: Inbox, count: pendingCount },
-    { id: 'history', label: 'Historique', icon: History, count: historyBookings.length },
+    { id: 'pending', label: t('requests.tab_pending'), icon: Inbox, count: pendingCount },
+    { id: 'history', label: t('requests.tab_history'), icon: History, count: historyBookings.length },
   ];
 
   return (
@@ -41,7 +43,7 @@ export default function BookingTabs({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center justify-center gap-2 flex-1 py-3 min-h-[48px] text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center justify-center gap-2 flex-1 py-3 min-h-[48px] text-xs sm:text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab.id
                 ? 'border-primary-600 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -73,10 +75,10 @@ export default function BookingTabs({
               <div className="flex items-center gap-2 mb-3">
                 <Bell className="w-4 h-4 text-green-600" />
                 <h3 className="text-sm font-semibold text-green-700 uppercase tracking-wide">
-                  Nouvelles demandes
+                  {t('requests.new_requests_section')}
                 </h3>
               </div>
-              <div className="space-y-3 p-3 bg-green-50/50 border border-green-200 rounded-xl">
+              <div className="space-y-2 sm:space-y-3 p-3 bg-green-50/50 border border-green-200 rounded-xl">
                 {newBookings.map((booking) => (
                   <BookingRequestCard key={booking.id} booking={booking} isNew />
                 ))}
@@ -86,10 +88,10 @@ export default function BookingTabs({
 
           {/* Active requests */}
           {activeBookings.length > 0 && (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {newBookings.length > 0 && (
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                  En cours de traitement
+                  {t('requests.in_progress_section')}
                 </h3>
               )}
               {activeBookings.map((booking) => (
@@ -102,9 +104,9 @@ export default function BookingTabs({
           {pendingCount === 0 && !isLoading && (
             <div className="text-center py-12">
               <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">Aucune demande à traiter</p>
+              <p className="text-gray-500 font-medium">{t('requests.empty_pending')}</p>
               <p className="text-sm text-gray-400 mt-1">
-                Les nouvelles demandes apparaîtront ici en temps réel
+                {t('requests.empty_pending_hint')}
               </p>
             </div>
           )}
@@ -114,7 +116,7 @@ export default function BookingTabs({
       {activeTab === 'history' && (
         <div>
           {historyBookings.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {historyBookings.map((booking) => (
                 <BookingRequestCard key={booking.id} booking={booking} onDelete={onDelete} />
               ))}
@@ -122,9 +124,9 @@ export default function BookingTabs({
           ) : (
             <div className="text-center py-12">
               <History className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">Aucun historique</p>
+              <p className="text-gray-500 font-medium">{t('requests.empty_history')}</p>
               <p className="text-sm text-gray-400 mt-1">
-                Les demandes terminées ou annulées apparaîtront ici
+                {t('requests.empty_history_hint')}
               </p>
             </div>
           )}

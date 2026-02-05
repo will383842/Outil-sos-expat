@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import type { ProviderMonthlyStats } from '../../types';
 
 interface CallsChartProps {
@@ -19,6 +20,7 @@ interface CallsChartProps {
 }
 
 export default function CallsChart({ stats }: CallsChartProps) {
+  const { t } = useTranslation();
   // Prepare data - sort by total calls descending
   const data = stats
     .map((s) => ({
@@ -33,9 +35,9 @@ export default function CallsChart({ stats }: CallsChartProps) {
   if (data.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Appels</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">{t('calls_chart.title')}</h3>
         <div className="h-64 flex items-center justify-center">
-          <p className="text-gray-500">Aucune donnée disponible</p>
+          <p className="text-gray-500">{t('common.no_data')}</p>
         </div>
       </div>
     );
@@ -43,7 +45,7 @@ export default function CallsChart({ stats }: CallsChartProps) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <h3 className="font-semibold text-gray-900 mb-4">Appels par prestataire</h3>
+      <h3 className="font-semibold text-gray-900 mb-4">{t('calls_chart.per_provider')}</h3>
 
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
@@ -57,7 +59,7 @@ export default function CallsChart({ stats }: CallsChartProps) {
             <Tooltip
               formatter={(value: number, name: string) => [
                 value,
-                name === 'answered' ? 'Répondus' : 'Manqués',
+                name === 'answered' ? t('calls_chart.answered') : t('calls_chart.missed'),
               ]}
               labelFormatter={(label) =>
                 data.find((d) => d.name === label)?.fullName || label
@@ -65,7 +67,7 @@ export default function CallsChart({ stats }: CallsChartProps) {
             />
             <Legend
               formatter={(value) =>
-                value === 'answered' ? 'Répondus' : 'Manqués'
+                value === 'answered' ? t('calls_chart.answered') : t('calls_chart.missed')
               }
             />
             <Bar
@@ -90,19 +92,19 @@ export default function CallsChart({ stats }: CallsChartProps) {
           <p className="text-lg font-semibold text-gray-900">
             {data.reduce((sum, d) => sum + d.total, 0)}
           </p>
-          <p className="text-xs text-gray-500">Total appels</p>
+          <p className="text-xs text-gray-500">{t('calls_chart.total')}</p>
         </div>
         <div>
           <p className="text-lg font-semibold text-green-600">
             {data.reduce((sum, d) => sum + d.answered, 0)}
           </p>
-          <p className="text-xs text-gray-500">Répondus</p>
+          <p className="text-xs text-gray-500">{t('calls_chart.answered')}</p>
         </div>
         <div>
           <p className="text-lg font-semibold text-red-600">
             {data.reduce((sum, d) => sum + d.missed, 0)}
           </p>
-          <p className="text-xs text-gray-500">Manqués</p>
+          <p className="text-xs text-gray-500">{t('calls_chart.missed')}</p>
         </div>
       </div>
     </div>

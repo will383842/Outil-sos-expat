@@ -10,6 +10,7 @@ import {
   Legend,
   Tooltip,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import type { AgencyStats } from '../../types';
 
 interface ComplianceChartProps {
@@ -19,18 +20,19 @@ interface ComplianceChartProps {
 const COLORS = ['#22c55e', '#ef4444'];
 
 export default function ComplianceChart({ stats }: ComplianceChartProps) {
+  const { t } = useTranslation();
   const data = [
-    { name: 'Conformes', value: stats.compliantProviders },
-    { name: 'Non conformes', value: stats.nonCompliantProviders },
+    { name: t('compliance_chart.compliant'), value: stats.compliantProviders },
+    { name: t('compliance_chart.non_compliant'), value: stats.nonCompliantProviders },
   ];
 
   // Handle empty state
   if (stats.totalProviders === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Taux de conformité</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">{t('compliance_chart.title')}</h3>
         <div className="h-64 flex items-center justify-center">
-          <p className="text-gray-500">Aucune donnée disponible</p>
+          <p className="text-gray-500">{t('common.no_data')}</p>
         </div>
       </div>
     );
@@ -38,7 +40,7 @@ export default function ComplianceChart({ stats }: ComplianceChartProps) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <h3 className="font-semibold text-gray-900 mb-4">Taux de conformité</h3>
+      <h3 className="font-semibold text-gray-900 mb-4">{t('compliance_chart.title')}</h3>
 
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
@@ -63,7 +65,7 @@ export default function ComplianceChart({ stats }: ComplianceChartProps) {
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number) => [value, 'Prestataires']}
+              formatter={(value: number) => [value, t('compliance_chart.providers')]}
             />
             <Legend />
           </PieChart>
@@ -75,7 +77,7 @@ export default function ComplianceChart({ stats }: ComplianceChartProps) {
         <p className="text-3xl font-bold text-gray-900">
           {stats.complianceRate.toFixed(0)}%
         </p>
-        <p className="text-sm text-gray-500">de conformité globale</p>
+        <p className="text-sm text-gray-500">{t('compliance_chart.global_rate')}</p>
       </div>
     </div>
   );

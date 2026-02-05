@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import type { ProviderMonthlyStats } from '../../types';
 import { PROVIDER_STATS_CONFIG } from '../../types';
 
@@ -20,6 +21,7 @@ interface HoursChartProps {
 }
 
 export default function HoursChart({ stats }: HoursChartProps) {
+  const { t } = useTranslation();
   // Prepare data - sort by hours descending
   const data = stats
     .map((s) => ({
@@ -34,9 +36,9 @@ export default function HoursChart({ stats }: HoursChartProps) {
   if (data.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Heures en ligne</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">{t('hours_chart.title')}</h3>
         <div className="h-64 flex items-center justify-center">
-          <p className="text-gray-500">Aucune donnée disponible</p>
+          <p className="text-gray-500">{t('common.no_data')}</p>
         </div>
       </div>
     );
@@ -44,7 +46,7 @@ export default function HoursChart({ stats }: HoursChartProps) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <h3 className="font-semibold text-gray-900 mb-4">Heures en ligne</h3>
+      <h3 className="font-semibold text-gray-900 mb-4">{t('hours_chart.title')}</h3>
 
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
@@ -57,7 +59,7 @@ export default function HoursChart({ stats }: HoursChartProps) {
             <XAxis type="number" unit="h" />
             <YAxis dataKey="name" type="category" width={60} />
             <Tooltip
-              formatter={(value: number) => [`${value}h`, 'Heures']}
+              formatter={(value: number) => [`${value}h`, t('hours_chart.hours')]}
               labelFormatter={(label) =>
                 data.find((d) => d.name === label)?.fullName || label
               }
@@ -66,7 +68,7 @@ export default function HoursChart({ stats }: HoursChartProps) {
               x={PROVIDER_STATS_CONFIG.HOURS_ONLINE_TARGET}
               stroke="#ef4444"
               strokeDasharray="3 3"
-              label={{ value: 'Objectif', position: 'top' }}
+              label={{ value: t('hours_chart.target'), position: 'top' }}
             />
             <Bar
               dataKey="hours"
@@ -84,12 +86,12 @@ export default function HoursChart({ stats }: HoursChartProps) {
       <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-center gap-6 text-sm">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-primary-600 rounded" />
-          <span className="text-gray-600">Heures en ligne</span>
+          <span className="text-gray-600">{t('hours_chart.hours_online')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-0.5 bg-red-500" style={{ width: 12 }} />
           <span className="text-gray-600">
-            Objectif ({PROVIDER_STATS_CONFIG.HOURS_ONLINE_TARGET}h)
+            {t('hours_chart.target')} ({PROVIDER_STATS_CONFIG.HOURS_ONLINE_TARGET}h)
           </span>
         </div>
       </div>

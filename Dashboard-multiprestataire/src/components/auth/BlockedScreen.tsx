@@ -2,6 +2,7 @@
  * Blocked Screen Component
  * Shown when user account is blocked or doesn't have access
  */
+import { useTranslation } from 'react-i18next';
 import { ShieldX, Mail } from 'lucide-react';
 
 interface BlockedScreenProps {
@@ -11,10 +12,14 @@ interface BlockedScreenProps {
 }
 
 export default function BlockedScreen({
-  title = 'Accès bloqué',
-  message = 'Votre compte a été suspendu ou n\'a pas accès à cette application.',
+  title,
+  message,
   email,
 }: BlockedScreenProps) {
+  const { t } = useTranslation();
+  const displayTitle = title ?? t('blocked.title');
+  const displayMessage = message ?? t('blocked.default_message');
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 safe-top">
       <div className="max-w-md w-full text-center">
@@ -22,12 +27,12 @@ export default function BlockedScreen({
           <ShieldX className="w-8 h-8 text-red-600" />
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
-        <p className="text-gray-600 mb-6">{message}</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">{displayTitle}</h1>
+        <p className="text-gray-600 mb-6">{displayMessage}</p>
 
         {email && (
           <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-            <p className="text-sm text-gray-500 mb-1">Compte connecté</p>
+            <p className="text-sm text-gray-500 mb-1">{t('blocked.connected_account')}</p>
             <p className="font-medium text-gray-900">{email}</p>
           </div>
         )}
@@ -38,14 +43,14 @@ export default function BlockedScreen({
             className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
           >
             <Mail className="w-5 h-5" />
-            Contacter le support
+            {t('blocked.contact_support')}
           </a>
 
           <button
             onClick={() => window.location.href = '/login'}
             className="w-full px-4 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
           >
-            Changer de compte
+            {t('blocked.change_account')}
           </button>
         </div>
       </div>

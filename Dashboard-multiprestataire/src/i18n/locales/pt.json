@@ -1,24 +1,30 @@
 {
   "nav": {
-    "home": "Início",
+    "home": "Inicio",
     "requests": "Pedidos",
     "team": "Equipa",
-    "dashboard": "Painel"
+    "dashboard": "Painel",
+    "stats": "Estatisticas",
+    "billing": "Faturacao"
   },
   "header": {
     "dashboard_title": "Painel",
-    "dashboard_subtitle": "Visão geral da sua equipa",
+    "dashboard_subtitle": "Visao geral da sua equipa",
     "requests_title": "Pedidos",
     "requests_subtitle": "Gerencie os pedidos dos seus clientes",
-    "team_title": "Gestão da equipa",
+    "team_title": "Gestao da equipa",
     "team_subtitle": "Gerencie os seus prestadores",
-    "logout": "Terminar sessão",
+    "stats_title": "Estatisticas",
+    "stats_subtitle": "Desempenho da sua equipa",
+    "billing_title": "Faturacao",
+    "billing_subtitle": "Gerencie a sua assinatura",
+    "logout": "Terminar sessao",
     "user_default": "Utilizador"
   },
   "login": {
     "title": "Dashboard Multi",
-    "subtitle": "Gestão da sua equipa SOS Expats",
-    "heading": "Iniciar sessão",
+    "subtitle": "Gestao da sua equipa SOS Expats",
+    "heading": "Iniciar sessao",
     "email_label": "Email",
     "email_placeholder": "seu@email.com",
     "password_label": "Palavra-passe",
@@ -30,7 +36,7 @@
     "error_password": "Por favor, introduza a sua palavra-passe"
   },
   "dashboard": {
-    "greeting": "Olá, {{name}}",
+    "greeting": "Ola, {{name}}",
     "requests_to_process": "Pedidos a tratar",
     "new_count_one": "{{count}} novo",
     "new_count_other": "{{count}} novos",
@@ -46,17 +52,17 @@
   "requests": {
     "new_label": "Novos",
     "to_process": "A tratar",
-    "history": "Histórico",
+    "history": "Historico",
     "error_loading": "Erro ao carregar os pedidos",
-    "error_retry": "Verifique a sua ligação e tente novamente",
+    "error_retry": "Verifique a sua ligacao e tente novamente",
     "tab_pending": "A tratar",
-    "tab_history": "Histórico",
+    "tab_history": "Historico",
     "new_requests_section": "Novos pedidos",
     "in_progress_section": "Em processamento",
     "empty_pending": "Sem pedidos a tratar",
-    "empty_pending_hint": "Os novos pedidos aparecerão aqui em tempo real",
-    "empty_history": "Sem histórico",
-    "empty_history_hint": "Os pedidos concluídos ou cancelados aparecerão aqui"
+    "empty_pending_hint": "Os novos pedidos aparecerao aqui em tempo real",
+    "empty_history": "Sem historico",
+    "empty_history_hint": "Os pedidos concluidos ou cancelados aparecerao aqui"
   },
   "booking": {
     "new_badge": "Novo",
@@ -69,34 +75,34 @@
     "copied": "Copiado",
     "copy": "Copiar",
     "client_unknown": "Cliente desconhecido",
-    "session_expired": "Sessão expirada. Inicie sessão novamente.",
+    "session_expired": "Sessao expirada. Inicie sessao novamente.",
     "sso_error": "Erro SSO",
-    "sso_fallback": "Ligação automática falhou. A abrir manualmente...",
+    "sso_fallback": "Ligacao automatica falhou. A abrir manualmente...",
     "time_now": "Agora mesmo",
-    "time_minutes": "Há {{count}}min",
-    "time_hours": "Há {{count}}h",
-    "time_days": "Há {{count}}d",
+    "time_minutes": "Ha {{count}}min",
+    "time_hours": "Ha {{count}}h",
+    "time_days": "Ha {{count}}d",
     "ai_error_label": "Erro IA"
   },
   "status": {
     "pending": "Pendente",
     "confirmed": "Confirmado",
     "in_progress": "Em curso",
-    "completed": "Concluído",
+    "completed": "Concluido",
     "cancelled": "Cancelado"
   },
   "service": {
-    "immigration": "Imigração",
-    "legal": "Jurídico",
+    "immigration": "Imigracao",
+    "legal": "Juridico",
     "tax": "Fiscal",
-    "housing": "Habitação",
-    "health": "Saúde",
-    "education": "Educação",
+    "housing": "Habitacao",
+    "health": "Saude",
+    "education": "Educacao",
     "employment": "Emprego",
     "banking": "Banca",
     "insurance": "Seguros",
-    "relocation": "Relocação",
-    "translation": "Tradução",
+    "relocation": "Relocacao",
+    "translation": "Traducao",
     "other": "Outro"
   },
   "team": {
@@ -106,7 +112,7 @@
     "online": "Online",
     "active": "Ativos",
     "no_providers": "Sem prestadores",
-    "no_providers_hint": "A sua equipa ainda não tem prestadores atribuídos.",
+    "no_providers_hint": "A sua equipa ainda nao tem prestadores atribuidos.",
     "calls": "Chamadas",
     "hours_online": "Online",
     "rating": "Nota",
@@ -115,35 +121,173 @@
     "inactive": "Inativo"
   },
   "activity": {
-    "is_online": "está online",
+    "is_online": "esta online",
     "disconnected": "desconectou-se",
     "time_now": "Agora mesmo",
-    "time_minutes": "Há {{count}} min",
-    "time_hours": "Há {{count}}h",
-    "time_days": "Há {{count}}d"
+    "time_minutes": "Ha {{count}} min",
+    "time_hours": "Ha {{count}}h",
+    "time_days": "Ha {{count}}d"
   },
   "pwa": {
     "install": "Instalar",
-    "install_app": "Instalar a aplicação",
+    "install_app": "Instalar a aplicacao",
     "install_title": "Instalar SOS Multi",
-    "ios_instructions": "Para instalar a aplicação no seu iPhone ou iPad:",
-    "ios_step1_title": "Toque no botão Partilhar",
-    "ios_step1_hint": "na parte inferior do ecrã",
-    "ios_step2_title": "Selecione \"Ecrã principal\"",
+    "quick_access": "Acesso rapido a partir do seu ecra principal",
+    "how_to": "Como fazer?",
+    "later": "Mais tarde",
+    "ios_instructions": "Para instalar a aplicacao no seu iPhone ou iPad:",
+    "ios_step1_title": "Toque no botao Partilhar",
+    "ios_step1_hint": "na parte inferior do ecra",
+    "ios_step2_title": "Selecione \"Ecra principal\"",
     "ios_step2_hint": "no menu",
     "ios_step3_title": "Toque em \"Adicionar\"",
-    "ios_step3_hint": "A app será adicionada ao seu ecrã principal",
+    "ios_step3_hint": "A app sera adicionada ao seu ecra principal",
     "understood": "Percebi"
   },
   "notfound": {
-    "title": "Página não encontrada",
-    "message": "A página que procura não existe ou foi movida.",
+    "title": "Pagina nao encontrada",
+    "message": "A pagina que procura nao existe ou foi movida.",
     "back": "Voltar",
-    "home": "Início"
+    "home": "Inicio"
   },
   "common": {
-    "logout_success": "Sessão terminada com sucesso",
-    "logout_error": "Erro ao terminar sessão",
-    "notification_title": "Novo pedido SOS-Expat!"
+    "logout_success": "Sessao terminada com sucesso",
+    "logout_error": "Erro ao terminar sessao",
+    "notification_title": "Novo pedido SOS-Expat!",
+    "loading": "A carregar...",
+    "no_data": "Nenhum dado disponivel",
+    "yes": "Sim",
+    "no": "Nao",
+    "close": "Fechar",
+    "modify": "Modificar",
+    "view": "Ver",
+    "contact_support": "Contactar suporte"
+  },
+  "status_badge": {
+    "available": "Disponivel",
+    "busy": "Ocupado",
+    "offline": "Offline",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "compliant": "Conforme",
+    "non_compliant": "Nao conforme",
+    "online_title": "Online",
+    "offline_title": "Offline"
+  },
+  "provider_list": {
+    "search_placeholder": "Pesquisar um prestador...",
+    "all_statuses": "Todos os estados",
+    "result_count_one": "{{count}} prestador",
+    "result_count_other": "{{count}} prestadores",
+    "filtered": "(filtrado)",
+    "no_results": "Nenhum prestador encontrado",
+    "th_provider": "Prestador",
+    "th_type": "Tipo",
+    "th_status": "Estado",
+    "th_calls": "Chamadas",
+    "th_hours": "Horas",
+    "th_actions": "Acoes"
+  },
+  "add_provider": {
+    "title": "Adicionar um prestador",
+    "heading": "Gestao de prestadores",
+    "description": "A adicao e gestao de prestadores e feita atraves do portal SOS Expats Admin. Contacte o administrador para adicionar novos membros a sua equipa.",
+    "how_to_title": "Para adicionar um prestador:",
+    "step1": "Contacte o administrador SOS Expats",
+    "step2": "Forneca as informacoes do novo prestador",
+    "step3": "Uma vez adicionado, aparecera automaticamente na sua equipa"
+  },
+  "error_boundary": {
+    "title": "Ocorreu um erro",
+    "description": "A aplicacao encontrou um problema inesperado. Por favor, atualize a pagina.",
+    "back_home": "Voltar ao inicio"
+  },
+  "blocked": {
+    "title": "Acesso bloqueado",
+    "default_message": "A sua conta foi suspensa ou nao tem acesso a esta aplicacao.",
+    "connected_account": "Conta conectada",
+    "contact_support": "Contactar suporte",
+    "change_account": "Mudar de conta"
+  },
+  "stats": {
+    "export_csv": "Exportar CSV",
+    "no_data_title": "Sem dados para {{month}}",
+    "no_data_hint": "As estatisticas estarao disponiveis assim que os seus prestadores estiverem ativos.",
+    "providers": "Prestadores",
+    "total_hours": "Horas totais",
+    "calls_received": "Chamadas recebidas",
+    "avg_duration": "Duracao media",
+    "details_title": "Detalhes por prestador",
+    "th_provider": "Prestador",
+    "th_hours": "Horas",
+    "th_calls": "Chamadas",
+    "th_missed": "Perdidas",
+    "th_compliance": "Conformidade",
+    "csv_no_data": "Nenhum dado para exportar",
+    "csv_downloaded": "Exportacao CSV descarregada",
+    "csv_provider": "Prestador",
+    "csv_email": "Email",
+    "csv_hours_online": "Horas online",
+    "csv_hours_target": "Objetivo horas",
+    "csv_hours_compliant": "Horas conforme",
+    "csv_calls_received": "Chamadas recebidas",
+    "csv_calls_missed": "Chamadas perdidas",
+    "csv_missed_target": "Objetivo max. perdidas",
+    "csv_missed_compliant": "Perdidas conforme",
+    "csv_compliant_global": "Conforme global"
+  },
+  "billing": {
+    "payment_method": "Metodo de pagamento",
+    "expires": "Expira",
+    "modify_payment_toast": "Contacte o suporte para modificar o seu metodo de pagamento",
+    "invoice_history": "Historico de faturas",
+    "help_title": "Precisa de ajuda com a faturacao?",
+    "help_description": "A nossa equipa esta disponivel para responder as suas questoes sobre a sua assinatura ou faturas.",
+    "change_plan_toast": "Contacte-nos para mudar de plano"
+  },
+  "invoice": {
+    "paid": "Paga",
+    "pending": "Pendente",
+    "overdue": "Em atraso",
+    "no_invoices": "Nenhuma fatura disponivel",
+    "th_invoice": "Fatura",
+    "th_date": "Data",
+    "th_amount": "Montante",
+    "th_status": "Estado",
+    "th_actions": "Acoes",
+    "download_unavailable": "Download indisponivel"
+  },
+  "plan": {
+    "current": "Plano atual",
+    "up_to_providers": "Ate {{count}} prestadores",
+    "per_month": "mes",
+    "per_year": "ano",
+    "change": "Mudar de plano"
+  },
+  "calls_chart": {
+    "title": "Chamadas",
+    "per_provider": "Chamadas por prestador",
+    "answered": "Atendidas",
+    "missed": "Perdidas",
+    "total": "Total chamadas"
+  },
+  "hours_chart": {
+    "title": "Horas online",
+    "hours": "Horas",
+    "hours_online": "Horas online",
+    "target": "Objetivo"
+  },
+  "compliance_chart": {
+    "title": "Taxa de conformidade",
+    "compliant": "Conformes",
+    "non_compliant": "Nao conformes",
+    "providers": "Prestadores",
+    "global_rate": "de conformidade global"
+  },
+  "auth": {
+    "unauthorized": "Acesso nao autorizado. Esta conta nao tem as permissoes necessarias.",
+    "login_error": "Erro de ligacao",
+    "wrong_credentials": "Email ou palavra-passe incorretos",
+    "loading_providers": "Erro ao carregar os prestadores"
   }
 }

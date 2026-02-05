@@ -4,16 +4,18 @@
  */
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Inbox, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useBookingRequests } from '../../hooks';
-
-const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Accueil' },
-  { to: '/requests', icon: Inbox, label: 'Demandes', hasBadge: true },
-  { to: '/team', icon: Users, label: 'Équipe' },
-];
 
 export default function BottomNav() {
   const { pendingCount } = useBookingRequests();
+  const { t } = useTranslation();
+
+  const navItems = [
+    { to: '/', icon: LayoutDashboard, label: t('nav.home') },
+    { to: '/requests', icon: Inbox, label: t('nav.requests'), hasBadge: true },
+    { to: '/team', icon: Users, label: t('nav.team') },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 lg:hidden safe-bottom">
@@ -34,12 +36,12 @@ export default function BottomNav() {
             <div className="relative">
               <item.icon className="w-5 h-5" />
               {item.hasBadge && pendingCount > 0 && (
-                <span className="absolute -top-1.5 -right-2.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold bg-red-500 text-white rounded-full">
+                <span className="absolute -top-1.5 -right-2.5 inline-flex items-center justify-center min-w-[18px] h-5 px-1 text-[11px] font-bold bg-red-500 text-white rounded-full">
                   {pendingCount}
                 </span>
               )}
             </div>
-            <span className="text-[10px] font-medium">{item.label}</span>
+            <span className="text-xs font-medium">{item.label}</span>
           </NavLink>
         ))}
       </div>

@@ -3,7 +3,9 @@
     "home": "Home",
     "requests": "Requests",
     "team": "Team",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "stats": "Statistics",
+    "billing": "Billing"
   },
   "header": {
     "dashboard_title": "Dashboard",
@@ -12,11 +14,15 @@
     "requests_subtitle": "Manage your clients' requests",
     "team_title": "Team Management",
     "team_subtitle": "Manage your providers",
+    "stats_title": "Statistics",
+    "stats_subtitle": "Your team's performance",
+    "billing_title": "Billing",
+    "billing_subtitle": "Manage your subscription",
     "logout": "Logout",
     "user_default": "User"
   },
   "login": {
-    "title": "Multi Dashboard",
+    "title": "Dashboard Multi",
     "subtitle": "Manage your SOS Expats team",
     "heading": "Login",
     "email_label": "Email",
@@ -126,6 +132,9 @@
     "install": "Install",
     "install_app": "Install the app",
     "install_title": "Install SOS Multi",
+    "quick_access": "Quick access from your home screen",
+    "how_to": "How to do it?",
+    "later": "Later",
     "ios_instructions": "To install the app on your iPhone or iPad:",
     "ios_step1_title": "Tap the Share button",
     "ios_step1_hint": "at the bottom of the screen",
@@ -144,6 +153,141 @@
   "common": {
     "logout_success": "Logged out successfully",
     "logout_error": "Error during logout",
-    "notification_title": "New SOS-Expat request!"
+    "notification_title": "New SOS-Expat request!",
+    "loading": "Loading...",
+    "no_data": "No data available",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "modify": "Edit",
+    "view": "View",
+    "contact_support": "Contact support"
+  },
+  "status_badge": {
+    "available": "Available",
+    "busy": "Busy",
+    "offline": "Offline",
+    "active": "Active",
+    "inactive": "Inactive",
+    "compliant": "Compliant",
+    "non_compliant": "Non-compliant",
+    "online_title": "Online",
+    "offline_title": "Offline"
+  },
+  "provider_list": {
+    "search_placeholder": "Search for a provider...",
+    "all_statuses": "All statuses",
+    "result_count_one": "{{count}} provider",
+    "result_count_other": "{{count}} providers",
+    "filtered": "(filtered)",
+    "no_results": "No providers found",
+    "th_provider": "Provider",
+    "th_type": "Type",
+    "th_status": "Status",
+    "th_calls": "Calls",
+    "th_hours": "Hours",
+    "th_actions": "Actions"
+  },
+  "add_provider": {
+    "title": "Add a provider",
+    "heading": "Provider management",
+    "description": "Adding and managing providers is done through the SOS Expats Admin portal. Contact the administrator to add new members to your team.",
+    "how_to_title": "To add a provider:",
+    "step1": "Contact the SOS Expats administrator",
+    "step2": "Provide the new provider's information",
+    "step3": "Once added, they will automatically appear in your team"
+  },
+  "error_boundary": {
+    "title": "An error occurred",
+    "description": "The application encountered an unexpected problem. Please refresh the page.",
+    "back_home": "Back to home"
+  },
+  "blocked": {
+    "title": "Access blocked",
+    "default_message": "Your account has been suspended or does not have access to this application.",
+    "connected_account": "Connected account",
+    "contact_support": "Contact support",
+    "change_account": "Change account"
+  },
+  "stats": {
+    "export_csv": "Export CSV",
+    "no_data_title": "No data for {{month}}",
+    "no_data_hint": "Statistics will be available once your providers have been active.",
+    "providers": "Providers",
+    "total_hours": "Total hours",
+    "calls_received": "Calls received",
+    "avg_duration": "Avg. duration",
+    "details_title": "Details by provider",
+    "th_provider": "Provider",
+    "th_hours": "Hours",
+    "th_calls": "Calls",
+    "th_missed": "Missed",
+    "th_compliance": "Compliance",
+    "csv_no_data": "No data to export",
+    "csv_downloaded": "CSV export downloaded",
+    "csv_provider": "Provider",
+    "csv_email": "Email",
+    "csv_hours_online": "Hours online",
+    "csv_hours_target": "Hours target",
+    "csv_hours_compliant": "Hours compliant",
+    "csv_calls_received": "Calls received",
+    "csv_calls_missed": "Calls missed",
+    "csv_missed_target": "Max missed target",
+    "csv_missed_compliant": "Missed compliant",
+    "csv_compliant_global": "Overall compliant"
+  },
+  "billing": {
+    "payment_method": "Payment method",
+    "expires": "Expires",
+    "modify_payment_toast": "Contact support to modify your payment method",
+    "invoice_history": "Invoice history",
+    "help_title": "Need help with billing?",
+    "help_description": "Our team is available to answer your questions about your subscription or invoices.",
+    "change_plan_toast": "Contact us to change your plan"
+  },
+  "invoice": {
+    "paid": "Paid",
+    "pending": "Pending",
+    "overdue": "Overdue",
+    "no_invoices": "No invoices available",
+    "th_invoice": "Invoice",
+    "th_date": "Date",
+    "th_amount": "Amount",
+    "th_status": "Status",
+    "th_actions": "Actions",
+    "download_unavailable": "Download unavailable"
+  },
+  "plan": {
+    "current": "Current plan",
+    "up_to_providers": "Up to {{count}} providers",
+    "per_month": "month",
+    "per_year": "year",
+    "change": "Change plan"
+  },
+  "calls_chart": {
+    "title": "Calls",
+    "per_provider": "Calls per provider",
+    "answered": "Answered",
+    "missed": "Missed",
+    "total": "Total calls"
+  },
+  "hours_chart": {
+    "title": "Hours online",
+    "hours": "Hours",
+    "hours_online": "Hours online",
+    "target": "Target"
+  },
+  "compliance_chart": {
+    "title": "Compliance rate",
+    "compliant": "Compliant",
+    "non_compliant": "Non-compliant",
+    "providers": "Providers",
+    "global_rate": "overall compliance"
+  },
+  "auth": {
+    "unauthorized": "Unauthorized access. This account does not have the required permissions.",
+    "login_error": "Login error",
+    "wrong_credentials": "Incorrect email or password",
+    "loading_providers": "Error loading providers"
   }
 }

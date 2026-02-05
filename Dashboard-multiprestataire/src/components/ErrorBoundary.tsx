@@ -4,6 +4,7 @@
  */
 import { Component, type ReactNode, type ErrorInfo } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import i18n from '../i18n/config';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -42,10 +43,10 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
               <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Une erreur est survenue
+              {i18n.t('error_boundary.title')}
             </h1>
             <p className="text-gray-600 mb-6">
-              L'application a rencontré un problème inattendu. Veuillez rafraîchir la page.
+              {i18n.t('error_boundary.description')}
             </p>
             {this.state.error && (
               <div className="bg-gray-100 rounded-lg p-4 mb-6 text-left">
@@ -59,7 +60,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
             >
               <RefreshCw className="w-5 h-5" />
-              Retour à l'accueil
+              {i18n.t('error_boundary.back_home')}
             </button>
           </div>
         </div>
