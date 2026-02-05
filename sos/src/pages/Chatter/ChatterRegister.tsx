@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { useSearchParams } from 'react-router-dom';
@@ -16,9 +17,9 @@ import type { ChatterRegistrationData } from '@/components/Chatter/Forms/Chatter
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Star, ArrowLeft, CheckCircle, Gift } from 'lucide-react';
 
-// Design tokens
+// Design tokens - Harmonized with ChatterLanding dark theme
 const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
+  card: "bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg",
 } as const;
 
 const ChatterRegister: React.FC = () => {
@@ -75,15 +76,15 @@ const ChatterRegister: React.FC = () => {
 
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-b from-red-950 via-gray-950 to-black">
+          <div className="max-w-md w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-8 text-center">
+            <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">⚠️</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h1 className="text-2xl font-bold text-white mb-4">
               <FormattedMessage id="chatter.register.roleConflict.title" defaultMessage="Registration Not Allowed" />
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-400 mb-6">
               <FormattedMessage
                 id="chatter.register.roleConflict.message"
                 defaultMessage="You are already registered as {role}. Each account can only have one role."
@@ -92,7 +93,7 @@ const ChatterRegister: React.FC = () => {
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors"
+              className="w-full px-6 py-3 min-h-[48px] bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold rounded-xl transition-all hover:shadow-lg hover:shadow-amber-500/30"
             >
               <FormattedMessage id="chatter.register.roleConflict.button" defaultMessage="Go to My Dashboard" />
             </button>
@@ -133,7 +134,9 @@ const ChatterRegister: React.FC = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        // Phone is collected later after quiz, not at registration
+        // WhatsApp number (optional, with country code)
+        whatsappNumber: data.whatsappNumber || undefined,
+        whatsappCountryCode: data.whatsappCountryCode || undefined,
         country: data.country,
         interventionCountries: data.interventionCountries, // Required by backend
         language: data.language,
@@ -189,8 +192,8 @@ const ChatterRegister: React.FC = () => {
   if (!authInitialized) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-950 via-gray-950 to-black">
+          <div className="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
         </div>
       </Layout>
     );
@@ -198,12 +201,25 @@ const ChatterRegister: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black py-12 px-4">
-        <div className="max-w-lg mx-auto">
+      <Helmet>
+        <html lang={langCode === 'ch' ? 'zh' : langCode} />
+        <title>{intl.formatMessage({ id: 'chatter.register.seo.title', defaultMessage: 'Chatter Registration | SOS-Expat' })}</title>
+        <meta name="description" content={intl.formatMessage({ id: 'chatter.register.seo.description', defaultMessage: 'Sign up as a Chatter to earn money helping travelers. Free registration.' })} />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#991B1B" />
+      </Helmet>
+
+      <div className="min-h-screen bg-gradient-to-b from-red-950 via-gray-950 to-black py-12 px-4">
+        {/* Radial glow effect matching landing */}
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(251,191,36,0.08),transparent_50%)] pointer-events-none" />
+
+        <div className="max-w-lg mx-auto relative z-10">
           {/* Back Button */}
           <button
             onClick={() => navigate(landingRoute)}
-            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-6"
+            className="flex items-center gap-2 text-gray-400 hover:text-amber-400 transition-colors mb-6 min-h-[44px]"
+            aria-label={intl.formatMessage({ id: 'common.back', defaultMessage: 'Back' })}
           >
             <ArrowLeft className="w-4 h-4" />
             <FormattedMessage id="common.back" defaultMessage="Retour" />
@@ -211,13 +227,13 @@ const ChatterRegister: React.FC = () => {
 
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-              <Star className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-400 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/30">
+              <Star className="w-8 h-8 text-black" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-black text-white mb-2">
               <FormattedMessage id="chatter.register.title" defaultMessage="Inscription Chatter" />
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-400">
               <FormattedMessage id="chatter.register.subtitle" defaultMessage="Rejoignez notre programme ambassadeur" />
             </p>
           </div>
@@ -225,36 +241,36 @@ const ChatterRegister: React.FC = () => {
           {/* Success State */}
           {success ? (
             <div className={`${UI.card} p-8 text-center`}>
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-xl font-bold text-white mb-2">
                 <FormattedMessage id="chatter.register.success.title" defaultMessage="Inscription réussie !" />
               </h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
+              <p className="text-gray-400 mb-4">
                 <FormattedMessage id="chatter.register.success.subtitle" defaultMessage="Vous allez être redirigé vers la présentation..." />
               </p>
-              <div className="w-6 h-6 mx-auto border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 mx-auto border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             /* Registration Form */
             <div className={`${UI.card} p-6`}>
               {/* Referral code banner if present */}
               {referralCodeFromUrl && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <div className="mb-6 p-4 bg-green-500/10 rounded-xl border border-green-500/30">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Gift className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <div className="w-10 h-10 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Gift className="w-5 h-5 text-green-400" />
                     </div>
                     <div>
-                      <p className="font-semibold text-green-800 dark:text-green-300">
+                      <p className="font-semibold text-green-300">
                         <FormattedMessage id="chatter.register.referralDetected" defaultMessage="You've been referred!" />
                       </p>
-                      <p className="text-sm text-green-600 dark:text-green-400">
+                      <p className="text-sm text-green-400">
                         <FormattedMessage
                           id="chatter.register.referralCode.applied"
                           defaultMessage="Referral code {code} will be applied automatically"
-                          values={{ code: <strong>{referralCodeFromUrl}</strong> }}
+                          values={{ code: <strong className="text-green-300">{referralCodeFromUrl}</strong> }}
                         />
                       </p>
                     </div>
@@ -273,13 +289,14 @@ const ChatterRegister: React.FC = () => {
                 loading={loading}
                 error={error}
                 onErrorClear={() => setError(null)}
+                darkMode
               />
             </div>
           )}
 
           {/* Info */}
           {!success && (
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+            <p className="text-center text-sm text-gray-500 mt-6">
               <FormattedMessage
                 id="chatter.register.info"
                 defaultMessage="En vous inscrivant, vous acceptez les conditions du programme Chatter"

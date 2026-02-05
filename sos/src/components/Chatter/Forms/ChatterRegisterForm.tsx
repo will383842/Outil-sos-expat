@@ -1,7 +1,7 @@
 /**
- * ChatterRegisterForm - Mobile-first registration form for chatters
- * Harmonized 2026 UX - NO phone required at registration
- * Phone will be collected after quiz for WhatsApp community
+ * ChatterRegisterForm - Registration form for chatters
+ * Dark theme harmonized with ChatterLanding (amber/yellow + dark gradients)
+ * Includes WhatsApp number with country phone code indicator
  */
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -17,19 +17,12 @@ import {
   Lock,
   Eye,
   EyeOff,
+  Phone,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
 import { languagesData, getLanguageLabel, type SupportedLocale } from '@/data/languages-spoken';
-import {
-  FormInput,
-  FormSection,
-  FormError,
-  FormSuccess,
-  FormButton,
-  formStyles,
-} from '@/components/forms/FormElements';
 import { useAntiBot } from '@/hooks/useAntiBot';
 
 // Get country name based on locale
@@ -50,17 +43,55 @@ const getFlag = (countryCode: string): string => {
   return String.fromCodePoint(...codePoints);
 };
 
+// ============================================================================
+// DARK THEME STYLES (matching ChatterLanding)
+// ============================================================================
+const darkStyles = {
+  input: `
+    w-full px-4 py-3.5
+    bg-white/5 border-2 border-white/10
+    rounded-2xl
+    text-base text-white
+    placeholder:text-gray-500
+    focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:ring-offset-0
+    focus:border-amber-400/50 focus:bg-white/10
+    transition-all duration-200 ease-out
+    disabled:opacity-50 disabled:cursor-not-allowed
+  `,
+  inputError: 'border-red-500/60 focus:ring-red-500/30 bg-red-500/10',
+  inputDefault: '',
+  inputFilled: 'bg-white/8 border-white/20',
+  label: 'block text-sm font-semibold text-gray-300 mb-2',
+  errorText: 'mt-1.5 text-xs text-red-400 flex items-center gap-1',
+  dropdown: `
+    absolute z-50 mt-2 w-full
+    bg-gray-900 border border-white/10
+    rounded-2xl shadow-xl shadow-black/30
+    overflow-hidden
+  `,
+  dropdownItem: `
+    w-full px-4 py-3
+    flex items-center gap-3
+    text-left text-sm text-white
+    hover:bg-white/5
+    transition-colors duration-150
+    cursor-pointer
+  `,
+  dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-white/5 text-white rounded-xl border-0 focus:ring-2 focus:ring-amber-400/30 placeholder:text-gray-500',
+};
+
 export interface ChatterRegistrationData {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;                // Password for Firebase Auth account
+  password: string;
   country: string;
-  interventionCountries?: string[]; // Countries where chatter can operate
-  language: string;                // Primary language
-  additionalLanguages?: string[];  // Additional languages spoken
-  referralCode?: string;           // Auto from URL only - never manual input
-  // ✅ TRACKING CGU - Preuve légale d'acceptation des conditions
+  whatsappNumber: string;
+  whatsappCountryCode: string;
+  interventionCountries?: string[];
+  language: string;
+  additionalLanguages?: string[];
+  referralCode?: string;
   acceptTerms: boolean;
   termsAcceptedAt?: string;
   termsVersion?: string;
@@ -72,7 +103,6 @@ export interface ChatterRegistrationData {
     acceptanceMethod: string;
     ipAddress?: string;
   };
-  // Security metadata for anti-bot validation
   _securityMeta?: {
     formFillTime: number;
     mouseMovements: number;
@@ -89,7 +119,8 @@ interface ChatterRegisterFormProps {
   loading?: boolean;
   error?: string | null;
   success?: boolean;
-  onErrorClear?: () => void; // Called when user modifies form to clear parent error
+  onErrorClear?: () => void;
+  darkMode?: boolean;
 }
 
 const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
@@ -99,38 +130,40 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   error,
   success = false,
   onErrorClear,
+  darkMode = false,
 }) => {
   const intl = useIntl();
   const { language } = useApp();
   const locale = (language || 'en') as SupportedLocale;
 
-  // Referral code comes ONLY from URL (via initialData), never from manual input
   const [formData, setFormData] = useState<ChatterRegistrationData>({
     firstName: initialData?.firstName || '',
     lastName: initialData?.lastName || '',
     email: initialData?.email || '',
     password: '',
     country: initialData?.country || '',
+    whatsappNumber: '',
+    whatsappCountryCode: '',
     language: initialData?.language || locale,
-    referralCode: initialData?.referralCode, // Auto from URL only
+    referralCode: initialData?.referralCode,
     acceptTerms: false,
   });
 
-  // Password visibility toggle
   const [showPassword, setShowPassword] = useState(false);
-
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [languageSearch, setLanguageSearch] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [showPhoneCodeDropdown, setShowPhoneCodeDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
+  const [phoneCodeSearch, setPhoneCodeSearch] = useState('');
   const [antiBotError, setAntiBotError] = useState<string | null>(null);
 
-  // Anti-bot protection
   const { honeypotValue, setHoneypotValue, validateHuman } = useAntiBot();
 
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
+  const phoneCodeDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -143,10 +176,24 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         setShowLanguageDropdown(false);
         setLanguageSearch('');
       }
+      if (phoneCodeDropdownRef.current && !phoneCodeDropdownRef.current.contains(e.target as Node)) {
+        setShowPhoneCodeDropdown(false);
+        setPhoneCodeSearch('');
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Auto-fill WhatsApp country code when country is selected
+  useEffect(() => {
+    if (formData.country && !formData.whatsappCountryCode) {
+      const countryEntry = phoneCodesData.find(e => e.code === formData.country);
+      if (countryEntry) {
+        setFormData(prev => ({ ...prev, whatsappCountryCode: countryEntry.code }));
+      }
+    }
+  }, [formData.country, formData.whatsappCountryCode]);
 
   // Filter countries based on search
   const filteredCountries = useMemo(() => {
@@ -157,6 +204,17 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       entry.code.toLowerCase().includes(search)
     );
   }, [countrySearch, locale]);
+
+  // Filter phone codes based on search
+  const filteredPhoneCodes = useMemo(() => {
+    if (!phoneCodeSearch) return phoneCodesData;
+    const search = phoneCodeSearch.toLowerCase();
+    return phoneCodesData.filter(entry =>
+      getCountryName(entry, locale).toLowerCase().includes(search) ||
+      entry.phoneCode.includes(search) ||
+      entry.code.toLowerCase().includes(search)
+    );
+  }, [phoneCodeSearch, locale]);
 
   // Filter languages based on search
   const filteredLanguages = useMemo(() => {
@@ -169,17 +227,34 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     );
   }, [languageSearch, locale]);
 
-  // Get selected country entry
+  // Get selected entries
   const selectedCountryEntry = useMemo(() =>
     phoneCodesData.find(e => e.code === formData.country),
     [formData.country]
   );
 
+  const selectedPhoneCodeEntry = useMemo(() =>
+    phoneCodesData.find(e => e.code === formData.whatsappCountryCode),
+    [formData.whatsappCountryCode]
+  );
+
+  // Styles helper
+  const s = darkMode ? darkStyles : {
+    input: `w-full px-4 py-3.5 bg-gray-100 dark:bg-gray-800/70 border-2 border-gray-200 dark:border-gray-600/50 rounded-2xl text-base text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-transparent focus:bg-white dark:focus:bg-gray-900 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed`,
+    inputError: 'border-red-400 dark:border-red-500 focus:ring-red-500/30 bg-red-50 dark:bg-red-900/20',
+    inputDefault: 'focus:ring-blue-500/30 dark:focus:ring-blue-400/30',
+    inputFilled: '',
+    label: 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2',
+    errorText: 'mt-1.5 text-xs text-red-500 dark:text-red-400 flex items-center gap-1',
+    dropdown: 'absolute z-50 mt-2 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/30 overflow-hidden',
+    dropdownItem: 'w-full px-4 py-3 flex items-center gap-3 text-left text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 cursor-pointer',
+    dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-xl border-0 focus:ring-2 focus:ring-red-500/30',
+  };
+
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear parent error when user modifies any field
     onErrorClear?.();
     if (validationErrors[name]) {
       setValidationErrors(prev => {
@@ -192,7 +267,12 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
 
   // Select country
   const selectCountry = (entry: PhoneCodeEntry) => {
-    setFormData(prev => ({ ...prev, country: entry.code }));
+    setFormData(prev => ({
+      ...prev,
+      country: entry.code,
+      // Auto-fill WhatsApp country code if not already set or if same as previous country
+      whatsappCountryCode: (!prev.whatsappCountryCode || prev.whatsappCountryCode === prev.country) ? entry.code : prev.whatsappCountryCode,
+    }));
     setShowCountryDropdown(false);
     setCountrySearch('');
     if (validationErrors.country) {
@@ -202,6 +282,13 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         return newErrors;
       });
     }
+  };
+
+  // Select phone code for WhatsApp
+  const selectPhoneCode = (entry: PhoneCodeEntry) => {
+    setFormData(prev => ({ ...prev, whatsappCountryCode: entry.code }));
+    setShowPhoneCodeDropdown(false);
+    setPhoneCodeSearch('');
   };
 
   // Handle primary language change
@@ -216,48 +303,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     }
   };
 
-  // Validate form
-  const validate = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.firstName.trim()) {
-      errors.firstName = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
-    }
-
-    if (!formData.lastName.trim()) {
-      errors.lastName = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
-    }
-
-    if (!formData.email.trim()) {
-      errors.email = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' });
-    }
-
-    // Password validation - minimum 8 characters
-    if (!formData.password) {
-      errors.password = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
-    } else if (formData.password.length < 8) {
-      errors.password = intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Password must be at least 8 characters' });
-    }
-
-    if (!formData.country) {
-      errors.country = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
-    }
-
-    if (!formData.language) {
-      errors.language = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
-    }
-
-    // ✅ Validation CGU obligatoire
-    if (!formData.acceptTerms) {
-      errors.acceptTerms = intl.formatMessage({ id: 'form.error.acceptTermsRequired', defaultMessage: 'You must accept the terms and conditions' });
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
   // Handle terms checkbox change
   const handleTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, acceptTerms: e.target.checked }));
@@ -270,24 +315,56 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     }
   };
 
+  // Validate form
+  const validate = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) {
+      errors.firstName = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    }
+    if (!formData.lastName.trim()) {
+      errors.lastName = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    }
+    if (!formData.email.trim()) {
+      errors.email = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' });
+    }
+    if (!formData.password) {
+      errors.password = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    } else if (formData.password.length < 8) {
+      errors.password = intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Password must be at least 8 characters' });
+    }
+    if (!formData.country) {
+      errors.country = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    }
+    if (!formData.language) {
+      errors.language = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    }
+    if (!formData.acceptTerms) {
+      errors.acceptTerms = intl.formatMessage({ id: 'form.error.acceptTermsRequired', defaultMessage: 'You must accept the terms and conditions' });
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAntiBotError(null);
     if (!validate()) return;
 
-    // Anti-bot validation
     const botCheck = await validateHuman('chatter_register');
     if (!botCheck.isValid) {
       setAntiBotError(botCheck.reason || 'Validation failed. Please try again.');
       return;
     }
 
-    // ✅ Ajouter les métadonnées d'acceptation CGU + sécurité
     const dataWithTerms: ChatterRegistrationData = {
       ...formData,
       termsAcceptedAt: new Date().toISOString(),
-      termsVersion: "3.0", // Version actuelle des CGU chatters
+      termsVersion: "3.0",
       termsType: "terms_chatters",
       termsAcceptanceMeta: {
         userAgent: navigator.userAgent,
@@ -295,7 +372,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         timestamp: Date.now(),
         acceptanceMethod: "checkbox_click",
       },
-      // Security metadata for backend analysis
       _securityMeta: botCheck.securityMeta,
     };
 
@@ -305,18 +381,36 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   // Success state
   if (success) {
     return (
-      <FormSuccess
-        title={<FormattedMessage id="chatter.register.success.title" defaultMessage="Registration successful!" />}
-        message={<FormattedMessage id="chatter.register.success.message" defaultMessage="Redirecting to your quiz..." />}
-      />
+      <div className={darkMode ? 'text-center py-12' : ''}>
+        <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center shadow-lg ${darkMode ? 'bg-green-500/20 border border-green-500/30 shadow-green-500/20' : 'bg-gradient-to-br from-green-400 to-green-500 shadow-green-500/30'}`}>
+          <Check className={`w-10 h-10 ${darkMode ? 'text-green-400' : 'text-white'}`} />
+        </div>
+        <h2 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+          <FormattedMessage id="chatter.register.success.title" defaultMessage="Registration successful!" />
+        </h2>
+        <p className={darkMode ? 'text-gray-400' : 'text-gray-500 dark:text-gray-400'}>
+          <FormattedMessage id="chatter.register.success.message" defaultMessage="Redirecting to your quiz..." />
+        </p>
+      </div>
     );
   }
 
+  // Icon color
+  const iconColor = darkMode ? 'text-gray-500' : 'text-gray-400';
+  const accentColor = darkMode ? 'text-amber-400' : 'text-red-500';
+  const selectedBg = darkMode ? 'bg-amber-500/10' : 'bg-red-50 dark:bg-red-900/20';
+  const checkColor = darkMode ? 'text-amber-400' : 'text-red-500';
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <FormError error={error || antiBotError || null} />
+      {/* Error display */}
+      {(error || antiBotError) && (
+        <div className={`flex items-start gap-3 p-4 mb-2 rounded-2xl ${darkMode ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400'}`}>
+          <span className="text-sm">{error || antiBotError}</span>
+        </div>
+      )}
 
-      {/* Honeypot field - hidden from humans, bots will fill it */}
+      {/* Honeypot */}
       <input
         type="text"
         name="website"
@@ -329,77 +423,114 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       />
 
       {/* Name Fields */}
-      <FormSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormInput
-            id="firstName"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            label={<FormattedMessage id="form.firstName" defaultMessage="First name" />}
-            placeholder={intl.formatMessage({ id: 'form.firstName.placeholder', defaultMessage: 'Your first name' })}
-            icon={<User className="w-5 h-5" />}
-            error={validationErrors.firstName}
-            required
-          />
-
-          <FormInput
-            id="lastName"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            label={<FormattedMessage id="form.lastName" defaultMessage="Last name" />}
-            placeholder={intl.formatMessage({ id: 'form.lastName.placeholder', defaultMessage: 'Your last name' })}
-            icon={<User className="w-5 h-5" />}
-            error={validationErrors.lastName}
-            required
-          />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* First Name */}
+        <div className="space-y-1">
+          <label htmlFor="firstName" className={s.label}>
+            <FormattedMessage id="form.firstName" defaultMessage="First name" />
+            <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+          </label>
+          <div className="relative">
+            <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
+            <input
+              type="text"
+              id="firstName"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              placeholder={intl.formatMessage({ id: 'form.firstName.placeholder', defaultMessage: 'Your first name' })}
+              className={`${s.input} pl-12 ${validationErrors.firstName ? s.inputError : s.inputDefault} ${formData.firstName ? s.inputFilled : ''}`}
+              aria-required="true"
+            />
+          </div>
+          {validationErrors.firstName && (
+            <p className={s.errorText}>
+              <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+              {validationErrors.firstName}
+            </p>
+          )}
         </div>
-      </FormSection>
+
+        {/* Last Name */}
+        <div className="space-y-1">
+          <label htmlFor="lastName" className={s.label}>
+            <FormattedMessage id="form.lastName" defaultMessage="Last name" />
+            <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+          </label>
+          <div className="relative">
+            <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              placeholder={intl.formatMessage({ id: 'form.lastName.placeholder', defaultMessage: 'Your last name' })}
+              className={`${s.input} pl-12 ${validationErrors.lastName ? s.inputError : s.inputDefault} ${formData.lastName ? s.inputFilled : ''}`}
+              aria-required="true"
+            />
+          </div>
+          {validationErrors.lastName && (
+            <p className={s.errorText}>
+              <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+              {validationErrors.lastName}
+            </p>
+          )}
+        </div>
+      </div>
 
       {/* Email */}
-      <FormInput
-        id="email"
-        name="email"
-        type="email"
-        value={formData.email}
-        onChange={handleChange}
-        label={<FormattedMessage id="form.email" defaultMessage="Email" />}
-        placeholder={intl.formatMessage({ id: 'form.email.placeholder', defaultMessage: 'your@email.com' })}
-        icon={<Mail className="w-5 h-5" />}
-        error={validationErrors.email}
-        required
-        autoComplete="email"
-      />
+      <div className="space-y-1">
+        <label htmlFor="email" className={s.label}>
+          <FormattedMessage id="form.email" defaultMessage="Email" />
+          <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+        </label>
+        <div className="relative">
+          <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder={intl.formatMessage({ id: 'form.email.placeholder', defaultMessage: 'your@email.com' })}
+            autoComplete="email"
+            className={`${s.input} pl-12 ${validationErrors.email ? s.inputError : s.inputDefault} ${formData.email ? s.inputFilled : ''}`}
+            aria-required="true"
+          />
+        </div>
+        {validationErrors.email && (
+          <p className={s.errorText}>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+            {validationErrors.email}
+          </p>
+        )}
+      </div>
 
       {/* Password */}
       <div className="space-y-2">
-        <label htmlFor="password" className={formStyles.label}>
+        <label htmlFor="password" className={s.label}>
           <FormattedMessage id="form.password" defaultMessage="Password" />
-          <span className="text-red-500 ml-0.5">*</span>
+          <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
         </label>
         <div className="relative">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
+          <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
           <input
             id="password"
             name="password"
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={handleChange}
-            placeholder={intl.formatMessage({ id: 'form.password.placeholder', defaultMessage: 'Minimum 6 characters' })}
+            placeholder={intl.formatMessage({ id: 'form.password.placeholder', defaultMessage: 'Minimum 8 characters' })}
             autoComplete="new-password"
-            className={`
-              ${formStyles.input}
-              pl-12 pr-12
-              ${validationErrors.password ? formStyles.inputError : formStyles.inputDefault}
-            `}
+            className={`${s.input} pl-12 pr-12 ${validationErrors.password ? s.inputError : s.inputDefault}`}
             aria-required="true"
             aria-invalid={!!validationErrors.password}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors z-10"
+            className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors z-10 ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
             aria-label={showPassword
               ? intl.formatMessage({ id: 'form.password.hide', defaultMessage: 'Hide password' })
               : intl.formatMessage({ id: 'form.password.show', defaultMessage: 'Show password' })
@@ -412,7 +543,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         {/* Password strength indicator */}
         {formData.password.length > 0 && (
           <div className="mt-2">
-            <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className={`h-1.5 rounded-full overflow-hidden ${darkMode ? 'bg-white/10' : 'bg-gray-200 dark:bg-gray-700'}`}>
               <div
                 className={`h-full transition-all duration-300 ${
                   formData.password.length < 6
@@ -427,12 +558,12 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
             </div>
             <p className={`text-xs mt-1 ${
               formData.password.length < 6
-                ? 'text-red-500'
+                ? 'text-red-400'
                 : formData.password.length < 8
-                ? 'text-orange-500'
+                ? 'text-orange-400'
                 : formData.password.length < 10
-                ? 'text-yellow-600 dark:text-yellow-400'
-                : 'text-green-500'
+                ? 'text-yellow-400'
+                : 'text-green-400'
             }`}>
               {formData.password.length < 6 ? (
                 <FormattedMessage id="form.password.strength.weak" defaultMessage="Too short (min. 6 characters)" />
@@ -448,8 +579,8 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         )}
 
         {validationErrors.password && (
-          <p className={formStyles.errorText}>
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">!</span>
+          <p className={s.errorText}>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
             {validationErrors.password}
           </p>
         )}
@@ -457,39 +588,33 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
 
       {/* Country */}
       <div ref={countryDropdownRef} className="space-y-2">
-        <label className={formStyles.label}>
+        <label className={s.label}>
           <FormattedMessage id="form.country" defaultMessage="Country of residence" />
-          <span className="text-red-500 ml-0.5">*</span>
+          <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
         </label>
-
         <div className="relative">
-          <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+          <Globe className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10`} />
           <button
             type="button"
             onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-            className={`
-              ${formStyles.input}
-              pl-12 pr-10 text-left
-              flex items-center justify-between
-              ${validationErrors.country ? formStyles.inputError : formStyles.inputDefault}
-            `}
+            className={`${s.input} pl-12 pr-10 text-left flex items-center justify-between ${validationErrors.country ? s.inputError : s.inputDefault}`}
           >
-            <span className={selectedCountryEntry ? '' : 'text-gray-400'}>
+            <span className={selectedCountryEntry ? '' : 'text-gray-500'}>
               {selectedCountryEntry ? (
                 <span className="flex items-center gap-2">
                   <span className="text-lg">{getFlag(selectedCountryEntry.code)}</span>
-                  {getCountryName(selectedCountryEntry, locale)}
+                  <span className={darkMode ? 'text-white' : ''}>{getCountryName(selectedCountryEntry, locale)}</span>
                 </span>
               ) : (
                 intl.formatMessage({ id: 'form.country.placeholder', defaultMessage: 'Select your country' })
               )}
             </span>
-            <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showCountryDropdown ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${showCountryDropdown ? 'rotate-180' : ''}`} />
           </button>
 
           {showCountryDropdown && (
-            <div className={formStyles.dropdown}>
-              <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+            <div className={s.dropdown}>
+              <div className={`p-2 border-b ${darkMode ? 'border-white/10' : 'border-gray-200 dark:border-gray-700'}`}>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
@@ -497,7 +622,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     value={countrySearch}
                     onChange={(e) => setCountrySearch(e.target.value)}
                     placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search country...' })}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-xl border-0 focus:ring-2 focus:ring-red-500/30"
+                    className={s.dropdownSearch}
                     autoFocus
                   />
                 </div>
@@ -508,15 +633,12 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     key={entry.code}
                     type="button"
                     onClick={() => selectCountry(entry)}
-                    className={`
-                      ${formStyles.dropdownItem}
-                      ${entry.code === formData.country ? 'bg-red-50 dark:bg-red-900/20' : ''}
-                    `}
+                    className={`${s.dropdownItem} ${entry.code === formData.country ? selectedBg : ''}`}
                   >
                     <span className="text-xl">{getFlag(entry.code)}</span>
                     <span className="flex-1 text-sm">{getCountryName(entry, locale)}</span>
                     {entry.code === formData.country && (
-                      <Check className="w-4 h-4 text-red-500" />
+                      <Check className={`w-4 h-4 ${checkColor}`} />
                     )}
                   </button>
                 ))}
@@ -524,46 +646,132 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
             </div>
           )}
         </div>
-
         {validationErrors.country && (
-          <p className={formStyles.errorText}>
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">!</span>
+          <p className={s.errorText}>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
             {validationErrors.country}
           </p>
         )}
       </div>
 
-      {/* Primary Language */}
-      <div ref={languageDropdownRef} className="space-y-3">
-        <label className={formStyles.label}>
-          <FormattedMessage id="form.primaryLanguage" defaultMessage="Primary language" />
-          <span className="text-red-500 ml-0.5">*</span>
+      {/* WhatsApp Number with Country Code Indicator */}
+      <div className="space-y-2">
+        <label className={s.label}>
+          <FormattedMessage id="form.whatsapp" defaultMessage="WhatsApp number" />
+          <span className={`ml-1 text-xs font-normal ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+            (<FormattedMessage id="form.optional" defaultMessage="optional" />)
+          </span>
         </label>
+        <div className="flex gap-2">
+          {/* Phone Code Selector */}
+          <div ref={phoneCodeDropdownRef} className="relative flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowPhoneCodeDropdown(!showPhoneCodeDropdown)}
+              className={`
+                ${s.input}
+                w-[120px] sm:w-[130px] pr-2 text-left
+                flex items-center gap-1.5
+                ${darkMode ? 'hover:bg-white/10' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}
+              `}
+            >
+              {selectedPhoneCodeEntry ? (
+                <>
+                  <span className="text-base">{getFlag(selectedPhoneCodeEntry.code)}</span>
+                  <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                    {selectedPhoneCodeEntry.phoneCode}
+                  </span>
+                </>
+              ) : (
+                <span className="text-gray-500 text-sm">+--</span>
+              )}
+              <ChevronDown className={`w-3.5 h-3.5 text-gray-500 ml-auto transition-transform duration-200 ${showPhoneCodeDropdown ? 'rotate-180' : ''}`} />
+            </button>
 
+            {showPhoneCodeDropdown && (
+              <div className={`${s.dropdown} w-[280px] sm:w-[320px]`}>
+                <div className={`p-2 border-b ${darkMode ? 'border-white/10' : 'border-gray-200 dark:border-gray-700'}`}>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={phoneCodeSearch}
+                      onChange={(e) => setPhoneCodeSearch(e.target.value)}
+                      placeholder={intl.formatMessage({ id: 'form.search.phoneCode', defaultMessage: 'Search country or code...' })}
+                      className={s.dropdownSearch}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="max-h-[280px] overflow-y-auto overscroll-contain">
+                  {filteredPhoneCodes.map((entry) => (
+                    <button
+                      key={entry.code}
+                      type="button"
+                      onClick={() => selectPhoneCode(entry)}
+                      className={`${s.dropdownItem} ${entry.code === formData.whatsappCountryCode ? selectedBg : ''}`}
+                    >
+                      <span className="text-lg">{getFlag(entry.code)}</span>
+                      <span className="flex-1 text-sm">{getCountryName(entry, locale)}</span>
+                      <span className={`text-sm font-medium ${darkMode ? 'text-amber-400' : 'text-gray-600 dark:text-gray-300'}`}>
+                        {entry.phoneCode}
+                      </span>
+                      {entry.code === formData.whatsappCountryCode && (
+                        <Check className={`w-4 h-4 ${checkColor}`} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Phone Number Input */}
+          <div className="flex-1 relative">
+            <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
+            <input
+              type="tel"
+              id="whatsappNumber"
+              name="whatsappNumber"
+              value={formData.whatsappNumber}
+              onChange={handleChange}
+              placeholder={intl.formatMessage({ id: 'form.whatsapp.placeholder', defaultMessage: 'Your WhatsApp number' })}
+              autoComplete="tel"
+              className={`${s.input} pl-12 ${formData.whatsappNumber ? s.inputFilled : ''}`}
+            />
+          </div>
+        </div>
+        <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+          <FormattedMessage id="form.whatsapp.helper" defaultMessage="Used to invite you to our Chatter WhatsApp community" />
+        </p>
+      </div>
+
+      {/* Primary Language */}
+      <div ref={languageDropdownRef} className="space-y-2">
+        <label className={s.label}>
+          <FormattedMessage id="form.primaryLanguage" defaultMessage="Primary language" />
+          <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+        </label>
         <div className="relative">
+          <Languages className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
           <button
             type="button"
             onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
-            className={`
-              ${formStyles.input}
-              pl-12 pr-10 text-left flex items-center justify-between
-              ${validationErrors.language ? formStyles.inputError : formStyles.inputDefault}
-            `}
+            className={`${s.input} pl-12 pr-10 text-left flex items-center justify-between ${validationErrors.language ? s.inputError : s.inputDefault}`}
           >
-            <Languages className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <span className={formData.language ? '' : 'text-gray-400'}>
+            <span className={formData.language ? (darkMode ? 'text-white' : '') : 'text-gray-500'}>
               {formData.language ? (
                 getLanguageLabel(languagesData.find(l => l.code === formData.language) || { code: formData.language, name: formData.language, nativeName: formData.language, labels: {} }, locale)
               ) : (
                 intl.formatMessage({ id: 'form.language.placeholder', defaultMessage: 'Select your primary language' })
               )}
             </span>
-            <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showLanguageDropdown ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${showLanguageDropdown ? 'rotate-180' : ''}`} />
           </button>
 
           {showLanguageDropdown && (
-            <div className={formStyles.dropdown}>
-              <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+            <div className={s.dropdown}>
+              <div className={`p-2 border-b ${darkMode ? 'border-white/10' : 'border-gray-200 dark:border-gray-700'}`}>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
@@ -571,7 +779,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     value={languageSearch}
                     onChange={(e) => setLanguageSearch(e.target.value)}
                     placeholder={intl.formatMessage({ id: 'form.search.language', defaultMessage: 'Search language...' })}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-xl border-0 focus:ring-2 focus:ring-red-500/30"
+                    className={s.dropdownSearch}
                     autoFocus
                   />
                 </div>
@@ -586,30 +794,26 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                       setShowLanguageDropdown(false);
                       setLanguageSearch('');
                     }}
-                    className={`
-                      ${formStyles.dropdownItem}
-                      ${lang.code === formData.language ? 'bg-red-50 dark:bg-red-900/20' : ''}
-                    `}
+                    className={`${s.dropdownItem} ${lang.code === formData.language ? selectedBg : ''}`}
                   >
                     <span className="flex-1 text-sm">{getLanguageLabel(lang, locale)}</span>
                     <span className="text-xs text-gray-500">{lang.nativeName}</span>
-                    {lang.code === formData.language && <Check className="w-4 h-4 text-red-500" />}
+                    {lang.code === formData.language && <Check className={`w-4 h-4 ${checkColor}`} />}
                   </button>
                 ))}
               </div>
             </div>
           )}
         </div>
-
         {validationErrors.language && (
-          <p className={formStyles.errorText}>
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">!</span>
+          <p className={s.errorText}>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
             {validationErrors.language}
           </p>
         )}
       </div>
 
-      {/* ✅ Acceptation des CGU - Obligatoire */}
+      {/* Terms & Conditions */}
       <div className="space-y-2">
         <label className="flex items-start gap-3 cursor-pointer select-none group">
           <div className="relative mt-0.5">
@@ -621,20 +825,23 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
               className={`
                 h-5 w-5 rounded border-2
                 ${validationErrors.acceptTerms
-                  ? 'border-red-500 bg-red-50'
+                  ? 'border-red-500 bg-red-500/10'
                   : formData.acceptTerms
-                    ? 'border-green-500 bg-green-500 text-white'
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                    ? darkMode
+                      ? 'border-amber-400 bg-amber-400 text-black'
+                      : 'border-green-500 bg-green-500 text-white'
+                    : darkMode
+                      ? 'border-white/20 bg-white/5'
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                 }
-                focus:ring-2 focus:ring-red-500/30 focus:ring-offset-0
-                transition-all duration-200
-                cursor-pointer
+                focus:ring-2 ${darkMode ? 'focus:ring-amber-400/30' : 'focus:ring-red-500/30'} focus:ring-offset-0
+                transition-all duration-200 cursor-pointer
               `}
               aria-required="true"
               aria-invalid={!!validationErrors.acceptTerms}
             />
           </div>
-          <span className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+          <span className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
             <FormattedMessage
               id="chatter.register.acceptTerms"
               defaultMessage="I accept the {termsLink} and the {privacyLink}"
@@ -644,7 +851,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     to="/cgu-chatters"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-red-500 hover:text-red-600 underline underline-offset-2 font-medium"
+                    className={`underline underline-offset-2 font-medium ${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
                   >
                     <FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" />
                   </Link>
@@ -654,33 +861,48 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     to="/privacy-policy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-red-500 hover:text-red-600 underline underline-offset-2 font-medium"
+                    className={`underline underline-offset-2 font-medium ${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
                   >
                     <FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" />
                   </Link>
                 ),
               }}
             />
-            <span className="text-red-500 ml-0.5">*</span>
+            <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
           </span>
         </label>
         {validationErrors.acceptTerms && (
-          <p className={formStyles.errorText}>
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">!</span>
+          <p className={s.errorText}>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
             {validationErrors.acceptTerms}
           </p>
         )}
       </div>
 
-      {/* Submit Button */}
-      <FormButton
+      {/* Submit Button - Amber/Yellow gradient matching landing CTA */}
+      <button
         type="submit"
-        variant="primary"
-        loading={loading}
         disabled={loading || !formData.acceptTerms}
+        className={`
+          w-full py-4 px-6 font-extrabold rounded-2xl
+          flex items-center justify-center gap-2
+          transition-all duration-200 ease-out
+          disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
+          ${darkMode
+            ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 hover:from-amber-300 hover:to-yellow-300 active:scale-[0.98]'
+            : 'bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 transform hover:-translate-y-0.5 active:translate-y-0'
+          }
+        `}
       >
-        <FormattedMessage id="chatter.register.submit" defaultMessage="Sign up as a Chatter" />
-      </FormButton>
+        {loading ? (
+          <>
+            <div className={`w-5 h-5 border-2 rounded-full animate-spin ${darkMode ? 'border-black/30 border-t-black' : 'border-white/30 border-t-white'}`} />
+            <FormattedMessage id="form.submitting" defaultMessage="Processing..." />
+          </>
+        ) : (
+          <FormattedMessage id="chatter.register.submit" defaultMessage="Sign up as a Chatter" />
+        )}
+      </button>
     </form>
   );
 };
