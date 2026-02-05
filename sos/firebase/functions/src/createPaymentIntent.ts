@@ -340,7 +340,9 @@ async function validateBusinessLogic(
       db.collection('sos_profiles').doc(data.providerId).get(),
     ]);
 
-    const providerData = providerDoc.data();
+    // FIX: Fallback sur sos_profiles si le document users n'existe pas
+    // (certains AAA profiles n'ont pas de document users mais ont un sos_profiles)
+    const providerData = providerDoc.data() ?? (providerProfileDoc.exists ? providerProfileDoc.data() : undefined);
     if (!providerData) return { valid: false, error: 'Prestataire non trouvé' };
     if (providerData.status === 'suspended' || providerData.status === 'banned') {
       return { valid: false, error: 'Prestataire non disponible' };
