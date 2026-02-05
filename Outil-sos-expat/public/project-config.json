@@ -14,9 +14,9 @@
   },
   "license": "Proprietary",
   "branding": {
-    "primaryColor": "#CE3C3C",
-    "secondaryColor": "#A02E2E",
-    "accentColor": "#E84545",
+    "primaryColor": "#DC2626",
+    "secondaryColor": "#B91C1C",
+    "accentColor": "#EF4444",
     "backgroundColor": "#FFFFFF",
     "textColor": "#333333",
     "logo": "/assets/logo-sos-expats.svg"
@@ -46,7 +46,7 @@
     "name": "Outils SOS Expat",
     "shortName": "SOS Expat",
     "description": "Plateforme interne d'assistance professionnelle SOS Expats",
-    "themeColor": "#CE3C3C",
+    "themeColor": "#DC2626",
     "backgroundColor": "#F2F2F2",
     "display": "standalone",
     "orientation": "portrait-primary",
@@ -264,8 +264,8 @@
   "deployment": {
     "hosting": "firebase",
     "domains": {
-      "production": "app.sosexpats.com",
-      "staging": "staging.sosexpats.com"
+      "production": "pro.sos-expat.com",
+      "staging": "staging.sos-expat.com"
     },
     "ssl": true,
     "cdn": true
