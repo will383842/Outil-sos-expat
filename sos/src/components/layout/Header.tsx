@@ -1076,18 +1076,18 @@ const PWAIconButton = memo(function PWAIconButton() {
   return (
     <Link
       to={getLocalePath("/")}
-      className="w-16 h-16 rounded-2xl overflow-hidden bg-transparent
+      className="flex items-center justify-center p-2 -m-2 rounded-2xl bg-transparent
         focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50
-        touch-manipulation select-none"
+        touch-manipulation select-none active:opacity-70"
       style={{ WebkitTapHighlightColor: 'transparent' }}
       aria-label={homeAriaLabel}
     >
       <img
         src="/icons/icon-72x72.png"
         alt={logoAlt}
-        className="w-full h-full object-cover pointer-events-none"
-        width={64}
-        height={64}
+        className="w-14 h-14 rounded-2xl object-cover pointer-events-none"
+        width={56}
+        height={56}
         loading="eager"
         decoding="async"
         onError={(e) => {
