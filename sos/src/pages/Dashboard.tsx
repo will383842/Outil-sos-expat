@@ -1616,7 +1616,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       {/* ========================================== */}
       {userDataReady && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <PWAInstallCards showOutilIA={user?.role === 'lawyer' || user?.role === 'expat'} />
+          <PWAInstallCards />
         </div>
       )}
 

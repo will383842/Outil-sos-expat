@@ -1623,7 +1623,7 @@ const ChatterDashboard: React.FC = () => {
 
         {/* PWA Install Cards - inline in dashboard */}
         <div className="px-4 sm:px-6 py-3">
-          <PWAInstallCards showOutilIA />
+          <PWAInstallCards />
         </div>
       </div>
 
