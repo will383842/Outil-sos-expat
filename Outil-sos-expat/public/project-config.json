@@ -264,7 +264,7 @@
   "deployment": {
     "hosting": "firebase",
     "domains": {
-      "production": "pro.sos-expat.com",
+      "production": "ia.sos-expat.com",
       "staging": "staging.sos-expat.com"
     },
     "ssl": true,

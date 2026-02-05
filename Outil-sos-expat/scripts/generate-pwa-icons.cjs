@@ -65,7 +65,7 @@ const OG_IMAGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" heigh
   <path d="M600 190 C555 190 520 225 520 270 C520 315 555 350 600 350 C645 350 680 315 680 270 C680 225 645 190 600 190 M590 330 C555 325 530 300 530 270 C530 262 532 255 535 248 L570 280 L570 290 C570 300 578 308 588 308 L590 330 M635 325 C632 320 625 315 618 315 L608 315 L608 295 C608 290 604 286 599 286 L564 286 L564 268 L582 268 C587 268 591 264 591 259 L591 241 L609 241 C619 241 627 233 627 223 L627 220 C648 230 662 249 662 270 C662 295 652 315 635 325" fill="white"/>
   <text x="600" y="430" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="56" font-weight="700" fill="white">SOS Expats Pro</text>
   <text x="600" y="490" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="rgba(255,255,255,0.9)">Espace Prestataires - Assistant IA</text>
-  <text x="600" y="580" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="rgba(255,255,255,0.7)">pro.sos-expat.com</text>
+  <text x="600" y="580" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="rgba(255,255,255,0.7)">ia.sos-expat.com</text>
 </svg>`;
 
 // Twitter Image SVG template (1200x675 for summary_large_image)
@@ -81,7 +81,7 @@ const TWITTER_IMAGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" 
   <path d="M600 210 C555 210 520 245 520 290 C520 335 555 370 600 370 C645 370 680 335 680 290 C680 245 645 210 600 210 M590 350 C555 345 530 320 530 290 C530 282 532 275 535 268 L570 300 L570 310 C570 320 578 328 588 328 L590 350 M635 345 C632 340 625 335 618 335 L608 335 L608 315 C608 310 604 306 599 306 L564 306 L564 288 L582 288 C587 288 591 284 591 279 L591 261 L609 261 C619 261 627 253 627 243 L627 240 C648 250 662 269 662 290 C662 315 652 335 635 345" fill="white"/>
   <text x="600" y="460" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="56" font-weight="700" fill="white">SOS Expats Pro</text>
   <text x="600" y="520" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="rgba(255,255,255,0.9)">Espace Prestataires - Assistant IA</text>
-  <text x="600" y="620" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="rgba(255,255,255,0.7)">pro.sos-expat.com</text>
+  <text x="600" y="620" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="rgba(255,255,255,0.7)">ia.sos-expat.com</text>
 </svg>`;
 
 async function generateIcons() {
