@@ -2,7 +2,7 @@
  * Firebase Configuration for Dashboard Multiprestataire
  * Uses the same Firebase project as SOS Global (sos-urgently-ac307)
  */
-import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
+import { initializeApp, getApps, getApp, type FirebaseOptions, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import {
   initializeFirestore,
@@ -59,8 +59,26 @@ export function call<TPayload, TReturn = unknown>(name: string) {
   return httpsCallable<TPayload, TReturn>(functions, name);
 }
 
+// Outil (ia.sos-expat.com) Firebase app — for calling Outil Cloud Functions
+const outilConfig: FirebaseOptions = {
+  apiKey: 'AIzaSyDLYZsw-2d5gy1XQRYvd5A8umQ8PKCC8FQ',
+  authDomain: 'outils-sos-expat.firebaseapp.com',
+  projectId: 'outils-sos-expat',
+  appId: '1:694506867593:web:174f79c8f79fbda6b22f58',
+};
+
+let outilApp: FirebaseApp;
+try {
+  outilApp = getApp('outil');
+} catch {
+  outilApp = initializeApp(outilConfig, 'outil');
+}
+
+export const outilFunctions = getFunctions(outilApp, REGION);
+
 console.log('Firebase initialized:', {
   projectId: app.options.projectId,
+  outilProjectId: outilApp.options.projectId,
   region: REGION,
 });
 

@@ -11,14 +11,18 @@ import {
   ChevronUp,
   ExternalLink,
   Trash2,
+  Loader2,
 } from 'lucide-react';
+import { httpsCallable } from 'firebase/functions';
 import {
   SERVICE_TYPE_LABELS,
   BOOKING_STATUS_LABELS,
   FIVE_MINUTES,
   type BookingRequest,
 } from '../../types';
+import { auth, outilFunctions } from '../../config/firebase';
 import AiResponsePreview, { AiErrorBadge } from './AiResponsePreview';
+import toast from 'react-hot-toast';
 
 interface BookingRequestCardProps {
   booking: BookingRequest;
@@ -50,6 +54,7 @@ function formatRelativeTime(date: Date): string {
 
 export default function BookingRequestCard({ booking, isNew, onDelete }: BookingRequestCardProps) {
   const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [isSsoLoading, setIsSsoLoading] = useState(false);
   const statusColor = STATUS_COLORS[booking.status];
   const isHistory = booking.status === 'completed' || booking.status === 'cancelled';
   const serviceLabel = SERVICE_TYPE_LABELS[booking.serviceType] || booking.serviceType;
@@ -61,8 +66,52 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
     ? booking.description
     : booking.description.slice(0, 150) + (descriptionTruncated ? '...' : '');
 
-  const handleRespond = () => {
-    window.open('https://ia.sos-expat.com', '_blank', 'noopener');
+  const handleRespond = async () => {
+    // Open window BEFORE async to avoid popup blockers on mobile
+    const newWindow = window.open('about:blank', '_blank');
+    setIsSsoLoading(true);
+
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        toast.error('Session expirée. Reconnectez-vous.');
+        newWindow?.close();
+        return;
+      }
+
+      const idToken = await currentUser.getIdToken();
+
+      const generateToken = httpsCallable<
+        { firebaseIdToken: string; providerId: string; bookingId?: string },
+        { success: boolean; ssoUrl?: string; error?: string }
+      >(outilFunctions, 'generateMultiDashboardOutilToken');
+
+      const result = await generateToken({
+        firebaseIdToken: idToken,
+        providerId: booking.providerId,
+        bookingId: booking.id,
+      });
+
+      if (result.data.success && result.data.ssoUrl) {
+        if (newWindow) {
+          newWindow.location.href = result.data.ssoUrl;
+        } else {
+          // Popup blocked — navigate current tab
+          window.location.href = result.data.ssoUrl;
+        }
+      } else {
+        newWindow?.close();
+        toast.error(result.data.error || 'Erreur SSO');
+      }
+    } catch (err) {
+      console.error('SSO error:', err);
+      newWindow?.close();
+      // Fallback: open ia.sos-expat.com without SSO
+      toast.error('Connexion auto impossible. Ouverture manuelle...');
+      window.open('https://ia.sos-expat.com', '_blank', 'noopener');
+    } finally {
+      setIsSsoLoading(false);
+    }
   };
 
   return (
@@ -174,10 +223,14 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
         {!isHistory && (
           <button
             onClick={handleRespond}
-            className="flex items-center justify-center gap-2 flex-1 py-2.5 min-h-[44px] text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] transition-all"
+            disabled={isSsoLoading}
+            className="flex items-center justify-center gap-2 flex-1 py-2.5 min-h-[44px] text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] transition-all disabled:opacity-50"
           >
-            <ExternalLink className="w-4 h-4" />
-            Répondre
+            {isSsoLoading ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Connexion...</>
+            ) : (
+              <><ExternalLink className="w-4 h-4" /> Répondre</>
+            )}
           </button>
         )}
         {isHistory && onDelete && (

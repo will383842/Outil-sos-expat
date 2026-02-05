@@ -14,7 +14,7 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
-import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "./sosFirestore";
+import { getSosFirestore, getSosAuth, SOS_SERVICE_ACCOUNT } from "./sosFirestore";
 
 // Initialize Firebase Admin for local project (outils-sos-expat)
 // This is used to sign custom tokens for the Outil IA
@@ -29,7 +29,8 @@ try {
 // =============================================================================
 
 interface GenerateTokenRequest {
-  sessionToken: string;
+  sessionToken?: string; // Auth mode 1: multi-dashboard session token (mds_*)
+  firebaseIdToken?: string; // Auth mode 2: Firebase ID token from SOS project (PWA)
   providerId: string;
   bookingId?: string; // Optional: redirect directly to a specific booking/conversation
 }
@@ -72,22 +73,63 @@ export const generateMultiDashboardOutilToken = onCall<
   async (request) => {
     logger.info("[generateMultiDashboardOutilToken] Function invoked");
 
-    const { sessionToken, providerId, bookingId } = request.data || {};
+    const { sessionToken, firebaseIdToken, providerId, bookingId } = request.data || {};
 
     logger.info("[generateMultiDashboardOutilToken] Request received", {
       providerId: providerId || "MISSING",
       bookingId: bookingId || "none",
       hasSessionToken: !!sessionToken,
+      hasFirebaseIdToken: !!firebaseIdToken,
       hasData: !!request.data,
     });
 
-    // Validate inputs
-    if (!sessionToken || typeof sessionToken !== "string" || !sessionToken.startsWith("mds_")) {
-      throw new HttpsError("unauthenticated", "Invalid session token");
-    }
-
     if (!providerId || typeof providerId !== "string") {
       throw new HttpsError("invalid-argument", "Provider ID is required");
+    }
+
+    // Validate auth: either sessionToken (mds_*) or firebaseIdToken (SOS Firebase Auth)
+    if (firebaseIdToken && typeof firebaseIdToken === "string") {
+      // Auth mode 2: Firebase ID token from SOS project (PWA multi.sos-expat.com)
+      try {
+        const sosAuth = getSosAuth();
+        const decodedToken = await sosAuth.verifyIdToken(firebaseIdToken);
+        const uid = decodedToken.uid;
+
+        logger.info("[generateMultiDashboardOutilToken] Firebase ID token verified", { uid });
+
+        // Verify user has permission (admin/agency_manager with this provider linked)
+        const sosDb = getSosFirestore();
+        const userDoc = await sosDb.collection("users").doc(uid).get();
+
+        if (!userDoc.exists) {
+          throw new HttpsError("permission-denied", "User not found");
+        }
+
+        const userData = userDoc.data()!;
+        const role = userData.role as string;
+        const linkedProviderIds = (userData.linkedProviderIds as string[]) || [];
+
+        if (!["admin", "agency_manager"].includes(role)) {
+          throw new HttpsError("permission-denied", "Insufficient role");
+        }
+
+        if (!linkedProviderIds.includes(providerId)) {
+          throw new HttpsError("permission-denied", "Provider not linked to this account");
+        }
+
+        logger.info("[generateMultiDashboardOutilToken] Firebase auth verified", {
+          uid, role, providerCount: linkedProviderIds.length,
+        });
+      } catch (authError) {
+        if (authError instanceof HttpsError) throw authError;
+        logger.error("[generateMultiDashboardOutilToken] Firebase token verification failed", { error: authError });
+        throw new HttpsError("unauthenticated", "Invalid Firebase token");
+      }
+    } else if (sessionToken && typeof sessionToken === "string" && sessionToken.startsWith("mds_")) {
+      // Auth mode 1: multi-dashboard session token (existing web flow)
+      logger.info("[generateMultiDashboardOutilToken] Using session token auth");
+    } else {
+      throw new HttpsError("unauthenticated", "Authentication required (sessionToken or firebaseIdToken)");
     }
 
     try {
@@ -164,7 +206,8 @@ export const generateMultiDashboardOutilToken = onCall<
           providerEmail,
           ownerUserId,
           timestamp: new Date().toISOString(),
-          sessionTokenPrefix: sessionToken.substring(0, 10) + "...",
+          authMethod: firebaseIdToken ? "firebase_sso" : "session_token",
+          sessionTokenPrefix: sessionToken ? sessionToken.substring(0, 10) + "..." : "firebase_auth",
         });
       } catch (auditError) {
         logger.warn("[generateMultiDashboardOutilToken] Failed to write audit log (non-blocking)", { error: auditError });
