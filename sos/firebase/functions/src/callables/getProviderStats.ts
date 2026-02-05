@@ -38,7 +38,7 @@ function getDb() {
 }
 
 /** Verify admin permissions */
-function assertAdmin(ctx: { auth?: { uid?: string; token?: { admin?: boolean; role?: string } } }) {
+function assertAdmin(ctx: { auth?: { uid?: string; token?: Record<string, unknown> } }) {
   const uid = ctx.auth?.uid;
   const claims = ctx.auth?.token;
   if (!uid) throw new HttpsError("unauthenticated", "Auth required");

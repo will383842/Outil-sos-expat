@@ -1689,9 +1689,6 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const isProcessingRef = useRef(false);
     // État pour afficher le message 3D Secure
     const [show3DSMessage, setShow3DSMessage] = useState(false);
-    // UX: Progressive disclosure - cacher les champs carte si Apple Pay disponible
-    // Afficher seulement si: pas d'Apple Pay OU utilisateur clique "Saisir une carte"
-    const [showCardFields, setShowCardFields] = useState(false);
 
     // P0-1 FIX: callSessionId stable généré UNE SEULE FOIS pour garantir l'idempotence
     // NE PAS utiliser Date.now() dans actuallySubmitPayment car cela crée une nouvelle clé à chaque retry
@@ -1945,7 +1942,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       // Gérer l'événement cancel (utilisateur ferme Apple Pay sans payer)
       // UX: Pas de message d'erreur pour une annulation simple - l'utilisateur peut:
       // 1. Recliquer sur Apple Pay pour changer de carte
-      // 2. Cliquer sur "Saisir une carte manuellement"
+      // 2. Saisir une carte dans les champs CB affichés en dessous
       pr.on("cancel", () => {
         console.log("[PaymentRequest] 🔄 Utilisateur a fermé Apple Pay (peut réessayer ou saisir carte)");
         // CRITICAL: Réinitialiser le ref AVANT l'état React (évite race condition)
@@ -2228,9 +2225,6 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           console.error("[PaymentRequest] ❌ Erreur:", err);
           ev.complete("fail");
           currentOnError(err instanceof Error ? err.message : String(err));
-          // UX: Si Apple Pay échoue, afficher automatiquement les champs carte
-          // pour que l'utilisateur puisse saisir une autre carte manuellement
-          setShowCardFields(true);
         } finally {
           // CRITICAL: Nettoyer le timeout et réinitialiser TOUS les états
           clearTimeout(timeoutId);
@@ -2929,45 +2923,21 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                   />
                 </div>
 
-                {/* Toggle pour afficher les champs carte manuellement */}
-                {!showCardFields && (
-                  <button
-                    type="button"
-                    onClick={() => setShowCardFields(true)}
-                    className="w-full py-3 text-sm text-gray-600 hover:text-gray-800 flex items-center justify-center space-x-2 transition-colors"
-                  >
-                    <CreditCard className="w-4 h-4" />
-                    <span>
-                      {language === "fr" ? "Saisir une carte manuellement" :
-                       language === "es" ? "Introducir tarjeta manualmente" :
-                       language === "de" ? "Karte manuell eingeben" :
-                       "Enter card manually"}
-                    </span>
-                  </button>
-                )}
+                {/* Séparateur "ou" entre Apple Pay et carte */}
+                <div className="flex items-center my-2">
+                  <div className="flex-1 border-t border-gray-200"></div>
+                  <span className="px-3 text-sm text-gray-400">
+                    {language === "fr" ? "ou" :
+                     language === "es" ? "o" :
+                     language === "de" ? "oder" :
+                     "or"}
+                  </span>
+                  <div className="flex-1 border-t border-gray-200"></div>
+                </div>
               </div>
             )}
 
-            {/* OPTION 2: Champs de carte (visible si pas d'Apple Pay OU si toggle activé) */}
-            {(!canMakePaymentRequest || showCardFields) && (
-              <>
-                {/* Bouton retour si on a Apple Pay disponible */}
-                {canMakePaymentRequest && showCardFields && (
-                  <button
-                    type="button"
-                    onClick={() => setShowCardFields(false)}
-                    className="flex items-center text-sm text-blue-600 hover:text-blue-800 mb-2"
-                  >
-                    <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    {language === "fr" ? "Revenir à Apple Pay" :
-                     language === "es" ? "Volver a Apple Pay" :
-                     language === "de" ? "Zurück zu Apple Pay" :
-                     "Back to Apple Pay"}
-                  </button>
-                )}
-
+            {/* OPTION 2: Champs de carte (toujours visible) */}
                 {/* Label simple et clair */}
                 <div className="flex items-center space-x-2 mb-3">
                   <CreditCard className="w-5 h-5 text-gray-500" />
@@ -3047,8 +3017,6 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                     </div>
                   </div>
                 </div>
-              </>
-            )}
               </>
             )}
             {/* ========== FIN PROGRESSIVE DISCLOSURE ========== */}
