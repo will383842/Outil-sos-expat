@@ -2,23 +2,18 @@ import React, { useMemo } from 'react';
 import { Controller } from 'react-hook-form';
 import { useIntl } from 'react-intl';
 import { useMobileBooking } from '../context/MobileBookingContext';
-import { countriesData } from '@/data/countries';
+import { getCountriesForLocale, OTHER_COUNTRY } from '@/data/countries';
 
 export const Step2CountryScreen: React.FC = () => {
   const intl = useIntl();
-  const { form, goNextStep, isCurrentStepValid } = useMobileBooking();
+  const { form } = useMobileBooking();
   const { control, watch, setValue, formState: { errors } } = form;
 
   const currentCountry = watch('currentCountry');
 
-  // Generate countries list (same as desktop)
-  const countries = useMemo(() =>
-    countriesData
-      .filter((c) => c.code !== 'SEPARATOR')
-      .map((c) => c.nameEn)
-      .sort((a, b) => a.localeCompare(b)),
-    []
-  );
+  // Generate countries list in the user's current language
+  const locale = intl.locale;
+  const countries = useMemo(() => getCountriesForLocale(locale), [locale]);
 
   return (
     <div className="px-4 py-6">
@@ -55,7 +50,7 @@ export const Step2CountryScreen: React.FC = () => {
               }`}
               onChange={(e) => {
                 field.onChange(e.target.value);
-                if (e.target.value !== 'Autre') {
+                if (e.target.value !== OTHER_COUNTRY) {
                   setValue('autrePays', '');
                 }
               }}
@@ -64,9 +59,11 @@ export const Step2CountryScreen: React.FC = () => {
                 {intl.formatMessage({ id: 'bookingRequest.validators.selectCountry' })}
               </option>
               {countries.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c.code} value={c.code}>{c.label}</option>
               ))}
-              <option value="Autre">Autre</option>
+              <option value={OTHER_COUNTRY}>
+                {intl.formatMessage({ id: 'bookingRequest.mobile.step2.other', defaultMessage: 'Autre pays' })}
+              </option>
             </select>
           )}
         />
@@ -76,7 +73,7 @@ export const Step2CountryScreen: React.FC = () => {
       </div>
 
       {/* Other country input */}
-      {currentCountry === 'Autre' && (
+      {currentCountry === OTHER_COUNTRY && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {intl.formatMessage({ id: 'bookingRequest.fields.otherCountry' })}
@@ -92,14 +89,6 @@ export const Step2CountryScreen: React.FC = () => {
               <input
                 {...field}
                 type="text"
-                enterKeyHint="next"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    (e.target as HTMLInputElement).blur();
-                    if (isCurrentStepValid) goNextStep();
-                  }
-                }}
                 placeholder={intl.formatMessage({ id: 'bookingRequest.placeholders.otherCountry' })}
                 className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl text-base focus:border-red-500"
               />
