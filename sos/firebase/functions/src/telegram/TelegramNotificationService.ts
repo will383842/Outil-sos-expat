@@ -359,9 +359,9 @@ class TelegramNotificationService {
         return false;
       }
 
-      // 3. Check if this specific event type is enabled
+      // 3. Check if this specific event type is enabled (default to enabled if not explicitly set to false)
       const eventEnabledKey = this.getEventEnabledKey(eventId);
-      if (eventEnabledKey && !config.notifications[eventEnabledKey]) {
+      if (eventEnabledKey && config.notifications[eventEnabledKey] === false) {
         console.log(`${LOG_PREFIX} [${logId}] Event ${eventId} is disabled in config`);
         return false; // Don't log as error - this is expected behavior
       }

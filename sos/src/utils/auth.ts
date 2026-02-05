@@ -116,6 +116,7 @@ const registerUser = async (
       isVisible: true,
       fullName: `${userData.firstName ?? ""} ${userData.lastName ?? ""}`.trim(),
       lang: userData.preferredLanguage || "fr",
+      phoneNumber: userData.phone || "",
       country: userData.currentCountry || "",
       avatar: userData.profilePhoto || null,
       isSOS: userData.role !== "client",

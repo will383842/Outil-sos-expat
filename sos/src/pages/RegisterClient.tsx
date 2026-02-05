@@ -124,6 +124,7 @@ interface CreateUserData {
   email: string;
   languagesSpoken: string[];
   phone?: string;
+  currentCountry?: string;
   isApproved: boolean;
   approvalStatus?: 'pending' | 'approved' | 'rejected';
   verificationStatus?: string;
@@ -1050,10 +1051,12 @@ const RegisterClient: React.FC = () => {
         await setPersistence(auth, browserLocalPersistence);
 
         let phoneE164: string | undefined;
+        let phoneCountry: string | undefined;
         if (formData.phone) {
           const parsed = parsePhoneNumberFromString(formData.phone);
           if (parsed && parsed.isValid()) {
             phoneE164 = parsed.number;
+            phoneCountry = parsed.country; // e.g. "FR", "US"
           }
         }
 
@@ -1072,6 +1075,7 @@ const RegisterClient: React.FC = () => {
           email: sanitizeEmail(formData.email),
           languagesSpoken: formData.languagesSpoken,
           phone: phoneE164,
+          currentCountry: phoneCountry,
           isApproved: true,
           approvalStatus: 'approved',
           verificationStatus: 'approved',

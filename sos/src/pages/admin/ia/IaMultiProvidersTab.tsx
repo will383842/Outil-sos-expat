@@ -136,6 +136,8 @@ interface MultiProviderAccount {
   activeProviderId?: string;
   // 🆕 Busy status sharing
   shareBusyStatus: boolean;
+  // Telegram notification chat ID (set by admin)
+  telegramChatId?: string;
   // 🆕 Conflict detection - now shows ALL conflicts with details
   conflictWarnings?: {
     providerId: string;
@@ -209,6 +211,9 @@ export const IaMultiProvidersTab: React.FC = () => {
 
   // 🆕 Tab state
   const [activeTab, setActiveTab] = useState<'accounts' | 'coverage'>('accounts');
+
+  // Telegram chat ID editing state (per account)
+  const [telegramEdits, setTelegramEdits] = useState<Record<string, string>>({});
 
   // ============================================================================
   // DATA LOADING
@@ -404,6 +409,7 @@ export const IaMultiProvidersTab: React.FC = () => {
           providers,
           activeProviderId: data.activeProviderId,
           shareBusyStatus: data.shareBusyStatus === true, // 🆕
+          telegramChatId: data.telegramChatId || undefined,
           conflictWarnings: conflictWarnings.length > 0 ? conflictWarnings : undefined // 🆕
         });
       }
@@ -656,6 +662,34 @@ export const IaMultiProvidersTab: React.FC = () => {
     } catch (err) {
       console.error('Error toggling shareBusyStatus:', err);
       setError('Erreur lors de la modification');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  // Save Telegram chat ID for a multi-provider account
+  const saveTelegramChatId = async (accountId: string) => {
+    const chatId = (telegramEdits[accountId] ?? '').trim();
+    setSaving(accountId);
+    try {
+      await updateDoc(doc(db, 'users', accountId), {
+        telegramChatId: chatId || null,
+        updatedAt: serverTimestamp(),
+      });
+      setAccounts(prev => prev.map(a =>
+        a.userId === accountId ? { ...a, telegramChatId: chatId || undefined } : a
+      ));
+      setTelegramEdits(prev => {
+        const next = { ...prev };
+        delete next[accountId];
+        return next;
+      });
+      setSuccess(chatId ? 'Telegram chat ID sauvegardé' : 'Telegram chat ID supprimé');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error saving telegramChatId:', err);
+      setError('Erreur lors de la sauvegarde du Telegram chat ID');
+      setTimeout(() => setError(null), 3000);
     } finally {
       setSaving(null);
     }
@@ -1815,6 +1849,30 @@ export const IaMultiProvidersTab: React.FC = () => {
                     {account.shareBusyStatus && <Check className="w-3 h-3" />}
                   </button>
 
+                  {/* Telegram Chat ID for payment notifications */}
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      placeholder="Telegram Chat ID"
+                      value={telegramEdits[account.userId] ?? account.telegramChatId ?? ''}
+                      onChange={(e) => setTelegramEdits(prev => ({ ...prev, [account.userId]: e.target.value }))}
+                      className="w-40 px-2 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 placeholder-gray-400"
+                    />
+                    {(telegramEdits[account.userId] !== undefined && telegramEdits[account.userId] !== (account.telegramChatId ?? '')) && (
+                      <button
+                        onClick={() => saveTelegramChatId(account.userId)}
+                        disabled={saving === account.userId}
+                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50"
+                        title="Sauvegarder le Telegram Chat ID"
+                      >
+                        {saving === account.userId ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                        <span>Save</span>
+                      </button>
+                    )}
+                    {account.telegramChatId && telegramEdits[account.userId] === undefined && (
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400" title="Telegram configuré">TG</span>
+                    )}
+                  </div>
 
                   {/* Account status toggle - changes color based on state */}
                   {(() => {

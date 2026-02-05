@@ -9,6 +9,7 @@ import {
   TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN,
   TWILIO_PHONE_NUMBER,
+  TELEGRAM_BOT_TOKEN,
 } from "../lib/secrets";
 
 // 📤 IMPORTS DES MODULES
@@ -20,6 +21,7 @@ import { Channel, TemplatesByEvent, RoutingPerEvent } from "./types";
 // IMPORTS DES PROVIDERS
 import { sendZoho } from "./providers/email/zohoSmtp";
 import { sendSms } from "./providers/sms/twilioSms"; // SMS only for booking_paid_provider
+import { sendTelegramMessage } from "../telegram/providers/telegramBot";
 import { sendPush } from "./providers/push/fcm";
 import { writeInApp } from "./providers/inapp/firestore";
 import { resolveLang } from "./i18n";
@@ -193,6 +195,37 @@ async function sendOne(
     console.log(`📱 [SMS] ✅ SMS SENT SUCCESSFULLY`);
     console.log(`📱 [SMS]   messageId: ${messageId}`);
     console.log(`📱 [SMS] ========================================`);
+
+    // Telegram notification for multi-provider accounts (booking_paid_provider only)
+    if (eventId === "booking_paid_provider") {
+      const providerId = evt.context?.user?.uid || evt.uid;
+      if (providerId) {
+        try {
+          const parentSnap = await getDb()
+            .collection("users")
+            .where("linkedProviderIds", "array-contains", providerId)
+            .limit(1)
+            .get();
+
+          if (!parentSnap.empty) {
+            const parentData = parentSnap.docs[0].data();
+            const telegramChatId = parentData.telegramChatId;
+            if (telegramChatId) {
+              console.log(`📱 [Telegram] Sending booking_paid notification to chat ${telegramChatId}`);
+              const tgResult = await sendTelegramMessage(telegramChatId, text);
+              if (tgResult.ok) {
+                console.log(`📱 [Telegram] ✅ Sent successfully (messageId: ${tgResult.messageId})`);
+              } else {
+                console.warn(`📱 [Telegram] ⚠️ Failed: ${tgResult.error}`);
+              }
+            }
+          }
+        } catch (tgErr) {
+          console.warn(`📱 [Telegram] ⚠️ Error (non-blocking):`, tgErr);
+        }
+      }
+    }
+
     return { messageId };
   }
 
@@ -296,6 +329,7 @@ export const onMessageEventCreate = onDocumentCreated(
       TWILIO_ACCOUNT_SID,
       TWILIO_AUTH_TOKEN,
       TWILIO_PHONE_NUMBER,
+      TELEGRAM_BOT_TOKEN,
     ],
   },
   async (event) => {
