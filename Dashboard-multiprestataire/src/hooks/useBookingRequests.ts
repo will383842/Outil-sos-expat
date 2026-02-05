@@ -2,7 +2,7 @@
  * Hook for real-time booking requests
  * Uses Firestore onSnapshot for live updates + browser notifications
  */
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import {
   collection,
   query,
@@ -10,6 +10,8 @@ import {
   orderBy,
   limit,
   onSnapshot,
+  doc,
+  deleteDoc,
   type Timestamp,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -22,6 +24,7 @@ interface UseBookingRequestsResult {
   activeBookings: BookingRequest[];
   historyBookings: BookingRequest[];
   pendingCount: number;
+  deleteBooking: (bookingId: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -252,12 +255,17 @@ export function useBookingRequests(): UseBookingRequestsResult {
     [classified]
   );
 
+  const deleteBooking = useCallback(async (bookingId: string) => {
+    await deleteDoc(doc(db, 'booking_requests', bookingId));
+  }, []);
+
   return {
     bookings,
     newBookings: classified.newB,
     activeBookings: classified.activeB,
     historyBookings: classified.historyB,
     pendingCount,
+    deleteBooking,
     isLoading,
     error,
   };

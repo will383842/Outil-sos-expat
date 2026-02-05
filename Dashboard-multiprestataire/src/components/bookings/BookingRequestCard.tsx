@@ -10,7 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
-  Eye,
+  Trash2,
 } from 'lucide-react';
 import {
   SERVICE_TYPE_LABELS,
@@ -23,6 +23,7 @@ import AiResponsePreview, { AiErrorBadge } from './AiResponsePreview';
 interface BookingRequestCardProps {
   booking: BookingRequest;
   isNew?: boolean;
+  onDelete?: (bookingId: string) => void;
 }
 
 const STATUS_COLORS: Record<BookingRequest['status'], { bg: string; text: string; dot: string }> = {
@@ -47,7 +48,7 @@ function formatRelativeTime(date: Date): string {
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
-export default function BookingRequestCard({ booking, isNew }: BookingRequestCardProps) {
+export default function BookingRequestCard({ booking, isNew, onDelete }: BookingRequestCardProps) {
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const statusColor = STATUS_COLORS[booking.status];
   const isHistory = booking.status === 'completed' || booking.status === 'cancelled';
@@ -168,28 +169,26 @@ export default function BookingRequestCard({ booking, isNew }: BookingRequestCar
       )}
       {booking.aiError && <AiErrorBadge error={booking.aiError} />}
 
-      {/* Action button */}
-      <div className="mt-3 pt-3 border-t border-gray-100">
-        <button
-          onClick={handleRespond}
-          className={`flex items-center justify-center gap-2 w-full py-2.5 min-h-[44px] text-sm font-medium rounded-lg transition-colors ${
-            isHistory
-              ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              : 'bg-primary-600 text-white hover:bg-primary-700'
-          }`}
-        >
-          {isHistory ? (
-            <>
-              <Eye className="w-4 h-4" />
-              Voir
-            </>
-          ) : (
-            <>
-              <ExternalLink className="w-4 h-4" />
-              Répondre
-            </>
-          )}
-        </button>
+      {/* Action buttons */}
+      <div className="mt-3 pt-3 border-t border-gray-100 flex gap-2">
+        {!isHistory && (
+          <button
+            onClick={handleRespond}
+            className="flex items-center justify-center gap-2 flex-1 py-2.5 min-h-[44px] text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] transition-all"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Répondre
+          </button>
+        )}
+        {isHistory && onDelete && (
+          <button
+            onClick={() => onDelete(booking.id)}
+            className="flex items-center justify-center gap-2 flex-1 py-2.5 min-h-[44px] text-sm font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 active:scale-[0.98] transition-all"
+          >
+            <Trash2 className="w-4 h-4" />
+            Supprimer
+          </button>
+        )}
       </div>
     </div>
   );

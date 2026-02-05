@@ -11,7 +11,6 @@ const PAGE_CONFIG: Record<string, { title: string; subtitle: string }> = {
   '/': { title: 'Dashboard', subtitle: 'Vue d\'ensemble de votre équipe' },
   '/requests': { title: 'Demandes', subtitle: 'Gérez les demandes de vos clients' },
   '/team': { title: 'Gestion de l\'équipe', subtitle: 'Gérez vos prestataires' },
-  '/stats': { title: 'Statistiques', subtitle: 'Performances de votre équipe' },
 };
 
 export default function Header() {

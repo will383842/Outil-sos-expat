@@ -12,6 +12,7 @@ interface BookingTabsProps {
   activeBookings: BookingRequest[];
   historyBookings: BookingRequest[];
   isLoading?: boolean;
+  onDelete?: (bookingId: string) => void;
 }
 
 type Tab = 'pending' | 'history';
@@ -21,6 +22,7 @@ export default function BookingTabs({
   activeBookings,
   historyBookings,
   isLoading,
+  onDelete,
 }: BookingTabsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('pending');
 
@@ -114,7 +116,7 @@ export default function BookingTabs({
           {historyBookings.length > 0 ? (
             <div className="space-y-3">
               {historyBookings.map((booking) => (
-                <BookingRequestCard key={booking.id} booking={booking} />
+                <BookingRequestCard key={booking.id} booking={booking} onDelete={onDelete} />
               ))}
             </div>
           ) : (

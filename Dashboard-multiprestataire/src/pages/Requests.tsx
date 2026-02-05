@@ -13,6 +13,7 @@ export default function Requests() {
     activeBookings,
     historyBookings,
     pendingCount,
+    deleteBooking,
     isLoading,
     error,
   } = useBookingRequests();
@@ -66,6 +67,7 @@ export default function Requests() {
           activeBookings={activeBookings}
           historyBookings={historyBookings}
           isLoading={isLoading}
+          onDelete={deleteBooking}
         />
       </div>
     </div>

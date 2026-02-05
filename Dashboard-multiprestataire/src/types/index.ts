@@ -36,7 +36,7 @@ export type {
 
 export {
   FIVE_MINUTES,
-  TWENTY_FOUR_HOURS,
+  ONE_HOUR,
   classifyBooking,
   SERVICE_TYPE_LABELS,
   BOOKING_STATUS_LABELS,

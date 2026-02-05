@@ -36,26 +36,34 @@ export interface BookingRequest {
 export type BookingCategory = 'new' | 'active' | 'history';
 
 export const FIVE_MINUTES = 5 * 60 * 1000;
-export const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+export const ONE_HOUR = 60 * 60 * 1000;
 
 /**
  * Classify a booking into new / active / history
  * - new: pending and created < 5 minutes ago
- * - active: pending/confirmed/in_progress (not new)
- * - history: completed or cancelled
+ * - active: pending/confirmed/in_progress AND created < 1 hour ago
+ * - history: completed, cancelled, OR older than 1 hour
  */
 export function classifyBooking(booking: BookingRequest): BookingCategory {
   const now = Date.now();
   const age = now - booking.createdAt.getTime();
 
+  // Completed or cancelled → always history
   if (booking.status === 'completed' || booking.status === 'cancelled') {
     return 'history';
   }
 
-  if (booking.status === 'pending' && age < FIVE_MINUTES) {
+  // Older than 1 hour → expired, move to history
+  if (age >= ONE_HOUR) {
+    return 'history';
+  }
+
+  // Less than 5 min → new
+  if (age < FIVE_MINUTES) {
     return 'new';
   }
 
+  // Between 5 min and 1 hour → active
   return 'active';
 }
 

@@ -3,14 +3,13 @@
  * Fixed bottom bar with main navigation items
  */
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Inbox, Users, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Inbox, Users } from 'lucide-react';
 import { useBookingRequests } from '../../hooks';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Accueil' },
   { to: '/requests', icon: Inbox, label: 'Demandes', hasBadge: true },
   { to: '/team', icon: Users, label: 'Équipe' },
-  { to: '/stats', icon: BarChart3, label: 'Stats' },
 ];
 
 export default function BottomNav() {

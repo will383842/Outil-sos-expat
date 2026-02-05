@@ -3,7 +3,7 @@
  */
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, Inbox, X, Download, Share, Plus } from 'lucide-react';
+import { LayoutDashboard, Users, Inbox, X, Download, Share, Plus } from 'lucide-react';
 import { useInstallPWA, useBookingRequests } from '../../hooks';
 import { Button } from '../ui';
 
@@ -16,7 +16,6 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/requests', icon: Inbox, label: 'Demandes', hasBadge: true },
   { to: '/team', icon: Users, label: 'Équipe' },
-  { to: '/stats', icon: BarChart3, label: 'Statistiques' },
 ];
 
 export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {

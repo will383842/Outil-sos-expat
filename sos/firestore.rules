@@ -996,8 +996,12 @@ service cloud.firestore {
                      resource.data.providerId == request.auth.uid ||
                      isAdmin() || isDev());
 
-      // Suppression : admin uniquement
-      allow delete: if isAdmin() || isDev();
+      // Suppression : admin, dev, ou agency_manager pour ses providers liés
+      allow delete: if isAuthenticated() &&
+                    (isAdmin() || isDev() ||
+                     ((get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'agency_manager' ||
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') &&
+                      resource.data.providerId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds));
     }
 
     // ================= AUTH LOGS COLLECTION =================

@@ -10,7 +10,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AppLayout } from './components/layout';
 import { InstallPrompt } from './components/pwa';
-import { Login, Dashboard, Team, Stats, Requests, NotFound } from './pages';
+import { Login, Dashboard, Team, Requests, NotFound } from './pages';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -39,7 +39,6 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/requests" element={<Requests />} />
                   <Route path="/team" element={<Team />} />
-                  <Route path="/stats" element={<Stats />} />
                 </Route>
               </Route>
 
