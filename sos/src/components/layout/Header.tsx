@@ -1017,6 +1017,7 @@ const PWAInstallArea = memo<PWAInstallAreaProps>(function PWAInstallArea({
   scrolled,
 }) {
   const intl = useIntl();
+  const getLocalePath = useLocalePath();
 
   const homeAriaLabel = intl.formatMessage({ id: "header.logo.homeAria" });
   const byUlixai = intl.formatMessage({ id: "header.logo.byUlixai" });
@@ -1024,7 +1025,7 @@ const PWAInstallArea = memo<PWAInstallAreaProps>(function PWAInstallArea({
 
   return (
     <Link
-      to="/"
+      to={getLocalePath("/")}
       className="flex items-center select-none group"
       aria-label={homeAriaLabel}
     >
@@ -1068,19 +1069,13 @@ const PWAInstallArea = memo<PWAInstallAreaProps>(function PWAInstallArea({
 
 const PWAIconButton = memo(function PWAIconButton() {
   const intl = useIntl();
-  const navigate = useLocaleNavigate();
+  const getLocalePath = useLocalePath();
   const homeAriaLabel = intl.formatMessage({ id: "header.logo.homeAria" });
   const logoAlt = intl.formatMessage({ id: "header.logo.alt" });
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    navigate("/");
-  }, [navigate]);
-
   return (
     <Link
-      to="/"
-      onTouchEnd={handleTouchEnd}
+      to={getLocalePath("/")}
       className="w-16 h-16 rounded-2xl overflow-hidden bg-transparent
         focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50
         touch-manipulation select-none"
@@ -1119,6 +1114,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
   const { user, logout } = useAuth();
   const typedUser = user as WithAuthExtras | null;
   const navigate = useLocaleNavigate();
+  const getLocalePath = useLocalePath();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -1210,7 +1206,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
     const authLinks = (
       <>
         <Link
-          to="/login"
+          to={getLocalePath("/login")}
           className={
             isMobile
               ? "group flex items-center justify-center w-full bg-white text-red-600 px-6 py-3 rounded-xl border border-gray-300 hover:bg-gray-50 font-semibold min-h-[44px]"
@@ -1228,7 +1224,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
           )}
         </Link>
         <Link
-          to="/register"
+          to={getLocalePath("/register")}
           className={
             isMobile
               ? "group flex items-center justify-center w-full bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 font-bold shadow min-h-[44px]"
@@ -1288,7 +1284,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
             </Link>
           )}
           <Link
-            to="/dashboard"
+            to={getLocalePath("/dashboard")}
             className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
               bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 min-h-[44px]"
             aria-label={t.dashboard}
@@ -1328,7 +1324,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
               )}
             </button>
             <Link
-              to="/dashboard/subscription"
+              to={getLocalePath("/dashboard/subscription")}
               className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
                 bg-gradient-to-r from-indigo-500/30 to-purple-500/30 backdrop-blur-sm text-white hover:from-indigo-500/40 hover:to-purple-500/40 min-h-[44px]"
             >
@@ -1430,7 +1426,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
               </Link>
             )}
             <Link
-              to="/dashboard"
+              to={getLocalePath("/dashboard")}
               className="group flex items-center px-4 py-3 text-sm text-gray-700
                 hover:bg-red-50 hover:text-red-600 rounded-xl mx-1
                 focus:outline-none focus-visible:bg-red-50"
@@ -1478,7 +1474,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
                   )}
                 </button>
                 <Link
-                  to="/dashboard/subscription"
+                  to={getLocalePath("/dashboard/subscription")}
                   className="group flex items-center px-4 py-3 text-sm text-gray-700
                     hover:bg-indigo-50 hover:text-indigo-600 rounded-xl mx-1
                     focus:outline-none focus-visible:bg-indigo-50"
@@ -1725,7 +1721,8 @@ const Header: React.FC = () => {
         {/* MOBILE HEADER */}
         {/* ============================================================ */}
         {/* z-[70] ensures mobile header stays above all overlays (wizard z-30, modals z-50, sidedrawer z-60, desktop header z-60) */}
-        <div className="lg:hidden bg-gray-900 shadow-xl relative z-[70]">
+        {/* safe-area-inset-top: compense l'encoche/Dynamic Island iPhone + cutout Android en mode PWA standalone */}
+        <div className="lg:hidden bg-gray-900 shadow-xl relative z-[70]" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
           <div className="px-4 py-3 flex items-center justify-between">
             <PWAIconButton />
 
@@ -1733,11 +1730,6 @@ const Header: React.FC = () => {
               <Link
                 to={getLocalePath("/sos-appel")}
                 onClick={() => trackLead({ contentName: 'mobile_header_sos_call', contentCategory: 'general' })}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  trackLead({ contentName: 'mobile_header_sos_call', contentCategory: 'general' });
-                  navigate("/sos-appel");
-                }}
                 className="bg-gradient-to-r from-red-600 to-red-700 text-white px-7 py-2.5
                   rounded-2xl font-bold text-base flex items-center space-x-2 border border-white/20
                   touch-manipulation select-none active:opacity-80"
@@ -1781,10 +1773,6 @@ const Header: React.FC = () => {
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                setIsMenuOpen(prev => !prev);
-              }}
               className="p-3 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-white
                 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50
                 touch-manipulation select-none min-w-[48px] min-h-[48px] flex items-center justify-center"
@@ -1806,7 +1794,8 @@ const Header: React.FC = () => {
           {isMenuOpen && (
             <div
               id="mobile-menu"
-              className="fixed inset-x-0 top-[76px] bottom-0 overflow-hidden bg-gray-900 z-[65]"
+              className="fixed inset-x-0 bottom-0 overflow-hidden bg-gray-900 z-[65]"
+              style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))' }}
               role="dialog"
               aria-modal="true"
               aria-label={t.mobileNav}
@@ -1859,8 +1848,8 @@ const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* Spacer pour compenser le header fixed */}
-      <div className="h-20" aria-hidden="true" />
+      {/* Spacer pour compenser le header fixed + safe-area-inset-top en mode PWA standalone */}
+      <div className="h-20" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }} aria-hidden="true" />
     </>
   );
 };
