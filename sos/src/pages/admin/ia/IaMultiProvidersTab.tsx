@@ -452,11 +452,40 @@ export const IaMultiProvidersTab: React.FC = () => {
       const newLinkedIds = account.providers.map(p => p.id).filter(id => id !== providerId);
       const newActiveId = account.activeProviderId === providerId ? newLinkedIds[0] : account.activeProviderId;
 
+      // Read fresh shareBusyStatus from Firestore (avoid stale local state)
+      const ownerDoc = await getDoc(doc(db, 'users', account.userId));
+      const freshShareBusyStatus = ownerDoc.data()?.shareBusyStatus === true;
+
       await updateDoc(doc(db, 'users', account.userId), {
         linkedProviderIds: newLinkedIds,
         activeProviderId: newActiveId,
         updatedAt: serverTimestamp()
       });
+
+      // ✅ DENORMALIZATION: Update remaining providers with new list
+      const denormData = {
+        linkedProviderIds: newLinkedIds,
+        shareBusyStatus: freshShareBusyStatus,
+        updatedAt: serverTimestamp()
+      };
+      for (const pid of newLinkedIds) {
+        await Promise.all([
+          updateDoc(doc(db, 'users', pid), denormData).catch(() => {}),
+          updateDoc(doc(db, 'sos_profiles', pid), denormData).catch(() => {}),
+        ]);
+      }
+
+      // ✅ DENORMALIZATION: Clean up the unlinked provider's docs
+      const cleanupData = {
+        linkedProviderIds: [],
+        shareBusyStatus: false,
+        updatedAt: serverTimestamp()
+      };
+      await Promise.all([
+        updateDoc(doc(db, 'users', providerId), cleanupData).catch(() => {}),
+        updateDoc(doc(db, 'sos_profiles', providerId), cleanupData).catch(() => {}),
+      ]);
+      console.log(`[unlinkProvider] ✅ Denormalized: updated ${newLinkedIds.length} providers, cleaned ${providerId}`);
 
       setAccounts(prev => prev.map(a => {
         if (a.userId !== account.userId) return a;
@@ -495,8 +524,26 @@ export const IaMultiProvidersTab: React.FC = () => {
         linkedProviderIds: [],
         activeProviderId: null,
         isMultiProvider: false,
+        shareBusyStatus: false,
         updatedAt: serverTimestamp()
       });
+
+      // ✅ DENORMALIZATION: Clean up all provider docs (including sibling busy state)
+      const cleanupData = {
+        linkedProviderIds: [],
+        shareBusyStatus: false,
+        busyBySibling: null,
+        busySiblingProviderId: null,
+        busySiblingCallSessionId: null,
+        updatedAt: serverTimestamp()
+      };
+      for (const provider of account.providers) {
+        await Promise.all([
+          updateDoc(doc(db, 'users', provider.id), cleanupData).catch(() => {}),
+          updateDoc(doc(db, 'sos_profiles', provider.id), cleanupData).catch(() => {}),
+        ]);
+      }
+      console.log(`[deleteAccount] ✅ Cleaned denormalized config from ${account.providers.length} provider docs`);
 
       // Remove from local state
       setAccounts(prev => prev.filter(a => a.userId !== account.userId));
@@ -519,13 +566,17 @@ export const IaMultiProvidersTab: React.FC = () => {
     try {
       // Vérifier si déjà lié
       const userDoc = await getDoc(doc(db, 'users', selectedAccountId));
-      const existingLinks: string[] = userDoc.data()?.linkedProviderIds || [];
+      const userData = userDoc.data();
+      const existingLinks: string[] = userData?.linkedProviderIds || [];
+      const currentShareBusyStatus: boolean = userData?.shareBusyStatus === true;
 
       if (existingLinks.includes(selectedProviderId)) {
         setError('Ce prestataire est déjà lié à ce compte');
         setSaving(null);
         return;
       }
+
+      const newLinkedIds = [...existingLinks, selectedProviderId];
 
       // IMPORTANT: Set isMultiProvider=true so the dashboard can find this account
       await updateDoc(doc(db, 'users', selectedAccountId), {
@@ -534,6 +585,21 @@ export const IaMultiProvidersTab: React.FC = () => {
         ...(existingLinks.length === 0 && { activeProviderId: selectedProviderId }),
         updatedAt: serverTimestamp()
       });
+
+      // ✅ DENORMALIZATION: Write linkedProviderIds + shareBusyStatus to each provider's own docs
+      // So providerStatusManager can read directly from the provider doc without parent lookup
+      const denormData = {
+        linkedProviderIds: newLinkedIds,
+        shareBusyStatus: currentShareBusyStatus,
+        updatedAt: serverTimestamp()
+      };
+      for (const pid of newLinkedIds) {
+        await Promise.all([
+          updateDoc(doc(db, 'users', pid), denormData).catch(() => {}),
+          updateDoc(doc(db, 'sos_profiles', pid), denormData).catch(() => {}),
+        ]);
+      }
+      console.log(`[linkProvider] ✅ Denormalized config to ${newLinkedIds.length} provider docs`);
 
       setSuccess('Prestataire lié avec succès');
       setTimeout(() => setSuccess(null), 3000);
@@ -554,11 +620,21 @@ export const IaMultiProvidersTab: React.FC = () => {
     const now = serverTimestamp();
 
     try {
-      // 1. Mettre à jour le flag shareBusyStatus
+      // 1. Mettre à jour le flag shareBusyStatus sur le compte owner
       await updateDoc(doc(db, 'users', account.userId), {
         shareBusyStatus: newValue,
         updatedAt: now
       });
+
+      // ✅ DENORMALIZATION: Propager shareBusyStatus à tous les provider docs
+      for (const provider of account.providers) {
+        const denormData = { shareBusyStatus: newValue, updatedAt: now };
+        await Promise.all([
+          updateDoc(doc(db, 'users', provider.id), denormData).catch(() => {}),
+          updateDoc(doc(db, 'sos_profiles', provider.id), denormData).catch(() => {}),
+        ]);
+      }
+      console.log(`[toggleShareBusyStatus] ✅ Denormalized shareBusyStatus=${newValue} to ${account.providers.length} provider docs`);
 
       let siblingsUpdated = 0;
 
@@ -1431,11 +1507,33 @@ export const IaMultiProvidersTab: React.FC = () => {
         const validLinkedIds = currentLinkedIds.filter(id => validProviderIds.has(id));
 
         if (validLinkedIds.length < currentLinkedIds.length) {
-          // Update the user document
+          // Update the account owner document
           await updateDoc(doc(db, 'users', account.userId), {
             linkedProviderIds: validLinkedIds,
             updatedAt: serverTimestamp()
           });
+
+          // ✅ DENORMALIZATION: Update remaining provider docs with new (smaller) list
+          const denormData = {
+            linkedProviderIds: validLinkedIds,
+            shareBusyStatus: account.shareBusyStatus,
+            updatedAt: serverTimestamp()
+          };
+          for (const pid of validLinkedIds) {
+            await Promise.all([
+              updateDoc(doc(db, 'users', pid), denormData).catch(() => {}),
+              updateDoc(doc(db, 'sos_profiles', pid), denormData).catch(() => {}),
+            ]);
+          }
+          // Clean up orphaned provider docs
+          const removedIds = currentLinkedIds.filter(id => !validProviderIds.has(id));
+          const cleanData = { linkedProviderIds: [], shareBusyStatus: false, updatedAt: serverTimestamp() };
+          for (const pid of removedIds) {
+            await Promise.all([
+              updateDoc(doc(db, 'users', pid), cleanData).catch(() => {}),
+              updateDoc(doc(db, 'sos_profiles', pid), cleanData).catch(() => {}),
+            ]);
+          }
 
           orphanedLinksRemoved += (currentLinkedIds.length - validLinkedIds.length);
           usersFixed++;

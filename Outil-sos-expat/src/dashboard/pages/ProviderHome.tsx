@@ -505,7 +505,7 @@ export default function ProviderHome() {
           variant="primary"
         />
         <KPICard
-          title={t("provider:sidebar.subscription")}
+          title={t("provider:dashboard.stats.status")}
           value={activeConversation ? t("provider:dashboard.stats.inProgress") : t("provider:sidebar.active")}
           subtitle={activeConversation ? t("provider:home.hasActive") : t("provider:home.readyToReceive")}
           icon={<Users className="w-6 h-6" />}

@@ -10,7 +10,7 @@
  * - Online/offline status tracking
  */
 
-import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
+import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from 'react';
 import { useIntl } from 'react-intl';
 // InstallBanner (unified for all platforms) is managed in Layout.tsx
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -55,6 +55,8 @@ const PWAProvider: React.FC<PWAProviderProps> = ({
   const { updateBadge } = useBadging();
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showUpdateBanner, setShowUpdateBanner] = useState(false);
+  const updateDismissed = useRef(false);
 
   // Initialize offline storage
   useEffect(() => {
@@ -95,6 +97,27 @@ const PWAProvider: React.FC<PWAProviderProps> = ({
     };
   }, []);
 
+  // Service Worker update detection
+  useEffect(() => {
+    const handleSWUpdate = () => {
+      if (!updateDismissed.current) {
+        setShowUpdateBanner(true);
+      }
+    };
+    window.addEventListener('sw-update-available', handleSWUpdate);
+    return () => window.removeEventListener('sw-update-available', handleSWUpdate);
+  }, []);
+
+  const handleUpdateRefresh = useCallback(() => {
+    setShowUpdateBanner(false);
+    window.location.reload();
+  }, []);
+
+  const handleUpdateDismiss = useCallback(() => {
+    setShowUpdateBanner(false);
+    updateDismissed.current = true;
+  }, []);
+
   // Badge updates
   useEffect(() => {
     if (enableBadging && installed) {
@@ -126,6 +149,34 @@ const PWAProvider: React.FC<PWAProviderProps> = ({
       {children}
 
       {/* Install Banner (all platforms) is managed in Layout.tsx */}
+
+      {/* SW Update banner */}
+      {showUpdateBanner && (
+        <div
+          className="fixed top-0 left-0 right-0 bg-blue-600 text-white text-center py-3 z-[200] shadow-lg"
+          style={{ paddingTop: 'calc(8px + env(safe-area-inset-top, 0px))' }}
+          role="alert"
+        >
+          <div className="flex items-center justify-center gap-3 px-4">
+            <span className="text-sm font-medium">
+              {intl.formatMessage({ id: 'pwa.update.available', defaultMessage: 'Nouvelle version disponible' })}
+            </span>
+            <button
+              onClick={handleUpdateRefresh}
+              className="px-3 py-1 bg-white text-blue-600 rounded-lg text-sm font-bold touch-manipulation"
+            >
+              {intl.formatMessage({ id: 'pwa.update.refresh', defaultMessage: 'Actualiser' })}
+            </button>
+            <button
+              onClick={handleUpdateDismiss}
+              className="text-white/80 hover:text-white text-lg leading-none touch-manipulation"
+              aria-label="Fermer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Offline indicator */}
       {!isOnline && (

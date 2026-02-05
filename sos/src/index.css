@@ -590,10 +590,9 @@
     transform: scale(0.98) !important;
   }
 
-  /* Force immediate response - no transition delays */
+  /* Force immediate response - no transition delays on touch devices */
   a, button {
     transition-duration: 0.1s !important;
-    transition-property: background-color, border-color, color, opacity !important;
   }
 }
 

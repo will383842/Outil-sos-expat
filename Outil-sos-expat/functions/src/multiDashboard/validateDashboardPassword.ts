@@ -66,6 +66,7 @@ export const validateDashboardPassword = onCall<
     cors: [
       "https://sos-expat.com",
       "https://www.sos-expat.com",
+      "https://multi.sos-expat.com",
       "http://localhost:3000",
       "http://localhost:5173",
     ],

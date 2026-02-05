@@ -131,7 +131,8 @@ const ALLOWED_ORIGINS = [
   "https://sos-expat.com",
   "https://www.sos-expat.com",
   "https://admin.sos-expat.com",
-  "https://app.sos-expat.com",
+  "https://ia.sos-expat.com",
+  "https://multi.sos-expat.com",
   "https://ulixai.com",
   "https://www.ulixai.com",
 ];

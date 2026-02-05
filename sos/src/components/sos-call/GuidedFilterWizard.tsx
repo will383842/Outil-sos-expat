@@ -139,11 +139,6 @@ const CountryStep: React.FC<{
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus input when wrapper is clicked (mobile fix)
-  const handleSearchWrapperClick = useCallback(() => {
-    searchInputRef.current?.focus();
-  }, []);
-
   // Sort countries: priority first, then alphabetically
   const sortedCountries = useMemo(() => {
     const priorityCountries: { code: string; label: string }[] = [];
@@ -183,16 +178,8 @@ const CountryStep: React.FC<{
         <FormattedMessage id="wizard.step1.title" />
       </h2>
 
-      {/* Search - Mobile-optimized with explicit focus handling */}
-      <div
-        className="relative mb-4 cursor-text"
-        onClick={handleSearchWrapperClick}
-        onTouchEnd={(e) => {
-          // Don't prevent default - let the input receive focus naturally
-          searchInputRef.current?.focus();
-        }}
-        role="search"
-      >
+      {/* Search */}
+      <div className="relative mb-4" role="search">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
         <input
           ref={searchInputRef}
@@ -206,13 +193,7 @@ const CountryStep: React.FC<{
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={intl.formatMessage({ id: "wizard.search.country" })}
-          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base"
-          style={{
-            WebkitTapHighlightColor: 'transparent',
-            WebkitUserSelect: 'text',
-            userSelect: 'text',
-            touchAction: 'manipulation'
-          } as React.CSSProperties}
+          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base touch-manipulation"
         />
       </div>
 
@@ -227,18 +208,9 @@ const CountryStep: React.FC<{
               key={country.code}
               type="button"
               onClick={() => onSelect(country.code)}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                onSelect(country.code);
-              }}
-              style={{
-                WebkitTapHighlightColor: 'transparent',
-                WebkitTouchCallout: 'none',
-                touchAction: 'manipulation'
-              } as React.CSSProperties}
               className={`
                 flex items-center gap-2.5 p-3 rounded-xl border-2
-                text-left min-h-[52px] select-none cursor-pointer
+                text-left min-h-[52px] select-none cursor-pointer touch-manipulation
                 ${selectedCountry === country.code
                   ? "bg-red-500/20 border-red-500 text-white"
                   : "bg-white/5 border-transparent text-gray-200 active:bg-white/15"
@@ -274,11 +246,6 @@ const LanguageStep: React.FC<{
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Focus input when wrapper is clicked (mobile fix)
-  const handleSearchWrapperClick = useCallback(() => {
-    searchInputRef.current?.focus();
-  }, []);
 
   // Sort languages: priority first, then alphabetically
   const sortedLanguages = useMemo(() => {
@@ -333,16 +300,8 @@ const LanguageStep: React.FC<{
         </p>
       )}
 
-      {/* Search - Mobile-optimized with explicit focus handling */}
-      <div
-        className="relative mb-4 cursor-text"
-        onClick={handleSearchWrapperClick}
-        onTouchEnd={(e) => {
-          // Don't prevent default - let the input receive focus naturally
-          searchInputRef.current?.focus();
-        }}
-        role="search"
-      >
+      {/* Search */}
+      <div className="relative mb-4" role="search">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
         <input
           ref={searchInputRef}
@@ -356,13 +315,7 @@ const LanguageStep: React.FC<{
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={intl.formatMessage({ id: "wizard.search.language" })}
-          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base"
-          style={{
-            WebkitTapHighlightColor: 'transparent',
-            WebkitUserSelect: 'text',
-            userSelect: 'text',
-            touchAction: 'manipulation'
-          } as React.CSSProperties}
+          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base touch-manipulation"
         />
       </div>
 
@@ -376,18 +329,9 @@ const LanguageStep: React.FC<{
                 key={lang.code}
                 type="button"
                 onClick={() => onToggle(lang.code)}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  onToggle(lang.code);
-                }}
-                style={{
-                  WebkitTapHighlightColor: 'transparent',
-                  WebkitTouchCallout: 'none',
-                  touchAction: 'manipulation'
-                } as React.CSSProperties}
                 className={`
                   flex items-center gap-2.5 p-3 rounded-xl border-2
-                  text-left min-h-[52px] select-none cursor-pointer
+                  text-left min-h-[52px] select-none cursor-pointer touch-manipulation
                   ${isSelected
                     ? "bg-blue-500/20 border-blue-500 text-white"
                     : "bg-white/5 border-transparent text-gray-200 active:bg-white/10"
@@ -461,17 +405,9 @@ const TypeStep: React.FC<{
             <button
               key={option.value}
               onClick={() => onSelect(option.value)}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                onSelect(option.value);
-              }}
-              style={{
-                WebkitTapHighlightColor: 'transparent',
-                touchAction: 'manipulation'
-              } as React.CSSProperties}
               className={`
                 w-full p-4 rounded-2xl border-2
-                text-left flex items-center gap-4
+                text-left flex items-center gap-4 touch-manipulation
                 ${isSelected
                   ? `${option.bgColor} ${option.borderColor}`
                   : "bg-white/5 border-transparent active:bg-white/10"
@@ -584,9 +520,12 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   if (!isOpen) return null;
 
   // z-50 ensures wizard is above SOSCall mobile header (z-40) but below main header (z-60) and mobile menu (z-55)
-  // top-[76px] matches the mobile header height (py-3 padding + 64px icon = ~76px)
+  // top uses calc() with safe-area-inset-top for PWA standalone mode (iPhone notch, Android cutout)
   return (
-    <div className="fixed inset-x-0 top-[76px] lg:top-[80px] bottom-0 z-50 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col">
+    <div
+      className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col"
+      style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))' }}
+    >
 
       {/* ===== HEADER FIXE : Progress Bar ===== */}
       <div className="flex-shrink-0 px-5 pt-8 pb-5 bg-gray-900/90 backdrop-blur-sm border-b border-white/5">
@@ -618,7 +557,6 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
       </div>
 
       {/* ===== FOOTER FIXE : Boutons Navigation ===== */}
-      {/* Fallback padding pour Android sans safe-area support */}
       <div
         className="flex-shrink-0 px-5 py-4 pb-8 bg-gray-900/95 backdrop-blur-md border-t border-white/10 max-w-md mx-auto w-full"
         style={{ paddingBottom: 'max(32px, calc(env(safe-area-inset-bottom, 16px) + 16px))' }}
@@ -626,18 +564,11 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
         {step === 1 && (
           // Step 1: Next button only
           <button
-            onClick={() => setStep(2)}
-            onTouchEnd={(e) => {
-              if (canProceed) {
-                e.preventDefault();
-                setStep(2);
-              }
-            }}
+            onClick={() => canProceed && setStep(2)}
             disabled={!canProceed}
-            style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' } as React.CSSProperties}
             className={`
               w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
-              min-h-[60px]
+              min-h-[60px] touch-manipulation
               ${canProceed
                 ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:opacity-80 shadow-lg shadow-red-500/30"
                 : "bg-white/10 text-gray-500 cursor-not-allowed"
@@ -655,29 +586,17 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
             <button
               type="button"
               onClick={handleBackToStep1}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                handleBackToStep1();
-              }}
-              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' } as React.CSSProperties}
-              className="flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:bg-white/20 min-h-[60px] select-none cursor-pointer"
+              className="flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:bg-white/20 min-h-[60px] select-none cursor-pointer touch-manipulation"
             >
               <ChevronLeft className="w-6 h-6" />
               <FormattedMessage id="action.back" />
             </button>
             <button
-              onClick={() => setStep(3)}
-              onTouchEnd={(e) => {
-                if (canProceed) {
-                  e.preventDefault();
-                  setStep(3);
-                }
-              }}
+              onClick={() => canProceed && setStep(3)}
               disabled={!canProceed}
-              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' } as React.CSSProperties}
               className={`
                 flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
-                min-h-[60px]
+                min-h-[60px] touch-manipulation
                 ${canProceed
                   ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:opacity-80 shadow-lg shadow-red-500/30"
                   : "bg-white/10 text-gray-500 cursor-not-allowed"
@@ -694,12 +613,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
           // Step 3 (Type selection): Back button only - selection auto-completes
           <button
             onClick={() => setStep(2)}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              setStep(2);
-            }}
-            style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' } as React.CSSProperties}
-            className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:bg-white/20 min-h-[60px]"
+            className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:bg-white/20 min-h-[60px] touch-manipulation"
           >
             <ChevronLeft className="w-6 h-6" />
             <FormattedMessage id="action.back" />

@@ -34,7 +34,8 @@ const CORS_ORIGINS = [
   "https://sos-expat.com",
   "https://www.sos-expat.com",
   "https://admin.sos-expat.com",
-  "https://app.sos-expat.com",
+  "https://ia.sos-expat.com",
+  "https://multi.sos-expat.com",
 ];
 
 /**

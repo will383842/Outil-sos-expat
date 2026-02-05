@@ -13,7 +13,7 @@ export default function Team() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-1">
       {/* Action bar */}
       <div className="flex items-center justify-end mb-6">
         <Button

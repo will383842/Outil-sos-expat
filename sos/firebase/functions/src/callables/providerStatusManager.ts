@@ -249,6 +249,10 @@ export async function setProviderBusy(
         message: `Provider status changed from ${previousStatus} to busy`,
         linkedProviderIds: userData?.linkedProviderIds || [],
         shareBusyStatus: userData?.shareBusyStatus === true,
+        // ✅ PERF FIX: Track if the provider doc has a linkedProviderIds field at all
+        // If the field exists (even as []), the provider has been denormalized → no parent lookup needed
+        // If absent (undefined), we may need a parent lookup for non-denormalized providers
+        hasMultiProviderConfig: Array.isArray(userData?.linkedProviderIds),
         skipPropagation: false,
       };
     });
@@ -267,21 +271,52 @@ export async function setProviderBusy(
     // ✅ BUG FIX 2026-02-05: Si linkedProviderIds/shareBusyStatus ne sont pas sur le
     // document du provider (cas multi-prestataire où ces champs sont sur le compte parent),
     // on fait un lookup du compte parent pour retrouver la config.
+    //
+    // ✅ PERF FIX: Skip parent lookup if the provider doc already has a linkedProviderIds field
+    // (even if empty → standalone provider, denormalized). Only lookup if field is absent entirely.
     let effectiveLinkedProviderIds = transactionResult.linkedProviderIds || [];
     let effectiveShareBusyStatus = transactionResult.shareBusyStatus === true;
 
     if (
       !transactionResult.skipPropagation &&
+      !transactionResult.hasMultiProviderConfig &&
       (!effectiveShareBusyStatus || effectiveLinkedProviderIds.length === 0)
     ) {
-      console.log(`🔗 [${logId}] Provider ${providerId} has no linkedProviderIds/shareBusyStatus on own doc, checking parent account...`);
+      console.log(`🔗 [${logId}] Provider ${providerId} has no linkedProviderIds field on own doc, checking parent account...`);
       const parentConfig = await findParentAccountConfig(providerId);
       if (parentConfig) {
         effectiveLinkedProviderIds = parentConfig.linkedProviderIds;
         effectiveShareBusyStatus = parentConfig.shareBusyStatus;
         console.log(`🔗 [${logId}] Using parent account config: shareBusyStatus=${effectiveShareBusyStatus}, linkedProviderIds=[${effectiveLinkedProviderIds.join(', ')}]`);
+
+        // ✅ SELF-HEALING: Write parent config back to provider's own docs
+        // so future calls can read directly without parent lookup
+        try {
+          const selfHealData = {
+            linkedProviderIds: parentConfig.linkedProviderIds,
+            shareBusyStatus: parentConfig.shareBusyStatus,
+          };
+          await Promise.all([
+            db.collection('users').doc(providerId).update(selfHealData),
+            db.collection('sos_profiles').doc(providerId).update(selfHealData).catch(() => {}),
+          ]);
+          console.log(`🔧 [${logId}] Self-healed: wrote parent config to provider ${providerId}'s own docs`);
+        } catch (selfHealErr) {
+          console.warn(`⚠️ [${logId}] Self-heal failed (non-blocking):`, selfHealErr);
+        }
       } else {
         console.log(`🔗 [${logId}] No parent account found - provider is standalone`);
+        // ✅ PERF FIX: Mark standalone provider to avoid future lookups
+        try {
+          const standaloneData = { linkedProviderIds: [], shareBusyStatus: false };
+          await Promise.all([
+            db.collection('users').doc(providerId).update(standaloneData),
+            db.collection('sos_profiles').doc(providerId).update(standaloneData).catch(() => {}),
+          ]);
+          console.log(`🔧 [${logId}] Marked provider ${providerId} as standalone (no future lookups)`);
+        } catch (standaloneErr) {
+          console.warn(`⚠️ [${logId}] Failed to mark standalone (non-blocking):`, standaloneErr);
+        }
       }
     }
 
@@ -593,6 +628,7 @@ export async function setProviderAvailable(
         message: `Provider status changed from ${previousStatus} to ${targetStatus}`,
         linkedProviderIds: userData?.linkedProviderIds || [],
         shareBusyStatus: userData?.shareBusyStatus === true,
+        hasMultiProviderConfig: Array.isArray(userData?.linkedProviderIds),
         skipSiblingRelease: false,
         busySafetyTimeoutTaskId: busySafetyTimeoutTaskId || null,
       };
@@ -617,21 +653,49 @@ export async function setProviderAvailable(
     //
     // ✅ BUG FIX 2026-02-05: Même logique que setProviderBusy - lookup du parent
     // si linkedProviderIds/shareBusyStatus ne sont pas sur le document du provider.
+    // ✅ PERF FIX: Skip parent lookup if provider doc already has linkedProviderIds field.
     let effectiveLinkedProviderIds = transactionResult.linkedProviderIds || [];
     let effectiveShareBusyStatus = transactionResult.shareBusyStatus === true;
 
     if (
       !transactionResult.skipSiblingRelease &&
+      !transactionResult.hasMultiProviderConfig &&
       (!effectiveShareBusyStatus || effectiveLinkedProviderIds.length === 0)
     ) {
-      console.log(`🔗 [ProviderStatusManager] Provider ${providerId} has no linkedProviderIds/shareBusyStatus on own doc, checking parent account...`);
+      console.log(`🔗 [ProviderStatusManager] Provider ${providerId} has no linkedProviderIds field on own doc, checking parent account...`);
       const parentConfig = await findParentAccountConfig(providerId);
       if (parentConfig) {
         effectiveLinkedProviderIds = parentConfig.linkedProviderIds;
         effectiveShareBusyStatus = parentConfig.shareBusyStatus;
         console.log(`🔗 [ProviderStatusManager] Using parent account config: shareBusyStatus=${effectiveShareBusyStatus}, linkedProviderIds=[${effectiveLinkedProviderIds.join(', ')}]`);
+
+        // ✅ SELF-HEALING: Write parent config back to provider's own docs
+        try {
+          const selfHealData = {
+            linkedProviderIds: parentConfig.linkedProviderIds,
+            shareBusyStatus: parentConfig.shareBusyStatus,
+          };
+          await Promise.all([
+            db.collection('users').doc(providerId).update(selfHealData),
+            db.collection('sos_profiles').doc(providerId).update(selfHealData).catch(() => {}),
+          ]);
+          console.log(`🔧 [ProviderStatusManager] Self-healed: wrote parent config to provider ${providerId}'s own docs`);
+        } catch (selfHealErr) {
+          console.warn(`⚠️ [ProviderStatusManager] Self-heal failed (non-blocking):`, selfHealErr);
+        }
       } else {
         console.log(`🔗 [ProviderStatusManager] No parent account found - provider is standalone`);
+        // ✅ PERF FIX: Mark standalone provider to avoid future lookups
+        try {
+          const standaloneData = { linkedProviderIds: [], shareBusyStatus: false };
+          await Promise.all([
+            db.collection('users').doc(providerId).update(standaloneData),
+            db.collection('sos_profiles').doc(providerId).update(standaloneData).catch(() => {}),
+          ]);
+          console.log(`🔧 [ProviderStatusManager] Marked provider ${providerId} as standalone (no future lookups)`);
+        } catch (standaloneErr) {
+          console.warn(`⚠️ [ProviderStatusManager] Failed to mark standalone (non-blocking):`, standaloneErr);
+        }
       }
     }
 

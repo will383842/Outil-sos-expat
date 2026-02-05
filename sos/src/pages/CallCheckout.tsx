@@ -4404,6 +4404,12 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                   bookingData={bookingDataForValidation}
                   onSuccess={handlePayPalPaymentSuccess}
                   onError={(err) => {
+                    // P0 FIX: Ignore errors if payment already succeeded and navigation is in progress
+                    // PayPal SDK can fire onError after onApprove (race condition)
+                    if (currentStep === "calling") {
+                      console.warn("[PayPal] Ignoring late error - payment already succeeded, navigation in progress");
+                      return;
+                    }
                     // PayPalPaymentForm handles error display internally,
                     // but we also set parent error as fallback for edge cases
                     console.error("[PayPal] Payment error:", err);

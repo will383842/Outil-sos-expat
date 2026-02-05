@@ -15,7 +15,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../../lib/firebase";
-import { useAuth, useProvider, useSubscription } from "../../contexts/UnifiedUserContext";
+import { useAuth, useProvider } from "../../contexts/UnifiedUserContext";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useProviderConversationCounts } from "../../hooks/useUnreadMessages";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,6 @@ import {
   ChevronRight,
   Building2,
   Sparkles,
-  CreditCard,
   Check,
   MessagesSquare,
   X,
@@ -323,8 +322,6 @@ export default function ProviderSidebar({ isOpen = false, onClose }: ProviderSid
   const { user } = useAuth();
   const { t } = useLanguage({ mode: "provider" });
   const { linkedProviders, activeProvider, switchProvider } = useProvider();
-  const { status: subscriptionStatus } = useSubscription();
-
   // Collapsed state (desktop only)
   const [collapsed, setCollapsed] = useState(false);
 
@@ -491,24 +488,6 @@ export default function ProviderSidebar({ isOpen = false, onClose }: ProviderSid
                   style={{ width: `${Math.min(aiQuotaPercent, 100)}%` }}
                 />
               </div>
-            </div>
-          )}
-
-          {/* Subscription Status */}
-          {!collapsed && (
-            <div className="flex items-center gap-2 px-3 py-2 text-sm">
-              <CreditCard className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-600">{t("provider:sidebar.subscription")}</span>
-              <span
-                className={cn(
-                  "ml-auto text-xs px-2 py-0.5 rounded-full font-medium",
-                  subscriptionStatus === "active"
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-100 text-amber-700"
-                )}
-              >
-                {subscriptionStatus === "active" ? t("provider:sidebar.active") : t("provider:sidebar.inactive")}
-              </span>
             </div>
           )}
 

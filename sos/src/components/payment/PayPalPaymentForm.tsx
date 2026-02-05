@@ -259,6 +259,10 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
   const intl = useIntl();
   const currentOrderIdRef = useRef<string>("");
+  // P0 FIX: Track successful payment to suppress late onError from PayPal SDK
+  // The PayPal SDK can fire onError AFTER onApprove has already succeeded
+  // (race condition when order is AUTHORIZED but SDK expects COMPLETED)
+  const paymentSucceededRef = useRef(false);
 
   // Safety timeout: if SDK is still pending after 15 seconds, show error
   useEffect(() => {
@@ -420,6 +424,9 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       const result = await response.json();
 
       if (result.success) {
+        // P0 FIX: Mark as succeeded BEFORE setting state to prevent race condition
+        // with PayPal SDK's onError firing after successful authorization
+        paymentSucceededRef.current = true;
         setPaymentStatus("success");
         onSuccess({
           orderId,
@@ -457,6 +464,12 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   }, [authorizeOrder]);
 
   const handleError = useCallback((err: Record<string, unknown>) => {
+    // P0 FIX: Suppress late onError from PayPal SDK if payment already succeeded
+    // The SDK can fire onError AFTER onApprove resolved successfully (race condition)
+    if (paymentSucceededRef.current) {
+      console.warn("⚠️ [PayPal] Ignoring late onError - payment already succeeded:", err);
+      return;
+    }
     if (import.meta.env.DEV) {
       console.error("PayPal handleError:", err);
     }
@@ -479,6 +492,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     setErrorCode("");
     setPaymentMethod(null);
     setIsProcessing(false);
+    paymentSucceededRef.current = false;
   };
 
   // Loading state - Skeleton loader to prevent page jumping
@@ -784,6 +798,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               disabled={disabled}
               onSubmit={() => setPaymentMethod("card")}
               onError={(err) => {
+                // P0 FIX: Suppress late errors if payment already succeeded
+                if (paymentSucceededRef.current) return;
                 setIsProcessing(false);
                 setPaymentStatus("error");
                 setErrorCode(extractPayPalErrorCode(err));

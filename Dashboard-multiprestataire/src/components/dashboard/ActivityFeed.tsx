@@ -78,7 +78,7 @@ export default function ActivityFeed({ providers }: ActivityFeedProps) {
         {activities.map((activity) => (
           <div
             key={activity.id}
-            className="px-6 py-4 flex items-center justify-between"
+            className="px-4 sm:px-6 py-4 flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
               <div className="relative">

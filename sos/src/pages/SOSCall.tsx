@@ -4014,8 +4014,8 @@ const SOSCall: React.FC = () => {
       {!showWizard && (
         <button
           onClick={() => setIsFilterOpen(true)}
-          className="lg:hidden fixed bottom-6 right-4 z-[35] w-14 h-14 rounded-2xl bg-gradient-to-r from-red-600 to-orange-600 flex items-center justify-center shadow-lg shadow-red-500/30 active:scale-95 transition-transform"
-          style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          className="lg:hidden fixed right-4 z-[35] w-14 h-14 rounded-2xl bg-gradient-to-r from-red-600 to-orange-600 flex items-center justify-center shadow-lg shadow-red-500/30 active:scale-95 transition-transform touch-manipulation"
+          style={{ bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}
           aria-label={intl.formatMessage({ id: "sosCall.filters.open" }, { defaultMessage: "Ouvrir les filtres" })}
         >
           <SlidersHorizontal className="w-6 h-6 text-white" />
