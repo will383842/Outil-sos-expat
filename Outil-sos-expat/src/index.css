@@ -1,3 +1,8 @@
+/* Google Fonts pour les scripts spéciaux (doit être en premier) */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+
 /* Import design tokens et animations AVANT Tailwind */
 @import './styles/design-tokens.css';
 @import './styles/animations.css';
@@ -453,10 +458,6 @@
    I18N - SUPPORT MULTILINGUE
    ============================================================================= */
 
-/* Import Google Fonts pour les scripts spéciaux */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
 
 /* =============================================================================
    RTL (Right-to-Left) Support - Arabe

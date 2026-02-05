@@ -90,8 +90,3 @@ export {
 // Multi-provider notifications
 export { useSiblingStatusNotifications } from "./useSiblingStatusNotifications";
 
-// PWA Installation
-export {
-  usePWAInstall,
-  type UsePWAInstallReturn,
-} from "./usePWAInstall";

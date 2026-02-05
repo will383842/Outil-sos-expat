@@ -57,25 +57,6 @@ export function registerServiceWorker(): void {
 }
 
 /**
- * Gère le prompt d'installation PWA
- * Note: Le hook usePWAInstall gère aussi cet événement de manière plus complète
- */
-export function initInstallPrompt(): void {
-  window.addEventListener("beforeinstallprompt", (e) => {
-    console.log("📲 Installation PWA disponible");
-    // Stocker l'événement pour installation ultérieure
-    (window as { deferredPrompt?: Event }).deferredPrompt = e;
-    window.dispatchEvent(new CustomEvent("app:install-available"));
-  });
-
-  // Logger quand l'app est installée
-  window.addEventListener("appinstalled", () => {
-    console.log("✅ PWA installée avec succès");
-    window.dispatchEvent(new CustomEvent("app:installed"));
-  });
-}
-
-/**
  * Demande les permissions de notification
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
@@ -95,5 +76,4 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
  */
 export function initPWA(): void {
   registerServiceWorker();
-  initInstallPrompt();
 }

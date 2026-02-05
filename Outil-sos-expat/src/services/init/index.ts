@@ -10,7 +10,7 @@
 export { initAllMonitoring, initPerformanceMonitoring, initKeyboardShortcuts, initOfflineHandling } from "./monitoring";
 export { initTheme, detectTheme, applyTheme, watchSystemTheme } from "./theme";
 export type { ThemeMode } from "./theme";
-export { initPWA, registerServiceWorker, initInstallPrompt, requestNotificationPermission } from "./pwa";
+export { initPWA, registerServiceWorker, requestNotificationPermission } from "./pwa";
 
 /**
  * Initialise tous les services non-critiques (à appeler dans useEffect)

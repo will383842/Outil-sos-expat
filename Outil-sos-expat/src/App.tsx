@@ -30,7 +30,6 @@ import { UnifiedUserProvider } from "./contexts/UnifiedUserContext";
 import { useSiblingStatusNotifications } from "./hooks";
 import { Toaster } from "react-hot-toast";
 import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
-// PWAInstallBanner disponible si besoin : import { PWAInstallBanner } from "./components/PWAInstallBanner";
 
 // Lazy loading des pages principales
 const AdminApp = lazy(() => import("./admin/AppAdmin"));

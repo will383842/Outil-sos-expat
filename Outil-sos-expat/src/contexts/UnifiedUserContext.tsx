@@ -265,7 +265,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             const adminUserSnap = await getDoc(adminUserRef);
 
             if (!adminUserSnap.exists()) {
-              console.log("[UnifiedUser] Creating missing users document for admin:", firebaseUser.email);
+              if (import.meta.env.DEV) console.log("[UnifiedUser] Creating missing users document for admin:", firebaseUser.email);
               await setDoc(adminUserRef, {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email?.toLowerCase() || "",
@@ -279,7 +279,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
                 updatedAt: serverTimestamp(),
                 source: "auto-created-admin-login",
               }, { merge: true });
-              console.log("[UnifiedUser] Admin users document created successfully");
+              if (import.meta.env.DEV) console.log("[UnifiedUser] Admin users document created successfully");
             }
           } catch (adminDocErr) {
             console.error("[UnifiedUser] Failed to create admin users document:", adminDocErr);
@@ -350,7 +350,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
         if (providerByUidSnap.exists()) {
           providerDoc = { id: providerByUidSnap.id, ...providerByUidSnap.data() };
           providerData = providerByUidSnap.data();
-          console.log("[UnifiedUser] Provider trouvé par UID:", firebaseUser.uid);
+          if (import.meta.env.DEV) console.log("[UnifiedUser] Provider trouvé par UID:", firebaseUser.uid);
         } else {
           // 2. FALLBACK: Chercher par email (pour compatibilité legacy)
           const providersQuery = query(
@@ -363,7 +363,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             const doc = snapshot.docs[0];
             providerDoc = { id: doc.id, ...doc.data() };
             providerData = doc.data();
-            console.log("[UnifiedUser] Provider trouvé par email (legacy):", emailLower);
+            if (import.meta.env.DEV) console.log("[UnifiedUser] Provider trouvé par email (legacy):", emailLower);
           }
         }
 
@@ -394,7 +394,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             const userSnap = await getDoc(userRef);
 
             if (!userSnap.exists()) {
-              console.log("[UnifiedUser] Creating missing users document for provider:", providerDoc.id);
+              if (import.meta.env.DEV) console.log("[UnifiedUser] Creating missing users document for provider:", providerDoc.id);
               try {
                 await setDoc(userRef, {
                   linkedProviderIds: [providerDoc.id],
@@ -408,7 +408,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
                   updatedAt: serverTimestamp(),
                   source: "auto-created-on-sso-login",
                 }, { merge: true });
-                console.log("[UnifiedUser] Users document created successfully");
+                if (import.meta.env.DEV) console.log("[UnifiedUser] Users document created successfully");
               } catch (createErr) {
                 console.error("[UnifiedUser] Failed to create users document:", createErr);
               }
@@ -417,7 +417,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
               const userData = userSnap.data();
               const linkedIds = userData.linkedProviderIds || [];
               if (!linkedIds.includes(providerDoc.id)) {
-                console.log("[UnifiedUser] Adding provider to linkedProviderIds:", providerDoc.id);
+                if (import.meta.env.DEV) console.log("[UnifiedUser] Adding provider to linkedProviderIds:", providerDoc.id);
                 await updateDoc(userRef, {
                   linkedProviderIds: [...linkedIds, providerDoc.id],
                   activeProviderId: providerDoc.id,
@@ -478,13 +478,13 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
           // IMPORTANT: Use ref instead of state to avoid race condition
           // The state might not be updated yet when this callback runs
           if (subscription.hasActiveSubscription || ssoClaimsRef.current.hasActiveSubscription) {
-            console.log("[UnifiedUser] ℹ️ User doc not found but SSO subscription active - no error");
+            if (import.meta.env.DEV) console.log("[UnifiedUser] ℹ️ User doc not found but SSO subscription active - no error");
             return;
           }
 
           // P1 FIX: Fallback - Check providers/{uid} for forcedAIAccess
           // This handles cases where syncProvider wrote to providers but not users
-          console.log("[UnifiedUser] ⚠️ User doc not found, checking providers fallback...");
+          if (import.meta.env.DEV) console.log("[UnifiedUser] ⚠️ User doc not found, checking providers fallback...");
           try {
             const providerRef = doc(db, "providers", user.uid);
             const providerSnap = await getDoc(providerRef);
@@ -506,7 +506,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
                 }
               }
 
-              console.log("[UnifiedUser] Provider fallback check:", {
+              if (import.meta.env.DEV) console.log("[UnifiedUser] Provider fallback check:", {
                 hasForcedAccess,
                 hasFreeTrialAccess,
                 hasSubActive,
@@ -578,7 +578,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             status === "trialing" ||
             status === "past_due";
 
-          console.log("[UnifiedUser] Firestore subscription check:", {
+          if (import.meta.env.DEV) console.log("[UnifiedUser] Firestore subscription check:", {
             hasForcedAccess,
             hasFreeTrialAccess,
             hasActiveSubscription: data.hasActiveSubscription,
@@ -711,7 +711,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
     );
 
     return () => unsub();
-  }, [user?.uid, isAdmin, providerProfile, activeProvider, linkedProviders.length, subscription.hasActiveSubscription]);
+  }, [user?.uid, isAdmin]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // ACTIONS
