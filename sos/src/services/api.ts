@@ -1,4 +1,4 @@
-import { auth, functionsPayment } from '../config/firebase';
+import { auth, functions, functionsPayment } from '../config/firebase';
 import { httpsCallable } from 'firebase/functions';
 
 /**
