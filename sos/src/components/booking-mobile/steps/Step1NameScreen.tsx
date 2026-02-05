@@ -7,7 +7,7 @@ export const Step1NameScreen: React.FC = () => {
   const intl = useIntl();
   const { form, goNextStep, isCurrentStepValid } = useMobileBooking();
   const { control, formState: { errors } } = form;
-  const lastNameRef = useRef<HTMLInputElement>(null);
+  const lastNameRef = useRef<HTMLInputElement | null>(null);
 
   return (
     <div className="px-4 py-6">
