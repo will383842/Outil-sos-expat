@@ -60,6 +60,55 @@ export interface ProviderStatusOptions {
 }
 
 // =============================
+// Helper: lookup du compte parent multi-prestataire
+// =============================
+
+/**
+ * Recherche le compte parent (propriétaire) qui contient ce providerId
+ * dans son linkedProviderIds.
+ *
+ * Contexte du bug: Dans l'admin multi-prestataires, shareBusyStatus et
+ * linkedProviderIds sont stockés sur le document users/{accountOwnerId},
+ * PAS sur users/{providerId}. Donc quand setProviderBusy/setProviderAvailable
+ * lit users/{providerId}, ces champs sont absents → pas de propagation.
+ *
+ * Cette fonction fait une query array-contains pour retrouver le parent.
+ *
+ * @param providerId - ID du prestataire
+ * @returns { linkedProviderIds, shareBusyStatus } ou null si pas de parent
+ */
+async function findParentAccountConfig(
+  providerId: string
+): Promise<{ linkedProviderIds: string[]; shareBusyStatus: boolean } | null> {
+  try {
+    const db = getDb();
+    const parentQuery = await db
+      .collection('users')
+      .where('linkedProviderIds', 'array-contains', providerId)
+      .limit(1)
+      .get();
+
+    if (parentQuery.empty) {
+      return null;
+    }
+
+    const parentDoc = parentQuery.docs[0];
+    const parentData = parentDoc.data();
+    const linkedProviderIds: string[] = parentData?.linkedProviderIds || [];
+    const shareBusyStatus: boolean = parentData?.shareBusyStatus === true;
+
+    console.log(`🔗 [findParentAccountConfig] Found parent account ${parentDoc.id} for provider ${providerId}`);
+    console.log(`🔗   linkedProviderIds: [${linkedProviderIds.join(', ')}]`);
+    console.log(`🔗   shareBusyStatus: ${shareBusyStatus}`);
+
+    return { linkedProviderIds, shareBusyStatus };
+  } catch (error) {
+    console.error(`⚠️ [findParentAccountConfig] Error looking up parent account for ${providerId}:`, error);
+    return null;
+  }
+}
+
+// =============================
 // Fonctions principales
 // =============================
 
@@ -214,14 +263,35 @@ export async function setProviderBusy(
 
     // 5. Propager aux prestataires liés si shareBusyStatus est activé
     // (fait en dehors de la transaction pour éviter les deadlocks)
+    //
+    // ✅ BUG FIX 2026-02-05: Si linkedProviderIds/shareBusyStatus ne sont pas sur le
+    // document du provider (cas multi-prestataire où ces champs sont sur le compte parent),
+    // on fait un lookup du compte parent pour retrouver la config.
+    let effectiveLinkedProviderIds = transactionResult.linkedProviderIds || [];
+    let effectiveShareBusyStatus = transactionResult.shareBusyStatus === true;
+
     if (
       !transactionResult.skipPropagation &&
-      transactionResult.shareBusyStatus &&
-      transactionResult.linkedProviderIds &&
-      transactionResult.linkedProviderIds.length > 0
+      (!effectiveShareBusyStatus || effectiveLinkedProviderIds.length === 0)
     ) {
-      console.log(`[ProviderStatusManager] shareBusyStatus=true, propagating to ${transactionResult.linkedProviderIds.length} linked providers`);
-      await propagateBusyToSiblings(providerId, transactionResult.linkedProviderIds, callSessionId, now);
+      console.log(`🔗 [${logId}] Provider ${providerId} has no linkedProviderIds/shareBusyStatus on own doc, checking parent account...`);
+      const parentConfig = await findParentAccountConfig(providerId);
+      if (parentConfig) {
+        effectiveLinkedProviderIds = parentConfig.linkedProviderIds;
+        effectiveShareBusyStatus = parentConfig.shareBusyStatus;
+        console.log(`🔗 [${logId}] Using parent account config: shareBusyStatus=${effectiveShareBusyStatus}, linkedProviderIds=[${effectiveLinkedProviderIds.join(', ')}]`);
+      } else {
+        console.log(`🔗 [${logId}] No parent account found - provider is standalone`);
+      }
+    }
+
+    if (
+      !transactionResult.skipPropagation &&
+      effectiveShareBusyStatus &&
+      effectiveLinkedProviderIds.length > 0
+    ) {
+      console.log(`[ProviderStatusManager] shareBusyStatus=true, propagating to ${effectiveLinkedProviderIds.length} linked providers`);
+      await propagateBusyToSiblings(providerId, effectiveLinkedProviderIds, callSessionId, now);
     }
 
     // 6. Schedule busy safety timeout task (non-blocking)
@@ -544,14 +614,34 @@ export async function setProviderAvailable(
 
     // 5. Libérer les siblings si shareBusyStatus est activé
     // (fait en dehors de la transaction pour éviter les deadlocks)
+    //
+    // ✅ BUG FIX 2026-02-05: Même logique que setProviderBusy - lookup du parent
+    // si linkedProviderIds/shareBusyStatus ne sont pas sur le document du provider.
+    let effectiveLinkedProviderIds = transactionResult.linkedProviderIds || [];
+    let effectiveShareBusyStatus = transactionResult.shareBusyStatus === true;
+
     if (
       !transactionResult.skipSiblingRelease &&
-      transactionResult.shareBusyStatus &&
-      transactionResult.linkedProviderIds &&
-      transactionResult.linkedProviderIds.length > 0
+      (!effectiveShareBusyStatus || effectiveLinkedProviderIds.length === 0)
     ) {
-      console.log(`[ProviderStatusManager] shareBusyStatus=true, releasing ${transactionResult.linkedProviderIds.length} linked providers`);
-      await releaseSiblingsFromBusy(providerId, transactionResult.linkedProviderIds, now);
+      console.log(`🔗 [ProviderStatusManager] Provider ${providerId} has no linkedProviderIds/shareBusyStatus on own doc, checking parent account...`);
+      const parentConfig = await findParentAccountConfig(providerId);
+      if (parentConfig) {
+        effectiveLinkedProviderIds = parentConfig.linkedProviderIds;
+        effectiveShareBusyStatus = parentConfig.shareBusyStatus;
+        console.log(`🔗 [ProviderStatusManager] Using parent account config: shareBusyStatus=${effectiveShareBusyStatus}, linkedProviderIds=[${effectiveLinkedProviderIds.join(', ')}]`);
+      } else {
+        console.log(`🔗 [ProviderStatusManager] No parent account found - provider is standalone`);
+      }
+    }
+
+    if (
+      !transactionResult.skipSiblingRelease &&
+      effectiveShareBusyStatus &&
+      effectiveLinkedProviderIds.length > 0
+    ) {
+      console.log(`[ProviderStatusManager] shareBusyStatus=true, releasing ${effectiveLinkedProviderIds.length} linked providers`);
+      await releaseSiblingsFromBusy(providerId, effectiveLinkedProviderIds, now);
     }
 
     return {

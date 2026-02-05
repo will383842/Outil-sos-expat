@@ -59,15 +59,17 @@ export function KPICard({
 }: KPICardProps) {
   const styles = variantStyles[variant];
 
-  // P0 DEBUG: Log KPI values to detect undefined/NaN issues
-  console.log("[KPICard] 📊", {
-    title,
-    value,
-    valueType: typeof value,
-    isValueValid: value !== undefined && value !== null && value !== "" && !Number.isNaN(value),
-    subtitle,
-    variant,
-  });
+  // Log KPI values only in development
+  if (import.meta.env.DEV) {
+    console.log("[KPICard] 📊", {
+      title,
+      value,
+      valueType: typeof value,
+      isValueValid: value !== undefined && value !== null && value !== "" && !Number.isNaN(value),
+      subtitle,
+      variant,
+    });
+  }
 
   const getTrendIcon = () => {
     if (!trend) return null;

@@ -83,7 +83,22 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "/screenshots/screenshot-narrow.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "SOS Expat - Assistance expatriés mobile"
+    },
+    {
+      "src": "/screenshots/screenshot-wide.png",
+      "sizes": "720x540",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "SOS Expat - Dashboard desktop"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Urgence Juridique",

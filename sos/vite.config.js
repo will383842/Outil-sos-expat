@@ -4,6 +4,7 @@ import wasm from 'vite-plugin-wasm'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { fileURLToPath, URL } from 'node:url'
 import { resolve } from 'path'
+import fs from 'fs'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -28,6 +29,31 @@ export default defineConfig(({ mode }) => {
         brotliSize: true,
         template: 'treemap', // ou 'sunburst', 'network'
       }),
+      // Plugin pour injecter BUILD_TIMESTAMP dans le Service Worker
+      {
+        name: 'inject-sw-timestamp',
+        closeBundle() {
+          const swPath = resolve(__dirname, 'dist', 'sw.js')
+          const fmswPath = resolve(__dirname, 'dist', 'firebase-messaging-sw.js')
+          const timestamp = Date.now().toString()
+
+          // Inject timestamp in sw.js
+          if (fs.existsSync(swPath)) {
+            let content = fs.readFileSync(swPath, 'utf-8')
+            content = content.replace(/'__BUILD_TIMESTAMP__'/g, `'${timestamp}'`)
+            fs.writeFileSync(swPath, content)
+            console.log(`✅ Injected BUILD_TIMESTAMP (${timestamp}) into sw.js`)
+          }
+
+          // Also inject in firebase-messaging-sw.js if it exists
+          if (fs.existsSync(fmswPath)) {
+            let content = fs.readFileSync(fmswPath, 'utf-8')
+            content = content.replace(/'__BUILD_TIMESTAMP__'/g, `'${timestamp}'`)
+            fs.writeFileSync(fmswPath, content)
+            console.log(`✅ Injected BUILD_TIMESTAMP (${timestamp}) into firebase-messaging-sw.js`)
+          }
+        }
+      },
       // Custom plugin to handle SPA routing in dev server
       {
         name: 'spa-fallback',

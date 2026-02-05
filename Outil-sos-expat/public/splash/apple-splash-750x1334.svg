@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 1334" width="750" height="1334">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC2626"/>
+      <stop offset="50%" style="stop-color:#B91C1C"/>
+      <stop offset="100%" style="stop-color:#991B1B"/>
+    </linearGradient>
+  </defs>
+  <rect width="750" height="1334" fill="url(#bg)"/>
+  <circle cx="100" cy="200" r="150" fill="rgba(255,255,255,0.03)"/>
+  <circle cx="650" cy="1100" r="200" fill="rgba(255,255,255,0.03)"/>
+  <g transform="translate(375, 550)">
+    <circle cx="0" cy="0" r="120" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+    <circle cx="0" cy="0" r="100" fill="rgba(255,255,255,0.15)"/>
+    <text x="0" y="15" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="60" font-weight="900">SOS</text>
+  </g>
+  <text x="375" y="780" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700">SOS Expats</text>
+  <text x="375" y="840" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="600">PRO</text>
+  <text x="375" y="910" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, -apple-system, sans-serif" font-size="22">Espace Prestataires</text>
+  <g transform="translate(375, 1020)">
+    <circle cx="-30" cy="0" r="8" fill="rgba(255,255,255,0.6)"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0s"/></circle>
+    <circle cx="0" cy="0" r="8" fill="rgba(255,255,255,0.6)"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.3s"/></circle>
+    <circle cx="30" cy="0" r="8" fill="rgba(255,255,255,0.6)"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.6s"/></circle>
+  </g>
+</svg>

@@ -13,6 +13,7 @@ import * as admin from "firebase-admin";
 import { ultraLogger, traceFunction } from "../utils/ultraDebugLogger";
 import { decryptPhoneNumber } from "../utils/encryption";
 import { OUTIL_SYNC_API_KEY, ENCRYPTION_KEY } from "../lib/secrets";
+import { getCountryName } from "../utils/countryUtils";
 
 // Language code to name mapping for SMS notifications
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -114,7 +115,8 @@ export async function syncCallSessionToOutil(
       clientEmail: cs?.participants?.client?.email || cs?.clientEmail,
       clientPhone: decryptedClientPhone,
       clientWhatsapp: cs?.clientWhatsapp,
-      clientCurrentCountry: cs?.clientCurrentCountry,
+      // P3 FIX: Convert ISO code to full country name for consistency with SMS
+      clientCurrentCountry: getCountryName(cs?.clientCurrentCountry) || cs?.clientCurrentCountry,
       clientNationality: cs?.clientNationality,
       clientLanguages: cs?.metadata?.clientLanguages || cs?.clientLanguages,
 
@@ -362,7 +364,9 @@ export const sendPaymentNotifications = traceFunction(
         const clientName = cs?.participants?.client?.name ?? cs?.participants?.client?.firstName ?? cs?.clientName ?? "Client";
         // P2 FIX: Use clientCurrentCountry as intervention country (selected by client in wizard)
         // clientCurrentCountry = where the client needs help (intervention country from wizard/booking form)
-        const interventionCountry = cs?.clientCurrentCountry ?? cs?.metadata?.clientCountry ?? "N/A";
+        // P3 FIX: Convert ISO code to full country name for SMS readability
+        const rawInterventionCountry = cs?.clientCurrentCountry ?? cs?.metadata?.clientCountry ?? "N/A";
+        const interventionCountry = getCountryName(rawInterventionCountry) || rawInterventionCountry;
         const amount = cs?.payment?.amount ?? cs?.metadata?.amount ?? 0;
         const currency = cs?.payment?.currency ?? cs?.currency ?? "EUR";
         const serviceType = cs?.metadata?.serviceType ?? cs?.serviceType ?? "consultation";

@@ -32,15 +32,17 @@ export function QuotaBar({
   const { t } = useLanguage({ mode: "provider" });
   const percentage = total > 0 ? Math.min((used / total) * 100, 100) : 0;
 
-  // P0 DEBUG: Log quota values to detect NaN/undefined issues
-  console.log("[QuotaBar] 📈", {
-    used,
-    total,
-    percentage,
-    isUsedValid: typeof used === "number" && !Number.isNaN(used),
-    isTotalValid: typeof total === "number" && !Number.isNaN(total) && total > 0,
-    calculatedWidth: `${percentage}%`,
-  });
+  // Log quota values only in development
+  if (import.meta.env.DEV) {
+    console.log("[QuotaBar] 📈", {
+      used,
+      total,
+      percentage,
+      isUsedValid: typeof used === "number" && !Number.isNaN(used),
+      isTotalValid: typeof total === "number" && !Number.isNaN(total) && total > 0,
+      calculatedWidth: `${percentage}%`,
+    });
+  }
 
   // Use translated warning message or provided one
   const quotaWarning = warningMessage || t("provider:dashboard.quota.almostReached");

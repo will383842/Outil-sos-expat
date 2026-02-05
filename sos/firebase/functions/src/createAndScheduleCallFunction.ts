@@ -22,6 +22,8 @@ import {
   TASKS_AUTH_SECRET,
   OUTIL_SYNC_API_KEY,
 } from './lib/secrets';
+// P3 FIX: Import country utils for converting ISO codes to full names
+import { getCountryName } from './utils/countryUtils';
 
 // ✅ Interface corrigée pour correspondre exactement aux données frontend
 interface CreateCallRequest {
@@ -595,7 +597,9 @@ export const createAndScheduleCallHTTPS = onCall(
         // P0 CRITICAL FIX: Use PROVIDER's country as intervention country
         // The client contacts a provider based in Thailand for Thailand-related questions
         // clientCurrentCountry often contains the client's residence (France) instead of the intervention country
-        const interventionCountry = providerDocData?.country || clientCurrentCountry || 'N/A';
+        // P3 FIX: Convert ISO code to full country name for SMS readability and IA sync consistency
+        const rawInterventionCountry = providerDocData?.country || clientCurrentCountry || 'N/A';
+        const interventionCountry = getCountryName(rawInterventionCountry) || rawInterventionCountry;
         const clientDisplayName = clientFirstName || clientData?.firstName || clientName;
 
         console.log(`📨 [${requestId}]   - scheduledTime: ${scheduledTime.toISOString()}`);

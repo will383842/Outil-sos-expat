@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import { GA4_MEASUREMENT_ID } from "../config";
+import { GA4_MEASUREMENT_ID, getGA4ApiSecret } from "../config";
 
 interface GA4EventParams {
   [key: string]: string | number | boolean | undefined;
@@ -14,10 +14,19 @@ async function sendToGA4(
   clientId?: string
 ): Promise<void> {
   const measurementId = GA4_MEASUREMENT_ID.value();
-  // const apiSecret = GA4_API_SECRET.value();
+
+  // SECURITY: Get API secret from Firebase Secret Manager (never hardcode!)
+  let apiSecret: string;
+  try {
+    apiSecret = getGA4ApiSecret();
+  } catch {
+    // Secret not configured - skip GA4 silently
+    console.warn("⚠️ GA4_API_SECRET not configured in Firebase Secret Manager");
+    return;
+  }
 
   // Skip if not configured
-  if (measurementId ) {
+  if (!measurementId || !apiSecret) {
     return;
   }
 
@@ -32,7 +41,7 @@ async function sendToGA4(
       ],
     };
 
-    const url = `https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=your_ga4_api_secret_here`;
+    const url = `https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`;
 
     const response = await fetch(url, {
       method: "POST",

@@ -22,9 +22,23 @@ export function useFCM() {
     Notification.requestPermission().then(async (permission) => {
       if (permission === 'granted') {
         try {
+          // P0 FIX: Use the main service worker instead of separate firebase-messaging-sw.js
+          // This avoids conflicts between two SWs at the same scope
+          // The main sw.js already handles push notifications
+          let swRegistration = await navigator.serviceWorker.getRegistration('/');
+
+          // If main SW not registered yet, register it
+          if (!swRegistration) {
+            swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            console.log('[FCM] Registered main service worker for push notifications');
+          }
+
+          // Wait for the SW to be ready
+          await navigator.serviceWorker.ready;
+
           const token = await getToken(messaging, {
             vapidKey,
-            serviceWorkerRegistration: await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js'),
+            serviceWorkerRegistration: swRegistration,
           });
 
           if (token) {
@@ -35,7 +49,7 @@ export function useFCM() {
               updatedAt: new Date(),
               role: user.role,
             });
-
+            console.log('[FCM] Token saved successfully');
           } else {
             console.warn('⚠️ Aucun token reçu');
           }
@@ -50,7 +64,19 @@ export function useFCM() {
     // Gère les messages reçus quand app est ouverte
     // SECURITY FIX: Store unsubscribe function to prevent memory leak
     const unsubscribe = onMessage(messaging, (payload) => {
-      // Notification reçue pendant l'utilisation de l'app
+      console.log('[FCM] Foreground message received:', payload);
+
+      // Show notification when app is in foreground
+      if (payload.notification) {
+        const { title, body } = payload.notification;
+        new Notification(title || 'SOS Expat', {
+          body: body || '',
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/icon-72x72.png',
+          tag: 'sos-foreground',
+          data: payload.data,
+        });
+      }
     });
 
     // Cleanup: unsubscribe when component unmounts or user changes

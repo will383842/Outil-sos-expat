@@ -93,3 +93,49 @@ export function getCountryData(countryCodeOrName: string | undefined | null): Co
 
   return countriesData.find((c: CountryData) => c.code === code);
 }
+
+/**
+ * Convertit un code ISO-2 ou nom de pays en nom complet dans la langue spécifiée
+ * Utilisé pour afficher les noms de pays dans les SMS, notifications, etc.
+ *
+ * @param countryCodeOrName - Code ISO-2 (ex: "TH", "FR") ou nom de pays
+ * @param language - Code langue pour le nom de retour (défaut: 'fr')
+ * @returns Nom complet du pays (ex: "Thaïlande", "France") ou la valeur d'origine si non trouvé
+ */
+export function getCountryName(
+  countryCodeOrName: string | undefined | null,
+  language: 'fr' | 'en' | 'es' | 'de' | 'pt' | 'zh' | 'ar' | 'ru' | 'it' | 'nl' = 'fr'
+): string {
+  if (!countryCodeOrName || typeof countryCodeOrName !== 'string') return '';
+
+  const trimmed = countryCodeOrName.trim();
+  if (!trimmed) return '';
+
+  // Récupérer les données du pays
+  const countryData = getCountryData(trimmed);
+
+  if (!countryData) {
+    // Si pas trouvé, retourner la valeur d'origine (peut déjà être un nom complet)
+    return trimmed;
+  }
+
+  // Mapper le code langue vers le champ correspondant
+  const nameFieldMap: Record<string, keyof CountryData> = {
+    fr: 'nameFr',
+    en: 'nameEn',
+    es: 'nameEs',
+    de: 'nameDe',
+    pt: 'namePt',
+    zh: 'nameZh',
+    ar: 'nameAr',
+    ru: 'nameRu',
+    it: 'nameIt',
+    nl: 'nameNl',
+  };
+
+  const nameField = nameFieldMap[language] || 'nameFr';
+  const countryName = countryData[nameField] as string;
+
+  // Fallback vers le français si le nom dans la langue demandée est vide
+  return countryName || countryData.nameFr || trimmed;
+}

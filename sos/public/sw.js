@@ -48,10 +48,36 @@ const BACKGROUND_PRECACHE = [
 // Configuration des caches avec limites strictes pour mobile
 const CACHE_CONFIG = {
   static: { maxAge: 7 * 24 * 60 * 60 * 1000, maxEntries: 30 },    // 7 jours, 30 entrées
-  dynamic: { maxAge: 24 * 60 * 60 * 1000, maxEntries: 20 },       // 1 jour, 20 entrées  
+  dynamic: { maxAge: 24 * 60 * 60 * 1000, maxEntries: 20 },       // 1 jour, 20 entrées
   images: { maxAge: 3 * 24 * 60 * 60 * 1000, maxEntries: 50 },    // 3 jours, 50 images
   api: { maxAge: 60 * 60 * 1000, maxEntries: 15 }                 // 1 heure, 15 API calls
 };
+
+// Configuration des retries pour background sync
+const SYNC_CONFIG = {
+  maxRetries: 5,                    // Maximum 5 tentatives
+  baseDelay: 1000,                  // Délai de base 1s
+  maxDelay: 30000,                  // Délai maximum 30s
+  backoffMultiplier: 2              // Exponential backoff x2
+};
+
+// Content-Type validation pour le caching
+const VALID_CONTENT_TYPES = {
+  static: ['text/css', 'application/javascript', 'text/javascript', 'application/json', 'font/'],
+  images: ['image/'],
+  api: ['application/json'],
+  html: ['text/html']
+};
+
+// Vérifie si la response est valide pour le caching
+function isValidCacheResponse(response, expectedTypes) {
+  if (!response || !response.ok) return false;
+
+  const contentType = response.headers.get('content-type') || '';
+
+  // Vérifier que le Content-Type correspond aux types attendus
+  return expectedTypes.some(type => contentType.includes(type));
+}
 
 // Détection intelligente du contexte
 const isMobile = () => {
@@ -264,19 +290,20 @@ async function handleHTML(request, url) {
 async function handleStatic(request, url) {
   const cache = await caches.open(STATIC_CACHE);
   const cachedResponse = await cache.match(request);
-  
+
   if (cachedResponse && isFresh(cachedResponse, CACHE_CONFIG.static.maxAge)) {
     return cachedResponse;
   }
-  
+
   try {
     const networkResponse = await fetchWithTimeout(request, NETWORK_TIMEOUTS.desktop);
-    
-    if (networkResponse.ok) {
+
+    // Valider Content-Type avant de cacher
+    if (isValidCacheResponse(networkResponse, VALID_CONTENT_TYPES.static)) {
       await cache.put(request, networkResponse.clone());
       await limitCacheSize(STATIC_CACHE, CACHE_CONFIG.static.maxEntries);
     }
-    
+
     return networkResponse;
   } catch {
     return cachedResponse || createOfflineResponse(request, url);
@@ -287,19 +314,20 @@ async function handleStatic(request, url) {
 async function handleImage(request, url) {
   const cache = await caches.open(IMAGE_CACHE);
   const cachedResponse = await cache.match(request);
-  
+
   if (cachedResponse) {
     return cachedResponse;
   }
-  
+
   try {
     const networkResponse = await fetchWithTimeout(request, NETWORK_TIMEOUTS.images);
-    
-    if (networkResponse.ok) {
+
+    // Valider Content-Type avant de cacher (doit être une image)
+    if (isValidCacheResponse(networkResponse, VALID_CONTENT_TYPES.images)) {
       await cache.put(request, networkResponse.clone());
       await limitCacheSize(IMAGE_CACHE, CACHE_CONFIG.images.maxEntries);
     }
-    
+
     return networkResponse;
   } catch {
     return createImagePlaceholder(url);
@@ -309,18 +337,16 @@ async function handleImage(request, url) {
 // Gestion API avec stratégie Network-First
 async function handleAPI(request, url) {
   const cache = await caches.open(API_CACHE);
-  
+
   try {
     const networkResponse = await fetchWithTimeout(request, NETWORK_TIMEOUTS.api);
-    
-    if (networkResponse.ok) {
-      // Cacher seulement les GET API success
-      if (request.method === 'GET') {
-        await cache.put(request, networkResponse.clone());
-        await limitCacheSize(API_CACHE, CACHE_CONFIG.api.maxEntries);
-      }
+
+    // Cacher seulement les GET API success avec Content-Type JSON valide
+    if (request.method === 'GET' && isValidCacheResponse(networkResponse, VALID_CONTENT_TYPES.api)) {
+      await cache.put(request, networkResponse.clone());
+      await limitCacheSize(API_CACHE, CACHE_CONFIG.api.maxEntries);
     }
-    
+
     return networkResponse;
   } catch {
     const cachedResponse = await cache.match(request);
@@ -359,15 +385,21 @@ async function handleAPI(request, url) {
 // Gestion ressources dynamiques
 async function handleDynamic(request, url) {
   const cache = await caches.open(DYNAMIC_CACHE);
-  
+
   try {
     const networkResponse = await fetchWithTimeout(request, NETWORK_TIMEOUTS.mobile);
-    
+
+    // Valider que la response est OK et a un Content-Type raisonnable
     if (networkResponse.ok) {
-      await cache.put(request, networkResponse.clone());
-      await limitCacheSize(DYNAMIC_CACHE, CACHE_CONFIG.dynamic.maxEntries);
+      const contentType = networkResponse.headers.get('content-type') || '';
+      // Ne pas cacher les erreurs HTML (pages 404/500 déguisées)
+      const isErrorPage = contentType.includes('text/html') && networkResponse.status >= 400;
+      if (!isErrorPage) {
+        await cache.put(request, networkResponse.clone());
+        await limitCacheSize(DYNAMIC_CACHE, CACHE_CONFIG.dynamic.maxEntries);
+      }
     }
-    
+
     return networkResponse;
   } catch {
     const cachedResponse = await cache.match(request);
@@ -777,8 +809,9 @@ self.addEventListener('notificationclick', event => {
 self.addEventListener('sync', event => {
   console.log('[SW] Background sync triggered:', event.tag);
 
-  if (event.tag === 'sync-pending-requests') {
-    event.waitUntil(syncPendingRequests());
+  // Handle sync-pending-actions from offlineStorage.ts
+  if (event.tag === 'sync-pending-actions') {
+    event.waitUntil(syncPendingActions());
   } else if (event.tag === 'sync-notifications') {
     event.waitUntil(syncPendingNotifications());
   } else if (event.tag === 'sync-messages') {
@@ -786,65 +819,332 @@ self.addEventListener('sync', event => {
   }
 });
 
-// Sync pending API requests from IndexedDB queue
-async function syncPendingRequests() {
-  console.log('[SW] Syncing pending requests...');
+// Calcul du délai avec exponential backoff
+function calculateBackoffDelay(retryCount) {
+  const delay = Math.min(
+    SYNC_CONFIG.baseDelay * Math.pow(SYNC_CONFIG.backoffMultiplier, retryCount),
+    SYNC_CONFIG.maxDelay
+  );
+  // Ajouter un peu de jitter pour éviter les thundering herds
+  return delay + Math.random() * 1000;
+}
+
+// Sync pending actions from IndexedDB queue (aligned with offlineStorage.ts)
+async function syncPendingActions() {
+  console.log('[SW] Syncing pending actions...');
 
   try {
-    // Open IndexedDB to get pending requests
-    const db = await openSyncDB();
-    const tx = db.transaction('pending-requests', 'readwrite');
-    const store = tx.objectStore('pending-requests');
-    const requests = await store.getAll();
+    const db = await openOfflineDB();
 
-    for (const req of requests) {
-      try {
-        const response = await fetch(req.url, {
-          method: req.method,
-          headers: req.headers,
-          body: req.body
+    // Get all pending actions
+    const actions = await new Promise((resolve, reject) => {
+      const tx = db.transaction('pendingActions', 'readonly');
+      const store = tx.objectStore('pendingActions');
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+
+    console.log(`[SW] Found ${actions.length} pending actions to sync`);
+
+    for (const action of actions) {
+      const retryCount = action.retryCount || 0;
+
+      // Vérifier si l'action a dépassé le nombre max de retries
+      if (retryCount >= SYNC_CONFIG.maxRetries) {
+        console.warn(`[SW] Action ${action.id} exceeded max retries (${retryCount}/${SYNC_CONFIG.maxRetries}), removing from queue`);
+        // Supprimer l'action définitivement
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction('pendingActions', 'readwrite');
+          const store = tx.objectStore('pendingActions');
+          const request = store.delete(action.id);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
         });
+        // Notifier les clients de l'échec permanent
+        const clients = await self.clients.matchAll();
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SYNC_ACTION_FAILED',
+            actionId: action.id,
+            actionType: action.type,
+            error: action.lastError || 'Max retries exceeded'
+          });
+        });
+        continue;
+      }
 
-        if (response.ok) {
-          await store.delete(req.id);
-          console.log('[SW] Synced request:', req.url);
+      // Appliquer exponential backoff si ce n'est pas la première tentative
+      if (retryCount > 0) {
+        const delay = calculateBackoffDelay(retryCount);
+        console.log(`[SW] Waiting ${Math.round(delay)}ms before retry ${retryCount + 1} for action ${action.id}`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
+      try {
+        // Process each action based on type
+        const success = await processPendingAction(action);
+
+        if (success) {
+          // Remove from queue on success
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction('pendingActions', 'readwrite');
+            const store = tx.objectStore('pendingActions');
+            const request = store.delete(action.id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+          });
+          console.log('[SW] Synced action:', action.type, action.id);
         }
       } catch (error) {
-        console.warn('[SW] Failed to sync request:', req.url, error);
+        console.warn(`[SW] Failed to sync action (attempt ${retryCount + 1}/${SYNC_CONFIG.maxRetries}):`, action.id, error);
+        // Update retry count
+        await updateActionError(db, action.id, error.message);
       }
     }
 
-    await tx.done;
+    db.close();
   } catch (error) {
     console.error('[SW] Sync failed:', error);
   }
 }
 
+// Process a single pending action
+async function processPendingAction(action) {
+  const { type, action: actionType, data } = action;
+
+  // Build API endpoint based on action type
+  let endpoint = '';
+  let method = 'POST';
+
+  switch (type) {
+    case 'message':
+      endpoint = '/api/messages';
+      break;
+    case 'favorite':
+      endpoint = '/api/favorites';
+      method = actionType === 'delete' ? 'DELETE' : 'POST';
+      break;
+    case 'profile':
+      endpoint = '/api/profile';
+      method = 'PUT';
+      break;
+    case 'review':
+      endpoint = '/api/reviews';
+      break;
+    case 'booking':
+      endpoint = '/api/bookings';
+      break;
+    default:
+      console.warn('[SW] Unknown action type:', type);
+      return true; // Remove unknown actions
+  }
+
+  const response = await fetch(endpoint, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+
+  return response.ok;
+}
+
+// Update action error count
+async function updateActionError(db, actionId, errorMessage) {
+  try {
+    const tx = db.transaction('pendingActions', 'readwrite');
+    const store = tx.objectStore('pendingActions');
+
+    const action = await new Promise((resolve, reject) => {
+      const request = store.get(actionId);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    if (action) {
+      action.retryCount = (action.retryCount || 0) + 1;
+      action.lastError = errorMessage;
+      store.put(action);
+    }
+  } catch (e) {
+    console.warn('[SW] Failed to update action error:', e);
+  }
+}
+
 // Placeholder for notification sync
+// Sync pending notification acknowledgments to the server
 async function syncPendingNotifications() {
   console.log('[SW] Syncing pending notifications...');
-  // Implementation depends on your notification queue system
+
+  try {
+    const db = await openOfflineDB();
+
+    // Get pending actions of type 'notification' (read receipts, etc.)
+    const actions = await new Promise((resolve, reject) => {
+      const tx = db.transaction('pendingActions', 'readonly');
+      const store = tx.objectStore('pendingActions');
+      const index = store.index('type');
+      const request = index.getAll('notification');
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+
+    console.log(`[SW] Found ${actions.length} pending notification actions`);
+
+    for (const action of actions) {
+      try {
+        // Send notification acknowledgment to server
+        const response = await fetch('/api/notifications/ack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            notificationId: action.data.notificationId,
+            action: action.action, // 'read', 'dismissed', etc.
+            timestamp: action.createdAt
+          })
+        });
+
+        if (response.ok) {
+          // Remove from pending queue
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction('pendingActions', 'readwrite');
+            const store = tx.objectStore('pendingActions');
+            const request = store.delete(action.id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+          });
+          console.log('[SW] Synced notification action:', action.id);
+        }
+      } catch (error) {
+        console.warn('[SW] Failed to sync notification:', action.id, error.message);
+      }
+    }
+
+    db.close();
+  } catch (error) {
+    console.error('[SW] Notification sync failed:', error);
+  }
 }
 
-// Placeholder for message sync
+// Sync unsynced messages from offline storage to the server
 async function syncPendingMessages() {
   console.log('[SW] Syncing pending messages...');
-  // Implementation depends on your messaging system
+
+  try {
+    const db = await openOfflineDB();
+
+    // Get unsynced messages using the 'synced' index
+    const unsyncedMessages = await new Promise((resolve, reject) => {
+      const tx = db.transaction('messages', 'readonly');
+      const store = tx.objectStore('messages');
+      const index = store.index('synced');
+      const request = index.getAll(false); // Get all where synced === false
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+
+    console.log(`[SW] Found ${unsyncedMessages.length} unsynced messages`);
+
+    for (const message of unsyncedMessages) {
+      try {
+        // Send message to server
+        const response = await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: message.id,
+            conversationId: message.conversationId,
+            senderId: message.senderId,
+            receiverId: message.receiverId,
+            content: message.content,
+            timestamp: message.timestamp
+          })
+        });
+
+        if (response.ok) {
+          // Mark message as synced
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction('messages', 'readwrite');
+            const store = tx.objectStore('messages');
+            const request = store.put({ ...message, synced: true });
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+          });
+          console.log('[SW] Synced message:', message.id);
+        } else if (response.status === 409) {
+          // Message already exists on server, mark as synced
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction('messages', 'readwrite');
+            const store = tx.objectStore('messages');
+            const request = store.put({ ...message, synced: true });
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+          });
+          console.log('[SW] Message already on server, marked synced:', message.id);
+        }
+      } catch (error) {
+        console.warn('[SW] Failed to sync message:', message.id, error.message);
+      }
+    }
+
+    db.close();
+  } catch (error) {
+    console.error('[SW] Message sync failed:', error);
+  }
 }
 
-// Helper to open IndexedDB for sync
-function openSyncDB() {
+// Helper to open the main offline IndexedDB (aligned with offlineStorage.ts)
+// Uses same DB_NAME and schema as src/services/offlineStorage.ts
+const OFFLINE_DB_NAME = 'sos-expat-offline';
+const OFFLINE_DB_VERSION = 2;
+
+function openOfflineDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('sos-sync-db', 1);
+    const request = indexedDB.open(OFFLINE_DB_NAME, OFFLINE_DB_VERSION);
 
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
 
+    // Schema should already exist from offlineStorage.ts init
+    // This is just for safety if SW runs before app init
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
-      if (!db.objectStoreNames.contains('pending-requests')) {
-        db.createObjectStore('pending-requests', { keyPath: 'id', autoIncrement: true });
+
+      // Pending actions queue (same as offlineStorage.ts)
+      if (!db.objectStoreNames.contains('pendingActions')) {
+        const pendingStore = db.createObjectStore('pendingActions', { keyPath: 'id' });
+        pendingStore.createIndex('type', 'type', { unique: false });
+        pendingStore.createIndex('createdAt', 'createdAt', { unique: false });
       }
+
+      // Other stores for completeness
+      if (!db.objectStoreNames.contains('userProfile')) {
+        db.createObjectStore('userProfile', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('messages')) {
+        const messagesStore = db.createObjectStore('messages', { keyPath: 'id' });
+        messagesStore.createIndex('conversationId', 'conversationId', { unique: false });
+        messagesStore.createIndex('timestamp', 'timestamp', { unique: false });
+        messagesStore.createIndex('synced', 'synced', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('favorites')) {
+        const favoritesStore = db.createObjectStore('favorites', { keyPath: 'id' });
+        favoritesStore.createIndex('providerId', 'providerId', { unique: true });
+      }
+      if (!db.objectStoreNames.contains('providers')) {
+        const providersStore = db.createObjectStore('providers', { keyPath: 'id' });
+        providersStore.createIndex('expiresAt', 'expiresAt', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings', { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains('cacheMetadata')) {
+        const metaStore = db.createObjectStore('cacheMetadata', { keyPath: 'key' });
+        metaStore.createIndex('store', 'store', { unique: false });
+        metaStore.createIndex('expiresAt', 'expiresAt', { unique: false });
+      }
+
+      console.log('[SW] IndexedDB schema initialized/upgraded');
     };
   });
 }

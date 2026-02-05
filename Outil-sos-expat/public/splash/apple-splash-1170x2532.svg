@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1170 2532" width="1170" height="2532">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC2626"/>
+      <stop offset="50%" style="stop-color:#B91C1C"/>
+      <stop offset="100%" style="stop-color:#991B1B"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1170" height="2532" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="200" cy="400" r="300" fill="rgba(255,255,255,0.03)"/>
+  <circle cx="970" cy="2100" r="400" fill="rgba(255,255,255,0.03)"/>
+  <circle cx="1100" cy="600" r="200" fill="rgba(255,255,255,0.02)"/>
+  <circle cx="100" cy="1800" r="250" fill="rgba(255,255,255,0.02)"/>
+
+  <!-- Logo Container -->
+  <g transform="translate(585, 1050)">
+    <!-- Outer glow ring -->
+    <circle cx="0" cy="0" r="180" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+    <circle cx="0" cy="0" r="200" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+
+    <!-- Logo background -->
+    <circle cx="0" cy="0" r="150" fill="rgba(255,255,255,0.15)" filter="url(#glow)"/>
+
+    <!-- SOS Text -->
+    <text x="0" y="20" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="100" font-weight="900" letter-spacing="-5">SOS</text>
+  </g>
+
+  <!-- App Name -->
+  <text x="585" y="1350" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700">SOS Expats</text>
+
+  <!-- Subtitle -->
+  <text x="585" y="1430" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="600">PRO</text>
+
+  <!-- Tagline -->
+  <text x="585" y="1530" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, -apple-system, sans-serif" font-size="32">Espace Prestataires</text>
+
+  <!-- Loading indicator -->
+  <g transform="translate(585, 1700)">
+    <circle cx="-40" cy="0" r="10" fill="rgba(255,255,255,0.6)">
+      <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0s"/>
+    </circle>
+    <circle cx="0" cy="0" r="10" fill="rgba(255,255,255,0.6)">
+      <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.3s"/>
+    </circle>
+    <circle cx="40" cy="0" r="10" fill="rgba(255,255,255,0.6)">
+      <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.6s"/>
+    </circle>
+  </g>
+
+  <!-- Bottom text -->
+  <text x="585" y="2400" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="system-ui, -apple-system, sans-serif" font-size="28">Assistant IA pour prestataires</text>
+</svg>

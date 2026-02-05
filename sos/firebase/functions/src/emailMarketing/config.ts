@@ -5,6 +5,10 @@ import { defineString, defineSecret } from "firebase-functions/params";
 const MAILWIZZ_API_KEY_SECRET = defineSecret("MAILWIZZ_API_KEY");
 const MAILWIZZ_WEBHOOK_SECRET = defineSecret("MAILWIZZ_WEBHOOK_SECRET");
 
+// GA4 Configuration - Using Firebase Secret Manager
+// SECURITY: GA4 API Secret must be stored in Firebase Secret Manager
+const GA4_API_SECRET = defineSecret("GA4_API_SECRET");
+
 /**
  * Get MailWizz API key from Firebase Secret Manager
  * Must be called within a Cloud Function context
@@ -14,9 +18,17 @@ export function getMailWizzApiKey(): string {
 }
 
 /**
- * Export the secret for use in runWith({ secrets: [...] })
+ * Export the secrets for use in runWith({ secrets: [...] })
  */
-export { MAILWIZZ_API_KEY_SECRET, MAILWIZZ_WEBHOOK_SECRET };
+export { MAILWIZZ_API_KEY_SECRET, MAILWIZZ_WEBHOOK_SECRET, GA4_API_SECRET };
+
+/**
+ * Get GA4 API Secret from Firebase Secret Manager
+ * Must be called within a Cloud Function context
+ */
+export function getGA4ApiSecret(): string {
+  return GA4_API_SECRET.value();
+}
 
 // MailWizz Configuration Strings - Read from env first, then Firebase params
 export const MAILWIZZ_API_URL = defineString("MAILWIZZ_API_URL", {
@@ -68,18 +80,26 @@ export function validateMailWizzConfig(): {
   listUid: string;
   customerId: string;
 } {
-  // Using static values - no longer reading from environment or secrets
+  // Get API key from Firebase Secret Manager
   const apiKey = getMailWizzApiKey();
   if (!apiKey) {
     throw new Error(
-      "MAILWIZZ_API_KEY is not configured."
+      "MAILWIZZ_API_KEY is not configured in Firebase Secret Manager."
     );
   }
 
-  // Get values from env first, then Firebase params
-  const apiUrl = process.env.MAILWIZZ_API_URL ||""
-  const listUid = process.env.MAILWIZZ_LIST_UID || ""
-  const customerId = process.env.MAILWIZZ_CUSTOMER_ID || ""
+  // Get values from env first, then Firebase params with proper defaults
+  // SECURITY: Never use empty strings as fallback - always have sensible defaults
+  const apiUrl = process.env.MAILWIZZ_API_URL || MAILWIZZ_API_URL.value() || "https://app.mail-ulixai.com/api/index.php";
+  const listUid = process.env.MAILWIZZ_LIST_UID || MAILWIZZ_LIST_UID.value() || "yl089ehqpgb96";
+  const customerId = process.env.MAILWIZZ_CUSTOMER_ID || MAILWIZZ_CUSTOMER_ID.value() || "2";
+
+  // Validate that we have actual values
+  if (!apiUrl || !listUid || !customerId) {
+    throw new Error(
+      "MailWizz configuration incomplete. Check MAILWIZZ_API_URL, MAILWIZZ_LIST_UID, MAILWIZZ_CUSTOMER_ID."
+    );
+  }
 
   return {
     apiUrl,

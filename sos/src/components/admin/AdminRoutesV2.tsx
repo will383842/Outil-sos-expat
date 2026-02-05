@@ -455,6 +455,9 @@ const AdminAgentMonitoring = lazy(() => import("../../pages/admin/AdminAgentMoni
 const AdminFunctionalMonitoring = lazy(() => import("../../pages/admin/AdminFunctionalMonitoring"));
 const AdminConnectionLogs = lazy(() => import("../../pages/admin/AdminConnectionLogs"));
 
+// ===== LAZY IMPORTS - PROVIDER STATS =====
+const AdminProviderStats = lazy(() => import("../../pages/admin/AdminProviderStats"));
+
 // ===== LAZY IMPORTS - SETTINGS & TOOLS =====
 const AdminPricing = lazy(() => import("../../pages/admin/AdminPricing"));
 const AdminCountries = lazy(() => import("../../pages/admin/AdminCountries"));
@@ -577,6 +580,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminExpats />
+          </Suspense>
+        }
+      />
+      <Route
+        path="users/providers/stats"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminProviderStats />
           </Suspense>
         }
       />
@@ -1713,6 +1724,7 @@ export const useAdminRouteValidation = () => {
       "/admin/users/clients",
       "/admin/users/providers/lawyers",
       "/admin/users/providers/expats",
+      "/admin/users/providers/stats",
       "/admin/aaaprofiles",
       "/admin/approvals/lawyers",
       "/admin/kyc/providers",

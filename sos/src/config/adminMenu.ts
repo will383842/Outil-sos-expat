@@ -133,6 +133,13 @@ export const adminMenuTree: AdminMenuItem[] = [
                 icon: Globe,
                 descriptionKey: "admin.menu.expats.description",
               },
+              {
+                id: "provider-stats",
+                labelKey: "admin.menu.providerStats",
+                path: "/admin/users/providers/stats",
+                icon: TrendingUp,
+                descriptionKey: "admin.menu.providerStats.description",
+              },
             ],
           },
           {

@@ -207,12 +207,14 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      // P0 DEBUG: Always log auth changes to help diagnose access issues
-      console.log("[UnifiedUser] 🔐 Auth changed:", {
-        email: firebaseUser?.email,
-        uid: firebaseUser?.uid,
-        timestamp: new Date().toISOString(),
-      });
+      // Log auth changes only in development
+      if (import.meta.env.DEV) {
+        console.log("[UnifiedUser] 🔐 Auth changed:", {
+          email: firebaseUser?.email,
+          uid: firebaseUser?.uid,
+          timestamp: new Date().toISOString(),
+        });
+      }
 
       setUser(firebaseUser);
 
@@ -237,12 +239,14 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
           claims.role === "admin";
         setIsAdmin(adminCheck);
 
-        // P0 DEBUG: Log admin check result
-        console.log("[UnifiedUser] 👤 Admin check:", {
-          isAdmin: adminCheck,
-          claimsAdmin: claims.admin,
-          claimsRole: claims.role,
-        });
+        // Log admin check only in development
+        if (import.meta.env.DEV) {
+          console.log("[UnifiedUser] 👤 Admin check:", {
+            isAdmin: adminCheck,
+            claimsAdmin: claims.admin,
+            claimsRole: claims.role,
+          });
+        }
 
         if (adminCheck) {
           // Admin a accès total
@@ -296,15 +300,17 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             (ssoStatus && activeStatuses.includes(ssoStatus)) ||
             (freeTrialUntil && new Date(freeTrialUntil) > new Date());
 
-          // P0 DEBUG: Log SSO subscription analysis
-          console.log("[UnifiedUser] 📜 SSO subscription from token:", {
-            ssoStatus,
-            ssoTier,
-            hasForcedAccess,
-            freeTrialUntil,
-            isActive,
-            allClaims: claims
-          });
+          // Log SSO subscription only in development
+          if (import.meta.env.DEV) {
+            console.log("[UnifiedUser] 📜 SSO subscription from token:", {
+              ssoStatus,
+              ssoTier,
+              hasForcedAccess,
+              freeTrialUntil,
+              isActive,
+              allClaims: claims
+            });
+          }
 
           // IMPORTANT: Update ref SYNCHRONOUSLY before setState
           // This prevents race condition with the user document listener
@@ -425,16 +431,18 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
         console.error("[UnifiedUser] Erreur recherche provider:", err);
       }
 
-      // P0 DEBUG: Log final auth state
-      console.log("[UnifiedUser] ✅ Auth processing complete:", {
-        email: firebaseUser?.email,
-        isAdmin,
-        isProvider,
-        providerId,
-        hasSubscription: subscription.hasActiveSubscription,
-        subscriptionStatus: subscription.status,
-        role,
-      });
+      // Log final auth state only in development
+      if (import.meta.env.DEV) {
+        console.log("[UnifiedUser] ✅ Auth processing complete:", {
+          email: firebaseUser?.email,
+          isAdmin,
+          isProvider,
+          providerId,
+          hasSubscription: subscription.hasActiveSubscription,
+          subscriptionStatus: subscription.status,
+          role,
+        });
+      }
 
       setLoading(false);
     });
@@ -455,13 +463,15 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
     const unsub = onSnapshot(
       userRef,
       async (snapshot) => {
-        // P0 DEBUG: Log Firestore user document status
-        console.log("[UnifiedUser] 📄 Firestore users/{uid} snapshot:", {
-          exists: snapshot.exists(),
-          uid: user.uid,
-          ssoHasActive: ssoClaimsRef.current.hasActiveSubscription,
-          stateHasActive: subscription.hasActiveSubscription,
-        });
+        // Log Firestore user document status only in development
+        if (import.meta.env.DEV) {
+          console.log("[UnifiedUser] 📄 Firestore users/{uid} snapshot:", {
+            exists: snapshot.exists(),
+            uid: user.uid,
+            ssoHasActive: ssoClaimsRef.current.hasActiveSubscription,
+            stateHasActive: subscription.hasActiveSubscription,
+          });
+        }
 
         if (!snapshot.exists()) {
           // Si l'utilisateur a déjà une subscription valide via SSO token, pas d'erreur

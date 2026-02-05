@@ -8,6 +8,7 @@
 
 import * as admin from "firebase-admin";
 import { AI_CONFIG } from "../core/config";
+import { countriesData, type CountryData } from "../../data/countries";
 
 // =============================================================================
 // GESTION DES RETRIES (délégué à retry.ts)
@@ -28,103 +29,60 @@ export {
 // NORMALISATION DES PAYS
 // =============================================================================
 
-const COUNTRY_MAP: Record<string, string> = {
-  // Asie du Sud-Est
-  "thailand": "Thaïlande",
-  "thailande": "Thaïlande",
-  "vietnam": "Vietnam",
-  "cambodia": "Cambodge",
-  "cambodge": "Cambodge",
-  "indonesia": "Indonésie",
-  "indonesie": "Indonésie",
-  "malaysia": "Malaisie",
-  "malaisie": "Malaisie",
-  "singapore": "Singapour",
-  "singapour": "Singapour",
-  "philippines": "Philippines",
-  "myanmar": "Myanmar",
-  "laos": "Laos",
+// =============================================================================
+// NORMALISATION DES PAYS - Utilise la source de données partagée (countries.ts)
+// =============================================================================
 
-  // Asie de l'Est
-  "japan": "Japon",
-  "japon": "Japon",
-  "china": "Chine",
-  "chine": "Chine",
-  "korea": "Corée du Sud",
-  "south korea": "Corée du Sud",
-  "coree": "Corée du Sud",
-  "taiwan": "Taïwan",
-  "hong kong": "Hong Kong",
-
-  // Asie du Sud
-  "india": "Inde",
-  "inde": "Inde",
-  "sri lanka": "Sri Lanka",
-  "nepal": "Népal",
-
-  // Océanie
-  "australia": "Australie",
-  "australie": "Australie",
-  "new zealand": "Nouvelle-Zélande",
-
-  // Amérique du Nord
-  "usa": "États-Unis",
-  "united states": "États-Unis",
-  "etats-unis": "États-Unis",
-  "canada": "Canada",
-  "mexico": "Mexique",
-  "mexique": "Mexique",
-
-  // Europe
-  "uk": "Royaume-Uni",
-  "united kingdom": "Royaume-Uni",
-  "royaume-uni": "Royaume-Uni",
-  "france": "France",
-  "spain": "Espagne",
-  "espagne": "Espagne",
-  "germany": "Allemagne",
-  "allemagne": "Allemagne",
-  "italy": "Italie",
-  "italie": "Italie",
-  "portugal": "Portugal",
-  "switzerland": "Suisse",
-  "suisse": "Suisse",
-  "belgium": "Belgique",
-  "belgique": "Belgique",
-  "netherlands": "Pays-Bas",
-
-  // Moyen-Orient
-  "dubai": "Émirats Arabes Unis",
-  "uae": "Émirats Arabes Unis",
-  "emirats": "Émirats Arabes Unis",
-  "qatar": "Qatar",
-  "saudi arabia": "Arabie Saoudite",
-  "israel": "Israël",
-  "turkey": "Turquie",
-  "turquie": "Turquie",
-
-  // Afrique
-  "morocco": "Maroc",
-  "maroc": "Maroc",
-  "tunisia": "Tunisie",
-  "tunisie": "Tunisie",
-  "senegal": "Sénégal",
-  "ivory coast": "Côte d'Ivoire",
-  "south africa": "Afrique du Sud",
-
-  // Amérique du Sud
-  "brazil": "Brésil",
-  "bresil": "Brésil",
-  "argentina": "Argentine",
-  "chile": "Chili",
-  "colombia": "Colombie",
-  "peru": "Pérou"
-};
-
+/**
+ * Normalise un pays vers son nom complet en français.
+ * Utilise la source de données partagée (countries.ts) pour garantir
+ * la cohérence avec les SMS envoyés par SOS-Expat.
+ *
+ * @param country - Code ISO-2 (ex: "TH") ou nom de pays (ex: "thailand")
+ * @returns Nom complet en français (ex: "Thaïlande") ou valeur d'origine
+ */
 export function normalizeCountry(country: string | undefined): string {
   if (!country) return "";
-  const lower = country.toLowerCase().trim();
-  return COUNTRY_MAP[lower] || country;
+
+  const trimmed = country.trim();
+  if (!trimmed) return "";
+
+  const upper = trimmed.toUpperCase();
+  const lower = trimmed.toLowerCase();
+
+  // 1. Vérifier si c'est un code ISO-2 valide
+  if (upper.length === 2 && /^[A-Z]{2}$/.test(upper)) {
+    const countryData = countriesData.find(
+      (c: CountryData) => c.code === upper && c.code !== 'SEPARATOR'
+    );
+    if (countryData) {
+      return countryData.nameFr;
+    }
+  }
+
+  // 2. Chercher par nom dans toutes les langues (10 langues)
+  const countryData = countriesData.find((c: CountryData) => {
+    if (c.code === 'SEPARATOR') return false;
+    return (
+      c.nameFr?.toLowerCase() === lower ||
+      c.nameEn?.toLowerCase() === lower ||
+      c.nameEs?.toLowerCase() === lower ||
+      c.nameDe?.toLowerCase() === lower ||
+      c.namePt?.toLowerCase() === lower ||
+      c.nameZh?.toLowerCase() === lower ||
+      c.nameAr?.toLowerCase() === lower ||
+      c.nameRu?.toLowerCase() === lower ||
+      c.nameIt?.toLowerCase() === lower ||
+      c.nameNl?.toLowerCase() === lower
+    );
+  });
+
+  if (countryData) {
+    return countryData.nameFr;
+  }
+
+  // 3. Si non trouvé, retourner la valeur d'origine
+  return trimmed;
 }
 
 // =============================================================================

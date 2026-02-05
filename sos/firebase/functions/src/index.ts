@@ -5921,6 +5921,40 @@ export {
 } from './groupAdmin';
 
 // ========== TELEGRAM NOTIFICATIONS ==========
-// TEMPORAIREMENT DÉSACTIVÉ - cause timeout de déploiement
-// TODO: Optimiser le chargement du module Telegram (lazy loading)
-// export * from './telegram';
+export { telegramOnUserRegistration } from './telegram/triggers/onUserRegistration';
+export { telegramOnCallCompleted } from './telegram/triggers/onCallCompleted';
+export { telegramOnPaymentReceived } from './telegram/triggers/onPaymentReceived';
+export { telegramOnPayPalPaymentReceived } from './telegram/triggers/onPayPalPaymentReceived';
+export { telegramOnNewProvider } from './telegram/triggers/onNewProvider';
+export { telegramOnNewContactMessage } from './telegram/triggers/onNewContactMessage';
+export { telegramOnSecurityAlert } from './telegram/triggers/onSecurityAlert';
+export { telegramOnNegativeReview } from './telegram/triggers/onNegativeReview';
+export { telegramOnWithdrawalRequest } from './telegram/triggers/onWithdrawalRequest';
+export { telegramDailyReport } from './telegram/scheduled/dailyReport';
+export { telegram_sendTestNotification } from './telegram/callables/sendTestNotification';
+export {
+  telegram_updateConfig,
+  telegram_getConfig,
+  telegram_getChatId,
+  telegram_validateBot,
+  telegram_updateTemplate,
+  telegram_getTemplates,
+} from './telegram/callables/updateTelegramConfig';
+
+// ========== PROVIDER STATS - PERFORMANCE TRACKING ==========
+// Tracks provider availability and missed calls for compliance monitoring
+// - Scheduled aggregation (hourly) of online sessions and call stats
+// - Admin callable to retrieve stats with filtering, sorting, pagination
+// - CSV export for reporting
+export {
+  aggregateProviderStats,
+  triggerProviderStatsAggregation,
+  backfillProviderStats,
+} from './scheduled/aggregateProviderStats';
+
+export {
+  getProviderStats,
+  getProviderStatsSummary,
+  getProviderStatsMonths,
+  exportProviderStatsCsv,
+} from './callables/getProviderStats';

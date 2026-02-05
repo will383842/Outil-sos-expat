@@ -10,6 +10,7 @@
  * pour garantir que l'utilisateur reste connecté après installation de la PWA.
  */
 
+// @ts-expect-error - Virtual module from vite-plugin-pwa, types in vite-env.d.ts
 import { registerSW } from "virtual:pwa-register";
 
 /**
@@ -40,7 +41,7 @@ export function registerServiceWorker(): void {
     },
 
     // En cas d'erreur d'enregistrement
-    onRegisterError(error) {
+    onRegisterError(error: Error) {
       console.error("❌ Erreur Service Worker:", error);
     },
 

@@ -83,14 +83,16 @@ function ActiveConversationHero({
 }) {
   const { t } = useLanguage({ mode: "provider" });
 
-  // P0 DEBUG: Log hero state to detect layout shifts
-  console.log("[ActiveConversationHero] 🎯 Render:", {
-    loading,
-    hasConversation: !!conversation,
-    conversationId: conversation?.id,
-    clientName: conversation?.clientName || conversation?.clientFirstName,
-    renderingState: loading ? "SKELETON" : (conversation ? "ACTIVE" : "EMPTY"),
-  });
+  // Log hero state only in development
+  if (import.meta.env.DEV) {
+    console.log("[ActiveConversationHero] 🎯 Render:", {
+      loading,
+      hasConversation: !!conversation,
+      conversationId: conversation?.id,
+      clientName: conversation?.clientName || conversation?.clientFirstName,
+      renderingState: loading ? "SKELETON" : (conversation ? "ACTIVE" : "EMPTY"),
+    });
+  }
 
   // P0 FIX: Use consistent min-height to prevent layout shifts
   const cardMinHeight = "min-h-[200px]";
@@ -239,28 +241,30 @@ export default function ProviderHome() {
   // Dev mode
   const isDevMock = new URLSearchParams(window.location.search).get("dev") === "true";
 
-  // P0 DEBUG: Log component state on every render to diagnose layout issues
-  console.log("[ProviderHome] 🏠 Render state:", {
-    loading,
-    activeProviderId: activeProvider?.id,
-    activeProviderName: activeProvider?.name,
-    activeProviderType: activeProvider?.type,
-    aiCallsUsed: activeProvider?.aiCallsUsed,
-    aiCallsLimit: activeProvider?.aiCallsLimit,
-    aiQuota: activeProvider?.aiQuota,
-    hasActiveConversation: !!activeConversation,
-    recentConversationsCount: recentConversations.length,
-    error,
-    isDevMock,
-  });
+  // Log component state only in development
+  if (import.meta.env.DEV) {
+    console.log("[ProviderHome] 🏠 Render state:", {
+      loading,
+      activeProviderId: activeProvider?.id,
+      activeProviderName: activeProvider?.name,
+      activeProviderType: activeProvider?.type,
+      aiCallsUsed: activeProvider?.aiCallsUsed,
+      aiCallsLimit: activeProvider?.aiCallsLimit,
+      aiQuota: activeProvider?.aiQuota,
+      hasActiveConversation: !!activeConversation,
+      recentConversationsCount: recentConversations.length,
+      error,
+      isDevMock,
+    });
 
-  // P0 DEBUG: Log translation keys to check if they resolve correctly
-  console.log("[ProviderHome] 🌐 Translation check:", {
-    "dashboard.stats.myDossiers": t("provider:dashboard.stats.myDossiers"),
-    "dashboard.quota.title": t("provider:dashboard.quota.title"),
-    "home.welcome": t("provider:home.welcome", { name: "" }),
-    "home.noActiveConversation": t("provider:home.noActiveConversation"),
-  });
+    // Log translation keys to check if they resolve correctly
+    console.log("[ProviderHome] 🌐 Translation check:", {
+      "dashboard.stats.myDossiers": t("provider:dashboard.stats.myDossiers"),
+      "dashboard.quota.title": t("provider:dashboard.quota.title"),
+      "home.welcome": t("provider:home.welcome", { name: "" }),
+      "home.noActiveConversation": t("provider:home.noActiveConversation"),
+    });
+  }
 
   // P0 FIX: Use refs to prevent infinite loop from re-renders
   const lastProviderIdRef = useRef<string | null>(null);
@@ -303,14 +307,16 @@ export default function ProviderHome() {
       isSubscribedRef.current = false;
     }
 
-    // P0 DEBUG: Log conversation loading trigger
-    console.log("[ProviderHome] 📥 useEffect triggered:", {
-      isDevMock,
-      activeProviderId: providerId,
-      lastProviderId: lastProviderIdRef.current,
-      willLoadMock: isDevMock && (!providerId || providerId.startsWith("dev-")),
-      willSkip: !providerId,
-    });
+    // Log conversation loading trigger only in development
+    if (import.meta.env.DEV) {
+      console.log("[ProviderHome] 📥 useEffect triggered:", {
+        isDevMock,
+        activeProviderId: providerId,
+        lastProviderId: lastProviderIdRef.current,
+        willLoadMock: isDevMock && (!providerId || providerId.startsWith("dev-")),
+        willSkip: !providerId,
+      });
+    }
 
     lastProviderIdRef.current = providerId;
 
@@ -353,25 +359,29 @@ export default function ProviderHome() {
         const active = conversations.find((c) => c.status === "active");
         const recent = conversations.filter((c) => c.status !== "active");
 
-        // P0 DEBUG: Log loaded conversations
-        console.log("[ProviderHome] ✅ Conversations loaded:", {
-          total: conversations.length,
-          hasActive: !!active,
-          recentCount: recent.length,
-          activeId: active?.id,
-        });
+        // Log loaded conversations only in development
+        if (import.meta.env.DEV) {
+          console.log("[ProviderHome] ✅ Conversations loaded:", {
+            total: conversations.length,
+            hasActive: !!active,
+            recentCount: recent.length,
+            activeId: active?.id,
+          });
+        }
 
         setActiveConversation(active || null);
         setRecentConversations(recent);
         setLoading(false);
       },
       (err) => {
-        // P0 DEBUG: Log error details
-        console.error("[ProviderHome] ❌ Error loading conversations:", {
-          code: err.code,
-          message: err.message,
-          providerId: providerId,
-        });
+        // Log error details only in development
+        if (import.meta.env.DEV) {
+          console.error("[ProviderHome] ❌ Error loading conversations:", {
+            code: err.code,
+            message: err.message,
+            providerId: providerId,
+          });
+        }
         // Use a hardcoded message to avoid t() in error handler
         setError("Erreur lors du chargement des conversations");
         setLoading(false);
@@ -410,13 +420,15 @@ export default function ProviderHome() {
   // We now use a SINGLE layout structure to prevent layout shifts
   const isEmptyState = !loading && recentConversations.length === 0 && !activeConversation;
 
-  // P0 DEBUG: Log state transitions
-  console.log("[ProviderHome] 📐 Layout state:", {
-    loading,
-    isEmptyState,
-    hasRecentConversations: recentConversations.length > 0,
-    hasActiveConversation: !!activeConversation,
-  });
+  // Log state transitions only in development
+  if (import.meta.env.DEV) {
+    console.log("[ProviderHome] 📐 Layout state:", {
+      loading,
+      isEmptyState,
+      hasRecentConversations: recentConversations.length > 0,
+      hasActiveConversation: !!activeConversation,
+    });
+  }
 
   return (
     <div className="space-y-6">
