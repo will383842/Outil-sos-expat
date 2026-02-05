@@ -76,7 +76,6 @@ const CountryFlag: React.FC<{ code: string; name?: string }> = ({ code, name }) 
       src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
       alt={name ? `Drapeau ${name}` : `Flag of ${code.toUpperCase()}`}
       className="w-6 h-4 object-cover rounded-sm flex-shrink-0 pointer-events-none"
-      loading="lazy"
       draggable={false}
     />
   );
@@ -138,6 +137,8 @@ const CountryStep: React.FC<{
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  // Track whether a touch gesture involved scrolling (to distinguish taps from scrolls)
+  const didScrollRef = useRef(false);
 
   // Sort countries: priority first, then alphabetically
   const sortedCountries = useMemo(() => {
@@ -171,6 +172,13 @@ const CountryStep: React.FC<{
     );
   }, [sortedCountries, searchQuery]);
 
+  const handleTouchEnd = useCallback((code: string, e: React.TouchEvent) => {
+    if (!didScrollRef.current) {
+      e.preventDefault(); // prevent delayed click (300ms) from firing a duplicate
+      onSelect(code);
+    }
+  }, [onSelect]);
+
   return (
     <>
       {/* Title */}
@@ -199,8 +207,9 @@ const CountryStep: React.FC<{
 
       {/* Countries Grid - Scrollable */}
       <div
-        className="flex-1 overflow-y-auto overscroll-contain"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        className="flex-1 overflow-y-auto overscroll-contain touch-manipulation"
+        onTouchStart={() => { didScrollRef.current = false; }}
+        onTouchMove={() => { didScrollRef.current = true; }}
       >
         <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredCountries.map((country) => (
@@ -208,6 +217,7 @@ const CountryStep: React.FC<{
               key={country.code}
               type="button"
               onClick={() => onSelect(country.code)}
+              onTouchEnd={(e) => handleTouchEnd(country.code, e)}
               className={`
                 flex items-center gap-2.5 p-3 rounded-xl border-2
                 text-left min-h-[52px] select-none cursor-pointer touch-manipulation
@@ -216,6 +226,7 @@ const CountryStep: React.FC<{
                   : "bg-white/5 border-transparent text-gray-200 active:bg-white/15"
                 }
               `}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <CountryFlag code={country.code} />
               <span className="text-sm font-medium truncate flex-1 pointer-events-none">{country.label}</span>
@@ -246,6 +257,7 @@ const LanguageStep: React.FC<{
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const didScrollRef = useRef(false);
 
   // Sort languages: priority first, then alphabetically
   const sortedLanguages = useMemo(() => {
@@ -282,6 +294,13 @@ const LanguageStep: React.FC<{
   const getFlagForLanguage = (code: string): string => {
     return LANGUAGE_FLAG_MAP[code.toLowerCase()] || "UN";
   };
+
+  const handleTouchEnd = useCallback((code: string, e: React.TouchEvent) => {
+    if (!didScrollRef.current) {
+      e.preventDefault();
+      onToggle(code);
+    }
+  }, [onToggle]);
 
   return (
     <>
@@ -320,7 +339,11 @@ const LanguageStep: React.FC<{
       </div>
 
       {/* Languages Grid - Scrollable */}
-      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div
+        className="flex-1 overflow-y-auto overscroll-contain touch-manipulation"
+        onTouchStart={() => { didScrollRef.current = false; }}
+        onTouchMove={() => { didScrollRef.current = true; }}
+      >
         <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredLanguages.map((lang) => {
             const isSelected = selectedLanguages.includes(lang.code);
@@ -329,6 +352,7 @@ const LanguageStep: React.FC<{
                 key={lang.code}
                 type="button"
                 onClick={() => onToggle(lang.code)}
+                onTouchEnd={(e) => handleTouchEnd(lang.code, e)}
                 className={`
                   flex items-center gap-2.5 p-3 rounded-xl border-2
                   text-left min-h-[52px] select-none cursor-pointer touch-manipulation
@@ -337,6 +361,7 @@ const LanguageStep: React.FC<{
                     : "bg-white/5 border-transparent text-gray-200 active:bg-white/10"
                   }
                 `}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <CountryFlag code={getFlagForLanguage(lang.code)} />
                 <span className="text-sm font-medium truncate flex-1 pointer-events-none">{lang.label}</span>

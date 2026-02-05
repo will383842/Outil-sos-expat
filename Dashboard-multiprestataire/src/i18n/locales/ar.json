@@ -1,0 +1,149 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "requests": "الطلبات",
+    "team": "الفريق",
+    "dashboard": "لوحة التحكم"
+  },
+  "header": {
+    "dashboard_title": "لوحة التحكم",
+    "dashboard_subtitle": "نظرة عامة على فريقك",
+    "requests_title": "الطلبات",
+    "requests_subtitle": "إدارة طلبات عملائك",
+    "team_title": "إدارة الفريق",
+    "team_subtitle": "إدارة مقدمي الخدمات",
+    "logout": "تسجيل الخروج",
+    "user_default": "مستخدم"
+  },
+  "login": {
+    "title": "لوحة متعددة",
+    "subtitle": "إدارة فريق SOS Expats",
+    "heading": "تسجيل الدخول",
+    "email_label": "البريد الإلكتروني",
+    "email_placeholder": "your@email.com",
+    "password_label": "كلمة المرور",
+    "password_placeholder": "كلمة المرور الخاصة بك",
+    "submit": "تسجيل الدخول",
+    "loading": "جاري الدخول...",
+    "footer": "الوصول مخصص لمديري الفرق",
+    "error_email": "يرجى إدخال بريدك الإلكتروني",
+    "error_password": "يرجى إدخال كلمة المرور"
+  },
+  "dashboard": {
+    "greeting": "مرحباً، {{name}}",
+    "requests_to_process": "طلبات للمعالجة",
+    "new_count_one": "{{count}} جديد",
+    "new_count_other": "{{count}} جديدة",
+    "all_caught_up": "كل شيء محدث",
+    "providers": "مقدمو الخدمات",
+    "online_count": "{{count}} متصل",
+    "new_requests_one": "{{count}} طلب جديد",
+    "new_requests_other": "{{count}} طلبات جديدة",
+    "view": "عرض",
+    "recent_activity": "النشاط الأخير",
+    "no_activity": "لا يوجد نشاط حديث"
+  },
+  "requests": {
+    "new_label": "جديدة",
+    "to_process": "للمعالجة",
+    "history": "السجل",
+    "error_loading": "خطأ في تحميل الطلبات",
+    "error_retry": "تحقق من اتصالك وحاول مرة أخرى",
+    "tab_pending": "للمعالجة",
+    "tab_history": "السجل",
+    "new_requests_section": "طلبات جديدة",
+    "in_progress_section": "قيد المعالجة",
+    "empty_pending": "لا توجد طلبات للمعالجة",
+    "empty_pending_hint": "ستظهر الطلبات الجديدة هنا في الوقت الفعلي",
+    "empty_history": "لا يوجد سجل",
+    "empty_history_hint": "ستظهر الطلبات المكتملة أو الملغاة هنا"
+  },
+  "booking": {
+    "new_badge": "جديد",
+    "see_more": "عرض المزيد",
+    "see_less": "عرض أقل",
+    "respond": "الرد",
+    "connecting": "جاري الاتصال...",
+    "delete": "حذف",
+    "ai_response": "رد الذكاء الاصطناعي",
+    "copied": "تم النسخ",
+    "copy": "نسخ",
+    "client_unknown": "عميل غير معروف",
+    "session_expired": "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.",
+    "sso_error": "خطأ SSO",
+    "sso_fallback": "فشل الدخول التلقائي. جاري الفتح يدوياً...",
+    "time_now": "الآن",
+    "time_minutes": "منذ {{count}} دقيقة",
+    "time_hours": "منذ {{count}} ساعة",
+    "time_days": "منذ {{count}} يوم",
+    "ai_error_label": "خطأ الذكاء الاصطناعي"
+  },
+  "status": {
+    "pending": "قيد الانتظار",
+    "confirmed": "مؤكد",
+    "in_progress": "قيد التنفيذ",
+    "completed": "مكتمل",
+    "cancelled": "ملغى"
+  },
+  "service": {
+    "immigration": "الهجرة",
+    "legal": "قانوني",
+    "tax": "ضرائب",
+    "housing": "سكن",
+    "health": "صحة",
+    "education": "تعليم",
+    "employment": "توظيف",
+    "banking": "بنوك",
+    "insurance": "تأمين",
+    "relocation": "نقل",
+    "translation": "ترجمة",
+    "other": "أخرى"
+  },
+  "team": {
+    "add": "إضافة",
+    "add_provider": "إضافة مقدم خدمة",
+    "total": "الإجمالي",
+    "online": "متصل",
+    "active": "نشط",
+    "no_providers": "لا يوجد مقدمو خدمات",
+    "no_providers_hint": "لم يتم تعيين مقدمي خدمات لفريقك بعد.",
+    "calls": "مكالمات",
+    "hours_online": "متصل",
+    "rating": "تقييم",
+    "lawyer": "محامي",
+    "expat": "مغترب",
+    "inactive": "غير نشط"
+  },
+  "activity": {
+    "is_online": "متصل",
+    "disconnected": "قطع الاتصال",
+    "time_now": "الآن",
+    "time_minutes": "منذ {{count}} دقيقة",
+    "time_hours": "منذ {{count}} ساعة",
+    "time_days": "منذ {{count}} يوم"
+  },
+  "pwa": {
+    "install": "تثبيت",
+    "install_app": "تثبيت التطبيق",
+    "install_title": "تثبيت SOS Multi",
+    "ios_instructions": "لتثبيت التطبيق على جهاز iPhone أو iPad:",
+    "ios_step1_title": "اضغط على زر المشاركة",
+    "ios_step1_hint": "أسفل الشاشة",
+    "ios_step2_title": "اختر \"إضافة إلى الشاشة الرئيسية\"",
+    "ios_step2_hint": "في القائمة",
+    "ios_step3_title": "اضغط على \"إضافة\"",
+    "ios_step3_hint": "سيتم إضافة التطبيق إلى شاشتك الرئيسية",
+    "understood": "فهمت"
+  },
+  "notfound": {
+    "title": "الصفحة غير موجودة",
+    "message": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+    "back": "رجوع",
+    "home": "الرئيسية"
+  },
+  "common": {
+    "logout_success": "تم تسجيل الخروج بنجاح",
+    "logout_error": "خطأ أثناء تسجيل الخروج",
+    "notification_title": "طلب جديد SOS-Expat!"
+  }
+}

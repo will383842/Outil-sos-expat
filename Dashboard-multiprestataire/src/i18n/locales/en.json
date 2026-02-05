@@ -1,0 +1,149 @@
+{
+  "nav": {
+    "home": "Home",
+    "requests": "Requests",
+    "team": "Team",
+    "dashboard": "Dashboard"
+  },
+  "header": {
+    "dashboard_title": "Dashboard",
+    "dashboard_subtitle": "Overview of your team",
+    "requests_title": "Requests",
+    "requests_subtitle": "Manage your clients' requests",
+    "team_title": "Team Management",
+    "team_subtitle": "Manage your providers",
+    "logout": "Logout",
+    "user_default": "User"
+  },
+  "login": {
+    "title": "Multi Dashboard",
+    "subtitle": "Manage your SOS Expats team",
+    "heading": "Login",
+    "email_label": "Email",
+    "email_placeholder": "your@email.com",
+    "password_label": "Password",
+    "password_placeholder": "Your password",
+    "submit": "Sign in",
+    "loading": "Signing in...",
+    "footer": "Access restricted to team managers",
+    "error_email": "Please enter your email",
+    "error_password": "Please enter your password"
+  },
+  "dashboard": {
+    "greeting": "Hello, {{name}}",
+    "requests_to_process": "Requests to process",
+    "new_count_one": "{{count}} new",
+    "new_count_other": "{{count}} new",
+    "all_caught_up": "All caught up",
+    "providers": "Providers",
+    "online_count": "{{count}} online",
+    "new_requests_one": "{{count}} new request",
+    "new_requests_other": "{{count}} new requests",
+    "view": "View",
+    "recent_activity": "Recent activity",
+    "no_activity": "No recent activity"
+  },
+  "requests": {
+    "new_label": "New",
+    "to_process": "To process",
+    "history": "History",
+    "error_loading": "Error loading requests",
+    "error_retry": "Check your connection and try again",
+    "tab_pending": "To process",
+    "tab_history": "History",
+    "new_requests_section": "New requests",
+    "in_progress_section": "Being processed",
+    "empty_pending": "No requests to process",
+    "empty_pending_hint": "New requests will appear here in real time",
+    "empty_history": "No history",
+    "empty_history_hint": "Completed or cancelled requests will appear here"
+  },
+  "booking": {
+    "new_badge": "New",
+    "see_more": "See more",
+    "see_less": "See less",
+    "respond": "Respond",
+    "connecting": "Connecting...",
+    "delete": "Delete",
+    "ai_response": "AI Response",
+    "copied": "Copied",
+    "copy": "Copy",
+    "client_unknown": "Unknown client",
+    "session_expired": "Session expired. Please sign in again.",
+    "sso_error": "SSO Error",
+    "sso_fallback": "Auto-login failed. Opening manually...",
+    "time_now": "Just now",
+    "time_minutes": "{{count}}min ago",
+    "time_hours": "{{count}}h ago",
+    "time_days": "{{count}}d ago",
+    "ai_error_label": "AI Error"
+  },
+  "status": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "in_progress": "In progress",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "service": {
+    "immigration": "Immigration",
+    "legal": "Legal",
+    "tax": "Tax",
+    "housing": "Housing",
+    "health": "Health",
+    "education": "Education",
+    "employment": "Employment",
+    "banking": "Banking",
+    "insurance": "Insurance",
+    "relocation": "Relocation",
+    "translation": "Translation",
+    "other": "Other"
+  },
+  "team": {
+    "add": "Add",
+    "add_provider": "Add a provider",
+    "total": "Total",
+    "online": "Online",
+    "active": "Active",
+    "no_providers": "No providers",
+    "no_providers_hint": "Your team doesn't have any assigned providers yet.",
+    "calls": "Calls",
+    "hours_online": "Online",
+    "rating": "Rating",
+    "lawyer": "Lawyer",
+    "expat": "Expat",
+    "inactive": "Inactive"
+  },
+  "activity": {
+    "is_online": "is online",
+    "disconnected": "disconnected",
+    "time_now": "Just now",
+    "time_minutes": "{{count}} min ago",
+    "time_hours": "{{count}}h ago",
+    "time_days": "{{count}}d ago"
+  },
+  "pwa": {
+    "install": "Install",
+    "install_app": "Install the app",
+    "install_title": "Install SOS Multi",
+    "ios_instructions": "To install the app on your iPhone or iPad:",
+    "ios_step1_title": "Tap the Share button",
+    "ios_step1_hint": "at the bottom of the screen",
+    "ios_step2_title": "Select \"Add to Home Screen\"",
+    "ios_step2_hint": "in the menu",
+    "ios_step3_title": "Tap \"Add\"",
+    "ios_step3_hint": "The app will be added to your home screen",
+    "understood": "Got it"
+  },
+  "notfound": {
+    "title": "Page not found",
+    "message": "The page you're looking for doesn't exist or has been moved.",
+    "back": "Back",
+    "home": "Home"
+  },
+  "common": {
+    "logout_success": "Logged out successfully",
+    "logout_error": "Error during logout",
+    "notification_title": "New SOS-Expat request!"
+  }
+}

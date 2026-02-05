@@ -370,3 +370,45 @@ export const COUNTRIES_STATS = {
   regions: getRegions().length,
   languages: 10
 } as const;
+
+// ========================================
+// 🌐 LOCALE-AWARE HELPERS (9 app languages)
+// ========================================
+
+/** Sentinel value for the "Other country" option (language-neutral) */
+export const OTHER_COUNTRY = 'OTHER';
+
+/** Map app locale → CountryData name property. Hindi has no data → fallback English. */
+const LOCALE_TO_NAME_KEY: Record<string, keyof CountryData> = {
+  fr: 'nameFr',
+  en: 'nameEn',
+  es: 'nameEs',
+  de: 'nameDe',
+  pt: 'namePt',
+  ch: 'nameZh',
+  ar: 'nameAr',
+  ru: 'nameRu',
+  hi: 'nameEn',
+};
+
+/** Get country name in the given app locale (falls back to English) */
+export function getCountryNameByLocale(country: CountryData, locale: string): string {
+  const key = LOCALE_TO_NAME_KEY[locale] || 'nameEn';
+  return (country[key] as string) || country.nameEn;
+}
+
+/** Build a sorted { code, label } list for a <select> in the given locale */
+export function getCountriesForLocale(locale: string): { code: string; label: string }[] {
+  return countriesData
+    .filter((c) => c.code !== 'SEPARATOR')
+    .map((c) => ({ code: c.code, label: getCountryNameByLocale(c, locale) }))
+    .sort((a, b) => a.label.localeCompare(b.label, locale));
+}
+
+/** Resolve a country code (e.g. "FR") to a display name in the given locale */
+export function resolveCountryName(code: string, locale: string = 'fr'): string {
+  if (!code || code === OTHER_COUNTRY) return code;
+  const country = countriesData.find((c) => c.code === code);
+  if (!country) return code;
+  return getCountryNameByLocale(country, locale);
+}

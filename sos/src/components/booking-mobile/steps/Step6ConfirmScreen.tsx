@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import { useIntl } from 'react-intl';
 import { useMobileBooking } from '../context/MobileBookingContext';
+import { resolveCountryName, OTHER_COUNTRY } from '@/data/countries';
 
 export const Step6ConfirmScreen: React.FC = () => {
   const intl = useIntl();
@@ -12,9 +13,16 @@ export const Step6ConfirmScreen: React.FC = () => {
 
   const firstName = watch('firstName');
   const lastName = watch('lastName');
-  const currentCountry = watch('currentCountry');
+  const currentCountryCode = watch('currentCountry');
+  const autrePays = watch('autrePays');
   const title = watch('title');
   const clientPhone = watch('clientPhone');
+
+  // Resolve country code to display name in user's language
+  const locale = intl.locale;
+  const countryDisplay = currentCountryCode === OTHER_COUNTRY
+    ? (autrePays || currentCountryCode)
+    : resolveCountryName(currentCountryCode, locale);
 
   return (
     <div className="px-4 py-6 pb-32">
@@ -40,7 +48,7 @@ export const Step6ConfirmScreen: React.FC = () => {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Pays</span>
-            <span className="font-medium">{currentCountry}</span>
+            <span className="font-medium">{countryDisplay}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Demande</span>

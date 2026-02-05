@@ -1,0 +1,149 @@
+{
+  "nav": {
+    "home": "Início",
+    "requests": "Pedidos",
+    "team": "Equipa",
+    "dashboard": "Painel"
+  },
+  "header": {
+    "dashboard_title": "Painel",
+    "dashboard_subtitle": "Visão geral da sua equipa",
+    "requests_title": "Pedidos",
+    "requests_subtitle": "Gerencie os pedidos dos seus clientes",
+    "team_title": "Gestão da equipa",
+    "team_subtitle": "Gerencie os seus prestadores",
+    "logout": "Terminar sessão",
+    "user_default": "Utilizador"
+  },
+  "login": {
+    "title": "Dashboard Multi",
+    "subtitle": "Gestão da sua equipa SOS Expats",
+    "heading": "Iniciar sessão",
+    "email_label": "Email",
+    "email_placeholder": "seu@email.com",
+    "password_label": "Palavra-passe",
+    "password_placeholder": "A sua palavra-passe",
+    "submit": "Entrar",
+    "loading": "A conectar...",
+    "footer": "Acesso reservado a gestores de equipa",
+    "error_email": "Por favor, introduza o seu email",
+    "error_password": "Por favor, introduza a sua palavra-passe"
+  },
+  "dashboard": {
+    "greeting": "Olá, {{name}}",
+    "requests_to_process": "Pedidos a tratar",
+    "new_count_one": "{{count}} novo",
+    "new_count_other": "{{count}} novos",
+    "all_caught_up": "Tudo em dia",
+    "providers": "Prestadores",
+    "online_count": "{{count}} online",
+    "new_requests_one": "{{count}} novo pedido",
+    "new_requests_other": "{{count}} novos pedidos",
+    "view": "Ver",
+    "recent_activity": "Atividade recente",
+    "no_activity": "Sem atividade recente"
+  },
+  "requests": {
+    "new_label": "Novos",
+    "to_process": "A tratar",
+    "history": "Histórico",
+    "error_loading": "Erro ao carregar os pedidos",
+    "error_retry": "Verifique a sua ligação e tente novamente",
+    "tab_pending": "A tratar",
+    "tab_history": "Histórico",
+    "new_requests_section": "Novos pedidos",
+    "in_progress_section": "Em processamento",
+    "empty_pending": "Sem pedidos a tratar",
+    "empty_pending_hint": "Os novos pedidos aparecerão aqui em tempo real",
+    "empty_history": "Sem histórico",
+    "empty_history_hint": "Os pedidos concluídos ou cancelados aparecerão aqui"
+  },
+  "booking": {
+    "new_badge": "Novo",
+    "see_more": "Ver mais",
+    "see_less": "Ver menos",
+    "respond": "Responder",
+    "connecting": "A conectar...",
+    "delete": "Eliminar",
+    "ai_response": "Resposta IA",
+    "copied": "Copiado",
+    "copy": "Copiar",
+    "client_unknown": "Cliente desconhecido",
+    "session_expired": "Sessão expirada. Inicie sessão novamente.",
+    "sso_error": "Erro SSO",
+    "sso_fallback": "Ligação automática falhou. A abrir manualmente...",
+    "time_now": "Agora mesmo",
+    "time_minutes": "Há {{count}}min",
+    "time_hours": "Há {{count}}h",
+    "time_days": "Há {{count}}d",
+    "ai_error_label": "Erro IA"
+  },
+  "status": {
+    "pending": "Pendente",
+    "confirmed": "Confirmado",
+    "in_progress": "Em curso",
+    "completed": "Concluído",
+    "cancelled": "Cancelado"
+  },
+  "service": {
+    "immigration": "Imigração",
+    "legal": "Jurídico",
+    "tax": "Fiscal",
+    "housing": "Habitação",
+    "health": "Saúde",
+    "education": "Educação",
+    "employment": "Emprego",
+    "banking": "Banca",
+    "insurance": "Seguros",
+    "relocation": "Relocação",
+    "translation": "Tradução",
+    "other": "Outro"
+  },
+  "team": {
+    "add": "Adicionar",
+    "add_provider": "Adicionar um prestador",
+    "total": "Total",
+    "online": "Online",
+    "active": "Ativos",
+    "no_providers": "Sem prestadores",
+    "no_providers_hint": "A sua equipa ainda não tem prestadores atribuídos.",
+    "calls": "Chamadas",
+    "hours_online": "Online",
+    "rating": "Nota",
+    "lawyer": "Advogado",
+    "expat": "Expat",
+    "inactive": "Inativo"
+  },
+  "activity": {
+    "is_online": "está online",
+    "disconnected": "desconectou-se",
+    "time_now": "Agora mesmo",
+    "time_minutes": "Há {{count}} min",
+    "time_hours": "Há {{count}}h",
+    "time_days": "Há {{count}}d"
+  },
+  "pwa": {
+    "install": "Instalar",
+    "install_app": "Instalar a aplicação",
+    "install_title": "Instalar SOS Multi",
+    "ios_instructions": "Para instalar a aplicação no seu iPhone ou iPad:",
+    "ios_step1_title": "Toque no botão Partilhar",
+    "ios_step1_hint": "na parte inferior do ecrã",
+    "ios_step2_title": "Selecione \"Ecrã principal\"",
+    "ios_step2_hint": "no menu",
+    "ios_step3_title": "Toque em \"Adicionar\"",
+    "ios_step3_hint": "A app será adicionada ao seu ecrã principal",
+    "understood": "Percebi"
+  },
+  "notfound": {
+    "title": "Página não encontrada",
+    "message": "A página que procura não existe ou foi movida.",
+    "back": "Voltar",
+    "home": "Início"
+  },
+  "common": {
+    "logout_success": "Sessão terminada com sucesso",
+    "logout_error": "Erro ao terminar sessão",
+    "notification_title": "Novo pedido SOS-Expat!"
+  }
+}

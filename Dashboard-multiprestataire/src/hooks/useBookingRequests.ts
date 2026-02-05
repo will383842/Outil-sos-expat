@@ -12,11 +12,11 @@ import {
   onSnapshot,
   doc,
   deleteDoc,
-  type Timestamp,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { classifyBooking, FIVE_MINUTES, type BookingRequest } from '../types';
+import { classifyBooking, FIVE_MINUTES, ONE_HOUR, type BookingRequest } from '../types';
 
 interface UseBookingRequestsResult {
   bookings: BookingRequest[];
@@ -31,14 +31,14 @@ interface UseBookingRequestsResult {
 
 /** Convert Firestore Timestamp or object to Date */
 function toDate(val: unknown): Date {
-  if (!val) return new Date();
+  if (!val) return new Date(0); // No date → epoch (will be classified as history)
   if (val instanceof Date) return val;
   if (typeof val === 'object' && val !== null && 'toDate' in val) {
     return (val as Timestamp).toDate();
   }
   if (typeof val === 'number') return new Date(val);
   if (typeof val === 'string') return new Date(val);
-  return new Date();
+  return new Date(0);
 }
 
 /** Play a short notification beep using Web Audio API */
@@ -197,12 +197,16 @@ export function useBookingRequests(): UseBookingRequestsResult {
       setIsLoading(false);
     }
 
+    // Only fetch bookings from the last 2 hours (covers "new" + "active" + small buffer)
+    const twoHoursAgo = Timestamp.fromDate(new Date(Date.now() - 2 * ONE_HOUR));
+
     const unsubscribes = chunks.map((chunk) => {
       const q = query(
         collection(db, 'booking_requests'),
         where('providerId', 'in', chunk),
+        where('createdAt', '>', twoHoursAgo),
         orderBy('createdAt', 'desc'),
-        limit(200)
+        limit(100)
       );
 
       return onSnapshot(

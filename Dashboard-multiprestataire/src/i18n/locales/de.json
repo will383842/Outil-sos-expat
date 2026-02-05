@@ -1,0 +1,149 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "requests": "Anfragen",
+    "team": "Team",
+    "dashboard": "Dashboard"
+  },
+  "header": {
+    "dashboard_title": "Dashboard",
+    "dashboard_subtitle": "Überblick über Ihr Team",
+    "requests_title": "Anfragen",
+    "requests_subtitle": "Verwalten Sie die Anfragen Ihrer Kunden",
+    "team_title": "Teamverwaltung",
+    "team_subtitle": "Verwalten Sie Ihre Dienstleister",
+    "logout": "Abmelden",
+    "user_default": "Benutzer"
+  },
+  "login": {
+    "title": "Multi Dashboard",
+    "subtitle": "Verwalten Sie Ihr SOS Expats Team",
+    "heading": "Anmeldung",
+    "email_label": "E-Mail",
+    "email_placeholder": "ihre@email.com",
+    "password_label": "Passwort",
+    "password_placeholder": "Ihr Passwort",
+    "submit": "Anmelden",
+    "loading": "Anmeldung...",
+    "footer": "Zugang nur für Teammanager",
+    "error_email": "Bitte geben Sie Ihre E-Mail ein",
+    "error_password": "Bitte geben Sie Ihr Passwort ein"
+  },
+  "dashboard": {
+    "greeting": "Hallo, {{name}}",
+    "requests_to_process": "Zu bearbeitende Anfragen",
+    "new_count_one": "{{count}} neue",
+    "new_count_other": "{{count}} neue",
+    "all_caught_up": "Alles erledigt",
+    "providers": "Dienstleister",
+    "online_count": "{{count}} online",
+    "new_requests_one": "{{count}} neue Anfrage",
+    "new_requests_other": "{{count}} neue Anfragen",
+    "view": "Ansehen",
+    "recent_activity": "Letzte Aktivität",
+    "no_activity": "Keine aktuelle Aktivität"
+  },
+  "requests": {
+    "new_label": "Neue",
+    "to_process": "Zu bearbeiten",
+    "history": "Verlauf",
+    "error_loading": "Fehler beim Laden der Anfragen",
+    "error_retry": "Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut",
+    "tab_pending": "Zu bearbeiten",
+    "tab_history": "Verlauf",
+    "new_requests_section": "Neue Anfragen",
+    "in_progress_section": "In Bearbeitung",
+    "empty_pending": "Keine Anfragen zu bearbeiten",
+    "empty_pending_hint": "Neue Anfragen erscheinen hier in Echtzeit",
+    "empty_history": "Kein Verlauf",
+    "empty_history_hint": "Abgeschlossene oder stornierte Anfragen erscheinen hier"
+  },
+  "booking": {
+    "new_badge": "Neu",
+    "see_more": "Mehr sehen",
+    "see_less": "Weniger sehen",
+    "respond": "Antworten",
+    "connecting": "Verbindung...",
+    "delete": "Löschen",
+    "ai_response": "KI-Antwort",
+    "copied": "Kopiert",
+    "copy": "Kopieren",
+    "client_unknown": "Unbekannter Kunde",
+    "session_expired": "Sitzung abgelaufen. Bitte erneut anmelden.",
+    "sso_error": "SSO-Fehler",
+    "sso_fallback": "Auto-Anmeldung fehlgeschlagen. Manuelles Öffnen...",
+    "time_now": "Gerade eben",
+    "time_minutes": "Vor {{count}}min",
+    "time_hours": "Vor {{count}}h",
+    "time_days": "Vor {{count}}T",
+    "ai_error_label": "KI-Fehler"
+  },
+  "status": {
+    "pending": "Ausstehend",
+    "confirmed": "Bestätigt",
+    "in_progress": "In Bearbeitung",
+    "completed": "Abgeschlossen",
+    "cancelled": "Storniert"
+  },
+  "service": {
+    "immigration": "Immigration",
+    "legal": "Recht",
+    "tax": "Steuern",
+    "housing": "Wohnung",
+    "health": "Gesundheit",
+    "education": "Bildung",
+    "employment": "Beschäftigung",
+    "banking": "Bankwesen",
+    "insurance": "Versicherung",
+    "relocation": "Umzug",
+    "translation": "Übersetzung",
+    "other": "Sonstiges"
+  },
+  "team": {
+    "add": "Hinzufügen",
+    "add_provider": "Dienstleister hinzufügen",
+    "total": "Gesamt",
+    "online": "Online",
+    "active": "Aktiv",
+    "no_providers": "Keine Dienstleister",
+    "no_providers_hint": "Ihr Team hat noch keine zugewiesenen Dienstleister.",
+    "calls": "Anrufe",
+    "hours_online": "Online",
+    "rating": "Bewertung",
+    "lawyer": "Anwalt",
+    "expat": "Expat",
+    "inactive": "Inaktiv"
+  },
+  "activity": {
+    "is_online": "ist online",
+    "disconnected": "hat sich abgemeldet",
+    "time_now": "Gerade eben",
+    "time_minutes": "Vor {{count}} min",
+    "time_hours": "Vor {{count}}h",
+    "time_days": "Vor {{count}}T"
+  },
+  "pwa": {
+    "install": "Installieren",
+    "install_app": "App installieren",
+    "install_title": "SOS Multi installieren",
+    "ios_instructions": "Um die App auf Ihrem iPhone oder iPad zu installieren:",
+    "ios_step1_title": "Tippen Sie auf den Teilen-Button",
+    "ios_step1_hint": "am unteren Bildschirmrand",
+    "ios_step2_title": "Wählen Sie \"Zum Home-Bildschirm\"",
+    "ios_step2_hint": "im Menü",
+    "ios_step3_title": "Tippen Sie auf \"Hinzufügen\"",
+    "ios_step3_hint": "Die App wird zu Ihrem Home-Bildschirm hinzugefügt",
+    "understood": "Verstanden"
+  },
+  "notfound": {
+    "title": "Seite nicht gefunden",
+    "message": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+    "back": "Zurück",
+    "home": "Startseite"
+  },
+  "common": {
+    "logout_success": "Erfolgreich abgemeldet",
+    "logout_error": "Fehler beim Abmelden",
+    "notification_title": "Neue SOS-Expat Anfrage!"
+  }
+}

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { UseFormWatch } from 'react-hook-form';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import type { BookingFormData } from '../context/MobileBookingContext';
+import { OTHER_COUNTRY } from '@/data/countries';
 
 interface UseStepValidationProps {
   watch: UseFormWatch<BookingFormData>;
@@ -40,7 +41,7 @@ export const useStepValidation = ({ watch, currentStep }: UseStepValidationProps
 
       case 2: // Country screen
         const hasCountry = Boolean(values.currentCountry?.trim());
-        const isOther = values.currentCountry === 'Autre';
+        const isOther = values.currentCountry === OTHER_COUNTRY;
         const hasOtherCountry = Boolean(values.autrePays?.trim());
 
         if (!hasCountry) errors.push('currentCountry');

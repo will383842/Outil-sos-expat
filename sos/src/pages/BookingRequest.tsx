@@ -49,7 +49,7 @@ import { useApp } from "../contexts/AppContext";
 import { logLanguageMismatch } from "../services/analytics";
 import languages, { getLanguageLabel, languagesData, type Language as AppLanguage } from "../data/languages-spoken";
 import { LanguageUtils } from "../locales/languageMap";
-import { countriesData } from "../data/countries";
+import { countriesData, getCountriesForLocale, resolveCountryName, OTHER_COUNTRY } from "../data/countries";
 
 import { db, auth } from "../config/firebase";
 import { doc, onSnapshot, getDoc, collection, query, where, getDocs } from "firebase/firestore";
@@ -979,12 +979,8 @@ const I18N = {
 //   "Zimbabwe",
 // ];
 
-// Generate countries list from countriesData to ensure synchronization
-// This avoids the previous bug where manual list had different names (e.g., "Ivory Coast" vs "Côte d'Ivoire")
-const countries = countriesData
-  .filter((c) => c.code !== "SEPARATOR")
-  .map((c) => c.nameEn)
-  .sort((a, b) => a.localeCompare(b));
+// Countries list is now generated inside the component via getCountriesForLocale(lang)
+// to display country names in the user's current language (9 supported locales).
 
 type MinimalUser = { uid?: string; firstName?: string } | null;
 const ALL_LANGS = languages as BookingLanguage[];
@@ -2170,6 +2166,9 @@ const BookingRequest: React.FC = () => {
   const lang = (language as LangKey) || "fr";
   const t = I18N[lang];
 
+  // Countries list in the user's current language
+  const countries = useMemo(() => getCountriesForLocale(lang), [lang]);
+
   // 🔍 [BOOKING_AUTH_DEBUG] Log BookingRequest component mount
   console.log('[BOOKING_AUTH_DEBUG] 📅 BookingRequest PAGE RENDER', {
     providerId,
@@ -2521,13 +2520,10 @@ const BookingRequest: React.FC = () => {
       console.log('🗣️ Codes langues reçus:', wizardLanguages?.length ? wizardLanguages : '(aucune)');
 
       // Pré-remplir le pays d'intervention depuis le wizard
-      // FIX: Le pays est maintenant requis au step 1 mobile, donc on le pré-remplit
-      // Convertir le code pays (ex: "FR") en nom anglais (ex: "France") car le select utilise nameEn
+      // Le select utilise le code pays (ex: "FR") comme value
       if (country) {
-        const countryData = countriesData.find((c) => c.code === country);
-        const countryName = countryData?.nameEn || country;
-        setValue('currentCountry', countryName);
-        console.log('✅ [BookingRequest] Pays pré-rempli depuis le wizard:', country, '->', countryName);
+        setValue('currentCountry', country);
+        console.log('✅ [BookingRequest] Pays pré-rempli depuis le wizard:', country);
       }
 
       // Préremplir les langues choisies par le client dans le wizard
@@ -2654,7 +2650,7 @@ const BookingRequest: React.FC = () => {
     const hasLast = values.lastName.trim().length > 0;
     const hasCountry = values.currentCountry.trim().length > 0;
     const otherOk =
-      values.currentCountry !== "Autre" ? true : !!values.autrePays?.trim();
+      values.currentCountry !== OTHER_COUNTRY ? true : !!values.autrePays?.trim();
     const langsOk = (values.clientLanguages?.length ?? 0) > 0;
     const accept = Boolean(values.acceptTerms);
 
@@ -2782,9 +2778,9 @@ const BookingRequest: React.FC = () => {
     };
 
     const normalizedCountry =
-      (state.currentCountry === "Autre"
+      (state.currentCountry === OTHER_COUNTRY
         ? state.autrePays
-        : state.currentCountry) ?? "N/A";
+        : resolveCountryName(state.currentCountry, 'fr')) ?? "N/A";
 
     // ✅ P0 FIX: Normaliser le téléphone en E.164 avant soumission
     // Gère tous les formats: 070000000, +33700000000, 0033700000000, etc.
@@ -2911,9 +2907,9 @@ const BookingRequest: React.FC = () => {
             description: data.description,
             nationality: data.nationality,
             currentCountry:
-              (data.currentCountry === "Autre"
+              (data.currentCountry === OTHER_COUNTRY
                 ? data.autrePays
-                : data.currentCountry) ?? "N/A",
+                : resolveCountryName(data.currentCountry, 'fr')) ?? "N/A",
           },
           source: "booking_request_form",
         });
@@ -3825,22 +3821,23 @@ const BookingRequest: React.FC = () => {
                             eventType: 'user-select',
                           });
                           field.onChange(e.target.value);
-                          if (e.target.value !== "Autre")
+                          if (e.target.value !== OTHER_COUNTRY)
                             setValue("autrePays", "");
                         }}
                       >
-                        {/* <option value="">-- Sélectionnez un pays --</option> */}
                         <option value="">
                           {intl.formatMessage({
                             id: "bookingRequest.validators.selectCountry",
                           })}
                         </option>
                         {countries.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
+                          <option key={c.code} value={c.code}>
+                            {c.label}
                           </option>
                         ))}
-                        <option value="Autre">Autre</option>
+                        <option value={OTHER_COUNTRY}>
+                          {intl.formatMessage({ id: "bookingRequest.other", defaultMessage: "Autre" })}
+                        </option>
                       </select>
                     )}
                   />
@@ -3850,7 +3847,7 @@ const BookingRequest: React.FC = () => {
                     </p>
                   )}
 
-                  {watch("currentCountry") === "Autre" && (
+                  {watch("currentCountry") === OTHER_COUNTRY && (
                     <div className="mt-3">
                       <Controller
                         control={control}
@@ -4489,7 +4486,7 @@ const BookingRequest: React.FC = () => {
                       {!validFlags.currentCountry && (
                         <div>• {t.validators.currentCountry}</div>
                       )}
-                      {watch("currentCountry") === "Autre" &&
+                      {watch("currentCountry") === OTHER_COUNTRY &&
                         !validFlags.autrePays && (
                           <div>• {t.validators.otherCountry}</div>
                         )}
@@ -4535,7 +4532,7 @@ const BookingRequest: React.FC = () => {
                           })}
                         </div>
                       )}
-                      {watch("currentCountry") === "Autre" &&
+                      {watch("currentCountry") === OTHER_COUNTRY &&
                         !validFlags.autrePays && (
                           <div>
                             •{" "}

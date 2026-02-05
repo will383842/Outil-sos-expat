@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { MobileBookingProvider, BookingFormData } from './context/MobileBookingContext';
 import { MobileBookingWizard } from './MobileBookingWizard';
 import type { Provider } from '@/types/provider';
-import { countriesData } from '@/data/countries';
 import { languagesData } from '@/data/languages-spoken';
 
 interface MobileBookingWrapperProps {
@@ -68,12 +67,9 @@ export const MobileBookingWrapper: React.FC<MobileBookingWrapperProps> = ({
           type?: string;
         };
 
-        // Convert country code to name
+        // Store country code directly (the select uses code as value)
         if (country) {
-          const countryData = countriesData.find((c) => c.code === country);
-          if (countryData) {
-            defaults.currentCountry = countryData.nameEn;
-          }
+          defaults.currentCountry = country;
         }
 
         // Convert language codes

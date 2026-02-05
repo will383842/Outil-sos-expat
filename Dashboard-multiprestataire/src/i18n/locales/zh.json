@@ -1,0 +1,149 @@
+{
+  "nav": {
+    "home": "首页",
+    "requests": "请求",
+    "team": "团队",
+    "dashboard": "仪表板"
+  },
+  "header": {
+    "dashboard_title": "仪表板",
+    "dashboard_subtitle": "团队概览",
+    "requests_title": "请求",
+    "requests_subtitle": "管理客户请求",
+    "team_title": "团队管理",
+    "team_subtitle": "管理您的服务商",
+    "logout": "退出",
+    "user_default": "用户"
+  },
+  "login": {
+    "title": "多人仪表板",
+    "subtitle": "管理您的SOS Expats团队",
+    "heading": "登录",
+    "email_label": "邮箱",
+    "email_placeholder": "your@email.com",
+    "password_label": "密码",
+    "password_placeholder": "您的密码",
+    "submit": "登录",
+    "loading": "登录中...",
+    "footer": "仅限团队管理员访问",
+    "error_email": "请输入您的邮箱",
+    "error_password": "请输入您的密码"
+  },
+  "dashboard": {
+    "greeting": "您好，{{name}}",
+    "requests_to_process": "待处理请求",
+    "new_count_one": "{{count}}个新请求",
+    "new_count_other": "{{count}}个新请求",
+    "all_caught_up": "全部处理完毕",
+    "providers": "服务商",
+    "online_count": "{{count}}人在线",
+    "new_requests_one": "{{count}}个新请求",
+    "new_requests_other": "{{count}}个新请求",
+    "view": "查看",
+    "recent_activity": "最近活动",
+    "no_activity": "暂无最近活动"
+  },
+  "requests": {
+    "new_label": "新的",
+    "to_process": "待处理",
+    "history": "历史",
+    "error_loading": "加载请求时出错",
+    "error_retry": "请检查您的连接并重试",
+    "tab_pending": "待处理",
+    "tab_history": "历史",
+    "new_requests_section": "新请求",
+    "in_progress_section": "处理中",
+    "empty_pending": "没有待处理的请求",
+    "empty_pending_hint": "新请求将实时显示在这里",
+    "empty_history": "暂无历史记录",
+    "empty_history_hint": "已完成或已取消的请求将显示在这里"
+  },
+  "booking": {
+    "new_badge": "新",
+    "see_more": "查看更多",
+    "see_less": "收起",
+    "respond": "回复",
+    "connecting": "连接中...",
+    "delete": "删除",
+    "ai_response": "AI回复",
+    "copied": "已复制",
+    "copy": "复制",
+    "client_unknown": "未知客户",
+    "session_expired": "会话已过期，请重新登录。",
+    "sso_error": "SSO错误",
+    "sso_fallback": "自动登录失败，正在手动打开...",
+    "time_now": "刚刚",
+    "time_minutes": "{{count}}分钟前",
+    "time_hours": "{{count}}小时前",
+    "time_days": "{{count}}天前",
+    "ai_error_label": "AI错误"
+  },
+  "status": {
+    "pending": "待处理",
+    "confirmed": "已确认",
+    "in_progress": "进行中",
+    "completed": "已完成",
+    "cancelled": "已取消"
+  },
+  "service": {
+    "immigration": "移民",
+    "legal": "法律",
+    "tax": "税务",
+    "housing": "住房",
+    "health": "健康",
+    "education": "教育",
+    "employment": "就业",
+    "banking": "银行",
+    "insurance": "保险",
+    "relocation": "搬迁",
+    "translation": "翻译",
+    "other": "其他"
+  },
+  "team": {
+    "add": "添加",
+    "add_provider": "添加服务商",
+    "total": "总计",
+    "online": "在线",
+    "active": "活跃",
+    "no_providers": "暂无服务商",
+    "no_providers_hint": "您的团队还没有分配的服务商。",
+    "calls": "通话",
+    "hours_online": "在线",
+    "rating": "评分",
+    "lawyer": "律师",
+    "expat": "外籍人士",
+    "inactive": "不活跃"
+  },
+  "activity": {
+    "is_online": "已上线",
+    "disconnected": "已下线",
+    "time_now": "刚刚",
+    "time_minutes": "{{count}}分钟前",
+    "time_hours": "{{count}}小时前",
+    "time_days": "{{count}}天前"
+  },
+  "pwa": {
+    "install": "安装",
+    "install_app": "安装应用",
+    "install_title": "安装SOS Multi",
+    "ios_instructions": "在您的iPhone或iPad上安装应用：",
+    "ios_step1_title": "点击分享按钮",
+    "ios_step1_hint": "在屏幕底部",
+    "ios_step2_title": "选择\"添加到主屏幕\"",
+    "ios_step2_hint": "在菜单中",
+    "ios_step3_title": "点击\"添加\"",
+    "ios_step3_hint": "应用将被添加到您的主屏幕",
+    "understood": "我知道了"
+  },
+  "notfound": {
+    "title": "页面未找到",
+    "message": "您查找的页面不存在或已被移动。",
+    "back": "返回",
+    "home": "首页"
+  },
+  "common": {
+    "logout_success": "已成功退出",
+    "logout_error": "退出时出错",
+    "notification_title": "新的SOS-Expat请求！"
+  }
+}

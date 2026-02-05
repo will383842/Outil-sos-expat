@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo } from
 import { useForm, UseFormReturn } from 'react-hook-form';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import type { Provider } from '@/types/provider';
+import { OTHER_COUNTRY } from '@/data/countries';
 
 // Types
 export interface BookingFormData {
@@ -155,7 +156,7 @@ export const MobileBookingProvider: React.FC<MobileBookingProviderProps> = ({
 
       case 2: // Country
         const hasCountry = Boolean(values.currentCountry?.trim());
-        const otherOk = values.currentCountry !== 'Autre' || Boolean(values.autrePays?.trim());
+        const otherOk = values.currentCountry !== OTHER_COUNTRY || Boolean(values.autrePays?.trim());
         return hasCountry && otherOk;
 
       case 3: // Title

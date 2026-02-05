@@ -1,0 +1,149 @@
+{
+  "nav": {
+    "home": "Главная",
+    "requests": "Заявки",
+    "team": "Команда",
+    "dashboard": "Панель"
+  },
+  "header": {
+    "dashboard_title": "Панель",
+    "dashboard_subtitle": "Обзор вашей команды",
+    "requests_title": "Заявки",
+    "requests_subtitle": "Управляйте заявками клиентов",
+    "team_title": "Управление командой",
+    "team_subtitle": "Управляйте своими провайдерами",
+    "logout": "Выйти",
+    "user_default": "Пользователь"
+  },
+  "login": {
+    "title": "Мульти Панель",
+    "subtitle": "Управление командой SOS Expats",
+    "heading": "Вход",
+    "email_label": "Эл. почта",
+    "email_placeholder": "ваш@email.com",
+    "password_label": "Пароль",
+    "password_placeholder": "Ваш пароль",
+    "submit": "Войти",
+    "loading": "Вход...",
+    "footer": "Доступ только для менеджеров команд",
+    "error_email": "Пожалуйста, введите вашу почту",
+    "error_password": "Пожалуйста, введите ваш пароль"
+  },
+  "dashboard": {
+    "greeting": "Здравствуйте, {{name}}",
+    "requests_to_process": "Заявки к обработке",
+    "new_count_one": "{{count}} новая",
+    "new_count_other": "{{count}} новых",
+    "all_caught_up": "Всё обработано",
+    "providers": "Провайдеры",
+    "online_count": "{{count}} онлайн",
+    "new_requests_one": "{{count}} новая заявка",
+    "new_requests_other": "{{count}} новых заявок",
+    "view": "Смотреть",
+    "recent_activity": "Последняя активность",
+    "no_activity": "Нет недавней активности"
+  },
+  "requests": {
+    "new_label": "Новые",
+    "to_process": "К обработке",
+    "history": "История",
+    "error_loading": "Ошибка загрузки заявок",
+    "error_retry": "Проверьте подключение и попробуйте снова",
+    "tab_pending": "К обработке",
+    "tab_history": "История",
+    "new_requests_section": "Новые заявки",
+    "in_progress_section": "В обработке",
+    "empty_pending": "Нет заявок к обработке",
+    "empty_pending_hint": "Новые заявки появятся здесь в реальном времени",
+    "empty_history": "Нет истории",
+    "empty_history_hint": "Завершённые или отменённые заявки появятся здесь"
+  },
+  "booking": {
+    "new_badge": "Новое",
+    "see_more": "Показать больше",
+    "see_less": "Показать меньше",
+    "respond": "Ответить",
+    "connecting": "Подключение...",
+    "delete": "Удалить",
+    "ai_response": "Ответ ИИ",
+    "copied": "Скопировано",
+    "copy": "Копировать",
+    "client_unknown": "Неизвестный клиент",
+    "session_expired": "Сессия истекла. Войдите заново.",
+    "sso_error": "Ошибка SSO",
+    "sso_fallback": "Авто-вход не удался. Открытие вручную...",
+    "time_now": "Только что",
+    "time_minutes": "{{count}}мин назад",
+    "time_hours": "{{count}}ч назад",
+    "time_days": "{{count}}д назад",
+    "ai_error_label": "Ошибка ИИ"
+  },
+  "status": {
+    "pending": "Ожидание",
+    "confirmed": "Подтверждено",
+    "in_progress": "В процессе",
+    "completed": "Завершено",
+    "cancelled": "Отменено"
+  },
+  "service": {
+    "immigration": "Иммиграция",
+    "legal": "Юридические",
+    "tax": "Налоги",
+    "housing": "Жильё",
+    "health": "Здоровье",
+    "education": "Образование",
+    "employment": "Трудоустройство",
+    "banking": "Банк",
+    "insurance": "Страхование",
+    "relocation": "Переезд",
+    "translation": "Перевод",
+    "other": "Другое"
+  },
+  "team": {
+    "add": "Добавить",
+    "add_provider": "Добавить провайдера",
+    "total": "Всего",
+    "online": "Онлайн",
+    "active": "Активные",
+    "no_providers": "Нет провайдеров",
+    "no_providers_hint": "В вашей команде ещё нет назначенных провайдеров.",
+    "calls": "Звонки",
+    "hours_online": "Онлайн",
+    "rating": "Рейтинг",
+    "lawyer": "Адвокат",
+    "expat": "Экспат",
+    "inactive": "Неактивный"
+  },
+  "activity": {
+    "is_online": "онлайн",
+    "disconnected": "отключился",
+    "time_now": "Только что",
+    "time_minutes": "{{count}} мин назад",
+    "time_hours": "{{count}}ч назад",
+    "time_days": "{{count}}д назад"
+  },
+  "pwa": {
+    "install": "Установить",
+    "install_app": "Установить приложение",
+    "install_title": "Установить SOS Multi",
+    "ios_instructions": "Чтобы установить приложение на iPhone или iPad:",
+    "ios_step1_title": "Нажмите кнопку «Поделиться»",
+    "ios_step1_hint": "внизу экрана",
+    "ios_step2_title": "Выберите «На экран Домой»",
+    "ios_step2_hint": "в меню",
+    "ios_step3_title": "Нажмите «Добавить»",
+    "ios_step3_hint": "Приложение будет добавлено на домашний экран",
+    "understood": "Понятно"
+  },
+  "notfound": {
+    "title": "Страница не найдена",
+    "message": "Страница, которую вы ищете, не существует или была перемещена.",
+    "back": "Назад",
+    "home": "Главная"
+  },
+  "common": {
+    "logout_success": "Выход выполнен успешно",
+    "logout_error": "Ошибка при выходе",
+    "notification_title": "Новая заявка SOS-Expat!"
+  }
+}
