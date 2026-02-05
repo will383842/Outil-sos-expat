@@ -7,6 +7,7 @@ import { Outlet } from 'react-router-dom';
 import { Menu, Download, X, Share, Plus } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import BottomNav from './BottomNav';
 import { useInstallPWA } from '../../hooks';
 import { Button } from '../ui';
 
@@ -57,10 +58,13 @@ export default function AppLayout() {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile bottom navigation */}
+      <BottomNav />
 
       {/* iOS Instructions Modal */}
       {showIOSModal && (

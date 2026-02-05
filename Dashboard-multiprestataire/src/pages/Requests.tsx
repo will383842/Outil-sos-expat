@@ -41,26 +41,26 @@ export default function Requests() {
   return (
     <div className="max-w-3xl mx-auto px-1">
       {/* Summary counters */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-          <Bell className="w-5 h-5 text-green-600 mx-auto mb-1" />
-          <p className="text-2xl font-bold text-gray-900">{newBookings.length}</p>
-          <p className="text-xs text-gray-500">Nouvelles</p>
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 sm:p-4 text-center">
+          <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mx-auto mb-0.5" />
+          <p className="text-lg sm:text-2xl font-bold text-gray-900">{newBookings.length}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500">Nouvelles</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-          <Inbox className="w-5 h-5 text-amber-600 mx-auto mb-1" />
-          <p className="text-2xl font-bold text-gray-900">{pendingCount}</p>
-          <p className="text-xs text-gray-500">À traiter</p>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 sm:p-4 text-center">
+          <Inbox className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 mx-auto mb-0.5" />
+          <p className="text-lg sm:text-2xl font-bold text-gray-900">{pendingCount}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500">À traiter</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-          <CheckCircle className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-          <p className="text-2xl font-bold text-gray-900">{historyBookings.length}</p>
-          <p className="text-xs text-gray-500">Historique</p>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 sm:p-4 text-center">
+          <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mx-auto mb-0.5" />
+          <p className="text-lg sm:text-2xl font-bold text-gray-900">{historyBookings.length}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500">Historique</p>
         </div>
       </div>
 
       {/* Booking tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-4">
         <BookingTabs
           newBookings={newBookings}
           activeBookings={activeBookings}
