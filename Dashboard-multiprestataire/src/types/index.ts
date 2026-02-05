@@ -28,6 +28,20 @@ export {
   aggregateAgencyStats,
 } from './stats';
 
+// Booking types
+export type {
+  BookingRequest,
+  BookingCategory,
+} from './booking';
+
+export {
+  FIVE_MINUTES,
+  TWENTY_FOUR_HOURS,
+  classifyBooking,
+  SERVICE_TYPE_LABELS,
+  BOOKING_STATUS_LABELS,
+} from './booking';
+
 // Auth types
 export interface AuthUser {
   id: string;

@@ -974,11 +974,14 @@ service cloud.firestore {
 
     // ================= BOOKING REQUESTS COLLECTION =================
     match /booking_requests/{bookingId} {
-      // Lecture : client ou provider concerné, ou admin/dev
+      // Lecture : client ou provider concerné, agency_manager pour ses providers liés, ou admin/dev
       allow read: if isAuthenticated() &&
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin() || isDev() ||
+                   ((get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'agency_manager' ||
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') &&
+                    resource.data.providerId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds));
 
       // Création : client authentifié avec validation des champs requis
       allow create: if isAuthenticated() &&

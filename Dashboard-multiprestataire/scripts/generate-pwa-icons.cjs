@@ -61,22 +61,41 @@ async function generateIcons() {
     process.exit(1);
   }
 
+  // Get source image metadata
+  const metadata = await sharp(SOURCE_ICON).metadata();
+  const srcSize = Math.max(metadata.width || 512, metadata.height || 512);
+
   for (const config of ICONS_CONFIG) {
     const outputPath = path.join(config.dest, config.name);
 
     try {
-      let pipeline = sharp(SOURCE_ICON);
+      // 1. Create a solid red canvas at the target size
+      const redCanvas = sharp({
+        create: {
+          width: config.size,
+          height: config.size,
+          channels: 3,
+          background: { r: 248, g: 24, b: 40 },
+        },
+      }).png();
 
-      if (config.maskable) {
-        // Maskable: flatten on red background (fills transparent areas), then resize to fill
-        pipeline = pipeline
-          .flatten({ background: { r: 220, g: 38, b: 38 } })
-          .resize(config.size, config.size, { fit: 'cover' });
-      } else {
-        pipeline = pipeline.resize(config.size, config.size, { fit: 'contain' });
-      }
+      // 2. Prepare the source: trim the edges to remove rounded corners,
+      //    then resize and composite centered on the red canvas
+      const logoSize = Math.round(config.size * 0.88); // 88% to leave safe margin
+      const logoBuffer = await sharp(SOURCE_ICON)
+        .flatten({ background: { r: 248, g: 24, b: 40 } })
+        .trim({ threshold: 30 }) // Remove near-red border pixels
+        .resize(logoSize, logoSize, { fit: 'contain', background: { r: 248, g: 24, b: 40 } })
+        .png()
+        .toBuffer();
 
-      await pipeline.png().toFile(outputPath);
+      const offset = Math.round((config.size - logoSize) / 2);
+
+      await redCanvas
+        .composite([{ input: logoBuffer, top: offset, left: offset }])
+        .png()
+        .toFile(outputPath);
+
       console.log(`✅ Generated: ${config.name} (${config.size}x${config.size})`);
     } catch (error) {
       console.error(`❌ Failed: ${config.name}`, error.message);

@@ -39,39 +39,47 @@ export function useAgencyProviders(): UseAgencyProvidersResult {
     setIsLoading(true);
     setError(null);
 
-    // Firestore 'in' queries support max 30 items
-    // For larger teams, we'd need to batch queries
-    const providerIds = user.linkedProviderIds.slice(0, 30);
+    // Firestore 'in' queries support max 30 items — batch into chunks
+    const allIds = user.linkedProviderIds;
+    const chunks: string[][] = [];
+    for (let i = 0; i < allIds.length; i += 30) {
+      chunks.push(allIds.slice(i, i + 30));
+    }
 
-    const q = query(
-      collection(db, 'sos_profiles'),
-      where(documentId(), 'in', providerIds)
-    );
+    const providerMap = new Map<string, Provider>();
+    let loadedChunks = 0;
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const providerList: Provider[] = [];
+    const unsubscribes = chunks.map((chunk) => {
+      const q = query(
+        collection(db, 'sos_profiles'),
+        where(documentId(), 'in', chunk)
+      );
 
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          providerList.push(normalizeProvider({ ...data, id: doc.id }));
-        });
+      return onSnapshot(
+        q,
+        (snapshot) => {
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            providerMap.set(doc.id, normalizeProvider({ ...data, id: doc.id }));
+          });
 
-        // Sort by name
-        providerList.sort((a, b) => a.name.localeCompare(b.name));
+          loadedChunks++;
+          if (loadedChunks >= chunks.length) {
+            const providerList = Array.from(providerMap.values());
+            providerList.sort((a, b) => a.name.localeCompare(b.name));
+            setProviders(providerList);
+            setIsLoading(false);
+          }
+        },
+        (err) => {
+          console.error('Error fetching providers:', err);
+          setError('Erreur lors du chargement des prestataires');
+          setIsLoading(false);
+        }
+      );
+    });
 
-        setProviders(providerList);
-        setIsLoading(false);
-      },
-      (err) => {
-        console.error('Error fetching providers:', err);
-        setError('Erreur lors du chargement des prestataires');
-        setIsLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
+    return () => unsubscribes.forEach((unsub) => unsub());
   }, [user?.linkedProviderIds]);
 
   const summaries = useMemo(

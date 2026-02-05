@@ -3,9 +3,9 @@
  * Main overview with KPIs and quick actions
  */
 import { Link } from 'react-router-dom';
-import { Users, BarChart3, CreditCard, Phone, Clock } from 'lucide-react';
+import { Users, BarChart3, Phone, Clock, Inbox } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useAgencyProviders, useProviderStats } from '../hooks';
+import { useAgencyProviders, useProviderStats, useBookingRequests } from '../hooks';
 import { StatsCard, ActivityFeed } from '../components/dashboard';
 import { LoadingSpinner } from '../components/ui';
 
@@ -13,8 +13,9 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { providers, isLoading: loadingProviders, activeCount, onlineCount } = useAgencyProviders();
   const { agencyStats, isLoading: loadingStats } = useProviderStats();
+  const { pendingCount, isLoading: loadingBookings } = useBookingRequests();
 
-  const isLoading = loadingProviders || loadingStats;
+  const isLoading = loadingProviders || loadingStats || loadingBookings;
 
   if (isLoading) {
     return (
@@ -25,14 +26,22 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-1">
       {/* Welcome message */}
       <p className="text-gray-600 mb-6">
         Bonjour, {user?.displayName || user?.email}
       </p>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
+        <StatsCard
+          title="Demandes à traiter"
+          value={pendingCount}
+          icon={<Inbox className="w-6 h-6 text-amber-600" />}
+          iconBg="bg-amber-100"
+          subtitle={pendingCount > 0 ? 'À traiter' : 'Tout est à jour'}
+        />
+
         <StatsCard
           title="Prestataires actifs"
           value={activeCount}
@@ -72,6 +81,30 @@ export default function Dashboard() {
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <Link
+          to="/requests"
+          className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:border-amber-300 hover:shadow-md transition-all group relative"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+              <Inbox className="w-6 h-6 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Demandes</h3>
+              <p className="text-sm text-gray-500">
+                {pendingCount > 0
+                  ? `${pendingCount} demande${pendingCount !== 1 ? 's' : ''} à traiter`
+                  : 'Aucune demande en attente'}
+              </p>
+            </div>
+          </div>
+          {pendingCount > 0 && (
+            <span className="absolute top-3 right-3 inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-bold bg-red-500 text-white rounded-full">
+              {pendingCount}
+            </span>
+          )}
+        </Link>
+
+        <Link
           to="/team"
           className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all group"
         >
@@ -100,23 +133,6 @@ export default function Dashboard() {
               <h3 className="font-semibold text-gray-900">Statistiques</h3>
               <p className="text-sm text-gray-500">
                 Performances détaillées
-              </p>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          to="/billing"
-          className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-              <CreditCard className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Facturation</h3>
-              <p className="text-sm text-gray-500">
-                Abonnement et factures
               </p>
             </div>
           </div>

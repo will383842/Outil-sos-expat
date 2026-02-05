@@ -9,9 +9,9 @@ import toast from 'react-hot-toast';
 
 const PAGE_CONFIG: Record<string, { title: string; subtitle: string }> = {
   '/': { title: 'Dashboard', subtitle: 'Vue d\'ensemble de votre équipe' },
+  '/requests': { title: 'Demandes', subtitle: 'Gérez les demandes de vos clients' },
   '/team': { title: 'Gestion de l\'équipe', subtitle: 'Gérez vos prestataires' },
   '/stats': { title: 'Statistiques', subtitle: 'Performances de votre équipe' },
-  '/billing': { title: 'Facturation', subtitle: 'Abonnement et factures' },
 };
 
 export default function Header() {

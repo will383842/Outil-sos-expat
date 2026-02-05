@@ -3,8 +3,8 @@
  */
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, CreditCard, X, Download, Share, Plus } from 'lucide-react';
-import { useInstallPWA } from '../../hooks';
+import { LayoutDashboard, Users, BarChart3, Inbox, X, Download, Share, Plus } from 'lucide-react';
+import { useInstallPWA, useBookingRequests } from '../../hooks';
 import { Button } from '../ui';
 
 interface SidebarProps {
@@ -14,13 +14,14 @@ interface SidebarProps {
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/requests', icon: Inbox, label: 'Demandes', hasBadge: true },
   { to: '/team', icon: Users, label: 'Équipe' },
   { to: '/stats', icon: BarChart3, label: 'Statistiques' },
-  { to: '/billing', icon: CreditCard, label: 'Facturation' },
 ];
 
 export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const { canInstall, isIOS, isInstalled, install } = useInstallPWA();
+  const { pendingCount } = useBookingRequests();
   const [showIOSModal, setShowIOSModal] = useState(false);
 
   const showInstallOption = !isInstalled && (canInstall || isIOS);
@@ -88,7 +89,12 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                   onClick={onClose}
                 >
                   <item.icon className="w-5 h-5" />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {item.hasBadge && pendingCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold bg-red-500 text-white rounded-full">
+                      {pendingCount}
+                    </span>
+                  )}
                 </NavLink>
               </li>
             ))}
