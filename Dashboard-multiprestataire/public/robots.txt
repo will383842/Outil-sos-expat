@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://multi.sosexpats.com/sitemap.xml
+Sitemap: https://multi.sos-expat.com/sitemap.xml

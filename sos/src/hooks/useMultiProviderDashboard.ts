@@ -721,6 +721,9 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
       return;
     }
 
+    // Open window synchronously (before await) to avoid mobile popup blockers
+    const newWindow = window.open('about:blank', '_blank');
+
     try {
       const generateToken = httpsCallable<
         { sessionToken: string; providerId: string; bookingId?: string },
@@ -734,14 +737,21 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
       });
 
       if (!result.data.success || !result.data.ssoUrl) {
+        if (newWindow) newWindow.close();
         throw new Error(result.data.error || 'Erreur lors de la génération du token');
       }
 
-      // Open AI tool in new tab (directly to the conversation if bookingId was provided)
-      window.open(result.data.ssoUrl, '_blank', 'noopener,noreferrer');
+      // Navigate the pre-opened window to the SSO URL
+      if (newWindow) {
+        newWindow.location.href = result.data.ssoUrl;
+      } else {
+        // Fallback: navigate current page if popup was still blocked
+        window.location.href = result.data.ssoUrl;
+      }
 
     } catch (err) {
       console.error('[useMultiProviderDashboard] openAiTool error:', err);
+      if (newWindow) newWindow.close();
       setError('Erreur lors de l\'accès à l\'outil IA.');
     }
   }, []);

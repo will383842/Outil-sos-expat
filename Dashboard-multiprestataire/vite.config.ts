@@ -15,7 +15,7 @@ export default defineConfig({
         name: "SOS Expats - Dashboard Multiprestataire",
         short_name: "SOS Multi",
         description: "Tableau de bord pour gestionnaires multiprestataires - Gérez votre équipe de prestataires SOS Expats",
-        theme_color: "#7C3AED",
+        theme_color: "#DC2626",
         background_color: "#ffffff",
         display: "standalone",
         orientation: "portrait-primary",

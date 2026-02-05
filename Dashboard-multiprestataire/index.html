@@ -15,9 +15,9 @@
   <!-- PWA MANIFEST -->
   <link rel="manifest" href="/manifest.webmanifest" />
 
-  <!-- THEME COLOR - Violet pour distinguer du Pro (rouge) -->
-  <meta name="theme-color" content="#7C3AED" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#6D28D9" media="(prefers-color-scheme: dark)" />
+  <!-- THEME COLOR - Rouge SOS Expat -->
+  <meta name="theme-color" content="#DC2626" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#B91C1C" media="(prefers-color-scheme: dark)" />
 
   <!-- iOS PWA META TAGS -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -47,7 +47,7 @@
   <meta name="application-name" content="SOS Multi" />
 
   <!-- MICROSOFT META -->
-  <meta name="msapplication-TileColor" content="#7C3AED" />
+  <meta name="msapplication-TileColor" content="#DC2626" />
   <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
   <meta name="msapplication-config" content="/browserconfig.xml" />
 
@@ -67,7 +67,7 @@
 
   <!-- OPEN GRAPH -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://multi.sosexpats.com/" />
+  <meta property="og:url" content="https://multi.sos-expat.com/" />
   <meta property="og:title" content="SOS Expats - Dashboard Multiprestataire" />
   <meta property="og:description" content="Gérez votre équipe de prestataires SOS Expats" />
   <meta property="og:image" content="/icons/og-image.png" />
@@ -87,8 +87,8 @@
     body{line-height:1.6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
     #root{min-height:100vh;min-height:100dvh}
 
-    /* App Loading Skeleton - Violet theme */
-    .app-loading{position:fixed;inset:0;background:linear-gradient(135deg,#7C3AED 0%,#6D28D9 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:9999;transition:opacity .3s ease}
+    /* App Loading Skeleton - Red SOS theme */
+    .app-loading{position:fixed;inset:0;background:linear-gradient(135deg,#DC2626 0%,#B91C1C 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:9999;transition:opacity .3s ease}
     .app-loading__logo{width:80px;height:80px;margin-bottom:24px;animation:pulse 2s ease-in-out infinite}
     .app-loading__text{font-size:18px;font-weight:500;opacity:.9}
     .app-loading__spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin-top:24px;animation:spin 1s linear infinite}
@@ -101,7 +101,7 @@
     }
 
     @media(prefers-color-scheme:dark){
-      .app-loading{background:linear-gradient(135deg,#6D28D9 0%,#5B21B6 100%)}
+      .app-loading{background:linear-gradient(135deg,#B91C1C 0%,#991B1B 100%)}
     }
 
     @media(prefers-reduced-motion:reduce){
@@ -153,7 +153,7 @@
 
   <!-- No JavaScript Fallback -->
   <noscript>
-    <div style="padding:40px;text-align:center;font-family:sans-serif;background:#EDE9FE;color:#5B21B6;min-height:100vh;display:flex;align-items:center;justify-content:center">
+    <div style="padding:40px;text-align:center;font-family:sans-serif;background:#FEE2E2;color:#991B1B;min-height:100vh;display:flex;align-items:center;justify-content:center">
       <div>
         <h1 style="font-size:24px;margin-bottom:16px">JavaScript requis</h1>
         <p>Cette application nécessite JavaScript pour fonctionner. Veuillez l'activer dans votre navigateur.</p>

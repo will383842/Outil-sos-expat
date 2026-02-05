@@ -68,19 +68,10 @@ async function generateIcons() {
       let pipeline = sharp(SOURCE_ICON);
 
       if (config.maskable) {
-        // Add padding for maskable icons (10% safe zone)
-        const padding = Math.round(config.size * 0.1);
-        const innerSize = config.size - (padding * 2);
-
+        // Maskable: flatten on red background (fills transparent areas), then resize to fill
         pipeline = pipeline
-          .resize(innerSize, innerSize, { fit: 'contain', background: { r: 124, g: 58, b: 237, alpha: 1 } })
-          .extend({
-            top: padding,
-            bottom: padding,
-            left: padding,
-            right: padding,
-            background: { r: 124, g: 58, b: 237, alpha: 1 } // Violet #7C3AED
-          });
+          .flatten({ background: { r: 220, g: 38, b: 38 } })
+          .resize(config.size, config.size, { fit: 'cover' });
       } else {
         pipeline = pipeline.resize(config.size, config.size, { fit: 'contain' });
       }
@@ -94,7 +85,7 @@ async function generateIcons() {
 
   // Generate SVG favicon
   const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#7C3AED"/>
+  <rect width="32" height="32" rx="6" fill="#DC2626"/>
   <path d="M16 6 L26 24 H6 Z" fill="none" stroke="white" stroke-width="2"/>
   <text x="16" y="21" text-anchor="middle" fill="white" font-family="Arial" font-weight="bold" font-size="4">M</text>
 </svg>`;
