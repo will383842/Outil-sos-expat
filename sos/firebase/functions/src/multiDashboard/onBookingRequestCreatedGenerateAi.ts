@@ -1,29 +1,24 @@
 /**
  * =============================================================================
- * AUTO AI RESPONSE GENERATION - All Providers
+ * AUTO AI RESPONSE GENERATION - DISABLED (deferred to post-payment)
  * =============================================================================
  *
- * Firestore trigger that automatically generates an AI response when a
- * booking_request is created for ANY provider with valid AI access.
+ * This Firestore trigger previously generated AI responses immediately when a
+ * booking_request was created. It is now disabled to avoid wasting API credits
+ * before payment is confirmed.
  *
- * AI access is granted via:
- * - Active subscription (subscriptions/{providerId})
- * - Forced access by admin (users/{providerId}.forcedAIAccess = true)
- * - Free trial until date (users/{providerId}.freeTrialUntil)
+ * AI generation is now handled ONLY after payment via:
+ *   syncCallSessionToOutil() in paymentNotifications.ts
+ *     → Outil's ingestBooking endpoint
+ *     → checkProviderAIStatus() verifies AI access (subscription, forcedAIAccess, free trial)
+ *     → AAA profiles (test accounts) always get AI access after payment
  *
- * This trigger is deployed on sos-urgently-ac307 (where booking_requests are created)
+ * This trigger is kept as a no-op to avoid breaking the Firebase deployment
+ * (removing an exported function requires careful handling).
  */
 
-import * as admin from "firebase-admin";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
-
-// =============================================================================
-// SECRETS
-// =============================================================================
-
-const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 
 // =============================================================================
 // TYPES
@@ -31,307 +26,35 @@ const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 
 interface BookingRequestData {
   providerId: string;
-  providerName?: string;
-  providerType?: "lawyer" | "expat";
   clientName?: string;
   clientFirstName?: string;
-  clientLastName?: string;
-  clientCurrentCountry?: string;
-  clientNationality?: string;
-  clientLanguages?: string[];
-  serviceType?: string;
-  title?: string;
-  description?: string;
-  status?: string;
-  aiResponse?: object;
-  aiProcessedAt?: admin.firestore.Timestamp;
-}
-
-interface ClaudeMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
-interface ClaudeResponse {
-  content: Array<{ type: string; text?: string }>;
-  model: string;
-  usage?: {
-    input_tokens: number;
-    output_tokens: number;
-  };
 }
 
 // =============================================================================
-// HELPER: Check if provider has valid AI access
-// =============================================================================
-
-interface AiAccessResult {
-  hasAccess: boolean;
-  reason: 'subscription_active' | 'forced_access' | 'free_trial' | 'no_access';
-  note?: string;
-}
-
-async function checkProviderAiAccess(providerId: string): Promise<AiAccessResult> {
-  const db = admin.firestore();
-  const now = new Date();
-
-  // 1. Check user document for forced access or free trial
-  const userDoc = await db.collection("users").doc(providerId).get();
-
-  if (userDoc.exists) {
-    const userData = userDoc.data()!;
-
-    // Check forcedAIAccess (admin-granted access)
-    if (userData.forcedAIAccess === true || userData.forceAiAccess === true) {
-      return {
-        hasAccess: true,
-        reason: 'forced_access',
-        note: userData.forcedAccessNote || 'Accès IA accordé par administrateur'
-      };
-    }
-
-    // Check freeTrialUntil
-    if (userData.freeTrialUntil) {
-      const freeTrialUntil = userData.freeTrialUntil.toDate
-        ? userData.freeTrialUntil.toDate()
-        : new Date(userData.freeTrialUntil);
-
-      if (freeTrialUntil > now) {
-        return {
-          hasAccess: true,
-          reason: 'free_trial',
-          note: `Essai gratuit jusqu'au ${freeTrialUntil.toLocaleDateString('fr-FR')}`
-        };
-      }
-    }
-  }
-
-  // 2. Check subscription status
-  const subDoc = await db.collection("subscriptions").doc(providerId).get();
-
-  if (subDoc.exists) {
-    const subscription = subDoc.data()!;
-    const status = subscription.status;
-
-    // Active subscription statuses that grant AI access
-    const activeStatuses = ['active', 'trialing', 'past_due'];
-
-    if (activeStatuses.includes(status)) {
-      // For past_due, check grace period (7 days default)
-      if (status === 'past_due') {
-        const pastDueSince = subscription.pastDueSince?.toDate?.()
-          || subscription.updatedAt?.toDate?.()
-          || now;
-        const daysPastDue = Math.ceil((now.getTime() - pastDueSince.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (daysPastDue >= 7) {
-          return { hasAccess: false, reason: 'no_access' };
-        }
-      }
-
-      return {
-        hasAccess: true,
-        reason: 'subscription_active',
-        note: `Abonnement ${status}`
-      };
-    }
-  }
-
-  return { hasAccess: false, reason: 'no_access' };
-}
-
-// =============================================================================
-// HELPER: Generate AI Welcome Response
-// =============================================================================
-
-async function generateWelcomeResponse(context: {
-  clientName: string;
-  clientCountry?: string;
-  serviceType?: string;
-  clientLanguages?: string[];
-  providerType?: "lawyer" | "expat";
-  title?: string;
-}): Promise<{ text: string; tokensUsed: number; model: string }> {
-  const apiKey = ANTHROPIC_API_KEY.value().trim();
-
-  if (!apiKey || !apiKey.startsWith("sk-ant-")) {
-    throw new Error("Invalid or missing Anthropic API key");
-  }
-
-  // Determine response language based on client languages
-  const primaryLanguage = context.clientLanguages?.[0] || "fr";
-  const languageInstruction = primaryLanguage.startsWith("en")
-    ? "Respond in English."
-    : primaryLanguage.startsWith("es")
-      ? "Respond in Spanish."
-      : primaryLanguage.startsWith("de")
-        ? "Respond in German."
-        : "Respond in French.";
-
-  const providerRole = context.providerType === "lawyer"
-    ? "un avocat spécialisé"
-    : "un aidant expatrié expérimenté";
-
-  const prompt = `Tu es un assistant pour SOS-Expat, une plateforme qui met en relation des expatriés avec des avocats et aidants.
-
-Un nouveau client vient de faire une demande de service. Génère une première réponse professionnelle et chaleureuse.
-
-Contexte:
-- Nom client: ${context.clientName}
-- Pays actuel: ${context.clientCountry || "Non spécifié"}
-- Type de service: ${context.serviceType || "Consultation"}
-- Type de prestataire: ${providerRole}
-${context.title ? `- Sujet: ${context.title}` : ""}
-
-Instructions:
-1. Salue le client par son nom
-2. Confirme la réception de sa demande
-3. Explique brièvement les prochaines étapes
-4. Rassure sur la confidentialité
-5. ${languageInstruction}
-
-Format: Réponse directe, professionnelle, 3-4 phrases maximum. Pas de formatage markdown.`;
-
-  const messages: ClaudeMessage[] = [
-    { role: "user", content: prompt }
-  ];
-
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 500,
-      temperature: 0.7,
-      messages,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Claude API error: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json() as ClaudeResponse;
-  const textContent = data.content.find(c => c.type === "text");
-
-  if (!textContent?.text) {
-    throw new Error("Empty response from Claude");
-  }
-
-  return {
-    text: textContent.text,
-    tokensUsed: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
-    model: data.model,
-  };
-}
-
-// =============================================================================
-// FIRESTORE TRIGGER
+// FIRESTORE TRIGGER (no-op — AI deferred to post-payment)
 // =============================================================================
 
 export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
   {
     document: "booking_requests/{bookingId}",
     region: "europe-west1",
-    secrets: [ANTHROPIC_API_KEY],
-    memory: "512MiB",
-    timeoutSeconds: 60,
-    maxInstances: 10,
+    memory: "256MiB",
+    timeoutSeconds: 10,
+    maxInstances: 5,
   },
   async (event) => {
     const snap = event.data;
-    if (!snap) {
-      logger.warn("[AutoAI] No snapshot data");
-      return;
-    }
+    if (!snap) return;
 
     const bookingId = event.params.bookingId;
     const booking = snap.data() as BookingRequestData;
 
-    logger.info("[AutoAI] New booking_request detected", {
+    // AI generation is now handled ONLY after payment via syncCallSessionToOutil
+    // (paymentNotifications.ts). This avoids wasting API credits before payment.
+    logger.info("[AutoAI] Booking request created — AI deferred to post-payment flow", {
       bookingId,
       providerId: booking.providerId,
       clientName: booking.clientName || booking.clientFirstName,
     });
-
-    // Skip if already processed
-    if (booking.aiResponse || booking.aiProcessedAt) {
-      logger.info("[AutoAI] Already processed, skipping", { bookingId });
-      return;
-    }
-
-    // Check if provider has valid AI access (subscription, forced access, or free trial)
-    const aiAccess = await checkProviderAiAccess(booking.providerId);
-
-    if (!aiAccess.hasAccess) {
-      logger.info("[AutoAI] Provider has no AI access, skipping", {
-        bookingId,
-        providerId: booking.providerId,
-        reason: aiAccess.reason,
-      });
-      return;
-    }
-
-    logger.info("[AutoAI] Provider has AI access, generating automatic response", {
-      bookingId,
-      providerId: booking.providerId,
-      accessReason: aiAccess.reason,
-      accessNote: aiAccess.note,
-    });
-
-    try {
-      // Build client name
-      const clientName = booking.clientName
-        || `${booking.clientFirstName || ""} ${booking.clientLastName || ""}`.trim()
-        || "Client";
-
-      // Generate AI response
-      const aiResult = await generateWelcomeResponse({
-        clientName,
-        clientCountry: booking.clientCurrentCountry,
-        serviceType: booking.serviceType,
-        clientLanguages: booking.clientLanguages,
-        providerType: booking.providerType,
-        title: booking.title,
-      });
-
-      // Save response to booking_request
-      await snap.ref.update({
-        aiResponse: {
-          content: aiResult.text,
-          generatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          model: aiResult.model,
-          tokensUsed: aiResult.tokensUsed,
-          source: "auto_ai_welcome",
-          accessReason: aiAccess.reason,
-        },
-        aiProcessedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      logger.info("[AutoAI] AI response saved successfully", {
-        bookingId,
-        model: aiResult.model,
-        tokensUsed: aiResult.tokensUsed,
-        responseLength: aiResult.text.length,
-      });
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      logger.error("[AutoAI] Failed to generate AI response", {
-        bookingId,
-        error: errorMessage,
-      });
-
-      // Mark as failed but don't block the booking
-      await snap.ref.update({
-        aiError: errorMessage,
-        aiErrorAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
   }
 );

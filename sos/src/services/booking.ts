@@ -1,7 +1,6 @@
 // src/services/booking.ts
-import { addDoc, collection, serverTimestamp, doc, updateDoc, getDoc } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
-import { triggerFullAiGeneration } from "../config/outilFirebase";
 
 /**
  * Champs MINIMAUX exigés par tes rules :
@@ -120,65 +119,9 @@ export async function createBookingRequest(data: BookingRequestCreate) {
     "NETWORK_TIMEOUT"
   );
 
-  // Check if provider has AI access (subscription or forced access)
-  // This triggers AI for ALL providers with AI access, not just multi-providers
-  (async () => {
-    try {
-      // Check provider's AI access in BOTH sos_profiles AND users
-      // Admin can set forcedAIAccess on either collection
-      const [profileDoc, userDoc] = await Promise.all([
-        getDoc(doc(db, "sos_profiles", providerId)),
-        getDoc(doc(db, "users", providerId)),
-      ]);
-
-      const profileData = profileDoc.exists() ? profileDoc.data() : null;
-      const userData = userDoc.exists() ? userDoc.data() : null;
-
-      const hasAiAccess =
-        // Check sos_profiles
-        profileData?.forcedAIAccess === true ||
-        profileData?.hasActiveSubscription === true ||
-        profileData?.subscriptionStatus === "active" ||
-        // Check users collection (admin may set forcedAIAccess here too)
-        userData?.forcedAIAccess === true ||
-        userData?.hasActiveSubscription === true ||
-        userData?.subscriptionStatus === "active";
-
-      if (!hasAiAccess) {
-        console.log("[Booking] Provider does not have AI access, skipping AI generation:", providerId);
-        return;
-      }
-
-      console.log("[Booking] Provider has AI access, triggering AI generation:", providerId);
-
-      // Call AI generation in background (don't block the booking creation)
-      const result = await triggerFullAiGeneration({
-        bookingRequestId: docRef.id,
-        clientId: u.uid,
-        providerId,
-      });
-
-      if (result.success) {
-        console.log("[Booking] AI generation triggered successfully:", {
-          bookingRequestId: docRef.id,
-          bookingId: result.bookingId,
-        });
-      } else if (result.error) {
-        console.error("[Booking] AI generation failed:", result.error);
-        // Save error to booking_request
-        try {
-          await updateDoc(doc(db, "booking_requests", docRef.id), {
-            aiError: result.error,
-            aiErrorAt: serverTimestamp(),
-          });
-        } catch {
-          // Ignore update errors
-        }
-      }
-    } catch (error) {
-      console.error("[Booking] Error checking AI access or triggering AI:", error);
-    }
-  })();
+  // AI generation is handled AFTER payment via syncCallSessionToOutil (paymentNotifications.ts)
+  // No AI should be triggered at booking creation to avoid wasting API credits before payment
+  console.log("[Booking] AI generation deferred to post-payment flow for provider:", providerId);
 
   return docRef.id;
 }

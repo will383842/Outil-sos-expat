@@ -738,6 +738,34 @@ export const createAndScheduleCallHTTPS = onCall(
         const outilApiKey = OUTIL_SYNC_API_KEY.value().trim();
         if (outilApiKey) {
           const OUTIL_INGEST_ENDPOINT = 'https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking';
+
+          // Fetch provider AI access info from users/{providerId}
+          let providerForcedAIAccess = false;
+          let providerFreeTrialUntil: string | null = null;
+          let providerSubscriptionStatus: string | undefined;
+          let providerHasActiveSubscription = false;
+          try {
+            const providerUserDoc = await db.collection('users').doc(providerId).get();
+            if (providerUserDoc.exists) {
+              const providerUserData = providerUserDoc.data();
+              // AAA profiles (test/demo accounts) always get AI access after payment
+              const isAAA = providerId.startsWith('aaa_') || providerUserData?.isAAA === true;
+              providerForcedAIAccess = isAAA || providerUserData?.forcedAIAccess === true;
+              providerFreeTrialUntil = providerUserData?.freeTrialUntil?.toDate?.()?.toISOString() || null;
+              providerSubscriptionStatus = providerUserData?.subscriptionStatus;
+              providerHasActiveSubscription = providerUserData?.hasActiveSubscription === true;
+              console.log(`🔑 [${requestId}] Provider AI access info: isAAA=${isAAA}, forcedAIAccess=${providerForcedAIAccess}, subscriptionStatus=${providerSubscriptionStatus}`);
+            } else {
+              // AAA profiles without a user doc still get AI access
+              if (providerId.startsWith('aaa_')) {
+                providerForcedAIAccess = true;
+                console.log(`🔑 [${requestId}] AAA provider without user doc — forcing AI access`);
+              }
+            }
+          } catch (accessError) {
+            console.warn(`⚠️ [${requestId}] Failed to get provider AI access info:`, accessError);
+          }
+
           // P0 FIX: Use real booking form data instead of defaults
           const outilPayload = {
             clientFirstName: clientDisplayName,
@@ -757,6 +785,12 @@ export const createAndScheduleCallHTTPS = onCall(
             providerType,
             providerName,
             providerCountry: providerDocData?.country || '',
+            providerEmail,
+            // Provider AI access info for Outil to decide whether to generate AI response
+            forcedAIAccess: providerForcedAIAccess,
+            freeTrialUntil: providerFreeTrialUntil,
+            subscriptionStatus: providerSubscriptionStatus,
+            hasActiveSubscription: providerHasActiveSubscription,
             source: 'sos-expat-app',
             externalId: callSession.id,
             metadata: {

@@ -1349,8 +1349,12 @@ async function syncCallSessionToOutil(
         const userDoc = await admin.firestore().collection("users").doc(providerId).get();
         if (userDoc.exists) {
           const userData = userDoc.data();
+
+          // AAA profiles (test/demo accounts) always get AI access after payment
+          const isAAA = providerId.startsWith("aaa_") || userData?.isAAA === true;
+
           providerAccessInfo = {
-            forcedAIAccess: userData?.forcedAIAccess === true,
+            forcedAIAccess: isAAA || userData?.forcedAIAccess === true,
             freeTrialUntil: userData?.freeTrialUntil?.toDate?.()?.toISOString() || null,
             subscriptionStatus: userData?.subscriptionStatus,
             hasActiveSubscription: userData?.hasActiveSubscription === true,
@@ -1358,11 +1362,19 @@ async function syncCallSessionToOutil(
           };
           console.log(`🔑 [${debugId}] Provider access info retrieved:`, {
             providerId,
+            isAAA,
             forcedAIAccess: providerAccessInfo.forcedAIAccess,
             subscriptionStatus: providerAccessInfo.subscriptionStatus,
           });
         } else {
-          console.warn(`⚠️ [${debugId}] Provider not found in users collection: ${providerId}`);
+          // AAA profiles without a user doc still get AI access
+          const isAAA = providerId.startsWith("aaa_");
+          if (isAAA) {
+            providerAccessInfo = { forcedAIAccess: true };
+            console.log(`🔑 [${debugId}] AAA provider without user doc — forcing AI access`);
+          } else {
+            console.warn(`⚠️ [${debugId}] Provider not found in users collection: ${providerId}`);
+          }
         }
       } catch (accessError) {
         console.warn(`⚠️ [${debugId}] Failed to get provider access info:`, accessError);
