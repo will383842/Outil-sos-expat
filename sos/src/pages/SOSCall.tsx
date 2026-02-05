@@ -3252,49 +3252,8 @@ const SOSCall: React.FC = () => {
       />
 
       <div className="min-h-screen bg-gray-950 overflow-x-hidden max-w-full">
-        {/* ========================================
-            📱 HERO MOBILE COMPACT (sticky)
-            Caché quand le wizard est ouvert pour éviter conflit z-index
-        ======================================== */}
-        {!showWizard && (
-        <header className="lg:hidden sticky top-[80px] z-40 bg-gray-950/95 backdrop-blur-xl border-b border-white/10 safe-area-top" role="banner">
-          <div className="px-4 py-2 flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-base font-bold text-white truncate">
-                <FormattedMessage id="sosCall.hero.title.short" defaultMessage="SOS Expat" />
-              </h1>
-              <p className="text-xs text-gray-400 truncate">
-                <FormattedMessage
-                  id="sosCall.hero.expertCount.short"
-                  defaultMessage="{total} experts disponibles"
-                  values={{ total: filteredProviders.length }}
-                />
-              </p>
-            </div>
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className="text-sm text-green-400 flex items-center gap-1.5 bg-green-400/10 px-2.5 py-1.5 rounded-full">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" aria-hidden="true" />
-                <span className="font-medium">{onlineCount}</span>
-                <span className="hidden xs:inline">
-                  <FormattedMessage id="sosCall.status.online" />
-                </span>
-              </span>
-              <button
-                onClick={() => setIsFilterOpen(true)}
-                className="relative p-2.5 rounded-xl bg-white/10 text-white min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-white/20 transition-colors"
-                aria-label={intl.formatMessage({ id: "sosCall.filters.open", defaultMessage: "Ouvrir les filtres" })}
-              >
-                <SlidersHorizontal className="w-5 h-5" />
-                {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        </header>
-        )}
+        {/* 📱 HERO MOBILE COMPACT — supprimé pour gagner de l'espace mobile.
+            Le FAB flottant en bas à droite permet toujours d'ouvrir les filtres. */}
 
         {/* ========================================
             🖥️ HERO DESKTOP (inchangé)
@@ -3371,72 +3330,8 @@ const SOSCall: React.FC = () => {
           aria-labelledby="section-title"
         >
 
-          {/* ========================================
-              📱 FILTRES CHIPS MOBILE (sticky)
-          ======================================== */}
-          <div className="lg:hidden sticky top-[136px] z-30 bg-gray-900/95 backdrop-blur-md border-b border-white/10 w-full overflow-hidden">
-            <div className="overflow-x-auto scrollbar-hide w-full">
-              <div className="flex gap-2 px-4 py-1.5 w-max min-w-full justify-center">
-                {/* Chip Type: All */}
-                <button
-                  onClick={() => setSelectedType("all")}
-                  className={`px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[44px] touch-manipulation ${
-                    selectedType === "all"
-                      ? "bg-red-500 text-white"
-                      : "bg-white/10 text-gray-300 hover:bg-white/20"
-                  }`}
-                >
-                  <FormattedMessage id="sosCall.filter.all" defaultMessage="Tous" />
-                </button>
-                {/* Chip Type: Lawyer */}
-                <button
-                  onClick={() => setSelectedType("lawyer")}
-                  className={`px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[44px] flex items-center gap-1.5 touch-manipulation ${
-                    selectedType === "lawyer"
-                      ? "bg-red-500 text-white"
-                      : "bg-white/10 text-gray-300 hover:bg-white/20"
-                  }`}
-                >
-                  <span>⚖️</span>
-                  <FormattedMessage id="sosCall.profession.lawyer" />
-                </button>
-                {/* Chip Type: Expat */}
-                <button
-                  onClick={() => setSelectedType("expat")}
-                  className={`px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[44px] flex items-center gap-1.5 touch-manipulation ${
-                    selectedType === "expat"
-                      ? "bg-red-500 text-white"
-                      : "bg-white/10 text-gray-300 hover:bg-white/20"
-                  }`}
-                >
-                  <span>🌍</span>
-                  <FormattedMessage id="sosCall.profession.expat" />
-                </button>
-                {/* Chip Status: Online */}
-                <button
-                  onClick={() => setStatusFilter(statusFilter === "online" ? "all" : "online")}
-                  className={`px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[44px] flex items-center gap-1.5 touch-manipulation ${
-                    statusFilter === "online"
-                      ? "bg-green-500 text-white"
-                      : "bg-white/10 text-gray-300 hover:bg-white/20"
-                  }`}
-                >
-                  <span className="w-2 h-2 bg-green-400 rounded-full" />
-                  <FormattedMessage id="sosCall.status.online" />
-                </button>
-                {/* Reset Filters (si des filtres sont actifs) */}
-                {activeFiltersCount > 0 && (
-                  <button
-                    onClick={resetFilters}
-                    className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[44px] flex items-center gap-1.5 bg-white/10 text-gray-300 hover:bg-white/20 touch-manipulation"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <FormattedMessage id="sosCall.filters.reset" defaultMessage="Réinitialiser" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+          {/* 📱 FILTRES CHIPS MOBILE — supprimés pour gagner de l'espace.
+              Le FAB flottant en bas à droite + FilterBottomSheet gèrent le filtrage. */}
 
           <div className="max-w-7xl xl:max-w-[1500px] mx-auto px-4 sm:px-6 lg:pt-0 pt-1 w-full overflow-hidden">
             {/* ===== H2 - Titre de section (Desktop uniquement) ===== */}
