@@ -5,7 +5,7 @@ import { useMobileBooking } from '../context/MobileBookingContext';
 
 export const Step3TitleScreen: React.FC = () => {
   const intl = useIntl();
-  const { form } = useMobileBooking();
+  const { form, goNextStep, isCurrentStepValid } = useMobileBooking();
   const { control, watch, formState: { errors } } = form;
 
   const title = watch('title');
@@ -46,6 +46,12 @@ export const Step3TitleScreen: React.FC = () => {
             <input
               {...field}
               type="text"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (isCurrentStepValid) goNextStep();
+                }
+              }}
               placeholder={intl.formatMessage({ id: 'bookingRequest.placeholders.title' })}
               className={`w-full px-4 py-4 border-2 rounded-xl text-base ${
                 errors.title ? 'border-red-400' : 'border-gray-200 focus:border-red-500'

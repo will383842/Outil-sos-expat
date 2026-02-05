@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Controller } from 'react-hook-form';
 import { useIntl } from 'react-intl';
 import { useMobileBooking } from '../context/MobileBookingContext';
 
 export const Step1NameScreen: React.FC = () => {
   const intl = useIntl();
-  const { form } = useMobileBooking();
+  const { form, goNextStep, isCurrentStepValid } = useMobileBooking();
   const { control, formState: { errors } } = form;
+  const lastNameRef = useRef<HTMLInputElement | null>(null);
 
   return (
     <div className="px-4 py-6">
@@ -40,6 +41,12 @@ export const Step1NameScreen: React.FC = () => {
               <input
                 {...field}
                 type="text"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    lastNameRef.current?.focus();
+                  }
+                }}
                 placeholder={intl.formatMessage({ id: 'bookingRequest.placeholders.firstName' })}
                 className={`w-full px-4 py-4 border-2 rounded-xl text-base ${
                   errors.firstName ? 'border-red-400' : 'border-gray-200 focus:border-red-500'
@@ -69,7 +76,17 @@ export const Step1NameScreen: React.FC = () => {
             render={({ field }) => (
               <input
                 {...field}
+                ref={(el) => {
+                  field.ref(el);
+                  lastNameRef.current = el;
+                }}
                 type="text"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (isCurrentStepValid) goNextStep();
+                  }
+                }}
                 placeholder={intl.formatMessage({ id: 'bookingRequest.placeholders.lastName' })}
                 className={`w-full px-4 py-4 border-2 rounded-xl text-base ${
                   errors.lastName ? 'border-red-400' : 'border-gray-200 focus:border-red-500'
