@@ -16,10 +16,9 @@ firestore-debug.log
 ui-debug.log
 pubsub-debug.log
 
-# Environment variables
+# Environment variables (keep .env.production for Cloudflare Pages builds)
 .env
 .env.local
-.env.production
 .env.development.local
 .env.test.local
 .env.production.local

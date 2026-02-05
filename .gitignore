@@ -43,9 +43,11 @@ src/multilingual-system/sitemaps/global/sitemap-index.xml.gz
 .env
 .env.*
 !.env.example
+!.env.production
 **/.env
 **/.env.*
 !**/.env.example
+!**/.env.production
 
 # Service account keys & credentials
 **/serviceAccount.json
