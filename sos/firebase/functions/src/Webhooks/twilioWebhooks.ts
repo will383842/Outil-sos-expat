@@ -614,8 +614,10 @@ async function handleCallCompleted(
     }
 
     // ===== Utiliser billingDuration (pas CallDuration) pour la décision de capture/remboursement =====
-    if (billingDuration >= 120) {
-      console.log(`🏁 [${completedId}] STEP 3: billingDuration >= 120s → handleCallCompletion (capture payment)`);
+    // P0 FIX 2026-02-05: Aligned with CALL_CONFIG.MIN_CALL_DURATION (60s) - was incorrectly 120s
+    const MIN_DURATION_FOR_CAPTURE = 60;
+    if (billingDuration >= MIN_DURATION_FOR_CAPTURE) {
+      console.log(`🏁 [${completedId}] STEP 3: billingDuration >= ${MIN_DURATION_FOR_CAPTURE}s → handleCallCompletion (capture payment)`);
       await twilioCallManager.handleCallCompletion(sessionId, billingDuration);
     } else {
       // P0 CRITICAL FIX 2026-01-17: Check if this participant was EVER connected
@@ -634,7 +636,7 @@ async function handleCallCompleted(
         console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
         console.log(`🏁 [${completedId}]   Retry loop will call handleCallFailure after all attempts exhausted`);
       } else {
-        console.log(`🏁 [${completedId}] STEP 3: billingDuration < 120s → handleEarlyDisconnection (may refund)`);
+        console.log(`🏁 [${completedId}] STEP 3: billingDuration < ${MIN_DURATION_FOR_CAPTURE}s → handleEarlyDisconnection (may refund)`);
         // P0 FIX LOG 2026-01-15: Log participant retry state BEFORE calling handleEarlyDisconnection
         console.log(`🏁 [${completedId}] 📊 RETRY STATE before handleEarlyDisconnection:`);
         console.log(`🏁 [${completedId}]   ${participantType}.attemptCount: ${participant?.attemptCount || 0}`);
@@ -662,14 +664,12 @@ async function handleCallCompleted(
 
     // === LOGS POUR DEBUG RACCROCHAGE ===
     console.log(`\n${'🏁'.repeat(30)}`);
-    // P0 FIX 2026-02-01: Minimum duration reduced from 120s (2 min) to 60s (1 min)
-    const MIN_CALL_DURATION = 60;
     console.log(`🏁 [${completedId}] === HANGUP SUMMARY ===`);
     console.log(`🏁 [${completedId}]   sessionId: ${sessionId}`);
     console.log(`🏁 [${completedId}]   participant who hung up: ${participantType}`);
     console.log(`🏁 [${completedId}]   billingDuration: ${billingDuration}s`);
-    console.log(`🏁 [${completedId}]   threshold (MIN_CALL_DURATION): ${MIN_CALL_DURATION}s`);
-    console.log(`🏁 [${completedId}]   action taken: ${billingDuration >= MIN_CALL_DURATION ? 'handleCallCompletion (CAPTURE)' : 'handleEarlyDisconnection (MAY REFUND)'}`);
+    console.log(`🏁 [${completedId}]   threshold (MIN_DURATION_FOR_CAPTURE): ${MIN_DURATION_FOR_CAPTURE}s`);
+    console.log(`🏁 [${completedId}]   action taken: ${billingDuration >= MIN_DURATION_FOR_CAPTURE ? 'handleCallCompletion (CAPTURE)' : 'handleEarlyDisconnection (MAY REFUND)'}`);
 
     // Fetch final state for debug
     const finalSession = await twilioCallManager.getCallSession(sessionId);

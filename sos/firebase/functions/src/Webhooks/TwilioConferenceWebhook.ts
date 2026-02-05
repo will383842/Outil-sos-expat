@@ -296,8 +296,8 @@ async function handleConferenceStart(sessionId: string, body: TwilioConferenceWe
 /**
  * Gère la fin de la conférence
  * IMPORTANT: handleCallCompletion gère automatiquement :
- *   - Si durée >= 120s → capture paiement + schedule transfer
- *   - Si durée < 120s  → processRefund (cancel si non-capturé, refund si capturé)
+ *   - Si durée >= 60s → capture paiement + schedule transfer
+ *   - Si durée < 60s  → processRefund (cancel si non-capturé, refund si capturé)
  */
 async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebhookBody) {
   const endId = `conf_end_${Date.now().toString(36)}`;
@@ -989,8 +989,8 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
 
     console.log(`👋 [${leaveId}] STEP 3: Checking if early disconnection...`);
     console.log(`👋 [${leaveId}]   billingDuration (from both connected): ${billingDuration}s`);
-    console.log(`👋 [${leaveId}]   minDuration: 120s`);
-    console.log(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 120}`);
+    console.log(`👋 [${leaveId}]   minDuration: 60s`);
+    console.log(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 60}`);
 
     // P0 CRITICAL FIX 2026-01-17 v4: Don't process if session is still connecting!
     // If session is in connecting phase, the retry loop should continue handling provider retries.
@@ -1057,7 +1057,7 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
     console.log(`👋 [${leaveId}]   participantType: ${participantType}`);
     console.log(`👋 [${leaveId}]   callSid: ${callSid}`);
     console.log(`👋 [${leaveId}]   billingDuration: ${billingDuration}s`);
-    console.log(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 120 ? 'YES' : 'NO'}`);
+    console.log(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 60 ? 'YES' : 'NO'}`);
 
     // Fetch and log final state after leave
     const finalLeaveState = await twilioCallManager.getCallSession(sessionId);

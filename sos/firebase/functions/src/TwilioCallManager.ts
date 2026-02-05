@@ -2453,7 +2453,7 @@ export class TwilioCallManager {
         }
         await this.capturePaymentForSession(sessionId);
       } else {
-        // Call duration < 120 seconds or payment not authorized - refund the payment
+        // Call duration < MIN_CALL_DURATION (60s) or payment not authorized - refund the payment
         console.log(`📄 Call duration too short or payment not authorized - processing refund for session: ${sessionId}`);
         // P0 FIX: Use "early_disconnect" in refundReason so frontend shows correct message
         const refundReason = duration < CALL_CONFIG.MIN_CALL_DURATION
