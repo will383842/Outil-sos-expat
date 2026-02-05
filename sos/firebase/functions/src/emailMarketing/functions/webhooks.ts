@@ -14,7 +14,8 @@ import { getMailWizzWebhookSecret } from "../config";
  */
 function verifyWebhookSecret(req: any): boolean {
   try {
-    const receivedSecret = req.headers["x-webhook-secret"] as string;
+    // Check header first, then fall back to query parameter
+    const receivedSecret = (req.headers["x-webhook-secret"] as string) || (req.query?.secret as string);
     const expectedSecret = getMailWizzWebhookSecret();
 
     if (!receivedSecret || !expectedSecret) {

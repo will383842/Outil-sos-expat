@@ -969,6 +969,94 @@ const useTranslation = () => {
       pt: "Contatar suporte",
       ar: "اتصل بالدعم"
     },
+    "err.cvc.title": {
+      fr: "Code de sécurité incorrect 🔐",
+      en: "Incorrect security code 🔐",
+      es: "Código de seguridad incorrecto 🔐",
+      de: "Sicherheitscode falsch 🔐",
+      ru: "Неверный код безопасности 🔐",
+      hi: "गलत सुरक्षा कोड 🔐",
+      ch: "安全码不正确 🔐",
+      pt: "Código de segurança incorreto 🔐",
+      ar: "رمز الأمان غير صحيح 🔐"
+    },
+    "err.cvc.message": {
+      fr: "Le code CVC/CVV de votre carte est incorrect. Vérifiez les 3 chiffres au dos de votre carte.",
+      en: "The CVC/CVV code on your card is incorrect. Check the 3 digits on the back of your card.",
+      es: "El código CVC/CVV de su tarjeta es incorrecto. Verifique los 3 dígitos en el reverso de su tarjeta.",
+      de: "Der CVC/CVV-Code Ihrer Karte ist falsch. Prüfen Sie die 3 Ziffern auf der Rückseite Ihrer Karte.",
+      ru: "Код CVC/CVV вашей карты неверен. Проверьте 3 цифры на обороте карты.",
+      hi: "आपके कार्ड का CVC/CVV कोड गलत है। अपने कार्ड के पीछे 3 अंक जांचें।",
+      ch: "您卡片的CVC/CVV码不正确。请检查卡片背面的3位数字。",
+      pt: "O código CVC/CVV do seu cartão está incorreto. Verifique os 3 dígitos no verso do cartão.",
+      ar: "رمز CVC/CVV لبطاقتك غير صحيح. تحقق من الأرقام الثلاثة على ظهر البطاقة."
+    },
+    "err.expired.title": {
+      fr: "Carte expirée 📅",
+      en: "Card expired 📅",
+      es: "Tarjeta vencida 📅",
+      de: "Karte abgelaufen 📅",
+      ru: "Карта просрочена 📅",
+      hi: "कार्ड की अवधि समाप्त 📅",
+      ch: "卡片已过期 📅",
+      pt: "Cartão expirado 📅",
+      ar: "انتهت صلاحية البطاقة 📅"
+    },
+    "err.expired.message": {
+      fr: "Votre carte a expiré. Veuillez utiliser une autre carte de paiement.",
+      en: "Your card has expired. Please use a different payment card.",
+      es: "Su tarjeta ha vencido. Por favor, use otra tarjeta de pago.",
+      de: "Ihre Karte ist abgelaufen. Bitte verwenden Sie eine andere Zahlungskarte.",
+      ru: "Срок действия вашей карты истёк. Пожалуйста, используйте другую карту.",
+      hi: "आपके कार्ड की अवधि समाप्त हो गई है। कृपया दूसरे कार्ड का उपयोग करें।",
+      ch: "您的卡片已过期。请使用其他支付卡。",
+      pt: "Seu cartão expirou. Por favor, use outro cartão de pagamento.",
+      ar: "انتهت صلاحية بطاقتك. يرجى استخدام بطاقة دفع أخرى."
+    },
+    "err.generic.message": {
+      fr: "Une erreur est survenue lors du paiement. Veuillez réessayer ou utiliser un autre moyen de paiement.",
+      en: "A payment error occurred. Please try again or use a different payment method.",
+      es: "Ocurrió un error en el pago. Intente de nuevo o use otro medio de pago.",
+      de: "Ein Zahlungsfehler ist aufgetreten. Bitte versuchen Sie es erneut oder nutzen Sie eine andere Zahlungsmethode.",
+      ru: "Произошла ошибка при оплате. Попробуйте снова или используйте другой способ оплаты.",
+      hi: "भुगतान में त्रुटि हुई। कृपया पुनः प्रयास करें या दूसरी भुगतान विधि उपयोग करें।",
+      ch: "支付出现错误。请重试或使用其他支付方式。",
+      pt: "Ocorreu um erro no pagamento. Tente novamente ou use outro meio de pagamento.",
+      ar: "حدث خطأ في الدفع. يرجى المحاولة مرة أخرى أو استخدام طريقة دفع أخرى."
+    },
+    "err.3dsTimeout": {
+      fr: "L'authentification 3D Secure a expiré. Veuillez réessayer.",
+      en: "3D Secure authentication has expired. Please try again.",
+      es: "La autenticación 3D Secure ha expirado. Intente de nuevo.",
+      de: "Die 3D-Secure-Authentifizierung ist abgelaufen. Bitte versuchen Sie es erneut.",
+      ru: "Аутентификация 3D Secure истекла. Попробуйте снова.",
+      hi: "3D Secure प्रमाणीकरण की समय सीमा समाप्त हो गई। कृपया पुनः प्रयास करें।",
+      ch: "3D Secure验证已超时。请重试。",
+      pt: "A autenticação 3D Secure expirou. Tente novamente.",
+      ar: "انتهت مهلة مصادقة 3D Secure. يرجى المحاولة مرة أخرى."
+    },
+    "err.paypalCanceled.title": {
+      fr: "Paiement annulé",
+      en: "Payment cancelled",
+      es: "Pago cancelado",
+      de: "Zahlung abgebrochen",
+      ru: "Платёж отменён",
+      hi: "भुगतान रद्द किया गया",
+      ch: "付款已取消",
+      pt: "Pagamento cancelado",
+      ar: "تم إلغاء الدفع"
+    },
+    "err.paypalCanceled.message": {
+      fr: "Vous avez annulé le paiement. Vous pouvez réessayer quand vous le souhaitez.",
+      en: "You cancelled the payment. You can try again whenever you're ready.",
+      es: "Ha cancelado el pago. Puede intentarlo de nuevo cuando lo desee.",
+      de: "Sie haben die Zahlung abgebrochen. Sie können es jederzeit erneut versuchen.",
+      ru: "Вы отменили платёж. Вы можете попробовать снова в любое время.",
+      hi: "आपने भुगतान रद्द कर दिया। आप जब चाहें फिर से प्रयास कर सकते हैं।",
+      ch: "您已取消付款。您可以随时重试。",
+      pt: "Você cancelou o pagamento. Pode tentar novamente quando quiser.",
+      ar: "لقد ألغيت الدفع. يمكنك المحاولة مرة أخرى في أي وقت."
+    },
   };
 
 
@@ -1126,11 +1214,15 @@ interface PaymentFeedbackProps {
 
 // Detect error type from message
 const detectErrorType = (error: string): {
-  type: 'duplicate' | 'rateLimit' | 'cardDeclined' | 'insufficientFunds' | 'network' | 'expired' | 'cvc' | 'generic';
+  type: 'duplicate' | 'rateLimit' | 'cardDeclined' | 'insufficientFunds' | 'network' | 'expired' | 'cvc' | 'cancelled' | 'generic';
   feedbackType: FeedbackType;
 } => {
   const lowerError = error.toLowerCase();
 
+  // PayPal/Payment cancellation detection
+  if (lowerError.includes('annulé') || lowerError.includes('cancelled') || lowerError.includes('canceled')) {
+    return { type: 'cancelled', feedbackType: 'info' };
+  }
   // Duplicate payment detection
   if (lowerError.includes('already') || lowerError.includes('doublon') || lowerError.includes('déjà') || lowerError.includes('similaire')) {
     return { type: 'duplicate', feedbackType: 'warning' };
@@ -1220,6 +1312,11 @@ const PaymentFeedback: React.FC<PaymentFeedbackProps> = ({ error, onDismiss, onR
           title: t('err.rateLimit.title', 'Tout doux ! ☕'),
           message: t('err.rateLimit.message', 'Trop de tentatives. Patientez une minute avant de réessayer.')
         };
+      case 'cancelled':
+        return {
+          title: t('err.paypalCanceled.title', 'Paiement annulé'),
+          message: t('err.paypalCanceled.message', 'Vous avez annulé le paiement. Vous pouvez réessayer quand vous le souhaitez.')
+        };
       case 'cvc':
         return {
           title: t('err.cvc.title', 'Code de sécurité incorrect 🔐'),
@@ -1275,6 +1372,11 @@ const PaymentFeedback: React.FC<PaymentFeedbackProps> = ({ error, onDismiss, onR
             flex items-center justify-center
             animate-in zoom-in duration-200
           `}>
+            {type === 'cancelled' && (
+              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
             {type === 'duplicate' && (
               <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -1346,23 +1448,39 @@ const PaymentFeedback: React.FC<PaymentFeedbackProps> = ({ error, onDismiss, onR
         </div>
 
         {/* Action buttons - Mobile optimized */}
-        {onRetry && (
+        {(onRetry || type === 'generic') && (
           <div className="flex gap-2 pt-1">
-            <button
-              onClick={onRetry}
-              className={`
-                flex-1 py-2.5 px-4 rounded-xl font-medium text-sm
-                ${styles.button}
-                transition-all duration-150
-                active:scale-[0.98]
-                flex items-center justify-center gap-2
-              `}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {t('err.tryAgain', 'Réessayer')}
-            </button>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className={`
+                  flex-1 py-2.5 px-4 rounded-xl font-medium text-sm
+                  ${styles.button}
+                  transition-all duration-150
+                  active:scale-[0.98]
+                  flex items-center justify-center gap-2
+                `}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {t('err.tryAgain', 'Réessayer')}
+              </button>
+            )}
+            {type === 'generic' && (
+              <a
+                href="mailto:support@sos-expat.com"
+                className="flex-1 py-2.5 px-4 rounded-xl font-medium text-sm
+                  bg-gray-100 hover:bg-gray-200 text-gray-700
+                  transition-all duration-150 active:scale-[0.98]
+                  flex items-center justify-center gap-2 no-underline"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                {t('err.contactSupport', 'Contacter le support')}
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -4415,7 +4533,10 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                     console.error("[PayPal] Payment error:", err);
                     handlePaymentError(err instanceof Error ? err.message : String(err));
                   }}
-                  onCancel={() => console.log("PayPal cancelled")}
+                  onCancel={() => {
+                    console.log("PayPal cancelled by user");
+                    handlePaymentError(t("err.paypalCanceled.message"));
+                  }}
                   disabled={isProcessing}
                 />
               ) : (
