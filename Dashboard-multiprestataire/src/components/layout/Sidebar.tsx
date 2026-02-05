@@ -1,8 +1,11 @@
 /**
  * Sidebar Component
  */
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, CreditCard, X } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, CreditCard, X, Download, Share, Plus } from 'lucide-react';
+import { useInstallPWA } from '../../hooks';
+import { Button } from '../ui';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -17,6 +20,19 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
+  const { canInstall, isIOS, isInstalled, install } = useInstallPWA();
+  const [showIOSModal, setShowIOSModal] = useState(false);
+
+  const showInstallOption = !isInstalled && (canInstall || isIOS);
+
+  const handleInstall = async () => {
+    if (isIOS) {
+      setShowIOSModal(true);
+    } else {
+      await install();
+    }
+  };
+
   return (
     <>
       {/* Mobile overlay */}
@@ -37,7 +53,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200 safe-top">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <Users className="w-5 h-5 text-white" />
@@ -78,7 +94,101 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
             ))}
           </ul>
         </nav>
+
+        {/* Bottom section - Install button */}
+        {showInstallOption && (
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+            <button
+              onClick={handleInstall}
+              className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium bg-primary-50 text-primary-700 hover:bg-primary-100 transition-colors"
+            >
+              <Download className="w-5 h-5" />
+              Installer l'application
+            </button>
+          </div>
+        )}
       </aside>
+
+      {/* iOS Instructions Modal */}
+      {showIOSModal && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Installer SOS Multi
+                </h3>
+                <button
+                  onClick={() => setShowIOSModal(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-gray-600 mb-6">
+                Pour installer l'application sur votre iPhone ou iPad :
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-primary-600 font-bold">1</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      Appuyez sur le bouton Partager
+                    </p>
+                    <div className="flex items-center gap-2 mt-1 text-gray-500">
+                      <Share className="w-5 h-5" />
+                      <span className="text-sm">en bas de l'écran</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-primary-600 font-bold">2</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      Sélectionnez "Sur l'écran d'accueil"
+                    </p>
+                    <div className="flex items-center gap-2 mt-1 text-gray-500">
+                      <Plus className="w-5 h-5" />
+                      <span className="text-sm">dans le menu</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-primary-600 font-bold">3</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      Appuyez sur "Ajouter"
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      L'app sera ajoutée à votre écran d'accueil
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 p-4">
+              <Button
+                variant="primary"
+                className="w-full"
+                onClick={() => setShowIOSModal(false)}
+              >
+                J'ai compris
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

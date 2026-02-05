@@ -20,7 +20,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Show loading while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 safe-top">
         <LoadingSpinner size="lg" />
         <p className="mt-4 text-sm text-gray-600">Chargement...</p>
       </div>

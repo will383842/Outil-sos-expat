@@ -16,7 +16,7 @@ export default function BlockedScreen({
   email,
 }: BlockedScreenProps) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 safe-top">
       <div className="max-w-md w-full text-center">
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <ShieldX className="w-8 h-8 text-red-600" />

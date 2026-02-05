@@ -3,6 +3,7 @@
  * Displays invoice history with download option
  */
 import { Download, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export interface Invoice {
   id: string;
@@ -112,7 +113,7 @@ export default function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
                       if (invoice.downloadUrl) {
                         window.open(invoice.downloadUrl, '_blank');
                       } else {
-                        alert('Téléchargement non disponible');
+                        toast('Téléchargement non disponible', { icon: 'i' });
                       }
                     }}
                     className="text-primary-600 hover:text-primary-800 text-sm font-medium inline-flex items-center gap-1"

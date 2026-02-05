@@ -14,7 +14,7 @@ import type { ProviderMonthlyStats } from '../types';
 /**
  * Generate CSV content from stats data
  */
-function generateCSV(stats: ProviderMonthlyStats[], month: string): string {
+function generateCSV(stats: ProviderMonthlyStats[]): string {
   const headers = [
     'Prestataire',
     'Email',
@@ -54,7 +54,7 @@ function downloadCSV(stats: ProviderMonthlyStats[], month: string) {
     return;
   }
 
-  const csv = generateCSV(stats, month);
+  const csv = generateCSV(stats);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
