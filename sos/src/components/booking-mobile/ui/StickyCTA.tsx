@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Euro, Loader2 } from 'lucide-react';
 import { useIntl } from 'react-intl';
 import { useMobileBooking } from '../context/MobileBookingContext';
@@ -21,27 +21,37 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({ onSubmit }) => {
   } = useMobileBooking();
 
   const isLastStep = currentStep === totalSteps;
+  const ctaRef = useRef<HTMLDivElement>(null);
 
-  // Detect if keyboard is open to hide CTA
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-
+  // Position CTA above keyboard using direct DOM manipulation (no React re-renders)
+  // This gives pixel-perfect tracking without lag from setState batching
   useEffect(() => {
-    // Use visualViewport API to detect keyboard
     const viewport = window.visualViewport;
     if (!viewport) return;
 
-    const handleResize = () => {
-      // If viewport height is significantly less than window height, keyboard is open
-      const keyboardOpen = viewport.height < window.innerHeight * 0.75;
-      setIsKeyboardOpen(keyboardOpen);
+    const update = () => {
+      if (!ctaRef.current) return;
+      const keyboardHeight = window.innerHeight - viewport.height;
+      const offset = keyboardHeight > 50 ? keyboardHeight : 0;
+      ctaRef.current.style.bottom = `${offset}px`;
+      ctaRef.current.style.paddingBottom = offset > 0 ? '0px' : 'env(safe-area-inset-bottom, 0px)';
     };
 
-    viewport.addEventListener('resize', handleResize);
-    return () => viewport.removeEventListener('resize', handleResize);
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    return () => {
+      viewport.removeEventListener('resize', update);
+      viewport.removeEventListener('scroll', update);
+    };
   }, []);
 
   const handleNext = () => {
     if (!isCurrentStepValid || isSubmitting) return;
+
+    // Blur active input to cleanly dismiss keyboard before transitioning
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
 
     if (isLastStep) {
       triggerHaptic('medium');
@@ -52,18 +62,18 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({ onSubmit }) => {
   };
 
   const handleBack = () => {
+    // Blur active input to cleanly dismiss keyboard
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     if (currentStep > 1) {
       goBackStep();
     }
   };
 
-  // Hide CTA when keyboard is open
-  if (isKeyboardOpen) {
-    return null;
-  }
-
   return (
     <div
+      ref={ctaRef}
       className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
@@ -88,7 +98,7 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({ onSubmit }) => {
           disabled={!isCurrentStepValid || isSubmitting}
           className={`flex-1 py-3 px-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2 touch-manipulation ${
             isCurrentStepValid && !isSubmitting
-              ? 'bg-red-500 active:bg-red-600'
+              ? 'bg-orange-500 active:bg-orange-600 shadow-lg shadow-orange-500/30'
               : 'bg-gray-300'
           }`}
         >

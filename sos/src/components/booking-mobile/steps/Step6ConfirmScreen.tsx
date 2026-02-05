@@ -78,7 +78,7 @@ export const Step6ConfirmScreen: React.FC = () => {
       </div>
 
       {/* Terms checkbox */}
-      <div className={`p-4 rounded-xl border-2 mb-4 ${watch('acceptTerms') ? 'border-green-400 bg-green-50' : 'border-gray-200'}`}>
+      <div className={`p-4 rounded-xl border-2 mb-4 ${watch('acceptTerms') ? 'border-green-400 bg-green-50' : 'border-amber-400 bg-amber-50'}`}>
         <div className="flex items-start gap-3">
           <Controller
             control={control}

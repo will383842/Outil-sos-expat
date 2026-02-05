@@ -6,7 +6,7 @@ import { countriesData } from '@/data/countries';
 
 export const Step2CountryScreen: React.FC = () => {
   const intl = useIntl();
-  const { form } = useMobileBooking();
+  const { form, goNextStep, isCurrentStepValid } = useMobileBooking();
   const { control, watch, setValue, formState: { errors } } = form;
 
   const currentCountry = watch('currentCountry');
@@ -92,6 +92,14 @@ export const Step2CountryScreen: React.FC = () => {
               <input
                 {...field}
                 type="text"
+                enterKeyHint="next"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    (e.target as HTMLInputElement).blur();
+                    if (isCurrentStepValid) goNextStep();
+                  }
+                }}
                 placeholder={intl.formatMessage({ id: 'bookingRequest.placeholders.otherCountry' })}
                 className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl text-base focus:border-red-500"
               />

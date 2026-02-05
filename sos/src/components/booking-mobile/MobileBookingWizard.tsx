@@ -77,10 +77,10 @@ export const MobileBookingWizard: React.FC<MobileBookingWizardProps> = ({
             <button
               type="button"
               onClick={handleBack}
-              className="p-2 -ml-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 touch-manipulation"
+              className="p-2 -ml-2 rounded-lg bg-gray-100 hover:bg-gray-200 active:bg-gray-300 touch-manipulation"
               aria-label={intl.formatMessage({ id: 'common.back', defaultMessage: 'Retour' })}
             >
-              <ArrowLeft size={20} className="text-gray-700" />
+              <ArrowLeft size={22} className="text-gray-900" />
             </button>
             <h1 className="text-lg font-bold text-gray-900">
               {intl.formatMessage({ id: 'bookingRequest.heroTitle', defaultMessage: 'Votre demande' })}

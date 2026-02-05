@@ -53,6 +53,7 @@ export const Step5PhoneScreen: React.FC = () => {
               placeholder="+33 6 12 34 56 78"
               className={errors.clientPhone ? 'error' : ''}
               name="clientPhone"
+              inputProps={{ enterKeyHint: 'done' }}
             />
           )}
         />
