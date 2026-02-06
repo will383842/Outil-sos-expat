@@ -58,11 +58,12 @@ const ChatterRegister: React.FC = () => {
   const isAlreadyChatter = userRole === 'chatter';
 
   // Redirect chatters to their dashboard (but not if they just registered - they go to presentation)
+  // IMPORTANT: Also check !loading to avoid redirecting during registration process
   useEffect(() => {
-    if (authInitialized && !authLoading && isAlreadyChatter && !success) {
+    if (authInitialized && !authLoading && !loading && isAlreadyChatter && !success) {
       navigate(dashboardRoute);
     }
-  }, [authInitialized, authLoading, isAlreadyChatter, navigate, dashboardRoute, success]);
+  }, [authInitialized, authLoading, loading, isAlreadyChatter, navigate, dashboardRoute, success]);
 
   // Show error if user has another role
   if (authInitialized && !authLoading && hasExistingRole && !isAlreadyChatter) {
