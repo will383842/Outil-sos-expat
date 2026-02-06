@@ -309,8 +309,8 @@ const ChatterLanding: React.FC = () => {
               <span className="text-amber-400"><FormattedMessage id="chatter.landing.hero.desktop.highlight" defaultMessage="voyageurs" /></span>
             </h1>
 
-            <p className="text-lg sm:text-2xl lg:text-3xl text-white font-bold mb-2 sm:mb-4">
-              <span className="text-amber-400 text-2xl sm:text-3xl lg:text-4xl">10$</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
+            <p className="text-xl sm:text-2xl lg:text-3xl text-white font-bold mb-2 sm:mb-4">
+              <span className="text-amber-400">10$</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
             </p>
 
             <p className="text-sm sm:text-lg lg:text-xl text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -373,7 +373,7 @@ const ChatterLanding: React.FC = () => {
                   <FormattedMessage id="chatter.landing.source2.desc" defaultMessage="Créez une équipe ILLIMITÉE. Sur chaque appel de vos recrues :" />
                 </p>
                 <div className="space-y-1 sm:space-y-2">
-                  <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-400">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-400">
                     +1$ <FormattedMessage id="chatter.landing.source2.level1" defaultMessage="niveau 1" />
                   </div>
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-cyan-400">
@@ -550,7 +550,7 @@ const ChatterLanding: React.FC = () => {
                   <FormattedMessage
                     id="chatter.landing.calc.label"
                     defaultMessage="Votre agence avec {count} chatters :"
-                    values={{ count: <span className="text-green-400 font-bold text-xl sm:text-2xl lg:text-3xl">{teamSize}</span> }}
+                    values={{ count: <span className="text-green-400 font-bold">{teamSize}</span> }}
                   />
                 </label>
                 <input
