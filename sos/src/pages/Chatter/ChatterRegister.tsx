@@ -135,14 +135,11 @@ const ChatterRegister: React.FC = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        // WhatsApp number (optional, with country code)
-        whatsappNumber: data.whatsappNumber || undefined,
-        whatsappCountryCode: data.whatsappCountryCode || undefined,
         country: data.country,
-        interventionCountries: data.interventionCountries, // Required by backend
+        interventionCountries: data.interventionCountries,
         language: data.language,
         additionalLanguages: data.additionalLanguages,
-        recruitmentCode: data.referralCode || undefined, // Correct field name for backend
+        recruitmentCode: data.referralCode || undefined,
         // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
         acceptTerms: data.acceptTerms,
         termsAcceptedAt: data.termsAcceptedAt,

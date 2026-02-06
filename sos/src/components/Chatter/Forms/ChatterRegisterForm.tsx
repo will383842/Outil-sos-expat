@@ -1,7 +1,6 @@
 /**
  * ChatterRegisterForm - Registration form for chatters
  * Dark theme harmonized with ChatterLanding (amber/yellow + dark gradients)
- * Includes WhatsApp number with country phone code indicator
  */
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -17,7 +16,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Phone,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -86,8 +84,6 @@ export interface ChatterRegistrationData {
   email: string;
   password: string;
   country: string;
-  whatsappNumber: string;
-  whatsappCountryCode: string;
   interventionCountries?: string[];
   language: string;
   additionalLanguages?: string[];
@@ -142,8 +138,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     email: initialData?.email || '',
     password: '',
     country: initialData?.country || '',
-    whatsappNumber: '',
-    whatsappCountryCode: '',
     language: initialData?.language || locale,
     referralCode: initialData?.referralCode,
     acceptTerms: false,
@@ -154,16 +148,13 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   const [languageSearch, setLanguageSearch] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
-  const [showPhoneCodeDropdown, setShowPhoneCodeDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
-  const [phoneCodeSearch, setPhoneCodeSearch] = useState('');
   const [antiBotError, setAntiBotError] = useState<string | null>(null);
 
   const { honeypotValue, setHoneypotValue, validateHuman } = useAntiBot();
 
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
-  const phoneCodeDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -176,24 +167,10 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         setShowLanguageDropdown(false);
         setLanguageSearch('');
       }
-      if (phoneCodeDropdownRef.current && !phoneCodeDropdownRef.current.contains(e.target as Node)) {
-        setShowPhoneCodeDropdown(false);
-        setPhoneCodeSearch('');
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // Auto-fill WhatsApp country code when country is selected
-  useEffect(() => {
-    if (formData.country && !formData.whatsappCountryCode) {
-      const countryEntry = phoneCodesData.find(e => e.code === formData.country);
-      if (countryEntry) {
-        setFormData(prev => ({ ...prev, whatsappCountryCode: countryEntry.code }));
-      }
-    }
-  }, [formData.country, formData.whatsappCountryCode]);
 
   // Filter countries based on search
   const filteredCountries = useMemo(() => {
@@ -204,17 +181,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       entry.code.toLowerCase().includes(search)
     );
   }, [countrySearch, locale]);
-
-  // Filter phone codes based on search
-  const filteredPhoneCodes = useMemo(() => {
-    if (!phoneCodeSearch) return phoneCodesData;
-    const search = phoneCodeSearch.toLowerCase();
-    return phoneCodesData.filter(entry =>
-      getCountryName(entry, locale).toLowerCase().includes(search) ||
-      entry.phoneCode.includes(search) ||
-      entry.code.toLowerCase().includes(search)
-    );
-  }, [phoneCodeSearch, locale]);
 
   // Filter languages based on search
   const filteredLanguages = useMemo(() => {
@@ -227,15 +193,10 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     );
   }, [languageSearch, locale]);
 
-  // Get selected entries
+  // Get selected country entry
   const selectedCountryEntry = useMemo(() =>
     phoneCodesData.find(e => e.code === formData.country),
     [formData.country]
-  );
-
-  const selectedPhoneCodeEntry = useMemo(() =>
-    phoneCodesData.find(e => e.code === formData.whatsappCountryCode),
-    [formData.whatsappCountryCode]
   );
 
   // Styles helper
@@ -251,49 +212,10 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-xl border-0 focus:ring-2 focus:ring-red-500/30',
   };
 
-  // Normalize phone number: remove country code if user types it, keep only digits
-  const normalizePhoneNumber = (value: string, countryCode: string): string => {
-    // Remove all non-digit characters except + at start
-    let normalized = value.replace(/[^\d+]/g, '');
-
-    // If user typed the phone code at the start, remove it
-    if (countryCode) {
-      const phoneCodeEntry = phoneCodesData.find(e => e.code === countryCode);
-      if (phoneCodeEntry) {
-        const phoneCode = phoneCodeEntry.phoneCode.replace('+', '');
-        // Remove leading + if present
-        if (normalized.startsWith('+')) {
-          normalized = normalized.substring(1);
-        }
-        // Remove country code if user typed it
-        if (normalized.startsWith(phoneCode)) {
-          normalized = normalized.substring(phoneCode.length);
-        }
-        // Also handle 00 prefix (international format)
-        if (normalized.startsWith('00' + phoneCode)) {
-          normalized = normalized.substring(2 + phoneCode.length);
-        }
-      }
-    }
-
-    // Remove leading zeros (common mistake)
-    normalized = normalized.replace(/^0+/, '');
-
-    return normalized;
-  };
-
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-
-    // Special handling for phone number - normalize it
-    if (name === 'whatsappNumber') {
-      const normalizedPhone = normalizePhoneNumber(value, formData.whatsappCountryCode);
-      setFormData(prev => ({ ...prev, [name]: normalizedPhone }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-
+    setFormData(prev => ({ ...prev, [name]: value }));
     onErrorClear?.();
     if (validationErrors[name]) {
       setValidationErrors(prev => {
@@ -309,8 +231,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     setFormData(prev => ({
       ...prev,
       country: entry.code,
-      // Auto-fill WhatsApp country code if not already set or if same as previous country
-      whatsappCountryCode: (!prev.whatsappCountryCode || prev.whatsappCountryCode === prev.country) ? entry.code : prev.whatsappCountryCode,
     }));
     setShowCountryDropdown(false);
     setCountrySearch('');
@@ -321,13 +241,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         return newErrors;
       });
     }
-  };
-
-  // Select phone code for WhatsApp
-  const selectPhoneCode = (entry: PhoneCodeEntry) => {
-    setFormData(prev => ({ ...prev, whatsappCountryCode: entry.code }));
-    setShowPhoneCodeDropdown(false);
-    setPhoneCodeSearch('');
   };
 
   // Handle primary language change
@@ -691,98 +604,6 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
             {validationErrors.country}
           </p>
         )}
-      </div>
-
-      {/* WhatsApp Number with Country Code Indicator */}
-      <div className="space-y-2">
-        <label className={s.label}>
-          <FormattedMessage id="form.whatsapp" defaultMessage="WhatsApp number" />
-          <span className={`ml-1 text-xs font-normal ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-            (<FormattedMessage id="form.optional" defaultMessage="optional" />)
-          </span>
-        </label>
-        <div className="flex gap-2">
-          {/* Phone Code Selector */}
-          <div ref={phoneCodeDropdownRef} className="relative flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowPhoneCodeDropdown(!showPhoneCodeDropdown)}
-              className={`
-                ${s.input}
-                w-[100px] xs:w-[110px] sm:w-[130px] pr-2 text-left
-                flex items-center gap-1
-                ${darkMode ? 'hover:bg-white/10' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}
-              `}
-            >
-              {selectedPhoneCodeEntry ? (
-                <>
-                  <span className="text-base">{getFlag(selectedPhoneCodeEntry.code)}</span>
-                  <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                    {selectedPhoneCodeEntry.phoneCode}
-                  </span>
-                </>
-              ) : (
-                <span className="text-gray-500 text-sm">+--</span>
-              )}
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-500 ml-auto transition-transform duration-200 ${showPhoneCodeDropdown ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showPhoneCodeDropdown && (
-              <div className={`${s.dropdown} w-[280px] sm:w-[320px]`}>
-                <div className={`p-2 border-b ${darkMode ? 'border-white/10' : 'border-gray-200 dark:border-gray-700'}`}>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={phoneCodeSearch}
-                      onChange={(e) => setPhoneCodeSearch(e.target.value)}
-                      placeholder={intl.formatMessage({ id: 'form.search.phoneCode', defaultMessage: 'Search country or code...' })}
-                      className={s.dropdownSearch}
-                      autoFocus
-                    />
-                  </div>
-                </div>
-                <div className="max-h-[280px] overflow-y-auto overscroll-contain">
-                  {filteredPhoneCodes.map((entry) => (
-                    <button
-                      key={entry.code}
-                      type="button"
-                      onClick={() => selectPhoneCode(entry)}
-                      className={`${s.dropdownItem} ${entry.code === formData.whatsappCountryCode ? selectedBg : ''}`}
-                    >
-                      <span className="text-lg">{getFlag(entry.code)}</span>
-                      <span className="flex-1 text-sm">{getCountryName(entry, locale)}</span>
-                      <span className={`text-sm font-medium ${darkMode ? 'text-amber-400' : 'text-gray-600 dark:text-gray-300'}`}>
-                        {entry.phoneCode}
-                      </span>
-                      {entry.code === formData.whatsappCountryCode && (
-                        <Check className={`w-4 h-4 ${checkColor}`} />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Phone Number Input */}
-          <div className="flex-1 relative">
-            <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
-            <input
-              type="tel"
-              id="whatsappNumber"
-              name="whatsappNumber"
-              value={formData.whatsappNumber}
-              onChange={handleChange}
-              placeholder={intl.formatMessage({ id: 'form.whatsapp.placeholder', defaultMessage: 'Your WhatsApp number' })}
-              autoComplete="tel"
-              className={`${s.input} pl-12 ${formData.whatsappNumber ? s.inputFilled : ''}`}
-            />
-          </div>
-        </div>
-        <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-          <FormattedMessage id="form.whatsapp.helper" defaultMessage="Used to invite you to our Chatter WhatsApp community" />
-        </p>
       </div>
 
       {/* Primary Language */}
