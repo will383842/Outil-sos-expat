@@ -15,7 +15,7 @@ import Layout from '@/components/layout/Layout';
 import ChatterRegisterForm from '@/components/Chatter/Forms/ChatterRegisterForm';
 import type { ChatterRegistrationData } from '@/components/Chatter/Forms/ChatterRegisterForm';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Star, ArrowLeft, CheckCircle, Gift } from 'lucide-react';
+import { Star, ArrowLeft, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 
 // Design tokens - Harmonized with ChatterLanding dark theme
 const UI = {
@@ -33,6 +33,8 @@ const ChatterRegister: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
+  const [existingEmail, setExistingEmail] = useState<string>('');
 
   const functions = getFunctions(undefined, 'europe-west1');
 
@@ -49,6 +51,7 @@ const ChatterRegister: React.FC = () => {
   const landingRoute = `/${getTranslatedRouteSlug('chatter-landing' as RouteKey, langCode)}`;
   const telegramRoute = `/${getTranslatedRouteSlug('chatter-telegram' as RouteKey, langCode)}`;
   const dashboardRoute = `/${getTranslatedRouteSlug('chatter-dashboard' as RouteKey, langCode)}`;
+  const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
 
   // ============================================================================
   // ROLE CHECK: Redirect if user already has a role
@@ -115,6 +118,8 @@ const ChatterRegister: React.FC = () => {
   const handleSubmit = async (data: ChatterRegistrationData) => {
     setLoading(true);
     setError(null);
+    setEmailAlreadyExists(false);
+    setExistingEmail(data.email); // Save email for "already exists" UI
 
     try {
       // Step 1: Create Firebase Auth account with role 'chatter'
@@ -177,10 +182,10 @@ const ChatterRegister: React.FC = () => {
 
         // Firebase Auth errors
         if (errorCode === 'auth/email-already-in-use' || message.includes('email-already-in-use')) {
-          errorMessage = intl.formatMessage({
-            id: 'chatter.register.error.emailInUse',
-            defaultMessage: 'This email is already registered. Please use another email or log in to your existing account.'
-          });
+          // Show special UI for existing email instead of just error message
+          setEmailAlreadyExists(true);
+          setLoading(false);
+          return; // Don't set error, show special UI instead
         } else if (errorCode === 'auth/weak-password' || message.includes('weak-password') || message.includes('6 characters')) {
           errorMessage = intl.formatMessage({
             id: 'chatter.register.error.weakPassword',
@@ -314,9 +319,65 @@ const ChatterRegister: React.FC = () => {
               </p>
               <div className="w-6 h-6 mx-auto border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
             </div>
+          ) : emailAlreadyExists ? (
+            /* Email Already Exists - Show Login Prompt */
+            <div className={`${UI.card} p-8 text-center`}>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-blue-400" />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">
+                <FormattedMessage id="chatter.register.emailExists.title" defaultMessage="Vous avez déjà un compte !" />
+              </h2>
+              <p className="text-gray-400 mb-2">
+                <FormattedMessage
+                  id="chatter.register.emailExists.message"
+                  defaultMessage="L'email {email} est déjà enregistré."
+                  values={{ email: <strong className="text-white">{existingEmail}</strong> }}
+                />
+              </p>
+              <p className="text-gray-500 text-sm mb-6">
+                <FormattedMessage
+                  id="chatter.register.emailExists.hint"
+                  defaultMessage="Connectez-vous pour continuer votre inscription et recevoir votre bonus de $50."
+                />
+              </p>
+
+              {/* Login Button */}
+              <button
+                onClick={() => navigate(loginRoute)}
+                className="w-full py-4 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-bold rounded-xl flex items-center justify-center gap-3 hover:opacity-90 transition-opacity mb-4"
+              >
+                <LogIn className="w-5 h-5" />
+                <FormattedMessage id="chatter.register.emailExists.loginButton" defaultMessage="Se connecter" />
+              </button>
+
+              {/* Try Different Email */}
+              <button
+                onClick={() => {
+                  setEmailAlreadyExists(false);
+                  setExistingEmail('');
+                }}
+                className="text-sm text-gray-400 hover:text-white underline"
+              >
+                <FormattedMessage id="chatter.register.emailExists.tryDifferent" defaultMessage="Utiliser un autre email" />
+              </button>
+            </div>
           ) : (
             /* Registration Form */
             <div className={`${UI.card} p-6`}>
+              {/* Already registered link */}
+              <div className="mb-6 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center">
+                <p className="text-sm text-gray-400">
+                  <FormattedMessage id="chatter.register.alreadyRegistered" defaultMessage="Déjà inscrit ?" />{' '}
+                  <button
+                    onClick={() => navigate(loginRoute)}
+                    className="text-blue-400 hover:text-blue-300 font-medium underline"
+                  >
+                    <FormattedMessage id="chatter.register.loginLink" defaultMessage="Connectez-vous ici" />
+                  </button>
+                </p>
+              </div>
+
               {/* Referral code banner if present */}
               {referralCodeFromUrl && (
                 <div className="mb-6 p-4 bg-green-500/10 rounded-xl border border-green-500/30">
