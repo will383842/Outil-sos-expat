@@ -302,67 +302,28 @@ const ChatterLanding: React.FC = () => {
 
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
 
-            {/* MOBILE */}
-            <div className="sm:hidden">
-              <h1 className="text-[2.5rem] font-black leading-[1.05] mb-3 tracking-tight">
-                <FormattedMessage id="chatter.landing.hero.title.line1" defaultMessage="Gagnez de l'" />
-                <span className="text-amber-400"><FormattedMessage id="chatter.landing.hero.title.highlight" defaultMessage="argent" /></span>
-              </h1>
+            <h1 className="text-[2.2rem] sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] mb-4 sm:mb-6">
+              <span className="text-white"><FormattedMessage id="chatter.landing.hero.desktop.line1" defaultMessage="Gagnez de l'argent" /></span>
+              <br />
+              <span className="text-white"><FormattedMessage id="chatter.landing.hero.desktop.line2" defaultMessage="en aidant les " /></span>
+              <span className="text-amber-400"><FormattedMessage id="chatter.landing.hero.desktop.highlight" defaultMessage="voyageurs" /></span>
+            </h1>
 
-              <p className="text-lg font-semibold text-white/90 mb-5">
-                <FormattedMessage id="chatter.landing.hero.subtitle" defaultMessage="en aidant les voyageurs" />
-              </p>
+            <p className="text-xl sm:text-2xl lg:text-3xl text-white font-bold mb-3 sm:mb-4">
+              <span className="text-amber-400">10$</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
+            </p>
 
-              <div className="bg-amber-400/10 border-2 border-amber-400/50 rounded-2xl py-4 px-5 mb-5 inline-block">
-                <span className="text-5xl font-black text-amber-400">10$</span>
-                <span className="text-lg font-bold text-white ml-2">
-                  / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
-                </span>
-              </div>
+            <p className="text-sm sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
+              <FormattedMessage id="chatter.landing.hero.desktop.desc" defaultMessage="Partagez votre lien aux expatriés qui ont besoin d'aide juridique. Quand ils appellent, vous gagnez." />
+            </p>
 
-              <p className="text-sm text-gray-300 mb-6 px-2 leading-relaxed">
-                <FormattedMessage id="chatter.landing.hero.desc" defaultMessage="Partagez votre lien. Quand ils appellent, vous gagnez." />
-              </p>
+            <CTAButton onClick={goToRegister} size="large" className="w-full sm:w-auto max-w-md mx-auto" ariaLabel={ctaAriaLabel}>
+              <FormattedMessage id="chatter.landing.cta.start" defaultMessage="Commencer gratuitement" />
+            </CTAButton>
 
-              <button
-                onClick={goToRegister}
-                aria-label={ctaAriaLabel}
-                className="w-full bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-4 px-6 rounded-2xl text-lg shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 min-h-[56px] active:scale-[0.98] will-change-transform"
-              >
-                <FormattedMessage id="chatter.landing.cta.start" defaultMessage="Commencer gratuitement" />
-                <ArrowRight className="w-5 h-5" aria-hidden="true" />
-              </button>
-
-              <p className="text-gray-400 mt-4 text-xs">
-                <FormattedMessage id="chatter.landing.reassurance" defaultMessage="100% gratuit • Aucun investissement • 197 pays" />
-              </p>
-            </div>
-
-            {/* DESKTOP */}
-            <div className="hidden sm:block">
-              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] mb-6">
-                <span className="text-white"><FormattedMessage id="chatter.landing.hero.desktop.line1" defaultMessage="Gagnez de l'argent" /></span>
-                <br />
-                <span className="text-white"><FormattedMessage id="chatter.landing.hero.desktop.line2" defaultMessage="en aidant les " /></span>
-                <span className="text-amber-400"><FormattedMessage id="chatter.landing.hero.desktop.highlight" defaultMessage="voyageurs" /></span>
-              </h1>
-
-              <p className="text-2xl lg:text-3xl text-white font-bold mb-4">
-                <span className="text-amber-400">10$</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
-              </p>
-
-              <p className="text-lg lg:text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-                <FormattedMessage id="chatter.landing.hero.desktop.desc" defaultMessage="Partagez votre lien aux expatriés qui ont besoin d'aide juridique. Quand ils appellent, vous gagnez." />
-              </p>
-
-              <CTAButton onClick={goToRegister} size="large" className="max-w-md mx-auto" ariaLabel={ctaAriaLabel}>
-                <FormattedMessage id="chatter.landing.cta.start" defaultMessage="Commencer gratuitement" />
-              </CTAButton>
-
-              <p className="text-gray-400 mt-6 text-base">
-                <FormattedMessage id="chatter.landing.reassurance" defaultMessage="100% gratuit • Aucun investissement • 197 pays" />
-              </p>
-            </div>
+            <p className="text-gray-400 mt-4 sm:mt-6 text-xs sm:text-base">
+              <FormattedMessage id="chatter.landing.reassurance" defaultMessage="100% gratuit • Aucun investissement • 197 pays" />
+            </p>
           </div>
 
           <ScrollIndicator label={intl.formatMessage({ id: 'chatter.landing.scroll', defaultMessage: 'Découvrir' })} />
