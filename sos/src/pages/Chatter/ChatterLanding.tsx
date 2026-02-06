@@ -287,7 +287,7 @@ const ChatterLanding: React.FC = () => {
 
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
 
-            <h1 className="text-4xl sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] mb-3 sm:mb-6">
+            <h1 className="!text-4xl sm:!text-4xl lg:!text-5xl xl:!text-6xl font-black leading-[1.1] mb-3 sm:mb-6">
               <span className="text-white"><FormattedMessage id="chatter.landing.hero.desktop.line1" defaultMessage="Gagnez de l'argent" /></span>
               <br />
               <span className="text-white"><FormattedMessage id="chatter.landing.hero.desktop.line2" defaultMessage="en aidant les " /></span>
@@ -320,7 +320,7 @@ const ChatterLanding: React.FC = () => {
         <section className="section-content section-lazy bg-gradient-to-b from-black to-gray-950" aria-labelledby="section-revenue">
           <div className="max-w-7xl mx-auto">
 
-            <h2 id="section-revenue" className="text-3xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-center text-white mb-3 sm:mb-4">
+            <h2 id="section-revenue" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
               <span className="text-amber-400"><FormattedMessage id="chatter.landing.revenue.title.highlight" defaultMessage="3 façons" /></span>{' '}
               <FormattedMessage id="chatter.landing.revenue.title" defaultMessage="de gagner" />
             </h2>
@@ -335,7 +335,7 @@ const ChatterLanding: React.FC = () => {
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-amber-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
                   <span className="text-xl sm:text-2xl lg:text-3xl font-black text-black">1</span>
                 </div>
-                <h3 className="text-2xl sm:text-2xl lg:text-3xl font-bold text-white mb-3 sm:mb-4">
+                <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
                   <FormattedMessage id="chatter.landing.source1.title" defaultMessage="Scrollez, aidez, gagnez" />
                 </h3>
                 <p className="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-5 lg:mb-6">
@@ -351,17 +351,17 @@ const ChatterLanding: React.FC = () => {
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-green-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
                   <span className="text-xl sm:text-2xl lg:text-3xl font-black text-black">2</span>
                 </div>
-                <h3 className="text-2xl sm:text-2xl lg:text-3xl font-bold text-white mb-3 sm:mb-4">
+                <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
                   <FormattedMessage id="chatter.landing.source2.title" defaultMessage="Recrutez des chatters" />
                 </h3>
                 <p className="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-5 lg:mb-6">
                   <FormattedMessage id="chatter.landing.source2.desc" defaultMessage="Créez une équipe ILLIMITÉE. Sur chaque appel de vos recrues :" />
                 </p>
                 <div className="space-y-1 sm:space-y-2">
-                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-400">
+                  <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-green-400">
                     +1$ <FormattedMessage id="chatter.landing.source2.level1" defaultMessage="niveau 1" />
                   </div>
-                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-cyan-400">
+                  <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-cyan-400">
                     +0,50$ <FormattedMessage id="chatter.landing.source2.level2" defaultMessage="niveau 2" />
                   </div>
                 </div>
@@ -372,7 +372,7 @@ const ChatterLanding: React.FC = () => {
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-purple-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
                   <span className="text-xl sm:text-2xl lg:text-3xl font-black text-white">3</span>
                 </div>
-                <h3 className="text-2xl sm:text-2xl lg:text-3xl font-bold text-white mb-3 sm:mb-4">
+                <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
                   <FormattedMessage id="chatter.landing.source3.title" defaultMessage="Trouvez des partenaires" />
                 </h3>
                 <p className="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-5 lg:mb-6">
@@ -395,7 +395,7 @@ const ChatterLanding: React.FC = () => {
         <section className="section-content section-lazy bg-gray-950" aria-labelledby="section-proof">
           <div className="max-w-7xl mx-auto">
 
-            <h2 id="section-proof" className="text-3xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-center text-white mb-3 sm:mb-4">
+            <h2 id="section-proof" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
               <FormattedMessage id="chatter.landing.proof.title" defaultMessage="Ils gagnent" />{' '}
               <span className="text-green-400"><FormattedMessage id="chatter.landing.proof.highlight" defaultMessage="vraiment" /></span>
             </h2>
@@ -460,7 +460,7 @@ const ChatterLanding: React.FC = () => {
               <span className="inline-block bg-green-500/20 text-green-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base lg:text-lg font-bold border border-green-500/30 mb-4 sm:mb-6">
                 <FormattedMessage id="chatter.landing.agency.badge" defaultMessage="🏢 Modèle Agence" />
               </span>
-              <h2 id="section-agency" className="text-3xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-white mb-3 sm:mb-4">
+              <h2 id="section-agency" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-white mb-3 sm:mb-4">
                 <FormattedMessage id="chatter.landing.agency.title" defaultMessage="De chatter solo à" />{' '}
                 <span className="text-green-400"><FormattedMessage id="chatter.landing.agency.highlight" defaultMessage="agence" /></span>
               </h2>
@@ -472,7 +472,7 @@ const ChatterLanding: React.FC = () => {
             <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 max-w-5xl mx-auto">
               {/* Structure */}
               <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-5 sm:mb-6 lg:mb-8">
+                <h3 className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-white mb-5 sm:mb-6 lg:mb-8">
                   <FormattedMessage id="chatter.landing.agency.structure" defaultMessage="Structure de votre agence" />
                 </h3>
                 <div className="space-y-4 sm:space-y-5 lg:space-y-6">
@@ -484,7 +484,7 @@ const ChatterLanding: React.FC = () => {
                       <div className="text-base sm:text-lg lg:text-xl text-white font-bold">
                         <FormattedMessage id="chatter.landing.agency.you" defaultMessage="Vous = Le directeur" />
                       </div>
-                      <div className="text-lg sm:text-xl lg:text-2xl font-bold text-amber-400">
+                      <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-amber-400">
                         10$ / <FormattedMessage id="chatter.landing.agency.persoCall" defaultMessage="appel perso" />
                       </div>
                     </div>
@@ -501,7 +501,7 @@ const ChatterLanding: React.FC = () => {
                         <FormattedMessage id="chatter.landing.agency.team" defaultMessage="Votre équipe" />{' '}
                         <span className="text-green-400 font-bold">(<FormattedMessage id="chatter.landing.unlimited" defaultMessage="illimitée" />)</span>
                       </div>
-                      <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-400">
+                      <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-green-400">
                         +1$ <FormattedMessage id="chatter.landing.agency.perCall" defaultMessage="sur chaque appel" />
                       </div>
                     </div>
@@ -518,7 +518,7 @@ const ChatterLanding: React.FC = () => {
                         <FormattedMessage id="chatter.landing.agency.recruits" defaultMessage="Leurs recrues" />{' '}
                         <span className="text-cyan-400 font-bold">(<FormattedMessage id="chatter.landing.unlimited" defaultMessage="illimitées" />)</span>
                       </div>
-                      <div className="text-lg sm:text-xl lg:text-2xl font-bold text-cyan-400">
+                      <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-cyan-400">
                         +0,50$ <FormattedMessage id="chatter.landing.agency.perCall" defaultMessage="sur chaque appel" />
                       </div>
                     </div>
@@ -528,7 +528,7 @@ const ChatterLanding: React.FC = () => {
 
               {/* Calculator */}
               <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border border-green-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-5 sm:mb-6 lg:mb-8">
+                <h3 className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-white mb-5 sm:mb-6 lg:mb-8">
                   <FormattedMessage id="chatter.landing.calc.title" defaultMessage="Calculez vos revenus passifs" />
                 </h3>
                 <label htmlFor="team-slider" className="text-base sm:text-lg lg:text-xl text-gray-300 block mb-4 sm:mb-5 lg:mb-6">
@@ -578,7 +578,7 @@ const ChatterLanding: React.FC = () => {
         <section className="section-content section-lazy bg-gray-950" aria-labelledby="section-risk">
           <div className="max-w-7xl mx-auto">
 
-            <h2 id="section-risk" className="text-3xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-center text-white mb-8 sm:mb-12 lg:mb-16">
+            <h2 id="section-risk" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-8 sm:mb-12 lg:mb-16">
               <FormattedMessage id="chatter.landing.risk.title" defaultMessage="Zéro risque." />{' '}
               <span className="text-green-400"><FormattedMessage id="chatter.landing.risk.highlight" defaultMessage="Zéro limite." /></span>
             </h2>
@@ -622,7 +622,7 @@ const ChatterLanding: React.FC = () => {
         ================================================================ */}
         <section className="section-content section-lazy bg-gradient-to-b from-gray-950 to-gray-950" id="faq" aria-labelledby="section-faq" itemScope itemType="https://schema.org/FAQPage">
           <div className="max-w-3xl mx-auto">
-            <h2 id="section-faq" className="text-3xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-center text-white mb-3 sm:mb-4">
+            <h2 id="section-faq" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
               <FormattedMessage id="chatter.faq.title" defaultMessage="Questions ?" />
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-gray-400 text-center mb-8 sm:mb-10 lg:mb-12">
@@ -656,7 +656,7 @@ const ChatterLanding: React.FC = () => {
               <FormattedMessage id="chatter.landing.cta.join" defaultMessage="Rejoignez 1 200+ chatters dans 197 pays" />
             </p>
 
-            <h2 id="section-cta-final" className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-white mb-6 sm:mb-8">
+            <h2 id="section-cta-final" className="!text-2xl sm:!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-6 sm:mb-8">
               <FormattedMessage id="chatter.landing.cta.title" defaultMessage="Commencez à gagner" />
               <br />
               <span className="text-amber-400"><FormattedMessage id="chatter.landing.cta.highlight" defaultMessage="aujourd'hui" /></span>
