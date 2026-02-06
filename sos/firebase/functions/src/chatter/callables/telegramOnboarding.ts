@@ -549,6 +549,13 @@ export const telegramChatterBotWebhook = onRequest(
       const text = message.text || "";
       const from = message.from;
 
+      // Validate chatId exists
+      if (!chatId) {
+        logger.warn("[telegramChatterBotWebhook] Missing chatId in message");
+        res.status(200).send("OK");
+        return;
+      }
+
       // Extract telegram user info
       const telegramId = from?.id;
       const telegramUsername = from?.username || null;
@@ -571,6 +578,18 @@ export const telegramChatterBotWebhook = onRequest(
       // Extract the code from /start {code}
       const parts = text.split(" ");
       const code = parts[1]?.trim();
+
+      // Validate code format (alphanumeric and hyphens only)
+      if (code && !/^[a-zA-Z0-9_-]+$/.test(code)) {
+        logger.warn("[telegramChatterBotWebhook] Invalid code format", { code: code.substring(0, 20) });
+        await sendTelegramMessage(
+          chatId,
+          "❌ <b>Code invalide</b>\n\n" +
+            "Le format du code n'est pas valide. Retournez dans l'application pour générer un nouveau lien."
+        );
+        res.status(200).send("OK");
+        return;
+      }
 
       if (!code) {
         // No code, send welcome without linking
@@ -715,7 +734,18 @@ export const telegramChatterBotWebhook = onRequest(
       }
 
       // Commit all updates
-      await batch.commit();
+      try {
+        await batch.commit();
+      } catch (batchError) {
+        logger.error("[telegramChatterBotWebhook] Batch commit failed", { batchError, code, userId: link.userId });
+        await sendTelegramMessage(
+          chatId,
+          "❌ <b>Erreur technique</b>\n\n" +
+            "Une erreur est survenue lors de la connexion. Veuillez réessayer dans quelques instants."
+        );
+        res.status(200).send("OK");
+        return;
+      }
 
       logger.info("[telegramChatterBotWebhook] Successfully linked account", {
         code,
@@ -781,9 +811,20 @@ export const skipTelegramOnboarding = onCall(
     try {
       const db = getDb();
       const now = Timestamp.now();
+      const batch = db.batch();
+
+      // Get user doc first to determine role
+      const userRef = db.collection("users").doc(userId);
+      const userDoc = await userRef.get();
+
+      if (!userDoc.exists) {
+        throw new HttpsError("not-found", "User not found");
+      }
+
+      const role = userDoc.data()?.role;
 
       // Update user document - mark as completed but without Telegram
-      await db.collection("users").doc(userId).update({
+      batch.update(userRef, {
         hasTelegram: false,
         telegramOnboardingCompleted: true,
         telegramOnboardingAt: now,
@@ -792,9 +833,6 @@ export const skipTelegramOnboarding = onCall(
       });
 
       // Also update chatters/influencers/etc if exists
-      const userDoc = await db.collection("users").doc(userId).get();
-      const role = userDoc.data()?.role;
-
       const roleCollections: Record<string, string> = {
         chatter: "chatters",
         influencer: "influencers",
@@ -807,7 +845,7 @@ export const skipTelegramOnboarding = onCall(
         const roleRef = db.collection(roleCollection).doc(userId);
         const roleDoc = await roleRef.get();
         if (roleDoc.exists) {
-          await roleRef.update({
+          batch.update(roleRef, {
             hasTelegram: false,
             telegramOnboardingCompleted: true,
             telegramOnboardingSkipped: true,
@@ -815,6 +853,9 @@ export const skipTelegramOnboarding = onCall(
           });
         }
       }
+
+      // Commit all updates atomically
+      await batch.commit();
 
       logger.info("[skipTelegramOnboarding] User skipped Telegram", { userId, role });
 

@@ -34,7 +34,7 @@ async function verifyAdmin(userId: string): Promise<void> {
   }
 
   const userData = userDoc.data();
-  if (userData?.role !== "admin") {
+  if (!userData || userData.role !== "admin") {
     throw new HttpsError("permission-denied", "Admin access required");
   }
 }
@@ -423,8 +423,9 @@ export const adminVerifyGroup = onCall(
         updates.groupVerifiedAt = Timestamp.now();
 
         // Award badge if not already earned
-        const groupAdmin = groupAdminDoc.data() as GroupAdmin;
-        if (!groupAdmin.badges.includes("group_verified")) {
+        const groupAdminData = groupAdminDoc.data();
+        const badges = groupAdminData?.badges || [];
+        if (!badges.includes("group_verified")) {
           updates.badges = FieldValue.arrayUnion("group_verified");
         }
       }
@@ -488,7 +489,16 @@ export const adminProcessWithdrawal = onCall(
         throw new HttpsError("not-found", "Withdrawal not found");
       }
 
-      const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
+      const withdrawalData = withdrawalDoc.data();
+      if (!withdrawalData) {
+        throw new HttpsError("not-found", "Withdrawal data is missing");
+      }
+      const withdrawal = withdrawalData as GroupAdminWithdrawal;
+
+      // Validate amount exists and is positive
+      if (!withdrawal.amount || typeof withdrawal.amount !== "number" || withdrawal.amount <= 0) {
+        throw new HttpsError("failed-precondition", "Invalid withdrawal amount");
+      }
 
       // Validate state transitions
       const validTransitions: Record<GroupAdminWithdrawalStatus, string[]> = {
@@ -530,9 +540,18 @@ export const adminProcessWithdrawal = onCall(
         case "complete":
           updates.completedAt = now;
           updates.paymentReference = input.paymentReference;
-          if (input.processingFee) {
+          if (input.processingFee !== undefined && input.processingFee !== null) {
+            // Validate processingFee is valid
+            if (typeof input.processingFee !== "number" || input.processingFee < 0) {
+              throw new HttpsError("invalid-argument", "Processing fee must be a non-negative number");
+            }
+            if (input.processingFee > withdrawal.amount) {
+              throw new HttpsError("invalid-argument", "Processing fee cannot exceed withdrawal amount");
+            }
             updates.processingFee = input.processingFee;
             updates.netAmount = withdrawal.amount - input.processingFee;
+          } else {
+            updates.netAmount = withdrawal.amount;
           }
           break;
         case "fail":

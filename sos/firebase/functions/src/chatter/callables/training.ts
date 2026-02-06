@@ -201,9 +201,18 @@ export const getChatterTrainingModuleContent = onCall(
         throw new HttpsError("not-found", "Training module not found");
       }
 
+      const moduleData = moduleDoc.data();
+      if (!moduleData) {
+        throw new HttpsError("not-found", "Training module data is missing");
+      }
+
       const module = {
         id: moduleDoc.id,
-        ...moduleDoc.data(),
+        ...moduleData,
+        // Ensure arrays exist with defaults
+        prerequisites: moduleData.prerequisites || [],
+        quizQuestions: moduleData.quizQuestions || [],
+        slides: moduleData.slides || [],
       } as ChatterTrainingModule;
 
       if (module.status !== "published") {
@@ -213,7 +222,7 @@ export const getChatterTrainingModuleContent = onCall(
       // Check prerequisites
       const blockedByPrerequisites: string[] = [];
 
-      if (module.prerequisites.length > 0) {
+      if (module.prerequisites && module.prerequisites.length > 0) {
         const progressQuery = await db
           .collection("chatter_training_progress")
           .doc(userId)
@@ -277,28 +286,35 @@ export const getChatterTrainingModuleContent = onCall(
         moduleForResponse.slides = [];
         moduleForResponse.quizQuestions = [];
       } else {
-        // Remove correctAnswerId from quiz questions
-        moduleForResponse.quizQuestions = module.quizQuestions.map((q) => ({
+        // Remove correctAnswerId from quiz questions (with null check)
+        moduleForResponse.quizQuestions = (module.quizQuestions || []).map((q) => ({
           ...q,
           correctAnswerId: "", // Hidden until submitted
         }));
       }
 
+      // Safely convert Timestamps to ISO strings for response
+      // The API returns ISO strings but types expect Timestamp (for internal use)
+      let progressResponse: ChatterTrainingProgress | null = null;
+      if (progress) {
+        const startedAtTs = progress.startedAt as unknown as Timestamp;
+        const completedAtTs = progress.completedAt as unknown as Timestamp | undefined;
+
+        progressResponse = {
+          ...progress,
+          // Convert Timestamps to ISO strings for JSON serialization
+          startedAt: (startedAtTs?.toDate?.()
+            ? startedAtTs.toDate().toISOString()
+            : progress.startedAt) as unknown as Timestamp,
+          completedAt: (completedAtTs?.toDate?.()
+            ? completedAtTs.toDate().toISOString()
+            : progress.completedAt) as unknown as Timestamp | undefined,
+        };
+      }
+
       return {
         module: moduleForResponse,
-        progress: progress
-          ? {
-              ...progress,
-              startedAt: (progress.startedAt as unknown as Timestamp)
-                .toDate()
-                .toISOString() as unknown as Timestamp,
-              completedAt: progress.completedAt
-                ? (progress.completedAt as unknown as Timestamp)
-                    .toDate()
-                    .toISOString() as unknown as Timestamp
-                : undefined,
-            }
-          : null,
+        progress: progressResponse,
         canAccess,
         blockedByPrerequisites,
       };
@@ -423,7 +439,21 @@ export const submitChatterTrainingQuiz = onCall(
         throw new HttpsError("not-found", "Training module not found");
       }
 
-      const module = moduleDoc.data() as ChatterTrainingModule;
+      const moduleData = moduleDoc.data();
+      if (!moduleData) {
+        throw new HttpsError("not-found", "Training module data is missing");
+      }
+
+      const module = {
+        ...moduleData,
+        quizQuestions: moduleData.quizQuestions || [],
+        passingScore: moduleData.passingScore || 70,
+      } as ChatterTrainingModule;
+
+      // Validate quiz has questions
+      if (module.quizQuestions.length === 0) {
+        throw new HttpsError("failed-precondition", "Module has no quiz questions");
+      }
 
       // Evaluate answers
       const results: SubmitTrainingQuizResponse["results"] = [];
@@ -471,6 +501,9 @@ export const submitChatterTrainingQuiz = onCall(
         .doc(moduleId);
 
       const progressDoc = await progressRef.get();
+      if (!progressDoc.exists) {
+        throw new HttpsError("not-found", "Training progress not found. Please start the module first.");
+      }
       const existingProgress = progressDoc.data() as ChatterTrainingProgress;
 
       const newBestScore = Math.max(existingProgress?.bestScore || 0, score);

@@ -301,13 +301,45 @@ export const trackBloggerGuideUsage = onCall(
         throw new HttpsError("permission-denied", "Only bloggers can use this feature");
       }
 
-      // 3. Log usage
+      // 3. Get resource name for better analytics
+      let resourceName = "";
+      try {
+        let collectionName = "";
+        switch (input.resourceType) {
+          case "template":
+            collectionName = "blogger_guide_templates";
+            break;
+          case "copy_text":
+            collectionName = "blogger_guide_copy_texts";
+            break;
+          case "best_practice":
+            collectionName = "blogger_guide_best_practices";
+            break;
+        }
+
+        if (collectionName) {
+          const resourceDoc = await db.collection(collectionName).doc(input.resourceId).get();
+          if (resourceDoc.exists) {
+            const resourceData = resourceDoc.data();
+            resourceName = resourceData?.name || resourceData?.title || "";
+          }
+        }
+      } catch (err) {
+        // Non-blocking error - just log without resource name
+        logger.warn("[trackBloggerGuideUsage] Could not fetch resource name", {
+          resourceType: input.resourceType,
+          resourceId: input.resourceId,
+          error: err,
+        });
+      }
+
+      // 4. Log usage
       await db.collection("blogger_usage_log").add({
         bloggerId: uid,
         action: input.action,
         resourceType: input.resourceType,
         resourceId: input.resourceId,
-        resourceName: "", // Will be filled if needed
+        resourceName,
         timestamp: Timestamp.now(),
       });
 
