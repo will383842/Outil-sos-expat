@@ -33,58 +33,13 @@ import {
 // STYLES - Mobile-first with performance hints
 // ============================================================================
 const globalStyles = `
-  /* Empêcher iOS Font Boosting / Text Autosizing */
-  .chatter-landing {
-    -webkit-text-size-adjust: 100%;
-    -moz-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+  /* Animations */
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+    50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.6); }
   }
-  .chatter-landing * {
-    max-height: 1000000px;
-  }
-  /* IMPORTANT: Override global h1-h6 styles from App.css - must match Tailwind classes */
-  .chatter-landing h1 {
-    font-size: 2.5rem !important; /* 40px on mobile - BIGGER than before */
-  }
-  .chatter-landing h2 {
-    font-size: 1.875rem !important; /* text-3xl = 30px */
-  }
-  .chatter-landing h3 {
-    font-size: 1.5rem !important; /* text-2xl = 24px */
-  }
-  .chatter-landing p {
-    font-size: inherit; /* Don't override paragraphs */
-  }
-  @media (min-width: 640px) {
-    .chatter-landing h1 {
-      font-size: 2.5rem !important; /* sm = 40px */
-    }
-    .chatter-landing h2 {
-      font-size: 1.875rem !important;
-    }
-    .chatter-landing h3 {
-      font-size: 1.5rem !important;
-    }
-  }
-  @media (min-width: 1024px) {
-    .chatter-landing h1 {
-      font-size: 3rem !important; /* lg = 48px */
-    }
-    .chatter-landing h2 {
-      font-size: 2.25rem !important;
-    }
-    .chatter-landing h3 {
-      font-size: 1.875rem !important;
-    }
-  }
-  @media (min-width: 1280px) {
-    .chatter-landing h1 {
-      font-size: 3.75rem !important; /* xl = 60px */
-    }
-    .chatter-landing h2 {
-      font-size: 3rem !important;
-    }
-  }
+  .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
   .section-content {
     padding: 3rem 1rem;
     position: relative;
