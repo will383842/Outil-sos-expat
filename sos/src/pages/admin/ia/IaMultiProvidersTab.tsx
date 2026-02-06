@@ -269,6 +269,9 @@ export const IaMultiProvidersTab: React.FC = () => {
 
       // 🆕 First pass: build the linkage map for conflict detection
       // Also build a map of userId -> displayName for conflict details
+      // ⚠️ FIX: Skip docs that are known providers (sos_profiles) — they have denormalized
+      // linkedProviderIds but are NOT real account owners. Without this filter, every provider
+      // with a users/{pid} doc appears as a separate "account", causing false conflict warnings.
       const userDisplayNames: { [userId: string]: string } = {};
 
       for (const docSnap of usersSnap.docs) {
@@ -276,6 +279,9 @@ export const IaMultiProvidersTab: React.FC = () => {
         const linkedIds: string[] = data.linkedProviderIds || [];
         const displayName = data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A';
         userDisplayNames[docSnap.id] = displayName;
+
+        // Skip provider docs — they have denormalized linkedProviderIds but aren't account owners
+        if (profilesMap.has(docSnap.id)) continue;
 
         for (const pid of linkedIds) {
           if (!providerLinkageMap[pid]) {
@@ -299,8 +305,11 @@ export const IaMultiProvidersTab: React.FC = () => {
           shareBusyStatus: data.shareBusyStatus === true // 🆕
         });
 
-        // Ne garder dans "accounts" que les comptes avec au moins 1 prestataire lié
+        // Ne garder dans "accounts" que les VRAIS comptes propriétaires
+        // Skip: docs sans prestataire lié, ET docs qui sont eux-mêmes des prestataires
+        // (ils ont linkedProviderIds via dénormalisation mais ne sont pas des propriétaires)
         if (linkedIds.length === 0) continue;
+        if (profilesMap.has(docSnap.id)) continue;
 
         const providers: Provider[] = [];
         for (const pid of linkedIds) {
@@ -1357,6 +1366,9 @@ export const IaMultiProvidersTab: React.FC = () => {
       for (const docSnap of usersSnap.docs) {
         const data = docSnap.data();
         const linkedIds: string[] = data.linkedProviderIds || [];
+
+        // Skip provider docs (they have denormalized linkedProviderIds, not real accounts)
+        if (profilesMap.has(docSnap.id)) continue;
 
         // TRUE multi-provider = 2 or more providers linked
         if (linkedIds.length >= 2 && data.isMultiProvider !== true) {
