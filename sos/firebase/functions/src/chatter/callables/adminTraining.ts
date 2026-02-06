@@ -47,14 +47,7 @@ export const adminGetTrainingModules = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: true,
   },
   async (request): Promise<{
     modules: Array<ChatterTrainingModule & { studentsCount: number }>;
@@ -133,14 +126,7 @@ export const adminCreateTrainingModule = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: true,
   },
   async (request): Promise<{ success: boolean; moduleId: string }> => {
     ensureInitialized();
@@ -242,14 +228,7 @@ export const adminUpdateTrainingModule = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -325,14 +304,7 @@ export const adminDeleteTrainingModule = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -406,14 +378,7 @@ export const adminSeedTrainingModules = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 120,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: true,
   },
   async (request): Promise<{ success: boolean; modulesCreated: number; errors: string[] }> => {
     ensureInitialized();
@@ -453,14 +418,7 @@ export const adminReorderTrainingModules = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();

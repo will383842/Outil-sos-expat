@@ -350,14 +350,8 @@ export const generateTelegramLink = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    // Allow all origins for callable functions (Firebase SDK handles auth)
+    cors: true,
   },
   async (request): Promise<GenerateLinkOutput> => {
     ensureInitialized();
@@ -466,14 +460,7 @@ export const checkTelegramLinkStatus = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 15,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: true,
   },
   async (request): Promise<CheckStatusOutput> => {
     ensureInitialized();
@@ -840,13 +827,7 @@ export const skipTelegramOnboarding = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 15,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: true,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     ensureInitialized();
