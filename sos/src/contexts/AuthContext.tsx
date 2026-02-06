@@ -1286,6 +1286,41 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             // Après tous les retries (~15-20s), le document n'existe toujours pas
             console.error("❌ [AuthContext] Document toujours absent après " + MAX_RETRIES + " retries (~" + Math.round(totalWaitTime/1000) + "s)");
             cancelAllFallbacks(); // ✅ FIX: Annuler tous les timeouts même en cas d'échec
+
+            // ✅ FIX: Tenter de réparer le compte orphelin via Cloud Function
+            console.log("🔧 [AuthContext] Tentative de réparation du compte orphelin...");
+            try {
+              const repairFn = httpsCallable(functions, 'repairOrphanedUser');
+              const result = await repairFn({});
+              const repairData = result.data as { success: boolean; repaired: boolean; role?: string; message: string };
+
+              if (repairData.success && repairData.repaired) {
+                console.log("✅ [AuthContext] Compte réparé avec succès:", repairData);
+                // Relire le document maintenant qu'il existe
+                const repairedSnap = await getDoc(refUser);
+                if (repairedSnap.exists()) {
+                  const data = repairedSnap.data() as Partial<User>;
+                  setUser((prev) => ({
+                    ...(prev ?? ({} as User)),
+                    ...(data as Partial<User>),
+                    id: uid,
+                    uid,
+                    email: data.email || authUser.email || prev?.email || null,
+                    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : prev?.createdAt || new Date(),
+                    updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
+                    isVerifiedEmail: authUser.emailVerified,
+                  } as User));
+                  firstSnapArrived.current = true;
+                  setIsLoading(false);
+                  setAuthInitialized(true);
+                  return;
+                }
+              }
+            } catch (repairError) {
+              console.error("❌ [AuthContext] Échec de la réparation:", repairError);
+            }
+
+            // Si la réparation échoue, afficher l'erreur originale
             setError('La création de votre profil prend plus de temps que prévu. Veuillez rafraîchir la page dans quelques secondes.');
             firstSnapArrived.current = true;
             setIsLoading(false);

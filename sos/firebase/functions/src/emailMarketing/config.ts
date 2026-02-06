@@ -32,7 +32,7 @@ export function getGA4ApiSecret(): string {
 
 // MailWizz Configuration Strings - Read from env first, then Firebase params
 export const MAILWIZZ_API_URL = defineString("MAILWIZZ_API_URL", {
-  default: process.env.MAILWIZZ_API_URL || "https://app.mail-ulixai.com/api/index.php",
+  default: process.env.MAILWIZZ_API_URL || "https://mail.sos-expat.com/api/index.php",
 });
 
 export const MAILWIZZ_LIST_UID = defineString("MAILWIZZ_LIST_UID", {
@@ -90,7 +90,7 @@ export function validateMailWizzConfig(): {
 
   // Get values from env first, then Firebase params with proper defaults
   // SECURITY: Never use empty strings as fallback - always have sensible defaults
-  const apiUrl = process.env.MAILWIZZ_API_URL || MAILWIZZ_API_URL.value() || "https://app.mail-ulixai.com/api/index.php";
+  const apiUrl = process.env.MAILWIZZ_API_URL || MAILWIZZ_API_URL.value() || "https://mail.sos-expat.com/api/index.php";
   const listUid = process.env.MAILWIZZ_LIST_UID || MAILWIZZ_LIST_UID.value() || "yl089ehqpgb96";
   const customerId = process.env.MAILWIZZ_CUSTOMER_ID || MAILWIZZ_CUSTOMER_ID.value() || "2";
 

@@ -61,8 +61,9 @@ service cloud.firestore {
       // Création : propriétaire OU admin/dev (pour les profils AAA)
       allow create: if (isAuthenticated() && isOwner(userId) &&
                     // Empêcher la création avec des rôles admin/dev par les utilisateurs normaux
+                    // Roles autorisés: client, lawyer, expat, chatter, blogger, influencer, groupAdmin
                     (!request.resource.data.keys().hasAny(['role']) ||
-                     request.resource.data.role in ['client', 'lawyer', 'expat']))
+                     request.resource.data.role in ['client', 'lawyer', 'expat', 'chatter', 'blogger', 'influencer', 'groupAdmin']))
                     || isAdmin() || isDev();
       // L'utilisateur peut modifier ses propres données SAUF:
       // - role, isApproved, approvalStatus: empêche l'escalade de privilèges

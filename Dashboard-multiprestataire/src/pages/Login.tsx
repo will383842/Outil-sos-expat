@@ -26,6 +26,11 @@ export default function Login() {
 
   const handleSubmit = async (email: string, password: string) => {
     await signIn(email, password);
+    // Navigate directly after successful signIn (which now resolves auth state fully)
+    // This is more reliable on mobile than relying solely on useEffect
+    const redirect = searchParams.get('redirect') || '/';
+    const safePath = redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/';
+    navigate(safePath, { replace: true });
   };
 
   return (

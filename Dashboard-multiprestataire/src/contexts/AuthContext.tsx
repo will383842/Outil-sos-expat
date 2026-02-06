@@ -8,6 +8,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from 'react';
 import {
@@ -35,6 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: false,
     error: null,
   });
+
+  // Track if signIn already resolved auth (avoid duplicate fetch in onAuthStateChanged)
+  const signInResolvedRef = useRef(false);
 
   // Fetch user data from Firestore
   const fetchUserData = useCallback(async (firebaseUser: FirebaseUser): Promise<AuthUser | null> => {
@@ -72,6 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        // If signIn() already fetched user data, skip duplicate fetch
+        if (signInResolvedRef.current) {
+          signInResolvedRef.current = false;
+          return;
+        }
+
         setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
         const userData = await fetchUserData(firebaseUser);
@@ -139,8 +149,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // Auth state change will handle the rest
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      signInResolvedRef.current = true;
+      // Fetch user data directly instead of relying solely on onAuthStateChanged
+      // This avoids race conditions on mobile where the async listener + Firestore
+      // getDoc can be delayed by slow networks or service worker interference
+      const userData = await fetchUserData(userCredential.user);
+
+      if (userData) {
+        setState({
+          user: userData,
+          isLoading: false,
+          isAuthenticated: true,
+          error: null,
+        });
+      } else {
+        await firebaseSignOut(auth);
+        setState({
+          user: null,
+          isLoading: false,
+          isAuthenticated: false,
+          error: i18n.t('auth.unauthorized'),
+        });
+      }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : i18n.t('auth.login_error');
       setState((prev) => ({
@@ -152,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }));
       throw error;
     }
-  }, []);
+  }, [fetchUserData]);
 
   const signOut = useCallback(async () => {
     try {

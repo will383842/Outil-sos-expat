@@ -93,15 +93,10 @@ export default defineConfig({
               expiration: { maxEntries: 150, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
-          {
-            urlPattern: /^https:\/\/firestore\.googleapis\.com/,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "firestore-api-cache",
-              networkTimeoutSeconds: 3,
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 5 },
-            },
-          },
+          // NOTE: Firestore API requests are NOT cached by the service worker.
+          // The Firestore SDK manages its own persistent IndexedDB cache (50MB).
+          // SW caching Firestore creates conflicts, especially on mobile with slow
+          // networks where the SW timeout can cause getDoc() to fail.
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com/,
             handler: "CacheFirst",
