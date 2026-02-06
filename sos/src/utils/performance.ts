@@ -311,7 +311,7 @@ export const preloadCriticalResources = (customResources: Partial<{
       "/sos-logo.webp",
       hasWebP ? "/images/critical-icon.webp" : "/images/critical-icon.png",
     ],
-    fonts: ["/fonts/inter-400.woff2", "/fonts/inter-600.woff2"],
+    fonts: ["/fonts/inter-var.woff2"],
     styles: ["/css/critical.css", ...(isMobile ? ["/css/mobile.css"] : ["/css/desktop.css"])],
     scripts: ["/js/critical.js"],
   };

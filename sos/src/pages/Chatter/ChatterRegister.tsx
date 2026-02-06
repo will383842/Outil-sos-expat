@@ -162,23 +162,80 @@ const ChatterRegister: React.FC = () => {
     } catch (err: unknown) {
       console.error('[ChatterRegister] Error:', err);
 
-      // Handle specific Firebase Auth errors
+      // Handle specific Firebase Auth and Cloud Function errors
       let errorMessage = intl.formatMessage({ id: 'chatter.register.error.generic', defaultMessage: 'An error occurred' });
 
       if (err instanceof Error) {
         const errorCode = (err as { code?: string })?.code || '';
-        const message = err.message;
+        const message = err.message.toLowerCase();
+        const originalMessage = err.message;
 
-        if (errorCode === 'auth/email-already-in-use' || message.includes('email-already-in-use') || message.includes('already registered')) {
-          errorMessage = intl.formatMessage({ id: 'chatter.register.error.emailInUse', defaultMessage: 'This email is already registered. Please use another email or log in.' });
+        // Firebase Auth errors
+        if (errorCode === 'auth/email-already-in-use' || message.includes('email-already-in-use')) {
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.emailInUse',
+            defaultMessage: 'This email is already registered. Please use another email or log in to your existing account.'
+          });
         } else if (errorCode === 'auth/weak-password' || message.includes('weak-password') || message.includes('6 characters')) {
-          errorMessage = intl.formatMessage({ id: 'chatter.register.error.weakPassword', defaultMessage: 'Password is too weak. Please use at least 6 characters.' });
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.weakPassword',
+            defaultMessage: 'Password is too weak. Please use at least 8 characters.'
+          });
         } else if (errorCode === 'auth/invalid-email' || message.includes('invalid-email')) {
-          errorMessage = intl.formatMessage({ id: 'chatter.register.error.invalidEmail', defaultMessage: 'Invalid email address.' });
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.invalidEmail',
+            defaultMessage: 'Invalid email address.'
+          });
         } else if (errorCode === 'auth/network-request-failed' || message.includes('network')) {
-          errorMessage = intl.formatMessage({ id: 'chatter.register.error.network', defaultMessage: 'Network error. Please check your connection and try again.' });
-        } else if (message) {
-          errorMessage = message;
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.network',
+            defaultMessage: 'Network error. Please check your connection and try again.'
+          });
+        }
+        // Cloud Function errors (from registerChatter)
+        else if (message.includes('avocat') || message.includes('lawyer')) {
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.isLawyer',
+            defaultMessage: 'This email is registered as a lawyer account. Chatters must use a dedicated account. Please use a different email.'
+          });
+        } else if (message.includes('expatri') || message.includes('expat')) {
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.isExpat',
+            defaultMessage: 'This email is registered as an expat helper account. Chatters must use a dedicated account. Please use a different email.'
+          });
+        } else if (message.includes('client') && message.includes('plateforme')) {
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.isActiveClient',
+            defaultMessage: 'This email belongs to an active client account. Please use a different email to register as a Chatter.'
+          });
+        } else if (message.includes('already registered') || message.includes('chatter already')) {
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.alreadyChatter',
+            defaultMessage: 'You already have a Chatter account! Please log in instead.'
+          });
+        } else if (message.includes('banned')) {
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.banned',
+            defaultMessage: 'This account has been suspended. Please contact support.'
+          });
+        } else if (message.includes('country') && message.includes('not supported')) {
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.countryNotSupported',
+            defaultMessage: 'Registration is not yet available in your country. Please try again later.'
+          });
+        } else if (message.includes('registration') && (message.includes('disabled') || message.includes('closed'))) {
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.registrationDisabled',
+            defaultMessage: 'New registrations are temporarily closed. Please try again later.'
+          });
+        } else if (message.includes('blocked') || message.includes('fraud')) {
+          errorMessage = intl.formatMessage({
+            id: 'chatter.register.error.blocked',
+            defaultMessage: 'Registration blocked. If this is an error, please contact support.'
+          });
+        } else if (originalMessage) {
+          // Use original message if no specific translation
+          errorMessage = originalMessage;
         }
       }
 

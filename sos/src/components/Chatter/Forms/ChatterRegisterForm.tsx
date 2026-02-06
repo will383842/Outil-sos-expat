@@ -251,10 +251,49 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-xl border-0 focus:ring-2 focus:ring-red-500/30',
   };
 
+  // Normalize phone number: remove country code if user types it, keep only digits
+  const normalizePhoneNumber = (value: string, countryCode: string): string => {
+    // Remove all non-digit characters except + at start
+    let normalized = value.replace(/[^\d+]/g, '');
+
+    // If user typed the phone code at the start, remove it
+    if (countryCode) {
+      const phoneCodeEntry = phoneCodesData.find(e => e.code === countryCode);
+      if (phoneCodeEntry) {
+        const phoneCode = phoneCodeEntry.phoneCode.replace('+', '');
+        // Remove leading + if present
+        if (normalized.startsWith('+')) {
+          normalized = normalized.substring(1);
+        }
+        // Remove country code if user typed it
+        if (normalized.startsWith(phoneCode)) {
+          normalized = normalized.substring(phoneCode.length);
+        }
+        // Also handle 00 prefix (international format)
+        if (normalized.startsWith('00' + phoneCode)) {
+          normalized = normalized.substring(2 + phoneCode.length);
+        }
+      }
+    }
+
+    // Remove leading zeros (common mistake)
+    normalized = normalized.replace(/^0+/, '');
+
+    return normalized;
+  };
+
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Special handling for phone number - normalize it
+    if (name === 'whatsappNumber') {
+      const normalizedPhone = normalizePhoneNumber(value, formData.whatsappCountryCode);
+      setFormData(prev => ({ ...prev, [name]: normalizedPhone }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+
     onErrorClear?.();
     if (validationErrors[name]) {
       setValidationErrors(prev => {
@@ -670,8 +709,8 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
               onClick={() => setShowPhoneCodeDropdown(!showPhoneCodeDropdown)}
               className={`
                 ${s.input}
-                w-[120px] sm:w-[130px] pr-2 text-left
-                flex items-center gap-1.5
+                w-[100px] xs:w-[110px] sm:w-[130px] pr-2 text-left
+                flex items-center gap-1
                 ${darkMode ? 'hover:bg-white/10' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}
               `}
             >

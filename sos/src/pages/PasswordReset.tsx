@@ -1163,7 +1163,7 @@ const PasswordReset: React.FC = () => {
           </div>
 
           {/* Preload critical resources */}
-          <link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+          <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
           <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
           <link rel="dns-prefetch" href="//www.google-analytics.com" />
           
