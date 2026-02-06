@@ -218,30 +218,8 @@ const ChatterTelegramOnboarding: React.FC = () => {
   }, [stopStatusCheck]);
 
   // ============================================================================
-  // SKIP TELEGRAM
+  // CONTINUE TO DASHBOARD (after successful connection)
   // ============================================================================
-
-  const handleSkip = async () => {
-    console.log('[TelegramOnboarding] handleSkip called');
-    setLoading(true);
-    setError(null);
-
-    try {
-      console.log('[TelegramOnboarding] Calling skipTelegramOnboarding...');
-      const skipFn = httpsCallable(functions, 'skipTelegramOnboarding');
-      await skipFn({});
-      console.log('[TelegramOnboarding] Skip successful, refreshing user...');
-      await refreshUser();
-      console.log('[TelegramOnboarding] Navigating to dashboard');
-      navigate(dashboardRoute, { replace: true });
-    } catch (err) {
-      console.error('[TelegramOnboarding] Error skipping:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(`Erreur: ${errorMessage}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleContinue = () => {
     console.log('[TelegramOnboarding] handleContinue called');
@@ -341,14 +319,10 @@ const ChatterTelegramOnboarding: React.FC = () => {
         </div>
       )}
 
-      {/* Skip link (very small) */}
-      <button
-        onClick={handleSkip}
-        disabled={loading}
-        className="text-xs text-gray-500 hover:text-gray-400 underline"
-      >
-        Passer cette étape (sans bonus)
-      </button>
+      {/* Info: Telegram is required */}
+      <p className="text-xs text-gray-500 text-center">
+        Telegram est requis pour recevoir vos notifications et bonus
+      </p>
     </motion.div>
   );
 
@@ -426,14 +400,10 @@ const ChatterTelegramOnboarding: React.FC = () => {
         </button>
       </div>
 
-      {/* Skip */}
-      <button
-        onClick={handleSkip}
-        disabled={loading}
-        className="text-xs text-gray-500 hover:text-gray-400 underline"
-      >
-        Continuer sans Telegram (sans bonus)
-      </button>
+      {/* Info: Telegram is required */}
+      <p className="text-xs text-gray-500 text-center mt-4">
+        Telegram est requis pour devenir Chatter
+      </p>
     </motion.div>
   );
 
