@@ -40,6 +40,46 @@ const globalStyles = `
   .chatter-landing * {
     max-height: 1000000px;
   }
+  /* IMPORTANT: Override global h1-h6 styles from App.css - must match Tailwind classes */
+  .chatter-landing h1 {
+    font-size: 2.25rem; /* text-4xl = 36px */
+  }
+  .chatter-landing h2 {
+    font-size: 1.875rem; /* text-3xl = 30px */
+  }
+  .chatter-landing h3 {
+    font-size: 1.5rem; /* text-2xl = 24px */
+  }
+  @media (min-width: 640px) {
+    .chatter-landing h1 {
+      font-size: 2.25rem; /* sm:text-4xl */
+    }
+    .chatter-landing h2 {
+      font-size: 1.875rem; /* sm:text-3xl */
+    }
+    .chatter-landing h3 {
+      font-size: 1.5rem; /* sm:text-2xl */
+    }
+  }
+  @media (min-width: 1024px) {
+    .chatter-landing h1 {
+      font-size: 3rem; /* lg:text-5xl = 48px */
+    }
+    .chatter-landing h2 {
+      font-size: 2.25rem; /* lg:text-4xl = 36px */
+    }
+    .chatter-landing h3 {
+      font-size: 1.875rem; /* lg:text-3xl = 30px */
+    }
+  }
+  @media (min-width: 1280px) {
+    .chatter-landing h1 {
+      font-size: 3.75rem; /* xl:text-6xl = 60px */
+    }
+    .chatter-landing h2 {
+      font-size: 3rem; /* xl:text-5xl = 48px */
+    }
+  }
   .section-content {
     padding: 3rem 1rem;
     position: relative;
