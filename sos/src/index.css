@@ -289,10 +289,15 @@
     font-size: max(0.875rem, 14px);
   }
 
-  /* Titres plus lisibles */
+  /* Titres plus lisibles - but NOT for Tailwind landing pages */
   h1 { font-size: clamp(1.5rem, 6vw, 2.5rem); }
   h2 { font-size: clamp(1.25rem, 5vw, 2rem); }
   h3 { font-size: clamp(1.125rem, 4vw, 1.5rem); }
+
+  /* Override for landing pages - use Tailwind sizes */
+  .chatter-landing h1 { font-size: 2.25rem !important; } /* text-4xl = 36px */
+  .chatter-landing h2 { font-size: 1.875rem !important; } /* text-3xl = 30px */
+  .chatter-landing h3 { font-size: 1.5rem !important; } /* text-2xl = 24px */
 
   /* Labels et textes d'info */
   label, .label {
