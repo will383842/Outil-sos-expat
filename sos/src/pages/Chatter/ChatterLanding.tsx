@@ -287,18 +287,18 @@ const ChatterLanding: React.FC = () => {
 
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
 
-            <h1 style={{ fontSize: '50px', color: 'lime', background: 'blue' }} className="!text-4xl sm:!text-4xl lg:!text-5xl xl:!text-6xl font-black leading-[1.1] mb-3 sm:mb-6">
+            <h1 style={{ fontSize: '2.25rem', lineHeight: 1.1 }} className="font-black text-white mb-3 sm:mb-6">
               <span><FormattedMessage id="chatter.landing.hero.desktop.line1" defaultMessage="Gagnez de l'argent" /></span>
               <br />
               <span><FormattedMessage id="chatter.landing.hero.desktop.line2" defaultMessage="en aidant les " /></span>
               <span className="text-amber-400"><FormattedMessage id="chatter.landing.hero.desktop.highlight" defaultMessage="expatriés, voyageurs et vacanciers." /></span>
             </h1>
 
-            <p className="text-2xl sm:text-2xl lg:text-3xl text-white font-bold mb-2 sm:mb-4">
+            <p style={{ fontSize: '1.5rem' }} className="text-white font-bold mb-2 sm:mb-4">
               <span className="text-amber-400">10$</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
             </p>
 
-            <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p style={{ fontSize: '1rem' }} className="text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
               <FormattedMessage id="chatter.landing.hero.desktop.desc" defaultMessage="Parlez de SOS-Expat et partagez votre lien affilié à tous ceux qui ont besoin de tous types d'aide. Quand ils appellent, vous gagnez." />
             </p>
 
