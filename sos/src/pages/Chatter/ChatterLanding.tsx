@@ -44,42 +44,45 @@ const globalStyles = `
   }
   /* IMPORTANT: Override global h1-h6 styles from App.css - must match Tailwind classes */
   .chatter-landing h1 {
-    font-size: 2.25rem; /* text-4xl = 36px */
+    font-size: 2.5rem !important; /* 40px on mobile - BIGGER than before */
   }
   .chatter-landing h2 {
-    font-size: 1.875rem; /* text-3xl = 30px */
+    font-size: 1.875rem !important; /* text-3xl = 30px */
   }
   .chatter-landing h3 {
-    font-size: 1.5rem; /* text-2xl = 24px */
+    font-size: 1.5rem !important; /* text-2xl = 24px */
+  }
+  .chatter-landing p {
+    font-size: inherit; /* Don't override paragraphs */
   }
   @media (min-width: 640px) {
     .chatter-landing h1 {
-      font-size: 2.25rem; /* sm:text-4xl */
+      font-size: 2.5rem !important; /* sm = 40px */
     }
     .chatter-landing h2 {
-      font-size: 1.875rem; /* sm:text-3xl */
+      font-size: 1.875rem !important;
     }
     .chatter-landing h3 {
-      font-size: 1.5rem; /* sm:text-2xl */
+      font-size: 1.5rem !important;
     }
   }
   @media (min-width: 1024px) {
     .chatter-landing h1 {
-      font-size: 3rem; /* lg:text-5xl = 48px */
+      font-size: 3rem !important; /* lg = 48px */
     }
     .chatter-landing h2 {
-      font-size: 2.25rem; /* lg:text-4xl = 36px */
+      font-size: 2.25rem !important;
     }
     .chatter-landing h3 {
-      font-size: 1.875rem; /* lg:text-3xl = 30px */
+      font-size: 1.875rem !important;
     }
   }
   @media (min-width: 1280px) {
     .chatter-landing h1 {
-      font-size: 3.75rem; /* xl:text-6xl = 60px */
+      font-size: 3.75rem !important; /* xl = 60px */
     }
     .chatter-landing h2 {
-      font-size: 3rem; /* xl:text-5xl = 48px */
+      font-size: 3rem !important;
     }
   }
   .section-content {
