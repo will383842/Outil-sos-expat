@@ -8,6 +8,7 @@ export { submitQuiz, getQuizQuestions } from "./submitQuiz";
 export { getChatterDashboard } from "./getChatterDashboard";
 export { requestWithdrawal } from "./requestWithdrawal";
 export { updateChatterProfile } from "./updateChatterProfile";
+export { updateTelegramOnboarding } from "./updateTelegramOnboarding";
 
 // Training Callables
 export {

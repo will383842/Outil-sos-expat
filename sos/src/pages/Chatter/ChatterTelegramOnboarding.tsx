@@ -15,8 +15,7 @@ import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/cor
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/config/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
   MessageCircle,
   Gift,
@@ -47,6 +46,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState<'yes' | 'no' | null>(null);
 
   // Routes
@@ -67,36 +67,31 @@ const ChatterTelegramOnboarding: React.FC = () => {
     }
   }, [authInitialized, authLoading, user, navigate, loginRoute, dashboardRoute]);
 
-  // Handle option selection and save to Firestore
+  const functions = getFunctions(undefined, 'europe-west1');
+
+  // Handle option selection and save via Cloud Function
   const handleContinue = async () => {
     if (!selectedOption || !user?.uid) return;
 
     setLoading(true);
+    setError(null);
     try {
-      // Update user document with Telegram choice
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
+      // Call Cloud Function to update Telegram onboarding status
+      const updateTelegramOnboardingFn = httpsCallable(functions, 'updateTelegramOnboarding');
+      await updateTelegramOnboardingFn({
         hasTelegram: selectedOption === 'yes',
-        telegramOnboardingCompleted: true,
-        telegramOnboardingAt: new Date().toISOString(),
       });
-
-      // Also update chatters document if it exists
-      try {
-        const chatterRef = doc(db, 'chatters', user.uid);
-        await updateDoc(chatterRef, {
-          hasTelegram: selectedOption === 'yes',
-          telegramOnboardingCompleted: true,
-          telegramOnboardingAt: new Date().toISOString(),
-        });
-      } catch {
-        // Chatters doc might not exist yet, that's ok
-      }
 
       await refreshUser();
       navigate(dashboardRoute, { replace: true });
-    } catch (error) {
-      console.error('[TelegramOnboarding] Error:', error);
+    } catch (err) {
+      console.error('[TelegramOnboarding] Error:', err);
+      setError(
+        intl.formatMessage({
+          id: 'chatter.telegram.error',
+          defaultMessage: 'An error occurred. Please try again.',
+        })
+      );
     } finally {
       setLoading(false);
     }
@@ -230,6 +225,13 @@ const ChatterTelegramOnboarding: React.FC = () => {
             <h3 className="text-lg font-bold text-white mb-4 text-center">
               <FormattedMessage id="chatter.telegram.question" defaultMessage="Do you have Telegram?" />
             </h3>
+
+            {/* Error display */}
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
+                <p className="text-sm text-red-400 text-center">{error}</p>
+              </div>
+            )}
 
             {/* Step 1: Initial Question - Only show if no option selected yet */}
             {!selectedOption && (

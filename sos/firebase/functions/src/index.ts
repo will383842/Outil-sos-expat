@@ -5667,6 +5667,7 @@ export {
   getChatterLeaderboard,
   chatterRequestWithdrawal,
   updateChatterProfile,
+  updateTelegramOnboarding,
   getReferralDashboard,
   // Country Rotation callables
   // DISABLED 2026-01-30: Country rotation system removed to free quota

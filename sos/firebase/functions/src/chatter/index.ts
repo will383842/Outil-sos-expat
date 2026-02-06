@@ -28,6 +28,7 @@ export { getChatterDashboard } from "./callables/getChatterDashboard";
 export { getChatterLeaderboard } from "./callables/getChatterLeaderboard";
 export { requestWithdrawal as chatterRequestWithdrawal } from "./callables/requestWithdrawal";
 export { updateChatterProfile } from "./callables/updateChatterProfile";
+export { updateTelegramOnboarding } from "./callables/updateTelegramOnboarding";
 
 // Referral Dashboard
 export { getReferralDashboard } from "./callables/getReferralDashboard";
