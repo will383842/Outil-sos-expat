@@ -31,6 +31,15 @@ import {
 // STYLES - Mobile-first with performance hints
 // ============================================================================
 const globalStyles = `
+  /* Empêcher iOS Font Boosting / Text Autosizing */
+  .chatter-landing {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  .chatter-landing * {
+    max-height: 1000000px;
+  }
   .section-content {
     padding: 3rem 1rem;
     position: relative;
@@ -292,7 +301,7 @@ const ChatterLanding: React.FC = () => {
       {/* Header SOS-Expat standard */}
       <Header />
 
-      <main className="bg-black text-white">
+      <main className="chatter-landing bg-black text-white">
 
         {/* ================================================================
             HERO - MOBILE-FIRST
