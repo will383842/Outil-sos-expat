@@ -2,11 +2,13 @@
  * Requests Page
  * Booking request management with tabs
  */
+import { useMemo } from 'react';
 import { Inbox, Bell, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useBookingRequests } from '../hooks';
+import { useBookingRequests, useAgencyProviders } from '../hooks';
 import { BookingTabs } from '../components/bookings';
 import { LoadingSpinner } from '../components/ui';
+import type { Provider } from '../types';
 
 export default function Requests() {
   const {
@@ -18,7 +20,16 @@ export default function Requests() {
     isLoading,
     error,
   } = useBookingRequests();
+  const { providers } = useAgencyProviders();
   const { t } = useTranslation();
+
+  const providerMap = useMemo(() => {
+    const map = new Map<string, Provider>();
+    for (const p of providers) {
+      map.set(p.id, p);
+    }
+    return map;
+  }, [providers]);
 
   if (isLoading) {
     return (
@@ -69,6 +80,7 @@ export default function Requests() {
         historyBookings={historyBookings}
         isLoading={isLoading}
         onDelete={deleteBooking}
+        providerMap={providerMap}
       />
     </div>
   );

@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { Inbox, History, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { BookingRequest } from '../../types';
+import type { BookingRequest, Provider } from '../../types';
 import BookingRequestCard from './BookingRequestCard';
 
 interface BookingTabsProps {
@@ -14,6 +14,7 @@ interface BookingTabsProps {
   historyBookings: BookingRequest[];
   isLoading?: boolean;
   onDelete?: (bookingId: string) => void;
+  providerMap?: Map<string, Provider>;
 }
 
 type Tab = 'pending' | 'history';
@@ -24,6 +25,7 @@ export default function BookingTabs({
   historyBookings,
   isLoading,
   onDelete,
+  providerMap,
 }: BookingTabsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('pending');
   const { t } = useTranslation();
@@ -80,7 +82,7 @@ export default function BookingTabs({
               </div>
               <div className="space-y-2 sm:space-y-3 p-3 bg-green-50/50 border border-green-200 rounded-xl">
                 {newBookings.map((booking) => (
-                  <BookingRequestCard key={booking.id} booking={booking} isNew />
+                  <BookingRequestCard key={booking.id} booking={booking} isNew providerMap={providerMap} />
                 ))}
               </div>
             </div>
@@ -95,7 +97,7 @@ export default function BookingTabs({
                 </h3>
               )}
               {activeBookings.map((booking) => (
-                <BookingRequestCard key={booking.id} booking={booking} />
+                <BookingRequestCard key={booking.id} booking={booking} providerMap={providerMap} />
               ))}
             </div>
           )}
@@ -118,7 +120,7 @@ export default function BookingTabs({
           {historyBookings.length > 0 ? (
             <div className="space-y-2 sm:space-y-3">
               {historyBookings.map((booking) => (
-                <BookingRequestCard key={booking.id} booking={booking} onDelete={onDelete} />
+                <BookingRequestCard key={booking.id} booking={booking} onDelete={onDelete} providerMap={providerMap} />
               ))}
             </div>
           ) : (

@@ -12,12 +12,15 @@ import {
   ExternalLink,
   Trash2,
   Loader2,
+  Scale,
+  Globe,
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { useTranslation } from 'react-i18next';
 import {
   FIVE_MINUTES,
   type BookingRequest,
+  type Provider,
 } from '../../types';
 import { auth, outilFunctions } from '../../config/firebase';
 import AiResponsePreview, { AiErrorBadge } from './AiResponsePreview';
@@ -27,6 +30,7 @@ interface BookingRequestCardProps {
   booking: BookingRequest;
   isNew?: boolean;
   onDelete?: (bookingId: string) => void;
+  providerMap?: Map<string, Provider>;
 }
 
 const STATUS_COLORS: Record<BookingRequest['status'], { bg: string; text: string; dot: string }> = {
@@ -37,7 +41,7 @@ const STATUS_COLORS: Record<BookingRequest['status'], { bg: string; text: string
   cancelled: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
 };
 
-export default function BookingRequestCard({ booking, isNew, onDelete }: BookingRequestCardProps) {
+export default function BookingRequestCard({ booking, isNew, onDelete, providerMap }: BookingRequestCardProps) {
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [isSsoLoading, setIsSsoLoading] = useState(false);
   const { t } = useTranslation();
@@ -45,6 +49,11 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
   const isHistory = booking.status === 'completed' || booking.status === 'cancelled';
   const serviceLabel = t(`service.${booking.serviceType}`, { defaultValue: booking.serviceType });
   const statusLabel = t(`status.${booking.status}`);
+
+  const provider = providerMap?.get(booking.providerId);
+  const providerDisplayName = provider?.name || booking.providerName;
+  const providerCountry = provider?.country;
+  const providerType = provider?.type || booking.providerType;
 
   const showNewBadge = isNew || (booking.status === 'pending' && Date.now() - booking.createdAt.getTime() < FIVE_MINUTES);
 
@@ -176,16 +185,34 @@ export default function BookingRequestCard({ booking, isNew, onDelete }: Booking
         </div>
       </div>
 
+      {/* Provider info */}
+      {providerDisplayName && (
+        <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg">
+          {providerType === 'lawyer' ? (
+            <Scale className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          ) : (
+            <Globe className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          )}
+          <span className="text-sm font-medium text-gray-800">
+            {providerDisplayName}
+          </span>
+          {providerCountry && (
+            <>
+              <span className="text-gray-300">|</span>
+              <span className="flex items-center gap-1 text-xs text-gray-500">
+                <MapPin className="w-3 h-3" />
+                {providerCountry}
+              </span>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Service type */}
-      <div className="mt-3">
+      <div className="mt-2">
         <span className="inline-block px-2.5 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-lg">
           {serviceLabel}
         </span>
-        {booking.providerName && (
-          <span className="ml-2 text-xs text-gray-400">
-            → {booking.providerName}
-          </span>
-        )}
       </div>
 
       {/* Description */}
