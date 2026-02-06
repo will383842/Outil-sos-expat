@@ -172,6 +172,15 @@ const ChatterTelegramOnboarding: React.FC = () => {
   // CHECK STATUS
   // ============================================================================
 
+  // stopStatusCheck must be declared first to avoid circular dependency
+  const stopStatusCheck = useCallback(() => {
+    console.log('[TelegramOnboarding] Stopping status polling');
+    if (statusCheckInterval.current) {
+      clearInterval(statusCheckInterval.current);
+      statusCheckInterval.current = null;
+    }
+  }, []);
+
   const checkStatus = useCallback(async () => {
     console.log('[TelegramOnboarding] checkStatus called');
 
@@ -215,14 +224,6 @@ const ChatterTelegramOnboarding: React.FC = () => {
     checkStatus();
     statusCheckInterval.current = setInterval(checkStatus, 3000);
   }, [checkStatus]);
-
-  const stopStatusCheck = useCallback(() => {
-    console.log('[TelegramOnboarding] Stopping status polling');
-    if (statusCheckInterval.current) {
-      clearInterval(statusCheckInterval.current);
-      statusCheckInterval.current = null;
-    }
-  }, []);
 
   useEffect(() => {
     return () => stopStatusCheck();
