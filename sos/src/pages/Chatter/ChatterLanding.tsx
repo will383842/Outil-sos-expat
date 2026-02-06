@@ -287,7 +287,7 @@ const ChatterLanding: React.FC = () => {
 
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
 
-            <h1 className="!text-4xl sm:!text-4xl lg:!text-5xl xl:!text-6xl font-black leading-[1.1] mb-3 sm:mb-6">
+            <h1 style={{ fontSize: '2.5rem' }} className="!text-4xl sm:!text-4xl lg:!text-5xl xl:!text-6xl font-black leading-[1.1] mb-3 sm:mb-6">
               <span className="text-white"><FormattedMessage id="chatter.landing.hero.desktop.line1" defaultMessage="Gagnez de l'argent" /></span>
               <br />
               <span className="text-white"><FormattedMessage id="chatter.landing.hero.desktop.line2" defaultMessage="en aidant les " /></span>
