@@ -444,12 +444,23 @@ const ChatterTelegramOnboarding: React.FC = () => {
         </p>
       </div>
 
-      {/* Open Telegram Button */}
+      {/* Open Telegram Button - use tg:// scheme for better app opening */}
       <a
         href={linkData?.deepLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-full py-4 bg-gradient-to-r from-[#0088cc] to-[#00a2e8] text-white font-bold rounded-xl flex items-center justify-center gap-3 hover:opacity-90 transition-opacity block"
+        onClick={(e) => {
+          // Try to open with tg:// scheme first for better app detection
+          const code = linkData?.code;
+          if (code) {
+            const tgScheme = `tg://resolve?domain=SOSExpatChatterBot&start=${code}`;
+            window.location.href = tgScheme;
+            // Fallback to https after a delay if tg:// doesn't work
+            setTimeout(() => {
+              window.open(linkData?.deepLink, '_blank');
+            }, 1000);
+            e.preventDefault();
+          }
+        }}
+        className="w-full py-4 bg-gradient-to-r from-[#0088cc] to-[#00a2e8] text-white font-bold rounded-xl flex items-center justify-center gap-3 hover:opacity-90 transition-opacity block cursor-pointer"
       >
         <MessageCircle className="w-5 h-5" />
         Ouvrir Telegram
