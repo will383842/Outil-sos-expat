@@ -57,13 +57,20 @@ const ChatterRegister: React.FC = () => {
   const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'lawyer', 'expat', 'client'].includes(userRole);
   const isAlreadyChatter = userRole === 'chatter';
 
-  // Redirect chatters to their dashboard (but not if they just registered - they go to presentation)
+  // Redirect chatters appropriately:
+  // - If Telegram onboarding not completed → go to Telegram page
+  // - Otherwise → go to Dashboard
   // IMPORTANT: Also check !loading to avoid redirecting during registration process
   useEffect(() => {
     if (authInitialized && !authLoading && !loading && isAlreadyChatter && !success) {
-      navigate(dashboardRoute);
+      // Check if Telegram onboarding is complete
+      if (!user?.telegramOnboardingCompleted) {
+        navigate(telegramRoute, { replace: true });
+      } else {
+        navigate(dashboardRoute, { replace: true });
+      }
     }
-  }, [authInitialized, authLoading, loading, isAlreadyChatter, navigate, dashboardRoute, success]);
+  }, [authInitialized, authLoading, loading, isAlreadyChatter, user?.telegramOnboardingCompleted, navigate, telegramRoute, dashboardRoute, success]);
 
   // Show error if user has another role
   if (authInitialized && !authLoading && hasExistingRole && !isAlreadyChatter) {
