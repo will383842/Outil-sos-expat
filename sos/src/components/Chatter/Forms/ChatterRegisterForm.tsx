@@ -1,9 +1,16 @@
 /**
  * ChatterRegisterForm - Registration form for chatters
  * Dark theme harmonized with ChatterLanding (amber/yellow + dark gradients)
+ *
+ * 2026 Best Practices:
+ * - Full ARIA accessibility (aria-describedby, aria-live, listbox pattern)
+ * - Inline validation on blur
+ * - Advanced password strength (length + complexity)
+ * - Keyboard navigation in dropdowns
+ * - Mobile-optimized inputs (inputmode, enterkeyhint)
  */
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
   User,
@@ -16,12 +23,62 @@ import {
   Lock,
   Eye,
   EyeOff,
+  AlertCircle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
 import { languagesData, getLanguageLabel, type SupportedLocale } from '@/data/languages-spoken';
 import { useAntiBot } from '@/hooks/useAntiBot';
+
+// ============================================================================
+// PASSWORD STRENGTH UTILITY (2026 best practice: complexity check)
+// ============================================================================
+interface PasswordStrength {
+  score: 0 | 1 | 2 | 3 | 4; // 0=very weak, 1=weak, 2=fair, 3=good, 4=strong
+  label: string;
+  color: string;
+  width: string;
+  feedback: string[];
+}
+
+const evaluatePasswordStrength = (password: string, intl: ReturnType<typeof useIntl>): PasswordStrength => {
+  const feedback: string[] = [];
+  let score = 0;
+
+  // Length checks
+  if (password.length >= 8) score++;
+  else feedback.push(intl.formatMessage({ id: 'form.password.feedback.minLength', defaultMessage: 'At least 8 characters' }));
+
+  if (password.length >= 12) score++;
+
+  // Complexity checks
+  if (/[A-Z]/.test(password)) score++;
+  else feedback.push(intl.formatMessage({ id: 'form.password.feedback.uppercase', defaultMessage: 'Add an uppercase letter' }));
+
+  if (/[0-9]/.test(password)) score++;
+  else feedback.push(intl.formatMessage({ id: 'form.password.feedback.number', defaultMessage: 'Add a number' }));
+
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  else feedback.push(intl.formatMessage({ id: 'form.password.feedback.special', defaultMessage: 'Add a special character' }));
+
+  // Normalize score to 0-4
+  const normalizedScore = Math.min(4, Math.floor(score * 0.8)) as 0 | 1 | 2 | 3 | 4;
+
+  const strengthMap: Record<number, { label: string; color: string; width: string }> = {
+    0: { label: intl.formatMessage({ id: 'form.password.strength.veryWeak', defaultMessage: 'Very weak' }), color: 'text-red-500', width: 'w-1/5' },
+    1: { label: intl.formatMessage({ id: 'form.password.strength.weak', defaultMessage: 'Weak' }), color: 'text-red-400', width: 'w-2/5' },
+    2: { label: intl.formatMessage({ id: 'form.password.strength.fair', defaultMessage: 'Fair' }), color: 'text-orange-400', width: 'w-3/5' },
+    3: { label: intl.formatMessage({ id: 'form.password.strength.good', defaultMessage: 'Good' }), color: 'text-yellow-400', width: 'w-4/5' },
+    4: { label: intl.formatMessage({ id: 'form.password.strength.strong', defaultMessage: 'Strong' }), color: 'text-green-400', width: 'w-full' },
+  };
+
+  return {
+    score: normalizedScore,
+    ...strengthMap[normalizedScore],
+    feedback: feedback.slice(0, 2), // Show max 2 feedback items
+  };
+};
 
 // Get country name based on locale
 const getCountryName = (entry: PhoneCodeEntry, locale: string): string => {
@@ -145,16 +202,21 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
 
   const [showPassword, setShowPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set()); // Track touched fields for inline validation
   const [languageSearch, setLanguageSearch] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
   const [antiBotError, setAntiBotError] = useState<string | null>(null);
+  const [focusedDropdownIndex, setFocusedDropdownIndex] = useState(-1); // Keyboard navigation
 
   const { honeypotValue, setHoneypotValue, validateHuman } = useAntiBot();
 
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
+  const countryListRef = useRef<HTMLDivElement>(null);
+  const languageListRef = useRef<HTMLDivElement>(null);
+  const errorAnnouncerRef = useRef<HTMLDivElement>(null); // ARIA live region
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -212,17 +274,76 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-xl border-0 focus:ring-2 focus:ring-red-500/30',
   };
 
-  // Handle input change
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ============================================================================
+  // INLINE VALIDATION (2026 best practice: validate on blur)
+  // ============================================================================
+  const validateField = useCallback((name: string, value: string): string | null => {
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+        if (!value.trim()) {
+          return intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+        }
+        if (value.trim().length < 2) {
+          return intl.formatMessage({ id: 'form.error.tooShort', defaultMessage: 'Must be at least 2 characters' });
+        }
+        return null;
+      case 'email':
+        if (!value.trim()) {
+          return intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          return intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' });
+        }
+        return null;
+      case 'password':
+        if (!value) {
+          return intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+        }
+        if (value.length < 8) {
+          return intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Password must be at least 8 characters' });
+        }
+        return null;
+      default:
+        return null;
+    }
+  }, [intl]);
+
+  // Handle blur for inline validation
+  const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    onErrorClear?.();
-    if (validationErrors[name]) {
+    setTouchedFields(prev => new Set(prev).add(name));
+
+    const error = validateField(name, value);
+    if (error) {
+      setValidationErrors(prev => ({ ...prev, [name]: error }));
+    } else {
       setValidationErrors(prev => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
       });
+    }
+  }, [validateField]);
+
+  // Handle input change
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    onErrorClear?.();
+
+    // If field was touched, revalidate on change for immediate feedback
+    if (touchedFields.has(name)) {
+      const error = validateField(name, value);
+      if (error) {
+        setValidationErrors(prev => ({ ...prev, [name]: error }));
+      } else {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[name];
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -254,6 +375,66 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       });
     }
   };
+
+  // ============================================================================
+  // KEYBOARD NAVIGATION (2026 best practice: full keyboard support)
+  // ============================================================================
+  const handleDropdownKeyDown = useCallback((
+    e: React.KeyboardEvent,
+    items: { code: string }[],
+    onSelect: (code: string) => void,
+    onClose: () => void
+  ) => {
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setFocusedDropdownIndex(prev => Math.min(prev + 1, items.length - 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setFocusedDropdownIndex(prev => Math.max(prev - 1, 0));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (focusedDropdownIndex >= 0 && items[focusedDropdownIndex]) {
+          onSelect(items[focusedDropdownIndex].code);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        onClose();
+        break;
+      case 'Tab':
+        onClose();
+        break;
+    }
+  }, [focusedDropdownIndex]);
+
+  // Scroll focused item into view
+  useEffect(() => {
+    if (showCountryDropdown && focusedDropdownIndex >= 0 && countryListRef.current) {
+      const items = countryListRef.current.querySelectorAll('[role="option"]');
+      items[focusedDropdownIndex]?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [focusedDropdownIndex, showCountryDropdown]);
+
+  useEffect(() => {
+    if (showLanguageDropdown && focusedDropdownIndex >= 0 && languageListRef.current) {
+      const items = languageListRef.current.querySelectorAll('[role="option"]');
+      items[focusedDropdownIndex]?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [focusedDropdownIndex, showLanguageDropdown]);
+
+  // Reset focused index when dropdown opens/closes
+  useEffect(() => {
+    setFocusedDropdownIndex(-1);
+  }, [showCountryDropdown, showLanguageDropdown]);
+
+  // Password strength calculation
+  const passwordStrength = useMemo(
+    () => formData.password ? evaluatePasswordStrength(formData.password, intl) : null,
+    [formData.password, intl]
+  );
 
   // Handle terms checkbox change
   const handleTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -354,10 +535,30 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   const checkColor = darkMode ? 'text-amber-400' : 'text-red-500';
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+      {/* ARIA Live Region for error announcements (2026 a11y) */}
+      <div
+        ref={errorAnnouncerRef}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {Object.keys(validationErrors).length > 0 && (
+          intl.formatMessage(
+            { id: 'form.errors.count', defaultMessage: '{count} errors in form' },
+            { count: Object.keys(validationErrors).length }
+          )
+        )}
+      </div>
+
       {/* Error display */}
       {(error || antiBotError) && (
-        <div className={`flex items-start gap-3 p-4 mb-2 rounded-2xl ${darkMode ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400'}`}>
+        <div
+          role="alert"
+          className={`flex items-start gap-3 p-4 mb-2 rounded-2xl ${darkMode ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400'}`}
+        >
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <span className="text-sm">{error || antiBotError}</span>
         </div>
       )}
@@ -390,13 +591,18 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder={intl.formatMessage({ id: 'form.firstName.placeholder', defaultMessage: 'Your first name' })}
               className={`${s.input} pl-12 ${validationErrors.firstName ? s.inputError : s.inputDefault} ${formData.firstName ? s.inputFilled : ''}`}
               aria-required="true"
+              aria-invalid={!!validationErrors.firstName}
+              aria-describedby={validationErrors.firstName ? 'firstName-error' : undefined}
+              autoComplete="given-name"
+              enterKeyHint="next"
             />
           </div>
           {validationErrors.firstName && (
-            <p className={s.errorText}>
+            <p id="firstName-error" className={s.errorText} role="alert">
               <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
               {validationErrors.firstName}
             </p>
@@ -417,13 +623,18 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder={intl.formatMessage({ id: 'form.lastName.placeholder', defaultMessage: 'Your last name' })}
               className={`${s.input} pl-12 ${validationErrors.lastName ? s.inputError : s.inputDefault} ${formData.lastName ? s.inputFilled : ''}`}
               aria-required="true"
+              aria-invalid={!!validationErrors.lastName}
+              aria-describedby={validationErrors.lastName ? 'lastName-error' : undefined}
+              autoComplete="family-name"
+              enterKeyHint="next"
             />
           </div>
           {validationErrors.lastName && (
-            <p className={s.errorText}>
+            <p id="lastName-error" className={s.errorText} role="alert">
               <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
               {validationErrors.lastName}
             </p>
@@ -445,14 +656,19 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
             name="email"
             value={formData.email}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder={intl.formatMessage({ id: 'form.email.placeholder', defaultMessage: 'your@email.com' })}
             autoComplete="email"
+            inputMode="email"
+            enterKeyHint="next"
             className={`${s.input} pl-12 ${validationErrors.email ? s.inputError : s.inputDefault} ${formData.email ? s.inputFilled : ''}`}
             aria-required="true"
+            aria-invalid={!!validationErrors.email}
+            aria-describedby={validationErrors.email ? 'email-error' : undefined}
           />
         </div>
         {validationErrors.email && (
-          <p className={s.errorText}>
+          <p id="email-error" className={s.errorText} role="alert">
             <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
             {validationErrors.email}
           </p>
@@ -473,65 +689,58 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder={intl.formatMessage({ id: 'form.password.placeholder', defaultMessage: 'Minimum 8 characters' })}
             autoComplete="new-password"
+            enterKeyHint="next"
             className={`${s.input} pl-12 pr-12 ${validationErrors.password ? s.inputError : s.inputDefault}`}
             aria-required="true"
             aria-invalid={!!validationErrors.password}
+            aria-describedby={`password-strength ${validationErrors.password ? 'password-error' : ''}`}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors z-10 ${darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
+            className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors z-10 p-1 rounded-lg ${darkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
             aria-label={showPassword
               ? intl.formatMessage({ id: 'form.password.hide', defaultMessage: 'Hide password' })
               : intl.formatMessage({ id: 'form.password.show', defaultMessage: 'Show password' })
             }
+            aria-pressed={showPassword}
           >
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
 
-        {/* Password strength indicator */}
-        {formData.password.length > 0 && (
-          <div className="mt-2">
+        {/* Password strength indicator (2026 best practice: complexity-based) */}
+        {passwordStrength && (
+          <div id="password-strength" className="mt-2 space-y-2">
             <div className={`h-1.5 rounded-full overflow-hidden ${darkMode ? 'bg-white/10' : 'bg-gray-200 dark:bg-gray-700'}`}>
               <div
-                className={`h-full transition-all duration-300 ${
-                  formData.password.length < 6
-                    ? 'w-1/4 bg-red-500'
-                    : formData.password.length < 8
-                    ? 'w-1/2 bg-orange-500'
-                    : formData.password.length < 10
-                    ? 'w-3/4 bg-yellow-500'
-                    : 'w-full bg-green-500'
+                className={`h-full transition-all duration-300 ${passwordStrength.width} ${
+                  passwordStrength.score === 0 ? 'bg-red-500' :
+                  passwordStrength.score === 1 ? 'bg-red-400' :
+                  passwordStrength.score === 2 ? 'bg-orange-400' :
+                  passwordStrength.score === 3 ? 'bg-yellow-400' :
+                  'bg-green-500'
                 }`}
               />
             </div>
-            <p className={`text-xs mt-1 ${
-              formData.password.length < 6
-                ? 'text-red-400'
-                : formData.password.length < 8
-                ? 'text-orange-400'
-                : formData.password.length < 10
-                ? 'text-yellow-400'
-                : 'text-green-400'
-            }`}>
-              {formData.password.length < 6 ? (
-                <FormattedMessage id="form.password.strength.weak" defaultMessage="Too short (min. 6 characters)" />
-              ) : formData.password.length < 8 ? (
-                <FormattedMessage id="form.password.strength.fair" defaultMessage="Fair" />
-              ) : formData.password.length < 10 ? (
-                <FormattedMessage id="form.password.strength.good" defaultMessage="Good" />
-              ) : (
-                <FormattedMessage id="form.password.strength.strong" defaultMessage="Strong" />
+            <div className="flex items-center justify-between">
+              <p className={`text-xs font-medium ${passwordStrength.color}`}>
+                {passwordStrength.label}
+              </p>
+              {passwordStrength.feedback.length > 0 && (
+                <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  {passwordStrength.feedback[0]}
+                </p>
               )}
-            </p>
+            </div>
           </div>
         )}
 
         {validationErrors.password && (
-          <p className={s.errorText}>
+          <p id="password-error" className={s.errorText} role="alert">
             <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
             {validationErrors.password}
           </p>
@@ -540,7 +749,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
 
       {/* Country */}
       <div ref={countryDropdownRef} className="space-y-2">
-        <label className={s.label}>
+        <label id="country-label" className={s.label}>
           <FormattedMessage id="form.country" defaultMessage="Country of residence" />
           <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
         </label>
@@ -548,8 +757,19 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           <Globe className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10`} />
           <button
             type="button"
+            id="country-button"
             onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+            onKeyDown={(e) => showCountryDropdown && handleDropdownKeyDown(
+              e,
+              filteredCountries,
+              (code) => selectCountry(filteredCountries.find(c => c.code === code)!),
+              () => setShowCountryDropdown(false)
+            )}
             className={`${s.input} pl-12 pr-10 text-left flex items-center justify-between ${validationErrors.country ? s.inputError : s.inputDefault}`}
+            aria-haspopup="listbox"
+            aria-expanded={showCountryDropdown}
+            aria-labelledby="country-label"
+            aria-describedby={validationErrors.country ? 'country-error' : undefined}
           >
             <span className={selectedCountryEntry ? '' : 'text-gray-500'}>
               {selectedCountryEntry ? (
@@ -565,7 +785,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           </button>
 
           {showCountryDropdown && (
-            <div className={s.dropdown}>
+            <div className={s.dropdown} role="listbox" aria-labelledby="country-label">
               <div className={`p-2 border-b ${darkMode ? 'border-white/10' : 'border-gray-200 dark:border-gray-700'}`}>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -573,19 +793,28 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     type="text"
                     value={countrySearch}
                     onChange={(e) => setCountrySearch(e.target.value)}
+                    onKeyDown={(e) => handleDropdownKeyDown(
+                      e,
+                      filteredCountries,
+                      (code) => selectCountry(filteredCountries.find(c => c.code === code)!),
+                      () => setShowCountryDropdown(false)
+                    )}
                     placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search country...' })}
                     className={s.dropdownSearch}
                     autoFocus
+                    aria-label={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search country...' })}
                   />
                 </div>
               </div>
-              <div className="max-h-[280px] overflow-y-auto overscroll-contain">
-                {filteredCountries.map((entry) => (
+              <div ref={countryListRef} className="max-h-[280px] overflow-y-auto overscroll-contain">
+                {filteredCountries.map((entry, idx) => (
                   <button
                     key={entry.code}
                     type="button"
+                    role="option"
+                    aria-selected={entry.code === formData.country}
                     onClick={() => selectCountry(entry)}
-                    className={`${s.dropdownItem} ${entry.code === formData.country ? selectedBg : ''}`}
+                    className={`${s.dropdownItem} ${entry.code === formData.country ? selectedBg : ''} ${idx === focusedDropdownIndex ? (darkMode ? 'bg-white/10' : 'bg-gray-100') : ''}`}
                   >
                     <span className="text-xl">{getFlag(entry.code)}</span>
                     <span className="flex-1 text-sm">{getCountryName(entry, locale)}</span>
@@ -599,7 +828,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           )}
         </div>
         {validationErrors.country && (
-          <p className={s.errorText}>
+          <p id="country-error" className={s.errorText} role="alert">
             <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
             {validationErrors.country}
           </p>
@@ -608,7 +837,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
 
       {/* Primary Language */}
       <div ref={languageDropdownRef} className="space-y-2">
-        <label className={s.label}>
+        <label id="language-label" className={s.label}>
           <FormattedMessage id="form.primaryLanguage" defaultMessage="Primary language" />
           <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
         </label>
@@ -616,8 +845,23 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           <Languages className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
           <button
             type="button"
+            id="language-button"
             onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+            onKeyDown={(e) => showLanguageDropdown && handleDropdownKeyDown(
+              e,
+              filteredLanguages,
+              (code) => {
+                handleLanguageChange(code);
+                setShowLanguageDropdown(false);
+                setLanguageSearch('');
+              },
+              () => setShowLanguageDropdown(false)
+            )}
             className={`${s.input} pl-12 pr-10 text-left flex items-center justify-between ${validationErrors.language ? s.inputError : s.inputDefault}`}
+            aria-haspopup="listbox"
+            aria-expanded={showLanguageDropdown}
+            aria-labelledby="language-label"
+            aria-describedby={validationErrors.language ? 'language-error' : undefined}
           >
             <span className={formData.language ? (darkMode ? 'text-white' : '') : 'text-gray-500'}>
               {formData.language ? (
@@ -630,7 +874,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           </button>
 
           {showLanguageDropdown && (
-            <div className={s.dropdown}>
+            <div className={s.dropdown} role="listbox" aria-labelledby="language-label">
               <div className={`p-2 border-b ${darkMode ? 'border-white/10' : 'border-gray-200 dark:border-gray-700'}`}>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -638,23 +882,36 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     type="text"
                     value={languageSearch}
                     onChange={(e) => setLanguageSearch(e.target.value)}
+                    onKeyDown={(e) => handleDropdownKeyDown(
+                      e,
+                      filteredLanguages,
+                      (code) => {
+                        handleLanguageChange(code);
+                        setShowLanguageDropdown(false);
+                        setLanguageSearch('');
+                      },
+                      () => setShowLanguageDropdown(false)
+                    )}
                     placeholder={intl.formatMessage({ id: 'form.search.language', defaultMessage: 'Search language...' })}
                     className={s.dropdownSearch}
                     autoFocus
+                    aria-label={intl.formatMessage({ id: 'form.search.language', defaultMessage: 'Search language...' })}
                   />
                 </div>
               </div>
-              <div className="max-h-[280px] overflow-y-auto overscroll-contain">
-                {filteredLanguages.map((lang) => (
+              <div ref={languageListRef} className="max-h-[280px] overflow-y-auto overscroll-contain">
+                {filteredLanguages.map((lang, idx) => (
                   <button
                     key={lang.code}
                     type="button"
+                    role="option"
+                    aria-selected={lang.code === formData.language}
                     onClick={() => {
                       handleLanguageChange(lang.code);
                       setShowLanguageDropdown(false);
                       setLanguageSearch('');
                     }}
-                    className={`${s.dropdownItem} ${lang.code === formData.language ? selectedBg : ''}`}
+                    className={`${s.dropdownItem} ${lang.code === formData.language ? selectedBg : ''} ${idx === focusedDropdownIndex ? (darkMode ? 'bg-white/10' : 'bg-gray-100') : ''}`}
                   >
                     <span className="flex-1 text-sm">{getLanguageLabel(lang, locale)}</span>
                     <span className="text-xs text-gray-500">{lang.nativeName}</span>
@@ -666,7 +923,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           )}
         </div>
         {validationErrors.language && (
-          <p className={s.errorText}>
+          <p id="language-error" className={s.errorText} role="alert">
             <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
             {validationErrors.language}
           </p>
@@ -732,7 +989,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           </span>
         </label>
         {validationErrors.acceptTerms && (
-          <p className={s.errorText}>
+          <p id="terms-error" className={s.errorText} role="alert">
             <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
             {validationErrors.acceptTerms}
           </p>
@@ -743,6 +1000,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       <button
         type="submit"
         disabled={loading || !formData.acceptTerms}
+        aria-busy={loading}
         className={`
           w-full py-4 px-6 font-extrabold rounded-2xl
           flex items-center justify-center gap-2

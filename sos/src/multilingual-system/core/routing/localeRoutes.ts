@@ -291,6 +291,7 @@ export type RouteKey =
   // Chatter routes
   | "chatter-landing"      // /devenir-chatter -> /become-chatter, etc.
   | "chatter-register"     // /chatter/inscription -> /chatter/register, etc.
+  | "chatter-telegram"     // /chatter/telegram -> /chatter/telegram, etc.
   | "chatter-presentation" // /chatter/presentation -> /chatter/presentation, etc.
   | "chatter-quiz"         // /chatter/quiz -> /chatter/quiz, etc.
   | "chatter-dashboard"    // /chatter/tableau-de-bord -> /chatter/dashboard, etc.
@@ -882,6 +883,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "chatter/zhuce",
     hi: "chatter/panjikaran",
     ar: "مسوق/تسجيل",
+  },
+  "chatter-telegram": {
+    fr: "chatter/telegram",
+    en: "chatter/telegram",
+    es: "chatter/telegram",
+    de: "chatter/telegram",
+    ru: "chatter/telegram",
+    pt: "chatter/telegram",
+    ch: "chatter/telegram",
+    hi: "chatter/telegram",
+    ar: "مسوق/تيليجرام",
   },
   "chatter-presentation": {
     fr: "chatter/presentation",

@@ -391,12 +391,23 @@ const ChatterDashboard: React.FC = () => {
   // ============================================================================
 
   const routes = useMemo(() => ({
+    telegram: `/${getTranslatedRouteSlug('chatter-telegram' as RouteKey, langCode)}`,
     payments: `/${getTranslatedRouteSlug('chatter-payments' as RouteKey, langCode)}`,
     referrals: `/${getTranslatedRouteSlug('chatter-referrals' as RouteKey, langCode)}`,
     refer: `/${getTranslatedRouteSlug('chatter-refer' as RouteKey, langCode)}`,
     leaderboard: `/${getTranslatedRouteSlug('chatter-leaderboard' as RouteKey, langCode)}`,
     training: `/${getTranslatedRouteSlug('chatter-training' as RouteKey, langCode)}`,
   }), [langCode]);
+
+  // ============================================================================
+  // TELEGRAM ONBOARDING CHECK (mandatory step)
+  // ============================================================================
+  useEffect(() => {
+    // Redirect to Telegram onboarding if not completed
+    if (user && !user.telegramOnboardingCompleted) {
+      navigate(routes.telegram, { replace: true });
+    }
+  }, [user, navigate, routes.telegram]);
 
   // ============================================================================
   // MEMOIZED FORMATTERS

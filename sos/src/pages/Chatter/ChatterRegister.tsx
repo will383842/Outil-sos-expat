@@ -47,7 +47,7 @@ const ChatterRegister: React.FC = () => {
 
   // Routes
   const landingRoute = `/${getTranslatedRouteSlug('chatter-landing' as RouteKey, langCode)}`;
-  const presentationRoute = `/${getTranslatedRouteSlug('chatter-presentation' as RouteKey, langCode)}`;
+  const telegramRoute = `/${getTranslatedRouteSlug('chatter-telegram' as RouteKey, langCode)}`;
   const dashboardRoute = `/${getTranslatedRouteSlug('chatter-dashboard' as RouteKey, langCode)}`;
 
   // ============================================================================
@@ -153,9 +153,9 @@ const ChatterRegister: React.FC = () => {
       // Refresh user data to ensure role is updated in context
       await refreshUser();
 
-      // Redirect to presentation after short delay
+      // Redirect to Telegram onboarding after short delay (mandatory step)
       setTimeout(() => {
-        navigate(presentationRoute, { replace: true });
+        navigate(telegramRoute, { replace: true });
       }, 2000);
     } catch (err: unknown) {
       console.error('[ChatterRegister] Error:', err);

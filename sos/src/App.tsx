@@ -142,6 +142,7 @@ const MultiProviderDashboard = lazy(() => import('./pages/MultiProviderDashboard
 const ChatterLanding = lazy(() => import('./pages/Chatter/ChatterLanding'));
 const ChatterLandingOld = lazy(() => import('./pages/Chatter/ChatterLandingOld'));
 const ChatterRegister = lazy(() => import('./pages/Chatter/ChatterRegister'));
+const ChatterTelegramOnboarding = lazy(() => import('./pages/Chatter/ChatterTelegramOnboarding'));
 const ChatterPresentation = lazy(() => import('./pages/Chatter/ChatterPresentation'));
 const ChatterQuiz = lazy(() => import('./pages/Chatter/ChatterQuiz'));
 const ChatterDashboard = lazy(() => import('./pages/Chatter/ChatterDashboard'));
@@ -357,7 +358,9 @@ const protectedUserRoutes: RouteConfig[] = [
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un chatter ne peut pas être client/lawyer/expat.
   // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
   { path: "/chatter/inscription", component: ChatterRegister, translated: "chatter-register" },
-  // Après inscription, l'utilisateur a role="chatter" - toutes les autres routes sont réservées aux chatters
+  // Après inscription, l'utilisateur passe par l'onboarding Telegram (obligatoire)
+  { path: "/chatter/telegram", component: ChatterTelegramOnboarding, protected: true, role: 'chatter', translated: "chatter-telegram" },
+  // Ensuite, présentation et quiz
   { path: "/chatter/presentation", component: ChatterPresentation, protected: true, role: 'chatter', translated: "chatter-presentation" },
   { path: "/chatter/quiz", component: ChatterQuiz, protected: true, role: 'chatter', translated: "chatter-quiz" },
   // DISABLED: Country selection feature - kept for potential future use

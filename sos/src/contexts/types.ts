@@ -57,6 +57,11 @@ export interface User {
   isOnline?: boolean;
   isAAA?: boolean; // Profil AAA avec accès spéciaux
 
+  // Telegram onboarding (for chatters)
+  hasTelegram?: boolean;
+  telegramOnboardingCompleted?: boolean;
+  telegramOnboardingAt?: string;
+
   // Stripe KYC
   stripeAccountId?: string;
   kycStatus?:

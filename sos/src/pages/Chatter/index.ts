@@ -1,5 +1,6 @@
 export { default as ChatterLanding } from './ChatterLanding';
 export { default as ChatterRegister } from './ChatterRegister';
+export { default as ChatterTelegramOnboarding } from './ChatterTelegramOnboarding';
 export { default as ChatterPresentation } from './ChatterPresentation';
 export { default as ChatterQuiz } from './ChatterQuiz';
 export { default as ChatterDashboard } from './ChatterDashboard';
