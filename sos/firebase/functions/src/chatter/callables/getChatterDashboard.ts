@@ -520,7 +520,7 @@ export const getChatterDashboard = onCall(
         // Piggy Bank - Bonus pending unlock
         piggyBank: await (async () => {
           const clientEarnings = getClientEarnings(chatter);
-          const unlockThreshold = REFERRAL_CONFIG.SOCIAL_LIKES.UNLOCK_THRESHOLD; // $100
+          const unlockThreshold = REFERRAL_CONFIG.SOCIAL_LIKES.UNLOCK_THRESHOLD; // $150
 
           // Social likes bonus
           const socialNetworks = await getActiveSocialNetworks();
@@ -535,10 +535,19 @@ export const getChatterDashboard = onCall(
           const socialNetworksTotal = socialNetworks.length;
           const socialNetworksLiked = socialLikes.length;
 
+          // Telegram bonus ($50 when Telegram is linked, locked until threshold)
+          const telegramBonusAmount = REFERRAL_CONFIG.TELEGRAM_BONUS?.AMOUNT || 5000; // $50
+          const hasTelegram = chatter.hasTelegram === true && chatter.telegramId;
+          const telegramBonusPending = hasTelegram && !chatter.telegramBonusPaid ? telegramBonusAmount : 0;
+          const telegramBonusPaid = chatter.telegramBonusPaid ? telegramBonusAmount : 0;
+
           // Calculate progress to unlock
           const progressPercent = Math.min(100, Math.round((clientEarnings / unlockThreshold) * 100));
           const amountToUnlock = Math.max(0, unlockThreshold - clientEarnings);
           const isUnlocked = clientEarnings >= unlockThreshold;
+
+          // Total pending = social likes + telegram bonus (all locked until threshold)
+          const totalPending = socialLikesPending + telegramBonusPending;
 
           return {
             // Overall unlock status
@@ -562,14 +571,21 @@ export const getChatterDashboard = onCall(
                 liked: likedNetworkIds.has(n.id),
               })),
             },
-            // Total pending in piggy bank
-            totalPending: socialLikesPending,
+            // Telegram bonus details
+            telegramBonus: {
+              hasTelegram,
+              bonusAmount: telegramBonusAmount,
+              bonusPending: telegramBonusPending,
+              bonusPaid: telegramBonusPaid,
+            },
+            // Total pending in piggy bank (social + telegram)
+            totalPending,
             // Message for UI
             message: isUnlocked
-              ? socialLikesPending > 0
-                ? `${(socialLikesPending / 100).toFixed(0)}$ de bonus likes en attente de paiement`
-                : "Tirelire vide - likez nos reseaux pour gagner des bonus !"
-              : `Encore ${(amountToUnlock / 100).toFixed(0)}$ de ventes pour debloquer ${(socialLikesPending / 100).toFixed(0)}$ de bonus`,
+              ? totalPending > 0
+                ? `${(totalPending / 100).toFixed(0)}$ de bonus en attente de paiement`
+                : "Tirelire vide - connectez Telegram et likez nos reseaux pour gagner des bonus !"
+              : `Encore ${(amountToUnlock / 100).toFixed(0)}$ de ventes pour debloquer ${(totalPending / 100).toFixed(0)}$ de bonus`,
           };
         })(),
         // Historical trends for charts

@@ -419,6 +419,41 @@ export interface Chatter {
   /** Timestamp when social bonus was unlocked */
   socialBonusUnlockedAt?: Timestamp | null;
 
+  // ---- Telegram Integration ----
+
+  /** Whether the chatter has linked their Telegram account */
+  hasTelegram?: boolean;
+
+  /** Telegram chat_id (for sending messages) */
+  telegramId?: number;
+
+  /** Telegram username (without @) */
+  telegramUsername?: string;
+
+  /** Telegram first name */
+  telegramFirstName?: string;
+
+  /** Telegram last name */
+  telegramLastName?: string;
+
+  /** When Telegram was linked */
+  telegramLinkedAt?: Timestamp | null;
+
+  /** Whether Telegram onboarding step was completed */
+  telegramOnboardingCompleted?: boolean;
+
+  /** Whether Telegram onboarding was skipped */
+  telegramOnboardingSkipped?: boolean;
+
+  /** Amount of Telegram bonus credited (in cents, typically 5000 = $50) */
+  telegramBonusAmount?: number;
+
+  /** Whether the Telegram bonus was credited to tirelire */
+  telegramBonusCredited?: boolean;
+
+  /** Whether the Telegram bonus has been paid out (unlocked and withdrawn) */
+  telegramBonusPaid?: boolean;
+
   // ---- Timestamps ----
 
   /** Registration date */
@@ -2239,8 +2274,14 @@ export const REFERRAL_CONFIG = {
   /** Social media likes bonus settings */
   SOCIAL_LIKES: {
     BONUS_PER_NETWORK: 100,        // $1 per network liked
-    UNLOCK_THRESHOLD: 10000,       // $100 direct earnings required to unlock
+    UNLOCK_THRESHOLD: 15000,       // $150 direct earnings required to unlock piggy bank
     MIN_VIEW_SECONDS: 5,           // Minimum seconds on social page before confirming
+  },
+
+  /** Telegram onboarding bonus settings */
+  TELEGRAM_BONUS: {
+    AMOUNT: 5000,                  // $50 bonus for connecting Telegram
+    UNLOCK_THRESHOLD: 15000,       // $150 direct earnings required to unlock (same as social likes)
   },
 } as const;
 
@@ -2359,6 +2400,8 @@ export interface RegisterChatterInput {
 export interface RegisterChatterResponse {
   success: boolean;
   chatterId: string;
+  affiliateCodeClient?: string;
+  affiliateCodeRecruitment?: string;
   message: string;
 }
 

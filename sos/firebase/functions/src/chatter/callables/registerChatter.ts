@@ -2,7 +2,8 @@
  * Callable: registerChatter
  *
  * Registers a new chatter in the system.
- * Creates chatter profile with pending_quiz status.
+ * Creates chatter profile with ACTIVE status immediately (no quiz required).
+ * Generates affiliate codes at registration.
  * Also creates/updates user document if needed.
  */
 
@@ -24,6 +25,10 @@ import {
   storeRegistrationIP,
   flagForManualReview,
 } from "../antiFraud";
+import {
+  generateChatterClientCode,
+  generateChatterRecruitmentCode,
+} from "../utils/chatterCodeGenerator";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -274,9 +279,21 @@ export const registerChatter = onCall(
         });
       }
 
-      // 10. Create chatter document
+      // 10. Generate affiliate codes IMMEDIATELY (no quiz required)
       const now = Timestamp.now();
+      const affiliateCodeClient = await generateChatterClientCode(
+        input.firstName,
+        input.email
+      );
+      const affiliateCodeRecruitment = generateChatterRecruitmentCode(affiliateCodeClient);
 
+      logger.info("[registerChatter] Generated affiliate codes", {
+        userId,
+        affiliateCodeClient,
+        affiliateCodeRecruitment,
+      });
+
+      // 11. Create chatter document with ACTIVE status
       const chatter: Chatter = {
         id: userId,
         email: input.email.toLowerCase(),
@@ -290,13 +307,13 @@ export const registerChatter = onCall(
         platforms: input.platforms ?? [],
         bio: input.bio?.trim(),
 
-        status: "pending_quiz",
+        status: "active", // Direct activation - no quiz required
         level: 1,
         levelProgress: 0,
 
-        // Codes will be generated after quiz passes
-        affiliateCodeClient: "",
-        affiliateCodeRecruitment: "",
+        // Codes generated immediately at registration
+        affiliateCodeClient,
+        affiliateCodeRecruitment,
 
         totalEarned: 0,
         availableBalance: 0,
@@ -376,7 +393,7 @@ export const registerChatter = onCall(
         },
       };
 
-      // 11. Create user document and chatter document in transaction
+      // 12. Create user document and chatter document in transaction
       // IMPORTANT: Chatters get a dedicated role, not shared with other roles
       await db.runTransaction(async (transaction) => {
         // Create chatter
@@ -389,22 +406,26 @@ export const registerChatter = onCall(
 
         if (userDoc.exists) {
           // This should only happen if user passed all role checks above
-          // Update to chatter role
+          // Update to chatter role - ACTIVE immediately
           transaction.update(userRef, {
-            role: "chatter", // Change role to chatter
+            role: "chatter",
             isChatter: true,
-            chatterStatus: "pending_quiz",
+            chatterStatus: "active",
+            affiliateCodeClient,
+            affiliateCodeRecruitment,
             updatedAt: now,
           });
         } else {
-          // Create NEW user document with chatter role
+          // Create NEW user document with chatter role - ACTIVE immediately
           transaction.set(userRef, {
             email: input.email.toLowerCase(),
             firstName: input.firstName.trim(),
             lastName: input.lastName.trim(),
-            role: "chatter", // CHATTER role - mutually exclusive with other roles
+            role: "chatter",
             isChatter: true,
-            chatterStatus: "pending_quiz",
+            chatterStatus: "active",
+            affiliateCodeClient,
+            affiliateCodeRecruitment,
             createdAt: now,
             updatedAt: now,
           });
@@ -442,7 +463,9 @@ export const registerChatter = onCall(
       return {
         success: true,
         chatterId: userId,
-        message: "Registration successful. Please complete the quiz to activate your account.",
+        affiliateCodeClient,
+        affiliateCodeRecruitment,
+        message: "Registration successful. Your account is now active!",
       };
     } catch (error) {
       if (error instanceof HttpsError) {

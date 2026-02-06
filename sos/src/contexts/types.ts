@@ -59,8 +59,13 @@ export interface User {
 
   // Telegram onboarding (for chatters)
   hasTelegram?: boolean;
+  telegramId?: number;
+  telegramUsername?: string;
+  telegramFirstName?: string;
   telegramOnboardingCompleted?: boolean;
+  telegramOnboardingSkipped?: boolean;
   telegramOnboardingAt?: string;
+  telegramLinkedAt?: string;
 
   // Stripe KYC
   stripeAccountId?: string;

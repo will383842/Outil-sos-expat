@@ -30,6 +30,14 @@ export { requestWithdrawal as chatterRequestWithdrawal } from "./callables/reque
 export { updateChatterProfile } from "./callables/updateChatterProfile";
 export { updateTelegramOnboarding } from "./callables/updateTelegramOnboarding";
 
+// Telegram Onboarding (Deep Link + Webhook system)
+export {
+  generateTelegramLink,
+  checkTelegramLinkStatus,
+  skipTelegramOnboarding,
+  telegramChatterBotWebhook,
+} from "./callables/telegramOnboarding";
+
 // Referral Dashboard
 export { getReferralDashboard } from "./callables/getReferralDashboard";
 

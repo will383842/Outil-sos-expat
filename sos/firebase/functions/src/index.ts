@@ -5668,6 +5668,11 @@ export {
   chatterRequestWithdrawal,
   updateChatterProfile,
   updateTelegramOnboarding,
+  // Telegram Deep Link + Webhook (new system)
+  generateTelegramLink,
+  checkTelegramLinkStatus,
+  skipTelegramOnboarding,
+  telegramChatterBotWebhook,
   getReferralDashboard,
   // Country Rotation callables
   // DISABLED 2026-01-30: Country rotation system removed to free quota
@@ -5971,3 +5976,8 @@ export {
   getProviderStatsMonths,
   exportProviderStatsCsv,
 } from './callables/getProviderStats';
+
+// ========== USER ACCOUNT REPAIR ==========
+// Repairs orphaned user accounts where Firebase Auth exists but users/{uid} document doesn't
+// Called automatically from AuthContext when document is not found after retries
+export { repairOrphanedUser } from './callables/repairOrphanedUser';
