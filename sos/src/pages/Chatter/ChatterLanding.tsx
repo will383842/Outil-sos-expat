@@ -302,18 +302,18 @@ const ChatterLanding: React.FC = () => {
 
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
 
-            <h1 className="text-[2.2rem] sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] mb-4 sm:mb-6">
+            <h1 className="text-[2rem] sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] mb-3 sm:mb-6">
               <span className="text-white"><FormattedMessage id="chatter.landing.hero.desktop.line1" defaultMessage="Gagnez de l'argent" /></span>
               <br />
               <span className="text-white"><FormattedMessage id="chatter.landing.hero.desktop.line2" defaultMessage="en aidant les " /></span>
               <span className="text-amber-400"><FormattedMessage id="chatter.landing.hero.desktop.highlight" defaultMessage="voyageurs" /></span>
             </h1>
 
-            <p className="text-xl sm:text-2xl lg:text-3xl text-white font-bold mb-3 sm:mb-4">
-              <span className="text-amber-400">10$</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
+            <p className="text-lg sm:text-2xl lg:text-3xl text-white font-bold mb-2 sm:mb-4">
+              <span className="text-amber-400 text-2xl sm:text-3xl lg:text-4xl">10$</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
             </p>
 
-            <p className="text-sm sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-lg lg:text-xl text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
               <FormattedMessage id="chatter.landing.hero.desktop.desc" defaultMessage="Partagez votre lien aux expatriés qui ont besoin d'aide juridique. Quand ils appellent, vous gagnez." />
             </p>
 
@@ -671,7 +671,7 @@ const ChatterLanding: React.FC = () => {
               <FormattedMessage id="chatter.landing.cta.join" defaultMessage="Rejoignez 1 200+ chatters dans 197 pays" />
             </p>
 
-            <h2 id="section-cta-final" className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-white mb-6 sm:mb-8">
+            <h2 id="section-cta-final" className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-white mb-6 sm:mb-8">
               <FormattedMessage id="chatter.landing.cta.title" defaultMessage="Commencez à gagner" />
               <br />
               <span className="text-amber-400"><FormattedMessage id="chatter.landing.cta.highlight" defaultMessage="aujourd'hui" /></span>
