@@ -35,6 +35,10 @@ export interface Provider {
   id: string;
   userId: string;
   name: string;
+  displayName?: string;
+  fullName?: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   type: ProviderType;
   photoURL?: string;
@@ -90,7 +94,7 @@ export function normalizeProvider(data: Partial<Provider> & { id: string }): Pro
   return {
     id: data.id,
     userId: data.userId || data.id,
-    name: data.name || 'Unknown',
+    name: data.name || data.displayName || data.fullName || [data.firstName, data.lastName].filter(Boolean).join(' ') || 'Unknown',
     email: data.email || '',
     type: data.type || 'lawyer',
     photoURL: data.photoURL,
