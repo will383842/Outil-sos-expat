@@ -37,8 +37,8 @@ Outil **indépendant** de toute plateforme existante (SOS-Expat, Ulixai, etc.), 
 | API Auth | Laravel Sanctum (tokens API) |
 | Bot Telegram | Telegram Bot API via webhook |
 | Email transactionnel | Brevo / SendGrid (SMTP) |
-| Paiements | Stripe (cartes, SEPA) + PayPal + Telegram Stars |
-| Hosting | VPS (Hetzner/OVH) + Laravel Forge |
+| Paiements | Stripe (cartes, SEPA) + Telegram Stars |
+| Hosting | VPS Hetzner |
 | CI/CD | GitHub Actions |
 | i18n | Laravel Localization (9 langues) |
 | Monitoring | Laravel Pulse + Sentry |
@@ -132,7 +132,7 @@ Outil **indépendant** de toute plateforme existante (SOS-Expat, Ulixai, etc.), 
 
 ### 3.2 Facturation
 
-- **Moyens de paiement** : Stripe (CB, SEPA), PayPal
+- **Moyens de paiement** : Stripe (CB, SEPA)
 - **Devises supportées** : EUR, USD, GBP, CHF, XOF (FCFA), XAF (FCFA), MAD, CAD, AUD, BRL, RUB, INR, CNY (13 devises — voir §18)
 - **Conversion automatique** : taux de change mis à jour quotidiennement
 - **Affichage** : prix dans la devise préférée de l'utilisateur
@@ -274,7 +274,7 @@ Outil **indépendant** de toute plateforme existante (SOS-Expat, Ulixai, etc.), 
 - **Historique par client** : tous les changements de plan, paiements, crédits, remboursements
 
 **Remboursements et crédits** :
-- **Remboursement** via Stripe / PayPal :
+- **Remboursement** via Stripe :
   - Remboursement total ou partiel
   - Raison obligatoire (incident technique, insatisfaction, erreur de facturation, etc.)
   - Notification automatique au client (email de confirmation)
@@ -359,7 +359,7 @@ Outil **indépendant** de toute plateforme existante (SOS-Expat, Ulixai, etc.), 
 ### 4.5 Paramètres Globaux
 
 - Configuration SMTP (email transactionnel)
-- Clés API Stripe / PayPal
+- Clés API Stripe
 - Templates d'emails système (bienvenue, relance, suspension, etc.)
 - Personnalisation de la plateforme (nom, logo, couleurs, favicon)
 - Maintenance mode (message personnalisé)
@@ -903,16 +903,24 @@ Chaque template est disponible dans les **9 langues** de la plateforme.
 - **Désactivable** : dans les paramètres utilisateur
 - **Non actifs** quand un input est focused
 
-### 7.9 SEO & Pages Publiques
+### 7.9 SEO, AEO & Pages Publiques
 
 - **Rendu** : Blade SSR (Server-Side Rendering natif Laravel) — pas besoin de SSR JS
-- **Pages statiques** : landing page, tarifs, FAQ, CGV, blog
-- **Meta tags** : title, description, og:image, og:title, og:description, twitter:card
-- **Sitemap XML** : auto-générée via `spatie/laravel-sitemap`
-- **Schema.org** : JSON-LD pour SoftwareApplication, FAQPage, PricingPage
-- **Performance** : pages publiques mises en cache (Varnish ou Laravel Page Cache)
-- **i18n SEO** : `hreflang` pour chaque langue, URL localisées (`/fr/tarifs`, `/en/pricing`)
-- **Blog** : articles Markdown, catégories, tags, auteur, SEO automatique
+- **Pages statiques** : landing page, tarifs, FAQ, CGV, blog, comparatifs
+- **Meta tags** : title, description, og:image, og:title, og:description, twitter:card, canonical
+- **Sitemap XML** : auto-générée via `spatie/laravel-sitemap`, un sitemap par locale (`sitemap-fr-fr.xml`, `sitemap-en-us.xml`, etc.) + sitemap index
+- **Schema.org (AEO)** : JSON-LD pour SoftwareApplication, FAQPage, PricingPage, Organization, BreadcrumbList, WebSite, Article, HowTo, Review, AggregateRating, SearchAction, ContactPage, AboutPage, VideoObject
+- **Performance** : pages publiques mises en cache (Laravel Page Cache)
+- **i18n SEO** :
+  - Format URL : `/{langue}-{pays}/{slug-traduit}` (ex: `/fr-fr/tarifs`, `/en-us/pricing`, `/es-es/precios`, `/zh-cn/jiage`, `/ar-sa/الأسعار`)
+  - `hreflang` tags sur chaque page publique (9 langues + x-default)
+  - Slugs traduits automatiquement : `pricing` → fr:"tarifs", es:"precios", de:"preise", etc. (même système que SOS-Expat `localeRoutes.ts`)
+  - Détection de langue : timezone (80% sans API) → cache géoloc (24h) → API géoloc fallback → navigateur → défaut FR
+  - Redirection legacy : `/fr/tarifs` → 301 vers `/fr-fr/tarifs`
+  - Mapping langue→pays par défaut : fr→fr, en→us, es→es, de→de, ru→ru, pt→pt, zh→cn, hi→in, ar→sa
+  - Pays réel par géolocalisation quand disponible : un français en Allemagne voit `/fr-de/tarifs`
+- **Blog** : articles Markdown, catégories, tags, auteur, SEO automatique, Schema.org Article
+- **Open Graph images** : images OG générées dynamiquement par page/langue
 
 ### 7.10 Tests Frontend
 
@@ -1776,9 +1784,15 @@ Guide concret pour connecter **n'importe quelle plateforme** (SOS-Expat, e-comme
 | 8 | हिन्दी | `hi` | LTR |
 | 9 | العربية | `ar` | RTL |
 
-- **Détection automatique** : basée sur la langue du navigateur
+- **Détection automatique** (multi-méthode, par priorité) :
+  1. Préférence sauvée (localStorage / profil utilisateur)
+  2. Timezone navigateur (80% des cas, ZERO appel API, 170+ timezones IANA → pays → langue)
+  3. Cache géolocalisation (24h localStorage)
+  4. APIs géolocalisation fallback (geojs.io → ipapi.co → ip-api.com, timeout 1.5s)
+  5. Langue navigateur (`navigator.languages`)
+  6. Défaut : FR
 - **Sélecteur de langue** : accessible partout dans le UI (dropdown dans le header + footer)
-- **Persistance** : sauvegardée dans le profil utilisateur
+- **Persistance** : sauvegardée dans le profil utilisateur + localStorage
 - **RTL** : support complet pour l'arabe (Tailwind RTL plugin, direction auto)
 - **Dates et nombres** : format localisé (ex: 1 234,56 en FR vs 1,234.56 en EN)
 - **Pluralisation** : gestion des pluriels selon les règles de chaque langue (Laravel trans_choice)
@@ -1804,7 +1818,61 @@ Guide concret pour connecter **n'importe quelle plateforme** (SOS-Expat, e-comme
 - **Fallback** : si une clé manque dans une langue → affichage en anglais (jamais de clé brute)
 - **Variables dans les traductions** : support des paramètres Laravel `:name`, `:count`, etc.
 
-### 17.2 Contenu des Messages Telegram (Multi-langue)
+### 17.2 Routing Multilingue & Slugs Traduits (Pages Publiques)
+
+**Architecture inspirée de SOS-Expat** (`multilingual-system/`) — adaptée côté Laravel Blade SSR.
+
+**Format URL** : `/{langue}-{pays}/{slug-traduit}`
+- Exemples : `/fr-fr/tarifs`, `/en-us/pricing`, `/es-es/precios`, `/de-de/preise`, `/zh-cn/jiage`, `/ar-sa/الأسعار`
+- Le pays est détecté par géolocation : un français en Allemagne voit `/fr-de/tarifs`
+- Fallback pays : mapping langue→pays par défaut (fr→fr, en→us, es→es, de→de, ru→ru, pt→pt, zh→cn, hi→in, ar→sa)
+
+**Slugs traduits** (config Laravel `config/routes-translations.php`) :
+
+| Clé route | FR | EN | ES | DE | AR |
+|---|---|---|---|---|---|
+| pricing | tarifs | pricing | precios | preise | الأسعار |
+| features | fonctionnalites | features | funcionalidades | funktionen | الميزات |
+| faq | faq | faq | preguntas-frecuentes | faq | الأسئلة-الشائعة |
+| blog | blog | blog | blog | blog | المدونة |
+| contact | contact | contact | contacto | kontakt | اتصل-بنا |
+| privacy | confidentialite | privacy-policy | privacidad | datenschutz | الخصوصية |
+| terms | conditions-generales | terms-of-service | terminos | nutzungsbedingungen | الشروط |
+| about | a-propos | about | sobre-nosotros | ueber-uns | من-نحن |
+| register | inscription | register | registro | registrierung | التسجيل |
+| login | connexion | login | iniciar-sesion | anmeldung | تسجيل-الدخول |
+| status | statut | status | estado | status | الحالة |
+| changelog | mises-a-jour | changelog | registro-cambios | aenderungsprotokoll | سجل-التغييرات |
+| compare | comparatif | compare | comparar | vergleich | مقارنة |
+| help | aide | help | ayuda | hilfe | المساعدة |
+| roadmap | feuille-de-route | roadmap | hoja-de-ruta | roadmap | خارطة-الطريق |
+
+**Composants Laravel** :
+- `config/routes-translations.php` : mapping complet clés → slugs × 9 langues
+- `config/locales.php` : langues supportées, mapping langue→pays, métadonnées
+- `app/Services/LanguageDetectionService.php` : détection timezone + géoloc + navigateur
+- `app/Http/Middleware/SetLocale.php` : parse l'URL, redirige si legacy (`/fr/tarifs` → `/fr-fr/tarifs`)
+- `resources/views/components/seo/hreflang-tags.blade.php` : génère les 9 balises hreflang + x-default
+- `resources/views/components/seo/canonical.blade.php` : URL canonique avec locale
+- `app/Console/Commands/GenerateSitemaps.php` : génère un sitemap par locale + sitemap index
+
+**Hreflang tags** (sur chaque page publique) :
+```html
+<link rel="alternate" hreflang="fr" href="https://app.example.com/fr-fr/tarifs" />
+<link rel="alternate" hreflang="en" href="https://app.example.com/en-us/pricing" />
+<link rel="alternate" hreflang="es" href="https://app.example.com/es-es/precios" />
+<link rel="alternate" hreflang="de" href="https://app.example.com/de-de/preise" />
+<link rel="alternate" hreflang="pt" href="https://app.example.com/pt-pt/precos" />
+<link rel="alternate" hreflang="ru" href="https://app.example.com/ru-ru/tseny" />
+<link rel="alternate" hreflang="zh-Hans" href="https://app.example.com/zh-cn/jiage" />
+<link rel="alternate" hreflang="hi" href="https://app.example.com/hi-in/mulya" />
+<link rel="alternate" hreflang="ar" href="https://app.example.com/ar-sa/الأسعار" />
+<link rel="alternate" hreflang="x-default" href="https://app.example.com/en-us/pricing" />
+```
+
+**Scope** : Uniquement les pages publiques (landing, pricing, blog, FAQ, légal, comparatifs, roadmap, etc.). Le dashboard authentifié n'utilise PAS de slugs traduits.
+
+### 17.3 Contenu des Messages Telegram (Multi-langue)
 
 - **Message par langue** : chaque campagne/séquence peut avoir des variantes par langue
 - **Détection** : basée sur le `language_code` Telegram de l'abonné
@@ -2198,7 +2266,7 @@ Le site vitrine est la **porte d'entrée** pour acquérir de nouveaux clients. I
 **SEO Technique** :
 - SSR Blade (rendu serveur, pas de SPA pour les pages publiques)
 - Sitemap XML auto-générée (spatie/laravel-sitemap)
-- URLs localisées : `/fr/tarifs`, `/en/pricing`, `/es/precios`, `/de/preise`...
+- URLs localisées avec slugs traduits : `/fr-fr/tarifs`, `/en-us/pricing`, `/es-es/precios`, `/de-de/preise`, `/zh-cn/jiage`...
 - Balises `hreflang` pour chaque page × chaque langue
 - Schema.org : SoftwareApplication, FAQPage, PricingTable, Article, Organization
 - Open Graph + Twitter Cards pour le partage social
@@ -2261,7 +2329,7 @@ Le site vitrine est la **porte d'entrée** pour acquérir de nouveaux clients. I
 - [ ] Blacklist globale
 - [ ] Emails transactionnels : bienvenue, vérification, facture, relance paiement (§20)
 - [ ] Multilingue backend (FR + EN)
-- [ ] Déploiement : staging + production (Forge + GitHub Actions CI/CD, §26.7)
+- [ ] Déploiement : staging + production (Hetzner VPS + GitHub Actions CI/CD, §26.7)
 
 **Frontend & UI**
 - [ ] Design System : bibliothèque de composants Blade/Livewire (boutons, inputs, modales, tables, cards, badges, toasts, skeleton loaders)
@@ -2303,7 +2371,7 @@ Le site vitrine est la **porte d'entrée** pour acquérir de nouveaux clients. I
 - [ ] Multi-devise (13 devises, taux de change auto)
 - [ ] Batch API (tags en masse, messages en masse, import async)
 - [ ] Add-ons payants : packs abonnés/messages/stockage supplémentaires (§4.3)
-- [ ] Remboursements et crédits Stripe/PayPal + avoirs PDF (§4.3)
+- [ ] Remboursements et crédits Stripe + avoirs PDF (§4.3)
 - [ ] Knowledge base / help center : articles par catégorie, recherche, 9 langues (§5.5)
 - [ ] Système de tickets support (formulaire, priorité par plan, suivi statut, §5.5)
 - [ ] Import depuis concurrents (ManyChat, ChatFuel, SendPulse — CSV + guide migration, §9.7)

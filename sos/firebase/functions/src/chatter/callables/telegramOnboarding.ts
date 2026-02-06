@@ -347,22 +347,41 @@ async function sendTelegramMessage(
  */
 export const generateTelegramLink = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 30,
     // Allow all origins for callable functions (Firebase SDK handles auth)
     cors: true,
   },
   async (request): Promise<GenerateLinkOutput> => {
-    ensureInitialized();
+    // ULTRA DEBUG - Log at the very first line
+    console.log("[generateTelegramLink] ===== FUNCTION CALLED =====");
+    logger.info("[generateTelegramLink] ===== FUNCTION ENTRY =====", {
+      hasAuth: !!request.auth,
+      hasData: !!request.data,
+      timestamp: new Date().toISOString(),
+    });
+
+    try {
+      console.log("[generateTelegramLink] Calling ensureInitialized...");
+      ensureInitialized();
+      console.log("[generateTelegramLink] ensureInitialized OK");
+    } catch (initError) {
+      console.error("[generateTelegramLink] ensureInitialized FAILED:", initError);
+      logger.error("[generateTelegramLink] Init failed", { initError });
+      throw new HttpsError("internal", "Function initialization failed");
+    }
 
     // 1. Check authentication
     if (!request.auth) {
+      logger.warn("[generateTelegramLink] No auth - rejecting");
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
     const userId = request.auth.uid;
     const input = request.data as GenerateLinkInput;
+
+    console.log("[generateTelegramLink] userId:", userId, "inputRole:", input?.role);
 
     try {
       logger.info("[generateTelegramLink] Starting", { userId, inputRole: input?.role });
@@ -421,13 +440,24 @@ export const generateTelegramLink = onCall(
         message: "Open Telegram and click the link to connect your account!",
       };
     } catch (error) {
+      console.error("[generateTelegramLink] CAUGHT ERROR:", error);
+
       if (error instanceof HttpsError) {
+        console.log("[generateTelegramLink] Re-throwing HttpsError:", error.code, error.message);
         throw error;
       }
 
       // Log detailed error for debugging
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
+
+      console.error("[generateTelegramLink] Error details:", {
+        errorMessage,
+        errorStack,
+        errorType: typeof error,
+        errorConstructor: error?.constructor?.name,
+      });
+
       logger.error("[generateTelegramLink] Error", {
         userId,
         errorMessage,
@@ -457,7 +487,7 @@ export const generateTelegramLink = onCall(
  */
 export const checkTelegramLinkStatus = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 15,
     cors: true,
@@ -549,7 +579,7 @@ export const checkTelegramLinkStatus = onCall(
  */
 export const telegramChatterBotWebhook = onRequest(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 30,
     // Allow unauthenticated access (Telegram servers need to call this)
@@ -824,7 +854,7 @@ export const telegramChatterBotWebhook = onRequest(
  */
 export const skipTelegramOnboarding = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 15,
     cors: true,

@@ -67,13 +67,14 @@ const ChatterTelegramOnboarding: React.FC = () => {
 
   // Refs
   const statusCheckInterval = useRef<NodeJS.Timeout | null>(null);
+  const errorCountRef = useRef<number>(0);
 
   // Routes
   const dashboardRoute = `/${getTranslatedRouteSlug('chatter-dashboard' as RouteKey, langCode)}`;
   const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
 
-  // Firebase Functions
-  const functions = getFunctions(undefined, 'europe-west1');
+  // Firebase Functions - Using europe-west3 for Telegram functions to avoid quota issues
+  const functions = getFunctions(undefined, 'europe-west3');
 
   // ============================================================================
   // DEBUG LOGS
@@ -180,6 +181,8 @@ const ChatterTelegramOnboarding: React.FC = () => {
 
       console.log('[TelegramOnboarding] checkTelegramLinkStatus result:', result.data);
       setLinkStatus(result.data);
+      // Reset error count on success
+      errorCountRef.current = 0;
 
       if (result.data.isLinked) {
         console.log('[TelegramOnboarding] Linked! Stopping polling and going to success');
@@ -194,8 +197,16 @@ const ChatterTelegramOnboarding: React.FC = () => {
       }
     } catch (err) {
       console.error('[TelegramOnboarding] Error checking status:', err);
+      errorCountRef.current += 1;
+
+      // Stop polling after 5 consecutive errors
+      if (errorCountRef.current >= 5) {
+        console.log('[TelegramOnboarding] Too many errors, stopping polling');
+        stopStatusCheck();
+        setError('Erreur de connexion. Cliquez sur "Ouvrir Telegram" puis revenez ici.');
+      }
     }
-  }, [functions, refreshUser]);
+  }, [functions, refreshUser, stopStatusCheck]);
 
   const startStatusCheck = useCallback(() => {
     console.log('[TelegramOnboarding] Starting status polling');

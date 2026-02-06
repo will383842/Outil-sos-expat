@@ -103,14 +103,28 @@ export const getChatterDashboard = onCall(
     cors: true,
   },
   async (request): Promise<GetChatterDashboardResponse> => {
-    ensureInitialized();
+    // ULTRA DEBUG - Log immediately
+    console.log("[getChatterDashboard] ===== FUNCTION CALLED =====");
+    logger.info("[getChatterDashboard] ===== FUNCTION ENTRY =====", {
+      hasAuth: !!request.auth,
+      timestamp: new Date().toISOString(),
+    });
+
+    try {
+      ensureInitialized();
+    } catch (initError) {
+      console.error("[getChatterDashboard] ensureInitialized FAILED:", initError);
+      throw new HttpsError("internal", "Function initialization failed");
+    }
 
     // 1. Check authentication
     if (!request.auth) {
+      logger.warn("[getChatterDashboard] No auth - rejecting");
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
     const userId = request.auth.uid;
+    console.log("[getChatterDashboard] userId:", userId);
     const db = getFirestore();
 
     try {
