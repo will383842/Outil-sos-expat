@@ -13,21 +13,16 @@ import {
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
-// Firebase configuration from environment variables
+// Firebase configuration — SOS Urgently (sos-urgently-ac307)
+// Web config keys are public by design; security is enforced by Firebase Security Rules.
 const firebaseConfig: FirebaseOptions = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID as string,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string || 'AIzaSyCLp02v_ywBw67d4VD7rQ2tCQUdKp83CT8',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string || 'sos-urgently-ac307.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string || 'sos-urgently-ac307',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string || 'sos-urgently-ac307.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string || '268195823113',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID as string || '1:268195823113:web:10bf2e5bacdc1816f182d8',
 };
-
-// Validate required config
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error('Firebase configuration missing. Check your .env file.');
-  throw new Error('Firebase configuration incomplete');
-}
 
 // Initialize app (HMR-safe)
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
