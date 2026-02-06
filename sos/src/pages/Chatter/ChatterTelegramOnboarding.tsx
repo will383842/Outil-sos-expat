@@ -139,8 +139,9 @@ const ChatterTelegramOnboarding: React.FC = () => {
 
     try {
       console.log('[TelegramOnboarding] Calling generateTelegramLink function...');
-      const generateFn = httpsCallable<unknown, TelegramLinkData>(functions, 'generateTelegramLink');
-      const result = await generateFn({});
+      const generateFn = httpsCallable<{ role?: string }, TelegramLinkData>(functions, 'generateTelegramLink');
+      // Pass role explicitly to avoid detection issues
+      const result = await generateFn({ role: 'chatter' });
 
       console.log('[TelegramOnboarding] generateTelegramLink result:', result.data);
 

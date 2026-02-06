@@ -217,16 +217,44 @@ async function getOrCreateLink(
   const now = Timestamp.now();
 
   // Check for existing pending link
-  const existingQuery = await db
-    .collection("telegram_onboarding_links")
-    .where("userId", "==", userId)
-    .where("status", "==", "pending")
-    .where("expiresAt", ">", now)
-    .limit(1)
-    .get();
+  // Note: This query requires a composite index on (userId, status, expiresAt)
+  // If index doesn't exist, we fall back to a simpler query
+  let existingDoc = null;
 
-  if (!existingQuery.empty) {
-    const existingDoc = existingQuery.docs[0];
+  try {
+    const existingQuery = await db
+      .collection("telegram_onboarding_links")
+      .where("userId", "==", userId)
+      .where("status", "==", "pending")
+      .where("expiresAt", ">", now)
+      .limit(1)
+      .get();
+
+    if (!existingQuery.empty) {
+      existingDoc = existingQuery.docs[0];
+    }
+  } catch (indexError) {
+    // Fallback: simpler query without expiresAt comparison
+    logger.warn("[getOrCreateLink] Index error, using fallback query", { indexError });
+    const fallbackQuery = await db
+      .collection("telegram_onboarding_links")
+      .where("userId", "==", userId)
+      .where("status", "==", "pending")
+      .orderBy("createdAt", "desc")
+      .limit(1)
+      .get();
+
+    if (!fallbackQuery.empty) {
+      const doc = fallbackQuery.docs[0];
+      const data = doc.data() as TelegramOnboardingLink;
+      // Manual expiry check
+      if (data.expiresAt.toMillis() > now.toMillis()) {
+        existingDoc = doc;
+      }
+    }
+  }
+
+  if (existingDoc) {
     logger.info("[getOrCreateLink] Returning existing link", {
       userId,
       code: existingDoc.id,
@@ -343,10 +371,14 @@ export const generateTelegramLink = onCall(
     const input = request.data as GenerateLinkInput;
 
     try {
+      logger.info("[generateTelegramLink] Starting", { userId, inputRole: input?.role });
+
       // 2. Determine role
       let role: TelegramOnboardingRole | undefined = input?.role;
       if (!role) {
+        logger.info("[generateTelegramLink] No role in input, detecting from user doc");
         const detectedRole = await getUserRole(userId);
+        logger.info("[generateTelegramLink] Detected role", { userId, detectedRole });
         if (!detectedRole) {
           throw new HttpsError(
             "failed-precondition",
@@ -399,8 +431,25 @@ export const generateTelegramLink = onCall(
         throw error;
       }
 
-      logger.error("[generateTelegramLink] Error", { userId, error });
-      throw new HttpsError("internal", "Failed to generate Telegram link");
+      // Log detailed error for debugging
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error("[generateTelegramLink] Error", {
+        userId,
+        errorMessage,
+        errorStack,
+        error,
+      });
+
+      // Check for index error
+      if (errorMessage.includes("index") || errorMessage.includes("Index")) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Database index required. Please deploy Firestore indexes."
+        );
+      }
+
+      throw new HttpsError("internal", `Failed to generate Telegram link: ${errorMessage}`);
     }
   }
 );
