@@ -11,12 +11,14 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
-import Header from '@/components/layout/Header';
+import Layout from '@/components/layout/Layout';
+import SEOHead from '@/components/layout/SEOHead';
+import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import {
   ArrowRight,
   Check,
@@ -195,6 +197,7 @@ const HREFLANG_MAP = [
 const ChatterLanding: React.FC = () => {
   const navigate = useLocaleNavigate();
   const intl = useIntl();
+  const location = useLocation();
   const { language } = useApp();
   const langCode = (language || 'fr') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
@@ -292,56 +295,31 @@ const ChatterLanding: React.FC = () => {
 
   const teamEarnings = teamSize * 10;
 
-  return (
-    <>
-      <Helmet>
-        <html lang={htmlLang} />
-        <title>{intl.formatMessage({ id: 'chatter.landing.seo.title' })}</title>
-        <meta name="description" content={intl.formatMessage({ id: 'chatter.landing.seo.description' })} />
-        <meta name="keywords" content={intl.formatMessage({ id: 'chatter.landing.seo.keywords' })} />
-        <meta name="author" content="SOS-Expat" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#991B1B" />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        {/* Canonical + Hreflang */}
-        <link rel="canonical" href={canonicalUrl} />
-        {HREFLANG_MAP.map(h => (
-          <link key={h.lang} rel="alternate" hrefLang={h.lang} href={`${BASE_URL}/${h.locale}/${h.slug}`} />
-        ))}
-        <link rel="alternate" hrefLang="x-default" href={`${BASE_URL}/fr-fr/devenir-chatter`} />
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:title" content={intl.formatMessage({ id: 'chatter.landing.seo.ogTitle' })} />
-        <meta property="og:description" content={intl.formatMessage({ id: 'chatter.landing.seo.ogDescription' })} />
-        <meta property="og:image" content={`${BASE_URL}/og-image.png`} />
-        <meta property="og:site_name" content="SOS-Expat" />
-        <meta property="og:locale" content={currentHreflang.ogLocale} />
-        {HREFLANG_MAP.filter(h => h.lang !== htmlLang).map(h => (
-          <meta key={h.lang} property="og:locale:alternate" content={h.ogLocale} />
-        ))}
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={intl.formatMessage({ id: 'chatter.landing.seo.ogTitle' })} />
-        <meta name="twitter:description" content={intl.formatMessage({ id: 'chatter.landing.seo.ogDescription' })} />
-        <meta name="twitter:image" content={`${BASE_URL}/og-image.png`} />
-        {/* AI/AEO - Optimized for LLM crawlers (ChatGPT, Perplexity, Google AI Overviews) */}
-        <meta name="ai-summary" content={intl.formatMessage({ id: 'chatter.landing.seo.aiSummary' })} />
-        <meta name="ai-content-description" content={intl.formatMessage({ id: 'chatter.landing.seo.aiSummary' })} />
-        <meta name="ai-questions" content={intl.formatMessage({ id: 'chatter.landing.seo.keywords.aio' })} />
-        {/* Structured Data (4 JSON-LD blocks) */}
-        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(webAppJsonLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(organizationJsonLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
-      </Helmet>
+  // SEO titles
+  const seoTitle = intl.formatMessage({ id: 'chatter.landing.seo.title' });
+  const seoDescription = intl.formatMessage({ id: 'chatter.landing.seo.description' });
 
+  return (
+    <Layout showFooter={false}>
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        ogImage="/og-chatter-2026.jpg"
+        ogType="website"
+        contentType="LandingPage"
+      />
+      <HreflangLinks pathname={location.pathname} />
+
+      {/* Custom styles */}
       <style>{globalStyles}</style>
 
-      {/* Header SOS-Expat standard */}
-      <Header />
+      {/* Structured Data (4 JSON-LD blocks) */}
+      <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
+      <script type="application/ld+json">{JSON.stringify(webAppJsonLd)}</script>
+      <script type="application/ld+json">{JSON.stringify(organizationJsonLd)}</script>
+      <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
 
-      <main className="chatter-landing bg-black text-white">
+      <div className="chatter-landing bg-black text-white">
 
         {/* ================================================================
             HERO - MOBILE-FIRST
@@ -774,8 +752,8 @@ const ChatterLanding: React.FC = () => {
           </div>
         )}
 
-      </main>
-    </>
+      </div>
+    </Layout>
   );
 };
 
