@@ -33,6 +33,14 @@ import {
 // STYLES - Mobile-first with performance hints
 // ============================================================================
 const globalStyles = `
+  /* FORCE font sizes on mobile - override index.css clamp() rules */
+  @media (max-width: 768px) {
+    .chatter-landing h1 { font-size: 2.25rem !important; } /* 36px */
+    .chatter-landing h2 { font-size: 1.875rem !important; } /* 30px */
+    .chatter-landing h3 { font-size: 1.5rem !important; } /* 24px */
+    .chatter-landing p { font-size: 1rem !important; } /* 16px base */
+  }
+
   /* Animations */
   @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
