@@ -239,6 +239,39 @@ const ChatterTelegramOnboarding: React.FC = () => {
   };
 
   // ============================================================================
+  // SKIP TELEGRAM (continue without)
+  // ============================================================================
+
+  const handleSkip = async () => {
+    console.log('[TelegramOnboarding] handleSkip called');
+    setLoading(true);
+    setError(null);
+
+    try {
+      const skipFn = httpsCallable<unknown, { success: boolean; message: string }>(
+        getFunctions(undefined, 'europe-west3'),
+        'skipTelegramOnboarding'
+      );
+      const result = await skipFn({});
+
+      console.log('[TelegramOnboarding] skipTelegramOnboarding result:', result.data);
+
+      if (result.data.success) {
+        await refreshUser();
+        navigate(dashboardRoute, { replace: true });
+      } else {
+        setError(result.data.message || 'Erreur lors du skip');
+      }
+    } catch (err: unknown) {
+      console.error('[TelegramOnboarding] Error skipping:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(`Erreur: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============================================================================
   // LOADING STATE
   // ============================================================================
 
@@ -335,6 +368,15 @@ const ChatterTelegramOnboarding: React.FC = () => {
       <p className="text-xs text-gray-500 text-center">
         Telegram est requis pour recevoir vos notifications et bonus
       </p>
+
+      {/* Skip option */}
+      <button
+        onClick={handleSkip}
+        disabled={loading}
+        className="text-xs text-gray-600 hover:text-gray-400 underline"
+      >
+        Continuer sans Telegram (vous perdrez le bonus de $50)
+      </button>
     </motion.div>
   );
 
