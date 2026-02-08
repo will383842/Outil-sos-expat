@@ -57,6 +57,16 @@
   }
 }
 
+/* Wizard overlay scroll lock
+ * Higher specificity (0,1,1) beats mobile media query body rule (0,0,1)
+ * Both use !important, so specificity decides the winner */
+body.wizard-scroll-lock {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  overflow: hidden !important;
+}
+
 /* Custom components */
 @layer components {
   .btn-primary {
@@ -278,9 +288,10 @@
   }
 
   /* ⚠️ FIX 2026: Force ALL grid and flex containers to stay within viewport */
+  /* Use 'clip' not 'hidden' — hidden creates a scroll context that captures touch events on iOS */
   .grid, [class*="grid-cols"] {
     max-width: 100% !important;
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
   }
 
   /* ⚠️ FIX 2026: Amélioration lisibilité texte sur mobile */
@@ -593,6 +604,12 @@
   /* SUPPRIMÉ: .touch-manipulation:active car cela affecte les sections */
   button:active:not(.carousel-card-button):not(.card-hover-effect) {
     transform: scale(0.98) !important;
+  }
+
+  /* Wizard buttons: disable active transform — the 2% shrink causes iOS to
+     interpret the position shift as finger movement, cancelling the tap */
+  [data-wizard] button:active {
+    transform: none !important;
   }
 
   /* Force immediate response - no transition delays on touch devices */
