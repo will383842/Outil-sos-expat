@@ -58,7 +58,8 @@ import { setPersistence, browserLocalPersistence } from "firebase/auth";
 import { auth, db } from "../config/firebase";
 import { trackMetaCompleteRegistration, trackMetaStartRegistration } from "../utils/metaPixel";
 import { trackAdRegistration } from "../services/adAttributionService";
-import { getStoredReferralTracking } from "../hooks/useAffiliate";
+import { getStoredReferralTracking, clearStoredReferral } from "../hooks/useAffiliate";
+import { getStoredReferral, getStoredReferralCode as getStoredRefCode } from "../utils/referralStorage";
 import "../styles/multi-language-select.css";
 
 // Lazy imports pour optimisation du bundle
@@ -144,6 +145,8 @@ interface CreateUserData {
   };
   // AFFILIATE: Include UTM tracking data for analytics
   referralTracking?: ReferralTracking;
+  // AFFILIATE: When the referral code was captured (for 30-day window enforcement)
+  referralCapturedAt?: string;
 }
 
 interface FormData {
@@ -420,8 +423,8 @@ const RegisterClient: React.FC = () => {
   const rawRedirect = redirectFromStorage || redirectFromParams || "/dashboard";
   const redirect = isAllowedRedirect(rawRedirect) ? rawRedirect : "/dashboard";
   const prefillEmail = searchParams.get("email") || "";
-  // AFFILIATE: Capture referral code from URL (?ref=CODE)
-  const referralCode = searchParams.get("ref") || "";
+  // AFFILIATE: Capture referral code from URL (?ref=CODE) or fallback to stored code
+  const referralCode = searchParams.get("ref") || getStoredRefCode('client') || "";
 
   const { register, loginWithGoogle, isLoading, error, user, authInitialized, isFullyReady } = useAuth();
 
@@ -1100,6 +1103,10 @@ const RegisterClient: React.FC = () => {
             const tracking = getStoredReferralTracking();
             return tracking ? { referralTracking: tracking } : {};
           })()),
+          // AFFILIATE: Include capturedAt for backend 30-day window enforcement
+          ...(referralCode && {
+            referralCapturedAt: getStoredReferral('client')?.capturedAt || new Date().toISOString(),
+          }),
         };
 
         await register(
@@ -1117,6 +1124,9 @@ const RegisterClient: React.FC = () => {
         trackAdRegistration({
           contentName: 'client_registration',
         });
+
+        // AFFILIATE: Clear stored referral after successful signup
+        clearStoredReferral();
 
         // 🔍 [BOOKING_AUTH_DEBUG] Log navigation after registration
         console.log('[BOOKING_AUTH_DEBUG] ✅ RegisterClient REGISTRATION SUCCESS', {

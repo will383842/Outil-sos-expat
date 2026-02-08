@@ -1067,6 +1067,7 @@ export interface RegisterGroupAdminRequest {
   groupDescription?: string;
 
   recruitmentCode?: string;
+  referralCapturedAt?: string; // ISO date - when the referral code was captured (for 30-day window enforcement)
 }
 
 /**

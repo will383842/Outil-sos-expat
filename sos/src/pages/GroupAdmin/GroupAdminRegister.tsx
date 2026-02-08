@@ -27,6 +27,7 @@ import {
   GROUP_TYPE_LABELS,
   GROUP_SIZE_LABELS,
 } from '@/types/groupAdmin';
+import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 
 // ============================================================================
 // CONSTANTS
@@ -65,7 +66,24 @@ const GroupAdminRegister: React.FC = () => {
   const navigate = useLocaleNavigate();
   const { user, register, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
-  const recruitmentCode = searchParams.get('ref') || '';
+
+  // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
+  // If found in URL, persist to localStorage with 30-day expiration
+  // Otherwise, fallback to stored code
+  const recruitmentCode = (() => {
+    const fromUrl = searchParams.get('ref')
+      || searchParams.get('referralCode')
+      || searchParams.get('code')
+      || searchParams.get('sponsor')
+      || '';
+
+    if (fromUrl) {
+      storeReferralCode(fromUrl, 'groupAdmin', 'recruitment');
+      return fromUrl;
+    }
+
+    return getStoredReferralCode('groupAdmin') || '';
+  })();
 
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -223,12 +241,15 @@ const GroupAdminRegister: React.FC = () => {
         groupLanguage: formData.groupLanguage,
         groupDescription: formData.groupDescription || undefined,
         recruitmentCode: recruitmentCode || undefined,
+        referralCapturedAt: getStoredReferral('groupAdmin')?.capturedAt || new Date().toISOString(),
       });
 
       const data = result.data as { success: boolean; affiliateCodeClient: string; affiliateCodeRecruitment: string };
 
       if (data.success) {
         setSuccess(true);
+        // Clear stored referral code after successful registration
+        clearStoredReferral('groupAdmin');
         // Refresh user data to ensure role is updated in context
         await refreshUser();
         setAffiliateCodes({

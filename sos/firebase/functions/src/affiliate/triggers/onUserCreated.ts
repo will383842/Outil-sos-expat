@@ -120,6 +120,24 @@ export const affiliateOnUserCreated = onDocumentCreated(
 
       const pendingReferralCode = userData.pendingReferralCode;
       if (pendingReferralCode) {
+        // Enforce 30-day attribution window if capturedAt is provided
+        const referralCapturedAt = userData.referralCapturedAt;
+        let referralExpired = false;
+        if (referralCapturedAt) {
+          const capturedDate = new Date(referralCapturedAt);
+          const windowMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+          if (Date.now() - capturedDate.getTime() > windowMs) {
+            logger.warn("[affiliateOnUserCreated] Referral code expired (>30 days)", {
+              userId,
+              code: pendingReferralCode,
+              capturedAt: referralCapturedAt,
+              expiredAgo: `${Math.round((Date.now() - capturedDate.getTime()) / (24 * 60 * 60 * 1000))} days`,
+            });
+            referralExpired = true;
+          }
+        }
+
+        if (!referralExpired) {
         const normalizedCode = normalizeAffiliateCode(pendingReferralCode);
         const referrer = await resolveAffiliateCode(normalizedCode);
 
@@ -163,6 +181,7 @@ export const affiliateOnUserCreated = onDocumentCreated(
             code: normalizedCode,
           });
         }
+        } // end if (!referralExpired)
       }
 
       // 7. Prepare affiliate fields

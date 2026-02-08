@@ -34,6 +34,7 @@ import {
   FormButton,
   formStyles,
 } from '@/components/forms/FormElements';
+import { clearStoredReferral } from '@/utils/referralStorage';
 
 // Get country name based on locale
 const getCountryName = (entry: PhoneCodeEntry, locale: string): string => {
@@ -290,6 +291,8 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({ referra
       if (data.success) {
         console.log('[InfluencerRegister] Registration completed successfully');
         setSuccess(true);
+        // Clear stored referral code after successful registration
+        clearStoredReferral('influencer');
         // Refresh user data to ensure role is updated in context
         await refreshUser();
         setTimeout(() => {

@@ -1256,6 +1256,9 @@ export interface RegisterBloggerInput {
 
   // Definitive role acknowledgment (REQUIRED)
   definitiveRoleAcknowledged: boolean;
+
+  recruiterCode?: string; // Recruitment code from URL
+  referralCapturedAt?: string; // ISO date - when the referral code was captured (for 30-day window enforcement)
 }
 
 export interface RegisterBloggerResponse {

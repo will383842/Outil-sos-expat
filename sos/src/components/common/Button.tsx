@@ -194,15 +194,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   };
 
   // Handle touch end for instant response on mobile
+  // ✅ FIX: Ne pas appeler event.preventDefault() car cela empêche le click natif
+  // et donc la soumission du formulaire sur mobile (type="submit")
   const handleTouchEnd = (event: React.TouchEvent<HTMLButtonElement>) => {
     if (disabled || loading) {
       event.preventDefault();
       return;
     }
-    // Prevent ghost click by stopping propagation
-    event.preventDefault();
-    // Trigger the onClick handler
-    onClick?.(event as unknown as React.MouseEvent<HTMLButtonElement>);
+    // Laisser le comportement natif se produire (click → form submit)
+    // Ne PAS appeler event.preventDefault() ici
   };
 
   // Get appropriate spinner color based on variant

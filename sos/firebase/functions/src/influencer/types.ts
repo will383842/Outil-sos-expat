@@ -1210,6 +1210,8 @@ export interface RegisterInfluencerInput {
     website?: string;
     other?: string;
   };
+  recruiterCode?: string; // Recruitment code from URL
+  referralCapturedAt?: string; // ISO date - when the referral code was captured (for 30-day window enforcement)
 }
 
 export interface RegisterInfluencerResponse {

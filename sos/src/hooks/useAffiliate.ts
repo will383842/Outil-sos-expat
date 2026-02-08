@@ -494,8 +494,13 @@ export function useAffiliateAdmin(): UseAffiliateAdminReturn {
 // REFERRAL CODE CAPTURE HOOK
 // ============================================================================
 
-const REFERRAL_CODE_KEY = "sos_referral_code";
-const REFERRAL_UTM_KEY = "sos_referral_utm";
+import {
+  storeReferralCode as storeCode,
+  getStoredReferral as getStored,
+  getStoredReferralCode as getCode,
+  clearStoredReferral as clearStored,
+  type StoredReferral,
+} from "../utils/referralStorage";
 
 interface ReferralTracking {
   code: string;
@@ -525,21 +530,26 @@ export function useReferralCapture(): {
 
     if (refCode) {
       // Capture UTM parameters
-      const tracking: ReferralTracking = {
-        code: refCode.toUpperCase(),
+      const tracking = {
         utmSource: urlParams.get("utm_source") || undefined,
         utmMedium: urlParams.get("utm_medium") || undefined,
         utmCampaign: urlParams.get("utm_campaign") || undefined,
         landingPage: window.location.pathname,
-        capturedAt: new Date().toISOString(),
       };
 
-      // Persist to localStorage
-      localStorage.setItem(REFERRAL_CODE_KEY, tracking.code);
-      localStorage.setItem(REFERRAL_UTM_KEY, JSON.stringify(tracking));
+      // Persist to localStorage via shared utility (30-day expiration)
+      storeCode(refCode, 'client', 'client', tracking);
 
-      setReferralCode(tracking.code);
-      setReferralTracking(tracking);
+      const stored = getStored('client');
+      setReferralCode(stored?.code ?? refCode.toUpperCase());
+      setReferralTracking(stored ? {
+        code: stored.code,
+        utmSource: stored.utmSource,
+        utmMedium: stored.utmMedium,
+        utmCampaign: stored.utmCampaign,
+        landingPage: stored.landingPage,
+        capturedAt: stored.capturedAt,
+      } : null);
 
       // Clean URL
       urlParams.delete("ref");
@@ -549,26 +559,25 @@ export function useReferralCapture(): {
         : window.location.pathname;
       window.history.replaceState({}, "", newUrl);
     } else {
-      // Check localStorage for existing code
-      const storedCode = localStorage.getItem(REFERRAL_CODE_KEY);
-      const storedTracking = localStorage.getItem(REFERRAL_UTM_KEY);
+      // Check localStorage for existing code (returns null if expired)
+      const stored = getStored('client');
 
-      if (storedCode) {
-        setReferralCode(storedCode);
-        if (storedTracking) {
-          try {
-            setReferralTracking(JSON.parse(storedTracking));
-          } catch {
-            // Invalid JSON, ignore
-          }
-        }
+      if (stored) {
+        setReferralCode(stored.code);
+        setReferralTracking({
+          code: stored.code,
+          utmSource: stored.utmSource,
+          utmMedium: stored.utmMedium,
+          utmCampaign: stored.utmCampaign,
+          landingPage: stored.landingPage,
+          capturedAt: stored.capturedAt,
+        });
       }
     }
   }, []);
 
   const clearReferral = useCallback(() => {
-    localStorage.removeItem(REFERRAL_CODE_KEY);
-    localStorage.removeItem(REFERRAL_UTM_KEY);
+    clearStored('client');
     setReferralCode(null);
     setReferralTracking(null);
   }, []);
@@ -584,29 +593,28 @@ export function useReferralCapture(): {
  * Get the stored referral code (for use in signup)
  */
 export function getStoredReferralCode(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(REFERRAL_CODE_KEY);
+  return getCode('client');
 }
 
 /**
  * Get the stored referral tracking (for use in signup)
  */
 export function getStoredReferralTracking(): ReferralTracking | null {
-  if (typeof window === "undefined") return null;
-  const stored = localStorage.getItem(REFERRAL_UTM_KEY);
+  const stored = getStored('client');
   if (!stored) return null;
-  try {
-    return JSON.parse(stored);
-  } catch {
-    return null;
-  }
+  return {
+    code: stored.code,
+    utmSource: stored.utmSource,
+    utmMedium: stored.utmMedium,
+    utmCampaign: stored.utmCampaign,
+    landingPage: stored.landingPage,
+    capturedAt: stored.capturedAt,
+  };
 }
 
 /**
  * Clear stored referral (after successful signup)
  */
 export function clearStoredReferral(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(REFERRAL_CODE_KEY);
-  localStorage.removeItem(REFERRAL_UTM_KEY);
+  clearStored('client');
 }

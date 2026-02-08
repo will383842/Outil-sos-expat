@@ -22,6 +22,7 @@ import ProviderOnlineManager from './components/providers/ProviderOnlineManager'
 import { PayPalProvider } from './contexts/PayPalContext';
 // AFFILIATE: Capture referral codes from URL
 import { useReferralCapture } from './hooks/useAffiliate';
+import { migrateFromLegacyStorage } from './utils/referralStorage';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
 import enMessages from "./helper/en.json";
 import esMessages from "./helper/es.json";
@@ -629,6 +630,11 @@ const TrafficSourceCapture: React.FC = () => {
 const ReferralCodeCapture: React.FC = () => {
   // Hook handles all capture logic: reads URL, persists to localStorage, cleans URL
   const { referralCode, referralTracking } = useReferralCapture();
+
+  // Migrate legacy localStorage keys to new format (runs once)
+  useEffect(() => {
+    migrateFromLegacyStorage();
+  }, []);
 
   useEffect(() => {
     if (referralCode) {

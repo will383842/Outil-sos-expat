@@ -2621,6 +2621,161 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= LAWYERS COLLECTION =================
+    // Collection utilisée par Stripe KYC (getAccountSession)
+    match /lawyers/{lawyerId} {
+      allow read: if (isAuthenticated() && isOwner(lawyerId)) || isAdmin() || isDev();
+      allow create: if isAuthenticated() && isOwner(lawyerId);
+      allow update: if (isOwner(lawyerId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['stripeAccountId', 'stripeAccountStatus']))
+                       || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= EXPATS COLLECTION =================
+    // Collection utilisée par Stripe KYC (getAccountSession)
+    match /expats/{expatId} {
+      allow read: if (isAuthenticated() && isOwner(expatId)) || isAdmin() || isDev();
+      allow create: if isAuthenticated() && isOwner(expatId);
+      allow update: if (isOwner(expatId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['stripeAccountId', 'stripeAccountStatus']))
+                       || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= BLOGGER PROMO WIDGETS =================
+    match /blogger_promo_widgets/{widgetId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= REFUND REQUESTS =================
+    match /refund_requests/{requestId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid ||
+                   resource.data.clientId == request.auth.uid ||
+                   isAdmin() || isDev());
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= PLATFORM COSTS (Finance) =================
+    match /platform_costs/{costId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions uniquement
+    }
+
+    // ================= TWILIO USAGE (Finance) =================
+    match /twilio_usage/{usageId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions uniquement
+    }
+
+    // ================= FINANCE EXPORTS =================
+    match /finance_exports/{exportId} {
+      allow read: if isAdmin() || isDev();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin() || isDev();
+    }
+
+    // ================= RECONCILIATION LOGS =================
+    match /reconciliation_logs/{logId} {
+      allow read: if isAdmin() || isDev();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ================= AI USAGE LOGS =================
+    match /ai_usage_logs/{logId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions uniquement
+    }
+
+    // ================= CALL ERRORS =================
+    match /call_errors/{errorId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions uniquement
+    }
+
+    // ================= COUNTRY SETTINGS =================
+    // Config pays (AppContext + AdminCountries)
+    match /country_settings/{countryId} {
+      allow read: if true; // Public - needed by AppContext on startup
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= LEGAL DOCUMENTS =================
+    // CGU, Privacy, Cookies, Terms (public pages + admin)
+    match /legal_documents/{docId} {
+      allow read: if true; // Public - Terms/Privacy/Cookies pages
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= HELP CENTER =================
+    match /help_categories/{categoryId} {
+      allow read: if true; // Public - Help center
+      allow write: if isAdmin() || isDev();
+    }
+
+    match /help_articles/{articleId} {
+      allow read: if true; // Public - Help center / SEO
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= REVIEWS =================
+    match /reviews/{reviewId} {
+      allow read: if true; // Public - provider ratings
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= BOOKING REQUESTS =================
+    match /booking_requests/{requestId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.clientId == request.auth.uid ||
+                   resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+                    (resource.data.clientId == request.auth.uid ||
+                     resource.data.providerId == request.auth.uid ||
+                     isAdmin() || isDev());
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= EMAIL LOGS =================
+    match /email_logs/{logId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions uniquement
+    }
+
+    // ================= CHATTER EARLY ADOPTER COUNTERS =================
+    match /chatter_early_adopter_counters/{counterId} {
+      allow read: if true; // Public - landing page counters
+      allow write: if false; // Cloud Functions uniquement
+    }
+
+    // ================= CAPI EVENTS (Facebook) =================
+    match /capi_events/{eventId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions uniquement
+    }
+
+    // ================= GOOGLE ADS EVENTS =================
+    match /google_ads_events/{eventId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions uniquement
+    }
+
+    // ================= AD CONVERSIONS =================
+    match /ad_conversions/{conversionId} {
+      allow read: if isAdmin() || isDev();
+      allow create: if isAuthenticated(); // Frontend tracking
+      allow update, delete: if isAdmin() || isDev();
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production

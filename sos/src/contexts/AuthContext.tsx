@@ -698,10 +698,11 @@ const createUserDocumentInFirestore = async (
 
       // 3️⃣ CRÉER AUSSI dans lawyers/expats pour compatibilité avec getAccountSession
       // Cette collection est attendue par la vérification Stripe KYC
+      // ✅ FIX: Non-bloquant - l'inscription ne doit pas échouer si cette écriture échoue
       const providerCollectionName = additionalData.role === 'lawyer' ? 'lawyers' : 'expats';
       const providerRef = doc(db, providerCollectionName, firebaseUser.uid);
 
-      await setDoc(providerRef, {
+      try { await setDoc(providerRef, {
         id: firebaseUser.uid,
         uid: firebaseUser.uid,
         type: additionalData.role,
@@ -748,6 +749,11 @@ const createUserDocumentInFirestore = async (
       });
 
       console.log(`✅ [Auth] Profil créé dans ${providerCollectionName}/${firebaseUser.uid} pour KYC Stripe`);
+      } catch (providerCollErr) {
+        // ✅ FIX: Ne pas bloquer l'inscription si l'écriture dans lawyers/expats échoue
+        // Le document sera créé par Cloud Function lors du KYC Stripe si nécessaire
+        console.warn(`⚠️ [Auth] Écriture non-bloquante dans ${providerCollectionName} échouée:`, providerCollErr);
+      }
     }
     
     console.log('✅ User document created with verificationStatus:', approvalFields.verificationStatus);
@@ -2142,6 +2148,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       console.log("[DEBUG] " + "🔵 REGISTER: createUserWithEmailAndPassword...");
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       console.log("[DEBUG] " + "✅ REGISTER: User créé!\n\nUID: " + cred.user.uid);
+
+      // ✅ FIX: Force token refresh pour que Firestore reconnaisse le nouvel utilisateur
+      // Sans cela, les règles Firestore voient request.auth == null → permission-denied
+      console.log("[DEBUG] " + "🔄 REGISTER: Token refresh pour Firestore...");
+      await cred.user.getIdToken(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // 🔍 [BOOKING_AUTH_DEBUG] Log successful user creation
       console.log('[BOOKING_AUTH_DEBUG] ✅ AuthContext.register() USER CREATED', {

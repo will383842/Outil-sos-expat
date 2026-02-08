@@ -472,9 +472,12 @@ const useCameraCapture = (
 
       const video = document.createElement('video');
       video.autoplay = true;
+      video.muted = true; // ✅ FIX: Required for autoplay on desktop browsers
       (video as HTMLVideoElement).playsInline = true; // iOS
       video.className = 'w-full h-64 object-cover rounded-lg bg-black';
       (video as HTMLVideoElement).srcObject = stream;
+      // ✅ FIX: Explicitly play the video in case autoplay doesn't work
+      (video as HTMLVideoElement).play().catch(() => { /* autoplay fallback */ });
 
       const btns = document.createElement('div');
       btns.className = 'flex gap-3 mt-4';
@@ -938,8 +941,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       cancelBtn.textContent = I18N[locale].ui.cancel;
 
       const cleanup = () => { if (modal.parentNode) document.body.removeChild(modal); };
-      // Utilise l'app caméra native du téléphone (plus fiable que getUserMedia sur mobile)
-      cameraBtn.onclick = () => { cleanup(); openFileSelector('image/*', 'user'); };
+      // ✅ FIX: Sur mobile utilise l'app caméra native, sur desktop utilise getUserMedia
+      const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      cameraBtn.onclick = () => {
+        cleanup();
+        if (isMobileDevice) {
+          openFileSelector('image/*', 'user');
+        } else {
+          openCameraCapture('user');
+        }
+      };
       galleryBtn.onclick = () => { cleanup(); openFileSelector('image/*'); };
       cancelBtn.onclick = cleanup;
 
@@ -952,7 +963,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       // If camera not supported, just open file selector
       openFileSelector('image/*');
     }
-  }, [isUploading, disabled, isCameraSupported, openFileSelector, locale]);
+  }, [isUploading, disabled, isCameraSupported, openFileSelector, openCameraCapture, locale]);
 
   return (
     <div className={`w-full ${className}`}>

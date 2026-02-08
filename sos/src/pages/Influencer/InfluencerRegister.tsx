@@ -17,6 +17,7 @@ import SEOHead from '@/components/layout/SEOHead';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import InfluencerRegisterForm from '@/components/Influencer/Forms/InfluencerRegisterForm';
 import { CheckCircle, Gift, Users, Image } from 'lucide-react';
+import { storeReferralCode, getStoredReferralCode } from '@/utils/referralStorage';
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
@@ -32,12 +33,21 @@ const InfluencerRegister: React.FC = () => {
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
   // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
+  // If found in URL, persist to localStorage with 30-day expiration
+  // Otherwise, fallback to stored code
   const referralCodeFromUrl = useMemo(() => {
-    return searchParams.get('ref')
+    const fromUrl = searchParams.get('ref')
       || searchParams.get('referralCode')
       || searchParams.get('code')
       || searchParams.get('sponsor')
       || '';
+
+    if (fromUrl) {
+      storeReferralCode(fromUrl, 'influencer', 'recruitment');
+      return fromUrl;
+    }
+
+    return getStoredReferralCode('influencer') || '';
   }, [searchParams]);
 
   const dashboardRoute = `/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`;

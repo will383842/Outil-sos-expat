@@ -75,14 +75,7 @@ export const registerGroupAdmin = onCall(
     memory: "256MiB",
     cpu: 0.25,
     timeoutSeconds: 60,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: true,
   },
   async (request): Promise<RegisterGroupAdminResponse> => {
     ensureInitialized();
@@ -252,16 +245,32 @@ export const registerGroupAdmin = onCall(
       let recruitedByCode: string | null = null;
 
       if (input.recruitmentCode) {
-        const recruiterQuery = await db
-          .collection("group_admins")
-          .where("affiliateCodeRecruitment", "==", input.recruitmentCode.toUpperCase())
-          .where("status", "==", "active")
-          .limit(1)
-          .get();
+        // Enforce 30-day attribution window if capturedAt is provided
+        let referralExpired = false;
+        if (input.referralCapturedAt) {
+          const capturedDate = new Date(input.referralCapturedAt);
+          const windowMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+          if (Date.now() - capturedDate.getTime() > windowMs) {
+            logger.warn("[registerGroupAdmin] Recruitment code expired (>30 days)", {
+              code: input.recruitmentCode,
+              capturedAt: input.referralCapturedAt,
+            });
+            referralExpired = true;
+          }
+        }
 
-        if (!recruiterQuery.empty) {
-          recruitedBy = recruiterQuery.docs[0].id;
-          recruitedByCode = input.recruitmentCode.toUpperCase();
+        if (!referralExpired) {
+          const recruiterQuery = await db
+            .collection("group_admins")
+            .where("affiliateCodeRecruitment", "==", input.recruitmentCode.toUpperCase())
+            .where("status", "==", "active")
+            .limit(1)
+            .get();
+
+          if (!recruiterQuery.empty) {
+            recruitedBy = recruiterQuery.docs[0].id;
+            recruitedByCode = input.recruitmentCode.toUpperCase();
+          }
         }
       }
 

@@ -49,6 +49,7 @@ import {
   FormWarningBox,
   formStyles,
 } from '@/components/forms/FormElements';
+import { storeReferralCode, getStoredReferralCode, clearStoredReferral } from '@/utils/referralStorage';
 
 // Get country name based on locale
 const getCountryName = (entry: PhoneCodeEntry, locale: string): string => {
@@ -111,12 +112,21 @@ const BloggerRegister: React.FC = () => {
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
   // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
+  // If found in URL, persist to localStorage with 30-day expiration
+  // Otherwise, fallback to stored code
   const referralCodeFromUrl = useMemo(() => {
-    return searchParams.get('ref')
+    const fromUrl = searchParams.get('ref')
       || searchParams.get('referralCode')
       || searchParams.get('code')
       || searchParams.get('sponsor')
       || '';
+
+    if (fromUrl) {
+      storeReferralCode(fromUrl, 'blogger', 'recruitment');
+      return fromUrl;
+    }
+
+    return getStoredReferralCode('blogger') || '';
   }, [searchParams]);
 
   const dashboardRoute = `/${getTranslatedRouteSlug('blogger-dashboard' as RouteKey, langCode)}`;
@@ -376,6 +386,8 @@ const BloggerRegister: React.FC = () => {
 
       if (result.data.success) {
         setSuccess(true);
+        // Clear stored referral code after successful registration
+        clearStoredReferral('blogger');
         // Refresh user data to ensure role is updated in context
         await refreshUser();
         setTimeout(() => {

@@ -16,6 +16,7 @@ import ChatterRegisterForm from '@/components/Chatter/Forms/ChatterRegisterForm'
 import type { ChatterRegistrationData } from '@/components/Chatter/Forms/ChatterRegisterForm';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Star, ArrowLeft, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
+import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 
 // Design tokens - Harmonized with ChatterLanding dark theme
 const UI = {
@@ -39,12 +40,22 @@ const ChatterRegister: React.FC = () => {
   const functions = getFunctions(undefined, 'europe-west1');
 
   // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
+  // If found in URL, persist to localStorage with 30-day expiration
+  // Otherwise, fallback to stored code
   const referralCodeFromUrl = useMemo(() => {
-    return searchParams.get('ref')
+    const fromUrl = searchParams.get('ref')
       || searchParams.get('referralCode')
       || searchParams.get('code')
       || searchParams.get('sponsor')
       || '';
+
+    if (fromUrl) {
+      storeReferralCode(fromUrl, 'chatter', 'recruitment');
+      return fromUrl;
+    }
+
+    // Fallback to localStorage (returns null if expired)
+    return getStoredReferralCode('chatter') || '';
   }, [searchParams]);
 
   // Routes
@@ -152,6 +163,7 @@ const ChatterRegister: React.FC = () => {
         language: data.language,
         additionalLanguages: data.additionalLanguages,
         recruitmentCode: data.referralCode || undefined,
+        referralCapturedAt: getStoredReferral('chatter')?.capturedAt || new Date().toISOString(),
         // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
         acceptTerms: data.acceptTerms,
         termsAcceptedAt: data.termsAcceptedAt,
@@ -161,6 +173,9 @@ const ChatterRegister: React.FC = () => {
       });
 
       setSuccess(true);
+
+      // Clear stored referral code after successful registration
+      clearStoredReferral('chatter');
 
       // Refresh user data to ensure role is updated in context
       await refreshUser();

@@ -430,8 +430,12 @@ export function useInfluencer(): UseInfluencerReturn {
 // REFERRAL CODE CAPTURE HOOK
 // ============================================================================
 
-const INFLUENCER_CODE_KEY = "sos_influencer_code";
-const INFLUENCER_CODE_TYPE_KEY = "sos_influencer_code_type";
+import {
+  storeReferralCode as storeCode,
+  getStoredReferral as getStored,
+  clearStoredReferral as clearStored,
+  type ReferralCodeType,
+} from "../utils/referralStorage";
 
 /**
  * Hook to capture and persist influencer referral codes from URL
@@ -453,8 +457,7 @@ export function useInfluencerReferralCapture(): {
     const clientMatch = path.match(/^\/ref\/i\/([A-Z0-9]+)$/i);
     if (clientMatch) {
       const code = clientMatch[1].toUpperCase();
-      localStorage.setItem(INFLUENCER_CODE_KEY, code);
-      localStorage.setItem(INFLUENCER_CODE_TYPE_KEY, "client");
+      storeCode(code, 'influencer', 'client');
       setReferralCode(code);
       setReferralType("client");
       return;
@@ -464,8 +467,7 @@ export function useInfluencerReferralCapture(): {
     const recruitMatch = path.match(/^\/rec\/i\/([A-Z0-9-]+)$/i);
     if (recruitMatch) {
       const code = recruitMatch[1].toUpperCase();
-      localStorage.setItem(INFLUENCER_CODE_KEY, code);
-      localStorage.setItem(INFLUENCER_CODE_TYPE_KEY, "recruitment");
+      storeCode(code, 'influencer', 'recruitment');
       setReferralCode(code);
       setReferralType("recruitment");
       return;
@@ -477,13 +479,11 @@ export function useInfluencerReferralCapture(): {
 
     if (refCode) {
       const normalizedCode = refCode.toUpperCase();
-      const type: "client" | "recruitment" = normalizedCode.startsWith("REC-")
+      const type: ReferralCodeType = normalizedCode.startsWith("REC-")
         ? "recruitment"
         : "client";
 
-      localStorage.setItem(INFLUENCER_CODE_KEY, normalizedCode);
-      localStorage.setItem(INFLUENCER_CODE_TYPE_KEY, type);
-
+      storeCode(normalizedCode, 'influencer', type);
       setReferralCode(normalizedCode);
       setReferralType(type);
 
@@ -495,20 +495,18 @@ export function useInfluencerReferralCapture(): {
         : window.location.pathname;
       window.history.replaceState({}, "", newUrl);
     } else {
-      // Check localStorage for existing code
-      const storedCode = localStorage.getItem(INFLUENCER_CODE_KEY);
-      const storedType = localStorage.getItem(INFLUENCER_CODE_TYPE_KEY);
+      // Check localStorage for existing code (returns null if expired)
+      const stored = getStored('influencer');
 
-      if (storedCode) {
-        setReferralCode(storedCode);
-        setReferralType(storedType as "client" | "recruitment" || "client");
+      if (stored) {
+        setReferralCode(stored.code);
+        setReferralType(stored.codeType as "client" | "recruitment");
       }
     }
   }, []);
 
   const clearReferral = useCallback(() => {
-    localStorage.removeItem(INFLUENCER_CODE_KEY);
-    localStorage.removeItem(INFLUENCER_CODE_TYPE_KEY);
+    clearStored('influencer');
     setReferralCode(null);
     setReferralType(null);
   }, []);
@@ -527,21 +525,18 @@ export function getStoredInfluencerCode(): {
   code: string | null;
   type: "client" | "recruitment" | null;
 } {
-  if (typeof window === "undefined") {
+  const stored = getStored('influencer');
+  if (!stored) {
     return { code: null, type: null };
   }
-  const code = localStorage.getItem(INFLUENCER_CODE_KEY);
-  const type = localStorage.getItem(INFLUENCER_CODE_TYPE_KEY) as "client" | "recruitment" | null;
-  return { code, type };
+  return { code: stored.code, type: stored.codeType as "client" | "recruitment" };
 }
 
 /**
  * Clear stored influencer referral (after successful conversion)
  */
 export function clearStoredInfluencerCode(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(INFLUENCER_CODE_KEY);
-  localStorage.removeItem(INFLUENCER_CODE_TYPE_KEY);
+  clearStored('influencer');
 }
 
 export default useInfluencer;

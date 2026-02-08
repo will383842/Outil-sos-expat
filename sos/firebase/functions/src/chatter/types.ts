@@ -2383,6 +2383,7 @@ export interface RegisterChatterInput {
   platforms?: ChatterPlatform[]; // Optional - not collected at registration
   bio?: string;
   recruitmentCode?: string; // Auto from URL - not manual input
+  referralCapturedAt?: string; // ISO date - when the referral code was captured (for 30-day window enforcement)
   // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
   acceptTerms?: boolean;
   termsAcceptedAt?: string;
