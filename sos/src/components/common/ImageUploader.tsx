@@ -869,16 +869,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     disabled: disabled || isUploading,
   });
 
-  const openCameraCapture = useCallback(async (facing: 'user' | 'environment' = preferredCamera) => {
-    if (!disabled && !isUploading && isCameraSupported) {
-      try { await openCamera(facing); } catch {
-        setError(I18N[locale].errors.cameraAccessFailed);
-      }
-    } else if (!isCameraSupported) {
-      setError(I18N[locale].errors.cameraNotSupported);
-    }
-  }, [disabled, isUploading, isCameraSupported, openCamera, preferredCamera, locale]);
-
   const openFileSelector = useCallback((accept = 'image/*', capture?: 'user' | 'environment') => {
     if (disabled || isUploading) return;
     const input = document.createElement('input');
@@ -892,6 +882,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     };
     input.click();
   }, [disabled, isUploading, handleFileSelect]);
+
+  const openCameraCapture = useCallback(async (facing: 'user' | 'environment' = preferredCamera) => {
+    if (!disabled && !isUploading && isCameraSupported) {
+      try { await openCamera(facing); } catch {
+        // Camera failed → fallback to file selector so user can still upload
+        console.warn('Camera access failed, falling back to file selector');
+        openFileSelector('image/*');
+      }
+    } else if (!isCameraSupported) {
+      // No camera API → open file selector directly
+      openFileSelector('image/*');
+    }
+  }, [disabled, isUploading, isCameraSupported, openCamera, preferredCamera, openFileSelector]);
 
   const handleRemoveImage = useCallback(async () => {
     if (isUploading || disabled) return;
@@ -1114,7 +1117,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   {isCameraSupported && (
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); openCameraCapture('user'); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // On mobile, use native camera app (fast & reliable)
+                        // On desktop, use getUserMedia webcam
+                        const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                        if (isMobileDevice) {
+                          openFileSelector('image/*', 'user');
+                        } else {
+                          openCameraCapture('user');
+                        }
+                      }}
                       disabled={disabled || isUploading}
                       className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                     >

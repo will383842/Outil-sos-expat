@@ -233,10 +233,23 @@ const sanitizeEmail = (email: string): string => {
   return email.trim().toLowerCase();
 };
 
+// 🌍 Liste des pays supportés par Stripe Connect (44 pays)
+// Source officielle: https://stripe.com/global
+// IMPORTANT: Synchronisé avec sos/firebase/functions/src/lib/paymentCountries.ts
+// Les autres pays utilisent PayPal automatiquement
+const STRIPE_SUPPORTED_COUNTRIES = new Set([
+  'US', 'CA',
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GI', 'GR', 'HU', 'IE', 'IT',
+  'LV', 'LI', 'LT', 'LU', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'CH', 'GB',
+  'AU', 'HK', 'JP', 'MY', 'NZ', 'SG', 'TH',
+  'AE',
+  'BR', 'MX'
+]);
+
 // Country code mapping pour Stripe
 const getCountryCode = (countryName: string): string => {
-  const country = countriesData.find(c => 
-    c.nameFr === countryName || 
+  const country = countriesData.find(c =>
+    c.nameFr === countryName ||
     c.nameEn === countryName ||
     c.nameEs === countryName ||
     c.nameDe === countryName ||
@@ -248,6 +261,11 @@ const getCountryCode = (countryName: string): string => {
     c.nameZh === countryName
   );
   return country?.code || "US";
+};
+
+// Vérifier si un pays est supporté par Stripe
+const isCountrySupportedByStripe = (countryCode: string): boolean => {
+  return STRIPE_SUPPORTED_COUNTRIES.has(countryCode.toUpperCase());
 };
 
 // 🎨 Composants de feedback
@@ -969,30 +987,57 @@ const RegisterExpat: React.FC = () => {
       };
 
       await register(userData, form.password);
-      
-      const { getFunctions, httpsCallable } = await import("firebase/functions");
-      const functions = getFunctions(undefined, "europe-west1");
-      const createStripeAccount = httpsCallable(functions, "createStripeAccount");
-      
-      try {
-        await createStripeAccount({
-          email: sanitizeEmail(form.email),
-          currentCountry: getCountryCode(form.currentPresenceCountry),
-          firstName: sanitizeString(form.firstName),
-          lastName: sanitizeString(form.lastName),
-          userType: "expat",
-        });
-        
-        // ✅ Succès complet - inscription + Stripe
+
+      // ✅ Vérification du support Stripe pour le pays
+      const stripeCountryCode = getCountryCode(form.currentPresenceCountry);
+
+      if (!isCountrySupportedByStripe(stripeCountryCode)) {
+        // Le pays n'est pas supporté par Stripe - PayPal sera utilisé automatiquement
+        console.log(`ℹ️ [RegisterExpat] Pays non-Stripe: ${stripeCountryCode} (${form.currentPresenceCountry}) → PayPal automatique`);
+
         hasNavigatedRef.current = true;
 
-        // Track Meta Pixel CompleteRegistration - inscription expat reussie
         trackMetaCompleteRegistration({
           content_name: 'expat_registration',
           status: 'completed',
         });
 
-        // Track Ad Attribution Registration (Firestore - pour dashboard admin)
+        trackAdRegistration({
+          contentName: 'expat_registration',
+        });
+
+        navigate(redirect, {
+          replace: true,
+          state: {
+            message: intl.formatMessage({ id: "registerExpat.success.registered" }),
+            type: "success",
+          },
+        });
+        return;
+      }
+
+      // Création du compte Stripe (uniquement si le pays est supporté)
+      try {
+        const { getFunctions, httpsCallable } = await import("firebase/functions");
+        const functions = getFunctions(undefined, "europe-west1");
+        const createStripeAccount = httpsCallable(functions, "createStripeAccount");
+
+        await createStripeAccount({
+          email: sanitizeEmail(form.email),
+          currentCountry: stripeCountryCode,
+          firstName: sanitizeString(form.firstName),
+          lastName: sanitizeString(form.lastName),
+          userType: "expat",
+        });
+
+        // ✅ Succès complet - inscription + Stripe
+        hasNavigatedRef.current = true;
+
+        trackMetaCompleteRegistration({
+          content_name: 'expat_registration',
+          status: 'completed',
+        });
+
         trackAdRegistration({
           contentName: 'expat_registration',
         });
@@ -1005,28 +1050,25 @@ const RegisterExpat: React.FC = () => {
           },
         });
       } catch (stripeError: unknown) {
-        // ✅ Erreur Stripe MAIS inscription Firebase réussie - on redirige quand même
+        // Erreur Stripe MAIS inscription Firebase réussie - on redirige quand même
         console.error('⚠️ [RegisterExpat] Erreur Stripe (compte utilisateur créé):', stripeError);
 
         hasNavigatedRef.current = true;
 
-        // Track Meta Pixel CompleteRegistration - inscription expat reussie (sans Stripe)
         trackMetaCompleteRegistration({
-          content_name: 'expat_registration_partial',
+          content_name: 'expat_registration',
           status: 'completed',
         });
 
-        // Track Ad Attribution Registration (Firestore - pour dashboard admin)
         trackAdRegistration({
-          contentName: 'expat_registration_partial',
+          contentName: 'expat_registration',
         });
 
-        // On redirige vers le dashboard avec un message d'avertissement
         navigate(redirect, {
           replace: true,
           state: {
-            message: "Votre compte a été créé avec succès ! La configuration des paiements sera finalisée ultérieurement par notre équipe.",
-            type: "warning",
+            message: intl.formatMessage({ id: "registerExpat.success.registered" }),
+            type: "success",
           },
         });
       }

@@ -261,8 +261,6 @@ export const checkStripeAccountStatus = onCall<{
       // Use set with merge to handle both existing and non-existing docs
       batch.set(sosProfileRef, {
         stripeAccountId: accountId,
-        isApproved: true,
-        isVisible: true,
         kycCompleted: true,
         kycCompletedAt: admin.firestore.FieldValue.serverTimestamp(),
         chargesEnabled: account.charges_enabled || false,

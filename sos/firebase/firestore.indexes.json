@@ -908,6 +908,15 @@
         { "fieldPath": "converted", "order": "ASCENDING" },
         { "fieldPath": "clickedAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "sos_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "approvalStatus", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

@@ -663,7 +663,6 @@ export const verifyPayPalCode = onCall(
       paypalAccountStatus: "active",
       paypalOnboardingComplete: true,
       paypalPaymentsReceivable: true,
-      isVisible: true,
       updatedAt: now,
     };
 

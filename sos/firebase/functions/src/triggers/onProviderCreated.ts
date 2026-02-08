@@ -1000,7 +1000,7 @@ async function handlePayPalProvider(
   console.log(`[onProviderCreated] 🔗 Lien PayPal dashboard généré pour: ${uid}`);
 
   // Données PayPal à sauvegarder
-  // IMPORTANT: isVisible = false car le provider doit d'abord connecter son compte PayPal
+  // isVisible = false jusqu'à approbation admin (même logique que Stripe)
   const paypalData = {
     paymentGateway: "paypal" as const,
     paypalAccountStatus: "not_connected",

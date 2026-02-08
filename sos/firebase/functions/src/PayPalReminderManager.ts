@@ -547,7 +547,6 @@ export async function onPayPalConnected(
     paypalOnboardingComplete: true,
     paypalPaymentsReceivable: true,
     paypalAccountStatus: "connected",
-    isVisible: true, // LE PROVIDER DEVIENT VISIBLE
     isPaymentAccountRequired: false,
     paymentAccountRequiredReason: null,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),

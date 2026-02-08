@@ -212,6 +212,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
   });
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -291,7 +292,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     if (!img) return;
     setImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
     setIsImageLoaded(true);
+    setLoadError(false);
   }, []);
+
+  const handleImageError = useCallback(() => {
+    console.error('ImageCropModal: Failed to load image from URL:', imageUrl);
+    setLoadError(true);
+  }, [imageUrl]);
 
   useEffect(() => {
     if (isImageLoaded && !isInitialized) {
@@ -304,6 +311,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     if (isOpen && imageUrl) {
       setIsImageLoaded(false);
       setIsInitialized(false);
+      setLoadError(false);
       setScale(1);
       setPosition({ x: 0, y: 0 });
       setRotation(0);
@@ -619,8 +627,23 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           style={{ height: `${CONTAINER_HEIGHT}px` }}
         >
           {(!isImageLoaded || !isInitialized) && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center z-20">
+              {loadError ? (
+                <div className="text-center p-4">
+                  <AlertCircle size={32} className="text-red-400 mx-auto mb-2" />
+                  <p className="text-white text-sm mb-3">
+                    {locale === 'fr' ? "Impossible de charger l'image. Réessayez." : 'Failed to load image. Please try again.'}
+                  </p>
+                  <button
+                    onClick={onCancel}
+                    className="px-4 py-2 bg-white text-gray-800 rounded-lg text-sm font-medium hover:bg-gray-100"
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              ) : (
+                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              )}
             </div>
           )}
 
@@ -643,6 +666,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               transition: isInitialized ? "none" : "opacity 0.2s",
             }}
             onLoad={handleImageLoad}
+            onError={handleImageError}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
             draggable={false}

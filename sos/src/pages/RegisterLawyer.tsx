@@ -407,92 +407,6 @@ const FieldSuccess = React.memo(({ show, message }: { show: boolean; message: st
 });
 FieldSuccess.displayName = "FieldSuccess";
 
-// ⚠️ Composant d'avertissement pour les pays non supportés par Stripe
-const StripeCountryWarning = React.memo(({ 
-  countryName, 
-  countryCode, 
-  lang 
-}: { 
-  countryName: string; 
-  countryCode: string;
-  lang: string;
-}) => {
-  const messages: Record<string, { title: string; description: string; note: string }> = {
-    fr: {
-      title: "⚠️ Paiements non disponibles dans ce pays",
-      description: `Les paiements en ligne via Stripe ne sont pas encore disponibles pour les prestataires résidant en ${countryName}. Vous pouvez tout de même créer votre compte et votre profil sera visible par les clients.`,
-      note: "Notre équipe vous contactera pour configurer un mode de paiement alternatif (virement bancaire, PayPal, Wise, etc.)."
-    },
-    en: {
-      title: "⚠️ Payments not available in this country",
-      description: `Online payments via Stripe are not yet available for providers residing in ${countryName}. You can still create your account and your profile will be visible to clients.`,
-      note: "Our team will contact you to set up an alternative payment method (bank transfer, PayPal, Wise, etc.)."
-    },
-    es: {
-      title: "⚠️ Pagos no disponibles en este país",
-      description: `Los pagos en línea a través de Stripe aún no están disponibles para proveedores que residen en ${countryName}. Aún puede crear su cuenta y su perfil será visible para los clientes.`,
-      note: "Nuestro equipo se pondrá en contacto con usted para configurar un método de pago alternativo (transferencia bancaria, PayPal, Wise, etc.)."
-    },
-    de: {
-      title: "⚠️ Zahlungen in diesem Land nicht verfügbar",
-      description: `Online-Zahlungen über Stripe sind für Anbieter mit Wohnsitz in ${countryName} noch nicht verfügbar. Sie können trotzdem ein Konto erstellen und Ihr Profil wird für Kunden sichtbar sein.`,
-      note: "Unser Team wird Sie kontaktieren, um eine alternative Zahlungsmethode einzurichten (Banküberweisung, PayPal, Wise, etc.)."
-    },
-    pt: {
-      title: "⚠️ Pagamentos não disponíveis neste país",
-      description: `Os pagamentos online via Stripe ainda não estão disponíveis para prestadores residentes em ${countryName}. Você ainda pode criar sua conta e seu perfil será visível para os clientes.`,
-      note: "Nossa equipe entrará em contato para configurar um método de pagamento alternativo (transferência bancária, PayPal, Wise, etc.)."
-    },
-    ru: {
-      title: "⚠️ Платежи недоступны в этой стране",
-      description: `Онлайн-платежи через Stripe пока недоступны для поставщиков, проживающих в ${countryName}. Вы все равно можете создать учетную запись, и ваш профиль будет виден клиентам.`,
-      note: "Наша команда свяжется с вами для настройки альтернативного способа оплаты (банковский перевод, PayPal, Wise и т.д.)."
-    },
-    ar: {
-      title: "⚠️ المدفوعات غير متوفرة في هذا البلد",
-      description: `المدفوعات عبر الإنترنت عبر Stripe غير متوفرة بعد لمقدمي الخدمات المقيمين في ${countryName}. لا يزال بإمكانك إنشاء حسابك وسيكون ملفك الشخصي مرئيًا للعملاء.`,
-      note: "سيتصل بك فريقنا لإعداد طريقة دفع بديلة (تحويل مصرفي، PayPal، Wise، إلخ)."
-    },
-    hi: {
-      title: "⚠️ इस देश में भुगतान उपलब्ध नहीं है",
-      description: `${countryName} में रहने वाले प्रदाताओं के लिए Stripe के माध्यम से ऑनलाइन भुगतान अभी उपलब्ध नहीं है। आप फिर भी अपना खाता बना सकते हैं और आपकी प्रोफ़ाइल ग्राहकों को दिखाई देगी।`,
-      note: "हमारी टीम वैकल्पिक भुगतान विधि (बैंक ट्रांसफर, PayPal, Wise, आदि) सेट करने के लिए आपसे संपर्क करेगी।"
-    },
-    ch: {
-      title: "⚠️ 此国家/地区暂不支持付款",
-      description: `居住在${countryName}的服务提供商目前无法使用Stripe在线支付。您仍然可以创建账户，您的个人资料将对客户可见。`,
-      note: "我们的团队将与您联系，为您设置替代支付方式（银行转账、PayPal、Wise等）。"
-    }
-  };
-
-  const msg = messages[lang] || messages.en;
-
-  return (
-    <div 
-      className="mt-3 p-4 bg-amber-50 border-2 border-amber-300 rounded-xl"
-      role="alert"
-      aria-live="polite"
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-          <AlertCircle className="w-5 h-5 text-amber-600" aria-hidden="true" />
-        </div>
-        <div className="flex-1">
-          <h4 className="text-sm font-bold text-amber-800 mb-1">
-            {msg.title}
-          </h4>
-          <p className="text-sm text-amber-700 mb-2">
-            {msg.description}
-          </p>
-          <p className="text-xs text-amber-600 italic">
-            {msg.note}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-});
-StripeCountryWarning.displayName = "StripeCountryWarning";
 
 const TagChip = React.memo(({ value, onRemove, ariaLabel }: { value: string; onRemove: () => void; ariaLabel: string }) => (
   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-100 text-indigo-800 text-sm font-medium border border-indigo-200">
@@ -650,10 +564,6 @@ const RegisterLawyer: React.FC = () => {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // ✅ State pour tracker si le pays est supporté par Stripe
-  const [isCountryStripeSupported, setIsCountryStripeSupported] = useState<boolean | null>(null);
-  const [selectedCountryCode, setSelectedCountryCode] = useState<string>("");
   
   // 🤖 State pour erreur anti-bot
   const [botError, setBotError] = useState<string>("");
@@ -924,16 +834,6 @@ const RegisterLawyer: React.FC = () => {
       ...prev,
       [name]: type === "checkbox" ? checked : type === "number" ? Number(value) : processedValue,
     }));
-    
-    // ✅ Vérifier le support Stripe quand le pays de résidence change
-    if (name === "currentCountry" && processedValue) {
-      const countryCode = getCountryCode(processedValue);
-      setSelectedCountryCode(countryCode);
-      setIsCountryStripeSupported(isCountrySupportedByStripe(countryCode));
-    } else if (name === "currentCountry" && !processedValue) {
-      setSelectedCountryCode("");
-      setIsCountryStripeSupported(null);
-    }
     
     // Clear l'erreur si le champ est modifié
     if (fieldErrors[name]) {
@@ -1231,29 +1131,25 @@ const RegisterLawyer: React.FC = () => {
       const stripeCountryCode = getCountryCode(form.currentCountry);
       
       if (!isCountrySupportedByStripe(stripeCountryCode)) {
-        // Le pays n'est pas supporté par Stripe - on continue quand même l'inscription
-        // mais on ne crée pas de compte Stripe (sera fait manuellement ou plus tard)
-        console.warn(`⚠️ [RegisterLawyer] Pays non supporté par Stripe: ${stripeCountryCode} (${form.currentCountry})`);
-        
-        // Navigation réussie même sans compte Stripe
+        // Le pays n'est pas supporté par Stripe - PayPal sera utilisé automatiquement
+        console.log(`ℹ️ [RegisterLawyer] Pays non-Stripe: ${stripeCountryCode} (${form.currentCountry}) → PayPal automatique`);
+
         hasNavigatedRef.current = true;
 
-        // Track Meta Pixel CompleteRegistration - inscription avocat reussie (sans Stripe)
         trackMetaCompleteRegistration({
-          content_name: 'lawyer_registration_no_stripe',
+          content_name: 'lawyer_registration',
           status: 'completed',
         });
 
-        // Track Ad Attribution Registration (Firestore - pour dashboard admin)
         trackAdRegistration({
-          contentName: 'lawyer_registration_no_stripe',
+          contentName: 'lawyer_registration',
         });
 
         navigate(redirect, {
           replace: true,
           state: {
-            message: intl.formatMessage({ id: "registerLawyer.success.registeredNoStripe" }),
-            type: "warning",
+            message: intl.formatMessage({ id: "registerLawyer.success.registered" }),
+            type: "success",
           },
         });
         return;
@@ -1295,28 +1191,25 @@ const RegisterLawyer: React.FC = () => {
           },
         });
       } catch (stripeError: unknown) {
-        // ✅ Erreur Stripe MAIS inscription Firebase réussie - on redirige quand même
+        // Erreur Stripe MAIS inscription Firebase réussie - on redirige quand même
         console.error('⚠️ [RegisterLawyer] Erreur Stripe (compte utilisateur créé):', stripeError);
 
         hasNavigatedRef.current = true;
 
-        // Track Meta Pixel CompleteRegistration - inscription avocat reussie (sans Stripe complet)
         trackMetaCompleteRegistration({
-          content_name: 'lawyer_registration_partial',
+          content_name: 'lawyer_registration',
           status: 'completed',
         });
 
-        // Track Ad Attribution Registration (Firestore - pour dashboard admin)
         trackAdRegistration({
-          contentName: 'lawyer_registration_partial',
+          contentName: 'lawyer_registration',
         });
 
-        // On redirige vers le dashboard avec un message d'avertissement
         navigate(redirect, {
           replace: true,
           state: {
-            message: "Votre compte a été créé avec succès ! La configuration des paiements sera finalisée ultérieurement par notre équipe.",
-            type: "warning",
+            message: intl.formatMessage({ id: "registerLawyer.success.registered" }),
+            type: "success",
           },
         });
       }
@@ -1990,19 +1883,10 @@ const RegisterLawyer: React.FC = () => {
                     error={fieldErrors.currentCountry} 
                     show={!!(fieldErrors.currentCountry && touched.currentCountry)} 
                   />
-                  <FieldSuccess 
-                    show={!fieldErrors.currentCountry && !!touched.currentCountry && !!form.currentCountry && isCountryStripeSupported === true} 
-                    message={intl.formatMessage({ id: "registerLawyer.success.fieldValid" })} 
+                  <FieldSuccess
+                    show={!fieldErrors.currentCountry && !!touched.currentCountry && !!form.currentCountry}
+                    message={intl.formatMessage({ id: "registerLawyer.success.fieldValid" })}
                   />
-                  
-                  {/* ⚠️ Avertissement si le pays n'est pas supporté par Stripe */}
-                  {form.currentCountry && isCountryStripeSupported === false && (
-                    <StripeCountryWarning 
-                      countryName={form.currentCountry}
-                      countryCode={selectedCountryCode}
-                      lang={lang}
-                    />
-                  )}
                 </div>
 
                 {/* Pays d'exercice */}
