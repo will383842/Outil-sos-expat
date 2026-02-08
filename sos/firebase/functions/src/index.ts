@@ -5654,15 +5654,17 @@ export {
 export {
   // Triggers
   chatterOnChatterCreated,
-  chatterOnQuizPassed,
+  // DISABLED 2026-02-08: Quiz feature removed from chatter flow
+  // chatterOnQuizPassed,
   chatterOnCallCompleted,
   chatterOnProviderRegistered,
   chatterOnClientRegistered,
   chatterOnChatterEarningsUpdated,
   // User callables
   registerChatter,
-  submitQuiz,
-  getQuizQuestions,
+  // DISABLED 2026-02-08: Quiz feature removed from chatter flow
+  // submitQuiz,
+  // getQuizQuestions,
   getChatterDashboard,
   getChatterLeaderboard,
   chatterRequestWithdrawal,

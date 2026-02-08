@@ -2776,6 +2776,65 @@ service cloud.firestore {
       allow update, delete: if isAdmin() || isDev();
     }
 
+    // ================= APP SETTINGS =================
+    // Parametres globaux de l'application (AdminSettings)
+    match /app_settings/{docId} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Ecriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= CALL LOGS =================
+    // Logs des appels (audit et monitoring)
+    match /call_logs/{logId} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Creation: utilisateurs authentifies (logging)
+      allow create: if isAuthenticated();
+      // Modification/suppression: Cloud Functions uniquement
+      allow update, delete: if false;
+    }
+
+    // ================= REVIEW REPORTS =================
+    // Signalements d'avis
+    match /review_reports/{reportId} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Creation: utilisateurs authentifies
+      allow create: if isAuthenticated();
+      // Modification/suppression: admin uniquement
+      allow update, delete: if isAdmin() || isDev();
+    }
+
+    // ================= CHATTER ACTIVITY FEED =================
+    // Flux d'activite en temps reel des chatters
+    match /chatter_activity_feed/{feedId} {
+      // Lecture: chatters actifs et admin
+      allow read: if isChatter() || isAdmin() || isDev();
+      // Ecriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // ================= TAX RATES =================
+    // Taux de taxes par pays/region
+    match /tax_rates/{rateId} {
+      // Lecture: utilisateurs authentifies (calculs de prix)
+      allow read: if isAuthenticated();
+      // Ecriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= TELEGRAM ONBOARDING LINKS =================
+    // Liens d'onboarding Telegram pour chatters/influencers/bloggers/groupAdmins
+    match /telegram_onboarding_links/{linkId} {
+      // Lecture: admin ou proprietaire du lien
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+      // Ecriture: Cloud Functions uniquement (via Admin SDK)
+      allow write: if false;
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production
