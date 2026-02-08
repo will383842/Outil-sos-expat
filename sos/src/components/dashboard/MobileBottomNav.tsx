@@ -5,7 +5,7 @@
  * P0 FIX: Navigation via URL query params + indicateur actif clair
  */
 
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '../../multilingual-system/core/routing/localeRoutes';
@@ -17,7 +17,6 @@ import {
   Bot,
   CreditCard,
   Menu,
-  Loader2,
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -28,13 +27,12 @@ interface MobileBottomNavProps {
 const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick }) => {
   const navigate = useLocaleNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { language } = useApp();
 
   // P1 FIX: Use AI tool access hook for smart navigation
   const {
     hasAccess: hasAiAccess,
-    isAccessing: isAccessingAi,
     handleAiToolClick,
     isLoading: aiAccessLoading,
   } = useAiToolAccess();
@@ -44,13 +42,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
 
   const translatedRoutes = useMemo(() => {
     const dashboardSlug = getTranslatedRouteSlug('dashboard' as RouteKey, langCode);
-    const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
     const subscriptionSlug = getTranslatedRouteSlug('dashboard-subscription' as RouteKey, langCode);
 
     return {
       dashboard: `/${dashboardSlug}`,
-      dashboardCalls: `/${dashboardSlug}?tab=calls`,
-      aiAssistant: `/${aiAssistantSlug}`,
       subscription: `/${subscriptionSlug}`,
     };
   }, [langCode]);
@@ -78,7 +73,6 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
   const activeTab = getActiveTab();
 
   // Navigation items with SHORT labels (max 5 chars) - using translated routes
-  // ✅ FIX: Mark items as internal tabs (use setSearchParams) vs external routes (use navigate)
   const navItems = [
     {
       key: 'profile',
@@ -120,33 +114,39 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
     },
   ];
 
-  // ✅ FIX: Handle both internal tabs (setSearchParams) and external routes (navigate)
-  // P1 FIX: Prevent navigation to same route (double-click bug)
-  // P1 FIX: Handle direct AI tool access
+  // ✅ FIX: Always use navigate() for all tabs to ensure correct routing
+  // Using setSearchParams only changes query params without changing pathname,
+  // which breaks navigation when on sub-routes like /dashboard/subscription
   const handleNavClick = useCallback(async (item: typeof navItems[0]) => {
     if (item.isMore) {
       onMoreClick();
       return;
     }
 
-    // P1 FIX: Handle direct AI tool access
+    // Handle direct AI tool access with error protection
     if ('isAiToolDirect' in item && item.isAiToolDirect) {
-      await handleAiToolClick();
+      try {
+        await handleAiToolClick();
+      } catch (e) {
+        console.error('[MobileBottomNav] AI tool click error:', e);
+      }
       return;
     }
 
-    // P1 FIX: Don't navigate if already on the same item (prevents double-click bug)
+    // Don't navigate if already on the same item (prevents double-click bug)
     if (activeTab === item.key) {
       return;
     }
 
     if (item.isInternalTab) {
-      // Internal tab - use setSearchParams to change tab
-      if ('tabKey' in item && item.tabKey === null) {
-        // Profile tab - remove tab param
-        setSearchParams({});
-      } else if ('tabKey' in item && item.tabKey) {
-        setSearchParams({ tab: item.tabKey });
+      // Internal tab - always use navigate to ensure we go back to dashboard route
+      // This fixes the bug where setSearchParams only changed query params
+      // without changing the pathname (e.g. staying on /dashboard/subscription)
+      if ('tabKey' in item && item.tabKey) {
+        navigate(`${translatedRoutes.dashboard}?tab=${item.tabKey}`);
+      } else {
+        // Profile tab - navigate to dashboard root (no tab param)
+        navigate(translatedRoutes.dashboard);
       }
     } else if ('route' in item && item.route) {
       // External route - use navigate
@@ -155,7 +155,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
 
     // Scroll to top of content
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [navigate, onMoreClick, setSearchParams, activeTab, handleAiToolClick]);
+  }, [navigate, onMoreClick, activeTab, handleAiToolClick, translatedRoutes.dashboard]);
 
   return (
     <nav

@@ -3,8 +3,8 @@
  * S'ouvre depuis la droite avec animation fluide
  */
 
-import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '../../multilingual-system/core/routing/localeRoutes';
 import { useIntl } from 'react-intl';
@@ -49,7 +49,6 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const location = useLocation();
-  const [, setSearchParams] = useSearchParams();
   const { user, logout } = useAuth();
   const { language } = useApp();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -104,30 +103,22 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
   // Get translated routes for current language
   const translatedRoutes = useMemo(() => {
     const dashboardSlug = getTranslatedRouteSlug('dashboard' as RouteKey, langCode);
-    const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
     const subscriptionSlug = getTranslatedRouteSlug('dashboard-subscription' as RouteKey, langCode);
     const loginSlug = getTranslatedRouteSlug('login' as RouteKey, langCode);
 
     return {
       dashboard: `/${dashboardSlug}`,
-      dashboardCalls: `/${dashboardSlug}?tab=calls`,
-      dashboardInvoices: `/${dashboardSlug}?tab=invoices`,
-      dashboardReviews: `/${dashboardSlug}?tab=reviews`,
-      dashboardMessages: `/${dashboardSlug}?tab=messages`,
-      dashboardFavorites: `/${dashboardSlug}?tab=favorites`,
-      aiAssistant: `/${aiAssistantSlug}`,
       subscription: `/${subscriptionSlug}`,
       login: `/${loginSlug}`,
     };
   }, [langCode]);
 
   // All menu items (all 9 supported languages)
-  // ✅ FIX: Mark items as internal tabs (use setSearchParams) vs external routes (use navigate)
   const menuItems = [
     {
       key: 'profile',
       icon: User,
-      isInternalTab: true, // Uses setSearchParams
+      isInternalTab: true,
       tabKey: null, // profile = no tab param
       labels: { fr: 'Mon profil', en: 'My profile', es: 'Mi perfil', de: 'Mein Profil', ru: 'Мой профиль', pt: 'Meu perfil', ch: '我的资料', hi: 'मेरी प्रोफ़ाइल', ar: 'ملفي' },
     },
@@ -189,30 +180,36 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
     },
   ] : [];
 
-  // ✅ FIX: Handle both internal tabs (setSearchParams) and external routes (navigate)
-  // P1 FIX: Prevent navigation to same route (double-click bug)
-  // P1 FIX: Handle direct AI tool access
+  // ✅ FIX: Always use navigate() for all tabs to ensure correct routing
+  // Using setSearchParams only changes query params without changing pathname,
+  // which breaks navigation when on sub-routes like /dashboard/subscription
   const handleNavClick = async (item: { key?: string; isInternalTab?: boolean; tabKey?: string | null; route?: string; isAiToolDirect?: boolean }) => {
-    // P1 FIX: Don't navigate if already on the same item (prevents double-click bug)
+    // Don't navigate if already on the same item (prevents double-click bug)
     if (item.key && activeKey === item.key && !item.isAiToolDirect) {
       onClose();
       return;
     }
 
-    // P1 FIX: Handle direct AI tool access
+    // Handle direct AI tool access with error protection
     if (item.isAiToolDirect) {
       onClose();
-      await handleAiToolClick();
+      try {
+        await handleAiToolClick();
+      } catch (e) {
+        console.error('[MobileSideDrawer] AI tool click error:', e);
+      }
       return;
     }
 
     if (item.isInternalTab) {
-      // Internal tab - use setSearchParams to change tab
-      if (item.tabKey === null) {
-        // Profile tab - remove tab param
-        setSearchParams({});
-      } else if (item.tabKey) {
-        setSearchParams({ tab: item.tabKey });
+      // Internal tab - always use navigate to ensure we go back to dashboard route
+      // This fixes the bug where setSearchParams only changed query params
+      // without changing the pathname (e.g. staying on /dashboard/subscription)
+      if (item.tabKey) {
+        navigate(`${translatedRoutes.dashboard}?tab=${item.tabKey}`);
+      } else {
+        // Profile tab - navigate to dashboard root (no tab param)
+        navigate(translatedRoutes.dashboard);
       }
     } else if (item.route) {
       // External route - use navigate
