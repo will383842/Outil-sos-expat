@@ -54,7 +54,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
@@ -150,6 +150,7 @@ const USERS_PER_PAGE = 20;
 
 const AdminUsers: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const adminT = useAdminTranslations();
 
   // `useAuth` n'expose pas de types ici : on contraint juste ce qu'on utilise
@@ -158,7 +159,14 @@ const AdminUsers: React.FC = () => {
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [selectedRole, setSelectedRole] = useState<'all' | Role>('all');
+  const [selectedRole, setSelectedRole] = useState<'all' | Role>(() => {
+    const path = location.pathname;
+    if (path.includes('/users/chatters')) return 'chatter';
+    if (path.includes('/users/influencers')) return 'influencer';
+    if (path.includes('/users/bloggers')) return 'blogger';
+    if (path.includes('/users/group-admins')) return 'groupAdmin';
+    return 'all';
+  });
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [showUserModal, setShowUserModal] = useState<boolean>(false);
@@ -192,6 +200,15 @@ const AdminUsers: React.FC = () => {
   // État pour édition rapide dans le modal
   const [editMode, setEditMode] = useState<boolean>(false);
   const [editedUser, setEditedUser] = useState<Partial<AdminUser>>({});
+
+  // Sync selectedRole when navigating between /users/chatters, /users/influencers, etc.
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/users/chatters')) setSelectedRole('chatter');
+    else if (path.includes('/users/influencers')) setSelectedRole('influencer');
+    else if (path.includes('/users/bloggers')) setSelectedRole('blogger');
+    else if (path.includes('/users/group-admins')) setSelectedRole('groupAdmin');
+  }, [location.pathname]);
 
   // Roles that have profiles in sos_profiles collection
   const providerRoles: Role[] = ['lawyer', 'expat', 'chatter', 'influencer', 'blogger'];
