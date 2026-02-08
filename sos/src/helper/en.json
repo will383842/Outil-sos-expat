@@ -4667,7 +4667,7 @@
   "availability.reminder.autoOfflineWarning": "You will be automatically set offline in 10 minutes if you don't respond.",
   "availability.reminder.message": "You're still online. Would you like to stay available?",
   "availability.reminder.title": "Availability Reminder",
-  "availability.reminder.warningMessage": "You have been inactive for 1 hour. If you don't respond, you will be automatically set offline in 10 minutes.",
+  "availability.reminder.warningMessage": "You have been inactive for 2 hours. If you don't respond, you will be automatically set offline in 10 minutes.",
   "availability.reminder.warningTitle": "Last Warning",
   "availability.reminderMessage": "Don't forget you're online!",
   "availability.status.offline": "Offline",

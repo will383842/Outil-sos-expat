@@ -2460,7 +2460,7 @@
   "availability.reminder.autoOfflineWarning": "如果您不响应，将在10分钟后自动离线。",
   "availability.reminder.message": "您仍然在线。您想保持可用吗？",
   "availability.reminder.title": "可用性提醒",
-  "availability.reminder.warningMessage": "您已经1小时没有活动了。如果您不响应，将在10分钟后自动离线。",
+  "availability.reminder.warningMessage": "您已经2小时没有活动了。如果您不响应，将在10分钟后自动离线。",
   "availability.reminder.warningTitle": "最后警告",
   "availability.reminderMessage": "不要忘记您在线！",
   "availability.status.offline": "离线",

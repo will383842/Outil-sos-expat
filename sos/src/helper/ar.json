@@ -2460,7 +2460,7 @@
   "availability.reminder.autoOfflineWarning": "سيتم فصلك تلقائياً خلال 10 دقائق إذا لم تستجب.",
   "availability.reminder.message": "ما زلت متصلاً. هل تريد البقاء متاحاً؟",
   "availability.reminder.title": "تذكير التوفر",
-  "availability.reminder.warningMessage": "لقد كنت غير نشط لمدة ساعة واحدة. إذا لم تستجب، سيتم فصلك تلقائياً خلال 10 دقائق.",
+  "availability.reminder.warningMessage": "لقد كنت غير نشط لمدة ساعتين. إذا لم تستجب، سيتم فصلك تلقائياً خلال 10 دقائق.",
   "availability.reminder.warningTitle": "التحذير الأخير",
   "availability.reminderMessage": "لا تنس أنك متصل!",
   "availability.status.offline": "غير متصل",

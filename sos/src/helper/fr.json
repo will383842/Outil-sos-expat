@@ -4724,7 +4724,7 @@
   "availability.reminder.autoOfflineWarning": "Vous serez automatiquement mis hors ligne dans 10 minutes si vous ne répondez pas.",
   "availability.reminder.message": "Vous êtes toujours en ligne. Souhaitez-vous rester disponible ?",
   "availability.reminder.title": "Rappel de disponibilité",
-  "availability.reminder.warningMessage": "Vous êtes inactif depuis 1 heure. Si vous ne répondez pas, vous serez automatiquement mis hors ligne dans 10 minutes.",
+  "availability.reminder.warningMessage": "Vous êtes inactif depuis 2 heures. Si vous ne répondez pas, vous serez automatiquement mis hors ligne dans 10 minutes.",
   "availability.reminder.warningTitle": "Dernier avertissement",
   "availability.reminderMessage": "N'oubliez pas que vous êtes en ligne !",
   "availability.status.offline": "Hors ligne",

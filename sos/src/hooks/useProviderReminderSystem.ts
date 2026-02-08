@@ -5,7 +5,7 @@ import { PROVIDER_ACTIVITY_CONFIG, toMs } from '../config/providerActivityConfig
 import { playAvailabilityReminder } from '../notificationsonline/playAvailabilityReminder';
 import type { ReminderState, ProviderActivityPreferences } from '../types/providerActivity';
 
-// Type de rappel : 'first' = T+30 (informatif), 'second' = T+60 (avertissement)
+// Type de rappel : 'first' = T+60 (informatif), 'second' = T+120 (avertissement)
 export type ReminderType = 'first' | 'second';
 
 interface UseProviderReminderSystemProps {
@@ -32,7 +32,7 @@ export const useProviderReminderSystem = ({
     reminderDisabledToday: false,
   });
 
-  // Track si le premier rappel (T+30) a été montré
+  // Track si le premier rappel (T+60) a été montré
   const firstReminderShownRef = useRef(false);
 
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -82,7 +82,7 @@ export const useProviderReminderSystem = ({
     const now = new Date();
     const currentState = reminderStateRef.current;
 
-    // T+60 : Deuxième rappel avec avertissement (prioritaire)
+    // T+120 : Deuxième rappel avec avertissement (prioritaire)
     if (inactivityMinutes >= PROVIDER_ACTIVITY_CONFIG.SECOND_REMINDER_MINUTES) {
       // Jouer le son si activé et pas joué récemment
       if (
@@ -123,7 +123,7 @@ export const useProviderReminderSystem = ({
         setReminderState(prev => ({ ...prev, lastModalShown: now }));
       }
     }
-    // T+30 : Premier rappel informatif
+    // T+60 : Premier rappel informatif
     else if (inactivityMinutes >= PROVIDER_ACTIVITY_CONFIG.FIRST_REMINDER_MINUTES && !firstReminderShownRef.current) {
       // Jouer le son pour le premier rappel
       if (preferences.soundEnabled) {
@@ -234,7 +234,7 @@ export const useProviderReminderSystem = ({
   }, [isOnline, isProvider, checkAndTriggerReminder]);
 
   // Timeout automatique: mise hors ligne si pas de réponse au popup
-  // Seulement pour le deuxième rappel (T+60) → mise hors ligne à T+70 (10 min après)
+  // Seulement pour le deuxième rappel (T+120) → mise hors ligne à T+130 (10 min après)
   useEffect(() => {
     if (showModal && isOnline && isProvider && reminderType === 'second') {
       // Démarrer le timeout de 10 minutes (T+70)

@@ -2470,7 +2470,7 @@
   "availability.reminder.autoOfflineWarning": "Se te desconectará automáticamente en 10 minutos si no respondes.",
   "availability.reminder.message": "Sigues en línea. ¿Deseas permanecer disponible?",
   "availability.reminder.title": "Recordatorio de disponibilidad",
-  "availability.reminder.warningMessage": "Has estado inactivo durante 1 hora. Si no respondes, se te desconectará automáticamente en 10 minutos.",
+  "availability.reminder.warningMessage": "Has estado inactivo durante 2 horas. Si no respondes, se te desconectará automáticamente en 10 minutos.",
   "availability.reminder.warningTitle": "Última advertencia",
   "availability.reminderMessage": "¡No olvides que estás en línea!",
   "availability.status.offline": "Desconectado",

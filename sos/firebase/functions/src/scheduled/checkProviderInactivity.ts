@@ -18,8 +18,8 @@ export const checkProviderInactivity = scheduler.onSchedule(
     try {
       const db = admin.firestore();
       const now = admin.firestore.Timestamp.now();
-      // 2026-01-19: Réduit de 2h à 90min pour être cohérent avec le frontend (T+70 + marge)
-      const inactivityThreshold = Date.now() - 90 * 60 * 1000; // 90 minutes = 1h30
+      // 2026-02-08: Augmenté de 90min à 180min pour être cohérent avec le frontend (T+130 + marge)
+      const inactivityThreshold = Date.now() - 180 * 60 * 1000; // 180 minutes = 3h
 
       // ✅ FIX: Récupérer tous les profils en ligne, puis filtrer en mémoire (plus sûr, pas de dépendance index)
       const onlineProvidersSnapshot = await db
@@ -115,9 +115,9 @@ export const checkProviderInactivity = scheduler.onSchedule(
 
       if (count > 0) {
         await batch.commit();
-        console.log(`✅ ${count} prestataires mis hors ligne pour inactivité >90min`);
+        console.log(`✅ ${count} prestataires mis hors ligne pour inactivité >180min`);
       } else {
-        console.log('✅ Aucun prestataire inactif depuis 90min');
+        console.log('✅ Aucun prestataire inactif depuis 180min');
       }
     } catch (error) {
       console.error('❌ Erreur checkProviderInactivity:', error);

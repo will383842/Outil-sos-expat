@@ -1,12 +1,12 @@
 // Configuration centralisée pour le système d'activité des prestataires
 export const PROVIDER_ACTIVITY_CONFIG = {
   // Délais d'inactivité (en minutes)
-  FIRST_REMINDER_MINUTES: 30,            // T+30: Premier rappel informatif
-  SECOND_REMINDER_MINUTES: 60,           // T+60: Deuxième rappel avec avertissement
-  INACTIVITY_AUTO_OFFLINE_MINUTES: 90,   // T+90: Mise hors ligne forcée par le backend (fallback, toutes les 15min)
+  FIRST_REMINDER_MINUTES: 60,            // T+60: Premier rappel informatif
+  SECOND_REMINDER_MINUTES: 120,          // T+120: Deuxième rappel avec avertissement
+  INACTIVITY_AUTO_OFFLINE_MINUTES: 180,  // T+180: Mise hors ligne forcée par le backend (fallback, toutes les 15min)
 
   // Timeout du popup avant mise hors ligne automatique (en minutes)
-  POPUP_AUTO_OFFLINE_TIMEOUT_MINUTES: 10, // T+70: 10 min après le popup T+60
+  POPUP_AUTO_OFFLINE_TIMEOUT_MINUTES: 10, // T+130: 10 min après le popup T+120
 
   // Intervalles de rappels (en minutes) - si le prestataire ferme le popup sans action
   REMINDER_MODAL_INTERVAL_MINUTES: 30,   // Rappel popup toutes les 30 min

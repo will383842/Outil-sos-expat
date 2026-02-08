@@ -2460,7 +2460,7 @@
   "availability.reminder.autoOfflineWarning": "यदि आप जवाब नहीं देते हैं तो आप 10 मिनट में स्वचालित रूप से ऑफ़लाइन हो जाएंगे।",
   "availability.reminder.message": "आप अभी भी ऑनलाइन हैं। क्या आप उपलब्ध रहना चाहेंगे?",
   "availability.reminder.title": "उपलब्धता अनुस्मारक",
-  "availability.reminder.warningMessage": "आप 1 घंटे से निष्क्रिय हैं। यदि आप जवाब नहीं देते हैं, तो आप 10 मिनट में स्वचालित रूप से ऑफ़लाइन हो जाएंगे।",
+  "availability.reminder.warningMessage": "आप 2 घंटे से निष्क्रिय हैं। यदि आप जवाब नहीं देते हैं, तो आप 10 मिनट में स्वचालित रूप से ऑफ़लाइन हो जाएंगे।",
   "availability.reminder.warningTitle": "अंतिम चेतावनी",
   "availability.reminderMessage": "मत भूलें कि आप ऑनलाइन हैं!",
   "availability.status.offline": "ऑफ़लाइन",
