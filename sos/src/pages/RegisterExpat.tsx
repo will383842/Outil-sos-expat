@@ -207,7 +207,6 @@ interface ExpatFormData {
   bio: string;
   availability: "available" | "busy" | "offline";
   acceptTerms: boolean;
-  acceptPaymentTerms: boolean;
 }
 
 interface LanguageOption {
@@ -444,7 +443,6 @@ const RegisterExpat: React.FC = () => {
     bio: "",
     availability: "offline" as const,
     acceptTerms: false,
-    acceptPaymentTerms: false,
   };
 
   const [form, setForm] = useState<ExpatFormData>(initial);
@@ -842,10 +840,6 @@ const RegisterExpat: React.FC = () => {
       e.acceptTerms = intl.formatMessage({ id: "registerExpat.errors.acceptTermsRequired" });
     }
 
-    if (!form.acceptPaymentTerms) {
-      e.acceptPaymentTerms = intl.formatMessage({ id: "registerExpat.errors.acceptPaymentTermsRequired" });
-    }
-
     setFieldErrors(e);
     
     if (Object.keys(e).length > 0 && fieldRefs.firstName.current) {
@@ -877,7 +871,6 @@ const RegisterExpat: React.FC = () => {
       interventionCountry: true,
       bio: true,
       acceptTerms: true,
-      acceptPaymentTerms: true
     });
     
     setIsSubmitting(true);
@@ -961,9 +954,6 @@ const RegisterExpat: React.FC = () => {
         termsAcceptedAt: new Date().toISOString(),
         termsVersion: "3.0", // Version actuelle des CGU expatriés
         termsType: "terms_expats",
-        paymentTermsAccepted: form.acceptPaymentTerms,
-        paymentTermsAcceptedAt: new Date().toISOString(),
-        paymentTermsVersion: "2.0", // Version des conditions de paiement
         // Métadonnées d'acceptation pour conformité légale (eIDAS/RGPD)
         termsAcceptanceMeta: {
           userAgent: navigator.userAgent,
@@ -1127,7 +1117,6 @@ const RegisterExpat: React.FC = () => {
       (selectedLanguages as LanguageOption[]).length > 0 &&
       form.yearsAsExpat >= 1 &&
       form.acceptTerms &&
-      form.acceptPaymentTerms &&
       !isLoading &&
       !isSubmitting
     );
@@ -2087,36 +2076,6 @@ const RegisterExpat: React.FC = () => {
                 show={!!fieldErrors.acceptTerms}
               />
 
-              {/* Checkbox conditions de paiement et fonds non réclamés */}
-              <div className="flex items-start gap-3 mb-5 p-4 bg-amber-50 rounded-xl border border-amber-200">
-                <input
-                  type="checkbox"
-                  id="acceptPaymentTerms"
-                  checked={form.acceptPaymentTerms}
-                  onChange={(e) => {
-                    setForm((p) => ({ ...p, acceptPaymentTerms: e.target.checked }));
-                    setTouched((p) => ({ ...p, acceptPaymentTerms: true }));
-                  }}
-                  className="mt-1 h-5 w-5 text-amber-600 border-gray-400 rounded focus:ring-2 focus:ring-amber-500"
-                  aria-required="true"
-                  aria-invalid={!!fieldErrors.acceptPaymentTerms}
-                  aria-describedby={fieldErrors.acceptPaymentTerms ? "acceptPaymentTerms-error" : undefined}
-                />
-                <label
-                  htmlFor="acceptPaymentTerms"
-                  className="text-sm text-gray-800 font-medium"
-                >
-                  <FormattedMessage id="registerExpat.ui.acceptPaymentTerms" />
-                  <span className="text-red-500 ml-1" aria-label={intl.formatMessage({ id: "common.required" })}>*</span>
-                  <p className="text-xs text-gray-600 mt-1">
-                    <FormattedMessage id="registerExpat.ui.paymentTermsDetails" />
-                  </p>
-                </label>
-              </div>
-              <FieldError
-                error={fieldErrors.acceptPaymentTerms}
-                show={!!fieldErrors.acceptPaymentTerms}
-              />
 
               <Button
                 type="submit"

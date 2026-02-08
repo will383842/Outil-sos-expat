@@ -209,7 +209,6 @@ interface LawyerFormData {
   educations: string[];
   availability: "available" | "busy" | "offline";
   acceptTerms: boolean;
-  acceptPaymentTerms: boolean;
 }
 
 interface LanguageOption {
@@ -553,7 +552,6 @@ const RegisterLawyer: React.FC = () => {
     educations: [""],
     availability: "offline",
     acceptTerms: false,
-    acceptPaymentTerms: false,
   };
 
   const [form, setForm] = useState<LawyerFormData>(initial);
@@ -978,11 +976,6 @@ const RegisterLawyer: React.FC = () => {
       e.acceptTerms = intl.formatMessage({ id: "registerLawyer.errors.acceptTermsRequired" });
     }
 
-    // Validation payment terms
-    if (!form.acceptPaymentTerms) {
-      e.acceptPaymentTerms = intl.formatMessage({ id: "registerLawyer.errors.acceptPaymentTermsRequired" });
-    }
-
     setFieldErrors(e);
     
     // Focus sur le premier champ en erreur
@@ -1013,7 +1006,6 @@ const RegisterLawyer: React.FC = () => {
       currentCountry: true,
       bio: true,
       acceptTerms: true,
-      acceptPaymentTerms: true
     });
     
     setIsSubmitting(true);
@@ -1100,9 +1092,6 @@ const RegisterLawyer: React.FC = () => {
         termsAcceptedAt: new Date().toISOString(),
         termsVersion: "3.0", // Version actuelle des CGU avocats
         termsType: "terms_lawyers",
-        paymentTermsAccepted: form.acceptPaymentTerms,
-        paymentTermsAcceptedAt: new Date().toISOString(),
-        paymentTermsVersion: "2.0", // Version des conditions de paiement
         // Métadonnées d'acceptation pour conformité légale (eIDAS/RGPD)
         termsAcceptanceMeta: {
           userAgent: navigator.userAgent,
@@ -1282,7 +1271,6 @@ const RegisterLawyer: React.FC = () => {
       (selectedLanguages as LanguageOption[]).length > 0 &&
       form.educations.some((e) => e.trim().length > 0) &&
       form.acceptTerms &&
-      form.acceptPaymentTerms &&
       !isLoading &&
       !isSubmitting
     );
@@ -2275,36 +2263,6 @@ const RegisterLawyer: React.FC = () => {
                 show={!!fieldErrors.acceptTerms}
               />
 
-              {/* Checkbox conditions de paiement et fonds non réclamés */}
-              <div className="flex items-start gap-3 mb-5 p-4 bg-amber-50 rounded-xl border border-amber-200">
-                <input
-                  type="checkbox"
-                  id="acceptPaymentTerms"
-                  checked={form.acceptPaymentTerms}
-                  onChange={(e) => {
-                    setForm((p) => ({ ...p, acceptPaymentTerms: e.target.checked }));
-                    setTouched((p) => ({ ...p, acceptPaymentTerms: true }));
-                  }}
-                  className="mt-1 h-5 w-5 text-amber-600 border-gray-400 rounded focus:ring-2 focus:ring-amber-500"
-                  aria-required="true"
-                  aria-invalid={!!fieldErrors.acceptPaymentTerms}
-                  aria-describedby={fieldErrors.acceptPaymentTerms ? "acceptPaymentTerms-error" : undefined}
-                />
-                <label
-                  htmlFor="acceptPaymentTerms"
-                  className="text-sm text-gray-800 font-medium"
-                >
-                  <FormattedMessage id="registerLawyer.ui.acceptPaymentTerms" />
-                  <span className="text-red-500 ml-1" aria-label={intl.formatMessage({ id: "common.required" })}>*</span>
-                  <p className="text-xs text-gray-600 mt-1">
-                    <FormattedMessage id="registerLawyer.ui.paymentTermsDetails" />
-                  </p>
-                </label>
-              </div>
-              <FieldError
-                error={fieldErrors.acceptPaymentTerms}
-                show={!!fieldErrors.acceptPaymentTerms}
-              />
 
               <Button
                 type="submit"
