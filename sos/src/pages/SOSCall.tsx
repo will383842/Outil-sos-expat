@@ -1904,13 +1904,35 @@ const FilterBottomSheet: React.FC<{
   activeFiltersCount, intl
 }) => {
   // Prevent body scroll when open
+  // iOS-safe: use position:fixed instead of overflow:hidden (which breaks touch/focus on iOS Safari)
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      const scrollY = window.scrollY;
+      document.body.dataset.sheetScrollY = String(scrollY);
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+    } else if (document.body.dataset.sheetScrollY !== undefined) {
+      const scrollY = parseInt(document.body.dataset.sheetScrollY || '0', 10);
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      delete document.body.dataset.sheetScrollY;
+      window.scrollTo(0, scrollY);
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      if (document.body.dataset.sheetScrollY !== undefined) {
+        const scrollY = parseInt(document.body.dataset.sheetScrollY || '0', 10);
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        delete document.body.dataset.sheetScrollY;
+        window.scrollTo(0, scrollY);
+      }
+    };
   }, [isOpen]);
 
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {

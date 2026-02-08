@@ -1720,7 +1720,7 @@ const Header: React.FC = () => {
         {/* ============================================================ */}
         {/* MOBILE HEADER */}
         {/* ============================================================ */}
-        {/* z-[70] ensures mobile header stays above all overlays (wizard z-30, modals z-50, sidedrawer z-60, desktop header z-60) */}
+        {/* z-[70] ensures mobile header stays above all overlays (wizard z-50, modals z-50, sidedrawer z-60, desktop header z-60) */}
         {/* safe-area-inset-top: compense l'encoche/Dynamic Island iPhone + cutout Android en mode PWA standalone */}
         <div className="lg:hidden bg-gray-900 shadow-xl relative z-[70]" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
           <div className="px-4 py-3 flex items-center justify-between">

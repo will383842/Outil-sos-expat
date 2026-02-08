@@ -137,8 +137,6 @@ const CountryStep: React.FC<{
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  // Track whether a touch gesture involved scrolling (to distinguish taps from scrolls)
-  const didScrollRef = useRef(false);
 
   // Sort countries: priority first, then alphabetically
   const sortedCountries = useMemo(() => {
@@ -172,11 +170,10 @@ const CountryStep: React.FC<{
     );
   }, [sortedCountries, searchQuery]);
 
-  const handleTouchEnd = useCallback((code: string, e: React.TouchEvent) => {
-    if (!didScrollRef.current) {
-      e.preventDefault(); // prevent delayed click (300ms) from firing a duplicate
-      onSelect(code);
-    }
+  // Dismiss keyboard and select country
+  const handleSelect = useCallback((code: string) => {
+    searchInputRef.current?.blur();
+    onSelect(code);
   }, [onSelect]);
 
   return (
@@ -206,18 +203,13 @@ const CountryStep: React.FC<{
       </div>
 
       {/* Countries Grid - Scrollable */}
-      <div
-        className="flex-1 overflow-y-auto overscroll-contain touch-manipulation"
-        onTouchStart={() => { didScrollRef.current = false; }}
-        onTouchMove={() => { didScrollRef.current = true; }}
-      >
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-manipulation">
         <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredCountries.map((country) => (
             <button
               key={country.code}
               type="button"
-              onClick={() => onSelect(country.code)}
-              onTouchEnd={(e) => handleTouchEnd(country.code, e)}
+              onClick={() => handleSelect(country.code)}
               className={`
                 flex items-center gap-2.5 p-3 rounded-xl border-2
                 text-left min-h-[52px] select-none cursor-pointer touch-manipulation
@@ -257,7 +249,6 @@ const LanguageStep: React.FC<{
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const didScrollRef = useRef(false);
 
   // Sort languages: priority first, then alphabetically
   const sortedLanguages = useMemo(() => {
@@ -295,11 +286,10 @@ const LanguageStep: React.FC<{
     return LANGUAGE_FLAG_MAP[code.toLowerCase()] || "UN";
   };
 
-  const handleTouchEnd = useCallback((code: string, e: React.TouchEvent) => {
-    if (!didScrollRef.current) {
-      e.preventDefault();
-      onToggle(code);
-    }
+  // Dismiss keyboard and toggle language
+  const handleToggle = useCallback((code: string) => {
+    searchInputRef.current?.blur();
+    onToggle(code);
   }, [onToggle]);
 
   return (
@@ -339,11 +329,7 @@ const LanguageStep: React.FC<{
       </div>
 
       {/* Languages Grid - Scrollable */}
-      <div
-        className="flex-1 overflow-y-auto overscroll-contain touch-manipulation"
-        onTouchStart={() => { didScrollRef.current = false; }}
-        onTouchMove={() => { didScrollRef.current = true; }}
-      >
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-manipulation">
         <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredLanguages.map((lang) => {
             const isSelected = selectedLanguages.includes(lang.code);
@@ -351,8 +337,7 @@ const LanguageStep: React.FC<{
               <button
                 key={lang.code}
                 type="button"
-                onClick={() => onToggle(lang.code)}
-                onTouchEnd={(e) => handleTouchEnd(lang.code, e)}
+                onClick={() => handleToggle(lang.code)}
                 className={`
                   flex items-center gap-2.5 p-3 rounded-xl border-2
                   text-left min-h-[52px] select-none cursor-pointer touch-manipulation
@@ -515,14 +500,34 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   }, [onComplete, selectedCountry, selectedLanguages]);
 
   // Prevent body scroll when wizard is open
+  // iOS-safe: use position:fixed instead of overflow:hidden (which breaks touch/focus on iOS Safari)
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+      const scrollY = window.scrollY;
+      document.body.dataset.wizardScrollY = String(scrollY);
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+    } else if (document.body.dataset.wizardScrollY !== undefined) {
+      const scrollY = parseInt(document.body.dataset.wizardScrollY || '0', 10);
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      delete document.body.dataset.wizardScrollY;
+      window.scrollTo(0, scrollY);
     }
     return () => {
-      document.body.style.overflow = "";
+      if (document.body.dataset.wizardScrollY !== undefined) {
+        const scrollY = parseInt(document.body.dataset.wizardScrollY || '0', 10);
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        delete document.body.dataset.wizardScrollY;
+        window.scrollTo(0, scrollY);
+      }
     };
   }, [isOpen]);
 
@@ -549,7 +554,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col"
-      style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))' }}
+      style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))', touchAction: 'auto' }}
     >
 
       {/* ===== HEADER FIXE : Progress Bar ===== */}
