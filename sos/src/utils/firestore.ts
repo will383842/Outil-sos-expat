@@ -710,23 +710,24 @@ export const getUserCallSessions = async (
         callSessionsRef,
         where(fieldName, "==", userId),
         orderBy("metadata.createdAt", "desc"),
-        fsLimit(50)
+        fsLimit(500)
       );
     }
 
     const snapshot = await getDocs(q);
-    
+
     return snapshot.docs.map(docSnap => {
       const data = asDict(docSnap.data());
       const metadata = asDict(data.metadata || {});
       const payment = asDict(data.payment || {});
+      const conference = asDict(data.conference || {});
       const participants = asDict(data.participants || {});
       const clientParticipant = asDict(participants.client || {});
       const providerParticipant = asDict(participants.provider || {});
-      
+
       const createdAt = toDate(metadata.createdAt) || new Date();
       const updatedAt = toDate(metadata.updatedAt) || new Date();
-      
+
       return {
         id: docSnap.id,
         sessionId: String(data.id || docSnap.id),
@@ -739,7 +740,7 @@ export const getUserCallSessions = async (
         title: `${metadata.serviceType === "lawyer_call" ? "Lawyer" : "Expat"} Call`,
         description: `Call session - ${data.status || "pending"}`,
         status: String(data.status || "pending") as "completed" | "pending" | "in_progress" | "failed",
-        duration: Number(metadata.maxDuration || 0) / 60, // Convert seconds to minutes
+        duration: Number(conference.billingDuration || conference.duration || 0) / 60, // Convert seconds to minutes
         price: Number(payment.amount || 0),
         amount: Number(payment.amount || 0),
         paymentStatus: String(payment.status || ""),

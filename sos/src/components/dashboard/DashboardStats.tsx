@@ -190,7 +190,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
         <StatCard
           icon={<Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-400" />}
           label={intl.formatMessage({ id: 'dashboard.stats.earnings', defaultMessage: 'Earnings' })}
-          value={formatCurrency(user.totalEarnings || stats.totalEarnings)}
+          value={formatCurrency(stats.totalEarnings)}
           subValue={formatCurrency(((user as any).pendingBalance || 0))}
           gradient="from-emerald-600 to-teal-600"
           iconBg="bg-emerald-100 dark:bg-emerald-900/30"
@@ -200,10 +200,10 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
         <StatCard
           icon={<Star className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 dark:text-amber-400" />}
           label={intl.formatMessage({ id: 'dashboard.stats.rating', defaultMessage: 'Rating' })}
-          value={user.rating ? user.rating.toFixed(1) : stats.avgRating}
+          value={stats.avgRating}
           subValue={intl.formatMessage(
             { id: 'dashboard.stats.reviewCount', defaultMessage: '{count} reviews' },
-            { count: user.reviewCount || stats.reviewCount }
+            { count: stats.reviewCount }
           )}
           gradient="from-amber-500 to-orange-500"
           iconBg="bg-amber-100 dark:bg-amber-900/30"
