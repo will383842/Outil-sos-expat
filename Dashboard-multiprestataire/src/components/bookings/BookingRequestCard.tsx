@@ -77,8 +77,14 @@ export default function BookingRequestCard({ booking, isNew, onDelete, providerM
   }
 
   const handleRespond = async () => {
-    // Open window BEFORE async to avoid popup blockers on mobile
-    const newWindow = window.open('about:blank', '_blank');
+    // Detect PWA standalone mode — window.open causes blank pages in standalone
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as any).standalone === true;
+
+    // In browser: pre-open window to avoid popup blockers
+    // In PWA standalone: skip pre-open (causes blank page), navigate directly later
+    const newWindow = isStandalone ? null : window.open('about:blank', '_blank');
     setIsSsoLoading(true);
 
     try {
@@ -106,7 +112,7 @@ export default function BookingRequestCard({ booking, isNew, onDelete, providerM
         if (newWindow) {
           newWindow.location.href = result.data.ssoUrl;
         } else {
-          // Popup blocked — navigate current tab
+          // PWA standalone or popup blocked — navigate current window
           window.location.href = result.data.ssoUrl;
         }
       } else {
@@ -116,9 +122,13 @@ export default function BookingRequestCard({ booking, isNew, onDelete, providerM
     } catch (err) {
       console.error('SSO error:', err);
       newWindow?.close();
-      // Fallback: open ia.sos-expat.com without SSO
       toast.error(t('booking.sso_fallback'));
-      window.open('https://ia.sos-expat.com', '_blank', 'noopener');
+      // Fallback: open ia.sos-expat.com without SSO
+      if (isStandalone) {
+        window.location.href = 'https://ia.sos-expat.com';
+      } else {
+        window.open('https://ia.sos-expat.com', '_blank', 'noopener');
+      }
     } finally {
       setIsSsoLoading(false);
     }
