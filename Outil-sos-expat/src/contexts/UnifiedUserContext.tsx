@@ -427,7 +427,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
 
               if (needsProviderLink || needsRoleUpdate || needsSubUpdate) {
                 if (import.meta.env.DEV) console.log("[UnifiedUser] Updating user doc:", { needsProviderLink, needsRoleUpdate, needsSubUpdate });
-                const updateData: Record<string, unknown> = {
+                const updateData: Record<string, any> = {
                   activeProviderId: providerDoc.id,
                   updatedAt: serverTimestamp(),
                 };
