@@ -37,9 +37,10 @@ import {
 const RECOVERY_CONFIG = {
   // Payments stuck for more than 10 minutes with completed call = auto-capture
   CAPTURE_THRESHOLD_MINUTES: 10,
-  // Payments stuck for more than 6 hours without completed call = auto-refund
-  // P0 FIX 2026-01-30: Reduced from 24h to 6h for better customer experience
-  REFUND_THRESHOLD_HOURS: 6,
+  // Payments stuck for more than 1 hour without completed call = auto-refund
+  // P0 FIX 2026-01-30: Reduced from 24h to 6h
+  // P0 FIX 2026-02-09: Reduced from 6h to 1h for much faster customer refund
+  REFUND_THRESHOLD_HOURS: 1,
   // Maximum payments to process per run
   BATCH_SIZE: 50,
   // Minimum call duration for capture (seconds) - P0 FIX 2026-02-01: Reduced from 2 min to 1 min
@@ -428,9 +429,10 @@ async function captureCompletedPayPalPayments(
 }
 
 /**
- * Find very old stuck payments (> 6 hours) and refund them
+ * Find old stuck payments (> 1 hour) and refund them
  * This prevents money from being held indefinitely
  * P0 FIX 2026-01-30: Reduced from 24h to 6h for better customer experience
+ * P0 FIX 2026-02-09: Reduced from 6h to 1h for much faster customer refund
  */
 async function refundOldStuckPayments(
   db: admin.firestore.Firestore,
@@ -440,7 +442,7 @@ async function refundOldStuckPayments(
     Date.now() - RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS * 60 * 60 * 1000
   );
 
-  console.log(`💸 [StuckPayments] Looking for very old stuck payments (> 6h)`);
+  console.log(`💸 [StuckPayments] Looking for stuck payments (> ${RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS}h)`);
 
   try {
     const veryOldPayments = await db
@@ -488,14 +490,14 @@ async function refundOldStuckPayments(
             status: "cancelled",
             cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
             cancelledBy: "stuck_payments_recovery",
-            cancellationReason: "Payment stuck for more than 6 hours without completed call",
+            cancellationReason: `Payment stuck for more than ${RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS} hour(s) without completed call`,
           });
 
           // Also update call session status if exists
           if (sessionId) {
             await db.collection("call_sessions").doc(sessionId).update({
               status: "cancelled",
-              cancelledReason: "Payment timeout - stuck for 6+ hours",
+              cancelledReason: `Payment timeout - stuck for ${RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS}+ hour(s)`,
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
           }
@@ -521,11 +523,11 @@ async function alertStuckPayments(
   db: admin.firestore.Firestore,
   results: { alerted: number; errors: number }
 ): Promise<void> {
-  const warningCutoff = new Date(Date.now() - 60 * 60 * 1000); // 1 hour
-  const criticalCutoff = new Date(Date.now() - 6 * 60 * 60 * 1000); // 6 hours
+  const warningCutoff = new Date(Date.now() - 30 * 60 * 1000); // 30 minutes
+  const criticalCutoff = new Date(Date.now() - RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS * 60 * 60 * 1000); // 1 hour
 
   try {
-    // Find payments that are stuck for 1-6 hours
+    // Find payments that are stuck for 30min to 1 hour (warning before auto-refund)
     const warningPayments = await db
       .collection("payments")
       .where("status", "==", "requires_capture")

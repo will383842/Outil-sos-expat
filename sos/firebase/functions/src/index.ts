@@ -515,6 +515,7 @@ import { createAndScheduleCallHTTPS } from "./createAndScheduleCallFunction";
 
 import { runExecuteCallTask } from "./runtime/executeCallTask";
 import { runSetProviderAvailableTask } from "./runtime/setProviderAvailableTask";
+import { runBusySafetyTimeoutTask } from "./runtime/busySafetyTimeoutTask";
 export { forceEndCallTask } from "./runtime/forceEndCallTask";
 
 ultraLogger.debug("IMPORTS", "Imports principaux chargés avec succès");
@@ -1065,6 +1066,22 @@ export const setProviderAvailableTask = onRequest(
     secrets: [TASKS_AUTH_SECRET],
   },
   (req, res) => runSetProviderAvailableTask(req as any, res as any)
+);
+
+// ========================================
+// 🛡️ ENDPOINT CLOUD TASKS : busy safety timeout (releases stuck busy providers)
+// ========================================
+export const busySafetyTimeoutTask = onRequest(
+  {
+    region: CALL_FUNCTIONS_REGION,
+    timeoutSeconds: 30,
+    memory: "256MiB" as const,
+    maxInstances: 10,
+    minInstances: 0,
+    concurrency: 1,
+    secrets: [TASKS_AUTH_SECRET],
+  },
+  (req, res) => runBusySafetyTimeoutTask(req as any, res as any)
 );
 
 // ========================================

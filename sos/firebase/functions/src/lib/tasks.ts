@@ -54,7 +54,7 @@ const PROVIDER_COOLDOWN_SECONDS = 5 * 60;
 
 // Busy safety timeout task URL - releases provider if stuck in busy state
 const BUSY_SAFETY_TIMEOUT_TASK_URL = defineString("BUSY_SAFETY_TIMEOUT_TASK_URL", {
-  default: "" // Will be set via Firebase params after deployment to europe-west3
+  default: "https://busysafetytimeouttask-5tfnuxa2hq-ey.a.run.app"
 });
 
 // Busy safety timeout duration in seconds (10 minutes)
