@@ -217,6 +217,26 @@ service cloud.firestore {
         // Mise à jour/Suppression: admin uniquement
         allow update, delete: if isAdmin();
       }
+
+      // Thinking logs (étapes de réflexion IA) dans la conversation
+      match /thinking_logs/{logId} {
+        // Lecture: même règle que la conversation parente
+        allow read: if isAdmin() || (
+          isProvider() &&
+          hasActiveSubscription() &&
+          isAssignedProvider(get(/databases/$(database)/documents/conversations/$(convId)).data.providerId)
+        );
+
+        // Création: admin, provider assigné, ou système
+        allow create: if isAdmin() || (
+          isProvider() &&
+          hasActiveSubscription() &&
+          isAssignedProvider(get(/databases/$(database)/documents/conversations/$(convId)).data.providerId)
+        );
+
+        // Mise à jour/Suppression: admin uniquement
+        allow update, delete: if isAdmin();
+      }
     }
 
     // ==========================================================================

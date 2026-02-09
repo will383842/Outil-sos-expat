@@ -786,7 +786,26 @@ const Login: React.FC = () => {
         defaultDashboard = "/blogger/tableau-de-bord";
       }
 
-      const rawRedirectToUse = redirectFromStorage || redirectFromParams || defaultDashboard;
+      // FIX: If a provider was selected (user clicked "Réserver" before login),
+      // redirect to booking form even if no explicit loginRedirect was set
+      let bookingRedirectFromProvider: string | null = null;
+      if (!redirectFromStorage && !redirectFromParams) {
+        try {
+          const selectedProviderRaw = sessionStorage.getItem('selectedProvider');
+          if (selectedProviderRaw) {
+            const selectedProvider = JSON.parse(selectedProviderRaw);
+            const providerIdentifier = selectedProvider.shortId || selectedProvider.id;
+            if (providerIdentifier) {
+              bookingRedirectFromProvider = `/booking-request/${providerIdentifier}`;
+              console.log('[BOOKING_AUTH_DEBUG] 🎯 Login detected selectedProvider, redirecting to booking:', bookingRedirectFromProvider);
+            }
+          }
+        } catch (e) {
+          console.error('[BOOKING_AUTH_DEBUG] Failed to parse selectedProvider:', e);
+        }
+      }
+
+      const rawRedirectToUse = redirectFromStorage || redirectFromParams || bookingRedirectFromProvider || defaultDashboard;
 
       // Decode the redirect URL (it was encoded when passed to login page)
       const decodedRedirect = decodeURIComponent(rawRedirectToUse);

@@ -171,10 +171,29 @@ const CountryStep: React.FC<{
   }, [sortedCountries, searchQuery]);
 
   // Dismiss keyboard and select country
+  // Use both onClick and onPointerUp for better mobile responsiveness
   const handleSelect = useCallback((code: string) => {
     searchInputRef.current?.blur();
     onSelect(code);
   }, [onSelect]);
+
+  // Prevent ghost clicks: track if selection came from pointer
+  const pointerHandledRef = useRef(false);
+  const handlePointerUp = useCallback((code: string, e: React.PointerEvent) => {
+    // Only handle touch events for faster response; mouse uses onClick
+    if (e.pointerType !== 'touch') return;
+    e.preventDefault();
+    pointerHandledRef.current = true;
+    handleSelect(code);
+    // Reset after a tick to allow onClick to check
+    setTimeout(() => { pointerHandledRef.current = false; }, 300);
+  }, [handleSelect]);
+
+  const handleClick = useCallback((code: string) => {
+    // Skip if already handled by pointerUp (touch)
+    if (pointerHandledRef.current) return;
+    handleSelect(code);
+  }, [handleSelect]);
 
   return (
     <>
@@ -213,7 +232,8 @@ const CountryStep: React.FC<{
             <button
               key={country.code}
               type="button"
-              onClick={() => handleSelect(country.code)}
+              onClick={() => handleClick(country.code)}
+              onPointerUp={(e) => handlePointerUp(country.code, e)}
               className={`
                 flex items-center gap-2.5 p-3 rounded-xl border-2
                 text-left min-h-[52px] select-none cursor-pointer touch-manipulation
@@ -296,6 +316,21 @@ const LanguageStep: React.FC<{
     onToggle(code);
   }, [onToggle]);
 
+  // Prevent ghost clicks: track if selection came from pointer
+  const langPointerHandledRef = useRef(false);
+  const handleLangPointerUp = useCallback((code: string, e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch') return;
+    e.preventDefault();
+    langPointerHandledRef.current = true;
+    handleToggle(code);
+    setTimeout(() => { langPointerHandledRef.current = false; }, 300);
+  }, [handleToggle]);
+
+  const handleLangClick = useCallback((code: string) => {
+    if (langPointerHandledRef.current) return;
+    handleToggle(code);
+  }, [handleToggle]);
+
   return (
     <>
       {/* Title with selection count */}
@@ -345,7 +380,8 @@ const LanguageStep: React.FC<{
               <button
                 key={lang.code}
                 type="button"
-                onClick={() => handleToggle(lang.code)}
+                onClick={() => handleLangClick(lang.code)}
+                onPointerUp={(e) => handleLangPointerUp(lang.code, e)}
                 className={`
                   flex items-center gap-2.5 p-3 rounded-xl border-2
                   text-left min-h-[52px] select-none cursor-pointer touch-manipulation
@@ -483,7 +519,10 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
 
     const handleTouchMove = (e: TouchEvent) => {
       const target = e.target as HTMLElement;
+      // Allow touch events inside scrollable containers
       if (target.closest('[data-wizard-scroll]')) return;
+      // Allow touch events on inputs and their containers (search bar)
+      if (target.closest('input') || target.tagName === 'INPUT' || target.closest('[role="search"]')) return;
       e.preventDefault();
     };
 

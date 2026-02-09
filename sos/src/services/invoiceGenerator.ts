@@ -545,11 +545,9 @@ export const generateInvoicePDF = async (invoiceData: InvoiceData): Promise<Blob
       if (invoiceData.payment.providerEmail) {
         pdf.text(`${t.email} ${invoiceData.payment.providerEmail}`, margin, yPos + 5);
       }
-      if (invoiceData.payment.providerPhone) {
-        pdf.text(`${t.phone} ${invoiceData.payment.providerPhone}`, margin, yPos + 10);
-      }
+      // SECURITY: Provider phone number intentionally NOT displayed on invoice
       if (invoiceData.callRecord.providerCountry) {
-        pdf.text(`${t.country} ${invoiceData.callRecord.providerCountry}`, margin, yPos + 15);
+        pdf.text(`${t.country} ${invoiceData.callRecord.providerCountry}`, margin, yPos + 10);
       }
     }
 
