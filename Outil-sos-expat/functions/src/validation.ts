@@ -107,7 +107,10 @@ export const IngestBookingSchema = z.object({
   // Métadonnées
   source: z.string().max(100).optional().default("sos-expat"),
   externalId: z.string().max(200).optional().nullable(),
-  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional().default({}),
+  metadata: z.record(z.string(), z.union([
+    z.string(), z.number(), z.boolean(), z.null(),
+    z.array(z.union([z.string(), z.number(), z.boolean(), z.null()])),
+  ])).optional().default({}),
 
   // Abonnement (pour vérification)
   subscriptionStatus: z.string().optional(),
@@ -131,7 +134,10 @@ export const MessageSchema = z.object({
   bookingId: z.string().optional(),
   role: z.enum(["user", "assistant", "system", "provider"]).default("user"),
   source: z.enum(["user", "api", "gpt", "system", "webhook"]).default("user"),
-  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
+  metadata: z.record(z.string(), z.union([
+    z.string(), z.number(), z.boolean(), z.null(),
+    z.array(z.union([z.string(), z.number(), z.boolean(), z.null()])),
+  ])).optional(),
 });
 
 export type MessagePayload = z.infer<typeof MessageSchema>;
@@ -170,7 +176,10 @@ export const SyncProviderSchema = z.object({
   active: z.boolean().default(true),
   bio: z.string().max(2000).optional(),
   avatarUrl: z.string().url().optional(),
-  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional().default({}),
+  metadata: z.record(z.string(), z.union([
+    z.string(), z.number(), z.boolean(), z.null(),
+    z.array(z.union([z.string(), z.number(), z.boolean(), z.null()])),
+  ])).optional().default({}),
 });
 
 export type SyncProviderPayload = z.infer<typeof SyncProviderSchema>;
