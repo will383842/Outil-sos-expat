@@ -494,6 +494,7 @@ async function assertAdmin(auth: { uid: string; token?: Record<string, unknown> 
  */
 export const adminUpdateChatterConfigSettings = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
     cpu: 0.1,
@@ -600,6 +601,7 @@ export const adminUpdateChatterConfigSettings = onCall(
  */
 export const adminGetChatterConfigSettings = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
     cpu: 0.1,
@@ -641,6 +643,7 @@ export const adminGetChatterConfigSettings = onCall(
  */
 export const adminInitializeChatterConfigSettings = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
     cpu: 0.1,
@@ -694,6 +697,7 @@ export const adminInitializeChatterConfigSettings = onCall(
  */
 export const adminToggleFlashBonus = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
     cpu: 0.1,

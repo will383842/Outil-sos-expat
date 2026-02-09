@@ -840,6 +840,7 @@ export const getServiceBalanceAlerts = onCall(
     region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ alerts: ServiceBalanceAlert[] }> => {
     // Authentication check
@@ -892,6 +893,7 @@ export const acknowledgeServiceBalanceAlert = onCall(
     region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     // Authentication check
@@ -948,6 +950,7 @@ export const updateServiceBalanceThreshold = onCall(
     region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; threshold: ServiceBalanceThreshold }> => {
     // Authentication check
@@ -1031,6 +1034,7 @@ export const getServiceBalanceThresholds = onCall(
     region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ thresholds: ServiceBalanceThreshold[] }> => {
     // Authentication check
@@ -1092,6 +1096,7 @@ export const triggerServiceBalanceCheck = onCall(
     region: 'europe-west3',
     memory: '512MiB',
     timeoutSeconds: 120,
+    cors: true,
     secrets: [
       TWILIO_ACCOUNT_SID_SECRET,
       TWILIO_AUTH_TOKEN_SECRET,

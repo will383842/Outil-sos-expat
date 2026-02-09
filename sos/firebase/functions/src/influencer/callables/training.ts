@@ -45,6 +45,7 @@ export const getInfluencerTrainingModules = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<GetInfluencerTrainingModulesResponse> => {
     ensureInitialized();
@@ -167,6 +168,7 @@ export const getInfluencerTrainingModuleContent = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<GetInfluencerTrainingModuleContentResponse> => {
     ensureInitialized();
@@ -326,6 +328,7 @@ export const updateInfluencerTrainingProgress = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -385,6 +388,7 @@ export const submitInfluencerTrainingQuiz = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 60,
+    cors: true,
   },
   async (request): Promise<SubmitInfluencerTrainingQuizResponse> => {
     ensureInitialized();

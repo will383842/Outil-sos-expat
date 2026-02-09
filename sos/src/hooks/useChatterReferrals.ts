@@ -5,7 +5,7 @@
  * - Filleuls N1/N2
  * - Referral commissions
  * - Tier progress
- * - Early adopter status
+ * - Active promotions
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -17,7 +17,6 @@ import {
   ChatterFilleulN2,
   ChatterReferralStats,
   ChatterTierProgress,
-  ChatterEarlyAdopterStatus,
   ChatterActivePromotion,
   ChatterReferralCommission,
 } from "@/types/chatter";
@@ -30,7 +29,6 @@ interface UseChatterReferralsReturn {
   filleulsN2: ChatterFilleulN2[];
   recentCommissions: ChatterReferralDashboardData["recentCommissions"];
   tierProgress: ChatterTierProgress | null;
-  earlyAdopter: ChatterEarlyAdopterStatus | null;
   activePromotion: ChatterActivePromotion | null;
 
   // State
@@ -86,7 +84,6 @@ export function useChatterReferrals(): UseChatterReferralsReturn {
     filleulsN2: dashboardData?.filleulsN2 || [],
     recentCommissions: dashboardData?.recentCommissions || [],
     tierProgress: dashboardData?.tierProgress || null,
-    earlyAdopter: dashboardData?.earlyAdopter || null,
     activePromotion: dashboardData?.activePromotion || null,
 
     // State

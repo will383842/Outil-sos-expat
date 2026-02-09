@@ -37,6 +37,7 @@ export const requestWithdrawal = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
+    cors: true,
   },
   async (request): Promise<RequestWithdrawalResponse> => {
     ensureInitialized();

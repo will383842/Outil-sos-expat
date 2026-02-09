@@ -601,14 +601,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.chattersList.description",
       },
       {
-        id: "chatters-pioneers",
-        labelKey: "admin.menu.chattersPioneers",
-        path: "/admin/chatters/early-adopters",
-        icon: Award,
-        badge: "+50%",
-        descriptionKey: "admin.menu.chattersPioneers.description",
-      },
-      {
         id: "chatters-referrals",
         labelKey: "admin.menu.chattersReferrals",
         path: "/admin/chatters/referrals",

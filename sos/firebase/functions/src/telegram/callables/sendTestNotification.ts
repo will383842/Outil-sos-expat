@@ -138,6 +138,7 @@ function buildTestVariables(eventType: TelegramEventType): NewRegistrationVars |
 export const telegram_sendTestNotification = onCall(
   {
     region: "europe-west1",
+    cors: true,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

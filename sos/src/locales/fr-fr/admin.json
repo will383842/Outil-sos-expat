@@ -1861,8 +1861,7 @@
   "admin.menu.chatters.description": "Programme Chatters et ambassadeurs",
   "admin.menu.chattersList": "Liste des Chatters",
   "admin.menu.chattersList.description": "Gérer tous les chatters",
-  "admin.menu.chattersPioneers": "Pionniers Chatters",
-  "admin.menu.chattersPioneers.description": "Premiers adopteurs avec bonus +50%",
+
   "admin.menu.chattersReferrals": "Parrainages Chatters",
   "admin.menu.chattersReferrals.description": "Parrainage de nouveaux chatters",
   "admin.menu.chattersCommissions": "Commissions Chatters",

@@ -184,9 +184,6 @@ Des questions ? Réponds à cet email ou contacte ton parrain.
         const referralUpdates: Record<string, unknown> = {
           parrainNiveau2Id: parrainNiveau2Id || null,
           // Initialize referral system fields
-          isEarlyAdopter: false,
-          earlyAdopterCountry: null,
-          earlyAdopterDate: null,
           qualifiedReferralsCount: 0,
           referralsN2Count: 0,
           referralEarnings: 0,
@@ -271,9 +268,6 @@ Des questions ? Réponds à cet email ou contacte ton parrain.
         // No recruiter - still initialize referral fields
         await db.collection("chatters").doc(chatterId).update({
           parrainNiveau2Id: null,
-          isEarlyAdopter: false,
-          earlyAdopterCountry: null,
-          earlyAdopterDate: null,
           qualifiedReferralsCount: 0,
           referralsN2Count: 0,
           referralEarnings: 0,

@@ -60,12 +60,6 @@ interface UseChatterReturn {
   ) => Promise<{ success: boolean; message: string }>;
   markNotificationRead: (notificationId: string) => Promise<void>;
   markAllNotificationsRead: () => Promise<void>;
-  markSocialNetworkLiked: (networkId: string) => Promise<{
-    success: boolean;
-    bonusPaid?: boolean;
-    bonusAmount?: number;
-    error?: string;
-  }>;
 
   // Computed
   clientShareUrl: string;
@@ -231,46 +225,6 @@ export function useChatter(): UseChatterReturn {
     [user?.uid, db, notifications]
   );
 
-  // Mark social network as liked (for piggy bank bonus)
-  const markSocialNetworkLiked = useCallback(
-    async (networkId: string): Promise<{
-      success: boolean;
-      bonusPaid?: boolean;
-      bonusAmount?: number;
-      error?: string;
-    }> => {
-      if (!user?.uid) {
-        return { success: false, error: "User must be authenticated" };
-      }
-
-      try {
-        const markLikedFn = httpsCallable<
-          { networkId: string },
-          {
-            success: boolean;
-            bonusPaid?: boolean;
-            bonusAmount?: number;
-            error?: string;
-          }
-        >(functions, "markSocialNetworkLiked");
-
-        const result = await markLikedFn({ networkId });
-
-        // Refresh dashboard to update piggy bank data
-        await refreshDashboard();
-
-        return result.data;
-      } catch (err) {
-        console.error("[useChatter] Error marking social network as liked:", err);
-        return {
-          success: false,
-          error: err instanceof Error ? err.message : "Failed to mark network as liked",
-        };
-      }
-    },
-    [user?.uid, functions, refreshDashboard]
-  );
-
   // Subscribe to commissions
   useEffect(() => {
     if (!user?.uid || !isChatter) return;
@@ -429,7 +383,6 @@ export function useChatter(): UseChatterReturn {
     updateProfile,
     markNotificationRead,
     markAllNotificationsRead,
-    markSocialNetworkLiked,
     clientShareUrl,
     recruitmentShareUrl,
     canWithdraw,

@@ -62,7 +62,6 @@ import {
   Crown,
   QrCode,
   TrendingUp,
-  Award,
   Calculator,
   Play,
   Camera,
@@ -466,22 +465,6 @@ const InfluencerLanding: React.FC = () => {
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
                 <Users className="w-4 h-4" />
                 <FormattedMessage id="influencer.hero.trust.4" defaultMessage="No Min Followers" />
-              </div>
-            </div>
-
-            {/* 🔥 EARLY ADOPTER URGENCY BANNER */}
-            <div className="mt-6 bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-yellow-500/20 backdrop-blur-md rounded-2xl p-4 border border-yellow-400/30 max-w-lg mx-auto animate-pulse">
-              <div className="flex items-center justify-center gap-3">
-                <Award className="w-6 h-6 text-yellow-400" />
-                <div className="text-center">
-                  <p className="font-bold text-yellow-300">
-                    <FormattedMessage id="influencer.hero.earlyAdopter" defaultMessage="🚨 Early Adopter Bonus: +25% for 6 months!" />
-                  </p>
-                  <p className="text-sm text-white/70">
-                    <FormattedMessage id="influencer.hero.earlyAdopter.sub" defaultMessage="Only for the first 100 influencers. Limited spots!" />
-                  </p>
-                </div>
-                <Timer className="w-6 h-6 text-yellow-400" />
               </div>
             </div>
 

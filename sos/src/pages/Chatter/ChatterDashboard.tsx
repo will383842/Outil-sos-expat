@@ -39,7 +39,6 @@ import {
   PiggyBankCard,
   EarningsMotivationCard,
 } from '@/components/Chatter/Cards';
-import type { SocialNetwork } from '@/components/Chatter/Cards/PiggyBankCard';
 import type { EarningsByCategory } from '@/components/Chatter/Cards/EarningsBreakdownCard';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
 import { SkeletonDashboard } from '@/components/ui/SkeletonCard';
@@ -69,9 +68,6 @@ const TeamManagementCard = lazy(() =>
 );
 const EarningsRatioCard = lazy(() =>
   import('@/components/Chatter/Cards/EarningsRatioCard').then(m => ({ default: m.EarningsRatioCard }))
-);
-const PioneerBadgeCard = lazy(() =>
-  import('@/components/Chatter/Cards/PioneerBadgeCard').then(m => ({ default: m.PioneerBadgeCard }))
 );
 const TeamMessagesCard = lazy(() =>
   import('@/components/Chatter/Cards/TeamMessagesCard').then(m => ({ default: m.TeamMessagesCard }))
@@ -353,7 +349,6 @@ const ChatterDashboard: React.FC = () => {
     canWithdraw,
     minimumWithdrawal,
     refreshDashboard,
-    markSocialNetworkLiked,
     markNotificationRead,
     markAllNotificationsRead,
     unreadNotificationsCount,
@@ -362,7 +357,6 @@ const ChatterDashboard: React.FC = () => {
   // Referral data
   const {
     stats: referralStats,
-    earlyAdopter,
     tierProgress,
     filleulsN1,
     filleulsN2,
@@ -507,19 +501,6 @@ const ChatterDashboard: React.FC = () => {
       unlockThreshold: pb.unlockThreshold,
       progressPercent: pb.progressPercent,
       amountToUnlock: pb.amountToUnlock,
-      socialLikes: {
-        networksAvailable: pb.socialLikes.networksAvailable,
-        networksLiked: pb.socialLikes.networksLiked,
-        bonusPending: pb.socialLikes.bonusPending,
-        bonusPaid: pb.socialLikes.bonusPaid,
-        networks: pb.socialLikes.networks.map((n) => ({
-          id: n.id,
-          name: n.label,
-          url: n.url,
-          liked: n.liked,
-          bonus: n.bonusAmount,
-        })),
-      },
       totalPending: pb.totalPending,
       message: pb.message,
     };
@@ -533,7 +514,6 @@ const ChatterDashboard: React.FC = () => {
       teamRecruitment: 0,
       tierBonuses: 0,
       streakBonuses: 0,
-      socialLikes: 0,
       recurringCommissions: 0,
     };
 
@@ -574,13 +554,8 @@ const ChatterDashboard: React.FC = () => {
       }
     });
 
-    // Social likes: from piggy bank data if available
-    if (dashboardData?.piggyBank?.socialLikes?.bonusPaid) {
-      breakdown.socialLikes = dashboardData.piggyBank.socialLikes.bonusPaid;
-    }
-
     return breakdown;
-  }, [commissions, dashboardData?.piggyBank?.socialLikes?.bonusPaid]);
+  }, [commissions]);
 
   // Memoized chatter data for AchievementBadgesCard - avoids creating new object on each render
   // Note: We intentionally depend on dashboardData?.chatter rather than dashboardData
@@ -771,29 +746,6 @@ const ChatterDashboard: React.FC = () => {
     }
   }, [dashboardData?.piggyBank, navigate, routes.payments, showToast, intl]);
 
-  const handleNetworkClick = useCallback(async (network: SocialNetwork) => {
-    window.open(network.url, '_blank', 'noopener,noreferrer');
-    if (!network.liked) {
-      setTimeout(async () => {
-        const result = await markSocialNetworkLiked(network.id);
-        if (result.success) {
-          if (result.bonusPaid && result.bonusAmount) {
-            celebrateCommission(`$${(result.bonusAmount / 100).toFixed(0)}`);
-          } else {
-            showToast(
-              'success',
-              intl.formatMessage({
-                id: 'chatter.piggyBank.likeRecorded',
-                defaultMessage: 'Like recorded! Bonus pending unlock.',
-              }),
-              `+$${(network.bonus / 100).toFixed(0)}`
-            );
-          }
-        }
-      }, 2000);
-    }
-  }, [markSocialNetworkLiked, celebrateCommission, showToast, intl]);
-
   // ============================================================================
   // EFFECTS
   // ============================================================================
@@ -982,13 +934,6 @@ const ChatterDashboard: React.FC = () => {
             </button>
           </div>
         </div>
-
-        {/* Pioneer Badge - Lazy loaded */}
-        {earlyAdopter?.isEarlyAdopter && (
-          <Suspense fallback={<CardSkeleton height="h-24" />}>
-            <PioneerBadgeCard earlyAdopter={earlyAdopter} variant="compact" />
-          </Suspense>
-        )}
 
         {/* Team Alerts Section */}
         {inactiveMembers.length > 0 && (
@@ -1460,7 +1405,6 @@ const ChatterDashboard: React.FC = () => {
                 <PiggyBankCard
                   piggyBank={piggyBankData}
                   onClaim={handlePiggyBankClaim}
-                  onNetworkClick={handleNetworkClick}
                   loading={isLoading}
                 />
               </div>

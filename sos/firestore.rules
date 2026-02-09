@@ -83,7 +83,8 @@ service cloud.firestore {
                                    'payoutMode', 'aaaPayoutMode', 'isAAA',
                                    'affiliateCode', 'referredBy', 'referredByUserId',
                                    'capturedRates', 'totalEarned', 'availableBalance',
-                                   'pendingBalance', 'affiliateStatus', 'affiliateStats']))
+                                   'pendingBalance', 'affiliateStatus', 'affiliateStats',
+                                   'linkedProviderIds', 'shareBusyStatus']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }

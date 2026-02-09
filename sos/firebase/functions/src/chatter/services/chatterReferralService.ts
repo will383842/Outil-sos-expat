@@ -5,7 +5,6 @@
  * - Threshold-based commissions ($10 → $1, $50 → $4, N2 $50 → $2)
  * - Per-call commissions: N1 = $1/call, N2 = $0.50/call (real-time via onCallCompleted)
  * - Tier bonuses (5/10/20/50/100/500 qualified filleuls)
- * - Early adopter (+50% lifetime bonus)
  * - Promotion multipliers (hackathons, special events)
  *
  * NOTE: Old monthly 5% recurring system has been REMOVED.
@@ -17,7 +16,6 @@ import { logger } from "firebase-functions/v2";
 import {
   Chatter,
   ChatterReferralCommission,
-  ChatterEarlyAdopterCounter,
   ChatterTierBonusHistory,
   ChatterPromotion,
   REFERRAL_CONFIG,
@@ -169,9 +167,6 @@ export async function checkAndApplyThresholds(chatterId: string): Promise<Thresh
         threshold50Reached: true,
         updatedAt: Timestamp.now(),
       });
-
-      // Check and apply early adopter status for the filleul
-      await checkAndApplyEarlyAdopter(chatterId);
     }
 
     return result;
@@ -179,116 +174,6 @@ export async function checkAndApplyThresholds(chatterId: string): Promise<Thresh
     logger.error("[checkAndApplyThresholds] Error", { chatterId, error });
     return result;
   }
-}
-
-// ============================================================================
-// EARLY ADOPTER (PIONEER) SYSTEM
-// ============================================================================
-
-export interface EarlyAdopterResult {
-  becameEarlyAdopter: boolean;
-  country: string | null;
-}
-
-/**
- * Check and apply early adopter status when a chatter reaches $50 threshold
- */
-export async function checkAndApplyEarlyAdopter(chatterId: string): Promise<EarlyAdopterResult> {
-  const db = getFirestore();
-  const result: EarlyAdopterResult = { becameEarlyAdopter: false, country: null };
-
-  try {
-    const chatterDoc = await db.collection("chatters").doc(chatterId).get();
-    if (!chatterDoc.exists) return result;
-
-    const chatter = chatterDoc.data() as Chatter;
-
-    // Already an early adopter
-    if (chatter.isEarlyAdopter) {
-      return { becameEarlyAdopter: false, country: chatter.earlyAdopterCountry };
-    }
-
-    // Must have reached $50 threshold
-    if (!chatter.threshold50Reached) return result;
-
-    // GLOBAL early adopter counter - uses "global" as the key (100 slots worldwide)
-    const counterRef = db.collection("chatter_early_adopter_counters").doc("global");
-
-    // Try to claim an early adopter slot
-    const success = await db.runTransaction(async (transaction) => {
-      const counterDoc = await transaction.get(counterRef);
-
-      let counter: ChatterEarlyAdopterCounter;
-      if (!counterDoc.exists) {
-        // Create counter if it doesn't exist
-        counter = {
-          countryCode: "global",
-          countryName: "Global",
-          maxEarlyAdopters: REFERRAL_CONFIG.EARLY_ADOPTER.TOTAL_SLOTS,
-          currentCount: 0,
-          remainingSlots: REFERRAL_CONFIG.EARLY_ADOPTER.TOTAL_SLOTS,
-          isOpen: true,
-          earlyAdopterIds: [],
-          updatedAt: Timestamp.now(),
-        };
-      } else {
-        counter = counterDoc.data() as ChatterEarlyAdopterCounter;
-      }
-
-      // Check if slots are available
-      if (!counter.isOpen || counter.remainingSlots <= 0) {
-        return false;
-      }
-
-      // Update counter
-      const updatedCounter: Partial<ChatterEarlyAdopterCounter> = {
-        currentCount: counter.currentCount + 1,
-        remainingSlots: counter.remainingSlots - 1,
-        isOpen: counter.remainingSlots - 1 > 0,
-        earlyAdopterIds: [...counter.earlyAdopterIds, chatterId],
-        updatedAt: Timestamp.now(),
-      };
-
-      if (counterDoc.exists) {
-        transaction.update(counterRef, updatedCounter);
-      } else {
-        transaction.set(counterRef, { ...counter, ...updatedCounter });
-      }
-
-      // Update chatter - keep earlyAdopterCountry for backwards compatibility but set to "global"
-      const chatterRef = db.collection("chatters").doc(chatterId);
-      transaction.update(chatterRef, {
-        isEarlyAdopter: true,
-        earlyAdopterCountry: "global", // Global program
-        earlyAdopterDate: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      });
-
-      return true;
-    });
-
-    if (success) {
-      result.becameEarlyAdopter = true;
-      result.country = "global";
-
-      logger.info("[checkAndApplyEarlyAdopter] New early adopter (global program)", {
-        chatterId,
-        originalCountry: chatter.country,
-      });
-    }
-
-    return result;
-  } catch (error) {
-    logger.error("[checkAndApplyEarlyAdopter] Error", { chatterId, error });
-    return result;
-  }
-}
-
-/**
- * Get the early adopter multiplier for a chatter
- */
-export function getEarlyAdopterMultiplier(chatter: Chatter): number {
-  return chatter.isEarlyAdopter ? REFERRAL_CONFIG.EARLY_ADOPTER.MULTIPLIER : 1.0;
 }
 
 // ============================================================================
@@ -522,19 +407,15 @@ async function createReferralCommission(input: CreateReferralCommissionInput): P
     const filleul = filleulDoc.exists ? (filleulDoc.data() as Chatter) : null;
 
     // Calculate multipliers
-    const earlyAdopterMultiplier = getEarlyAdopterMultiplier(parrain);
     const promoResult = await getActivePromoMultiplier(input.parrainId, input.type);
 
     // Calculate final amount
     const finalAmount = Math.floor(
-      input.baseAmount * earlyAdopterMultiplier * promoResult.multiplier
+      input.baseAmount * promoResult.multiplier
     );
 
     // Build calculation details string
     let calculationDetails = `Base: $${(input.baseAmount / 100).toFixed(2)}`;
-    if (earlyAdopterMultiplier > 1) {
-      calculationDetails += ` x ${earlyAdopterMultiplier} (Pioneer)`;
-    }
     if (promoResult.multiplier > 1) {
       calculationDetails += ` x ${promoResult.multiplier} (${promoResult.promoName})`;
     }
@@ -555,7 +436,6 @@ async function createReferralCommission(input: CreateReferralCommissionInput): P
       type: input.type,
       level: input.level,
       baseAmount: input.baseAmount,
-      earlyAdopterMultiplier,
       promoMultiplier: promoResult.multiplier,
       amount: finalAmount,
       // recurringMonth and filleulMonthlyEarnings removed - old 5% system deprecated
@@ -606,7 +486,6 @@ async function createReferralCommission(input: CreateReferralCommissionInput): P
       type: input.type,
       baseAmount: input.baseAmount,
       finalAmount,
-      earlyAdopterMultiplier,
       promoMultiplier: promoResult.multiplier,
     });
 

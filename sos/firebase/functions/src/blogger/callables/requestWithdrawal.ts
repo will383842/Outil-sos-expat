@@ -101,6 +101,7 @@ export const bloggerRequestWithdrawal = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
+    cors: true,
   },
   async (request): Promise<RequestBloggerWithdrawalResponse> => {
     // 1. Check authentication

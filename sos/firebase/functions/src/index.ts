@@ -5726,10 +5726,6 @@ export {
   // Admin Referral System
   adminGetReferralStats,
   adminGetReferralTree,
-  adminGetEarlyAdopters,
-  adminUpdateEarlyAdopterQuota,
-  // DISABLED 2026-01-30: One-time init - removed to free quota
-  // adminInitializeAllEarlyAdopterCounters,
   adminGetReferralFraudAlerts,
   adminReviewFraudAlert,
   adminGetReferralCommissions,

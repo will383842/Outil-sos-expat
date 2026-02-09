@@ -24,7 +24,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { ChatterNotification, Chatter } from "../types";
-import { createCommission, checkAndPaySocialBonus, checkAndPayTelegramBonus } from "../services";
+import { createCommission, checkAndPayTelegramBonus } from "../services";
 import {
   getChatterConfigCached,
   getClientCallCommission,
@@ -208,15 +208,6 @@ export const chatterOnCallCompleted = onDocumentUpdated(
 
         // Update daily missions progress
         await updateDailyMissionCall(db, chatterId);
-
-        // Check and pay social bonus if eligible (requires $100 direct earnings)
-        const socialBonusResult = await checkAndPaySocialBonus(chatterId);
-        if (socialBonusResult.paid) {
-          logger.info("[chatterOnCallCompleted] Social bonus paid", {
-            chatterId,
-            amount: socialBonusResult.amount,
-          });
-        }
 
         // Check and pay telegram bonus if eligible (requires $150 direct earnings)
         const telegramBonusResult = await checkAndPayTelegramBonus(chatterId);

@@ -91,6 +91,7 @@ export const adminGetGroupAdminsList = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
+    cors: true,
   },
   async (request): Promise<GetGroupAdminsListResponse> => {
     ensureInitialized();
@@ -230,6 +231,7 @@ export const adminGetGroupAdminDetail = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ groupAdmin: GroupAdmin; recentWithdrawals: GroupAdminWithdrawal[]; recentCommissions: GroupAdminCommission[] }> => {
     ensureInitialized();
@@ -308,6 +310,7 @@ export const adminUpdateGroupAdminStatus = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -389,6 +392,7 @@ export const adminVerifyGroup = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -463,6 +467,7 @@ export const adminProcessWithdrawal = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -633,6 +638,7 @@ export const adminGetWithdrawalsList = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
+    cors: true,
   },
   async (request): Promise<{ withdrawals: GroupAdminWithdrawal[]; hasMore: boolean; stats: WithdrawalStats }> => {
     ensureInitialized();
@@ -767,6 +773,7 @@ export const adminExportGroupAdmins = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; data: ExportGroupAdminItem[]; csv: string }> => {
     ensureInitialized();

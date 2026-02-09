@@ -278,20 +278,24 @@ export class PaymentService {
    * @param paymentMethodId - The payment method ID to delete
    */
   async deletePaymentMethod(userId: string, paymentMethodId: string): Promise<void> {
-    const methodRef = this.db.collection(COLLECTIONS.PAYMENT_METHODS).doc(paymentMethodId);
-    const methodDoc = await methodRef.get();
+    // Atomic transaction: read + verify ownership + delete
+    // Prevents TOCTOU where state changes between check and delete
+    await this.db.runTransaction(async (transaction) => {
+      const methodRef = this.db.collection(COLLECTIONS.PAYMENT_METHODS).doc(paymentMethodId);
+      const methodDoc = await transaction.get(methodRef);
 
-    if (!methodDoc.exists) {
-      throw new Error('Payment method not found');
-    }
+      if (!methodDoc.exists) {
+        throw new Error('Payment method not found');
+      }
 
-    const method = methodDoc.data() as UserPaymentMethod;
+      const method = methodDoc.data() as UserPaymentMethod;
 
-    if (method.userId !== userId) {
-      throw new Error('Not authorized to delete this payment method');
-    }
+      if (method.userId !== userId) {
+        throw new Error('Not authorized to delete this payment method');
+      }
 
-    await methodRef.delete();
+      transaction.delete(methodRef);
+    });
 
     logger.info('[PaymentService.deletePaymentMethod] Payment method deleted', {
       paymentMethodId,
@@ -385,8 +389,22 @@ export class PaymentService {
       requestedAt: now,
     };
 
-    // 5. Execute in transaction
+    // 5. Execute in transaction (balance deduction + withdrawal creation atomic)
     await this.db.runTransaction(async (transaction) => {
+      // Re-check for pending withdrawals INSIDE transaction to prevent race condition
+      // where two concurrent requests both pass the pre-check
+      const pendingCheck = await this.db
+        .collection(COLLECTIONS.WITHDRAWALS)
+        .where('userId', '==', userId)
+        .where('userType', '==', userType)
+        .where('status', 'in', ['pending', 'validating', 'approved', 'queued', 'processing', 'sent'])
+        .limit(1)
+        .get();
+
+      if (!pendingCheck.empty) {
+        throw new Error('A withdrawal request is already pending');
+      }
+
       // Deduct from user's available balance
       await this.deductUserBalance(userId, userType, amount, transaction);
 
@@ -459,35 +477,64 @@ export class PaymentService {
    * @param reason - Optional cancellation reason
    */
   async cancelWithdrawal(withdrawalId: string, userId: string, reason?: string): Promise<void> {
-    const withdrawal = await this.getWithdrawal(withdrawalId);
+    const now = new Date().toISOString();
 
-    if (!withdrawal) {
-      throw new Error('Withdrawal not found');
-    }
+    // Atomic transaction: read withdrawal + verify status + update status + refund balance
+    // Prevents double-refund race condition from concurrent cancellation requests
+    await this.db.runTransaction(async (transaction) => {
+      // 1. Read withdrawal INSIDE transaction
+      const withdrawalRef = this.db.collection(COLLECTIONS.WITHDRAWALS).doc(withdrawalId);
+      const withdrawalDoc = await transaction.get(withdrawalRef);
 
-    if (withdrawal.userId !== userId) {
-      throw new Error('Not authorized to cancel this withdrawal');
-    }
+      if (!withdrawalDoc.exists) {
+        throw new Error('Withdrawal not found');
+      }
 
-    if (withdrawal.status !== 'pending') {
-      throw new Error(`Cannot cancel withdrawal with status: ${withdrawal.status}`);
-    }
+      const withdrawal = withdrawalDoc.data() as WithdrawalRequest;
 
-    await this.updateWithdrawalStatus(
+      if (withdrawal.userId !== userId) {
+        throw new Error('Not authorized to cancel this withdrawal');
+      }
+
+      if (withdrawal.status !== 'pending') {
+        throw new Error(`Cannot cancel withdrawal with status: ${withdrawal.status}`);
+      }
+
+      // 2. Update withdrawal status to cancelled
+      const historyEntry: StatusHistoryEntry = {
+        status: 'cancelled',
+        timestamp: now,
+        actor: userId,
+        actorType: 'user',
+        note: reason || 'Cancelled by user',
+      };
+
+      transaction.update(withdrawalRef, {
+        status: 'cancelled',
+        statusHistory: FieldValue.arrayUnion(historyEntry),
+      });
+
+      // 3. Refund balance in the SAME transaction
+      const collectionName = this.getUserCollectionName(withdrawal.userType);
+      const userRef = this.db.collection(collectionName).doc(withdrawal.userId);
+      const userDoc = await transaction.get(userRef);
+
+      if (!userDoc.exists) {
+        throw new Error(`${withdrawal.userType} not found`);
+      }
+
+      const userData = userDoc.data()!;
+      const currentBalance = userData.availableBalance || 0;
+
+      transaction.update(userRef, {
+        availableBalance: currentBalance + withdrawal.amount,
+        updatedAt: Timestamp.now(),
+      });
+    });
+
+    logger.info('[PaymentService.cancelWithdrawal] Withdrawal cancelled (atomic)', {
       withdrawalId,
-      'cancelled',
       userId,
-      'user',
-      reason || 'Cancelled by user'
-    );
-
-    // Refund the balance
-    await this.refundUserBalance(withdrawal.userId, withdrawal.userType, withdrawal.amount);
-
-    logger.info('[PaymentService.cancelWithdrawal] Withdrawal cancelled', {
-      withdrawalId,
-      userId,
-      amount: withdrawal.amount,
     });
   }
 
@@ -541,31 +588,60 @@ export class PaymentService {
     adminId: string,
     reason: string
   ): Promise<void> {
-    const withdrawal = await this.getWithdrawal(withdrawalId);
-
-    if (!withdrawal) {
-      throw new Error('Withdrawal not found');
-    }
-
-    if (withdrawal.status !== 'pending' && withdrawal.status !== 'validating') {
-      throw new Error(`Cannot reject withdrawal with status: ${withdrawal.status}`);
-    }
-
     const now = new Date().toISOString();
 
-    await this.updateWithdrawalStatus(
-      withdrawalId,
-      'rejected',
-      adminId,
-      'admin',
-      reason,
-      { rejectedAt: now, processedBy: adminId, errorMessage: reason }
-    );
+    // Atomic transaction: read + verify status + reject + refund balance
+    // Prevents double-refund from concurrent rejection requests
+    await this.db.runTransaction(async (transaction) => {
+      const withdrawalRef = this.db.collection(COLLECTIONS.WITHDRAWALS).doc(withdrawalId);
+      const withdrawalDoc = await transaction.get(withdrawalRef);
 
-    // Refund the balance
-    await this.refundUserBalance(withdrawal.userId, withdrawal.userType, withdrawal.amount);
+      if (!withdrawalDoc.exists) {
+        throw new Error('Withdrawal not found');
+      }
 
-    logger.info('[PaymentService.rejectWithdrawal] Withdrawal rejected', {
+      const withdrawal = withdrawalDoc.data() as WithdrawalRequest;
+
+      if (withdrawal.status !== 'pending' && withdrawal.status !== 'validating') {
+        throw new Error(`Cannot reject withdrawal with status: ${withdrawal.status}`);
+      }
+
+      // Update withdrawal status to rejected
+      const historyEntry: StatusHistoryEntry = {
+        status: 'rejected',
+        timestamp: now,
+        actor: adminId,
+        actorType: 'admin',
+        note: reason,
+      };
+
+      transaction.update(withdrawalRef, {
+        status: 'rejected',
+        statusHistory: FieldValue.arrayUnion(historyEntry),
+        rejectedAt: now,
+        processedBy: adminId,
+        errorMessage: reason,
+      });
+
+      // Refund balance in the SAME transaction
+      const collectionName = this.getUserCollectionName(withdrawal.userType);
+      const userRef = this.db.collection(collectionName).doc(withdrawal.userId);
+      const userDoc = await transaction.get(userRef);
+
+      if (!userDoc.exists) {
+        throw new Error(`${withdrawal.userType} not found`);
+      }
+
+      const userData = userDoc.data()!;
+      const currentBalance = userData.availableBalance || 0;
+
+      transaction.update(userRef, {
+        availableBalance: currentBalance + withdrawal.amount,
+        updatedAt: Timestamp.now(),
+      });
+    });
+
+    logger.info('[PaymentService.rejectWithdrawal] Withdrawal rejected (atomic)', {
       withdrawalId,
       adminId,
       reason,
@@ -811,35 +887,69 @@ export class PaymentService {
     errorCode: string,
     errorMessage: string
   ): Promise<void> {
-    const withdrawal = await this.getWithdrawal(withdrawalId);
-
-    if (!withdrawal) {
-      throw new Error('Withdrawal not found');
-    }
-
     const now = new Date().toISOString();
+    let shouldRefund = false;
+    let withdrawalAmount = 0;
+    let withdrawalUserId = '';
+    let withdrawalUserType: PaymentUserType = 'chatter';
+    let newRetryCount = 0;
 
-    await this.updateWithdrawalStatus(
-      withdrawalId,
-      'failed',
-      'system',
-      'system',
-      errorMessage,
-      {
+    // Atomic transaction: read withdrawal + update status + conditionally refund balance
+    await this.db.runTransaction(async (transaction) => {
+      const withdrawalRef = this.db.collection(COLLECTIONS.WITHDRAWALS).doc(withdrawalId);
+      const withdrawalDoc = await transaction.get(withdrawalRef);
+
+      if (!withdrawalDoc.exists) {
+        throw new Error('Withdrawal not found');
+      }
+
+      const withdrawal = withdrawalDoc.data() as WithdrawalRequest;
+      newRetryCount = withdrawal.retryCount + 1;
+      shouldRefund = newRetryCount >= withdrawal.maxRetries;
+      withdrawalAmount = withdrawal.amount;
+      withdrawalUserId = withdrawal.userId;
+      withdrawalUserType = withdrawal.userType;
+
+      // Update withdrawal status
+      const historyEntry: StatusHistoryEntry = {
+        status: 'failed',
+        timestamp: now,
+        actor: 'system',
+        actorType: 'system',
+        note: errorMessage,
+      };
+
+      transaction.update(withdrawalRef, {
+        status: 'failed',
+        statusHistory: FieldValue.arrayUnion(historyEntry),
         failedAt: now,
         errorCode,
         errorMessage,
-        retryCount: withdrawal.retryCount + 1,
+        retryCount: newRetryCount,
         lastRetryAt: now,
-      }
-    );
+      });
 
-    // Refund the balance if max retries exceeded
-    if (withdrawal.retryCount + 1 >= withdrawal.maxRetries) {
-      await this.refundUserBalance(withdrawal.userId, withdrawal.userType, withdrawal.amount);
+      // Refund balance atomically if max retries exceeded
+      if (shouldRefund) {
+        const collectionName = this.getUserCollectionName(withdrawal.userType);
+        const userRef = this.db.collection(collectionName).doc(withdrawal.userId);
+        const userDoc = await transaction.get(userRef);
+
+        if (userDoc.exists) {
+          const userData = userDoc.data()!;
+          const currentBalance = userData.availableBalance || 0;
+          transaction.update(userRef, {
+            availableBalance: currentBalance + withdrawal.amount,
+            updatedAt: Timestamp.now(),
+          });
+        }
+      }
+    });
+
+    if (shouldRefund) {
       logger.info('[PaymentService.failWithdrawal] Balance refunded after max retries', {
         withdrawalId,
-        amount: withdrawal.amount,
+        amount: withdrawalAmount,
       });
     }
 
@@ -847,7 +957,8 @@ export class PaymentService {
       withdrawalId,
       errorCode,
       errorMessage,
-      retryCount: withdrawal.retryCount + 1,
+      retryCount: newRetryCount,
+      shouldRefund,
     });
   }
 

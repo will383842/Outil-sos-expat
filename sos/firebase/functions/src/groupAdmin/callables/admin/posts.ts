@@ -59,6 +59,7 @@ export const adminCreatePost = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; postId: string }> => {
     ensureInitialized();
@@ -148,6 +149,7 @@ export const adminUpdatePost = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -222,6 +224,7 @@ export const adminDeletePost = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -284,6 +287,7 @@ export const adminGetPostsList = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ posts: GroupAdminPost[] }> => {
     ensureInitialized();

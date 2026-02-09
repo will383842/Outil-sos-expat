@@ -106,8 +106,6 @@ export {
   getClientEarnings,
   calculateParrainN2,
   checkAndApplyThresholds,
-  checkAndApplyEarlyAdopter,
-  getEarlyAdopterMultiplier,
   checkAndApplyTierBonuses,
   getNextTierBonus,
   getActivePromoMultiplier,
@@ -117,7 +115,6 @@ export {
   releaseValidatedReferralCommissions,
   REFERRAL_CONFIG,
   ThresholdResult,
-  EarlyAdopterResult,
   TierBonusResult,
   PromoMultiplierResult,
 } from "./chatterReferralService";
@@ -151,21 +148,7 @@ export {
   UpdatePromotionInput,
 } from "./chatterPromotionService";
 
-// Social Likes Service
+// Telegram Bonus Service
 export {
-  getAllSocialNetworks,
-  getActiveSocialNetworks,
-  addSocialNetwork,
-  updateSocialNetwork,
-  deleteSocialNetwork,
-  markNetworkAsLiked,
-  getChatterSocialLikes,
-  checkSocialBonusEligibility,
-  paySocialBonus,
-  checkAndPaySocialBonus,
   checkAndPayTelegramBonus,
-  AddSocialNetworkInput,
-  UpdateSocialNetworkInput,
-  MarkNetworkLikedInput,
-  SocialBonusCheckResult,
-} from "./chatterSocialLikesService";
+} from "./chatterTelegramBonusService";

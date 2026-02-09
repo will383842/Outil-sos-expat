@@ -459,6 +459,7 @@ export const scheduledPayPalReminders = onSchedule(
 export const triggerPayPalReminders = onCall(
   {
     region: "europe-west3",
+    cors: true,
     memory: "512MiB",
     timeoutSeconds: 300,
   },
@@ -497,6 +498,7 @@ export const triggerPayPalReminders = onCall(
 export const getPayPalReminderStatus = onCall(
   {
     region: "europe-west3",
+    cors: true,
     memory: "256MiB",
   },
   async (request) => {

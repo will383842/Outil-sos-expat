@@ -6,7 +6,6 @@
  * - Team recruitment (activation_bonus, n1_recruit_bonus, recruitment)
  * - Tier bonuses (tier_bonus)
  * - Streak bonuses (bonus_streak, bonus_level)
- * - Social likes (piggy bank bonuses)
  * - Recurring commissions (n1_call, n2_call, recurring_5pct)
  *
  * Features:
@@ -27,7 +26,6 @@ import {
   UserPlus,
   Award,
   Flame,
-  Heart,
   RefreshCw,
   TrendingUp,
   ChevronRight,
@@ -43,7 +41,6 @@ export interface EarningsByCategory {
   teamRecruitment: number;
   tierBonuses: number;
   streakBonuses: number;
-  socialLikes: number;
   recurringCommissions: number;
 }
 
@@ -115,16 +112,6 @@ const SEGMENT_CONFIG: SegmentConfig[] = [
     textColor: 'text-orange-600 dark:text-orange-400',
     icon: Flame,
     commissionTypes: ['bonus_streak', 'bonus_level', 'bonus_zoom'],
-  },
-  {
-    key: 'socialLikes',
-    labelKey: 'chatter.earnings.socialLikes',
-    defaultLabel: 'Social Likes',
-    color: '#EC4899', // pink-500
-    bgColor: 'bg-pink-100 dark:bg-pink-900/30',
-    textColor: 'text-pink-600 dark:text-pink-400',
-    icon: Heart,
-    commissionTypes: [],
   },
   {
     key: 'recurringCommissions',

@@ -226,6 +226,7 @@ export const getWithdrawalStatus = onCall(
     region: 'europe-west1',
     memory: '256MiB',
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request: CallableRequest<GetWithdrawalStatusInput>): Promise<PaymentTrackingSummary> => {
     ensureInitialized();

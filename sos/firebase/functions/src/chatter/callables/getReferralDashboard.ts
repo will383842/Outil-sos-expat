@@ -3,7 +3,7 @@
  *
  * Returns detailed referral dashboard data for a chatter.
  * Includes filleuls N1/N2, referral commissions, tier progress,
- * early adopter status, and active promotions.
+ * and active promotions.
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
@@ -15,7 +15,6 @@ import {
   Chatter,
   ChatterReferralCommission,
   GetReferralDashboardResponse,
-  REFERRAL_CONFIG,
 } from "../types";
 import {
   getClientEarnings,
@@ -153,15 +152,6 @@ export const getReferralDashboard = onCall(
       // Get tier progress
       const nextTier = getNextTierBonus(chatter);
 
-      // Get early adopter info
-      const earlyAdopter = {
-        isEarlyAdopter: chatter.isEarlyAdopter || false,
-        country: chatter.earlyAdopterCountry || null,
-        multiplier: chatter.isEarlyAdopter
-          ? REFERRAL_CONFIG.EARLY_ADOPTER.MULTIPLIER
-          : 1.0,
-      };
-
       // Get active promotion
       const activePromos = await getActivePromotions(
         chatterId,
@@ -206,7 +196,6 @@ export const getReferralDashboard = onCall(
               filleulsNeeded: 0,
               bonusAmount: 0,
             },
-        earlyAdopter,
         activePromotion,
       };
     } catch (error) {

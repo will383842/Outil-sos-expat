@@ -65,6 +65,7 @@ export const adminCreateResource = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; resourceId: string }> => {
     ensureInitialized();
@@ -169,6 +170,7 @@ export const adminUpdateResource = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -238,6 +240,7 @@ export const adminDeleteResource = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -301,6 +304,7 @@ export const adminGetResourcesList = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ resources: GroupAdminResource[] }> => {
     ensureInitialized();

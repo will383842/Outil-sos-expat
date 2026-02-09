@@ -70,6 +70,7 @@ export const adminGetBloggersList = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
+    cors: true,
   },
   async (request): Promise<AdminGetBloggersListResponse> => {
     if (!request.auth) {
@@ -164,6 +165,7 @@ export const adminGetBloggerDetail = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
+    cors: true,
   },
   async (request): Promise<AdminGetBloggerDetailResponse> => {
     if (!request.auth) {
@@ -284,6 +286,7 @@ export const adminProcessBloggerWithdrawal = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     if (!request.auth) {
@@ -335,6 +338,7 @@ export const adminUpdateBloggerStatus = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     if (!request.auth) {
@@ -408,6 +412,7 @@ export const adminGetBloggerConfig = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<AdminGetBloggerConfigResponse> => {
     if (!request.auth) {
@@ -431,6 +436,7 @@ export const adminUpdateBloggerConfig = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     if (!request.auth) {
@@ -474,6 +480,7 @@ export const adminCreateBloggerResource = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; resourceId: string }> => {
     if (!request.auth) {
@@ -530,6 +537,7 @@ export const adminUpdateBloggerResource = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -567,6 +575,7 @@ export const adminDeleteBloggerResource = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -598,6 +607,7 @@ export const adminCreateBloggerResourceText = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; textId: string }> => {
     if (!request.auth) {
@@ -648,6 +658,7 @@ export const adminCreateBloggerGuideTemplate = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; templateId: string }> => {
     if (!request.auth) {
@@ -697,6 +708,7 @@ export const adminUpdateBloggerGuideTemplate = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -736,6 +748,7 @@ export const adminCreateBloggerGuideCopyText = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; textId: string }> => {
     if (!request.auth) {
@@ -782,6 +795,7 @@ export const adminUpdateBloggerGuideCopyText = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -828,6 +842,7 @@ export const adminCreateBloggerGuideBestPractice = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean; practiceId: string }> => {
     if (!request.auth) {
@@ -873,6 +888,7 @@ export const adminUpdateBloggerGuideBestPractice = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {

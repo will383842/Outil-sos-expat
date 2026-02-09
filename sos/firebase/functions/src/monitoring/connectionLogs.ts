@@ -355,7 +355,8 @@ export const logConnection = onCall(
   {
     region: CONFIG.REGION,
     memory: '256MiB',
-    timeoutSeconds: 30
+    timeoutSeconds: 30,
+    cors: true,
   },
   async (request) => {
     const data = request.data as LogConnectionInput;
@@ -433,7 +434,8 @@ export const getConnectionLogs = onCall(
   {
     region: CONFIG.REGION,
     memory: '256MiB',
-    timeoutSeconds: 60
+    timeoutSeconds: 60,
+    cors: true,
   },
   async (request) => {
     // Require authentication
@@ -526,7 +528,8 @@ export const getConnectionStats = onCall(
   {
     region: CONFIG.REGION,
     memory: '512MiB',
-    timeoutSeconds: 120
+    timeoutSeconds: 120,
+    cors: true,
   },
   async (request) => {
     // Require authentication

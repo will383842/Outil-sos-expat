@@ -79,7 +79,6 @@ export type ChatterCommissionType =
   | "threshold_50_n2"       // LEGACY: Filleul N2 reached $50 threshold
   | "recurring_5pct"        // LEGACY: Old monthly 5% system, replaced by per-call commissions - kept for DB compatibility
   | "tier_bonus"            // Tier bonus (5/10/20/50/100/500 filleuls)
-  | "bonus_social"          // Social media likes bonus
   | "bonus_telegram";       // Telegram onboarding bonus ($50, unlocked at $150 earnings)
 
 /**
@@ -370,17 +369,6 @@ export interface Chatter {
   /** N2 parrain - the parrain of this chatter's parrain */
   parrainNiveau2Id: string | null;
 
-  // ---- Early Adopter (Pioneer) ----
-
-  /** Whether this chatter is an early adopter (+50% bonus for life) */
-  isEarlyAdopter: boolean;
-
-  /** LEGACY: Was country-based, now always "global". Kept for backwards compatibility. */
-  earlyAdopterCountry: string | null;
-
-  /** Date when this chatter became an early adopter */
-  earlyAdopterDate: Timestamp | null;
-
   // ---- Referral Stats ----
 
   /** Number of N1 filleuls who reached $50 threshold */
@@ -405,20 +393,6 @@ export interface Chatter {
 
   /** Tier bonuses already paid to this chatter (5, 10, 20, 50, 100, 500 filleuls) */
   tierBonusesPaid: number[];
-
-  // ---- Social Media Likes Bonus ----
-
-  /** IDs of social networks the chatter has marked as "liked" */
-  likedSocialNetworks?: string[];
-
-  /** Whether the social bonus has been unlocked (requires $100 direct earnings) */
-  socialBonusUnlocked?: boolean;
-
-  /** Total social bonus amount paid (in cents) */
-  socialBonusPaid?: number;
-
-  /** Timestamp when social bonus was unlocked */
-  socialBonusUnlockedAt?: Timestamp | null;
 
   // ---- Telegram Integration ----
 
@@ -609,9 +583,6 @@ export interface ChatterCommission {
     streakDays?: number;
     levelReached?: ChatterLevel;
 
-    // For social likes bonus
-    networkCount?: number;
-    networks?: string;
   };
 
   // ---- Amount ----
@@ -1936,7 +1907,6 @@ export interface ChatterReferralCommission {
   baseAmount: number;
 
   /** Multipliers applied */
-  earlyAdopterMultiplier: number;  // 1.0 or 1.5 (50% bonus)
   promoMultiplier: number;          // 1.0, 2.0, 3.0 for hackathons
 
   /** Final amount (cents) */
@@ -2031,39 +2001,6 @@ export interface ChatterPromotion {
 
   /** Created timestamp */
   createdAt: Timestamp;
-
-  /** Updated timestamp */
-  updatedAt: Timestamp;
-}
-
-/**
- * Early Adopter counter - GLOBAL (not per country)
- * Collection: chatter_early_adopter_counters/global
- *
- * NOTE: Previously was per-country, now uses a single "global" document
- * for the first 50 chatters worldwide to get +50% lifetime bonus.
- */
-export interface ChatterEarlyAdopterCounter {
-  /** "global" for the worldwide counter (legacy: was country code) */
-  countryCode: string;
-
-  /** "Global" (legacy: was country name) */
-  countryName: string;
-
-  /** Maximum early adopters for this country */
-  maxEarlyAdopters: number;
-
-  /** Current count of early adopters */
-  currentCount: number;
-
-  /** Remaining slots */
-  remainingSlots: number;
-
-  /** Whether registration is still open */
-  isOpen: boolean;
-
-  /** List of early adopter chatter IDs */
-  earlyAdopterIds: string[];
 
   /** Updated timestamp */
   updatedAt: Timestamp;
@@ -2209,13 +2146,6 @@ export interface GetReferralDashboardResponse {
     bonusAmount: number;
   };
 
-  /** Early adopter status */
-  earlyAdopter: {
-    isEarlyAdopter: boolean;
-    country: string | null;
-    multiplier: number;
-  };
-
   /** Active promotion if any */
   activePromotion: {
     id: string;
@@ -2259,24 +2189,11 @@ export const REFERRAL_CONFIG = {
   /** Minimum direct earnings (cents) for a filleul to be counted as "qualified" */
   QUALIFIED_FILLEUL_THRESHOLD: 2000, // $20
 
-  /** Early adopter settings */
-  EARLY_ADOPTER: {
-    MULTIPLIER: 1.5,              // +50% bonus
-    TOTAL_SLOTS: 50,              // 50 first chatters globally
-  },
-
   /** Anti-fraud thresholds */
   FRAUD: {
     MAX_REFERRAL_TO_CLIENT_RATIO: 2.0,  // Max 2:1 referral vs client earnings
     MAX_REFERRALS_PER_DAY: 10,
     CIRCULAR_DETECTION_DEPTH: 5,
-  },
-
-  /** Social media likes bonus settings */
-  SOCIAL_LIKES: {
-    BONUS_PER_NETWORK: 100,        // $1 per network liked
-    UNLOCK_THRESHOLD: 15000,       // $150 direct earnings required to unlock piggy bank
-    MIN_VIEW_SECONDS: 5,           // Minimum seconds on social page before confirming
   },
 
   /** Telegram onboarding bonus settings */
@@ -2285,88 +2202,6 @@ export const REFERRAL_CONFIG = {
     UNLOCK_THRESHOLD: 15000,       // $150 direct earnings required to unlock (same as social likes)
   },
 } as const;
-
-// ============================================================================
-// SOCIAL MEDIA NETWORKS (Admin-managed)
-// ============================================================================
-
-/**
- * Social network platform types
- */
-export type SocialPlatformType =
-  | "facebook"
-  | "instagram"
-  | "tiktok"
-  | "youtube"
-  | "twitter"
-  | "linkedin"
-  | "other";
-
-/**
- * Social network document (admin-managed)
- * Collection: chatter_social_networks/{networkId}
- */
-export interface ChatterSocialNetwork {
-  /** Document ID */
-  id: string;
-
-  /** Platform type for icon display */
-  platform: SocialPlatformType;
-
-  /** Display label (e.g., "Notre page Facebook") */
-  label: string;
-
-  /** URL to the social network page */
-  url: string;
-
-  /** Bonus amount in cents for liking this network */
-  bonusAmount: number;
-
-  /** Whether this network is active (visible to chatters) */
-  isActive: boolean;
-
-  /** Display order (lower = first) */
-  order: number;
-
-  /** Created timestamp */
-  createdAt: Timestamp;
-
-  /** Updated timestamp */
-  updatedAt: Timestamp;
-
-  /** Created by (admin user ID) */
-  createdBy: string;
-}
-
-/**
- * Record of a chatter's social like action
- * Subcollection: chatters/{chatterId}/socialLikes/{networkId}
- */
-export interface ChatterSocialLike {
-  /** Network ID */
-  networkId: string;
-
-  /** Platform type */
-  platform: SocialPlatformType;
-
-  /** Network label at time of like */
-  networkLabel: string;
-
-  /** When the chatter marked this as liked */
-  likedAt: Timestamp;
-
-  /** Bonus amount (in cents) at time of like */
-  bonusAmount: number;
-
-  /** Whether the bonus has been paid */
-  bonusPaid: boolean;
-
-  /** When the bonus was paid (null if not paid yet) */
-  bonusPaidAt: Timestamp | null;
-
-  /** Commission ID if bonus was paid */
-  commissionId: string | null;
-}
 
 // ============================================================================
 // INPUT/OUTPUT TYPES FOR CALLABLES
@@ -2476,13 +2311,6 @@ export interface GetChatterDashboardResponse {
     } | null;
   };
 
-  /** Early adopter (Pioneer) status */
-  earlyAdopter: {
-    isEarlyAdopter: boolean;
-    country: string | null;
-    multiplier: number;
-  };
-
   /** Earnings ratio (affiliation vs referral) */
   earningsRatio: {
     affiliationEarnings: number;   // Client referrals + recruitment
@@ -2499,38 +2327,18 @@ export interface GetChatterDashboardResponse {
     endsAt: string;
   } | null;
 
-  /** Piggy Bank - Bonus pending unlock (social likes, etc.) */
+  /** Piggy Bank - Bonus pending unlock */
   piggyBank: {
-    /** Whether the piggy bank is unlocked ($100+ direct earnings) */
+    /** Whether the piggy bank is unlocked ($150+ direct earnings) */
     isUnlocked: boolean;
     /** Current direct client earnings (cents) */
     clientEarnings: number;
-    /** Threshold to unlock (cents) - default $100 */
+    /** Threshold to unlock (cents) - default $150 */
     unlockThreshold: number;
     /** Progress percentage towards unlock */
     progressPercent: number;
     /** Amount remaining to unlock (cents) */
     amountToUnlock: number;
-    /** Social likes bonus details */
-    socialLikes: {
-      /** Total networks available to like */
-      networksAvailable: number;
-      /** Networks already liked by chatter */
-      networksLiked: number;
-      /** Bonus amount pending payment (cents) */
-      bonusPending: number;
-      /** Bonus amount already paid (cents) */
-      bonusPaid: number;
-      /** List of networks with like status */
-      networks: Array<{
-        id: string;
-        platform: SocialPlatformType;
-        label: string;
-        url: string;
-        bonusAmount: number;
-        liked: boolean;
-      }>;
-    };
     /** Total pending bonus in piggy bank (cents) */
     totalPending: number;
     /** User-friendly message for UI */

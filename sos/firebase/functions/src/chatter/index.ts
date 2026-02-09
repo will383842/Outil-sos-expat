@@ -98,9 +98,6 @@ export {
 export {
   adminGetReferralStats,
   adminGetReferralTree,
-  adminGetEarlyAdopters,
-  adminUpdateEarlyAdopterQuota,
-  adminInitializeAllEarlyAdopterCounters,
   adminGetReferralFraudAlerts,
   adminReviewFraudAlert,
   adminGetReferralCommissions,
@@ -152,18 +149,6 @@ export {
   adminGetMeetingAttendees,
   adminUpdateMeetingStatus,
 } from "./callables/zoom";
-
-// Social Likes Callables
-export {
-  // Admin
-  adminGetSocialNetworks,
-  adminAddSocialNetwork,
-  adminUpdateSocialNetwork,
-  adminDeleteSocialNetwork,
-  // Chatter
-  getChatterSocialStatus,
-  markSocialNetworkLiked,
-} from "./callables/socialLikes";
 
 // Message Templates Callables
 export {
@@ -383,7 +368,6 @@ export type {
   // Referral System Types
   ChatterReferralCommission,
   ChatterPromotion,
-  ChatterEarlyAdopterCounter,
   ChatterTierBonusHistory,
   ChatterReferralFraudAlert,
   ChatterReferralFraudAlertType,

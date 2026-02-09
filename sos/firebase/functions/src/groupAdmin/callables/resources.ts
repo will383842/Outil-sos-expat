@@ -32,6 +32,7 @@ export const getGroupAdminResources = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<GroupAdminResourcesResponse> => {
     ensureInitialized();
@@ -122,6 +123,7 @@ export const getGroupAdminResourceContent = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<ResourceContentResponse> => {
     ensureInitialized();
@@ -208,6 +210,7 @@ export const trackGroupAdminResourceUsage = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -294,6 +297,7 @@ export const getGroupAdminProcessedResourceContent = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<ProcessedContentResponse> => {
     ensureInitialized();

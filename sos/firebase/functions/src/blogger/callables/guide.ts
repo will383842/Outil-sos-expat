@@ -31,6 +31,7 @@ export const getBloggerGuide = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<GetBloggerGuideResponse> => {
     // 1. Check authentication
@@ -150,6 +151,7 @@ export const copyBloggerGuideText = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<CopyBloggerGuideTextResponse> => {
     // 1. Check authentication
@@ -271,6 +273,7 @@ export const trackBloggerGuideUsage = onCall(
     region: "europe-west1",
     memory: "128MiB",
     timeoutSeconds: 15,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     // 1. Check authentication

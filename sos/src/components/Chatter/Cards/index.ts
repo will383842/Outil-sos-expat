@@ -17,13 +17,12 @@ export { default as DailyMissionsCard } from './DailyMissionsCard';
 export { default as RevenueCalculatorCard, RevenueCalculatorCard as RevenueCalculatorCardNamed } from './RevenueCalculatorCard';
 export { ReferralStatsCard } from './ReferralStatsCard';
 export { EarningsRatioCard } from './EarningsRatioCard';
-export { PioneerBadgeCard } from './PioneerBadgeCard';
 export { MilestoneProgressCard } from './MilestoneProgressCard';
 export { PromoAlertCard } from './PromoAlertCard';
 export { default as WeeklyChallengeCard } from './WeeklyChallengeCard';
 export { default as LiveActivityFeed } from './LiveActivityFeed';
 export { default as PiggyBankCard } from './PiggyBankCard';
-export type { PiggyBankData, SocialNetwork } from './PiggyBankCard';
+export type { PiggyBankData } from './PiggyBankCard';
 
 // Trend visualization components
 export { default as TrendsChartCard } from './TrendsChartCard';

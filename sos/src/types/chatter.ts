@@ -40,7 +40,6 @@ export type ChatterCommissionType =
   | "bonus_level"        // Level-up bonus
   | "bonus_streak"       // Streak bonus
   | "bonus_zoom"         // Zoom attendance bonus
-  | "bonus_social"       // Social media likes bonus
   | "bonus_telegram"     // Telegram onboarding bonus ($50, unlocked at $150 earnings)
   | "manual_adjustment"  // Admin manual adjustment
   // LEGACY (kept for backward compatibility)
@@ -236,11 +235,6 @@ export interface ChatterData {
 
   // Referral N2 (2-level system)
   parrainNiveau2Id: string | null;
-
-  // Early Adopter (Pioneer)
-  isEarlyAdopter: boolean;
-  earlyAdopterCountry: string | null;
-  earlyAdopterDate: string | null;
 
   // Referral Stats
   qualifiedReferralsCount: number;
@@ -447,18 +441,6 @@ export interface ChatterConfig {
 // ============================================================================
 
 /**
- * Piggy bank social network data
- */
-export interface PiggyBankSocialNetwork {
-  id: string;
-  platform: string;
-  label: string;
-  url: string;
-  bonusAmount: number;
-  liked: boolean;
-}
-
-/**
  * Piggy bank data for bonus display
  */
 export interface PiggyBankData {
@@ -467,13 +449,6 @@ export interface PiggyBankData {
   unlockThreshold: number;
   progressPercent: number;
   amountToUnlock: number;
-  socialLikes: {
-    networksAvailable: number;
-    networksLiked: number;
-    bonusPending: number;
-    bonusPaid: number;
-    networks: PiggyBankSocialNetwork[];
-  };
   totalPending: number;
   message: string;
 }
@@ -781,7 +756,6 @@ export interface ChatterReferralCommission {
   type: "threshold_10" | "threshold_50" | "threshold_50_n2" | "recurring_5pct" | "tier_bonus";
   level: 1 | 2;
   baseAmount: number;
-  earlyAdopterMultiplier: number;
   promoMultiplier: number;
   amount: number;
   recurringMonth?: string;
@@ -846,15 +820,6 @@ export interface ChatterTierProgress {
 }
 
 /**
- * Early adopter (Pioneer) status
- */
-export interface ChatterEarlyAdopterStatus {
-  isEarlyAdopter: boolean;
-  country: string | null;
-  multiplier: number;
-}
-
-/**
  * Active promotion info
  */
 export interface ChatterActivePromotion {
@@ -880,18 +845,6 @@ export interface ChatterPromotion {
   isActive: boolean;
   maxBudget: number;
   currentSpent: number;
-}
-
-/**
- * Early adopter counter per country
- */
-export interface ChatterEarlyAdopterCounter {
-  countryCode: string;
-  countryName: string;
-  currentCount: number;
-  maxEarlyAdopters: number;
-  remainingSlots: number;
-  isOpen: boolean;
 }
 
 /**
@@ -922,7 +875,6 @@ export interface ChatterReferralDashboardData {
   filleulsN1: ChatterFilleulN1[];
   filleulsN2: ChatterFilleulN2[];
   tierProgress: ChatterTierProgress;
-  earlyAdopter: ChatterEarlyAdopterStatus;
   activePromotion: ChatterActivePromotion | null;
 }
 
@@ -950,10 +902,6 @@ export const REFERRAL_CONFIG = {
     100: 60000,   // $600
     500: 400000,  // $4,000
   } as Record<number, number>,
-  EARLY_ADOPTER: {
-    MULTIPLIER: 1.5,
-    DEFAULT_SLOTS_PER_COUNTRY: 100,
-  },
 } as const;
 
 // ============================================================================

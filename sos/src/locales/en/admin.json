@@ -2037,8 +2037,7 @@
   "admin.menu.chatters.description": "Chatters and ambassadors program",
   "admin.menu.chattersList": "Chatters List",
   "admin.menu.chattersList.description": "Manage all chatters",
-  "admin.menu.chattersPioneers": "Chatter Pioneers",
-  "admin.menu.chattersPioneers.description": "Early adopters with +50% bonus",
+
   "admin.menu.chattersReferrals": "Chatter Referrals",
   "admin.menu.chattersReferrals.description": "Referral of new chatters",
   "admin.menu.chattersCommissions": "Chatter Commissions",

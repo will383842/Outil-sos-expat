@@ -349,9 +349,6 @@ const AdminChatterCountryRotation = lazy(
 const AdminChatterReferrals = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterReferrals")
 );
-const AdminEarlyAdopters = lazy(
-  () => import("../../pages/admin/Chatter/AdminEarlyAdopters")
-);
 const AdminChatterPromotions = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterPromotions")
 );
@@ -1166,14 +1163,6 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminChatterReferrals />
-          </Suspense>
-        }
-      />
-      <Route
-        path="chatters/early-adopters"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminEarlyAdopters />
           </Suspense>
         }
       />

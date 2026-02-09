@@ -4,6 +4,5 @@ export { default as AdminChatterPayments } from './AdminChatterPayments';
 export { default as AdminChatterConfig } from './AdminChatterConfig';
 export { default as AdminChatterCountryRotation } from './AdminChatterCountryRotation';
 export { default as AdminChatterReferrals } from './AdminChatterReferrals';
-export { default as AdminEarlyAdopters } from './AdminEarlyAdopters';
 export { default as AdminChatterPromotions } from './AdminChatterPromotions';
 export { default as AdminChatterFraud } from './AdminChatterFraud';

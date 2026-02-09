@@ -3,7 +3,6 @@
  *
  * Displays a beautiful animated piggy bank with:
  * - Visual fill level based on progress
- * - Social network likes bonus checklist
  * - Progress bar to unlock threshold
  * - Claim button when unlocked
  */
@@ -14,30 +13,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Lock,
   Unlock,
-  Check,
-  Circle,
-  ExternalLink,
   Sparkles,
   TrendingUp,
-  Gift,
   PartyPopper,
-  Facebook,
-  Instagram,
-  Twitter,
-  Youtube,
-  Linkedin,
 } from 'lucide-react';
-
-// Custom TikTok icon (not available in lucide-react)
-const TikTokIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-  >
-    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-  </svg>
-);
 
 // Design tokens - matching existing Chatter card styles
 const UI = {
@@ -50,47 +29,13 @@ const UI = {
   },
 } as const;
 
-// Social network icons mapping
-const NETWORK_ICONS: Record<string, React.ElementType> = {
-  facebook: Facebook,
-  instagram: Instagram,
-  tiktok: TikTokIcon,
-  twitter: Twitter,
-  youtube: Youtube,
-  linkedin: Linkedin,
-};
-
-const NETWORK_COLORS: Record<string, string> = {
-  facebook: 'text-blue-600',
-  instagram: 'text-pink-500',
-  tiktok: 'text-gray-900 dark:text-white',
-  twitter: 'text-sky-500',
-  youtube: 'text-red-600',
-  linkedin: 'text-blue-700',
-};
-
 // Types
-export interface SocialNetwork {
-  id: string;
-  name: string;
-  url: string;
-  liked: boolean;
-  bonus: number; // in cents
-}
-
 export interface PiggyBankData {
   isUnlocked: boolean;
   clientEarnings: number; // in cents
   unlockThreshold: number; // in cents
   progressPercent: number;
   amountToUnlock: number; // in cents
-  socialLikes: {
-    networksAvailable: number;
-    networksLiked: number;
-    bonusPending: number; // in cents
-    bonusPaid: number; // in cents
-    networks: SocialNetwork[];
-  };
   totalPending: number; // in cents
   message: string;
 }
@@ -98,7 +43,6 @@ export interface PiggyBankData {
 interface PiggyBankCardProps {
   piggyBank: PiggyBankData | null;
   onClaim?: () => void;
-  onNetworkClick?: (network: SocialNetwork) => void;
   loading?: boolean;
   claiming?: boolean;
 }
@@ -106,7 +50,6 @@ interface PiggyBankCardProps {
 const PiggyBankCard = memo(function PiggyBankCard({
   piggyBank,
   onClaim,
-  onNetworkClick,
   loading = false,
   claiming = false,
 }: PiggyBankCardProps) {
@@ -158,7 +101,6 @@ const PiggyBankCard = memo(function PiggyBankCard({
     unlockThreshold,
     progressPercent,
     amountToUnlock,
-    socialLikes,
     totalPending,
     message,
   } = piggyBank;
@@ -314,94 +256,6 @@ const PiggyBankCard = memo(function PiggyBankCard({
             )}
           </div>
         </div>
-
-        {/* Social Networks Checklist */}
-        {socialLikes.networks.length > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
-                <Gift className="w-4 h-4 text-pink-500" />
-                <FormattedMessage
-                  id="chatter.piggyBank.socialBonus"
-                  defaultMessage="Social Bonus"
-                />
-              </h4>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {socialLikes.networksLiked}/{socialLikes.networksAvailable}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {socialLikes.networks.map((network) => {
-                const Icon = NETWORK_ICONS[network.id.toLowerCase()] || Circle;
-                const color = NETWORK_COLORS[network.id.toLowerCase()] || 'text-gray-500';
-
-                return (
-                  <motion.button
-                    key={network.id}
-                    onClick={() => onNetworkClick?.(network)}
-                    className={`relative flex items-center gap-2 p-2.5 rounded-xl border-2 transition-all ${
-                      network.liked
-                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                        : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:border-pink-300 dark:hover:border-pink-700'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {/* Network icon */}
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      network.liked
-                        ? 'bg-green-100 dark:bg-green-900/30'
-                        : 'bg-white dark:bg-white/10'
-                    }`}>
-                      <Icon className={`w-4 h-4 ${network.liked ? 'text-green-600' : color}`} />
-                    </div>
-
-                    {/* Network name and bonus */}
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                        {network.name}
-                      </p>
-                      <p className={`text-xs ${
-                        network.liked
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-pink-600 dark:text-pink-400'
-                      }`}>
-                        +{formatAmount(network.bonus)}
-                      </p>
-                    </div>
-
-                    {/* Status indicator */}
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      network.liked
-                        ? 'bg-green-500'
-                        : 'border-2 border-gray-300 dark:border-gray-600'
-                    }`}>
-                      {network.liked ? (
-                        <Check className="w-3 h-3 text-white" />
-                      ) : (
-                        <ExternalLink className="w-2.5 h-2.5 text-gray-400" />
-                      )}
-                    </div>
-                  </motion.button>
-                );
-              })}
-            </div>
-
-            {/* Social bonus summary */}
-            {socialLikes.bonusPending > 0 && (
-              <div className="mt-2 p-2 bg-pink-50 dark:bg-pink-900/20 rounded-lg text-center">
-                <p className="text-xs text-pink-700 dark:text-pink-300">
-                  <FormattedMessage
-                    id="chatter.piggyBank.bonusPending"
-                    defaultMessage="{amount} bonus pending"
-                    values={{ amount: formatAmount(socialLikes.bonusPending) }}
-                  />
-                </p>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Total Pending Display */}
         <div className="p-3 bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-xl mb-4">

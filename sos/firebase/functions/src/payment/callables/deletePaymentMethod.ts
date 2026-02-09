@@ -55,6 +55,7 @@ export const deletePaymentMethod = onCall(
     region: 'europe-west1',
     memory: '256MiB',
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request: CallableRequest<DeletePaymentMethodInput>): Promise<DeletePaymentMethodOutput> => {
     ensureInitialized();
@@ -73,20 +74,9 @@ export const deletePaymentMethod = onCall(
     }
 
     try {
-      // 3. Check if payment method exists and belongs to user
       const db = getFirestore();
-      const methodDoc = await db.collection('payment_methods').doc(paymentMethodId).get();
 
-      if (!methodDoc.exists) {
-        throw new HttpsError('not-found', 'Payment method not found');
-      }
-
-      const methodData = methodDoc.data();
-      if (methodData?.userId !== userId) {
-        throw new HttpsError('permission-denied', 'You do not have permission to delete this payment method');
-      }
-
-      // 4. Check for pending withdrawals using this method
+      // 3. Check for pending withdrawals using this method (pre-check for UX)
       const pendingWithdrawals = await db
         .collection('payment_withdrawals')
         .where('paymentMethodId', '==', paymentMethodId)
@@ -101,14 +91,13 @@ export const deletePaymentMethod = onCall(
         );
       }
 
-      // 5. Delete the payment method using service
+      // 4. Delete the payment method using service (atomic: read + verify + delete in transaction)
       const service = getPaymentService();
       await service.deletePaymentMethod(userId, paymentMethodId);
 
       logger.info('[deletePaymentMethod] Payment method deleted', {
         userId,
         paymentMethodId,
-        userType: methodData?.userType,
       });
 
       return {

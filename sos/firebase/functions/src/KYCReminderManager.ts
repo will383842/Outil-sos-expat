@@ -448,6 +448,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 export const triggerKYCReminders = onCall(
   {
     region: "europe-west3",
+    cors: true,
     memory: "512MiB",
     timeoutSeconds: 300,
   },
@@ -484,6 +485,7 @@ export const triggerKYCReminders = onCall(
 export const getKYCReminderStatus = onCall(
   {
     region: "europe-west3",
+    cors: true,
   },
   async (request) => {
     ensureInitialized();

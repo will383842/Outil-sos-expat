@@ -11,7 +11,6 @@ import { ReferralCommissionsTable } from "@/components/Chatter/Tables/ReferralCo
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Loader2,
   DollarSign,
@@ -34,7 +33,6 @@ export default function ChatterReferralEarnings() {
     dashboardData,
     stats,
     recentCommissions,
-    earlyAdopter,
     isLoading,
     error,
     refreshDashboard,
@@ -164,14 +162,11 @@ export default function ChatterReferralEarnings() {
                 <CardContent className="pt-6">
                   <div className="text-center">
                     <p className="text-sm text-gray-500 mb-1">
-                      {t("chatter.referrals.multiplier")}
+                      {t("chatter.referrals.qualifiedReferrals")}
                     </p>
                     <p className="text-3xl font-bold text-red-600">
-                      x{earlyAdopter?.multiplier?.toFixed(1) || "1.0"}
+                      {stats?.qualifiedFilleulsN1 || 0}
                     </p>
-                    {earlyAdopter?.isEarlyAdopter && (
-                      <Badge className="mt-1 bg-amber-500">Pioneer</Badge>
-                    )}
                   </div>
                 </CardContent>
               </Card>

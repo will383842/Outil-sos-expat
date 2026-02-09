@@ -52,6 +52,7 @@ export const adminProcessPayoutWise = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 120,
+    cors: true,
     secrets: WISE_PAYOUT_SECRETS,
   },
   async (request) => {
@@ -235,6 +236,7 @@ export const adminProcessPayoutManual = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
     secrets: [ENCRYPTION_KEY],
   },
   async (request) => {
@@ -355,6 +357,7 @@ export const adminRejectPayout = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request) => {
     ensureInitialized();
@@ -478,6 +481,7 @@ export const adminApprovePayout = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request) => {
     ensureInitialized();
@@ -571,6 +575,7 @@ export const adminGetPendingPayouts = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request) => {
     ensureInitialized();

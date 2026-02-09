@@ -33,6 +33,7 @@ export const getGroupAdminLeaderboard = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<GroupAdminLeaderboardResponse> => {
     ensureInitialized();

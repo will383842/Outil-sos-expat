@@ -451,6 +451,7 @@ export async function resetMessageTemplatesToDefaults(
  */
 export const getChatterMessageTemplates = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
   },
@@ -479,6 +480,7 @@ export const getChatterMessageTemplates = onCall(
  */
 export const adminSeedMessageTemplates = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
   },
@@ -512,6 +514,7 @@ export const adminSeedMessageTemplates = onCall(
  */
 export const adminCreateMessageTemplate = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
   },
@@ -562,6 +565,7 @@ export const adminCreateMessageTemplate = onCall(
  */
 export const adminUpdateMessageTemplate = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
   },
@@ -614,6 +618,7 @@ export const adminUpdateMessageTemplate = onCall(
  */
 export const adminDeleteMessageTemplate = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
   },
@@ -663,6 +668,7 @@ export const adminDeleteMessageTemplate = onCall(
  */
 export const adminResetMessageTemplatesToDefaults = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
   },

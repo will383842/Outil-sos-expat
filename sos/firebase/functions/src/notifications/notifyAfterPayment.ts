@@ -7,6 +7,7 @@ import { logger } from 'firebase-functions/v2';
 // 🔧 FIX CRITIQUE: Configuration d'optimisation CPU
 const CPU_OPTIMIZED_CONFIG = {
   region: 'europe-west1' as const,
+  cors: true,
   memory: '256MiB' as const,
   cpu: 0.25 as const,
   timeoutSeconds: 30,

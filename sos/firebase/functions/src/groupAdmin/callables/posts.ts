@@ -32,6 +32,7 @@ export const getGroupAdminPosts = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<GroupAdminPostsResponse> => {
     ensureInitialized();
@@ -122,6 +123,7 @@ export const getGroupAdminPostContent = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<PostContentResponse> => {
     ensureInitialized();
@@ -223,6 +225,7 @@ export const getGroupAdminProcessedPost = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<ProcessedPostResponse> => {
     ensureInitialized();
@@ -380,6 +383,7 @@ export const trackGroupAdminPostUsage = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();

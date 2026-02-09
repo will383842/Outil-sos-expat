@@ -10,7 +10,6 @@ import { ReferralLinkCard } from "@/components/Chatter/ViralKit/ReferralLinkCard
 import { ShareButtons } from "@/components/Chatter/ViralKit/ShareButtons";
 import { ShareMessageSelector } from "@/components/Chatter/ViralKit/ShareMessageSelector";
 import { QRCodeDisplay } from "@/components/Chatter/ViralKit/QRCodeDisplay";
-import { PioneerBadgeCard } from "@/components/Chatter/Cards/PioneerBadgeCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +27,7 @@ import { REFERRAL_CONFIG } from "@/types/chatter";
 
 export default function ChatterRefer() {
   const { t } = useTranslation();
-  const { stats, earlyAdopter } = useChatterReferrals();
+  const { stats } = useChatterReferrals();
 
   const commissionAmounts = [
     {
@@ -73,11 +72,6 @@ export default function ChatterRefer() {
             {t("chatter.referrals.referSubtitle")}
           </p>
         </div>
-
-        {/* Pioneer badge if applicable */}
-        {earlyAdopter?.isEarlyAdopter && (
-          <PioneerBadgeCard earlyAdopter={earlyAdopter} variant="compact" />
-        )}
 
         {/* Stats summary */}
         {stats && (
@@ -180,13 +174,6 @@ export default function ChatterRefer() {
                   </div>
                 ))}
 
-                {earlyAdopter?.isEarlyAdopter && (
-                  <Alert className="bg-amber-50 border-amber-200">
-                    <AlertDescription className="text-amber-800">
-                      <strong>+50% Pioneer Bonus</strong> {t("chatter.referrals.pioneerBonusApplied")}
-                    </AlertDescription>
-                  </Alert>
-                )}
               </CardContent>
             </Card>
 

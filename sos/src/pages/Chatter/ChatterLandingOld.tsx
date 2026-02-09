@@ -45,7 +45,6 @@ import {
   Coins,
   Star,
   Shield,
-  Award,
   Phone,
   Scale,
   HelpCircle,
@@ -53,7 +52,6 @@ import {
   Home,
   Briefcase,
   MessageCircle,
-  Timer,
   Share2,
   ShieldCheck,
   BadgeCheck,
@@ -650,22 +648,6 @@ const ChatterLanding: React.FC = () => {
                   <span>{badge.text}</span>
                 </div>
               ))}
-            </div>
-
-            {/* 🔥 EARLY ADOPTER URGENCY BANNER */}
-            <div className="mt-6 bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20 backdrop-blur-md rounded-2xl p-4 border border-red-400/30 max-w-lg mx-auto animate-pulse">
-              <div className="flex items-center justify-center gap-3">
-                <Award className="w-6 h-6 text-red-400" />
-                <div className="text-center">
-                  <p className="font-bold text-red-300">
-                    <FormattedMessage id="chatter.hero.earlyAdopter" defaultMessage="🚨 Early Adopter Bonus: +50% lifetime!" />
-                  </p>
-                  <p className="text-sm text-white/70">
-                    <FormattedMessage id="chatter.hero.earlyAdopter.sub" defaultMessage="Only for the first 50 chatters. Limited spots!" />
-                  </p>
-                </div>
-                <Timer className="w-6 h-6 text-red-400" />
-              </div>
             </div>
 
             {/* Scroll indicator */}

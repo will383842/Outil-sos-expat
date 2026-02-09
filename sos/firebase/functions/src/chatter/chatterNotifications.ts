@@ -313,9 +313,6 @@ export const chatterNotifyCommissionEarned = onDocumentCreated(
       case "bonus_zoom":
         reason = "Bonus Zoom";
         break;
-      case "bonus_social":
-        reason = "Bonus likes reseaux sociaux";
-        break;
       case "bonus_telegram":
         reason = "Bonus connexion Telegram";
         break;
@@ -902,6 +899,7 @@ export const chatterNotifyFlashBonusStart = onCall(
  */
 export const chatterRegisterFcmToken = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
     cpu: 0.1,
@@ -990,6 +988,7 @@ export const chatterRegisterFcmToken = onCall(
  */
 export const chatterUnregisterFcmToken = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
     cpu: 0.1,

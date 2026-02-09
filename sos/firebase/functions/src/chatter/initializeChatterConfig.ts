@@ -65,6 +65,7 @@ export async function initializeChatterConfigInternal(): Promise<{
  */
 export const initializeChatterConfig = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
@@ -107,6 +108,7 @@ export const initializeChatterConfig = onCall(
  */
 export const resetChatterConfigToDefaults = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
@@ -911,6 +913,7 @@ export async function initializePlatformDefinitionsInternal(): Promise<number> {
  */
 export const initializeChatterSystem = onCall(
   {
+    cors: true,
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,

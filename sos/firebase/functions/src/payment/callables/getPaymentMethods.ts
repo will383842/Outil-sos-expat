@@ -85,6 +85,7 @@ export const getPaymentMethods = onCall(
     region: 'europe-west1',
     memory: '256MiB',
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request: CallableRequest): Promise<GetPaymentMethodsOutput> => {
     ensureInitialized();

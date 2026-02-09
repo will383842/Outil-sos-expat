@@ -31,6 +31,7 @@ export const updateBankDetails = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: true,
     secrets: [ENCRYPTION_KEY],
   },
   async (request): Promise<{ success: boolean; message: string }> => {

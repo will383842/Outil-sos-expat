@@ -34,7 +34,6 @@ import {
   DollarSign,
   TrendingUp,
   Search,
-  Award,
   AlertTriangle,
   ChevronDown,
   ChevronRight,
@@ -48,7 +47,6 @@ interface ReferralStats {
   monthlyReferralEarnings: number;
   averageReferralsPerChatter: number;
   topReferrersCount: number;
-  earlyAdoptersCount: number;
 }
 
 interface ReferralCommission {
@@ -69,7 +67,6 @@ interface ReferralTreeNode {
   email: string;
   totalEarned: number;
   qualifiedReferralsCount: number;
-  isEarlyAdopter: boolean;
   filleuls: ReferralTreeNode[];
 }
 
@@ -194,12 +191,6 @@ const AdminChatterReferrals: React.FC = () => {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="font-medium">{node.name}</span>
-              {node.isEarlyAdopter && (
-                <Badge className="bg-amber-500 text-white">
-                  <Award className="w-3 h-3 mr-1" />
-                  Pioneer
-                </Badge>
-              )}
             </div>
             <p className="text-xs text-gray-500">{node.email}</p>
           </div>
@@ -283,7 +274,7 @@ const AdminChatterReferrals: React.FC = () => {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -330,19 +321,6 @@ const AdminChatterReferrals: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                  <Award className="h-6 w-6 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Pioneers</p>
-                  <p className="text-2xl font-bold">{stats.earlyAdoptersCount}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       )}
 

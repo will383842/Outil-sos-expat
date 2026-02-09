@@ -940,6 +940,7 @@ function resolveLanguage(lang?: string): SupportedLanguage {
 export const sendCustomPasswordResetEmail = onCall(
   {
     region: "europe-west1",
+    cors: true,
     secrets: [EMAIL_USER, EMAIL_PASS],
   },
   async (request) => {

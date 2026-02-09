@@ -160,8 +160,6 @@ const ChatterTraining = lazy(() => import('./pages/Chatter/ChatterTraining'));
 const ChatterReferrals = lazy(() => import('./pages/Chatter/ChatterReferrals'));
 const ChatterReferralEarnings = lazy(() => import('./pages/Chatter/ChatterReferralEarnings'));
 const ChatterRefer = lazy(() => import('./pages/Chatter/ChatterRefer'));
-const PioneersPage = lazy(() => import('./pages/Pioneers'));
-
 // Influencer System
 const InfluencerLanding = lazy(() => import('./pages/Influencer/InfluencerLanding'));
 const InfluencerRegister = lazy(() => import('./pages/Influencer/InfluencerRegister'));
@@ -379,9 +377,6 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/chatter/filleuls", component: ChatterReferrals, protected: true, role: 'chatter', translated: "chatter-referrals" },
   { path: "/chatter/gains-parrainage", component: ChatterReferralEarnings, protected: true, role: 'chatter', translated: "chatter-referral-earnings" },
   { path: "/chatter/parrainer", component: ChatterRefer, protected: true, role: 'chatter', translated: "chatter-refer" },
-
-  // Pioneers Page - Public route
-  { path: "/pioneers", component: PioneersPage, translated: "pioneers" },
 
   // Influencer System Routes - Protected routes for registered influencers
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un influenceur ne peut pas être client/lawyer/expat/chatter.

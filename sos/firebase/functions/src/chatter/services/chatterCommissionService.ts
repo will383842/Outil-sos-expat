@@ -397,8 +397,6 @@ function getDefaultDescription(
       return `Bonus Top ${details?.rank || ""} mensuel (${details?.month || ""})`;
     case "bonus_zoom":
       return "Bonus participation Zoom";
-    case "bonus_social":
-      return `Bonus likes reseaux sociaux${details?.networkCount ? ` (${details.networkCount} reseaux)` : ""}`;
     case "bonus_telegram":
       return "Bonus connexion Telegram";
     case "manual_adjustment":

@@ -36,6 +36,7 @@ export const getGroupAdminDashboard = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 30,
+    cors: true,
   },
   async (request): Promise<GroupAdminDashboardResponse> => {
     ensureInitialized();

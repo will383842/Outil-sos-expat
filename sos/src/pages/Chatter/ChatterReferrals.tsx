@@ -8,7 +8,6 @@ import React from "react";
 import ChatterDashboardLayout from "@/components/Chatter/Layout/ChatterDashboardLayout";
 import { ReferralStatsCard } from "@/components/Chatter/Cards/ReferralStatsCard";
 import { MilestoneProgressCard } from "@/components/Chatter/Cards/MilestoneProgressCard";
-import { PioneerBadgeCard } from "@/components/Chatter/Cards/PioneerBadgeCard";
 import { PromoAlertCard } from "@/components/Chatter/Cards/PromoAlertCard";
 import { ReferralN1Table } from "@/components/Chatter/Tables/ReferralN1Table";
 import { ReferralN2List } from "@/components/Chatter/Tables/ReferralN2List";
@@ -30,7 +29,6 @@ export default function ChatterReferrals() {
     filleulsN1,
     filleulsN2,
     tierProgress,
-    earlyAdopter,
     activePromotion,
     isLoading,
     error,
@@ -96,11 +94,6 @@ export default function ChatterReferrals() {
             {/* Active promotion alert */}
             {activePromotion && (
               <PromoAlertCard promotion={activePromotion} />
-            )}
-
-            {/* Pioneer badge */}
-            {earlyAdopter?.isEarlyAdopter && (
-              <PioneerBadgeCard earlyAdopter={earlyAdopter} />
             )}
 
             {/* Stats and milestones */}

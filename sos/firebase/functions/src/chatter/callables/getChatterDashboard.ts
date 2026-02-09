@@ -27,10 +27,6 @@ import {
 import { getChatterConfigCached } from "../utils";
 import { getNextTierBonus, getClientEarnings } from "../services/chatterReferralService";
 import { getActivePromotions } from "../services/chatterPromotionService";
-import {
-  getActiveSocialNetworks,
-  getChatterSocialLikes,
-} from "../services/chatterSocialLikesService";
 
 // Helper function to get week start date (Monday)
 function getWeekStart(date: Date): Date {
@@ -443,9 +439,6 @@ export const getChatterDashboard = onCall(
           recruiterCommissionPaid: chatter.recruiterCommissionPaid,
           // Referral N2 system fields
           parrainNiveau2Id: chatter.parrainNiveau2Id,
-          isEarlyAdopter: chatter.isEarlyAdopter,
-          earlyAdopterCountry: chatter.earlyAdopterCountry,
-          earlyAdopterDate: chatter.earlyAdopterDate,
           qualifiedReferralsCount: chatter.qualifiedReferralsCount,
           referralsN2Count: chatter.referralsN2Count,
           referralEarnings: chatter.referralEarnings,
@@ -494,12 +487,6 @@ export const getChatterDashboard = onCall(
           referralEarnings: chatter.referralEarnings || 0,
           nextTierBonus: getNextTierBonus(chatter),
         },
-        // Early adopter (Pioneer) status
-        earlyAdopter: {
-          isEarlyAdopter: chatter.isEarlyAdopter || false,
-          country: chatter.earlyAdopterCountry || null,
-          multiplier: chatter.isEarlyAdopter ? REFERRAL_CONFIG.EARLY_ADOPTER.MULTIPLIER : 1,
-        },
         // Earnings ratio
         earningsRatio: (() => {
           const affiliationEarnings = (chatter.totalEarned || 0) - (chatter.referralEarnings || 0);
@@ -527,34 +514,20 @@ export const getChatterDashboard = onCall(
         // Piggy Bank - Bonus pending unlock
         piggyBank: await (async () => {
           const clientEarnings = getClientEarnings(chatter);
-          const unlockThreshold = REFERRAL_CONFIG.SOCIAL_LIKES.UNLOCK_THRESHOLD; // $150
-
-          // Social likes bonus
-          const socialNetworks = await getActiveSocialNetworks();
-          const socialLikes = await getChatterSocialLikes(userId);
-          const likedNetworkIds = new Set(socialLikes.map(l => l.networkId));
-
-          const socialLikesPending = socialLikes
-            .filter(l => !l.bonusPaid)
-            .reduce((sum, l) => sum + l.bonusAmount, 0);
-
-          const socialLikesPaid = chatter.socialBonusPaid || 0;
-          const socialNetworksTotal = socialNetworks.length;
-          const socialNetworksLiked = socialLikes.length;
+          const unlockThreshold = REFERRAL_CONFIG.TELEGRAM_BONUS.UNLOCK_THRESHOLD; // $150
 
           // Telegram bonus ($50 when Telegram is linked, locked until threshold)
           const telegramBonusAmount = REFERRAL_CONFIG.TELEGRAM_BONUS?.AMOUNT || 5000; // $50
           const hasTelegram = chatter.hasTelegram === true && chatter.telegramId;
           const telegramBonusPending = hasTelegram && !chatter.telegramBonusPaid ? telegramBonusAmount : 0;
-          const telegramBonusPaid = chatter.telegramBonusPaid ? telegramBonusAmount : 0;
 
           // Calculate progress to unlock
           const progressPercent = Math.min(100, Math.round((clientEarnings / unlockThreshold) * 100));
           const amountToUnlock = Math.max(0, unlockThreshold - clientEarnings);
           const isUnlocked = clientEarnings >= unlockThreshold;
 
-          // Total pending = social likes + telegram bonus (all locked until threshold)
-          const totalPending = socialLikesPending + telegramBonusPending;
+          // Total pending = telegram bonus (locked until threshold)
+          const totalPending = telegramBonusPending;
 
           return {
             // Overall unlock status
@@ -563,35 +536,13 @@ export const getChatterDashboard = onCall(
             unlockThreshold,
             progressPercent,
             amountToUnlock,
-            // Social likes details
-            socialLikes: {
-              networksAvailable: socialNetworksTotal,
-              networksLiked: socialNetworksLiked,
-              bonusPending: socialLikesPending,
-              bonusPaid: socialLikesPaid,
-              networks: socialNetworks.map(n => ({
-                id: n.id,
-                platform: n.platform,
-                label: n.label,
-                url: n.url,
-                bonusAmount: n.bonusAmount,
-                liked: likedNetworkIds.has(n.id),
-              })),
-            },
-            // Telegram bonus details
-            telegramBonus: {
-              hasTelegram,
-              bonusAmount: telegramBonusAmount,
-              bonusPending: telegramBonusPending,
-              bonusPaid: telegramBonusPaid,
-            },
-            // Total pending in piggy bank (social + telegram)
+            // Total pending in piggy bank
             totalPending,
             // Message for UI
             message: isUnlocked
               ? totalPending > 0
                 ? `${(totalPending / 100).toFixed(0)}$ de bonus en attente de paiement`
-                : "Tirelire vide - connectez Telegram et likez nos reseaux pour gagner des bonus !"
+                : "Tirelire vide - connectez Telegram pour gagner un bonus !"
               : `Encore ${(amountToUnlock / 100).toFixed(0)}$ de ventes pour debloquer ${(totalPending / 100).toFixed(0)}$ de bonus`,
           };
         })(),
