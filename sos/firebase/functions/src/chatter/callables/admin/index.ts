@@ -308,11 +308,7 @@ export const adminGetChatterDetail = onCall(
 // ============================================================================
 
 export const adminProcessWithdrawal = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; message: string }> => {
     ensureInitialized();
     const adminId = await assertAdmin(request);
@@ -389,11 +385,7 @@ export const adminProcessWithdrawal = onCall(
 // ============================================================================
 
 export const adminUpdateChatterStatus = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean; message: string }> => {
     ensureInitialized();
     const adminId = await assertAdmin(request);
@@ -475,11 +467,7 @@ export const adminUpdateChatterStatus = onCall(
 // ============================================================================
 
 export const adminGetPendingWithdrawals = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<{
     success: boolean;
     withdrawals: ChatterWithdrawal[];
@@ -524,7 +512,7 @@ export const adminGetPendingWithdrawals = onCall(
  * Export chatters to CSV
  */
 export const adminExportChatters = onCall(
-  { region: "europe-west1", memory: "512MiB", timeoutSeconds: 60 },
+  { ...adminConfig, timeoutSeconds: 60 },
   async (request) => {
     ensureInitialized();
     await assertAdmin(request);
@@ -592,7 +580,7 @@ export const adminExportChatters = onCall(
  * Bulk actions on multiple chatters
  */
 export const adminBulkChatterAction = onCall(
-  { region: "europe-west1", memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     ensureInitialized();
     await assertAdmin(request);
@@ -659,7 +647,7 @@ export const adminBulkChatterAction = onCall(
  * Get current chatter system configuration
  */
 export const adminGetChatterConfig = onCall(
-  { region: "europe-west1", memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<{ config: ChatterConfig }> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -703,7 +691,7 @@ export const adminGetChatterConfig = onCall(
  * Update chatter system configuration
  */
 export const adminUpdateChatterConfig = onCall(
-  { region: "europe-west1", memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
     const adminId = await assertAdmin(request);
@@ -793,7 +781,7 @@ export const adminUpdateChatterConfig = onCall(
  * Get chatter leaderboard with country/language filters (admin version)
  */
 export const adminGetChatterLeaderboard = onCall(
-  { region: "europe-west1", memory: "512MiB", timeoutSeconds: 30 },
+  { ...adminConfig, timeoutSeconds: 30 },
   async (request) => {
     ensureInitialized();
     await assertAdmin(request);

@@ -4,6 +4,7 @@
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
+import { adminConfig } from "../../lib/functionConfigs";
 import * as zoomService from "../services/chatterZoomService";
 
 const db = () => getFirestore();
@@ -16,7 +17,7 @@ const db = () => getFirestore();
  * Get upcoming Zoom meetings for chatters
  */
 export const getZoomMeetings = onCall(
-  { region: "europe-west1" },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -43,7 +44,7 @@ export const getZoomMeetings = onCall(
  * Record attendance for a Zoom meeting
  */
 export const recordZoomAttendance = onCall(
-  { region: "europe-west1" },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -84,7 +85,7 @@ export const recordZoomAttendance = onCall(
  * Get chatter's attendance history
  */
 export const getMyZoomAttendances = onCall(
-  { region: "europe-west1" },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -108,7 +109,7 @@ export const getMyZoomAttendances = onCall(
  * Create a new Zoom meeting (admin only)
  */
 export const adminCreateZoomMeeting = onCall(
-  { region: "europe-west1" },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -165,7 +166,7 @@ export const adminCreateZoomMeeting = onCall(
  * Update a Zoom meeting (admin only)
  */
 export const adminUpdateZoomMeeting = onCall(
-  { region: "europe-west1" },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -202,7 +203,7 @@ export const adminUpdateZoomMeeting = onCall(
  * Get all meetings with filters (admin only)
  */
 export const adminGetZoomMeetings = onCall(
-  { region: "europe-west1" },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -230,7 +231,7 @@ export const adminGetZoomMeetings = onCall(
  * Get meeting attendees (admin only)
  */
 export const adminGetMeetingAttendees = onCall(
-  { region: "europe-west1" },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -262,7 +263,7 @@ export const adminGetMeetingAttendees = onCall(
  * Update meeting status (admin only)
  */
 export const adminUpdateMeetingStatus = onCall(
-  { region: "europe-west1" },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");

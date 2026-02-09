@@ -16,6 +16,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { logger } from "firebase-functions/v2";
+import { adminConfig } from "../../lib/functionConfigs";
 
 import {
   getAllSocialNetworks,
@@ -54,10 +55,7 @@ function ensureInitialized() {
  * Get all social networks (admin view - includes inactive)
  */
 export const adminGetSocialNetworks = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean; networks: ChatterSocialNetwork[] }> => {
     ensureInitialized();
 
@@ -85,10 +83,7 @@ export const adminGetSocialNetworks = onCall(
  * Add a new social network (admin only)
  */
 export const adminAddSocialNetwork = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean; network: ChatterSocialNetwork }> => {
     ensureInitialized();
 
@@ -152,10 +147,7 @@ export const adminAddSocialNetwork = onCall(
  * Update an existing social network (admin only)
  */
 export const adminUpdateSocialNetwork = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean; network: ChatterSocialNetwork | null }> => {
     ensureInitialized();
 
@@ -207,10 +199,7 @@ export const adminUpdateSocialNetwork = onCall(
  * Delete (deactivate) a social network (admin only)
  */
 export const adminDeleteSocialNetwork = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
 
@@ -254,10 +243,7 @@ export const adminDeleteSocialNetwork = onCall(
  * Get chatter's social status (networks to like, likes made, bonus status)
  */
 export const getChatterSocialStatus = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (
     request
   ): Promise<{
@@ -353,10 +339,7 @@ export const getChatterSocialStatus = onCall(
  * Chatter confirms they clicked and liked the page
  */
 export const markSocialNetworkLiked = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (
     request
   ): Promise<{

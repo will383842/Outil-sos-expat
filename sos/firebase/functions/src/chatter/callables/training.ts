@@ -13,6 +13,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { adminConfig } from "../../lib/functionConfigs";
 
 import {
   Chatter,
@@ -41,11 +42,7 @@ function ensureInitialized() {
  * Get all training modules with user progress
  */
 export const getChatterTrainingModules = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<GetTrainingModulesResponse> => {
     ensureInitialized();
 
@@ -163,11 +160,7 @@ export const getChatterTrainingModules = onCall(
  * Get full module content with slides and quiz
  */
 export const getChatterTrainingModuleContent = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<GetTrainingModuleContentResponse> => {
     ensureInitialized();
 
@@ -338,11 +331,7 @@ export const getChatterTrainingModuleContent = onCall(
  * Update slide progress
  */
 export const updateChatterTrainingProgress = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
 
@@ -397,11 +386,7 @@ export const updateChatterTrainingProgress = onCall(
  * Submit quiz answers and check for module completion
  */
 export const submitChatterTrainingQuiz = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<SubmitTrainingQuizResponse> => {
     ensureInitialized();
 
@@ -652,11 +637,7 @@ export const submitChatterTrainingQuiz = onCall(
  * Get certificate details
  */
 export const getChatterTrainingCertificate = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<GetTrainingCertificateResponse> => {
     ensureInitialized();
 
