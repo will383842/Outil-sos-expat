@@ -371,6 +371,11 @@
   "chatter.provider.links.title": "Vous Recevez 2 Liens d'Affiliation",
   "chatter.provider.link1.label": "Lien 1 : Pour les Clients",
   "chatter.provider.link2.label": "Lien 2 : Pour les Prestataires",
+  "chatter.provider.you.earn": "5$/appel reçu (6 mois)",
+  "chatter.provider.example": "Exemple : 3 avocats × moy. 22 appels/mois",
+  "chatter.provider.passive": "Revenus passifs !",
+  "chatter.provider.cta": "Commencer à recruter",
+  "chatter.provider.avg": "≈ 22 appels/mois par prestataire",
 
   "chatter.social.badge": "Histoires de Succès Réelles",
   "chatter.social.title": "Les Chatters Gagnent Chaque Jour",
@@ -742,6 +747,7 @@
   "blogger.topics.ex4": "'Permis de résidence Dubaï'",
   "blogger.topics.tip": "Concentrez-vous sur les mots-clés longue traîne pour un meilleur classement SEO",
   "blogger.topics.recommended": "Top performer !",
+  "blogger.topic.recommended": "Top performer !",
 
   "blogger.topic.visa": "Guides visa",
   "blogger.topic.visa.desc": "Infos visa par pays",

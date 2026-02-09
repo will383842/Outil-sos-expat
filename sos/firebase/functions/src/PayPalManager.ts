@@ -3296,6 +3296,8 @@ async function handlePayoutFailure(
 export const paypalWebhook = onRequest(
   {
     region: "europe-west1",
+    // P0 CRITICAL FIX: Allow unauthenticated access for PayPal webhooks (Cloud Run requires explicit public access)
+    invoker: "public",
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID, META_CAPI_TOKEN],
   },
   async (req, res) => {

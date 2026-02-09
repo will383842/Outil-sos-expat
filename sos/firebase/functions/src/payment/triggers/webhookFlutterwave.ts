@@ -346,6 +346,8 @@ async function logWebhookEvent(
 export const paymentWebhookFlutterwave = onRequest(
   {
     region: "europe-west1",
+    // P0 CRITICAL FIX: Allow unauthenticated access for Flutterwave webhooks (Cloud Run requires explicit public access)
+    invoker: "public",
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [FLUTTERWAVE_WEBHOOK_SECRET],

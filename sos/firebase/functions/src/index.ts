@@ -1903,6 +1903,8 @@ export const sendPaymentNotifications = traceFunction(
 export const stripeWebhook = onRequest(
   {
     region: "europe-west1",
+    // P0 CRITICAL FIX: Allow unauthenticated access for Stripe webhooks (Cloud Run requires explicit public access)
+    invoker: "public",
     memory: "512MiB",
     // P0 FIX: Add Stripe API secrets + webhook secrets + ENCRYPTION_KEY + OUTIL_SYNC_API_KEY
     secrets: [
