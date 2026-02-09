@@ -890,8 +890,6 @@ export class PaymentService {
     const now = new Date().toISOString();
     let shouldRefund = false;
     let withdrawalAmount = 0;
-    let withdrawalUserId = '';
-    let withdrawalUserType: PaymentUserType = 'chatter';
     let newRetryCount = 0;
 
     // Atomic transaction: read withdrawal + update status + conditionally refund balance
@@ -907,8 +905,6 @@ export class PaymentService {
       newRetryCount = withdrawal.retryCount + 1;
       shouldRefund = newRetryCount >= withdrawal.maxRetries;
       withdrawalAmount = withdrawal.amount;
-      withdrawalUserId = withdrawal.userId;
-      withdrawalUserType = withdrawal.userType;
 
       // Update withdrawal status
       const historyEntry: StatusHistoryEntry = {

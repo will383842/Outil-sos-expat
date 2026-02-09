@@ -52,7 +52,7 @@ interface DeletePaymentMethodOutput {
  */
 export const deletePaymentMethod = onCall(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: true,

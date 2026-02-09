@@ -223,7 +223,7 @@ function getEstimatedCompletion(withdrawal: WithdrawalRequest): string | undefin
  */
 export const getWithdrawalStatus = onCall(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: true,

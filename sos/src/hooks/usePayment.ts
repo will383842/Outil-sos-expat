@@ -12,7 +12,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
+import { functionsPayment } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
 
 // ============================================================================
@@ -376,7 +377,9 @@ export const COUNTRY_PAYMENT_INFO: CountryPaymentInfo[] = [
 // FIREBASE FUNCTIONS SETUP
 // ============================================================================
 
-const functions = getFunctions(undefined, "europe-west1");
+// Use the dedicated payment functions instance (europe-west3) from centralized config
+// to isolate payment operations from CPU quota pressure of 500+ general functions
+const functions = functionsPayment;
 
 // ============================================================================
 // HOOK: usePaymentMethods

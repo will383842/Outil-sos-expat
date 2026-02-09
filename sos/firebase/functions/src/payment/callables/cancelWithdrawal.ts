@@ -70,7 +70,7 @@ function validateInput(input: CancelWithdrawalInput): void {
  */
 export const cancelWithdrawal = onCall(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: true,
