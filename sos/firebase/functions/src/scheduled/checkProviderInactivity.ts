@@ -1,5 +1,11 @@
 import * as scheduler from 'firebase-functions/v2/scheduler';
 import * as admin from 'firebase-admin';
+import { setProviderAvailable } from '../callables/providerStatusManager';
+
+// Maximum time a provider should remain "busy" before the cron fallback releases them (15 minutes)
+// This is slightly longer than the Cloud Tasks-based safety timeout (10 min)
+// to give the Cloud Task a chance to fire first
+const BUSY_FALLBACK_TIMEOUT_MS = 15 * 60 * 1000;
 
 export const checkProviderInactivity = scheduler.onSchedule(
   {
@@ -119,6 +125,14 @@ export const checkProviderInactivity = scheduler.onSchedule(
       } else {
         console.log('✅ Aucun prestataire inactif depuis 180min');
       }
+
+      // =====================================================================
+      // 2026-02-09: FALLBACK - Release providers stuck in "busy" state
+      // This is a safety net in case the Cloud Tasks-based busySafetyTimeoutTask
+      // fails to fire (URL misconfigured, queue issue, Cloud Tasks outage, etc.)
+      // =====================================================================
+      await releaseStuckBusyProviders(db);
+
     } catch (error) {
       console.error('❌ Erreur checkProviderInactivity:', error);
       // Re-throw pour que Firebase enregistre l'échec de la fonction
@@ -126,3 +140,113 @@ export const checkProviderInactivity = scheduler.onSchedule(
     }
   }
 );
+
+/**
+ * 2026-02-09: Fallback to release providers stuck in "busy" state for > 15 minutes
+ * when the call session is no longer active.
+ *
+ * This catches cases where:
+ * - busySafetyTimeoutTask Cloud Task URL is misconfigured
+ * - Cloud Tasks queue is paused or errored
+ * - The task was created but never executed
+ * - Any other Cloud Tasks failure
+ */
+async function releaseStuckBusyProviders(db: admin.firestore.Firestore): Promise<void> {
+  console.log('🛡️ [BusyFallback] Checking for providers stuck in busy state...');
+
+  try {
+    // Query users with availability === 'busy'
+    const busyProviders = await db
+      .collection('users')
+      .where('availability', '==', 'busy')
+      .get();
+
+    if (busyProviders.empty) {
+      console.log('🛡️ [BusyFallback] No busy providers found');
+      return;
+    }
+
+    console.log(`🛡️ [BusyFallback] Found ${busyProviders.size} busy providers to evaluate`);
+    const nowMs = Date.now();
+    let releasedCount = 0;
+
+    for (const providerDoc of busyProviders.docs) {
+      const data = providerDoc.data();
+      const providerId = providerDoc.id;
+      const isAAA = data.isAAA === true || providerId.startsWith('aaa_');
+
+      // Skip AAA profiles - they are test accounts
+      if (isAAA) {
+        continue;
+      }
+
+      // Check how long they've been busy
+      const busySince = data.busySince?.toMillis?.() || data.lastStatusChange?.toMillis?.() || 0;
+      if (busySince === 0) {
+        console.log(`🛡️ [BusyFallback] Skip ${providerId}: no busySince timestamp`);
+        continue;
+      }
+
+      const busyDurationMs = nowMs - busySince;
+      const busyDurationMin = Math.round(busyDurationMs / 60000);
+
+      // Only act if busy for > 15 minutes (gives Cloud Tasks timeout of 10 min a chance to fire first)
+      if (busyDurationMs < BUSY_FALLBACK_TIMEOUT_MS) {
+        console.log(`🛡️ [BusyFallback] Skip ${providerId}: busy for only ${busyDurationMin} min (< 15 min threshold)`);
+        continue;
+      }
+
+      // Check if the call session is still active
+      const callSessionId = data.currentCallSessionId;
+      let sessionStillActive = false;
+
+      if (callSessionId) {
+        try {
+          const sessionDoc = await db.collection('call_sessions').doc(callSessionId).get();
+          if (sessionDoc.exists) {
+            const sessionStatus = sessionDoc.data()?.status;
+            const activeStatuses = ['pending', 'scheduled', 'provider_connecting', 'client_connecting', 'both_connecting', 'active'];
+            sessionStillActive = activeStatuses.includes(sessionStatus);
+
+            if (sessionStillActive) {
+              console.log(`🛡️ [BusyFallback] Skip ${providerId}: session ${callSessionId} still active (status: ${sessionStatus})`);
+              continue;
+            }
+            console.log(`🛡️ [BusyFallback] Provider ${providerId} busy for ${busyDurationMin} min, session ${callSessionId} is ${sessionStatus} → releasing`);
+          } else {
+            console.log(`🛡️ [BusyFallback] Provider ${providerId} busy for ${busyDurationMin} min, session ${callSessionId} NOT FOUND → releasing`);
+          }
+        } catch (sessionError) {
+          console.warn(`⚠️ [BusyFallback] Error checking session ${callSessionId}:`, sessionError);
+          // Session check failed - still release if busy for a long time (> 30 min)
+          if (busyDurationMs < 30 * 60 * 1000) {
+            console.log(`🛡️ [BusyFallback] Skip ${providerId}: session check failed and busy < 30 min`);
+            continue;
+          }
+          console.log(`🛡️ [BusyFallback] Provider ${providerId} busy for ${busyDurationMin} min, session check failed → releasing (> 30 min safety)`);
+        }
+      } else {
+        // No callSessionId but busy → definitely stuck
+        console.log(`🛡️ [BusyFallback] Provider ${providerId} busy for ${busyDurationMin} min with NO currentCallSessionId → releasing`);
+      }
+
+      // Release the provider using setProviderAvailable (handles sibling propagation)
+      try {
+        const result = await setProviderAvailable(providerId, 'busy_fallback_cron');
+        releasedCount++;
+        console.log(`✅ [BusyFallback] Released ${providerId}: ${result.previousStatus} → ${result.newStatus}`);
+      } catch (releaseError) {
+        console.error(`❌ [BusyFallback] Failed to release ${providerId}:`, releaseError);
+      }
+    }
+
+    if (releasedCount > 0) {
+      console.log(`🛡️ [BusyFallback] Released ${releasedCount} stuck busy providers`);
+    } else {
+      console.log('🛡️ [BusyFallback] No providers needed release');
+    }
+  } catch (error) {
+    // Non-blocking - don't fail the whole cron if busy fallback fails
+    console.error('❌ [BusyFallback] Error in releaseStuckBusyProviders:', error);
+  }
+}

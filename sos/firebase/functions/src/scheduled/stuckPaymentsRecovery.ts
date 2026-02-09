@@ -12,7 +12,7 @@
  * 3. Find payments stuck in 'requires_capture' for more than 6 hours - refund them
  * 4. Alert admins about stuck payments
  *
- * Runs every 30 minutes
+ * Runs every 15 minutes
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -62,12 +62,12 @@ function getStripeInstance(): Stripe {
 }
 
 /**
- * Scheduled function - runs every 4 hours
- * 2025-01-16: Garder à 4h car paiements impliqués (pas quotidien)
+ * Scheduled function - runs every 15 minutes
+ * 2026-02-09: Changed from 4h to 15min - refund threshold is 1h so we need frequent checks
  */
 export const stuckPaymentsRecovery = onSchedule(
   {
-    schedule: "0 */4 * * *", // Every 4 hours (paiements = garder réactif)
+    schedule: "*/15 * * * *", // Every 15 minutes - catches stuck payments within 15min of threshold
     region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
@@ -310,8 +310,39 @@ async function captureCompletedPayPalPayments(
         // Find the associated call session
         const sessionDoc = await db.collection("call_sessions").doc(callSessionId).get();
 
+        // Check order age for timeout logic
+        const orderCreatedAt = orderData.createdAt?.toDate?.()?.getTime() || orderData.createdAt?.getTime?.() || 0;
+        const orderAgeMs = orderCreatedAt > 0 ? Date.now() - orderCreatedAt : 0;
+        const orderAgeHours = orderAgeMs / (60 * 60 * 1000);
+        const isOlderThanThreshold = orderAgeHours >= RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS;
+
         if (!sessionDoc.exists) {
-          console.warn(`⚠️ [StuckPayments] Call session ${callSessionId} not found for PayPal order ${orderId}`);
+          // 2026-02-09: If session not found AND order is old → void the authorization
+          if (isOlderThanThreshold) {
+            console.log(`💳 [StuckPayments] VOIDING PayPal order ${orderId} - session ${callSessionId} NOT FOUND and order is ${Math.round(orderAgeHours * 60)} min old`);
+            try {
+              const authorizationId = orderData.authorizationId;
+              if (authorizationId) {
+                const { PayPalManager } = await import("../PayPalManager");
+                const pm = new PayPalManager();
+                const voidResult = await pm.voidAuthorization(authorizationId);
+                if (voidResult.success) {
+                  results.paypalVoided++;
+                  await db.collection("paypal_orders").doc(orderId).update({
+                    status: "VOIDED",
+                    voidedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    voidedBy: "stuck_payments_recovery",
+                    voidReason: "session_not_found_timeout",
+                  });
+                }
+              }
+            } catch (voidErr) {
+              console.error(`❌ [StuckPayments] Error voiding PayPal order ${orderId} (no session):`, voidErr);
+              results.errors++;
+            }
+          } else {
+            console.warn(`⚠️ [StuckPayments] Call session ${callSessionId} not found for PayPal order ${orderId}, waiting for timeout`);
+          }
           continue;
         }
 
@@ -413,9 +444,44 @@ async function captureCompletedPayPalPayments(
             console.error(`❌ [StuckPayments] Error voiding PayPal order ${orderId}:`, voidError);
             results.errors++;
           }
+        } else if (isOlderThanThreshold) {
+          // 2026-02-09: Session stuck in non-terminal status (pending, scheduled, etc.)
+          // AND order is older than threshold → void the authorization (same as Stripe refund logic)
+          console.log(`💳 [StuckPayments] VOIDING PayPal order ${orderId} - session ${callSessionId} stuck in "${sessionStatus}" for ${Math.round(orderAgeHours * 60)} min`);
+
+          try {
+            const authorizationId = orderData.authorizationId;
+            if (authorizationId) {
+              const voidResult = await paypalManager.voidAuthorization(authorizationId);
+
+              if (voidResult.success) {
+                results.paypalVoided++;
+                console.log(`✅ [StuckPayments] Successfully voided stuck PayPal authorization ${authorizationId}`);
+
+                await db.collection("paypal_orders").doc(orderId).update({
+                  status: "VOIDED",
+                  voidedAt: admin.firestore.FieldValue.serverTimestamp(),
+                  voidedBy: "stuck_payments_recovery",
+                  voidReason: `session_stuck_${sessionStatus}_timeout`,
+                });
+
+                await db.collection("call_sessions").doc(callSessionId).update({
+                  status: "cancelled",
+                  "payment.status": "cancelled",
+                  "payment.cancelledAt": admin.firestore.FieldValue.serverTimestamp(),
+                  "payment.cancelledBy": "stuck_payments_recovery",
+                  cancelledReason: `PayPal payment timeout - stuck for ${RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS}+ hour(s) in ${sessionStatus}`,
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+              }
+            }
+          } catch (voidError) {
+            console.error(`❌ [StuckPayments] Error voiding stuck PayPal order ${orderId}:`, voidError);
+            results.errors++;
+          }
         } else {
-          // Session still in progress or other status - leave it alone
-          console.log(`ℹ️ [StuckPayments] Skipping PayPal order ${orderId} - session status: ${sessionStatus}, duration: ${duration}s`);
+          // Session still in progress and not yet past threshold - leave it alone
+          console.log(`ℹ️ [StuckPayments] Skipping PayPal order ${orderId} - session status: ${sessionStatus}, age: ${Math.round(orderAgeHours * 60)} min`);
         }
       } catch (error) {
         console.error(`❌ [StuckPayments] Error processing PayPal order ${orderId}:`, error);
@@ -558,7 +624,7 @@ async function alertStuckPayments(
           priority: criticalCount > 0 ? "critical" : "high",
           title: `⚠️ ${warningPayments.size} paiements bloqués`,
           message: `${warningPayments.size} paiements sont bloqués en attente de capture. ` +
-            `${criticalCount} sont critiques (> 6 heures). Vérifiez les sessions d'appel associées.`,
+            `${criticalCount} sont critiques (> ${RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS}h). Vérifiez les sessions d'appel associées.`,
           count: warningPayments.size,
           criticalCount,
           date: today,
