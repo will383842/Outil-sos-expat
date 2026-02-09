@@ -235,7 +235,7 @@ export const syncAllCustomClaims = onCall(
       console.log(`[syncAllCustomClaims] 📊 Terminé: ${synced} synchronisés, ${failed} échecs`);
 
       // Log d'audit global
-      await db.collection("admin_actions_logs").add({
+      await db.collection("admin_actions_log").add({
         action: "syncAllCustomClaims",
         performedBy: request.auth.uid,
         performedAt: admin.firestore.FieldValue.serverTimestamp(),

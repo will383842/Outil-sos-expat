@@ -2725,12 +2725,9 @@ service cloud.firestore {
     }
 
     // ================= REVIEWS =================
-    match /reviews/{reviewId} {
-      allow read: if true; // Public - provider ratings
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow delete: if isAdmin() || isDev();
-    }
+    // SUPPRIMÉ: Doublon permissif de la règle ligne ~135 qui inclut validation stricte
+    // (status == 'published' && isPublic == true pour la lecture, validation des champs pour create)
+    // La règle complète et sécurisée est dans la section REVIEWS COLLECTION plus haut
 
     // ================= BOOKING REQUESTS =================
     // SUPPRIMÉ: Doublon de la règle ligne ~977 qui inclut agency_manager + linkedProviderIds
@@ -2761,11 +2758,9 @@ service cloud.firestore {
     }
 
     // ================= AD CONVERSIONS =================
-    match /ad_conversions/{conversionId} {
-      allow read: if isAdmin() || isDev();
-      allow create: if isAuthenticated(); // Frontend tracking
-      allow update, delete: if isAdmin() || isDev();
-    }
+    // SUPPRIMÉ: Doublon permissif de la règle ligne ~1136 qui inclut validation stricte
+    // (validation source, timestamp, taille max des champs, unauthenticated create autorisé)
+    // La règle complète et sécurisée est dans la section AD CONVERSIONS plus haut
 
     // ================= APP SETTINGS =================
     // Parametres globaux de l'application (AdminSettings)
@@ -2824,6 +2819,18 @@ service cloud.firestore {
                   (resource.data.userId == request.auth.uid || isAdmin() || isDev());
       // Ecriture: Cloud Functions uniquement (via Admin SDK)
       allow write: if false;
+    }
+
+    // ================= MESSAGE TEMPLATES =================
+    // Templates de messages pour l'admin comms UI
+    match /message_templates/{locale} {
+      allow read: if isAdmin() || isDev();
+      allow write: if isAdmin() || isDev();
+
+      match /items/{itemId} {
+        allow read: if isAdmin() || isDev();
+        allow write: if isAdmin() || isDev();
+      }
     }
 
     // ================= CATCH-ALL (deny by default) =================
