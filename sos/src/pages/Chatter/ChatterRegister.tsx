@@ -14,7 +14,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
 import ChatterRegisterForm from '@/components/Chatter/Forms/ChatterRegisterForm';
 import type { ChatterRegistrationData } from '@/components/Chatter/Forms/ChatterRegisterForm';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/config/firebase';
 import { Star, ArrowLeft, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 
@@ -36,8 +37,6 @@ const ChatterRegister: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
   const [existingEmail, setExistingEmail] = useState<string>('');
-
-  const functions = getFunctions(undefined, 'europe-west1');
 
   // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
   // If found in URL, persist to localStorage with 30-day expiration
@@ -172,13 +171,13 @@ const ChatterRegister: React.FC = () => {
         termsAcceptanceMeta: data.termsAcceptanceMeta,
       });
 
-      setSuccess(true);
-
       // Clear stored referral code after successful registration
       clearStoredReferral('chatter');
 
-      // Refresh user data to ensure role is updated in context
+      // Refresh user data BEFORE showing success to avoid loading flicker
       await refreshUser();
+
+      setSuccess(true);
 
       // Redirect to Telegram onboarding after short delay (mandatory step)
       setTimeout(() => {

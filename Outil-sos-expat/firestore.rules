@@ -265,6 +265,14 @@ service cloud.firestore {
     }
 
     // ==========================================================================
+    // SETTINGS SUBCOLLECTIONS - Telegram templates, etc.
+    // ==========================================================================
+    match /settings/{settingId}/{subcol}/{docId} {
+      allow read: if isSignedIn() && (isAdmin() || hasActiveSubscription());
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==========================================================================
     // COUNTRY CONFIGS - Configuration par pays
     // ==========================================================================
     match /countryConfigs/{countryCode} {
@@ -325,6 +333,13 @@ service cloud.firestore {
     match /auditLogs/{logId} {
       allow read: if isAdmin();
       allow create, update, delete: if false;
+    }
+
+    // audit_logs (snake_case - used by Outil-sos-expat frontend)
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && (isAdmin() || isProvider());
+      allow update, delete: if isAdmin();
     }
 
     // ==========================================================================
