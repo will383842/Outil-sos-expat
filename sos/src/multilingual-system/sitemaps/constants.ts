@@ -7,22 +7,15 @@ import countriesConfig from '../config/countries.json';
 
 export const SITE_URL = 'https://sos-expat.com';
 
-// Parse language-country combinations from config
-// This generates 1 sitemap per language-country (9 languages × 197 countries = 1773 sitemaps)
-export const LANGUAGE_COUNTRY_COMBINATIONS: Language[] = countriesConfig.languages.flatMap(locale => {
-  const [lang, defaultCountry] = locale.split('-');
-  // For each language, create combinations with all countries
-  return countriesConfig.countries.map(country => ({
-    code: lang,
-    country: country.toLowerCase(),
-  }));
-});
-
-// Also keep the original for backward compatibility (default language-country pairs)
+// Valid language-country pairs (only the 9 supported locales)
 export const LANGUAGES: Language[] = countriesConfig.languages.map(locale => {
   const [lang, country] = locale.split('-');
   return { code: lang, country: country.toLowerCase() };
 });
+
+// LANGUAGE_COUNTRY_COMBINATIONS now equals LANGUAGES (only valid locales)
+// Previously this was a cartesian product of 9 languages × 197 countries = 1773 invalid combos
+export const LANGUAGE_COUNTRY_COMBINATIONS: Language[] = LANGUAGES;
 
 // All unique countries from config
 export const COUNTRIES: string[] = countriesConfig.countries.map(c => c.toLowerCase());

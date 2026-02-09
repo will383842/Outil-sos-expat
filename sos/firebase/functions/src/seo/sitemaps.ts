@@ -166,19 +166,21 @@ ${hreflangs}
     <lastmod>${today}</lastmod>
   </url>`);
           } else {
-            // Slug sans préfixe langue (très ancien format), ajouter le préfixe
-            const countryCode = (profile.countryCode || profile.country || 'fr') as string;
+            // Slug sans préfixe langue (très ancien format), use default locale per language
             LANGUAGES.forEach(lang => {
-              const url = `${SITE_URL}/${lang}-${countryCode.toLowerCase()}/${legacySlug}`;
+              const locale = getLocaleString(lang);
+              const url = `${SITE_URL}/${locale}/${legacySlug}`;
 
               const hreflangs = LANGUAGES.map(hrefLang => {
-                return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLang}-${countryCode.toLowerCase()}/${legacySlug}`)}"/>`;
+                const hrefLocale = getLocaleString(hrefLang);
+                return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLocale}/${legacySlug}`)}"/>`;
               }).join('\n');
 
+              const defaultLocale = getLocaleString('fr');
               urlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
-    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr-${countryCode.toLowerCase()}/${legacySlug}`)}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/${defaultLocale}/${legacySlug}`)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
     <lastmod>${today}</lastmod>

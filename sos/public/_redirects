@@ -1,3 +1,80 @@
-# Cloudflare Pages SPA routing
-# All routes that don't match a static file should be served by index.html
-/*  /index.html  200
+# Cloudflare Pages Redirects for SOS-Expat.com
+# Order matters: first match wins. Redirects are processed BEFORE the SPA fallback.
+# Limits: 2000 static rules, 100 dynamic rules (with :splat)
+
+# =============================================
+# Legacy single-language URLs -> new lang-country format
+# /de/... -> /de-de/..., /pt/... -> /pt-pt/..., etc.
+# =============================================
+/fr/* /fr-fr/:splat 301
+/en/* /en-us/:splat 301
+/es/* /es-es/:splat 301
+/de/* /de-de/:splat 301
+/ru/* /ru-ru/:splat 301
+/pt/* /pt-pt/:splat 301
+/ch/* /zh-cn/:splat 301
+/zh/* /zh-cn/:splat 301
+/hi/* /hi-in/:splat 301
+/ar/* /ar-sa/:splat 301
+
+# Legacy root language URLs (no trailing content)
+/fr /fr-fr/ 301
+/en /en-us/ 301
+/es /es-es/ 301
+/de /de-de/ 301
+/ru /ru-ru/ 301
+/pt /pt-pt/ 301
+/ch /zh-cn/ 301
+/zh /zh-cn/ 301
+/hi /hi-in/ 301
+/ar /ar-sa/ 301
+
+# =============================================
+# Invalid cross-locale combinations (from broken sitemap generator)
+# These were indexed by Google and need proper redirects
+# =============================================
+/fr-us/* /fr-fr/:splat 301
+/fr-de/* /fr-fr/:splat 301
+/fr-gb/* /fr-fr/:splat 301
+/es-us/* /es-es/:splat 301
+/es-fr/* /es-es/:splat 301
+/de-us/* /de-de/:splat 301
+/de-fr/* /de-de/:splat 301
+/ru-fr/* /ru-ru/:splat 301
+/ru-us/* /ru-ru/:splat 301
+/pt-us/* /pt-pt/:splat 301
+/pt-fr/* /pt-pt/:splat 301
+/hi-fr/* /hi-in/:splat 301
+/hi-us/* /hi-in/:splat 301
+/ar-fr/* /ar-sa/:splat 301
+/ar-us/* /ar-sa/:splat 301
+/zh-fr/* /zh-cn/:splat 301
+/zh-us/* /zh-cn/:splat 301
+
+# Root for invalid cross-locales
+/fr-us /fr-fr/ 301
+/fr-de /fr-fr/ 301
+/fr-gb /fr-fr/ 301
+/es-us /es-es/ 301
+/de-us /de-de/ 301
+/de-fr /de-de/ 301
+
+# =============================================
+# Non-localized static routes -> French default
+# =============================================
+/tarifs /fr-fr/tarifs 301
+/contact /fr-fr/contact 301
+/register /fr-fr/inscription 301
+/login /fr-fr/connexion 301
+/faq /fr-fr/faq 301
+/centre-aide /fr-fr/centre-aide 301
+/appel-expatrie /fr-fr/appel-expatrie 301
+/sos-appel /fr-fr/sos-appel 301
+/pricing /en-us/pricing 301
+/help-center /en-us/help-center 301
+
+# =============================================
+# SPA fallback - MUST be last
+# All routes that don't match above are served by index.html
+# =============================================
+/* /index.html 200
