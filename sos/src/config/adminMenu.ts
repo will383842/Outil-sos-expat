@@ -56,7 +56,6 @@ import {
   Wallet,
   // Chatter icons
   MessageCircle,
-  MapPin,
   // Training icons
   GraduationCap,
   // Blogger icons
@@ -635,13 +634,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         path: "/admin/chatters/promotions",
         icon: Percent,
         descriptionKey: "admin.menu.chattersPromotions.description",
-      },
-      {
-        id: "chatters-countries",
-        labelKey: "admin.menu.chattersCountries",
-        path: "/admin/chatters/countries",
-        icon: MapPin,
-        descriptionKey: "admin.menu.chattersCountries.description",
       },
       {
         id: "chatters-config",
