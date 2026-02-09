@@ -102,7 +102,7 @@ async function syncAccessToOutil(
 export const onUserAccessUpdated = onDocumentUpdated(
   {
     document: "users/{uid}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: [OUTIL_SYNC_API_KEY],
   },
   async (event) => {

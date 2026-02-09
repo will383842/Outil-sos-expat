@@ -34,7 +34,7 @@ interface CallDocument {
 export const onCallCompletedGroupAdmin = onDocumentUpdated(
   {
     document: "calls/{callId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },

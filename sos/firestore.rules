@@ -2732,18 +2732,8 @@ service cloud.firestore {
     }
 
     // ================= BOOKING REQUESTS =================
-    match /booking_requests/{requestId} {
-      allow read: if isAuthenticated() &&
-                  (resource.data.clientId == request.auth.uid ||
-                   resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() &&
-                    (resource.data.clientId == request.auth.uid ||
-                     resource.data.providerId == request.auth.uid ||
-                     isAdmin() || isDev());
-      allow delete: if isAdmin() || isDev();
-    }
+    // SUPPRIMÉ: Doublon de la règle ligne ~977 qui inclut agency_manager + linkedProviderIds
+    // La règle complète est dans la section BOOKING REQUESTS COLLECTION plus haut
 
     // ================= EMAIL LOGS =================
     match /email_logs/{logId} {

@@ -136,7 +136,7 @@ async function syncToOutil(payload: SyncPayload): Promise<{ ok: boolean; error?:
 export const onSosProfileCreated = onDocumentCreated(
   {
     document: "sos_profiles/{uid}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: [OUTIL_SYNC_API_KEY],
   },
   async (event) => {
@@ -174,7 +174,7 @@ export const onSosProfileCreated = onDocumentCreated(
 export const onSosProfileUpdated = onDocumentUpdated(
   {
     document: "sos_profiles/{uid}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: [OUTIL_SYNC_API_KEY],
   },
   async (event) => {

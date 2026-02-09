@@ -110,7 +110,6 @@ export {
   getEarlyAdopterMultiplier,
   checkAndApplyTierBonuses,
   getNextTierBonus,
-  calculateMonthlyRecurringCommission,
   getActivePromoMultiplier,
   validateReferralCommission,
   releaseReferralCommission,
@@ -120,7 +119,6 @@ export {
   ThresholdResult,
   EarlyAdopterResult,
   TierBonusResult,
-  RecurringCommissionResult,
   PromoMultiplierResult,
 } from "./chatterReferralService";
 
@@ -165,6 +163,7 @@ export {
   checkSocialBonusEligibility,
   paySocialBonus,
   checkAndPaySocialBonus,
+  checkAndPayTelegramBonus,
   AddSocialNetworkInput,
   UpdateSocialNetworkInput,
   MarkNetworkLikedInput,

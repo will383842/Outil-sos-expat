@@ -713,7 +713,7 @@ const TermsChatters: React.FC = () => {
 
 4.4. **Bonus et défis.** Des bonus supplémentaires peuvent être accordés via :
 - Défis hebdomadaires
-- Paliers de recrutement (5, 10, 25, 50 filleuls)
+- Paliers de recrutement (5, 10, 20, 50, 100, 500 filleuls)
 - Événements spéciaux
 
 ---
@@ -951,7 +951,7 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 4.4. **Bonuses and Challenges.** Additional bonuses may be granted through:
 - Weekly challenges
-- Recruitment milestones (5, 10, 25, 50 referrals)
+- Recruitment milestones (5, 10, 20, 50, 100, 500 referrals)
 - Special events
 
 ---

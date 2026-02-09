@@ -318,7 +318,7 @@ async function logDelivery(params: {
 // DEBUG VERSION: Exhaustive logging for SMS/notification debugging
 export const onMessageEventCreate = onDocumentCreated(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     document: "message_events/{id}",
     memory: "512MiB",
     timeoutSeconds: 120,

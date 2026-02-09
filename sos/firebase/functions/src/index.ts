@@ -4028,7 +4028,7 @@ const handleTransferFailed = traceFunction(
 
 export const scheduledCleanup = onSchedule(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     cpu: 0.25,
     maxInstances: 1,

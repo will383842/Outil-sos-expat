@@ -9,7 +9,7 @@ import { db, FieldValue } from '../utils/firebase';
 export const initializeProviderTranslation = onDocumentCreated(
   {
     document: 'sos_profiles/{providerId}',
-    region: 'europe-west1',
+    region: 'europe-west3',
   },
   async (event) => {
     const providerId = event.params.providerId;

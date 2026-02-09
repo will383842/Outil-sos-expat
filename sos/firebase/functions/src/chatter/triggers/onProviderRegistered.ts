@@ -37,7 +37,7 @@ interface UserDocument {
 export const chatterOnProviderRegistered = onDocumentCreated(
   {
     document: "users/{userId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },
@@ -179,7 +179,7 @@ export const chatterOnProviderRegistered = onDocumentCreated(
 export const chatterOnClientRegistered = onDocumentCreated(
   {
     document: "users/{userId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },

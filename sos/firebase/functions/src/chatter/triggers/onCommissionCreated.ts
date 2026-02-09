@@ -22,7 +22,7 @@ function ensureInitialized() {
 export const chatterOnCommissionCreated = onDocumentCreated(
   {
     document: "chatter_commissions/{commissionId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 30,
   },

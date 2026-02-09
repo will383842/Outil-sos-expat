@@ -13,7 +13,7 @@ import { getLanguageCode } from "../config";
 export const detectInactiveUsers = onSchedule(
   {
     schedule: "every 24 hours",
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "UTC",
     memory: "256MiB", // OPTIMIZED: Added explicit memory allocation
   },

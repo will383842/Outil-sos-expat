@@ -217,7 +217,7 @@ export const morningBackup = onSchedule(
   {
     schedule: "0 3 * * *",
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 300,
   },
@@ -238,7 +238,7 @@ export const morningBackup = onSchedule(
 //   {
 //     schedule: "0 11 * * *",
 //     timeZone: "Europe/Paris",
-//     region: "europe-west1",
+//     region: "europe-west3",
 //     memory: "512MiB",
 //     timeoutSeconds: 300,
 //   },
@@ -258,7 +258,7 @@ export const morningBackup = onSchedule(
 //   {
 //     schedule: "0 19 * * *",
 //     timeZone: "Europe/Paris",
-//     region: "europe-west1",
+//     region: "europe-west3",
 //     memory: "512MiB",
 //     timeoutSeconds: 300,
 //   },
@@ -277,7 +277,7 @@ export const cleanupOldBackups = onSchedule(
   {
     schedule: "0 4 * * 0", // Dimanche a 4h
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 300,
   },

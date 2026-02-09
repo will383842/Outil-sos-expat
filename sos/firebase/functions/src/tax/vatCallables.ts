@@ -79,7 +79,7 @@ interface CheckReverseChargeResponse {
  */
 export const validateVat = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
   },
   async (request: CallableRequest<ValidateVatRequest>): Promise<ValidateVatResponse> => {
@@ -146,7 +146,7 @@ export const validateVat = onCall(
  */
 export const checkReverseCharge = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
   },
   async (request: CallableRequest<CheckReverseChargeRequest>): Promise<CheckReverseChargeResponse> => {
@@ -200,7 +200,7 @@ export const cleanupVatCache = onSchedule(
   {
     schedule: "0 3 * * *",
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
   },
   async (_event: ScheduledEvent): Promise<void> => {

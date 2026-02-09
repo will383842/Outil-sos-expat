@@ -12,7 +12,7 @@ import { getLanguageCode } from "../config";
 export const handleUserRegistration = onDocumentCreated(
   {
     document: "users/{userId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const user = event.data?.data();

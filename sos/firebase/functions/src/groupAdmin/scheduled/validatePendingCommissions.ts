@@ -21,7 +21,7 @@ export const validatePendingGroupAdminCommissions = onSchedule(
   {
     schedule: "0 * * * *", // Every hour at minute 0
     timeZone: "UTC",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 300,
   },

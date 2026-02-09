@@ -170,7 +170,7 @@ function getDisplayName(data: UserData | ProviderProfileData | undefined): strin
  */
 export const telegramOnCallCompleted = onDocumentUpdated(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     document: "call_sessions/{sessionId}",
     memory: "256MiB",
     timeoutSeconds: 60,

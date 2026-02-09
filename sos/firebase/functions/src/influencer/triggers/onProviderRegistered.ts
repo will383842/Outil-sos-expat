@@ -39,7 +39,7 @@ interface ProviderDocument {
 export const influencerOnProviderRegistered = onDocumentCreated(
   {
     document: "users/{userId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },
@@ -216,7 +216,7 @@ export const influencerOnProviderRegistered = onDocumentCreated(
 export const influencerOnProviderCallCompleted = onDocumentCreated(
   {
     document: "call_sessions/{sessionId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },

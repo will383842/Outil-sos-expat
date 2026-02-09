@@ -180,6 +180,7 @@ export const generateMultiDashboardOutilToken = onCall<
       // 3. Generate custom token for the provider
       // The token will be used to sign in to the Outil IA as this provider
       const customClaims = {
+        role: "provider",
         provider: true,
         providerType: providerType,
         subscriptionTier: "unlimited",

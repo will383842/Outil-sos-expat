@@ -132,7 +132,7 @@ function formatTimeParis(date: Date): string {
  */
 export const telegramOnSecurityAlert = onDocumentCreated(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     document: "security_alerts/{alertId}",
     memory: "256MiB",
     timeoutSeconds: 60,

@@ -215,7 +215,7 @@ async function sendNotification(
  */
 export const submitForValidation = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     cpu: 0.1,
     minInstances: 0,
@@ -329,7 +329,7 @@ export const submitForValidation = onCall(
  */
 export const assignValidation = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     cpu: 0.1,
     minInstances: 0,
@@ -404,7 +404,7 @@ export const assignValidation = onCall(
  */
 export const approveProfile = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     cpu: 0.25,
     minInstances: 0,
@@ -531,7 +531,7 @@ export const approveProfile = onCall(
  */
 export const rejectProfile = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     cpu: 0.25,
     minInstances: 0,
@@ -641,7 +641,7 @@ export const rejectProfile = onCall(
  */
 export const requestChanges = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     cpu: 0.25,
     minInstances: 0,
@@ -771,7 +771,7 @@ export const requestChanges = onCall(
  */
 export const getValidationQueue = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     cpu: 0.25,
     minInstances: 0,
@@ -1014,7 +1014,7 @@ export const getValidationQueue = onCall(
  */
 export const getValidationHistory = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     cpu: 0.1,
     minInstances: 0,
@@ -1093,7 +1093,7 @@ export const getValidationHistory = onCall(
 export const onValidationCreated = onDocumentCreated(
   {
     document: "validation_queue/{validationId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const db = getDb();
@@ -1159,7 +1159,7 @@ export const onValidationCreated = onDocumentCreated(
 export const onValidationDecision = onDocumentUpdated(
   {
     document: "validation_queue/{validationId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const db = getDb();
@@ -1253,7 +1253,7 @@ export const onValidationDecision = onDocumentUpdated(
  */
 export const resubmitForValidation = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     cpu: 0.1,
     minInstances: 0,

@@ -24,7 +24,7 @@ function ensureInitialized() {
 export const chatterOnQuizPassed = onDocumentUpdated(
   {
     document: "chatters/{chatterId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },

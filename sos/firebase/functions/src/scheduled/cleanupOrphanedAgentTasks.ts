@@ -35,7 +35,7 @@ export const cleanupOrphanedAgentTasks = scheduler.onSchedule(
     // 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales
     schedule: '0 8 * * *', // 8h Paris tous les jours
     timeZone: 'Europe/Paris',
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '512MiB',
     timeoutSeconds: 300, // 5 minutes max
   },

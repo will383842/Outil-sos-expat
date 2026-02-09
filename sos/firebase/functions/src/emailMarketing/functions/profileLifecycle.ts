@@ -11,7 +11,7 @@ import { getLanguageCode } from "../config";
 export const handleProfileCompleted = onDocumentUpdated(
   {
     document: "users/{userId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -76,7 +76,7 @@ export const handleProfileCompleted = onDocumentUpdated(
 export const handleUserLogin = onDocumentUpdated(
   {
     document: "users/{userId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -145,7 +145,7 @@ export const handleUserLogin = onDocumentUpdated(
 export const handleProviderOnlineStatus = onDocumentUpdated(
   {
     document: "users/{userId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -207,7 +207,7 @@ export const handleProviderOnlineStatus = onDocumentUpdated(
 export const handleKYCVerification = onDocumentUpdated(
   {
     document: "users/{userId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -272,7 +272,7 @@ export const handleKYCVerification = onDocumentUpdated(
 export const handlePayPalConfiguration = onDocumentUpdated(
   {
     document: "users/{userId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const before = event.data?.before.data();

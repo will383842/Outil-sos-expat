@@ -32,7 +32,7 @@ function ensureInitialized() {
 export const affiliateOnCallCompleted = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },

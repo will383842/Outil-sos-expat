@@ -238,7 +238,7 @@ async function fetchUserName(
  */
 export const telegramOnWithdrawalRequest = onDocumentCreated(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     document: `${WITHDRAWAL_COLLECTION}/{withdrawalId}`,
     memory: "256MiB",
     timeoutSeconds: 60,

@@ -464,7 +464,7 @@ async function collectPaymentMetrics(): Promise<void> {
 export const runPaymentHealthCheck = onSchedule(
   {
     schedule: '0 */4 * * *', // Every 4 hours (paiements = garder réactif)
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB',
     timeoutSeconds: 120
@@ -493,7 +493,7 @@ export const collectDailyPaymentMetrics = onSchedule(
   {
     schedule: '0 6 * * *', // 6h du matin
     timeZone: 'Europe/Paris',
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB'
   },
   async () => {
@@ -515,7 +515,7 @@ export const cleanupOldPaymentAlerts = onSchedule(
   {
     schedule: '0 3 * * 0', // Dimanche à 3h
     timeZone: 'Europe/Paris',
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB'
   },
   async () => {

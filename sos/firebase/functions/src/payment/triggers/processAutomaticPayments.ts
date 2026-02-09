@@ -359,7 +359,7 @@ async function logProcessingRun(
 export const paymentProcessAutomaticPayments = onSchedule(
   {
     schedule: "every 15 minutes",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 300, // 5 minutes
     secrets: [...WISE_SECRETS, ...FLUTTERWAVE_SECRETS, ENCRYPTION_KEY],

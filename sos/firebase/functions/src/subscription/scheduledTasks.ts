@@ -154,7 +154,7 @@ async function sendEmail(
 export const resetBillingCycleQuotas = onSchedule(
   {
     schedule: '0 1 * * *', // Daily at 01:00 UTC
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'UTC',
     secrets: [MAILWIZZ_API_KEY_SECRET],
     memory: '512MiB',
@@ -283,7 +283,7 @@ export const resetMonthlyQuotas = resetBillingCycleQuotas;
 export const checkPastDueSubscriptions = onSchedule(
   {
     schedule: '0 9 * * *', // Hour 9, Every day
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'UTC',
     secrets: [MAILWIZZ_API_KEY_SECRET],
     memory: '256MiB', // OPTIMIZED: Reduced from 512MiB - simple queries
@@ -410,7 +410,7 @@ export const checkPastDueSubscriptions = onSchedule(
 export const sendQuotaAlerts = onSchedule(
   {
     schedule: '0 10 * * *', // Hour 10, Every day
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'UTC',
     secrets: [MAILWIZZ_API_KEY_SECRET],
     memory: '256MiB', // OPTIMIZED: Reduced from 512MiB - simple queries
@@ -533,7 +533,7 @@ export const sendQuotaAlerts = onSchedule(
 export const cleanupExpiredTrials = onSchedule(
   {
     schedule: '0 2 * * *', // Hour 2, Every day
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'UTC',
     secrets: [MAILWIZZ_API_KEY_SECRET, STRIPE_SECRET_KEY],
     memory: '256MiB', // OPTIMIZED: Reduced from 512MiB - simple queries
@@ -657,7 +657,7 @@ export const cleanupExpiredTrials = onSchedule(
 export const cleanupExpiredDocuments = onSchedule(
   {
     schedule: '0 3 * * *', // Hour 3, Every day
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'UTC',
     memory: '256MiB', // OPTIMIZED: Reduced from 512MiB - simple cleanup queries
     timeoutSeconds: 300,

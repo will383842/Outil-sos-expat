@@ -54,15 +54,16 @@ const GAINS = {
   N2_CALL: 50,              // 0.50$ in cents
   ACTIVATION_BONUS: 500,    // 5$ in cents
   TIER_BONUSES: {
-    5: 2500,                // 25$ in cents
-    10: 7500,               // 75$ in cents
-    25: 20000,              // 200$ in cents
-    50: 50000,              // 500$ in cents
-    100: 150000,            // 1500$ in cents
+    5: 1500,                // $15 in cents
+    10: 3500,               // $35 in cents
+    20: 7500,               // $75 in cents
+    50: 25000,              // $250 in cents
+    100: 60000,             // $600 in cents
+    500: 400000,            // $4000 in cents
   } as Record<number, number>,
 } as const;
 
-const TIER_THRESHOLDS = [5, 10, 25, 50, 100];
+const TIER_THRESHOLDS = [5, 10, 20, 50, 100, 500];
 
 // ============================================================================
 // HELPER FUNCTIONS

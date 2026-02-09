@@ -31,7 +31,7 @@ interface UserData {
 export const onUserCreatedSyncClaims = onDocumentCreated(
   {
     document: "users/{uid}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const uid = event.params.uid;
@@ -91,7 +91,7 @@ export const onUserCreatedSyncClaims = onDocumentCreated(
 export const onUserUpdatedSyncClaims = onDocumentUpdated(
   {
     document: "users/{uid}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const uid = event.params.uid;

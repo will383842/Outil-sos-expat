@@ -79,7 +79,8 @@ export type ChatterCommissionType =
   | "threshold_50_n2"       // LEGACY: Filleul N2 reached $50 threshold
   | "recurring_5pct"        // LEGACY: Old monthly 5% system, replaced by per-call commissions - kept for DB compatibility
   | "tier_bonus"            // Tier bonus (5/10/20/50/100/500 filleuls)
-  | "bonus_social";         // Social media likes bonus
+  | "bonus_social"          // Social media likes bonus
+  | "bonus_telegram";       // Telegram onboarding bonus ($50, unlocked at $150 earnings)
 
 /**
  * Commission status lifecycle
@@ -2081,8 +2082,8 @@ export interface ChatterTierBonusHistory {
   chatterEmail: string;
   chatterName: string;
 
-  /** Tier reached (5, 10, 25, 50) */
-  tier: 5 | 10 | 25 | 50;
+  /** Tier reached (5, 10, 20, 50, 100, 500) */
+  tier: 5 | 10 | 20 | 50 | 100 | 500;
 
   /** Bonus amount (cents) */
   amount: number;

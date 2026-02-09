@@ -37,7 +37,7 @@ interface BookingRequestData {
 export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
   {
     document: "booking_requests/{bookingId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 10,
     maxInstances: 5,

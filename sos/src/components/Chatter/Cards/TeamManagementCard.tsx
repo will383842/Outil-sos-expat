@@ -96,12 +96,14 @@ interface TeamManagementCardProps {
 // CONSTANTS
 // ============================================================================
 
-const MILESTONES = [5, 10, 25, 50];
+const MILESTONES = [5, 10, 20, 50, 100, 500];
 const MILESTONE_REWARDS = {
-  5: { label: 'Bronze', bonus: 25, color: 'from-amber-600 to-amber-700' },
-  10: { label: 'Silver', bonus: 75, color: 'from-gray-400 to-gray-500' },
-  25: { label: 'Gold', bonus: 200, color: 'from-yellow-400 to-yellow-600' },
-  50: { label: 'Platinum', bonus: 500, color: 'from-red-400 to-red-600' },
+  5: { label: 'Bronze', bonus: 15, color: 'from-amber-600 to-amber-700' },
+  10: { label: 'Silver', bonus: 35, color: 'from-gray-400 to-gray-500' },
+  20: { label: 'Gold', bonus: 75, color: 'from-yellow-400 to-yellow-600' },
+  50: { label: 'Platinum', bonus: 250, color: 'from-red-400 to-red-600' },
+  100: { label: 'Diamond', bonus: 600, color: 'from-blue-400 to-blue-600' },
+  500: { label: 'Legend', bonus: 4000, color: 'from-purple-400 to-purple-600' },
 } as const;
 
 const GROWTH_TIPS = [

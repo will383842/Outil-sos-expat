@@ -28,7 +28,7 @@ function ensureInitialized() {
 export const influencerValidatePendingCommissions = onSchedule(
   {
     schedule: "every 1 hours",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 300,
   },
@@ -57,7 +57,7 @@ export const influencerValidatePendingCommissions = onSchedule(
 export const influencerReleaseValidatedCommissions = onSchedule(
   {
     schedule: "every 1 hours",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 300,
   },

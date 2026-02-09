@@ -525,7 +525,7 @@ export const aggregateCostMetrics = onSchedule(
   {
     schedule: "0 8 * * *", // 8h Paris tous les jours
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 120,
   },

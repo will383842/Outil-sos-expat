@@ -46,7 +46,7 @@ interface UserData {
 export const onUserEmailUpdated = onDocumentUpdated(
   {
     document: "users/{uid}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const uid = event.params.uid;

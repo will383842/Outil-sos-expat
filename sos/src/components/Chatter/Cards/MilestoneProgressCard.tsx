@@ -23,10 +23,12 @@ interface MilestoneProgressCardProps {
 }
 
 const TIER_INFO = [
-  { tier: 5, bonus: 2500, label: "Bronze" },
-  { tier: 10, bonus: 7500, label: "Silver" },
-  { tier: 25, bonus: 20000, label: "Gold" },
-  { tier: 50, bonus: 50000, label: "Platinum" },
+  { tier: 5, bonus: 1500, label: "Bronze" },       // $15
+  { tier: 10, bonus: 3500, label: "Silver" },      // $35
+  { tier: 20, bonus: 7500, label: "Gold" },        // $75
+  { tier: 50, bonus: 25000, label: "Platinum" },   // $250
+  { tier: 100, bonus: 60000, label: "Diamond" },   // $600
+  { tier: 500, bonus: 400000, label: "Legend" },    // $4,000
 ];
 
 export function MilestoneProgressCard({
@@ -103,7 +105,7 @@ export function MilestoneProgressCard({
         )}
 
         {/* Tier milestones */}
-        <div className="grid grid-cols-4 gap-2 mt-4">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4">
           {TIER_INFO.map((tier) => {
             const isAchieved = paidTiers.includes(tier.tier);
             const isCurrent =

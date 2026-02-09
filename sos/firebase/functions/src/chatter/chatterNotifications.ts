@@ -5,7 +5,7 @@
  * 1. COMMISSION_EARNED - After any commission is created
  * 2. TEAM_MEMBER_ACTIVATED - When a referral makes their 2nd call
  * 3. TEAM_MEMBER_INACTIVE - When member inactive for X days (scheduled)
- * 4. TIER_BONUS_UNLOCKED - When chatter reaches 5, 10, 25, 50, or 100 active members
+ * 4. TIER_BONUS_UNLOCKED - When chatter reaches 5, 10, 20, 50, 100, or 500 active members
  * 5. NEAR_TOP_3 - When user is close to Top 3 (scheduled)
  * 6. FLASH_BONUS_START - When admin activates flash bonus
  *
@@ -316,6 +316,9 @@ export const chatterNotifyCommissionEarned = onDocumentCreated(
       case "bonus_social":
         reason = "Bonus likes reseaux sociaux";
         break;
+      case "bonus_telegram":
+        reason = "Bonus connexion Telegram";
+        break;
       case "client_referral":
         reason = "Parrainage client";
         break;
@@ -535,7 +538,7 @@ export const chatterNotifyInactiveMembers = onSchedule(
 // ============================================================================
 
 /**
- * Notify when a chatter unlocks a tier bonus (5, 10, 25, 50, or 100 active members)
+ * Notify when a chatter unlocks a tier bonus (5, 10, 20, 50, 100, or 500 active members)
  * Triggered when tierBonusesPaid array is updated
  */
 export const chatterNotifyTierBonusUnlocked = onDocumentUpdated(
@@ -566,11 +569,12 @@ export const chatterNotifyTierBonusUnlocked = onDocumentUpdated(
     // Get config for bonus amounts
     const config = await getChatterConfig();
     const tierAmounts: Record<number, number> = config.tierBonuses || {
-      5: 2500,
-      10: 7500,
-      25: 20000,
-      50: 50000,
-      100: 150000,
+      5: 1500,
+      10: 3500,
+      20: 7500,
+      50: 25000,
+      100: 60000,
+      500: 400000,
     };
 
     for (const tier of newTiers) {

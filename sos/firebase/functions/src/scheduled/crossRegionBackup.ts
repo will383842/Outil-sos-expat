@@ -113,7 +113,7 @@ export const dailyCrossRegionBackup = onSchedule(
   {
     schedule: "0 4 * * 0", // Dimanche à 4h (était: tous les jours)
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "1GiB",
     cpu: 1,
     timeoutSeconds: 540, // 9 minutes
@@ -232,7 +232,7 @@ export const cleanupDRBackups = onSchedule(
   {
     schedule: "0 5 * * 1", // Lundi a 5h
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 300,
   },

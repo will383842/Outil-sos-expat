@@ -373,7 +373,7 @@ export const cleanupOrphanedSessions = scheduler.onSchedule(
     // Pour réactivité: client remboursé max 2h après paiement si appel jamais démarré
     schedule: '0 * * * *', // Toutes les heures à minute 0
     timeZone: 'Europe/Paris',
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '512MiB', // Plus de mémoire pour les appels API
     timeoutSeconds: 300, // 5 minutes max
     // P0 FIX: Secrets nécessaires pour Stripe, PayPal et Twilio

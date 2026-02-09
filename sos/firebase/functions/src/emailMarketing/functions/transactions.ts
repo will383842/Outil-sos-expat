@@ -14,7 +14,7 @@ import { isPaymentCompleted } from "../../utils/paymentStatusUtils";
 export const handleCallCompleted = onDocumentUpdated(
   {
     document: "calls/{callId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -136,7 +136,7 @@ export const handleCallCompleted = onDocumentUpdated(
 export const handleReviewSubmitted = onDocumentCreated(
   {
     document: "reviews/{reviewId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const review = event.data?.data();
@@ -385,7 +385,7 @@ export const handleReviewSubmitted = onDocumentCreated(
 export const handlePaymentReceived = onDocumentCreated(
   {
     document: "payments/{paymentId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const payment = event.data?.data();
@@ -451,7 +451,7 @@ export const handlePaymentReceived = onDocumentCreated(
 export const handlePaymentFailed = onDocumentCreated(
   {
     document: "payments/{paymentId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const payment = event.data?.data();
@@ -517,7 +517,7 @@ export const handlePaymentFailed = onDocumentCreated(
 export const handlePayoutRequested = onDocumentCreated(
   {
     document: "payouts/{payoutId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const payout = event.data?.data();
@@ -579,7 +579,7 @@ export const handlePayoutRequested = onDocumentCreated(
 export const handlePayoutSent = onDocumentUpdated(
   {
     document: "payouts/{payoutId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const before = event.data?.before.data();

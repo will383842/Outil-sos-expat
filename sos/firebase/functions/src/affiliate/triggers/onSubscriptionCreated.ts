@@ -30,7 +30,7 @@ function ensureInitialized() {
 export const affiliateOnSubscriptionCreated = onDocumentCreated(
   {
     document: "subscriptions/{providerId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },

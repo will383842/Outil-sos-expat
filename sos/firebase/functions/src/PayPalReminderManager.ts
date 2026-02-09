@@ -441,7 +441,7 @@ export const scheduledPayPalReminders = onSchedule(
   {
     schedule: "0 10 * * *",
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - simple queries
     timeoutSeconds: 300,
   },
@@ -458,7 +458,7 @@ export const scheduledPayPalReminders = onSchedule(
  */
 export const triggerPayPalReminders = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 300,
   },
@@ -496,7 +496,7 @@ export const triggerPayPalReminders = onCall(
  */
 export const getPayPalReminderStatus = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
   },
   async (request) => {

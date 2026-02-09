@@ -33,14 +33,15 @@ export type ChatterCommissionType =
   | "n1_recruit_bonus"   // $1 - When N1 recruits someone who activates
   | "provider_call"      // $5 - Recruited provider received a call (6 months window)
   // Tier bonuses
-  | "tier_bonus"         // Milestone bonus (5→$25, 10→$75, etc.)
+  | "tier_bonus"         // Milestone bonus (5→$15, 10→$35, 20→$75, 50→$250, 100→$600, 500→$4000)
   // Monthly rewards
-  | "bonus_top3"         // Monthly top 3 rewards ($200/$100/$50)
+  | "bonus_top3"         // Monthly top 3 rewards (2.0x / 1.5x / 1.15x multipliers)
   // Other bonuses
   | "bonus_level"        // Level-up bonus
   | "bonus_streak"       // Streak bonus
   | "bonus_zoom"         // Zoom attendance bonus
   | "bonus_social"       // Social media likes bonus
+  | "bonus_telegram"     // Telegram onboarding bonus ($50, unlocked at $150 earnings)
   | "manual_adjustment"  // Admin manual adjustment
   // LEGACY (kept for backward compatibility)
   | "client_referral"    // @deprecated - Use client_call

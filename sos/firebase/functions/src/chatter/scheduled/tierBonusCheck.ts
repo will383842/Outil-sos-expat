@@ -365,7 +365,7 @@ export async function processTierBonusCheck(): Promise<TierBonusCheckResult> {
 export const chatterTierBonusCheck = onSchedule(
   {
     schedule: "0 3 * * *", // Every day at 3:00 AM
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "512MiB",
     timeoutSeconds: 540, // 9 minutes (processing many chatters might take time)

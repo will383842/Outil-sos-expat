@@ -8,7 +8,7 @@ export const checkProviderInactivity = scheduler.onSchedule(
     schedule: 'every 15 minutes',
     timeZone: 'Europe/Paris',
     // ✅ BUG FIX: Ajouter configuration pour éviter les échecs silencieux
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 180, // 3 minutes max pour traiter tous les prestataires
   },

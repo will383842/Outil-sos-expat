@@ -251,7 +251,7 @@ async function logWithdrawalCreation(withdrawal: WithdrawalRequest): Promise<voi
 export const paymentOnWithdrawalCreated = onDocumentCreated(
   {
     document: `${WITHDRAWAL_COLLECTION}/{withdrawalId}`,
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },

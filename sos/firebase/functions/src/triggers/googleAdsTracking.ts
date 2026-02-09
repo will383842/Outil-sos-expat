@@ -198,7 +198,7 @@ const GOOGLE_ADS_SECRETS = [
 export const onBookingRequestCreatedTrackGoogleAdsLead = onDocumentCreated(
   {
     document: "booking_requests/{requestId}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: GOOGLE_ADS_SECRETS,
   },
   async (event) => {
@@ -288,7 +288,7 @@ export const onBookingRequestCreatedTrackGoogleAdsLead = onDocumentCreated(
 export const onUserCreatedTrackGoogleAdsSignUp = onDocumentCreated(
   {
     document: "users/{uid}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: GOOGLE_ADS_SECRETS,
   },
   async (event) => {
@@ -382,7 +382,7 @@ export const onUserCreatedTrackGoogleAdsSignUp = onDocumentCreated(
 export const onCallSessionPaymentAuthorizedTrackGoogleAdsCheckout = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: GOOGLE_ADS_SECRETS,
   },
   async (event) => {

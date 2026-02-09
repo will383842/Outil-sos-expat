@@ -209,7 +209,7 @@ async function awardBloggerCommission(
 export const onCallSessionCompleted = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const before = event.data?.before.data();

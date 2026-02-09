@@ -51,7 +51,7 @@ export const backupStorageToDR = onSchedule(
   {
     schedule: "0 5 * * 0", // Dimanche 5h du matin (était: tous les jours)
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "1GiB",
     cpu: 1,
     timeoutSeconds: 540, // 9 minutes

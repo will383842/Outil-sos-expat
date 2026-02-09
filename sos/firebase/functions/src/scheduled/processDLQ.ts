@@ -84,7 +84,7 @@ export const processWebhookDLQ = onSchedule(
     // P0-6 FIX: Augmenté à 1×/heure pour traiter les paiements échoués plus rapidement
     // (était 1×/jour à 8h, inacceptable pour les paiements critiques)
     schedule: '0 * * * *', // Toutes les heures
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB',
     timeoutSeconds: 300
@@ -177,7 +177,7 @@ export const processWebhookDLQ = onSchedule(
 export const cleanupWebhookDLQ = onSchedule(
   {
     schedule: '0 4 * * 0', // Dimanche 4h UTC
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB'
   },

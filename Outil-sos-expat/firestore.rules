@@ -16,30 +16,50 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
+    // Vérifie si le document users/{uid} existe
+    function userDocExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
     // Vérifie le rôle via custom claims (prioritaire) ou Firestore
     function hasRole(role) {
       return isSignedIn() && (
         request.auth.token.role == role ||
-        getUserData().role == role
+        (userDocExists() && getUserData().role == role)
       );
     }
 
     // Vérifie si admin
     function isAdmin() {
-      return hasRole('admin') || hasRole('superadmin');
+      return isSignedIn() && (
+        request.auth.token.role == 'admin' ||
+        request.auth.token.role == 'superadmin' ||
+        request.auth.token.admin == true ||
+        (userDocExists() && getUserData().role in ['admin', 'superadmin'])
+      );
     }
 
-    // Vérifie si provider
+    // Vérifie si provider (via token SSO ou Firestore)
     function isProvider() {
-      return hasRole('provider') || isAdmin();
+      return isSignedIn() && (
+        request.auth.token.role == 'provider' ||
+        request.auth.token.provider == true ||
+        (userDocExists() && getUserData().role == 'provider') ||
+        isAdmin()
+      );
     }
 
-    // Vérifie si l'utilisateur a un abonnement actif
+    // Vérifie si l'utilisateur a un abonnement actif (via token SSO ou Firestore)
     function hasActiveSubscription() {
-      let userData = getUserData();
-      return userData.subscriptionStatus == 'active' ||
-             userData.subscriptionStatus == 'trialing' ||
-             isAdmin();
+      return isSignedIn() && (
+        isAdmin() ||
+        request.auth.token.subscriptionStatus == 'active' ||
+        request.auth.token.forcedAccess == true ||
+        (userDocExists() && (
+          getUserData().subscriptionStatus == 'active' ||
+          getUserData().subscriptionStatus == 'trialing'
+        ))
+      );
     }
 
     // Vérifie si l'utilisateur est le propriétaire du document
@@ -48,12 +68,15 @@ service cloud.firestore {
     }
 
     // Vérifie si le provider est assigné au booking
+    // Priorité: self-access (uid == providerId), puis activeProviderId, puis linkedProviderIds
     function isAssignedProvider(providerId) {
-      let userData = getUserData();
       return isSignedIn() && (
-        userData.linkedProviderIds.hasAny([providerId]) ||
-        userData.activeProviderId == providerId ||
-        isAdmin()
+        request.auth.uid == providerId ||
+        isAdmin() ||
+        (userDocExists() && (
+          getUserData().activeProviderId == providerId ||
+          ('linkedProviderIds' in getUserData() && getUserData().linkedProviderIds.hasAny([providerId]))
+        ))
       );
     }
 
@@ -158,8 +181,12 @@ service cloud.firestore {
         isAssignedProvider(resource.data.providerId)
       );
 
-      // Création: admin ou système (Cloud Functions)
-      allow create: if isAdmin();
+      // Création: admin, système (Cloud Functions), ou provider pour ses propres conversations
+      allow create: if isAdmin() || (
+        isProvider() &&
+        hasActiveSubscription() &&
+        isAssignedProvider(request.resource.data.providerId)
+      );
 
       // Mise à jour: admin ou provider assigné
       allow update: if isAdmin() || (

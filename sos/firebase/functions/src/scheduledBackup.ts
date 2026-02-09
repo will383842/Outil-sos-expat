@@ -83,7 +83,7 @@ export const scheduledBackup = onSchedule(
   {
     schedule: "0 3 * * *",
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
   },
   async () => {

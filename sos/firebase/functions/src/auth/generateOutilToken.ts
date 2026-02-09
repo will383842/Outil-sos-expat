@@ -352,6 +352,7 @@ export const generateOutilToken = onCall(
       if (hasForcedAccess) {
         console.log("[generateOutilToken] User has forced access, generating token...");
         const customClaims: Record<string, any> = {
+          role: "provider",
           provider: true,
           subscriptionTier: "unlimited",
           subscriptionStatus: "active",
@@ -399,6 +400,7 @@ export const generateOutilToken = onCall(
       if (freeTrialUntil) {
         console.log("[generateOutilToken] User has free trial until:", freeTrialUntil);
         const customClaims: Record<string, any> = {
+          role: "provider",
           provider: true,
           subscriptionTier: "trial",
           subscriptionStatus: "trialing",
@@ -531,6 +533,7 @@ export const generateOutilToken = onCall(
 
       // 6. Générer le Custom Token avec des claims personnalisés
       const customClaims: Record<string, any> = {
+        role: "provider",
         provider: true,
         subscriptionTier: tier,
         subscriptionStatus: subscriptionData.status,

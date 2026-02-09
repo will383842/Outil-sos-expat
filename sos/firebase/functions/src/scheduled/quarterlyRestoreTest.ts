@@ -380,7 +380,7 @@ export const quarterlyRestoreTest = onSchedule(
   {
     schedule: "0 2 1 1,4,7,10 *", // 1er jour des mois 1,4,7,10 a 2h
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 300,
   },

@@ -31,7 +31,7 @@ const db = getFirestore();
 // CONFIGURATION
 // ============================================================================
 
-const REGION = 'europe-west1';
+const REGION = 'europe-west3';
 
 const standardConfig = {
   region: REGION,

@@ -322,7 +322,7 @@ export const monthlySecretsConfigBackup = onSchedule(
   {
     schedule: "0 2 1 * *", // 1er du mois à 2h
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 300,
   },

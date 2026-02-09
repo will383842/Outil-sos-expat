@@ -22,7 +22,7 @@ function ensureInitialized() {
 export const chatterReleaseValidatedCommissions = onSchedule(
   {
     schedule: "30 * * * *", // Every hour at minute 30
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 300,
     retryCount: 3,

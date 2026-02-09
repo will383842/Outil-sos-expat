@@ -358,7 +358,7 @@ export const processDunningQueue = onSchedule(
   {
     // 2025-01-16: Réduit à 4h (paiements impliqués, pas quotidien)
     schedule: '0 */4 * * *', // Every 4 hours
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'Europe/Paris',
     secrets: [STRIPE_SECRET_KEY],
     memory: '256MiB',

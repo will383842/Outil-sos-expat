@@ -25,7 +25,7 @@ function ensureInitialized() {
 export const onGroupAdminCreated = onDocumentCreated(
   {
     document: "group_admins/{groupAdminId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },

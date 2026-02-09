@@ -316,7 +316,7 @@ export async function checkAndApplyTierBonuses(chatterId: string): Promise<TierB
     const paidTiers = chatter.tierBonusesPaid || [];
 
     // Check each tier
-    const tiers = [5, 10, 25, 50];
+    const tiers = [5, 10, 20, 50, 100, 500];
 
     for (const tier of tiers) {
       // Skip if already paid or not enough filleuls
@@ -346,7 +346,7 @@ export async function checkAndApplyTierBonuses(chatterId: string): Promise<TierB
           chatterId,
           chatterEmail: chatter.email,
           chatterName: `${chatter.firstName} ${chatter.lastName}`,
-          tier: tier as 5 | 10 | 25 | 50,
+          tier: tier as 5 | 10 | 20 | 50 | 100 | 500,
           amount: bonusAmount,
           commissionId,
           qualifiedFilleulsCount: qualifiedCount,
@@ -386,7 +386,7 @@ export function getNextTierBonus(chatter: Chatter): {
   const qualifiedCount = chatter.qualifiedReferralsCount || 0;
   const paidTiers = chatter.tierBonusesPaid || [];
 
-  const tiers = [5, 10, 25, 50];
+  const tiers = [5, 10, 20, 50, 100, 500];
 
   for (const tier of tiers) {
     if (!paidTiers.includes(tier) && qualifiedCount < tier) {
@@ -399,50 +399,6 @@ export function getNextTierBonus(chatter: Chatter): {
   }
 
   return null; // All tiers achieved
-}
-
-// ============================================================================
-// MONTHLY RECURRING COMMISSIONS - DEPRECATED
-// ============================================================================
-// NOTE: This system has been REPLACED by per-call commissions.
-// N1 and N2 commissions are now paid in real-time via onCallCompleted trigger:
-// - N1: $1 per call (n1_call)
-// - N2: $0.50 per call (n2_call)
-//
-// The old 5% monthly system is no longer used.
-// Keeping this interface for backwards compatibility with existing code.
-// ============================================================================
-
-export interface RecurringCommissionResult {
-  filleulsActifs: number;
-  totalCommission: number;
-  commissionsCreated: string[];
-}
-
-/**
- * @deprecated Use per-call commissions via onCallCompleted trigger instead.
- * This function is kept for backwards compatibility but returns empty results.
- *
- * The new system pays commissions in real-time:
- * - N1 calls: $1 per call
- * - N2 calls: $0.50 per call
- */
-export async function calculateMonthlyRecurringCommission(
-  parrainId: string,
-  month: string // YYYY-MM format
-): Promise<RecurringCommissionResult> {
-  logger.warn("[calculateMonthlyRecurringCommission] DEPRECATED - Using per-call system now", {
-    parrainId,
-    month,
-    message: "This function is deprecated. N1/N2 commissions are now paid in real-time via onCallCompleted.",
-  });
-
-  // Return empty result - commissions are now handled per-call
-  return {
-    filleulsActifs: 0,
-    totalCommission: 0,
-    commissionsCreated: [],
-  };
 }
 
 // ============================================================================

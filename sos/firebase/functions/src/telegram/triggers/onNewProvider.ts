@@ -121,7 +121,7 @@ interface ProfileData {
  */
 export const telegramOnNewProvider = onDocumentCreated(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     document: "sos_profiles/{profileId}",
     memory: "256MiB",
     timeoutSeconds: 60,

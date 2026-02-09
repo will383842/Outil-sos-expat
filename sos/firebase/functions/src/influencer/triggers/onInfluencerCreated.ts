@@ -24,7 +24,7 @@ function ensureInitialized() {
 export const influencerOnInfluencerCreated = onDocumentCreated(
   {
     document: "influencers/{influencerId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },

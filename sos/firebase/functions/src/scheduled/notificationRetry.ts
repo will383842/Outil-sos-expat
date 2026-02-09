@@ -34,7 +34,7 @@ const RETRY_CONFIG = {
 export const notificationRetry = onSchedule(
   {
     schedule: "0 */4 * * *", // Every 4 hours (notifications = garder réactif)
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
     memory: "512MiB",
@@ -226,7 +226,7 @@ async function moveToDeadLetterQueue(
  */
 export const triggerNotificationRetry = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (request) => {
     if (!request.auth) {
@@ -269,7 +269,7 @@ export const triggerNotificationRetry = onCall(
  */
 export const retrySpecificDelivery = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (request) => {
     if (!request.auth) {
@@ -347,7 +347,7 @@ export const retrySpecificDelivery = onCall(
  */
 export const getDLQStats = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (request) => {
     if (!request.auth) {

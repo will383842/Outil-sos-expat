@@ -163,7 +163,7 @@ function formatAmount(amount: number): string {
  */
 export const telegramOnPayPalPaymentReceived = onDocumentWritten(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     document: "paypal_orders/{orderId}",
     memory: "256MiB",
     timeoutSeconds: 60,

@@ -213,7 +213,7 @@ async function syncToOutil(
 export const onBookingRequestCreated = onDocumentCreated(
   {
     document: "booking_requests/{bookingId}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: [OUTIL_SYNC_API_KEY],
   },
   async (event) => {
@@ -305,7 +305,7 @@ export async function addToRetryQueue(
 export const retryOutilSync = onSchedule(
   {
     schedule: "0 8 * * *", // 8h Paris tous les jours
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     secrets: [OUTIL_SYNC_API_KEY],
     timeoutSeconds: 120,

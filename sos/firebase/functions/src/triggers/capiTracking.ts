@@ -269,7 +269,7 @@ async function logCAPIEventToFirestore(params: LogCAPIEventParams): Promise<void
 export const onBookingRequestCreatedTrackLead = onDocumentCreated(
   {
     document: "booking_requests/{requestId}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: [META_CAPI_TOKEN],
   },
   async (event) => {
@@ -348,7 +348,7 @@ export const onBookingRequestCreatedTrackLead = onDocumentCreated(
 export const onUserCreatedTrackRegistration = onDocumentCreated(
   {
     document: "users/{uid}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: [META_CAPI_TOKEN],
   },
   async (event) => {
@@ -428,7 +428,7 @@ export const onUserCreatedTrackRegistration = onDocumentCreated(
 export const onCallSessionPaymentAuthorized = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: [META_CAPI_TOKEN],
   },
   async (event) => {
@@ -521,7 +521,7 @@ export const onCallSessionPaymentAuthorized = onDocumentUpdated(
 export const onContactSubmittedTrackLead = onDocumentCreated(
   {
     document: "contact_submissions/{submissionId}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: [META_CAPI_TOKEN],
   },
   async (event) => {

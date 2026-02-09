@@ -25,7 +25,7 @@ import { deactivateExpiredRecruitments } from "../triggers/onProviderRegistered"
 export const bloggerValidatePendingCommissions = onSchedule(
   {
     schedule: "0 * * * *", // Every hour at minute 0
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "512MiB",
     timeoutSeconds: 300,
@@ -54,7 +54,7 @@ export const bloggerValidatePendingCommissions = onSchedule(
 export const bloggerReleaseValidatedCommissions = onSchedule(
   {
     schedule: "30 * * * *", // Every hour at minute 30
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "512MiB",
     timeoutSeconds: 300,
@@ -83,7 +83,7 @@ export const bloggerReleaseValidatedCommissions = onSchedule(
 export const bloggerUpdateMonthlyRankings = onSchedule(
   {
     schedule: "0 0 * * *", // Daily at midnight
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "512MiB",
     timeoutSeconds: 300,
@@ -112,7 +112,7 @@ export const bloggerUpdateMonthlyRankings = onSchedule(
 export const bloggerDeactivateExpiredRecruitments = onSchedule(
   {
     schedule: "0 1 * * *", // Daily at 1 AM
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "256MiB",
     timeoutSeconds: 120,
@@ -140,7 +140,7 @@ export const bloggerDeactivateExpiredRecruitments = onSchedule(
 export const bloggerFinalizeMonthlyRankings = onSchedule(
   {
     schedule: "0 2 1 * *", // 1st of each month at 2 AM
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "512MiB",
     timeoutSeconds: 300,

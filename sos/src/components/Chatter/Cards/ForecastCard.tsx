@@ -58,10 +58,12 @@ const LEVEL_CONFIG = {
 
 // Tier bonuses (in cents)
 const TIER_BONUSES: Record<number, number> = {
-  5: 2500,   // $25
-  10: 7500,  // $75
-  25: 20000, // $200
-  50: 50000, // $500
+  5: 1500,      // $15
+  10: 3500,     // $35
+  20: 7500,     // $75
+  50: 25000,    // $250
+  100: 60000,   // $600
+  500: 400000,  // $4000
 };
 
 interface ForecastCardProps {
@@ -122,7 +124,7 @@ const ForecastCard = memo(function ForecastCard({
       : null;
 
     // Next tier bonus
-    const tierThresholds = [5, 10, 25, 50];
+    const tierThresholds = [5, 10, 20, 50, 100, 500];
     const nextTier = tierThresholds.find(
       (threshold) => !paidTierBonuses.includes(threshold) && qualifiedReferrals < threshold
     );

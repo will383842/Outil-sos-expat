@@ -14,7 +14,7 @@ import { Blogger } from "../types";
 export const onBloggerCreated = onDocumentCreated(
   {
     document: "bloggers/{bloggerId}",
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (event) => {
     const snapshot = event.data;

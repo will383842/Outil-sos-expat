@@ -131,7 +131,7 @@ export const backupFirebaseAuth = onSchedule(
   {
     schedule: '0 3 * * *', // Tous les jours à 3h
     timeZone: 'Europe/Paris',
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '1GiB',
     cpu: 1,
     timeoutSeconds: 540
@@ -260,7 +260,7 @@ export const cleanupOldAuthBackups = onSchedule(
   {
     schedule: '0 4 1 * *', // 1er du mois à 4h
     timeZone: 'Europe/Paris',
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB'
   },
   async () => {

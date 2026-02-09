@@ -388,7 +388,7 @@ export const scheduledKYCReminders = onSchedule(
   {
     schedule: "0 10 * * *", // Tous les jours à 10h00
     timeZone: "Europe/Paris",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - simple queries
     timeoutSeconds: 300, // 5 minutes max
   },
@@ -447,7 +447,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
  */
 export const triggerKYCReminders = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 300,
   },
@@ -483,7 +483,7 @@ export const triggerKYCReminders = onCall(
  */
 export const getKYCReminderStatus = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
   },
   async (request) => {
     ensureInitialized();

@@ -67,7 +67,7 @@ function getStripeInstance(): Stripe {
 export const stuckPaymentsRecovery = onSchedule(
   {
     schedule: "0 */4 * * *", // Every 4 hours (paiements = garder réactif)
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
     memory: "512MiB",
@@ -580,7 +580,7 @@ async function alertStuckPayments(
  */
 export const triggerStuckPaymentsRecovery = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     // P0 FIX 2026-02-01: Added PayPal secrets
     secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
@@ -636,7 +636,7 @@ export const triggerStuckPaymentsRecovery = onCall(
  */
 export const capturePayPalPaymentManually = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (request) => {

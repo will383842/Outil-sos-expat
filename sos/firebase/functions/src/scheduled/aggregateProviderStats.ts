@@ -49,7 +49,7 @@ function getDb() {
 export const aggregateProviderStats = onSchedule(
   {
     schedule: "0 * * * *", // Every hour at minute 0
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 540, // 9 minutes
     memory: "512MiB",
@@ -76,7 +76,7 @@ export const aggregateProviderStats = onSchedule(
  */
 export const triggerProviderStatsAggregation = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 540,
   },
@@ -422,7 +422,7 @@ async function calculateCallStats(
  */
 export const backfillProviderStats = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "1GiB",
     timeoutSeconds: 540,
   },

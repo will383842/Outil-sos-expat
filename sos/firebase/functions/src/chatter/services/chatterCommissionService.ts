@@ -399,6 +399,8 @@ function getDefaultDescription(
       return "Bonus participation Zoom";
     case "bonus_social":
       return `Bonus likes reseaux sociaux${details?.networkCount ? ` (${details.networkCount} reseaux)` : ""}`;
+    case "bonus_telegram":
+      return "Bonus connexion Telegram";
     case "manual_adjustment":
       return details?.bonusReason || "Ajustement manuel";
     default:
@@ -547,9 +549,6 @@ export async function releaseCommission(
 
     // Check and award milestone badges
     await checkAndAwardBadges(commission.chatterId);
-
-    // REMOVED: $50 recruiter bonus feature has been disabled
-    // await checkRecruiterMilestoneBonus(commission.chatterId);
 
     return { success: true };
   } catch (error) {
@@ -740,26 +739,6 @@ export async function checkAndUpdateLevel(chatterId: string): Promise<{
     logger.error("[checkAndUpdateLevel] Error", { chatterId, error });
     return { levelChanged: false };
   }
-}
-
-// ============================================================================
-// RECRUITER MILESTONE BONUS - DISABLED
-// ============================================================================
-
-/**
- * DISABLED: This feature has been removed.
- * Previously awarded $50 recruiter bonus when recruited chatter reaches $500 in total earnings.
- * Kept for backward compatibility but always returns { bonusAwarded: false }
- *
- * @deprecated This function is disabled and does nothing
- */
-export async function checkRecruiterMilestoneBonus(_chatterId: string): Promise<{
-  bonusAwarded: boolean;
-  recruiterId?: string;
-  bonusCommissionId?: string;
-}> {
-  // Feature disabled - always return false
-  return { bonusAwarded: false };
 }
 
 // ============================================================================

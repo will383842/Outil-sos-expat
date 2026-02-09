@@ -527,7 +527,7 @@ async function getCurrentChallengeInternal(): Promise<WeeklyChallenge | null> {
 export const chatterCreateWeeklyChallenge = onSchedule(
   {
     schedule: "5 0 * * 1", // Every Monday at 00:05 UTC
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 300,
     retryCount: 3,
@@ -554,7 +554,7 @@ export const chatterCreateWeeklyChallenge = onSchedule(
 export const chatterUpdateChallengeLeaderboard = onSchedule(
   {
     schedule: "0 * * * *", // Every hour at minute 0
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "1GiB",
     timeoutSeconds: 540,
     retryCount: 2,
@@ -582,7 +582,7 @@ export const chatterUpdateChallengeLeaderboard = onSchedule(
 export const chatterEndWeeklyChallenge = onSchedule(
   {
     schedule: "55 23 * * 0", // Every Sunday at 23:55 UTC
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "1GiB",
     timeoutSeconds: 540,
     retryCount: 3,
@@ -610,7 +610,7 @@ export const chatterEndWeeklyChallenge = onSchedule(
  */
 export const getCurrentChallenge = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -654,7 +654,7 @@ export const getCurrentChallenge = onCall(
  */
 export const getChallengeHistory = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 30,
   },

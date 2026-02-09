@@ -601,7 +601,7 @@ function initStripe(): Stripe | null {
 export const onProviderCreated = onDocumentCreated(
   {
     document: "sos_profiles/{uid}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, META_CAPI_TOKEN],
   },
   async (event) => {

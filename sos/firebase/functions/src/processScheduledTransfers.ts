@@ -35,7 +35,7 @@ const TRANSITION_END_DATE = new Date(
 export const processScheduledTransfers = onSchedule(
   {
     schedule: "0 2 * * *", // Every day at 2 AM UTC
-    region: "europe-west1",
+    region: "europe-west3",
     timeoutSeconds: 540,
     memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - legacy function with simple queries
   },

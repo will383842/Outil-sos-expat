@@ -264,7 +264,7 @@ async function fetchProviderName(providerId: string | undefined): Promise<string
  */
 export const telegramOnNegativeReview = onDocumentCreated(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     document: "reviews/{reviewId}",
     memory: "256MiB",
     timeoutSeconds: 60,

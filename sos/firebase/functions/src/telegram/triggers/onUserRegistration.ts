@@ -108,7 +108,7 @@ interface UserData {
  */
 export const telegramOnUserRegistration = onDocumentCreated(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     document: "users/{userId}",
     memory: "256MiB",
     timeoutSeconds: 60,

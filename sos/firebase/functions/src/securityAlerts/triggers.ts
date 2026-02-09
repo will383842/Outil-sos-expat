@@ -39,7 +39,7 @@ import { archiveOldResolvedAlerts, getAggregationStats } from './aggregator';
 // ==========================================
 // RÉGION EUROPE
 // ==========================================
-const REGION = 'europe-west1';
+const REGION = 'europe-west3';
 
 // ==========================================
 // TRIGGER: NOUVELLE ALERTE CRÉÉE

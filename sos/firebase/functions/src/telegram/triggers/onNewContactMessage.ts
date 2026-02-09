@@ -98,7 +98,7 @@ function truncateMessage(message: string, maxLength: number = MESSAGE_PREVIEW_MA
  */
 export const telegramOnNewContactMessage = onDocumentCreated(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     document: "contact_messages/{messageId}",
     memory: "256MiB",
     timeoutSeconds: 60,

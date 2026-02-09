@@ -66,19 +66,20 @@ interface ChatterConfigSettings {
     activationBonus: number; // $5 in cents
     n1RecruitBonus: number;  // $1 in cents
   };
-  // Tier Bonuses - keyed by number of filleuls (string keys for UI compatibility)
+  // Tier Bonuses - keyed by number of filleuls
   tierBonuses: {
-    tier5: number;   // $25 in cents
-    tier10: number;  // $75 in cents
-    tier25: number;  // $200 in cents
-    tier50: number;  // $500 in cents
-    tier100: number; // $1500 in cents
+    5: number;    // $15 in cents
+    10: number;   // $35 in cents
+    20: number;   // $75 in cents
+    50: number;   // $250 in cents
+    100: number;  // $600 in cents
+    500: number;  // $4000 in cents
   };
-  // Monthly Top - keyed by rank (string keys for UI compatibility)
+  // Monthly Top - commission MULTIPLIERS (not cash amounts)
   monthlyTop: {
-    top1: number; // $200 in cents
-    top2: number; // $100 in cents
-    top3: number; // $50 in cents
+    1: number;  // 2.0x multiplier
+    2: number;  // 1.5x multiplier
+    3: number;  // 1.15x multiplier
   };
   // Flash Bonus - aligned with backend FlashBonusConfig
   flashBonus: {
@@ -108,16 +109,17 @@ const DEFAULT_CONFIG: ChatterConfigSettings = {
     n1RecruitBonus: 100,   // $1
   },
   tierBonuses: {
-    tier5: 2500,      // $25
-    tier10: 7500,     // $75
-    tier25: 20000,    // $200
-    tier50: 50000,    // $500
-    tier100: 150000,  // $1500
+    5: 1500,       // $15
+    10: 3500,      // $35
+    20: 7500,      // $75
+    50: 25000,     // $250
+    100: 60000,    // $600
+    500: 400000,   // $4000
   },
   monthlyTop: {
-    top1: 20000, // $200
-    top2: 10000, // $100
-    top3: 5000,  // $50
+    1: 2.0,    // 2x multiplier
+    2: 1.5,    // 1.5x multiplier
+    3: 1.15,   // 1.15x multiplier
   },
   flashBonus: {
     enabled: false,
@@ -634,61 +636,72 @@ const ChatterAdminConfig: React.FC = () => {
             />
           </div>
           <div className={UI.cardBody}>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               <NumberInput
                 label={intl.formatMessage({
                   id: 'admin.chatterSystemConfig.tierBonuses.tier5',
                   defaultMessage: '5 active members',
                 })}
-                value={config.tierBonuses.tier5}
-                onChange={(v) => updateConfig('tierBonuses', { tier5: v })}
+                value={config.tierBonuses[5]}
+                onChange={(v) => updateConfig('tierBonuses', { 5: v } as any)}
                 suffix="$"
                 isCents
-                hint={`= ${formatCents(config.tierBonuses.tier5)}`}
+                hint={`= ${formatCents(config.tierBonuses[5])}`}
               />
               <NumberInput
                 label={intl.formatMessage({
                   id: 'admin.chatterSystemConfig.tierBonuses.tier10',
                   defaultMessage: '10 active members',
                 })}
-                value={config.tierBonuses.tier10}
-                onChange={(v) => updateConfig('tierBonuses', { tier10: v })}
+                value={config.tierBonuses[10]}
+                onChange={(v) => updateConfig('tierBonuses', { 10: v } as any)}
                 suffix="$"
                 isCents
-                hint={`= ${formatCents(config.tierBonuses.tier10)}`}
+                hint={`= ${formatCents(config.tierBonuses[10])}`}
               />
               <NumberInput
                 label={intl.formatMessage({
-                  id: 'admin.chatterSystemConfig.tierBonuses.tier25',
-                  defaultMessage: '25 active members',
+                  id: 'admin.chatterSystemConfig.tierBonuses.tier20',
+                  defaultMessage: '20 active members',
                 })}
-                value={config.tierBonuses.tier25}
-                onChange={(v) => updateConfig('tierBonuses', { tier25: v })}
+                value={config.tierBonuses[20]}
+                onChange={(v) => updateConfig('tierBonuses', { 20: v } as any)}
                 suffix="$"
                 isCents
-                hint={`= ${formatCents(config.tierBonuses.tier25)}`}
+                hint={`= ${formatCents(config.tierBonuses[20])}`}
               />
               <NumberInput
                 label={intl.formatMessage({
                   id: 'admin.chatterSystemConfig.tierBonuses.tier50',
                   defaultMessage: '50 active members',
                 })}
-                value={config.tierBonuses.tier50}
-                onChange={(v) => updateConfig('tierBonuses', { tier50: v })}
+                value={config.tierBonuses[50]}
+                onChange={(v) => updateConfig('tierBonuses', { 50: v } as any)}
                 suffix="$"
                 isCents
-                hint={`= ${formatCents(config.tierBonuses.tier50)}`}
+                hint={`= ${formatCents(config.tierBonuses[50])}`}
               />
               <NumberInput
                 label={intl.formatMessage({
                   id: 'admin.chatterSystemConfig.tierBonuses.tier100',
                   defaultMessage: '100 active members',
                 })}
-                value={config.tierBonuses.tier100}
-                onChange={(v) => updateConfig('tierBonuses', { tier100: v })}
+                value={config.tierBonuses[100]}
+                onChange={(v) => updateConfig('tierBonuses', { 100: v } as any)}
                 suffix="$"
                 isCents
-                hint={`= ${formatCents(config.tierBonuses.tier100)}`}
+                hint={`= ${formatCents(config.tierBonuses[100])}`}
+              />
+              <NumberInput
+                label={intl.formatMessage({
+                  id: 'admin.chatterSystemConfig.tierBonuses.tier500',
+                  defaultMessage: '500 active members',
+                })}
+                value={config.tierBonuses[500]}
+                onChange={(v) => updateConfig('tierBonuses', { 500: v } as any)}
+                suffix="$"
+                isCents
+                hint={`= ${formatCents(config.tierBonuses[500])}`}
               />
             </div>
           </div>
@@ -705,7 +718,7 @@ const ChatterAdminConfig: React.FC = () => {
               icon={<Trophy className="w-5 h-5" />}
               description={intl.formatMessage({
                 id: 'admin.chatterSystemConfig.monthlyTop.description',
-                defaultMessage: 'Monthly leaderboard prizes',
+                defaultMessage: 'Commission multipliers for top performers next month',
               })}
             />
           </div>
@@ -718,13 +731,15 @@ const ChatterAdminConfig: React.FC = () => {
                 <NumberInput
                   label={intl.formatMessage({
                     id: 'admin.chatterSystemConfig.monthlyTop.top1',
-                    defaultMessage: 'Top 1 Prize',
+                    defaultMessage: 'Top 1 Multiplier',
                   })}
-                  value={config.monthlyTop.top1}
-                  onChange={(v) => updateConfig('monthlyTop', { top1: v })}
-                  suffix="$"
-                  isCents
-                  hint={`= ${formatCents(config.monthlyTop.top1)}`}
+                  value={config.monthlyTop[1]}
+                  onChange={(v) => updateConfig('monthlyTop', { 1: v } as any)}
+                  suffix="x"
+                  step={0.05}
+                  min={1}
+                  max={10}
+                  hint={`${config.monthlyTop[1]}x commissions next month`}
                 />
               </div>
               <div className="relative">
@@ -734,13 +749,15 @@ const ChatterAdminConfig: React.FC = () => {
                 <NumberInput
                   label={intl.formatMessage({
                     id: 'admin.chatterSystemConfig.monthlyTop.top2',
-                    defaultMessage: 'Top 2 Prize',
+                    defaultMessage: 'Top 2 Multiplier',
                   })}
-                  value={config.monthlyTop.top2}
-                  onChange={(v) => updateConfig('monthlyTop', { top2: v })}
-                  suffix="$"
-                  isCents
-                  hint={`= ${formatCents(config.monthlyTop.top2)}`}
+                  value={config.monthlyTop[2]}
+                  onChange={(v) => updateConfig('monthlyTop', { 2: v } as any)}
+                  suffix="x"
+                  step={0.05}
+                  min={1}
+                  max={10}
+                  hint={`${config.monthlyTop[2]}x commissions next month`}
                 />
               </div>
               <div className="relative">
@@ -750,13 +767,15 @@ const ChatterAdminConfig: React.FC = () => {
                 <NumberInput
                   label={intl.formatMessage({
                     id: 'admin.chatterSystemConfig.monthlyTop.top3',
-                    defaultMessage: 'Top 3 Prize',
+                    defaultMessage: 'Top 3 Multiplier',
                   })}
-                  value={config.monthlyTop.top3}
-                  onChange={(v) => updateConfig('monthlyTop', { top3: v })}
-                  suffix="$"
-                  isCents
-                  hint={`= ${formatCents(config.monthlyTop.top3)}`}
+                  value={config.monthlyTop[3]}
+                  onChange={(v) => updateConfig('monthlyTop', { 3: v } as any)}
+                  suffix="x"
+                  step={0.05}
+                  min={1}
+                  max={10}
+                  hint={`${config.monthlyTop[3]}x commissions next month`}
                 />
               </div>
             </div>

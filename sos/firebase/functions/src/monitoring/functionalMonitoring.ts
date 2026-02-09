@@ -884,7 +884,7 @@ async function checkPaymentFlowHealth(): Promise<void> {
 export const runFunctionalHealthCheck = onSchedule(
   {
     schedule: '0 9,18 * * *', // 9h et 18h Paris
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '512MiB',
     timeoutSeconds: 300
@@ -916,7 +916,7 @@ export const runFunctionalHealthCheck = onSchedule(
 export const runCriticalFunctionalCheck = onSchedule(
   {
     schedule: '0 */4 * * *', // Toutes les 4 heures
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB',
     timeoutSeconds: 120
@@ -943,7 +943,7 @@ export const runCriticalFunctionalCheck = onSchedule(
 export const cleanupFunctionalData = onSchedule(
   {
     schedule: '0 4 * * 0', // Dimanche 4h
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB'
   },

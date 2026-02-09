@@ -27,7 +27,7 @@ const CLEANUP_CONFIG = {
 export const paymentDataCleanup = onSchedule(
   {
     schedule: "0 */6 * * *", // Every 6 hours
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 540,
     memory: "512MiB",

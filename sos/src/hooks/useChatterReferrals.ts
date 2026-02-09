@@ -137,10 +137,12 @@ export function getFilleulProgressPercent(clientEarnings: number): {
  */
 export function formatTierBonus(tier: number): string {
   const bonuses: Record<number, string> = {
-    5: "$25",
-    10: "$75",
-    25: "$200",
-    50: "$500",
+    5: "$15",
+    10: "$35",
+    20: "$75",
+    50: "$250",
+    100: "$600",
+    500: "$4,000",
   };
   return bonuses[tier] || "";
 }
@@ -152,7 +154,7 @@ export function getNextTierInfo(
   qualifiedCount: number,
   paidTiers: number[]
 ): { tier: number; needed: number; bonus: string } | null {
-  const tiers = [5, 10, 25, 50];
+  const tiers = [5, 10, 20, 50, 100, 500];
 
   for (const tier of tiers) {
     if (!paidTiers.includes(tier) && qualifiedCount < tier) {

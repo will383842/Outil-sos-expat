@@ -36,7 +36,7 @@ import { PayPalManager } from "../PayPalManager";
 export const cleanupUncapturedPayPalOrders = onSchedule(
   {
     schedule: "0 */6 * * *", // Toutes les 6 heures
-    region: "europe-west1",
+    region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300, // 5 minutes pour traiter les annulations API
     memory: "512MiB",
@@ -180,7 +180,7 @@ export const cleanupUncapturedPayPalOrders = onSchedule(
 export const sendPayoutSuccessEmail = onDocumentUpdated(
   {
     document: "paypal_payouts/{payoutId}",
-    region: "europe-west1",
+    region: "europe-west3",
     secrets: EMAIL_SECRETS,
   },
   async (event) => {

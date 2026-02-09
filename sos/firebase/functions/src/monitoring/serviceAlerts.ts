@@ -776,7 +776,7 @@ export const checkServiceBalances = onSchedule(
   {
     schedule: '0 8 * * *', // 8h Paris tous les jours
     timeZone: 'Europe/Paris',
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '512MiB',
     timeoutSeconds: 120,
     secrets: [
@@ -837,7 +837,7 @@ export const checkServiceBalances = onSchedule(
  */
 export const getServiceBalanceAlerts = onCall(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
   },
@@ -889,7 +889,7 @@ export const getServiceBalanceAlerts = onCall(
  */
 export const acknowledgeServiceBalanceAlert = onCall(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
   },
@@ -945,7 +945,7 @@ export const acknowledgeServiceBalanceAlert = onCall(
  */
 export const updateServiceBalanceThreshold = onCall(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
   },
@@ -1028,7 +1028,7 @@ export const updateServiceBalanceThreshold = onCall(
  */
 export const getServiceBalanceThresholds = onCall(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '256MiB',
     timeoutSeconds: 30,
   },
@@ -1089,7 +1089,7 @@ export const getServiceBalanceThresholds = onCall(
  */
 export const triggerServiceBalanceCheck = onCall(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     memory: '512MiB',
     timeoutSeconds: 120,
     secrets: [

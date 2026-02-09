@@ -56,7 +56,7 @@ async function shouldSkipRegeneration(): Promise<boolean> {
  */
 export const generateSitemaps = onRequest(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeoutSeconds: 540, // 9 minutes (max for v2)
     memory: '1GiB', // More memory for large operations
     cpu: 1, // Required when memory > 512MiB
@@ -97,7 +97,7 @@ export const generateSitemaps = onRequest(
  */
 export const onProviderChange = onDocumentWritten(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeoutSeconds: 540,
     memory: '1GiB',
     cpu: 1, // Required when memory > 512MiB
@@ -142,7 +142,7 @@ export const onProviderChange = onDocumentWritten(
 
 export const scheduledSitemapGeneration = onSchedule(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     timeoutSeconds: 540,
     memory: '1GiB',
     cpu: 1, // Required when memory > 512MiB

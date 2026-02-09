@@ -32,7 +32,7 @@ function ensureInitialized() {
 export const chatterOnChatterEarningsUpdated = onDocumentUpdated(
   {
     document: "chatters/{chatterId}",
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 120,
   },

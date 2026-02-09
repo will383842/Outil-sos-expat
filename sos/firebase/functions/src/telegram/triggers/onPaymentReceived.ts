@@ -221,7 +221,7 @@ function calculateCommission(
  */
 export const telegramOnPaymentReceived = onDocumentWritten(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     document: "payments/{paymentId}",
     memory: "256MiB",
     timeoutSeconds: 60,

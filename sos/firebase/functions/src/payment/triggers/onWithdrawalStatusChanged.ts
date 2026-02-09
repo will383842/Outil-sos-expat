@@ -351,7 +351,7 @@ async function handleStatusTransition(
 export const paymentOnWithdrawalStatusChanged = onDocumentUpdated(
   {
     document: `${WITHDRAWAL_COLLECTION}/{withdrawalId}`,
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },

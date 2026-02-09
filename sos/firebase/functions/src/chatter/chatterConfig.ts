@@ -403,7 +403,7 @@ export function getTierBonusForFilleulCount(
   filleulCount: number,
   config: ChatterConfigSettings
 ): { tier: number; amount: number } | null {
-  const tiers = [100, 50, 25, 10, 5]; // Check from highest to lowest
+  const tiers = [500, 100, 50, 20, 10, 5]; // Check from highest to lowest
 
   for (const tier of tiers) {
     if (filleulCount >= tier) {
