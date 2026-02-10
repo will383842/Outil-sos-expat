@@ -56,6 +56,7 @@ import {
   parseLocaleFromPath,
   hasLocalePrefix,
   getRouteKeyFromSlug,
+  getAllTranslatedSlugs,
 } from "../multilingual-system/core/routing/localeRoutes";
 
 // ==================== SECURITY: REDIRECT WHITELIST ====================
@@ -285,21 +286,6 @@ const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const { login, loginWithGoogle, isLoading, error, user, authInitialized, isFullyReady } = useAuth();
-
-  // 🔍 [BOOKING_AUTH_DEBUG] Log initial Login component mount
-  console.log('[BOOKING_AUTH_DEBUG] 🔑 Login PAGE RENDER', {
-    locationPathname: location.pathname,
-    locationSearch: location.search,
-    locationState: location.state,
-    searchParamsRedirect: searchParams.get('redirect'),
-    sessionStorageLoginRedirect: sessionStorage.getItem('loginRedirect'),
-    sessionStorageSelectedProvider: sessionStorage.getItem('selectedProvider') ?
-      JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
-    user: user ? { id: user.id, email: user.email } : null,
-    isLoading,
-    authInitialized,
-    isFullyReady,
-  });
 
   // Helper function to translate auth error codes
   const translateAuthError = (errorCode: string | null): string | null => {
@@ -597,22 +583,11 @@ const Login: React.FC = () => {
     const state = (rawState ?? null) as NavState | null;
     const sp = state?.selectedProvider;
 
-    // 🔍 [BOOKING_AUTH_DEBUG] Log provider storage from location.state
-    console.log('[BOOKING_AUTH_DEBUG] 📦 Login STORE_PROVIDER useEffect', {
-      hasLocationState: !!location.state,
-      rawState: rawState,
-      selectedProviderFromState: sp ? { id: sp.id, name: sp.name, type: sp.type } : 'NULL',
-      isProviderLike: isProviderLike(sp),
-      currentSessionStorageProvider: sessionStorage.getItem('selectedProvider') ?
-        JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
-    });
-
     if (isProviderLike(sp)) {
       try {
         sessionStorage.setItem("selectedProvider", JSON.stringify(sp));
-        console.log('[BOOKING_AUTH_DEBUG] ✅ Login STORED selectedProvider in sessionStorage:', sp.id);
-      } catch (e) {
-        console.error('[BOOKING_AUTH_DEBUG] ❌ Login FAILED to store selectedProvider:', e);
+      } catch {
+        // Ignore storage errors
       }
     }
   }, [location.state]);
@@ -751,13 +726,6 @@ const Login: React.FC = () => {
 
   // ==================== REDIRECT ====================
   useEffect(() => {
-    // 🔍 [BOOKING_AUTH_DEBUG] Log redirect useEffect trigger
-    console.log('[BOOKING_AUTH_DEBUG] 🔄 Login REDIRECT useEffect triggered', {
-      isFullyReady,
-      user: user ? { id: user.id, email: user.email, role: user.role } : null,
-      willRedirect: isFullyReady && user,
-    });
-
     // ✅ FIX FLASH P0: Utiliser isFullyReady qui garantit que TOUT est chargé
     // isFullyReady = authInitialized AND !isLoading (défini dans AuthContext)
     // Cela évite les race conditions entre les différents états
@@ -766,14 +734,6 @@ const Login: React.FC = () => {
       // sessionStorage is more reliable because it's set BEFORE navigation happens
       const redirectFromStorage = sessionStorage.getItem("loginRedirect");
       const redirectFromParams = searchParams.get("redirect");
-
-      // 🔍 [BOOKING_AUTH_DEBUG] Log redirect sources
-      console.log('[BOOKING_AUTH_DEBUG] 📍 Login REDIRECT sources', {
-        redirectFromStorage,
-        redirectFromParams,
-        selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
-          JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
-      });
 
       // ✅ ROLE-BASED REDIRECT: Rediriger vers le dashboard approprié selon le rôle
       // Les rôles sont mutuellement exclusifs : chatter, influencer, blogger ne sont ni client, ni avocat, ni expat
@@ -797,11 +757,10 @@ const Login: React.FC = () => {
             const providerIdentifier = selectedProvider.shortId || selectedProvider.id;
             if (providerIdentifier) {
               bookingRedirectFromProvider = `/booking-request/${providerIdentifier}`;
-              console.log('[BOOKING_AUTH_DEBUG] 🎯 Login detected selectedProvider, redirecting to booking:', bookingRedirectFromProvider);
             }
           }
-        } catch (e) {
-          console.error('[BOOKING_AUTH_DEBUG] Failed to parse selectedProvider:', e);
+        } catch {
+          // Ignore parse errors
         }
       }
 
@@ -829,19 +788,24 @@ const Login: React.FC = () => {
           const pathSegments = pathWithoutSlash.split('/').filter(Boolean);
           if (pathSegments.length > 0) {
             // Essayer de trouver une route correspondante
+            // Track how many segments matched so we can preserve the rest (e.g. /:providerId)
             let routeKey = getRouteKeyFromSlug(pathWithoutSlash);
+            let matchedSegmentCount = pathSegments.length;
             if (!routeKey && pathSegments.length >= 2) {
               routeKey = getRouteKeyFromSlug(`${pathSegments[0]}/${pathSegments[1]}`);
+              matchedSegmentCount = 2;
             }
             if (!routeKey) {
               routeKey = getRouteKeyFromSlug(pathSegments[0]);
+              matchedSegmentCount = 1;
             }
 
             if (routeKey) {
               // On a trouvé une route, utiliser le slug traduit
+              // Preserve remaining path segments (e.g. /booking-request/abc123 → /demande-reservation/abc123)
               const translatedSlug = getTranslatedRouteSlug(routeKey, currentLang as any);
-              finalUrl = `/${localePrefix}/${translatedSlug}`;
-              console.log("[Login] Built localized URL:", finalUrl, "from routeKey:", routeKey);
+              const remainingPath = pathSegments.slice(matchedSegmentCount).join('/');
+              finalUrl = `/${localePrefix}/${translatedSlug}${remainingPath ? '/' + remainingPath : ''}`;
             } else {
               // Pas de route trouvée, juste ajouter le préfixe de locale
               finalUrl = `/${localePrefix}${finalUrl.startsWith('/') ? finalUrl : '/' + finalUrl}`;
@@ -861,8 +825,8 @@ const Login: React.FC = () => {
               if (routeKey) {
                 const translatedSlug = getTranslatedRouteSlug(routeKey, lang as any);
                 if (pathSegments[0] !== translatedSlug) {
-                  finalUrl = `/${getLocaleString(lang as any)}/${translatedSlug}`;
-                  console.log("[Login] Corrected slug to:", finalUrl);
+                  const remainingPath = pathSegments.slice(1).join('/');
+                  finalUrl = `/${getLocaleString(lang as any)}/${translatedSlug}${remainingPath ? '/' + remainingPath : ''}`;
                 }
               }
             }
@@ -889,35 +853,20 @@ const Login: React.FC = () => {
 
       // Only clear selectedProvider if not going to booking or provider profile
       // This preserves provider data when user returns to profile after login (e.g., from translation)
-      const goingToBooking = finalUrl.startsWith("/booking-request/");
+      // Check all translated booking slugs (e.g. "demande-reservation", "booking-request", etc.)
+      const bookingSlugs = getAllTranslatedSlugs("booking-request" as any);
+      const goingToBooking = bookingSlugs.some(slug => finalUrl.includes(`/${slug}/`) || finalUrl.endsWith(`/${slug}`));
       const goingToProviderProfile = finalUrl.includes("/avocat/") ||
                                      finalUrl.includes("/expatrie/") ||
                                      finalUrl.includes("/expats/") ||
                                      finalUrl.includes("/lawyers/") ||
                                      finalUrl.includes("/provider/");
 
-      // 🔍 [BOOKING_AUTH_DEBUG] Log selectedProvider decision
-      const currentSelectedProvider = sessionStorage.getItem('selectedProvider');
-      console.log('[BOOKING_AUTH_DEBUG] 🎯 Login REDIRECT final decision', {
-        finalUrl,
-        goingToBooking,
-        goingToProviderProfile,
-        currentSelectedProviderInSession: currentSelectedProvider ?
-          JSON.parse(currentSelectedProvider).id : 'NULL',
-        willKeepSelectedProvider: goingToBooking || goingToProviderProfile,
-        willClearSelectedProvider: !goingToBooking && !goingToProviderProfile,
-      });
-
       if (!goingToBooking && !goingToProviderProfile) {
-        console.log('[BOOKING_AUTH_DEBUG] ⚠️ CLEARING selectedProvider from sessionStorage');
         sessionStorage.removeItem("selectedProvider");
-      } else {
-        console.log('[BOOKING_AUTH_DEBUG] ✅ KEEPING selectedProvider in sessionStorage');
       }
       sessionStorage.removeItem("loginAttempts");
 
-      // Navigate to the redirect URL (provider profile if coming from translation, dashboard otherwise)
-      console.log("[BOOKING_AUTH_DEBUG] 🚀 Login NAVIGATING to:", finalUrl);
       navigate(finalUrl, { replace: true });
     }
   }, [isFullyReady, user, navigate, searchParams, currentLang]);
@@ -927,21 +876,10 @@ const Login: React.FC = () => {
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
 
-      // 🔍 [BOOKING_AUTH_DEBUG] Log form submission start
-      console.log('[BOOKING_AUTH_DEBUG] 📝 Login FORM SUBMIT START', {
-        email: formData.email,
-        rememberMe: formData.rememberMe,
-        selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
-          JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
-        loginRedirectInSession: sessionStorage.getItem('loginRedirect') || 'NULL',
-        localLoading,
-      });
-
       // Protection contre le double-clic
       if (localLoading) return;
 
       if (!validateForm()) {
-        console.log('[BOOKING_AUTH_DEBUG] ❌ Login FORM VALIDATION FAILED');
         setSubmitAttempts((prev) => prev + 1);
         return;
       }
@@ -961,11 +899,8 @@ const Login: React.FC = () => {
           localStorage.removeItem("savedEmail");
         }
 
-        console.log('[BOOKING_AUTH_DEBUG] 🔐 Login calling login() function...');
         await login(formData.email.trim().toLowerCase(), formData.password);
-        console.log('[BOOKING_AUTH_DEBUG] ✅ Login login() function SUCCESS - waiting for redirect useEffect');
       } catch (loginError) {
-        console.error("[BOOKING_AUTH_DEBUG] ❌ Login ERROR:", loginError);
         setSubmitAttempts((prev) => prev + 1);
         setLocalLoading(false);
 

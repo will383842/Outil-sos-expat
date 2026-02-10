@@ -1759,24 +1759,13 @@ const ProviderProfile: React.FC = () => {
   }, [provider, isLoading, updateSEOMetadata]);
 
   const handleBookCall = useCallback(() => {
-    // 🔍 [BOOKING_AUTH_DEBUG] Log handleBookCall click
-    console.log('[BOOKING_AUTH_DEBUG] 🔘 ProviderProfile handleBookCall CLICKED', {
-      provider: provider ? { id: provider.id, shortId: provider.shortId, name: provider.fullName } : 'NULL',
-      user: user ? { id: user.id, email: user.email } : null,
-      authInitialized,
-      selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
-        JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
-    });
-
     if (!provider) {
-      console.log('[BOOKING_AUTH_DEBUG] ❌ ProviderProfile handleBookCall NO PROVIDER');
       return;
     }
 
     // FIX: On attend seulement que authInitialized soit true (Firebase a vérifié l'état d'auth)
     // Une fois initialisé, on peut continuer : soit naviguer (si user), soit montrer le wizard
     if (!authInitialized) {
-      console.log('[BOOKING_AUTH_DEBUG] ⏳ ProviderProfile handleBookCall waiting for authInitialized');
       return;
     }
 
@@ -1819,9 +1808,8 @@ const ProviderProfile: React.FC = () => {
         STORAGE_KEYS.SELECTED_PROVIDER,
         JSON.stringify(provider)
       );
-      console.log('[BOOKING_AUTH_DEBUG] ✅ ProviderProfile STORED selectedProvider in sessionStorage:', provider.id);
-    } catch (e) {
-      console.error('[BOOKING_AUTH_DEBUG] ❌ ProviderProfile FAILED to store selectedProvider:', e);
+    } catch {
+      // Ignore storage errors
     }
     // Utiliser shortId (6 chars) si disponible, sinon fallback sur id
     const providerIdentifier = provider.shortId || provider.id;
@@ -1829,12 +1817,10 @@ const ProviderProfile: React.FC = () => {
 
     // Validation: s'assurer que l'identifiant est défini
     if (!providerIdentifier) {
-      console.log('[BOOKING_AUTH_DEBUG] ❌ ProviderProfile handleBookCall NO providerIdentifier');
       return;
     }
 
     if (user) {
-      console.log('[BOOKING_AUTH_DEBUG] 🚀 ProviderProfile USER CONNECTED - navigating to booking:', target);
       navigate(target, {
         state: {
           selectedProvider: provider,
@@ -1842,24 +1828,15 @@ const ProviderProfile: React.FC = () => {
         },
       });
     } else {
-      console.log('[BOOKING_AUTH_DEBUG] 👤 ProviderProfile USER NOT CONNECTED - showing AuthWizard');
-      console.log('[BOOKING_AUTH_DEBUG] 📦 selectedProvider now in sessionStorage:', sessionStorage.getItem('selectedProvider') ?
-        JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL');
+      // Save booking redirect URL before opening wizard (fallback if Google redirect/page reload)
+      sessionStorage.setItem('loginRedirect', `/booking-request/${providerIdentifier}`);
       setShowAuthWizard(true);
     }
   }, [provider, user, authInitialized, navigate, onlineStatus]);
 
   // Callback quand l'authentification réussit via le wizard
   const handleAuthSuccess = useCallback(() => {
-    // 🔍 [BOOKING_AUTH_DEBUG] Log handleAuthSuccess callback
-    console.log('[BOOKING_AUTH_DEBUG] 🎯 ProviderProfile handleAuthSuccess CALLED', {
-      provider: provider ? { id: provider.id, shortId: provider.shortId, name: provider.fullName } : 'NULL',
-      selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
-        JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
-    });
-
     if (!provider || (!provider.shortId && !provider.id)) {
-      console.log('[BOOKING_AUTH_DEBUG] ❌ ProviderProfile handleAuthSuccess NO PROVIDER - aborting');
       return;
     }
 
@@ -1867,14 +1844,9 @@ const ProviderProfile: React.FC = () => {
 
     // Utiliser shortId (6 chars) si disponible
     const providerIdentifier = provider.shortId || provider.id;
-    const target = `/booking-request/${providerIdentifier}`;
-
-    console.log('[BOOKING_AUTH_DEBUG] 🚀 ProviderProfile NAVIGATING to booking:', {
-      target,
-      providerIdentifier,
-      selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
-        JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
-    });
+    // Use translated slug to avoid LocaleRouter double-redirect
+    const bookingSlug = getTranslatedRouteSlug("booking-request" as any, language as any);
+    const target = `/${bookingSlug}/${providerIdentifier}`;
 
     navigate(target, {
       state: {
@@ -1882,7 +1854,7 @@ const ProviderProfile: React.FC = () => {
         navigationSource: "provider_profile",
       },
     });
-  }, [provider, navigate]);
+  }, [provider, navigate, language]);
 
   const handleHelpfulClick = useCallback(
     async (reviewId: string) => {
@@ -3541,7 +3513,7 @@ const ProviderProfile: React.FC = () => {
         onClose={() => setShowAuthWizard(false)}
         onSuccess={handleAuthSuccess}
         providerName={provider ? formatPublicName(provider) : undefined}
-        bookingRedirectUrl={provider ? `/booking-request/${provider.id}` : undefined}
+        bookingRedirectUrl={provider ? `/booking-request/${provider.shortId || provider.id}` : undefined}
       />
     </Layout>
   );
