@@ -260,6 +260,29 @@ export interface Influencer {
 
   /** Last activity date (for ranking calculation) */
   lastActivityDate: string | null; // YYYY-MM-DD
+
+  // ---- TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD) ----
+
+  /** Whether terms were accepted */
+  termsAccepted?: boolean;
+
+  /** ISO timestamp of terms acceptance */
+  termsAcceptedAt?: string;
+
+  /** Version of terms accepted (e.g., "3.0") */
+  termsVersion?: string;
+
+  /** Type of terms (e.g., "terms_influencers") */
+  termsType?: string;
+
+  /** Metadata about the acceptance context */
+  termsAcceptanceMeta?: {
+    userAgent: string;
+    language: string;
+    timestamp: number;
+    acceptanceMethod: string;
+    ipAddress?: string;
+  };
 }
 
 /**
@@ -1212,6 +1235,18 @@ export interface RegisterInfluencerInput {
   };
   recruiterCode?: string; // Recruitment code from URL
   referralCapturedAt?: string; // ISO date - when the referral code was captured (for 30-day window enforcement)
+
+  // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
+  acceptTerms?: boolean;
+  termsAcceptedAt?: string;
+  termsVersion?: string;
+  termsType?: string;
+  termsAcceptanceMeta?: {
+    userAgent: string;
+    language: string;
+    timestamp: number;
+    acceptanceMethod: string;
+  };
 }
 
 export interface RegisterInfluencerResponse {

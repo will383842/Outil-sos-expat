@@ -361,6 +361,19 @@ export const registerGroupAdmin = onCall(
         createdAt: now,
         updatedAt: now,
         lastLoginAt: now,
+
+        // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
+        termsAccepted: input.acceptTerms ?? true,
+        termsAcceptedAt: input.termsAcceptedAt || now.toDate().toISOString(),
+        termsVersion: input.termsVersion || "3.0",
+        termsType: input.termsType || "terms_group_admins",
+        termsAcceptanceMeta: input.termsAcceptanceMeta || {
+          userAgent: request.rawRequest?.headers?.["user-agent"] || "unknown",
+          language: input.language || "en",
+          timestamp: Date.now(),
+          acceptanceMethod: "checkbox_click",
+          ipAddress: request.rawRequest?.ip || "unknown",
+        },
       };
 
       // 11. Create documents in transaction
