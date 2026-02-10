@@ -51,7 +51,6 @@ import {
   Cloud,
   // Toolbox icons
   Wrench,
-  Link2,
   // Affiliate icons
   Handshake,
   UserPlus,
@@ -919,18 +918,9 @@ export const adminMenuTree: AdminMenuItem[] = [
   {
     id: "toolbox",
     labelKey: "admin.menu.toolbox",
+    path: "/admin/toolbox",
     icon: Wrench,
     descriptionKey: "admin.menu.toolbox.description",
-    children: [
-      {
-        id: "toolbox-backlink-engine",
-        labelKey: "admin.menu.toolbox.backlinkEngine",
-        path: "/admin/toolbox",
-        icon: Link2,
-        badge: "NEW",
-        descriptionKey: "admin.menu.toolbox.backlinkEngine.description",
-      },
-    ],
   },
 
   // ===== ADMINISTRATION SYSTEME (Priorite 8 - Usage occasionnel) =====
