@@ -13,16 +13,16 @@ import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/cor
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsPayment } from '@/config/firebase';
 import { motion } from 'framer-motion';
 import {
   MessageCircle,
   Gift,
   CheckCircle,
   ExternalLink,
-  Download,
   ArrowRight,
-  X,
+  Download,
 } from 'lucide-react';
 
 // ============================================================================
@@ -58,12 +58,13 @@ const ChatterTelegramOnboarding: React.FC = () => {
   const { user, refreshUser, authInitialized, isLoading: authLoading } = useAuth();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
-  // State
-  const [step, setStep] = useState<'choice' | 'connect' | 'download' | 'success'>('choice');
+  // State - removed 'download' step, replaced with inline hint
+  const [step, setStep] = useState<'choice' | 'connect' | 'success'>('choice');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [linkData, setLinkData] = useState<TelegramLinkData | null>(null);
   const [linkStatus, setLinkStatus] = useState<LinkStatusData | null>(null);
+  const [showDownloadHint, setShowDownloadHint] = useState(false);
 
   // Refs
   const statusCheckInterval = useRef<NodeJS.Timeout | null>(null);
@@ -73,38 +74,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
   const dashboardRoute = `/${getTranslatedRouteSlug('chatter-dashboard' as RouteKey, langCode)}`;
   const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
 
-  // Firebase Functions - Using europe-west3 for Telegram functions to avoid quota issues
-  const functions = getFunctions(undefined, 'europe-west3');
-
-  // ============================================================================
-  // DEBUG LOGS
-  // ============================================================================
-
-  useEffect(() => {
-    console.log('[TelegramOnboarding] Component mounted');
-    console.log('[TelegramOnboarding] authInitialized:', authInitialized);
-    console.log('[TelegramOnboarding] authLoading:', authLoading);
-    console.log('[TelegramOnboarding] user:', user);
-    console.log('[TelegramOnboarding] user?.role:', user?.role);
-    console.log('[TelegramOnboarding] user?.telegramId:', user?.telegramId);
-    console.log('[TelegramOnboarding] user?.telegramOnboardingCompleted:', user?.telegramOnboardingCompleted);
-  }, [authInitialized, authLoading, user]);
-
-  useEffect(() => {
-    console.log('[TelegramOnboarding] step changed to:', step);
-  }, [step]);
-
-  useEffect(() => {
-    console.log('[TelegramOnboarding] linkData:', linkData);
-  }, [linkData]);
-
-  useEffect(() => {
-    console.log('[TelegramOnboarding] linkStatus:', linkStatus);
-  }, [linkStatus]);
-
-  useEffect(() => {
-    console.log('[TelegramOnboarding] error:', error);
-  }, [error]);
+  // Firebase Functions - europe-west3 via shared config (functionsPayment)
 
   // ============================================================================
   // AUTH REDIRECT
@@ -112,19 +82,12 @@ const ChatterTelegramOnboarding: React.FC = () => {
 
   useEffect(() => {
     if (authInitialized && !authLoading) {
-      console.log('[TelegramOnboarding] Auth ready, checking redirects...');
-
       if (!user) {
-        console.log('[TelegramOnboarding] No user, redirecting to login');
         navigate(loginRoute);
       } else if (user.role !== 'chatter') {
-        console.log('[TelegramOnboarding] Not a chatter, redirecting to dashboard');
         navigate('/dashboard');
       } else if (user.telegramOnboardingCompleted && user.telegramId) {
-        console.log('[TelegramOnboarding] Already completed, redirecting to dashboard');
         navigate(dashboardRoute);
-      } else {
-        console.log('[TelegramOnboarding] User is valid chatter, showing onboarding');
       }
     }
   }, [authInitialized, authLoading, user, navigate, loginRoute, dashboardRoute]);
@@ -134,21 +97,15 @@ const ChatterTelegramOnboarding: React.FC = () => {
   // ============================================================================
 
   const generateLink = useCallback(async () => {
-    console.log('[TelegramOnboarding] generateLink called');
     setLoading(true);
     setError(null);
 
     try {
-      console.log('[TelegramOnboarding] Calling generateTelegramLink function...');
-      const generateFn = httpsCallable<{ role?: string }, TelegramLinkData>(functions, 'generateTelegramLink');
-      // Pass role explicitly to avoid detection issues
+      const generateFn = httpsCallable<{ role?: string }, TelegramLinkData>(functionsPayment, 'generateTelegramLink');
       const result = await generateFn({ role: 'chatter' });
-
-      console.log('[TelegramOnboarding] generateTelegramLink result:', result.data);
 
       if (result.data.success) {
         if (!result.data.code) {
-          console.log('[TelegramOnboarding] Already linked, going to success');
           setStep('success');
           return;
         }
@@ -156,25 +113,21 @@ const ChatterTelegramOnboarding: React.FC = () => {
         setStep('connect');
         startStatusCheck();
       } else {
-        console.error('[TelegramOnboarding] Generate failed:', result.data.message);
-        setError(result.data.message || 'Failed to generate link');
+        setError(result.data.message || intl.formatMessage({ id: 'chatter.telegram.error.generic', defaultMessage: 'An error occurred. Please try again.' }));
       }
     } catch (err: unknown) {
-      console.error('[TelegramOnboarding] Error generating link:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(`Erreur: ${errorMessage}`);
+      const errorMessage = err instanceof Error ? err.message : '';
+      setError(intl.formatMessage({ id: 'chatter.telegram.error.generic', defaultMessage: 'An error occurred. Please try again.' }) + (errorMessage ? ` (${errorMessage})` : ''));
     } finally {
       setLoading(false);
     }
-  }, [functions]);
+  }, [intl]);
 
   // ============================================================================
   // CHECK STATUS
   // ============================================================================
 
-  // stopStatusCheck must be declared first to avoid circular dependency
   const stopStatusCheck = useCallback(() => {
-    console.log('[TelegramOnboarding] Stopping status polling');
     if (statusCheckInterval.current) {
       clearInterval(statusCheckInterval.current);
       statusCheckInterval.current = null;
@@ -182,45 +135,33 @@ const ChatterTelegramOnboarding: React.FC = () => {
   }, []);
 
   const checkStatus = useCallback(async () => {
-    console.log('[TelegramOnboarding] checkStatus called');
-
     try {
-      const checkFn = httpsCallable<unknown, LinkStatusData>(functions, 'checkTelegramLinkStatus');
+      const checkFn = httpsCallable<unknown, LinkStatusData>(functionsPayment, 'checkTelegramLinkStatus');
       const result = await checkFn({});
 
-      console.log('[TelegramOnboarding] checkTelegramLinkStatus result:', result.data);
       setLinkStatus(result.data);
-      // Reset error count on success
       errorCountRef.current = 0;
 
       if (result.data.isLinked) {
-        console.log('[TelegramOnboarding] Linked! Stopping polling and going to success');
         stopStatusCheck();
         setStep('success');
         await refreshUser();
       } else if (result.data.status === 'expired') {
-        console.log('[TelegramOnboarding] Link expired');
-        setError('Lien expiré. Cliquez pour en générer un nouveau.');
+        setError(intl.formatMessage({ id: 'chatter.telegram.error.expired', defaultMessage: 'Link expired. Click to generate a new one.' }));
         setLinkData(null);
         stopStatusCheck();
       }
-    } catch (err) {
-      console.error('[TelegramOnboarding] Error checking status:', err);
+    } catch {
       errorCountRef.current += 1;
-
-      // Stop polling after 5 consecutive errors
       if (errorCountRef.current >= 5) {
-        console.log('[TelegramOnboarding] Too many errors, stopping polling');
         stopStatusCheck();
-        setError('Erreur de connexion. Cliquez sur "Ouvrir Telegram" puis revenez ici.');
+        setError(intl.formatMessage({ id: 'chatter.telegram.error.connection', defaultMessage: 'Connection error. Click "Open Telegram" then come back here.' }));
       }
     }
-  }, [functions, refreshUser, stopStatusCheck]);
+  }, [refreshUser, stopStatusCheck, intl]);
 
   const startStatusCheck = useCallback(() => {
-    console.log('[TelegramOnboarding] Starting status polling');
     if (statusCheckInterval.current) return;
-
     checkStatus();
     statusCheckInterval.current = setInterval(checkStatus, 3000);
   }, [checkStatus]);
@@ -230,42 +171,37 @@ const ChatterTelegramOnboarding: React.FC = () => {
   }, [stopStatusCheck]);
 
   // ============================================================================
-  // CONTINUE TO DASHBOARD (after successful connection)
+  // CONTINUE TO DASHBOARD
   // ============================================================================
 
   const handleContinue = () => {
-    console.log('[TelegramOnboarding] handleContinue called');
     navigate(dashboardRoute, { replace: true });
   };
 
   // ============================================================================
-  // SKIP TELEGRAM (continue without)
+  // SKIP TELEGRAM
   // ============================================================================
 
   const handleSkip = async () => {
-    console.log('[TelegramOnboarding] handleSkip called');
     setLoading(true);
     setError(null);
 
     try {
       const skipFn = httpsCallable<unknown, { success: boolean; message: string }>(
-        getFunctions(undefined, 'europe-west3'),
+        functionsPayment,
         'skipTelegramOnboarding'
       );
       const result = await skipFn({});
-
-      console.log('[TelegramOnboarding] skipTelegramOnboarding result:', result.data);
 
       if (result.data.success) {
         await refreshUser();
         navigate(dashboardRoute, { replace: true });
       } else {
-        setError(result.data.message || 'Erreur lors du skip');
+        setError(result.data.message || intl.formatMessage({ id: 'chatter.telegram.error.generic', defaultMessage: 'An error occurred. Please try again.' }));
       }
     } catch (err: unknown) {
-      console.error('[TelegramOnboarding] Error skipping:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur: ${errorMessage}`);
+      const errorMessage = err instanceof Error ? err.message : '';
+      setError(intl.formatMessage({ id: 'chatter.telegram.error.generic', defaultMessage: 'An error occurred. Please try again.' }) + (errorMessage ? ` (${errorMessage})` : ''));
     } finally {
       setLoading(false);
     }
@@ -285,7 +221,9 @@ const ChatterTelegramOnboarding: React.FC = () => {
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             />
-            <p className="text-gray-400">Chargement...</p>
+            <p className="text-gray-400">
+              <FormattedMessage id="chatter.telegram.loading" defaultMessage="Loading..." />
+            </p>
           </div>
         </div>
       </Layout>
@@ -300,27 +238,37 @@ const ChatterTelegramOnboarding: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-center space-y-8"
+      className="text-center space-y-6"
     >
+      {/* $50 Bonus Badge - prominent at top */}
+      <motion.div
+        className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/30 rounded-full px-5 py-3"
+        animate={{ scale: [1, 1.03, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <Gift className="w-6 h-6 text-amber-400" />
+        <span className="text-amber-400 font-bold text-lg">
+          <FormattedMessage id="chatter.telegram.bonusBadge" defaultMessage="+$50 free bonus" />
+        </span>
+      </motion.div>
+
       {/* Telegram Icon */}
-      <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[#0088cc] to-[#00a2e8] flex items-center justify-center">
+      <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[#0088cc] to-[#00a2e8] flex items-center justify-center shadow-lg shadow-blue-500/30">
         <MessageCircle className="w-10 h-10 text-white" />
       </div>
 
       {/* Title */}
       <div>
         <h1 className="text-2xl font-bold text-white mb-2">
-          Avez-vous Telegram ?
+          <FormattedMessage id="chatter.telegram.title" defaultMessage="Do you have Telegram?" />
         </h1>
         <p className="text-gray-400">
-          Connectez-le pour recevoir <span className="text-amber-400 font-bold">$50 de bonus</span>
+          <FormattedMessage
+            id="chatter.telegram.subtitle"
+            defaultMessage="Connect your Telegram to receive a {bonus} bonus"
+            values={{ bonus: <span className="text-amber-400 font-bold">$50</span> }}
+          />
         </p>
-      </div>
-
-      {/* $50 Bonus Badge */}
-      <div className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/30 rounded-full px-4 py-2">
-        <Gift className="w-5 h-5 text-amber-400" />
-        <span className="text-amber-400 font-bold">+$50 bonus offert</span>
       </div>
 
       {/* Two Buttons */}
@@ -340,22 +288,41 @@ const ChatterTelegramOnboarding: React.FC = () => {
           ) : (
             <>
               <CheckCircle className="w-5 h-5" />
-              Oui, connecter mon Telegram
+              <FormattedMessage id="chatter.telegram.yesButton" defaultMessage="Yes, connect my Telegram" />
               <ArrowRight className="w-5 h-5" />
             </>
           )}
         </button>
 
-        {/* NO Button */}
+        {/* NO Button - opens telegram.org/apps in new tab + shows hint */}
         <button
-          onClick={() => setStep('download')}
+          onClick={() => {
+            window.open('https://telegram.org/apps', '_blank');
+            setShowDownloadHint(true);
+          }}
           disabled={loading}
           className="w-full py-4 bg-white/5 border border-white/10 text-white font-medium rounded-xl flex items-center justify-center gap-3 hover:bg-white/10 transition-colors disabled:opacity-50"
         >
-          <X className="w-5 h-5" />
-          Non, je n'ai pas Telegram
+          <Download className="w-5 h-5" />
+          <FormattedMessage id="chatter.telegram.noButton" defaultMessage="No, I don't have Telegram yet" />
         </button>
       </div>
+
+      {/* Download hint - shown after clicking "No" */}
+      {showDownloadHint && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl"
+        >
+          <p className="text-sm text-blue-300">
+            <FormattedMessage
+              id="chatter.telegram.noButtonInstall"
+              defaultMessage='Install Telegram (free), then come back and click "Yes"'
+            />
+          </p>
+        </motion.div>
+      )}
 
       {/* Error */}
       {error && (
@@ -364,9 +331,9 @@ const ChatterTelegramOnboarding: React.FC = () => {
         </div>
       )}
 
-      {/* Info: Telegram is required */}
+      {/* Info */}
       <p className="text-xs text-gray-500 text-center">
-        Telegram est requis pour recevoir vos notifications et bonus
+        <FormattedMessage id="chatter.telegram.requiredInfo" defaultMessage="Telegram is required to receive your notifications and bonuses" />
       </p>
 
       {/* Skip option */}
@@ -375,89 +342,8 @@ const ChatterTelegramOnboarding: React.FC = () => {
         disabled={loading}
         className="text-xs text-gray-600 hover:text-gray-400 underline"
       >
-        Continuer sans Telegram (vous perdrez le bonus de $50)
+        <FormattedMessage id="chatter.telegram.skipButton" defaultMessage="Continue without Telegram (you'll lose the $50 bonus)" />
       </button>
-    </motion.div>
-  );
-
-  // ============================================================================
-  // RENDER: DOWNLOAD STEP
-  // ============================================================================
-
-  const renderDownloadStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="text-center space-y-6"
-    >
-      {/* Icon */}
-      <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[#0088cc] to-[#00a2e8] flex items-center justify-center">
-        <Download className="w-10 h-10 text-white" />
-      </div>
-
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-2">
-          Téléchargez Telegram
-        </h1>
-        <p className="text-gray-400">
-          C'est gratuit et rapide !
-        </p>
-      </div>
-
-      {/* Download Links */}
-      <div className="space-y-3">
-        <a
-          href="https://apps.apple.com/app/telegram-messenger/id686449807"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full py-4 bg-white/5 border border-white/10 text-white font-medium rounded-xl flex items-center justify-center gap-3 hover:bg-white/10 transition-colors"
-        >
-          <span>📱</span>
-          App Store (iPhone)
-          <ExternalLink className="w-4 h-4" />
-        </a>
-
-        <a
-          href="https://play.google.com/store/apps/details?id=org.telegram.messenger"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full py-4 bg-white/5 border border-white/10 text-white font-medium rounded-xl flex items-center justify-center gap-3 hover:bg-white/10 transition-colors"
-        >
-          <span>🤖</span>
-          Google Play (Android)
-          <ExternalLink className="w-4 h-4" />
-        </a>
-
-        <a
-          href="https://telegram.org/apps"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full py-4 bg-white/5 border border-white/10 text-white font-medium rounded-xl flex items-center justify-center gap-3 hover:bg-white/10 transition-colors"
-        >
-          <span>💻</span>
-          Desktop / Web
-          <ExternalLink className="w-4 h-4" />
-        </a>
-      </div>
-
-      {/* After Download */}
-      <div className="pt-4 border-t border-white/10">
-        <p className="text-sm text-gray-400 mb-3">
-          Une fois installé, revenez ici :
-        </p>
-        <button
-          onClick={() => setStep('choice')}
-          className="w-full py-3 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-bold rounded-xl hover:opacity-90 transition-opacity"
-        >
-          J'ai installé Telegram
-        </button>
-      </div>
-
-      {/* Info: Telegram is required */}
-      <p className="text-xs text-gray-500 text-center mt-4">
-        Telegram est requis pour devenir Chatter
-      </p>
     </motion.div>
   );
 
@@ -479,23 +365,21 @@ const ChatterTelegramOnboarding: React.FC = () => {
       {/* Title */}
       <div>
         <h1 className="text-2xl font-bold text-white mb-2">
-          Presque terminé !
+          <FormattedMessage id="chatter.telegram.connect.title" defaultMessage="Almost done!" />
         </h1>
         <p className="text-gray-400">
-          Cliquez sur le bouton puis appuyez sur "Start" dans Telegram
+          <FormattedMessage id="chatter.telegram.connect.subtitle" defaultMessage='Click the button then tap "Start" in Telegram' />
         </p>
       </div>
 
-      {/* Open Telegram Button - use tg:// scheme for better app opening */}
+      {/* Open Telegram Button */}
       <a
         href={linkData?.deepLink}
         onClick={(e) => {
-          // Try to open with tg:// scheme first for better app detection
           const code = linkData?.code;
           if (code) {
             const tgScheme = `tg://resolve?domain=SOSExpatChatterBot&start=${code}`;
             window.location.href = tgScheme;
-            // Fallback to https after a delay if tg:// doesn't work
             setTimeout(() => {
               window.open(linkData?.deepLink, '_blank');
             }, 1000);
@@ -505,7 +389,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
         className="w-full py-4 bg-gradient-to-r from-[#0088cc] to-[#00a2e8] text-white font-bold rounded-xl flex items-center justify-center gap-3 hover:opacity-90 transition-opacity block cursor-pointer"
       >
         <MessageCircle className="w-5 h-5" />
-        Ouvrir Telegram
+        <FormattedMessage id="chatter.telegram.connect.openButton" defaultMessage="Open Telegram" />
         <ExternalLink className="w-5 h-5" />
       </a>
 
@@ -518,18 +402,10 @@ const ChatterTelegramOnboarding: React.FC = () => {
             transition={{ duration: 1.5, repeat: Infinity }}
           />
           <span className="text-gray-300">
-            En attente de connexion...
+            <FormattedMessage id="chatter.telegram.connect.waiting" defaultMessage="Waiting for connection..." />
           </span>
         </div>
       </div>
-
-      {/* Debug Info */}
-      {linkData && (
-        <div className="text-xs text-gray-600 bg-gray-900 p-2 rounded">
-          <p>Deep Link: {linkData.deepLink?.substring(0, 50)}...</p>
-          <p>Code: {linkData.code}</p>
-        </div>
-      )}
 
       {/* Error */}
       {error && (
@@ -539,7 +415,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
             onClick={generateLink}
             className="mt-2 text-sm text-red-400 underline"
           >
-            Générer un nouveau lien
+            <FormattedMessage id="chatter.telegram.connect.regenerate" defaultMessage="Generate a new link" />
           </button>
         </div>
       )}
@@ -553,7 +429,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
         }}
         className="text-sm text-gray-500 hover:text-gray-400"
       >
-        ← Retour
+        &larr; <FormattedMessage id="chatter.telegram.back" defaultMessage="Back" />
       </button>
     </motion.div>
   );
@@ -576,10 +452,10 @@ const ChatterTelegramOnboarding: React.FC = () => {
       {/* Title */}
       <div>
         <h1 className="text-2xl font-bold text-white mb-2">
-          Parfait !
+          <FormattedMessage id="chatter.telegram.success.title" defaultMessage="Perfect!" />
         </h1>
         <p className="text-gray-400">
-          Votre Telegram est connecté
+          <FormattedMessage id="chatter.telegram.success.subtitle" defaultMessage="Your Telegram is connected" />
         </p>
       </div>
 
@@ -601,7 +477,9 @@ const ChatterTelegramOnboarding: React.FC = () => {
           <Gift className="w-8 h-8 text-amber-400" />
           <div>
             <p className="text-2xl font-black text-white">+$50</p>
-            <p className="text-xs text-amber-300">Crédité dans votre tirelire</p>
+            <p className="text-xs text-amber-300">
+              <FormattedMessage id="chatter.telegram.success.bonusCredit" defaultMessage="Credited to your piggy bank" />
+            </p>
           </div>
         </div>
       </div>
@@ -611,7 +489,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
         onClick={handleContinue}
         className="w-full py-4 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-bold rounded-xl flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
       >
-        Accéder au Dashboard
+        <FormattedMessage id="chatter.telegram.success.continueButton" defaultMessage="Go to Dashboard" />
         <ArrowRight className="w-5 h-5" />
       </button>
     </motion.div>
@@ -624,14 +502,13 @@ const ChatterTelegramOnboarding: React.FC = () => {
   return (
     <Layout showFooter={false}>
       <Helmet>
-        <title>Connecter Telegram | SOS-Expat</title>
+        <title>{intl.formatMessage({ id: 'chatter.telegram.seo.title', defaultMessage: 'Connect Telegram | SOS-Expat' })}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <div className="min-h-screen bg-gray-950 py-8 px-4 flex items-center justify-center">
         <div className="max-w-sm w-full">
           {step === 'choice' && renderChoiceStep()}
-          {step === 'download' && renderDownloadStep()}
           {step === 'connect' && renderConnectStep()}
           {step === 'success' && renderSuccessStep()}
         </div>
