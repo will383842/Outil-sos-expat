@@ -269,12 +269,12 @@ const GroupAdminResources: React.FC = () => {
 
           {/* Copy Error Toast */}
           {copyError && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-              <p className="text-red-700 text-sm">{copyError}</p>
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+              <p className="text-red-700 dark:text-red-300 text-sm">{copyError}</p>
               <button
                 onClick={() => setCopyError(null)}
-                className="ml-auto p-1 text-red-400 hover:text-red-600 rounded-full hover:bg-red-100 transition-colors"
+                className="ml-auto p-1 text-red-400 hover:text-red-600 dark:hover:text-red-300 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                 aria-label="Dismiss"
               >
                 <X className="w-4 h-4" />

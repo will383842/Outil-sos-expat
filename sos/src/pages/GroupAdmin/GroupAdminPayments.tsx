@@ -21,14 +21,14 @@ import {
 
 const getWithdrawalStatusBadge = (status: GroupAdminWithdrawalStatus) => {
   const statusConfig: Record<GroupAdminWithdrawalStatus, { bg: string; text: string }> = {
-    pending: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-    approved: { bg: 'bg-blue-100', text: 'text-blue-800' },
-    processing: { bg: 'bg-purple-100', text: 'text-purple-800' },
-    completed: { bg: 'bg-green-100', text: 'text-green-800' },
-    rejected: { bg: 'bg-red-100', text: 'text-red-800' },
-    failed: { bg: 'bg-red-100', text: 'text-red-800' },
+    pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-800 dark:text-yellow-300' },
+    approved: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-800 dark:text-blue-300' },
+    processing: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-800 dark:text-purple-300' },
+    completed: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-300' },
+    rejected: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-300' },
+    failed: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-300' },
   };
-  return statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800' };
+  return statusConfig[status] || { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-800 dark:text-gray-300' };
 };
 
 const PAYMENT_METHODS: { value: GroupAdminPaymentMethod; label: string; description: string }[] = [
@@ -137,7 +137,7 @@ const GroupAdminPayments: React.FC = () => {
     return (
       <GroupAdminDashboardLayout>
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
         </div>
       </GroupAdminDashboardLayout>
     );
@@ -154,16 +154,16 @@ const GroupAdminPayments: React.FC = () => {
           </h1>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500" />
-              <span className="text-red-700">{error}</span>
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400" />
+              <span className="text-red-700 dark:text-red-300">{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span className="text-green-700">{success}</span>
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-lg flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400" />
+              <span className="text-green-700 dark:text-green-300">{success}</span>
             </div>
           )}
 
@@ -342,7 +342,7 @@ const GroupAdminPayments: React.FC = () => {
                               />
                             </span>
                             {(withdrawal.rejectionReason || withdrawal.failureReason) && (
-                              <p className="text-xs text-red-600 mt-1">
+                              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                                 {withdrawal.rejectionReason || withdrawal.failureReason}
                               </p>
                             )}
