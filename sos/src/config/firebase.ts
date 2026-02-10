@@ -475,9 +475,13 @@ const REGION = IS_DEV && RAW_REGION_DEV ? RAW_REGION_DEV : RAW_REGION;
 // ✅ Instance Functions (type inféré automatiquement)
 export const functions = getFunctions(app, REGION);
 
-// ✅ Instance Functions pour les fonctions de paiement (region dédiée pour éviter quota CPU)
+// ✅ Instance Functions pour les fonctions de paiement (region dédiée europe-west4 pour éviter quota CPU)
 const PAYMENT_REGION = (import.meta.env.VITE_FUNCTIONS_PAYMENT_REGION ?? "europe-west3").toString();
 export const functionsPayment = getFunctions(app, PAYMENT_REGION);
+
+// ✅ Instance Functions pour les triggers/call/telegram (europe-west3 - Twilio, Cloud Tasks, Telegram)
+const TRIGGERS_REGION = (import.meta.env.VITE_FUNCTIONS_TRIGGERS_REGION ?? "europe-west3").toString();
+export const functionsWest3 = getFunctions(app, TRIGGERS_REGION);
 
 /** ----------------------------------------
  *  Emulateurs (optionnels en local)
@@ -508,6 +512,9 @@ if (USE_EMULATORS && typeof window !== "undefined") {
   } catch { /* noop */ }
   try {
     connectFunctionsEmulator(functionsPayment, EMU_HOST, PORT_FUNC);
+  } catch { /* noop */ }
+  try {
+    connectFunctionsEmulator(functionsWest3, EMU_HOST, PORT_FUNC);
   } catch { /* noop */ }
   try {
     connectStorageEmulator(storage, EMU_HOST, PORT_STORAGE);

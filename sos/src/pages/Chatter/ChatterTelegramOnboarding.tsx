@@ -14,7 +14,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
 import { httpsCallable } from 'firebase/functions';
-import { functionsPayment } from '@/config/firebase';
+import { functionsWest3 } from '@/config/firebase';
 import { motion } from 'framer-motion';
 import {
   MessageCircle,
@@ -74,7 +74,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
   const dashboardRoute = `/${getTranslatedRouteSlug('chatter-dashboard' as RouteKey, langCode)}`;
   const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
 
-  // Firebase Functions - europe-west3 via shared config (functionsPayment)
+  // Firebase Functions - europe-west3 via shared config (functionsWest3)
 
   // ============================================================================
   // AUTH REDIRECT
@@ -101,7 +101,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
     setError(null);
 
     try {
-      const generateFn = httpsCallable<{ role?: string }, TelegramLinkData>(functionsPayment, 'generateTelegramLink');
+      const generateFn = httpsCallable<{ role?: string }, TelegramLinkData>(functionsWest3, 'generateTelegramLink');
       const result = await generateFn({ role: 'chatter' });
 
       if (result.data.success) {
@@ -136,7 +136,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
 
   const checkStatus = useCallback(async () => {
     try {
-      const checkFn = httpsCallable<unknown, LinkStatusData>(functionsPayment, 'checkTelegramLinkStatus');
+      const checkFn = httpsCallable<unknown, LinkStatusData>(functionsWest3, 'checkTelegramLinkStatus');
       const result = await checkFn({});
 
       setLinkStatus(result.data);
@@ -188,7 +188,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
 
     try {
       const skipFn = httpsCallable<unknown, { success: boolean; message: string }>(
-        functionsPayment,
+        functionsWest3,
         'skipTelegramOnboarding'
       );
       const result = await skipFn({});

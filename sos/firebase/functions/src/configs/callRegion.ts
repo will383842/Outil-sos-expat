@@ -6,16 +6,16 @@
 //
 // 2 regions:
 // 1. europe-west1 (Belgium) - General business logic (~500+ functions)
-// 2. europe-west3 (Frankfurt) - Scheduled/trigger + Call + Payment functions
+// 2. europe-west3 (Frankfurt) - Triggers + Call/webhook + Payment callables
 // ============================================================================
 
 /**
- * Region for all call-related functions.
+ * Region for all call-related functions (webhooks + Cloud Tasks endpoints).
  *
- * These functions are deployed to a separate region to:
- * - Avoid CPU quota exhaustion in europe-west3 (199 functions hitting limit)
- * - Ensure critical call functions always have resources available
- * - Provide dedicated CPU quota in europe-west4 (Netherlands)
+ * These stay in europe-west3 because:
+ * - Twilio webhook URLs are configured to point here
+ * - Cloud Tasks queue (call-scheduler-queue) is in europe-west3
+ * - Changing would require updating Twilio dashboard + Cloud Tasks URLs
  *
  * Functions using this region:
  * - twilioCallWebhook
@@ -27,17 +27,16 @@
  * - setProviderAvailableTask
  * - forceEndCallTask
  * - busySafetyTimeoutTask
- * - createAndScheduleCallHTTPS (optional - can stay in europe-west1 for now)
  */
 export const CALL_FUNCTIONS_REGION = "europe-west3" as const;
 
 /**
- * Region for payment-related functions.
+ * Region for payment-related callable functions.
  *
- * Payment functions are deployed to europe-west4 alongside call functions:
- * - Ensure financial operations are never blocked by CPU quota exhaustion
- * - Dedicated quota in europe-west4 (Netherlands) separate from background functions
- * - Co-locate with call functions for shared infrastructure benefits
+ * Payment callables are deployed to europe-west3 alongside call functions:
+ * - Separate from europe-west1 (500+ functions) to avoid CPU quota exhaustion
+ * - Frontend calls these via httpsCallable with dedicated region parameter
+ * - NOTE: europe-west4 migration blocked by GCP "Project failed to initialize" quota
  *
  * Functions using this region:
  * - cancelWithdrawal
@@ -48,6 +47,8 @@ export const CALL_FUNCTIONS_REGION = "europe-west3" as const;
  * - requestWithdrawal
  * - savePaymentMethod
  * - setDefaultPaymentMethod
+ * - createPaymentIntent
+ * - getRecommendedPaymentGateway
  */
 export const PAYMENT_FUNCTIONS_REGION = "europe-west3" as const;
 
