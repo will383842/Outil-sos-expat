@@ -1,0 +1,214 @@
+/* Dark theme styles for registration phone input */
+
+.dark-phone-wrapper .react-tel-input {
+  position: relative !important;
+}
+
+.dark-phone-wrapper .react-tel-input .country-list {
+  position: absolute !important;
+  background-color: #111827 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  z-index: 100 !important;
+  margin-top: 4px !important;
+  width: 280px !important;
+  left: 0 !important;
+  pointer-events: auto !important;
+}
+
+.dark-phone-wrapper .react-tel-input .country-list .country {
+  padding: 10px 12px !important;
+  color: #d1d5db !important;
+  background-color: transparent !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.dark-phone-wrapper .react-tel-input .country-list .country:hover,
+.dark-phone-wrapper .react-tel-input .country-list .country.highlight {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-phone-wrapper .react-tel-input .country-list .country.active {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  font-weight: 600 !important;
+}
+
+.dark-phone-wrapper .react-tel-input .country-list .country-name {
+  color: #d1d5db !important;
+  margin-right: 8px !important;
+}
+
+.dark-phone-wrapper .react-tel-input .country-list .dial-code {
+  color: #6b7280 !important;
+}
+
+.dark-phone-wrapper .react-tel-input .flag-dropdown {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  border-right: none !important;
+  border-radius: 16px 0 0 16px !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  transition: all 0.2s ease !important;
+}
+
+.dark-phone-wrapper .react-tel-input .flag-dropdown:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark-phone-wrapper .react-tel-input .flag-dropdown.open {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.dark-phone-wrapper .react-tel-input .form-control {
+  width: 100% !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  color: #ffffff !important;
+  padding: 14px 16px 14px 64px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  pointer-events: auto !important;
+  cursor: text !important;
+  transition: all 0.2s ease !important;
+  min-height: 48px !important;
+}
+
+.dark-phone-wrapper .react-tel-input .form-control:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Theme-aware focus ring using CSS custom properties */
+.dark-phone-wrapper .react-tel-input .form-control:focus-visible {
+  outline: none !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 0 0 3px rgba(var(--phone-accent-rgb, 255, 255, 255), 0.2) !important;
+}
+
+/* Fallback for browsers without :focus-visible */
+.dark-phone-wrapper .react-tel-input .form-control:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+.dark-phone-wrapper .react-tel-input .form-control::placeholder {
+  color: #6b7280 !important;
+}
+
+/* CSS custom property for accent color from data attribute */
+.dark-phone-wrapper[data-accent-rgb] .react-tel-input .form-control:focus-visible {
+  box-shadow: 0 0 0 3px rgba(var(--phone-accent-rgb, 255, 255, 255), 0.2) !important;
+}
+
+/* Scrollbar dark */
+.dark-phone-wrapper .react-tel-input .country-list::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.dark-phone-wrapper .react-tel-input .country-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark-phone-wrapper .react-tel-input .country-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 4px !important;
+}
+
+.dark-phone-wrapper .react-tel-input .country-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .dark-phone-wrapper .react-tel-input .country-list {
+    width: min(300px, calc(100vw - 40px)) !important;
+    max-width: 300px !important;
+  }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .dark-phone-wrapper .react-tel-input .flag-dropdown,
+  .dark-phone-wrapper .react-tel-input .form-control,
+  .dark-reg-form [class*="-control"] {
+    transition: none !important;
+  }
+}
+
+/* MultiLanguageSelect / SpecialtySelect dark theme overrides */
+.dark-reg-form [class*="-control"] {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  min-height: 48px !important;
+}
+
+.dark-reg-form [class*="-control"]:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark-reg-form [class*="-menu"] {
+  background-color: #111827 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  z-index: 100 !important;
+}
+
+.dark-reg-form [class*="-option"] {
+  color: #d1d5db !important;
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.dark-reg-form [class*="-option"]:hover,
+.dark-reg-form [class*="-option--is-focused"] {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-reg-form [class*="-singleValue"],
+.dark-reg-form [class*="-input"] input,
+.dark-reg-form [class*="-placeholder"] {
+  color: #d1d5db !important;
+}
+
+.dark-reg-form [class*="-multiValue"] {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+.dark-reg-form [class*="-multiValue__label"] {
+  color: #d1d5db !important;
+}
+
+.dark-reg-form [class*="-multiValue__remove"]:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.dark-reg-form [class*="-indicatorSeparator"] {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-reg-form [class*="-dropdownIndicator"],
+.dark-reg-form [class*="-clearIndicator"] {
+  color: #6b7280 !important;
+}
+
+/* Ensure font-size >= 16px on all inputs to prevent iOS zoom */
+.dark-reg-form input,
+.dark-reg-form [class*="-input"] input {
+  font-size: 16px !important;
+}
