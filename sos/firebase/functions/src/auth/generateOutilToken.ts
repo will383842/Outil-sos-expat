@@ -157,14 +157,31 @@ async function syncLinkedProvidersToOutil(
 
     // 3a. Créer/mettre à jour le document users dans l'Outil
     const outilUserRef = outilDb.collection("users").doc(callerUid);
-    batch.set(outilUserRef, {
+    const outilUserData: Record<string, any> = {
       linkedProviderIds: linkedProviderIds,
       activeProviderId: linkedProviderIds[0],
       email: callerEmail?.toLowerCase() || "",
       role: "provider",
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       source: "sso-sync",
-    }, { merge: true });
+    };
+    // Sync subscription fields so Firestore rules fallback works
+    if (callerData?.subscriptionStatus) {
+      outilUserData.subscriptionStatus = callerData.subscriptionStatus;
+    }
+    if (callerData?.forcedAIAccess === true) {
+      outilUserData.forcedAIAccess = true;
+    }
+    // Also check sos_profiles for forcedAIAccess (admin often sets it there)
+    const callerProfileDoc = await sosDb.collection("sos_profiles").doc(callerUid).get();
+    const callerProfileData = callerProfileDoc.data();
+    if (callerProfileData?.forcedAIAccess === true) {
+      outilUserData.forcedAIAccess = true;
+    }
+    if (callerProfileData?.subscriptionStatus && !outilUserData.subscriptionStatus) {
+      outilUserData.subscriptionStatus = callerProfileData.subscriptionStatus;
+    }
+    batch.set(outilUserRef, outilUserData, { merge: true });
 
     // 3b. Créer/mettre à jour les providers dans l'Outil
     for (const provider of providersToSync) {

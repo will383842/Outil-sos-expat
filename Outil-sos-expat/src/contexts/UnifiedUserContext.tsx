@@ -393,20 +393,15 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             const userRef = doc(db, "users", firebaseUser.uid);
             const userSnap = await getDoc(userRef);
 
-            // FIX: Use ssoClaimsRef (synchronous) instead of subscription state (async)
-            // to avoid race condition where state hasn't updated yet
-            const hasActiveSub = subscription.hasActiveSubscription || ssoClaimsRef.current.hasActiveSubscription;
-            const effectiveSubStatus = hasActiveSub ? "active" : "inactive";
-
             if (!userSnap.exists()) {
+              // Create user doc with only non-protected fields.
+              // Protected fields (role, subscriptionStatus, linkedProviderIds,
+              // activeProviderId) are set by server-side syncLinkedProvidersToOutil.
+              // Using merge:true means if the server creates the doc first (race),
+              // this becomes an update which would be blocked for protected fields.
               if (import.meta.env.DEV) console.log("[UnifiedUser] Creating missing users document for provider:", providerDoc.id);
               try {
                 await setDoc(userRef, {
-                  linkedProviderIds: [providerDoc.id],
-                  activeProviderId: providerDoc.id,
-                  subscriptionStatus: effectiveSubStatus,
-                  subscriptionTier: subscription.planName || ssoClaimsRef.current.role || "free",
-                  role: "provider",
                   email: emailLower,
                   name: data.name || "Provider",
                   createdAt: serverTimestamp(),
@@ -418,30 +413,12 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
                 console.error("[UnifiedUser] Failed to create users document:", createErr);
               }
             } else {
-              // Update linkedProviderIds, role, and subscriptionStatus if needed
-              const userData = userSnap.data();
-              const linkedIds = userData.linkedProviderIds || [];
-              const needsProviderLink = !linkedIds.includes(providerDoc.id);
-              const needsRoleUpdate = userData.role !== "provider" && userData.role !== "admin";
-              const needsSubUpdate = hasActiveSub && (!userData.subscriptionStatus || userData.subscriptionStatus === "inactive" || userData.subscriptionStatus === "user");
-
-              if (needsProviderLink || needsRoleUpdate || needsSubUpdate) {
-                if (import.meta.env.DEV) console.log("[UnifiedUser] Updating user doc:", { needsProviderLink, needsRoleUpdate, needsSubUpdate });
-                const updateData: Record<string, any> = {
-                  activeProviderId: providerDoc.id,
-                  updatedAt: serverTimestamp(),
-                };
-                if (needsProviderLink) {
-                  updateData.linkedProviderIds = [...linkedIds, providerDoc.id];
-                }
-                if (needsRoleUpdate) {
-                  updateData.role = "provider";
-                }
-                if (needsSubUpdate) {
-                  updateData.subscriptionStatus = effectiveSubStatus;
-                }
-                await updateDoc(userRef, updateData);
-              }
+              // Doc exists (likely created by server-side syncLinkedProvidersToOutil)
+              // IMPORTANT: Do NOT write protected fields (role, subscriptionStatus,
+              // linkedProviderIds, activeProviderId) - these are blocked by Firestore
+              // update rules (line 95-97 of firestore.rules) for non-admin users.
+              // The server sync already sets these fields correctly.
+              if (import.meta.env.DEV) console.log("[UnifiedUser] User doc exists (from server sync), skipping protected field updates");
             }
           }
         }

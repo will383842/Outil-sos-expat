@@ -54,10 +54,12 @@ service cloud.firestore {
       return isSignedIn() && (
         isAdmin() ||
         request.auth.token.subscriptionStatus == 'active' ||
+        request.auth.token.subscriptionStatus == 'trialing' ||
         request.auth.token.forcedAccess == true ||
         (userDocExists() && (
           getUserData().subscriptionStatus == 'active' ||
-          getUserData().subscriptionStatus == 'trialing'
+          getUserData().subscriptionStatus == 'trialing' ||
+          getUserData().forcedAIAccess == true
         ))
       );
     }
