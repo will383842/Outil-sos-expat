@@ -1213,7 +1213,7 @@ export const twilioAmdTwiml = onRequest(
     memory: '256MiB',  // P0 FIX: 128MiB was too low (firebase-admin requires ~150MB)
     cpu: 0.25,
     maxInstances: 10,
-    minInstances: 1,  // P0 FIX: Keep 1 instance warm to avoid 5-8s cold start delay
+    minInstances: 0,  // Reduced to 0 to free CPU quota for createPaymentIntent. AMD TwiML is called after AMD detection completes, brief cold start acceptable.
     concurrency: 1
   },
   async (req: Request, res: Response) => {

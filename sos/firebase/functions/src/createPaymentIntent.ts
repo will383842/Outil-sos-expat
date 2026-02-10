@@ -80,7 +80,7 @@ const FUNCTION_OPTIONS = {
   memory: '256MiB' as const,
   concurrency: 1,
   timeoutSeconds: 60,
-  minInstances: 0,  // Temporarily 0 to free quota - TODO: restore to 1 after quota increase
+  minInstances: 1,  // Restored: payment reliability > quota savings. twilioAmdTwiml reduced to 0 to compensate.
   maxInstances: 3,
   cors: [
     'https://sos-expat.com',
