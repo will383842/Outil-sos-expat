@@ -64,8 +64,11 @@ export async function getDocumentRest<T = Record<string, any>>(
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const url = `${BASE_URL}/${collectionPath}/${documentId}`;
-    console.log(`📡 [REST API] Fetching document: ${url}`);
+    let url = `${BASE_URL}/${collectionPath}/${documentId}`;
+    if (API_KEY) {
+      url += `?key=${API_KEY}`;
+    }
+    console.log(`📡 [REST API] Fetching document: ${collectionPath}/${documentId}`);
 
     const response = await fetch(url, {
       method: 'GET',
@@ -243,7 +246,10 @@ export async function runQueryRest<T = Record<string, any>>(
       }
     }
 
-    const url = `${BASE_URL}:runQuery`;
+    let url = `${BASE_URL}:runQuery`;
+    if (API_KEY) {
+      url += `?key=${API_KEY}`;
+    }
     console.log(`📡 [REST API] Running query on ${collectionPath}`, { filters, limit });
 
     const response = await fetch(url, {

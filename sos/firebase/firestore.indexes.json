@@ -263,6 +263,15 @@
       ]
     },
     {
+      "collectionGroup": "sos_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isApproved", "order": "ASCENDING" },
+        { "fieldPath": "isVisible", "order": "ASCENDING" },
+        { "fieldPath": "type", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "security_alerts",
       "queryScope": "COLLECTION",
       "fields": [
