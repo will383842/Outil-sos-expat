@@ -13,6 +13,7 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { getPaymentService } from '../services/paymentService';
 import { WithdrawalRequest, WithdrawalStatus, PaymentUserType } from '../types';
+import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -130,7 +131,7 @@ function validateInput(input: GetWithdrawalHistoryInput): void {
  */
 export const getWithdrawalHistory = onCall(
   {
-    region: 'europe-west3',
+    region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: true,

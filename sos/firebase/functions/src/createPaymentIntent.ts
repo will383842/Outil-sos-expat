@@ -24,6 +24,7 @@ import {
   STRIPE_MODE,
   isProduction as isProductionEnv,
 } from './lib/stripe';
+import { PAYMENT_FUNCTIONS_REGION } from './configs/callRegion';
 
 /* ────────────────────────────────────────────────────────────────────────────
    (A) LIMITS — placé tout en haut, avant toute utilisation
@@ -75,7 +76,7 @@ function getLimits() {
    Config & Params
    ──────────────────────────────────────────────────────────────────────────── */
 const FUNCTION_OPTIONS = {
-  region: 'europe-west3',
+  region: PAYMENT_FUNCTIONS_REGION,
   memory: '256MiB' as const,
   concurrency: 1,
   timeoutSeconds: 60,

@@ -13,6 +13,7 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { getPaymentService } from '../services/paymentService';
 import { UserPaymentMethod, PaymentUserType } from '../types';
+import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -82,7 +83,7 @@ async function getUserType(userId: string): Promise<PaymentUserType | null> {
  */
 export const getPaymentMethods = onCall(
   {
-    region: 'europe-west3',
+    region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: true,

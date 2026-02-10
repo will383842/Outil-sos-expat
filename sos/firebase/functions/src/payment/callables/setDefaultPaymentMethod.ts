@@ -10,6 +10,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { UserPaymentMethod, PaymentUserType } from '../types';
+import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -52,7 +53,7 @@ interface SetDefaultPaymentMethodOutput {
  */
 export const setDefaultPaymentMethod = onCall(
   {
-    region: 'europe-west3',
+    region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: true,

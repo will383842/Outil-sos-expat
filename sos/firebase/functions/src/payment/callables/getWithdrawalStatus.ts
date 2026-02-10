@@ -17,6 +17,7 @@ import {
   TrackingTimelineItem,
   WithdrawalStatus,
 } from '../types';
+import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -223,7 +224,7 @@ function getEstimatedCompletion(withdrawal: WithdrawalRequest): string | undefin
  */
 export const getWithdrawalStatus = onCall(
   {
-    region: 'europe-west3',
+    region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: true,

@@ -6,22 +6,21 @@
 //
 // 3 regions:
 // 1. europe-west1 (Belgium) - General business logic (~500+ functions)
-// 2. europe-west3 (Frankfurt) - Call functions (isolated for CPU quota)
-// 3. europe-west3 (Frankfurt) - Payment functions (co-located with calls
-//    for reliability isolation from general functions)
+// 2. europe-west3 (Frankfurt) - Scheduled/trigger functions (~180 background)
+// 3. europe-west4 (Netherlands) - Call + Payment functions (~17 critical)
 //
-// Calls and payments share europe-west3 to isolate them from the CPU quota
-// pressure of 500+ general functions in europe-west1. This ensures that
-// real-time call handling and financial operations always have resources.
+// Call and payment functions are in europe-west4 to avoid the CPU quota
+// exhaustion in europe-west3 (199 functions hitting run.googleapis.com/cpu_allocation).
+// This gives real-time call handling and financial operations a dedicated quota.
 // ============================================================================
 
 /**
  * Region for all call-related functions.
  *
  * These functions are deployed to a separate region to:
- * - Avoid CPU quota exhaustion from other functions (500+ functions in europe-west1)
+ * - Avoid CPU quota exhaustion in europe-west3 (199 functions hitting limit)
  * - Ensure critical call functions always have resources available
- * - Provide isolation for the call system
+ * - Provide dedicated CPU quota in europe-west4 (Netherlands)
  *
  * Functions using this region:
  * - twilioCallWebhook
@@ -35,14 +34,14 @@
  * - busySafetyTimeoutTask
  * - createAndScheduleCallHTTPS (optional - can stay in europe-west1 for now)
  */
-export const CALL_FUNCTIONS_REGION = "europe-west3" as const;
+export const CALL_FUNCTIONS_REGION = "europe-west4" as const;
 
 /**
  * Region for payment-related functions.
  *
- * Payment functions are deployed to the same isolated region as calls to:
- * - Ensure financial operations are never blocked by CPU quota from general functions
- * - Provide reliability isolation for withdrawal processing
+ * Payment functions are deployed to europe-west4 alongside call functions:
+ * - Ensure financial operations are never blocked by CPU quota exhaustion
+ * - Dedicated quota in europe-west4 (Netherlands) separate from background functions
  * - Co-locate with call functions for shared infrastructure benefits
  *
  * Functions using this region:
@@ -55,7 +54,7 @@ export const CALL_FUNCTIONS_REGION = "europe-west3" as const;
  * - savePaymentMethod
  * - setDefaultPaymentMethod
  */
-export const PAYMENT_FUNCTIONS_REGION = "europe-west3" as const;
+export const PAYMENT_FUNCTIONS_REGION = "europe-west4" as const;
 
 /**
  * Default region for non-call, non-payment functions.

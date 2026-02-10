@@ -33,6 +33,7 @@ import { sendPaymentNotifications, ENCRYPTION_KEY, OUTIL_SYNC_API_KEY } from "./
 import { encryptPhoneNumber } from "./utils/encryption";
 // P0 FIX: Import setProviderBusy to reserve provider immediately after payment authorization
 import { setProviderBusy } from "./callables/providerStatusManager";
+import { PAYMENT_FUNCTIONS_REGION } from "./configs/callRegion";
 
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import {
@@ -4108,7 +4109,7 @@ export const checkPayPalPayoutStatus = onCall(
  */
 export const getRecommendedPaymentGateway = onCall(
   {
-    region: "europe-west3",
+    region: PAYMENT_FUNCTIONS_REGION,
     cors: true,
   },
   async (request) => {

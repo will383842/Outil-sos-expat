@@ -17,6 +17,7 @@ import {
   MobileMoneyDetails,
   PaymentUserType,
 } from '../types';
+import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -171,7 +172,7 @@ function validateMobileMoneyDetails(details: MobileMoneyDetails): void {
  */
 export const savePaymentMethod = onCall(
   {
-    region: 'europe-west3',
+    region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: true,
