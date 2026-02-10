@@ -372,6 +372,9 @@ const AdminInfluencersConfig = lazy(
 const AdminInfluencersLeaderboard = lazy(
   () => import("../../pages/admin/Influencers/AdminInfluencersLeaderboard")
 );
+const AdminInfluencersResources = lazy(
+  () => import("../../pages/admin/Influencers/AdminInfluencersResources")
+);
 
 // ===== LAZY IMPORTS - BLOGGER =====
 const AdminBloggersList = lazy(
@@ -395,6 +398,9 @@ const AdminBloggersGuide = lazy(
 const AdminBloggersWidgets = lazy(
   () => import("../../pages/admin/Bloggers/AdminBloggersWidgets")
 );
+const AdminBloggersArticles = lazy(
+  () => import("../../pages/admin/Bloggers/AdminBloggersArticles")
+);
 
 // ===== LAZY IMPORTS - GROUPADMIN =====
 const AdminGroupAdminsList = lazy(
@@ -415,6 +421,9 @@ const AdminGroupAdminsResources = lazy(
 const AdminGroupAdminsPosts = lazy(
   () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsPosts")
 );
+const AdminGroupAdminsRecruitments = lazy(
+  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsRecruitments")
+);
 
 // ===== LAZY IMPORTS - CENTRALIZED PAYMENTS =====
 const AdminPaymentsDashboard = lazy(
@@ -425,6 +434,11 @@ const AdminPaymentDetail = lazy(
 );
 const AdminPaymentConfig = lazy(
   () => import("../../pages/admin/Payments/AdminPaymentConfig")
+);
+
+// ===== LAZY IMPORTS - TOOLBOX =====
+const AdminToolbox = lazy(
+  () => import("../../pages/admin/AdminToolbox")
 );
 
 // ===== LAZY IMPORTS - TRAINING =====
@@ -1221,6 +1235,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="influencers/resources"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminInfluencersResources />
+          </Suspense>
+        }
+      />
 
       {/* 📝 BLOGGERS */}
       <Route
@@ -1279,6 +1301,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="bloggers/articles"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggersArticles />
+          </Suspense>
+        }
+      />
 
       {/* 👥 GROUPADMINS (Facebook Group Administrators) */}
       <Route
@@ -1302,6 +1332,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGroupAdminsPayments />
+          </Suspense>
+        }
+      />
+      <Route
+        path="groupadmins/recruitments"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminsRecruitments />
           </Suspense>
         }
       />
@@ -1378,6 +1416,16 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminPaymentConfig />
+          </Suspense>
+        }
+      />
+
+      {/* 🧰 BOITE A OUTILS */}
+      <Route
+        path="toolbox"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminToolbox />
           </Suspense>
         }
       />
@@ -1767,15 +1815,18 @@ export const useAdminRouteValidation = () => {
       "/admin/influencers/payments",
       "/admin/influencers/leaderboard",
       "/admin/influencers/config",
+      "/admin/influencers/resources",
       "/admin/bloggers",
       "/admin/bloggers/:bloggerId",
       "/admin/bloggers/payments",
       "/admin/bloggers/resources",
       "/admin/bloggers/guide",
+      "/admin/bloggers/articles",
       "/admin/bloggers/config",
       "/admin/groupadmins",
       "/admin/groupadmins/:groupAdminId",
       "/admin/groupadmins/payments",
+      "/admin/groupadmins/recruitments",
       "/admin/groupadmins/resources",
       "/admin/groupadmins/posts",
       "/admin/groupadmins/config",

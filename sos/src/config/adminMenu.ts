@@ -49,6 +49,9 @@ import {
   LogIn,
   PieChart,
   Cloud,
+  // Toolbox icons
+  Wrench,
+  Link2,
   // Affiliate icons
   Handshake,
   UserPlus,
@@ -162,13 +165,7 @@ export const adminMenuTree: AdminMenuItem[] = [
             icon: FileText,
             descriptionKey: "admin.menu.bloggersUsers.description",
           },
-          {
-            id: "group-admins",
-            labelKey: "admin.menu.groupAdmins",
-            path: "/admin/users/group-admins",
-            icon: Shield,
-            descriptionKey: "admin.menu.groupAdmins.description",
-          },
+          // Group Admins moved to dedicated section below
         ],
       },
       // Sous-section : AAA PROFILES
@@ -675,6 +672,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.influencersLeaderboard.description",
       },
       {
+        id: "influencers-resources",
+        labelKey: "admin.menu.influencersResources",
+        path: "/admin/influencers/resources",
+        icon: FolderOpen,
+        badge: "NEW",
+        descriptionKey: "admin.menu.influencersResources.description",
+      },
+      {
         id: "influencers-config",
         labelKey: "admin.menu.influencersConfig",
         path: "/admin/influencers/config",
@@ -723,6 +728,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.bloggersGuide.description",
       },
       {
+        id: "bloggers-articles",
+        labelKey: "admin.menu.bloggersArticles",
+        path: "/admin/bloggers/articles",
+        icon: FileText,
+        badge: "NEW",
+        descriptionKey: "admin.menu.bloggersArticles.description",
+      },
+      {
         id: "bloggers-widgets",
         labelKey: "admin.menu.bloggersWidgets",
         path: "/admin/bloggers/widgets",
@@ -736,6 +749,59 @@ export const adminMenuTree: AdminMenuItem[] = [
         path: "/admin/bloggers/config",
         icon: Settings,
         descriptionKey: "admin.menu.bloggersConfig.description",
+      },
+    ],
+  },
+
+  // ===== 👥 GROUPADMINS (Priorité 6.75 - Programme Group Administrators) =====
+  {
+    id: "groupadmins",
+    labelKey: "admin.menu.groupAdminsSection",
+    icon: Shield,
+    descriptionKey: "admin.menu.groupAdminsSection.description",
+    children: [
+      {
+        id: "groupadmins-list",
+        labelKey: "admin.menu.groupAdminsList",
+        path: "/admin/groupadmins",
+        icon: Users,
+        descriptionKey: "admin.menu.groupAdminsList.description",
+      },
+      {
+        id: "groupadmins-recruitments",
+        labelKey: "admin.menu.groupAdminsRecruitments",
+        path: "/admin/groupadmins/recruitments",
+        icon: UserPlus,
+        badge: "NEW",
+        descriptionKey: "admin.menu.groupAdminsRecruitments.description",
+      },
+      {
+        id: "groupadmins-payments",
+        labelKey: "admin.menu.groupAdminsPayments",
+        path: "/admin/groupadmins/payments",
+        icon: Wallet,
+        descriptionKey: "admin.menu.groupAdminsPayments.description",
+      },
+      {
+        id: "groupadmins-resources",
+        labelKey: "admin.menu.groupAdminsResources",
+        path: "/admin/groupadmins/resources",
+        icon: FolderOpen,
+        descriptionKey: "admin.menu.groupAdminsResources.description",
+      },
+      {
+        id: "groupadmins-posts",
+        labelKey: "admin.menu.groupAdminsPosts",
+        path: "/admin/groupadmins/posts",
+        icon: FileText,
+        descriptionKey: "admin.menu.groupAdminsPosts.description",
+      },
+      {
+        id: "groupadmins-config",
+        labelKey: "admin.menu.groupAdminsConfig",
+        path: "/admin/groupadmins/config",
+        icon: Settings,
+        descriptionKey: "admin.menu.groupAdminsConfig.description",
       },
     ],
   },
@@ -845,6 +911,24 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.securityAlerts.description",
           },
         ],
+      },
+    ],
+  },
+
+  // ===== BOITE A OUTILS (Priorite 7.5 - Outils externes) =====
+  {
+    id: "toolbox",
+    labelKey: "admin.menu.toolbox",
+    icon: Wrench,
+    descriptionKey: "admin.menu.toolbox.description",
+    children: [
+      {
+        id: "toolbox-backlink-engine",
+        labelKey: "admin.menu.toolbox.backlinkEngine",
+        path: "/admin/toolbox",
+        icon: Link2,
+        badge: "NEW",
+        descriptionKey: "admin.menu.toolbox.backlinkEngine.description",
       },
     ],
   },
