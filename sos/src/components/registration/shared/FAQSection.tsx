@@ -22,7 +22,7 @@ const FAQSection: React.FC<FAQSectionProps> = React.memo(({ theme, intl, faqCoun
 
   return (
     <section
-      className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-lg mt-8"
+      className="relative z-[1] bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-lg mt-8"
       aria-labelledby="faq-heading"
     >
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
