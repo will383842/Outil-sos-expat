@@ -38,15 +38,15 @@ module.exports = {
     '!src/**/index.ts'
   ],
 
-  // Coverage thresholds (optional, can be enabled later)
-  // coverageThreshold: {
-  //   global: {
-  //     branches: 80,
-  //     functions: 80,
-  //     lines: 80,
-  //     statements: 80
-  //   }
-  // },
+  // Coverage thresholds - enforced to prevent untested code from being deployed
+  coverageThreshold: {
+    global: {
+      branches: 30,
+      functions: 30,
+      lines: 30,
+      statements: 30
+    }
+  },
 
   // Setup files (run before each test)
   setupFilesAfterEnv: [],

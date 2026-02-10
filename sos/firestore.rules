@@ -1136,9 +1136,9 @@ service cloud.firestore {
     match /ad_conversions/{conversionId} {
       // Seuls les admins peuvent lire les données d'attribution
       allow read: if isAdmin() || isDev();
-      // SECURITY FIX: Validate required fields to prevent DDoS/abuse
-      // Still allows unauthenticated visitors for tracking, but with structure validation
-      allow create: if request.resource.data.keys().hasAll(['source', 'timestamp']) &&
+      // SECURITY FIX: Require authentication + validate required fields to prevent denial-of-wallet abuse
+      allow create: if request.auth != null &&
+                    request.resource.data.keys().hasAll(['source', 'timestamp']) &&
                     request.resource.data.source is string &&
                     request.resource.data.source.size() > 0 &&
                     request.resource.data.source.size() < 100 &&

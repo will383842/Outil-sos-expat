@@ -533,6 +533,15 @@ export interface RegisterBloggerInput {
   blogDescription?: string;
   definitiveRoleAcknowledged: boolean;
   recruiterCode?: string;
+  termsAcceptedAt?: string;
+  termsVersion?: string;
+  termsType?: string;
+  termsAcceptanceMeta?: {
+    userAgent: string;
+    language: string;
+    timestamp: number;
+    acceptanceMethod: string;
+  };
 }
 
 export interface RegisterBloggerResponse {

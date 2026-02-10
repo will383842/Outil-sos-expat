@@ -888,7 +888,13 @@ export class StripeManager {
           useDirectCharges = paymentData?.useDirectCharges === true;
           // P1 FIX: Stocker providerAmount pour utilisation ultérieure (évite le fallback 80%)
           if (paymentData?.providerAmount) {
-            storedProviderAmountCents = Math.round(paymentData.providerAmount * 100);
+            // FIX: Detect format — providerAmountEuros exists = new format (providerAmount is in cents)
+            if (paymentData.providerAmountEuros !== undefined) {
+              storedProviderAmountCents = Math.round(Number(paymentData.providerAmount));
+            } else {
+              // Legacy format: providerAmount was in euros
+              storedProviderAmountCents = Math.round(Number(paymentData.providerAmount) * 100);
+            }
           }
 
           console.log('[capturePayment] Payment document retrieved:', {
@@ -1361,10 +1367,14 @@ export class StripeManager {
 
     if (!paymentDoc.empty) {
       const paymentData = paymentDoc.docs[0].data();
-      // Priorité: providerAmountCents > providerAmount (converted) > metadata
-      if (paymentData.providerAmountCents) {
+      // FIX: Detect format — providerAmountEuros exists = new format (providerAmount is in cents)
+      if (paymentData.providerAmountEuros !== undefined && paymentData.providerAmount) {
+        // Post-P0 format: providerAmount is stored in cents by savePaymentRecord
+        providerAmountCents = Math.round(Number(paymentData.providerAmount));
+      } else if (paymentData.providerAmountCents) {
         providerAmountCents = Number(paymentData.providerAmountCents);
       } else if (paymentData.providerAmount) {
+        // Legacy format: providerAmount was in euros
         providerAmountCents = Math.round(Number(paymentData.providerAmount) * 100);
       } else if (paymentData.metadata?.providerAmountCents) {
         providerAmountCents = Number(paymentData.metadata.providerAmountCents);

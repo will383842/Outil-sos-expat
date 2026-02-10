@@ -155,6 +155,27 @@ export async function createCommission(
       }
     }
 
+    // 4b. Duplicate check (same sourceId + chatterId + type)
+    if (source.id) {
+      const duplicateCheck = await db
+        .collection("chatter_commissions")
+        .where("chatterId", "==", chatterId)
+        .where("type", "==", type)
+        .where("sourceId", "==", source.id)
+        .limit(1)
+        .get();
+
+      if (!duplicateCheck.empty) {
+        logger.warn("[createCommission] Duplicate commission detected", {
+          chatterId,
+          type,
+          sourceId: source.id,
+          existingCommissionId: duplicateCheck.docs[0].id,
+        });
+        return { success: false, error: "Commission already exists for this action" };
+      }
+    }
+
     // 5. Calculate base amount
     let baseAmount: number;
 

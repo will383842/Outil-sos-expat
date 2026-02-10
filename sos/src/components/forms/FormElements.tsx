@@ -734,7 +734,7 @@ interface FormButtonProps {
   onClick?: () => void;
   children: React.ReactNode;
   className?: string;
-  accentColor?: 'red' | 'purple';
+  accentColor?: 'red' | 'purple' | 'amber' | 'indigo';
 }
 
 export const FormButton: React.FC<FormButtonProps> = ({
@@ -749,9 +749,14 @@ export const FormButton: React.FC<FormButtonProps> = ({
 }) => {
   const baseStyle = variant === 'primary' ? formStyles.buttonPrimary : formStyles.buttonSecondary;
 
-  // Override gradient for purple accent
-  const colorOverride = variant === 'primary' && accentColor === 'purple'
-    ? 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 shadow-purple-500/25 hover:shadow-purple-500/30'
+  // Override gradient for non-red accents
+  const colorOverrides: Record<string, string> = {
+    purple: 'from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 shadow-purple-500/25 hover:shadow-purple-500/30',
+    amber: 'from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-black shadow-amber-500/25 hover:shadow-amber-500/30',
+    indigo: 'from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 shadow-indigo-500/25 hover:shadow-indigo-500/30',
+  };
+  const colorOverride = variant === 'primary' && accentColor !== 'red'
+    ? colorOverrides[accentColor] || ''
     : '';
 
   return (

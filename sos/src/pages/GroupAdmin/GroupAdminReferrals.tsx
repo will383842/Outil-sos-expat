@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import Layout from '@/components/layout/Layout';
+import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
@@ -65,26 +65,26 @@ const GroupAdminReferrals: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <GroupAdminDashboardLayout>
+        <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
         </div>
-      </Layout>
+      </GroupAdminDashboardLayout>
     );
   }
 
   const recruitmentLink = getGroupAdminRecruitmentLink(affiliateCode);
 
   return (
-    <Layout>
+    <GroupAdminDashboardLayout>
       <SEOHead description="Manage your Facebook group with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.referrals.title', defaultMessage: 'Referrals | SOS-Expat Group Admin' })} />
 
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             <FormattedMessage id="groupAdmin.referrals.heading" defaultMessage="Recruited Admins" />
           </h1>
-          <p className="text-gray-600 mb-8">
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
             <FormattedMessage id="groupAdmin.referrals.subtitle" defaultMessage="Earn $5 for each admin you recruit" />
           </p>
 
@@ -116,14 +116,14 @@ const GroupAdminReferrals: React.FC = () => {
           </div>
 
           {/* Commission Window Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 mb-8">
             <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-blue-800 font-medium">
+                <p className="text-blue-800 dark:text-blue-300 font-medium">
                   <FormattedMessage id="groupAdmin.referrals.commissionWindowInfo.title" defaultMessage="6-Month Commission Window" />
                 </p>
-                <p className="text-blue-600 text-sm mt-1">
+                <p className="text-blue-600 dark:text-blue-400 text-sm mt-1">
                   <FormattedMessage
                     id="groupAdmin.referrals.commissionWindowInfo.description"
                     defaultMessage="You have 6 months from the recruitment date to earn the $5 commission. The commission is paid when your recruit makes their first client referral within this window."
@@ -135,33 +135,33 @@ const GroupAdminReferrals: React.FC = () => {
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <p className="text-2xl font-bold text-gray-900">{recruits.length}</p>
-              <p className="text-sm text-gray-500">
+            <div className="bg-white dark:bg-white/5 rounded-xl p-4 shadow-sm dark:shadow-none text-center">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{recruits.length}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 <FormattedMessage id="groupAdmin.referrals.totalRecruited" defaultMessage="Total Recruited" />
               </p>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+            <div className="bg-white dark:bg-white/5 rounded-xl p-4 shadow-sm dark:shadow-none text-center">
               <p className="text-2xl font-bold text-green-600">
                 {formatGroupAdminAmount(recruits.filter((r) => r.commissionPaid).length * 500)}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 <FormattedMessage id="groupAdmin.referrals.earned" defaultMessage="Earned" />
               </p>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center col-span-2 md:col-span-1">
+            <div className="bg-white dark:bg-white/5 rounded-xl p-4 shadow-sm dark:shadow-none text-center col-span-2 md:col-span-1">
               <p className="text-2xl font-bold text-purple-600">
                 {recruits.filter((r) => !r.commissionPaid).length}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 <FormattedMessage id="groupAdmin.referrals.pending" defaultMessage="Pending" />
               </p>
             </div>
           </div>
 
           {/* Recruits List */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="font-bold text-lg mb-4">
+          <div className="bg-white dark:bg-white/5 rounded-xl shadow-sm dark:shadow-none p-6">
+            <h2 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
               <FormattedMessage id="groupAdmin.referrals.recruitedAdmins" defaultMessage="Recruited Admins" />
             </h2>
             {recruits.length > 0 ? (
@@ -173,10 +173,10 @@ const GroupAdminReferrals: React.FC = () => {
                     : new Date(recruit.commissionWindowEnd);
 
                   return (
-                    <div key={recruit.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-b border-gray-100 last:border-0 gap-3">
+                    <div key={recruit.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-b border-gray-100 dark:border-white/10 last:border-0 gap-3">
                       <div className="flex-1">
-                        <p className="font-medium">{recruit.recruitedName}</p>
-                        <p className="text-sm text-gray-500">{recruit.recruitedGroupName}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{recruit.recruitedName}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{recruit.recruitedGroupName}</p>
                         <p className="text-xs text-gray-400">
                           <FormattedMessage
                             id="groupAdmin.referrals.recruitedOn"
@@ -203,7 +203,7 @@ const GroupAdminReferrals: React.FC = () => {
                             <span className="text-amber-600 font-medium">
                               <FormattedMessage id="groupAdmin.referrals.pendingCommission" defaultMessage="Pending" />
                             </span>
-                            <div className={`inline-flex items-center gap-1 text-xs ${timeRemaining.isExpiringSoon ? 'text-red-500' : 'text-gray-500'}`}>
+                            <div className={`inline-flex items-center gap-1 text-xs ${timeRemaining.isExpiringSoon ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>
                               {timeRemaining.isExpiringSoon ? (
                                 <AlertTriangle className="w-3 h-3" />
                               ) : (
@@ -240,7 +240,7 @@ const GroupAdminReferrals: React.FC = () => {
             ) : (
               <div className="text-center py-12">
                 <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 mb-2">
+                <p className="text-gray-500 dark:text-gray-400 mb-2">
                   <FormattedMessage id="groupAdmin.referrals.noRecruits" defaultMessage="No recruits yet" />
                 </p>
                 <p className="text-sm text-gray-400">
@@ -251,7 +251,7 @@ const GroupAdminReferrals: React.FC = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </GroupAdminDashboardLayout>
   );
 };
 

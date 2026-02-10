@@ -164,7 +164,8 @@ const RegistrationWizard: React.FC<RegistrationWizardProps> = ({
       />
 
       {/* Step content with slide animation */}
-      <div className="relative overflow-hidden min-h-[300px]" ref={stepContentRef}>
+      {/* overflow-x: clip prevents horizontal slide overflow; overflow-y: visible lets phone dropdown escape */}
+      <div className="relative min-h-[300px]" style={{ overflowX: 'clip', overflowY: 'visible' }} ref={stepContentRef}>
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={currentStep}

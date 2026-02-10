@@ -56,6 +56,25 @@ export async function createClientReferralCommission(
       return null;
     }
 
+    // Duplicate check for client_referral (same groupAdminId + callId)
+    const duplicateCheck = await getDb()
+      .collection("group_admin_commissions")
+      .where("groupAdminId", "==", groupAdminId)
+      .where("type", "==", "client_referral")
+      .where("sourceCallId", "==", callId)
+      .limit(1)
+      .get();
+
+    if (!duplicateCheck.empty) {
+      logger.warn("[GroupAdminCommission] Client referral commission already exists", {
+        groupAdminId,
+        clientId,
+        callId,
+        existingCommissionId: duplicateCheck.docs[0].id,
+      });
+      return null;
+    }
+
     // Get commission amount
     const amount = await getClientCommissionAmount();
 

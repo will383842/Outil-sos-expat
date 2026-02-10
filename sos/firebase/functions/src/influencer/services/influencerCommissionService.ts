@@ -178,7 +178,28 @@ export async function createCommission(
       return { success: false, error: "Influencer system is not active" };
     }
 
-    // 4. Calculate amount (V2: flexible calculation using captured rates)
+    // 4. Duplicate check (same sourceId + influencerId + type)
+    if (source.id) {
+      const duplicateCheck = await db
+        .collection("influencer_commissions")
+        .where("influencerId", "==", influencerId)
+        .where("type", "==", type)
+        .where("sourceId", "==", source.id)
+        .limit(1)
+        .get();
+
+      if (!duplicateCheck.empty) {
+        logger.warn("[createCommission] Duplicate commission detected", {
+          influencerId,
+          type,
+          sourceId: source.id,
+          existingCommissionId: duplicateCheck.docs[0].id,
+        });
+        return { success: false, error: "Commission already exists for this action" };
+      }
+    }
+
+    // 5. Calculate amount (V2: flexible calculation using captured rates)
     let commissionAmount: number;
 
     if (inputAmount !== undefined) {

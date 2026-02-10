@@ -6,7 +6,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { useAuth } from '@/contexts/AuthContext';
-import Layout from '@/components/layout/Layout';
+import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
@@ -45,10 +45,10 @@ import {
 // SKELETON COMPONENTS
 // ============================================================================
 const CardSkeleton: React.FC = () => (
-  <div className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
-    <div className="h-4 bg-gray-200 rounded w-1/3 mb-4" />
-    <div className="h-8 bg-gray-200 rounded w-1/2 mb-2" />
-    <div className="h-3 bg-gray-200 rounded w-2/3" />
+  <div className="bg-white dark:bg-white/5 rounded-xl p-6 shadow-sm dark:shadow-none dark:border dark:border-white/10 animate-pulse">
+    <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-4" />
+    <div className="h-8 bg-gray-200 dark:bg-white/10 rounded w-1/2 mb-2" />
+    <div className="h-3 bg-gray-200 dark:bg-white/10 rounded w-2/3" />
   </div>
 );
 
@@ -91,31 +91,27 @@ const GroupAdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <GroupAdminDashboardLayout>
         <SEOHead title={intl.formatMessage({ id: 'groupAdmin.dashboard.loading', defaultMessage: 'Loading Dashboard...' })} description="Group Admin Dashboard - SOS-Expat" />
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <CardSkeleton />
-              <CardSkeleton />
-              <CardSkeleton />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
         </div>
-      </Layout>
+      </GroupAdminDashboardLayout>
     );
   }
 
   if (error || !dashboardData) {
     return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-8 max-w-md w-full text-center shadow-lg">
+      <GroupAdminDashboardLayout>
+        <div className="flex items-center justify-center p-4 min-h-[60vh]">
+          <div className="bg-white dark:bg-white/5 rounded-xl p-8 max-w-md w-full text-center shadow-lg dark:shadow-none dark:border dark:border-white/10">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
               <FormattedMessage id="groupAdmin.dashboard.error.title" defaultMessage="Error Loading Dashboard" />
             </h2>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
             <button
               onClick={fetchDashboard}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg"
@@ -124,7 +120,7 @@ const GroupAdminDashboard: React.FC = () => {
             </button>
           </div>
         </div>
-      </Layout>
+      </GroupAdminDashboardLayout>
     );
   }
 
@@ -133,14 +129,13 @@ const GroupAdminDashboard: React.FC = () => {
   const recruitmentLink = getGroupAdminRecruitmentLink(profile.affiliateCodeRecruitment);
 
   return (
-    <Layout>
+    <GroupAdminDashboardLayout>
       <SEOHead title={intl.formatMessage({ id: 'groupAdmin.dashboard.title', defaultMessage: 'Dashboard | SOS-Expat Group Admin' })} description="Manage your Facebook group and earn commissions with SOS-Expat" />
 
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
+      <div>
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               <FormattedMessage
                 id="groupAdmin.dashboard.welcome"
                 defaultMessage="Welcome, {name}!"
@@ -407,9 +402,8 @@ const GroupAdminDashboard: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
       </div>
-    </Layout>
+    </GroupAdminDashboardLayout>
   );
 };
 

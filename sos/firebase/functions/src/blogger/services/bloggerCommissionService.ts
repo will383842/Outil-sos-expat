@@ -133,6 +133,27 @@ export async function createBloggerCommission(
       return { success: false, error: "Invalid commission amount" };
     }
 
+    // 4b. Duplicate check (same sourceId + bloggerId + type)
+    if (source.id) {
+      const duplicateCheck = await db
+        .collection("blogger_commissions")
+        .where("bloggerId", "==", bloggerId)
+        .where("type", "==", type)
+        .where("sourceId", "==", source.id)
+        .limit(1)
+        .get();
+
+      if (!duplicateCheck.empty) {
+        logger.warn("[createBloggerCommission] Duplicate commission detected", {
+          bloggerId,
+          type,
+          sourceId: source.id,
+          existingCommissionId: duplicateCheck.docs[0].id,
+        });
+        return { success: false, error: "Commission already exists for this action" };
+      }
+    }
+
     // 5. Create timestamp
     const now = Timestamp.now();
 

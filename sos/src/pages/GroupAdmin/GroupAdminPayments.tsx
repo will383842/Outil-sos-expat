@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import Layout from '@/components/layout/Layout';
+import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
@@ -135,21 +135,21 @@ const GroupAdminPayments: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <GroupAdminDashboardLayout>
+        <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
         </div>
-      </Layout>
+      </GroupAdminDashboardLayout>
     );
   }
 
   return (
-    <Layout>
+    <GroupAdminDashboardLayout>
       <SEOHead description="Manage your Facebook group with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.payments.title', defaultMessage: 'Payments | SOS-Expat Group Admin' })} />
 
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-8">
             <FormattedMessage id="groupAdmin.payments.heading" defaultMessage="Payments & Withdrawals" />
           </h1>
 
@@ -195,29 +195,29 @@ const GroupAdminPayments: React.FC = () => {
           {/* Withdrawal Form Modal */}
           {showWithdrawForm && profile && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl p-6 max-w-md w-full">
-                <h2 className="text-xl font-bold mb-6">Request Withdrawal</h2>
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-md w-full">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Request Withdrawal</h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount (cents)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount (cents)</label>
                     <input
                       type="number"
                       value={withdrawForm.amount}
                       onChange={(e) => setWithdrawForm({ ...withdrawForm, amount: Number(e.target.value) })}
                       max={profile.availableBalance}
                       min={2500}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-white/5 text-gray-900 dark:text-white"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Min: $25 | Max: {formatGroupAdminAmount(profile.availableBalance)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Min: $25 | Max: {formatGroupAdminAmount(profile.availableBalance)}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Method</label>
                     <select
                       value={withdrawForm.paymentMethod}
                       onChange={(e) => setWithdrawForm({ ...withdrawForm, paymentMethod: e.target.value as GroupAdminPaymentMethod })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-white/5 text-gray-900 dark:text-white"
                     >
                       {PAYMENT_METHODS.map((method) => (
                         <option key={method.value} value={method.value}>{method.label}</option>
@@ -226,24 +226,24 @@ const GroupAdminPayments: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                     <input
                       type="email"
                       value={withdrawForm.email}
                       onChange={(e) => setWithdrawForm({ ...withdrawForm, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-white/5 text-gray-900 dark:text-white"
                       placeholder="your@email.com"
                     />
                   </div>
 
                   {withdrawForm.paymentMethod === 'wise' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Account Holder Name</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Holder Name</label>
                       <input
                         type="text"
                         value={withdrawForm.accountHolderName}
                         onChange={(e) => setWithdrawForm({ ...withdrawForm, accountHolderName: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                        className="w-full px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-white/5 text-gray-900 dark:text-white"
                       />
                     </div>
                   )}
@@ -252,7 +252,7 @@ const GroupAdminPayments: React.FC = () => {
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={() => setShowWithdrawForm(false)}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg"
+                    className="flex-1 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 font-bold py-2 px-4 rounded-lg"
                   >
                     Cancel
                   </button>
@@ -269,53 +269,53 @@ const GroupAdminPayments: React.FC = () => {
           )}
 
           {/* Commissions History */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="font-bold text-lg mb-4">Recent Commissions</h2>
+          <div className="bg-white dark:bg-white/5 rounded-xl shadow-sm dark:shadow-none p-6">
+            <h2 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Recent Commissions</h2>
             {commissions.length > 0 ? (
               <div className="space-y-3">
                 {commissions.map((commission) => (
-                  <div key={commission.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                  <div key={commission.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-white/10 last:border-0">
                     <div>
-                      <p className="font-medium">{commission.description}</p>
-                      <p className="text-sm text-gray-500">{new Date(commission.createdAt).toLocaleDateString()}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{commission.description}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{new Date(commission.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
                       <p className={`font-bold ${commission.status === 'available' ? 'text-green-600' : 'text-amber-600'}`}>
                         {formatGroupAdminAmount(commission.amount)}
                       </p>
-                      <p className="text-xs text-gray-500 capitalize">{commission.status}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{commission.status}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8">No commissions yet</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No commissions yet</p>
             )}
           </div>
 
           {/* Withdrawal History */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
-            <h2 className="font-bold text-lg mb-4">
+          <div className="bg-white dark:bg-white/5 rounded-xl shadow-sm dark:shadow-none p-6 mt-6">
+            <h2 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
               <FormattedMessage id="groupAdmin.payments.history" defaultMessage="Withdrawal History" />
             </h2>
             {withdrawals.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+                    <tr className="border-b border-gray-200 dark:border-white/10">
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
                         <FormattedMessage id="groupAdmin.payments.date" defaultMessage="Date" />
                       </th>
-                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
                         <FormattedMessage id="groupAdmin.payments.amount" defaultMessage="Amount" />
                       </th>
-                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
                         <FormattedMessage id="groupAdmin.payments.method" defaultMessage="Method" />
                       </th>
-                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
                         <FormattedMessage id="groupAdmin.payments.status" defaultMessage="Status" />
                       </th>
-                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
                         <FormattedMessage id="groupAdmin.payments.reference" defaultMessage="Reference" />
                       </th>
                     </tr>
@@ -324,14 +324,14 @@ const GroupAdminPayments: React.FC = () => {
                     {withdrawals.map((withdrawal) => {
                       const statusBadge = getWithdrawalStatusBadge(withdrawal.status);
                       return (
-                        <tr key={withdrawal.id} className="border-b border-gray-100 last:border-0">
-                          <td className="py-3 px-2 text-sm text-gray-700">
+                        <tr key={withdrawal.id} className="border-b border-gray-100 dark:border-white/10 last:border-0">
+                          <td className="py-3 px-2 text-sm text-gray-700 dark:text-gray-300">
                             {new Date(withdrawal.createdAt).toLocaleDateString()}
                           </td>
-                          <td className="py-3 px-2 text-sm font-medium text-gray-900">
+                          <td className="py-3 px-2 text-sm font-medium text-gray-900 dark:text-white">
                             {formatGroupAdminAmount(withdrawal.amount)}
                           </td>
-                          <td className="py-3 px-2 text-sm text-gray-700 capitalize">
+                          <td className="py-3 px-2 text-sm text-gray-700 dark:text-gray-300 capitalize">
                             {withdrawal.paymentMethod.replace('_', ' ')}
                           </td>
                           <td className="py-3 px-2">
@@ -347,7 +347,7 @@ const GroupAdminPayments: React.FC = () => {
                               </p>
                             )}
                           </td>
-                          <td className="py-3 px-2 text-sm text-gray-500">
+                          <td className="py-3 px-2 text-sm text-gray-500 dark:text-gray-400">
                             {withdrawal.paymentReference || '-'}
                           </td>
                         </tr>
@@ -357,14 +357,14 @@ const GroupAdminPayments: React.FC = () => {
                 </table>
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">
                 <FormattedMessage id="groupAdmin.payments.noWithdrawals" defaultMessage="No withdrawals made" />
               </p>
             )}
           </div>
         </div>
       </div>
-    </Layout>
+    </GroupAdminDashboardLayout>
   );
 };
 

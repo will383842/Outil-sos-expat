@@ -265,8 +265,39 @@ export const registerBlogger = onCall(
         lastLoginAt: now,
       };
 
-      // 9. Save blogger profile
-      await db.collection("bloggers").doc(uid).set(blogger);
+      // 9. Save blogger profile + update users doc (in transaction for consistency)
+      await db.runTransaction(async (transaction) => {
+        const bloggerRef = db.collection("bloggers").doc(uid);
+        transaction.set(bloggerRef, blogger);
+
+        // Update users/{uid} with blogger role (matching chatter/influencer pattern)
+        const userRef = db.collection("users").doc(uid);
+        const userDoc = await transaction.get(userRef);
+
+        if (userDoc.exists) {
+          transaction.update(userRef, {
+            role: "blogger",
+            isBlogger: true,
+            bloggerStatus: "active",
+            affiliateCodeClient,
+            affiliateCodeRecruitment,
+            updatedAt: now,
+          });
+        } else {
+          transaction.set(userRef, {
+            email: input.email.toLowerCase().trim(),
+            firstName: input.firstName.trim(),
+            lastName: input.lastName.trim(),
+            role: "blogger",
+            isBlogger: true,
+            bloggerStatus: "active",
+            affiliateCodeClient,
+            affiliateCodeRecruitment,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+      });
 
       // 10. Create welcome notification
       await db.collection("blogger_notifications").add({

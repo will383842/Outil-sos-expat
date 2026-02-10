@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useAuth } from '@/contexts/AuthContext';
-import Layout from '@/components/layout/Layout';
+import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
@@ -72,24 +72,24 @@ const GroupAdminPosts: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <GroupAdminDashboardLayout>
+        <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
         </div>
-      </Layout>
+      </GroupAdminDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-8 max-w-md w-full text-center shadow-lg">
+      <GroupAdminDashboardLayout>
+        <div className="flex items-center justify-center p-4 py-20">
+          <div className="bg-white dark:bg-white/5 rounded-xl p-8 max-w-md w-full text-center shadow-lg dark:shadow-none">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
               <FormattedMessage id="groupAdmin.posts.error.title" defaultMessage="Error Loading Posts" />
             </h2>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
             <button
               onClick={fetchPosts}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg"
@@ -98,21 +98,21 @@ const GroupAdminPosts: React.FC = () => {
             </button>
           </div>
         </div>
-      </Layout>
+      </GroupAdminDashboardLayout>
     );
   }
 
   return (
-    <Layout>
+    <GroupAdminDashboardLayout>
       <SEOHead description="Manage your Facebook group with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.posts.title', defaultMessage: 'Posts | SOS-Expat Group Admin' })} />
 
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               <FormattedMessage id="groupAdmin.posts.heading" defaultMessage="Ready-to-Use Posts" />
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               <FormattedMessage id="groupAdmin.posts.subtitle" defaultMessage="Copy and paste these posts into your Facebook group" />
             </p>
           </div>
@@ -122,7 +122,7 @@ const GroupAdminPosts: React.FC = () => {
             <button
               onClick={() => setSelectedCategory('all')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+                selectedCategory === 'all' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
               }`}
             >
               All
@@ -132,7 +132,7 @@ const GroupAdminPosts: React.FC = () => {
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === cat ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+                  selectedCategory === cat ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
                 }`}
               >
                 {POST_CATEGORY_LABELS[cat].en}
@@ -143,13 +143,13 @@ const GroupAdminPosts: React.FC = () => {
           {/* Posts List */}
           <div className="space-y-6">
             {filteredPosts.map((post) => (
-              <div key={post.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div key={post.id} className="bg-white dark:bg-white/5 rounded-xl shadow-sm dark:shadow-none overflow-hidden">
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-bold text-gray-900 mb-1">{post.name}</h3>
-                      <div className="flex items-center gap-3 text-sm text-gray-500">
-                        <span className="bg-gray-100 px-2 py-1 rounded">{POST_CATEGORY_LABELS[post.category].en}</span>
+                      <h3 className="font-bold text-gray-900 dark:text-white mb-1">{post.name}</h3>
+                      <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="bg-gray-100 dark:bg-white/10 px-2 py-1 rounded">{POST_CATEGORY_LABELS[post.category].en}</span>
                         {post.recommendedPinDuration && (
                           <span className="flex items-center gap-1">
                             <Pin className="w-4 h-4" />
@@ -186,12 +186,12 @@ const GroupAdminPosts: React.FC = () => {
                   </div>
 
                   {/* Post Preview */}
-                  <div className="bg-gray-50 rounded-lg p-4 whitespace-pre-wrap text-sm text-gray-700 max-h-64 overflow-y-auto">
+                  <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-4 whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 max-h-64 overflow-y-auto">
                     {post.content}
                   </div>
 
                   {post.placeholders.length > 0 && (
-                    <p className="mt-3 text-xs text-gray-500">
+                    <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                       <FormattedMessage
                         id="groupAdmin.posts.placeholdersNote"
                         defaultMessage="Placeholders like {{AFFILIATE_LINK}} will be replaced with your actual values"
@@ -206,12 +206,12 @@ const GroupAdminPosts: React.FC = () => {
           {filteredPosts.length === 0 && (
             <div className="text-center py-12">
               <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No posts in this category yet</p>
+              <p className="text-gray-500 dark:text-gray-400">No posts in this category yet</p>
             </div>
           )}
         </div>
       </div>
-    </Layout>
+    </GroupAdminDashboardLayout>
   );
 };
 

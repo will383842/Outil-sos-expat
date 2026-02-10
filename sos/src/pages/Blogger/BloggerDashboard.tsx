@@ -7,6 +7,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { BloggerDashboardLayout } from '@/components/Blogger';
 import { useBlogger } from '@/hooks/useBlogger';
+import toast from 'react-hot-toast';
 import {
   DollarSign,
   Users,
@@ -46,9 +47,9 @@ const BloggerDashboard: React.FC = () => {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      // TODO: Show toast notification
-    } catch (err) {
-      console.error('Failed to copy:', err);
+      toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }));
+    } catch {
+      toast.error(intl.formatMessage({ id: 'common.copyFailed', defaultMessage: 'Copy failed' }));
     }
   };
 
@@ -56,7 +57,7 @@ const BloggerDashboard: React.FC = () => {
     return (
       <BloggerDashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-purple-500 dark:text-purple-400" />
         </div>
       </BloggerDashboardLayout>
     );

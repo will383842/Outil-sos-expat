@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useAuth } from '@/contexts/AuthContext';
-import Layout from '@/components/layout/Layout';
+import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
@@ -203,43 +203,43 @@ const GroupAdminResources: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <GroupAdminDashboardLayout>
+        <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
         </div>
-      </Layout>
+      </GroupAdminDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-8 max-w-md w-full text-center shadow-lg">
+      <GroupAdminDashboardLayout>
+        <div className="flex items-center justify-center p-4 py-20">
+          <div className="bg-white dark:bg-white/5 rounded-xl p-8 max-w-md w-full text-center shadow-lg dark:shadow-none">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Error</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Error</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
             <button onClick={fetchResources} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg">
               Retry
             </button>
           </div>
         </div>
-      </Layout>
+      </GroupAdminDashboardLayout>
     );
   }
 
   return (
-    <Layout>
+    <GroupAdminDashboardLayout>
       <SEOHead description="Manage your Facebook group with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.resources.title', defaultMessage: 'Resources | SOS-Expat Group Admin' })} />
 
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               <FormattedMessage id="groupAdmin.resources.heading" defaultMessage="Resources" />
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               <FormattedMessage id="groupAdmin.resources.subtitle" defaultMessage="Ready-to-use images, banners, and texts for your group" />
             </p>
           </div>
@@ -249,7 +249,7 @@ const GroupAdminResources: React.FC = () => {
             <button
               onClick={() => setSelectedCategory('all')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+                selectedCategory === 'all' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
               }`}
             >
               <FormattedMessage id="groupAdmin.resources.all" defaultMessage="All" />
@@ -259,7 +259,7 @@ const GroupAdminResources: React.FC = () => {
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === cat ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+                  selectedCategory === cat ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
                 }`}
               >
                 {RESOURCE_CATEGORY_LABELS[cat].en}
@@ -285,10 +285,10 @@ const GroupAdminResources: React.FC = () => {
           {/* Resources Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredResources.map((resource) => (
-              <div key={resource.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div key={resource.id} className="bg-white dark:bg-white/5 rounded-xl shadow-sm dark:shadow-none overflow-hidden">
                 {/* Preview */}
                 {resource.type === 'image' && resource.thumbnailUrl && (
-                  <div className="aspect-video bg-gray-100 relative">
+                  <div className="aspect-video bg-gray-100 dark:bg-white/5 relative">
                     <img
                       src={resource.thumbnailUrl}
                       alt={resource.name}
@@ -297,16 +297,16 @@ const GroupAdminResources: React.FC = () => {
                   </div>
                 )}
                 {(resource.type === 'text' || resource.type === 'template') && (
-                  <div className="aspect-video bg-gray-50 p-4 overflow-hidden">
-                    <p className="text-sm text-gray-600 line-clamp-6">{resource.content}</p>
+                  <div className="aspect-video bg-gray-50 dark:bg-white/5 p-4 overflow-hidden">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-6">{resource.content}</p>
                   </div>
                 )}
 
                 {/* Info */}
                 <div className="p-4">
-                  <h3 className="font-bold text-gray-900 mb-1">{resource.name}</h3>
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-1">{resource.name}</h3>
                   {resource.description && (
-                    <p className="text-sm text-gray-500 mb-3">{resource.description}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{resource.description}</p>
                   )}
                   {resource.dimensions && (
                     <p className="text-xs text-gray-400 mb-3">
@@ -355,14 +355,14 @@ const GroupAdminResources: React.FC = () => {
           {filteredResources.length === 0 && (
             <div className="text-center py-12">
               <Image className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">
+              <p className="text-gray-500 dark:text-gray-400">
                 <FormattedMessage id="groupAdmin.resources.noResources" defaultMessage="No resources in this category yet" />
               </p>
             </div>
           )}
         </div>
       </div>
-    </Layout>
+    </GroupAdminDashboardLayout>
   );
 };
 

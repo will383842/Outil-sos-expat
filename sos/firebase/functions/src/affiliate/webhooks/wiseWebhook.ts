@@ -99,7 +99,9 @@ export const wiseWebhook = onRequest(
           .update(rawBody)
           .digest("hex");
 
-        if (signature !== expectedSignature) {
+        const sigBuffer = Buffer.from(signature, "utf8");
+        const expectedBuffer = Buffer.from(expectedSignature, "utf8");
+        if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
           logger.warn("[WiseWebhook] Invalid signature", {
             received: signature.substring(0, 10) + "...",
           });

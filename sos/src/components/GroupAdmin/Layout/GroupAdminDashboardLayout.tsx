@@ -1,0 +1,152 @@
+/**
+ * GroupAdminDashboardLayout - Layout wrapper for group admin dashboard pages
+ * Follows InfluencerDashboardLayout pattern with indigo accent
+ */
+
+import React from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
+import { useLocation } from 'react-router-dom';
+import { useLocaleNavigate } from '@/multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
+import { useApp } from '@/contexts/AppContext';
+import Layout from '@/components/layout/Layout';
+import {
+  LayoutDashboard,
+  Image,
+  FileText,
+  CreditCard,
+  Users,
+  Trophy,
+  BookOpen,
+  LogOut,
+} from 'lucide-react';
+
+interface GroupAdminDashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+const GroupAdminDashboardLayout: React.FC<GroupAdminDashboardLayoutProps> = ({ children }) => {
+  const intl = useIntl();
+  const navigate = useLocaleNavigate();
+  const location = useLocation();
+  const { language } = useApp();
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+
+  const menuItems = [
+    {
+      id: 'dashboard',
+      label: intl.formatMessage({ id: 'groupAdmin.menu.dashboard', defaultMessage: 'Tableau de bord' }),
+      icon: <LayoutDashboard className="w-5 h-5" />,
+      path: `/group-admin/tableau-de-bord`,
+      routeKey: 'groupadmin-dashboard' as RouteKey,
+    },
+    {
+      id: 'resources',
+      label: intl.formatMessage({ id: 'groupAdmin.menu.resources', defaultMessage: 'Ressources' }),
+      icon: <Image className="w-5 h-5" />,
+      path: `/group-admin/ressources`,
+      routeKey: 'groupadmin-resources' as RouteKey,
+    },
+    {
+      id: 'posts',
+      label: intl.formatMessage({ id: 'groupAdmin.menu.posts', defaultMessage: 'Posts' }),
+      icon: <FileText className="w-5 h-5" />,
+      path: `/group-admin/posts`,
+      routeKey: 'groupadmin-posts' as RouteKey,
+    },
+    {
+      id: 'payments',
+      label: intl.formatMessage({ id: 'groupAdmin.menu.payments', defaultMessage: 'Paiements' }),
+      icon: <CreditCard className="w-5 h-5" />,
+      path: `/group-admin/paiements`,
+      routeKey: 'groupadmin-payments' as RouteKey,
+    },
+    {
+      id: 'referrals',
+      label: intl.formatMessage({ id: 'groupAdmin.menu.referrals', defaultMessage: 'Filleuls' }),
+      icon: <Users className="w-5 h-5" />,
+      path: `/group-admin/filleuls`,
+      routeKey: 'groupadmin-referrals' as RouteKey,
+    },
+    {
+      id: 'leaderboard',
+      label: intl.formatMessage({ id: 'groupAdmin.menu.leaderboard', defaultMessage: 'Classement' }),
+      icon: <Trophy className="w-5 h-5" />,
+      path: `/group-admin/classement`,
+      routeKey: 'groupadmin-leaderboard' as RouteKey,
+    },
+    {
+      id: 'guide',
+      label: intl.formatMessage({ id: 'groupAdmin.menu.guide', defaultMessage: 'Guide' }),
+      icon: <BookOpen className="w-5 h-5" />,
+      path: `/group-admin/guide`,
+      routeKey: 'groupadmin-guide' as RouteKey,
+    },
+  ];
+
+  const isActive = (path: string) => {
+    return location.pathname.includes(path);
+  };
+
+  return (
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Sidebar */}
+            <aside className="lg:w-64 flex-shrink-0">
+              <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-4 sticky top-24">
+                <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    <FormattedMessage id="groupAdmin.sidebar.title" defaultMessage="Espace Group Admin" />
+                  </h2>
+                </div>
+
+                <nav className="space-y-1">
+                  {menuItems.map((item) => {
+                    const translatedPath = `/${getTranslatedRouteSlug(item.routeKey, langCode)}`;
+                    const active = isActive(item.path);
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => navigate(translatedPath)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                          active
+                            ? 'bg-indigo-500 text-white'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        {item.icon}
+                        <span className="text-sm font-medium">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span className="text-sm font-medium">
+                      <FormattedMessage id="groupAdmin.sidebar.back" defaultMessage="Retour au site" />
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </aside>
+
+            {/* Main Content */}
+            <main className="flex-1 min-w-0">
+              {children}
+            </main>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default GroupAdminDashboardLayout;

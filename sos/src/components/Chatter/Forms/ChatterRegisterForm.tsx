@@ -30,6 +30,7 @@ import { useApp } from '@/contexts/AppContext';
 import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
 import { languagesData, getLanguageLabel, type SupportedLocale } from '@/data/languages-spoken';
 import { useAntiBot } from '@/hooks/useAntiBot';
+import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 
 // ============================================================================
 // PASSWORD STRENGTH UTILITY (2026 best practice: complexity check)
@@ -78,24 +79,6 @@ const evaluatePasswordStrength = (password: string, intl: ReturnType<typeof useI
     ...strengthMap[normalizedScore],
     feedback: feedback.slice(0, 2), // Show max 2 feedback items
   };
-};
-
-// Get country name based on locale
-const getCountryName = (entry: PhoneCodeEntry, locale: string): string => {
-  const localeMap: Record<string, keyof PhoneCodeEntry> = {
-    fr: 'fr', en: 'en', es: 'es', de: 'de', pt: 'pt', ru: 'ru', zh: 'zh', ch: 'zh', ar: 'ar', hi: 'hi'
-  };
-  const key = localeMap[locale] || 'en';
-  return entry[key] as string || entry.en;
-};
-
-// Country flag emoji from country code
-const getFlag = (countryCode: string): string => {
-  const codePoints = countryCode
-    .toUpperCase()
-    .split('')
-    .map(char => 127397 + char.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
 };
 
 // ============================================================================
