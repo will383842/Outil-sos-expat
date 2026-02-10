@@ -476,7 +476,7 @@ const REGION = IS_DEV && RAW_REGION_DEV ? RAW_REGION_DEV : RAW_REGION;
 export const functions = getFunctions(app, REGION);
 
 // ✅ Instance Functions pour les fonctions de paiement (region dédiée pour éviter quota CPU)
-const PAYMENT_REGION = (import.meta.env.VITE_FUNCTIONS_PAYMENT_REGION ?? "europe-west4").toString();
+const PAYMENT_REGION = (import.meta.env.VITE_FUNCTIONS_PAYMENT_REGION ?? "europe-west3").toString();
 export const functionsPayment = getFunctions(app, PAYMENT_REGION);
 
 /** ----------------------------------------
