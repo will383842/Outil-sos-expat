@@ -235,7 +235,7 @@ export async function scheduleCallTask(
 
     // P1-4 FIX: Cloud Run URL now from environment variable (was hardcoded)
     // Firebase Functions v2 uses Cloud Run with different URL format than v1
-    const finalUrl = EXECUTE_CALL_TASK_URL.value() || 'https://executecalltask-5tfnuxa2hq-ew.a.run.app';
+    const finalUrl = EXECUTE_CALL_TASK_URL.value() || 'https://executecalltask-5tfnuxa2hq-ey.a.run.app';
 
     console.log(`\n📋 [CloudTasks][${debugId}] STEP 4: URL Configuration:`);
     console.log(`📋 [CloudTasks][${debugId}]   Computed URL (NOT USED): ${callbackUrl}`);
