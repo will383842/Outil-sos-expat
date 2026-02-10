@@ -1,15 +1,15 @@
 /**
- * BloggerLanding - Elite Mobile-First Landing Page 2026
+ * BloggerLanding - V2 Dark Premium Mobile-First
  *
- * OBJECTIFS:
- * - Comprendre en 3 secondes ce qu'on doit faire
- * - Savoir qu'on peut gagner de l'argent rapidement
- * - Voir que c'est SIMPLE : écrire des articles et intégrer des liens
- * - Avocat OU Expatrié Aidant (pas juste avocat)
- * - Mobile-first d'exception
+ * Harmonized with ChatterLanding V7 design system:
+ * - Dark theme (bg-black text-white) with purple/indigo identity
+ * - Mobile-first with safe-area, 44px+ touch targets
+ * - Accessible FAQ accordion (aria-controls, Plus/Minus)
+ * - content-visibility: auto for below-fold perf
+ * - Sticky CTA on mobile, prefers-reduced-motion
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '@/multilingual-system';
@@ -20,32 +20,129 @@ import SEOHead from '@/components/layout/SEOHead';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import FAQPageSchema from '@/components/seo/FAQPageSchema';
 import {
-  CheckCircle,
   ArrowRight,
+  Check,
   ChevronDown,
+  Plus,
+  Minus,
   DollarSign,
-  Target,
-  UserPlus,
-  Rocket,
-  ArrowDown,
-  Phone,
-  Network,
-  MessageSquare,
   PenTool,
-  FileText,
-  Crown,
   Link,
-  Search,
-  Image,
-  Copy,
   Code,
   Calculator,
-  Clock,
+  Phone,
+  Crown,
+  UserPlus,
+  Search,
   Zap,
+  Clock,
+  FileText,
+  Copy,
 } from 'lucide-react';
 
 // ============================================================================
-// MAIN COMPONENT
+// STYLES
+// ============================================================================
+const globalStyles = `
+  @media (max-width: 768px) {
+    .blogger-landing h1 { font-size: 2.25rem !important; }
+    .blogger-landing h2 { font-size: 1.875rem !important; }
+    .blogger-landing h3 { font-size: 1.5rem !important; }
+    .blogger-landing p { font-size: 1rem !important; }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+    50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.6); }
+  }
+  .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+  .section-content {
+    padding: 3rem 1rem;
+    position: relative;
+  }
+  @media (min-width: 640px) { .section-content { padding: 4rem 1.5rem; } }
+  @media (min-width: 1024px) { .section-content { padding: 6rem 2rem; } }
+  .section-lazy {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 600px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-bounce, .transition-all { animation: none !important; transition: none !important; }
+  }
+`;
+
+// ============================================================================
+// SHARED COMPONENTS
+// ============================================================================
+const CTAButton: React.FC<{
+  onClick: () => void;
+  children: React.ReactNode;
+  size?: 'normal' | 'large';
+  className?: string;
+  ariaLabel?: string;
+}> = ({ onClick, children, size = 'normal', className = '', ariaLabel }) => (
+  <button
+    onClick={onClick}
+    aria-label={ariaLabel}
+    className={`
+      flex items-center justify-center gap-2 sm:gap-3
+      bg-gradient-to-r from-amber-400 to-yellow-400
+      text-black font-extrabold rounded-2xl
+      shadow-lg shadow-amber-500/30
+      transition-all active:scale-[0.98] hover:shadow-xl hover:from-amber-300 hover:to-yellow-300
+      will-change-transform
+      ${size === 'large' ? 'min-h-[56px] sm:min-h-[64px] px-6 sm:px-8 py-4 sm:py-5 text-lg sm:text-xl' : 'min-h-[48px] sm:min-h-[56px] px-5 sm:px-6 py-3 sm:py-4 text-base sm:text-lg'}
+      ${className}
+    `}
+  >
+    {children}
+    <ArrowRight className={size === 'large' ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4 sm:w-5 sm:h-5'} aria-hidden="true" />
+  </button>
+);
+
+const FAQItem: React.FC<{
+  question: React.ReactNode;
+  answer: React.ReactNode;
+  isOpen: boolean;
+  onToggle: () => void;
+  index: number;
+}> = ({ question, answer, isOpen, onToggle, index }) => (
+  <div className="border border-white/10 rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+    <button
+      type="button"
+      onClick={onToggle}
+      className="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-4 sm:py-5 text-left min-h-[48px]"
+      aria-expanded={isOpen}
+      aria-controls={`faq-answer-${index}`}
+      id={`faq-question-${index}`}
+    >
+      <span className="text-base sm:text-lg font-semibold text-white pr-2" itemProp="name">{question}</span>
+      <span className={`flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
+        {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+      </span>
+    </button>
+    <div
+      id={`faq-answer-${index}`}
+      role="region"
+      aria-labelledby={`faq-question-${index}`}
+      className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
+      itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer"
+    >
+      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base text-gray-300 leading-relaxed" itemProp="text">
+        {answer}
+      </div>
+    </div>
+  </div>
+);
+
+const ScrollIndicator: React.FC<{ label: string }> = ({ label }) => (
+  <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" aria-hidden="true">
+    <span className="text-white/60 text-xs sm:text-sm font-medium">{label}</span>
+    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-white/60 animate-bounce" />
+  </div>
+);
+
+// ============================================================================
+// PAGE
 // ============================================================================
 const BloggerLanding: React.FC = () => {
   const intl = useIntl();
@@ -53,60 +150,44 @@ const BloggerLanding: React.FC = () => {
   const location = useLocation();
   const { language } = useApp();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // Calculator state for existing blog section
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showStickyCTA, setShowStickyCTA] = useState(false);
+
+  // Calculator
   const [calcArticles, setCalcArticles] = useState(20);
   const [calcVisitsPerArticle, setCalcVisitsPerArticle] = useState(5);
   const [calcConversionRate, setCalcConversionRate] = useState(1);
-
-  // Realistic calculation (conservative estimates)
   const monthlyVisits = calcArticles * calcVisitsPerArticle * 30;
   const monthlyClients = Math.floor((monthlyVisits * calcConversionRate) / 100);
   const monthlyEarnings = monthlyClients * 10;
 
   const registerRoute = `/${getTranslatedRouteSlug('blogger-register' as RouteKey, langCode)}`;
+  const goToRegister = () => navigate(registerRoute);
+
+  useEffect(() => {
+    const onScroll = () => setShowStickyCTA(window.scrollY > window.innerHeight * 0.8);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // SEO
-  const seoTitle = intl.formatMessage({
-    id: 'blogger.landing.seo.title',
-    defaultMessage: 'Become a SOS-Expat Blogger Partner | Earn $10/client with your blog'
-  });
-  const seoDescription = intl.formatMessage({
-    id: 'blogger.landing.seo.description',
-    defaultMessage: 'Write articles about expat life. Earn $10 per client, $5 per lawyer/helper partner. Templates, logos, and resources included. Withdraw via Wise or PayPal.'
-  });
+  const seoTitle = intl.formatMessage({ id: 'blogger.landing.seo.title', defaultMessage: 'Become a SOS-Expat Blogger Partner | Earn $10/client with your blog' });
+  const seoDescription = intl.formatMessage({ id: 'blogger.landing.seo.description', defaultMessage: 'Write articles about expat life. Earn $10 per client, $5 per lawyer/helper partner. Templates, logos, and resources included. Withdraw via Wise or PayPal.' });
+  const ctaAriaLabel = intl.formatMessage({ id: 'blogger.aria.cta.main', defaultMessage: 'Start earning money with your blog - Register as a Blogger Partner for free' });
 
   // FAQ
   const faqs = [
-    {
-      question: intl.formatMessage({ id: 'blogger.faq.q1', defaultMessage: "What exactly do I have to do as a Blogger Partner?" }),
-      answer: intl.formatMessage({ id: 'blogger.faq.a1', defaultMessage: "Write blog articles about expat life, travel, immigration, visas, or living abroad. Include your unique affiliate link in articles. When readers call a lawyer or expat helper, you earn $10. That's it!" }),
-    },
-    {
-      question: intl.formatMessage({ id: 'blogger.faq.q2', defaultMessage: "How much can I realistically earn?" }),
-      answer: intl.formatMessage({ id: 'blogger.faq.a2', defaultMessage: "It depends on your blog traffic. 10 clients = $100. 50 clients = $500. Some bloggers earn $1000-3000/month by writing SEO-optimized articles that rank well on Google." }),
-    },
-    {
-      question: intl.formatMessage({ id: 'blogger.faq.q3', defaultMessage: "What is an 'expat helper'?" }),
-      answer: intl.formatMessage({ id: 'blogger.faq.a3', defaultMessage: "Expat helpers are experienced expats who provide practical advice and guidance. They're not lawyers, but they know the local system well and can help with everyday questions about visas, administration, housing, etc." }),
-    },
-    {
-      question: intl.formatMessage({ id: 'blogger.faq.q4', defaultMessage: "What resources do I get?" }),
-      answer: intl.formatMessage({ id: 'blogger.faq.a4', defaultMessage: "You get article templates, ready-to-copy texts in 9 languages, HD logos, banners, and a complete integration guide with SEO best practices." }),
-    },
-    {
-      question: intl.formatMessage({ id: 'blogger.faq.q5', defaultMessage: "How and when do I get paid?" }),
-      answer: intl.formatMessage({ id: 'blogger.faq.a5', defaultMessage: "Withdraw anytime once you reach $50. We support Wise, PayPal, Mobile Money, and bank transfers. Payments processed within 48 hours." }),
-    },
-    {
-      question: intl.formatMessage({ id: 'blogger.faq.q6', defaultMessage: "Do I need a specific blog topic?" }),
-      answer: intl.formatMessage({ id: 'blogger.faq.a6', defaultMessage: "Your blog should relate to expat life, travel, immigration, or similar topics. We provide article templates if you need inspiration!" }),
-    },
+    { question: intl.formatMessage({ id: 'blogger.faq.q1', defaultMessage: "What exactly do I have to do as a Blogger Partner?" }), answer: intl.formatMessage({ id: 'blogger.faq.a1', defaultMessage: "Write blog articles about expat life, travel, immigration, visas, or living abroad. Include your unique affiliate link in articles. When readers call a lawyer or expat helper, you earn $10. That's it!" }) },
+    { question: intl.formatMessage({ id: 'blogger.faq.q2', defaultMessage: "How much can I realistically earn?" }), answer: intl.formatMessage({ id: 'blogger.faq.a2', defaultMessage: "It depends on your blog traffic. 10 clients = $100. 50 clients = $500. Some bloggers earn $1000-3000/month by writing SEO-optimized articles that rank well on Google." }) },
+    { question: intl.formatMessage({ id: 'blogger.faq.q3', defaultMessage: "What is an 'expat helper'?" }), answer: intl.formatMessage({ id: 'blogger.faq.a3', defaultMessage: "Expat helpers are experienced expats who provide practical advice and guidance. They're not lawyers, but they know the local system well and can help with everyday questions about visas, administration, housing, etc." }) },
+    { question: intl.formatMessage({ id: 'blogger.faq.q4', defaultMessage: "What resources do I get?" }), answer: intl.formatMessage({ id: 'blogger.faq.a4', defaultMessage: "You get article templates, ready-to-copy texts in 9 languages, HD logos, banners, and a complete integration guide with SEO best practices." }) },
+    { question: intl.formatMessage({ id: 'blogger.faq.q5', defaultMessage: "How and when do I get paid?" }), answer: intl.formatMessage({ id: 'blogger.faq.a5', defaultMessage: "Withdraw anytime once you reach $50. We support Wise, PayPal, Mobile Money, and bank transfers. Payments processed within 48 hours." }) },
+    { question: intl.formatMessage({ id: 'blogger.faq.q6', defaultMessage: "Do I need a specific blog topic?" }), answer: intl.formatMessage({ id: 'blogger.faq.a6', defaultMessage: "Your blog should relate to expat life, travel, immigration, or similar topics. We provide article templates if you need inspiration!" }) },
   ];
 
-  // Article topics bloggers can write about - EXPANDED for travel, photographers, influencers, etc.
-  const articleTopics: { name: string; icon: string; desc: string; highlight?: boolean }[] = [
+  // Article topics
+  const articleTopics = [
     { name: intl.formatMessage({ id: 'blogger.topic.visa', defaultMessage: 'Visa Guides' }), icon: '📋', desc: intl.formatMessage({ id: 'blogger.topic.visa.desc', defaultMessage: 'Country-specific visa info' }), highlight: true },
     { name: intl.formatMessage({ id: 'blogger.topic.travel', defaultMessage: 'Travel Stories' }), icon: '✈️', desc: intl.formatMessage({ id: 'blogger.topic.travel.desc', defaultMessage: 'Destinations & tips' }), highlight: true },
     { name: intl.formatMessage({ id: 'blogger.topic.photo', defaultMessage: 'Travel Photos' }), icon: '📸', desc: intl.formatMessage({ id: 'blogger.topic.photo.desc', defaultMessage: 'Photo journals' }) },
@@ -121,7 +202,7 @@ const BloggerLanding: React.FC = () => {
     { name: intl.formatMessage({ id: 'blogger.topic.adventure', defaultMessage: 'Adventure' }), icon: '🏔️', desc: intl.formatMessage({ id: 'blogger.topic.adventure.desc', defaultMessage: 'Hiking, diving...' }) },
   ];
 
-  // Resources provided
+  // Resources
   const resources = [
     { name: intl.formatMessage({ id: 'blogger.resource.templates', defaultMessage: 'Article Templates' }), icon: '📝' },
     { name: intl.formatMessage({ id: 'blogger.resource.texts', defaultMessage: 'Ready Texts' }), icon: '📋' },
@@ -140,7 +221,7 @@ const BloggerLanding: React.FC = () => {
   ];
 
   return (
-    <Layout>
+    <Layout showFooter={false}>
       <SEOHead
         title={seoTitle}
         description={seoDescription}
@@ -151,213 +232,185 @@ const BloggerLanding: React.FC = () => {
       <HreflangLinks pathname={location.pathname} />
       <FAQPageSchema faqs={faqs} pageTitle={seoTitle} />
 
-      {/* Custom styles */}
-      <style>{`
-        @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.4); }
-          50% { box-shadow: 0 0 40px rgba(147, 51, 234, 0.6); }
-        }
-        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-        .animate-float { animation: float 3s ease-in-out infinite; }
-      `}</style>
+      <style>{globalStyles}</style>
 
-      <div className="min-h-screen bg-white dark:bg-gray-950">
+      <div className="blogger-landing bg-black text-white">
 
-        {/* ============================================================== */}
-        {/* HERO - Comprendre en 3 secondes */}
-        {/* ============================================================== */}
-        <section className="relative min-h-[85vh] flex items-center bg-gradient-to-br from-purple-600 via-purple-500 to-indigo-500 overflow-hidden">
-          {/* Background decorations */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-10 right-10 w-96 h-96 bg-pink-400/20 rounded-full blur-3xl" />
-          </div>
+        {/* ================================================================
+            SECTION 1 - HERO
+        ================================================================ */}
+        <section
+          className="min-h-[100svh] flex flex-col justify-center items-center relative bg-gradient-to-b from-purple-950 via-purple-900 to-black overflow-hidden"
+          aria-label={seoTitle}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(168,85,247,0.15),transparent_50%)]" aria-hidden="true" />
 
-          <div className="relative z-10 max-w-5xl mx-auto px-4 py-12 text-center text-white">
+          <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-              <PenTool className="w-5 h-5 text-yellow-300" />
-              <span className="font-semibold text-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-6 sm:mb-8">
+              <PenTool className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" aria-hidden="true" />
+              <span className="text-sm sm:text-base font-semibold text-white/90">
                 <FormattedMessage id="blogger.hero.badge" defaultMessage="Blogger Partner Program • Resources Included" />
               </span>
             </div>
 
-            {/* Main headline - LE BÉNÉFICE */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight">
-              <FormattedMessage
-                id="blogger.hero.title"
-                defaultMessage="Monetize Your Blog: $10 Per Client"
-              />
+            {/* H1 */}
+            <h1 style={{ fontSize: '2.25rem', lineHeight: 1.1 }} className="font-black text-white mb-3 sm:mb-6">
+              <FormattedMessage id="blogger.hero.title" defaultMessage="Monetize Your Blog: $10 Per Client" />
             </h1>
 
-            {/* Subtitle - CE QUE TU FAIS */}
-            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-4 font-medium">
-              <FormattedMessage
-                id="blogger.hero.subtitle"
-                defaultMessage="Write articles about expat life. Include your link. Readers call a lawyer or expat helper. You earn $10."
-              />
+            {/* Subtitle */}
+            <p className="text-lg sm:text-xl text-white/80 max-w-3xl mx-auto mb-4 sm:mb-6">
+              <FormattedMessage id="blogger.hero.subtitle" defaultMessage="Write articles about expat life. Include your link. Readers call a lawyer or expat helper. You earn $10." />
             </p>
 
-            {/* Ultra simple explanation */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 max-w-2xl mx-auto mb-8 border border-white/20">
-              <p className="text-lg md:text-xl font-semibold">
-                <FormattedMessage
-                  id="blogger.hero.simple"
-                  defaultMessage="Your job: Write articles → Add your link → Readers call → You earn $10"
-                />
+            {/* Simple flow box */}
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 max-w-2xl mx-auto mb-6 sm:mb-8 border border-white/10">
+              <p className="text-base sm:text-lg font-semibold text-white/90">
+                <FormattedMessage id="blogger.hero.simple" defaultMessage="Your job: Write articles → Add your link → Readers call → You earn $10" />
               </p>
             </div>
 
-            {/* CTA */}
-            <button
-              onClick={() => navigate(registerRoute)}
-              className="group bg-white text-purple-600 font-bold px-8 py-5 rounded-2xl text-xl inline-flex items-center gap-3 hover:bg-gray-100 transition-all shadow-2xl animate-pulse-glow"
-            >
-              <Rocket className="w-7 h-7" />
-              <FormattedMessage id="blogger.hero.cta" defaultMessage="Become a Blogger Partner - It's Free" />
-              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </button>
+            {/* Key numbers */}
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+              {[
+                { value: '$10', label: intl.formatMessage({ id: 'blogger.hero.trust.client', defaultMessage: 'per client' }) },
+                { value: '$5', label: intl.formatMessage({ id: 'blogger.hero.trust.partner', defaultMessage: 'per partner call' }) },
+                { value: 'SEO', label: intl.formatMessage({ id: 'blogger.hero.trust.seo', defaultMessage: 'passive traffic' }) },
+              ].map((item, i) => (
+                <div key={i} className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl px-5 py-3 min-w-[100px]">
+                  <span className="text-xl sm:text-2xl font-black text-purple-400">{item.value}</span>
+                  <span className="text-xs sm:text-sm text-white/60">{item.label}</span>
+                </div>
+              ))}
+            </div>
 
-            {/* Quick trust */}
-            <div className="flex flex-wrap justify-center gap-4 mt-8 text-sm">
-              <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
-                <FileText className="w-4 h-4" />
+            {/* CTA */}
+            <CTAButton onClick={goToRegister} size="large" className="animate-pulse-glow mx-auto" ariaLabel={ctaAriaLabel}>
+              <FormattedMessage id="blogger.hero.cta" defaultMessage="Become a Blogger Partner - It's Free" />
+            </CTAButton>
+
+            {/* Trust pills */}
+            <div className="flex flex-wrap justify-center gap-3 mt-6 sm:mt-8 text-xs sm:text-sm">
+              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1.5">
+                <FileText className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
                 <FormattedMessage id="blogger.hero.trust.1" defaultMessage="Article Templates" />
               </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
-                <Search className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1.5">
+                <Search className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
                 <FormattedMessage id="blogger.hero.trust.2" defaultMessage="SEO Guide" />
               </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
-                <Image className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1.5">
+                <Code className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
                 <FormattedMessage id="blogger.hero.trust.3" defaultMessage="HD Logos & Banners" />
               </div>
             </div>
-
-            {/* Scroll indicator */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce">
-              <ArrowDown className="w-8 h-8 text-white/60" />
-            </div>
           </div>
+
+          <ScrollIndicator label={intl.formatMessage({ id: 'blogger.hero.scroll', defaultMessage: 'Discover more' })} />
         </section>
 
-        {/* ============================================================== */}
-        {/* TON RÔLE - Ultra simple, 3 étapes */}
-        {/* ============================================================== */}
-        <section className="py-16 md:py-24 px-4 bg-white dark:bg-gray-950">
+        {/* ================================================================
+            SECTION 2 - HOW IT WORKS (3 steps)
+        ================================================================ */}
+        <section className="section-content section-lazy" aria-labelledby="blogger-steps-title">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full text-sm font-semibold mb-4">
-                <Target className="w-4 h-4" />
-                <FormattedMessage id="blogger.role.badge" defaultMessage="Your Mission" />
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 id="blogger-steps-title" className="text-2xl sm:text-4xl font-black mb-3">
                 <FormattedMessage id="blogger.role.title" defaultMessage="It's Super Simple" />
               </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto">
                 <FormattedMessage id="blogger.role.subtitle" defaultMessage="Use your existing blog. We give you all the resources." />
               </p>
             </div>
 
-            {/* 3 Steps - MOBILE FIRST */}
-            <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-3 md:gap-8">
-              {/* Step 1 */}
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-3xl p-6 md:p-8 border border-purple-100 dark:border-purple-800 relative">
-                <div className="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg">
-                  1
-                </div>
+            <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
+              {/* Step 1 - Write */}
+              <article className="relative bg-white/5 border border-purple-500/30 rounded-2xl p-5 sm:p-6">
+                <div className="absolute -top-3 -left-3 w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg">1</div>
                 <div className="pt-4">
-                  <div className="w-16 h-16 bg-purple-100 dark:bg-purple-800 rounded-2xl flex items-center justify-center mb-4">
-                    <PenTool className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-purple-500/20 rounded-xl flex items-center justify-center mb-3">
+                    <PenTool className="w-6 h-6 sm:w-7 sm:h-7 text-purple-400" aria-hidden="true" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2">
                     <FormattedMessage id="blogger.step1.title" defaultMessage="Write Articles" />
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  <p className="text-sm sm:text-base text-gray-400 mb-3">
                     <FormattedMessage id="blogger.step1.desc" defaultMessage="Write about expat life, visas, moving abroad, legal tips. Use our templates if you need inspiration. Focus on SEO for long-term traffic." />
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full text-xs font-bold">
+                    <span className="px-3 py-1 bg-purple-500/30 text-purple-300 rounded-full text-xs font-bold">
                       <FormattedMessage id="blogger.step1.tag.visa" defaultMessage="Visa Guides" />
                     </span>
-                    <span className="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
+                    <span className="px-3 py-1 bg-white/5 text-white/70 rounded-full text-xs font-medium">
                       <FormattedMessage id="blogger.step1.tag.tips" defaultMessage="Living Abroad" />
                     </span>
-                    <span className="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
+                    <span className="px-3 py-1 bg-white/5 text-white/70 rounded-full text-xs font-medium">
                       <FormattedMessage id="blogger.step1.tag.legal" defaultMessage="Legal Tips" />
                     </span>
                   </div>
                 </div>
-              </div>
+              </article>
 
-              {/* Step 2 */}
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-3xl p-6 md:p-8 border border-blue-100 dark:border-blue-800 relative">
-                <div className="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg">
-                  2
-                </div>
+              {/* Step 2 - Link */}
+              <article className="relative bg-white/5 border border-blue-500/30 rounded-2xl p-5 sm:p-6">
+                <div className="absolute -top-3 -left-3 w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg">2</div>
                 <div className="pt-4">
-                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-800 rounded-2xl flex items-center justify-center mb-4">
-                    <Link className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-500/20 rounded-xl flex items-center justify-center mb-3">
+                    <Link className="w-6 h-6 sm:w-7 sm:h-7 text-blue-400" aria-hidden="true" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2">
                     <FormattedMessage id="blogger.step2.title" defaultMessage="Add Your Link" />
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  <p className="text-sm sm:text-base text-gray-400 mb-3">
                     <FormattedMessage id="blogger.step2.desc" defaultMessage="Include your unique affiliate link in articles. Use our banners, widgets, or simple text links. We track everything automatically." />
                   </p>
-                  {/* Widget highlight */}
-                  <div className="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-xl p-3 border border-purple-200 dark:border-purple-700 mb-3">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-purple-700 dark:text-purple-400">
-                      <Code className="w-4 h-4" />
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3 mb-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-purple-300">
+                      <Code className="w-4 h-4" aria-hidden="true" />
                       <FormattedMessage id="blogger.step2.widgets" defaultMessage="Ready-to-use widgets with your link already embedded!" />
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-blue-200 dark:border-blue-700">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                  <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                    <p className="text-sm text-gray-400 italic">
                       "<FormattedMessage id="blogger.step2.example" defaultMessage="Need help with your visa? Talk to a lawyer or expat helper in minutes →" />"
                     </p>
                   </div>
                 </div>
-              </div>
+              </article>
 
-              {/* Step 3 */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-3xl p-6 md:p-8 border border-green-100 dark:border-green-800 relative">
-                <div className="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg">
-                  3
-                </div>
+              {/* Step 3 - Earn */}
+              <article className="relative bg-white/5 border border-green-500/30 rounded-2xl p-5 sm:p-6">
+                <div className="absolute -top-3 -left-3 w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg">3</div>
                 <div className="pt-4">
-                  <div className="w-16 h-16 bg-green-100 dark:bg-green-800 rounded-2xl flex items-center justify-center mb-4">
-                    <DollarSign className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-500/20 rounded-xl flex items-center justify-center mb-3">
+                    <DollarSign className="w-6 h-6 sm:w-7 sm:h-7 text-green-400" aria-hidden="true" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2">
                     <FormattedMessage id="blogger.step3.title" defaultMessage="Get Paid $10" />
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  <p className="text-sm sm:text-base text-gray-400 mb-3">
                     <FormattedMessage id="blogger.step3.desc" defaultMessage="When readers make a call through your link, you earn $10. Withdraw anytime via Wise, PayPal, or Mobile Money." />
                   </p>
-                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-bold text-lg">
-                    <CheckCircle className="w-5 h-5" />
+                  <div className="flex items-center gap-2 text-green-400 font-bold">
+                    <Check className="w-5 h-5" aria-hidden="true" />
                     <FormattedMessage id="blogger.step3.note" defaultMessage="No limit on earnings!" />
                   </div>
                 </div>
-              </div>
+              </article>
             </div>
 
-            {/* Important note: Lawyer OR Expat Helper */}
-            <div className="mt-12 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-3xl p-6 md:p-8 border border-amber-200 dark:border-amber-800">
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                <div className="w-14 h-14 bg-amber-100 dark:bg-amber-800 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <MessageSquare className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+            {/* Note: Lawyers AND Expat Helpers */}
+            <div className="mt-8 sm:mt-10 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl" aria-hidden="true">⚖️</span>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                  <h3 className="text-lg font-bold mb-1">
                     <FormattedMessage id="blogger.note.title" defaultMessage="Lawyers AND Expat Helpers" />
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-sm sm:text-base text-gray-400">
                     <FormattedMessage id="blogger.note.desc" defaultMessage="SOS-Expat connects people with professional lawyers AND experienced expat helpers. Lawyers for legal matters, expat helpers for practical advice. Both available instantly by phone, worldwide." />
                   </p>
                 </div>
@@ -366,228 +419,115 @@ const BloggerLanding: React.FC = () => {
           </div>
         </section>
 
-        {/* ============================================================== */}
-        {/* WHO CAN BECOME A BLOGGER PARTNER? - Target profiles */}
-        {/* ============================================================== */}
-        <section className="py-16 md:py-24 px-4 bg-gray-50 dark:bg-gray-900">
+        {/* ================================================================
+            SECTION 3 - WHO CAN JOIN (8 profiles)
+        ================================================================ */}
+        <section className="section-content section-lazy" aria-labelledby="blogger-profiles-title">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full text-sm font-semibold mb-4">
-                <Network className="w-4 h-4" />
-                <FormattedMessage id="blogger.profiles.badge" defaultMessage="For Content Creators" />
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 id="blogger-profiles-title" className="text-2xl sm:text-4xl font-black mb-3">
                 <FormattedMessage id="blogger.profiles.title" defaultMessage="Who Can Join?" />
               </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg text-gray-400 max-w-3xl mx-auto">
                 <FormattedMessage id="blogger.profiles.subtitle" defaultMessage="Bloggers, photographers, influencers... If your audience travels or lives abroad, SOS-Expat is perfect for you!" />
               </p>
             </div>
 
-            {/* Profile cards grid */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {/* Travel Blogger */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
-                  ✈️
-                </div>
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.profiles.travel.title" defaultMessage="Travel Bloggers" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.profiles.travel.desc" defaultMessage="Your readers plan trips. They need visa info, legal help abroad. $10 per referral!" />
-                </p>
-              </div>
-
-              {/* Vacation / Holiday Blogger */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
-                <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-yellow-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
-                  🏖️
-                </div>
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.profiles.vacation.title" defaultMessage="Vacation Bloggers" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.profiles.vacation.desc" defaultMessage="Beach lovers, resort experts. Tourists abroad sometimes need urgent legal help." />
-                </p>
-              </div>
-
-              {/* Travel Photographer */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
-                  📸
-                </div>
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.profiles.photo.title" defaultMessage="Travel Photographers" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.profiles.photo.desc" defaultMessage="Photo essays, destination guides. Your visual content + our link = passive income." />
-                </p>
-              </div>
-
-              {/* Digital Nomad */}
-              <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all ring-2 ring-purple-400/50">
-                <div className="absolute -top-2 -right-2 px-2 py-1 bg-purple-500 text-white rounded-full text-xs font-bold">
-                  TOP
-                </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
-                  💻
-                </div>
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.profiles.nomad.title" defaultMessage="Digital Nomads" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.profiles.nomad.desc" defaultMessage="Your audience NEEDS visa info! Digital nomad visa guides = high conversion." />
-                </p>
-              </div>
-
-              {/* Travel Influencer */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
-                <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-rose-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
-                  🎬
-                </div>
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.profiles.influencer.title" defaultMessage="Travel Influencers" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.profiles.influencer.desc" defaultMessage="YouTube, Instagram, TikTok. Link in bio + affiliate links in descriptions." />
-                </p>
-              </div>
-
-              {/* Expat Blogger */}
-              <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all ring-2 ring-green-400/50">
-                <div className="absolute -top-2 -right-2 px-2 py-1 bg-green-500 text-white rounded-full text-xs font-bold">
-                  BEST
-                </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
-                  🌍
-                </div>
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.profiles.expat.title" defaultMessage="Expat Bloggers" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.profiles.expat.desc" defaultMessage="You live abroad. Perfect fit! Your readers face the same challenges you did." />
-                </p>
-              </div>
-
-              {/* Relocation Expert */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
-                <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
-                  🚚
-                </div>
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.profiles.relocation.title" defaultMessage="Relocation Experts" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.profiles.relocation.desc" defaultMessage="Moving abroad guides, country comparisons. High intent audience!" />
-                </p>
-              </div>
-
-              {/* Adventure / Outdoor */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all">
-                <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-cyan-400 rounded-xl flex items-center justify-center text-white mb-4 text-2xl">
-                  🏔️
-                </div>
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.profiles.adventure.title" defaultMessage="Adventure Bloggers" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.profiles.adventure.desc" defaultMessage="Hiking, diving, extreme sports abroad. Adventurers need legal protection too!" />
-                </p>
-              </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[
+                { emoji: '✈️', titleId: 'blogger.profiles.travel.title', titleDefault: 'Travel Bloggers', descId: 'blogger.profiles.travel.desc', descDefault: 'Your readers plan trips. They need visa info, legal help abroad. $10 per referral!', gradient: 'from-blue-500 to-cyan-400' },
+                { emoji: '🏖️', titleId: 'blogger.profiles.vacation.title', titleDefault: 'Vacation Bloggers', descId: 'blogger.profiles.vacation.desc', descDefault: 'Beach lovers, resort experts. Tourists abroad sometimes need urgent legal help.', gradient: 'from-orange-500 to-yellow-400' },
+                { emoji: '📸', titleId: 'blogger.profiles.photo.title', titleDefault: 'Travel Photographers', descId: 'blogger.profiles.photo.desc', descDefault: 'Photo essays, destination guides. Your visual content + our link = passive income.', gradient: 'from-purple-500 to-pink-400' },
+                { emoji: '💻', titleId: 'blogger.profiles.nomad.title', titleDefault: 'Digital Nomads', descId: 'blogger.profiles.nomad.desc', descDefault: 'Your audience NEEDS visa info! Digital nomad visa guides = high conversion.', gradient: 'from-indigo-500 to-purple-400', badge: 'TOP' },
+                { emoji: '🎬', titleId: 'blogger.profiles.influencer.title', titleDefault: 'Travel Influencers', descId: 'blogger.profiles.influencer.desc', descDefault: 'YouTube, Instagram, TikTok. Link in bio + affiliate links in descriptions.', gradient: 'from-pink-500 to-rose-400' },
+                { emoji: '🌍', titleId: 'blogger.profiles.expat.title', titleDefault: 'Expat Bloggers', descId: 'blogger.profiles.expat.desc', descDefault: 'You live abroad. Perfect fit! Your readers face the same challenges you did.', gradient: 'from-green-500 to-emerald-400', badge: 'BEST' },
+                { emoji: '🚚', titleId: 'blogger.profiles.relocation.title', titleDefault: 'Relocation Experts', descId: 'blogger.profiles.relocation.desc', descDefault: 'Moving abroad guides, country comparisons. High intent audience!', gradient: 'from-amber-500 to-orange-400' },
+                { emoji: '🏔️', titleId: 'blogger.profiles.adventure.title', titleDefault: 'Adventure Bloggers', descId: 'blogger.profiles.adventure.desc', descDefault: 'Hiking, diving, extreme sports abroad. Adventurers need legal protection too!', gradient: 'from-teal-500 to-cyan-400' },
+              ].map((profile, i) => (
+                <article key={i} className={`relative bg-white/5 rounded-2xl p-4 sm:p-5 border ${profile.badge ? 'border-purple-500/50 ring-1 ring-purple-400/30' : 'border-white/10'} transition-colors hover:border-white/20`}>
+                  {profile.badge && (
+                    <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-purple-500 text-white rounded-full text-[10px] sm:text-xs font-bold">{profile.badge}</div>
+                  )}
+                  <div className={`w-11 h-11 sm:w-14 sm:h-14 bg-gradient-to-br ${profile.gradient} rounded-xl flex items-center justify-center text-lg sm:text-2xl mb-3`}>
+                    {profile.emoji}
+                  </div>
+                  <h3 className="font-bold text-sm sm:text-base mb-1">
+                    <FormattedMessage id={profile.titleId} defaultMessage={profile.titleDefault} />
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-400">
+                    <FormattedMessage id={profile.descId} defaultMessage={profile.descDefault} />
+                  </p>
+                </article>
+              ))}
             </div>
 
-            {/* WHY IT WORKS - value proposition */}
-            <div className="mt-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-6 md:p-8 text-white">
-              <div className="text-center mb-6">
-                <h3 className="text-xl md:text-2xl font-bold mb-2">
-                  <FormattedMessage id="blogger.profiles.why.title" defaultMessage="Why Your Audience Needs SOS-Expat" />
-                </h3>
-              </div>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="text-3xl mb-2">📋</div>
-                  <h4 className="font-semibold mb-1">
-                    <FormattedMessage id="blogger.profiles.why1.title" defaultMessage="Visa Problems" />
-                  </h4>
-                  <p className="text-sm text-white/80">
-                    <FormattedMessage id="blogger.profiles.why1.desc" defaultMessage="Expired visa, wrong documents, need extension. Travelers need help FAST." />
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl mb-2">⚖️</div>
-                  <h4 className="font-semibold mb-1">
-                    <FormattedMessage id="blogger.profiles.why2.title" defaultMessage="Legal Issues Abroad" />
-                  </h4>
-                  <p className="text-sm text-white/80">
-                    <FormattedMessage id="blogger.profiles.why2.desc" defaultMessage="Traffic accidents, contracts, scams. Legal help in a foreign country = urgent." />
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl mb-2">🆘</div>
-                  <h4 className="font-semibold mb-1">
-                    <FormattedMessage id="blogger.profiles.why3.title" defaultMessage="Practical Questions" />
-                  </h4>
-                  <p className="text-sm text-white/80">
-                    <FormattedMessage id="blogger.profiles.why3.desc" defaultMessage="Bank account, housing, local admin. Expat helpers share real experience." />
-                  </p>
-                </div>
+            {/* Why your audience needs SOS-Expat */}
+            <div className="mt-8 sm:mt-10 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/20 rounded-2xl p-5 sm:p-8">
+              <h3 className="text-lg sm:text-xl font-bold text-center mb-6">
+                <FormattedMessage id="blogger.profiles.why.title" defaultMessage="Why Your Audience Needs SOS-Expat" />
+              </h3>
+              <div className="grid sm:grid-cols-3 gap-5">
+                {[
+                  { emoji: '📋', titleId: 'blogger.profiles.why1.title', titleDefault: 'Visa Problems', descId: 'blogger.profiles.why1.desc', descDefault: 'Expired visa, wrong documents, need extension. Travelers need help FAST.' },
+                  { emoji: '⚖️', titleId: 'blogger.profiles.why2.title', titleDefault: 'Legal Issues Abroad', descId: 'blogger.profiles.why2.desc', descDefault: 'Traffic accidents, contracts, scams. Legal help in a foreign country = urgent.' },
+                  { emoji: '🆘', titleId: 'blogger.profiles.why3.title', titleDefault: 'Practical Questions', descId: 'blogger.profiles.why3.desc', descDefault: 'Bank account, housing, local admin. Expat helpers share real experience.' },
+                ].map((item, i) => (
+                  <div key={i} className="text-center">
+                    <div className="text-3xl mb-2">{item.emoji}</div>
+                    <h4 className="font-semibold mb-1">
+                      <FormattedMessage id={item.titleId} defaultMessage={item.titleDefault} />
+                    </h4>
+                    <p className="text-sm text-gray-400">
+                      <FormattedMessage id={item.descId} defaultMessage={item.descDefault} />
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ============================================================== */}
-        {/* ALREADY HAVE A BLOG? - Monetize existing articles */}
-        {/* ============================================================== */}
-        <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 text-white">
+        {/* ================================================================
+            SECTION 4 - MONETIZE EXISTING BLOG + CALCULATOR
+        ================================================================ */}
+        <section className="section-content section-lazy" aria-labelledby="blogger-existing-title">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-4">
-                <Zap className="w-4 h-4" />
-                <FormattedMessage id="blogger.existing.badge" defaultMessage="Already a blogger?" />
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black mb-4">
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 id="blogger-existing-title" className="text-2xl sm:text-4xl font-black mb-3">
                 <FormattedMessage id="blogger.existing.title" defaultMessage="Monetize Your Existing Articles" />
               </h2>
-              <p className="text-xl text-white/90 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto">
                 <FormattedMessage id="blogger.existing.subtitle" defaultMessage="You already have articles? Add our widgets to them and start earning immediately. It takes 30 seconds per article." />
               </p>
             </div>
 
             {/* 2 integration methods */}
-            <div className="grid md:grid-cols-2 gap-6 mb-10">
-              {/* Method 1: Theme/Sidebar - ONE TIME */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
+              {/* Method 1: Sidebar */}
+              <div className="bg-white/5 border border-amber-500/30 rounded-2xl p-5 sm:p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-yellow-400 text-yellow-900 rounded-full flex items-center justify-center font-black">
-                    <Zap className="w-6 h-6" />
+                  <div className="w-11 h-11 bg-amber-400 text-black rounded-full flex items-center justify-center">
+                    <Zap className="w-5 h-5" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">
+                    <h3 className="font-bold text-base sm:text-lg">
                       <FormattedMessage id="blogger.existing.method1.title" defaultMessage="Sidebar / Theme" />
                     </h3>
-                    <p className="text-sm text-yellow-300 font-semibold">
+                    <p className="text-xs sm:text-sm text-amber-400 font-semibold">
                       <FormattedMessage id="blogger.existing.method1.badge" defaultMessage="Recommended for large blogs" />
                     </p>
                   </div>
                 </div>
-                <ul className="space-y-2 text-sm text-white/90">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-300 mt-0.5 flex-shrink-0" />
-                    <FormattedMessage id="blogger.existing.method1.point1" defaultMessage="Add widget ONCE in your sidebar or theme" />
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-300 mt-0.5 flex-shrink-0" />
-                    <FormattedMessage id="blogger.existing.method1.point2" defaultMessage="Appears on ALL pages automatically" />
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-300 mt-0.5 flex-shrink-0" />
-                    <FormattedMessage id="blogger.existing.method1.point3" defaultMessage="Works with WordPress, Blogger, Wix, etc." />
-                  </li>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  {['blogger.existing.method1.point1', 'blogger.existing.method1.point2', 'blogger.existing.method1.point3'].map((id, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                      <FormattedMessage id={id} defaultMessage={['Add widget ONCE in your sidebar or theme', 'Appears on ALL pages automatically', 'Works with WordPress, Blogger, Wix, etc.'][i]} />
+                    </li>
+                  ))}
                 </ul>
-                <div className="mt-4 bg-white/10 rounded-xl p-3 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-yellow-300" />
+                <div className="mt-4 bg-white/5 rounded-xl p-3 flex items-center gap-2 text-sm">
+                  <Clock className="w-4 h-4 text-amber-400" aria-hidden="true" />
                   <span className="font-semibold">
                     <FormattedMessage id="blogger.existing.method1.time" defaultMessage="5 minutes, one time only" />
                   </span>
@@ -595,36 +535,30 @@ const BloggerLanding: React.FC = () => {
               </div>
 
               {/* Method 2: Per article */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center font-black">
-                    <FileText className="w-6 h-6" />
+                  <div className="w-11 h-11 bg-white/10 rounded-full flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-white/80" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">
+                    <h3 className="font-bold text-base sm:text-lg">
                       <FormattedMessage id="blogger.existing.method2.title" defaultMessage="In specific articles" />
                     </h3>
-                    <p className="text-sm text-white/60">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       <FormattedMessage id="blogger.existing.method2.badge" defaultMessage="For targeted placement" />
                     </p>
                   </div>
                 </div>
-                <ul className="space-y-2 text-sm text-white/90">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-300 mt-0.5 flex-shrink-0" />
-                    <FormattedMessage id="blogger.existing.method2.point1" defaultMessage="Copy-paste widget in article content" />
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-300 mt-0.5 flex-shrink-0" />
-                    <FormattedMessage id="blogger.existing.method2.point2" defaultMessage="Place at the best spot for conversion" />
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-300 mt-0.5 flex-shrink-0" />
-                    <FormattedMessage id="blogger.existing.method2.point3" defaultMessage="Ideal for your top-performing articles" />
-                  </li>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  {['blogger.existing.method2.point1', 'blogger.existing.method2.point2', 'blogger.existing.method2.point3'].map((id, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                      <FormattedMessage id={id} defaultMessage={['Copy-paste widget in article content', 'Place at the best spot for conversion', 'Ideal for your top-performing articles'][i]} />
+                    </li>
+                  ))}
                 </ul>
-                <div className="mt-4 bg-white/10 rounded-xl p-3 flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
+                <div className="mt-4 bg-white/5 rounded-xl p-3 flex items-center gap-2 text-sm">
+                  <Clock className="w-4 h-4 text-gray-500" aria-hidden="true" />
                   <span className="font-semibold">
                     <FormattedMessage id="blogger.existing.method2.time" defaultMessage="30 seconds per article" />
                   </span>
@@ -633,17 +567,17 @@ const BloggerLanding: React.FC = () => {
             </div>
 
             {/* Pro tip */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 mb-10 max-w-2xl mx-auto">
-              <p className="text-center text-sm">
-                <span className="font-bold text-yellow-300">💡 <FormattedMessage id="blogger.existing.tip.label" defaultMessage="Pro tip:" /></span>{' '}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-8 max-w-2xl mx-auto text-center text-sm">
+              <span className="font-bold text-amber-400">💡 <FormattedMessage id="blogger.existing.tip.label" defaultMessage="Pro tip:" /></span>{' '}
+              <span className="text-gray-300">
                 <FormattedMessage id="blogger.existing.tip.text" defaultMessage="Add the widget in your sidebar for all pages, PLUS inside your 10 best articles for maximum visibility." />
-              </p>
+              </span>
             </div>
 
             {/* Calculator */}
-            <div className="bg-white rounded-3xl p-6 md:p-8 text-gray-900 max-w-2xl mx-auto">
-              <h3 className="text-xl font-bold text-center mb-6 flex items-center justify-center gap-2">
-                <Calculator className="w-6 h-6 text-green-600" />
+            <div className="bg-white/5 border border-purple-500/30 rounded-2xl p-5 sm:p-8 max-w-2xl mx-auto">
+              <h3 className="text-lg sm:text-xl font-bold text-center mb-6 flex items-center justify-center gap-2">
+                <Calculator className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" aria-hidden="true" />
                 <FormattedMessage id="blogger.existing.calculator.title" defaultMessage="Calculate Your Potential Earnings" />
               </h3>
 
@@ -651,173 +585,122 @@ const BloggerLanding: React.FC = () => {
                 {/* Articles slider */}
                 <div>
                   <label className="flex items-center justify-between text-sm font-medium mb-2">
-                    <span>
+                    <span className="text-gray-300">
                       <FormattedMessage id="blogger.existing.calculator.articles" defaultMessage="How many articles do you have?" />
                     </span>
-                    <span className="text-green-600 font-bold text-lg">{calcArticles}</span>
+                    <span className="text-purple-400 font-bold text-lg">{calcArticles}</span>
                   </label>
-                  <input
-                    type="range"
-                    min="5"
-                    max="100"
-                    value={calcArticles}
-                    onChange={(e) => setCalcArticles(parseInt(e.target.value))}
-                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>5</span>
-                    <span>50</span>
-                    <span>100</span>
-                  </div>
+                  <input type="range" min="5" max="100" value={calcArticles} onChange={(e) => setCalcArticles(parseInt(e.target.value))} className="w-full h-3 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1"><span>5</span><span>50</span><span>100</span></div>
                 </div>
 
                 {/* Visits per article per day */}
                 <div>
                   <label className="flex items-center justify-between text-sm font-medium mb-2">
-                    <span>
+                    <span className="text-gray-300">
                       <FormattedMessage id="blogger.existing.calculator.visits" defaultMessage="Average visits per article/day" />
                     </span>
-                    <span className="text-green-600 font-bold text-lg">{calcVisitsPerArticle}</span>
+                    <span className="text-purple-400 font-bold text-lg">{calcVisitsPerArticle}</span>
                   </label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="50"
-                    value={calcVisitsPerArticle}
-                    onChange={(e) => setCalcVisitsPerArticle(parseInt(e.target.value))}
-                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>1</span>
-                    <span>25</span>
-                    <span>50</span>
-                  </div>
+                  <input type="range" min="1" max="50" value={calcVisitsPerArticle} onChange={(e) => setCalcVisitsPerArticle(parseInt(e.target.value))} className="w-full h-3 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1"><span>1</span><span>25</span><span>50</span></div>
                 </div>
 
-                {/* Conversion rate - REALISTIC 0.5% to 3% */}
+                {/* Conversion rate */}
                 <div>
                   <label className="flex items-center justify-between text-sm font-medium mb-2">
-                    <span>
+                    <span className="text-gray-300">
                       <FormattedMessage id="blogger.existing.calculator.conversion" defaultMessage="Conversion rate" />
                     </span>
-                    <span className="text-green-600 font-bold text-lg">{calcConversionRate}%</span>
+                    <span className="text-purple-400 font-bold text-lg">{calcConversionRate}%</span>
                   </label>
-                  <input
-                    type="range"
-                    min="0.5"
-                    max="3"
-                    step="0.5"
-                    value={calcConversionRate}
-                    onChange={(e) => setCalcConversionRate(parseFloat(e.target.value))}
-                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>0.5%</span>
-                    <span>1.5%</span>
-                    <span>3%</span>
-                  </div>
+                  <input type="range" min="0.5" max="3" step="0.5" value={calcConversionRate} onChange={(e) => setCalcConversionRate(parseFloat(e.target.value))} className="w-full h-3 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1"><span>0.5%</span><span>1.5%</span><span>3%</span></div>
                 </div>
 
                 {/* Results */}
-                <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-6 text-white text-center">
+                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-5 sm:p-6 text-center">
                   <p className="text-sm opacity-90 mb-1">
                     <FormattedMessage id="blogger.existing.calculator.result" defaultMessage="Estimated monthly earnings" />
                   </p>
-                  <p className="text-5xl font-black">${monthlyEarnings}</p>
-                  <p className="text-sm opacity-90 mt-2">
+                  <p className="text-4xl sm:text-5xl font-black">${monthlyEarnings}</p>
+                  <p className="text-sm opacity-80 mt-2">
                     {monthlyVisits.toLocaleString()} <FormattedMessage id="blogger.existing.calculator.visits.label" defaultMessage="visits" /> × {calcConversionRate}% = {monthlyClients} <FormattedMessage id="blogger.existing.calculator.clients" defaultMessage="clients" /> × $10
                   </p>
                 </div>
 
-                {/* Disclaimer - HONEST */}
                 <p className="text-xs text-gray-500 text-center">
-                  <FormattedMessage
-                    id="blogger.existing.calculator.disclaimer"
-                    defaultMessage="Results vary depending on your niche, traffic quality, and content relevance. These are estimates, not guarantees."
-                  />
+                  <FormattedMessage id="blogger.existing.calculator.disclaimer" defaultMessage="Results vary depending on your niche, traffic quality, and content relevance. These are estimates, not guarantees." />
                 </p>
               </div>
             </div>
 
             {/* CTA */}
-            <div className="text-center mt-10">
-              <button
-                onClick={() => navigate(registerRoute)}
-                className="group bg-white text-green-600 font-bold px-8 py-4 rounded-2xl text-lg inline-flex items-center gap-3 hover:bg-gray-100 transition-all shadow-xl"
-              >
-                <Rocket className="w-6 h-6" />
+            <div className="text-center mt-8">
+              <CTAButton onClick={goToRegister} ariaLabel={ctaAriaLabel}>
                 <FormattedMessage id="blogger.existing.cta" defaultMessage="Start Monetizing My Articles" />
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </CTAButton>
             </div>
           </div>
         </section>
 
-        {/* ============================================================== */}
-        {/* WHAT TO WRITE ABOUT */}
-        {/* ============================================================== */}
-        <section className="py-16 md:py-20 px-4 bg-gray-50 dark:bg-gray-900">
+        {/* ================================================================
+            SECTION 5 - ARTICLE TOPICS + WIDGET HIGHLIGHT
+        ================================================================ */}
+        <section className="section-content section-lazy" aria-labelledby="blogger-topics-title">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-4">
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 id="blogger-topics-title" className="text-2xl sm:text-4xl font-black mb-3">
                 <FormattedMessage id="blogger.topics.title" defaultMessage="What to Write About?" />
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-base sm:text-lg text-gray-400">
                 <FormattedMessage id="blogger.topics.subtitle" defaultMessage="Topics that work well for SOS-Expat referrals" />
               </p>
             </div>
 
-            {/* Visa guides highlight box */}
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-6 md:p-8 text-white mb-8">
-              <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-3xl">📋</span>
+            {/* Visa guides highlight */}
+            <div className="bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/20 rounded-2xl p-5 sm:p-8 mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl sm:text-3xl">📋</span>
                 </div>
                 <div>
-                  <h3 className="text-xl md:text-2xl font-bold mb-1">
+                  <h3 className="text-lg sm:text-2xl font-bold mb-1">
                     <FormattedMessage id="blogger.topics.visa.title" defaultMessage="Visa Guides = Best Performers" />
                   </h3>
-                  <p className="text-white/80">
+                  <p className="text-sm sm:text-base text-gray-400">
                     <FormattedMessage id="blogger.topics.visa.desc" defaultMessage="Articles about visa requirements rank well on Google and convert best." />
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-white/10 rounded-xl px-3 py-2 text-center text-sm">
-                  <FormattedMessage id="blogger.topics.ex1" defaultMessage="'Spain Digital Nomad Visa'" />
-                </div>
-                <div className="bg-white/10 rounded-xl px-3 py-2 text-center text-sm">
-                  <FormattedMessage id="blogger.topics.ex2" defaultMessage="'UK Work Permit Guide'" />
-                </div>
-                <div className="bg-white/10 rounded-xl px-3 py-2 text-center text-sm">
-                  <FormattedMessage id="blogger.topics.ex3" defaultMessage="'How to Get a French Visa'" />
-                </div>
-                <div className="bg-white/10 rounded-xl px-3 py-2 text-center text-sm">
-                  <FormattedMessage id="blogger.topics.ex4" defaultMessage="'Dubai Residence Permit'" />
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                {['blogger.topics.ex1', 'blogger.topics.ex2', 'blogger.topics.ex3', 'blogger.topics.ex4'].map((id, i) => (
+                  <div key={i} className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-center text-xs sm:text-sm text-gray-300">
+                    <FormattedMessage id={id} defaultMessage={["'Spain Digital Nomad Visa'", "'UK Work Permit Guide'", "'How to Get a French Visa'", "'Dubai Residence Permit'"][i]} />
+                  </div>
+                ))}
               </div>
-              <p className="mt-4 text-sm text-white/70 text-center">
+              <p className="mt-4 text-xs sm:text-sm text-gray-500 text-center">
                 <FormattedMessage id="blogger.topics.tip" defaultMessage="Focus on long-tail keywords for better SEO rankings" />
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {/* Topic grid */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
               {articleTopics.map((topic, idx) => (
                 <div
                   key={idx}
-                  className={`rounded-2xl p-4 text-center border hover:shadow-lg hover:-translate-y-1 transition-all ${
+                  className={`rounded-2xl p-3 sm:p-4 text-center border transition-colors ${
                     topic.highlight
-                      ? 'bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border-purple-300 dark:border-purple-700 ring-2 ring-purple-400/50'
-                      : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+                      ? 'bg-purple-500/10 border-purple-500/30'
+                      : 'bg-white/5 border-white/10 hover:border-white/20'
                   }`}
                 >
-                  <div className="text-4xl mb-2">{topic.icon}</div>
-                  <div className={`font-bold ${topic.highlight ? 'text-purple-700 dark:text-purple-300' : 'text-gray-900 dark:text-white'}`}>
-                    {topic.name}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{topic.desc}</div>
+                  <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">{topic.icon}</div>
+                  <div className={`font-bold text-xs sm:text-sm ${topic.highlight ? 'text-purple-300' : 'text-white'}`}>{topic.name}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{topic.desc}</div>
                   {topic.highlight && (
-                    <div className="mt-2 text-xs font-semibold text-purple-600 dark:text-purple-400">
+                    <div className="mt-1 text-[10px] sm:text-xs font-semibold text-purple-400">
                       <FormattedMessage id="blogger.topic.recommended" defaultMessage="Top performer!" />
                     </div>
                   )}
@@ -825,234 +708,151 @@ const BloggerLanding: React.FC = () => {
               ))}
             </div>
 
-            {/* Example article ideas - 4 columns for variety */}
-            <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Digital Nomad example */}
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl p-4 border border-purple-200 dark:border-purple-700">
-                <div className="text-2xl mb-2">💻</div>
-                <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">
-                  <FormattedMessage id="blogger.example.nomad.type" defaultMessage="Digital Nomad:" />
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
-                  "<FormattedMessage id="blogger.example.nomad.text" defaultMessage="Spain Digital Nomad Visa 2026 Guide" />"
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/visa help call</p>
-              </div>
+            {/* Example articles */}
+            <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[
+                { emoji: '💻', typeId: 'blogger.example.nomad.type', typeDefault: 'Digital Nomad:', textId: 'blogger.example.nomad.text', textDefault: 'Spain Digital Nomad Visa 2026 Guide', earning: '$10/visa help call', colorClass: 'text-purple-400' },
+                { emoji: '✈️', typeId: 'blogger.example.travel.type', typeDefault: 'Travel Blog:', textId: 'blogger.example.travel.text', textDefault: 'What to Do if You Lose Your Passport in Thailand', earning: '$10/emergency help', colorClass: 'text-blue-400' },
+                { emoji: '📸', typeId: 'blogger.example.photo.type', typeDefault: 'Photo Blog:', textId: 'blogger.example.photo.text', textDefault: 'Photography Permits in Morocco: What You Need', earning: '$10/legal help', colorClass: 'text-pink-400' },
+                { emoji: '🏖️', typeId: 'blogger.example.vacation.type', typeDefault: 'Vacation Blog:', textId: 'blogger.example.vacation.text', textDefault: 'Bali Tourist Visa: How to Extend Your Stay', earning: '$10/visa help', colorClass: 'text-orange-400' },
+              ].map((ex, i) => (
+                <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4">
+                  <div className="text-xl sm:text-2xl mb-2">{ex.emoji}</div>
+                  <p className={`text-xs font-semibold ${ex.colorClass} mb-1`}>
+                    <FormattedMessage id={ex.typeId} defaultMessage={ex.typeDefault} />
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-400 italic mb-2">
+                    "<FormattedMessage id={ex.textId} defaultMessage={ex.textDefault} />"
+                  </p>
+                  <p className="text-xs text-green-400 font-bold">→ {ex.earning}</p>
+                </div>
+              ))}
+            </div>
 
-              {/* Travel blogger example */}
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl p-4 border border-blue-200 dark:border-blue-700">
-                <div className="text-2xl mb-2">✈️</div>
-                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
-                  <FormattedMessage id="blogger.example.travel.type" defaultMessage="Travel Blog:" />
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
-                  "<FormattedMessage id="blogger.example.travel.text" defaultMessage="What to Do if You Lose Your Passport in Thailand" />"
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/emergency help</p>
-              </div>
-
-              {/* Photographer example */}
-              <div className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-2xl p-4 border border-pink-200 dark:border-pink-700">
-                <div className="text-2xl mb-2">📸</div>
-                <p className="text-xs font-semibold text-pink-600 dark:text-pink-400 mb-1">
-                  <FormattedMessage id="blogger.example.photo.type" defaultMessage="Photo Blog:" />
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
-                  "<FormattedMessage id="blogger.example.photo.text" defaultMessage="Photography Permits in Morocco: What You Need" />"
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/legal help</p>
-              </div>
-
-              {/* Vacation/Holiday example */}
-              <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl p-4 border border-orange-200 dark:border-orange-700">
-                <div className="text-2xl mb-2">🏖️</div>
-                <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1">
-                  <FormattedMessage id="blogger.example.vacation.type" defaultMessage="Vacation Blog:" />
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
-                  "<FormattedMessage id="blogger.example.vacation.text" defaultMessage="Bali Tourist Visa: How to Extend Your Stay" />"
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-400 font-bold">→ $10/visa help</p>
+            {/* Widget highlight */}
+            <div className="mt-8 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-2xl p-5 sm:p-8 relative overflow-hidden">
+              <div className="absolute top-2 right-3 px-2.5 py-1 bg-amber-400 text-black rounded-full text-[10px] sm:text-xs font-black">NEW</div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <Code className="w-8 h-8 sm:w-10 sm:h-10 text-purple-400" aria-hidden="true" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl sm:text-2xl font-black mb-2">
+                    <FormattedMessage id="blogger.resources.widgets.highlight.title" defaultMessage="Smart Widgets = Copy & Paste" />
+                  </h3>
+                  <p className="text-sm text-gray-300 mb-4">
+                    <FormattedMessage id="blogger.resources.widgets.highlight.desc" defaultMessage="Pre-built buttons and banners with your affiliate link already integrated. Just copy the HTML code and paste it into your articles. Multiple sizes and styles available. Perfect tracking included!" />
+                  </p>
+                  <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
+                    {['blogger.resources.widgets.tag1', 'blogger.resources.widgets.tag2', 'blogger.resources.widgets.tag3', 'blogger.resources.widgets.tag4'].map((id, i) => (
+                      <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-gray-300">
+                        <FormattedMessage id={id} defaultMessage={['CTA Buttons', 'Banners 728x90', 'Sidebar 300x250', 'Mobile Optimized'][i]} />
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ============================================================== */}
-        {/* RESOURCES PROVIDED */}
-        {/* ============================================================== */}
-        <section className="py-16 md:py-20 px-4 bg-white dark:bg-gray-950">
+        {/* ================================================================
+            SECTION 6 - RESOURCES + EARNINGS
+        ================================================================ */}
+        <section className="section-content section-lazy" aria-labelledby="blogger-resources-title">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-4">
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 id="blogger-resources-title" className="text-2xl sm:text-4xl font-black mb-3">
                 <FormattedMessage id="blogger.resources.title" defaultMessage="Resources Included Free" />
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-base sm:text-lg text-gray-400">
                 <FormattedMessage id="blogger.resources.subtitle" defaultMessage="Everything you need to promote professionally" />
               </p>
             </div>
 
-            {/* Resources highlight box */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white mb-8">
-              <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-3xl">🎁</span>
+            {/* Resources grid */}
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4 mb-10">
+              {resources.map((resource, idx) => (
+                <div key={idx} className={`rounded-2xl p-3 sm:p-4 text-center border ${resource.highlight ? 'bg-purple-500/10 border-purple-500/30' : 'bg-white/5 border-white/10'}`}>
+                  <div className="text-2xl sm:text-3xl mb-1">{resource.icon}</div>
+                  <div className="text-xs sm:text-sm font-medium">{resource.name}</div>
                 </div>
-                <div>
-                  <h3 className="text-xl md:text-2xl font-bold mb-1">
-                    <FormattedMessage id="blogger.resources.box.title" defaultMessage="All Resources Included" />
+              ))}
+            </div>
+
+            {/* 3 resource detail cards */}
+            <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 mb-10">
+              {[
+                { icon: <FileText className="w-6 h-6 text-purple-400" />, titleId: 'blogger.resources.templates.title', titleDefault: 'Article Templates', descId: 'blogger.resources.templates.desc', descDefault: 'Pre-written article structures you can customize. Just add your personal touch and publish.', borderClass: 'border-purple-500/20', bgClass: 'bg-purple-500/20' },
+                { icon: <Copy className="w-6 h-6 text-blue-400" />, titleId: 'blogger.resources.texts.title', titleDefault: 'Ready-to-Copy Texts', descId: 'blogger.resources.texts.desc', descDefault: 'Promotional texts in 9 languages. Copy, paste, and you\'re done.', borderClass: 'border-blue-500/20', bgClass: 'bg-blue-500/20' },
+                { icon: <Search className="w-6 h-6 text-green-400" />, titleId: 'blogger.resources.seo.title', titleDefault: 'SEO Guide', descId: 'blogger.resources.seo.desc', descDefault: 'Best practices to rank your articles on Google and drive organic traffic.', borderClass: 'border-green-500/20', bgClass: 'bg-green-500/20' },
+              ].map((card, i) => (
+                <div key={i} className={`bg-white/5 border ${card.borderClass} rounded-2xl p-5 sm:p-6`}>
+                  <div className={`w-11 h-11 ${card.bgClass} rounded-xl flex items-center justify-center mb-3`} aria-hidden="true">
+                    {card.icon}
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold mb-2">
+                    <FormattedMessage id={card.titleId} defaultMessage={card.titleDefault} />
                   </h3>
-                  <p className="text-white/80">
-                    <FormattedMessage id="blogger.resources.box.desc" defaultMessage="No need to create your own graphics. We provide everything." />
+                  <p className="text-sm text-gray-400">
+                    <FormattedMessage id={card.descId} defaultMessage={card.descDefault} />
                   </p>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {resources.map((resource, idx) => (
-                  <div key={idx} className="bg-white/10 rounded-xl px-3 py-2 text-center text-sm">
-                    <div className="text-2xl mb-1">{resource.icon}</div>
-                    <div>{resource.name}</div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
 
-            {/* Widget highlight - NEW feature */}
-            <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white mb-8 relative overflow-hidden">
-              <div className="absolute top-2 right-4 px-3 py-1 bg-yellow-400 text-yellow-900 rounded-full text-xs font-black animate-pulse">
-                NEW
-              </div>
-              <div className="flex flex-col md:flex-row md:items-center gap-6">
-                <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <Code className="w-10 h-10" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-2xl font-black mb-2">
-                    <FormattedMessage id="blogger.resources.widgets.highlight.title" defaultMessage="Smart Widgets = Copy & Paste" />
-                  </h3>
-                  <p className="text-white/90 mb-4">
-                    <FormattedMessage id="blogger.resources.widgets.highlight.desc" defaultMessage="Pre-built buttons and banners with your affiliate link already integrated. Just copy the HTML code and paste it into your articles. Multiple sizes and styles available. Perfect tracking included!" />
-                  </p>
-                  <div className="flex flex-wrap gap-2 text-sm">
-                    <span className="px-3 py-1 bg-white/20 rounded-full">
-                      <FormattedMessage id="blogger.resources.widgets.tag1" defaultMessage="CTA Buttons" />
-                    </span>
-                    <span className="px-3 py-1 bg-white/20 rounded-full">
-                      <FormattedMessage id="blogger.resources.widgets.tag2" defaultMessage="Banners 728x90" />
-                    </span>
-                    <span className="px-3 py-1 bg-white/20 rounded-full">
-                      <FormattedMessage id="blogger.resources.widgets.tag3" defaultMessage="Sidebar 300x250" />
-                    </span>
-                    <span className="px-3 py-1 bg-white/20 rounded-full">
-                      <FormattedMessage id="blogger.resources.widgets.tag4" defaultMessage="Mobile Optimized" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 3 resource cards */}
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-700">
-                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-800 rounded-xl flex items-center justify-center mb-4">
-                  <FileText className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.resources.templates.title" defaultMessage="Article Templates" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.resources.templates.desc" defaultMessage="Pre-written article structures you can customize. Just add your personal touch and publish." />
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-xl flex items-center justify-center mb-4">
-                  <Copy className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.resources.texts.title" defaultMessage="Ready-to-Copy Texts" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.resources.texts.desc" defaultMessage="Promotional texts in 9 languages. Copy, paste, and you're done." />
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-700">
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-xl flex items-center justify-center mb-4">
-                  <Search className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  <FormattedMessage id="blogger.resources.seo.title" defaultMessage="SEO Guide" />
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <FormattedMessage id="blogger.resources.seo.desc" defaultMessage="Best practices to rank your articles on Google and drive organic traffic." />
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ============================================================== */}
-        {/* EARNINGS - Simple and clear */}
-        {/* ============================================================== */}
-        <section className="py-16 md:py-24 px-4 bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-semibold mb-4">
-                <DollarSign className="w-4 h-4" />
-                <FormattedMessage id="blogger.earnings.badge" defaultMessage="Your Earnings" />
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+            {/* Earnings overview */}
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-4xl font-black mb-3">
                 <FormattedMessage id="blogger.earnings.title" defaultMessage="How Much Can You Earn?" />
               </h2>
             </div>
 
-            {/* Main earning */}
-            <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-3xl p-8 md:p-12 text-white text-center mb-8">
-              <Phone className="w-16 h-16 mx-auto mb-4 opacity-80" />
-              <div className="text-6xl md:text-8xl font-black mb-2">$10</div>
-              <p className="text-xl md:text-2xl font-medium opacity-90">
+            {/* Main earning card */}
+            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-6 sm:p-10 text-center mb-6">
+              <Phone className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 opacity-80" aria-hidden="true" />
+              <div className="text-5xl sm:text-7xl font-black mb-2">$10</div>
+              <p className="text-lg sm:text-xl opacity-90">
                 <FormattedMessage id="blogger.earnings.perCall" defaultMessage="Per client call to a lawyer or expat helper" />
               </p>
-              <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
-                <div className="bg-white/20 rounded-full px-4 py-2">10 clients = $100</div>
-                <div className="bg-white/20 rounded-full px-4 py-2">50 clients = $500</div>
-                <div className="bg-white/20 rounded-full px-4 py-2">100 clients = $1000</div>
+              <div className="mt-5 flex flex-wrap justify-center gap-3 text-sm">
+                {['10 = $100', '50 = $500', '100 = $1000'].map((text, i) => (
+                  <div key={i} className="bg-white/10 rounded-full px-4 py-2">{text.split('=')[0]} clients = ${text.split('$')[1]}</div>
+                ))}
               </div>
             </div>
 
             {/* Bonus earnings */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Find lawyer/helper partners */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-3xl p-6 border border-purple-100 dark:border-purple-800">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-purple-100 dark:bg-purple-800 rounded-xl flex items-center justify-center">
-                    <UserPlus className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="bg-white/5 border border-purple-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-11 h-11 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                    <UserPlus className="w-5 h-5 text-purple-400" aria-hidden="true" />
                   </div>
                   <div>
-                    <div className="text-3xl font-black text-purple-600 dark:text-purple-400">$5</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-2xl sm:text-3xl font-black text-purple-400">$5</div>
+                    <div className="text-xs sm:text-sm text-gray-400">
                       <FormattedMessage id="blogger.earnings.partner" defaultMessage="Per call to your lawyer/helper partners" />
                     </div>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-400">
                   <FormattedMessage id="blogger.earnings.partner.desc" defaultMessage="Find a lawyer or expat helper to join SOS-Expat. Every time they receive a call, you earn $5 passively!" />
                 </p>
               </div>
-
-              {/* SEO advantage */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-3xl p-6 border border-green-100 dark:border-green-800">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-xl flex items-center justify-center">
-                    <Search className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <div className="bg-white/5 border border-green-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-11 h-11 bg-green-500/20 rounded-xl flex items-center justify-center">
+                    <Search className="w-5 h-5 text-green-400" aria-hidden="true" />
                   </div>
                   <div>
-                    <div className="text-3xl font-black text-green-600 dark:text-green-400">SEO</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-2xl sm:text-3xl font-black text-green-400">SEO</div>
+                    <div className="text-xs sm:text-sm text-gray-400">
                       <FormattedMessage id="blogger.earnings.seo" defaultMessage="Long-term passive traffic" />
                     </div>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-400">
                   <FormattedMessage id="blogger.earnings.seo.desc" defaultMessage="Your articles rank on Google and generate traffic for months or years. Write once, earn forever!" />
                 </p>
               </div>
@@ -1060,185 +860,154 @@ const BloggerLanding: React.FC = () => {
           </div>
         </section>
 
-        {/* ============================================================== */}
-        {/* RECRUIT LAWYERS/HELPERS - Passive income */}
-        {/* ============================================================== */}
-        <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 text-white">
+        {/* ================================================================
+            SECTION 7 - RECRUIT PARTNERS (Network diagram)
+        ================================================================ */}
+        <section className="section-content section-lazy" aria-labelledby="blogger-passive-title">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-4">
-                <Network className="w-4 h-4" />
-                <FormattedMessage id="blogger.passive.badge" defaultMessage="Passive Income" />
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black mb-4">
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 id="blogger-passive-title" className="text-2xl sm:text-4xl font-black mb-3">
                 <FormattedMessage id="blogger.passive.title" defaultMessage="Find Lawyer & Helper Partners" />
               </h2>
-              <p className="text-xl text-white/90 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto">
                 <FormattedMessage id="blogger.passive.subtitle" defaultMessage="Know a lawyer or experienced expat? Help them join SOS-Expat and earn $5 every time they receive a call!" />
               </p>
             </div>
 
-            {/* Visual representation */}
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 md:p-10 border border-white/20 max-w-3xl mx-auto">
+            {/* Network diagram */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-10 max-w-3xl mx-auto">
               <div className="flex flex-col items-center">
                 {/* You */}
-                <div className="flex flex-col items-center mb-6">
-                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl">
-                    <Crown className="w-10 h-10 text-purple-500" />
+                <div className="flex flex-col items-center mb-5">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-white" aria-hidden="true" />
                   </div>
-                  <span className="mt-2 font-bold text-lg">
+                  <span className="mt-2 font-bold text-base sm:text-lg">
                     <FormattedMessage id="blogger.passive.you" defaultMessage="YOU" />
                   </span>
-                  <span className="text-white/80 text-sm">
+                  <span className="text-gray-400 text-xs sm:text-sm">
                     <FormattedMessage id="blogger.passive.you.earn" defaultMessage="$10/client + $5/call from partners" />
                   </span>
                 </div>
 
-                {/* Arrow */}
-                <div className="text-3xl mb-4">↓</div>
+                <div className="text-2xl sm:text-3xl mb-4 text-gray-500" aria-hidden="true">↓</div>
 
-                {/* Partner providers */}
-                <div className="flex justify-center gap-4 md:gap-8 mb-6">
+                {/* Partners */}
+                <div className="flex justify-center gap-4 sm:gap-8 mb-6">
                   {[
                     { emoji: '⚖️', label: intl.formatMessage({ id: 'blogger.passive.lawyer', defaultMessage: 'Lawyer' }) },
                     { emoji: '🌍', label: intl.formatMessage({ id: 'blogger.passive.helper', defaultMessage: 'Helper' }) },
                     { emoji: '⚖️', label: intl.formatMessage({ id: 'blogger.passive.lawyer', defaultMessage: 'Lawyer' }) },
                   ].map((item, i) => (
                     <div key={i} className="flex flex-col items-center">
-                      <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center text-2xl">
-                        {item.emoji}
-                      </div>
-                      <span className="mt-1 text-sm font-medium">{item.label}</span>
-                      <span className="text-xs text-green-300">+$5/call</span>
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-full flex items-center justify-center text-xl sm:text-2xl">{item.emoji}</div>
+                      <span className="mt-1 text-xs sm:text-sm font-medium">{item.label}</span>
+                      <span className="text-xs text-green-400">+$5/call</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Example calculation */}
-              <div className="mt-8 bg-white/10 rounded-2xl p-4 text-center">
-                <p className="font-semibold mb-2">
+              {/* Example */}
+              <div className="mt-6 bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+                <p className="font-semibold mb-1 text-sm sm:text-base">
                   <FormattedMessage id="blogger.passive.example" defaultMessage="Example: 3 lawyer partners, 20 calls/month each" />
                 </p>
-                <p className="text-2xl font-black text-green-300">
+                <p className="text-xl sm:text-2xl font-black text-green-400">
                   = $300/month <FormattedMessage id="blogger.passive.passive" defaultMessage="passive income!" />
                 </p>
               </div>
             </div>
 
-            {/* CTA */}
-            <div className="text-center mt-10">
-              <button
-                onClick={() => navigate(registerRoute)}
-                className="group bg-white text-purple-600 font-bold px-8 py-4 rounded-2xl text-lg inline-flex items-center gap-3 hover:bg-gray-100 transition-all shadow-xl"
-              >
-                <Rocket className="w-6 h-6" />
-                <FormattedMessage id="blogger.passive.cta" defaultMessage="Find Partners Today" />
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+            {/* Payment methods */}
+            <div className="mt-10 text-center">
+              <h3 className="text-lg sm:text-xl font-bold mb-5">
+                <FormattedMessage id="blogger.payment.title" defaultMessage="Get Paid Your Way" />
+              </h3>
+              <div className="flex flex-wrap justify-center gap-3">
+                {paymentMethods.map((method, idx) => (
+                  <div key={idx} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
+                    <span className="text-lg">{method.icon}</span>
+                    <span className="font-medium text-sm">{method.name}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs sm:text-sm text-gray-500">
+                <FormattedMessage id="blogger.payment.note" defaultMessage="Minimum $50 • Processed in 48h" />
+              </p>
             </div>
           </div>
         </section>
 
-        {/* ============================================================== */}
-        {/* PAYMENT METHODS */}
-        {/* ============================================================== */}
-        <section className="py-12 md:py-16 px-4 bg-white dark:bg-gray-950">
-          <div className="max-w-4xl mx-auto text-center">
-            <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              <FormattedMessage id="blogger.payment.title" defaultMessage="Get Paid Your Way" />
-            </h3>
-            <div className="flex flex-wrap justify-center gap-4">
-              {paymentMethods.map((method, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2"
-                >
-                  <span className="text-xl">{method.icon}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{method.name}</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="blogger.payment.note" defaultMessage="Minimum $50 • Processed in 48h" />
-            </p>
-          </div>
-        </section>
-
-        {/* ============================================================== */}
-        {/* FAQ */}
-        {/* ============================================================== */}
-        <section className="py-16 md:py-24 px-4 bg-gray-50 dark:bg-gray-900">
+        {/* ================================================================
+            SECTION 8 - FAQ (accessible accordion)
+        ================================================================ */}
+        <section className="section-content section-lazy" aria-labelledby="blogger-faq-title">
           <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">
-                <FormattedMessage id="blogger.faq.title" defaultMessage="Questions?" />
-              </h2>
-            </div>
-
-            <div className="space-y-3">
+            <h2 id="blogger-faq-title" className="text-2xl sm:text-4xl font-black text-center mb-8 sm:mb-10">
+              <FormattedMessage id="blogger.faq.title" defaultMessage="Questions?" />
+            </h2>
+            <div className="space-y-3" itemScope itemType="https://schema.org/FAQPage">
               {faqs.map((faq, idx) => (
-                <div
+                <FAQItem
                   key={idx}
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden"
-                >
-                  <button
-                    onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                    className="w-full flex items-center justify-between p-5 text-left"
-                  >
-                    <h3 className="font-semibold text-gray-900 dark:text-white pr-4">
-                      {faq.question}
-                    </h3>
-                    <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform flex-shrink-0 ${openFaq === idx ? 'rotate-180' : ''}`} />
-                  </button>
-                  {openFaq === idx && (
-                    <div className="px-5 pb-5 text-gray-600 dark:text-gray-300">
-                      <p>{faq.answer}</p>
-                    </div>
-                  )}
-                </div>
+                  question={faq.question}
+                  answer={faq.answer}
+                  isOpen={openFaq === idx}
+                  onToggle={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  index={idx}
+                />
               ))}
             </div>
           </div>
         </section>
 
-        {/* ============================================================== */}
-        {/* FINAL CTA */}
-        {/* ============================================================== */}
-        <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-purple-600 via-purple-500 to-indigo-500 text-white">
+        {/* ================================================================
+            SECTION 9 - FINAL CTA
+        ================================================================ */}
+        <section className="section-content" aria-label="Call to action">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-5xl font-black mb-6">
+            <h2 className="text-2xl sm:text-4xl font-black mb-4 sm:mb-6">
               <FormattedMessage id="blogger.final.title" defaultMessage="Ready to Monetize Your Blog?" />
             </h2>
-            <p className="text-xl text-white/90 mb-8">
+            <p className="text-base sm:text-lg text-gray-400 mb-6 sm:mb-8">
               <FormattedMessage id="blogger.final.subtitle" defaultMessage="It's free, resources included, start earning today." />
             </p>
 
-            <button
-              onClick={() => navigate(registerRoute)}
-              className="group bg-white text-purple-600 font-bold px-10 py-6 rounded-2xl text-xl inline-flex items-center gap-3 hover:bg-gray-100 transition-all shadow-2xl animate-pulse-glow"
-            >
-              <Rocket className="w-8 h-8" />
-              <FormattedMessage id="blogger.final.cta" defaultMessage="Become a Blogger Partner Now" />
-              <ArrowRight className="w-7 h-7 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            <div className="flex flex-wrap justify-center gap-4 mt-8 text-sm">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-300" />
-                <FormattedMessage id="blogger.final.trust.1" defaultMessage="100% Free" />
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-300" />
-                <FormattedMessage id="blogger.final.trust.2" defaultMessage="Resources Included" />
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-300" />
-                <FormattedMessage id="blogger.final.trust.3" defaultMessage="SEO Guide" />
-              </div>
+            {/* Recap pills */}
+            <div className="flex flex-wrap justify-center gap-3 mb-6 sm:mb-8">
+              {[
+                { id: 'blogger.final.trust.1', defaultMessage: '100% Free' },
+                { id: 'blogger.final.trust.2', defaultMessage: 'Resources Included' },
+                { id: 'blogger.final.trust.3', defaultMessage: 'SEO Guide' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm">
+                  <Check className="w-4 h-4 text-green-400" aria-hidden="true" />
+                  <FormattedMessage id={item.id} defaultMessage={item.defaultMessage} />
+                </div>
+              ))}
             </div>
+
+            <CTAButton onClick={goToRegister} size="large" className="animate-pulse-glow mx-auto" ariaLabel={ctaAriaLabel}>
+              <FormattedMessage id="blogger.final.cta" defaultMessage="Become a Blogger Partner Now" />
+            </CTAButton>
           </div>
         </section>
+
+        {/* ================================================================
+            STICKY CTA (mobile only)
+        ================================================================ */}
+        <div
+          className={`fixed bottom-0 left-0 right-0 z-50 lg:hidden transition-all duration-300 ${showStickyCTA ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          <div className="bg-black/90 backdrop-blur-md border-t border-white/10 px-4 py-3">
+            <CTAButton onClick={goToRegister} className="w-full" ariaLabel={ctaAriaLabel}>
+              <FormattedMessage id="blogger.hero.cta" defaultMessage="Become a Blogger Partner - It's Free" />
+            </CTAButton>
+          </div>
+        </div>
+
       </div>
     </Layout>
   );

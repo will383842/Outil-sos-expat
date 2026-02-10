@@ -1,76 +1,221 @@
 /**
  * GroupAdminLanding - Landing Page for Facebook Group Administrators
  *
- * Designed to convert Facebook group admins into SOS-Expat partners.
- * Highlights: $15 per client, ready-to-use tools, 9 languages support.
+ * V2: Harmonized with ChatterLanding V7 dark premium design
+ * - Dark theme (bg-black text-white) with blue/indigo identity
+ * - Mobile-first with safe-area, 44px+ touch targets
+ * - Accessible FAQ accordion (aria-controls, Plus/Minus)
+ * - content-visibility: auto for below-fold perf
+ * - Sticky CTA on mobile
+ * - prefers-reduced-motion support
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import {
-  Users,
-  CheckCircle,
   ArrowRight,
-  DollarSign,
-  Globe,
+  Check,
   ChevronDown,
-  Smartphone,
-  Zap,
-  Gift,
-  Image,
-  Copy,
-  Target,
-  TrendingUp,
-  Award,
-  ShieldCheck,
+  Plus,
+  Minus,
   Facebook,
   UserPlus,
-  FileText,
+  Copy,
+  DollarSign,
+  Image,
+  Globe,
+  Gift,
 } from 'lucide-react';
 
 // ============================================================================
-// MAIN COMPONENT
+// STYLES - Mobile-first with performance hints
+// ============================================================================
+const globalStyles = `
+  /* FORCE font sizes on mobile - override index.css clamp() rules */
+  @media (max-width: 768px) {
+    .groupadmin-landing h1 { font-size: 2.25rem !important; }
+    .groupadmin-landing h2 { font-size: 1.875rem !important; }
+    .groupadmin-landing h3 { font-size: 1.5rem !important; }
+    .groupadmin-landing p { font-size: 1rem !important; }
+  }
+
+  /* Animations */
+  @keyframes pulse-glow-blue {
+    0%, 100% { box-shadow: 0 0 20px rgba(96, 165, 250, 0.4); }
+    50% { box-shadow: 0 0 40px rgba(96, 165, 250, 0.6); }
+  }
+  .animate-pulse-glow-blue { animation: pulse-glow-blue 2s ease-in-out infinite; }
+
+  .section-content {
+    padding: 3rem 1rem;
+    position: relative;
+  }
+  @media (min-width: 640px) {
+    .section-content { padding: 4rem 1.5rem; }
+  }
+  @media (min-width: 1024px) {
+    .section-content { padding: 6rem 2rem; }
+  }
+  /* Below-fold sections: paint only when near viewport */
+  .section-lazy {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 600px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-bounce, .transition-all { animation: none !important; transition: none !important; }
+  }
+`;
+
+// ============================================================================
+// COMPOSANTS
+// ============================================================================
+
+const CTAButton: React.FC<{
+  onClick: () => void;
+  children: React.ReactNode;
+  size?: 'normal' | 'large';
+  className?: string;
+  ariaLabel?: string;
+}> = ({ onClick, children, size = 'normal', className = '', ariaLabel }) => (
+  <button
+    onClick={onClick}
+    aria-label={ariaLabel}
+    className={`
+      flex items-center justify-center gap-2 sm:gap-3
+      bg-gradient-to-r from-amber-400 to-yellow-400
+      text-black font-extrabold rounded-2xl
+      shadow-lg shadow-amber-500/30
+      transition-all active:scale-[0.98] hover:shadow-xl hover:from-amber-300 hover:to-yellow-300
+      will-change-transform
+      ${size === 'large' ? 'min-h-[56px] sm:min-h-[64px] px-6 sm:px-8 py-4 sm:py-5 text-lg sm:text-xl' : 'min-h-[48px] sm:min-h-[56px] px-5 sm:px-6 py-3 sm:py-4 text-base sm:text-lg'}
+      ${className}
+    `}
+  >
+    {children}
+    <ArrowRight className={size === 'large' ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4 sm:w-5 sm:h-5'} aria-hidden="true" />
+  </button>
+);
+
+const FAQItem: React.FC<{
+  question: React.ReactNode;
+  answer: React.ReactNode;
+  isOpen: boolean;
+  onToggle: () => void;
+  index: number;
+}> = ({ question, answer, isOpen, onToggle, index }) => (
+  <div className="border border-white/10 rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20">
+    <button
+      type="button"
+      onClick={onToggle}
+      className="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-4 sm:py-5 text-left min-h-[48px]"
+      aria-expanded={isOpen}
+      aria-controls={`faq-answer-${index}`}
+      id={`faq-question-${index}`}
+    >
+      <span className="text-base sm:text-lg font-semibold text-white pr-2">{question}</span>
+      <span className={`flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
+        {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+      </span>
+    </button>
+    <div
+      id={`faq-answer-${index}`}
+      role="region"
+      aria-labelledby={`faq-question-${index}`}
+      className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
+    >
+      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base text-gray-300 leading-relaxed">
+        {answer}
+      </div>
+    </div>
+  </div>
+);
+
+const ScrollIndicator: React.FC<{ label: string }> = ({ label }) => (
+  <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" aria-hidden="true">
+    <span className="text-white/60 text-xs sm:text-sm font-medium">{label}</span>
+    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-white/60 animate-bounce" />
+  </div>
+);
+
+// ============================================================================
+// PAGE
 // ============================================================================
 const GroupAdminLanding: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showStickyCTA, setShowStickyCTA] = useState(false);
 
   const handleRegisterClick = () => {
     navigate('/group-admin/inscription');
   };
 
+  useEffect(() => {
+    const onScroll = () => setShowStickyCTA(window.scrollY > window.innerHeight * 0.8);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const ctaAriaLabel = intl.formatMessage({ id: 'groupAdmin.landing.hero.cta', defaultMessage: 'Become a Partner' });
+
+  const faqItems = [
+    {
+      q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q1', defaultMessage: 'Is it really free to join?' }),
+      a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a1', defaultMessage: 'Yes! Registration is 100% free. There are no fees, no commitments, and no minimum requirements.' }),
+    },
+    {
+      q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q2', defaultMessage: 'When do I get paid?' }),
+      a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a2', defaultMessage: 'Commissions become available 7 days after the client\'s consultation. You can withdraw anytime once you have at least $25.' }),
+    },
+    {
+      q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q3', defaultMessage: 'What payment methods are available?' }),
+      a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a3', defaultMessage: 'We support PayPal, Wise, Mobile Money, and bank transfers to over 100 countries.' }),
+    },
+    {
+      q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q4', defaultMessage: 'How does the recruitment bonus work?' }),
+      a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a4', defaultMessage: 'When you recruit another group admin using your recruitment link, you earn $5 when they sign up. The bonus window is 6 months.' }),
+    },
+    {
+      q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q5', defaultMessage: 'What kind of groups are eligible?' }),
+      a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a5', defaultMessage: 'Any Facebook group related to travel, expatriation, immigration, international relocation, or living abroad is eligible.' }),
+    },
+  ];
+
   return (
-    <Layout>
+    <Layout showFooter={false}>
       <SEOHead
         title={intl.formatMessage({ id: 'groupAdmin.landing.seo.title', defaultMessage: 'Become a Group Admin Partner - Earn $15 per Client | SOS-Expat' })}
         description={intl.formatMessage({ id: 'groupAdmin.landing.seo.description', defaultMessage: 'Monetize your Facebook group. Earn $15 for each client referred, plus $5 for each admin recruited. Ready-to-use tools in 9 languages.' })}
       />
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
-        </div>
+      {/* Custom styles */}
+      <style>{globalStyles}</style>
 
-        <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
+      <div className="groupadmin-landing bg-black text-white">
+
+        {/* ================================================================
+            HERO - FULL VIEWPORT
+        ================================================================ */}
+        <section
+          className="min-h-[100svh] flex flex-col justify-center items-center relative bg-gradient-to-b from-blue-950 via-indigo-900 to-black overflow-hidden"
+          aria-label={intl.formatMessage({ id: 'groupAdmin.landing.seo.title', defaultMessage: 'Become a Group Admin Partner' })}
+        >
+          {/* Radial blue glow */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(96,165,250,0.15),transparent_50%)]" aria-hidden="true" />
+
+          <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
+
             {/* Facebook Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-              <Facebook className="w-5 h-5 text-blue-400" />
-              <span className="text-sm font-medium">
-                <FormattedMessage id="groupAdmin.landing.badge" defaultMessage="For Facebook Group Admins" />
-              </span>
+            <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-bold border border-blue-500/30 mb-4 sm:mb-6">
+              <Facebook className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+              <FormattedMessage id="groupAdmin.landing.badge" defaultMessage="For Facebook Group Admins" />
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+            <h1 style={{ fontSize: '2.25rem', lineHeight: 1.1 }} className="font-black text-white mb-3 sm:mb-6">
               <FormattedMessage
                 id="groupAdmin.landing.hero.title"
                 defaultMessage="Earn Money with Your Facebook Group"
@@ -78,270 +223,311 @@ const GroupAdminLanding: React.FC = () => {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            <p style={{ fontSize: '1rem' }} className="text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
               <FormattedMessage
                 id="groupAdmin.landing.hero.subtitle"
                 defaultMessage="Help your expat members with legal assistance and earn $15 per client. Plus $5 for each admin you recruit."
               />
             </p>
 
-            {/* Key Numbers */}
-            <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-10">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6">
-                <div className="text-3xl md:text-4xl font-bold text-green-400">$15</div>
-                <div className="text-sm text-blue-200">
+            {/* Key Numbers Row */}
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-10">
+              <div className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-center">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-green-400">$15</div>
+                <div className="text-xs sm:text-sm text-gray-400">
                   <FormattedMessage id="groupAdmin.landing.hero.perClient" defaultMessage="per client" />
                 </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6">
-                <div className="text-3xl md:text-4xl font-bold text-yellow-400">$5</div>
-                <div className="text-sm text-blue-200">
+              <div className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-center">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-yellow-400">$5</div>
+                <div className="text-xs sm:text-sm text-gray-400">
                   <FormattedMessage id="groupAdmin.landing.hero.perRecruit" defaultMessage="per recruit" />
                 </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6">
-                <div className="text-3xl md:text-4xl font-bold text-purple-400">9</div>
-                <div className="text-sm text-blue-200">
+              <div className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-center">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-blue-400">9</div>
+                <div className="text-xs sm:text-sm text-gray-400">
                   <FormattedMessage id="groupAdmin.landing.hero.languages" defaultMessage="languages" />
                 </div>
               </div>
             </div>
 
             {/* CTA Button */}
-            <button
-              onClick={handleRegisterClick}
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-lg px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            >
+            <CTAButton onClick={handleRegisterClick} size="large" className="w-full sm:w-auto max-w-md mx-auto" ariaLabel={ctaAriaLabel}>
               <FormattedMessage id="groupAdmin.landing.hero.cta" defaultMessage="Become a Partner" />
-              <ArrowRight className="w-5 h-5" />
-            </button>
+            </CTAButton>
 
-            <p className="text-sm text-blue-200 mt-4">
+            <p className="text-gray-400 mt-4 sm:mt-6 text-sm sm:text-base">
               <FormattedMessage id="groupAdmin.landing.hero.free" defaultMessage="100% free - No commitment" />
             </p>
           </div>
-        </div>
-      </section>
 
-      {/* How It Works Section */}
-      <section className="py-16 md:py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            <FormattedMessage id="groupAdmin.landing.howItWorks.title" defaultMessage="How It Works" />
-          </h2>
-          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-            <FormattedMessage id="groupAdmin.landing.howItWorks.subtitle" defaultMessage="Three simple steps to start earning" />
-          </p>
+          <ScrollIndicator label={intl.formatMessage({ id: 'groupAdmin.landing.scroll', defaultMessage: 'Discover' })} />
+        </section>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Step 1 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <UserPlus className="w-8 h-8 text-blue-600" />
-              </div>
-              <div className="text-sm font-bold text-blue-600 mb-2">
-                <FormattedMessage id="groupAdmin.landing.step1.label" defaultMessage="STEP 1" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">
-                <FormattedMessage id="groupAdmin.landing.step1.title" defaultMessage="Register for Free" />
-              </h3>
-              <p className="text-gray-600">
-                <FormattedMessage id="groupAdmin.landing.step1.description" defaultMessage="Sign up and add your Facebook group. Get your unique affiliate links instantly." />
-              </p>
-            </div>
+        {/* ================================================================
+            SECTION 2 - HOW IT WORKS (3 steps)
+        ================================================================ */}
+        <section className="section-content section-lazy bg-gradient-to-b from-black to-gray-950" aria-labelledby="section-how">
+          <div className="max-w-7xl mx-auto">
 
-            {/* Step 2 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Copy className="w-8 h-8 text-green-600" />
-              </div>
-              <div className="text-sm font-bold text-green-600 mb-2">
-                <FormattedMessage id="groupAdmin.landing.step2.label" defaultMessage="STEP 2" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">
-                <FormattedMessage id="groupAdmin.landing.step2.title" defaultMessage="Share Ready-Made Posts" />
-              </h3>
-              <p className="text-gray-600">
-                <FormattedMessage id="groupAdmin.landing.step2.description" defaultMessage="Use our copy-paste posts, banners, and images. Available in 9 languages!" />
-              </p>
-            </div>
+            <h2 id="section-how" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
+              <FormattedMessage id="groupAdmin.landing.howItWorks.title" defaultMessage="How It Works" />
+            </h2>
+            <p className="text-base sm:text-lg lg:text-xl text-gray-400 text-center mb-10 sm:mb-12 lg:mb-16">
+              <FormattedMessage id="groupAdmin.landing.howItWorks.subtitle" defaultMessage="Three simple steps to start earning" />
+            </p>
 
-            {/* Step 3 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow text-center">
-              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <DollarSign className="w-8 h-8 text-yellow-600" />
-              </div>
-              <div className="text-sm font-bold text-yellow-600 mb-2">
-                <FormattedMessage id="groupAdmin.landing.step3.label" defaultMessage="STEP 3" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">
-                <FormattedMessage id="groupAdmin.landing.step3.title" defaultMessage="Earn Commissions" />
-              </h3>
-              <p className="text-gray-600">
-                <FormattedMessage id="groupAdmin.landing.step3.description" defaultMessage="Earn $15 for each client and $5 for each admin you recruit. Withdraw anytime." />
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+            <div className="grid lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
 
-      {/* Benefits Section */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            <FormattedMessage id="groupAdmin.landing.benefits.title" defaultMessage="Why Join?" />
-          </h2>
+              {/* Step 1 */}
+              <article className="bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
+                  <UserPlus className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
+                </div>
+                <div className="text-sm font-bold text-blue-400 mb-2">
+                  <FormattedMessage id="groupAdmin.landing.step1.label" defaultMessage="STEP 1" />
+                </div>
+                <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
+                  <FormattedMessage id="groupAdmin.landing.step1.title" defaultMessage="Register for Free" />
+                </h3>
+                <p className="text-base sm:text-lg lg:text-xl text-gray-200">
+                  <FormattedMessage id="groupAdmin.landing.step1.description" defaultMessage="Sign up and add your Facebook group. Get your unique affiliate links instantly." />
+                </p>
+              </article>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {/* Benefit 1 */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
-              <DollarSign className="w-10 h-10 text-green-600 mb-4" />
-              <h3 className="font-bold text-lg mb-2">
-                <FormattedMessage id="groupAdmin.landing.benefit1.title" defaultMessage="$15 Per Client" />
-              </h3>
-              <p className="text-gray-600 text-sm">
-                <FormattedMessage id="groupAdmin.landing.benefit1.description" defaultMessage="Earn commission for every member who books a consultation through your link." />
-              </p>
-            </div>
+              {/* Step 2 */}
+              <article className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border border-green-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-green-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
+                  <Copy className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
+                </div>
+                <div className="text-sm font-bold text-green-400 mb-2">
+                  <FormattedMessage id="groupAdmin.landing.step2.label" defaultMessage="STEP 2" />
+                </div>
+                <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
+                  <FormattedMessage id="groupAdmin.landing.step2.title" defaultMessage="Share Ready-Made Posts" />
+                </h3>
+                <p className="text-base sm:text-lg lg:text-xl text-gray-200">
+                  <FormattedMessage id="groupAdmin.landing.step2.description" defaultMessage="Use our copy-paste posts, banners, and images. Available in 9 languages!" />
+                </p>
+              </article>
 
-            {/* Benefit 2 */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-              <Image className="w-10 h-10 text-blue-600 mb-4" />
-              <h3 className="font-bold text-lg mb-2">
-                <FormattedMessage id="groupAdmin.landing.benefit2.title" defaultMessage="Ready-Made Tools" />
-              </h3>
-              <p className="text-gray-600 text-sm">
-                <FormattedMessage id="groupAdmin.landing.benefit2.description" defaultMessage="Posts, banners, images - all ready to use. Just copy-paste!" />
-              </p>
-            </div>
-
-            {/* Benefit 3 */}
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
-              <Globe className="w-10 h-10 text-purple-600 mb-4" />
-              <h3 className="font-bold text-lg mb-2">
-                <FormattedMessage id="groupAdmin.landing.benefit3.title" defaultMessage="9 Languages" />
-              </h3>
-              <p className="text-gray-600 text-sm">
-                <FormattedMessage id="groupAdmin.landing.benefit3.description" defaultMessage="All resources available in FR, EN, ES, PT, AR, DE, IT, NL, ZH." />
-              </p>
-            </div>
-
-            {/* Benefit 4 */}
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-100">
-              <Gift className="w-10 h-10 text-yellow-600 mb-4" />
-              <h3 className="font-bold text-lg mb-2">
-                <FormattedMessage id="groupAdmin.landing.benefit4.title" defaultMessage="$5 Discount for Members" />
-              </h3>
-              <p className="text-gray-600 text-sm">
-                <FormattedMessage id="groupAdmin.landing.benefit4.description" defaultMessage="Your members get an exclusive $5 discount on their first consultation." />
-              </p>
+              {/* Step 3 */}
+              <article className="bg-gradient-to-br from-yellow-500/20 to-amber-500/10 border border-yellow-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-yellow-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
+                  <DollarSign className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-black" />
+                </div>
+                <div className="text-sm font-bold text-yellow-400 mb-2">
+                  <FormattedMessage id="groupAdmin.landing.step3.label" defaultMessage="STEP 3" />
+                </div>
+                <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
+                  <FormattedMessage id="groupAdmin.landing.step3.title" defaultMessage="Earn Commissions" />
+                </h3>
+                <p className="text-base sm:text-lg lg:text-xl text-gray-200">
+                  <FormattedMessage id="groupAdmin.landing.step3.description" defaultMessage="Earn $15 for each client and $5 for each admin you recruit. Withdraw anytime." />
+                </p>
+              </article>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Target Groups Section */}
-      <section className="py-16 md:py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            <FormattedMessage id="groupAdmin.landing.targetGroups.title" defaultMessage="Perfect For Your Group" />
-          </h2>
-          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-            <FormattedMessage id="groupAdmin.landing.targetGroups.subtitle" defaultMessage="Whether you manage a travel, expat, or immigration group - we have the right tools for you." />
-          </p>
+        {/* ================================================================
+            SECTION 3 - BENEFITS (4 cards)
+        ================================================================ */}
+        <section className="section-content section-lazy bg-gray-950" aria-labelledby="section-benefits">
+          <div className="max-w-7xl mx-auto">
 
-          <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
-            {[
-              { id: 'travel', icon: '✈️', label: 'Travel Groups' },
-              { id: 'expat', icon: '🌍', label: 'Expat Communities' },
-              { id: 'nomad', icon: '💻', label: 'Digital Nomads' },
-              { id: 'immigration', icon: '🛂', label: 'Immigration' },
-              { id: 'relocation', icon: '📦', label: 'Relocation' },
-              { id: 'student', icon: '🎓', label: 'Students Abroad' },
-              { id: 'family', icon: '👨‍👩‍👧‍👦', label: 'Expat Families' },
-              { id: 'retirement', icon: '🌴', label: 'Retirement Abroad' },
-            ].map((group) => (
-              <div
-                key={group.id}
-                className="bg-white rounded-full px-5 py-3 shadow-sm hover:shadow-md transition-shadow flex items-center gap-2"
-              >
-                <span className="text-xl">{group.icon}</span>
-                <span className="font-medium text-gray-700">
-                  <FormattedMessage id={`groupAdmin.landing.groupType.${group.id}`} defaultMessage={group.label} />
-                </span>
+            <h2 id="section-benefits" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-8 sm:mb-12 lg:mb-16">
+              <FormattedMessage id="groupAdmin.landing.benefits.title" defaultMessage="Why Join?" />
+            </h2>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+
+              {/* Benefit 1 */}
+              <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border border-green-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-3 sm:mb-4" aria-hidden="true">
+                  <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
+                </div>
+                <h3 className="font-bold text-base sm:text-lg lg:text-xl text-white mb-1 sm:mb-2">
+                  <FormattedMessage id="groupAdmin.landing.benefit1.title" defaultMessage="$15 Per Client" />
+                </h3>
+                <p className="text-xs sm:text-sm lg:text-base text-gray-400">
+                  <FormattedMessage id="groupAdmin.landing.benefit1.description" defaultMessage="Earn commission for every member who books a consultation through your link." />
+                </p>
               </div>
-            ))}
+
+              {/* Benefit 2 */}
+              <div className="bg-gradient-to-br from-blue-500/15 to-indigo-500/10 border border-blue-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-3 sm:mb-4" aria-hidden="true">
+                  <Image className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+                </div>
+                <h3 className="font-bold text-base sm:text-lg lg:text-xl text-white mb-1 sm:mb-2">
+                  <FormattedMessage id="groupAdmin.landing.benefit2.title" defaultMessage="Ready-Made Tools" />
+                </h3>
+                <p className="text-xs sm:text-sm lg:text-base text-gray-400">
+                  <FormattedMessage id="groupAdmin.landing.benefit2.description" defaultMessage="Posts, banners, images - all ready to use. Just copy-paste!" />
+                </p>
+              </div>
+
+              {/* Benefit 3 */}
+              <div className="bg-gradient-to-br from-purple-500/15 to-violet-500/10 border border-purple-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-3 sm:mb-4" aria-hidden="true">
+                  <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+                </div>
+                <h3 className="font-bold text-base sm:text-lg lg:text-xl text-white mb-1 sm:mb-2">
+                  <FormattedMessage id="groupAdmin.landing.benefit3.title" defaultMessage="9 Languages" />
+                </h3>
+                <p className="text-xs sm:text-sm lg:text-base text-gray-400">
+                  <FormattedMessage id="groupAdmin.landing.benefit3.description" defaultMessage="All resources available in FR, EN, ES, PT, AR, DE, IT, NL, ZH." />
+                </p>
+              </div>
+
+              {/* Benefit 4 */}
+              <div className="bg-gradient-to-br from-amber-500/15 to-yellow-500/10 border border-amber-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500/20 rounded-xl flex items-center justify-center mb-3 sm:mb-4" aria-hidden="true">
+                  <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
+                </div>
+                <h3 className="font-bold text-base sm:text-lg lg:text-xl text-white mb-1 sm:mb-2">
+                  <FormattedMessage id="groupAdmin.landing.benefit4.title" defaultMessage="$5 Discount for Members" />
+                </h3>
+                <p className="text-xs sm:text-sm lg:text-base text-gray-400">
+                  <FormattedMessage id="groupAdmin.landing.benefit4.description" defaultMessage="Your members get an exclusive $5 discount on their first consultation." />
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FAQ Section */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            <FormattedMessage id="groupAdmin.landing.faq.title" defaultMessage="Frequently Asked Questions" />
-          </h2>
+        {/* ================================================================
+            SECTION 4 - TARGET GROUPS (pills)
+        ================================================================ */}
+        <section className="section-content section-lazy bg-gradient-to-b from-gray-950 to-gray-950" aria-labelledby="section-targets">
+          <div className="max-w-7xl mx-auto">
 
-          <div className="max-w-3xl mx-auto space-y-4">
-            {[
-              {
-                q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q1', defaultMessage: 'Is it really free to join?' }),
-                a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a1', defaultMessage: 'Yes! Registration is 100% free. There are no fees, no commitments, and no minimum requirements.' }),
-              },
-              {
-                q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q2', defaultMessage: 'When do I get paid?' }),
-                a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a2', defaultMessage: 'Commissions become available 7 days after the client\'s consultation. You can withdraw anytime once you have at least $25.' }),
-              },
-              {
-                q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q3', defaultMessage: 'What payment methods are available?' }),
-                a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a3', defaultMessage: 'We support PayPal, Wise, Mobile Money, and bank transfers to over 100 countries.' }),
-              },
-              {
-                q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q4', defaultMessage: 'How does the recruitment bonus work?' }),
-                a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a4', defaultMessage: 'When you recruit another group admin using your recruitment link, you earn $5 when they sign up. The bonus window is 6 months.' }),
-              },
-              {
-                q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q5', defaultMessage: 'What kind of groups are eligible?' }),
-                a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a5', defaultMessage: 'Any Facebook group related to travel, expatriation, immigration, international relocation, or living abroad is eligible.' }),
-              },
-            ].map((faq, index) => (
-              <div key={index} className="border border-gray-200 rounded-xl overflow-hidden">
-                <button
-                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full flex items-center justify-between p-5 bg-white hover:bg-gray-50 transition-colors text-left"
+            <h2 id="section-targets" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
+              <FormattedMessage id="groupAdmin.landing.targetGroups.title" defaultMessage="Perfect For Your Group" />
+            </h2>
+            <p className="text-base sm:text-lg lg:text-xl text-gray-400 text-center mb-8 sm:mb-10 lg:mb-12">
+              <FormattedMessage id="groupAdmin.landing.targetGroups.subtitle" defaultMessage="Whether you manage a travel, expat, or immigration group - we have the right tools for you." />
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4 max-w-4xl mx-auto">
+              {[
+                { id: 'travel', icon: '✈️', label: 'Travel Groups' },
+                { id: 'expat', icon: '🌍', label: 'Expat Communities' },
+                { id: 'nomad', icon: '💻', label: 'Digital Nomads' },
+                { id: 'immigration', icon: '🛂', label: 'Immigration' },
+                { id: 'relocation', icon: '📦', label: 'Relocation' },
+                { id: 'student', icon: '🎓', label: 'Students Abroad' },
+                { id: 'family', icon: '👨‍👩‍👧‍👦', label: 'Expat Families' },
+                { id: 'retirement', icon: '🌴', label: 'Retirement Abroad' },
+              ].map((group) => (
+                <div
+                  key={group.id}
+                  className="bg-white/5 border border-white/10 rounded-full px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 flex items-center gap-2 hover:border-white/20 transition-colors"
                 >
-                  <span className="font-medium text-gray-900">{faq.q}</span>
-                  <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
-                </button>
-                {openFaq === index && (
-                  <div className="p-5 bg-gray-50 border-t border-gray-200">
-                    <p className="text-gray-600">{faq.a}</p>
-                  </div>
-                )}
-              </div>
-            ))}
+                  <span className="text-lg sm:text-xl" aria-hidden="true">{group.icon}</span>
+                  <span className="font-medium text-sm sm:text-base lg:text-lg text-white">
+                    <FormattedMessage id={`groupAdmin.landing.groupType.${group.id}`} defaultMessage={group.label} />
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Final CTA Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-indigo-900 to-purple-900 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            <FormattedMessage id="groupAdmin.landing.finalCta.title" defaultMessage="Ready to Start Earning?" />
-          </h2>
-          <p className="text-xl text-indigo-200 mb-8 max-w-2xl mx-auto">
-            <FormattedMessage id="groupAdmin.landing.finalCta.subtitle" defaultMessage="Join hundreds of group admins already earning with SOS-Expat." />
-          </p>
-          <button
-            onClick={handleRegisterClick}
-            className="inline-flex items-center gap-3 bg-white text-indigo-900 font-bold text-lg px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+        {/* ================================================================
+            SECTION 5 - FAQ (accessible accordion)
+        ================================================================ */}
+        <section className="section-content section-lazy bg-gray-950" id="faq" aria-labelledby="section-faq">
+          <div className="max-w-3xl mx-auto">
+            <h2 id="section-faq" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
+              <FormattedMessage id="groupAdmin.landing.faq.title" defaultMessage="Frequently Asked Questions" />
+            </h2>
+            <p className="text-base sm:text-lg lg:text-xl text-gray-400 text-center mb-8 sm:mb-10 lg:mb-12">
+              <FormattedMessage id="groupAdmin.landing.faq.subtitle" defaultMessage="Everything you need to know before getting started" />
+            </p>
+
+            <div className="space-y-3 sm:space-y-4">
+              {faqItems.map((faq, i) => (
+                <FAQItem
+                  key={i}
+                  index={i}
+                  question={faq.q}
+                  answer={faq.a}
+                  isOpen={openFaq === i}
+                  onToggle={() => setOpenFaq(openFaq === i ? null : i)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ================================================================
+            SECTION 6 - CTA FINAL
+        ================================================================ */}
+        <section className="section-content bg-gradient-to-b from-gray-950 via-blue-950/20 to-black relative" aria-labelledby="section-cta-final">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(96,165,250,0.06),transparent_50%)]" aria-hidden="true" />
+
+          <div className="relative z-10 max-w-4xl mx-auto text-center">
+
+            <h2 id="section-cta-final" className="!text-2xl sm:!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-6 sm:mb-8">
+              <FormattedMessage id="groupAdmin.landing.finalCta.title" defaultMessage="Ready to Start Earning?" />
+            </h2>
+
+            <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8">
+              <FormattedMessage id="groupAdmin.landing.finalCta.subtitle" defaultMessage="Join hundreds of group admins already earning with SOS-Expat." />
+            </p>
+
+            {/* Recap pills */}
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4 mb-8 sm:mb-10">
+              {[
+                { id: 'groupAdmin.landing.recap.perClient', defaultMessage: '$15 per client' },
+                { id: 'groupAdmin.landing.recap.perRecruit', defaultMessage: '$5 per recruit' },
+                { id: 'groupAdmin.landing.recap.languages', defaultMessage: '9 languages' },
+                { id: 'groupAdmin.landing.recap.free', defaultMessage: '100% free' },
+              ].map((item, i) => (
+                <span key={i} className="flex items-center gap-1.5 sm:gap-2 bg-amber-500/15 border border-amber-500/40 text-white rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-medium">
+                  <Check className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" aria-hidden="true" />
+                  <FormattedMessage id={item.id} defaultMessage={item.defaultMessage} />
+                </span>
+              ))}
+            </div>
+
+            <CTAButton onClick={handleRegisterClick} size="large" className="w-full max-w-sm sm:max-w-md mx-auto" ariaLabel={ctaAriaLabel}>
+              <FormattedMessage id="groupAdmin.landing.finalCta.cta" defaultMessage="Register Now - It's Free" />
+            </CTAButton>
+
+            <p className="text-gray-500 mt-5 sm:mt-6 text-sm sm:text-base lg:text-lg">
+              <FormattedMessage id="groupAdmin.landing.finalCta.footer" defaultMessage="Free registration • Start in 5 minutes" />
+            </p>
+          </div>
+        </section>
+
+        {/* ================================================================
+            STICKY CTA MOBILE
+        ================================================================ */}
+        {showStickyCTA && (
+          <div
+            className="fixed bottom-0 left-0 right-0 z-40 lg:hidden"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            role="complementary"
+            aria-label="CTA"
           >
-            <FormattedMessage id="groupAdmin.landing.finalCta.cta" defaultMessage="Register Now - It's Free" />
-            <ArrowRight className="w-5 h-5" />
-          </button>
-        </div>
-      </section>
+            <div className="bg-black/95 backdrop-blur-md border-t border-blue-500/40 px-4 py-3">
+              <button
+                onClick={handleRegisterClick}
+                aria-label={ctaAriaLabel}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] text-base sm:text-lg will-change-transform"
+              >
+                <FormattedMessage id="groupAdmin.landing.hero.cta" defaultMessage="Become a Partner" />
+                <ArrowRight className="w-5 h-5" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        )}
+
+      </div>
     </Layout>
   );
 };
