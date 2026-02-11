@@ -40,6 +40,7 @@ const AdminTelegramLogs: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
+  const [currentStartAfter, setCurrentStartAfter] = useState<string | null>(null);
   const [prevCursors, setPrevCursors] = useState<string[]>([]);
   const [filterEvent, setFilterEvent] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
@@ -75,28 +76,27 @@ const AdminTelegramLogs: React.FC = () => {
   useEffect(() => {
     setPrevCursors([]);
     setCursor(null);
+    setCurrentStartAfter(null);
     loadLogs();
   }, [filterEvent, filterStatus, loadLogs]);
 
   const handleNextPage = () => {
     if (!cursor) return;
-    const lastId = logs.length > 0 ? logs[0].id : null;
-    if (lastId) {
-      setPrevCursors((prev) => [...prev, lastId]);
+    if (currentStartAfter !== undefined) {
+      setPrevCursors((prev) => [...prev, currentStartAfter ?? ""]);
     }
+    setCurrentStartAfter(cursor);
     loadLogs(cursor);
   };
 
   const handlePrevPage = () => {
     if (prevCursors.length === 0) return;
     const newPrev = [...prevCursors];
-    const prev = newPrev.pop();
+    const prevStart = newPrev.pop()!;
     setPrevCursors(newPrev);
-    if (newPrev.length === 0) {
-      loadLogs(null);
-    } else {
-      loadLogs(prev);
-    }
+    const target = prevStart === "" ? null : prevStart;
+    setCurrentStartAfter(target);
+    loadLogs(target);
   };
 
   const formatDate = (iso: string | null) => {

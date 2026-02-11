@@ -2827,6 +2827,34 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= TELEGRAM ADMIN CONFIG =================
+    // Configuration admin du bot Telegram - admin lecture seule
+    match /telegram_admin_config/{configId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false;
+    }
+
+    // ================= TELEGRAM ADMIN TEMPLATES =================
+    // Templates de notification Telegram - admin lecture seule
+    match /telegram_admin_templates/{templateId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false;
+    }
+
+    // ================= TELEGRAM ADMIN LOGS =================
+    // Logs de notification Telegram - admin lecture seule
+    match /telegram_admin_logs/{logId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false;
+    }
+
+    // ================= TELEGRAM CAMPAIGNS =================
+    // Campagnes Telegram - admin lecture seule
+    match /telegram_campaigns/{campaignId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false;
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production

@@ -3141,6 +3141,20 @@
       ]
     },
     {
+      "collectionGroup": "telegram_message_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "campaignId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "aaa_used_content",
       "queryScope": "COLLECTION",
       "fields": [
