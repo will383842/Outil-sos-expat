@@ -1,7 +1,7 @@
 /**
  * Callable: registerGroupAdmin
  *
- * Registers a new GroupAdmin (Facebook Group Administrator) in the system.
+ * Registers a new GroupAdmin (Group/Community Administrator) in the system.
  * Creates GroupAdmin profile with active status (no quiz required).
  */
 
@@ -19,6 +19,7 @@ import {
   GroupSizeTier,
 } from "../types";
 import { areNewRegistrationsEnabled, getGroupAdminConfig } from "../groupAdminConfig";
+import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -45,25 +46,23 @@ const VALID_GROUP_SIZES: GroupSizeTier[] = [
 ];
 
 /**
- * Generate unique affiliate code for GroupAdmin
+ * Generate unique affiliate code for GroupAdmin.
+ * Uses 6 random alphanumeric chars for ~2.17 billion combinations per prefix.
  */
 function generateAffiliateCode(firstName: string, isRecruitment: boolean = false): string {
   const prefix = isRecruitment ? "REC-GROUP-" : "GROUP-";
-  const cleanName = firstName.replace(/[^a-zA-Z]/g, "").toUpperCase().substring(0, 6);
-  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const cleanName = firstName.replace(/[^a-zA-Z]/g, "").toUpperCase().substring(0, 4);
+  const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
   return `${prefix}${cleanName}${randomSuffix}`;
 }
 
 /**
- * Validate Facebook group URL
+ * Validate group/community URL (any valid http/https URL)
  */
-function isValidFacebookGroupUrl(url: string): boolean {
+function isValidGroupUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return (
-      (parsed.hostname === "www.facebook.com" || parsed.hostname === "facebook.com") &&
-      (parsed.pathname.includes("/groups/") || parsed.pathname.startsWith("/groups/"))
-    );
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
   } catch {
     return false;
   }
@@ -95,10 +94,6 @@ export const registerGroupAdmin = onCall(
       throw new HttpsError("invalid-argument", "First name and last name are required");
     }
 
-    if (!input.email || !input.email.includes("@")) {
-      throw new HttpsError("invalid-argument", "Valid email is required");
-    }
-
     if (!input.country || input.country.length !== 2) {
       throw new HttpsError("invalid-argument", "Valid country code is required");
     }
@@ -108,8 +103,8 @@ export const registerGroupAdmin = onCall(
     }
 
     // Validate group info
-    if (!input.groupUrl || !isValidFacebookGroupUrl(input.groupUrl)) {
-      throw new HttpsError("invalid-argument", "Valid Facebook group URL is required");
+    if (!input.groupUrl || !isValidGroupUrl(input.groupUrl)) {
+      throw new HttpsError("invalid-argument", "Valid group or community URL is required");
     }
 
     if (!input.groupName || input.groupName.length < 3) {
@@ -218,6 +213,21 @@ export const registerGroupAdmin = onCall(
         }
       }
 
+      // 5b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
+      const fraudResult = await checkReferralFraud(
+        input.recruitmentCode || "direct",
+        input.email,
+        request.rawRequest?.ip || null,
+        null
+      );
+      if (!fraudResult.allowed) {
+        logger.warn("[registerGroupAdmin] Fraud check blocked registration", {
+          userId, email: input.email, riskScore: fraudResult.riskScore,
+          issues: fraudResult.issues, blockReason: fraudResult.blockReason,
+        });
+        throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
+      }
+
       // 6. Check for duplicate email
       const emailQuery = await db
         .collection("group_admins")
@@ -237,23 +247,27 @@ export const registerGroupAdmin = onCall(
         .get();
 
       if (!groupUrlQuery.empty) {
-        throw new HttpsError("already-exists", "This Facebook group is already registered");
+        throw new HttpsError("already-exists", "This group/community is already registered");
       }
 
-      // 8. Find recruiter if recruitment code provided
+      // 8. Load config (used for attribution window + recruitment record)
+      const config = await getGroupAdminConfig();
+
+      // 9. Find recruiter if recruitment code provided
       let recruitedBy: string | null = null;
       let recruitedByCode: string | null = null;
 
       if (input.recruitmentCode) {
-        // Enforce 30-day attribution window if capturedAt is provided
+        // Enforce attribution window from config (default 30 days)
         let referralExpired = false;
         if (input.referralCapturedAt) {
           const capturedDate = new Date(input.referralCapturedAt);
-          const windowMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+          const windowMs = config.attributionWindowDays * 24 * 60 * 60 * 1000;
           if (Date.now() - capturedDate.getTime() > windowMs) {
-            logger.warn("[registerGroupAdmin] Recruitment code expired (>30 days)", {
+            logger.warn("[registerGroupAdmin] Recruitment code expired", {
               code: input.recruitmentCode,
               capturedAt: input.referralCapturedAt,
+              windowDays: config.attributionWindowDays,
             });
             referralExpired = true;
           }
@@ -274,32 +288,46 @@ export const registerGroupAdmin = onCall(
         }
       }
 
-      // 9. Generate unique affiliate codes
-      let affiliateCodeClient = generateAffiliateCode(input.firstName, false);
-      let affiliateCodeRecruitment = generateAffiliateCode(input.firstName, true);
+      // 10. Generate unique affiliate codes with retry loop
+      const MAX_CODE_RETRIES = 5;
+      let affiliateCodeClient = "";
+      let affiliateCodeRecruitment = "";
 
-      // Ensure codes are unique
-      const codeCheckClient = await db
-        .collection("group_admins")
-        .where("affiliateCodeClient", "==", affiliateCodeClient)
-        .limit(1)
-        .get();
-
-      if (!codeCheckClient.empty) {
-        affiliateCodeClient = generateAffiliateCode(input.firstName + Date.now(), false);
+      for (let attempt = 0; attempt < MAX_CODE_RETRIES; attempt++) {
+        const candidate = generateAffiliateCode(input.firstName, false);
+        const check = await db
+          .collection("group_admins")
+          .where("affiliateCodeClient", "==", candidate)
+          .limit(1)
+          .get();
+        if (check.empty) {
+          affiliateCodeClient = candidate;
+          break;
+        }
+        logger.warn("[registerGroupAdmin] Client code collision, retrying", { attempt, candidate });
+      }
+      if (!affiliateCodeClient) {
+        throw new HttpsError("internal", "Failed to generate unique client affiliate code. Please try again.");
       }
 
-      const codeCheckRecruitment = await db
-        .collection("group_admins")
-        .where("affiliateCodeRecruitment", "==", affiliateCodeRecruitment)
-        .limit(1)
-        .get();
-
-      if (!codeCheckRecruitment.empty) {
-        affiliateCodeRecruitment = generateAffiliateCode(input.firstName + Date.now(), true);
+      for (let attempt = 0; attempt < MAX_CODE_RETRIES; attempt++) {
+        const candidate = generateAffiliateCode(input.firstName, true);
+        const check = await db
+          .collection("group_admins")
+          .where("affiliateCodeRecruitment", "==", candidate)
+          .limit(1)
+          .get();
+        if (check.empty) {
+          affiliateCodeRecruitment = candidate;
+          break;
+        }
+        logger.warn("[registerGroupAdmin] Recruitment code collision, retrying", { attempt, candidate });
+      }
+      if (!affiliateCodeRecruitment) {
+        throw new HttpsError("internal", "Failed to generate unique recruitment affiliate code. Please try again.");
       }
 
-      // 10. Create GroupAdmin document
+      // 11. Create GroupAdmin document
       const now = Timestamp.now();
       const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
 
@@ -376,7 +404,7 @@ export const registerGroupAdmin = onCall(
         },
       };
 
-      // 11. Create documents in transaction
+      // 12. Create documents in transaction
       await db.runTransaction(async (transaction) => {
         // Create GroupAdmin
         const groupAdminRef = db.collection("group_admins").doc(userId);
@@ -408,7 +436,6 @@ export const registerGroupAdmin = onCall(
 
         // Track recruitment if from recruiter
         if (recruitedBy && recruitedByCode) {
-          const config = await getGroupAdminConfig();
           const recruitRef = db.collection("group_admin_recruited_admins").doc();
           const commissionWindowEnd = new Date();
           commissionWindowEnd.setMonth(commissionWindowEnd.getMonth() + config.recruitmentWindowMonths);

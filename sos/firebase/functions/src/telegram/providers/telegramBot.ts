@@ -9,7 +9,8 @@
  * - Get updates (for chat ID retrieval from /start command)
  * - Validate bot token
  * - Get chat info
- * - Built-in rate limiting (30 msg/min)
+ * - Built-in rate limiting (30 msg/sec for groups, we use conservative in-memory limiter)
+ * - sendTelegramMessageDirect() for queue processor (bypasses in-memory rate limiter)
  * - Comprehensive error handling
  */
 
@@ -22,7 +23,9 @@ import { getTelegramBotToken } from "../../lib/secrets";
 const TELEGRAM_API_BASE = "https://api.telegram.org/bot";
 const LOG_PREFIX = "\u{1F4F1} [Telegram]";
 
-// Rate limiting: 30 messages per minute (Telegram's limit is ~30/sec for groups, but we're conservative)
+// Rate limiting: Telegram's actual limit is ~30 msg/sec for bots, ~20 msg/min to same chat.
+// This in-memory limiter is a per-instance safety net. The global queue processor
+// (maxInstances: 1) is the real rate control mechanism.
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const MAX_MESSAGES_PER_WINDOW = 30;
 
@@ -324,6 +327,51 @@ export async function sendTelegramMessage(
 
   if (response.ok && response.result) {
     console.log(`${LOG_PREFIX} Message sent successfully. ID: ${response.result.message_id}`);
+    return { ok: true, messageId: response.result.message_id };
+  }
+
+  return { ok: false, error: response.description };
+}
+
+/**
+ * Send a message directly to Telegram WITHOUT the in-memory rate limiter.
+ *
+ * Used exclusively by the queue processor (maxInstances: 1) which handles
+ * its own rate control via batch size + delay. Do NOT use this from triggers
+ * or callables — use enqueueTelegramMessage() instead.
+ */
+export async function sendTelegramMessageDirect(
+  chatId: string | number,
+  text: string,
+  options?: SendMessageOptions
+): Promise<SendMessageResult> {
+  console.log(`${LOG_PREFIX} [Direct] Sending message to chat ${chatId}`);
+
+  const params: Record<string, unknown> = {
+    chat_id: chatId,
+    text,
+  };
+
+  if (options?.parseMode) {
+    params.parse_mode = options.parseMode;
+  }
+
+  if (options?.disableNotification) {
+    params.disable_notification = true;
+  }
+
+  if (options?.disableWebPagePreview) {
+    params.disable_web_page_preview = true;
+  }
+
+  if (options?.replyToMessageId) {
+    params.reply_to_message_id = options.replyToMessageId;
+  }
+
+  const response = await telegramApiRequest<{ message_id: number }>("sendMessage", params);
+
+  if (response.ok && response.result) {
+    console.log(`${LOG_PREFIX} [Direct] Message sent successfully. ID: ${response.result.message_id}`);
     return { ok: true, messageId: response.result.message_id };
   }
 

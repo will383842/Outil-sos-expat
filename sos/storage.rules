@@ -34,7 +34,7 @@ service firebase.storage {
     }
 
     match /profilePhotos/{userId}/{fileName} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow write: if (isAuthenticated() && request.auth.uid == userId && isImage() && isValidFileSize()) || isAdmin();
       allow delete: if (isAuthenticated() && (request.auth.uid == userId || isAdmin()));
     }
@@ -43,7 +43,7 @@ service firebase.storage {
     // Security: Anonymous uploads allowed with strict limits (images only, 5MB max)
     // Files are cleaned up by Cloud Function after 24h
     match /registration_temp/{fileName} {
-      allow read: if true;
+      allow read: if isAuthenticated() || isAdmin();
       // Allow anonymous uploads during registration with strict validation
       // - Images only (jpeg, png, webp, gif)
       // - Max 5MB for anonymous uploads (reduced from 15MB)
@@ -56,7 +56,7 @@ service firebase.storage {
     // TEMP PROFILES: Temporary profile photos during registration
     // Same rules as registration_temp
     match /temp_profiles/{fileName} {
-      allow read: if true;
+      allow read: if isAuthenticated() || isAdmin();
       // Allow anonymous uploads during registration with strict validation
       allow write: if isImage() &&
                    request.resource != null &&
@@ -66,7 +66,7 @@ service firebase.storage {
 
     // P1 SECURITY FIX: Require ownership check for delete
     match /profile_photos/{userId}/{fileName} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow write: if isAuthenticated() && request.auth.uid == userId && isImage() && isValidFileSize();
       // P1 FIX: Only owner or admin can delete their own photos
       allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
@@ -76,7 +76,7 @@ service firebase.storage {
     // Note: isAdmin() checks custom claim 'role' == 'admin'
     // Fallback: also allow authenticated users (temporary for AAA admin)
     match /profile_photos/{fileName} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow write: if isAuthenticated() && isImage() && isValidFileSize();
       allow delete: if isAdmin();
     }

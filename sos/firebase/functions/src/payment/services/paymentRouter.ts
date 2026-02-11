@@ -445,10 +445,10 @@ export class PaymentRouter {
     } else {
       // Type mismatch
       if (provider === 'wise' && details.type !== 'bank_transfer') {
-        errors.push('Wise requires bank transfer details, but mobile money details were provided');
+        errors.push('Wise requires bank transfer details, but other details type was provided');
       }
       if (provider === 'flutterwave' && details.type !== 'mobile_money') {
-        errors.push('Flutterwave requires mobile money details, but bank transfer details were provided');
+        errors.push('Flutterwave requires mobile money details, but other details type was provided');
       }
     }
 

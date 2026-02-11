@@ -20,6 +20,8 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import * as crypto from "crypto";
 import { REFERRAL_CONFIG } from "../types";
+import { handleWithdrawalCallback } from "../../telegram/withdrawalConfirmation";
+import { TELEGRAM_SECRETS } from "../../lib/secrets";
 
 // ============================================================================
 // TYPES
@@ -558,6 +560,7 @@ export const telegramChatterBotWebhook = onRequest(
     timeoutSeconds: 30,
     // Allow unauthenticated access (Telegram servers need to call this)
     invoker: "public",
+    secrets: [...TELEGRAM_SECRETS],
   },
   async (req, res) => {
     ensureInitialized();
@@ -571,13 +574,16 @@ export const telegramChatterBotWebhook = onRequest(
     try {
       // SECURITY: Verify webhook secret to reject unauthorized calls
       const webhookSecret = TELEGRAM_CONFIG.WEBHOOK_SECRET;
-      if (webhookSecret) {
-        const headerSecret = req.headers["x-telegram-bot-api-secret-token"] as string;
-        if (!headerSecret || headerSecret !== webhookSecret) {
-          logger.warn("[telegramChatterBotWebhook] Invalid or missing webhook secret token");
-          res.status(403).send("Forbidden");
-          return;
-        }
+      if (!webhookSecret) {
+        logger.error("[telegramChatterBotWebhook] TELEGRAM_WEBHOOK_SECRET not configured");
+        res.status(500).send("Webhook secret not configured");
+        return;
+      }
+      const headerSecret = req.headers["x-telegram-bot-api-secret-token"] as string;
+      if (!headerSecret || headerSecret !== webhookSecret) {
+        logger.warn("[telegramChatterBotWebhook] Invalid or missing webhook secret token");
+        res.status(403).send("Forbidden");
+        return;
       }
 
       const update = req.body;
@@ -587,7 +593,18 @@ export const telegramChatterBotWebhook = onRequest(
         updateId: update?.update_id,
         messageText: update?.message?.text,
         chatId: update?.message?.chat?.id,
+        hasCallbackQuery: !!update?.callback_query,
       });
+
+      // Handle callback_query (inline keyboard responses) - withdrawal confirmations
+      if (update?.callback_query) {
+        const callbackData = update.callback_query.data || "";
+        if (callbackData.startsWith("wc_")) {
+          await handleWithdrawalCallback(update.callback_query);
+        }
+        res.status(200).send("OK");
+        return;
+      }
 
       // Only process messages
       if (!update?.message) {

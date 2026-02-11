@@ -20,7 +20,14 @@ function ensureInitialized() {
 /**
  * Verify the caller is an admin
  */
-async function verifyAdmin(userId: string): Promise<void> {
+async function verifyAdmin(userId: string, authToken?: Record<string, unknown>): Promise<void> {
+  // Check custom claims first (faster, no Firestore read)
+  const tokenRole = authToken?.role as string | undefined;
+  if (tokenRole === "admin" || tokenRole === "dev") {
+    return;
+  }
+
+  // Fall back to Firestore check
   const db = getFirestore();
   const userDoc = await db.collection("users").doc(userId).get();
 
@@ -29,7 +36,7 @@ async function verifyAdmin(userId: string): Promise<void> {
   }
 
   const userData = userDoc.data();
-  if (userData?.role !== "admin") {
+  if (!userData || !["admin", "dev"].includes(userData.role)) {
     throw new HttpsError("permission-denied", "Admin access required");
   }
 }
@@ -51,7 +58,7 @@ export const adminGetGroupAdminConfig = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     try {
       // Force refresh to get latest
@@ -70,7 +77,9 @@ interface UpdateConfigInput {
   withdrawalsEnabled?: boolean;
   commissionClientAmount?: number;
   commissionRecruitmentAmount?: number;
-  clientDiscountPercent?: number;
+  clientDiscountAmount?: number;
+  recruitmentCommissionThreshold?: number;
+  paymentMode?: "manual" | "automatic";
   recruitmentWindowMonths?: number;
   attributionWindowDays?: number;
   validationHoldPeriodDays?: number;
@@ -96,7 +105,7 @@ export const adminUpdateGroupAdminConfig = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const input = request.data as UpdateConfigInput;
 
@@ -109,8 +118,16 @@ export const adminUpdateGroupAdminConfig = onCall(
       throw new HttpsError("invalid-argument", "Recruitment commission amount cannot be negative");
     }
 
-    if (input.clientDiscountPercent !== undefined && (input.clientDiscountPercent < 0 || input.clientDiscountPercent > 100)) {
-      throw new HttpsError("invalid-argument", "Client discount percent must be between 0 and 100");
+    if (input.clientDiscountAmount !== undefined && input.clientDiscountAmount < 0) {
+      throw new HttpsError("invalid-argument", "Client discount amount cannot be negative");
+    }
+
+    if (input.recruitmentCommissionThreshold !== undefined && input.recruitmentCommissionThreshold < 0) {
+      throw new HttpsError("invalid-argument", "Recruitment commission threshold cannot be negative");
+    }
+
+    if (input.paymentMode !== undefined && !["manual", "automatic"].includes(input.paymentMode)) {
+      throw new HttpsError("invalid-argument", "Payment mode must be 'manual' or 'automatic'");
     }
 
     if (input.recruitmentWindowMonths !== undefined && input.recruitmentWindowMonths < 1) {
@@ -133,7 +150,9 @@ export const adminUpdateGroupAdminConfig = onCall(
       if (input.withdrawalsEnabled !== undefined) updates.withdrawalsEnabled = input.withdrawalsEnabled;
       if (input.commissionClientAmount !== undefined) updates.commissionClientAmount = input.commissionClientAmount;
       if (input.commissionRecruitmentAmount !== undefined) updates.commissionRecruitmentAmount = input.commissionRecruitmentAmount;
-      if (input.clientDiscountPercent !== undefined) updates.clientDiscountPercent = input.clientDiscountPercent;
+      if (input.clientDiscountAmount !== undefined) updates.clientDiscountAmount = input.clientDiscountAmount;
+      if (input.recruitmentCommissionThreshold !== undefined) updates.recruitmentCommissionThreshold = input.recruitmentCommissionThreshold;
+      if (input.paymentMode !== undefined) updates.paymentMode = input.paymentMode;
       if (input.recruitmentWindowMonths !== undefined) updates.recruitmentWindowMonths = input.recruitmentWindowMonths;
       if (input.attributionWindowDays !== undefined) updates.attributionWindowDays = input.attributionWindowDays;
       if (input.validationHoldPeriodDays !== undefined) updates.validationHoldPeriodDays = input.validationHoldPeriodDays;

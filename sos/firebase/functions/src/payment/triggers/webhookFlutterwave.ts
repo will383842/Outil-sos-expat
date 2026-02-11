@@ -9,7 +9,7 @@
  */
 
 import { onRequest } from "firebase-functions/v2/https";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import * as crypto from "crypto";
@@ -276,7 +276,7 @@ async function updateWithdrawalFromWebhook(
   const updateData: Record<string, unknown> = {
     status: newStatus,
     providerStatus: webhookData.data.status,
-    statusHistory: [...withdrawal.statusHistory, statusEntry],
+    statusHistory: FieldValue.arrayUnion(statusEntry),
     lastWebhookAt: new Date().toISOString(),
   };
 
@@ -399,6 +399,37 @@ export const paymentWebhookFlutterwave = onRequest(
         status: webhookData.data?.status,
         reference: webhookData.data?.reference,
       });
+
+      // Idempotency check - prevent duplicate processing
+      const db = getFirestore();
+      const idempotencyKey = `flutterwave_${webhookData.data?.id || 'unknown'}_${webhookData.event}`;
+      const webhookEventRef = db.collection('processed_webhook_events').doc(idempotencyKey);
+      let isDuplicate = false;
+      try {
+        await db.runTransaction(async (transaction) => {
+          const doc = await transaction.get(webhookEventRef);
+          if (doc.exists) {
+            isDuplicate = true;
+            return;
+          }
+          transaction.set(webhookEventRef, {
+            processedAt: FieldValue.serverTimestamp(),
+            eventType: webhookData.event,
+            transferId: webhookData.data?.id,
+            reference: webhookData.data?.reference,
+            source: 'flutterwave',
+          });
+        });
+      } catch (txError) {
+        logger.error('[webhookFlutterwave] Idempotency check failed', { txError });
+        res.status(500).send('Internal error');
+        return;
+      }
+      if (isDuplicate) {
+        logger.info('[webhookFlutterwave] Duplicate event, skipping', { idempotencyKey });
+        res.status(200).send('OK - already processed');
+        return;
+      }
 
       // Only handle transfer events
       if (

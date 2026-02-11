@@ -45,7 +45,7 @@ const VALID_GROUP_SIZES: GroupSizeTier[] = [
 
 // Valid payment methods
 const VALID_PAYMENT_METHODS: GroupAdminPaymentMethod[] = [
-  "wise", "paypal", "mobile_money", "bank_transfer"
+  "wise", "mobile_money", "bank_transfer"
 ];
 
 interface UpdateProfileInput {
@@ -213,11 +213,6 @@ export const updateGroupAdminProfile = onCall(
             case "wise":
               if (!details.email || !details.accountHolderName || !details.currency) {
                 throw new HttpsError("invalid-argument", "Wise requires email, account holder name, and currency");
-              }
-              break;
-            case "paypal":
-              if (!details.email) {
-                throw new HttpsError("invalid-argument", "PayPal requires email");
               }
               break;
             case "mobile_money":

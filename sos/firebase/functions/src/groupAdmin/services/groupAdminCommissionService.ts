@@ -19,6 +19,7 @@ import {
   getGroupAdminConfig,
   getClientCommissionAmount,
   getRecruitmentCommissionAmount,
+  getRecruitmentCommissionThreshold,
 } from "../groupAdminConfig";
 
 // Lazy Firestore initialization
@@ -34,7 +35,9 @@ function getDb(): Firestore {
 }
 
 /**
- * Create a client referral commission
+ * Create a client referral commission.
+ * Amount is a fixed USD value from config (default $10 = 1000 cents),
+ * independent of the call's billing currency (EUR, USD, etc.).
  */
 export async function createClientReferralCommission(
   groupAdminId: string,
@@ -115,6 +118,9 @@ export async function createClientReferralCommission(
         clientId,
         callId,
       });
+
+      // Check if this GroupAdmin was recruited and if the threshold is now met
+      await checkAndPayRecruitmentCommission(groupAdminId);
     }
 
     return commission;
@@ -128,7 +134,11 @@ export async function createClientReferralCommission(
 }
 
 /**
- * Create a recruitment commission
+ * Create a recruitment commission.
+ *
+ * @deprecated No longer called internally. Recruitment commissions are now
+ * created atomically inside `checkAndPayRecruitmentCommission()` using a
+ * Firestore transaction. Kept for API compatibility only.
  */
 export async function createRecruitmentCommission(
   recruiterId: string,
@@ -246,6 +256,153 @@ export async function createRecruitmentCommission(
       error,
     });
     return null;
+  }
+}
+
+/**
+ * Check if a recruited GroupAdmin has reached the threshold for the recruiter to get paid.
+ * Called after each client referral commission is created.
+ *
+ * Uses a Firestore transaction on the recruit record to prevent race conditions:
+ * two concurrent calls completing at the same time could both see commissionPaid=false
+ * and each create a recruitment commission. The transaction ensures only one wins.
+ *
+ * All amounts are in USD cents (fixed amounts, independent of call currency).
+ */
+async function checkAndPayRecruitmentCommission(groupAdminId: string): Promise<void> {
+  try {
+    // ---- Preliminary reads (outside transaction) ----
+    const groupAdminDoc = await getDb().collection("group_admins").doc(groupAdminId).get();
+    if (!groupAdminDoc.exists) return;
+
+    const groupAdmin = groupAdminDoc.data() as GroupAdmin;
+    if (!groupAdmin.recruitedBy) return;
+
+    // Find the recruitment record
+    const recruitQuery = await getDb()
+      .collection("group_admin_recruited_admins")
+      .where("recruiterId", "==", groupAdmin.recruitedBy)
+      .where("recruitedId", "==", groupAdminId)
+      .limit(1)
+      .get();
+
+    if (recruitQuery.empty) return;
+
+    const recruitDoc = recruitQuery.docs[0];
+    const recruit = recruitDoc.data() as GroupAdminRecruit;
+
+    // Already paid — skip
+    if (recruit.commissionPaid) return;
+
+    // Check commission window
+    if (recruit.commissionWindowEnd.toDate() < new Date()) {
+      logger.info("[GroupAdminCommission] Recruitment window expired, skipping", {
+        recruitedId: groupAdminId,
+        recruiterId: groupAdmin.recruitedBy,
+      });
+      return;
+    }
+
+    // Sum all non-cancelled client_referral commissions for this recruited admin (USD cents)
+    const commissionsSnapshot = await getDb()
+      .collection("group_admin_commissions")
+      .where("groupAdminId", "==", groupAdminId)
+      .where("type", "==", "client_referral")
+      .get();
+
+    let totalEarnedFromCommissions = 0;
+    for (const doc of commissionsSnapshot.docs) {
+      const c = doc.data() as GroupAdminCommission;
+      if (c.status !== "cancelled") {
+        totalEarnedFromCommissions += c.amount;
+      }
+    }
+
+    const threshold = await getRecruitmentCommissionThreshold();
+
+    if (totalEarnedFromCommissions < threshold) return;
+
+    logger.info("[GroupAdminCommission] Recruitment threshold reached, paying recruiter", {
+      recruitedId: groupAdminId,
+      recruiterId: groupAdmin.recruitedBy,
+      totalEarned: totalEarnedFromCommissions,
+      threshold,
+    });
+
+    // ---- Atomic transaction: mark recruit as paid + create commission ----
+    const recruitRef = recruitDoc.ref;
+    const recruiterRef = getDb().collection("group_admins").doc(groupAdmin.recruitedBy);
+    const amount = await getRecruitmentCommissionAmount();
+
+    await getDb().runTransaction(async (tx) => {
+      // Re-read inside transaction to guard against concurrent writes
+      const freshRecruit = await tx.get(recruitRef);
+      if (!freshRecruit.exists || freshRecruit.data()?.commissionPaid === true) {
+        // Another process already paid — abort silently
+        return;
+      }
+
+      // Verify recruiter is still active
+      const recruiterSnap = await tx.get(recruiterRef);
+      if (!recruiterSnap.exists || (recruiterSnap.data() as GroupAdmin).status !== "active") {
+        return;
+      }
+
+      // Create commission document
+      const commissionRef = getDb().collection("group_admin_commissions").doc();
+      const now = Timestamp.now();
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      const recruiter = recruiterSnap.data() as GroupAdmin;
+
+      const commission: GroupAdminCommission = {
+        id: commissionRef.id,
+        groupAdminId: groupAdmin.recruitedBy!,
+        type: "recruitment",
+        status: "pending",
+        amount,
+        originalAmount: amount,
+        currency: "USD", // Always USD — fixed amount, not a % of call price
+        description: `Recruitment commission for ${groupAdmin.firstName} ${groupAdmin.lastName}`,
+        createdAt: now,
+        sourceRecruitId: groupAdminId,
+      };
+
+      tx.set(commissionRef, commission);
+
+      // Mark recruitment record as paid
+      tx.update(recruitRef, {
+        commissionPaid: true,
+        commissionId: commissionRef.id,
+        commissionPaidAt: now,
+      });
+
+      // Update recruiter stats
+      tx.update(recruiterRef, {
+        totalRecruits: FieldValue.increment(1),
+        totalCommissions: FieldValue.increment(1),
+        pendingBalance: FieldValue.increment(amount),
+        "currentMonthStats.recruits": recruiter.currentMonthStats.month === currentMonth
+          ? FieldValue.increment(1)
+          : 1,
+        "currentMonthStats.earnings": recruiter.currentMonthStats.month === currentMonth
+          ? FieldValue.increment(amount)
+          : amount,
+        "currentMonthStats.month": currentMonth,
+        updatedAt: now,
+      });
+
+      logger.info("[GroupAdminCommission] Recruitment commission created (transaction)", {
+        recruiterId: groupAdmin.recruitedBy,
+        commissionId: commissionRef.id,
+        amount,
+        recruitedId: groupAdminId,
+      });
+    });
+  } catch (error) {
+    logger.error("[GroupAdminCommission] Error checking recruitment threshold", {
+      groupAdminId,
+      error,
+    });
   }
 }
 
@@ -416,25 +573,27 @@ export async function cancelCommission(
 ): Promise<boolean> {
   try {
     const commissionRef = getDb().collection("group_admin_commissions").doc(commissionId);
-    const commissionDoc = await commissionRef.get();
 
-    if (!commissionDoc.exists) {
-      logger.error("[GroupAdminCommission] Commission not found", { commissionId });
-      return false;
-    }
+    // All checks + mutations inside transaction to prevent double-cancellation
+    const result = await getDb().runTransaction(async (transaction) => {
+      const commissionDoc = await transaction.get(commissionRef);
 
-    const commission = commissionDoc.data() as GroupAdminCommission;
+      if (!commissionDoc.exists) {
+        logger.error("[GroupAdminCommission] Commission not found", { commissionId });
+        return false;
+      }
 
-    // Can only cancel pending or validated commissions
-    if (!["pending", "validated"].includes(commission.status)) {
-      logger.warn("[GroupAdminCommission] Cannot cancel commission in this status", {
-        commissionId,
-        status: commission.status,
-      });
-      return false;
-    }
+      const commission = commissionDoc.data() as GroupAdminCommission;
 
-    await getDb().runTransaction(async (transaction) => {
+      // Can only cancel pending or validated commissions
+      if (!["pending", "validated"].includes(commission.status)) {
+        logger.warn("[GroupAdminCommission] Cannot cancel commission in this status", {
+          commissionId,
+          status: commission.status,
+        });
+        return false;
+      }
+
       // Update commission
       transaction.update(commissionRef, {
         status: "cancelled" as GroupAdminCommissionStatus,
@@ -451,14 +610,18 @@ export async function cancelCommission(
         totalCommissions: FieldValue.increment(-1),
         updatedAt: Timestamp.now(),
       });
+
+      return true;
     });
 
-    logger.info("[GroupAdminCommission] Commission cancelled", {
-      commissionId,
-      reason,
-    });
+    if (result) {
+      logger.info("[GroupAdminCommission] Commission cancelled", {
+        commissionId,
+        reason,
+      });
+    }
 
-    return true;
+    return result;
   } catch (error) {
     logger.error("[GroupAdminCommission] Error cancelling commission", {
       commissionId,

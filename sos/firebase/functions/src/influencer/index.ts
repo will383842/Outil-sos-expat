@@ -47,6 +47,27 @@ export {
 } from "./callables/adminTraining";
 
 // ============================================================================
+// RESOURCES CALLABLES
+// ============================================================================
+
+export {
+  getInfluencerResources,
+  downloadInfluencerResource,
+  copyInfluencerResourceText,
+} from "./callables/resources";
+
+// Admin Resources
+export {
+  adminGetInfluencerResources,
+  adminCreateInfluencerResource,
+  adminUpdateInfluencerResource,
+  adminDeleteInfluencerResource,
+  adminCreateInfluencerResourceText,
+  adminUpdateInfluencerResourceText,
+  adminDeleteInfluencerResourceText,
+} from "./callables/admin/resources";
+
+// ============================================================================
 // ADMIN CALLABLES
 // ============================================================================
 
@@ -74,6 +95,7 @@ export {
 export {
   influencerValidatePendingCommissions,
   influencerReleaseValidatedCommissions,
+  influencerMonthlyTop3Rewards,
 } from "./scheduled";
 
 // ============================================================================
@@ -115,7 +137,6 @@ export type {
   InfluencerPaymentMethod,
   InfluencerPaymentDetails,
   InfluencerWiseDetails,
-  InfluencerPayPalDetails,
   InfluencerBankDetails,
   InfluencerReferral,
   InfluencerMonthlyRanking,

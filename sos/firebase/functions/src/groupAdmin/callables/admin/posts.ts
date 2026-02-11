@@ -23,7 +23,14 @@ function ensureInitialized() {
 /**
  * Verify the caller is an admin
  */
-async function verifyAdmin(userId: string): Promise<void> {
+async function verifyAdmin(userId: string, authToken?: Record<string, unknown>): Promise<void> {
+  // Check custom claims first (faster, no Firestore read)
+  const tokenRole = authToken?.role as string | undefined;
+  if (tokenRole === "admin" || tokenRole === "dev") {
+    return;
+  }
+
+  // Fall back to Firestore check
   const db = getFirestore();
   const userDoc = await db.collection("users").doc(userId).get();
 
@@ -32,7 +39,7 @@ async function verifyAdmin(userId: string): Promise<void> {
   }
 
   const userData = userDoc.data();
-  if (userData?.role !== "admin") {
+  if (!userData || !["admin", "dev"].includes(userData.role)) {
     throw new HttpsError("permission-denied", "Admin access required");
   }
 }
@@ -68,7 +75,7 @@ export const adminCreatePost = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const input = request.data as CreatePostInput;
@@ -158,7 +165,7 @@ export const adminUpdatePost = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const input = request.data as UpdatePostInput;
@@ -233,7 +240,7 @@ export const adminDeletePost = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const { postId, hardDelete } = request.data as { postId: string; hardDelete?: boolean };
@@ -296,7 +303,7 @@ export const adminGetPostsList = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const input = request.data as GetPostsListInput;

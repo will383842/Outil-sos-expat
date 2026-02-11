@@ -32,7 +32,7 @@ export type BloggerWithdrawalStatus = 'pending' | 'approved' | 'processing' | 'c
 /**
  * @deprecated Use centralized payment types from @/types/payment instead.
  */
-export type BloggerPaymentMethod = 'paypal' | 'wise' | 'mobile_money';
+export type BloggerPaymentMethod = 'wise' | 'mobile_money';
 
 export type BlogTrafficTier = 'lt1k' | '1k-5k' | '5k-10k' | '10k-50k' | '50k-100k' | 'gt100k';
 
@@ -156,13 +156,6 @@ export interface Blogger {
  * These types will be removed in a future version.
  */
 
-export interface BloggerPayPalDetails {
-  type: 'paypal';
-  email: string;
-  currency: string;
-  accountHolderName: string;
-}
-
 export interface BloggerWiseDetails {
   type: 'wise';
   email: string;
@@ -185,7 +178,6 @@ export interface BloggerMobileMoneyDetails {
 }
 
 export type BloggerPaymentDetails =
-  | BloggerPayPalDetails
   | BloggerWiseDetails
   | BloggerMobileMoneyDetails;
 
@@ -264,7 +256,6 @@ export interface BloggerWithdrawal {
   commissionCount: number;
 
   paymentReference?: string;
-  paypalTransactionId?: string;
   wiseTransferId?: string;
   flutterwaveRef?: string;
   estimatedArrival?: string;

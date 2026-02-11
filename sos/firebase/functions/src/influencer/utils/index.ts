@@ -13,6 +13,12 @@ export {
   getRecruitmentWindowEnd,
   isRecruitmentActive,
   getRecruitmentMonthsRemaining,
+  // Level & Bonus calculations
+  calculateLevelFromEarnings,
+  getLevelBonus,
+  getTop3Bonus,
+  getStreakBonusMultiplier,
+  calculateCommissionWithBonuses,
   // V2 exports
   getCommissionRule,
   getEnabledCommissionRules,

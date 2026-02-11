@@ -23,6 +23,11 @@ export {
   telegram_getTemplates,
 } from "./callables/updateTelegramConfig";
 
+// Queue (global rate-limited queue + monitoring)
+export { processTelegramQueue } from "./queue/processor";
+export { monitorTelegramUsage } from "./queue/monitor";
+export { enqueueTelegramMessage, enqueueTelegramNotification } from "./queue/enqueue";
+
 // Service (for internal use)
 export { telegramNotificationService, TelegramNotificationService } from "./TelegramNotificationService";
 

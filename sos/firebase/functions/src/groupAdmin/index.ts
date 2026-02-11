@@ -1,8 +1,8 @@
 /**
  * GroupAdmin Module - Main Export
  *
- * Facebook Group Administrator (GroupAdmin) system for SOS-Expat.
- * Provides affiliate program for Facebook group admins to earn commissions
+ * Group/Community Administrator (GroupAdmin) system for SOS-Expat.
+ * Provides affiliate program for group/community admins to earn commissions
  * by referring clients and recruiting other group admins.
  */
 
@@ -17,6 +17,8 @@ export {
   // User callables
   registerGroupAdmin,
   getGroupAdminDashboard,
+  getGroupAdminCommissions,
+  getGroupAdminNotifications,
   getGroupAdminLeaderboard,
   updateGroupAdminProfile,
   requestGroupAdminWithdrawal,
@@ -48,6 +50,8 @@ export {
   adminGetPostsList,
   adminUpdateGroupAdminConfig,
   adminGetGroupAdminConfig,
+  adminGetRecruitmentsList,
+  adminGetGroupAdminRecruits,
 } from "./callables";
 
 // Services

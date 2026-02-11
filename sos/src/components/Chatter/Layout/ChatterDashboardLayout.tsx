@@ -31,6 +31,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 
 // Design tokens
 const UI = {
@@ -117,7 +118,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
   // Loading state
   if (!user || !authInitialized) {
     return (
-      <Layout showFooter={false}>
+      <Layout showHeader={false} showFooter={false}>
         <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
@@ -240,7 +241,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
   };
 
   return (
-    <Layout showFooter={false}>
+    <Layout showHeader={false} showFooter={false}>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
         {/* Mobile Header */}
         <div className="lg:hidden sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/10">
@@ -406,7 +407,9 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
 
             {/* MAIN CONTENT */}
             <div id="chatter-dashboard-content" className="lg:col-span-3">
-              {children}
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
             </div>
           </div>
         </div>

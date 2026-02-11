@@ -80,6 +80,7 @@ interface UnifiedWithdrawal {
   rejectionReason?: string;
   failureReason?: string;
   paymentReference?: string;
+  telegramConfirmationPending?: boolean;
 }
 
 interface WithdrawalStats {
@@ -322,6 +323,7 @@ const AdminPaymentsDashboard: React.FC = () => {
       rejectionReason: data.rejectionReason,
       failureReason: data.failureReason,
       paymentReference: data.paymentReference,
+      telegramConfirmationPending: data.telegramConfirmationPending || false,
     };
   };
 
@@ -480,6 +482,15 @@ const AdminPaymentsDashboard: React.FC = () => {
   // ============================================================================
 
   const handleApprove = async (withdrawal: UnifiedWithdrawal) => {
+    // Block approval if Telegram confirmation is still pending
+    if (withdrawal.telegramConfirmationPending) {
+      setError(intl.formatMessage({
+        id: 'admin.withdrawals.error.telegramPending',
+        defaultMessage: 'Impossible d\'approuver : confirmation Telegram en attente. L\'utilisateur doit d\'abord confirmer via Telegram.',
+      }));
+      return;
+    }
+
     setProcessingId(withdrawal.id);
     setIsProcessing(true);
     setError(null);
@@ -1120,7 +1131,14 @@ const AdminPaymentsDashboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <StatusBadge status={withdrawal.status} />
+                        <div className="flex items-center gap-1.5">
+                          <StatusBadge status={withdrawal.status} />
+                          {withdrawal.telegramConfirmationPending && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 border border-blue-200 rounded-full" title="En attente de confirmation Telegram">
+                              TG
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="text-sm">
@@ -1143,13 +1161,16 @@ const AdminPaymentsDashboard: React.FC = () => {
                             <Eye className="w-4 h-4" />
                           </button>
 
-                          {/* Approve (if pending) */}
+                          {/* Approve (if pending and Telegram confirmed) */}
                           {withdrawal.status === 'pending' && (
                             <button
                               onClick={() => handleApprove(withdrawal)}
-                              disabled={isProcessing && processingId === withdrawal.id}
-                              className="p-2 text-green-400 hover:text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
-                              title={intl.formatMessage({ id: 'admin.withdrawals.action.approve', defaultMessage: 'Approuver' })}
+                              disabled={(isProcessing && processingId === withdrawal.id) || withdrawal.telegramConfirmationPending}
+                              className={`p-2 rounded disabled:opacity-50 ${withdrawal.telegramConfirmationPending ? 'text-gray-300 cursor-not-allowed' : 'text-green-400 hover:text-green-600 hover:bg-green-50'}`}
+                              title={withdrawal.telegramConfirmationPending
+                                ? intl.formatMessage({ id: 'admin.withdrawals.action.telegramPending', defaultMessage: 'En attente de confirmation Telegram' })
+                                : intl.formatMessage({ id: 'admin.withdrawals.action.approve', defaultMessage: 'Approuver' })
+                              }
                             >
                               {isProcessing && processingId === withdrawal.id
                                 ? <Loader2 className="w-4 h-4 animate-spin" />

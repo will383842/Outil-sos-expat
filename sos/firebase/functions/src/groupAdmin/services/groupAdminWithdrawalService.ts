@@ -1,5 +1,9 @@
 /**
- * GroupAdmin Withdrawal Service
+ * @deprecated This service is deprecated.
+ * Use the centralized payment system (payment/ module) instead.
+ * Withdrawals now go through payment_withdrawals collection.
+ *
+ * GroupAdmin Withdrawal Service (Legacy)
  *
  * Handles withdrawal processing and status management.
  */
@@ -53,36 +57,43 @@ export async function approveWithdrawal(
 ): Promise<boolean> {
   try {
     const withdrawalRef = getDb().collection("group_admin_withdrawals").doc(withdrawalId);
-    const withdrawalDoc = await withdrawalRef.get();
 
-    if (!withdrawalDoc.exists) {
-      logger.error("[GroupAdminWithdrawal] Withdrawal not found", { withdrawalId });
-      return false;
-    }
+    // Transaction ensures atomic status check + update (prevents concurrent approvals)
+    const result = await getDb().runTransaction(async (tx) => {
+      const withdrawalDoc = await tx.get(withdrawalRef);
 
-    const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
+      if (!withdrawalDoc.exists) {
+        logger.error("[GroupAdminWithdrawal] Withdrawal not found", { withdrawalId });
+        return false;
+      }
 
-    if (withdrawal.status !== "pending") {
-      logger.warn("[GroupAdminWithdrawal] Cannot approve non-pending withdrawal", {
-        withdrawalId,
-        status: withdrawal.status,
+      const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
+
+      if (withdrawal.status !== "pending") {
+        logger.warn("[GroupAdminWithdrawal] Cannot approve non-pending withdrawal", {
+          withdrawalId,
+          status: withdrawal.status,
+        });
+        return false;
+      }
+
+      tx.update(withdrawalRef, {
+        status: "approved" as GroupAdminWithdrawalStatus,
+        approvedAt: Timestamp.now(),
+        approvedBy: adminId,
       });
-      return false;
+
+      return true;
+    });
+
+    if (result) {
+      logger.info("[GroupAdminWithdrawal] Withdrawal approved", {
+        withdrawalId,
+        adminId,
+      });
     }
 
-    await withdrawalRef.update({
-      status: "approved" as GroupAdminWithdrawalStatus,
-      approvedAt: Timestamp.now(),
-      approvedBy: adminId,
-    });
-
-    logger.info("[GroupAdminWithdrawal] Withdrawal approved", {
-      withdrawalId,
-      adminId,
-      amount: withdrawal.amount,
-    });
-
-    return true;
+    return result;
   } catch (error) {
     logger.error("[GroupAdminWithdrawal] Error approving withdrawal", {
       withdrawalId,
@@ -102,24 +113,26 @@ export async function rejectWithdrawal(
 ): Promise<boolean> {
   try {
     const withdrawalRef = getDb().collection("group_admin_withdrawals").doc(withdrawalId);
-    const withdrawalDoc = await withdrawalRef.get();
 
-    if (!withdrawalDoc.exists) {
-      logger.error("[GroupAdminWithdrawal] Withdrawal not found", { withdrawalId });
-      return false;
-    }
+    // All checks + mutations inside transaction to prevent double-refund
+    const result = await getDb().runTransaction(async (transaction) => {
+      const withdrawalDoc = await transaction.get(withdrawalRef);
 
-    const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
+      if (!withdrawalDoc.exists) {
+        logger.error("[GroupAdminWithdrawal] Withdrawal not found", { withdrawalId });
+        return false;
+      }
 
-    if (!["pending", "approved"].includes(withdrawal.status)) {
-      logger.warn("[GroupAdminWithdrawal] Cannot reject withdrawal in this status", {
-        withdrawalId,
-        status: withdrawal.status,
-      });
-      return false;
-    }
+      const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
 
-    await getDb().runTransaction(async (transaction) => {
+      if (!["pending", "approved"].includes(withdrawal.status)) {
+        logger.warn("[GroupAdminWithdrawal] Cannot reject withdrawal in this status", {
+          withdrawalId,
+          status: withdrawal.status,
+        });
+        return false;
+      }
+
       // Update withdrawal
       transaction.update(withdrawalRef, {
         status: "rejected" as GroupAdminWithdrawalStatus,
@@ -132,29 +145,36 @@ export async function rejectWithdrawal(
       const groupAdminRef = getDb().collection("group_admins").doc(withdrawal.groupAdminId);
       transaction.update(groupAdminRef, {
         availableBalance: FieldValue.increment(withdrawal.amount),
-        pendingWithdrawalId: null,
+        pendingWithdrawalId: FieldValue.delete(),
         updatedAt: Timestamp.now(),
       });
 
-      // Revert commission statuses
-      for (const commissionId of withdrawal.commissionIds) {
-        const commissionRef = getDb().collection("group_admin_commissions").doc(commissionId);
-        transaction.update(commissionRef, {
-          status: "available",
-          paidAt: null,
-          withdrawalId: null,
-        });
+      // Revert commission statuses (with validation)
+      if (Array.isArray(withdrawal.commissionIds)) {
+        for (const commissionId of withdrawal.commissionIds) {
+          if (typeof commissionId === "string" && commissionId) {
+            const commissionRef = getDb().collection("group_admin_commissions").doc(commissionId);
+            transaction.update(commissionRef, {
+              status: "available",
+              paidAt: FieldValue.delete(),
+              withdrawalId: FieldValue.delete(),
+            });
+          }
+        }
       }
+
+      return true;
     });
 
-    logger.info("[GroupAdminWithdrawal] Withdrawal rejected", {
-      withdrawalId,
-      adminId,
-      reason,
-      amount: withdrawal.amount,
-    });
+    if (result) {
+      logger.info("[GroupAdminWithdrawal] Withdrawal rejected", {
+        withdrawalId,
+        adminId,
+        reason,
+      });
+    }
 
-    return true;
+    return result;
   } catch (error) {
     logger.error("[GroupAdminWithdrawal] Error rejecting withdrawal", {
       withdrawalId,
@@ -170,34 +190,39 @@ export async function rejectWithdrawal(
 export async function startProcessingWithdrawal(withdrawalId: string): Promise<boolean> {
   try {
     const withdrawalRef = getDb().collection("group_admin_withdrawals").doc(withdrawalId);
-    const withdrawalDoc = await withdrawalRef.get();
 
-    if (!withdrawalDoc.exists) {
-      logger.error("[GroupAdminWithdrawal] Withdrawal not found", { withdrawalId });
-      return false;
-    }
+    // Transaction to prevent concurrent status transitions
+    const result = await getDb().runTransaction(async (tx) => {
+      const withdrawalDoc = await tx.get(withdrawalRef);
 
-    const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
+      if (!withdrawalDoc.exists) {
+        logger.error("[GroupAdminWithdrawal] Withdrawal not found", { withdrawalId });
+        return false;
+      }
 
-    if (withdrawal.status !== "approved") {
-      logger.warn("[GroupAdminWithdrawal] Can only process approved withdrawals", {
-        withdrawalId,
-        status: withdrawal.status,
+      const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
+
+      if (withdrawal.status !== "approved") {
+        logger.warn("[GroupAdminWithdrawal] Can only process approved withdrawals", {
+          withdrawalId,
+          status: withdrawal.status,
+        });
+        return false;
+      }
+
+      tx.update(withdrawalRef, {
+        status: "processing" as GroupAdminWithdrawalStatus,
+        processingStartedAt: Timestamp.now(),
       });
-      return false;
+
+      return true;
+    });
+
+    if (result) {
+      logger.info("[GroupAdminWithdrawal] Withdrawal processing started", { withdrawalId });
     }
 
-    await withdrawalRef.update({
-      status: "processing" as GroupAdminWithdrawalStatus,
-      processingStartedAt: Timestamp.now(),
-    });
-
-    logger.info("[GroupAdminWithdrawal] Withdrawal processing started", {
-      withdrawalId,
-      amount: withdrawal.amount,
-    });
-
-    return true;
+    return result;
   } catch (error) {
     logger.error("[GroupAdminWithdrawal] Error starting withdrawal processing", {
       withdrawalId,
@@ -217,26 +242,28 @@ export async function completeWithdrawal(
 ): Promise<boolean> {
   try {
     const withdrawalRef = getDb().collection("group_admin_withdrawals").doc(withdrawalId);
-    const withdrawalDoc = await withdrawalRef.get();
 
-    if (!withdrawalDoc.exists) {
-      logger.error("[GroupAdminWithdrawal] Withdrawal not found", { withdrawalId });
-      return false;
-    }
+    // All checks + mutations inside transaction to prevent double-completion
+    const result = await getDb().runTransaction(async (transaction) => {
+      const withdrawalDoc = await transaction.get(withdrawalRef);
 
-    const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
+      if (!withdrawalDoc.exists) {
+        logger.error("[GroupAdminWithdrawal] Withdrawal not found", { withdrawalId });
+        return false;
+      }
 
-    if (withdrawal.status !== "processing") {
-      logger.warn("[GroupAdminWithdrawal] Can only complete processing withdrawals", {
-        withdrawalId,
-        status: withdrawal.status,
-      });
-      return false;
-    }
+      const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
 
-    const netAmount = withdrawal.amount - processingFee;
+      if (withdrawal.status !== "processing") {
+        logger.warn("[GroupAdminWithdrawal] Can only complete processing withdrawals", {
+          withdrawalId,
+          status: withdrawal.status,
+        });
+        return false;
+      }
 
-    await getDb().runTransaction(async (transaction) => {
+      const netAmount = withdrawal.amount - processingFee;
+
       // Update withdrawal
       transaction.update(withdrawalRef, {
         status: "completed" as GroupAdminWithdrawalStatus,
@@ -252,18 +279,21 @@ export async function completeWithdrawal(
       const groupAdminRef = getDb().collection("group_admins").doc(withdrawal.groupAdminId);
       transaction.update(groupAdminRef, {
         totalWithdrawn: FieldValue.increment(withdrawal.amount),
-        pendingWithdrawalId: null,
+        pendingWithdrawalId: FieldValue.delete(),
         updatedAt: Timestamp.now(),
       });
+
+      return true;
     });
 
-    logger.info("[GroupAdminWithdrawal] Withdrawal completed", {
-      withdrawalId,
-      paymentReference,
-      netAmount,
-    });
+    if (result) {
+      logger.info("[GroupAdminWithdrawal] Withdrawal completed", {
+        withdrawalId,
+        paymentReference,
+      });
+    }
 
-    return true;
+    return result;
   } catch (error) {
     logger.error("[GroupAdminWithdrawal] Error completing withdrawal", {
       withdrawalId,
@@ -282,24 +312,26 @@ export async function failWithdrawal(
 ): Promise<boolean> {
   try {
     const withdrawalRef = getDb().collection("group_admin_withdrawals").doc(withdrawalId);
-    const withdrawalDoc = await withdrawalRef.get();
 
-    if (!withdrawalDoc.exists) {
-      logger.error("[GroupAdminWithdrawal] Withdrawal not found", { withdrawalId });
-      return false;
-    }
+    // All checks + mutations inside transaction to prevent double-refund
+    const result = await getDb().runTransaction(async (transaction) => {
+      const withdrawalDoc = await transaction.get(withdrawalRef);
 
-    const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
+      if (!withdrawalDoc.exists) {
+        logger.error("[GroupAdminWithdrawal] Withdrawal not found", { withdrawalId });
+        return false;
+      }
 
-    if (withdrawal.status !== "processing") {
-      logger.warn("[GroupAdminWithdrawal] Can only fail processing withdrawals", {
-        withdrawalId,
-        status: withdrawal.status,
-      });
-      return false;
-    }
+      const withdrawal = withdrawalDoc.data() as GroupAdminWithdrawal;
 
-    await getDb().runTransaction(async (transaction) => {
+      if (withdrawal.status !== "processing") {
+        logger.warn("[GroupAdminWithdrawal] Can only fail processing withdrawals", {
+          withdrawalId,
+          status: withdrawal.status,
+        });
+        return false;
+      }
+
       // Update withdrawal
       transaction.update(withdrawalRef, {
         status: "failed" as GroupAdminWithdrawalStatus,
@@ -311,28 +343,35 @@ export async function failWithdrawal(
       const groupAdminRef = getDb().collection("group_admins").doc(withdrawal.groupAdminId);
       transaction.update(groupAdminRef, {
         availableBalance: FieldValue.increment(withdrawal.amount),
-        pendingWithdrawalId: null,
+        pendingWithdrawalId: FieldValue.delete(),
         updatedAt: Timestamp.now(),
       });
 
-      // Revert commission statuses
-      for (const commissionId of withdrawal.commissionIds) {
-        const commissionRef = getDb().collection("group_admin_commissions").doc(commissionId);
-        transaction.update(commissionRef, {
-          status: "available",
-          paidAt: null,
-          withdrawalId: null,
-        });
+      // Revert commission statuses (with validation)
+      if (Array.isArray(withdrawal.commissionIds)) {
+        for (const commissionId of withdrawal.commissionIds) {
+          if (typeof commissionId === "string" && commissionId) {
+            const commissionRef = getDb().collection("group_admin_commissions").doc(commissionId);
+            transaction.update(commissionRef, {
+              status: "available",
+              paidAt: FieldValue.delete(),
+              withdrawalId: FieldValue.delete(),
+            });
+          }
+        }
       }
+
+      return true;
     });
 
-    logger.info("[GroupAdminWithdrawal] Withdrawal failed", {
-      withdrawalId,
-      reason,
-      amount: withdrawal.amount,
-    });
+    if (result) {
+      logger.info("[GroupAdminWithdrawal] Withdrawal failed", {
+        withdrawalId,
+        reason,
+      });
+    }
 
-    return true;
+    return result;
   } catch (error) {
     logger.error("[GroupAdminWithdrawal] Error failing withdrawal", {
       withdrawalId,

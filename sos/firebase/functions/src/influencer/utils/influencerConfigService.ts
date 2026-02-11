@@ -14,6 +14,7 @@ import {
   InfluencerCommissionRule,
   InfluencerCapturedRates,
   InfluencerCommissionType,
+  InfluencerLevel,
   InfluencerRateHistoryEntry,
   DEFAULT_INFLUENCER_CONFIG,
   DEFAULT_COMMISSION_RULES,
@@ -203,6 +204,144 @@ export function getRecruitmentMonthsRemaining(
   const diffMs = endDate.getTime() - now.getTime();
   const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30);
   return Math.ceil(diffMonths);
+}
+
+// ============================================================================
+// LEVEL & BONUS CALCULATIONS (aligned with Chatter system)
+// ============================================================================
+
+/**
+ * Calculate level from total earnings
+ */
+export function calculateLevelFromEarnings(
+  totalEarned: number,
+  config: InfluencerConfig
+): { level: InfluencerLevel; progress: number } {
+  const thresholds = config.levelThresholds;
+
+  if (totalEarned >= thresholds.level5) {
+    return { level: 5, progress: 100 };
+  }
+
+  if (totalEarned >= thresholds.level4) {
+    const progress =
+      ((totalEarned - thresholds.level4) /
+        (thresholds.level5 - thresholds.level4)) *
+      100;
+    return { level: 4, progress: Math.min(99, Math.floor(progress)) };
+  }
+
+  if (totalEarned >= thresholds.level3) {
+    const progress =
+      ((totalEarned - thresholds.level3) /
+        (thresholds.level4 - thresholds.level3)) *
+      100;
+    return { level: 3, progress: Math.min(99, Math.floor(progress)) };
+  }
+
+  if (totalEarned >= thresholds.level2) {
+    const progress =
+      ((totalEarned - thresholds.level2) /
+        (thresholds.level3 - thresholds.level2)) *
+      100;
+    return { level: 2, progress: Math.min(99, Math.floor(progress)) };
+  }
+
+  // Level 1
+  const progress = thresholds.level2 > 0
+    ? (totalEarned / thresholds.level2) * 100
+    : 0;
+  return { level: 1, progress: Math.min(99, Math.floor(progress)) };
+}
+
+/**
+ * Get level bonus multiplier
+ */
+export function getLevelBonus(
+  level: InfluencerLevel,
+  config: InfluencerConfig
+): number {
+  return config.levelBonuses[`level${level}`];
+}
+
+/**
+ * Get Top 3 bonus multiplier based on monthly rank
+ */
+export function getTop3Bonus(
+  rank: number | null,
+  config: InfluencerConfig
+): number {
+  if (!rank || rank > 3) {
+    return 1.0;
+  }
+
+  switch (rank) {
+    case 1:
+      return config.top1BonusMultiplier;
+    case 2:
+      return config.top2BonusMultiplier;
+    case 3:
+      return config.top3BonusMultiplier;
+    default:
+      return 1.0;
+  }
+}
+
+/**
+ * Get streak bonus multiplier based on consecutive activity days
+ */
+export function getStreakBonusMultiplier(
+  currentStreak: number,
+  config: InfluencerConfig
+): number {
+  if (currentStreak >= 100) return config.streakBonuses.days100;
+  if (currentStreak >= 30) return config.streakBonuses.days30;
+  if (currentStreak >= 14) return config.streakBonuses.days14;
+  if (currentStreak >= 7) return config.streakBonuses.days7;
+  return 1.0;
+}
+
+/**
+ * Calculate total commission with all bonuses
+ */
+export function calculateCommissionWithBonuses(
+  baseAmount: number,
+  levelBonus: number,
+  top3Bonus: number,
+  streakBonus: number,
+  monthlyTopMultiplier: number = 1.0
+): {
+  amount: number;
+  details: string;
+} {
+  // Apply bonuses multiplicatively
+  const afterLevel = baseAmount * levelBonus;
+  const afterTop3 = afterLevel * top3Bonus;
+  const afterStreak = afterTop3 * streakBonus;
+  const finalAmount = Math.round(afterStreak * monthlyTopMultiplier);
+
+  // Build explanation
+  const parts: string[] = [`Base: $${(baseAmount / 100).toFixed(2)}`];
+
+  if (levelBonus > 1) {
+    parts.push(`Level: +${Math.round((levelBonus - 1) * 100)}%`);
+  }
+  if (top3Bonus > 1) {
+    parts.push(`Top 3: +${Math.round((top3Bonus - 1) * 100)}%`);
+  }
+  if (streakBonus > 1) {
+    parts.push(`Streak: +${Math.round((streakBonus - 1) * 100)}%`);
+  }
+  if (monthlyTopMultiplier > 1) {
+    parts.push(`Monthly Top: x${monthlyTopMultiplier.toFixed(2)}`);
+  }
+
+  parts.push(`Final: $${(finalAmount / 100).toFixed(2)}`);
+
+  return {
+    amount: finalAmount,
+    details: parts.join(" | "),
+  };
 }
 
 // ============================================================================

@@ -81,76 +81,78 @@ export const adminApproveWithdrawal = onCall(
       });
 
       const withdrawalRef = db.collection('payment_withdrawals').doc(withdrawalId);
-      const withdrawalDoc = await withdrawalRef.get();
 
-      if (!withdrawalDoc.exists) {
-        throw new HttpsError('not-found', 'Withdrawal not found');
-      }
+      // Use transaction to prevent TOCTOU race conditions
+      const updatedWithdrawal = await db.runTransaction(async (transaction) => {
+        const withdrawalDoc = await transaction.get(withdrawalRef);
 
-      const withdrawal = withdrawalDoc.data() as WithdrawalRequest;
+        if (!withdrawalDoc.exists) {
+          throw new HttpsError('not-found', 'Withdrawal not found');
+        }
 
-      // Validate current status
-      const approvableStatuses: WithdrawalStatus[] = ['pending', 'validating'];
-      if (!approvableStatuses.includes(withdrawal.status)) {
-        throw new HttpsError(
-          'failed-precondition',
-          `Cannot approve withdrawal with status: ${withdrawal.status}. Expected: ${approvableStatuses.join(', ')}`
-        );
-      }
+        const withdrawal = withdrawalDoc.data() as WithdrawalRequest;
 
-      // Create status history entry
-      const historyEntry: StatusHistoryEntry = {
-        status: 'approved',
-        timestamp: new Date().toISOString(),
-        actor: adminId,
-        actorType: 'admin',
-        note: note || 'Approved by admin',
-      };
+        // Validate current status
+        const approvableStatuses: WithdrawalStatus[] = ['pending', 'validating'];
+        if (!approvableStatuses.includes(withdrawal.status)) {
+          throw new HttpsError(
+            'failed-precondition',
+            `Cannot approve withdrawal with status: ${withdrawal.status}. Expected: ${approvableStatuses.join(', ')}`
+          );
+        }
 
-      // Update withdrawal
-      const now = new Date().toISOString();
-      const updates: Partial<WithdrawalRequest> = {
-        status: 'approved',
-        approvedAt: now,
-        processedBy: adminId,
-        statusHistory: [...withdrawal.statusHistory, historyEntry],
-      };
+        // Create status history entry
+        const historyEntry: StatusHistoryEntry = {
+          status: 'approved',
+          timestamp: new Date().toISOString(),
+          actor: adminId,
+          actorType: 'admin',
+          note: note || 'Approved by admin',
+        };
 
-      await withdrawalRef.update(updates);
+        // Update withdrawal
+        const now = new Date().toISOString();
+        const updates: Partial<WithdrawalRequest> = {
+          status: 'approved',
+          approvedAt: now,
+          processedBy: adminId,
+          statusHistory: [...withdrawal.statusHistory, historyEntry],
+        };
 
-      // Create audit log
-      const auditRef = db.collection('payment_audit_logs').doc();
-      await auditRef.set({
-        id: auditRef.id,
-        action: 'withdrawal_approved',
-        actorId: adminId,
-        actorType: 'admin',
-        targetId: withdrawalId,
-        targetType: 'withdrawal',
-        timestamp: Timestamp.now(),
-        details: {
-          previousStatus: withdrawal.status,
-          newStatus: 'approved',
-          amount: withdrawal.amount,
-          userId: withdrawal.userId,
-          userType: withdrawal.userType,
-          note,
-        },
+        transaction.update(withdrawalRef, updates);
+
+        // Create audit log
+        const auditRef = db.collection('payment_audit_logs').doc();
+        transaction.set(auditRef, {
+          id: auditRef.id,
+          action: 'withdrawal_approved',
+          actorId: adminId,
+          actorType: 'admin',
+          targetId: withdrawalId,
+          targetType: 'withdrawal',
+          timestamp: Timestamp.now(),
+          details: {
+            previousStatus: withdrawal.status,
+            newStatus: 'approved',
+            amount: withdrawal.amount,
+            userId: withdrawal.userId,
+            userType: withdrawal.userType,
+            note,
+          },
+        });
+
+        return {
+          ...withdrawal,
+          ...updates,
+          id: withdrawalDoc.id,
+        } as WithdrawalRequest;
       });
-
-      // Get updated withdrawal
-      const updatedDoc = await withdrawalRef.get();
-      const updatedWithdrawal = {
-        ...updatedDoc.data(),
-        id: updatedDoc.id,
-      } as WithdrawalRequest;
 
       logger.info('[adminApproveWithdrawal] Withdrawal approved', {
         adminId,
         withdrawalId,
-        userId: withdrawal.userId,
-        amount: withdrawal.amount,
-        auditLogId: auditRef.id,
+        userId: updatedWithdrawal.userId,
+        amount: updatedWithdrawal.amount,
       });
 
       return {

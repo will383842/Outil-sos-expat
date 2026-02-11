@@ -1,11 +1,11 @@
 /**
  * GroupAdmin System Types
  *
- * Complete type definitions for the SOS-Expat GroupAdmin (Facebook Group Administrators) program.
+ * Complete type definitions for the SOS-Expat GroupAdmin (Group/Community Administrators) program.
  * Supports:
- * - Client referral commissions ($15 per client)
- * - Admin recruitment commissions ($5 per recruited admin)
- * - Resources & ready-to-use Facebook posts
+ * - Client referral commissions ($10 per client)
+ * - Admin recruitment commissions ($5 per recruited admin, paid when recruit reaches $50)
+ * - Resources & ready-to-use posts
  * - Gamification (badges, leaderboard)
  * - 9 languages: fr, en, es, pt, ar, de, it, nl, zh
  */
@@ -71,7 +71,7 @@ export type GroupSizeTier =
  * Commission type for GroupAdmins
  */
 export type GroupAdminCommissionType =
-  | "client_referral"    // $15 per client booking
+  | "client_referral"    // $10 per client booking
   | "recruitment"        // $5 per recruited admin
   | "manual_adjustment"; // Admin manual adjustment
 
@@ -101,7 +101,6 @@ export type GroupAdminWithdrawalStatus =
  */
 export type GroupAdminPaymentMethod =
   | "wise"          // Wise (TransferWise)
-  | "paypal"        // PayPal
   | "mobile_money"  // Mobile Money (Flutterwave)
   | "bank_transfer"; // Bank transfer
 
@@ -357,7 +356,6 @@ export interface GroupAdmin {
  */
 export type GroupAdminPaymentDetails =
   | GroupAdminWiseDetails
-  | GroupAdminPayPalDetails
   | GroupAdminMobileMoneyDetails
   | GroupAdminBankTransferDetails;
 
@@ -366,11 +364,6 @@ export interface GroupAdminWiseDetails {
   email: string;
   accountHolderName: string;
   currency: string;
-}
-
-export interface GroupAdminPayPalDetails {
-  type: "paypal";
-  email: string;
 }
 
 export interface GroupAdminMobileMoneyDetails {
@@ -417,7 +410,13 @@ export interface GroupAdminCommission {
   /** Original amount before any adjustments */
   originalAmount: number;
 
-  /** Currency (always USD) */
+  /**
+   * Currency — always USD.
+   * Commission amounts are fixed dollar values ($10 client, $5 recruitment),
+   * NOT a percentage of the call price. The call itself may be billed in EUR
+   * or another currency, but commissions are always computed and stored in
+   * USD cents, making the sum currency-safe.
+   */
   currency: "USD";
 
   /** Description */
@@ -966,14 +965,20 @@ export interface GroupAdminConfig {
 
   // ---- Commission Amounts (in cents) ----
 
-  /** Client referral commission ($15 = 1500) */
+  /** Client referral commission ($10 = 1000) */
   commissionClientAmount: number;
 
   /** Recruitment commission ($5 = 500) */
   commissionRecruitmentAmount: number;
 
-  /** Client discount percent (5% = $5 off) */
-  clientDiscountPercent: number;
+  /** Client discount amount in cents ($5 = 500) */
+  clientDiscountAmount: number;
+
+  /** Minimum totalEarned (cents) a recruited admin must reach before recruiter gets $5 */
+  recruitmentCommissionThreshold: number;
+
+  /** Payment processing mode */
+  paymentMode: "manual" | "automatic";
 
   // ---- Time Windows ----
 
@@ -1020,9 +1025,12 @@ export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "u
   newRegistrationsEnabled: true,
   withdrawalsEnabled: true,
 
-  commissionClientAmount: 1500,        // $15
-  commissionRecruitmentAmount: 500,    // $5
-  clientDiscountPercent: 5,            // 5% = ~$5 off
+  // All amounts in USD cents — fixed values, independent of call currency (EUR/USD/etc.)
+  commissionClientAmount: 1000,        // $10 per client referral
+  commissionRecruitmentAmount: 500,    // $5 per recruited admin (paid once threshold met)
+  clientDiscountAmount: 500,           // $5 discount for client
+  recruitmentCommissionThreshold: 5000, // $50 — recruited admin must earn this in commissions before recruiter gets $5
+  paymentMode: "manual",               // manual | automatic
 
   recruitmentWindowMonths: 6,
   attributionWindowDays: 30,
@@ -1195,6 +1203,7 @@ export interface RequestWithdrawalResponse {
   withdrawalId: string;
   amount: number;
   estimatedProcessingTime: string;
+  telegramConfirmationRequired?: boolean;
 }
 
 // ============================================================================

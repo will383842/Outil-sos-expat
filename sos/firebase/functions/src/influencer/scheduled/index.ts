@@ -14,6 +14,8 @@ import {
   releaseValidatedCommissions,
 } from "../services";
 
+export { influencerMonthlyTop3Rewards } from "./monthlyTop3Rewards";
+
 // Lazy initialization
 function ensureInitialized() {
   if (!getApps().length) {

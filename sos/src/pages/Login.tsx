@@ -736,14 +736,16 @@ const Login: React.FC = () => {
       const redirectFromParams = searchParams.get("redirect");
 
       // ✅ ROLE-BASED REDIRECT: Rediriger vers le dashboard approprié selon le rôle
-      // Les rôles sont mutuellement exclusifs : chatter, influencer, blogger ne sont ni client, ni avocat, ni expat
+      // Les rôles sont mutuellement exclusifs : chatter, influencer, blogger, groupAdmin ne sont ni client, ni avocat, ni expat
       let defaultDashboard = "/dashboard";
       if (user.role === "chatter") {
-        defaultDashboard = "/chatter/dashboard";
+        defaultDashboard = "/chatter/tableau-de-bord";
       } else if (user.role === "influencer") {
         defaultDashboard = "/influencer/tableau-de-bord";
       } else if (user.role === "blogger") {
         defaultDashboard = "/blogger/tableau-de-bord";
+      } else if (user.role === "groupAdmin") {
+        defaultDashboard = "/group-admin/tableau-de-bord";
       }
 
       // FIX: If a provider was selected (user clicked "Réserver" before login),

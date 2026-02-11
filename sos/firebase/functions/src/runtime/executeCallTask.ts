@@ -147,11 +147,33 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
       // Continue quand même car TwilioCallManager gère ses propres credentials
     }
 
-    // ✅ ÉTAPE 5: Exécution via l'adapter
-    console.log(`🚀 [executeCallTask] Starting call execution for: ${callSessionId}`);
-    
+    // ✅ ÉTAPE 5: Re-check provider availability before calling
+    console.log(`🔍 [executeCallTask] Re-checking provider availability for: ${callSessionId}`);
+    const callSessionDoc = await db.collection('call_sessions').doc(callSessionId).get();
+    if (callSessionDoc.exists) {
+      const sessionData = callSessionDoc.data();
+      const providerId = sessionData?.providerId;
+      if (providerId) {
+        const profileDoc = await db.collection('sos_profiles').doc(providerId).get();
+        const profileData = profileDoc.data();
+        if (profileData && profileData.status !== 'available') {
+          console.warn(`⚠️ [executeCallTask] Provider ${providerId} is no longer available (status: ${profileData.status}), aborting call`);
+          await lockRef.update({ status: 'aborted_provider_unavailable', updatedAt: new Date() });
+          res.status(200).json({
+            success: false,
+            error: 'Provider no longer available',
+            callSessionId,
+            providerStatus: profileData.status,
+          });
+          return;
+        }
+        console.log(`✅ [executeCallTask] Provider ${providerId} still available`);
+      }
+    }
 
-    
+    // ✅ ÉTAPE 5b: Exécution via l'adapter
+    console.log(`🚀 [executeCallTask] Starting call execution for: ${callSessionId}`);
+
     const callResult = await beginOutboundCallForSession(callSessionId);
     console.log('✅ [executeCallTask] Call execution result:', callResult);
 

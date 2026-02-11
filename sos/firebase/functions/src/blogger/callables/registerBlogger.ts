@@ -22,6 +22,7 @@ import {
 } from "../types";
 import { getBloggerConfigCached } from "../utils/bloggerConfigService";
 import { generateBloggerAffiliateCodes } from "../utils/bloggerCodeGenerator";
+import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 
 // ============================================================================
 // VALIDATION
@@ -93,11 +94,6 @@ function validateInput(input: RegisterBloggerInput): void {
     throw new HttpsError("invalid-argument", "Invalid blog URL format");
   }
 
-  // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(input.email)) {
-    throw new HttpsError("invalid-argument", "Invalid email format");
-  }
 }
 
 // ============================================================================
@@ -172,6 +168,21 @@ export const registerBlogger = onCall(
         );
       }
 
+      // 5b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
+      const fraudResult = await checkReferralFraud(
+        input.recruiterCode || "direct",
+        input.email,
+        request.rawRequest?.ip || null,
+        null
+      );
+      if (!fraudResult.allowed) {
+        logger.warn("[registerBlogger] Fraud check blocked registration", {
+          uid, email: input.email, riskScore: fraudResult.riskScore,
+          issues: fraudResult.issues, blockReason: fraudResult.blockReason,
+        });
+        throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
+      }
+
       // 6. Check if blog URL is already registered by another blogger
       const blogUrlQuery = await db
         .collection("bloggers")
@@ -186,7 +197,40 @@ export const registerBlogger = onCall(
         );
       }
 
-      // 7. Generate affiliate codes
+      // 7. Find recruiter if recruitment code provided
+      let recruitedBy: string | null = null;
+      let recruitedByCode: string | null = null;
+
+      if (input.recruiterCode) {
+        let referralExpired = false;
+        if (input.referralCapturedAt) {
+          const capturedDate = new Date(input.referralCapturedAt);
+          const windowMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+          if (Date.now() - capturedDate.getTime() > windowMs) {
+            logger.warn("[registerBlogger] Recruitment code expired (>30 days)", {
+              code: input.recruiterCode,
+              capturedAt: input.referralCapturedAt,
+            });
+            referralExpired = true;
+          }
+        }
+
+        if (!referralExpired) {
+          const recruiterQuery = await db
+            .collection("bloggers")
+            .where("affiliateCodeRecruitment", "==", input.recruiterCode.toUpperCase())
+            .where("status", "==", "active")
+            .limit(1)
+            .get();
+
+          if (!recruiterQuery.empty) {
+            recruitedBy = recruiterQuery.docs[0].id;
+            recruitedByCode = input.recruiterCode.toUpperCase();
+          }
+        }
+      }
+
+      // 8. Generate affiliate codes
       const { affiliateCodeClient, affiliateCodeRecruitment } =
         await generateBloggerAffiliateCodes(input.firstName);
 
@@ -259,6 +303,11 @@ export const registerBlogger = onCall(
         paymentDetails: null,
         pendingWithdrawalId: null,
 
+        // Recruitment tracking
+        recruitedBy,
+        recruitedByCode,
+        recruitedAt: recruitedBy ? now : null,
+
         // Timestamps
         createdAt: now,
         updatedAt: now,
@@ -311,6 +360,26 @@ export const registerBlogger = onCall(
           });
         }
       });
+
+      // 9b. Create recruitment tracking document if recruited
+      if (recruitedBy) {
+        const sixMonthsFromNow = new Date();
+        sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+        const recruitTrackingRef = db.collection("blogger_recruited_bloggers").doc();
+        await recruitTrackingRef.set({
+          id: recruitTrackingRef.id,
+          recruiterId: recruitedBy,
+          recruitedId: uid,
+          recruitedEmail: input.email.toLowerCase().trim(),
+          recruitedName: `${input.firstName.trim()} ${input.lastName.trim()}`,
+          recruitmentCode: recruitedByCode,
+          recruitedAt: now,
+          commissionWindowEnd: Timestamp.fromDate(sixMonthsFromNow),
+          commissionPaid: false,
+          commissionId: null,
+          commissionPaidAt: null,
+        });
+      }
 
       // 10. Create welcome notification
       await db.collection("blogger_notifications").add({

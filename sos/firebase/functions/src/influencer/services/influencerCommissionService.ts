@@ -2,15 +2,15 @@
  * Influencer Commission Service
  *
  * Core business logic for commission management:
- * - Creating commissions (FIXED amounts - no bonuses)
+ * - Creating commissions with level/streak/top3 bonuses
  * - Validating commissions after hold period (7 days)
  * - Releasing commissions to available balance
  * - Handling cancellations
  *
- * NOTE: Influencer commissions are SIMPLER than Chatter:
- * - Fixed $10 per client referral
- * - Fixed $5 per provider call (within 6-month window)
- * - NO level bonuses, NO top 3 bonuses, NO Zoom bonuses
+ * Commission structure (aligned with Chatter):
+ * - $10 base per client referral + level/streak/top3 bonuses
+ * - $5 per provider call (within 6-month window, no bonuses)
+ * - $5 one-time recruitment commission (when recruit reaches $50)
  */
 
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
@@ -27,6 +27,11 @@ import {
   getValidationDelayMs,
   getReleaseDelayMs,
   getCommissionRule,
+  calculateLevelFromEarnings,
+  getLevelBonus,
+  getTop3Bonus,
+  getStreakBonusMultiplier,
+  calculateCommissionWithBonuses,
 } from "../utils/influencerConfigService";
 
 // ============================================================================
@@ -199,24 +204,52 @@ export async function createCommission(
       }
     }
 
-    // 5. Calculate amount (V2: flexible calculation using captured rates)
-    let commissionAmount: number;
+    // 5. Calculate base amount (V2: flexible calculation using captured rates)
+    let baseCommissionAmount: number;
 
     if (inputAmount !== undefined) {
       // Manual override
-      commissionAmount = inputAmount;
+      baseCommissionAmount = inputAmount;
     } else {
       // V2: Calculate using captured rates or current rules
-      // Base amount can come from input or source details
       const base = baseAmount
         || source.details?.totalAmount
         || source.details?.connectionFee
         || 0;
 
-      commissionAmount = calculateCommissionAmount(influencer, type, base, config);
+      baseCommissionAmount = calculateCommissionAmount(influencer, type, base, config);
     }
 
-    // 5. Create timestamp
+    // 5b. Apply level/streak/top3 bonuses (only for client_referral)
+    let commissionAmount = baseCommissionAmount;
+    let levelBonusMultiplier = 1.0;
+    let top3BonusMultiplier = 1.0;
+    let streakBonusMultiplier = 1.0;
+    let monthlyTopMult = influencer.monthlyTopMultiplier ?? 1.0;
+    let calculationDetails = "";
+
+    if (type === "client_referral") {
+      // Calculate level (self-healing: use totalEarned if level field missing)
+      const levelInfo = calculateLevelFromEarnings(influencer.totalEarned || 0, config);
+      const effectiveLevel = influencer.level || levelInfo.level;
+
+      levelBonusMultiplier = getLevelBonus(effectiveLevel, config);
+      top3BonusMultiplier = getTop3Bonus(influencer.currentMonthRank, config);
+      streakBonusMultiplier = getStreakBonusMultiplier(influencer.currentStreak || 0, config);
+
+      const bonusResult = calculateCommissionWithBonuses(
+        baseCommissionAmount,
+        levelBonusMultiplier,
+        top3BonusMultiplier,
+        streakBonusMultiplier,
+        monthlyTopMult
+      );
+
+      commissionAmount = bonusResult.amount;
+      calculationDetails = bonusResult.details;
+    }
+
+    // 5c. Create timestamp
     const now = Timestamp.now();
 
     // 6. Create commission document
@@ -232,6 +265,12 @@ export async function createCommission(
       sourceType: source.type,
       sourceDetails: source.details,
       amount: commissionAmount,
+      baseAmount: baseCommissionAmount,
+      levelBonus: levelBonusMultiplier,
+      top3Bonus: top3BonusMultiplier,
+      streakBonus: streakBonusMultiplier,
+      monthlyTopMultiplier: monthlyTopMult,
+      calculationDetails,
       currency: "USD",
       description: description || getDefaultDescription(type, source.details),
       status: "pending",
@@ -291,8 +330,35 @@ export async function createCommission(
         currentMonthStats.earnings += commissionAmount;
       }
 
-      // Update last activity date
+      // Update last activity date and streak
       const today = new Date().toISOString().split("T")[0];
+      let newStreak = currentData.currentStreak || 0;
+      let newBestStreak = currentData.bestStreak || 0;
+
+      if (currentData.lastActivityDate) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+        if (currentData.lastActivityDate === yesterdayStr) {
+          // Consecutive day
+          newStreak += 1;
+        } else if (currentData.lastActivityDate !== today) {
+          // Streak broken (gap > 1 day)
+          newStreak = 1;
+        }
+        // Same day = no change to streak
+      } else {
+        newStreak = 1;
+      }
+
+      if (newStreak > newBestStreak) {
+        newBestStreak = newStreak;
+      }
+
+      // Check level progression
+      const newTotalEarned = (currentData.totalEarned || 0) + commissionAmount;
+      const levelResult = calculateLevelFromEarnings(newTotalEarned, config);
 
       // Create commission
       transaction.set(commissionRef, commission);
@@ -305,6 +371,10 @@ export async function createCommission(
         totalRecruits: newTotalRecruits,
         currentMonthStats,
         lastActivityDate: today,
+        currentStreak: newStreak,
+        bestStreak: newBestStreak,
+        level: levelResult.level,
+        levelProgress: levelResult.progress,
         updatedAt: Timestamp.now(),
       });
     });

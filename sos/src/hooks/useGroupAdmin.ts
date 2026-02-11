@@ -1,5 +1,7 @@
 /**
  * useGroupAdmin - Main hook for GroupAdmin data
+ * useGroupAdminCommissions - Paginated commissions hook
+ * useGroupAdminNotifications - Paginated notifications hook
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,6 +16,10 @@ import {
   GroupAdminLeaderboardEntry,
   GroupAdminDashboardResponse,
 } from '@/types/groupAdmin';
+
+// ============================================================================
+// useGroupAdmin - Dashboard profile + preview data
+// ============================================================================
 
 interface UseGroupAdminReturn {
   profile: GroupAdmin | null;
@@ -76,6 +82,132 @@ export function useGroupAdmin(): UseGroupAdminReturn {
     error,
     refresh: fetchDashboard,
   };
+}
+
+// ============================================================================
+// useGroupAdminCommissions - Paginated commissions
+// ============================================================================
+
+interface UseGroupAdminCommissionsReturn {
+  commissions: GroupAdminCommission[];
+  total: number;
+  page: number;
+  hasMore: boolean;
+  isLoading: boolean;
+  error: string | null;
+  loadPage: (page: number) => Promise<void>;
+  loadMore: () => Promise<void>;
+}
+
+export function useGroupAdminCommissions(pageSize: number = 20): UseGroupAdminCommissionsReturn {
+  const { user } = useAuth();
+  const [commissions, setCommissions] = useState<GroupAdminCommission[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadPage = useCallback(async (targetPage: number) => {
+    if (!user) return;
+    try {
+      setIsLoading(true);
+      setError(null);
+      const fn = httpsCallable(functions, 'getGroupAdminCommissions');
+      const result = await fn({ page: targetPage, limit: pageSize });
+      const data = result.data as {
+        commissions: GroupAdminCommission[];
+        total: number;
+        page: number;
+        hasMore: boolean;
+      };
+      setCommissions(data.commissions);
+      setTotal(data.total);
+      setPage(data.page);
+      setHasMore(data.hasMore);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message || 'Failed to load commissions');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, pageSize]);
+
+  const loadMore = useCallback(async () => {
+    if (!hasMore || isLoading) return;
+    await loadPage(page + 1);
+  }, [hasMore, isLoading, page, loadPage]);
+
+  useEffect(() => {
+    loadPage(1);
+  }, [loadPage]);
+
+  return { commissions, total, page, hasMore, isLoading, error, loadPage, loadMore };
+}
+
+// ============================================================================
+// useGroupAdminNotifications - Paginated notifications
+// ============================================================================
+
+interface UseGroupAdminNotificationsReturn {
+  notifications: GroupAdminNotification[];
+  total: number;
+  unreadCount: number;
+  page: number;
+  hasMore: boolean;
+  isLoading: boolean;
+  error: string | null;
+  loadPage: (page: number) => Promise<void>;
+  loadMore: () => Promise<void>;
+}
+
+export function useGroupAdminNotifications(pageSize: number = 20): UseGroupAdminNotificationsReturn {
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<GroupAdminNotification[]>([]);
+  const [total, setTotal] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadPage = useCallback(async (targetPage: number) => {
+    if (!user) return;
+    try {
+      setIsLoading(true);
+      setError(null);
+      const fn = httpsCallable(functions, 'getGroupAdminNotifications');
+      const result = await fn({ page: targetPage, limit: pageSize });
+      const data = result.data as {
+        notifications: GroupAdminNotification[];
+        total: number;
+        unreadCount: number;
+        page: number;
+        hasMore: boolean;
+      };
+      setNotifications(data.notifications);
+      setTotal(data.total);
+      setUnreadCount(data.unreadCount);
+      setPage(data.page);
+      setHasMore(data.hasMore);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message || 'Failed to load notifications');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, pageSize]);
+
+  const loadMore = useCallback(async () => {
+    if (!hasMore || isLoading) return;
+    await loadPage(page + 1);
+  }, [hasMore, isLoading, page, loadPage]);
+
+  useEffect(() => {
+    loadPage(1);
+  }, [loadPage]);
+
+  return { notifications, total, unreadCount, page, hasMore, isLoading, error, loadPage, loadMore };
 }
 
 export default useGroupAdmin;

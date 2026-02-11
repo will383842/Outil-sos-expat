@@ -281,7 +281,10 @@ const normalizeEmail = (s: string): string =>
     .replace(/\u00A0/g, '')            // NBSP
     .replace(/[\u2000-\u200D]/g, '');  // espaces fines / zero-width
 
-const isValidEmail = (e: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+const isValidEmail = (e: string): boolean => {
+  if (!e || e.length > 254) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+};
 
 type LogPayload = Record<string, unknown>;
 const logAuthEvent = async (type: string, data: LogPayload = {}): Promise<void> => {

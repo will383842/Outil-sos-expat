@@ -2,13 +2,16 @@
  * GroupAdminPayments - Payments and withdrawals page
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 import { DollarSign, CreditCard, Clock, CheckCircle, XCircle, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import TelegramConnect from '@/components/shared/TelegramConnect';
+import TelegramConfirmationWaiting from '@/components/shared/TelegramConfirmationWaiting';
 import {
   GroupAdmin,
   GroupAdminCommission,
@@ -40,6 +43,7 @@ const PAYMENT_METHODS: { value: GroupAdminPaymentMethod; label: string; descript
 
 const GroupAdminPayments: React.FC = () => {
   const intl = useIntl();
+  const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<GroupAdmin | null>(null);
   const [commissions, setCommissions] = useState<GroupAdminCommission[]>([]);
@@ -48,6 +52,10 @@ const GroupAdminPayments: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Telegram confirmation state
+  const [pendingConfirmationId, setPendingConfirmationId] = useState<string | null>(null);
+  const [pendingConfirmationAmount, setPendingConfirmationAmount] = useState(0);
 
   const [withdrawForm, setWithdrawForm] = useState({
     amount: 0,
@@ -115,23 +123,53 @@ const GroupAdminPayments: React.FC = () => {
           paymentDetails = { type: 'paypal', email: withdrawForm.email };
       }
 
-      const requestWithdrawal = httpsCallable(functions, 'requestGroupAdminWithdrawal');
-      await requestWithdrawal({
+      const requestWithdrawal = httpsCallable<unknown, { success: boolean; withdrawalId: string; telegramConfirmationRequired?: boolean }>(functions, 'requestGroupAdminWithdrawal');
+      const result = await requestWithdrawal({
         amount: withdrawForm.amount,
         paymentMethod: withdrawForm.paymentMethod,
         paymentDetails,
       });
 
-      setSuccess('Withdrawal request submitted successfully!');
-      setShowWithdrawForm(false);
-      fetchData();
+      if (result.data.telegramConfirmationRequired) {
+        setPendingConfirmationId(result.data.withdrawalId);
+        setPendingConfirmationAmount(withdrawForm.amount);
+        setShowWithdrawForm(false);
+      } else {
+        setSuccess('Withdrawal request submitted successfully!');
+        setShowWithdrawForm(false);
+        fetchData();
+      }
     } catch (err: unknown) {
       const error = err as { message?: string };
-      setError(error.message || 'Failed to submit withdrawal');
+      if (error.message?.includes('TELEGRAM_REQUIRED')) {
+        setError('Vous devez connecter Telegram pour effectuer un retrait.');
+        setShowWithdrawForm(false);
+      } else if (error.message?.includes('TELEGRAM_SEND_FAILED')) {
+        setError('Impossible d\'envoyer la confirmation Telegram. Vérifiez que vous n\'avez pas bloqué le bot et réessayez.');
+      } else {
+        setError(error.message || 'Failed to submit withdrawal');
+      }
     } finally {
       setSubmitting(false);
     }
   };
+
+  // Telegram confirmation callbacks
+  const handleTelegramConfirmed = useCallback(() => {
+    setPendingConfirmationId(null);
+    setSuccess('Withdrawal confirmed via Telegram!');
+    fetchData();
+  }, []);
+
+  const handleTelegramCancelled = useCallback(() => {
+    setPendingConfirmationId(null);
+    fetchData();
+  }, []);
+
+  const handleTelegramExpired = useCallback(() => {
+    setPendingConfirmationId(null);
+    fetchData();
+  }, []);
 
   if (loading) {
     return (
@@ -145,7 +183,7 @@ const GroupAdminPayments: React.FC = () => {
 
   return (
     <GroupAdminDashboardLayout>
-      <SEOHead description="Manage your Facebook group with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.payments.title', defaultMessage: 'Payments | SOS-Expat Group Admin' })} />
+      <SEOHead description="Manage your group or community with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.payments.title', defaultMessage: 'Payments | SOS-Expat Group Admin' })} />
 
       <div className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
@@ -167,8 +205,28 @@ const GroupAdminPayments: React.FC = () => {
             </div>
           )}
 
+          {/* Telegram Connect Gate */}
+          {!user?.telegramId && (
+            <div className="mb-8">
+              <TelegramConnect role="groupAdmin" onConnected={refreshUser} />
+            </div>
+          )}
+
+          {/* Telegram Confirmation Waiting */}
+          {pendingConfirmationId && (
+            <div className="mb-8">
+              <TelegramConfirmationWaiting
+                withdrawalId={pendingConfirmationId}
+                amount={pendingConfirmationAmount}
+                onConfirmed={handleTelegramConfirmed}
+                onCancelled={handleTelegramCancelled}
+                onExpired={handleTelegramExpired}
+              />
+            </div>
+          )}
+
           {/* Balance Card */}
-          {profile && (
+          {profile && !pendingConfirmationId && (
             <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white mb-8">
               <div className="flex items-center justify-between">
                 <div>
@@ -180,7 +238,7 @@ const GroupAdminPayments: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setShowWithdrawForm(true)}
-                  disabled={profile.availableBalance < 2500 || !!profile.pendingWithdrawalId}
+                  disabled={profile.availableBalance < 2500 || !!profile.pendingWithdrawalId || !user?.telegramId}
                   className="bg-white text-green-600 font-bold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Withdraw

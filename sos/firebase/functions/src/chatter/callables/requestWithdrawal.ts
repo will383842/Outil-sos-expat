@@ -2,11 +2,13 @@
  * Callable: requestWithdrawal
  *
  * Creates a withdrawal request for the chatter.
- * Validates balance, payment details, and creates request.
+ * Delegates to the centralized payment system (payment_withdrawals collection).
+ *
+ * Migration: Previously wrote to chatter_withdrawals, now uses payment/ module.
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
@@ -15,9 +17,15 @@ import {
   RequestWithdrawalInput,
   RequestWithdrawalResponse,
   ChatterPaymentDetails,
+  ChatterPaymentMethod,
 } from "../types";
-import { createWithdrawalRequest } from "../services";
 import { getChatterConfigCached, areWithdrawalsEnabled, getMinimumWithdrawalAmount } from "../utils";
+import { getPaymentService } from "../../payment/services/paymentService";
+import {
+  PaymentMethodDetails,
+  BankTransferDetails,
+  MobileMoneyDetails,
+} from "../../payment/types";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -26,11 +34,60 @@ function ensureInitialized() {
   }
 }
 
+/**
+ * Convert legacy Chatter payment details to centralized PaymentMethodDetails
+ */
+function convertToPaymentMethodDetails(
+  method: ChatterPaymentMethod,
+  details: ChatterPaymentDetails
+): PaymentMethodDetails {
+  switch (method) {
+    case "wise":
+      return {
+        type: "bank_transfer",
+        accountHolderName: (details as { accountHolderName: string }).accountHolderName,
+        country: (details as { country?: string }).country || "",
+        currency: (details as { currency?: string }).currency || "USD",
+        iban: (details as { iban?: string }).iban,
+        accountNumber: (details as { accountNumber?: string }).accountNumber,
+        routingNumber: (details as { routingNumber?: string }).routingNumber,
+        sortCode: (details as { sortCode?: string }).sortCode,
+        swiftBic: (details as { bic?: string }).bic,
+      } as BankTransferDetails;
+
+    case "bank_transfer":
+      return {
+        type: "bank_transfer",
+        accountHolderName: (details as { accountHolderName: string }).accountHolderName,
+        country: (details as { country?: string }).country || "",
+        currency: (details as { currency?: string }).currency || "USD",
+        accountNumber: (details as { accountNumber?: string }).accountNumber,
+        routingNumber: (details as { routingNumber?: string }).routingNumber,
+        swiftBic: (details as { swiftCode?: string }).swiftCode,
+        iban: (details as { iban?: string }).iban,
+        bankName: (details as { bankName?: string }).bankName,
+      } as BankTransferDetails;
+
+    case "mobile_money":
+      return {
+        type: "mobile_money",
+        provider: (details as { provider: string }).provider,
+        phoneNumber: (details as { phoneNumber: string }).phoneNumber,
+        country: (details as { country: string }).country,
+        accountName: (details as { accountName?: string }).accountName || (details as { accountHolderName?: string }).accountHolderName || "",
+        currency: (details as { currency?: string }).currency || "XOF",
+      } as MobileMoneyDetails;
+
+    default:
+      throw new HttpsError("invalid-argument", `Unsupported payment method: ${method}`);
+  }
+}
+
 export const requestWithdrawal = onCall(
   {
     region: "europe-west1",
     memory: "256MiB",
-    timeoutSeconds: 30,
+    timeoutSeconds: 60,
     cors: true,
   },
   async (request): Promise<RequestWithdrawalResponse> => {
@@ -76,7 +133,7 @@ export const requestWithdrawal = onCall(
         );
       }
 
-      // 5. Check for existing pending withdrawal
+      // 5. Check for existing pending withdrawal (legacy field check)
       if (chatter.pendingWithdrawalId) {
         throw new HttpsError(
           "failed-precondition",
@@ -111,35 +168,64 @@ export const requestWithdrawal = onCall(
         );
       }
 
-      // 7. Create withdrawal request
-      const result = await createWithdrawalRequest({
-        chatterId: userId,
-        amount: requestedAmount,
-        paymentMethod: input.paymentMethod,
-        paymentDetails: input.paymentDetails,
+      // 7. Convert legacy details → centralized format
+      const centralizedDetails = convertToPaymentMethodDetails(
+        input.paymentMethod,
+        input.paymentDetails
+      );
+
+      // 8. Save payment method in centralized system
+      const paymentService = getPaymentService();
+      const paymentMethod = await paymentService.savePaymentMethod({
+        userId,
+        userType: "chatter",
+        details: centralizedDetails,
+        setAsDefault: true,
       });
 
-      if (!result.success) {
-        throw new HttpsError("internal", result.error || "Failed to create withdrawal");
-      }
+      // 9. Create withdrawal via centralized service
+      const withdrawal = await paymentService.createWithdrawalRequest({
+        userId,
+        userType: "chatter",
+        userEmail: chatter.email || "",
+        userName: chatter.firstName || "",
+        amount: requestedAmount,
+        paymentMethodId: paymentMethod.id,
+      });
 
-      logger.info("[requestWithdrawal] Withdrawal requested", {
+      // 10. Set pendingWithdrawalId on chatter doc (backward compatibility)
+      await db.collection("chatters").doc(userId).update({
+        pendingWithdrawalId: withdrawal.id,
+        updatedAt: Timestamp.now(),
+      });
+
+      logger.info("[requestWithdrawal] Withdrawal requested via centralized system", {
         chatterId: userId,
-        withdrawalId: result.withdrawalId,
-        amount: result.amount,
+        withdrawalId: withdrawal.id,
+        amount: requestedAmount,
         paymentMethod: input.paymentMethod,
+        collection: "payment_withdrawals",
       });
 
       return {
         success: true,
-        withdrawalId: result.withdrawalId!,
-        amount: result.amount!,
+        withdrawalId: withdrawal.id,
+        amount: requestedAmount,
         status: "pending",
         message: "Withdrawal request submitted successfully. Processing typically takes 1-3 business days.",
       };
     } catch (error) {
       if (error instanceof HttpsError) {
         throw error;
+      }
+
+      // Surface transaction-level errors (race condition protection) as user-friendly messages
+      const errMsg = error instanceof Error ? error.message : "";
+      if (errMsg.includes("Insufficient balance")) {
+        throw new HttpsError("failed-precondition", "Insufficient balance for this withdrawal");
+      }
+      if (errMsg.includes("already pending")) {
+        throw new HttpsError("failed-precondition", "A withdrawal request is already pending");
       }
 
       logger.error("[requestWithdrawal] Error", { userId, error });
@@ -149,14 +235,13 @@ export const requestWithdrawal = onCall(
 );
 
 /**
- * Validate payment details based on method
+ * Validate payment details based on method (unchanged from legacy)
  */
 function validatePaymentDetails(
   method: string,
   details: ChatterPaymentDetails
 ): void {
   if (details.type !== method.replace("_", "-").toLowerCase().replace("-", "_")) {
-    // Allow some flexibility in type naming
     if (
       (method === "wise" && details.type !== "wise") ||
       (method === "mobile_money" && details.type !== "mobile_money") ||
@@ -192,7 +277,6 @@ function validatePaymentDetails(
           "Mobile Money requires provider, phone number, and country"
         );
       }
-      // Validate phone number format (basic check)
       if (!/^\+?[0-9]{8,15}$/.test(details.phoneNumber.replace(/\s/g, ""))) {
         throw new HttpsError("invalid-argument", "Invalid phone number format");
       }

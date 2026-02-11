@@ -431,6 +431,18 @@ const InfluencerDashboard: React.FC = () => {
               <FormattedMessage id="influencer.dashboard.subtitle" defaultMessage="Voici un aperçu de vos performances" />
               {isRefreshing && <RefreshCw className="w-4 h-4 animate-spin" />}
             </p>
+            {influencer?.monthlyTopMultiplier && influencer.monthlyTopMultiplier > 1.0 && (
+              <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 border border-yellow-200 dark:border-yellow-800">
+                <Sparkles className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">
+                  <FormattedMessage
+                    id="influencer.dashboard.bonusActive"
+                    defaultMessage="Bonus Top 3 actif : x{multiplier}"
+                    values={{ multiplier: influencer.monthlyTopMultiplier.toFixed(2) }}
+                  />
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -487,13 +499,35 @@ const InfluencerDashboard: React.FC = () => {
         </div>
 
         {/* ================================================================ */}
+        {/* AFFILIATE LINKS - Prominent position for easy access */}
+        {/* ================================================================ */}
+        <Suspense fallback={<CardSkeleton height="h-48" />}>
+          <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '350ms' }}>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-yellow-500" />
+              <FormattedMessage id="influencer.dashboard.links.title" defaultMessage="Vos liens de parrainage" />
+            </h2>
+            <InfluencerAffiliateLinks
+              clientCode={influencer?.affiliateCodeClient || ''}
+              recruitmentCode={influencer?.affiliateCodeRecruitment || ''}
+              clientDiscount={config?.clientDiscountPercent || 5}
+            />
+          </div>
+        </Suspense>
+
+        {/* ================================================================ */}
         {/* LEVEL + STATS ROW */}
         {/* ================================================================ */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Level Card */}
           <Suspense fallback={<CardSkeleton height="h-48" />}>
             <div className="lg:col-span-1 animate-fade-in-up" style={{ animationDelay: '350ms' }}>
-              <InfluencerLevelCard totalEarned={influencer?.totalEarned || 0} />
+              <InfluencerLevelCard
+                totalEarned={influencer?.totalEarned || 0}
+                level={influencer?.level}
+                levelProgress={influencer?.levelProgress}
+                monthlyTopMultiplier={influencer?.monthlyTopMultiplier}
+              />
             </div>
           </Suspense>
 
@@ -543,23 +577,6 @@ const InfluencerDashboard: React.FC = () => {
             ))}
           </div>
         </div>
-
-        {/* ================================================================ */}
-        {/* AFFILIATE LINKS */}
-        {/* ================================================================ */}
-        <Suspense fallback={<CardSkeleton height="h-48" />}>
-          <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '650ms' }}>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-yellow-500" />
-              <FormattedMessage id="influencer.dashboard.links.title" defaultMessage="Vos liens de parrainage" />
-            </h2>
-            <InfluencerAffiliateLinks
-              clientCode={influencer?.affiliateCodeClient || ''}
-              recruitmentCode={influencer?.affiliateCodeRecruitment || ''}
-              clientDiscount={config?.clientDiscountPercent || 5}
-            />
-          </div>
-        </Suspense>
 
         {/* ================================================================ */}
         {/* EARNINGS BREAKDOWN + ACTIVITY FEED */}

@@ -468,7 +468,10 @@ const GLOBAL_SECRETS = [
   PAYPAL_CLIENT_SECRET,
   PAYPAL_WEBHOOK_ID,
   PAYPAL_PARTNER_ID,
-  // MAILWIZZ_API_KEY and MAILWIZZ_WEBHOOK_SECRET removed - now using static values from environment
+  // Encryption & Outil integration
+  ENCRYPTION_KEY,
+  OUTIL_API_KEY,
+  OUTIL_SYNC_API_KEY,
 ].filter(Boolean) as any[];
 
 
@@ -915,9 +918,7 @@ export { createAndScheduleCallHTTPS };
 export { createAndScheduleCallHTTPS as createAndScheduleCall };
 export { createPaymentIntent } from "./createPaymentIntent";
 export { api } from "./adminApi";
-// P0 SECURITY: testTwilioCall DISABLED - Public endpoint that could generate unlimited Twilio costs
-// export { testTwilioCall } from "./testTwilioCall";
-// TODO: If needed for testing, add admin authentication before re-enabling
+// REMOVED: testTwilioCall.ts deleted (P0 security risk - unauthenticated Twilio cost endpoint)
 export { twilioCallWebhook, twilioAmdTwiml, twilioGatherResponse } from "./Webhooks/twilioWebhooks";
 export { twilioConferenceWebhook } from "./Webhooks/TwilioConferenceWebhook";
 export { providerNoAnswerTwiML } from "./Webhooks/providerNoAnswerTwiML";
@@ -5679,6 +5680,7 @@ export {
   chatterOnProviderRegistered,
   chatterOnClientRegistered,
   chatterOnChatterEarningsUpdated,
+  chatterOnCommissionCreated,
   // User callables
   registerChatter,
   // DISABLED 2026-02-08: Quiz feature removed from chatter flow
@@ -5812,6 +5814,7 @@ export {
   // Scheduled
   influencerValidatePendingCommissions,
   influencerReleaseValidatedCommissions,
+  influencerMonthlyTop3Rewards,
   // Initialization
   initializeInfluencerConfig,
   // Training callables
@@ -5827,6 +5830,18 @@ export {
   adminDeleteInfluencerTrainingModule,
   // DISABLED 2026-01-30: One-time seed - removed to free quota
   // adminSeedInfluencerTrainingModules,
+  // Resources callables
+  getInfluencerResources,
+  downloadInfluencerResource,
+  copyInfluencerResourceText,
+  // Admin Resources callables
+  adminGetInfluencerResources,
+  adminCreateInfluencerResource,
+  adminUpdateInfluencerResource,
+  adminDeleteInfluencerResource,
+  adminCreateInfluencerResourceText,
+  adminUpdateInfluencerResourceText,
+  adminDeleteInfluencerResourceText,
 } from './influencer';
 
 // ========== BLOGGER SYSTEM ==========
@@ -5836,6 +5851,11 @@ export {
 export {
   // Triggers
   onBloggerCreated,
+  bloggerOnCallSessionCompleted,
+  checkBloggerClientReferral,
+  checkBloggerProviderRecruitment,
+  awardBloggerRecruitmentCommission,
+  deactivateExpiredRecruitments,
   // User callables
   registerBlogger,
   getBloggerDashboard,
@@ -5869,6 +5889,13 @@ export {
   adminUpdateBloggerGuideBestPractice,
   adminExportBloggers,
   adminGetBloggerLeaderboard,
+  // Articles
+  getBloggerArticles,
+  copyBloggerArticle,
+  adminGetBloggerArticles,
+  adminCreateBloggerArticle,
+  adminUpdateBloggerArticle,
+  adminDeleteBloggerArticle,
   // Scheduled
   bloggerValidatePendingCommissions,
   bloggerReleaseValidatedCommissions,
@@ -5878,8 +5905,8 @@ export {
 } from './blogger';
 
 // ========== CENTRALIZED PAYMENT SYSTEM ==========
-// Unified payment system for Chatter, Influencer, and Blogger
-// Supports: Wise (bank transfers) and Flutterwave (Mobile Money)
+// Unified payment system for Chatter, Influencer, Blogger, and GroupAdmin
+// Supports: Wise (bank transfers), Flutterwave (Mobile Money)
 export {
   // User callables
   paymentSaveMethod,
@@ -5910,12 +5937,14 @@ export {
 } from './payment';
 
 // ========== GROUPADMIN SYSTEM ==========
-// Facebook Group Administrator affiliate program with client referrals and admin recruitment
-// Supports: $15 per client, $5 per recruited admin, ready-to-use posts/resources
+// Group/Community Administrator affiliate program with client referrals and admin recruitment
+// Supports: $10 per client, $5 per recruited admin (after $50 threshold), ready-to-use posts/resources
 export {
   // User callables
   registerGroupAdmin,
   getGroupAdminDashboard,
+  getGroupAdminCommissions,
+  getGroupAdminNotifications,
   getGroupAdminLeaderboard,
   updateGroupAdminProfile,
   requestGroupAdminWithdrawal,
@@ -5947,6 +5976,8 @@ export {
   adminGetPostsList as adminGetGroupAdminPostsList,
   adminUpdateGroupAdminConfig,
   adminGetGroupAdminConfig,
+  adminGetRecruitmentsList,
+  adminGetGroupAdminRecruits,
   // Triggers
   onCallCompletedGroupAdmin,
   onGroupAdminCreated,
@@ -5975,6 +6006,14 @@ export {
   telegram_updateTemplate,
   telegram_getTemplates,
 } from './telegram/callables/updateTelegramConfig';
+
+// ========== TELEGRAM QUEUE (global rate-limited queue + monitoring) ==========
+export { processTelegramQueue } from './telegram/queue/processor';
+export { monitorTelegramUsage } from './telegram/queue/monitor';
+
+// ========== TELEGRAM WITHDRAWAL CONFIRMATION ==========
+export { getWithdrawalConfirmationStatus } from './telegram/withdrawalConfirmation';
+export { cleanupExpiredWithdrawalConfirmations } from './telegram/cleanupExpiredConfirmations';
 
 // ========== PROVIDER STATS - PERFORMANCE TRACKING ==========
 // Tracks provider availability and missed calls for compliance monitoring

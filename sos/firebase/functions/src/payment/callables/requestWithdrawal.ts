@@ -14,6 +14,8 @@ import { logger } from 'firebase-functions/v2';
 import { getPaymentService } from '../services/paymentService';
 import { PaymentUserType, WithdrawalStatus } from '../types';
 import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
+import { sendWithdrawalConfirmation, WithdrawalConfirmationRole } from '../../telegram/withdrawalConfirmation';
+import { TELEGRAM_SECRETS } from '../../lib/secrets';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -35,6 +37,7 @@ interface RequestWithdrawalOutput {
   success: true;
   withdrawalId: string;
   status: WithdrawalStatus;
+  telegramConfirmationRequired?: boolean;
 }
 
 // ============================================================================
@@ -138,6 +141,7 @@ export const requestWithdrawal = onCall(
     memory: '256MiB',
     timeoutSeconds: 60,
     cors: true,
+    secrets: [...TELEGRAM_SECRETS],
   },
   async (request: CallableRequest<RequestWithdrawalInput>): Promise<RequestWithdrawalOutput> => {
     ensureInitialized();
@@ -172,7 +176,16 @@ export const requestWithdrawal = onCall(
         );
       }
 
-      // 5. Create withdrawal request using service
+      // 5. Check telegramId BEFORE creating withdrawal (critical: avoid orphaned withdrawals)
+      const db = getFirestore();
+      const userDoc = await db.collection('users').doc(userId).get();
+      const telegramId = userDoc.data()?.telegramId as number | undefined;
+
+      if (!telegramId) {
+        throw new HttpsError('failed-precondition', 'TELEGRAM_REQUIRED');
+      }
+
+      // 6. Create withdrawal request using service
       const service = getPaymentService();
       const withdrawal = await service.createWithdrawalRequest({
         userId,
@@ -192,10 +205,52 @@ export const requestWithdrawal = onCall(
         isAutomatic: withdrawal.isAutomatic,
       });
 
+      // 7. Send Telegram confirmation
+      const roleMap: Record<string, WithdrawalConfirmationRole> = {
+        chatter: 'chatter',
+        influencer: 'influencer',
+        blogger: 'blogger',
+      };
+
+      // Resolve human-readable payment method label
+      const methodTypeLabels: Record<string, string> = {
+        bank_transfer: 'Virement bancaire',
+        mobile_money: 'Mobile Money',
+        wise: 'Wise',
+      };
+      const paymentMethodLabel = methodTypeLabels[withdrawal.methodType] || withdrawal.methodType || input.paymentMethodId;
+
+      const confirmResult = await sendWithdrawalConfirmation({
+        withdrawalId: withdrawal.id,
+        userId,
+        role: roleMap[userProfile.userType] || 'chatter',
+        collection: 'payment_withdrawals',
+        amount: withdrawal.amount,
+        paymentMethod: paymentMethodLabel,
+        telegramId,
+      });
+
+      // If Telegram message failed to send, cancel the withdrawal to avoid orphaned state
+      if (!confirmResult.success) {
+        logger.warn('[requestWithdrawal] Telegram confirmation failed, cancelling withdrawal', {
+          withdrawalId: withdrawal.id, userId,
+        });
+        try {
+          const service2 = getPaymentService();
+          await service2.cancelWithdrawal(withdrawal.id, userId, 'Telegram confirmation failed to send');
+        } catch (cancelErr) {
+          logger.error('[requestWithdrawal] Failed to auto-cancel after Telegram failure', {
+            withdrawalId: withdrawal.id, error: cancelErr,
+          });
+        }
+        throw new HttpsError('unavailable', 'TELEGRAM_SEND_FAILED');
+      }
+
       return {
         success: true,
         withdrawalId: withdrawal.id,
         status: withdrawal.status,
+        telegramConfirmationRequired: true,
       };
     } catch (error) {
       if (error instanceof HttpsError) {

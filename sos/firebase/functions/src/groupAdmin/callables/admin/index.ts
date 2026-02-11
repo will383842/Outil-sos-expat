@@ -30,3 +30,8 @@ export {
   adminUpdateGroupAdminConfig,
   adminGetGroupAdminConfig,
 } from "./config";
+
+export {
+  adminGetRecruitmentsList,
+  adminGetGroupAdminRecruits,
+} from "./recruitments";

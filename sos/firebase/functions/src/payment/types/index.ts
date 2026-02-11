@@ -28,7 +28,7 @@ export type PaymentMethodType = 'bank_transfer' | 'mobile_money';
 /**
  * User types that can request withdrawals from the system
  */
-export type PaymentUserType = 'chatter' | 'influencer' | 'blogger';
+export type PaymentUserType = 'chatter' | 'influencer' | 'blogger' | 'group_admin';
 
 /**
  * Detailed withdrawal status for professional tracking
@@ -541,7 +541,7 @@ export const DEFAULT_PAYMENT_CONFIG: Omit<PaymentConfig, 'updatedAt' | 'updatedB
   notifyOnFailure: true,
   adminEmails: [],
 
-  // Providers - both enabled by default
+  // Providers - all enabled by default
   wiseEnabled: true,
   flutterwaveEnabled: true,
 };

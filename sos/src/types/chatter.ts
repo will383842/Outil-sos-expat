@@ -65,8 +65,7 @@ export type ChatterWithdrawalStatus =
   | "failed"
   | "rejected";
 
-// NOTE: Added 'paypal' for alignment with Influencer system
-export type ChatterPaymentMethod = "wise" | "paypal" | "mobile_money" | "bank_transfer";
+export type ChatterPaymentMethod = "wise" | "mobile_money" | "bank_transfer";
 
 export type ChatterPlatform =
   | "facebook"
@@ -135,13 +134,6 @@ export interface ChatterWiseDetails {
   bic?: string;
 }
 
-export interface ChatterPayPalDetails {
-  type: "paypal";
-  email: string;
-  currency: string;
-  accountHolderName: string;
-}
-
 export type MobileMoneyProvider = "mtn" | "orange" | "moov" | "airtel" | "mpesa" | "wave";
 
 export interface ChatterMobileMoneyDetails {
@@ -168,7 +160,6 @@ export interface ChatterBankDetails {
 
 export type ChatterPaymentDetails =
   | ChatterWiseDetails
-  | ChatterPayPalDetails
   | ChatterMobileMoneyDetails
   | ChatterBankDetails;
 

@@ -1,5 +1,5 @@
 /**
- * InfluencerLeaderboard - Monthly top 10 rankings (informational only)
+ * InfluencerLeaderboard - Monthly top 10 rankings with Top 3 bonus rewards
  */
 
 import React, { useEffect } from 'react';
@@ -8,7 +8,13 @@ import { useInfluencer } from '@/hooks/useInfluencer';
 import type { InfluencerLeaderboardEntry } from '@/types/influencer';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { Trophy, Medal } from 'lucide-react';
+import { Trophy, Medal, Crown, Star, Sparkles } from 'lucide-react';
+
+const TOP3_BONUSES = [
+  { rank: 1, multiplier: 'x2.00', label: 'Gold', color: 'from-yellow-400 to-amber-500', textColor: 'text-yellow-700 dark:text-yellow-300', bgColor: 'bg-yellow-50 dark:bg-yellow-900/20' },
+  { rank: 2, multiplier: 'x1.50', label: 'Silver', color: 'from-gray-300 to-gray-400', textColor: 'text-gray-600 dark:text-gray-300', bgColor: 'bg-gray-50 dark:bg-gray-800/30' },
+  { rank: 3, multiplier: 'x1.15', label: 'Bronze', color: 'from-amber-500 to-orange-600', textColor: 'text-amber-700 dark:text-amber-300', bgColor: 'bg-amber-50 dark:bg-amber-900/20' },
+] as const;
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
@@ -25,9 +31,9 @@ const InfluencerLeaderboard: React.FC = () => {
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
-      case 1: return <Trophy className="w-6 h-6 text-yellow-500" />;
-      case 2: return <Medal className="w-6 h-6 text-gray-400" />;
-      case 3: return <Medal className="w-6 h-6 text-amber-600" />;
+      case 1: return <Crown className="w-6 h-6 text-yellow-500 drop-shadow-sm" />;
+      case 2: return <Star className="w-6 h-6 text-gray-400" />;
+      case 3: return <Star className="w-6 h-6 text-amber-600" />;
       default: return <span className="w-6 h-6 flex items-center justify-center text-gray-500 font-bold">#{rank}</span>;
     }
   };
@@ -56,12 +62,31 @@ const InfluencerLeaderboard: React.FC = () => {
               values={{ month: leaderboard?.month || new Date().toISOString().substring(0, 7) }}
             />
           </p>
-          <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-2">
-            <FormattedMessage
-              id="influencer.leaderboard.info"
-              defaultMessage="Classement informatif uniquement - pas de bonus associé"
-            />
-          </p>
+        </div>
+
+        {/* Top 3 Bonus Cards */}
+        <div className="grid grid-cols-3 gap-3">
+          {TOP3_BONUSES.map((bonus) => (
+            <div
+              key={bonus.rank}
+              className={`${bonus.bgColor} rounded-xl p-3 text-center border border-white/20 dark:border-white/10`}
+            >
+              <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br ${bonus.color} mb-1.5`}>
+                {bonus.rank === 1 ? (
+                  <Crown className="w-4 h-4 text-white" />
+                ) : (
+                  <Star className="w-4 h-4 text-white" />
+                )}
+              </div>
+              <p className={`text-lg font-bold ${bonus.textColor}`}>{bonus.multiplier}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                <FormattedMessage
+                  id={`influencer.leaderboard.bonus.rank${bonus.rank}`}
+                  defaultMessage={`Top ${bonus.rank} bonus`}
+                />
+              </p>
+            </div>
+          ))}
         </div>
 
         {/* Your Position */}
@@ -134,6 +159,14 @@ const InfluencerLeaderboard: React.FC = () => {
                       {entry.referrals}
                       <FormattedMessage id="influencer.leaderboard.clientsShort" defaultMessage=" réf." />
                     </p>
+                    {entry.rank <= 3 && (
+                      <span className={`inline-flex items-center gap-0.5 mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                        TOP3_BONUSES[entry.rank - 1].bgColor
+                      } ${TOP3_BONUSES[entry.rank - 1].textColor}`}>
+                        <Sparkles className="w-2.5 h-2.5" />
+                        {TOP3_BONUSES[entry.rank - 1].multiplier}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

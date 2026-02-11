@@ -22,7 +22,7 @@ import {
   TemplateVariablesMap,
 } from './types';
 import { DEFAULT_TEMPLATES, TEMPLATE_VARIABLES } from './templates';
-import { sendTelegramMessage } from './providers/telegramBot';
+import { enqueueTelegramMessage } from './queue/enqueue';
 
 // ============================================================================
 // CONSTANTS
@@ -427,22 +427,26 @@ class TelegramNotificationService {
         variables as unknown as Record<string, string>
       );
 
-      // 8. Send via Telegram
-      console.log(`${LOG_PREFIX} [${logId}] Sending to chat ${config.recipientChatId}`);
-      const result = await sendTelegramMessage(
-        config.recipientChatId,
-        message,
-        { parseMode: 'Markdown' }
-      );
+      // 8. Enqueue via global Telegram queue (processed by single-instance processor)
+      console.log(`${LOG_PREFIX} [${logId}] Enqueueing to chat ${config.recipientChatId}`);
+      try {
+        const queueId = await enqueueTelegramMessage(
+          config.recipientChatId,
+          message,
+          {
+            parseMode: 'Markdown',
+            priority: 'realtime',
+            sourceEventType: eventId,
+          }
+        );
 
-      // 9. Log result
-      if (result.ok) {
-        console.log(`${LOG_PREFIX} [${logId}] Notification sent successfully, messageId: ${result.messageId}`);
-        await this.logNotification(eventId, true, undefined, result.messageId, config.recipientChatId);
+        console.log(`${LOG_PREFIX} [${logId}] Notification enqueued successfully (queueId: ${queueId})`);
+        await this.logNotification(eventId, true, undefined, undefined, config.recipientChatId);
         return true;
-      } else {
-        console.error(`${LOG_PREFIX} [${logId}] Failed to send notification:`, result.error);
-        await this.logNotification(eventId, false, result.error, undefined, config.recipientChatId);
+      } catch (enqueueError) {
+        const errMsg = enqueueError instanceof Error ? enqueueError.message : 'Enqueue failed';
+        console.error(`${LOG_PREFIX} [${logId}] Failed to enqueue notification:`, errMsg);
+        await this.logNotification(eventId, false, errMsg, undefined, config.recipientChatId);
         return false;
       }
     } catch (error) {

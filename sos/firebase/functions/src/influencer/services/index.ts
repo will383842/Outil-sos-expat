@@ -28,3 +28,8 @@ export {
   CreateWithdrawalResult,
   ProcessWithdrawalResult,
 } from "./influencerWithdrawalService";
+
+// Recruitment Service (harmonized with GroupAdmin model)
+export {
+  checkAndPayRecruitmentCommission,
+} from "./influencerRecruitmentService";

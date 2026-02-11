@@ -165,11 +165,27 @@ export async function getRecruitmentCommissionAmount(): Promise<number> {
 }
 
 /**
- * Get client discount percent
+ * Get client discount amount in cents
  */
-export async function getClientDiscountPercent(): Promise<number> {
+export async function getClientDiscountAmount(): Promise<number> {
   const config = await getGroupAdminConfig();
-  return config.clientDiscountPercent;
+  return config.clientDiscountAmount;
+}
+
+/**
+ * Get recruitment commission threshold in cents
+ */
+export async function getRecruitmentCommissionThreshold(): Promise<number> {
+  const config = await getGroupAdminConfig();
+  return config.recruitmentCommissionThreshold;
+}
+
+/**
+ * Get payment mode (manual or automatic)
+ */
+export async function getPaymentMode(): Promise<"manual" | "automatic"> {
+  const config = await getGroupAdminConfig();
+  return config.paymentMode;
 }
 
 /**

@@ -25,7 +25,14 @@ function ensureInitialized() {
 /**
  * Verify the caller is an admin
  */
-async function verifyAdmin(userId: string): Promise<void> {
+async function verifyAdmin(userId: string, authToken?: Record<string, unknown>): Promise<void> {
+  // Check custom claims first (faster, no Firestore read)
+  const tokenRole = authToken?.role as string | undefined;
+  if (tokenRole === "admin" || tokenRole === "dev") {
+    return;
+  }
+
+  // Fall back to Firestore check
   const db = getFirestore();
   const userDoc = await db.collection("users").doc(userId).get();
 
@@ -34,7 +41,7 @@ async function verifyAdmin(userId: string): Promise<void> {
   }
 
   const userData = userDoc.data();
-  if (!userData || userData.role !== "admin") {
+  if (!userData || !["admin", "dev"].includes(userData.role)) {
     throw new HttpsError("permission-denied", "Admin access required");
   }
 }
@@ -100,7 +107,7 @@ export const adminGetGroupAdminsList = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const input = request.data as GetGroupAdminsListInput;
@@ -240,7 +247,7 @@ export const adminGetGroupAdminDetail = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const { groupAdminId } = request.data as { groupAdminId: string };
@@ -319,7 +326,7 @@ export const adminUpdateGroupAdminStatus = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const input = request.data as UpdateStatusInput;
@@ -401,7 +408,7 @@ export const adminVerifyGroup = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const input = request.data as VerifyGroupInput;
@@ -476,7 +483,7 @@ export const adminProcessWithdrawal = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const input = request.data as ProcessWithdrawalInput;
@@ -647,7 +654,7 @@ export const adminGetWithdrawalsList = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const input = request.data as GetWithdrawalsListInput;
@@ -782,7 +789,7 @@ export const adminExportGroupAdmins = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request.auth.uid, request.auth.token);
 
     const db = getFirestore();
     const input = (request.data as ExportGroupAdminsInput) || {};

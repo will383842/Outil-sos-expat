@@ -7,12 +7,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
 import { useWizard } from '../../contexts/WizardContext';
 import LoadingSpinner from '../common/LoadingSpinner';
+import ErrorBoundary from '../common/ErrorBoundary';
 // InstallBanner removed — PWA install now handled via PWAInstallCards in dashboards
 import CookieBanner from '../common/CookieBanner';
 import { shouldHideBannersOnRoute } from '../../constants/excludedBannerRoutes';
 
 interface LayoutProps {
   children: ReactNode;
+  showHeader?: boolean;
   showFooter?: boolean;
   className?: string;
   role?: string;
@@ -20,6 +22,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({
   children,
+  showHeader = true,
   showFooter = true,
   className = '',
   role = 'main'
@@ -214,7 +217,7 @@ const Layout: React.FC<LayoutProps> = ({
           </a>
         </nav>
 
-        <Header />
+        {showHeader && <Header />}
 
       <main
         id="main-content"
@@ -222,7 +225,9 @@ const Layout: React.FC<LayoutProps> = ({
         role={role}
         tabIndex={-1}
       >
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </main>
 
       {showFooter && <Footer />}

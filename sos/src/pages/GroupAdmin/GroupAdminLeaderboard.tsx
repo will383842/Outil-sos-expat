@@ -127,7 +127,7 @@ const GroupAdminLeaderboard: React.FC = () => {
 
   return (
     <GroupAdminDashboardLayout>
-      <SEOHead description="Manage your Facebook group with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.leaderboard.title', defaultMessage: 'Leaderboard | SOS-Expat Group Admin' })} />
+      <SEOHead description="Manage your group or community with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.leaderboard.title', defaultMessage: 'Leaderboard | SOS-Expat Group Admin' })} />
 
       <div className="p-4 md:p-8">
         <div className="max-w-2xl mx-auto">

@@ -1119,6 +1119,23 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
   const [loggingOut, setLoggingOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  // Compute role-specific dashboard path
+  const dashboardPath = useMemo(() => {
+    const role = typedUser?.role;
+    switch (role) {
+      case "chatter":
+        return "/chatter/tableau-de-bord";
+      case "influencer":
+        return "/influencer/tableau-de-bord";
+      case "blogger":
+        return "/blogger/tableau-de-bord";
+      case "groupAdmin":
+        return "/group-admin/tableau-de-bord";
+      default:
+        return "/dashboard";
+    }
+  }, [typedUser?.role]);
+
   // Hook pour l'accès intelligent à l'outil IA
   const {
     hasAccess: hasAiAccess,
@@ -1284,7 +1301,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
             </Link>
           )}
           <Link
-            to={getLocalePath("/dashboard")}
+            to={getLocalePath(dashboardPath)}
             className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
               bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 min-h-[44px]"
             aria-label={t.dashboard}
@@ -1426,7 +1443,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
               </Link>
             )}
             <Link
-              to={getLocalePath("/dashboard")}
+              to={getLocalePath(dashboardPath)}
               className="group flex items-center px-4 py-3 text-sm text-gray-700
                 hover:bg-red-50 hover:text-red-600 rounded-xl mx-1
                 focus:outline-none focus-visible:bg-red-50"

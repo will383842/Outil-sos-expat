@@ -52,6 +52,7 @@ export const COLLECTIONS = {
   CHATTERS: 'chatters',
   INFLUENCERS: 'influencers',
   BLOGGERS: 'bloggers',
+  GROUP_ADMINS: 'group_admins',
 } as const;
 
 // ============================================================================
@@ -166,6 +167,43 @@ export class PaymentService {
     const provider: PaymentProvider = details.type === 'bank_transfer' ? 'wise' : 'flutterwave';
     const methodType: PaymentMethodType = details.type;
 
+    // Check for existing matching payment method to avoid duplicates
+    const existingMethod = await this.findMatchingPaymentMethod(userId, userType, details);
+    if (existingMethod) {
+      logger.info('[PaymentService.savePaymentMethod] Reusing existing payment method', {
+        methodId: existingMethod.id,
+        userId,
+        userType,
+      });
+
+      // Update default status if needed
+      if (setAsDefault && !existingMethod.isDefault) {
+        const now = new Date().toISOString();
+        await this.db.runTransaction(async (transaction) => {
+          // Unset other defaults
+          const existingDefaults = await this.db
+            .collection(COLLECTIONS.PAYMENT_METHODS)
+            .where('userId', '==', userId)
+            .where('userType', '==', userType)
+            .where('isDefault', '==', true)
+            .get();
+
+          for (const doc of existingDefaults.docs) {
+            transaction.update(doc.ref, { isDefault: false, updatedAt: now });
+          }
+
+          // Set this one as default
+          transaction.update(
+            this.db.collection(COLLECTIONS.PAYMENT_METHODS).doc(existingMethod.id),
+            { isDefault: true, updatedAt: now }
+          );
+        });
+        existingMethod.isDefault = true;
+      }
+
+      return existingMethod;
+    }
+
     const now = new Date().toISOString();
     const methodRef = this.db.collection(COLLECTIONS.PAYMENT_METHODS).doc();
 
@@ -209,6 +247,60 @@ export class PaymentService {
     });
 
     return paymentMethod;
+  }
+
+  /**
+   * Find an existing payment method matching the same details to avoid duplicates.
+   *
+   * @private
+   */
+  private async findMatchingPaymentMethod(
+    userId: string,
+    userType: PaymentUserType,
+    details: BankTransferDetails | MobileMoneyDetails
+  ): Promise<UserPaymentMethod | null> {
+    const snapshot = await this.db
+      .collection(COLLECTIONS.PAYMENT_METHODS)
+      .where('userId', '==', userId)
+      .where('userType', '==', userType)
+      .where('methodType', '==', details.type)
+      .get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    // Match on identifying field based on type
+    for (const doc of snapshot.docs) {
+      const existing = doc.data() as UserPaymentMethod;
+      const existingDetails = existing.details;
+
+      if (existingDetails.type !== details.type) continue;
+
+      let isMatch = false;
+      switch (details.type) {
+        case 'mobile_money':
+          isMatch = (existingDetails as MobileMoneyDetails).phoneNumber === details.phoneNumber
+            && (existingDetails as MobileMoneyDetails).provider === details.provider;
+          break;
+        case 'bank_transfer':
+          isMatch = (
+            ((existingDetails as BankTransferDetails).iban && details.iban
+              ? (existingDetails as BankTransferDetails).iban === details.iban
+              : false) ||
+            ((existingDetails as BankTransferDetails).accountNumber && details.accountNumber
+              ? (existingDetails as BankTransferDetails).accountNumber === details.accountNumber
+              : false)
+          );
+          break;
+      }
+
+      if (isMatch) {
+        return existing;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -559,6 +651,12 @@ export class PaymentService {
       throw new Error(`Cannot approve withdrawal with status: ${withdrawal.status}`);
     }
 
+    // Block approval if Telegram confirmation is still pending
+    const freshDoc = await this.db.collection(COLLECTIONS.WITHDRAWALS).doc(withdrawalId).get();
+    if (freshDoc.data()?.telegramConfirmationPending === true) {
+      throw new Error('Cannot approve: Telegram confirmation is still pending. The user must confirm via Telegram first.');
+    }
+
     const now = new Date().toISOString();
 
     await this.updateWithdrawalStatus(
@@ -702,7 +800,7 @@ export class PaymentService {
       });
 
       // Get country from payment details
-      const countryCode = withdrawal.paymentDetails.country;
+      const countryCode = (withdrawal.paymentDetails as { country: string }).country;
 
       // Process payment via router
       const result = await router.processPayment({
@@ -1181,6 +1279,59 @@ export class PaymentService {
       };
     }
 
+    // Check daily limit
+    if (config.dailyLimit > 0) {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const dailyWithdrawals = await this.db
+        .collection(COLLECTIONS.WITHDRAWALS)
+        .where('userId', '==', userId)
+        .where('userType', '==', userType)
+        .where('status', 'in', ['completed', 'processing', 'sent'])
+        .where('requestedAt', '>=', twentyFourHoursAgo)
+        .get();
+
+      const dailyTotal = dailyWithdrawals.docs.reduce(
+        (sum, doc) => sum + ((doc.data() as WithdrawalRequest).amount || 0),
+        0
+      );
+
+      if (dailyTotal + amount > config.dailyLimit) {
+        const remainingDaily = Math.max(0, config.dailyLimit - dailyTotal);
+        return {
+          valid: false,
+          error: `Daily withdrawal limit reached ($${(config.dailyLimit / 100).toFixed(2)}/day). ` +
+            `You can still withdraw up to $${(remainingDaily / 100).toFixed(2)} today.`,
+        };
+      }
+    }
+
+    // Check monthly limit
+    if (config.monthlyLimit > 0) {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const monthlyWithdrawals = await this.db
+        .collection(COLLECTIONS.WITHDRAWALS)
+        .where('userId', '==', userId)
+        .where('userType', '==', userType)
+        .where('status', 'in', ['completed', 'processing', 'sent'])
+        .where('requestedAt', '>=', monthStart)
+        .get();
+
+      const monthlyTotal = monthlyWithdrawals.docs.reduce(
+        (sum, doc) => sum + ((doc.data() as WithdrawalRequest).amount || 0),
+        0
+      );
+
+      if (monthlyTotal + amount > config.monthlyLimit) {
+        const remainingMonthly = Math.max(0, config.monthlyLimit - monthlyTotal);
+        return {
+          valid: false,
+          error: `Monthly withdrawal limit reached ($${(config.monthlyLimit / 100).toFixed(2)}/month). ` +
+            `You can still withdraw up to $${(remainingMonthly / 100).toFixed(2)} this month.`,
+        };
+      }
+    }
+
     return { valid: true };
   }
 
@@ -1305,6 +1456,8 @@ export class PaymentService {
         return COLLECTIONS.INFLUENCERS;
       case 'blogger':
         return COLLECTIONS.BLOGGERS;
+      case 'group_admin':
+        return COLLECTIONS.GROUP_ADMINS;
       default:
         throw new Error(`Unknown user type: ${userType}`);
     }

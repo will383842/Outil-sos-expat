@@ -1,5 +1,6 @@
 // src/components/Payment/PaymentMethodCard.tsx
 import React from 'react';
+import { useIntl } from 'react-intl';
 import { Edit2, Trash2, Star, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PaymentMethodIcon, mobileMoneyProviderNames } from './PaymentMethodIcon';
@@ -44,6 +45,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
   compact = false,
   className,
 }) => {
+  const intl = useIntl();
   const isMobileMoney = method.methodType === 'mobile_money';
   const mobileMoneyDetails = isMobileMoney
     ? (method.details as MobileMoneyDetails)
@@ -196,7 +198,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 <Edit2 className="w-4 h-4" />
-                Modifier
+                {intl.formatMessage({ id: 'common.edit', defaultMessage: 'Edit' })}
               </button>
             )}
             {onDelete && (
@@ -205,7 +207,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
-                Supprimer
+                {intl.formatMessage({ id: 'common.delete', defaultMessage: 'Delete' })}
               </button>
             )}
           </div>

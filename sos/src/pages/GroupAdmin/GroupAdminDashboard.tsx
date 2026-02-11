@@ -1,5 +1,5 @@
 /**
- * GroupAdminDashboard - Main Dashboard for Facebook Group Administrators
+ * GroupAdminDashboard - Main Dashboard for Group/Community Administrators
  */
 
 import React, { useState, useEffect, lazy, Suspense } from 'react';
@@ -130,7 +130,7 @@ const GroupAdminDashboard: React.FC = () => {
 
   return (
     <GroupAdminDashboardLayout>
-      <SEOHead title={intl.formatMessage({ id: 'groupAdmin.dashboard.title', defaultMessage: 'Dashboard | SOS-Expat Group Admin' })} description="Manage your Facebook group and earn commissions with SOS-Expat" />
+      <SEOHead title={intl.formatMessage({ id: 'groupAdmin.dashboard.title', defaultMessage: 'Dashboard | SOS-Expat Group Admin' })} description="Manage your group and earn commissions with SOS-Expat" />
 
       <div>
           {/* Header */}
@@ -207,50 +207,92 @@ const GroupAdminDashboard: React.FC = () => {
           </div>
 
           {/* Affiliate Links */}
-          <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
-            <h2 className="text-lg font-bold mb-4">
+          <div className="bg-white dark:bg-white/5 rounded-xl p-4 sm:p-6 shadow-sm dark:shadow-none dark:border dark:border-white/10 mb-8">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
               <FormattedMessage id="groupAdmin.dashboard.affiliateLinks" defaultMessage="Your Affiliate Links" />
             </h2>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-4">
               {/* Client Link */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-500 mb-2">
-                  <FormattedMessage id="groupAdmin.dashboard.clientLink" defaultMessage="Client link ($15 per client)" />
+              <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-800/20 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <FormattedMessage id="groupAdmin.dashboard.clientLink" defaultMessage="Client link ($10 per client)" />
+                  </span>
+                  <span className="text-sm font-bold bg-green-200 text-green-800 dark:bg-green-800/50 dark:text-green-300 px-3 py-1.5 rounded-full">
+                    {profile.affiliateCodeClient}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="space-y-2">
                   <input
                     type="text"
                     readOnly
                     value={affiliateLink}
-                    className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono"
+                    className="w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px] font-mono"
                   />
-                  <button
-                    onClick={() => copyToClipboard(affiliateLink, 'client')}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg"
-                  >
-                    {copiedCode === 'client' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => copyToClipboard(affiliateLink, 'client')}
+                      className="flex-1 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                    >
+                      {copiedCode === 'client' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                      <span>
+                        {copiedCode === 'client'
+                          ? <FormattedMessage id="common.copied" defaultMessage="Copied!" />
+                          : <FormattedMessage id="common.copy" defaultMessage="Copy" />
+                        }
+                      </span>
+                    </button>
+                    <a
+                      href={affiliateLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-h-[48px] min-w-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                    </a>
+                  </div>
                 </div>
               </div>
 
               {/* Recruitment Link */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-500 mb-2">
-                  <FormattedMessage id="groupAdmin.dashboard.recruitLink" defaultMessage="Recruitment link ($5 per recruit)" />
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-800/20 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <FormattedMessage id="groupAdmin.dashboard.recruitLink" defaultMessage="Recruitment link ($5 when recruit reaches $50)" />
+                  </span>
+                  <span className="text-sm font-bold bg-blue-200 text-blue-800 dark:bg-blue-800/50 dark:text-blue-300 px-3 py-1.5 rounded-full">
+                    {profile.affiliateCodeRecruitment}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="space-y-2">
                   <input
                     type="text"
                     readOnly
                     value={recruitmentLink}
-                    className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono"
+                    className="w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px] font-mono"
                   />
-                  <button
-                    onClick={() => copyToClipboard(recruitmentLink, 'recruit')}
-                    className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg"
-                  >
-                    {copiedCode === 'recruit' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => copyToClipboard(recruitmentLink, 'recruit')}
+                      className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                    >
+                      {copiedCode === 'recruit' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                      <span>
+                        {copiedCode === 'recruit'
+                          ? <FormattedMessage id="common.copied" defaultMessage="Copied!" />
+                          : <FormattedMessage id="common.copy" defaultMessage="Copy" />
+                        }
+                      </span>
+                    </button>
+                    <a
+                      href={recruitmentLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-h-[48px] min-w-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>

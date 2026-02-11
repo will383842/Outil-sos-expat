@@ -5,6 +5,8 @@
 // User Callables
 export { registerGroupAdmin } from "./registerGroupAdmin";
 export { getGroupAdminDashboard } from "./getGroupAdminDashboard";
+export { getGroupAdminCommissions } from "./getGroupAdminCommissions";
+export { getGroupAdminNotifications } from "./getGroupAdminNotifications";
 export { getGroupAdminLeaderboard } from "./getGroupAdminLeaderboard";
 export { updateGroupAdminProfile } from "./updateGroupAdminProfile";
 export { requestGroupAdminWithdrawal } from "./requestWithdrawal";
@@ -44,4 +46,6 @@ export {
   adminGetPostsList,
   adminUpdateGroupAdminConfig,
   adminGetGroupAdminConfig,
+  adminGetRecruitmentsList,
+  adminGetGroupAdminRecruits,
 } from "./admin";

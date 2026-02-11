@@ -14,6 +14,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { useAuth } from '@/contexts/AuthContext';
 import { useInfluencer } from '@/hooks/useInfluencer';
 import {
   usePaymentMethods,
@@ -69,6 +70,7 @@ type TabType = 'withdraw' | 'methods' | 'history';
 
 const InfluencerPayments: React.FC = () => {
   const intl = useIntl();
+  const { user, refreshUser } = useAuth();
 
   // Influencer data
   const {
@@ -112,6 +114,9 @@ const InfluencerPayments: React.FC = () => {
   const [withdrawalSuccess, setWithdrawalSuccess] = useState(false);
   const [selectedWithdrawalId, setSelectedWithdrawalId] = useState<string | null>(null);
   const [deletingMethodId, setDeletingMethodId] = useState<string | null>(null);
+  // Telegram confirmation state
+  const [pendingConfirmationId, setPendingConfirmationId] = useState<string | null>(null);
+  const [pendingConfirmationAmount, setPendingConfirmationAmount] = useState(0);
 
   // Tracking for selected withdrawal
   const {
@@ -148,18 +153,40 @@ const InfluencerPayments: React.FC = () => {
       setWithdrawalSuccess(false);
 
       try {
-        await requestWithdrawal(paymentMethodId, amount);
-        setWithdrawalSuccess(true);
-        await refreshWithdrawals();
+        const withdrawalId = await requestWithdrawal(paymentMethodId, amount);
+        setPendingConfirmationId(withdrawalId);
+        setPendingConfirmationAmount(amount || availableBalance);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Une erreur est survenue';
-        setWithdrawalError(message);
+        if (message.includes('TELEGRAM_REQUIRED')) {
+          setWithdrawalError('Vous devez connecter Telegram pour effectuer un retrait.');
+        } else if (message.includes('TELEGRAM_SEND_FAILED')) {
+          setWithdrawalError('Impossible d\'envoyer la confirmation Telegram. Vérifiez que vous n\'avez pas bloqué le bot et réessayez.');
+        } else {
+          setWithdrawalError(message);
+        }
       } finally {
         setWithdrawalLoading(false);
       }
     },
-    [requestWithdrawal, refreshWithdrawals]
+    [requestWithdrawal, availableBalance]
   );
+
+  const handleTelegramConfirmed = useCallback(() => {
+    setPendingConfirmationId(null);
+    setWithdrawalSuccess(true);
+    refreshWithdrawals();
+  }, [refreshWithdrawals]);
+
+  const handleTelegramCancelled = useCallback(() => {
+    setPendingConfirmationId(null);
+    refreshWithdrawals();
+  }, [refreshWithdrawals]);
+
+  const handleTelegramExpired = useCallback(() => {
+    setPendingConfirmationId(null);
+    refreshWithdrawals();
+  }, [refreshWithdrawals]);
 
   // Handle save payment method
   const handleSavePaymentMethod = useCallback(
@@ -491,6 +518,14 @@ const InfluencerPayments: React.FC = () => {
               success={withdrawalSuccess}
               paymentMethods={methods}
               defaultPaymentMethodId={defaultMethodId}
+              role="influencer"
+              telegramConnected={!!user?.telegramId}
+              onTelegramConnected={refreshUser}
+              pendingConfirmationWithdrawalId={pendingConfirmationId}
+              pendingConfirmationAmount={pendingConfirmationAmount}
+              onTelegramConfirmed={handleTelegramConfirmed}
+              onTelegramCancelled={handleTelegramCancelled}
+              onTelegramExpired={handleTelegramExpired}
             />
           </div>
         )}

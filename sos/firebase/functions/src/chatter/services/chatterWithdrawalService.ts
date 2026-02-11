@@ -1,5 +1,9 @@
 /**
- * Chatter Withdrawal Service
+ * @deprecated This service is deprecated.
+ * Use the centralized payment system (payment/ module) instead.
+ * Withdrawals now go through payment_withdrawals collection.
+ *
+ * Chatter Withdrawal Service (Legacy)
  *
  * Handles withdrawal requests and processing:
  * - Creating withdrawal requests
@@ -177,11 +181,13 @@ export async function createWithdrawalRequest(
         updatedAt: now,
       });
 
-      // Update commissions to "processing" (custom status for tracking)
+      // Mark commissions as paid (aligned with Influencer/Blogger/GroupAdmin)
       for (const commissionId of commissionIds) {
         const commissionRef = db.collection("chatter_commissions").doc(commissionId);
         transaction.update(commissionRef, {
+          status: "paid",
           withdrawalId: withdrawalRef.id,
+          paidAt: now,
           updatedAt: now,
         });
       }

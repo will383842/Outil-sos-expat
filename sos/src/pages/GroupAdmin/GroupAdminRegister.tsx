@@ -1,5 +1,5 @@
 /**
- * GroupAdminRegister - Registration page for Facebook Group Administrators
+ * GroupAdminRegister - Registration page for Group & Community Administrators
  * Dark theme with indigo accent - Harmonized with ChatterRegister pattern
  * Features: role conflict check, email-already-exists UI, referral code banner, terms tracking
  */
@@ -217,7 +217,7 @@ const GroupAdminRegister: React.FC = () => {
       <Helmet>
         <html lang={langCode === 'ch' ? 'zh' : langCode} />
         <title>{intl.formatMessage({ id: 'groupadmin.register.seo.title', defaultMessage: 'Group Admin Registration | SOS-Expat' })}</title>
-        <meta name="description" content={intl.formatMessage({ id: 'groupadmin.register.seo.description', defaultMessage: 'Register as a Group Admin to earn $15 per client referred.' })} />
+        <meta name="description" content={intl.formatMessage({ id: 'groupadmin.register.seo.description', defaultMessage: 'Register as a Group Admin to earn $10 per client referred.' })} />
         <meta name="robots" content="noindex, nofollow" />
         <meta name="theme-color" content="#312e81" />
       </Helmet>
@@ -245,7 +245,7 @@ const GroupAdminRegister: React.FC = () => {
               <FormattedMessage id="groupadmin.register.title" defaultMessage="Group Admin Registration" />
             </h1>
             <p className="text-gray-400">
-              <FormattedMessage id="groupadmin.register.subtitle" defaultMessage="Earn $15 per client referred from your group" />
+              <FormattedMessage id="groupadmin.register.subtitle" defaultMessage="Earn $10 per client referred from your group" />
             </p>
           </div>
 

@@ -23,7 +23,7 @@ import { useAuth } from "../contexts/AuthContext";
 /**
  * Supported payment method types
  */
-export type PaymentMethodType = "wise" | "paypal" | "mobile_money" | "bank_transfer";
+export type PaymentMethodType = "wise" | "mobile_money" | "bank_transfer";
 
 /**
  * Withdrawal status progression
@@ -78,13 +78,6 @@ export interface WisePaymentDetails {
   bic?: string;
 }
 
-export interface PayPalPaymentDetails {
-  type: "paypal";
-  email: string;
-  currency: string;
-  accountHolderName: string;
-}
-
 export interface MobileMoneyPaymentDetails {
   type: "mobile_money";
   provider: MobileMoneyProvider;
@@ -112,7 +105,6 @@ export interface BankTransferPaymentDetails {
 
 export type PaymentDetails =
   | WisePaymentDetails
-  | PayPalPaymentDetails
   | MobileMoneyPaymentDetails
   | BankTransferPaymentDetails;
 
@@ -234,7 +226,6 @@ export interface CountryPaymentInfo {
   mobileProviders: MobileMoneyProvider[];
   bankTransferAvailable: boolean;
   wiseAvailable: boolean;
-  paypalAvailable: boolean;
 }
 
 // ============================================================================
@@ -342,35 +333,35 @@ export const WISE_SUPPORTED_CURRENCIES = [
 
 export const COUNTRY_PAYMENT_INFO: CountryPaymentInfo[] = [
   // Europe
-  { code: "FR", name: "France", currency: "EUR", currencySymbol: "\u20ac", supportedMethods: ["wise", "paypal", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: true },
-  { code: "DE", name: "Germany", currency: "EUR", currencySymbol: "\u20ac", supportedMethods: ["wise", "paypal", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: true },
-  { code: "ES", name: "Spain", currency: "EUR", currencySymbol: "\u20ac", supportedMethods: ["wise", "paypal", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: true },
-  { code: "IT", name: "Italy", currency: "EUR", currencySymbol: "\u20ac", supportedMethods: ["wise", "paypal", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: true },
-  { code: "BE", name: "Belgium", currency: "EUR", currencySymbol: "\u20ac", supportedMethods: ["wise", "paypal", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: true },
-  { code: "CH", name: "Switzerland", currency: "CHF", currencySymbol: "CHF", supportedMethods: ["wise", "paypal", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: true },
-  { code: "GB", name: "United Kingdom", currency: "GBP", currencySymbol: "\u00a3", supportedMethods: ["wise", "paypal", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: true },
+  { code: "FR", name: "France", currency: "EUR", currencySymbol: "\u20ac", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
+  { code: "DE", name: "Germany", currency: "EUR", currencySymbol: "\u20ac", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
+  { code: "ES", name: "Spain", currency: "EUR", currencySymbol: "\u20ac", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
+  { code: "IT", name: "Italy", currency: "EUR", currencySymbol: "\u20ac", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
+  { code: "BE", name: "Belgium", currency: "EUR", currencySymbol: "\u20ac", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
+  { code: "CH", name: "Switzerland", currency: "CHF", currencySymbol: "CHF", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
+  { code: "GB", name: "United Kingdom", currency: "GBP", currencySymbol: "\u00a3", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
   // North America
-  { code: "US", name: "United States", currency: "USD", currencySymbol: "$", supportedMethods: ["wise", "paypal", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: true },
-  { code: "CA", name: "Canada", currency: "CAD", currencySymbol: "CA$", supportedMethods: ["wise", "paypal", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: true },
+  { code: "US", name: "United States", currency: "USD", currencySymbol: "$", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
+  { code: "CA", name: "Canada", currency: "CAD", currencySymbol: "CA$", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
   // North Africa
-  { code: "MA", name: "Morocco", currency: "MAD", currencySymbol: "MAD", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: false },
-  { code: "TN", name: "Tunisia", currency: "TND", currencySymbol: "TND", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: false },
-  { code: "DZ", name: "Algeria", currency: "DZD", currencySymbol: "DZD", supportedMethods: ["bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: false, paypalAvailable: false },
+  { code: "MA", name: "Morocco", currency: "MAD", currencySymbol: "MAD", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
+  { code: "TN", name: "Tunisia", currency: "TND", currencySymbol: "TND", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
+  { code: "DZ", name: "Algeria", currency: "DZD", currencySymbol: "DZD", supportedMethods: ["bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: false },
   // West Africa
-  { code: "SN", name: "Senegal", currency: "XOF", currencySymbol: "CFA", supportedMethods: ["wise", "mobile_money"], mobileProviders: ["orange_money", "wave"], bankTransferAvailable: false, wiseAvailable: true, paypalAvailable: false },
-  { code: "CI", name: "Ivory Coast", currency: "XOF", currencySymbol: "CFA", supportedMethods: ["wise", "mobile_money"], mobileProviders: ["orange_money", "mtn_momo", "moov_money", "wave"], bankTransferAvailable: false, wiseAvailable: true, paypalAvailable: false },
-  { code: "ML", name: "Mali", currency: "XOF", currencySymbol: "CFA", supportedMethods: ["mobile_money"], mobileProviders: ["orange_money", "moov_money"], bankTransferAvailable: false, wiseAvailable: false, paypalAvailable: false },
-  { code: "BF", name: "Burkina Faso", currency: "XOF", currencySymbol: "CFA", supportedMethods: ["mobile_money"], mobileProviders: ["orange_money", "moov_money"], bankTransferAvailable: false, wiseAvailable: false, paypalAvailable: false },
-  { code: "GH", name: "Ghana", currency: "GHS", currencySymbol: "GH\u20b5", supportedMethods: ["wise", "mobile_money"], mobileProviders: ["mtn_momo", "airtel_money"], bankTransferAvailable: false, wiseAvailable: true, paypalAvailable: false },
-  { code: "NG", name: "Nigeria", currency: "NGN", currencySymbol: "\u20a6", supportedMethods: ["wise", "mobile_money", "bank_transfer"], mobileProviders: ["mtn_momo", "airtel_money"], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: false },
+  { code: "SN", name: "Senegal", currency: "XOF", currencySymbol: "CFA", supportedMethods: ["wise", "mobile_money"], mobileProviders: ["orange_money", "wave"], bankTransferAvailable: false, wiseAvailable: true },
+  { code: "CI", name: "Ivory Coast", currency: "XOF", currencySymbol: "CFA", supportedMethods: ["wise", "mobile_money"], mobileProviders: ["orange_money", "mtn_momo", "moov_money", "wave"], bankTransferAvailable: false, wiseAvailable: true },
+  { code: "ML", name: "Mali", currency: "XOF", currencySymbol: "CFA", supportedMethods: ["mobile_money"], mobileProviders: ["orange_money", "moov_money"], bankTransferAvailable: false, wiseAvailable: false },
+  { code: "BF", name: "Burkina Faso", currency: "XOF", currencySymbol: "CFA", supportedMethods: ["mobile_money"], mobileProviders: ["orange_money", "moov_money"], bankTransferAvailable: false, wiseAvailable: false },
+  { code: "GH", name: "Ghana", currency: "GHS", currencySymbol: "GH\u20b5", supportedMethods: ["wise", "mobile_money"], mobileProviders: ["mtn_momo", "airtel_money"], bankTransferAvailable: false, wiseAvailable: true },
+  { code: "NG", name: "Nigeria", currency: "NGN", currencySymbol: "\u20a6", supportedMethods: ["wise", "mobile_money", "bank_transfer"], mobileProviders: ["mtn_momo", "airtel_money"], bankTransferAvailable: true, wiseAvailable: true },
   // Central Africa
-  { code: "CM", name: "Cameroon", currency: "XAF", currencySymbol: "FCFA", supportedMethods: ["mobile_money"], mobileProviders: ["orange_money", "mtn_momo"], bankTransferAvailable: false, wiseAvailable: false, paypalAvailable: false },
+  { code: "CM", name: "Cameroon", currency: "XAF", currencySymbol: "FCFA", supportedMethods: ["mobile_money"], mobileProviders: ["orange_money", "mtn_momo"], bankTransferAvailable: false, wiseAvailable: false },
   // East Africa
-  { code: "KE", name: "Kenya", currency: "KES", currencySymbol: "KSh", supportedMethods: ["wise", "mobile_money"], mobileProviders: ["mpesa", "airtel_money"], bankTransferAvailable: false, wiseAvailable: true, paypalAvailable: false },
-  { code: "TZ", name: "Tanzania", currency: "TZS", currencySymbol: "TSh", supportedMethods: ["mobile_money"], mobileProviders: ["mpesa", "airtel_money"], bankTransferAvailable: false, wiseAvailable: false, paypalAvailable: false },
-  { code: "UG", name: "Uganda", currency: "UGX", currencySymbol: "USh", supportedMethods: ["mobile_money"], mobileProviders: ["mtn_momo", "airtel_money"], bankTransferAvailable: false, wiseAvailable: false, paypalAvailable: false },
+  { code: "KE", name: "Kenya", currency: "KES", currencySymbol: "KSh", supportedMethods: ["wise", "mobile_money"], mobileProviders: ["mpesa", "airtel_money"], bankTransferAvailable: false, wiseAvailable: true },
+  { code: "TZ", name: "Tanzania", currency: "TZS", currencySymbol: "TSh", supportedMethods: ["mobile_money"], mobileProviders: ["mpesa", "airtel_money"], bankTransferAvailable: false, wiseAvailable: false },
+  { code: "UG", name: "Uganda", currency: "UGX", currencySymbol: "USh", supportedMethods: ["mobile_money"], mobileProviders: ["mtn_momo", "airtel_money"], bankTransferAvailable: false, wiseAvailable: false },
   // South Africa
-  { code: "ZA", name: "South Africa", currency: "ZAR", currencySymbol: "R", supportedMethods: ["wise", "paypal", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true, paypalAvailable: true },
+  { code: "ZA", name: "South Africa", currency: "ZAR", currencySymbol: "R", supportedMethods: ["wise", "bank_transfer"], mobileProviders: [], bankTransferAvailable: true, wiseAvailable: true },
 ];
 
 // ============================================================================
@@ -440,7 +431,7 @@ export function usePaymentMethods(): UsePaymentMethodsReturn {
     try {
       const getPaymentMethodsFn = httpsCallable<void, PaymentMethodsResponse>(
         functions,
-        "getPaymentMethods"
+        "paymentGetMethods"
       );
 
       const result = await getPaymentMethodsFn();
@@ -465,7 +456,7 @@ export function usePaymentMethods(): UsePaymentMethodsReturn {
       const savePaymentMethodFn = httpsCallable<
         { details: PaymentDetails; setAsDefault: boolean },
         SaveMethodResponse
-      >(functions, "savePaymentMethod");
+      >(functions, "paymentSaveMethod");
 
       const result = await savePaymentMethodFn({ details, setAsDefault });
 
@@ -491,7 +482,7 @@ export function usePaymentMethods(): UsePaymentMethodsReturn {
       const deletePaymentMethodFn = httpsCallable<
         { methodId: string },
         DeleteMethodResponse
-      >(functions, "deletePaymentMethod");
+      >(functions, "paymentDeleteMethod");
 
       const result = await deletePaymentMethodFn({ methodId });
 
@@ -515,7 +506,7 @@ export function usePaymentMethods(): UsePaymentMethodsReturn {
       const setDefaultPaymentMethodFn = httpsCallable<
         { methodId: string },
         SetDefaultResponse
-      >(functions, "setDefaultPaymentMethod");
+      >(functions, "paymentSetDefault");
 
       const result = await setDefaultPaymentMethodFn({ methodId });
 
@@ -574,6 +565,7 @@ interface RequestWithdrawalResponse {
   amount: number;
   status: WithdrawalStatus;
   message: string;
+  telegramConfirmationRequired?: boolean;
 }
 
 interface CancelWithdrawalResponse {
@@ -608,7 +600,7 @@ export function useWithdrawals(options?: {
       const getWithdrawalsFn = httpsCallable<
         { limit?: number; status?: WithdrawalStatus[] },
         WithdrawalsResponse
-      >(functions, "getWithdrawals");
+      >(functions, "paymentGetHistory");
 
       const result = await getWithdrawalsFn({
         limit: optionsRef.current?.limit,
@@ -635,7 +627,7 @@ export function useWithdrawals(options?: {
       const requestWithdrawalFn = httpsCallable<
         { paymentMethodId: string; amount?: number },
         RequestWithdrawalResponse
-      >(functions, "requestWithdrawal");
+      >(functions, "paymentRequestWithdrawal");
 
       const result = await requestWithdrawalFn({ paymentMethodId, amount });
 
@@ -661,7 +653,7 @@ export function useWithdrawals(options?: {
       const cancelWithdrawalFn = httpsCallable<
         { withdrawalId: string; reason?: string },
         CancelWithdrawalResponse
-      >(functions, "cancelWithdrawal");
+      >(functions, "paymentCancelWithdrawal");
 
       const result = await cancelWithdrawalFn({ withdrawalId, reason });
 
@@ -728,7 +720,7 @@ export function useWithdrawalTracking(withdrawalId: string | null): UseWithdrawa
       const getWithdrawalTrackingFn = httpsCallable<
         { withdrawalId: string },
         TrackingResponse
-      >(functions, "getWithdrawalTracking");
+      >(functions, "paymentGetStatus");
 
       const result = await getWithdrawalTrackingFn({ withdrawalId });
 
@@ -936,7 +928,6 @@ interface UsePaymentConfigReturn {
   currency: string;
   processingTimes: {
     wise: string;
-    paypal: string;
     mobile_money: string;
     bank_transfer: string;
   };
@@ -969,7 +960,7 @@ export function usePaymentConfig(): UsePaymentConfigReturn {
       try {
         const getPaymentConfigFn = httpsCallable<void, PaymentConfigResponse>(
           functions,
-          "getPaymentConfig"
+          "paymentAdminGetConfig"
         );
 
         // Add 10 second timeout to prevent infinite loading
@@ -999,7 +990,6 @@ export function usePaymentConfig(): UsePaymentConfigReturn {
   const processingTimes = useMemo(
     () => ({
       wise: "1-3 business days",
-      paypal: "Instant - 24 hours",
       mobile_money: "Instant - 24 hours",
       bank_transfer: "3-5 business days",
     }),
@@ -1025,7 +1015,6 @@ interface ValidationErrors {
 
 interface UsePaymentValidationReturn {
   validateWiseDetails: (details: Partial<WisePaymentDetails>) => ValidationErrors;
-  validatePayPalDetails: (details: Partial<PayPalPaymentDetails>) => ValidationErrors;
   validateMobileMoneyDetails: (details: Partial<MobileMoneyPaymentDetails>) => ValidationErrors;
   validateBankTransferDetails: (details: Partial<BankTransferPaymentDetails>) => ValidationErrors;
   validatePaymentDetails: (details: Partial<PaymentDetails>) => ValidationErrors;
@@ -1054,30 +1043,6 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
         errors.currency = "Currency is required";
       } else if (!WISE_SUPPORTED_CURRENCIES.some((c) => c.code === details.currency)) {
         errors.currency = "Currency not supported";
-      }
-
-      return errors;
-    },
-    []
-  );
-
-  // Validate PayPal details
-  const validatePayPalDetails = useCallback(
-    (details: Partial<PayPalPaymentDetails>): ValidationErrors => {
-      const errors: ValidationErrors = {};
-
-      if (!details.email) {
-        errors.email = "PayPal email is required";
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email)) {
-        errors.email = "Invalid email format";
-      }
-
-      if (!details.accountHolderName) {
-        errors.accountHolderName = "Account holder name is required";
-      }
-
-      if (!details.currency) {
-        errors.currency = "Currency is required";
       }
 
       return errors;
@@ -1174,8 +1139,6 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
       switch (details.type) {
         case "wise":
           return validateWiseDetails(details as Partial<WisePaymentDetails>);
-        case "paypal":
-          return validatePayPalDetails(details as Partial<PayPalPaymentDetails>);
         case "mobile_money":
           return validateMobileMoneyDetails(details as Partial<MobileMoneyPaymentDetails>);
         case "bank_transfer":
@@ -1186,7 +1149,6 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
     },
     [
       validateWiseDetails,
-      validatePayPalDetails,
       validateMobileMoneyDetails,
       validateBankTransferDetails,
     ]
@@ -1199,7 +1161,6 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
 
   return {
     validateWiseDetails,
-    validatePayPalDetails,
     validateMobileMoneyDetails,
     validateBankTransferDetails,
     validatePaymentDetails,
@@ -1263,8 +1224,6 @@ export function getPaymentMethodDisplayName(details: PaymentDetails): string {
   switch (details.type) {
     case "wise":
       return `Wise - ${details.email}`;
-    case "paypal":
-      return `PayPal - ${details.email}`;
     case "mobile_money": {
       const providerName =
         MOBILE_PROVIDER_DETAILS[details.provider]?.name || details.provider;

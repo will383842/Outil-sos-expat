@@ -59,7 +59,6 @@ export type GroupAdminWithdrawalStatus =
 
 export type GroupAdminPaymentMethod =
   | "wise"
-  | "paypal"
   | "mobile_money"
   | "bank_transfer";
 
@@ -176,7 +175,6 @@ export interface GroupAdmin {
 
 export type GroupAdminPaymentDetails =
   | GroupAdminWiseDetails
-  | GroupAdminPayPalDetails
   | GroupAdminMobileMoneyDetails
   | GroupAdminBankTransferDetails;
 
@@ -185,11 +183,6 @@ export interface GroupAdminWiseDetails {
   email: string;
   accountHolderName: string;
   currency: string;
-}
-
-export interface GroupAdminPayPalDetails {
-  type: "paypal";
-  email: string;
 }
 
 export interface GroupAdminMobileMoneyDetails {

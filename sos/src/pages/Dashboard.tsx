@@ -425,6 +425,21 @@ const Dashboard: React.FC = () => {
   const { user, firebaseUser, logout, refreshUser, isLoading: authLoading, authInitialized } = useAuth();
   const { language } = useApp();
 
+  // ✅ Redirect non-provider roles to their specific dashboard
+  useEffect(() => {
+    if (!user?.role) return;
+    const roleRedirects: Record<string, string> = {
+      chatter: "/chatter/tableau-de-bord",
+      influencer: "/influencer/tableau-de-bord",
+      blogger: "/blogger/tableau-de-bord",
+      groupAdmin: "/group-admin/tableau-de-bord",
+    };
+    const redirect = roleRedirects[user.role];
+    if (redirect) {
+      navigate(redirect, { replace: true });
+    }
+  }, [user?.role, navigate]);
+
   // AI Quota for sidebar display (lawyers and expats only)
   const {
     currentUsage: aiCurrentUsage,

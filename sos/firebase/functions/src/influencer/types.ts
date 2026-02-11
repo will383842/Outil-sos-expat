@@ -3,15 +3,13 @@
  *
  * Complete type definitions for the SOS-Expat Influencer program.
  * Supports:
- * - Client referral commissions (fixed $10)
+ * - Client referral commissions ($10 base + level/streak/top3 bonuses)
  * - Provider recruitment commissions (fixed $5 for 6 months)
- * - Top 10 monthly leaderboard (informational, no bonuses)
+ * - Influencer recruitment commissions ($5 one-time when recruit reaches $50)
+ * - Levels 1-5 based on totalEarned (same thresholds as Chatter)
+ * - Monthly Top 3 leaderboard with bonus multipliers
+ * - Streak bonuses for consecutive daily activity
  * - Promotional tools (banners, widgets, QR codes)
- *
- * NOTE: Unlike Chatters, Influencers have:
- * - No quiz requirement (direct activation)
- * - No levels/badges (simplified system)
- * - Fixed commission amounts (no multipliers)
  * - 5% client discount via referral links
  */
 
@@ -20,6 +18,11 @@ import { Timestamp } from "firebase-admin/firestore";
 // ============================================================================
 // ENUMS
 // ============================================================================
+
+/**
+ * Influencer level (1-5 based on total earnings, aligned with Chatter)
+ */
+export type InfluencerLevel = 1 | 2 | 3 | 4 | 5;
 
 /**
  * Influencer account status
@@ -90,7 +93,6 @@ export type InfluencerWithdrawalStatus =
  */
 export type InfluencerPaymentMethod =
   | "wise"          // Wise (TransferWise)
-  | "paypal"        // PayPal
   | "mobile_money"  // Mobile Money (Flutterwave) - for African markets
   | "bank_transfer"; // Bank transfer
 
@@ -228,6 +230,40 @@ export interface Influencer {
   /** Best ever rank */
   bestRank: number | null;
 
+  // ---- Level & Gamification (aligned with Chatter) ----
+
+  /** Current level (1-5) based on totalEarned */
+  level: InfluencerLevel;
+
+  /** Progress towards next level (0-100%) */
+  levelProgress: number;
+
+  /** Current streak (consecutive days with activity) */
+  currentStreak: number;
+
+  /** Best streak ever */
+  bestStreak: number;
+
+  /**
+   * Commission multiplier for this month (reward for being top 3 previous month)
+   * 1.0 = no bonus, 2.0 = double, 1.5 = +50%, 1.15 = +15%
+   */
+  monthlyTopMultiplier: number;
+
+  /** Month during which the multiplier is active (YYYY-MM format, null if no active bonus) */
+  monthlyTopMultiplierMonth: string | null;
+
+  // ---- Recruitment (who recruited this influencer) ----
+
+  /** Influencer who recruited this one (influencer ID) */
+  recruitedBy: string | null;
+
+  /** Recruitment code used */
+  recruitedByCode: string | null;
+
+  /** When recruited */
+  recruitedAt: Timestamp | null;
+
   // ---- Payment Details ----
 
   /** Preferred payment method */
@@ -291,7 +327,6 @@ export interface Influencer {
  */
 export type InfluencerPaymentDetails =
   | InfluencerWiseDetails
-  | InfluencerPayPalDetails
   | InfluencerMobileMoneyDetails
   | InfluencerBankDetails;
 
@@ -308,16 +343,6 @@ export interface InfluencerWiseDetails {
   accountNumber?: string;
   routingNumber?: string;
   bic?: string;
-}
-
-/**
- * PayPal payment details
- */
-export interface InfluencerPayPalDetails {
-  type: "paypal";
-  email: string;
-  currency: string;
-  accountHolderName: string;
 }
 
 /**
@@ -401,11 +426,29 @@ export interface InfluencerCommission {
 
   // ---- Amount ----
 
-  /** Commission amount (cents) - FIXED, no bonuses */
+  /** Base amount before bonuses (cents) */
+  baseAmount: number;
+
+  /** Level bonus multiplier applied (1.0 = no bonus) */
+  levelBonus: number;
+
+  /** Top 3 bonus multiplier applied (1.0 = no bonus) */
+  top3Bonus: number;
+
+  /** Streak bonus multiplier applied (1.0 = no bonus) */
+  streakBonus: number;
+
+  /** Monthly top multiplier (reward for being top 3 previous month, 1.0 = no bonus) */
+  monthlyTopMultiplier: number;
+
+  /** Final commission amount (cents) */
   amount: number;
 
   /** Currency (always USD) */
   currency: "USD";
+
+  /** Human-readable calculation explanation */
+  calculationDetails: string;
 
   /** Human-readable description */
   description: string;
@@ -504,9 +547,6 @@ export interface InfluencerWithdrawal {
 
   /** Wise transfer ID (if using Wise) */
   wiseTransferId?: string;
-
-  /** PayPal transaction ID (if using PayPal) */
-  paypalTransactionId?: string;
 
   /** Estimated arrival date */
   estimatedArrival?: Timestamp;
@@ -697,6 +737,48 @@ export interface InfluencerRateHistoryEntry {
 }
 
 // ============================================================================
+// RECRUITED INFLUENCERS TRACKING
+// ============================================================================
+
+/**
+ * Recruited influencer tracking document (mirrors GroupAdminRecruit)
+ * Collection: influencer_recruited_influencers/{id}
+ */
+export interface InfluencerRecruitedInfluencer {
+  id: string;
+
+  /** Recruiter Influencer ID */
+  recruiterId: string;
+
+  /** Recruited Influencer ID */
+  recruitedId: string;
+
+  /** Recruited influencer's email */
+  recruitedEmail: string;
+
+  /** Recruited influencer's name */
+  recruitedName: string;
+
+  /** Recruitment code used */
+  recruitmentCode: string;
+
+  /** When recruited */
+  recruitedAt: Timestamp;
+
+  /** Commission window end date (6 months after recruitment) */
+  commissionWindowEnd: Timestamp;
+
+  /** Whether commission was paid */
+  commissionPaid: boolean;
+
+  /** Commission ID if paid */
+  commissionId?: string;
+
+  /** When commission was paid */
+  commissionPaidAt?: Timestamp;
+}
+
+// ============================================================================
 // CONFIGURATION
 // ============================================================================
 
@@ -758,6 +840,46 @@ export interface InfluencerConfig {
 
   /** Number of influencers shown in leaderboard */
   leaderboardSize: number;
+
+  // ---- Level Bonuses (aligned with Chatter) ----
+
+  levelBonuses: {
+    level1: number;  // 1.00 = no bonus
+    level2: number;  // 1.10 = +10%
+    level3: number;  // 1.20 = +20%
+    level4: number;  // 1.35 = +35%
+    level5: number;  // 1.50 = +50%
+  };
+
+  // ---- Level Thresholds (cents) ----
+
+  levelThresholds: {
+    level2: number;  // $100 = 10000
+    level3: number;  // $500 = 50000
+    level4: number;  // $2000 = 200000
+    level5: number;  // $5000 = 500000
+  };
+
+  // ---- Top 3 Monthly Bonuses ----
+
+  top1BonusMultiplier: number;  // 2.00 = +100%
+  top2BonusMultiplier: number;  // 1.50 = +50%
+  top3BonusMultiplier: number;  // 1.15 = +15%
+
+  // ---- Streak Bonus ----
+
+  /** Streak bonus multipliers based on consecutive activity days */
+  streakBonuses: {
+    days7: number;   // 1.05 = +5% bonus at 7+ days
+    days14: number;  // 1.10 = +10% bonus at 14+ days
+    days30: number;  // 1.20 = +20% bonus at 30+ days
+    days100: number; // 1.50 = +50% bonus at 100+ days
+  };
+
+  // ---- Recruitment Commission ----
+
+  /** Minimum totalEarned (cents) a recruited influencer must reach before recruiter gets $5 */
+  recruitmentCommissionThreshold: number;
 
   // ---- V2: Commission Rules ----
 
@@ -933,13 +1055,42 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
 
   recruitmentWindowMonths: 6,
 
-  minimumWithdrawalAmount: 5000,     // $50
+  minimumWithdrawalAmount: 2500,     // $25 (aligned with Chatter/Blogger/GroupAdmin)
   validationHoldPeriodDays: 7,       // 7 days minimum
   releaseDelayHours: 24,             // 1 day after validation
 
   attributionWindowDays: 30,
 
   leaderboardSize: 10,
+
+  // Level bonuses (aligned with Chatter)
+  levelBonuses: {
+    level1: 1.00,
+    level2: 1.10,
+    level3: 1.20,
+    level4: 1.35,
+    level5: 1.50,
+  },
+
+  levelThresholds: {
+    level2: 10000,   // $100
+    level3: 50000,   // $500
+    level4: 200000,  // $2000
+    level5: 500000,  // $5000
+  },
+
+  top1BonusMultiplier: 2.00,
+  top2BonusMultiplier: 1.50,
+  top3BonusMultiplier: 1.15,
+
+  streakBonuses: {
+    days7: 1.05,    // +5% bonus at 7+ consecutive days
+    days14: 1.10,   // +10% bonus at 14+ consecutive days
+    days30: 1.20,   // +20% bonus at 30+ consecutive days
+    days100: 1.50,  // +50% bonus at 100+ consecutive days
+  },
+
+  recruitmentCommissionThreshold: 5000, // $50 — recruited influencer must earn this before recruiter gets $5
 
   // V2: Commission rules
   commissionRules: DEFAULT_COMMISSION_RULES,
@@ -965,7 +1116,7 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
  * Monthly ranking record
  * Collection: influencer_monthly_rankings/{year-month}
  *
- * NOTE: Top 10 is INFORMATIONAL ONLY - no bonus payouts
+ * Top 3 get bonus multipliers for the following month (aligned with Chatter)
  */
 export interface InfluencerMonthlyRanking {
   /** Document ID (YYYY-MM format) */
@@ -1114,6 +1265,122 @@ export interface InfluencerNotification {
 
   /** Read timestamp */
   readAt?: Timestamp;
+}
+
+// ============================================================================
+// RESOURCE SYSTEM
+// ============================================================================
+
+/**
+ * Resource categories for influencers
+ */
+export type InfluencerResourceCategory =
+  | "sos_expat"    // SOS-Expat resources
+  | "ulixai"       // Ulixai AI resources
+  | "founder";     // Founder's resources (photos, bio, quotes)
+
+/**
+ * Resource type
+ */
+export type InfluencerResourceType =
+  | "logo"         // Logo files
+  | "image"        // Images/graphics
+  | "text"         // Text content
+  | "data"         // Data/statistics
+  | "photo"        // Photos (founder)
+  | "bio"          // Biography text
+  | "quote";       // Quotes
+
+/**
+ * Influencer downloadable resource
+ * Collection: influencer_resources/{resourceId}
+ */
+export interface InfluencerResource {
+  id: string;
+  category: InfluencerResourceCategory;
+  type: InfluencerResourceType;
+  name: string;
+  nameTranslations?: { [key in SupportedInfluencerLanguage]?: string };
+  description?: string;
+  descriptionTranslations?: { [key in SupportedInfluencerLanguage]?: string };
+  fileUrl?: string;
+  thumbnailUrl?: string;
+  fileSize?: number;
+  fileFormat?: string;
+  dimensions?: { width: number; height: number };
+  isActive: boolean;
+  order: number;
+  downloadCount: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  createdBy: string;
+}
+
+/**
+ * Influencer copyable text resource
+ * Collection: influencer_resource_texts/{textId}
+ */
+export interface InfluencerResourceText {
+  id: string;
+  category: InfluencerResourceCategory;
+  type: InfluencerResourceType;
+  title: string;
+  titleTranslations?: { [key in SupportedInfluencerLanguage]?: string };
+  content: string;
+  contentTranslations?: { [key in SupportedInfluencerLanguage]?: string };
+  isActive: boolean;
+  order: number;
+  copyCount: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  createdBy: string;
+}
+
+/**
+ * Resource callables input/output types
+ */
+export interface GetInfluencerResourcesInput {
+  category?: InfluencerResourceCategory;
+}
+
+export interface GetInfluencerResourcesResponse {
+  resources: Array<{
+    id: string;
+    category: InfluencerResourceCategory;
+    type: InfluencerResourceType;
+    name: string;
+    description?: string;
+    fileUrl?: string;
+    thumbnailUrl?: string;
+    fileSize?: number;
+    fileFormat?: string;
+    dimensions?: { width: number; height: number };
+  }>;
+  texts: Array<{
+    id: string;
+    category: InfluencerResourceCategory;
+    type: InfluencerResourceType;
+    title: string;
+    content: string;
+  }>;
+}
+
+export interface DownloadInfluencerResourceInput {
+  resourceId: string;
+}
+
+export interface DownloadInfluencerResourceResponse {
+  success: boolean;
+  downloadUrl: string;
+}
+
+export interface CopyInfluencerResourceTextInput {
+  textId: string;
+}
+
+export interface CopyInfluencerResourceTextResponse {
+  success: boolean;
+  content: string;
 }
 
 // ============================================================================
@@ -1279,6 +1546,8 @@ export interface GetInfluencerDashboardResponse {
     | "commissionRecruitmentAmount"
     | "clientDiscountPercent"
     | "minimumWithdrawalAmount"
+    | "levelThresholds"
+    | "levelBonuses"
   >;
 }
 

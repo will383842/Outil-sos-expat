@@ -18,7 +18,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "types": ["node"],
-    "noEmitOnError": false, // Temporarily disabled to allow compilation with pre-existing errors
+    "noEmitOnError": true,
     "forceConsistentCasingInFileNames": true
   },
   "compileOnSave": true,

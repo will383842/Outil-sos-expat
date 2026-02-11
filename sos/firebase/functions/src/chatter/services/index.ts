@@ -152,3 +152,8 @@ export {
 export {
   checkAndPayTelegramBonus,
 } from "./chatterTelegramBonusService";
+
+// Recruitment Service (harmonized with GroupAdmin model)
+export {
+  checkAndPayRecruitmentCommission,
+} from "./chatterRecruitmentService";

@@ -2,11 +2,13 @@
  * Callable: requestInfluencerWithdrawal
  *
  * Creates a withdrawal request for an influencer.
- * Minimum withdrawal: $50
+ * Delegates to the centralized payment system (payment_withdrawals collection).
+ *
+ * Migration: Previously wrote to influencer_withdrawals, now uses payment/ module.
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
@@ -17,7 +19,12 @@ import {
   InfluencerPaymentMethod,
 } from "../types";
 import { getInfluencerConfigCached } from "../utils";
-import { createWithdrawalRequest } from "../services";
+import { getPaymentService } from "../../payment/services/paymentService";
+import {
+  PaymentMethodDetails,
+  BankTransferDetails,
+  MobileMoneyDetails,
+} from "../../payment/types";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -27,8 +34,57 @@ function ensureInitialized() {
 }
 
 const VALID_PAYMENT_METHODS: InfluencerPaymentMethod[] = [
-  "wise", "paypal", "bank_transfer"
+  "wise", "bank_transfer", "mobile_money"
 ];
+
+/**
+ * Convert legacy Influencer payment details to centralized PaymentMethodDetails
+ */
+function convertToPaymentMethodDetails(
+  method: InfluencerPaymentMethod,
+  details: Record<string, unknown>
+): PaymentMethodDetails {
+  switch (method) {
+    case "wise":
+      return {
+        type: "bank_transfer",
+        accountHolderName: details.accountHolderName as string,
+        country: (details.country as string) || "",
+        currency: (details.currency as string) || "USD",
+        iban: details.iban as string | undefined,
+        accountNumber: details.accountNumber as string | undefined,
+        routingNumber: details.routingNumber as string | undefined,
+        sortCode: details.sortCode as string | undefined,
+        swiftBic: details.bic as string | undefined,
+      } as BankTransferDetails;
+
+    case "bank_transfer":
+      return {
+        type: "bank_transfer",
+        accountHolderName: details.accountHolderName as string,
+        country: (details.country as string) || "",
+        currency: (details.currency as string) || "USD",
+        accountNumber: details.accountNumber as string | undefined,
+        routingNumber: details.routingNumber as string | undefined,
+        swiftBic: details.swiftCode as string | undefined,
+        iban: details.iban as string | undefined,
+        bankName: details.bankName as string | undefined,
+      } as BankTransferDetails;
+
+    case "mobile_money":
+      return {
+        type: "mobile_money",
+        provider: details.provider as string,
+        phoneNumber: details.phoneNumber as string,
+        country: details.country as string,
+        accountName: (details.accountName as string) || (details.accountHolderName as string) || "",
+        currency: (details.currency as string) || "XOF",
+      } as MobileMoneyDetails;
+
+    default:
+      throw new HttpsError("invalid-argument", `Unsupported payment method: ${method}`);
+  }
+}
 
 export const requestWithdrawal = onCall(
   {
@@ -66,7 +122,7 @@ export const requestWithdrawal = onCall(
       );
     }
 
-    // Validate payment details based on type (using discriminated union)
+    // Validate payment details based on type
     const details = input.paymentDetails;
     switch (details.type) {
       case "wise":
@@ -74,20 +130,19 @@ export const requestWithdrawal = onCall(
           throw new HttpsError("invalid-argument", "Wise requires email and account holder name");
         }
         break;
-      case "paypal":
-        if (!details.email || !details.accountHolderName) {
-          throw new HttpsError("invalid-argument", "PayPal requires email and account holder name");
-        }
-        break;
       case "bank_transfer":
-        if (
-          !details.bankName ||
-          !details.accountHolderName ||
-          !details.accountNumber
-        ) {
+        if (!details.bankName || !details.accountHolderName || !details.accountNumber) {
           throw new HttpsError(
             "invalid-argument",
             "Bank transfer requires bank name, account holder, and account number"
+          );
+        }
+        break;
+      case "mobile_money":
+        if (!details.provider || !details.phoneNumber || !details.country) {
+          throw new HttpsError(
+            "invalid-argument",
+            "Mobile Money requires provider, phone number, and country"
           );
         }
         break;
@@ -111,7 +166,7 @@ export const requestWithdrawal = onCall(
         );
       }
 
-      // 5. Check for pending withdrawal
+      // 5. Check for pending withdrawal (legacy field check)
       if (influencer.pendingWithdrawalId) {
         throw new HttpsError(
           "failed-precondition",
@@ -147,35 +202,64 @@ export const requestWithdrawal = onCall(
         );
       }
 
-      // 8. Create withdrawal request
-      const result = await createWithdrawalRequest({
-        influencerId: userId,
-        amount: withdrawAmount,
-        paymentMethod: input.paymentMethod,
-        paymentDetails: input.paymentDetails,
+      // 8. Convert legacy details → centralized format
+      const centralizedDetails = convertToPaymentMethodDetails(
+        input.paymentMethod,
+        input.paymentDetails as unknown as Record<string, unknown>
+      );
+
+      // 9. Save payment method in centralized system
+      const paymentService = getPaymentService();
+      const paymentMethod = await paymentService.savePaymentMethod({
+        userId,
+        userType: "influencer",
+        details: centralizedDetails,
+        setAsDefault: true,
       });
 
-      if (!result.success) {
-        throw new HttpsError("internal", result.error || "Failed to create withdrawal request");
-      }
+      // 10. Create withdrawal via centralized service
+      const withdrawal = await paymentService.createWithdrawalRequest({
+        userId,
+        userType: "influencer",
+        userEmail: influencer.email || "",
+        userName: influencer.firstName || "",
+        amount: withdrawAmount,
+        paymentMethodId: paymentMethod.id,
+      });
 
-      logger.info("[requestInfluencerWithdrawal] Withdrawal requested", {
+      // 11. Set pendingWithdrawalId on influencer doc (backward compatibility)
+      await db.collection("influencers").doc(userId).update({
+        pendingWithdrawalId: withdrawal.id,
+        updatedAt: Timestamp.now(),
+      });
+
+      logger.info("[requestInfluencerWithdrawal] Withdrawal requested via centralized system", {
         influencerId: userId,
-        withdrawalId: result.withdrawalId,
+        withdrawalId: withdrawal.id,
         amount: withdrawAmount,
         paymentMethod: input.paymentMethod,
+        collection: "payment_withdrawals",
       });
 
       return {
         success: true,
-        withdrawalId: result.withdrawalId!,
-        amount: result.amount!,
+        withdrawalId: withdrawal.id,
+        amount: withdrawAmount,
         status: "pending",
         message: "Withdrawal request submitted successfully",
       };
     } catch (error) {
       if (error instanceof HttpsError) {
         throw error;
+      }
+
+      // Surface transaction-level errors (race condition protection) as user-friendly messages
+      const errMsg = error instanceof Error ? error.message : "";
+      if (errMsg.includes("Insufficient balance")) {
+        throw new HttpsError("failed-precondition", "Insufficient balance for this withdrawal");
+      }
+      if (errMsg.includes("already pending")) {
+        throw new HttpsError("failed-precondition", "A withdrawal request is already pending");
       }
 
       logger.error("[requestInfluencerWithdrawal] Error", { userId, error });

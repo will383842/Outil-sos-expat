@@ -10,7 +10,5 @@ export { default as BloggerReferrals } from './BloggerReferrals';
 export { default as BloggerLeaderboard } from './BloggerLeaderboard';
 export { default as BloggerPayments } from './BloggerPayments';
 export { default as BloggerResources } from './BloggerResources';
-export { default as BloggerGuide } from './BloggerGuide';
-export { default as BloggerPromoTools } from './BloggerPromoTools';
 export { default as BloggerProfile } from './BloggerProfile';
 export { default as BloggerSuspended } from './BloggerSuspended';

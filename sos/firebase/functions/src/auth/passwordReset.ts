@@ -16,6 +16,16 @@ import { EMAIL_USER, EMAIL_PASS } from "../lib/secrets";
 
 type SupportedLanguage = 'fr' | 'en' | 'es' | 'pt' | 'de' | 'ru' | 'ar' | 'hi' | 'ch';
 
+/** Escape HTML special characters to prevent XSS in email templates */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 interface PasswordResetTemplate {
   subject: string;
   html: (resetLink: string, firstName?: string) => string;
@@ -962,7 +972,8 @@ export const sendCustomPasswordResetEmail = onCall(
 
       try {
         const userRecord = await admin.auth().getUserByEmail(normalizedEmail);
-        firstName = userRecord.displayName?.split(" ")[0];
+        const rawFirstName = userRecord.displayName?.split(" ")[0];
+        firstName = rawFirstName ? escapeHtml(rawFirstName) : undefined;
       } catch (error: any) {
         if (error.code === "auth/user-not-found") {
           userExists = false;

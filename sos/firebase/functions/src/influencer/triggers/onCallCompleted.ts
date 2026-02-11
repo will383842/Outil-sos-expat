@@ -1,8 +1,12 @@
 /**
  * Trigger: onCallCompleted (Influencer)
  *
- * Triggered when a call session is completed.
+ * Triggered when a call session is completed AND paid.
  * Checks if the client was referred by an influencer and creates commission.
+ *
+ * IMPORTANT: Commission is only created when isPaid === true,
+ * which is set by Stripe/PayPal webhooks when payment is captured
+ * (money received on SOS Expat's account).
  *
  * Commission: Fixed $10 per client referral
  */
@@ -13,7 +17,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { Influencer } from "../types";
-import { createCommission } from "../services";
+import { createCommission, checkAndPayRecruitmentCommission } from "../services";
 import { getInfluencerConfigCached } from "../utils";
 
 // Lazy initialization
@@ -22,6 +26,9 @@ function ensureInitialized() {
     initializeApp();
   }
 }
+
+/** Minimum call duration in seconds to earn commission (anti-fraud) */
+const MIN_CALL_DURATION_SECONDS = 120;
 
 interface CallSession {
   id: string;
@@ -32,6 +39,7 @@ interface CallSession {
   providerType: "lawyer" | "expat";
   connectionFee?: number;
   duration?: number;
+  isPaid?: boolean;
   // Influencer tracking
   influencerCode?: string;
   influencerId?: string;
@@ -55,13 +63,26 @@ export const influencerOnCallCompleted = onDocumentUpdated(
       return;
     }
 
-    // Only process when status changes to "completed"
-    if (beforeData.status === afterData.status || afterData.status !== "completed") {
+    // Only process when call becomes completed AND paid (payment captured)
+    const wasNotPaid = beforeData.status !== "completed" || !beforeData.isPaid;
+    const isNowPaid = afterData.status === "completed" && afterData.isPaid === true;
+
+    if (!wasNotPaid || !isNowPaid) {
       return;
     }
 
     const sessionId = event.params.sessionId;
     const db = getFirestore();
+
+    // Minimum call duration check (anti-fraud: prevent 1-second call commissions)
+    if (!afterData.duration || afterData.duration < MIN_CALL_DURATION_SECONDS) {
+      logger.warn("[influencerOnCallCompleted] Call too short for commission", {
+        sessionId,
+        duration: afterData.duration,
+        minimum: MIN_CALL_DURATION_SECONDS,
+      });
+      return;
+    }
 
     // Check if influencer commission already created
     if (afterData.influencerCommissionCreated) {
@@ -193,6 +214,9 @@ export const influencerOnCallCompleted = onDocumentUpdated(
           commissionId: result.commissionId,
           amount: result.amount,
         });
+
+        // Check and pay recruitment commission (recruiter gets $5 when this influencer reaches $50)
+        await checkAndPayRecruitmentCommission(influencerId);
       } else {
         logger.error("[influencerOnCallCompleted] Failed to create commission", {
           sessionId,

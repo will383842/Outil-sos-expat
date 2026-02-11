@@ -13,7 +13,6 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { GroupAdmin, GroupAdminNotification } from "../types";
-import { createRecruitmentCommission } from "../services/groupAdminCommissionService";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -52,7 +51,7 @@ export const onGroupAdminCreated = onDocumentCreated(
         groupAdminId,
         type: "system_announcement",
         title: "Welcome to SOS-Expat Group Admin Program!",
-        message: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link with your group members to earn $15 per client.`,
+        message: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link with your group members to earn $10 per client.`,
         data: {
           affiliateCodeClient: groupAdminData.affiliateCodeClient,
           affiliateCodeRecruitment: groupAdminData.affiliateCodeRecruitment,
@@ -64,18 +63,32 @@ export const onGroupAdminCreated = onDocumentCreated(
 
       // 2. If recruited, handle recruiter commission
       if (groupAdminData.recruitedBy) {
-        // The commission is created when the recruited admin gets their first client
-        // For now, just ensure the recruitment record exists
-
-        const recruitDoc = await db
+        // The commission is created when the recruited admin gets their first client.
+        // Verify the recruitment record exists (may be delayed due to eventual consistency).
+        let recruitDoc = await db
           .collection("group_admin_recruited_admins")
           .where("recruiterId", "==", groupAdminData.recruitedBy)
           .where("recruitedId", "==", groupAdminId)
           .limit(1)
           .get();
 
+        // Retry up to 3 times with 500ms delay — Firestore writes from the
+        // registration transaction may not be visible immediately to queries.
         if (recruitDoc.empty) {
-          logger.warn("[onGroupAdminCreated] Recruitment record not found", {
+          for (let retry = 0; retry < 3; retry++) {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            recruitDoc = await db
+              .collection("group_admin_recruited_admins")
+              .where("recruiterId", "==", groupAdminData.recruitedBy)
+              .where("recruitedId", "==", groupAdminId)
+              .limit(1)
+              .get();
+            if (!recruitDoc.empty) break;
+          }
+        }
+
+        if (recruitDoc.empty) {
+          logger.warn("[onGroupAdminCreated] Recruitment record not found after retries", {
             groupAdminId,
             recruitedBy: groupAdminData.recruitedBy,
           });
@@ -87,7 +100,7 @@ export const onGroupAdminCreated = onDocumentCreated(
             groupAdminId: groupAdminData.recruitedBy,
             type: "system_announcement",
             title: "New Admin Recruited!",
-            message: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn $5 when they activate.`,
+            message: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn $5 when they reach $50 in earnings.`,
             data: {
               recruitedId: groupAdminId,
               recruitedName: `${groupAdminData.firstName} ${groupAdminData.lastName}`,
@@ -107,15 +120,9 @@ export const onGroupAdminCreated = onDocumentCreated(
         recruitedBy: groupAdminData.recruitedBy,
       });
 
-      // 3. Award recruitment commission if recruited
-      // This happens immediately upon registration (not on first client)
-      if (groupAdminData.recruitedBy) {
-        await createRecruitmentCommission(
-          groupAdminData.recruitedBy,
-          groupAdminId,
-          `${groupAdminData.firstName} ${groupAdminData.lastName}`
-        );
-      }
+      // Note: Recruitment commission is NOT paid immediately.
+      // It is triggered when the recruited admin reaches $50 in totalEarned.
+      // See groupAdminCommissionService.checkAndPayRecruitmentCommission()
     } catch (error) {
       logger.error("[onGroupAdminCreated] Error in post-registration tasks", {
         groupAdminId,

@@ -38,13 +38,14 @@ const UI = {
 } as const;
 
 // Level configurations based on total earnings (in cents)
-// Level 1: $0+, Level 2: $100+, Level 3: $500+, Level 4: $2000+, Level 5: $10000+
+// Level 1: $0+, Level 2: $100+, Level 3: $500+, Level 4: $2000+, Level 5: $5000+
 const LEVEL_CONFIG = {
   1: {
     name: 'Starter',
     color: 'from-gray-400 to-gray-500',
     icon: Star,
     minEarned: 0,
+    bonusLabel: null,
     badge: null,
   },
   2: {
@@ -52,6 +53,7 @@ const LEVEL_CONFIG = {
     color: 'from-blue-400 to-blue-500',
     icon: TrendingUp,
     minEarned: 10000, // $100 in cents
+    bonusLabel: '+10%',
     badge: 'rising',
   },
   3: {
@@ -59,6 +61,7 @@ const LEVEL_CONFIG = {
     color: 'from-purple-400 to-purple-500',
     icon: Award,
     minEarned: 50000, // $500 in cents
+    bonusLabel: '+20%',
     badge: 'pro',
   },
   4: {
@@ -66,13 +69,15 @@ const LEVEL_CONFIG = {
     color: 'from-amber-400 to-orange-500',
     icon: Crown,
     minEarned: 200000, // $2000 in cents
+    bonusLabel: '+35%',
     badge: 'expert',
   },
   5: {
     name: 'Elite',
     color: 'from-yellow-400 to-amber-400',
     icon: Zap,
-    minEarned: 1000000, // $10000 in cents
+    minEarned: 500000, // $5000 in cents (aligned with Chatter)
+    bonusLabel: '+50%',
     badge: 'elite',
   },
 } as const;
@@ -125,6 +130,12 @@ function formatCurrencyLocale(cents: number, locale: string = 'en-US'): string {
 interface InfluencerLevelCardProps {
   /** Total earnings in cents */
   totalEarned: number;
+  /** Backend-computed level (1-5). Falls back to client-side calc if not provided */
+  level?: 1 | 2 | 3 | 4 | 5;
+  /** Backend-computed progress to next level (0-100) */
+  levelProgress?: number;
+  /** Monthly top multiplier (>1.0 means active bonus) */
+  monthlyTopMultiplier?: number;
   /** Additional CSS classes */
   className?: string;
   /** Show loading skeleton */
@@ -135,6 +146,9 @@ interface InfluencerLevelCardProps {
 
 const InfluencerLevelCard = memo(function InfluencerLevelCard({
   totalEarned,
+  level: backendLevel,
+  levelProgress: backendProgress,
+  monthlyTopMultiplier,
   className = '',
   loading = false,
   animationDelay = 0,
@@ -143,8 +157,8 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
   const [progressAnimated, setProgressAnimated] = useState(false);
   const [badgesVisible, setBadgesVisible] = useState(false);
 
-  // Calculate level based on total earnings
-  const level = calculateLevel(totalEarned);
+  // Use backend level if provided, otherwise fallback to client-side calc
+  const level = backendLevel || calculateLevel(totalEarned);
 
   // Trigger progress bar animation after mount
   useEffect(() => {
@@ -171,10 +185,12 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
   const nextLevel = level < 5 ? LEVEL_CONFIG[(level + 1) as keyof typeof LEVEL_CONFIG] : null;
   const LevelIcon = levelConfig.icon;
 
-  // Calculate progress to next level
-  const progressToNextLevel = nextLevel
-    ? Math.min(100, ((totalEarned - levelConfig.minEarned) / (nextLevel.minEarned - levelConfig.minEarned)) * 100)
-    : 100;
+  // Calculate progress to next level (prefer backend value)
+  const progressToNextLevel = backendProgress !== undefined
+    ? (level === 5 ? 100 : backendProgress)
+    : nextLevel
+      ? Math.min(100, ((totalEarned - levelConfig.minEarned) / (nextLevel.minEarned - levelConfig.minEarned)) * 100)
+      : 100;
 
   const amountToNextLevel = nextLevel
     ? Math.max(0, nextLevel.minEarned - totalEarned)
@@ -247,6 +263,16 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
             >
               {levelConfig.name}
             </span>
+            {levelConfig.bonusLabel && (
+              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                {levelConfig.bonusLabel}
+              </span>
+            )}
+            {monthlyTopMultiplier && monthlyTopMultiplier > 1.0 && (
+              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 animate-pulse">
+                x{monthlyTopMultiplier.toFixed(2)}
+              </span>
+            )}
           </h3>
           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             <FormattedMessage

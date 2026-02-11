@@ -15,6 +15,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useChatter } from '@/hooks/useChatter';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   usePaymentMethods,
   useWithdrawals,
@@ -68,6 +69,7 @@ type TabType = 'withdraw' | 'methods' | 'history';
 
 const ChatterPayments: React.FC = () => {
   const intl = useIntl();
+  const { user, refreshUser } = useAuth();
 
   // Chatter data
   const {
@@ -112,6 +114,10 @@ const ChatterPayments: React.FC = () => {
   const [selectedWithdrawalId, setSelectedWithdrawalId] = useState<string | null>(null);
   const [deletingMethodId, setDeletingMethodId] = useState<string | null>(null);
 
+  // Telegram confirmation state
+  const [pendingConfirmationId, setPendingConfirmationId] = useState<string | null>(null);
+  const [pendingConfirmationAmount, setPendingConfirmationAmount] = useState(0);
+
   // Tracking for selected withdrawal
   const {
     tracking: selectedTracking,
@@ -147,18 +153,40 @@ const ChatterPayments: React.FC = () => {
       setWithdrawalSuccess(false);
 
       try {
-        await requestWithdrawal(paymentMethodId, amount);
-        setWithdrawalSuccess(true);
-        await refreshWithdrawals();
+        const withdrawalId = await requestWithdrawal(paymentMethodId, amount);
+        // Show Telegram confirmation waiting UI
+        setPendingConfirmationId(withdrawalId);
+        setPendingConfirmationAmount(amount || availableBalance);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Une erreur est survenue';
-        setWithdrawalError(message);
+        if (message.includes('TELEGRAM_REQUIRED')) {
+          setWithdrawalError('Vous devez connecter Telegram pour effectuer un retrait.');
+        } else {
+          setWithdrawalError(message);
+        }
       } finally {
         setWithdrawalLoading(false);
       }
     },
-    [requestWithdrawal, refreshWithdrawals]
+    [requestWithdrawal, availableBalance]
   );
+
+  // Telegram confirmation callbacks
+  const handleTelegramConfirmed = useCallback(() => {
+    setPendingConfirmationId(null);
+    setWithdrawalSuccess(true);
+    refreshWithdrawals();
+  }, [refreshWithdrawals]);
+
+  const handleTelegramCancelled = useCallback(() => {
+    setPendingConfirmationId(null);
+    refreshWithdrawals();
+  }, [refreshWithdrawals]);
+
+  const handleTelegramExpired = useCallback(() => {
+    setPendingConfirmationId(null);
+    refreshWithdrawals();
+  }, [refreshWithdrawals]);
 
   // Handle save payment method
   const handleSavePaymentMethod = useCallback(
@@ -473,6 +501,14 @@ const ChatterPayments: React.FC = () => {
               success={withdrawalSuccess}
               paymentMethods={methods}
               defaultPaymentMethodId={defaultMethodId}
+              role="chatter"
+              telegramConnected={!!user?.telegramId}
+              onTelegramConnected={refreshUser}
+              pendingConfirmationWithdrawalId={pendingConfirmationId}
+              pendingConfirmationAmount={pendingConfirmationAmount}
+              onTelegramConfirmed={handleTelegramConfirmed}
+              onTelegramCancelled={handleTelegramCancelled}
+              onTelegramExpired={handleTelegramExpired}
             />
           </div>
         )}

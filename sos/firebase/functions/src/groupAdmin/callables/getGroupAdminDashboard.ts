@@ -64,17 +64,23 @@ export const getGroupAdminDashboard = onCall(
         throw new HttpsError("permission-denied", "Your account has been blocked");
       }
 
-      // 3. Update current month stats if needed
+      // 3. Update current month stats if needed (transaction to avoid race with concurrent commissions)
       const currentMonth = new Date().toISOString().substring(0, 7);
       if (profile.currentMonthStats.month !== currentMonth) {
-        // Reset monthly stats for new month
-        await groupAdminDoc.ref.update({
-          "currentMonthStats.month": currentMonth,
-          "currentMonthStats.clients": 0,
-          "currentMonthStats.recruits": 0,
-          "currentMonthStats.earnings": 0,
-          currentMonthRank: null,
-          updatedAt: Timestamp.now(),
+        await db.runTransaction(async (tx) => {
+          const freshDoc = await tx.get(groupAdminDoc.ref);
+          const freshProfile = freshDoc.data() as GroupAdmin;
+          // Re-check inside transaction — another call or commission may have already reset
+          if (freshProfile.currentMonthStats.month !== currentMonth) {
+            tx.update(groupAdminDoc.ref, {
+              "currentMonthStats.month": currentMonth,
+              "currentMonthStats.clients": 0,
+              "currentMonthStats.recruits": 0,
+              "currentMonthStats.earnings": 0,
+              currentMonthRank: null,
+              updatedAt: Timestamp.now(),
+            });
+          }
         });
         profile.currentMonthStats = {
           month: currentMonth,
@@ -85,48 +91,48 @@ export const getGroupAdminDashboard = onCall(
         profile.currentMonthRank = null;
       }
 
-      // 4. Fetch recent commissions (last 10)
+      // 4. Fetch recent commissions (last 5 for dashboard preview)
       const commissionsSnapshot = await db
         .collection("group_admin_commissions")
         .where("groupAdminId", "==", userId)
         .orderBy("createdAt", "desc")
-        .limit(10)
+        .limit(5)
         .get();
 
       const recentCommissions: GroupAdminCommission[] = commissionsSnapshot.docs.map(
         (doc) => doc.data() as GroupAdminCommission
       );
 
-      // 5. Fetch recent withdrawals (last 10)
+      // 5. Fetch recent withdrawals (last 5)
       const withdrawalsSnapshot = await db
         .collection("group_admin_withdrawals")
         .where("groupAdminId", "==", userId)
         .orderBy("createdAt", "desc")
-        .limit(10)
+        .limit(5)
         .get();
 
       const recentWithdrawals: GroupAdminWithdrawal[] = withdrawalsSnapshot.docs.map(
         (doc) => doc.data() as GroupAdminWithdrawal
       );
 
-      // 6. Fetch recent recruits (last 10)
+      // 6. Fetch recent recruits (last 5)
       const recruitsSnapshot = await db
         .collection("group_admin_recruited_admins")
         .where("recruiterId", "==", userId)
         .orderBy("recruitedAt", "desc")
-        .limit(10)
+        .limit(5)
         .get();
 
       const recentRecruits: GroupAdminRecruit[] = recruitsSnapshot.docs.map(
         (doc) => doc.data() as GroupAdminRecruit
       );
 
-      // 7. Fetch unread notifications (last 20)
+      // 7. Fetch recent notifications (last 5 for dashboard preview)
       const notificationsSnapshot = await db
         .collection("group_admin_notifications")
         .where("groupAdminId", "==", userId)
         .orderBy("createdAt", "desc")
-        .limit(20)
+        .limit(5)
         .get();
 
       const notifications: GroupAdminNotification[] = notificationsSnapshot.docs.map(

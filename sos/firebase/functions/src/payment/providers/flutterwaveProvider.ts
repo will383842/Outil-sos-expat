@@ -480,7 +480,8 @@ export class FlutterwaveProvider {
   private async request<T>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     endpoint: string,
-    body?: Record<string, unknown>
+    body?: Record<string, unknown>,
+    idempotencyKey?: string
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -488,6 +489,10 @@ export class FlutterwaveProvider {
       Authorization: `Bearer ${this.secretKey}`,
       'Content-Type': 'application/json',
     };
+
+    if (idempotencyKey && method === 'POST') {
+      headers['Idempotency-Key'] = idempotencyKey;
+    }
 
     const fetchOptions: RequestInit = {
       method,
@@ -642,7 +647,8 @@ export class FlutterwaveProvider {
     const transfer = await this.request<FlutterwaveTransfer>(
       'POST',
       '/transfers',
-      requestBody
+      requestBody,
+      params.externalId // idempotency key = withdrawalId
     );
 
     console.log(`[FlutterwaveProvider] Transfer created:`, {
@@ -683,12 +689,14 @@ export class FlutterwaveProvider {
    * @param transferId Flutterwave transfer ID
    * @returns FlutterwaveTransfer
    */
-  async retryTransfer(transferId: string): Promise<FlutterwaveTransfer> {
+  async retryTransfer(transferId: string, idempotencyKey?: string): Promise<FlutterwaveTransfer> {
     console.log(`[FlutterwaveProvider] Retrying transfer: ${transferId}`);
 
     const transfer = await this.request<FlutterwaveTransfer>(
       'POST',
-      `/transfers/${transferId}/retries`
+      `/transfers/${transferId}/retries`,
+      undefined,
+      idempotencyKey || `retry-${transferId}-${Date.now()}`
     );
 
     console.log(`[FlutterwaveProvider] Transfer retry initiated:`, {

@@ -1,20 +1,26 @@
 /**
  * Trigger: On Call Completed (for blogger commissions)
  *
- * This trigger should be called when a call is completed to check
+ * This trigger fires when a call is completed AND paid to check
  * if the client was referred by a blogger and award commission.
  *
+ * IMPORTANT: Commission is only created when isPaid === true,
+ * which is set by Stripe/PayPal webhooks when payment is captured
+ * (money received on SOS Expat's account).
+ *
  * NOTE: This trigger listens to call_sessions collection.
- * The actual trigger should be integrated with your existing call completion flow.
  */
 
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
-// Note: Import onDocumentUpdated when uncommenting the trigger below:
-// import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 import { Blogger } from "../types";
 import { createBloggerCommission } from "../services/bloggerCommissionService";
+import { checkAndPayRecruitmentCommission } from "../services/bloggerRecruitmentService";
 import { getBloggerConfigCached } from "../utils/bloggerConfigService";
+
+/** Minimum call duration in seconds to earn commission (anti-fraud) */
+const MIN_CALL_DURATION_SECONDS = 120;
 
 /**
  * Check and award blogger commission when a call is completed
@@ -36,6 +42,14 @@ export async function checkBloggerClientReferral(
     const config = await getBloggerConfigCached();
     if (!config.isSystemActive) {
       return { awarded: false, error: "Blogger system not active" };
+    }
+
+    // Minimum call duration check (anti-fraud: prevent 1-second call commissions)
+    if (!callDuration || callDuration < MIN_CALL_DURATION_SECONDS) {
+      logger.warn("[checkBloggerClientReferral] Call too short for commission", {
+        callSessionId, callDuration, minimum: MIN_CALL_DURATION_SECONDS,
+      });
+      return { awarded: false, error: "Call too short for commission" };
     }
 
     // 2. Look for blogger attribution for this client
@@ -192,6 +206,9 @@ async function awardBloggerCommission(
       },
       createdAt: Timestamp.now(),
     });
+
+    // Check and pay recruitment commission (recruiter gets $5 when this blogger reaches $50)
+    await checkAndPayRecruitmentCommission(bloggerId);
   }
 
   return {
@@ -202,11 +219,9 @@ async function awardBloggerCommission(
 }
 
 /**
- * Example Firestore trigger for call completion
- * Uncomment and adapt to your call_sessions structure if needed
+ * Firestore trigger for call completion - awards blogger commissions
  */
-/*
-export const onCallSessionCompleted = onDocumentUpdated(
+export const bloggerOnCallSessionCompleted = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
     region: "europe-west3",
@@ -216,17 +231,38 @@ export const onCallSessionCompleted = onDocumentUpdated(
     const after = event.data?.after.data();
     const sessionId = event.params.sessionId;
 
-    // Check if call just completed
-    if (before?.status !== "completed" && after?.status === "completed") {
-      // Check for blogger referral
-      await checkBloggerClientReferral(
+    if (!before || !after) return;
+
+    // Check if call just completed and is paid (isPaid set by Stripe/PayPal webhook on capture)
+    const wasNotPaid = before.status !== "completed" || !before.isPaid;
+    const isNowPaid = after.status === "completed" && after.isPaid === true;
+
+    if (wasNotPaid && isNowPaid) {
+      const clientId = after.clientId || after.userId;
+      const clientEmail = after.clientEmail || after.userEmail || "";
+      const duration = after.duration || after.callDuration || 0;
+      const connectionFee = after.connectionFee || after.amount || 0;
+
+      if (!clientId) {
+        logger.warn("[bloggerOnCallSessionCompleted] No clientId found", { sessionId });
+        return;
+      }
+
+      // Check for blogger referral and award commission
+      const result = await checkBloggerClientReferral(
         sessionId,
-        after.clientId,
-        after.clientEmail,
-        after.duration,
-        after.connectionFee
+        clientId,
+        clientEmail,
+        duration,
+        connectionFee
       );
+
+      if (result.awarded) {
+        logger.info("[bloggerOnCallSessionCompleted] Blogger commission awarded", {
+          sessionId,
+          commissionId: result.commissionId,
+        });
+      }
     }
   }
 );
-*/

@@ -10,7 +10,7 @@
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
@@ -22,6 +22,7 @@ import {
   BankTransferDetails,
   MobileMoneyDetails,
 } from "../types";
+import { COLLECTIONS } from "../services/paymentService";
 import { createPaymentRouter } from "../services/paymentRouter";
 import {
   WISE_SECRETS,
@@ -44,12 +45,65 @@ const WITHDRAWAL_COLLECTION = "payment_withdrawals";
 /**
  * Payment config document path
  */
-const CONFIG_DOC_PATH = "config/payment_config";
+const CONFIG_DOC_PATH = "payment_config/payment_config";
 
 /**
  * Maximum withdrawals to process per run (to stay within function timeout)
  */
 const MAX_WITHDRAWALS_PER_RUN = 10;
+
+/**
+ * Map userType to Firestore collection name for balance refund
+ */
+function getUserCollectionName(userType: string): string {
+  switch (userType) {
+    case 'chatter': return COLLECTIONS.CHATTERS;
+    case 'influencer': return COLLECTIONS.INFLUENCERS;
+    case 'blogger': return COLLECTIONS.BLOGGERS;
+    case 'group_admin': return COLLECTIONS.GROUP_ADMINS;
+    default: return `${userType}s`;
+  }
+}
+
+/**
+ * Refund user balance when a withdrawal permanently fails (max retries reached)
+ */
+async function refundUserBalance(withdrawal: WithdrawalRequest): Promise<void> {
+  const db = getFirestore();
+  const collectionName = getUserCollectionName(withdrawal.userType);
+  const userRef = db.collection(collectionName).doc(withdrawal.userId);
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists) {
+        logger.error("[processAutomaticPayments] User not found for refund", {
+          userId: withdrawal.userId,
+          userType: withdrawal.userType,
+        });
+        return;
+      }
+
+      const currentBalance = userDoc.data()!.availableBalance || 0;
+      transaction.update(userRef, {
+        availableBalance: currentBalance + withdrawal.amount,
+        updatedAt: Timestamp.now(),
+      });
+    });
+
+    logger.info("[processAutomaticPayments] Balance refunded after max retries", {
+      withdrawalId: withdrawal.id,
+      userId: withdrawal.userId,
+      amount: withdrawal.amount,
+    });
+  } catch (refundError) {
+    logger.error("[processAutomaticPayments] Failed to refund balance", {
+      withdrawalId: withdrawal.id,
+      userId: withdrawal.userId,
+      error: refundError instanceof Error ? refundError.message : "Unknown",
+    });
+  }
+}
 
 /**
  * Get payment configuration from Firestore
@@ -97,6 +151,15 @@ async function findReadyWithdrawals(config: PaymentConfig): Promise<WithdrawalRe
 
   for (const doc of snapshot.docs) {
     const withdrawal = { ...doc.data(), id: doc.id } as WithdrawalRequest;
+
+    // Skip withdrawals that are still awaiting Telegram confirmation
+    const docData = doc.data();
+    if (docData?.telegramConfirmationPending === true) {
+      logger.debug("[processAutomaticPayments] Skipping - Telegram confirmation pending", {
+        withdrawalId: withdrawal.id,
+      });
+      continue;
+    }
 
     // Check if the processing delay has passed
     const processAfter = (withdrawal as unknown as { processAfter?: string }).processAfter;
@@ -151,7 +214,7 @@ async function processWithdrawal(
   });
 
   try {
-    // Update status to processing
+    // Use transaction to atomically check status and update to "processing"
     const processingStatusEntry = {
       status: "processing" as WithdrawalStatus,
       timestamp: new Date().toISOString(),
@@ -159,11 +222,29 @@ async function processWithdrawal(
       note: "Automatic processing started",
     };
 
-    await withdrawalRef.update({
-      status: "processing",
-      processedAt: new Date().toISOString(),
-      statusHistory: [...withdrawal.statusHistory, processingStatusEntry],
+    const canProcess = await db.runTransaction(async (transaction) => {
+      const freshDoc = await transaction.get(withdrawalRef);
+      if (!freshDoc.exists) return false;
+      const freshData = freshDoc.data();
+      // Only proceed if still in approved or queued status
+      if (freshData?.status !== 'approved' && freshData?.status !== 'queued') {
+        logger.warn('[processAutomaticPayments] Withdrawal no longer in processable status', {
+          withdrawalId: withdrawal.id,
+          currentStatus: freshData?.status,
+        });
+        return false;
+      }
+      transaction.update(withdrawalRef, {
+        status: "processing",
+        processedAt: new Date().toISOString(),
+        statusHistory: FieldValue.arrayUnion(processingStatusEntry),
+      });
+      return true;
     });
+
+    if (!canProcess) {
+      return { success: false, error: 'Withdrawal status changed before processing' };
+    }
 
     // Create payment router with config
     const router = createPaymentRouter({
@@ -172,12 +253,9 @@ async function processWithdrawal(
     });
 
     // Determine country code from payment details
-    let countryCode: string;
-    if (withdrawal.paymentDetails.type === "bank_transfer") {
-      countryCode = (withdrawal.paymentDetails as BankTransferDetails).country;
-    } else {
-      countryCode = (withdrawal.paymentDetails as MobileMoneyDetails).country;
-    }
+    const countryCode = withdrawal.paymentDetails.type === "bank_transfer"
+      ? (withdrawal.paymentDetails as BankTransferDetails).country
+      : (withdrawal.paymentDetails as MobileMoneyDetails).country;
 
     // Process the payment
     const result = await router.processPayment({
@@ -213,7 +291,7 @@ async function processWithdrawal(
         providerResponse: result.rawResponse,
         fees: result.fees,
         exchangeRate: result.exchangeRate,
-        statusHistory: [...withdrawal.statusHistory, processingStatusEntry, successStatusEntry],
+        statusHistory: FieldValue.arrayUnion(processingStatusEntry, successStatusEntry),
       });
 
       logger.info("[processAutomaticPayments] Withdrawal sent successfully", {
@@ -250,8 +328,13 @@ async function processWithdrawal(
         canRetry,
         nextRetryAt,
         lastRetryAt: new Date().toISOString(),
-        statusHistory: [...withdrawal.statusHistory, processingStatusEntry, failedStatusEntry],
+        statusHistory: FieldValue.arrayUnion(processingStatusEntry, failedStatusEntry),
       });
+
+      // Refund user balance if max retries reached
+      if (!canRetry) {
+        await refundUserBalance(withdrawal);
+      }
 
       logger.error("[processAutomaticPayments] Withdrawal failed", {
         withdrawalId: withdrawal.id,
@@ -293,8 +376,13 @@ async function processWithdrawal(
         canRetry,
         nextRetryAt,
         lastRetryAt: new Date().toISOString(),
-        statusHistory: [...withdrawal.statusHistory, errorStatusEntry],
+        statusHistory: FieldValue.arrayUnion(errorStatusEntry),
       });
+
+      // Refund user balance if max retries reached
+      if (!canRetry) {
+        await refundUserBalance(withdrawal);
+      }
     } catch (updateError) {
       logger.error("[processAutomaticPayments] Failed to update withdrawal status", {
         withdrawalId: withdrawal.id,

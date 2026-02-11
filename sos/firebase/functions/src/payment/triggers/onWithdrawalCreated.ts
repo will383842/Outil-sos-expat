@@ -9,7 +9,7 @@
  */
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
@@ -34,7 +34,7 @@ const WITHDRAWAL_COLLECTION = "payment_withdrawals";
 /**
  * Payment config document path
  */
-const CONFIG_DOC_PATH = "config/payment_config";
+const CONFIG_DOC_PATH = "payment_config/payment_config";
 
 /**
  * Get payment configuration from Firestore
@@ -160,7 +160,7 @@ async function queueForAutoProcessing(
   // Check if auto-processing is applicable
   const isAutoEligible =
     config.paymentMode === "automatic" ||
-    (config.paymentMode === "hybrid" && withdrawal.amount < config.autoPaymentThreshold);
+    (config.paymentMode === "hybrid" && withdrawal.amount <= config.autoPaymentThreshold);
 
   if (!isAutoEligible) {
     logger.info("[onWithdrawalCreated] Withdrawal not eligible for auto-processing", {
@@ -194,7 +194,7 @@ async function queueForAutoProcessing(
   await withdrawalRef.update({
     status: "queued",
     isAutomatic: true,
-    statusHistory: [...withdrawal.statusHistory, statusEntry],
+    statusHistory: FieldValue.arrayUnion(statusEntry),
     queuedAt: new Date().toISOString(),
     processAfter: processAfter.toISOString(),
   });

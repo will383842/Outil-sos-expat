@@ -91,7 +91,7 @@ const BloggerSuspended: React.FC = () => {
             </a>
 
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/blogger/tableau-de-bord')}
               className={`${UI.button.secondary} px-6 py-3 w-full inline-flex items-center justify-center gap-2`}
             >
               <ArrowLeft className="w-5 h-5" />

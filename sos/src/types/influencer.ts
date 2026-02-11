@@ -45,7 +45,7 @@ export type InfluencerWithdrawalStatus = 'pending' | 'processing' | 'completed' 
  * NOTE: Added 'mobile_money' for alignment with Chatter (African markets)
  * This type will be removed in a future version.
  */
-export type InfluencerPaymentMethod = 'wise' | 'paypal' | 'mobile_money' | 'bank_transfer';
+export type InfluencerPaymentMethod = 'wise' | 'mobile_money' | 'bank_transfer';
 
 export type InfluencerPlatform =
   | 'youtube'
@@ -166,6 +166,13 @@ export interface Influencer {
   currentMonthEarnings: number;
   currentMonthRank?: number;
 
+  // Level & bonuses
+  level?: 1 | 2 | 3 | 4 | 5;
+  levelProgress?: number;
+  monthlyTopMultiplier?: number;
+  monthlyTopMultiplierMonth?: string | null;
+  bestStreak?: number;
+
   // Activity tracking
   lastActivityAt?: string;
   currentStreak: number;
@@ -230,20 +237,6 @@ export interface InfluencerPaymentDetailsWise {
 /**
  * @deprecated This type is deprecated.
  * Use the centralized payment system instead:
- * - Types: @/types/payment (PaymentDetailsPayPal)
- *
- * This type will be removed in a future version.
- */
-export interface InfluencerPaymentDetailsPayPal {
-  type: 'paypal';
-  email: string;
-  currency: string;
-  accountHolderName: string;
-}
-
-/**
- * @deprecated This type is deprecated.
- * Use the centralized payment system instead:
  * - Types: @/types/payment (MobileMoneyProvider)
  *
  * This type will be removed in a future version.
@@ -298,7 +291,6 @@ export interface InfluencerPaymentDetailsBankTransfer {
  */
 export type InfluencerPaymentDetails =
   | InfluencerPaymentDetailsWise
-  | InfluencerPaymentDetailsPayPal
   | InfluencerPaymentDetailsMobileMoney
   | InfluencerPaymentDetailsBankTransfer;
 
@@ -675,4 +667,38 @@ export interface SubmitInfluencerTrainingQuizResult {
     type: "bonus";
     bonusAmount?: number;
   };
+}
+
+// ============================================================================
+// RESOURCES
+// ============================================================================
+
+export type InfluencerResourceCategory = 'sos_expat' | 'ulixai' | 'founder';
+
+export interface InfluencerResourceFile {
+  id: string;
+  category: InfluencerResourceCategory;
+  type: string;
+  name: string;
+  description?: string;
+  fileUrl?: string;
+  previewUrl?: string;
+  downloadUrl?: string;
+  format?: string;
+  size?: number;
+  sizeFormatted?: string;
+  dimensions?: { width: number; height: number };
+}
+
+export interface InfluencerResourceText {
+  id: string;
+  category: InfluencerResourceCategory;
+  type: string;
+  title: string;
+  content: string;
+}
+
+export interface InfluencerResourcesData {
+  files: InfluencerResourceFile[];
+  texts: InfluencerResourceText[];
 }

@@ -81,10 +81,6 @@ export const registerChatter = onCall(
       throw new HttpsError("invalid-argument", "First name and last name are required");
     }
 
-    if (!input.email || !input.email.includes("@")) {
-      throw new HttpsError("invalid-argument", "Valid email is required");
-    }
-
     if (!input.country || input.country.length !== 2) {
       throw new HttpsError("invalid-argument", "Valid country code is required");
     }
@@ -459,6 +455,24 @@ export const registerChatter = onCall(
             conversionType: "chatter_signup",
             clickedAt: now,
             convertedAt: now,
+          });
+
+          // Create recruitment tracking document (for harmonized $5 commission system)
+          const sixMonthsFromNow = new Date();
+          sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+          const recruitTrackingRef = db.collection("chatter_recruited_chatters").doc();
+          transaction.set(recruitTrackingRef, {
+            id: recruitTrackingRef.id,
+            recruiterId: recruitedBy,
+            recruitedId: userId,
+            recruitedEmail: input.email.toLowerCase(),
+            recruitedName: `${input.firstName.trim()} ${input.lastName.trim()}`,
+            recruitmentCode: recruitedByCode,
+            recruitedAt: now,
+            commissionWindowEnd: Timestamp.fromDate(sixMonthsFromNow),
+            commissionPaid: false,
+            commissionId: null,
+            commissionPaidAt: null,
           });
         }
       });

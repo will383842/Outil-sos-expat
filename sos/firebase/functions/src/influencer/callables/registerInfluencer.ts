@@ -28,6 +28,7 @@ import {
   hashIP,
   captureCurrentRates,
 } from "../utils";
+import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -71,10 +72,6 @@ export const registerInfluencer = onCall(
 
     if (!input.firstName || !input.lastName) {
       throw new HttpsError("invalid-argument", "First name and last name are required");
-    }
-
-    if (!input.email || !input.email.includes("@")) {
-      throw new HttpsError("invalid-argument", "Valid email is required");
     }
 
     if (!input.country || input.country.length !== 2) {
@@ -153,6 +150,12 @@ export const registerInfluencer = onCall(
         // Check if already an influencer
         if (userData?.isInfluencer === true) {
           // Let it fall through to existing influencer check below
+        } else if (existingRole && existingRole !== "client") {
+          // Generic block for any other role (blogger, groupAdmin, etc.)
+          throw new HttpsError(
+            "permission-denied",
+            "Vous avez déjà un compte avec un autre rôle. Veuillez créer un nouveau compte pour devenir influenceur."
+          );
         } else if (existingRole === "client") {
           // Check if client has any calls (if so, block)
           const callsQuery = await db
@@ -190,6 +193,21 @@ export const registerInfluencer = onCall(
         }
       }
 
+      // 5b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
+      const fraudResult = await checkReferralFraud(
+        input.recruiterCode || "direct",
+        input.email,
+        request.rawRequest?.ip || null,
+        null
+      );
+      if (!fraudResult.allowed) {
+        logger.warn("[registerInfluencer] Fraud check blocked registration", {
+          userId, email: input.email, riskScore: fraudResult.riskScore,
+          issues: fraudResult.issues, blockReason: fraudResult.blockReason,
+        });
+        throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
+      }
+
       // 6. Check for duplicate email
       const emailQuery = await db
         .collection("influencers")
@@ -201,7 +219,41 @@ export const registerInfluencer = onCall(
         throw new HttpsError("already-exists", "An influencer with this email already exists");
       }
 
-      // 7. Generate affiliate codes
+      // 7. Find recruiter if recruitment code provided
+      let recruitedBy: string | null = null;
+      let recruitedByCode: string | null = null;
+
+      if (input.recruiterCode) {
+        // Enforce 30-day attribution window if capturedAt is provided
+        let referralExpired = false;
+        if (input.referralCapturedAt) {
+          const capturedDate = new Date(input.referralCapturedAt);
+          const windowMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+          if (Date.now() - capturedDate.getTime() > windowMs) {
+            logger.warn("[registerInfluencer] Recruitment code expired (>30 days)", {
+              code: input.recruiterCode,
+              capturedAt: input.referralCapturedAt,
+            });
+            referralExpired = true;
+          }
+        }
+
+        if (!referralExpired) {
+          const recruiterQuery = await db
+            .collection("influencers")
+            .where("affiliateCodeRecruitment", "==", input.recruiterCode.toUpperCase())
+            .where("status", "==", "active")
+            .limit(1)
+            .get();
+
+          if (!recruiterQuery.empty) {
+            recruitedBy = recruiterQuery.docs[0].id;
+            recruitedByCode = input.recruiterCode.toUpperCase();
+          }
+        }
+      }
+
+      // 8. Generate affiliate codes
       const affiliateCodeClient = await generateClientCode(input.firstName);
       const affiliateCodeRecruitment = generateRecruitmentCode(affiliateCodeClient);
 
@@ -231,6 +283,14 @@ export const registerInfluencer = onCall(
         affiliateCodeClient,
         affiliateCodeRecruitment,
 
+        // Level system (aligned with Chatter)
+        level: 1,
+        levelProgress: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+        monthlyTopMultiplier: 1.0,
+        monthlyTopMultiplierMonth: null,
+
         totalEarned: 0,
         availableBalance: 0,
         pendingBalance: 0,
@@ -251,6 +311,11 @@ export const registerInfluencer = onCall(
         preferredPaymentMethod: null,
         paymentDetails: null,
         pendingWithdrawalId: null,
+
+        // Recruitment tracking
+        recruitedBy,
+        recruitedByCode,
+        recruitedAt: recruitedBy ? now : null,
 
         // V2: Captured rates (frozen at registration)
         capturedRates,
@@ -321,6 +386,26 @@ export const registerInfluencer = onCall(
           clickedAt: now,
           convertedAt: now,
         });
+
+        // Create recruitment tracking document if recruited
+        if (recruitedBy) {
+          const sixMonthsFromNow = new Date();
+          sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+          const recruitTrackingRef = db.collection("influencer_recruited_influencers").doc();
+          transaction.set(recruitTrackingRef, {
+            id: recruitTrackingRef.id,
+            recruiterId: recruitedBy,
+            recruitedId: userId,
+            recruitedEmail: input.email.toLowerCase(),
+            recruitedName: `${input.firstName.trim()} ${input.lastName.trim()}`,
+            recruitmentCode: recruitedByCode,
+            recruitedAt: now,
+            commissionWindowEnd: Timestamp.fromDate(sixMonthsFromNow),
+            commissionPaid: false,
+            commissionId: null,
+            commissionPaidAt: null,
+          });
+        }
       });
 
       logger.info("[registerInfluencer] Influencer registered", {

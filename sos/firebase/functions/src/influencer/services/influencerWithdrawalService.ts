@@ -1,5 +1,9 @@
 /**
- * Influencer Withdrawal Service
+ * @deprecated This service is deprecated.
+ * Use the centralized payment system (payment/ module) instead.
+ * Withdrawals now go through payment_withdrawals collection.
+ *
+ * Influencer Withdrawal Service (Legacy)
  *
  * Handles withdrawal requests for influencers:
  * - Creating withdrawal requests
@@ -7,7 +11,7 @@
  * - Getting pending withdrawals
  */
 
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import {
   Influencer,
@@ -81,15 +85,11 @@ export async function createWithdrawalRequest(
       return { success: false, error: "Withdrawals are currently disabled" };
     }
 
-    // 5. Calculate withdrawal amount
+    // 5. Pre-calculate withdrawal amount for validation
     const withdrawAmount = requestedAmount || influencer.availableBalance;
 
     if (withdrawAmount <= 0) {
       return { success: false, error: "No balance available for withdrawal" };
-    }
-
-    if (withdrawAmount > influencer.availableBalance) {
-      return { success: false, error: "Insufficient balance" };
     }
 
     // 6. Check minimum withdrawal amount
@@ -124,30 +124,52 @@ export async function createWithdrawalRequest(
     const now = Timestamp.now();
     const withdrawalRef = db.collection("influencer_withdrawals").doc();
 
-    const withdrawal: InfluencerWithdrawal = {
-      id: withdrawalRef.id,
-      influencerId,
-      influencerEmail: influencer.email,
-      influencerName: `${influencer.firstName} ${influencer.lastName}`,
-      amount: withdrawAmount,
-      sourceCurrency: "USD",
-      targetCurrency: paymentDetails.currency || "USD",
-      status: "pending",
-      paymentMethod,
-      paymentDetailsSnapshot: paymentDetails,
-      commissionIds,
-      commissionCount: commissionIds.length,
-      requestedAt: now,
-    };
-
-    // 9. Update in transaction
+    // 9. ATOMIC transaction: re-verify balance + create withdrawal + deduct balance
+    // FIX: Balance is now verified INSIDE the transaction to prevent race condition
+    // where two concurrent withdrawals both pass the balance check.
     await db.runTransaction(async (transaction) => {
+      // Re-read influencer INSIDE transaction for accurate balance
+      const influencerRef = db.collection("influencers").doc(influencerId);
+      const freshInfluencerDoc = await transaction.get(influencerRef);
+
+      if (!freshInfluencerDoc.exists) {
+        throw new Error("Influencer not found");
+      }
+
+      const freshInfluencer = freshInfluencerDoc.data() as Influencer;
+
+      // Validate balance INSIDE transaction (prevents race condition)
+      if (withdrawAmount > freshInfluencer.availableBalance) {
+        throw new Error("Insufficient balance");
+      }
+
+      // Check for pending withdrawal INSIDE transaction
+      if (freshInfluencer.pendingWithdrawalId) {
+        throw new Error("A withdrawal request is already pending");
+      }
+
+      const withdrawal: InfluencerWithdrawal = {
+        id: withdrawalRef.id,
+        influencerId,
+        influencerEmail: freshInfluencer.email,
+        influencerName: `${freshInfluencer.firstName} ${freshInfluencer.lastName}`,
+        amount: withdrawAmount,
+        sourceCurrency: "USD",
+        targetCurrency: paymentDetails.currency || "USD",
+        status: "pending",
+        paymentMethod,
+        paymentDetailsSnapshot: paymentDetails,
+        commissionIds,
+        commissionCount: commissionIds.length,
+        requestedAt: now,
+      };
+
       // Create withdrawal
       transaction.set(withdrawalRef, withdrawal);
 
-      // Update influencer
-      const influencerRef = db.collection("influencers").doc(influencerId);
+      // Update influencer (decrement balance + set lock)
       transaction.update(influencerRef, {
+        availableBalance: FieldValue.increment(-withdrawAmount),
         pendingWithdrawalId: withdrawalRef.id,
         updatedAt: now,
       });

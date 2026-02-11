@@ -1037,6 +1037,20 @@ const ChatterDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Affiliate Links - Prominent position for easy access */}
+        <div data-tour="affiliate-links">
+          <Suspense fallback={<CardSkeleton height="h-48" />}>
+            <ChatterAffiliateLinks
+              affiliateCodeClient={chatter.affiliateCodeClient || ''}
+              affiliateCodeRecruitment={chatter.affiliateCodeRecruitment || ''}
+              clientLinkUrl={clientShareUrl}
+              recruitmentLinkUrl={recruitmentShareUrl}
+              totalClientConversions={chatter.totalClients}
+              totalRecruitmentConversions={chatter.totalRecruits}
+            />
+          </Suspense>
+        </div>
+
         {/* Stats Grid - Critical above-fold, loaded synchronously */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* This Month - Most Prominent */}
@@ -1273,20 +1287,6 @@ const ChatterDashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Affiliate Links - Lazy loaded */}
-            <div data-tour="affiliate-links">
-              <Suspense fallback={<CardSkeleton height="h-48" />}>
-                <ChatterAffiliateLinks
-                  affiliateCodeClient={chatter.affiliateCodeClient || ''}
-                  affiliateCodeRecruitment={chatter.affiliateCodeRecruitment || ''}
-                  clientLinkUrl={clientShareUrl}
-                  recruitmentLinkUrl={recruitmentShareUrl}
-                  totalClientConversions={chatter.totalClients}
-                  totalRecruitmentConversions={chatter.totalRecruits}
-                />
-              </Suspense>
-            </div>
-
             {/* Motivation Widget - Lazy loaded */}
             <Suspense fallback={<CardSkeleton height="h-64" />}>
               <MotivationWidget

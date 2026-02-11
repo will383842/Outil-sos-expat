@@ -106,6 +106,21 @@ interface Commission {
   createdAt: string;
 }
 
+interface Recruit {
+  id: string;
+  recruitedId: string;
+  recruitedName: string;
+  recruitedEmail: string;
+  recruitedGroupName: string;
+  recruitedAt: string;
+  commissionWindowEnd: string;
+  commissionPaid: boolean;
+  recruitedTotalEarned: number;
+  threshold: number;
+  progressPercent: number;
+  computedStatus: 'pending' | 'eligible' | 'paid' | 'expired';
+}
+
 const AdminGroupAdminDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -118,6 +133,9 @@ const AdminGroupAdminDetail: React.FC = () => {
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'recruits'>('overview');
+  const [recruits, setRecruits] = useState<Recruit[]>([]);
+  const [recruitsLoading, setRecruitsLoading] = useState(false);
 
   // Fetch admin details
   const fetchDetails = async () => {
@@ -140,9 +158,30 @@ const AdminGroupAdminDetail: React.FC = () => {
     }
   };
 
+  const fetchRecruits = async () => {
+    if (!id) return;
+    setRecruitsLoading(true);
+    try {
+      const getRecruits = httpsCallable(functions, 'adminGetGroupAdminRecruits');
+      const result = await getRecruits({ recruiterId: id });
+      const data = result.data as { recruits: Recruit[] };
+      setRecruits(data.recruits || []);
+    } catch (err) {
+      console.error('Error fetching recruits:', err);
+    } finally {
+      setRecruitsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (activeTab === 'recruits' && recruits.length === 0 && !recruitsLoading) {
+      fetchRecruits();
+    }
+  }, [activeTab]);
 
   // Update status
   const handleStatusChange = async (newStatus: 'active' | 'suspended' | 'blocked', reason?: string) => {
@@ -271,7 +310,116 @@ const AdminGroupAdminDetail: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-gray-200 dark:border-white/10">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'overview'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('recruits')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+              activeTab === 'recruits'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            <UserPlus className="w-4 h-4" />
+            Recruits
+            {admin.totalRecruits > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
+                {admin.totalRecruits}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Recruits Tab */}
+        {activeTab === 'recruits' && (
+          <div className={UI.card + " p-6"}>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-blue-500" />
+              Recruited Admins
+            </h2>
+            {recruitsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+              </div>
+            ) : recruits.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No recruits yet</p>
+            ) : (
+              <div className="space-y-3">
+                {recruits.map(recruit => (
+                  <div key={recruit.id} className="p-4 bg-gray-50 dark:bg-white/5 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">{recruit.recruitedName}</p>
+                        <p className="text-sm text-gray-500">{recruit.recruitedEmail}</p>
+                        {recruit.recruitedGroupName && (
+                          <p className="text-xs text-gray-400">{recruit.recruitedGroupName}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        {recruit.computedStatus === 'paid' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            <CheckCircle className="w-3 h-3" /> Paid
+                          </span>
+                        )}
+                        {recruit.computedStatus === 'pending' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400">
+                            <Clock className="w-3 h-3" /> Pending
+                          </span>
+                        )}
+                        {recruit.computedStatus === 'eligible' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                            <CheckCircle className="w-3 h-3" /> Eligible
+                          </span>
+                        )}
+                        {recruit.computedStatus === 'expired' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                            <AlertTriangle className="w-3 h-3" /> Expired
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div>
+                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>Progress: {formatAmount(recruit.recruitedTotalEarned)} / {formatAmount(recruit.threshold)}</span>
+                        <span>{recruit.progressPercent}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-white/10 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            recruit.progressPercent >= 100
+                              ? 'bg-green-500'
+                              : recruit.progressPercent >= 50
+                                ? 'bg-blue-500'
+                                : 'bg-orange-400'
+                          }`}
+                          style={{ width: `${recruit.progressPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>Recruited: {formatDate(recruit.recruitedAt)}</span>
+                      <span>Window ends: {formatDate(recruit.commissionWindowEnd)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Profile & Group */}
           <div className="lg:col-span-2 space-y-6">
             {/* Group Information */}
@@ -586,7 +734,7 @@ const AdminGroupAdminDetail: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </AdminLayout>
   );

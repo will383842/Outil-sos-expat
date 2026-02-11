@@ -70,6 +70,30 @@ export async function migrateToV2(): Promise<{
         releaseDelayHours: 24,
         attributionWindowDays: 30,
         leaderboardSize: 10,
+        // Level & bonus fields
+        levelBonuses: {
+          level1: 1.00,
+          level2: 1.10,
+          level3: 1.20,
+          level4: 1.35,
+          level5: 1.50,
+        },
+        levelThresholds: {
+          level2: 10000,
+          level3: 50000,
+          level4: 200000,
+          level5: 500000,
+        },
+        top1BonusMultiplier: 2.00,
+        top2BonusMultiplier: 1.50,
+        top3BonusMultiplier: 1.15,
+        streakBonuses: {
+          days7: 1.05,
+          days14: 1.10,
+          days30: 1.20,
+          days100: 1.50,
+        },
+        recruitmentCommissionThreshold: 5000,
         // V2 fields
         commissionRules: DEFAULT_COMMISSION_RULES,
         antiFraud: DEFAULT_ANTI_FRAUD_CONFIG,

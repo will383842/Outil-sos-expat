@@ -97,7 +97,6 @@ export const PAYPAL_CLIENT_SECRET = defineSecret("PAYPAL_CLIENT_SECRET");
 export const PAYPAL_WEBHOOK_ID = defineSecret("PAYPAL_WEBHOOK_ID");
 export const PAYPAL_PARTNER_ID = defineSecret("PAYPAL_PARTNER_ID");
 export const PAYPAL_PLATFORM_MERCHANT_ID = defineSecret("PAYPAL_PLATFORM_MERCHANT_ID");
-
 export const PAYPAL_MODE = defineString("PAYPAL_MODE", { default: "sandbox" });
 
 /** All PayPal secrets for function config */
@@ -774,11 +773,6 @@ export const CALL_FUNCTION_SECRETS = [
 /** All secrets for payment/Stripe functions */
 export const PAYMENT_FUNCTION_SECRETS = [
   ...STRIPE_SECRETS,
-];
-
-/** All secrets for PayPal payment functions */
-export const PAYPAL_PAYMENT_SECRETS = [
-  ...PAYPAL_SECRETS,
 ];
 
 /** All secrets for Wise affiliate payout functions */

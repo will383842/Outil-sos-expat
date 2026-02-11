@@ -24,7 +24,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { ChatterNotification, Chatter } from "../types";
-import { createCommission, checkAndPayTelegramBonus } from "../services";
+import { createCommission, checkAndPayTelegramBonus, checkAndPayRecruitmentCommission } from "../services";
 import {
   getChatterConfigCached,
   getClientCallCommission,
@@ -45,6 +45,9 @@ function ensureInitialized() {
     initializeApp();
   }
 }
+
+/** Minimum call duration in seconds to earn commission (anti-fraud) */
+const MIN_CALL_DURATION_SECONDS = 120;
 
 interface CallSession {
   id: string;
@@ -100,6 +103,16 @@ export const chatterOnCallCompleted = onDocumentUpdated(
 
     const sessionId = event.params.sessionId;
     const session = afterData;
+
+    // Minimum call duration check (anti-fraud: prevent 1-second call commissions)
+    if (!session.duration || session.duration < MIN_CALL_DURATION_SECONDS) {
+      logger.warn("[chatterOnCallCompleted] Call too short for commission", {
+        sessionId,
+        duration: session.duration,
+        minimum: MIN_CALL_DURATION_SECONDS,
+      });
+      return;
+    }
 
     logger.info("[chatterOnCallCompleted] Processing completed call", {
       sessionId,
@@ -217,6 +230,9 @@ export const chatterOnCallCompleted = onDocumentUpdated(
             amount: telegramBonusResult.amount,
           });
         }
+
+        // Check and pay recruitment commission (recruiter gets $5 when this chatter reaches $50)
+        await checkAndPayRecruitmentCommission(chatterId);
       }
 
       // ========================================================================

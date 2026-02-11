@@ -1,37 +1,41 @@
 /**
- * @deprecated This callable is deprecated.
- * Use the centralized payment system instead:
- * - Components: @/components/Payment
- * - Types: @/types/payment
- * - Hooks: @/hooks/usePayment
- *
- * This file will be removed in a future version.
+ * @deprecated Legacy callable name preserved for frontend compatibility.
+ * Now delegates to the centralized payment system (payment_withdrawals collection).
  *
  * Request Blogger Withdrawal Callable
- *
- * Handles withdrawal requests from bloggers.
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
+import { getApps, initializeApp } from "firebase-admin/app";
+
+// Lazy initialization
+function ensureInitialized() {
+  if (!getApps().length) {
+    initializeApp();
+  }
+}
+
 import {
   RequestBloggerWithdrawalInput,
   RequestBloggerWithdrawalResponse,
   Blogger,
   BloggerPaymentMethod,
-  BloggerPayPalDetails,
-  BloggerWiseDetails,
-  BloggerMobileMoneyDetails,
 } from "../types";
-import { createBloggerWithdrawal } from "../services/bloggerWithdrawalService";
 import { getBloggerConfigCached } from "../utils/bloggerConfigService";
+import { getPaymentService } from "../../payment/services/paymentService";
+import {
+  PaymentMethodDetails,
+  BankTransferDetails,
+  MobileMoneyDetails,
+} from "../../payment/types";
 
 // ============================================================================
 // VALIDATION
 // ============================================================================
 
-const PAYMENT_METHODS: BloggerPaymentMethod[] = ["paypal", "wise", "mobile_money"];
+const PAYMENT_METHODS: BloggerPaymentMethod[] = ["wise", "mobile_money", "bank_transfer"];
 
 function validateInput(input: RequestBloggerWithdrawalInput): void {
   if (!input.paymentMethod || !PAYMENT_METHODS.includes(input.paymentMethod)) {
@@ -42,53 +46,81 @@ function validateInput(input: RequestBloggerWithdrawalInput): void {
     throw new HttpsError("invalid-argument", "Payment details are required");
   }
 
-  // Validate payment details match method
   if (input.paymentDetails.type !== input.paymentMethod) {
     throw new HttpsError("invalid-argument", "Payment details type must match payment method");
   }
 
-  // Validate specific payment details
-  switch (input.paymentMethod) {
-    case "paypal": {
-      const paypalDetails = input.paymentDetails as BloggerPayPalDetails;
-      if (!paypalDetails.email?.trim()) {
-        throw new HttpsError("invalid-argument", "PayPal email is required");
-      }
-      if (!paypalDetails.accountHolderName?.trim()) {
-        throw new HttpsError("invalid-argument", "Account holder name is required");
-      }
-      break;
-    }
-
+  const d = input.paymentDetails;
+  switch (d.type) {
     case "wise": {
-      const wiseDetails = input.paymentDetails as BloggerWiseDetails;
-      if (!wiseDetails.email?.trim()) {
-        throw new HttpsError("invalid-argument", "Wise email is required");
-      }
-      if (!wiseDetails.accountHolderName?.trim()) {
-        throw new HttpsError("invalid-argument", "Account holder name is required");
-      }
+      if (!d.email?.trim()) throw new HttpsError("invalid-argument", "Wise email is required");
+      if (!d.accountHolderName?.trim()) throw new HttpsError("invalid-argument", "Account holder name is required");
       break;
     }
-
     case "mobile_money": {
-      const mobileDetails = input.paymentDetails as BloggerMobileMoneyDetails;
-      if (mobileDetails.type !== "mobile_money") {
-        throw new HttpsError("invalid-argument", "Invalid Mobile Money details");
-      }
-      if (!mobileDetails.phoneNumber?.trim()) {
-        throw new HttpsError("invalid-argument", "Phone number is required for Mobile Money");
-      }
-      if (!mobileDetails.provider) {
-        throw new HttpsError("invalid-argument", "Mobile Money provider is required");
-      }
+      if (!d.phoneNumber?.trim()) throw new HttpsError("invalid-argument", "Phone number is required for Mobile Money");
+      if (!d.provider) throw new HttpsError("invalid-argument", "Mobile Money provider is required");
+      break;
+    }
+    case "bank_transfer": {
+      if (!d.bankName?.trim()) throw new HttpsError("invalid-argument", "Bank name is required");
+      if (!d.accountHolderName?.trim()) throw new HttpsError("invalid-argument", "Account holder name is required");
+      if (!d.accountNumber?.trim()) throw new HttpsError("invalid-argument", "Account number is required");
       break;
     }
   }
 
-  // Validate amount if provided
   if (input.amount !== undefined && input.amount <= 0) {
     throw new HttpsError("invalid-argument", "Withdrawal amount must be positive");
+  }
+}
+
+/**
+ * Convert legacy Blogger payment details to centralized PaymentMethodDetails
+ */
+function convertToPaymentMethodDetails(
+  method: BloggerPaymentMethod,
+  details: Record<string, unknown>
+): PaymentMethodDetails {
+  switch (method) {
+    case "wise":
+      return {
+        type: "bank_transfer",
+        accountHolderName: details.accountHolderName as string,
+        country: (details.country as string) || "",
+        currency: (details.currency as string) || "USD",
+        iban: details.iban as string | undefined,
+        accountNumber: details.accountNumber as string | undefined,
+        routingNumber: details.routingNumber as string | undefined,
+        sortCode: details.sortCode as string | undefined,
+        swiftBic: details.bic as string | undefined,
+      } as BankTransferDetails;
+
+    case "bank_transfer":
+      return {
+        type: "bank_transfer",
+        accountHolderName: details.accountHolderName as string,
+        country: (details.country as string) || "",
+        currency: (details.currency as string) || "USD",
+        accountNumber: details.accountNumber as string | undefined,
+        routingNumber: details.routingNumber as string | undefined,
+        swiftBic: details.swiftCode as string | undefined,
+        iban: details.iban as string | undefined,
+        bankName: details.bankName as string | undefined,
+      } as BankTransferDetails;
+
+    case "mobile_money":
+      return {
+        type: "mobile_money",
+        provider: details.provider as string,
+        phoneNumber: details.phoneNumber as string,
+        country: details.country as string,
+        accountName: (details.accountName as string) || (details.accountHolderName as string) || "",
+        currency: (details.currency as string) || "XOF",
+      } as MobileMoneyDetails;
+
+    default:
+      throw new HttpsError("invalid-argument", `Unsupported payment method: ${method}`);
   }
 }
 
@@ -104,6 +136,8 @@ export const bloggerRequestWithdrawal = onCall(
     cors: true,
   },
   async (request): Promise<RequestBloggerWithdrawalResponse> => {
+    ensureInitialized();
+
     // 1. Check authentication
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -135,7 +169,15 @@ export const bloggerRequestWithdrawal = onCall(
         );
       }
 
-      // 5. Get config
+      // 5. Check for pending withdrawal (legacy field check)
+      if ((blogger as unknown as Record<string, unknown>).pendingWithdrawalId) {
+        throw new HttpsError(
+          "failed-precondition",
+          "You already have a pending withdrawal request"
+        );
+      }
+
+      // 6. Get config
       const config = await getBloggerConfigCached();
 
       if (!config.withdrawalsEnabled) {
@@ -145,7 +187,7 @@ export const bloggerRequestWithdrawal = onCall(
         );
       }
 
-      // 6. Check minimum amount
+      // 7. Check minimum amount
       const withdrawalAmount = input.amount || blogger.availableBalance;
 
       if (withdrawalAmount < config.minimumWithdrawalAmount) {
@@ -155,35 +197,71 @@ export const bloggerRequestWithdrawal = onCall(
         );
       }
 
-      // 7. Create withdrawal
-      const result = await createBloggerWithdrawal({
-        bloggerId: uid,
-        amount: input.amount,
-        paymentMethod: input.paymentMethod,
-        paymentDetails: input.paymentDetails,
-      });
-
-      if (!result.success) {
-        throw new HttpsError("failed-precondition", result.error || "Failed to create withdrawal");
+      if (withdrawalAmount > blogger.availableBalance) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Insufficient balance. Available: $${(blogger.availableBalance / 100).toFixed(2)}`
+        );
       }
 
-      logger.info("[bloggerRequestWithdrawal] Withdrawal requested", {
+      // 8. Convert legacy details → centralized format
+      const centralizedDetails = convertToPaymentMethodDetails(
+        input.paymentMethod,
+        input.paymentDetails as unknown as Record<string, unknown>
+      );
+
+      // 9. Save payment method in centralized system
+      const paymentService = getPaymentService();
+      const paymentMethod = await paymentService.savePaymentMethod({
+        userId: uid,
+        userType: "blogger",
+        details: centralizedDetails,
+        setAsDefault: true,
+      });
+
+      // 10. Create withdrawal via centralized service
+      const withdrawal = await paymentService.createWithdrawalRequest({
+        userId: uid,
+        userType: "blogger",
+        userEmail: blogger.email || "",
+        userName: blogger.firstName || "",
+        amount: withdrawalAmount,
+        paymentMethodId: paymentMethod.id,
+      });
+
+      // 11. Set pendingWithdrawalId on blogger doc (backward compatibility)
+      await db.collection("bloggers").doc(uid).update({
+        pendingWithdrawalId: withdrawal.id,
+        updatedAt: Timestamp.now(),
+      });
+
+      logger.info("[bloggerRequestWithdrawal] Withdrawal requested via centralized system", {
         bloggerId: uid,
-        withdrawalId: result.withdrawalId,
-        amount: result.amount,
+        withdrawalId: withdrawal.id,
+        amount: withdrawalAmount,
         paymentMethod: input.paymentMethod,
+        collection: "payment_withdrawals",
       });
 
       return {
         success: true,
-        withdrawalId: result.withdrawalId!,
-        amount: result.amount!,
+        withdrawalId: withdrawal.id,
+        amount: withdrawalAmount,
         status: "pending",
         message: "Withdrawal request submitted successfully. You will be notified once processed.",
       };
     } catch (error) {
       if (error instanceof HttpsError) {
         throw error;
+      }
+
+      // Surface transaction-level errors (race condition protection) as user-friendly messages
+      const errMsg = error instanceof Error ? error.message : "";
+      if (errMsg.includes("Insufficient balance")) {
+        throw new HttpsError("failed-precondition", "Insufficient balance for this withdrawal");
+      }
+      if (errMsg.includes("already pending")) {
+        throw new HttpsError("failed-precondition", "A withdrawal request is already pending");
       }
 
       logger.error("[bloggerRequestWithdrawal] Error", { uid, error });

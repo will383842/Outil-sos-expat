@@ -9,7 +9,7 @@
  */
 
 import { onRequest } from "firebase-functions/v2/https";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import * as crypto from "crypto";
@@ -350,6 +350,36 @@ export const paymentWebhookWise = onRequest(
         resourceId: webhookData.resourceId,
         profileId: webhookData.profileId,
       });
+
+      // Idempotency check - prevent duplicate processing
+      const db = getFirestore();
+      const idempotencyKey = `wise_${webhookData.resourceId || 'unknown'}_${webhookData.eventType}`;
+      const webhookEventRef = db.collection('processed_webhook_events').doc(idempotencyKey);
+      let isDuplicate = false;
+      try {
+        await db.runTransaction(async (transaction) => {
+          const doc = await transaction.get(webhookEventRef);
+          if (doc.exists) {
+            isDuplicate = true;
+            return;
+          }
+          transaction.set(webhookEventRef, {
+            processedAt: FieldValue.serverTimestamp(),
+            eventType: webhookData.eventType,
+            resourceId: webhookData.resourceId,
+            source: 'wise',
+          });
+        });
+      } catch (txError) {
+        logger.error('[webhookWise] Idempotency check failed', { txError });
+        res.status(500).send('Internal error');
+        return;
+      }
+      if (isDuplicate) {
+        logger.info('[webhookWise] Duplicate event, skipping', { idempotencyKey });
+        res.status(200).send('OK - already processed');
+        return;
+      }
 
       // Only handle transfer state changes
       if (webhookData.eventType !== "transfers#state-change") {

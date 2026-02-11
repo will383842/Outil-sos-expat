@@ -376,14 +376,9 @@ export function validateTwilioWebhookSignature(
   // - X-Forwarded-For headers are not properly transmitted
   const ipValid = isFromTwilioIp(req);
   if (!ipValid) {
-    // MONITORING MODE: Log warning but allow through since other checks passed
-    // (X-Twilio-Signature header present + AccountSid matches)
-    console.warn("[TWILIO_VALIDATION] ⚠️ Request NOT from known Twilio IP range");
-    console.warn("[TWILIO_VALIDATION] Allowing through because signature header + AccountSid are valid");
-    console.warn("[TWILIO_VALIDATION] If this happens frequently, consider updating TWILIO_IP_RANGES");
-    // To enable strict blocking, uncomment below:
-    // if (res) res.status(403).send("Forbidden: Invalid source IP");
-    // return false;
+    console.error("[TWILIO_VALIDATION] ❌ Request NOT from known Twilio IP range - BLOCKED");
+    if (res) res.status(403).send("Forbidden: Invalid source IP");
+    return false;
   }
 
   console.log("[TWILIO_VALIDATION] Validation passed:", {

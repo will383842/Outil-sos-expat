@@ -1,5 +1,5 @@
 /**
- * GroupAdminRegisterForm - Dark theme registration form for Facebook Group Administrators
+ * GroupAdminRegisterForm - Dark theme registration form for Group/Community Administrators
  * Follows ChatterRegisterForm patterns: DarkInput-style glassmorphism, inline validation,
  * password strength, terms tracking, 2-step wizard
  */
@@ -300,7 +300,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     if (!formData.firstName.trim()) errors.firstName = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
     if (!formData.lastName.trim()) errors.lastName = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
     if (!formData.email.trim()) errors.email = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Invalid email' });
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) || formData.email.length > 254) errors.email = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Invalid email' });
     if (!isLoggedIn) {
       if (!formData.password) errors.password = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
       else if (formData.password.length < MIN_PASSWORD_LENGTH) errors.password = intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Min {min} characters' }, { min: MIN_PASSWORD_LENGTH });
@@ -312,8 +312,8 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
 
   const validateStep2 = (): boolean => {
     const errors: Record<string, string> = {};
-    if (!formData.groupUrl || !formData.groupUrl.includes('facebook.com/groups/'))
-      errors.groupUrl = intl.formatMessage({ id: 'groupadmin.register.error.groupUrlRequired', defaultMessage: 'Valid Facebook group URL required' });
+    if (!formData.groupUrl || !/^https?:\/\/.+/.test(formData.groupUrl))
+      errors.groupUrl = intl.formatMessage({ id: 'groupadmin.register.error.groupUrlRequired', defaultMessage: 'Valid group or community URL required' });
     if (!formData.groupName || formData.groupName.length < 3)
       errors.groupName = intl.formatMessage({ id: 'groupadmin.register.error.groupNameRequired', defaultMessage: 'Group name required (min 3 chars)' });
     if (!formData.groupType) errors.groupType = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
@@ -651,13 +651,13 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
       {step === 2 && (
         <div className="space-y-5">
           <h3 className="text-lg font-bold text-white">
-            <FormattedMessage id="groupadmin.register.step2.title" defaultMessage="Your Facebook Group" />
+            <FormattedMessage id="groupadmin.register.step2.title" defaultMessage="Your Group / Community" />
           </h3>
 
           {/* Group URL */}
           <div className="space-y-1">
             <label className={darkStyles.label}>
-              <FormattedMessage id="groupadmin.register.groupUrl" defaultMessage="Facebook Group URL" /> <span className="text-red-400">*</span>
+              <FormattedMessage id="groupadmin.register.groupUrl" defaultMessage="Group / Community URL" /> <span className="text-red-400">*</span>
             </label>
             <div className="relative">
               <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
@@ -666,7 +666,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                 value={formData.groupUrl}
                 onChange={(e) => handleChange('groupUrl', e.target.value)}
                 onBlur={() => handleBlur('groupUrl')}
-                placeholder="https://www.facebook.com/groups/..."
+                placeholder="https://www.facebook.com/groups/... or any group URL"
                 className={`${darkStyles.input} pl-12 ${validationErrors.groupUrl ? darkStyles.inputError : formData.groupUrl ? darkStyles.inputFilled : ''}`}
               />
             </div>

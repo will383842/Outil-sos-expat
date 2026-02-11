@@ -202,4 +202,90 @@ export function useBloggerGuide(): UseBloggerGuideReturn {
   };
 }
 
+// ============================================================================
+// ARTICLES HOOK
+// ============================================================================
+
+export interface BloggerArticle {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  seoTitle?: string;
+  seoKeywords?: string[];
+  estimatedWordCount?: number;
+}
+
+interface UseBloggerArticlesReturn {
+  articles: BloggerArticle[] | null;
+  isLoading: boolean;
+  error: string | null;
+  fetchArticles: () => Promise<void>;
+  copyArticle: (articleId: string) => Promise<{ success: boolean; content?: string; error?: string }>;
+}
+
+export function useBloggerArticles(): UseBloggerArticlesReturn {
+  const [articles, setArticles] = useState<BloggerArticle[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchArticles = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const getBloggerArticles = httpsCallable<unknown, { articles: BloggerArticle[] }>(
+        functions,
+        'getBloggerArticles'
+      );
+
+      const result = await getBloggerArticles({});
+      setArticles(result.data.articles || []);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message || 'Failed to load articles');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const copyArticle = useCallback(async (articleId: string): Promise<{
+    success: boolean;
+    content?: string;
+    error?: string;
+  }> => {
+    try {
+      const copyBloggerArticle = httpsCallable<
+        { articleId: string },
+        { success: boolean; content: string }
+      >(functions, 'copyBloggerArticle');
+
+      const result = await copyBloggerArticle({ articleId });
+
+      if (result.data.content) {
+        await navigator.clipboard.writeText(result.data.content);
+      }
+
+      return {
+        success: true,
+        content: result.data.content,
+      };
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      return {
+        success: false,
+        error: e.message || 'Failed to copy article',
+      };
+    }
+  }, []);
+
+  return {
+    articles,
+    isLoading,
+    error,
+    fetchArticles,
+    copyArticle,
+  };
+}
+
 export default useBloggerResources;

@@ -85,9 +85,9 @@ export type BloggerWithdrawalStatus =
  * @deprecated Use centralized payment types instead. This type will be removed in a future version.
  */
 export type BloggerPaymentMethod =
-  | "paypal"        // PayPal
   | "wise"          // Wise (TransferWise)
-  | "mobile_money"; // Mobile Money (Flutterwave)
+  | "mobile_money"  // Mobile Money (Flutterwave)
+  | "bank_transfer"; // Bank transfer
 
 /**
  * Blog traffic tier estimate
@@ -292,6 +292,17 @@ export interface Blogger {
   /** Earned badges */
   badges: BloggerBadgeType[];
 
+  // ---- Recruitment (who recruited this blogger) ----
+
+  /** Blogger who recruited this one (blogger ID) */
+  recruitedBy: string | null;
+
+  /** Recruitment code used */
+  recruitedByCode: string | null;
+
+  /** When recruited */
+  recruitedAt: Timestamp | null;
+
   // ---- Payment Details ----
 
   /** Preferred payment method */
@@ -343,20 +354,9 @@ export interface Blogger {
  * @deprecated Use centralized payment types instead. This type will be removed in a future version.
  */
 export type BloggerPaymentDetails =
-  | BloggerPayPalDetails
   | BloggerWiseDetails
-  | BloggerMobileMoneyDetails;
-
-/**
- * PayPal payment details
- * @deprecated Use centralized payment types instead. This type will be removed in a future version.
- */
-export interface BloggerPayPalDetails {
-  type: "paypal";
-  email: string;
-  currency: string;
-  accountHolderName: string;
-}
+  | BloggerMobileMoneyDetails
+  | BloggerBankDetails;
 
 /**
  * Wise payment details
@@ -385,6 +385,21 @@ export interface BloggerMobileMoneyDetails {
   country: string;
   currency: string;
   accountName: string;
+}
+
+/**
+ * Bank transfer details
+ */
+export interface BloggerBankDetails {
+  type: "bank_transfer";
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string;
+  routingNumber?: string;
+  swiftCode?: string;
+  iban?: string;
+  country: string;
+  currency: string;
 }
 
 // ============================================================================
@@ -541,9 +556,6 @@ export interface BloggerWithdrawal {
   /** Payment reference/transaction ID */
   paymentReference?: string;
 
-  /** PayPal transaction ID (if using PayPal) */
-  paypalTransactionId?: string;
-
   /** Wise transfer ID (if using Wise) */
   wiseTransferId?: string;
 
@@ -628,6 +640,48 @@ export interface BloggerRecruitedProvider {
 
   /** Updated timestamp */
   updatedAt: Timestamp;
+}
+
+// ============================================================================
+// RECRUITED BLOGGERS TRACKING
+// ============================================================================
+
+/**
+ * Recruited blogger tracking document (mirrors GroupAdminRecruit)
+ * Collection: blogger_recruited_bloggers/{id}
+ */
+export interface BloggerRecruitedBlogger {
+  id: string;
+
+  /** Recruiter Blogger ID */
+  recruiterId: string;
+
+  /** Recruited Blogger ID */
+  recruitedId: string;
+
+  /** Recruited blogger's email */
+  recruitedEmail: string;
+
+  /** Recruited blogger's name */
+  recruitedName: string;
+
+  /** Recruitment code used */
+  recruitmentCode: string;
+
+  /** When recruited */
+  recruitedAt: Timestamp;
+
+  /** Commission window end date (6 months after recruitment) */
+  commissionWindowEnd: Timestamp;
+
+  /** Whether commission was paid */
+  commissionPaid: boolean;
+
+  /** Commission ID if paid */
+  commissionId?: string;
+
+  /** When commission was paid */
+  commissionPaidAt?: Timestamp;
 }
 
 // ============================================================================
@@ -1212,6 +1266,11 @@ export interface BloggerConfig {
   /** Number of bloggers shown in leaderboard */
   leaderboardSize: number;
 
+  // ---- Recruitment Commission ----
+
+  /** Minimum totalEarned (cents) a recruited blogger must reach before recruiter gets $5 */
+  recruitmentCommissionThreshold: number;
+
   // ---- Version & History ----
 
   /** Config version */
@@ -1250,6 +1309,8 @@ export const DEFAULT_BLOGGER_CONFIG: Omit<
   attributionWindowDays: 30,
 
   leaderboardSize: 10,               // Top 10 only (informational)
+
+  recruitmentCommissionThreshold: 5000, // $50 — recruited blogger must earn this before recruiter gets $5
 
   version: 1,
 };

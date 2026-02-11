@@ -16,6 +16,8 @@ import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
 import fetch from 'node-fetch';
+import nodemailer from 'nodemailer';
+import { EMAIL_USER, EMAIL_PASS } from '../lib/secrets';
 
 // ============================================================================
 // LAZY INITIALIZATION
@@ -142,28 +144,46 @@ async function sendSlackNotification(alert: Partial<Alert>): Promise<boolean> {
 }
 
 /**
- * Envoie un email d'alerte via Firebase Admin SDK
- * (utilise l'extension Firebase Email ou un service tiers)
+ * Envoie un email d'alerte via Zoho SMTP (même pattern que passwordReset.ts)
  */
 async function sendEmailAlert(alert: Partial<Alert>): Promise<boolean> {
-  const db = admin.firestore();
-
   try {
-    // Utilise la collection mail pour Firebase Email Extension
-    // ou implémentez votre propre logique d'envoi
-    await db.collection('mail').add({
-      to: CONFIG.ALERT_EMAILS,
-      template: {
-        name: 'system_alert',
-        data: {
-          severity: alert.severity,
-          category: alert.category,
-          title: alert.title,
-          message: alert.message,
-          timestamp: new Date().toISOString(),
-          metadata: JSON.stringify(alert.metadata || {}, null, 2)
-        }
-      }
+    const emailUser = EMAIL_USER.value();
+    const emailPass = EMAIL_PASS.value();
+
+    if (!emailUser || !emailPass) {
+      logger.warn('[Alerts] Email credentials not configured');
+      return false;
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.zoho.eu',
+      port: 465,
+      secure: true,
+      auth: { user: emailUser, pass: emailPass },
+    });
+
+    const severityLabel = (alert.severity || 'warning').toUpperCase();
+    const metadataStr = alert.metadata
+      ? Object.entries(alert.metadata)
+          .map(([k, v]) => `<li><strong>${k}:</strong> ${String(v)}</li>`)
+          .join('')
+      : '';
+
+    await transporter.sendMail({
+      from: `"SOS Expat Alerts" <${emailUser}>`,
+      to: CONFIG.ALERT_EMAILS.join(', '),
+      subject: `[${severityLabel}] ${alert.title}`,
+      html: `
+        <h2 style="color: ${alert.severity === 'emergency' ? '#9c27b0' : alert.severity === 'critical' ? '#f44336' : '#ff9800'};">
+          ${alert.title}
+        </h2>
+        <p>${alert.message}</p>
+        <p><strong>Severity:</strong> ${severityLabel}</p>
+        <p><strong>Category:</strong> ${alert.category}</p>
+        <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+        ${metadataStr ? `<ul>${metadataStr}</ul>` : ''}
+      `,
     });
 
     return true;

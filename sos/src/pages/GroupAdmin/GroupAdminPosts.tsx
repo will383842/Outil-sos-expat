@@ -104,7 +104,7 @@ const GroupAdminPosts: React.FC = () => {
 
   return (
     <GroupAdminDashboardLayout>
-      <SEOHead description="Manage your Facebook group with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.posts.title', defaultMessage: 'Posts | SOS-Expat Group Admin' })} />
+      <SEOHead description="Manage your group or community with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.posts.title', defaultMessage: 'Posts | SOS-Expat Group Admin' })} />
 
       <div className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
@@ -113,7 +113,7 @@ const GroupAdminPosts: React.FC = () => {
               <FormattedMessage id="groupAdmin.posts.heading" defaultMessage="Ready-to-Use Posts" />
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              <FormattedMessage id="groupAdmin.posts.subtitle" defaultMessage="Copy and paste these posts into your Facebook group" />
+              <FormattedMessage id="groupAdmin.posts.subtitle" defaultMessage="Copy and paste these posts into your group or community" />
             </p>
           </div>
 

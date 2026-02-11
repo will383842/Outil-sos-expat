@@ -14,7 +14,7 @@ import {
   AlertTriangle,
   CheckCircle,
   RefreshCw,
-  Facebook,
+  Users,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -34,7 +34,9 @@ interface GroupAdminConfig {
   withdrawalsEnabled: boolean;
   commissionClientAmount: number;
   commissionRecruitmentAmount: number;
-  clientDiscountPercent: number;
+  clientDiscountAmount: number;
+  recruitmentCommissionThreshold: number;
+  paymentMode: "manual" | "automatic";
   recruitmentWindowMonths: number;
   minimumWithdrawalAmount: number;
   validationHoldPeriodDays: number;
@@ -96,7 +98,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
   };
 
   // Update config field
-  const updateField = (field: keyof GroupAdminConfig, value: number | boolean) => {
+  const updateField = (field: keyof GroupAdminConfig, value: number | boolean | string) => {
     if (!config) return;
     setConfig({ ...config, [field]: value });
   };
@@ -132,7 +134,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <Facebook className="w-6 h-6 text-blue-500" />
+              <Users className="w-6 h-6 text-blue-500" />
               <FormattedMessage id="groupAdmin.admin.config" defaultMessage="GroupAdmin Configuration" />
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -238,15 +240,27 @@ const AdminGroupAdminsConfig: React.FC = () => {
               </p>
             </div>
             <div>
-              <label className={UI.label}>Client Discount (%)</label>
+              <label className={UI.label}>Client Discount Amount (cents)</label>
               <input
                 type="number"
-                value={config.clientDiscountPercent}
-                onChange={(e) => updateField('clientDiscountPercent', parseInt(e.target.value) || 0)}
+                value={config.clientDiscountAmount}
+                onChange={(e) => updateField('clientDiscountAmount', parseInt(e.target.value) || 0)}
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Discount given to clients using affiliate link
+                Current: ${(config.clientDiscountAmount / 100).toFixed(2)} discount for clients
+              </p>
+            </div>
+            <div>
+              <label className={UI.label}>Recruitment Commission Threshold (cents)</label>
+              <input
+                type="number"
+                value={config.recruitmentCommissionThreshold}
+                onChange={(e) => updateField('recruitmentCommissionThreshold', parseInt(e.target.value) || 0)}
+                className={UI.input}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Recruit must earn ${(config.recruitmentCommissionThreshold / 100).toFixed(2)} before recruiter gets commission
               </p>
             </div>
             <div>
@@ -270,6 +284,38 @@ const AdminGroupAdminsConfig: React.FC = () => {
             <Clock className="w-5 h-5 text-blue-500" />
             Payment Settings
           </h2>
+          <div className="space-y-4 mb-4">
+            <div>
+              <label className={UI.label}>Payment Mode</label>
+              <div className="flex items-center gap-4 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paymentMode"
+                    value="manual"
+                    checked={config.paymentMode === 'manual'}
+                    onChange={() => updateField('paymentMode', 'manual')}
+                    className="w-4 h-4 text-blue-500 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">Manual</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paymentMode"
+                    value="automatic"
+                    checked={config.paymentMode === 'automatic'}
+                    onChange={() => updateField('paymentMode', 'automatic')}
+                    className="w-4 h-4 text-blue-500 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">Automatic</span>
+                </label>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Automatic: coming soon - requires Wise/PayPal API integration
+              </p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={UI.label}>Minimum Withdrawal (cents)</label>

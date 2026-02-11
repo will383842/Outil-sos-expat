@@ -27,6 +27,8 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { UserPaymentMethod, PaymentMethodType } from '@/types/payment';
+import TelegramConnect from '@/components/shared/TelegramConnect';
+import TelegramConfirmationWaiting from '@/components/shared/TelegramConfirmationWaiting';
 
 // ============================================================================
 // DESIGN TOKENS
@@ -76,12 +78,6 @@ const FEE_CONFIG: Record<PaymentMethodType, FeeConfig> = {
     fixedFee: 0,
     minFee: 0,
     deliveryDays: { min: 1, max: 3 },
-  },
-  paypal: {
-    percentage: 2.9,
-    fixedFee: 30, // 30 cents
-    minFee: 0,
-    deliveryDays: { min: 0, max: 1 },
   },
 };
 
@@ -145,6 +141,22 @@ interface WithdrawalRequestFormProps {
   paymentMethods?: UserPaymentMethod[];
   /** Optional: default payment method ID */
   defaultPaymentMethodId?: string | null;
+  /** User role for Telegram connection */
+  role?: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin';
+  /** Whether user has Telegram connected */
+  telegramConnected?: boolean;
+  /** Called when user connects Telegram */
+  onTelegramConnected?: () => void;
+  /** Withdrawal ID for Telegram confirmation waiting */
+  pendingConfirmationWithdrawalId?: string | null;
+  /** Amount for Telegram confirmation display */
+  pendingConfirmationAmount?: number;
+  /** Callback when Telegram confirmation is done */
+  onTelegramConfirmed?: () => void;
+  /** Callback when Telegram confirmation is cancelled */
+  onTelegramCancelled?: () => void;
+  /** Callback when Telegram confirmation expires */
+  onTelegramExpired?: () => void;
 }
 
 // ============================================================================
@@ -209,6 +221,14 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
   success = false,
   paymentMethods: propMethods,
   defaultPaymentMethodId: propDefaultMethodId,
+  role,
+  telegramConnected,
+  onTelegramConnected,
+  pendingConfirmationWithdrawalId,
+  pendingConfirmationAmount,
+  onTelegramConfirmed,
+  onTelegramCancelled,
+  onTelegramExpired,
 }) => {
   const intl = useIntl();
 
@@ -297,6 +317,31 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
     const amount = withdrawAmount === 'custom' ? customAmount : undefined;
     await onSubmit(selectedMethodId, amount);
   };
+
+  // ============================================================================
+  // RENDER: Telegram Connect Gate (no Telegram = show connect first)
+  // ============================================================================
+
+  if (role && telegramConnected === false && onTelegramConnected) {
+    return <TelegramConnect role={role} onConnected={onTelegramConnected} />;
+  }
+
+  // ============================================================================
+  // RENDER: Telegram Confirmation Waiting (after submit, waiting for Telegram)
+  // ============================================================================
+
+  if (pendingConfirmationWithdrawalId && onTelegramConfirmed && onTelegramCancelled && onTelegramExpired) {
+    return (
+      <TelegramConfirmationWaiting
+        withdrawalId={pendingConfirmationWithdrawalId}
+        amount={pendingConfirmationAmount || 0}
+        currency={currency}
+        onConfirmed={onTelegramConfirmed}
+        onCancelled={onTelegramCancelled}
+        onExpired={onTelegramExpired}
+      />
+    );
+  }
 
   // ============================================================================
   // RENDER: Loading State

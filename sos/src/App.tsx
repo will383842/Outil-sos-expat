@@ -144,18 +144,11 @@ const ChatterLanding = lazy(() => import('./pages/Chatter/ChatterLanding'));
 const ChatterLandingOld = lazy(() => import('./pages/Chatter/ChatterLandingOld'));
 const ChatterRegister = lazy(() => import('./pages/Chatter/ChatterRegister'));
 const ChatterTelegramOnboarding = lazy(() => import('./pages/Chatter/ChatterTelegramOnboarding'));
-// DISABLED: Presentation + Quiz removed - activation is now immediate
-// const ChatterPresentation = lazy(() => import('./pages/Chatter/ChatterPresentation'));
-// const ChatterQuiz = lazy(() => import('./pages/Chatter/ChatterQuiz'));
 const ChatterDashboard = lazy(() => import('./pages/Chatter/ChatterDashboard'));
 const ChatterLeaderboard = lazy(() => import('./pages/Chatter/ChatterLeaderboard'));
 const ChatterPayments = lazy(() => import('./pages/Chatter/ChatterPayments'));
 const ChatterSuspended = lazy(() => import('./pages/Chatter/ChatterSuspended'));
-// DISABLED: Country selection feature - kept for potential future use
-// const ChatterCountrySelection = lazy(() => import('./pages/Chatter/ChatterCountrySelection'));
 const ChatterPosts = lazy(() => import('./pages/Chatter/ChatterPosts'));
-// DISABLED: Zoom bonus feature removed - not implemented
-// const ChatterZoom = lazy(() => import('./pages/Chatter/ChatterZoom'));
 const ChatterTraining = lazy(() => import('./pages/Chatter/ChatterTraining'));
 const ChatterReferrals = lazy(() => import('./pages/Chatter/ChatterReferrals'));
 const ChatterReferralEarnings = lazy(() => import('./pages/Chatter/ChatterReferralEarnings'));
@@ -170,7 +163,7 @@ const InfluencerLeaderboard = lazy(() => import('./pages/Influencer/InfluencerLe
 const InfluencerPayments = lazy(() => import('./pages/Influencer/InfluencerPayments'));
 const InfluencerProfile = lazy(() => import('./pages/Influencer/InfluencerProfile'));
 const InfluencerPromoTools = lazy(() => import('./pages/Influencer/InfluencerPromoTools'));
-const InfluencerTraining = lazy(() => import('./pages/Influencer/InfluencerTraining'));
+const InfluencerResources = lazy(() => import('./pages/Influencer/InfluencerResources'));
 const InfluencerSuspended = lazy(() => import('./pages/Influencer/InfluencerSuspended'));
 
 // Blogger System
@@ -182,8 +175,6 @@ const BloggerReferrals = lazy(() => import('./pages/Blogger/BloggerReferrals'));
 const BloggerLeaderboard = lazy(() => import('./pages/Blogger/BloggerLeaderboard'));
 const BloggerPayments = lazy(() => import('./pages/Blogger/BloggerPayments'));
 const BloggerResources = lazy(() => import('./pages/Blogger/BloggerResources'));
-const BloggerGuide = lazy(() => import('./pages/Blogger/BloggerGuide'));
-const BloggerPromoTools = lazy(() => import('./pages/Blogger/BloggerPromoTools'));
 const BloggerProfile = lazy(() => import('./pages/Blogger/BloggerProfile'));
 const BloggerSuspended = lazy(() => import('./pages/Blogger/BloggerSuspended'));
 
@@ -196,7 +187,7 @@ const GroupAdminPosts = lazy(() => import('./pages/GroupAdmin/GroupAdminPosts'))
 const GroupAdminPayments = lazy(() => import('./pages/GroupAdmin/GroupAdminPayments'));
 const GroupAdminReferrals = lazy(() => import('./pages/GroupAdmin/GroupAdminReferrals'));
 const GroupAdminLeaderboard = lazy(() => import('./pages/GroupAdmin/GroupAdminLeaderboard'));
-const GroupAdminGuide = lazy(() => import('./pages/GroupAdmin/GroupAdminGuide'));
+const GroupAdminProfile = lazy(() => import('./pages/GroupAdmin/GroupAdminProfile'));
 const GroupAdminSuspended = lazy(() => import('./pages/GroupAdmin/GroupAdminSuspended'));
 
 // -------------------------------------------
@@ -360,19 +351,11 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/chatter/inscription", component: ChatterRegister, translated: "chatter-register" },
   // Après inscription, l'utilisateur passe par l'onboarding Telegram (optionnel mais incentivé)
   { path: "/chatter/telegram", component: ChatterTelegramOnboarding, protected: true, role: 'chatter', translated: "chatter-telegram" },
-  // DISABLED: Presentation + Quiz removed - activation is now immediate
-  // Landing page already educates users, quiz was causing registration drop-off
-  // { path: "/chatter/presentation", component: ChatterPresentation, protected: true, role: 'chatter', translated: "chatter-presentation" },
-  // { path: "/chatter/quiz", component: ChatterQuiz, protected: true, role: 'chatter', translated: "chatter-quiz" },
-  // DISABLED: Country selection feature - kept for potential future use
-  // { path: "/chatter/pays", component: ChatterCountrySelection, protected: true, role: 'chatter', translated: "chatter-country-selection" },
   { path: "/chatter/tableau-de-bord", component: ChatterDashboard, protected: true, role: 'chatter', translated: "chatter-dashboard" },
   { path: "/chatter/classement", component: ChatterLeaderboard, protected: true, role: 'chatter', translated: "chatter-leaderboard" },
   { path: "/chatter/paiements", component: ChatterPayments, protected: true, role: 'chatter', translated: "chatter-payments" },
   { path: "/chatter/suspendu", component: ChatterSuspended, protected: true, role: 'chatter', translated: "chatter-suspended" },
   { path: "/chatter/posts", component: ChatterPosts, protected: true, role: 'chatter', translated: "chatter-posts" },
-  // DISABLED: Zoom bonus feature removed - not implemented
-  // { path: "/chatter/zoom", component: ChatterZoom, protected: true, role: 'chatter', translated: "chatter-zoom" },
   { path: "/chatter/formation", component: ChatterTraining, protected: true, role: 'chatter', translated: "chatter-training" },
   { path: "/chatter/filleuls", component: ChatterReferrals, protected: true, role: 'chatter', translated: "chatter-referrals" },
   { path: "/chatter/gains-parrainage", component: ChatterReferralEarnings, protected: true, role: 'chatter', translated: "chatter-referral-earnings" },
@@ -388,8 +371,8 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/influencer/filleuls", component: InfluencerReferrals, protected: true, role: 'influencer', translated: "influencer-referrals" },
   { path: "/influencer/classement", component: InfluencerLeaderboard, protected: true, role: 'influencer', translated: "influencer-leaderboard" },
   { path: "/influencer/paiements", component: InfluencerPayments, protected: true, role: 'influencer', translated: "influencer-payments" },
+  { path: "/influencer/ressources", component: InfluencerResources, protected: true, role: 'influencer', translated: "influencer-resources" },
   { path: "/influencer/outils", component: InfluencerPromoTools, protected: true, role: 'influencer', translated: "influencer-promo-tools" },
-  { path: "/influencer/formation", component: InfluencerTraining, protected: true, role: 'influencer', translated: "influencer-training" },
   { path: "/influencer/profil", component: InfluencerProfile, protected: true, role: 'influencer', translated: "influencer-profile" },
   { path: "/influencer/suspendu", component: InfluencerSuspended, protected: true, role: 'influencer', translated: "influencer-suspended" },
 
@@ -404,8 +387,6 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/blogger/classement", component: BloggerLeaderboard, protected: true, role: 'blogger', translated: "blogger-leaderboard" },
   { path: "/blogger/paiements", component: BloggerPayments, protected: true, role: 'blogger', translated: "blogger-payments" },
   { path: "/blogger/ressources", component: BloggerResources, protected: true, role: 'blogger', translated: "blogger-resources" },
-  { path: "/blogger/guide", component: BloggerGuide, protected: true, role: 'blogger', translated: "blogger-guide" },
-  { path: "/blogger/outils", component: BloggerPromoTools, protected: true, role: 'blogger', translated: "blogger-promo-tools" },
   { path: "/blogger/profil", component: BloggerProfile, protected: true, role: 'blogger', translated: "blogger-profile" },
   { path: "/blogger/suspendu", component: BloggerSuspended, protected: true, role: 'blogger', translated: "blogger-suspended" },
 
@@ -420,7 +401,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/group-admin/paiements", component: GroupAdminPayments, protected: true, role: 'groupAdmin', translated: "groupadmin-payments" },
   { path: "/group-admin/filleuls", component: GroupAdminReferrals, protected: true, role: 'groupAdmin', translated: "groupadmin-referrals" },
   { path: "/group-admin/classement", component: GroupAdminLeaderboard, protected: true, role: 'groupAdmin', translated: "groupadmin-leaderboard" },
-  { path: "/group-admin/guide", component: GroupAdminGuide, protected: true, role: 'groupAdmin', translated: "groupadmin-guide" },
+  { path: "/group-admin/profil", component: GroupAdminProfile, protected: true, role: 'groupAdmin', translated: "groupadmin-profile" },
   { path: "/group-admin/suspendu", component: GroupAdminSuspended, protected: true, role: 'groupAdmin', translated: "groupadmin-suspended" },
 ];
 

@@ -17,6 +17,7 @@ import {
   WithdrawalRequest,
   WithdrawalStatus,
   PaymentConfig,
+  PaymentUserType,
   DEFAULT_PAYMENT_CONFIG,
 } from "../types";
 
@@ -35,7 +36,7 @@ const WITHDRAWAL_COLLECTION = "payment_withdrawals";
 /**
  * Payment config document path
  */
-const CONFIG_DOC_PATH = "config/payment_config";
+const CONFIG_DOC_PATH = "payment_config/payment_config";
 
 /**
  * Status messages for notifications
@@ -305,6 +306,141 @@ async function updateUserStats(withdrawal: WithdrawalRequest): Promise<void> {
 }
 
 /**
+ * Map userType to Firestore collection name
+ */
+function getUserCollection(userType: PaymentUserType): string {
+  switch (userType) {
+    case 'chatter': return 'chatters';
+    case 'influencer': return 'influencers';
+    case 'blogger': return 'bloggers';
+    case 'group_admin': return 'group_admins';
+    default: return `${userType}s`;
+  }
+}
+
+/**
+ * Terminal statuses where pendingWithdrawalId should be cleared
+ */
+const TERMINAL_STATUSES: WithdrawalStatus[] = [
+  "completed", "sent", "rejected", "cancelled",
+];
+
+/**
+ * Clear pendingWithdrawalId on the user doc when withdrawal reaches a terminal state.
+ * For "failed", only clear if no more retries are possible.
+ */
+async function clearPendingWithdrawalId(
+  withdrawal: WithdrawalRequest,
+  newStatus: WithdrawalStatus
+): Promise<void> {
+  const isTerminal = TERMINAL_STATUSES.includes(newStatus);
+  const isFailedNoRetry = newStatus === "failed" &&
+    withdrawal.retryCount >= withdrawal.maxRetries;
+
+  if (!isTerminal && !isFailedNoRetry) {
+    return;
+  }
+
+  const db = getFirestore();
+  const userCollection = getUserCollection(withdrawal.userType as PaymentUserType);
+  const userRef = db.collection(userCollection).doc(withdrawal.userId);
+
+  try {
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      logger.warn("[onWithdrawalStatusChanged] User doc not found for pendingWithdrawalId cleanup", {
+        userId: withdrawal.userId,
+        userType: withdrawal.userType,
+        collection: userCollection,
+      });
+      return;
+    }
+
+    const userData = userDoc.data()!;
+    // Only clear if the pendingWithdrawalId matches this withdrawal
+    if (userData.pendingWithdrawalId === withdrawal.id) {
+      await userRef.update({
+        pendingWithdrawalId: null,
+        updatedAt: Timestamp.now(),
+      });
+
+      logger.info("[onWithdrawalStatusChanged] Cleared pendingWithdrawalId", {
+        userId: withdrawal.userId,
+        withdrawalId: withdrawal.id,
+        newStatus,
+        collection: userCollection,
+      });
+    }
+  } catch (error) {
+    logger.error("[onWithdrawalStatusChanged] Failed to clear pendingWithdrawalId", {
+      userId: withdrawal.userId,
+      withdrawalId: withdrawal.id,
+      error: error instanceof Error ? error.message : "Unknown",
+    });
+  }
+}
+
+/**
+ * Rollback GroupAdmin commissions when a withdrawal permanently fails.
+ * Reverts commissions from "paid" back to "available" so the GroupAdmin can
+ * include them in a future withdrawal.
+ */
+async function rollbackGroupAdminCommissions(
+  withdrawal: WithdrawalRequest
+): Promise<void> {
+  if (withdrawal.userType !== "group_admin") {
+    return;
+  }
+
+  const db = getFirestore();
+
+  try {
+    // Find commissions tied to this withdrawal that were marked "paid"
+    const commissionsSnapshot = await db
+      .collection("group_admin_commissions")
+      .where("withdrawalId", "==", withdrawal.id)
+      .where("status", "==", "paid")
+      .get();
+
+    if (commissionsSnapshot.empty) {
+      logger.info("[onWithdrawalStatusChanged] No commissions to rollback", {
+        withdrawalId: withdrawal.id,
+      });
+      return;
+    }
+
+    // Batch update all commissions back to "available"
+    const batch = db.batch();
+    const now = Timestamp.now();
+
+    for (const doc of commissionsSnapshot.docs) {
+      batch.update(doc.ref, {
+        status: "available",
+        withdrawalId: null,
+        paidAt: null,
+        rolledBackAt: now,
+        rolledBackReason: `Withdrawal ${withdrawal.id} permanently failed`,
+        updatedAt: now,
+      });
+    }
+
+    await batch.commit();
+
+    logger.info("[onWithdrawalStatusChanged] GroupAdmin commissions rolled back", {
+      withdrawalId: withdrawal.id,
+      groupAdminId: withdrawal.userId,
+      commissionsRolledBack: commissionsSnapshot.size,
+    });
+  } catch (error) {
+    logger.error("[onWithdrawalStatusChanged] Failed to rollback commissions", {
+      withdrawalId: withdrawal.id,
+      groupAdminId: withdrawal.userId,
+      error: error instanceof Error ? error.message : "Unknown",
+    });
+  }
+}
+
+/**
  * Handle specific status transitions
  */
 async function handleStatusTransition(
@@ -320,8 +456,8 @@ async function handleStatusTransition(
     });
   }
 
-  // Handle completed withdrawal - update user stats
-  if (newStatus === "completed") {
+  // Handle completed/sent withdrawal - update user stats
+  if (newStatus === "completed" || newStatus === "sent") {
     await updateUserStats(withdrawal);
   }
 
@@ -343,6 +479,17 @@ async function handleStatusTransition(
       nextRetryAt,
     });
   }
+
+  // Handle permanent failure — rollback GroupAdmin commissions
+  if (newStatus === "failed" && withdrawal.retryCount >= withdrawal.maxRetries) {
+    await rollbackGroupAdminCommissions(withdrawal);
+  }
+  if (newStatus === "rejected" || newStatus === "cancelled") {
+    await rollbackGroupAdminCommissions(withdrawal);
+  }
+
+  // Clear pendingWithdrawalId on terminal states
+  await clearPendingWithdrawalId(withdrawal, newStatus);
 }
 
 /**

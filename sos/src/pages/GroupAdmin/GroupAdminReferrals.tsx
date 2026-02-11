@@ -77,7 +77,7 @@ const GroupAdminReferrals: React.FC = () => {
 
   return (
     <GroupAdminDashboardLayout>
-      <SEOHead description="Manage your Facebook group with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.referrals.title', defaultMessage: 'Referrals | SOS-Expat Group Admin' })} />
+      <SEOHead description="Manage your group with SOS-Expat" title={intl.formatMessage({ id: 'groupAdmin.referrals.title', defaultMessage: 'Referrals | SOS-Expat Group Admin' })} />
 
       <div className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
@@ -85,7 +85,7 @@ const GroupAdminReferrals: React.FC = () => {
             <FormattedMessage id="groupAdmin.referrals.heading" defaultMessage="Recruited Admins" />
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            <FormattedMessage id="groupAdmin.referrals.subtitle" defaultMessage="Earn $5 for each admin you recruit" />
+            <FormattedMessage id="groupAdmin.referrals.subtitle" defaultMessage="Earn $5 when your recruit reaches $50 in earnings" />
           </p>
 
           {/* Recruitment Link Card */}
@@ -111,7 +111,7 @@ const GroupAdminReferrals: React.FC = () => {
               </button>
             </div>
             <p className="text-purple-100 text-sm">
-              <FormattedMessage id="groupAdmin.referrals.shareLinkDesc" defaultMessage="Share this link with other Facebook group admins to earn $5 per signup" />
+              <FormattedMessage id="groupAdmin.referrals.shareLinkDesc" defaultMessage="Share this link with other community/group admins. Earn $5 when your recruit reaches $50 in earnings." />
             </p>
           </div>
 
@@ -126,7 +126,7 @@ const GroupAdminReferrals: React.FC = () => {
                 <p className="text-blue-600 dark:text-blue-400 text-sm mt-1">
                   <FormattedMessage
                     id="groupAdmin.referrals.commissionWindowInfo.description"
-                    defaultMessage="You have 6 months from the recruitment date to earn the $5 commission. The commission is paid when your recruit makes their first client referral within this window."
+                    defaultMessage="You have 6 months from the recruitment date to earn the $5 commission. The commission is paid when your recruit reaches $50 in total earnings within this window."
                   />
                 </p>
               </div>

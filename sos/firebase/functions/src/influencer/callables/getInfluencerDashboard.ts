@@ -19,7 +19,7 @@ import {
   InfluencerCommission,
   GetInfluencerDashboardResponse,
 } from "../types";
-import { getInfluencerConfigCached } from "../utils";
+import { getInfluencerConfigCached, calculateLevelFromEarnings } from "../utils";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -59,6 +59,27 @@ export const getInfluencerDashboard = onCall(
       // 3. Check status
       if (influencer.status === "banned") {
         throw new HttpsError("permission-denied", "Account is banned");
+      }
+
+      // 3b. Self-healing: calculate level if missing
+      const config = await getInfluencerConfigCached();
+
+      if (influencer.level === undefined || influencer.level === null) {
+        const levelResult = calculateLevelFromEarnings(influencer.totalEarned || 0, config);
+        influencer.level = levelResult.level;
+        influencer.levelProgress = levelResult.progress;
+
+        // Write back (fire and forget)
+        db.collection("influencers").doc(userId).update({
+          level: levelResult.level,
+          levelProgress: levelResult.progress,
+          currentStreak: influencer.currentStreak ?? 0,
+          bestStreak: influencer.bestStreak ?? 0,
+          monthlyTopMultiplier: influencer.monthlyTopMultiplier ?? 1.0,
+          monthlyTopMultiplierMonth: influencer.monthlyTopMultiplierMonth ?? null,
+        }).catch((err) => {
+          logger.warn("[getInfluencerDashboard] Self-heal write failed", { userId, err });
+        });
       }
 
       // 4. Get recent commissions (last 10)
@@ -131,8 +152,7 @@ export const getInfluencerDashboard = onCall(
 
       const unreadNotifications = notificationsQuery.data().count;
 
-      // 7. Get config values
-      const config = await getInfluencerConfigCached();
+      // 7. Config already fetched above for self-healing
 
       // 8. Update last login
       await db.collection("influencers").doc(userId).update({
@@ -156,6 +176,8 @@ export const getInfluencerDashboard = onCall(
           commissionRecruitmentAmount: config.commissionRecruitmentAmount,
           clientDiscountPercent: config.clientDiscountPercent,
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
+          levelThresholds: config.levelThresholds,
+          levelBonuses: config.levelBonuses,
         },
       };
     } catch (error) {

@@ -12,8 +12,8 @@
 // ============================================================================
 
 export type PaymentProvider = 'wise' | 'flutterwave';
-export type PaymentMethodType = 'bank_transfer' | 'mobile_money' | 'wise' | 'paypal';
-export type PaymentUserType = 'chatter' | 'influencer' | 'blogger';
+export type PaymentMethodType = 'bank_transfer' | 'mobile_money' | 'wise';
+export type PaymentUserType = 'chatter' | 'influencer' | 'blogger' | 'group_admin';
 
 export type WithdrawalStatus =
   | 'pending'
@@ -57,13 +57,6 @@ export interface WisePaymentDetails {
   bic?: string;
 }
 
-export interface PayPalPaymentDetails {
-  type: 'paypal';
-  email: string;
-  currency: string;
-  accountHolderName: string;
-}
-
 export interface BankTransferDetails {
   type: 'bank_transfer';
   accountHolderName: string;
@@ -91,7 +84,6 @@ export interface MobileMoneyDetails {
 
 export type PaymentDetails =
   | WisePaymentDetails
-  | PayPalPaymentDetails
   | BankTransferDetails
   | MobileMoneyDetails;
 

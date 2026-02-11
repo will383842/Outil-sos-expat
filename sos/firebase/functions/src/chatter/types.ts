@@ -104,11 +104,9 @@ export type ChatterWithdrawalStatus =
 
 /**
  * Payment method for withdrawals
- * NOTE: Aligned with Influencer - includes PayPal support
  */
 export type ChatterPaymentMethod =
   | "wise"          // Wise (TransferWise)
-  | "paypal"        // PayPal
   | "mobile_money"  // Mobile Money (Flutterwave)
   | "bank_transfer"; // Bank transfer
 
@@ -466,11 +464,9 @@ export interface Chatter {
 
 /**
  * Payment details union type
- * NOTE: Aligned with Influencer - includes PayPal support
  */
 export type ChatterPaymentDetails =
   | ChatterWiseDetails
-  | ChatterPayPalDetails
   | ChatterMobileMoneyDetails
   | ChatterBankDetails;
 
@@ -488,17 +484,6 @@ export interface ChatterWiseDetails {
   routingNumber?: string;
   bic?: string;
   wiseRecipientId?: string;
-}
-
-/**
- * PayPal payment details
- * NOTE: Added for alignment with Influencer system
- */
-export interface ChatterPayPalDetails {
-  type: "paypal";
-  email: string;
-  currency: string;
-  accountHolderName: string;
 }
 
 /**
@@ -746,6 +731,51 @@ export interface ChatterWithdrawal {
 }
 
 // ============================================================================
+// RECRUITED CHATTERS TRACKING
+// ============================================================================
+
+/**
+ * Recruited chatter tracking document (mirrors GroupAdminRecruit)
+ * Collection: chatter_recruited_chatters/{id}
+ *
+ * Used for the harmonized recruitment commission system:
+ * $5 ONE-TIME when the recruited chatter reaches $50 in client earnings.
+ */
+export interface ChatterRecruitedChatter {
+  id: string;
+
+  /** Recruiter Chatter ID */
+  recruiterId: string;
+
+  /** Recruited Chatter ID */
+  recruitedId: string;
+
+  /** Recruited chatter's email */
+  recruitedEmail: string;
+
+  /** Recruited chatter's name */
+  recruitedName: string;
+
+  /** Recruitment code used */
+  recruitmentCode: string;
+
+  /** When recruited */
+  recruitedAt: Timestamp;
+
+  /** Commission window end date (6 months after recruitment) */
+  commissionWindowEnd: Timestamp;
+
+  /** Whether commission was paid */
+  commissionPaid: boolean;
+
+  /** Commission ID if paid */
+  commissionId?: string;
+
+  /** When commission was paid */
+  commissionPaidAt?: Timestamp;
+}
+
+// ============================================================================
 // RECRUITMENT LINK
 // ============================================================================
 
@@ -902,6 +932,11 @@ export interface ChatterConfig {
     days100: number; // 1.50 = +50% bonus at 100+ days
   };
 
+  // ---- Recruitment Commission ----
+
+  /** Minimum totalEarned (cents) a recruited chatter must reach before recruiter gets $5 (harmonized model) */
+  recruitmentCommissionThreshold: number;
+
   // ---- Recruitment Links ----
 
   /** Duration of recruitment links in months */
@@ -1009,6 +1044,8 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
     days30: 1.20,   // +20% bonus at 30+ consecutive days
     days100: 1.50,  // +50% bonus at 100+ consecutive days
   },
+
+  recruitmentCommissionThreshold: 5000, // $50 — recruited chatter must earn this before recruiter gets $5
 
   recruitmentLinkDurationMonths: 6,
 

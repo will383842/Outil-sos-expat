@@ -36,7 +36,7 @@ const VALID_PLATFORMS: InfluencerPlatform[] = [
 ];
 
 const VALID_PAYMENT_METHODS: InfluencerPaymentMethod[] = [
-  "wise", "paypal", "bank_transfer"
+  "wise", "bank_transfer"
 ];
 
 export const updateInfluencerProfile = onCall(

@@ -33,7 +33,7 @@ const BLOG_TRAFFIC_TIERS: BlogTrafficTier[] = [
   "lt1k", "1k-5k", "5k-10k", "10k-50k", "50k-100k", "gt100k",
 ];
 
-const PAYMENT_METHODS: BloggerPaymentMethod[] = ["paypal", "wise", "mobile_money"];
+const PAYMENT_METHODS: BloggerPaymentMethod[] = ["wise", "mobile_money"];
 
 function validateInput(input: UpdateBloggerProfileInput): void {
   // Validate optional fields if provided
@@ -75,15 +75,6 @@ function validatePaymentDetails(details: UpdateBloggerProfileInput["paymentDetai
   if (!details) return;
 
   switch (details.type) {
-    case "paypal":
-      if (!details.email?.trim()) {
-        throw new HttpsError("invalid-argument", "PayPal email is required");
-      }
-      if (!details.accountHolderName?.trim()) {
-        throw new HttpsError("invalid-argument", "Account holder name is required");
-      }
-      break;
-
     case "wise":
       if (!details.email?.trim()) {
         throw new HttpsError("invalid-argument", "Wise email is required");

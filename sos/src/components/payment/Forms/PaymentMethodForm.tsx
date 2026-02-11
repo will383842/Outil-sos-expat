@@ -186,13 +186,8 @@ const formatIBAN = (value: string): string => {
   return cleaned.replace(/(.{4})/g, '$1 ').trim();
 };
 
-const validateIBAN = (iban: string): boolean => {
-  const cleaned = iban.replace(/\s/g, '').toUpperCase();
-  if (cleaned.length < 15 || cleaned.length > 34) return false;
-  // Basic country code check
-  const countryCode = cleaned.substring(0, 2);
-  return /^[A-Z]{2}/.test(countryCode);
-};
+// Use centralized IBAN validation with MOD-97 checksum
+import { validateIBAN } from '@/utils/validation';
 
 const formatPhoneNumber = (value: string, countryCode: string): string => {
   // Remove all non-numeric characters except +

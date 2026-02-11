@@ -318,6 +318,7 @@ export type RouteKey =
   | "influencer-profile"      // /influencer/profil -> /influencer/profile, etc.
   | "influencer-suspended"    // /influencer/suspendu -> /influencer/suspended, etc.
   | "influencer-training"     // /influencer/formation -> /influencer/training, etc.
+  | "influencer-resources"    // /influencer/ressources -> /influencer/resources, etc.
   // Blogger routes
   | "blogger-landing"         // /devenir-blogger -> /become-blogger, etc.
   | "blogger-register"        // /blogger/inscription -> /blogger/register, etc.
@@ -341,7 +342,8 @@ export type RouteKey =
   | "groupadmin-referrals"    // /groupadmin/filleuls -> /groupadmin/referrals, etc.
   | "groupadmin-leaderboard"  // /groupadmin/classement -> /groupadmin/leaderboard, etc.
   | "groupadmin-guide"        // /groupadmin/guide -> /groupadmin/guide, etc.
-  | "groupadmin-suspended";   // /groupadmin/suspendu -> /groupadmin/suspended, etc.
+  | "groupadmin-suspended"    // /groupadmin/suspendu -> /groupadmin/suspended, etc.
+  | "groupadmin-profile";     // /groupadmin/profil -> /groupadmin/profile, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -1171,6 +1173,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     hi: "influencer/prashikshan",
     ar: "مؤثر/تدريب",
   },
+  "influencer-resources": {
+    fr: "influencer/ressources",
+    en: "influencer/resources",
+    es: "influencer/recursos",
+    de: "influencer/ressourcen",
+    ru: "influencer/resursy",
+    pt: "influencer/recursos",
+    ch: "influencer/ziyuan",
+    hi: "influencer/sansaadhan",
+    ar: "مؤثر/موارد",
+  },
   // Blogger routes
   "blogger-landing": {
     fr: "devenir-blogger",
@@ -1414,6 +1427,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "groupadmin/zanting",
     hi: "groupadmin/nilambit",
     ar: "مسؤول-مجموعة/معلق",
+  },
+  "groupadmin-profile": {
+    fr: "group-admin/profil",
+    en: "group-admin/profile",
+    es: "group-admin/perfil",
+    de: "group-admin/profil",
+    ru: "group-admin/profil",
+    pt: "group-admin/perfil",
+    ch: "group-admin/ziliao",
+    hi: "group-admin/profail",
+    ar: "مسؤول-مجموعة/ملف-شخصي",
   },
 };
 
