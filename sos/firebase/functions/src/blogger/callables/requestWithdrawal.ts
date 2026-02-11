@@ -30,6 +30,8 @@ import {
   BankTransferDetails,
   MobileMoneyDetails,
 } from "../../payment/types";
+import { sendWithdrawalConfirmation, WithdrawalConfirmationRole } from "../../telegram/withdrawalConfirmation";
+import { TELEGRAM_SECRETS } from "../../lib/secrets";
 
 // ============================================================================
 // VALIDATION
@@ -134,6 +136,7 @@ export const bloggerRequestWithdrawal = onCall(
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,
+    secrets: [...TELEGRAM_SECRETS],
   },
   async (request): Promise<RequestBloggerWithdrawalResponse> => {
     ensureInitialized();
@@ -150,6 +153,15 @@ export const bloggerRequestWithdrawal = onCall(
     validateInput(input);
 
     const db = getFirestore();
+
+    // 2b. Verify Telegram is connected (required for withdrawal confirmation)
+    const userDoc = await db.doc(`users/${uid}`).get();
+    if (!userDoc.exists || !userDoc.data()?.telegramId) {
+      throw new HttpsError(
+        "failed-precondition",
+        "TELEGRAM_REQUIRED: You must connect Telegram before requesting a withdrawal"
+      );
+    }
 
     try {
       // 3. Get blogger profile
@@ -235,6 +247,36 @@ export const bloggerRequestWithdrawal = onCall(
         updatedAt: Timestamp.now(),
       });
 
+      // 12. Send Telegram confirmation
+      const telegramId = userDoc.data()?.telegramId as number;
+      const methodLabels: Record<string, string> = {
+        bank_transfer: "Virement bancaire",
+        mobile_money: "Mobile Money",
+        wise: "Wise",
+      };
+      const confirmResult = await sendWithdrawalConfirmation({
+        withdrawalId: withdrawal.id,
+        userId: uid,
+        role: "blogger" as WithdrawalConfirmationRole,
+        collection: "payment_withdrawals",
+        amount: withdrawalAmount,
+        paymentMethod: methodLabels[input.paymentMethod] || input.paymentMethod,
+        telegramId,
+      });
+
+      if (!confirmResult.success) {
+        logger.warn("[bloggerRequestWithdrawal] Telegram confirmation failed, cancelling", {
+          withdrawalId: withdrawal.id, userId: uid,
+        });
+        try {
+          const svc = getPaymentService();
+          await svc.cancelWithdrawal(withdrawal.id, uid, "Telegram confirmation failed to send");
+        } catch (cancelErr) {
+          logger.error("[bloggerRequestWithdrawal] Failed to auto-cancel", { withdrawalId: withdrawal.id, error: cancelErr });
+        }
+        throw new HttpsError("unavailable", "TELEGRAM_SEND_FAILED");
+      }
+
       logger.info("[bloggerRequestWithdrawal] Withdrawal requested via centralized system", {
         bloggerId: uid,
         withdrawalId: withdrawal.id,
@@ -248,7 +290,8 @@ export const bloggerRequestWithdrawal = onCall(
         withdrawalId: withdrawal.id,
         amount: withdrawalAmount,
         status: "pending",
-        message: "Withdrawal request submitted successfully. You will be notified once processed.",
+        telegramConfirmationRequired: true,
+        message: "Withdrawal request submitted successfully. Please confirm via Telegram.",
       };
     } catch (error) {
       if (error instanceof HttpsError) {

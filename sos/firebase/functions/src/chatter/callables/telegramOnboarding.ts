@@ -21,7 +21,7 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import * as crypto from "crypto";
 import { REFERRAL_CONFIG } from "../types";
 import { handleWithdrawalCallback } from "../../telegram/withdrawalConfirmation";
-import { TELEGRAM_SECRETS } from "../../lib/secrets";
+import { TELEGRAM_SECRETS, getTelegramBotToken, getTelegramWebhookSecret } from "../../lib/secrets";
 
 // ============================================================================
 // TYPES
@@ -122,12 +122,8 @@ interface CheckStatusOutput {
 const TELEGRAM_CONFIG = {
   // Bot username (without @)
   BOT_USERNAME: process.env.TELEGRAM_BOT_USERNAME || "SOSExpatChatterBot",
-  // Bot token for API calls (set via Firebase secrets)
-  BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || "",
   // Link expiry in hours
   LINK_EXPIRY_HOURS: 24,
-  // Webhook secret for verification
-  WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET || "",
 };
 
 // ============================================================================
@@ -306,14 +302,15 @@ async function sendTelegramMessage(
   text: string,
   parseMode: "HTML" | "Markdown" = "HTML"
 ): Promise<boolean> {
-  if (!TELEGRAM_CONFIG.BOT_TOKEN) {
+  const botToken = getTelegramBotToken();
+  if (!botToken) {
     logger.warn("[sendTelegramMessage] Bot token not configured");
     return false;
   }
 
   try {
     const response = await fetch(
-      `https://api.telegram.org/bot${TELEGRAM_CONFIG.BOT_TOKEN}/sendMessage`,
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -573,7 +570,7 @@ export const telegramChatterBotWebhook = onRequest(
 
     try {
       // SECURITY: Verify webhook secret to reject unauthorized calls
-      const webhookSecret = TELEGRAM_CONFIG.WEBHOOK_SECRET;
+      const webhookSecret = getTelegramWebhookSecret();
       if (!webhookSecret) {
         logger.error("[telegramChatterBotWebhook] TELEGRAM_WEBHOOK_SECRET not configured");
         res.status(500).send("Webhook secret not configured");
@@ -624,8 +621,14 @@ export const telegramChatterBotWebhook = onRequest(
         return;
       }
 
-      // Extract telegram user info
-      const telegramId = from?.id;
+      // Extract and validate telegram user info (accept number or numeric string)
+      const rawTelegramId = from?.id;
+      const telegramId = typeof rawTelegramId === "string" ? Number(rawTelegramId) : rawTelegramId;
+      if (!telegramId || !Number.isFinite(telegramId) || telegramId <= 0) {
+        logger.warn("[telegramChatterBotWebhook] Invalid or missing telegramId", { rawId: from?.id });
+        res.status(200).send("OK");
+        return;
+      }
       const telegramUsername = from?.username || null;
       const telegramFirstName = from?.first_name || null;
       const telegramLastName = from?.last_name || null;
@@ -647,8 +650,8 @@ export const telegramChatterBotWebhook = onRequest(
       const parts = text.split(" ");
       const code = parts[1]?.trim();
 
-      // Validate code format (alphanumeric and hyphens only)
-      if (code && !/^[a-zA-Z0-9_-]+$/.test(code)) {
+      // Validate code format (hex string, reasonable length, no special chars)
+      if (code && !/^[a-f0-9]{6,64}$/.test(code)) {
         logger.warn("[telegramChatterBotWebhook] Invalid code format", { code: code.substring(0, 20) });
         await sendTelegramMessage(
           chatId,
@@ -738,43 +741,10 @@ export const telegramChatterBotWebhook = onRequest(
         }
       }
 
-      // Success! Link the account
+      // Success! Link the account using a transaction to prevent race conditions
       const now = Timestamp.now();
-      const batch = db.batch();
-
-      // Update link document
-      batch.update(linkRef, {
-        status: "linked",
-        telegramId,
-        telegramUsername,
-        telegramFirstName,
-        telegramLastName,
-        linkedAt: now,
-      });
-
-      // Get bonus amount
       const telegramBonusAmount = REFERRAL_CONFIG.TELEGRAM_BONUS?.AMOUNT || 5000;
 
-      // Update users document
-      const userRef = db.collection("users").doc(link.userId);
-      batch.update(userRef, {
-        hasTelegram: true,
-        telegramId,
-        telegramUsername,
-        telegramFirstName,
-        telegramLastName,
-        telegramLinkedAt: now,
-        telegramOnboardingCompleted: true,
-        telegramOnboardingAt: now,
-        // Credit the $50 bonus to tirelire (locked until threshold)
-        telegramBonusAmount,
-        telegramBonusCredited: true,
-        telegramBonusCreditedAt: now,
-        telegramBonusPaid: false, // Will be true when unlocked and paid
-        updatedAt: now,
-      });
-
-      // Also update role-specific collection (chatters, influencers, etc.)
       const roleCollections: Record<TelegramOnboardingRole, string> = {
         chatter: "chatters",
         influencer: "influencers",
@@ -782,30 +752,106 @@ export const telegramChatterBotWebhook = onRequest(
         groupAdmin: "group_admins",
       };
 
-      const roleCollection = roleCollections[link.role];
-      if (roleCollection) {
-        const roleRef = db.collection(roleCollection).doc(link.userId);
-        const roleDoc = await roleRef.get();
-        if (roleDoc.exists) {
-          batch.update(roleRef, {
+      try {
+        await db.runTransaction(async (transaction) => {
+          // Re-read the link document inside the transaction to prevent double-linking
+          const linkSnap = await transaction.get(linkRef);
+          if (!linkSnap.exists) {
+            throw new Error("LINK_NOT_FOUND");
+          }
+          const linkData = linkSnap.data() as TelegramOnboardingLink;
+          if (linkData.status === "linked") {
+            throw new Error("ALREADY_LINKED");
+          }
+          if (linkData.expiresAt.toMillis() < Date.now()) {
+            throw new Error("LINK_EXPIRED");
+          }
+
+          // Validate user role matches link role
+          const userRef = db.collection("users").doc(linkData.userId);
+          const userSnap = await transaction.get(userRef);
+          if (userSnap.exists) {
+            const userData = userSnap.data();
+            const userRole = userData?.role;
+            if (userRole && userRole !== linkData.role) {
+              logger.warn("[telegramChatterBotWebhook] Role mismatch", {
+                linkRole: linkData.role,
+                userRole,
+                userId: linkData.userId,
+              });
+            }
+          }
+
+          // Update link document
+          transaction.update(linkRef, {
+            status: "linked",
+            telegramId,
+            telegramUsername,
+            telegramFirstName,
+            telegramLastName,
+            linkedAt: now,
+          });
+
+          // Update users document
+          transaction.update(db.collection("users").doc(linkData.userId), {
             hasTelegram: true,
             telegramId,
             telegramUsername,
             telegramFirstName,
+            telegramLastName,
             telegramLinkedAt: now,
+            telegramOnboardingCompleted: true,
+            telegramOnboardingAt: now,
             telegramBonusAmount,
             telegramBonusCredited: true,
+            telegramBonusCreditedAt: now,
             telegramBonusPaid: false,
             updatedAt: now,
           });
-        }
-      }
 
-      // Commit all updates
-      try {
-        await batch.commit();
-      } catch (batchError) {
-        logger.error("[telegramChatterBotWebhook] Batch commit failed", { batchError, code, userId: link.userId });
+          // Also update role-specific collection
+          const roleCollection = roleCollections[linkData.role];
+          if (roleCollection) {
+            const roleRef = db.collection(roleCollection).doc(linkData.userId);
+            const roleDoc = await transaction.get(roleRef);
+            if (roleDoc.exists) {
+              transaction.update(roleRef, {
+                hasTelegram: true,
+                telegramId,
+                telegramUsername,
+                telegramFirstName,
+                telegramLastName,
+                telegramLinkedAt: now,
+                telegramOnboardingCompleted: true,
+                telegramOnboardingAt: now,
+                telegramBonusAmount,
+                telegramBonusCredited: true,
+                telegramBonusPaid: false,
+                updatedAt: now,
+              });
+            }
+          }
+        });
+      } catch (txError) {
+        const errorMsg = txError instanceof Error ? txError.message : String(txError);
+        if (errorMsg === "ALREADY_LINKED") {
+          await sendTelegramMessage(
+            chatId,
+            "✅ <b>Compte déjà connecté!</b>\n\n" +
+              `Votre compte Telegram est déjà lié à votre profil.`
+          );
+          res.status(200).send("OK");
+          return;
+        }
+        if (errorMsg === "LINK_EXPIRED") {
+          await sendTelegramMessage(
+            chatId,
+            "⏰ <b>Lien expiré</b>\n\nCe lien a expiré. Retournez dans l'application pour générer un nouveau lien."
+          );
+          res.status(200).send("OK");
+          return;
+        }
+        logger.error("[telegramChatterBotWebhook] Transaction failed", { error: errorMsg, code, userId: link.userId });
         await sendTelegramMessage(
           chatId,
           "❌ <b>Erreur technique</b>\n\n" +

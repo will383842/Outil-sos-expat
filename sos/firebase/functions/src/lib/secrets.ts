@@ -158,9 +158,10 @@ export const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
 // ============================================================================
 
 export const TELEGRAM_BOT_TOKEN = defineSecret("TELEGRAM_BOT_TOKEN");
+export const TELEGRAM_WEBHOOK_SECRET = defineSecret("TELEGRAM_WEBHOOK_SECRET");
 
 /** All Telegram secrets for function config */
-export const TELEGRAM_SECRETS = [TELEGRAM_BOT_TOKEN];
+export const TELEGRAM_SECRETS = [TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET];
 
 // ============================================================================
 // GETTERS WITH FALLBACK TO process.env (for emulator/local dev)
@@ -756,6 +757,27 @@ export function getTelegramBotToken(): string {
   }
 
   console.error(`[Secrets] TELEGRAM_BOT_TOKEN NOT FOUND`);
+  return "";
+}
+
+// --- TELEGRAM WEBHOOK SECRET GETTER ---
+
+export function getTelegramWebhookSecret(): string {
+  try {
+    const secretValue = TELEGRAM_WEBHOOK_SECRET.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      return secretValue;
+    }
+  } catch {
+    // Secret not available, try process.env
+  }
+
+  const envValue = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
+  if (envValue && envValue.length > 0) {
+    return envValue;
+  }
+
+  console.error(`[Secrets] TELEGRAM_WEBHOOK_SECRET NOT FOUND`);
   return "";
 }
 

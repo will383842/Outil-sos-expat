@@ -422,6 +422,7 @@ export const registerChatter = onCall(
             chatterStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            telegramOnboardingCompleted: false,
             updatedAt: now,
           });
         } else {
@@ -435,6 +436,7 @@ export const registerChatter = onCall(
             chatterStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            telegramOnboardingCompleted: false,
             createdAt: now,
             updatedAt: now,
           });

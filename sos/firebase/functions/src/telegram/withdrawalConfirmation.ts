@@ -339,34 +339,42 @@ export async function handleWithdrawalCallback(
   const amountFormatted = (confirmation.amount / 100).toFixed(2);
 
   if (action === "confirm") {
-    // Update confirmation doc
-    await confirmRef.update({
-      status: "confirmed",
-      resolvedAt: now,
-    });
+    try {
+      // Use transaction for atomicity - both docs must update together
+      await db.runTransaction(async (transaction) => {
+        transaction.update(confirmRef, {
+          status: "confirmed",
+          resolvedAt: now,
+        });
 
-    // Update withdrawal doc - clear pending flag
-    await db.collection(confirmation.collection).doc(confirmation.withdrawalId).update({
-      telegramConfirmationPending: false,
-      telegramConfirmedAt: now,
-    });
+        const withdrawalRef = db.collection(confirmation.collection).doc(confirmation.withdrawalId);
+        transaction.update(withdrawalRef, {
+          telegramConfirmationPending: false,
+          telegramConfirmedAt: now,
+        });
+      });
 
-    await answerCallbackQuery(callbackQuery.id, "Retrait confirmé !");
+      await answerCallbackQuery(callbackQuery.id, "Retrait confirmé !");
 
-    if (chatId && messageId) {
-      await editMessageText(
-        chatId,
-        messageId,
-        `✅ <b>Retrait confirmé !</b>\n\nVotre retrait de <b>$${amountFormatted}</b> via <b>${confirmation.paymentMethod}</b> a été confirmé.\n\nIl sera traité dans les plus brefs délais.`
-      );
+      if (chatId && messageId) {
+        await editMessageText(
+          chatId,
+          messageId,
+          `✅ <b>Retrait confirmé !</b>\n\nVotre retrait de <b>$${amountFormatted}</b> via <b>${confirmation.paymentMethod}</b> a été confirmé.\n\nIl sera traité dans les plus brefs délais.`
+        );
+      }
+
+      logger.info("[handleWithdrawalCallback] Withdrawal confirmed", {
+        code,
+        withdrawalId: confirmation.withdrawalId,
+      });
+    } catch (confirmError) {
+      logger.error("[handleWithdrawalCallback] Confirm transaction failed", { code, confirmError });
+      await answerCallbackQuery(callbackQuery.id, "Erreur technique, réessayez", true);
     }
-
-    logger.info("[handleWithdrawalCallback] Withdrawal confirmed", {
-      code,
-      withdrawalId: confirmation.withdrawalId,
-    });
   } else {
     // Cancel: update confirmation + cancel withdrawal + refund balance
+    try {
     await db.runTransaction(async (transaction) => {
       // Update confirmation
       transaction.update(confirmRef, {
@@ -428,6 +436,10 @@ export async function handleWithdrawalCallback(
       code,
       withdrawalId: confirmation.withdrawalId,
     });
+    } catch (cancelError) {
+      logger.error("[handleWithdrawalCallback] Cancel transaction failed", { code, cancelError });
+      await answerCallbackQuery(callbackQuery.id, "Erreur technique, réessayez", true);
+    }
   }
 }
 

@@ -1407,6 +1407,7 @@ export interface RequestBloggerWithdrawalResponse {
   amount: number;
   status: BloggerWithdrawalStatus;
   message: string;
+  telegramConfirmationRequired?: boolean;
 }
 
 export interface UpdateBloggerProfileInput {

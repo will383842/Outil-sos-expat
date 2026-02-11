@@ -2429,6 +2429,7 @@ export interface RequestWithdrawalResponse {
   amount: number;
   status: ChatterWithdrawalStatus;
   message: string;
+  telegramConfirmationRequired?: boolean;
 }
 
 export interface UpdateChatterProfileInput {

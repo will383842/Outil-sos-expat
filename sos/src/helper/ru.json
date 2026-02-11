@@ -4357,5 +4357,20 @@
   "wizard.step3.lawyer": "ÐÐ´Ð²Ð¾ÐºÐ°Ñ‚",
   "wizard.step3.lawyer.desc": "ÐŸÑ€Ð¾Ñ„ÐµÑÑÐ¸Ð¾Ð½Ð°Ð»ÑŒÐ½Ð°Ñ ÑŽÑ€Ð¸Ð´Ð¸Ñ‡ÐµÑÐºÐ°Ñ ÐºÐ¾Ð½ÑÑƒÐ»ÑŒÑ‚Ð°Ñ†Ð¸Ñ",
   "wizard.step3.subtitle": "Ð’Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ñ‚Ð¸Ð¿ ÑÐºÑÐ¿ÐµÑ€Ñ‚Ð°",
-  "wizard.step3.title": "Ð¡ ÐºÐµÐ¼ Ð²Ñ‹ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÑÐ²ÑÐ·Ð°Ñ‚ÑŒÑÑ?"
+  "wizard.step3.title": "Ð¡ ÐºÐµÐ¼ Ð²Ñ‹ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÑÐ²ÑÐ·Ð°Ñ‚ÑŒÑÑ?",
+  "telegram.connect.title": "Подключите ваш Telegram",
+  "telegram.connect.description": "Для безопасности выводов подключите свой Telegram. Это быстро!",
+  "telegram.connect.button": "Подключить Telegram",
+  "telegram.connect.success": "Telegram подключён!",
+  "telegram.connect.waiting.title": "Ожидание подключения...",
+  "telegram.connect.waiting.description": "Откройте Telegram и нажмите \"Начать\"",
+  "telegram.connect.waiting.detecting": "Автоматическое определение...",
+  "telegram.connect.waiting.notWorking": "Ссылка не работает?",
+  "telegram.connect.waiting.reopen": "Открыть снова",
+  "telegram.connect.copy": "Скопировать ссылку",
+  "telegram.connect.copied": "Скопировано!",
+  "telegram.connect.noTelegram": "Нет Telegram?",
+  "telegram.connect.download": "Скачайте бесплатное приложение",
+  "telegram.connect.error.generate": "Не удалось создать ссылку Telegram",
+  "telegram.connect.error.connection": "Ошибка соединения"
 }

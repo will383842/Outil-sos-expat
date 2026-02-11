@@ -4303,5 +4303,20 @@
   "wizard.step3.lawyer": "محامٍ",
   "wizard.step3.lawyer.desc": "استشارة قانونية مهنية",
   "wizard.step3.subtitle": "اختر نوع الخبير",
-  "wizard.step3.title": "من تريد الاتصال به؟"
+  "wizard.step3.title": "من تريد الاتصال به؟",
+  "telegram.connect.title": "اربط حساب Telegram الخاص بك",
+  "telegram.connect.description": "لتأمين عمليات السحب، اربط حساب Telegram الخاص بك. إنه سريع!",
+  "telegram.connect.button": "ربط Telegram",
+  "telegram.connect.success": "تم توصيل Telegram!",
+  "telegram.connect.waiting.title": "في انتظار الاتصال...",
+  "telegram.connect.waiting.description": "افتح Telegram واضغط على \"ابدأ\"",
+  "telegram.connect.waiting.detecting": "اكتشاف تلقائي...",
+  "telegram.connect.waiting.notWorking": "الرابط لا يعمل؟",
+  "telegram.connect.waiting.reopen": "فتح مرة أخرى",
+  "telegram.connect.copy": "نسخ الرابط",
+  "telegram.connect.copied": "تم النسخ!",
+  "telegram.connect.noTelegram": "ليس لديك Telegram؟",
+  "telegram.connect.download": "حمّل التطبيق المجاني",
+  "telegram.connect.error.generate": "تعذّر إنشاء رابط Telegram",
+  "telegram.connect.error.connection": "خطأ في الاتصال"
 }

@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
 import { functionsWest3 } from '@/config/firebase';
 import {
@@ -48,6 +48,7 @@ interface LinkStatusData {
 // ============================================================================
 
 const TelegramConnect: React.FC<TelegramConnectProps> = ({ role, onConnected }) => {
+  const intl = useIntl();
   const [step, setStep] = useState<'invite' | 'waiting' | 'success'>('invite');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +77,7 @@ const TelegramConnect: React.FC<TelegramConnectProps> = ({ role, onConnected }) 
       const data = result.data;
 
       if (!data.success) {
-        setError('Impossible de générer le lien Telegram');
+        setError(intl.formatMessage({ id: 'telegram.connect.error.generate', defaultMessage: 'Impossible de générer le lien Telegram' }));
         return;
       }
 
@@ -95,7 +96,7 @@ const TelegramConnect: React.FC<TelegramConnectProps> = ({ role, onConnected }) 
       // Start polling
       startPolling();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur de connexion';
+      const message = err instanceof Error ? err.message : intl.formatMessage({ id: 'telegram.connect.error.connection', defaultMessage: 'Erreur de connexion' });
       setError(message);
     } finally {
       setLoading(false);

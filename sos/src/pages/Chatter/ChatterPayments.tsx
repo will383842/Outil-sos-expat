@@ -161,6 +161,8 @@ const ChatterPayments: React.FC = () => {
         const message = err instanceof Error ? err.message : 'Une erreur est survenue';
         if (message.includes('TELEGRAM_REQUIRED')) {
           setWithdrawalError('Vous devez connecter Telegram pour effectuer un retrait.');
+        } else if (message.includes('TELEGRAM_SEND_FAILED')) {
+          setWithdrawalError('Impossible d\'envoyer la confirmation Telegram. Vérifiez que vous n\'avez pas bloqué le bot et réessayez.');
         } else {
           setWithdrawalError(message);
         }

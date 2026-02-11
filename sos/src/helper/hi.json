@@ -4298,5 +4298,20 @@
   "wizard.step3.lawyer": "एक वकील",
   "wizard.step3.lawyer.desc": "पेशेवर कानूनी सलाह",
   "wizard.step3.subtitle": "विशेषज्ञ का प्रकार चुनें",
-  "wizard.step3.title": "आप किससे संपर्क करना चाहते हैं?"
+  "wizard.step3.title": "आप किससे संपर्क करना चाहते हैं?",
+  "telegram.connect.title": "अपना Telegram जोड़ें",
+  "telegram.connect.description": "अपनी निकासी सुरक्षित करने के लिए, अपना Telegram अकाउंट जोड़ें। यह तेज़ है!",
+  "telegram.connect.button": "Telegram जोड़ें",
+  "telegram.connect.success": "Telegram जुड़ गया!",
+  "telegram.connect.waiting.title": "कनेक्शन की प्रतीक्षा...",
+  "telegram.connect.waiting.description": "Telegram खोलें और \"शुरू करें\" पर टैप करें",
+  "telegram.connect.waiting.detecting": "स्वचालित पहचान...",
+  "telegram.connect.waiting.notWorking": "लिंक काम नहीं कर रहा?",
+  "telegram.connect.waiting.reopen": "फिर से खोलें",
+  "telegram.connect.copy": "लिंक कॉपी करें",
+  "telegram.connect.copied": "कॉपी हो गया!",
+  "telegram.connect.noTelegram": "Telegram नहीं है?",
+  "telegram.connect.download": "मुफ्त ऐप डाउनलोड करें",
+  "telegram.connect.error.generate": "Telegram लिंक बनाने में असमर्थ",
+  "telegram.connect.error.connection": "कनेक्शन त्रुटि"
 }

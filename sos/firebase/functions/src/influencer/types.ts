@@ -1563,6 +1563,7 @@ export interface RequestInfluencerWithdrawalResponse {
   amount: number;
   status: InfluencerWithdrawalStatus;
   message: string;
+  telegramConfirmationRequired?: boolean;
 }
 
 export interface UpdateInfluencerProfileInput {

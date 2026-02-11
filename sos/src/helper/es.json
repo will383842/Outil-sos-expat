@@ -4303,5 +4303,20 @@
   "wizard.step3.lawyer": "Un abogado",
   "wizard.step3.lawyer.desc": "Asesoramiento jurídico profesional",
   "wizard.step3.subtitle": "Seleccione el tipo de experto",
-  "wizard.step3.title": "¿Con quién desea contactar?"
+  "wizard.step3.title": "¿Con quién desea contactar?",
+  "telegram.connect.title": "Conecta tu Telegram",
+  "telegram.connect.description": "Para asegurar tus retiros, conecta tu cuenta de Telegram. ¡Es rápido!",
+  "telegram.connect.button": "Conectar Telegram",
+  "telegram.connect.success": "¡Telegram conectado!",
+  "telegram.connect.waiting.title": "Esperando conexión...",
+  "telegram.connect.waiting.description": "Abre Telegram y pulsa \"Iniciar\"",
+  "telegram.connect.waiting.detecting": "Detección automática...",
+  "telegram.connect.waiting.notWorking": "¿El enlace no funciona?",
+  "telegram.connect.waiting.reopen": "Abrir de nuevo",
+  "telegram.connect.copy": "Copiar enlace",
+  "telegram.connect.copied": "¡Copiado!",
+  "telegram.connect.noTelegram": "¿No tienes Telegram?",
+  "telegram.connect.download": "Descarga la app gratis",
+  "telegram.connect.error.generate": "No se pudo generar el enlace de Telegram",
+  "telegram.connect.error.connection": "Error de conexión"
 }

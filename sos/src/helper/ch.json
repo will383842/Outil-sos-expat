@@ -4309,5 +4309,20 @@
   "wizard.step3.lawyer": "律师",
   "wizard.step3.lawyer.desc": "专业法律咨询",
   "wizard.step3.subtitle": "选择专家类型",
-  "wizard.step3.title": "您想联系谁？"
+  "wizard.step3.title": "您想联系谁？",
+  "telegram.connect.title": "连接您的 Telegram",
+  "telegram.connect.description": "为了确保您的提款安全，请连接您的 Telegram 账户。很快！",
+  "telegram.connect.button": "连接 Telegram",
+  "telegram.connect.success": "Telegram 已连接！",
+  "telegram.connect.waiting.title": "等待连接...",
+  "telegram.connect.waiting.description": "打开 Telegram 并点击\"开始\"",
+  "telegram.connect.waiting.detecting": "自动检测中...",
+  "telegram.connect.waiting.notWorking": "链接无法使用？",
+  "telegram.connect.waiting.reopen": "重新打开",
+  "telegram.connect.copy": "复制链接",
+  "telegram.connect.copied": "已复制！",
+  "telegram.connect.noTelegram": "没有 Telegram？",
+  "telegram.connect.download": "下载免费应用",
+  "telegram.connect.error.generate": "无法生成 Telegram 链接",
+  "telegram.connect.error.connection": "连接错误"
 }
