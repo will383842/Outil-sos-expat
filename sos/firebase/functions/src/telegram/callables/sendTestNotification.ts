@@ -14,6 +14,11 @@ import {
   CallCompletedVars,
   PaymentReceivedVars,
   DailyReportVars,
+  NewProviderVars,
+  NewContactMessageVars,
+  NegativeReviewVars,
+  SecurityAlertVars,
+  WithdrawalRequestVars,
 } from "../types";
 
 // ============================================================================
@@ -28,6 +33,11 @@ const VALID_EVENT_TYPES: TelegramEventType[] = [
   "call_completed",
   "payment_received",
   "daily_report",
+  "new_provider",
+  "new_contact_message",
+  "negative_review",
+  "security_alert",
+  "withdrawal_request",
 ];
 
 // ============================================================================
@@ -73,7 +83,7 @@ function getCurrentDateTime(): { date: string; time: string } {
 /**
  * Build test variables based on event type
  */
-function buildTestVariables(eventType: TelegramEventType): NewRegistrationVars | CallCompletedVars | PaymentReceivedVars | DailyReportVars {
+function buildTestVariables(eventType: TelegramEventType): NewRegistrationVars | CallCompletedVars | PaymentReceivedVars | DailyReportVars | NewProviderVars | NewContactMessageVars | NegativeReviewVars | SecurityAlertVars | WithdrawalRequestVars {
   const { date, time } = getCurrentDateTime();
 
   switch (eventType) {
@@ -114,6 +124,58 @@ function buildTestVariables(eventType: TelegramEventType): NewRegistrationVars |
         CALL_COUNT: "10",
         TIME: time,
       } as DailyReportVars;
+
+    case "new_provider":
+      return {
+        PROVIDER_NAME: "Pierre Durand",
+        PROVIDER_TYPE_FR: "Avocat",
+        EMAIL: "pierre.durand@example.com",
+        PHONE: "+33698765432",
+        COUNTRY: "France",
+        DATE: date,
+        TIME: time,
+      } as NewProviderVars;
+
+    case "new_contact_message":
+      return {
+        SENDER_NAME: "Sophie Laurent",
+        SENDER_EMAIL: "sophie@example.com",
+        SUBJECT: "Demande d'information",
+        MESSAGE_PREVIEW: "Bonjour, je souhaite en savoir plus sur vos services...",
+        DATE: date,
+        TIME: time,
+      } as NewContactMessageVars;
+
+    case "negative_review":
+      return {
+        CLIENT_NAME: "Marc Petit",
+        PROVIDER_NAME: "Marie Martin",
+        RATING: "2",
+        COMMENT_PREVIEW: "Service decevant, temps d'attente trop long...",
+        DATE: date,
+        TIME: time,
+      } as NegativeReviewVars;
+
+    case "security_alert":
+      return {
+        ALERT_TYPE_FR: "Connexion suspecte",
+        USER_EMAIL: "user@example.com",
+        IP_ADDRESS: "192.168.1.100",
+        COUNTRY: "Russie",
+        DETAILS: "Tentative de connexion depuis une localisation inhabituelle",
+        DATE: date,
+        TIME: time,
+      } as SecurityAlertVars;
+
+    case "withdrawal_request":
+      return {
+        USER_NAME: "Julie Moreau",
+        USER_TYPE_FR: "Influenceur",
+        AMOUNT: "150",
+        PAYMENT_METHOD: "Virement bancaire",
+        DATE: date,
+        TIME: time,
+      } as WithdrawalRequestVars;
 
     default:
       throw new HttpsError("invalid-argument", `Type d'evenement inconnu: ${eventType}`);

@@ -51,6 +51,9 @@ import {
   Cloud,
   // Toolbox icons
   Wrench,
+  // Telegram icons
+  Send,
+  Inbox,
   // Affiliate icons
   Handshake,
   UserPlus,
@@ -910,6 +913,66 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.securityAlerts.description",
           },
         ],
+      },
+    ],
+  },
+
+  // ===== TELEGRAM (Priorite 7.3 - Notifications & Campagnes) =====
+  {
+    id: "telegram",
+    labelKey: "admin.menu.telegram",
+    icon: Send,
+    descriptionKey: "admin.menu.telegram.description",
+    children: [
+      {
+        id: "telegram-dashboard",
+        labelKey: "admin.menu.telegramDashboard",
+        path: "/admin/telegram",
+        icon: BarChart3,
+        descriptionKey: "admin.menu.telegramDashboard.description",
+      },
+      {
+        id: "telegram-config",
+        labelKey: "admin.menu.telegramConfig",
+        path: "/admin/telegram/config",
+        icon: Settings,
+        descriptionKey: "admin.menu.telegramConfig.description",
+      },
+      {
+        id: "telegram-templates",
+        labelKey: "admin.menu.telegramTemplates",
+        path: "/admin/telegram/templates",
+        icon: FileText,
+        descriptionKey: "admin.menu.telegramTemplates.description",
+      },
+      {
+        id: "telegram-logs",
+        labelKey: "admin.menu.telegramLogs",
+        path: "/admin/telegram/logs",
+        icon: Activity,
+        descriptionKey: "admin.menu.telegramLogs.description",
+      },
+      {
+        id: "telegram-campaigns",
+        labelKey: "admin.menu.telegramCampaigns",
+        path: "/admin/telegram/campaigns",
+        icon: Megaphone,
+        badge: "NEW",
+        descriptionKey: "admin.menu.telegramCampaigns.description",
+      },
+      {
+        id: "telegram-queue",
+        labelKey: "admin.menu.telegramQueue",
+        path: "/admin/telegram/queue",
+        icon: Inbox,
+        descriptionKey: "admin.menu.telegramQueue.description",
+      },
+      {
+        id: "telegram-subscribers",
+        labelKey: "admin.menu.telegramSubscribers",
+        path: "/admin/telegram/subscribers",
+        icon: UsersIcon,
+        descriptionKey: "admin.menu.telegramSubscribers.description",
       },
     ],
   },

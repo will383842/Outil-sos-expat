@@ -102,6 +102,11 @@ interface NotificationSettingsUpdate {
   callCompleted?: boolean;
   paymentReceived?: boolean;
   dailyReport?: boolean;
+  newProvider?: boolean;
+  newContactMessage?: boolean;
+  negativeReview?: boolean;
+  securityAlert?: boolean;
+  withdrawalRequest?: boolean;
 }
 
 /**
@@ -176,6 +181,11 @@ export const telegram_updateConfig = onCall(
         "callCompleted",
         "paymentReceived",
         "dailyReport",
+        "newProvider",
+        "newContactMessage",
+        "negativeReview",
+        "securityAlert",
+        "withdrawalRequest",
       ];
 
       for (const key of validKeys) {
@@ -207,6 +217,11 @@ export const telegram_updateConfig = onCall(
           callCompleted: true,
           paymentReceived: true,
           dailyReport: true,
+          newProvider: true,
+          newContactMessage: true,
+          negativeReview: true,
+          securityAlert: true,
+          withdrawalRequest: true,
           ...notifications,
         },
         updatedAt: Timestamp.now(),
@@ -258,6 +273,11 @@ export const telegram_getConfig = onCall(
             callCompleted: true,
             paymentReceived: true,
             dailyReport: true,
+            newProvider: true,
+            newContactMessage: true,
+            negativeReview: true,
+            securityAlert: true,
+            withdrawalRequest: true,
           },
         },
       };
@@ -275,6 +295,11 @@ export const telegram_getConfig = onCall(
           callCompleted: true,
           paymentReceived: true,
           dailyReport: true,
+          newProvider: true,
+          newContactMessage: true,
+          negativeReview: true,
+          securityAlert: true,
+          withdrawalRequest: true,
         },
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || null,
         updatedBy: data.updatedBy || null,
@@ -437,6 +462,11 @@ export const telegram_updateTemplate = onCall(
       "call_completed",
       "payment_received",
       "daily_report",
+      "new_provider",
+      "new_contact_message",
+      "negative_review",
+      "security_alert",
+      "withdrawal_request",
     ];
 
     if (!eventId || !validEventIds.includes(eventId)) {
@@ -562,6 +592,11 @@ export const telegram_getTemplates = onCall(
       "call_completed",
       "payment_received",
       "daily_report",
+      "new_provider",
+      "new_contact_message",
+      "negative_review",
+      "security_alert",
+      "withdrawal_request",
     ];
 
     for (const eventId of allEventIds) {

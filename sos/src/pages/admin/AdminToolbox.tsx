@@ -1,7 +1,8 @@
 import React from "react";
 import { useTranslation } from "../../hooks/useTranslation";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { Bot, ExternalLink, Link2, Mail, MessageCircle, Settings, Users, Wrench } from "lucide-react";
+import { Bot, Database, ExternalLink, Link2, Mail, MessageCircle, Settings, Users, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.sos-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
@@ -9,6 +10,7 @@ const MAILWIZZ_BACKEND_URL = "https://mail.sos-expat.com/backend";
 const MULTI_DASHBOARD_URL = "https://multi.sos-expat.com";
 const IA_TOOL_URL = "https://ia.sos-expat.com";
 const TELEGRAM_ENGINE_URL = "https://telegram.sos-expat.com";
+const SCRAPER_PRO_URL = "https://scraper.sos-expat.com";
 
 interface ToolCard {
   id: string;
@@ -18,6 +20,7 @@ interface ToolCard {
   icon: React.ReactNode;
   color: string;
   status: "live" | "coming-soon";
+  internalRoute?: string;
 }
 
 const tools: ToolCard[] = [
@@ -73,12 +76,30 @@ const tools: ToolCard[] = [
     url: TELEGRAM_ENGINE_URL,
     icon: <MessageCircle className="h-8 w-8" />,
     color: "bg-sky-500",
-    status: "coming-soon",
+    status: "live",
+    internalRoute: "/admin/telegram",
+  },
+  {
+    id: "scraper-pro",
+    titleKey: "admin.toolbox.scraperPro",
+    descriptionKey: "admin.toolbox.scraperPro.description",
+    url: SCRAPER_PRO_URL,
+    icon: <Database className="h-8 w-8" />,
+    color: "bg-rose-600",
+    status: "live",
   },
 ];
 
 const AdminToolbox: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const handleClick = (tool: ToolCard, e: React.MouseEvent) => {
+    if (tool.internalRoute) {
+      e.preventDefault();
+      navigate(tool.internalRoute);
+    }
+  };
 
   return (
     <AdminLayout>
@@ -99,9 +120,10 @@ const AdminToolbox: React.FC = () => {
           {tools.map((tool) => (
             <a
               key={tool.id}
-              href={tool.url}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={tool.internalRoute || tool.url}
+              target={tool.internalRoute ? undefined : "_blank"}
+              rel={tool.internalRoute ? undefined : "noopener noreferrer"}
+              onClick={(e) => handleClick(tool, e)}
               className="group block bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden"
             >
               <div className={`${tool.color} p-4 flex items-center justify-between`}>
@@ -128,7 +150,7 @@ const AdminToolbox: React.FC = () => {
                   {t(tool.descriptionKey)}
                 </p>
                 <div className="mt-3 text-xs text-gray-400 truncate">
-                  {tool.url}
+                  {tool.internalRoute || tool.url}
                 </div>
               </div>
             </a>

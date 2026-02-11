@@ -77,6 +77,16 @@ export interface NotificationSettings {
   paymentReceived: boolean;
   /** Envoyer le rapport quotidien */
   dailyReport: boolean;
+  /** Notifier lors d'un nouveau prestataire */
+  newProvider: boolean;
+  /** Notifier lors d'un nouveau message de contact */
+  newContactMessage: boolean;
+  /** Notifier lors d'un avis negatif */
+  negativeReview: boolean;
+  /** Notifier lors d'une alerte de securite */
+  securityAlert: boolean;
+  /** Notifier lors d'une demande de retrait */
+  withdrawalRequest: boolean;
 }
 
 /**

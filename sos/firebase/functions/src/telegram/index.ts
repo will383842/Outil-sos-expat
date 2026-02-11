@@ -22,10 +22,22 @@ export {
   telegram_updateTemplate,
   telegram_getTemplates,
 } from "./callables/updateTelegramConfig";
+export {
+  telegram_getNotificationLogs,
+  telegram_getQueueStats,
+  telegram_getSubscriberStats,
+} from "./callables/adminQueries";
+export {
+  telegram_createCampaign,
+  telegram_getCampaigns,
+  telegram_cancelCampaign,
+  telegram_getCampaignDetail,
+} from "./callables/campaigns";
 
 // Queue (global rate-limited queue + monitoring)
 export { processTelegramQueue } from "./queue/processor";
 export { monitorTelegramUsage } from "./queue/monitor";
+export { processTelegramCampaigns } from "./queue/campaignProcessor";
 export { enqueueTelegramMessage, enqueueTelegramNotification } from "./queue/enqueue";
 
 // Service (for internal use)

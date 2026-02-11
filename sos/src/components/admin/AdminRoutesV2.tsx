@@ -436,6 +436,32 @@ const AdminPaymentConfig = lazy(
   () => import("../../pages/admin/Payments/AdminPaymentConfig")
 );
 
+// ===== LAZY IMPORTS - TELEGRAM =====
+const AdminTelegramDashboard = lazy(
+  () => import("../../pages/admin/Telegram/AdminTelegramDashboard")
+);
+const AdminTelegramConfig = lazy(
+  () => import("../../pages/admin/Telegram/AdminTelegramConfig")
+);
+const AdminTelegramTemplates = lazy(
+  () => import("../../pages/admin/Telegram/AdminTelegramTemplates")
+);
+const AdminTelegramLogs = lazy(
+  () => import("../../pages/admin/Telegram/AdminTelegramLogs")
+);
+const AdminTelegramCampaigns = lazy(
+  () => import("../../pages/admin/Telegram/AdminTelegramCampaigns")
+);
+const AdminTelegramCampaignCreate = lazy(
+  () => import("../../pages/admin/Telegram/AdminTelegramCampaignCreate")
+);
+const AdminTelegramQueue = lazy(
+  () => import("../../pages/admin/Telegram/AdminTelegramQueue")
+);
+const AdminTelegramSubscribers = lazy(
+  () => import("../../pages/admin/Telegram/AdminTelegramSubscribers")
+);
+
 // ===== LAZY IMPORTS - TOOLBOX =====
 const AdminToolbox = lazy(
   () => import("../../pages/admin/AdminToolbox")
@@ -1420,6 +1446,72 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
+      {/* 📨 TELEGRAM */}
+      <Route
+        path="telegram"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramDashboard />
+          </Suspense>
+        }
+      />
+      <Route
+        path="telegram/config"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramConfig />
+          </Suspense>
+        }
+      />
+      <Route
+        path="telegram/templates"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramTemplates />
+          </Suspense>
+        }
+      />
+      <Route
+        path="telegram/logs"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramLogs />
+          </Suspense>
+        }
+      />
+      <Route
+        path="telegram/campaigns"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramCampaigns />
+          </Suspense>
+        }
+      />
+      <Route
+        path="telegram/campaigns/create"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramCampaignCreate />
+          </Suspense>
+        }
+      />
+      <Route
+        path="telegram/queue"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramQueue />
+          </Suspense>
+        }
+      />
+      <Route
+        path="telegram/subscribers"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramSubscribers />
+          </Suspense>
+        }
+      />
+
       {/* 🧰 BOITE A OUTILS */}
       <Route
         path="toolbox"
@@ -1858,6 +1950,14 @@ export const useAdminRouteValidation = () => {
       "/admin/marketing/google-ads-analytics",
       "/admin/analytics/unified",
       "/admin/feedback",
+      "/admin/telegram",
+      "/admin/telegram/config",
+      "/admin/telegram/templates",
+      "/admin/telegram/logs",
+      "/admin/telegram/campaigns",
+      "/admin/telegram/campaigns/create",
+      "/admin/telegram/queue",
+      "/admin/telegram/subscribers",
     ];
     return validPaths.includes(path);
   };

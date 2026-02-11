@@ -462,13 +462,16 @@ class TelegramNotificationService {
    * Returns null for event types that don't have a config toggle (always enabled)
    */
   private getEventEnabledKey(eventId: TelegramEventType): keyof TelegramAdminConfig['notifications'] | null {
-    const mapping: Partial<Record<TelegramEventType, keyof TelegramAdminConfig['notifications']>> = {
+    const mapping: Record<TelegramEventType, keyof TelegramAdminConfig['notifications']> = {
       new_registration: 'newRegistration',
       call_completed: 'callCompleted',
       payment_received: 'paymentReceived',
       daily_report: 'dailyReport',
-      // Note: new_provider, new_contact_message, negative_review, security_alert,
-      // and withdrawal_request don't have config toggles yet - they are always enabled
+      new_provider: 'newProvider',
+      new_contact_message: 'newContactMessage',
+      negative_review: 'negativeReview',
+      security_alert: 'securityAlert',
+      withdrawal_request: 'withdrawalRequest',
     };
     return mapping[eventId] || null;
   }

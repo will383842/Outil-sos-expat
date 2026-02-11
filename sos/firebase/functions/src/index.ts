@@ -6006,10 +6006,22 @@ export {
   telegram_updateTemplate,
   telegram_getTemplates,
 } from './telegram/callables/updateTelegramConfig';
+export {
+  telegram_getNotificationLogs,
+  telegram_getQueueStats,
+  telegram_getSubscriberStats,
+} from './telegram/callables/adminQueries';
+export {
+  telegram_createCampaign,
+  telegram_getCampaigns,
+  telegram_cancelCampaign,
+  telegram_getCampaignDetail,
+} from './telegram/callables/campaigns';
 
 // ========== TELEGRAM QUEUE (global rate-limited queue + monitoring) ==========
 export { processTelegramQueue } from './telegram/queue/processor';
 export { monitorTelegramUsage } from './telegram/queue/monitor';
+export { processTelegramCampaigns } from './telegram/queue/campaignProcessor';
 
 // ========== TELEGRAM WITHDRAWAL CONFIRMATION ==========
 export { getWithdrawalConfirmationStatus } from './telegram/withdrawalConfirmation';
