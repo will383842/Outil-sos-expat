@@ -136,6 +136,7 @@ const UserTypeBadge: React.FC<{ userType: PaymentUserType }> = ({ userType }) =>
     chatter: { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Chatter' },
     influencer: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Influencer' },
     blogger: { color: 'bg-green-100 text-green-800 border-green-200', label: 'Blogger' },
+    group_admin: { color: 'bg-indigo-100 text-indigo-800 border-indigo-200', label: 'Group Admin' },
   };
 
   const { color, label } = config[userType] || config.chatter;

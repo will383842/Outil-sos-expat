@@ -583,8 +583,6 @@ const BloggerPayments: React.FC = () => {
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                               {method.methodType === 'mobile_money'
                                 ? 'Mobile Money'
-                                : method.methodType === 'paypal'
-                                ? 'PayPal'
                                 : method.methodType === 'wise'
                                 ? 'Wise'
                                 : 'Virement bancaire'}

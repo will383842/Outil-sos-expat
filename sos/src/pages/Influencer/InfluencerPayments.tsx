@@ -628,8 +628,6 @@ const InfluencerPayments: React.FC = () => {
                                 ? 'Mobile Money'
                                 : method.methodType === 'wise'
                                 ? 'Wise'
-                                : method.methodType === 'paypal'
-                                ? 'PayPal'
                                 : 'Virement bancaire'}
                               {'country' in method.details && method.details.country && ` - ${method.details.country}`}
                             </p>

@@ -35,7 +35,6 @@ const getWithdrawalStatusBadge = (status: GroupAdminWithdrawalStatus) => {
 };
 
 const PAYMENT_METHODS: { value: GroupAdminPaymentMethod; label: string; description: string }[] = [
-  { value: 'paypal', label: 'PayPal', description: 'Fast and easy' },
   { value: 'wise', label: 'Wise', description: 'Low fees worldwide' },
   { value: 'bank_transfer', label: 'Bank Transfer', description: '3-5 business days' },
   { value: 'mobile_money', label: 'Mobile Money', description: 'For Africa & Asia' },
@@ -59,7 +58,7 @@ const GroupAdminPayments: React.FC = () => {
 
   const [withdrawForm, setWithdrawForm] = useState({
     amount: 0,
-    paymentMethod: 'paypal' as GroupAdminPaymentMethod,
+    paymentMethod: 'wise' as GroupAdminPaymentMethod,
     email: '',
     accountHolderName: '',
     currency: 'USD',
@@ -108,9 +107,6 @@ const GroupAdminPayments: React.FC = () => {
       let paymentDetails: GroupAdminPaymentDetails;
 
       switch (withdrawForm.paymentMethod) {
-        case 'paypal':
-          paymentDetails = { type: 'paypal', email: withdrawForm.email };
-          break;
         case 'wise':
           paymentDetails = {
             type: 'wise',
@@ -119,8 +115,22 @@ const GroupAdminPayments: React.FC = () => {
             currency: withdrawForm.currency,
           };
           break;
+        case 'bank_transfer':
+          paymentDetails = {
+            type: 'bank_transfer',
+            accountHolderName: withdrawForm.accountHolderName,
+            bankName: '',
+            accountNumber: '',
+            country: '',
+          };
+          break;
         default:
-          paymentDetails = { type: 'paypal', email: withdrawForm.email };
+          paymentDetails = {
+            type: 'wise',
+            email: withdrawForm.email,
+            accountHolderName: withdrawForm.accountHolderName,
+            currency: withdrawForm.currency,
+          };
       }
 
       const requestWithdrawal = httpsCallable<unknown, { success: boolean; withdrawalId: string; telegramConfirmationRequired?: boolean }>(functions, 'requestGroupAdminWithdrawal');
