@@ -15,7 +15,7 @@
  */
 
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import * as crypto from "crypto";
@@ -30,7 +30,7 @@ import { TELEGRAM_SECRETS, getTelegramBotToken, getTelegramWebhookSecret } from 
 /**
  * Supported roles for Telegram onboarding
  */
-export type TelegramOnboardingRole = "chatter" | "influencer" | "blogger" | "groupAdmin";
+export type TelegramOnboardingRole = "chatter" | "influencer" | "blogger" | "groupAdmin" | "affiliate";
 
 /**
  * Status of a Telegram onboarding link
@@ -199,6 +199,10 @@ async function getUserRole(userId: string): Promise<TelegramOnboardingRole | nul
     case "groupAdmin":
       return "groupAdmin";
     default:
+      // Any user with an affiliate code can use Telegram onboarding
+      if (userData?.affiliateCode) {
+        return "affiliate";
+      }
       return null;
   }
 }
@@ -381,7 +385,7 @@ export const generateTelegramLink = onCall(
         if (!detectedRole) {
           throw new HttpsError(
             "failed-precondition",
-            "User role not found. Only chatters, influencers, bloggers, and group admins can use this."
+            "User role not found. Please ensure your account is set up correctly."
           );
         }
         role = detectedRole;
@@ -745,11 +749,12 @@ export const telegramChatterBotWebhook = onRequest(
       const now = Timestamp.now();
       const telegramBonusAmount = REFERRAL_CONFIG.TELEGRAM_BONUS?.AMOUNT || 5000;
 
-      const roleCollections: Record<TelegramOnboardingRole, string> = {
+      const roleCollections: Partial<Record<TelegramOnboardingRole, string>> = {
         chatter: "chatters",
         influencer: "influencers",
         blogger: "bloggers",
         groupAdmin: "group_admins",
+        // affiliate: no separate collection (uses users/ doc directly)
       };
 
       try {
@@ -806,6 +811,8 @@ export const telegramChatterBotWebhook = onRequest(
             telegramBonusCredited: true,
             telegramBonusCreditedAt: now,
             telegramBonusPaid: false,
+            // Tag with role for marketing campaign segmentation
+            telegramTags: FieldValue.arrayUnion(linkData.role),
             updatedAt: now,
           });
 

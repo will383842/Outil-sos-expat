@@ -31,7 +31,14 @@ export const updateBankDetails = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: [
+      "https://sos-expat.com",
+      "https://www.sos-expat.com",
+      /\.sos-expat\.pages\.dev$/,
+      "http://localhost:5173",
+      "http://localhost:4173",
+      "http://127.0.0.1:5173",
+    ],
     secrets: [ENCRYPTION_KEY],
   },
   async (request): Promise<{ success: boolean; message: string }> => {

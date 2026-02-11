@@ -24,6 +24,8 @@ import {
   areWithdrawalsEnabled,
 } from "../utils/configService";
 import { maskBankAccount } from "../utils/bankDetailsEncryption";
+import { sendWithdrawalConfirmation, WithdrawalConfirmationRole } from "../../telegram/withdrawalConfirmation";
+import { TELEGRAM_SECRETS } from "../../lib/secrets";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -37,7 +39,15 @@ export const requestWithdrawal = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: [
+      "https://sos-expat.com",
+      "https://www.sos-expat.com",
+      /\.sos-expat\.pages\.dev$/,
+      "http://localhost:5173",
+      "http://localhost:4173",
+      "http://127.0.0.1:5173",
+    ],
+    secrets: [...TELEGRAM_SECRETS],
   },
   async (request): Promise<RequestWithdrawalResponse> => {
     ensureInitialized();
@@ -82,6 +92,14 @@ export const requestWithdrawal = onCall(
       // 5. Validate user has affiliate code
       if (!userData.affiliateCode) {
         throw new HttpsError("failed-precondition", "User is not an affiliate");
+      }
+
+      // 5b. Verify Telegram is connected (required for withdrawal 2FA + marketing ID capture)
+      if (!userData.telegramId) {
+        throw new HttpsError(
+          "failed-precondition",
+          "TELEGRAM_REQUIRED: You must connect Telegram before requesting a withdrawal"
+        );
       }
 
       // 6. Check for pending payout
@@ -167,7 +185,7 @@ export const requestWithdrawal = onCall(
         }
       }
 
-      // 12. Get available commissions to include in payout
+      // 12. Get candidate commissions (query outside transaction - Firestore limitation)
       const commissionsQuery = await db
         .collection("affiliate_commissions")
         .where("referrerId", "==", userId)
@@ -176,14 +194,14 @@ export const requestWithdrawal = onCall(
         .get();
 
       let totalFromCommissions = 0;
-      const commissionIds: string[] = [];
+      const candidateCommissionIds: string[] = [];
 
       for (const doc of commissionsQuery.docs) {
         const commission = doc.data() as AffiliateCommission;
 
         if (totalFromCommissions + commission.amount <= withdrawalAmount) {
           totalFromCommissions += commission.amount;
-          commissionIds.push(doc.id);
+          candidateCommissionIds.push(doc.id);
         }
 
         if (totalFromCommissions >= withdrawalAmount) {
@@ -191,41 +209,82 @@ export const requestWithdrawal = onCall(
         }
       }
 
-      // Use actual amount from commissions
-      const actualAmount = totalFromCommissions;
-
-      if (actualAmount < settings.minimumAmount) {
+      if (totalFromCommissions < settings.minimumAmount) {
         throw new HttpsError(
           "failed-precondition",
-          `Available commissions (€${(actualAmount / 100).toFixed(2)}) are below the minimum withdrawal amount`
+          `Available commissions (€${(totalFromCommissions / 100).toFixed(2)}) are below the minimum withdrawal amount`
         );
       }
 
-      // 13. Create payout document and update in transaction
+      // 13. Create payout document and update in ATOMIC transaction
+      // P0-2 FIX: Re-validate balance + commission status INSIDE transaction
+      // to prevent race conditions from concurrent withdrawal requests
       const payoutRef = db.collection("affiliate_payouts").doc();
       const now = Timestamp.now();
 
-      const payout: Omit<AffiliatePayout, "id"> = {
-        userId,
-        userEmail: userData.email,
-        userName: `${userData.firstName || ""} ${userData.lastName || ""}`.trim(),
-        amount: actualAmount,
-        sourceCurrency: "USD",
-        targetCurrency: userData.bankDetails.currency || "USD",
-        status: "pending",
-        bankDetailsSnapshot: {
-          accountType: userData.bankDetails.accountType,
-          accountHolderName: userData.bankDetails.accountHolderName,
-          country: userData.bankDetails.country,
-          currency: userData.bankDetails.currency,
-          maskedAccount: maskBankAccount(userData.bankDetails),
-        },
-        commissionIds,
-        commissionCount: commissionIds.length,
-        requestedAt: now,
-      };
+      let actualAmount = 0;
+      const commissionIds: string[] = [];
 
       await db.runTransaction(async (transaction: Transaction) => {
+        // Re-read user doc inside transaction to get authoritative balance
+        const freshUserSnap = await transaction.get(db.collection("users").doc(userId));
+        if (!freshUserSnap.exists) {
+          throw new HttpsError("not-found", "User not found");
+        }
+        const freshUserData = freshUserSnap.data()!;
+
+        // Re-verify no pending payout (race condition guard)
+        if (freshUserData.pendingPayoutId) {
+          throw new HttpsError("failed-precondition", "You already have a pending withdrawal");
+        }
+
+        // Re-verify each commission is still "available" (race condition guard)
+        actualAmount = 0;
+        commissionIds.length = 0;
+
+        for (const candidateId of candidateCommissionIds) {
+          const commSnap = await transaction.get(
+            db.collection("affiliate_commissions").doc(candidateId)
+          );
+          if (commSnap.exists && commSnap.data()!.status === "available") {
+            actualAmount += commSnap.data()!.amount;
+            commissionIds.push(candidateId);
+          }
+        }
+
+        if (actualAmount < settings.minimumAmount) {
+          throw new HttpsError(
+            "failed-precondition",
+            "Some commissions are no longer available, please retry"
+          );
+        }
+
+        // Re-verify balance is sufficient
+        const freshBalance = freshUserData.availableBalance || 0;
+        if (freshBalance < actualAmount) {
+          throw new HttpsError("failed-precondition", "Insufficient balance, please retry");
+        }
+
+        // Build payout (P0-3 FIX: no accountHolderName in snapshot - PII risk)
+        const payout: Omit<AffiliatePayout, "id"> = {
+          userId,
+          userEmail: freshUserData.email,
+          userName: `${freshUserData.firstName || ""} ${freshUserData.lastName || ""}`.trim(),
+          amount: actualAmount,
+          sourceCurrency: "USD",
+          targetCurrency: freshUserData.bankDetails?.currency || "USD",
+          status: "pending",
+          bankDetailsSnapshot: {
+            accountType: freshUserData.bankDetails?.accountType,
+            country: freshUserData.bankDetails?.country,
+            currency: freshUserData.bankDetails?.currency,
+            maskedAccount: maskBankAccount(freshUserData.bankDetails),
+          },
+          commissionIds,
+          commissionCount: commissionIds.length,
+          requestedAt: now,
+        };
+
         // Create payout
         transaction.set(payoutRef, { ...payout, id: payoutRef.id });
 
@@ -239,7 +298,7 @@ export const requestWithdrawal = onCall(
           });
         }
 
-        // Update user
+        // Update user balance
         transaction.update(db.collection("users").doc(userId), {
           availableBalance: FieldValue.increment(-actualAmount),
           pendingPayoutId: payoutRef.id,
@@ -247,7 +306,49 @@ export const requestWithdrawal = onCall(
         });
       });
 
-      logger.info("[requestWithdrawal] Payout created", {
+      // 14. Send Telegram confirmation (REQUIRED - 2FA + captures telegram_id for marketing)
+      const telegramId = userData.telegramId as number;
+      const confirmResult = await sendWithdrawalConfirmation({
+        withdrawalId: payoutRef.id,
+        userId,
+        role: "affiliate" as WithdrawalConfirmationRole,
+        collection: "affiliate_payouts",
+        amount: actualAmount,
+        paymentMethod: "Wise / Bank Transfer",
+        telegramId,
+      });
+
+      if (!confirmResult.success) {
+        logger.warn("[requestWithdrawal] Telegram confirmation failed, reverting payout", {
+          payoutId: payoutRef.id, userId,
+        });
+        // Revert: restore commissions and balance
+        try {
+          await db.runTransaction(async (revertTx: Transaction) => {
+            revertTx.delete(payoutRef);
+            for (const commissionId of commissionIds) {
+              revertTx.update(db.collection("affiliate_commissions").doc(commissionId), {
+                status: "available",
+                payoutId: null,
+                paidAt: null,
+                updatedAt: Timestamp.now(),
+              });
+            }
+            revertTx.update(db.collection("users").doc(userId), {
+              availableBalance: FieldValue.increment(actualAmount),
+              pendingPayoutId: null,
+              updatedAt: Timestamp.now(),
+            });
+          });
+        } catch (revertErr) {
+          logger.error("[requestWithdrawal] Failed to revert payout after Telegram failure", {
+            payoutId: payoutRef.id, error: revertErr,
+          });
+        }
+        throw new HttpsError("unavailable", "TELEGRAM_SEND_FAILED");
+      }
+
+      logger.info("[requestWithdrawal] Payout created with Telegram confirmation", {
         payoutId: payoutRef.id,
         userId,
         amount: actualAmount,
@@ -258,6 +359,7 @@ export const requestWithdrawal = onCall(
         payoutId: payoutRef.id,
         amount: actualAmount,
         status: "pending",
+        telegramConfirmationRequired: true,
       };
     } catch (error) {
       if (error instanceof HttpsError) {

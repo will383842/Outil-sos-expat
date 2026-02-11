@@ -397,7 +397,7 @@ export interface AffiliatePayout {
   /** Bank details snapshot at request time */
   bankDetailsSnapshot: {
     accountType: BankAccountType;
-    accountHolderName: string; // Encrypted
+    accountHolderName?: string; // Deprecated: no longer stored (PII risk). Kept optional for backward compat with existing docs.
     country: string;
     currency: string;
     /** Masked IBAN/account for display */
@@ -769,6 +769,9 @@ export interface GetAffiliateDataResponse {
   pendingBalance: number;
   affiliateStats: UserAffiliateFields["affiliateStats"];
   hasBankDetails: boolean;
+  bankAccountType?: string;
+  bankCurrency?: string;
+  maskedBankAccount?: string;
   pendingPayoutId: string | null;
   recentCommissions: Array<{
     id: string;
@@ -807,6 +810,7 @@ export interface RequestWithdrawalResponse {
   amount: number;
   status: PayoutStatus;
   estimatedArrival?: string;
+  telegramConfirmationRequired?: boolean;
 }
 
 // ============================================================================

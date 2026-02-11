@@ -104,6 +104,15 @@ export const affiliateOnCallCompleted = onDocumentUpdated(
       // 3. Calculate call duration
       const callDuration = after.duration || after.durationSeconds || 0;
 
+      // 3b. Skip if call has no meaningful duration (prevents ghost commissions)
+      if (callDuration <= 0) {
+        logger.info("[affiliateOnCallCompleted] Skipping - call has no duration", {
+          sessionId,
+          clientId,
+        });
+        return;
+      }
+
       // 5. Get call amounts
       const connectionFee = after.pricing?.connectionFee || after.connectionFee || 0;
       const totalAmount = after.pricing?.totalAmount || after.totalAmount || 0;
@@ -115,19 +124,35 @@ export const affiliateOnCallCompleted = onDocumentUpdated(
         : undefined;
 
       // 7. Check if this is the client's first completed call
-      const previousCallsQuery = await db
-        .collection("call_sessions")
-        .where("clientId", "==", clientId)
-        .where("status", "==", "completed")
-        .limit(2)
+      // First, check if a first_call commission already exists for this referral pair
+      // (prevents race condition if two calls complete simultaneously)
+      const existingFirstCallQuery = await db
+        .collection("affiliate_commissions")
+        .where("referrerId", "==", referredByUserId)
+        .where("refereeId", "==", clientId)
+        .where("type", "==", "referral_first_call")
+        .limit(1)
         .get();
 
-      // Count completed calls (excluding current one which is still updating)
-      const previousCompletedCalls = previousCallsQuery.docs.filter(
-        (doc) => doc.id !== sessionId
-      ).length;
+      let isFirstCall: boolean;
+      if (!existingFirstCallQuery.empty) {
+        // A first_call commission already exists - this is definitely a recurring call
+        isFirstCall = false;
+      } else {
+        // Check call_sessions as secondary check
+        const previousCallsQuery = await db
+          .collection("call_sessions")
+          .where("clientId", "==", clientId)
+          .where("status", "==", "completed")
+          .limit(2)
+          .get();
 
-      const isFirstCall = previousCompletedCalls === 0;
+        const previousCompletedCalls = previousCallsQuery.docs.filter(
+          (doc) => doc.id !== sessionId
+        ).length;
+
+        isFirstCall = previousCompletedCalls === 0;
+      }
 
       logger.info("[affiliateOnCallCompleted] Call details", {
         sessionId,

@@ -137,11 +137,12 @@ export async function createCommission(
     const refereeData = refereeDoc.data()!;
 
     // 3. Check if referrer has affiliate status
-    if (referrerData.affiliateStatus === "suspended") {
-      logger.info("[CommissionService] Referrer is suspended", {
+    if (referrerData.affiliateStatus === "suspended" || referrerData.affiliateStatus === "flagged") {
+      logger.info("[CommissionService] Referrer is suspended or flagged", {
         referrerId: input.referrerId,
+        status: referrerData.affiliateStatus,
       });
-      return { success: false, reason: "Referrer account is suspended" };
+      return { success: false, reason: `Referrer account is ${referrerData.affiliateStatus}` };
     }
 
     // 4. Check for duplicate (same source)
@@ -352,53 +353,54 @@ export async function releasePendingCommissions(): Promise<{
     let released = 0;
     let failed = 0;
 
-    // Process in batches to avoid transaction limits
-    const batch = db.batch();
-    const userUpdates: Map<string, number> = new Map();
+    // P1-3 FIX: Group by user and use per-user transactions for atomicity
+    // (commission status + balance update must be atomic per user)
+    const userCommissions: Map<string, Array<{ ref: FirebaseFirestore.DocumentReference; amount: number }>> = new Map();
 
     for (const doc of pendingQuery.docs) {
-      try {
-        const commission = doc.data() as AffiliateCommission;
-
-        // Update commission status
-        batch.update(doc.ref, {
-          status: "available",
-          updatedAt: now,
-        });
-
-        // Accumulate user balance updates
-        const currentAmount = userUpdates.get(commission.referrerId) || 0;
-        userUpdates.set(commission.referrerId, currentAmount + commission.amount);
-
-        released++;
-      } catch (err) {
-        logger.error("[CommissionService] Error processing commission", {
-          commissionId: doc.id,
-          error: err,
-        });
-        failed++;
-      }
+      const commission = doc.data() as AffiliateCommission;
+      const existing = userCommissions.get(commission.referrerId) || [];
+      existing.push({ ref: doc.ref, amount: commission.amount });
+      userCommissions.set(commission.referrerId, existing);
     }
 
-    // Commit commission updates
-    await batch.commit();
+    // Process each user's commissions in an atomic transaction
+    for (const [userId, commissions] of userCommissions) {
+      try {
+        await db.runTransaction(async (transaction: Transaction) => {
+          const totalAmount = commissions.reduce((sum, c) => sum + c.amount, 0);
 
-    // Update user balances
-    for (const [userId, amount] of userUpdates) {
-      await db
-        .collection("users")
-        .doc(userId)
-        .update({
-          pendingBalance: FieldValue.increment(-amount),
-          availableBalance: FieldValue.increment(amount),
-          updatedAt: now,
+          // Update all commissions for this user
+          for (const commission of commissions) {
+            transaction.update(commission.ref, {
+              status: "available",
+              updatedAt: now,
+            });
+          }
+
+          // Update user balance atomically with commission status
+          transaction.update(db.collection("users").doc(userId), {
+            pendingBalance: FieldValue.increment(-totalAmount),
+            availableBalance: FieldValue.increment(totalAmount),
+            updatedAt: now,
+          });
         });
+
+        released += commissions.length;
+      } catch (err) {
+        logger.error("[CommissionService] Error releasing commissions for user", {
+          userId,
+          commissionCount: commissions.length,
+          error: err,
+        });
+        failed += commissions.length;
+      }
     }
 
     logger.info("[CommissionService] Released pending commissions", {
       released,
       failed,
-      usersUpdated: userUpdates.size,
+      usersProcessed: userCommissions.size,
     });
 
     return { released, failed };
@@ -428,12 +430,10 @@ export async function cancelCommission(
 
     const commission = commissionDoc.data() as AffiliateCommission;
 
-    if (commission.status === "cancelled") {
-      return { success: false, error: "Commission already cancelled" };
-    }
-
-    if (commission.status === "paid") {
-      return { success: false, error: "Cannot cancel a paid commission" };
+    // Only pending or available commissions can be cancelled
+    const cancellableStatuses: CommissionStatus[] = ["pending", "available"];
+    if (!cancellableStatuses.includes(commission.status)) {
+      return { success: false, error: `Cannot cancel commission with status: ${commission.status}` };
     }
 
     const now = Timestamp.now();

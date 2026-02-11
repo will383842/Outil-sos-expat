@@ -15,7 +15,7 @@
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, Transaction } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
@@ -41,7 +41,14 @@ export const getMyAffiliateData = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: [
+      "https://sos-expat.com",
+      "https://www.sos-expat.com",
+      /\.sos-expat\.pages\.dev$/,
+      "http://localhost:5173",
+      "http://localhost:4173",
+      "http://127.0.0.1:5173",
+    ],
   },
   async (request): Promise<GetAffiliateDataResponse> => {
     ensureInitialized();
@@ -65,21 +72,20 @@ export const getMyAffiliateData = onCall(
       let userData = userDoc.data()!;
 
       // 3. LAZY INITIALIZATION: Generate affiliate code for legacy users
+      // P1-5 FIX: Use transaction to prevent race condition where concurrent
+      // calls could generate different affiliate codes for the same user
       if (!userData.affiliateCode) {
         logger.info("[getMyAffiliateData] Initializing affiliate data for legacy user", { userId });
 
         try {
-          // Generate unique affiliate code
+          // Pre-generate code and config outside transaction (these are idempotent)
           const affiliateCode = await generateAffiliateCode(
             userData.email,
             userData.firstName,
             userData.lastName
           );
-
-          // Get current config for captured rates
           const config = await getAffiliateConfigCached();
 
-          // Capture current rates (frozen for life)
           const capturedRates: CapturedRates = {
             capturedAt: Timestamp.now(),
             configVersion: config.version.toString(),
@@ -91,43 +97,54 @@ export const getMyAffiliateData = onCall(
             providerValidationBonus: config.defaultRates.providerValidationBonus,
           };
 
-          // Initialize affiliate fields
-          const affiliateFields = {
-            affiliateCode,
-            capturedRates,
-            totalEarned: 0,
-            availableBalance: 0,
-            pendingBalance: 0,
-            affiliateStats: {
-              totalReferrals: 0,
-              activeReferrals: 0,
-              totalCommissions: 0,
-              byType: {
-                signup: { count: 0, amount: 0 },
-                firstCall: { count: 0, amount: 0 },
-                recurringCall: { count: 0, amount: 0 },
-                subscription: { count: 0, amount: 0 },
-                renewal: { count: 0, amount: 0 },
-                providerBonus: { count: 0, amount: 0 },
+          // Transaction: re-check and only write if still no affiliate code
+          await db.runTransaction(async (transaction: Transaction) => {
+            const freshSnap = await transaction.get(db.collection("users").doc(userId));
+            if (!freshSnap.exists) {
+              throw new HttpsError("not-found", "User not found");
+            }
+
+            // Another concurrent call may have already initialized
+            if (freshSnap.data()!.affiliateCode) {
+              userData = { ...userData, ...freshSnap.data()! };
+              return;
+            }
+
+            const affiliateFields = {
+              affiliateCode,
+              capturedRates,
+              totalEarned: 0,
+              availableBalance: 0,
+              pendingBalance: 0,
+              affiliateStats: {
+                totalReferrals: 0,
+                activeReferrals: 0,
+                totalCommissions: 0,
+                byType: {
+                  signup: { count: 0, amount: 0 },
+                  firstCall: { count: 0, amount: 0 },
+                  recurringCall: { count: 0, amount: 0 },
+                  subscription: { count: 0, amount: 0 },
+                  renewal: { count: 0, amount: 0 },
+                  providerBonus: { count: 0, amount: 0 },
+                },
               },
-            },
-            bankDetails: null,
-            pendingPayoutId: null,
-            affiliateStatus: "active",
-            updatedAt: Timestamp.now(),
-          };
+              bankDetails: null,
+              pendingPayoutId: null,
+              affiliateStatus: "active",
+              updatedAt: Timestamp.now(),
+            };
 
-          // Update user document
-          await db.collection("users").doc(userId).update(affiliateFields);
-
-          // Merge with userData for response
-          userData = { ...userData, ...affiliateFields };
+            transaction.update(freshSnap.ref, affiliateFields);
+            userData = { ...userData, ...affiliateFields };
+          });
 
           logger.info("[getMyAffiliateData] Successfully initialized affiliate for legacy user", {
             userId,
-            affiliateCode,
+            affiliateCode: userData.affiliateCode,
           });
         } catch (initError) {
+          if (initError instanceof HttpsError) throw initError;
           logger.error("[getMyAffiliateData] Failed to initialize affiliate", { userId, initError });
           throw new HttpsError("internal", "Failed to initialize affiliate account");
         }
@@ -154,6 +171,10 @@ export const getMyAffiliateData = onCall(
       });
 
       // 5. Build response
+      // Build bank details summary (non-sensitive fields only)
+      const bankDetails = userData.bankDetails;
+      const hasBankDetails = !!bankDetails;
+
       const response: GetAffiliateDataResponse = {
         affiliateCode: userData.affiliateCode,
         referredBy: userData.referredBy || null,
@@ -174,7 +195,10 @@ export const getMyAffiliateData = onCall(
             providerBonus: { count: 0, amount: 0 },
           },
         },
-        hasBankDetails: !!userData.bankDetails,
+        hasBankDetails,
+        bankAccountType: hasBankDetails ? bankDetails.accountType : undefined,
+        bankCurrency: hasBankDetails ? bankDetails.currency : undefined,
+        maskedBankAccount: hasBankDetails ? `****${bankDetails.accountType === "iban" ? " (IBAN)" : ""}` : undefined,
         pendingPayoutId: userData.pendingPayoutId || null,
         recentCommissions,
       };

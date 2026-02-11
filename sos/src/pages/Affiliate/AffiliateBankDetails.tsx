@@ -173,11 +173,15 @@ const AffiliateBankDetails: React.FC = () => {
       }
     } catch (err) {
       console.error("Bank details update error:", err);
-      setSubmitError(
-        err instanceof Error
-          ? err.message
-          : intl.formatMessage({ id: "affiliate.bankDetails.error.generic", defaultMessage: "Erreur lors de la mise à jour" })
-      );
+      // Map backend errors to user-friendly messages
+      const errorCode = err instanceof Error ? err.message : "";
+      if (errorCode.includes("pending")) {
+        setSubmitError(intl.formatMessage({ id: "affiliate.bankDetails.error.pending", defaultMessage: "Impossible de modifier pendant un retrait en cours." }));
+      } else if (errorCode.includes("Invalid bank details")) {
+        setSubmitError(intl.formatMessage({ id: "affiliate.bankDetails.error.invalid", defaultMessage: "Les coordonnees bancaires sont invalides. Verifiez et reessayez." }));
+      } else {
+        setSubmitError(intl.formatMessage({ id: "affiliate.bankDetails.error.generic", defaultMessage: "Erreur lors de la mise a jour. Veuillez reessayer." }));
+      }
     } finally {
       setIsSubmitting(false);
     }

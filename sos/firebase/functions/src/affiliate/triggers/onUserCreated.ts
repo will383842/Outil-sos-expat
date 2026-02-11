@@ -120,10 +120,17 @@ export const affiliateOnUserCreated = onDocumentCreated(
 
       const pendingReferralCode = userData.pendingReferralCode;
       if (pendingReferralCode) {
-        // Enforce 30-day attribution window if capturedAt is provided
+        // Enforce 30-day attribution window
         const referralCapturedAt = userData.referralCapturedAt;
         let referralExpired = false;
-        if (referralCapturedAt) {
+        if (!referralCapturedAt) {
+          // No timestamp = can't verify window, treat as expired to prevent stale attribution
+          logger.warn("[affiliateOnUserCreated] Referral code missing capturedAt timestamp, treating as expired", {
+            userId,
+            code: pendingReferralCode,
+          });
+          referralExpired = true;
+        } else {
           const capturedDate = new Date(referralCapturedAt);
           const windowMs = 30 * 24 * 60 * 60 * 1000; // 30 days
           if (Date.now() - capturedDate.getTime() > windowMs) {

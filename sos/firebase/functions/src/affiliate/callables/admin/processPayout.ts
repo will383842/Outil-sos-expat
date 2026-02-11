@@ -291,37 +291,38 @@ export const adminProcessPayoutManual = onCall(
         adminUid,
       });
 
-      // Update payout as completed
-      await payoutRef.update({
-        status: "completed" as PayoutStatus,
-        processedAt: Timestamp.now(),
-        processedBy: adminUid,
-        completedAt: Timestamp.now(),
-        adminNotes: notes
-          ? `[Manual] ${notes}${transactionReference ? ` - Ref: ${transactionReference}` : ""}`
-          : transactionReference
-          ? `[Manual] Transaction ref: ${transactionReference}`
-          : "[Manual] Processed manually by admin",
-        updatedAt: Timestamp.now(),
-      });
-
-      // Update user's pendingPayoutId
-      await db.collection("users").doc(payout.userId).update({
-        pendingPayoutId: null,
-        updatedAt: Timestamp.now(),
-      });
-
-      // Update commissions as paid
-      const batch = db.batch();
-      for (const commissionId of payout.commissionIds) {
-        const commissionRef = db.collection("affiliate_commissions").doc(commissionId);
-        batch.update(commissionRef, {
-          status: "paid",
-          paidAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
+      // Atomic transaction: payout + user + commissions must all update together
+      const now = Timestamp.now();
+      await db.runTransaction(async (transaction) => {
+        // Update payout as completed
+        transaction.update(payoutRef, {
+          status: "completed" as PayoutStatus,
+          processedAt: now,
+          processedBy: adminUid,
+          completedAt: now,
+          adminNotes: notes
+            ? `[Manual] ${notes}${transactionReference ? ` - Ref: ${transactionReference}` : ""}`
+            : transactionReference
+            ? `[Manual] Transaction ref: ${transactionReference}`
+            : "[Manual] Processed manually by admin",
+          updatedAt: now,
         });
-      }
-      await batch.commit();
+
+        // Update user's pendingPayoutId
+        transaction.update(db.collection("users").doc(payout.userId), {
+          pendingPayoutId: null,
+          updatedAt: now,
+        });
+
+        // Update commissions as paid
+        for (const commissionId of payout.commissionIds) {
+          transaction.update(db.collection("affiliate_commissions").doc(commissionId), {
+            status: "paid",
+            paidAt: now,
+            updatedAt: now,
+          });
+        }
+      });
 
       logger.info("[adminProcessPayoutManual] Payout marked as completed", {
         payoutId,

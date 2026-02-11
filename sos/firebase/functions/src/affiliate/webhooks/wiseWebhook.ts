@@ -239,6 +239,8 @@ export const wiseWebhook = onRequest(
 
 /**
  * Restore user balance when a payout fails
+ * P0-4 FIX: Uses transaction + validates commission status before reverting
+ * to prevent double-credit if commissions were already released
  */
 async function restoreBalanceOnFailure(
   db: FirebaseFirestore.Firestore,
@@ -247,35 +249,66 @@ async function restoreBalanceOnFailure(
   const { userId, amount, commissionIds } = payoutData;
 
   try {
-    // Start a batch
-    const batch = db.batch();
+    await db.runTransaction(async (transaction) => {
+      const now = Timestamp.now();
 
-    // 1. Restore user balance
-    const userRef = db.collection("users").doc(userId);
-    batch.update(userRef, {
-      availableBalance: FieldValue.increment(amount),
-      pendingPayoutId: null,
-      updatedAt: Timestamp.now(),
-    });
+      // 1. Re-read user doc to verify current state
+      const userRef = db.collection("users").doc(userId);
+      const userSnap = await transaction.get(userRef);
+      if (!userSnap.exists) {
+        logger.error("[WiseWebhook] User not found during restore", { userId });
+        return;
+      }
 
-    // 2. Restore commission statuses
-    if (commissionIds && Array.isArray(commissionIds)) {
-      for (const commissionId of commissionIds) {
-        const commissionRef = db.collection("affiliate_commissions").doc(commissionId);
-        batch.update(commissionRef, {
-          status: "available",
-          payoutId: null,
-          updatedAt: Timestamp.now(),
+      // 2. Restore only commissions that are still in "paid" status
+      let restoredAmount = 0;
+      let restoredCount = 0;
+
+      if (commissionIds && Array.isArray(commissionIds)) {
+        for (const commissionId of commissionIds) {
+          const commissionRef = db.collection("affiliate_commissions").doc(commissionId);
+          const commSnap = await transaction.get(commissionRef);
+
+          if (commSnap.exists && commSnap.data()!.status === "paid") {
+            transaction.update(commissionRef, {
+              status: "available",
+              payoutId: null,
+              paidAt: null,
+              updatedAt: now,
+            });
+            restoredAmount += commSnap.data()!.amount || 0;
+            restoredCount++;
+          } else {
+            logger.warn("[WiseWebhook] Skipping commission restore - not in paid status", {
+              commissionId,
+              currentStatus: commSnap.exists ? commSnap.data()!.status : "not_found",
+            });
+          }
+        }
+      }
+
+      // 3. Restore user balance only for the amount actually restored
+      if (restoredAmount > 0) {
+        transaction.update(userRef, {
+          availableBalance: FieldValue.increment(restoredAmount),
+          pendingPayoutId: null,
+          updatedAt: now,
+        });
+      } else {
+        // Still clear pendingPayoutId even if no commissions restored
+        transaction.update(userRef, {
+          pendingPayoutId: null,
+          updatedAt: now,
         });
       }
-    }
 
-    await batch.commit();
-
-    logger.info("[WiseWebhook] Restored balance after payout failure", {
-      userId,
-      amount,
-      commissionsRestored: commissionIds?.length || 0,
+      logger.info("[WiseWebhook] Restored balance after payout failure", {
+        userId,
+        originalAmount: amount,
+        restoredAmount,
+        commissionsRestored: restoredCount,
+        totalCommissions: commissionIds?.length || 0,
+      });
     });
   } catch (error) {
     logger.error("[WiseWebhook] Error restoring balance", { userId, error });

@@ -97,6 +97,15 @@ export const affiliateOnSubscriptionCreated = onDocumentCreated(
       const tier = subscriptionData.tier || "basic";
       const planId = subscriptionData.planId || "";
 
+      // Skip if subscription has no amount
+      if (!subscriptionAmount || subscriptionAmount <= 0) {
+        logger.info("[affiliateOnSubscriptionCreated] Skipping - subscription has no amount", {
+          providerId,
+          amount: subscriptionAmount,
+        });
+        return;
+      }
+
       // Calculate annual value for yearly subscriptions
       const annualValue = billingPeriod === "yearly"
         ? subscriptionAmount
@@ -108,14 +117,21 @@ export const affiliateOnSubscriptionCreated = onDocumentCreated(
         : Math.round(subscriptionAmount / 12);
 
       // 4. Check if this is the provider's first subscription
-      const previousSubscriptionsQuery = await db
-        .collection("subscription_logs")
-        .where("providerId", "==", providerId)
-        .where("action", "==", "subscription_created")
-        .limit(2)
-        .get();
+      // Check both subscription_logs AND existing subscription commissions for robustness
+      const [previousSubscriptionsQuery, existingSubCommissionQuery] = await Promise.all([
+        db.collection("subscription_logs")
+          .where("providerId", "==", providerId)
+          .where("action", "==", "subscription_created")
+          .limit(2)
+          .get(),
+        db.collection("affiliate_commissions")
+          .where("refereeId", "==", providerId)
+          .where("type", "==", "referral_subscription")
+          .limit(1)
+          .get(),
+      ]);
 
-      const isFirstSubscription = previousSubscriptionsQuery.empty;
+      const isFirstSubscription = previousSubscriptionsQuery.empty && existingSubCommissionQuery.empty;
 
       // 5. Get provider type
       const sosProfileDoc = await db.collection("sos_profiles").doc(providerId).get();

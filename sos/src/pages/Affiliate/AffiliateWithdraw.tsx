@@ -21,9 +21,11 @@ import {
 import { useLocaleNavigate } from "@/multilingual-system";
 import { getTranslatedRouteSlug, type RouteKey } from "@/multilingual-system/core/routing/localeRoutes";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAffiliate } from "@/hooks/useAffiliate";
 import { formatCents, getPayoutStatusLabel } from "@/types/affiliate";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import TelegramConnect from "@/components/shared/TelegramConnect";
 
 // Design tokens
 const UI = {
@@ -42,6 +44,7 @@ const AffiliateWithdraw: React.FC = () => {
   const { language } = useApp();
   const langCode = (language || "en") as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar";
 
+  const { user, refreshUser } = useAuth();
   const {
     affiliateData,
     payouts,
@@ -50,6 +53,8 @@ const AffiliateWithdraw: React.FC = () => {
     minimumWithdrawal,
     requestWithdrawal,
   } = useAffiliate();
+
+  const hasTelegram = !!user?.telegramId;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,11 +85,19 @@ const AffiliateWithdraw: React.FC = () => {
       }
     } catch (err) {
       console.error("Withdrawal error:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : intl.formatMessage({ id: "affiliate.withdraw.error", defaultMessage: "Erreur lors de la demande" })
-      );
+      // Map backend error codes to user-friendly messages
+      const errorCode = err instanceof Error ? err.message : "";
+      if (errorCode.includes("TELEGRAM_REQUIRED") || errorCode.includes("TELEGRAM_SEND_FAILED")) {
+        setError(intl.formatMessage({ id: "affiliate.withdraw.error.telegram", defaultMessage: "Veuillez d'abord connecter votre compte Telegram." }));
+      } else if (errorCode.includes("pending withdrawal") || errorCode.includes("pending payout")) {
+        setError(intl.formatMessage({ id: "affiliate.withdraw.error.pending", defaultMessage: "Vous avez deja un retrait en cours." }));
+      } else if (errorCode.includes("Insufficient") || errorCode.includes("below the minimum")) {
+        setError(intl.formatMessage({ id: "affiliate.withdraw.error.insufficient", defaultMessage: "Solde insuffisant pour effectuer un retrait." }));
+      } else if (errorCode.includes("bank details") || errorCode.includes("Bank details")) {
+        setError(intl.formatMessage({ id: "affiliate.withdraw.error.bankDetails", defaultMessage: "Veuillez d'abord ajouter vos coordonnees bancaires." }));
+      } else {
+        setError(intl.formatMessage({ id: "affiliate.withdraw.error", defaultMessage: "Erreur lors de la demande. Veuillez reessayer." }));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -251,6 +264,13 @@ const AffiliateWithdraw: React.FC = () => {
                 </div>
               )}
 
+              {/* Telegram connection required */}
+              {!hasTelegram && (
+                <div className="mb-6">
+                  <TelegramConnect role="affiliate" onConnected={refreshUser} />
+                </div>
+              )}
+
               {/* Pending payout warning */}
               {hasPendingPayout && (
                 <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl mb-6">
@@ -284,7 +304,7 @@ const AffiliateWithdraw: React.FC = () => {
               {/* Withdrawal button */}
               <button
                 onClick={handleWithdrawal}
-                disabled={!canWithdraw || isSubmitting}
+                disabled={!canWithdraw || isSubmitting || !hasTelegram}
                 className={`${UI.button.primary} w-full py-4 flex items-center justify-center gap-2`}
               >
                 {isSubmitting ? (

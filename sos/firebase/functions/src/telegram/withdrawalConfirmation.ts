@@ -19,7 +19,8 @@ import { getTelegramBotToken } from "../lib/secrets";
 // TYPES
 // ============================================================================
 
-export type WithdrawalConfirmationRole = "chatter" | "influencer" | "blogger" | "groupAdmin";
+// Note: Keep in sync with TelegramOnboardingRole in chatter/callables/telegramOnboarding.ts
+export type WithdrawalConfirmationRole = "chatter" | "influencer" | "blogger" | "groupAdmin" | "affiliate";
 
 export type WithdrawalConfirmationStatus = "pending" | "confirmed" | "cancelled" | "expired";
 
@@ -28,7 +29,7 @@ export interface TelegramWithdrawalConfirmation {
   withdrawalId: string;
   userId: string;
   role: WithdrawalConfirmationRole;
-  collection: "payment_withdrawals" | "group_admin_withdrawals";
+  collection: "payment_withdrawals" | "group_admin_withdrawals" | "affiliate_payouts";
   amount: number;
   paymentMethod: string;
   telegramId: number;
@@ -43,7 +44,7 @@ export interface SendConfirmationParams {
   withdrawalId: string;
   userId: string;
   role: WithdrawalConfirmationRole;
-  collection: "payment_withdrawals" | "group_admin_withdrawals";
+  collection: "payment_withdrawals" | "group_admin_withdrawals" | "affiliate_payouts";
   amount: number;
   paymentMethod: string;
   telegramId: number;
@@ -234,6 +235,7 @@ export async function sendWithdrawalConfirmation(
     influencer: "Influenceur",
     blogger: "Blogueur",
     groupAdmin: "Admin Groupe",
+    affiliate: "Affilié",
   };
 
   const message =
@@ -376,6 +378,28 @@ export async function handleWithdrawalCallback(
     // Cancel: update confirmation + cancel withdrawal + refund balance
     try {
     await db.runTransaction(async (transaction) => {
+      // === ALL READS FIRST (Firestore requirement) ===
+      const withdrawalRef = db.collection(confirmation.collection).doc(confirmation.withdrawalId);
+      const withdrawalSnap = await transaction.get(withdrawalRef);
+
+      // For affiliate role, also read the payout doc to get commissionIds
+      let payoutSnap: FirebaseFirestore.DocumentSnapshot | null = null;
+      if (confirmation.role === "affiliate") {
+        payoutSnap = await transaction.get(
+          db.collection("affiliate_payouts").doc(confirmation.withdrawalId)
+        );
+      }
+
+      // === VALIDATE STATE ===
+      if (!withdrawalSnap.exists) {
+        throw new Error("Withdrawal not found");
+      }
+      const withdrawalStatus = withdrawalSnap.data()!.status;
+      if (withdrawalStatus !== "pending" && withdrawalStatus !== "approved") {
+        throw new Error(`Cannot cancel withdrawal with status: ${withdrawalStatus}`);
+      }
+
+      // === ALL WRITES ===
       // Update confirmation
       transaction.update(confirmRef, {
         status: "cancelled",
@@ -383,7 +407,6 @@ export async function handleWithdrawalCallback(
       });
 
       // Update withdrawal status to cancelled
-      const withdrawalRef = db.collection(confirmation.collection).doc(confirmation.withdrawalId);
       transaction.update(withdrawalRef, {
         status: "cancelled",
         cancelledAt: now.toDate().toISOString(),
@@ -404,6 +427,26 @@ export async function handleWithdrawalCallback(
           pendingWithdrawalId: null,
           updatedAt: now,
         });
+      } else if (confirmation.role === "affiliate") {
+        // Affiliate: balance is on users/{userId} doc + restore commissions
+        const userRef = db.collection("users").doc(confirmation.userId);
+        transaction.update(userRef, {
+          availableBalance: FieldValue.increment(confirmation.amount),
+          pendingPayoutId: null,
+          updatedAt: now,
+        });
+        // Restore affiliate commissions to "available"
+        if (payoutSnap && payoutSnap.exists) {
+          const payoutData = payoutSnap.data()!;
+          if (payoutData.commissionIds && Array.isArray(payoutData.commissionIds)) {
+            for (const commissionId of payoutData.commissionIds) {
+              transaction.update(
+                db.collection("affiliate_commissions").doc(commissionId),
+                { status: "available", payoutId: null, paidAt: null, updatedAt: now }
+              );
+            }
+          }
+        }
       } else {
         // Chatter/Influencer/Blogger: refund to their collection
         const roleCollections: Record<string, string> = {
@@ -482,11 +525,15 @@ export const getWithdrawalConfirmationStatus = onCall(
 
     const db = getDb();
 
-    // Try payment_withdrawals first, then group_admin_withdrawals
+    // Try all withdrawal collections
     let withdrawalDoc = await db.collection("payment_withdrawals").doc(withdrawalId).get();
 
     if (!withdrawalDoc.exists) {
       withdrawalDoc = await db.collection("group_admin_withdrawals").doc(withdrawalId).get();
+    }
+
+    if (!withdrawalDoc.exists) {
+      withdrawalDoc = await db.collection("affiliate_payouts").doc(withdrawalId).get();
     }
 
     if (!withdrawalDoc.exists) {
