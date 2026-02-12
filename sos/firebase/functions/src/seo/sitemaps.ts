@@ -239,7 +239,6 @@ export const sitemapHelp = onRequest(
       console.log('📥 Récupération des help_articles...');
       const snapshot = await db.collection('help_articles')
         .where('isPublished', '==', true)
-        .orderBy('updatedAt', 'desc')
         .limit(1000)
         .get();
       console.log(`📄 ${snapshot.docs.length} documents trouvés`);

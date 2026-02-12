@@ -60,6 +60,12 @@
 /de-fr /de-de/ 301
 
 # =============================================
+# Legacy blog/external URLs
+# =============================================
+/blog-expatnola/ /fr-fr/ 301
+/blog-expatnola /fr-fr/ 301
+
+# =============================================
 # Non-localized static routes -> French default
 # =============================================
 /tarifs /fr-fr/tarifs 301
