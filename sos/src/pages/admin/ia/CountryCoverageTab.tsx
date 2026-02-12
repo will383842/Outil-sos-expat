@@ -235,12 +235,13 @@ export const CountryCoverageTab: React.FC<CountryCoverageTabProps> = ({ onSucces
     return coverage;
   }, [profilesMap]);
 
-  // Filtrer la couverture
+  // Filtrer la couverture (accent-insensitive)
   const filteredCoverage = useMemo(() => {
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     return countryCoverage.filter((c) => {
       if (searchTerm) {
-        const search = searchTerm.toLowerCase();
-        if (!c.countryName.toLowerCase().includes(search) && !c.countryCode.toLowerCase().includes(search)) {
+        const search = strip(searchTerm);
+        if (!strip(c.countryName).includes(search) && !c.countryCode.toLowerCase().includes(search)) {
           return false;
         }
       }

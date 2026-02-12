@@ -133,13 +133,14 @@ const AdminLegalDocuments: React.FC = () => {
     return matrix;
   }, [documents]);
 
-  // Documents filtrés pour la vue liste
+  // Documents filtrés pour la vue liste (accent-insensitive)
   const filteredDocuments = useMemo(() => {
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     return documents.filter(doc => {
       if (searchTerm) {
-        const search = searchTerm.toLowerCase();
-        if (!doc.title.toLowerCase().includes(search) &&
-            !doc.content.toLowerCase().includes(search)) {
+        const search = strip(searchTerm);
+        if (!strip(doc.title).includes(search) &&
+            !strip(doc.content).includes(search)) {
           return false;
         }
       }

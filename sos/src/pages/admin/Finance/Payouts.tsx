@@ -741,13 +741,14 @@ const Payouts: React.FC = () => {
       }
     }
 
-    // Search filter
+    // Search filter (accent-insensitive)
     if (searchTerm) {
-      const search = searchTerm.toLowerCase();
+      const strip = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const search = strip(searchTerm);
       result = result.filter(p =>
-        p.providerInfo?.displayName?.toLowerCase().includes(search) ||
-        p.providerInfo?.firstName?.toLowerCase().includes(search) ||
-        p.providerInfo?.lastName?.toLowerCase().includes(search) ||
+        strip(p.providerInfo?.displayName || '').includes(search) ||
+        strip(p.providerInfo?.firstName || '').includes(search) ||
+        strip(p.providerInfo?.lastName || '').includes(search) ||
         p.providerInfo?.email?.toLowerCase().includes(search) ||
         p.providerId.toLowerCase().includes(search)
       );

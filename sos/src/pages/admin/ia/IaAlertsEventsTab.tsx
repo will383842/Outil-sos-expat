@@ -452,14 +452,15 @@ export const IaAlertsEventsTab: React.FC = () => {
         return false;
       }
 
-      // Search filter
+      // Search filter (accent-insensitive)
       if (searchTerm) {
-        const search = searchTerm.toLowerCase();
+        const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const search = strip(searchTerm);
         return (
-          event.providerName.toLowerCase().includes(search) ||
+          strip(event.providerName).includes(search) ||
           event.providerEmail.toLowerCase().includes(search) ||
-          event.title.toLowerCase().includes(search) ||
-          event.description.toLowerCase().includes(search)
+          strip(event.title).includes(search) ||
+          strip(event.description).includes(search)
         );
       }
 

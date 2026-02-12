@@ -1080,15 +1080,16 @@ const AdminProviders: React.FC = () => {
   const filteredProviders = useMemo(() => {
     let result = providers.filter((provider) => {
       if (searchTerm) {
-        const search = searchTerm.toLowerCase();
+        const strip = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const search = strip(searchTerm);
         const matchesSearch =
           provider.email?.toLowerCase().includes(search) ||
-          provider.displayName?.toLowerCase().includes(search) ||
-          provider.firstName?.toLowerCase().includes(search) ||
-          provider.lastName?.toLowerCase().includes(search) ||
-          provider.phone?.includes(search) ||
-          provider.country?.toLowerCase().includes(search) ||
-          provider.city?.toLowerCase().includes(search);
+          strip(provider.displayName || '').includes(search) ||
+          strip(provider.firstName || '').includes(search) ||
+          strip(provider.lastName || '').includes(search) ||
+          provider.phone?.includes(searchTerm) ||
+          strip(provider.country || '').includes(search) ||
+          strip(provider.city || '').includes(search);
         if (!matchesSearch) return false;
       }
 

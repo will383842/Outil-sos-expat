@@ -1054,12 +1054,13 @@ const AdminProfileValidation: React.FC = () => {
   const filteredQueue = useMemo(() => {
     let result = queue;
 
-    // Search
+    // Search (accent-insensitive)
     if (searchTerm) {
-      const search = searchTerm.toLowerCase();
+      const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const search = strip(searchTerm);
       result = result.filter(
         (item) =>
-          item.providerName.toLowerCase().includes(search) ||
+          strip(item.providerName).includes(search) ||
           item.providerEmail.toLowerCase().includes(search)
       );
     }

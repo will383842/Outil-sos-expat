@@ -2,9 +2,7 @@ import React from 'react';
 import { useAuth } from '../../contexts/useAuth';
 import { useProviderActivityTracker } from '../../hooks/useProviderActivityTracker';
 import { useProviderReminderSystem } from '../../hooks/useProviderReminderSystem';
-import { useIncomingCallSound } from '../../hooks/useIncomingCallSound';
 import ReminderModal from '../../notificationsonline/ReminderModal';
-import IncomingCallNotification from './IncomingCallNotification';
 
 interface ProviderOnlineManagerProps {
   children: React.ReactNode;
@@ -45,27 +43,12 @@ const ProviderOnlineManager: React.FC<ProviderOnlineManagerProps> = ({ children 
     preferredLanguage: user?.preferredLanguage || 'en',
   });
 
-  // Hook de gestion des appels entrants avec sonnerie
-  const {
-    hasIncomingCall,
-    incomingCall,
-    isSoundEnabled,
-    isVibrationEnabled,
-    toggleSound,
-    toggleVibration,
-  } = useIncomingCallSound({
-    userId: user?.uid,
-    isOnline: shouldTrack,
-    isProvider,
-    enabled: shouldTrack,
-  });
-
   return (
     <>
       {children}
 
       {/* Modal de rappel d'inactivité */}
-      {shouldTrack && showModal && !hasIncomingCall && (
+      {shouldTrack && showModal && (
         <ReminderModal
           isOpen={showModal}
           onClose={handleClose}
@@ -73,17 +56,6 @@ const ProviderOnlineManager: React.FC<ProviderOnlineManagerProps> = ({ children 
           onDisableReminderToday={handleDisableToday}
           langCode={user?.preferredLanguage || 'en'}
           reminderType={reminderType}
-        />
-      )}
-
-      {/* Notification d'appel entrant */}
-      {shouldTrack && hasIncomingCall && incomingCall && (
-        <IncomingCallNotification
-          call={incomingCall}
-          isSoundEnabled={isSoundEnabled}
-          isVibrationEnabled={isVibrationEnabled}
-          onToggleSound={toggleSound}
-          onToggleVibration={toggleVibration}
         />
       )}
     </>

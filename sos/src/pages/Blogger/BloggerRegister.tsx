@@ -298,17 +298,19 @@ const BloggerRegister: React.FC = () => {
   // Filtered data
   const filteredCountries = useMemo(() => {
     if (!countrySearch) return phoneCodesData;
-    const search = countrySearch.toLowerCase();
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const search = strip(countrySearch);
     return phoneCodesData.filter(entry =>
-      getCountryName(entry, locale).toLowerCase().includes(search) || entry.code.toLowerCase().includes(search)
+      strip(getCountryName(entry, locale)).includes(search) || entry.code.toLowerCase().includes(search)
     );
   }, [countrySearch, locale]);
 
   const filteredBlogCountries = useMemo(() => {
     if (!blogCountrySearch) return phoneCodesData;
-    const search = blogCountrySearch.toLowerCase();
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const search = strip(blogCountrySearch);
     return phoneCodesData.filter(entry =>
-      getCountryName(entry, locale).toLowerCase().includes(search) || entry.code.toLowerCase().includes(search)
+      strip(getCountryName(entry, locale)).includes(search) || entry.code.toLowerCase().includes(search)
     );
   }, [blogCountrySearch, locale]);
 

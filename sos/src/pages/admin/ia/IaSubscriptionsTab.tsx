@@ -645,8 +645,9 @@ export const IaSubscriptionsTab: React.FC = () => {
   const filteredSubscriptions = useMemo(() => {
     let result = subscriptions.filter(sub => {
       if (filters.search) {
-        const search = filters.search.toLowerCase();
-        if (!sub.providerName.toLowerCase().includes(search) &&
+        const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const search = strip(filters.search);
+        if (!strip(sub.providerName).includes(search) &&
             !sub.providerEmail.toLowerCase().includes(search)) {
           return false;
         }

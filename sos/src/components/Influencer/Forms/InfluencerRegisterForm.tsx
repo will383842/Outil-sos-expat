@@ -258,12 +258,13 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
     }
   }, [focusedDropdownIndex, showCountryDropdown]);
 
-  // Filter countries based on search
+  // Filter countries based on search (accent-insensitive)
   const filteredCountries = useMemo(() => {
     if (!countrySearch) return phoneCodesData;
-    const search = countrySearch.toLowerCase();
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const search = strip(countrySearch);
     return phoneCodesData.filter(entry =>
-      getCountryName(entry, locale).toLowerCase().includes(search) ||
+      strip(getCountryName(entry, locale)).includes(search) ||
       entry.code.toLowerCase().includes(search)
     );
   }, [countrySearch, locale]);

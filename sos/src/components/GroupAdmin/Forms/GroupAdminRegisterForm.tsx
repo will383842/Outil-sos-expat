@@ -249,21 +249,23 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filtered countries
+  // Filtered countries (accent-insensitive)
   const filteredCountries = useMemo(() => {
     if (!countrySearch) return phoneCodesData;
-    const search = countrySearch.toLowerCase();
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const search = strip(countrySearch);
     return phoneCodesData.filter(entry =>
-      getCountryName(entry, locale).toLowerCase().includes(search) ||
+      strip(getCountryName(entry, locale)).includes(search) ||
       entry.code.toLowerCase().includes(search)
     );
   }, [countrySearch, locale]);
 
   const filteredGroupCountries = useMemo(() => {
     if (!groupCountrySearch) return phoneCodesData;
-    const search = groupCountrySearch.toLowerCase();
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const search = strip(groupCountrySearch);
     return phoneCodesData.filter(entry =>
-      getCountryName(entry, locale).toLowerCase().includes(search) ||
+      strip(getCountryName(entry, locale)).includes(search) ||
       entry.code.toLowerCase().includes(search)
     );
   }, [groupCountrySearch, locale]);

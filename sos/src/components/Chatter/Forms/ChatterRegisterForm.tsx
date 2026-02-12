@@ -217,23 +217,25 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter countries based on search
+  // Filter countries based on search (accent-insensitive)
   const filteredCountries = useMemo(() => {
     if (!countrySearch) return phoneCodesData;
-    const search = countrySearch.toLowerCase();
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const search = strip(countrySearch);
     return phoneCodesData.filter(entry =>
-      getCountryName(entry, locale).toLowerCase().includes(search) ||
+      strip(getCountryName(entry, locale)).includes(search) ||
       entry.code.toLowerCase().includes(search)
     );
   }, [countrySearch, locale]);
 
-  // Filter languages based on search
+  // Filter languages based on search (accent-insensitive)
   const filteredLanguages = useMemo(() => {
     if (!languageSearch) return languagesData.slice(0, 30);
-    const search = languageSearch.toLowerCase();
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const search = strip(languageSearch);
     return languagesData.filter(lang =>
-      getLanguageLabel(lang, locale).toLowerCase().includes(search) ||
-      lang.nativeName.toLowerCase().includes(search) ||
+      strip(getLanguageLabel(lang, locale)).includes(search) ||
+      strip(lang.nativeName).includes(search) ||
       lang.code.toLowerCase().includes(search)
     );
   }, [languageSearch, locale]);

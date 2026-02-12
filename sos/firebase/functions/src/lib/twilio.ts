@@ -369,16 +369,17 @@ export function validateTwilioWebhookSignature(
     return false;
   }
 
-  // P0 FIX: Additional IP-based validation (monitoring mode - log but don't block)
-  // Blocking mode was too strict and could reject legitimate webhooks if:
-  // - Twilio adds new IP ranges not in our list
-  // - Cloud Run proxy masks the source IP
-  // - X-Forwarded-For headers are not properly transmitted
+  // P0 FIX: IP-based validation in MONITORING MODE (log but don't block)
+  // CRITICAL: Blocking mode broke ALL calls because Twilio's MEDIA servers
+  // (which call the `url` parameter when a call is answered) use DIFFERENT IPs
+  // than the signaling servers listed in TWILIO_IP_RANGES.
+  // The X-Twilio-Signature header + AccountSid validation are sufficient security.
   const ipValid = isFromTwilioIp(req);
   if (!ipValid) {
-    console.error("[TWILIO_VALIDATION] ❌ Request NOT from known Twilio IP range - BLOCKED");
-    if (res) res.status(403).send("Forbidden: Invalid source IP");
-    return false;
+    console.warn("[TWILIO_VALIDATION] ⚠️ Request NOT from known Twilio IP range");
+    console.warn("[TWILIO_VALIDATION] Allowing through because signature header + AccountSid are valid");
+    console.warn("[TWILIO_VALIDATION] This is expected for Twilio media server callbacks (url parameter)");
+    // DO NOT BLOCK - Twilio media servers use different IPs than signaling servers
   }
 
   console.log("[TWILIO_VALIDATION] Validation passed:", {

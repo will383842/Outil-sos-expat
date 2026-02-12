@@ -113,11 +113,12 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
     fetchAvailableCountries();
   }, [fetchAvailableCountries]);
 
-  // Filter countries by search
-  const filteredCountries = availableCountries.filter(country =>
-    country.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    country.code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter countries by search (accent-insensitive)
+  const filteredCountries = availableCountries.filter(country => {
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const query = strip(searchQuery);
+    return strip(country.name).includes(query) || country.code.toLowerCase().includes(query);
+  });
 
   // Toggle country selection
   const toggleCountry = (code: string) => {
