@@ -358,7 +358,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           aria-expanded={isOpen}
-          aria-label={isOpen ? 'Close quick actions' : 'Open quick actions'}
+          aria-label={isOpen ? intl.formatMessage({ id: 'chatter.quickActions.close', defaultMessage: 'Close quick actions' }) : intl.formatMessage({ id: 'chatter.quickActions.open', defaultMessage: 'Open quick actions' })}
         >
           <motion.div
             animate={{ rotate: isOpen ? 45 : 0 }}

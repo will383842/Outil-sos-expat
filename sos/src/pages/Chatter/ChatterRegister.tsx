@@ -15,7 +15,7 @@ import Layout from '@/components/layout/Layout';
 import ChatterRegisterForm from '@/components/Chatter/Forms/ChatterRegisterForm';
 import type { ChatterRegistrationData } from '@/components/Chatter/Forms/ChatterRegisterForm';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/config/firebase';
+import { functions, auth } from '@/config/firebase';
 import { Star, ArrowLeft, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 
@@ -153,23 +153,38 @@ const ChatterRegister: React.FC = () => {
       // Step 2: Now that user is authenticated, call registerChatter Cloud Function
       // to create the chatter profile with additional data
       const registerChatterFn = httpsCallable(functions, 'registerChatter');
-      await registerChatterFn({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        country: data.country,
-        interventionCountries: data.interventionCountries,
-        language: data.language,
-        additionalLanguages: data.additionalLanguages,
-        recruitmentCode: data.referralCode || undefined,
-        referralCapturedAt: getStoredReferral('chatter')?.capturedAt || new Date().toISOString(),
-        // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
-        acceptTerms: data.acceptTerms,
-        termsAcceptedAt: data.termsAcceptedAt,
-        termsVersion: data.termsVersion,
-        termsType: data.termsType,
-        termsAcceptanceMeta: data.termsAcceptanceMeta,
-      });
+      try {
+        await registerChatterFn({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          country: data.country,
+          interventionCountries: data.interventionCountries,
+          language: data.language,
+          additionalLanguages: data.additionalLanguages,
+          recruitmentCode: data.referralCode || undefined,
+          referralCapturedAt: getStoredReferral('chatter')?.capturedAt || new Date().toISOString(),
+          // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
+          acceptTerms: data.acceptTerms,
+          termsAcceptedAt: data.termsAcceptedAt,
+          termsVersion: data.termsVersion,
+          termsType: data.termsType,
+          termsAcceptanceMeta: data.termsAcceptanceMeta,
+        });
+      } catch (cfError) {
+        // CRITICAL: If Cloud Function fails, delete the orphaned Firebase Auth user
+        // to prevent accounts without chatter profiles
+        try {
+          const { deleteUser } = await import('firebase/auth');
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            await deleteUser(currentUser);
+          }
+        } catch (deleteErr) {
+          console.error('[ChatterRegister] Failed to cleanup orphaned auth user:', deleteErr);
+        }
+        throw cfError; // Re-throw to be caught by outer catch
+      }
 
       // Clear stored referral code after successful registration
       clearStoredReferral('chatter');
@@ -329,7 +344,7 @@ const ChatterRegister: React.FC = () => {
                 <FormattedMessage id="chatter.register.success.title" defaultMessage="Inscription réussie !" />
               </h2>
               <p className="text-gray-400 mb-4">
-                <FormattedMessage id="chatter.register.success.subtitle" defaultMessage="Vous allez être redirigé vers la présentation..." />
+                <FormattedMessage id="chatter.register.success.subtitle" defaultMessage="Vous allez être redirigé vers la configuration Telegram..." />
               </p>
               <div className="w-6 h-6 mx-auto border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
             </div>

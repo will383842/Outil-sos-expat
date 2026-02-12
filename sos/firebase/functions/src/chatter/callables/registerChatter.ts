@@ -254,8 +254,19 @@ export const registerChatter = onCall(
             .get();
 
           if (!recruiterQuery.empty) {
-            recruitedBy = recruiterQuery.docs[0].id;
-            recruitedByCode = input.recruitmentCode.toUpperCase();
+            const recruiterId = recruiterQuery.docs[0].id;
+
+            // SECURITY: Block self-referral to prevent fraudulent commission generation
+            if (recruiterId === userId) {
+              logger.warn("[registerChatter] Self-recruitment attempt blocked", {
+                userId,
+                code: input.recruitmentCode,
+              });
+              // Silently ignore the referral code (don't block registration)
+            } else {
+              recruitedBy = recruiterId;
+              recruitedByCode = input.recruitmentCode.toUpperCase();
+            }
           }
         }
       }

@@ -106,7 +106,7 @@ const NOTIFICATION_CONFIG: Record<NotificationType, {
 /**
  * Format time difference for "time ago" display
  */
-function formatTimeAgo(timestamp: Date | string, locale: string): string {
+function formatTimeAgo(timestamp: Date | string, locale: string, intl: ReturnType<typeof useIntl>): string {
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
   const now = Date.now();
   const diffMs = now - date.getTime();
@@ -115,28 +115,26 @@ function formatTimeAgo(timestamp: Date | string, locale: string): string {
   const diffHours = Math.floor(diffMinutes / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  const isFrench = locale.startsWith('fr');
-
   if (diffSeconds < 60) {
-    return isFrench ? "a l'instant" : 'just now';
+    return intl.formatMessage({ id: 'chatter.notifications.timeAgo.justNow', defaultMessage: 'just now' });
   }
   if (diffMinutes === 1) {
-    return isFrench ? 'il y a 1 min' : '1 min ago';
+    return intl.formatMessage({ id: 'chatter.notifications.timeAgo.minuteAgo', defaultMessage: '1 min ago' });
   }
   if (diffMinutes < 60) {
-    return isFrench ? `il y a ${diffMinutes} min` : `${diffMinutes} min ago`;
+    return intl.formatMessage({ id: 'chatter.notifications.timeAgo.minutesAgo', defaultMessage: '{minutes} min ago' }, { minutes: diffMinutes });
   }
   if (diffHours === 1) {
-    return isFrench ? 'il y a 1 h' : '1 hour ago';
+    return intl.formatMessage({ id: 'chatter.notifications.timeAgo.hourAgo', defaultMessage: '1 hour ago' });
   }
   if (diffHours < 24) {
-    return isFrench ? `il y a ${diffHours} h` : `${diffHours} hours ago`;
+    return intl.formatMessage({ id: 'chatter.notifications.timeAgo.hoursAgo', defaultMessage: '{hours} hours ago' }, { hours: diffHours });
   }
   if (diffDays === 1) {
-    return isFrench ? 'hier' : 'yesterday';
+    return intl.formatMessage({ id: 'chatter.notifications.timeAgo.yesterday', defaultMessage: 'yesterday' });
   }
   if (diffDays < 7) {
-    return isFrench ? `il y a ${diffDays} j` : `${diffDays} days ago`;
+    return intl.formatMessage({ id: 'chatter.notifications.timeAgo.daysAgo', defaultMessage: '{days} days ago' }, { days: diffDays });
   }
 
   // More than a week ago, show formatted date
@@ -184,6 +182,7 @@ const NotificationItemComponent: React.FC<NotificationItemProps> = ({
   onNavigate,
   locale,
 }) => {
+  const intl = useIntl();
   const notificationType = mapNotificationType(notification.type);
   const config = NOTIFICATION_CONFIG[notificationType];
   const IconComponent = config.icon;
@@ -258,7 +257,7 @@ const NotificationItemComponent: React.FC<NotificationItemProps> = ({
           {notification.message}
         </p>
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          {formatTimeAgo(notification.createdAt, locale)}
+          {formatTimeAgo(notification.createdAt, locale, intl)}
         </p>
       </div>
 

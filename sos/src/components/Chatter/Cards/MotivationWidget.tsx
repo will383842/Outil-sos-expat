@@ -393,7 +393,7 @@ const MotivationWidget = memo(function MotivationWidget({
                 <button
                   onClick={handlePrevTip}
                   className="p-1.5 rounded-lg hover:bg-white/50 dark:hover:bg-white/10 transition-colors text-gray-500 dark:text-gray-400"
-                  aria-label="Previous tip"
+                  aria-label={intl.formatMessage({ id: 'chatter.motivation.previousTip', defaultMessage: 'Previous tip' })}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -414,7 +414,7 @@ const MotivationWidget = memo(function MotivationWidget({
                           ? 'bg-amber-500 w-4'
                           : 'bg-gray-300 dark:bg-gray-600 hover:bg-amber-400'
                       }`}
-                      aria-label={`Go to tip ${index + 1}`}
+                      aria-label={intl.formatMessage({ id: 'chatter.motivation.goToTip', defaultMessage: 'Go to tip {number}' }, { number: index + 1 })}
                     />
                   ))}
                 </div>
@@ -422,7 +422,7 @@ const MotivationWidget = memo(function MotivationWidget({
                 <button
                   onClick={handleNextTip}
                   className="p-1.5 rounded-lg hover:bg-white/50 dark:hover:bg-white/10 transition-colors text-gray-500 dark:text-gray-400"
-                  aria-label="Next tip"
+                  aria-label={intl.formatMessage({ id: 'chatter.motivation.nextTip', defaultMessage: 'Next tip' })}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>

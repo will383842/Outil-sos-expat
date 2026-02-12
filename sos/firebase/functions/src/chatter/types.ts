@@ -427,6 +427,9 @@ export interface Chatter {
   /** Whether the Telegram bonus has been paid out (unlocked and withdrawn) */
   telegramBonusPaid?: boolean;
 
+  /** When the Telegram bonus was paid out */
+  telegramBonusPaidAt?: Timestamp | null;
+
   // ---- Timestamps ----
 
   /** Registration date */

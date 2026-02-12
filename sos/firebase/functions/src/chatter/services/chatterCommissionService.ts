@@ -155,7 +155,7 @@ export async function createCommission(
       }
     }
 
-    // 4b. Duplicate check (same sourceId + chatterId + type)
+    // 4b. Duplicate check - fast path outside transaction (catches most duplicates)
     if (source.id) {
       const duplicateCheck = await db
         .collection("chatter_commissions")
@@ -287,6 +287,20 @@ export async function createCommission(
 
       if (!freshChatter.exists) {
         throw new Error("Chatter not found in transaction");
+      }
+
+      // Double-check for duplicates inside transaction (race condition safety net)
+      if (source.id) {
+        const txDuplicateCheck = await transaction.get(
+          db.collection("chatter_commissions")
+            .where("chatterId", "==", chatterId)
+            .where("type", "==", type)
+            .where("sourceId", "==", source.id)
+            .limit(1)
+        );
+        if (!txDuplicateCheck.empty) {
+          throw new Error("Commission already exists for this action");
+        }
       }
 
       const currentData = freshChatter.data() as Chatter;

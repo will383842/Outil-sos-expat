@@ -478,7 +478,7 @@ const ChatterTelegramOnboarding: React.FC = () => {
           <div>
             <p className="text-2xl font-black text-white">+$50</p>
             <p className="text-xs text-amber-300">
-              <FormattedMessage id="chatter.telegram.success.bonusCredit" defaultMessage="Credited to your piggy bank" />
+              <FormattedMessage id="chatter.telegram.success.bonusCredit" defaultMessage="Unlocked when you earn $150 in commissions" />
             </p>
           </div>
         </div>

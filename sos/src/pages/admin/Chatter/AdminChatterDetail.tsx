@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -147,7 +148,7 @@ const AdminChatterDetail: React.FC = () => {
       await fetchChatter();
     } catch (err: any) {
       console.error('Error updating status:', err);
-      alert(err.message || 'Failed to update status');
+      toast.error(err.message || 'Failed to update status');
     } finally {
       setActionLoading(false);
     }
@@ -269,7 +270,8 @@ const AdminChatterDetail: React.FC = () => {
             {chatter.status !== 'banned' && (
               <button
                 onClick={() => {
-                  if (confirm('Êtes-vous sûr de vouloir bannir ce chatter ?')) {
+                  // TODO: Replace window.confirm with a proper confirmation Dialog component
+                  if (window.confirm('Êtes-vous sûr de vouloir bannir ce chatter ?')) {
                     handleStatusChange('banned', 'Banni par admin');
                   }
                 }}

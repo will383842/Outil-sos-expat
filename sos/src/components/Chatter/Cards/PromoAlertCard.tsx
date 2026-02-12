@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import { useIntl } from "react-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Zap, Clock, X } from "lucide-react";
@@ -18,6 +19,7 @@ interface PromoAlertCardProps {
 
 export function PromoAlertCard({ promotion, onDismiss }: PromoAlertCardProps) {
   const { t } = useTranslation();
+  const intl = useIntl();
 
   if (!promotion) {
     return null;
@@ -59,7 +61,7 @@ export function PromoAlertCard({ promotion, onDismiss }: PromoAlertCardProps) {
           <button
             onClick={onDismiss}
             className="absolute top-2 right-2 p-1 rounded-full hover:bg-white/20 transition-colors"
-            aria-label="Dismiss"
+            aria-label={intl.formatMessage({ id: 'chatter.promo.dismiss', defaultMessage: 'Dismiss' })}
           >
             <X className="h-4 w-4" />
           </button>

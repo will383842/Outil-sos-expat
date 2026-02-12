@@ -50,18 +50,38 @@ export async function generateChatterClientCode(
     attempts++;
   }
 
-  // Fallback: use email prefix + random string
+  // Fallback: use email prefix + random 4-digit string, with uniqueness check
   const emailPrefix = email.split("@")[0].toUpperCase().slice(0, 4);
-  const fallbackSuffix = Math.floor(1000 + Math.random() * 9000).toString();
-  const fallbackCode = `${normalizeForCode(emailPrefix)}${fallbackSuffix}`;
+  const normalizedPrefix = normalizeForCode(emailPrefix);
 
-  logger.warn("[generateChatterClientCode] Using fallback code generation", {
-    fallbackCode,
+  for (let fallbackAttempt = 0; fallbackAttempt < 5; fallbackAttempt++) {
+    const fallbackSuffix = Math.floor(1000 + Math.random() * 9000).toString();
+    const fallbackCode = `${normalizedPrefix}${fallbackSuffix}`;
+
+    const fallbackCheck = await chattersRef
+      .where("affiliateCodeClient", "==", fallbackCode)
+      .limit(1)
+      .get();
+
+    if (fallbackCheck.empty) {
+      logger.warn("[generateChatterClientCode] Using fallback code generation", {
+        fallbackCode,
+        firstName,
+        email,
+        fallbackAttempt: fallbackAttempt + 1,
+      });
+      return fallbackCode;
+    }
+  }
+
+  // Ultimate fallback: timestamp-based code (virtually unique)
+  const ultimateCode = `${normalizedPrefix}${Date.now().toString(36).toUpperCase().slice(-5)}`;
+  logger.error("[generateChatterClientCode] All fallback attempts exhausted, using timestamp code", {
+    ultimateCode,
     firstName,
     email,
   });
-
-  return fallbackCode;
+  return ultimateCode;
 }
 
 /**

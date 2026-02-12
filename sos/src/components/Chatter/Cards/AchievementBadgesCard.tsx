@@ -35,7 +35,6 @@ import {
   Rocket,
   Heart,
   BookOpen,
-  Video,
   DollarSign,
 } from 'lucide-react';
 import type { ChatterBadgeType, ChatterData } from '@/types/chatter';
@@ -74,9 +73,9 @@ interface BadgeConfig {
   bgColor: string;
   glowColor: string;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-  category: 'milestone' | 'streak' | 'level' | 'competition' | 'activity';
+  category: 'milestone' | 'streak' | 'level' | 'competition' | 'activity' | 'team';
   requirement?: {
-    type: 'clients' | 'recruits' | 'streak' | 'earnings' | 'level' | 'rank';
+    type: 'clients' | 'recruits' | 'streak' | 'earnings' | 'level' | 'rank' | 'team_size';
     target: number;
   };
 }
@@ -368,32 +367,34 @@ const BADGE_CONFIG: BadgeConfig[] = [
     category: 'milestone',
     requirement: { type: 'earnings', target: 100000 },
   },
-  // Activity badges
+  // Team badges
   {
-    id: 'zoom_participant',
-    icon: Video,
-    nameKey: 'chatter.badges.zoomParticipant.name',
-    defaultName: 'Participant Zoom',
-    descriptionKey: 'chatter.badges.zoomParticipant.desc',
-    defaultDescription: 'Premiere participation a un meeting Zoom',
+    id: 'team_10',
+    icon: Users,
+    nameKey: 'chatter.badges.team10.name',
+    defaultName: 'Chef d\'equipe',
+    descriptionKey: 'chatter.badges.team10.desc',
+    defaultDescription: '10 membres dans votre equipe',
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'bg-blue-100 dark:bg-blue-900/30',
     glowColor: 'shadow-blue-500/30',
-    rarity: 'common',
-    category: 'activity',
+    rarity: 'uncommon',
+    category: 'team',
+    requirement: { type: 'team_size', target: 10 },
   },
   {
-    id: 'zoom_regular',
-    icon: Video,
-    nameKey: 'chatter.badges.zoomRegular.name',
-    defaultName: 'Assidu Zoom',
-    descriptionKey: 'chatter.badges.zoomRegular.desc',
-    defaultDescription: '5+ participations aux meetings Zoom',
+    id: 'team_25',
+    icon: Users,
+    nameKey: 'chatter.badges.team25.name',
+    defaultName: 'Manager',
+    descriptionKey: 'chatter.badges.team25.desc',
+    defaultDescription: '25 membres dans votre equipe',
     color: 'text-indigo-600 dark:text-indigo-400',
     bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
     glowColor: 'shadow-indigo-500/30',
-    rarity: 'uncommon',
-    category: 'activity',
+    rarity: 'rare',
+    category: 'team',
+    requirement: { type: 'team_size', target: 25 },
   },
 ];
 

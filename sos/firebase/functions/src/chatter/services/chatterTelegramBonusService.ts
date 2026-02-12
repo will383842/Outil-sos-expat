@@ -58,7 +58,7 @@ export async function checkAndPayTelegramBonus(
 
     const commissionResult = await createCommission({
       chatterId,
-      type: "bonus_telegram" as any,
+      type: "bonus_telegram",
       source: {
         id: null,
         type: "bonus",

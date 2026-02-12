@@ -1,6 +1,7 @@
 // src/components/admin/AdminRoutesV2.tsx
 import React, { Suspense, lazy } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import ProtectedRoute from "../auth/ProtectedRoute";
 import { Loader2 } from "lucide-react";
 
 // ===== DÉTECTION LANGUE NAVIGATEUR =====
@@ -355,6 +356,9 @@ const AdminChatterFraud = lazy(
 const AdminCommissionTracker = lazy(
   () => import("../../pages/admin/Chatter/AdminCommissionTracker")
 );
+const AdminChatterCountryRotation = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterCountryRotation")
+);
 
 // ===== LAZY IMPORTS - INFLUENCER =====
 const AdminInfluencersList = lazy(
@@ -436,30 +440,9 @@ const AdminPaymentConfig = lazy(
   () => import("../../pages/admin/Payments/AdminPaymentConfig")
 );
 
-// ===== LAZY IMPORTS - TELEGRAM =====
-const AdminTelegramDashboard = lazy(
-  () => import("../../pages/admin/Telegram/AdminTelegramDashboard")
-);
-const AdminTelegramConfig = lazy(
-  () => import("../../pages/admin/Telegram/AdminTelegramConfig")
-);
-const AdminTelegramTemplates = lazy(
-  () => import("../../pages/admin/Telegram/AdminTelegramTemplates")
-);
-const AdminTelegramLogs = lazy(
-  () => import("../../pages/admin/Telegram/AdminTelegramLogs")
-);
-const AdminTelegramCampaigns = lazy(
-  () => import("../../pages/admin/Telegram/AdminTelegramCampaigns")
-);
-const AdminTelegramCampaignCreate = lazy(
-  () => import("../../pages/admin/Telegram/AdminTelegramCampaignCreate")
-);
-const AdminTelegramQueue = lazy(
-  () => import("../../pages/admin/Telegram/AdminTelegramQueue")
-);
-const AdminTelegramSubscribers = lazy(
-  () => import("../../pages/admin/Telegram/AdminTelegramSubscribers")
+// ===== LAZY IMPORTS - TELEGRAM (redirects to standalone Telegram Engine) =====
+const AdminTelegramRedirect = lazy(
+  () => import("../../pages/admin/Telegram/AdminTelegramRedirect")
 );
 
 // ===== LAZY IMPORTS - TOOLBOX =====
@@ -556,11 +539,18 @@ const AdminTrustpilot = lazy(() => import("../../pages/admin/AdminTrustpilot"));
 const AdminMetaAnalytics = lazy(() => import("../../pages/admin/AdminMetaAnalytics"));
 const AdminGoogleAdsAnalytics = lazy(() => import("../../pages/admin/AdminGoogleAdsAnalytics"));
 
+// ===== LAYOUT PROTÉGÉ ADMIN =====
+const AdminProtectedLayout: React.FC = () => (
+  <ProtectedRoute allowedRoles="admin">
+    <Outlet />
+  </ProtectedRoute>
+);
+
 // ===== COMPOSANT PRINCIPAL =====
 const AdminRoutesV2: React.FC = () => {
   return (
     <Routes>
-      {/* ===== 🔐 AUTHENTIFICATION (hors layout) ===== */}
+      {/* ===== 🔐 AUTHENTIFICATION (hors layout protégé) ===== */}
       <Route
         path="login"
         element={
@@ -570,7 +560,8 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
-      {/* ===== Toutes les autres routes (CHAQUE PAGE rend son layout) ===== */}
+      {/* ===== Toutes les routes admin protégées ===== */}
+      <Route element={<AdminProtectedLayout />}>
       {/* Index /admin → /admin/dashboard */}
       <Route index element={<Navigate to="dashboard" replace />} />
 
@@ -1219,6 +1210,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="chatters/country-rotation"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterCountryRotation />
+          </Suspense>
+        }
+      />
 
       {/* 📢 INFLUENCERS */}
       <Route
@@ -1446,68 +1445,12 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
-      {/* 📨 TELEGRAM */}
+      {/* 📨 TELEGRAM — redirects to standalone Telegram Engine */}
       <Route
-        path="telegram"
+        path="telegram/*"
         element={
           <Suspense fallback={<LoadingSpinner />}>
-            <AdminTelegramDashboard />
-          </Suspense>
-        }
-      />
-      <Route
-        path="telegram/config"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminTelegramConfig />
-          </Suspense>
-        }
-      />
-      <Route
-        path="telegram/templates"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminTelegramTemplates />
-          </Suspense>
-        }
-      />
-      <Route
-        path="telegram/logs"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminTelegramLogs />
-          </Suspense>
-        }
-      />
-      <Route
-        path="telegram/campaigns"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminTelegramCampaigns />
-          </Suspense>
-        }
-      />
-      <Route
-        path="telegram/campaigns/create"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminTelegramCampaignCreate />
-          </Suspense>
-        }
-      />
-      <Route
-        path="telegram/queue"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminTelegramQueue />
-          </Suspense>
-        }
-      />
-      <Route
-        path="telegram/subscribers"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminTelegramSubscribers />
+            <AdminTelegramRedirect />
           </Suspense>
         }
       />
@@ -1827,6 +1770,7 @@ const AdminRoutesV2: React.FC = () => {
 
       {/* 404 admin */}
       <Route path="*" element={<AdminNotFound />} />
+      </Route>{/* End AdminProtectedLayout */}
     </Routes>
   );
 };
@@ -1902,6 +1846,7 @@ export const useAdminRouteValidation = () => {
       "/admin/chatters/payments",
       "/admin/chatters/config",
       "/admin/chatters/commissions",
+      "/admin/chatters/country-rotation",
       "/admin/influencers",
       "/admin/influencers/:influencerId",
       "/admin/influencers/payments",
@@ -1951,13 +1896,6 @@ export const useAdminRouteValidation = () => {
       "/admin/analytics/unified",
       "/admin/feedback",
       "/admin/telegram",
-      "/admin/telegram/config",
-      "/admin/telegram/templates",
-      "/admin/telegram/logs",
-      "/admin/telegram/campaigns",
-      "/admin/telegram/campaigns/create",
-      "/admin/telegram/queue",
-      "/admin/telegram/subscribers",
     ];
     return validPaths.includes(path);
   };

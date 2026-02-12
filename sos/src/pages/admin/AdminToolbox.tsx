@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { Bot, Database, ExternalLink, Link2, Mail, MessageCircle, Settings, Users, Wrench } from "lucide-react";
+import { Bot, Database, ExternalLink, Link2, Mail, MessageCircle, Send, Server, Settings, SettingsIcon, Users, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.sos-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
@@ -11,6 +11,7 @@ const MULTI_DASHBOARD_URL = "https://multi.sos-expat.com";
 const IA_TOOL_URL = "https://ia.sos-expat.com";
 const TELEGRAM_ENGINE_URL = "https://telegram.sos-expat.com";
 const SCRAPER_PRO_URL = "https://scraper.sos-expat.com";
+const EMAIL_ENGINE_URL = "https://engine.sos-expat.com";
 
 interface ToolCard {
   id: string;
@@ -77,7 +78,6 @@ const tools: ToolCard[] = [
     icon: <MessageCircle className="h-8 w-8" />,
     color: "bg-sky-500",
     status: "live",
-    internalRoute: "/admin/telegram",
   },
   {
     id: "scraper-pro",
@@ -86,6 +86,15 @@ const tools: ToolCard[] = [
     url: SCRAPER_PRO_URL,
     icon: <Database className="h-8 w-8" />,
     color: "bg-rose-600",
+    status: "live",
+  },
+  {
+    id: "email-engine-cold",
+    titleKey: "admin.toolbox.emailEngineCold",
+    descriptionKey: "admin.toolbox.emailEngineCold.description",
+    url: EMAIL_ENGINE_URL,
+    icon: <Server className="h-8 w-8" />,
+    color: "bg-cyan-700",
     status: "live",
   },
 ];

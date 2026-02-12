@@ -482,7 +482,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
               onClick={() => goToCard(currentCardIndex - 1)}
               disabled={currentCardIndex === 0}
               className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-11 h-11 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg disabled:opacity-30 disabled:cursor-not-allowed z-10 touch-manipulation active:scale-95"
-              aria-label="Previous task"
+              aria-label={intl.formatMessage({ id: 'chatter.missions.previousTask', defaultMessage: 'Previous task' })}
             >
               <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -491,7 +491,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
               onClick={() => goToCard(currentCardIndex + 1)}
               disabled={currentCardIndex === totalTasks - 1}
               className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 w-11 h-11 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg disabled:opacity-30 disabled:cursor-not-allowed z-10 touch-manipulation active:scale-95"
-              aria-label="Next task"
+              aria-label={intl.formatMessage({ id: 'chatter.missions.nextTask', defaultMessage: 'Next task' })}
             >
               <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -507,7 +507,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
                   key={task.id}
                   onClick={() => goToCard(index)}
                   className={`min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation`}
-                  aria-label={`Go to task ${index + 1}`}
+                  aria-label={intl.formatMessage({ id: 'chatter.missions.goToTask', defaultMessage: 'Go to task {number}' }, { number: index + 1 })}
                 >
                   <span className={`block rounded-full transition-all ${
                     index === currentCardIndex

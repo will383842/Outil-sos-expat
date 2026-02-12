@@ -812,6 +812,29 @@ export class FlutterwaveProvider {
         );
       }
 
+      // Step 1b: Check balance before transfer (debit in USD)
+      try {
+        const balance = await this.getBalance('USD');
+        const totalNeeded = params.amount + (fees ? fees.fee : 0);
+        if (balance.availableBalance < totalNeeded) {
+          console.error(`[FlutterwaveProvider] Insufficient balance`, {
+            available: balance.availableBalance,
+            needed: totalNeeded,
+            withdrawalId: params.withdrawalId,
+          });
+          return {
+            success: false,
+            status: 'failed',
+            message: `Insufficient Flutterwave balance: $${balance.availableBalance.toFixed(2)} available, $${totalNeeded.toFixed(2)} needed`,
+          };
+        }
+      } catch (balanceError) {
+        console.warn(
+          `[FlutterwaveProvider] Could not check balance, proceeding:`,
+          balanceError
+        );
+      }
+
       // Step 2: Create the transfer
       const transfer = await this.createTransfer({
         amount: params.amount,

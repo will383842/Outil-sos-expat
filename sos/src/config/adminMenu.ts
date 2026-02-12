@@ -635,6 +635,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.chattersPromotions.description",
       },
       {
+        id: "chatters-country-rotation",
+        labelKey: "admin.menu.chattersCountryRotation",
+        path: "/admin/chatters/country-rotation",
+        icon: RotateCcw,
+        badge: "NEW",
+        descriptionKey: "admin.menu.chattersCountryRotation.description",
+      },
+      {
         id: "chatters-config",
         labelKey: "admin.menu.chattersConfig",
         path: "/admin/chatters/config",
@@ -917,7 +925,7 @@ export const adminMenuTree: AdminMenuItem[] = [
     ],
   },
 
-  // ===== TELEGRAM (Priorite 7.3 - Notifications & Campagnes) =====
+  // ===== TELEGRAM (redirects to standalone Telegram Engine) =====
   {
     id: "telegram",
     labelKey: "admin.menu.telegram",
@@ -925,54 +933,11 @@ export const adminMenuTree: AdminMenuItem[] = [
     descriptionKey: "admin.menu.telegram.description",
     children: [
       {
-        id: "telegram-dashboard",
-        labelKey: "admin.menu.telegramDashboard",
+        id: "telegram-engine",
+        labelKey: "admin.menu.telegramEngine",
         path: "/admin/telegram",
-        icon: BarChart3,
-        descriptionKey: "admin.menu.telegramDashboard.description",
-      },
-      {
-        id: "telegram-config",
-        labelKey: "admin.menu.telegramConfig",
-        path: "/admin/telegram/config",
-        icon: Settings,
-        descriptionKey: "admin.menu.telegramConfig.description",
-      },
-      {
-        id: "telegram-templates",
-        labelKey: "admin.menu.telegramTemplates",
-        path: "/admin/telegram/templates",
-        icon: FileText,
-        descriptionKey: "admin.menu.telegramTemplates.description",
-      },
-      {
-        id: "telegram-logs",
-        labelKey: "admin.menu.telegramLogs",
-        path: "/admin/telegram/logs",
-        icon: Activity,
-        descriptionKey: "admin.menu.telegramLogs.description",
-      },
-      {
-        id: "telegram-campaigns",
-        labelKey: "admin.menu.telegramCampaigns",
-        path: "/admin/telegram/campaigns",
-        icon: Megaphone,
-        badge: "NEW",
-        descriptionKey: "admin.menu.telegramCampaigns.description",
-      },
-      {
-        id: "telegram-queue",
-        labelKey: "admin.menu.telegramQueue",
-        path: "/admin/telegram/queue",
-        icon: Inbox,
-        descriptionKey: "admin.menu.telegramQueue.description",
-      },
-      {
-        id: "telegram-subscribers",
-        labelKey: "admin.menu.telegramSubscribers",
-        path: "/admin/telegram/subscribers",
-        icon: UsersIcon,
-        descriptionKey: "admin.menu.telegramSubscribers.description",
+        icon: Send,
+        descriptionKey: "admin.menu.telegramEngine.description",
       },
     ],
   },

@@ -10,12 +10,37 @@ import { getFirestore } from "firebase-admin/firestore";
 
 const db = getFirestore();
 
-// Liste des emails autorisés à être admin (même liste que frontend)
-const ADMIN_EMAILS = [
+// Fallback hardcoded list (used only if Firestore read fails or doc doesn't exist)
+const FALLBACK_ADMIN_EMAILS = [
   'williamsjullin@gmail.com',
   'williamjullin@gmail.com',
   'julienvalentine1@gmail.com'
 ];
+
+/**
+ * Get admin whitelist from Firestore, fallback to hardcoded list
+ */
+async function getAdminEmails(): Promise<string[]> {
+  try {
+    const doc = await db.collection("settings").doc("admin_whitelist").get();
+    if (doc.exists) {
+      const data = doc.data();
+      if (data?.emails && Array.isArray(data.emails) && data.emails.length > 0) {
+        return data.emails.map((e: string) => e.toLowerCase());
+      }
+    }
+    // Doc doesn't exist yet — initialize it with fallback values
+    await db.collection("settings").doc("admin_whitelist").set({
+      emails: FALLBACK_ADMIN_EMAILS,
+      updatedAt: new Date(),
+      note: "Auto-initialized from hardcoded list",
+    });
+    return FALLBACK_ADMIN_EMAILS;
+  } catch (error) {
+    console.warn("[getAdminEmails] Firestore read failed, using fallback", error);
+    return FALLBACK_ADMIN_EMAILS;
+  }
+}
 
 /**
  * Définit les custom claims admin pour l'utilisateur connecté
@@ -34,8 +59,9 @@ export const setAdminClaims = onCall(
     const uid = request.auth.uid;
     const email = request.auth.token.email?.toLowerCase();
 
-    // Vérifier que l'email est dans la whitelist admin
-    if (!email || !ADMIN_EMAILS.includes(email)) {
+    // Vérifier que l'email est dans la whitelist admin (from Firestore)
+    const adminEmails = await getAdminEmails();
+    if (!email || !adminEmails.includes(email)) {
       throw new HttpsError(
         "permission-denied",
         "Cet email n'est pas autorisé comme admin"
@@ -92,8 +118,9 @@ export const bootstrapFirstAdmin = onCall(
 
     console.log(`[bootstrapFirstAdmin] Attempt by ${email} (${uid})`);
 
-    // SECURITY: Vérifier que l'email est dans la whitelist admin
-    if (!email || !ADMIN_EMAILS.includes(email)) {
+    // SECURITY: Vérifier que l'email est dans la whitelist admin (from Firestore)
+    const adminEmails = await getAdminEmails();
+    if (!email || !adminEmails.includes(email)) {
       console.warn(`[bootstrapFirstAdmin] SECURITY: Rejected non-whitelisted email: ${email}`);
       throw new HttpsError(
         "permission-denied",
@@ -186,8 +213,9 @@ export const initializeAdminClaims = onCall(
 
     const normalizedEmail = email.toLowerCase();
 
-    // Keep whitelist as additional security layer
-    if (!ADMIN_EMAILS.includes(normalizedEmail)) {
+    // Keep whitelist as additional security layer (from Firestore)
+    const adminEmails = await getAdminEmails();
+    if (!adminEmails.includes(normalizedEmail)) {
       console.warn(`[initializeAdminClaims] SECURITY: Attempt to add non-whitelisted email: ${normalizedEmail} by ${request.auth.uid}`);
       throw new HttpsError(
         "permission-denied",

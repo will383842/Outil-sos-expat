@@ -867,6 +867,38 @@
       ]
     },
     {
+      "collectionGroup": "chatters",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "level",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "chatters",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "totalEarned",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "chatter_commissions",
       "queryScope": "COLLECTION",
       "fields": [

@@ -100,13 +100,21 @@ export type ChatterBadgeType =
   | "clients_10"
   | "clients_50"
   | "clients_100"
+  | "recruits_3"
   | "recruits_5"
   | "recruits_10"
+  | "recruits_25"
+  | "recruits_50"
   | "earned_100"
   | "earned_500"
   | "earned_1000"
-  | "zoom_participant"
-  | "zoom_regular";
+  | "team_10"
+  | "team_25"
+  | "team_50"
+  | "team_100"
+  | "team_earned_500"
+  | "team_earned_1000"
+  | "team_earned_5000";
 
 // ============================================================================
 // PAYMENT DETAILS

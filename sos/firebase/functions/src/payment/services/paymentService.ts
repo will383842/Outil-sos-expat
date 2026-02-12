@@ -33,6 +33,56 @@ import {
   DEFAULT_PAYMENT_CONFIG,
 } from '../types';
 import { createPaymentRouter } from './paymentRouter';
+import { encryptFields, decryptFields } from '../../utils/encryption';
+
+// Sensitive fields to encrypt for each payment detail type
+const BANK_SENSITIVE_FIELDS: (keyof BankTransferDetails)[] = [
+  'accountHolderName', 'iban', 'accountNumber', 'routingNumber',
+  'sortCode', 'bsb', 'ifsc', 'swiftBic',
+];
+
+const MOBILE_SENSITIVE_FIELDS: (keyof MobileMoneyDetails)[] = [
+  'phoneNumber', 'accountName',
+];
+
+/**
+ * Encrypt sensitive fields in payment details before storing
+ */
+function encryptPaymentDetails(
+  details: BankTransferDetails | MobileMoneyDetails
+): BankTransferDetails | MobileMoneyDetails {
+  try {
+    if (details.type === 'bank_transfer') {
+      return encryptFields(details as BankTransferDetails & Record<string, unknown>, BANK_SENSITIVE_FIELDS as string[]) as unknown as BankTransferDetails;
+    } else if (details.type === 'mobile_money') {
+      return encryptFields(details as MobileMoneyDetails & Record<string, unknown>, MOBILE_SENSITIVE_FIELDS as string[]) as unknown as MobileMoneyDetails;
+    }
+    return details;
+  } catch (error) {
+    logger.error('[PaymentService] Failed to encrypt payment details', { error, type: details.type });
+    throw new Error('Failed to encrypt payment details');
+  }
+}
+
+/**
+ * Decrypt sensitive fields in payment details after reading
+ * Gracefully handles unencrypted data (migration-safe)
+ */
+function decryptPaymentDetails(
+  details: BankTransferDetails | MobileMoneyDetails
+): BankTransferDetails | MobileMoneyDetails {
+  try {
+    if (details.type === 'bank_transfer') {
+      return decryptFields(details as BankTransferDetails & Record<string, unknown>, BANK_SENSITIVE_FIELDS as string[]) as unknown as BankTransferDetails;
+    } else if (details.type === 'mobile_money') {
+      return decryptFields(details as MobileMoneyDetails & Record<string, unknown>, MOBILE_SENSITIVE_FIELDS as string[]) as unknown as MobileMoneyDetails;
+    }
+    return details;
+  } catch (error) {
+    logger.warn('[PaymentService] Failed to decrypt payment details, returning as-is', { error, type: details.type });
+    return details;
+  }
+}
 
 // ============================================================================
 // COLLECTION PATHS
@@ -207,13 +257,16 @@ export class PaymentService {
     const now = new Date().toISOString();
     const methodRef = this.db.collection(COLLECTIONS.PAYMENT_METHODS).doc();
 
+    // Encrypt sensitive fields before storing
+    const encryptedDetails = encryptPaymentDetails(details);
+
     const paymentMethod: UserPaymentMethod = {
       id: methodRef.id,
       userId,
       userType,
       provider,
       methodType,
-      details,
+      details: encryptedDetails,
       isDefault: setAsDefault,
       isVerified: false, // Can be verified later
       createdAt: now,
@@ -270,10 +323,10 @@ export class PaymentService {
       return null;
     }
 
-    // Match on identifying field based on type
+    // Match on identifying field based on type (decrypt stored data for comparison)
     for (const doc of snapshot.docs) {
       const existing = doc.data() as UserPaymentMethod;
-      const existingDetails = existing.details;
+      const existingDetails = decryptPaymentDetails(existing.details);
 
       if (existingDetails.type !== details.type) continue;
 
@@ -321,7 +374,11 @@ export class PaymentService {
       .orderBy('createdAt', 'desc')
       .get();
 
-    return snapshot.docs.map((doc) => doc.data() as UserPaymentMethod);
+    return snapshot.docs.map((doc) => {
+      const method = doc.data() as UserPaymentMethod;
+      method.details = decryptPaymentDetails(method.details);
+      return method;
+    });
   }
 
   /**
@@ -357,10 +414,14 @@ export class PaymentService {
         return null;
       }
 
-      return anyMethod.docs[0].data() as UserPaymentMethod;
+      const method = anyMethod.docs[0].data() as UserPaymentMethod;
+      method.details = decryptPaymentDetails(method.details);
+      return method;
     }
 
-    return snapshot.docs[0].data() as UserPaymentMethod;
+    const method = snapshot.docs[0].data() as UserPaymentMethod;
+    method.details = decryptPaymentDetails(method.details);
+    return method;
   }
 
   /**

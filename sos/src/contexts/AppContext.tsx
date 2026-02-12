@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   ReactNode,
 } from "react";
 import { collection, getDocs, query } from "firebase/firestore";
@@ -161,10 +162,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   // Helper function to check if a country is enabled
-  const isCountryEnabled = (countryCode: string): boolean => {
+  const isCountryEnabled = useCallback((countryCode: string): boolean => {
     if (!countryCode) return false;
     return supportedCountries.includes(countryCode.toUpperCase());
-  };
+  }, [supportedCountries]);
 
   const [enhancedSettings, setEnhancedSettings] = useState<EnhancedSettings>({
     notifications: {
@@ -249,7 +250,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     saveLanguagePreference(lang); // Save user preference (takes priority over location)
   }, []);
 
-  const addNotification = (
+  const addNotification = useCallback((
     notification: Omit<Notification, "id" | "createdAt">
   ) => {
     const newNotification: Notification = {
@@ -259,19 +260,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       isRead: false,
     };
     setNotifications((prev) => [newNotification, ...prev]);
-  };
+  }, []);
 
-  const markNotificationAsRead = (id: string) => {
+  const markNotificationAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
-  };
+  }, []);
 
-  const getUnreadNotificationsCount = () => {
+  const getUnreadNotificationsCount = useCallback(() => {
     return notifications.filter((n) => !n.isRead).length;
-  };
+  }, [notifications]);
 
-  const updateEnhancedSettings = (partial: Partial<EnhancedSettings>) => {
+  const updateEnhancedSettings = useCallback((partial: Partial<EnhancedSettings>) => {
     setEnhancedSettings((prev) => ({
       ...prev,
       ...partial,
@@ -298,27 +299,32 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         details: { settings: JSON.stringify(partial) },
       });
     }
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    services,
+    settings,
+    enhancedSettings,
+    notifications,
+    language,
+    isRTL: isRTLLanguage(language),
+    setLanguage: handleSetLanguage,
+    addNotification,
+    markNotificationAsRead,
+    getUnreadNotificationsCount,
+    updateEnhancedSettings,
+    isCountryEnabled,
+    countriesLoading,
+    enabledCountries: supportedCountries,
+  }), [
+    services, settings, enhancedSettings, notifications, language,
+    handleSetLanguage, addNotification, markNotificationAsRead,
+    getUnreadNotificationsCount, updateEnhancedSettings, isCountryEnabled,
+    countriesLoading, supportedCountries,
+  ]);
 
   return (
-    <AppContext.Provider
-      value={{
-        services,
-        settings,
-        enhancedSettings,
-        notifications,
-        language,
-        isRTL: isRTLLanguage(language),
-        setLanguage: handleSetLanguage,
-        addNotification,
-        markNotificationAsRead,
-        getUnreadNotificationsCount,
-        updateEnhancedSettings,
-        isCountryEnabled,
-        countriesLoading,
-        enabledCountries: supportedCountries,
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

@@ -324,6 +324,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
   isFirstStep,
   isLastStep,
 }) => {
+  const intl = useIntl();
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{ top: number; left: number; arrowPosition: 'top' | 'bottom' | 'left' | 'right' | 'none' }>({ top: 0, left: 0, arrowPosition: 'none' });
   const isFrench = language.startsWith('fr');
@@ -403,7 +404,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
                   ? 'hover:bg-white/20 text-white/80 hover:text-white'
                   : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
               }`}
-              aria-label="Skip tour"
+              aria-label={intl.formatMessage({ id: 'chatter.tour.skipTour', defaultMessage: 'Skip tour' })}
             >
               <X className="w-5 h-5" />
             </button>
@@ -442,7 +443,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span className="hidden sm:inline">
-                  {isFrench ? 'Precedent' : 'Previous'}
+                  {intl.formatMessage({ id: 'chatter.tour.previous', defaultMessage: 'Previous' })}
                 </span>
               </button>
             )}
@@ -452,8 +453,8 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
             >
               <span>
                 {isLastStep
-                  ? (isFrench ? 'Commencer !' : 'Get Started!')
-                  : (isFrench ? 'Suivant' : 'Next')
+                  ? intl.formatMessage({ id: 'chatter.tour.getStarted', defaultMessage: 'Get Started!' })
+                  : intl.formatMessage({ id: 'chatter.tour.next', defaultMessage: 'Next' })
                 }
               </span>
               {!isLastStep && <ChevronRight className="w-4 h-4" />}

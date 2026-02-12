@@ -303,27 +303,27 @@ const REFRESH_INTERVAL = 60000;
 
 /**
  * Format time difference for "last updated" display
- * Pure function - memoization handled at call site
+ * Uses intl.formatMessage for i18n instead of hardcoded locale checks
  */
-function formatTimeAgo(timestamp: number, locale: string): string {
+function formatTimeAgo(timestamp: number, intl: ReturnType<typeof useIntl>): string {
   const now = Date.now();
   const diffMs = now - timestamp;
   const diffSeconds = Math.floor(diffMs / 1000);
   const diffMinutes = Math.floor(diffSeconds / 60);
 
   if (diffSeconds < 10) {
-    return locale === 'fr' ? "a l'instant" : 'just now';
+    return intl.formatMessage({ id: 'chatter.dashboard.timeAgo.justNow', defaultMessage: 'just now' });
   }
   if (diffSeconds < 60) {
-    return locale === 'fr' ? `il y a ${diffSeconds}s` : `${diffSeconds}s ago`;
+    return intl.formatMessage({ id: 'chatter.dashboard.timeAgo.seconds', defaultMessage: '{seconds}s ago' }, { seconds: diffSeconds });
   }
   if (diffMinutes === 1) {
-    return locale === 'fr' ? 'il y a 1 min' : '1 min ago';
+    return intl.formatMessage({ id: 'chatter.dashboard.timeAgo.oneMinute', defaultMessage: '1 min ago' });
   }
   if (diffMinutes < 60) {
-    return locale === 'fr' ? `il y a ${diffMinutes} min` : `${diffMinutes} min ago`;
+    return intl.formatMessage({ id: 'chatter.dashboard.timeAgo.minutes', defaultMessage: '{minutes} min ago' }, { minutes: diffMinutes });
   }
-  return locale === 'fr' ? 'il y a plus d\'1h' : '1h+ ago';
+  return intl.formatMessage({ id: 'chatter.dashboard.timeAgo.overOneHour', defaultMessage: '1h+ ago' });
 }
 
 // ============================================================================
@@ -863,8 +863,8 @@ const ChatterDashboard: React.FC = () => {
               <RefreshCw className={`w-5 h-5 ${pullDistance > 60 ? 'animate-spin' : ''}`} style={{ transform: `rotate(${pullDistance * 3.6}deg)` }} />
               <span className="text-sm">
                 {pullDistance > 60
-                  ? (langCode === 'fr' ? 'Relacher pour actualiser' : 'Release to refresh')
-                  : (langCode === 'fr' ? 'Tirer pour actualiser' : 'Pull to refresh')
+                  ? intl.formatMessage({ id: 'chatter.dashboard.releaseToRefresh', defaultMessage: 'Release to refresh' })
+                  : intl.formatMessage({ id: 'chatter.dashboard.pullToRefresh', defaultMessage: 'Pull to refresh' })
                 }
               </span>
             </div>
@@ -893,13 +893,15 @@ const ChatterDashboard: React.FC = () => {
                 onClick={handleRefresh}
                 disabled={isRefreshing}
                 className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50 min-h-[32px] px-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5"
-                title={langCode === 'fr' ? 'Actualiser' : 'Refresh'}
-                aria-label={langCode === 'fr' ? 'Actualiser le tableau de bord' : 'Refresh dashboard'}
+                title={intl.formatMessage({ id: 'chatter.dashboard.refresh', defaultMessage: 'Refresh' })}
+                aria-label={intl.formatMessage({ id: 'chatter.dashboard.refreshDashboard', defaultMessage: 'Refresh dashboard' })}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span>
-                  {langCode === 'fr' ? 'Mis a jour ' : 'Updated '}
-                  {formatTimeAgo(lastUpdated, langCode)}
+                  {intl.formatMessage(
+                    { id: 'chatter.dashboard.updatedAgo', defaultMessage: 'Updated {timeAgo}' },
+                    { timeAgo: formatTimeAgo(lastUpdated, intl) }
+                  )}
                 </span>
               </button>
               {isRefreshing && (
@@ -1085,7 +1087,11 @@ const ChatterDashboard: React.FC = () => {
                 <div className="mt-2 flex flex-col gap-1">
                   {commissionBreakdown.clientCalls > 0 && (
                     <p className="text-xs text-green-600 dark:text-green-400">
-                      {commissionBreakdown.clientCalls} clients (10$/u)
+                      <FormattedMessage
+                        id="chatter.dashboard.clientsCount"
+                        defaultMessage="{count} clients ($10/ea)"
+                        values={{ count: commissionBreakdown.clientCalls }}
+                      />
                     </p>
                   )}
                   {teamPassiveIncome > 0 && (
@@ -1184,8 +1190,20 @@ const ChatterDashboard: React.FC = () => {
                 />
               </div>
               <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
-                <span>{tierProgress?.qualifiedFilleulsCount || 0} qualifies</span>
-                <span>{nextTier.tier} requis</span>
+                <span>
+                  <FormattedMessage
+                    id="chatter.dashboard.tierQualified"
+                    defaultMessage="{count} qualified"
+                    values={{ count: tierProgress?.qualifiedFilleulsCount || 0 }}
+                  />
+                </span>
+                <span>
+                  <FormattedMessage
+                    id="chatter.dashboard.tierRequired"
+                    defaultMessage="{count} required"
+                    values={{ count: nextTier.tier }}
+                  />
+                </span>
               </div>
             </div>
           </div>
@@ -1499,7 +1517,9 @@ const ChatterDashboard: React.FC = () => {
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           <FormattedMessage id="chatter.referrals.directN1" defaultMessage="Directs (N1)" />
                         </p>
-                        <p className="text-xs text-red-600 dark:text-red-400 font-medium mt-0.5">1$/appel</p>
+                        <p className="text-xs text-red-600 dark:text-red-400 font-medium mt-0.5">
+                          <FormattedMessage id="chatter.dashboard.n1RatePerCall" defaultMessage="$1/call" />
+                        </p>
                       </div>
                       <div className="text-center p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
                         <p className="text-2xl sm:text-3xl font-bold text-pink-600 dark:text-pink-400">
@@ -1508,7 +1528,9 @@ const ChatterDashboard: React.FC = () => {
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           <FormattedMessage id="chatter.referrals.indirectN2" defaultMessage="Indirects (N2)" />
                         </p>
-                        <p className="text-xs text-pink-600 dark:text-pink-400 font-medium mt-0.5">0.50$/appel</p>
+                        <p className="text-xs text-pink-600 dark:text-pink-400 font-medium mt-0.5">
+                          <FormattedMessage id="chatter.dashboard.n2RatePerCall" defaultMessage="$0.50/call" />
+                        </p>
                       </div>
                     </div>
                     <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl border border-red-200 dark:border-red-800/30">

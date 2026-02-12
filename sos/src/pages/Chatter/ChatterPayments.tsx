@@ -16,6 +16,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useChatter } from '@/hooks/useChatter';
 import { useAuth } from '@/contexts/AuthContext';
+import type { PiggyBankData } from '@/types/chatter';
 import {
   usePaymentMethods,
   useWithdrawals,
@@ -50,6 +51,8 @@ import {
   Building2,
   Smartphone,
   Eye,
+  Lock,
+  Gift,
 } from 'lucide-react';
 
 // Design tokens
@@ -131,6 +134,7 @@ const ChatterPayments: React.FC = () => {
   const pendingBalance = chatter?.pendingBalance || 0;
   const validatedBalance = chatter?.validatedBalance || 0;
   const totalBalance = availableBalance + pendingBalance + validatedBalance;
+  const piggyBank: PiggyBankData | undefined = dashboardData?.piggyBank;
 
   // Format amount in USD (primary display)
   const formatAmount = useCallback(
@@ -158,11 +162,11 @@ const ChatterPayments: React.FC = () => {
         setPendingConfirmationId(withdrawalId);
         setPendingConfirmationAmount(amount || availableBalance);
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Une erreur est survenue';
+        const message = err instanceof Error ? err.message : intl.formatMessage({ id: 'chatter.payments.error.generic', defaultMessage: 'An error occurred' });
         if (message.includes('TELEGRAM_REQUIRED')) {
-          setWithdrawalError('Vous devez connecter Telegram pour effectuer un retrait.');
+          setWithdrawalError(intl.formatMessage({ id: 'chatter.payments.error.telegramRequired', defaultMessage: 'You must connect Telegram to make a withdrawal.' }));
         } else if (message.includes('TELEGRAM_SEND_FAILED')) {
-          setWithdrawalError('Impossible d\'envoyer la confirmation Telegram. Vérifiez que vous n\'avez pas bloqué le bot et réessayez.');
+          setWithdrawalError(intl.formatMessage({ id: 'chatter.payments.error.telegramSendFailed', defaultMessage: 'Unable to send Telegram confirmation. Make sure you have not blocked the bot and try again.' }));
         } else {
           setWithdrawalError(message);
         }
@@ -201,7 +205,7 @@ const ChatterPayments: React.FC = () => {
         setShowPaymentMethodForm(false);
         await refreshMethods();
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Une erreur est survenue';
+        const message = err instanceof Error ? err.message : intl.formatMessage({ id: 'chatter.payments.error.generic', defaultMessage: 'An error occurred' });
         setSaveMethodError(message);
         throw err; // Re-throw so the form can handle it
       } finally {
@@ -405,6 +409,45 @@ const ChatterPayments: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Locked Telegram Bonus Banner */}
+        {piggyBank && piggyBank.totalPending > 0 && !piggyBank.isUnlocked && (
+          <div className={`${UI.card} p-4 bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 border-l-4 border-pink-500`}>
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-pink-100 dark:bg-pink-900/50 rounded-lg shrink-0">
+                <Gift className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <Lock className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />
+                  <p className="font-medium text-pink-700 dark:text-pink-300">
+                    <FormattedMessage
+                      id="chatter.payments.lockedBonus.title"
+                      defaultMessage="Bonus Telegram verrouillé: {amount}"
+                      values={{ amount: formatAmount(piggyBank.totalPending) }}
+                    />
+                  </p>
+                </div>
+                <p className="text-sm text-pink-600 dark:text-pink-400 mb-2">
+                  <FormattedMessage
+                    id="chatter.payments.lockedBonus.subtitle"
+                    defaultMessage="Gagnez encore {amount} en commissions client pour débloquer"
+                    values={{ amount: formatAmount(piggyBank.amountToUnlock) }}
+                  />
+                </p>
+                <div className="h-2 bg-pink-200 dark:bg-pink-900/50 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full transition-all duration-500"
+                    style={{ width: `${piggyBank.progressPercent}%` }}
+                  />
+                </div>
+                <p className="text-xs text-pink-500 dark:text-pink-400 mt-1">
+                  {formatAmount(piggyBank.clientEarnings)} / {formatAmount(piggyBank.unlockThreshold)} ({piggyBank.progressPercent}%)
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Pending Withdrawal Alert */}
         {hasPendingWithdrawal && pendingWithdrawal && (

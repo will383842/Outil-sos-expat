@@ -317,11 +317,13 @@ export async function rejectWithdrawal(
         });
       }
 
-      // Revert commission withdrawalIds
+      // Revert commission status and withdrawalIds
       for (const commissionId of withdrawal.commissionIds) {
         const commissionRef = db.collection("chatter_commissions").doc(commissionId);
         transaction.update(commissionRef, {
+          status: "available",
           withdrawalId: null,
+          paidAt: null,
           updatedAt: now,
         });
       }
@@ -525,11 +527,13 @@ export async function failWithdrawal(
           });
         }
 
-        // Revert commission withdrawalIds
+        // Revert commission status and withdrawalIds
         for (const commissionId of withdrawal.commissionIds) {
           const commissionRef = db.collection("chatter_commissions").doc(commissionId);
           transaction.update(commissionRef, {
+            status: "available",
             withdrawalId: null,
+            paidAt: null,
             updatedAt: now,
           });
         }

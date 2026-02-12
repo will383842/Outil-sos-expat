@@ -270,7 +270,7 @@ const ChatterLanding: React.FC = () => {
       <SEOHead
         title={seoTitle}
         description={seoDescription}
-        ogImage="/og-chatter-2026.jpg"
+        ogImage="/og-image.png"
         ogType="website"
         contentType="LandingPage"
       />
@@ -427,7 +427,7 @@ const ChatterLanding: React.FC = () => {
                 <div className="bg-gradient-to-t from-amber-500/20 to-yellow-400/10 border-2 border-amber-500/50 rounded-t-xl sm:rounded-t-2xl px-4 sm:px-8 lg:px-14 pt-5 sm:pt-8 pb-6 sm:pb-10 text-center">
                   <p className="text-white font-bold text-base sm:text-lg lg:text-2xl">Marie L.</p>
                   <p className="text-2xl sm:text-3xl lg:text-5xl font-black text-amber-400">5 300$</p>
-                  <p className="text-xs sm:text-sm lg:text-base text-gray-400 mt-1">TOP EARNER</p>
+                  <p className="text-xs sm:text-sm lg:text-base text-gray-400 mt-1">{intl.formatMessage({ id: 'chatter.landing.topEarnerBadge', defaultMessage: 'TOP EARNER' })}</p>
                 </div>
               </div>
               {/* 3rd */}
@@ -486,7 +486,7 @@ const ChatterLanding: React.FC = () => {
                 <div className="space-y-4 sm:space-y-5 lg:space-y-6">
                   <div className="flex items-center gap-3 sm:gap-4 lg:gap-5">
                     <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0" aria-hidden="true">
-                      <span className="text-xs sm:text-sm font-black text-black">BOSS</span>
+                      <span className="text-xs sm:text-sm font-black text-black">{intl.formatMessage({ id: 'chatter.landing.bossBadge', defaultMessage: 'BOSS' })}</span>
                     </div>
                     <div>
                       <div className="text-base sm:text-lg lg:text-xl text-white font-bold">
@@ -703,7 +703,7 @@ const ChatterLanding: React.FC = () => {
             className="fixed bottom-0 left-0 right-0 z-40 lg:hidden"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             role="complementary"
-            aria-label="CTA"
+            aria-label={intl.formatMessage({ id: 'chatter.landing.ctaAriaLabel', defaultMessage: 'Call to action - Register now' })}
           >
             <div className="bg-black/95 backdrop-blur-md border-t border-amber-500/40 px-4 py-3">
               <button
