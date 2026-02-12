@@ -51,7 +51,7 @@ interface PaymentStats {
 }
 
 export function PaymentsMonitoringDashboard() {
-  const { user } = useAuth();
+  const { user, firebaseUser } = useAuth();
   const navigate = useNavigate();
 
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
@@ -80,8 +80,12 @@ export function PaymentsMonitoringDashboard() {
     // Check if user is admin (you may need to adjust this based on your auth setup)
     const checkAdmin = async () => {
       try {
-        const token = await user.getIdTokenResult();
-        if (!token.claims.admin && !token.claims.role === 'admin') {
+        if (!firebaseUser) {
+          navigate('/login');
+          return;
+        }
+        const token = await firebaseUser.getIdTokenResult();
+        if (!token.claims.admin && token.claims.role !== 'admin') {
           navigate('/');
         }
       } catch (error) {
@@ -91,7 +95,7 @@ export function PaymentsMonitoringDashboard() {
     };
 
     checkAdmin();
-  }, [user, navigate]);
+  }, [user, firebaseUser, navigate]);
 
   // Calculate time range
   const getTimeRangeDate = (range: '1h' | '24h' | '7d' | '30d'): Date => {

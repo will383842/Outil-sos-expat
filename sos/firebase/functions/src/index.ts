@@ -11,11 +11,19 @@ const IS_DEPLOYMENT_ANALYSIS =
   !process.env.FUNCTIONS_EMULATOR;
 
 if (IS_DEPLOYMENT_ANALYSIS) {
-  // Give 8 seconds for exports to load, then force exit
+  console.log('[DEPLOYMENT] Analysis mode detected - setting up forced exit');
+  // Force exit immediately after module loads (next tick)
+  process.nextTick(() => {
+    setImmediate(() => {
+      console.log('[DEPLOYMENT] Forcing process exit for Firebase CLI');
+      setTimeout(() => process.exit(0), 100);
+    });
+  });
+  // Backup: force exit after 7 seconds no matter what
   setTimeout(() => {
-    console.log('[DEPLOYMENT] Exports loaded, forcing process exit for Firebase CLI analysis');
+    console.log('[DEPLOYMENT] Timeout reached, forcing exit');
     process.exit(0);
-  }, 8000);
+  }, 7000).unref(); // unref() allows process to exit naturally if event loop is empty
 }
 
 // ====== P1-4: SENTRY (lazy initialization - called in functions, not at module load) ======
