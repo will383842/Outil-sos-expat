@@ -312,6 +312,10 @@ async function sendTelegramMessage(
     return false;
   }
 
+  // AbortController with 30s timeout to prevent hanging requests (C1 fix)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
   try {
     const response = await fetch(
       `https://api.telegram.org/bot${botToken}/sendMessage`,
@@ -323,8 +327,11 @@ async function sendTelegramMessage(
           text,
           parse_mode: parseMode,
         }),
+        signal: controller.signal,
       }
     );
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const error = await response.text();
@@ -334,6 +341,11 @@ async function sendTelegramMessage(
 
     return true;
   } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      logger.error("[sendTelegramMessage] Request timeout after 30s", { chatId });
+      return false;
+    }
     logger.error("[sendTelegramMessage] Error", { chatId, error });
     return false;
   }
@@ -589,11 +601,10 @@ export const telegramChatterBotWebhook = onRequest(
 
       const update = req.body;
 
-      // Log incoming update (remove in production for privacy)
+      // Log incoming update (C5 fix: no PII in production logs)
       logger.info("[telegramChatterBotWebhook] Received update", {
         updateId: update?.update_id,
-        messageText: update?.message?.text,
-        chatId: update?.message?.chat?.id,
+        hasMessage: !!update?.message,
         hasCallbackQuery: !!update?.callback_query,
       });
 

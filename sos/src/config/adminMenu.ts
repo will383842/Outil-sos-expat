@@ -484,6 +484,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.googleAdsAnalytics.description",
       },
       {
+        id: "landing-pages",
+        labelKey: "admin.menu.landingPages",
+        path: "/admin/marketing/landing-pages",
+        icon: Globe,
+        badge: "NEW",
+        descriptionKey: "admin.menu.landingPages.description",
+      },
+      {
         id: "notifications",
         labelKey: "admin.menu.notifications",
         path: "/admin/comms/notifications",

@@ -62,7 +62,7 @@ const DashboardAffiliateCard: React.FC = () => {
   };
 
   const goToAffiliateDashboard = () => {
-    const langCode = intl.locale?.substring(0, 2) || "fr";
+    const langCode = (intl.locale?.substring(0, 2) || "fr") as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar";
     const slug = getTranslatedRouteSlug("affiliate-dashboard" as RouteKey, langCode);
     navigate(`/${slug}`);
   };

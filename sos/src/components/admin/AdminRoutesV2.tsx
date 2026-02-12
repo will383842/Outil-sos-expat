@@ -533,6 +533,7 @@ const AdminAdsAnalytics = lazy(() => import("../../pages/admin/AdminAdsAnalytics
 const AdminTrustpilot = lazy(() => import("../../pages/admin/AdminTrustpilot"));
 const AdminMetaAnalytics = lazy(() => import("../../pages/admin/AdminMetaAnalytics"));
 const AdminGoogleAdsAnalytics = lazy(() => import("../../pages/admin/AdminGoogleAdsAnalytics"));
+const AdminLandingPages = lazy(() => import("../../pages/admin/AdminLandingPages"));
 
 // ===== LAYOUT PROTÉGÉ ADMIN =====
 const AdminProtectedLayout: React.FC = () => (
@@ -1751,6 +1752,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="marketing/landing-pages"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminLandingPages />
+          </Suspense>
+        }
+      />
       <Route path="marketing" element={<Navigate to="marketing/templates-emails" replace />} />
 
       {/* 404 admin */}
@@ -1878,6 +1887,7 @@ export const useAdminRouteValidation = () => {
       "/admin/marketing/trustpilot",
       "/admin/marketing/meta-analytics",
       "/admin/marketing/google-ads-analytics",
+      "/admin/marketing/landing-pages",
       "/admin/analytics/unified",
       "/admin/feedback",
     ];

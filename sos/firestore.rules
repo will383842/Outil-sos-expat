@@ -2710,6 +2710,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= COUNTRY LANDING CONFIGS =================
+    // Landing page configs per country (payments, currency, testimonials, SEO)
+    match /country_landing_configs/{configId} {
+      allow read: if true;          // Landing pages are public
+      allow write: if isAdmin();    // Only admins can edit
+    }
+
     // ================= MESSAGE TEMPLATES =================
     // Templates de messages pour l'admin comms UI
     match /message_templates/{locale} {

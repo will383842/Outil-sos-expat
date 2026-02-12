@@ -199,6 +199,11 @@ export interface User {
     ipAddress?: string; // Si capturé côté serveur
   };
 
+  // Meta Pixel / CAPI tracking identifiers
+  fbp?: string;
+  fbc?: string;
+  metaEventId?: string;
+
   // Motivation (pour expatriés)
   motivation?: string;
 }

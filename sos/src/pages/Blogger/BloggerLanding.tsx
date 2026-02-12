@@ -40,6 +40,7 @@ import {
   FileText,
   Copy,
 } from 'lucide-react';
+import { useCountryFromUrl, useCountryLandingConfig, formatPaymentMethodDisplay, convertToLocal } from '@/country-landing';
 
 // ============================================================================
 // STYLES
@@ -155,6 +156,11 @@ const BloggerLanding: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
 
+  // Country-specific config
+  const { countryCode, lang: urlLang } = useCountryFromUrl();
+  const { config: countryConfig } = useCountryLandingConfig('blogger', countryCode, urlLang || langCode);
+  const local = (usd: number) => { const s = convertToLocal(usd, countryConfig.currency); return s ? ` (${s})` : ''; };
+
   // Calculator
   const [calcArticles, setCalcArticles] = useState(20);
   const [calcVisitsPerArticle, setCalcVisitsPerArticle] = useState(5);
@@ -217,13 +223,8 @@ const BloggerLanding: React.FC = () => {
     { name: intl.formatMessage({ id: 'blogger.resource.seo', defaultMessage: 'SEO Guide' }), icon: '🔍' },
   ];
 
-  // Payment methods
-  const paymentMethods = [
-    { name: 'Wise', icon: '🌐' },
-    { name: 'PayPal', icon: '💳' },
-    { name: 'Mobile Money', icon: '📱' },
-    { name: 'Bank', icon: '🏦' },
-  ];
+  // Payment methods (from country config)
+  const paymentMethods = countryConfig.paymentMethods.map(m => ({ name: m.name, icon: m.emoji }));
 
   return (
     <Layout showFooter={false}>

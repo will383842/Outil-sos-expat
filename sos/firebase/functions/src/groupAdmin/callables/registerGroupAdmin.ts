@@ -185,7 +185,8 @@ export const registerGroupAdmin = onCall(
           );
         }
 
-        if (userData?.isGroupAdmin === true) {
+        // (frontend creates users doc with role='groupAdmin' before calling this function)
+        if (userData?.isGroupAdmin === true || existingRole === "groupAdmin") {
           // Already a GroupAdmin, let it fall through to existing check
         } else if (existingRole && existingRole !== "client") {
           throw new HttpsError(

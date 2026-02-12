@@ -29,6 +29,7 @@ import {
   Plus,
   Minus,
 } from 'lucide-react';
+import { useCountryFromUrl, useCountryLandingConfig, formatPaymentMethodDisplay, convertToLocal } from '@/country-landing';
 
 // ============================================================================
 // STYLES - Mobile-first with performance hints
@@ -172,6 +173,10 @@ const ChatterLanding: React.FC = () => {
   const [teamSize, setTeamSize] = useState(10);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
+  // Country-specific config
+  const { countryCode, lang: urlLang } = useCountryFromUrl();
+  const { config: countryConfig } = useCountryLandingConfig('chatter', countryCode, urlLang || langCode);
+
   // SEO: canonical URL + hrefLang
   const htmlLang = langCode === 'ch' ? 'zh' : langCode;
   const currentHreflang = HREFLANG_MAP.find(h => h.lang === htmlLang) || HREFLANG_MAP[0];
@@ -266,6 +271,12 @@ const ChatterLanding: React.FC = () => {
 
   const teamEarnings = teamSize * 10;
 
+  // Local currency helper — returns " (6 000 FCFA)" or empty string
+  const local = (usd: number) => {
+    const str = convertToLocal(usd, countryConfig.currency);
+    return str ? ` (${str})` : '';
+  };
+
   // SEO titles
   const seoTitle = intl.formatMessage({ id: 'chatter.landing.seo.title' });
   const seoDescription = intl.formatMessage({ id: 'chatter.landing.seo.description' });
@@ -308,7 +319,7 @@ const ChatterLanding: React.FC = () => {
             </h1>
 
             <p className="text-xl sm:text-2xl text-white font-bold mb-2 sm:mb-4">
-              <span className="text-amber-400">10$</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
+              <span className="text-amber-400">10${local(10)}</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
             </p>
 
             <p className="text-base sm:text-lg text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -355,7 +366,7 @@ const ChatterLanding: React.FC = () => {
                   <FormattedMessage id="chatter.landing.source1.desc" defaultMessage="Parcourez les groupes Facebook et forums. Aidez ceux qui ont besoin en partageant votre lien." />
                 </p>
                 <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-amber-400">
-                  10$ / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
+                  10${local(10)} / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
                 </div>
               </article>
 
@@ -372,10 +383,10 @@ const ChatterLanding: React.FC = () => {
                 </p>
                 <div className="space-y-1 sm:space-y-2">
                   <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-green-400">
-                    +1$ <FormattedMessage id="chatter.landing.source2.level1" defaultMessage="niveau 1" />
+                    +1${local(1)} <FormattedMessage id="chatter.landing.source2.level1" defaultMessage="niveau 1" />
                   </div>
                   <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-cyan-400">
-                    +0,50$ <FormattedMessage id="chatter.landing.source2.level2" defaultMessage="niveau 2" />
+                    +0,50${local(0.5)} <FormattedMessage id="chatter.landing.source2.level2" defaultMessage="niveau 2" />
                   </div>
                 </div>
               </article>
@@ -392,7 +403,7 @@ const ChatterLanding: React.FC = () => {
                   <FormattedMessage id="chatter.landing.source3.desc" defaultMessage="Invitez des avocats ou expatriés aidants avec votre lien spécial." />
                 </p>
                 <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-purple-400 mb-2">
-                  5$ / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
+                  5${local(5)} / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
                 </div>
                 <p className="text-sm sm:text-base lg:text-lg text-gray-300">
                   <FormattedMessage id="chatter.landing.source3.info" defaultMessage="Un avocat reçoit 8 à 60 appels/mois" />
@@ -417,33 +428,47 @@ const ChatterLanding: React.FC = () => {
             </p>
 
             {/* Podium */}
-            <div className="flex items-end justify-center gap-2 sm:gap-4 lg:gap-8 mb-10 sm:mb-12 lg:mb-16" role="list" aria-label={intl.formatMessage({ id: 'chatter.landing.proof.podium', defaultMessage: 'Top earners' })}>
-              {/* 2nd */}
-              <div className="flex flex-col items-center" role="listitem">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gray-400 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3" aria-hidden="true">🥈</div>
-                <div className="bg-gradient-to-t from-gray-500/20 to-gray-400/10 border border-gray-400/40 rounded-t-xl sm:rounded-t-2xl px-3 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-5 sm:pb-8 text-center">
-                  <p className="text-white font-bold text-sm sm:text-base lg:text-xl">Fatou S.</p>
-                  <p className="text-xl sm:text-2xl lg:text-4xl font-black text-gray-300">3 850$</p>
+            {(() => {
+              const t = countryConfig.testimonials;
+              const first = t.find(x => x.rank === 1) || t[0];
+              const second = t.find(x => x.rank === 2) || t[1];
+              const third = t.find(x => x.rank === 3) || t[2];
+              return (
+                <div className="flex items-end justify-center gap-2 sm:gap-4 lg:gap-8 mb-10 sm:mb-12 lg:mb-16" role="list" aria-label={intl.formatMessage({ id: 'chatter.landing.proof.podium', defaultMessage: 'Top earners' })}>
+                  {/* 2nd */}
+                  {second && (
+                    <div className="flex flex-col items-center" role="listitem">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gray-400 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3" aria-hidden="true">🥈</div>
+                      <div className="bg-gradient-to-t from-gray-500/20 to-gray-400/10 border border-gray-400/40 rounded-t-xl sm:rounded-t-2xl px-3 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-5 sm:pb-8 text-center">
+                        <p className="text-white font-bold text-sm sm:text-base lg:text-xl">{second.name}</p>
+                        <p className="text-xl sm:text-2xl lg:text-4xl font-black text-gray-300">{second.earningsDisplay}</p>
+                      </div>
+                    </div>
+                  )}
+                  {/* 1st */}
+                  {first && (
+                    <div className="flex flex-col items-center -mb-4 sm:-mb-6" role="listitem">
+                      <div className="w-14 h-14 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-amber-500 rounded-full flex items-center justify-center text-3xl sm:text-4xl lg:text-5xl mb-2 sm:mb-3" aria-hidden="true">🥇</div>
+                      <div className="bg-gradient-to-t from-amber-500/20 to-yellow-400/10 border-2 border-amber-500/50 rounded-t-xl sm:rounded-t-2xl px-4 sm:px-8 lg:px-14 pt-5 sm:pt-8 pb-6 sm:pb-10 text-center">
+                        <p className="text-white font-bold text-base sm:text-lg lg:text-2xl">{first.name}</p>
+                        <p className="text-2xl sm:text-3xl lg:text-5xl font-black text-amber-400">{first.earningsDisplay}</p>
+                        <p className="text-xs sm:text-sm lg:text-base text-gray-400 mt-1">{intl.formatMessage({ id: 'chatter.landing.topEarnerBadge', defaultMessage: 'TOP EARNER' })}</p>
+                      </div>
+                    </div>
+                  )}
+                  {/* 3rd */}
+                  {third && (
+                    <div className="flex flex-col items-center" role="listitem">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-orange-700 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3" aria-hidden="true">🥉</div>
+                      <div className="bg-gradient-to-t from-orange-700/20 to-orange-600/10 border border-orange-600/40 rounded-t-xl sm:rounded-t-2xl px-3 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-5 sm:pb-8 text-center">
+                        <p className="text-white font-bold text-sm sm:text-base lg:text-xl">{third.name}</p>
+                        <p className="text-xl sm:text-2xl lg:text-4xl font-black text-orange-400">{third.earningsDisplay}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-              {/* 1st */}
-              <div className="flex flex-col items-center -mb-4 sm:-mb-6" role="listitem">
-                <div className="w-14 h-14 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-amber-500 rounded-full flex items-center justify-center text-3xl sm:text-4xl lg:text-5xl mb-2 sm:mb-3" aria-hidden="true">🥇</div>
-                <div className="bg-gradient-to-t from-amber-500/20 to-yellow-400/10 border-2 border-amber-500/50 rounded-t-xl sm:rounded-t-2xl px-4 sm:px-8 lg:px-14 pt-5 sm:pt-8 pb-6 sm:pb-10 text-center">
-                  <p className="text-white font-bold text-base sm:text-lg lg:text-2xl">Marie L.</p>
-                  <p className="text-2xl sm:text-3xl lg:text-5xl font-black text-amber-400">5 300$</p>
-                  <p className="text-xs sm:text-sm lg:text-base text-gray-400 mt-1">{intl.formatMessage({ id: 'chatter.landing.topEarnerBadge', defaultMessage: 'TOP EARNER' })}</p>
-                </div>
-              </div>
-              {/* 3rd */}
-              <div className="flex flex-col items-center" role="listitem">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-orange-700 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3" aria-hidden="true">🥉</div>
-                <div className="bg-gradient-to-t from-orange-700/20 to-orange-600/10 border border-orange-600/40 rounded-t-xl sm:rounded-t-2xl px-3 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-5 sm:pb-8 text-center">
-                  <p className="text-white font-bold text-sm sm:text-base lg:text-xl">Kwame O.</p>
-                  <p className="text-xl sm:text-2xl lg:text-4xl font-black text-orange-400">2 940$</p>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-sm sm:max-w-lg mx-auto">
@@ -498,7 +523,7 @@ const ChatterLanding: React.FC = () => {
                         <FormattedMessage id="chatter.landing.agency.you" defaultMessage="Vous = Le directeur" />
                       </div>
                       <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-amber-400">
-                        10$ / <FormattedMessage id="chatter.landing.agency.persoCall" defaultMessage="appel perso" />
+                        10${local(10)} / <FormattedMessage id="chatter.landing.agency.persoCall" defaultMessage="appel perso" />
                       </div>
                     </div>
                   </div>
@@ -515,7 +540,7 @@ const ChatterLanding: React.FC = () => {
                         <span className="text-green-400 font-bold">(<FormattedMessage id="chatter.landing.unlimited" defaultMessage="illimitée" />)</span>
                       </div>
                       <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-green-400">
-                        +1$ <FormattedMessage id="chatter.landing.agency.perCall" defaultMessage="sur chaque appel" />
+                        +1${local(1)} <FormattedMessage id="chatter.landing.agency.perCall" defaultMessage="sur chaque appel" />
                       </div>
                     </div>
                   </div>
@@ -532,7 +557,7 @@ const ChatterLanding: React.FC = () => {
                         <span className="text-cyan-400 font-bold">(<FormattedMessage id="chatter.landing.unlimited" defaultMessage="illimitées" />)</span>
                       </div>
                       <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-cyan-400">
-                        +0,50$ <FormattedMessage id="chatter.landing.agency.perCall" defaultMessage="sur chaque appel" />
+                        +0,50${local(0.5)} <FormattedMessage id="chatter.landing.agency.perCall" defaultMessage="sur chaque appel" />
                       </div>
                     </div>
                   </div>
@@ -573,7 +598,7 @@ const ChatterLanding: React.FC = () => {
                     <FormattedMessage id="chatter.landing.calc.passive" defaultMessage="Revenus passifs mensuels" />
                   </p>
                   <p className="text-4xl sm:text-5xl lg:text-6xl font-black text-green-400" aria-live="polite">
-                    +{teamEarnings}$
+                    +{teamEarnings}${local(teamEarnings)}
                   </p>
                   <p className="text-sm sm:text-base lg:text-lg text-gray-400 mt-3 sm:mt-4 flex items-center justify-center gap-2">
                     <Infinity className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
@@ -622,7 +647,7 @@ const ChatterLanding: React.FC = () => {
                 <FormattedMessage id="chatter.landing.payment.info" defaultMessage="Retrait dès 25$ • Reçu en 48h" />
               </p>
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4">
-                {['🌐 Wise', '🟠 Orange Money', '🌊 Wave', '💚 M-Pesa', '🏦 Virement'].map((m, i) => (
+                {formatPaymentMethodDisplay(countryConfig.paymentMethods).map((m, i) => (
                   <span key={i} className="bg-white/10 text-white rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-medium">{m}</span>
                 ))}
               </div>

@@ -148,7 +148,8 @@ export const registerInfluencer = onCall(
         }
 
         // Check if already an influencer
-        if (userData?.isInfluencer === true) {
+        // (frontend creates users doc with role='influencer' before calling this function)
+        if (userData?.isInfluencer === true || existingRole === "influencer") {
           // Let it fall through to existing influencer check below
         } else if (existingRole && existingRole !== "client") {
           // Generic block for any other role (blogger, groupAdmin, etc.)

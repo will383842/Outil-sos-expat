@@ -82,7 +82,7 @@ function assertAdmin(ctx: { auth?: { uid?: string; token?: Record<string, unknow
 interface CreateCampaignRequest {
   name: string;
   message: string;
-  targetAudience: string;
+  targetAudience: string; // Single role or comma-separated: "chatters,bloggers"
   scheduledAt?: string; // ISO string, null = draft
 }
 
@@ -109,33 +109,44 @@ export const telegram_createCampaign = onCall(
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       throw new HttpsError("invalid-argument", "Campaign message is required.");
     }
+    // Validate audience: supports "all", single role, or comma-separated multi-role
     const validAudiences = ["all", "chatters", "influencers", "bloggers", "groupAdmins"];
-    if (!targetAudience || !validAudiences.includes(targetAudience)) {
-      throw new HttpsError("invalid-argument", `targetAudience must be one of: ${validAudiences.join(", ")}`);
+    if (!targetAudience) {
+      throw new HttpsError("invalid-argument", "targetAudience is required.");
+    }
+    const audienceParts = targetAudience.split(",").map((s) => s.trim()).filter(Boolean);
+    for (const part of audienceParts) {
+      if (!validAudiences.includes(part)) {
+        throw new HttpsError("invalid-argument", `Invalid audience "${part}". Must be one of: ${validAudiences.join(", ")}`);
+      }
     }
 
     const db = getDb();
 
-    // Count target audience
+    // Count target audience (supports multi-role)
     let targetCount = 0;
     const usersRef = db.collection("users");
+    const roleMap: Record<string, string> = {
+      chatters: "chatter",
+      influencers: "influencer",
+      bloggers: "blogger",
+      groupAdmins: "groupAdmin",
+    };
+
     if (targetAudience === "all") {
       const snap = await usersRef.where("telegram_id", "!=", "").count().get();
       targetCount = snap.data().count;
     } else {
-      const roleMap: Record<string, string> = {
-        chatters: "chatter",
-        influencers: "influencer",
-        bloggers: "blogger",
-        groupAdmins: "groupAdmin",
-      };
-      const role = roleMap[targetAudience] || targetAudience;
-      const snap = await usersRef
-        .where("telegram_id", "!=", "")
-        .where("role", "==", role)
-        .count()
-        .get();
-      targetCount = snap.data().count;
+      // Count for each role and sum
+      for (const part of audienceParts) {
+        const role = roleMap[part] || part;
+        const snap = await usersRef
+          .where("telegram_id", "!=", "")
+          .where("role", "==", role)
+          .count()
+          .get();
+        targetCount += snap.data().count;
+      }
     }
 
     const status: CampaignStatus = scheduledAt ? "scheduled" : "draft";

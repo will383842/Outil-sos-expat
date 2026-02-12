@@ -23,6 +23,9 @@ import { getTelegramBotToken } from "../../lib/secrets";
 const TELEGRAM_API_BASE = "https://api.telegram.org/bot";
 const LOG_PREFIX = "\u{1F4F1} [Telegram]";
 
+/** Timeout for Telegram API requests (30 seconds) */
+const API_REQUEST_TIMEOUT_MS = 30_000;
+
 // Rate limiting: Telegram's actual limit is ~30 msg/sec for bots, ~20 msg/min to same chat.
 // This in-memory limiter is a per-instance safety net. The global queue processor
 // (maxInstances: 1) is the real rate control mechanism.
@@ -229,6 +232,10 @@ async function telegramApiRequest<T>(
 
   const url = `${TELEGRAM_API_BASE}${token}/${method}`;
 
+  // AbortController with timeout to prevent hanging requests (C1 fix)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
+
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -236,7 +243,10 @@ async function telegramApiRequest<T>(
         "Content-Type": "application/json",
       },
       body: params ? JSON.stringify(params) : undefined,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const data = await response.json() as { ok: boolean; result?: unknown; error_code?: number; description?: string };
 
@@ -255,6 +265,11 @@ async function telegramApiRequest<T>(
 
     return { ok: true, result: data.result as T };
   } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      console.error(`${LOG_PREFIX} Request timeout for ${method} after ${API_REQUEST_TIMEOUT_MS}ms`);
+      return { ok: false, description: `Request timeout after ${API_REQUEST_TIMEOUT_MS / 1000}s` };
+    }
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error(`${LOG_PREFIX} Network error for ${method}:`, errorMessage);
     return { ok: false, description: errorMessage };

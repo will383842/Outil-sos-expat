@@ -32,6 +32,7 @@ import {
   Globe,
   Gift,
 } from 'lucide-react';
+import { useCountryFromUrl, useCountryLandingConfig, convertToLocal } from '@/country-landing';
 
 // ============================================================================
 // STYLES - Mobile-first with performance hints
@@ -154,6 +155,11 @@ const GroupAdminLanding: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
 
+  // Country-specific config
+  const { countryCode, lang: urlLang } = useCountryFromUrl();
+  const { config: countryConfig } = useCountryLandingConfig('groupadmin', countryCode, urlLang || langCode);
+  const local = (usd: number) => { const s = convertToLocal(usd, countryConfig.currency); return s ? ` (${s})` : ''; };
+
   const registerRoute = `/${getTranslatedRouteSlug('groupadmin-register' as RouteKey, langCode)}`;
   const handleRegisterClick = () => {
     navigate(registerRoute);
@@ -243,13 +249,13 @@ const GroupAdminLanding: React.FC = () => {
             {/* Key Numbers Row */}
             <div className="flex flex-wrap justify-center gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-10">
               <div className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-center">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-green-400">$10</div>
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-green-400">$10{local(10)}</div>
                 <div className="text-xs sm:text-sm text-gray-400">
                   <FormattedMessage id="groupAdmin.landing.hero.perCall" defaultMessage="per call generated" />
                 </div>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-center">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-yellow-400">-$5</div>
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-yellow-400">-$5{local(5)}</div>
                 <div className="text-xs sm:text-sm text-gray-400">
                   <FormattedMessage id="groupAdmin.landing.hero.discount" defaultMessage="discount for your members" />
                 </div>

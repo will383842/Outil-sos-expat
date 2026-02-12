@@ -7,6 +7,7 @@
  */
 
 import * as admin from 'firebase-admin';
+import * as crypto from 'crypto';
 import {
   QUEUE_COLLECTION,
   QueuePriority,
@@ -17,6 +18,21 @@ const LOG_PREFIX = '[TelegramQueue]';
 
 /** Telegram sendMessage API limit */
 const TELEGRAM_MAX_LENGTH = 4096;
+
+/** Idempotency window: reject duplicate messages within this period (C2 fix) */
+const IDEMPOTENCY_WINDOW_MS = 60_000; // 1 minute
+
+/**
+ * Generate a SHA-256 idempotency key from chatId + text + minute-level timestamp
+ */
+function generateIdempotencyKey(chatId: string | number, text: string): string {
+  const minuteTs = Math.floor(Date.now() / IDEMPOTENCY_WINDOW_MS);
+  return crypto
+    .createHash('sha256')
+    .update(`${chatId}:${text}:${minuteTs}`)
+    .digest('hex')
+    .substring(0, 32);
+}
 
 // ============================================================================
 // ENQUEUE FUNCTIONS
@@ -62,6 +78,25 @@ export async function enqueueTelegramMessage(
 
   const db = admin.firestore();
 
+  // Idempotency check: prevent duplicate messages within 1-minute window (C2 fix)
+  // Skip dedup for campaign messages (they are batch-generated and unique by design)
+  const idempotencyKey = generateIdempotencyKey(chatId, finalText);
+  if (!options?.campaignId) {
+    const dupCheck = await db
+      .collection(QUEUE_COLLECTION)
+      .where('idempotencyKey', '==', idempotencyKey)
+      .where('status', 'in', ['pending', 'sending', 'sent'])
+      .limit(1)
+      .get();
+
+    if (!dupCheck.empty) {
+      console.warn(
+        `${LOG_PREFIX} Duplicate message detected for chat ${chatId} (key: ${idempotencyKey}), skipping`
+      );
+      return dupCheck.docs[0].id;
+    }
+  }
+
   // Build document without undefined fields (C3)
   const message: Record<string, unknown> = {
     chatId,
@@ -70,6 +105,7 @@ export async function enqueueTelegramMessage(
     status: 'pending',
     retryCount: 0,
     maxRetries: MAX_RETRIES,
+    idempotencyKey,
     createdAt: admin.firestore.Timestamp.now(),
   };
 

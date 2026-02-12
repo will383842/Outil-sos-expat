@@ -38,6 +38,7 @@ import {
   Percent,
   Video,
 } from 'lucide-react';
+import { useCountryFromUrl, useCountryLandingConfig, formatPaymentMethodDisplay, convertToLocal } from '@/country-landing';
 
 // ============================================================================
 // STYLES
@@ -180,6 +181,11 @@ const InfluencerLanding: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
 
+  // Country-specific config
+  const { countryCode, lang: urlLang } = useCountryFromUrl();
+  const { config: countryConfig } = useCountryLandingConfig('influencer', countryCode, urlLang || langCode);
+  const local = (usd: number) => { const s = convertToLocal(usd, countryConfig.currency); return s ? ` (${s})` : ''; };
+
   // Calculator state
   const [calcVideos, setCalcVideos] = useState(4);
   const [calcViewsPerVideo, setCalcViewsPerVideo] = useState(5000);
@@ -262,7 +268,7 @@ const InfluencerLanding: React.FC = () => {
             </div>
 
             <h1 style={{ fontSize: '2.25rem', lineHeight: 1.1 }} className="font-black text-white mb-3 sm:mb-6">
-              <span className="text-amber-400"><FormattedMessage id="influencer.hero.earn" defaultMessage="Earn" /> $10</span>
+              <span className="text-amber-400"><FormattedMessage id="influencer.hero.earn" defaultMessage="Earn" /> $10{local(10)}</span>
               <br />
               <span className="text-2xl sm:text-4xl lg:text-5xl">
                 <FormattedMessage id="influencer.hero.perClient" defaultMessage="Per Client Referred" />
@@ -502,7 +508,7 @@ const InfluencerLanding: React.FC = () => {
               {/* Main earning card */}
               <div className="bg-gradient-to-br from-red-500/15 to-orange-500/10 border border-red-500/30 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 text-center">
                 <Phone className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-red-400 opacity-80" aria-hidden="true" />
-                <div className="text-5xl sm:text-6xl lg:text-7xl font-black text-amber-400 mb-2">$10</div>
+                <div className="text-5xl sm:text-6xl lg:text-7xl font-black text-amber-400 mb-2">$10{local(10) && <span className="text-2xl sm:text-3xl lg:text-4xl">{local(10)}</span>}</div>
                 <p className="text-base sm:text-lg text-gray-300">
                   <FormattedMessage id="influencer.earnings.perCall" defaultMessage="Per client call to a lawyer or expat helper" />
                 </p>
@@ -565,7 +571,7 @@ const InfluencerLanding: React.FC = () => {
                     <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                   </div>
                   <div>
-                    <div className="text-2xl sm:text-3xl font-black text-purple-400">$5</div>
+                    <div className="text-2xl sm:text-3xl font-black text-purple-400">$5{local(5)}</div>
                     <div className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="influencer.earnings.partner" defaultMessage="Per call to your lawyer/helper partners" /></div>
                   </div>
                 </div>
@@ -659,7 +665,7 @@ const InfluencerLanding: React.FC = () => {
             <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-center max-w-3xl mx-auto">
               <h3 className="text-base sm:text-lg font-bold text-white mb-4"><FormattedMessage id="influencer.payment.title" defaultMessage="Get Paid Your Way" /></h3>
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                {['🌐 Wise', '💳 PayPal', '🟠 Orange Money', '🌊 Wave', '💛 MTN MoMo', '💚 M-Pesa', '🏦 Bank'].map((m, i) => (
+                {formatPaymentMethodDisplay(countryConfig.paymentMethods).map((m, i) => (
                   <span key={i} className="bg-white/10 text-white rounded-full px-3 sm:px-4 py-2 text-sm font-medium">{m}</span>
                 ))}
               </div>

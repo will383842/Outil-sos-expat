@@ -6020,6 +6020,12 @@ export {
   telegram_getCampaignDetail,
 } from './telegram/callables/campaigns';
 
+// ========== TELEGRAM ADMIN ACTIONS (dead letter reprocessing + one-off messaging) ==========
+export {
+  telegram_reprocessDeadLetters,
+  telegram_sendOneOff,
+} from './telegram/callables/adminActions';
+
 // ========== TELEGRAM QUEUE (global rate-limited queue + monitoring) ==========
 export { processTelegramQueue } from './telegram/queue/processor';
 export { monitorTelegramUsage } from './telegram/queue/monitor';

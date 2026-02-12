@@ -185,8 +185,9 @@ export const registerChatter = onCall(
           }
         }
 
-        // If user exists but has isChatter already, check that
-        if (userData?.isChatter === true) {
+        // If user exists but has isChatter already or role is already 'chatter'
+        // (frontend creates users doc with role='chatter' before calling this function)
+        if (userData?.isChatter === true || existingRole === "chatter") {
           // Let it fall through to existing chatter check below
         } else if (existingRole && existingRole !== "client") {
           // Generic block for any other role

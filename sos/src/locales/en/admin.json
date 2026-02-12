@@ -2259,6 +2259,8 @@
   "admin.metaAnalytics.info.deduplicationDesc": "Both are combined with a shared event_id for automatic deduplication by Meta.",
   "admin.menu.googleAdsAnalytics": "Google Ads Analytics",
   "admin.menu.googleAdsAnalytics.description": "Google Ads Analytics and Enhanced Conversions",
+  "admin.menu.landingPages": "Landing Pages by Country",
+  "admin.menu.landingPages.description": "Manage landing pages per country (payments, currencies, testimonials, SEO)",
   "admin.googleAdsAnalytics.title": "Google Ads Analytics",
   "admin.googleAdsAnalytics.subtitle": "Track conversions and Enhanced Conversions performance",
   "admin.googleAdsAnalytics.refresh": "Refresh",
