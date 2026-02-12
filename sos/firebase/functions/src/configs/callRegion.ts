@@ -28,7 +28,7 @@
  * - forceEndCallTask
  * - busySafetyTimeoutTask
  */
-export const CALL_FUNCTIONS_REGION = "europe-west3" as const;
+export const CALL_FUNCTIONS_REGION = "europe-west4" as const;
 
 /**
  * Region for payment-related callable functions.
@@ -50,7 +50,7 @@ export const CALL_FUNCTIONS_REGION = "europe-west3" as const;
  * - createPaymentIntent
  * - getRecommendedPaymentGateway
  */
-export const PAYMENT_FUNCTIONS_REGION = "europe-west3" as const;
+export const PAYMENT_FUNCTIONS_REGION = "europe-west4" as const;
 
 /**
  * Default region for non-call, non-payment functions.

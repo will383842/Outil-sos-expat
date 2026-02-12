@@ -1,0 +1,58 @@
+DEMANDE D'AUGMENTATION DE QUOTA GCP - URGENCE PRODUCTION
+
+===================================================================
+PROJECT: sos-urgently-ac307
+REGION: europe-west3
+QUOTA: Cloud Run CPU allocation
+DEMANDE: Augmentation de 3 CPU → 20 CPU
+URGENCE: P1 (Production down)
+===================================================================
+
+JUSTIFICATION:
+
+Notre application de production (SOS Expat - assistance juridique d'urgence)
+subit une panne critique depuis 48h due à l'épuisement du quota CPU
+en europe-west3.
+
+IMPACT BUSINESS:
+- Service d'urgence juridique INDISPONIBLE
+- Clients ne peuvent PAS recevoir d'appels d'avocats
+- Perte de revenus estimée: 5000+ EUR/jour
+- 212 microservices déployés pour haute disponibilité
+
+QUOTA ACTUEL:
+- CPU allocation: ~3 CPU
+- Services déployés: 212
+- Région: europe-west3
+- Tous les services configurés avec minInstances=0
+
+QUOTA DEMANDÉ:
+- CPU allocation: 20 CPU minimum
+- Justification: 212 services × 0.25 CPU moyen = ~53 CPU en pointe
+                 20 CPU permet 80 services actifs simultanément
+
+URGENCE:
+- Production DOWN depuis 2026-02-10
+- Service d'urgence (appels avocat 24/7)
+- Impact direct sur sécurité des clients à l'étranger
+
+ERREUR LOGS:
+"The request failed because the project exceeded its quota limit
+for run.googleapis.com/cpu_allocation recently."
+
+Timestamp: 2026-02-12 20:16:00 UTC
+Service: executeCallTask (critical for emergency calls)
+
+ACTIONS DÉJÀ PRISES:
+- Réduit minInstances de 6 à 0 (libéré 2 CPU)
+- Optimisé CPU de 1.0 → 0.25 pour certains services
+- Impossible de faire plus sans casser la production
+
+DEMANDE:
+Merci d'augmenter le quota à 20 CPU en urgence.
+Si augmentation permanente impossible, un quota temporaire
+de 15 jours permettrait de migrer vers europe-west4.
+
+Contact: williamsjullin@gmail.com
+Disponible 24/7 pour clarifications
+===================================================================

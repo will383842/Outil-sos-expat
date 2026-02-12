@@ -20,11 +20,7 @@ import {
   ChatterPlatform,
 } from "../types";
 import { getChatterConfigCached, areRegistrationsEnabled, isCountrySupported, hashIP } from "../utils";
-import {
-  performFraudCheck,
-  storeRegistrationIP,
-  flagForManualReview,
-} from "../antiFraud";
+import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 import {
   generateChatterClientCode,
   generateChatterRecruitmentCode,
@@ -272,31 +268,31 @@ export const registerChatter = onCall(
         }
       }
 
-      // 9. ENHANCED FRAUD CHECK using new anti-fraud system
-      const ip = request.rawRequest?.ip || "unknown";
-      const fraudResult = await performFraudCheck({
-        ip,
-        email: input.email,
-        referrerId: recruitedBy || undefined,
-        userId,
-      });
+      // 9. LIGHTWEIGHT FRAUD CHECK (same as influencer/blogger/groupAdmin)
+      const fraudResult = await checkReferralFraud(
+        recruitedBy || userId, // Use recruiter ID if exists, otherwise self
+        input.email,
+        request.rawRequest?.ip || null,
+        null // No device fingerprint for chatters
+      );
 
-      if (fraudResult.shouldBlock) {
+      if (!fraudResult.allowed) {
         logger.warn("[registerChatter] Blocked by fraud detection", {
           userId,
           email: input.email,
-          flags: fraudResult.flags,
-          severity: fraudResult.severity,
+          riskScore: fraudResult.riskScore,
+          issues: fraudResult.issues,
+          blockReason: fraudResult.blockReason,
         });
         throw new HttpsError(
           "permission-denied",
-          "Registration blocked. Please contact support if this is an error."
+          fraudResult.blockReason || "Registration blocked by fraud detection"
         );
       }
 
-      // Flag for manual review if needed (but don't block)
-      if (fraudResult.requiresManualReview) {
-        await flagForManualReview(userId, fraudResult.flags, fraudResult.severity, {
+      // Log if there are warnings (medium risk) but don't block
+      if (fraudResult.riskScore > 30 && fraudResult.riskScore < 70) {
+        logger.warn("[registerChatter] Medium fraud risk detected", {
           email: input.email,
           country: input.country,
           recruitedBy,
@@ -463,7 +459,7 @@ export const registerChatter = onCall(
             chatterId: recruitedBy,
             linkType: "recruitment",
             landingPage: "/chatter/register",
-            ipHash: hashIP(ip),
+            ipHash: hashIP(request.rawRequest?.ip || "unknown"),
             converted: true,
             conversionId: userId,
             conversionType: "chatter_signup",
@@ -490,9 +486,6 @@ export const registerChatter = onCall(
           });
         }
       });
-
-      // Store IP address for anti-fraud tracking (in separate collection for privacy)
-      await storeRegistrationIP(userId, ip, input.email);
 
       logger.info("[registerChatter] Chatter registered", {
         chatterId: userId,
