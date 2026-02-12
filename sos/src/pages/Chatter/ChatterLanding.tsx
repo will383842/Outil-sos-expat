@@ -43,6 +43,15 @@ const globalStyles = `
     /* p tags: NO override — let Tailwind classes control each <p> individually */
   }
 
+  /* FIX: index.css forces "span { font-size: 14px }" on mobile.
+     Colored highlight spans inside headings MUST inherit the heading font-size,
+     not shrink to 14px. Specificity (0,1,2) beats element selector (0,0,1). */
+  .chatter-landing h1 span,
+  .chatter-landing h2 span,
+  .chatter-landing h3 span {
+    font-size: inherit;
+  }
+
   /* Animations */
   @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
@@ -311,7 +320,7 @@ const ChatterLanding: React.FC = () => {
 
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
 
-            <h1 style={{ fontSize: '2.25rem', lineHeight: 1.1 }} className="font-black text-white mb-3 sm:mb-6">
+            <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
               <span><FormattedMessage id="chatter.landing.hero.desktop.line1" defaultMessage="Gagnez de l'argent" /></span>
               <br />
               <span><FormattedMessage id="chatter.landing.hero.desktop.line2" defaultMessage="en aidant les " /></span>
@@ -319,7 +328,7 @@ const ChatterLanding: React.FC = () => {
             </h1>
 
             <p className="text-xl sm:text-2xl text-white font-bold mb-2 sm:mb-4">
-              <span className="text-amber-400">10${local(10)}</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
+              <span className="text-amber-400 text-xl sm:text-2xl">10${local(10)}</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
             </p>
 
             <p className="text-base sm:text-lg text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">

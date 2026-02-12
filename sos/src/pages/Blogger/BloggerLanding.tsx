@@ -52,6 +52,15 @@ const globalStyles = `
     .blogger-landing h3 { font-size: 1.5rem !important; }
     /* p tags: NO override — let Tailwind classes control each <p> individually */
   }
+
+  /* FIX: index.css forces "span { font-size: 14px }" on mobile.
+     Colored highlight spans inside headings MUST inherit the heading font-size. */
+  .blogger-landing h1 span,
+  .blogger-landing h2 span,
+  .blogger-landing h3 span {
+    font-size: inherit;
+  }
+
   @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
     50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.6); }
@@ -261,7 +270,7 @@ const BloggerLanding: React.FC = () => {
             </div>
 
             {/* H1 */}
-            <h1 style={{ fontSize: '2.25rem', lineHeight: 1.1 }} className="font-black text-white mb-3 sm:mb-6">
+            <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
               <FormattedMessage id="blogger.hero.title" defaultMessage="Monetize Your Blog: $10 Per Client" />
             </h1>
 

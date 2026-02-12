@@ -46,6 +46,14 @@ const globalStyles = `
     /* p tags: NO override — let Tailwind classes control each <p> individually */
   }
 
+  /* FIX: index.css forces "span { font-size: 14px }" on mobile.
+     Colored highlight spans inside headings MUST inherit the heading font-size. */
+  .groupadmin-landing h1 span,
+  .groupadmin-landing h2 span,
+  .groupadmin-landing h3 span {
+    font-size: inherit;
+  }
+
   /* Animations */
   @keyframes pulse-glow-blue {
     0%, 100% { box-shadow: 0 0 20px rgba(96, 165, 250, 0.4); }
@@ -231,7 +239,7 @@ const GroupAdminLanding: React.FC = () => {
             </div>
 
             {/* Headline */}
-            <h1 style={{ fontSize: '2.25rem', lineHeight: 1.1 }} className="font-black text-white mb-3 sm:mb-6">
+            <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
               <FormattedMessage
                 id="groupAdmin.landing.hero.title"
                 defaultMessage="Earn Money with Your Group or Community"
