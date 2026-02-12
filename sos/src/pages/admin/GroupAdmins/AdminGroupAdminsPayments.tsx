@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
   DollarSign,
@@ -57,6 +57,7 @@ interface WithdrawalStats {
 
 const AdminGroupAdminsPayments: React.FC = () => {
   const functions = getFunctions(undefined, 'europe-west1');
+  const intl = useIntl();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +78,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
       setStats(data.stats);
     } catch (err) {
       console.error('Error fetching withdrawals:', err);
-      setError('Failed to load withdrawals');
+      setError(intl.formatMessage({ id: 'groupAdmin.admin.payments.error' }));
     } finally {
       setLoading(false);
     }
@@ -104,7 +105,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
   };
 
   const handleReject = async (withdrawal: Withdrawal) => {
-    const reason = window.prompt('Rejection reason:');
+    const reason = window.prompt(intl.formatMessage({ id: 'groupAdmin.admin.payments.rejectionPrompt' }));
     if (!reason) return;
 
     setProcessingId(withdrawal.id);
@@ -148,35 +149,35 @@ const AdminGroupAdminsPayments: React.FC = () => {
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
             <Clock className="w-3 h-3" />
-            Pending
+            {intl.formatMessage({ id: 'groupAdmin.admin.payments.status.pending' })}
           </span>
         );
       case 'approved':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
             <CheckCircle className="w-3 h-3" />
-            Approved
+            {intl.formatMessage({ id: 'groupAdmin.admin.payments.status.approved' })}
           </span>
         );
       case 'processing':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
             <Loader2 className="w-3 h-3 animate-spin" />
-            Processing
+            {intl.formatMessage({ id: 'groupAdmin.admin.payments.status.processing' })}
           </span>
         );
       case 'completed':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
             <CheckCircle className="w-3 h-3" />
-            Completed
+            {intl.formatMessage({ id: 'groupAdmin.admin.payments.status.completed' })}
           </span>
         );
       case 'rejected':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
             <XCircle className="w-3 h-3" />
-            Rejected
+            {intl.formatMessage({ id: 'groupAdmin.admin.payments.status.rejected' })}
           </span>
         );
       default:
@@ -195,7 +196,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
               <FormattedMessage id="groupAdmin.admin.payments" defaultMessage="GroupAdmin Withdrawals" />
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Process withdrawal requests from GroupAdmins
+              {intl.formatMessage({ id: 'groupAdmin.admin.payments.description' })}
             </p>
           </div>
           <button onClick={fetchWithdrawals} className={`${UI.button.secondary} p-2`}>
@@ -212,7 +213,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
                   <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.payments.stats.pending' })}</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">
                     {stats.pendingCount} ({formatAmount(stats.pendingAmount)})
                   </p>
@@ -225,7 +226,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
                   <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Approved</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.payments.stats.approved' })}</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">
                     {stats.approvedCount} ({formatAmount(stats.approvedAmount)})
                   </p>
@@ -238,7 +239,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
                   <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Completed This Month</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.payments.stats.completedThisMonth' })}</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">
                     {stats.completedThisMonth} ({formatAmount(stats.completedAmountThisMonth)})
                   </p>
@@ -255,12 +256,12 @@ const AdminGroupAdminsPayments: React.FC = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className={UI.select}
           >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="processing">Processing</option>
-            <option value="completed">Completed</option>
-            <option value="rejected">Rejected</option>
+            <option value="all">{intl.formatMessage({ id: 'groupAdmin.admin.payments.filter.all' })}</option>
+            <option value="pending">{intl.formatMessage({ id: 'groupAdmin.admin.payments.filter.pending' })}</option>
+            <option value="approved">{intl.formatMessage({ id: 'groupAdmin.admin.payments.filter.approved' })}</option>
+            <option value="processing">{intl.formatMessage({ id: 'groupAdmin.admin.payments.filter.processing' })}</option>
+            <option value="completed">{intl.formatMessage({ id: 'groupAdmin.admin.payments.filter.completed' })}</option>
+            <option value="rejected">{intl.formatMessage({ id: 'groupAdmin.admin.payments.filter.rejected' })}</option>
           </select>
         </div>
 
@@ -281,22 +282,22 @@ const AdminGroupAdminsPayments: React.FC = () => {
                 <thead className="bg-gray-50 dark:bg-white/5">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      GroupAdmin
+                      {intl.formatMessage({ id: 'groupAdmin.admin.payments.col.groupAdmin' })}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Amount
+                      {intl.formatMessage({ id: 'groupAdmin.admin.payments.col.amount' })}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Method
+                      {intl.formatMessage({ id: 'groupAdmin.admin.payments.col.method' })}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Status
+                      {intl.formatMessage({ id: 'groupAdmin.admin.payments.col.status' })}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Requested
+                      {intl.formatMessage({ id: 'groupAdmin.admin.payments.col.requested' })}
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Actions
+                      {intl.formatMessage({ id: 'groupAdmin.admin.payments.col.actions' })}
                     </th>
                   </tr>
                 </thead>
@@ -353,7 +354,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
                                 {processingId === withdrawal.id ? (
                                   <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
-                                  'Approve'
+                                  intl.formatMessage({ id: 'groupAdmin.admin.payments.approve' })
                                 )}
                               </button>
                               <button
@@ -361,7 +362,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
                                 disabled={processingId === withdrawal.id}
                                 className={`${UI.button.danger} px-3 py-1 text-sm`}
                               >
-                                Reject
+                                {intl.formatMessage({ id: 'groupAdmin.admin.payments.reject' })}
                               </button>
                             </>
                           )}
@@ -374,7 +375,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
                               {processingId === withdrawal.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                               ) : (
-                                'Mark Complete'
+                                intl.formatMessage({ id: 'groupAdmin.admin.payments.markComplete' })
                               )}
                             </button>
                           )}
@@ -388,7 +389,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
               {withdrawals.length === 0 && (
                 <div className="flex flex-col items-center justify-center p-12 text-gray-500">
                   <DollarSign className="w-12 h-12 mb-4 opacity-50" />
-                  <p>No withdrawals found</p>
+                  <p>{intl.formatMessage({ id: 'groupAdmin.admin.payments.noWithdrawals' })}</p>
                 </div>
               )}
             </div>

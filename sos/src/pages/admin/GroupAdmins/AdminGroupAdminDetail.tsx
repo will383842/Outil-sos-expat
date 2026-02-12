@@ -152,7 +152,7 @@ const AdminGroupAdminDetail: React.FC = () => {
       setCommissions(data.commissions || []);
     } catch (err) {
       console.error('Error fetching group admin:', err);
-      setError('Failed to load group admin details');
+      setError(intl.formatMessage({ id: 'groupAdmin.admin.detail.error' }));
     } finally {
       setLoading(false);
     }
@@ -235,21 +235,21 @@ const AdminGroupAdminDetail: React.FC = () => {
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
             <CheckCircle className="w-4 h-4" />
-            Active
+            {intl.formatMessage({ id: 'groupAdmin.status.active' })}
           </span>
         );
       case 'suspended':
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
             <Clock className="w-4 h-4" />
-            Suspended
+            {intl.formatMessage({ id: 'groupAdmin.status.suspended' })}
           </span>
         );
       case 'blocked':
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
             <AlertTriangle className="w-4 h-4" />
-            Blocked
+            {intl.formatMessage({ id: 'groupAdmin.status.blocked' })}
           </span>
         );
       default:
@@ -272,12 +272,12 @@ const AdminGroupAdminDetail: React.FC = () => {
       <AdminLayout>
         <div className="flex flex-col items-center justify-center min-h-screen text-red-500">
           <AlertTriangle className="w-12 h-12 mb-4" />
-          <p>{error || 'GroupAdmin not found'}</p>
+          <p>{error || intl.formatMessage({ id: 'groupAdmin.admin.detail.notFound' })}</p>
           <button
             onClick={() => navigate('/admin/group-admins')}
             className={`${UI.button.secondary} px-4 py-2 mt-4`}
           >
-            Back to List
+            {intl.formatMessage({ id: 'groupAdmin.admin.detail.backToList' })}
           </button>
         </div>
       </AdminLayout>
@@ -320,7 +320,7 @@ const AdminGroupAdminDetail: React.FC = () => {
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            Overview
+            {intl.formatMessage({ id: 'groupAdmin.admin.detail.overview' })}
           </button>
           <button
             onClick={() => setActiveTab('recruits')}
@@ -331,7 +331,7 @@ const AdminGroupAdminDetail: React.FC = () => {
             }`}
           >
             <UserPlus className="w-4 h-4" />
-            Recruits
+            {intl.formatMessage({ id: 'groupAdmin.admin.detail.recruits' })}
             {admin.totalRecruits > 0 && (
               <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
                 {admin.totalRecruits}
@@ -345,14 +345,14 @@ const AdminGroupAdminDetail: React.FC = () => {
           <div className={UI.card + " p-6"}>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-blue-500" />
-              Recruited Admins
+              {intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitedAdmins' })}
             </h2>
             {recruitsLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
               </div>
             ) : recruits.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No recruits yet</p>
+              <p className="text-gray-500 text-center py-8">{intl.formatMessage({ id: 'groupAdmin.admin.detail.noRecruits' })}</p>
             ) : (
               <div className="space-y-3">
                 {recruits.map(recruit => (
@@ -368,22 +368,22 @@ const AdminGroupAdminDetail: React.FC = () => {
                       <div className="text-right">
                         {recruit.computedStatus === 'paid' && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                            <CheckCircle className="w-3 h-3" /> Paid
+                            <CheckCircle className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.paid' })}
                           </span>
                         )}
                         {recruit.computedStatus === 'pending' && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400">
-                            <Clock className="w-3 h-3" /> Pending
+                            <Clock className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.pending' })}
                           </span>
                         )}
                         {recruit.computedStatus === 'eligible' && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                            <CheckCircle className="w-3 h-3" /> Eligible
+                            <CheckCircle className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.eligible' })}
                           </span>
                         )}
                         {recruit.computedStatus === 'expired' && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                            <AlertTriangle className="w-3 h-3" /> Expired
+                            <AlertTriangle className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.expired' })}
                           </span>
                         )}
                       </div>
@@ -391,7 +391,7 @@ const AdminGroupAdminDetail: React.FC = () => {
                     {/* Progress bar */}
                     <div>
                       <div className="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>Progress: {formatAmount(recruit.recruitedTotalEarned)} / {formatAmount(recruit.threshold)}</span>
+                        <span>{intl.formatMessage({ id: 'groupAdmin.admin.detail.progress' }, { earned: formatAmount(recruit.recruitedTotalEarned), threshold: formatAmount(recruit.threshold) })}</span>
                         <span>{recruit.progressPercent}%</span>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-white/10 rounded-full h-2">
@@ -408,8 +408,8 @@ const AdminGroupAdminDetail: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex justify-between text-xs text-gray-400">
-                      <span>Recruited: {formatDate(recruit.recruitedAt)}</span>
-                      <span>Window ends: {formatDate(recruit.commissionWindowEnd)}</span>
+                      <span>{intl.formatMessage({ id: 'groupAdmin.admin.detail.recruited' }, { date: formatDate(recruit.recruitedAt) })}</span>
+                      <span>{intl.formatMessage({ id: 'groupAdmin.admin.detail.windowEnds' }, { date: formatDate(recruit.commissionWindowEnd) })}</span>
                     </div>
                   </div>
                 ))}
@@ -427,12 +427,12 @@ const AdminGroupAdminDetail: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Facebook className="w-5 h-5 text-blue-500" />
-                  Group Information
+                  {intl.formatMessage({ id: 'groupAdmin.admin.detail.groupInfo' })}
                 </h2>
                 {admin.isGroupVerified ? (
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400">
                     <ShieldCheck className="w-4 h-4" />
-                    Verified
+                    {intl.formatMessage({ id: 'groupAdmin.admin.detail.verified' })}
                   </span>
                 ) : (
                   <button
@@ -441,17 +441,17 @@ const AdminGroupAdminDetail: React.FC = () => {
                     className={`${UI.button.primary} px-3 py-1 text-sm flex items-center gap-1`}
                   >
                     <Shield className="w-4 h-4" />
-                    Verify Group
+                    {intl.formatMessage({ id: 'groupAdmin.admin.detail.verifyGroup' })}
                   </button>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Group Name</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.groupName' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">{admin.groupName}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Group URL</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.groupUrl' })}</p>
                   <a
                     href={admin.groupUrl}
                     target="_blank"
@@ -459,28 +459,28 @@ const AdminGroupAdminDetail: React.FC = () => {
                     className="font-medium text-blue-500 hover:underline flex items-center gap-1"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    View on Facebook
+                    {intl.formatMessage({ id: 'groupAdmin.admin.detail.viewOnFacebook' })}
                   </a>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Group Type</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.groupType' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">{admin.groupType}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Group Size</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.groupSize' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">{admin.groupSize}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Target Country</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.targetCountry' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">{admin.groupCountry}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Group Language</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.groupLanguage' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">{admin.groupLanguage}</p>
                 </div>
                 {admin.groupDescription && (
                   <div className="col-span-2">
-                    <p className="text-sm text-gray-500">Description</p>
+                    <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.description' })}</p>
                     <p className="text-gray-900 dark:text-white">{admin.groupDescription}</p>
                   </div>
                 )}
@@ -491,33 +491,33 @@ const AdminGroupAdminDetail: React.FC = () => {
             <div className={UI.card + " p-6"}>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <User className="w-5 h-5" />
-                Personal Information
+                {intl.formatMessage({ id: 'groupAdmin.admin.detail.personalInfo' })}
               </h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Full Name</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.fullName' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">{admin.firstName} {admin.lastName}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.email' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">{admin.email}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Country</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.country' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">{admin.country}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Language</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.language' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">{admin.language}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Joined</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.joined' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">{formatDate(admin.createdAt)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Last Login</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.lastLogin' })}</p>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {admin.lastLoginAt ? formatDate(admin.lastLoginAt) : 'Never'}
+                    {admin.lastLoginAt ? formatDate(admin.lastLoginAt) : intl.formatMessage({ id: 'groupAdmin.admin.detail.never' })}
                   </p>
                 </div>
               </div>
@@ -526,12 +526,12 @@ const AdminGroupAdminDetail: React.FC = () => {
             {/* Affiliate Codes */}
             <div className={UI.card + " p-6"}>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Affiliate Codes
+                {intl.formatMessage({ id: 'groupAdmin.admin.detail.affiliateCodes' })}
               </h2>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
                   <div>
-                    <p className="text-sm text-gray-500">Client Code</p>
+                    <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.clientCode' })}</p>
                     <p className="font-mono font-medium text-gray-900 dark:text-white">{admin.affiliateCodeClient}</p>
                   </div>
                   <button
@@ -543,7 +543,7 @@ const AdminGroupAdminDetail: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
                   <div>
-                    <p className="text-sm text-gray-500">Recruitment Code</p>
+                    <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitmentCode' })}</p>
                     <p className="font-mono font-medium text-gray-900 dark:text-white">{admin.affiliateCodeRecruitment}</p>
                   </div>
                   <button
@@ -559,7 +559,7 @@ const AdminGroupAdminDetail: React.FC = () => {
             {/* Recent Commissions */}
             <div className={UI.card + " p-6"}>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Recent Commissions
+                {intl.formatMessage({ id: 'groupAdmin.admin.detail.recentCommissions' })}
               </h2>
               {commissions.length > 0 ? (
                 <div className="space-y-2">
@@ -577,7 +577,7 @@ const AdminGroupAdminDetail: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">No commissions yet</p>
+                <p className="text-gray-500 text-center py-4">{intl.formatMessage({ id: 'groupAdmin.admin.detail.noCommissions' })}</p>
               )}
             </div>
           </div>
@@ -588,28 +588,28 @@ const AdminGroupAdminDetail: React.FC = () => {
             <div className={UI.card + " p-6"}>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-green-500" />
-                Earnings
+                {intl.formatMessage({ id: 'groupAdmin.admin.detail.earnings' })}
               </h2>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Total Earned</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.totalEarned' })}</span>
                   <span className="font-bold text-xl text-gray-900 dark:text-white">{formatAmount(admin.totalEarned)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Available</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.available' })}</span>
                   <span className="font-medium text-green-600">{formatAmount(admin.availableBalance)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Pending</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.pending' })}</span>
                   <span className="font-medium text-yellow-600">{formatAmount(admin.pendingBalance)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Validated</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.validated' })}</span>
                   <span className="font-medium text-blue-600">{formatAmount(admin.validatedBalance)}</span>
                 </div>
                 <hr className="border-gray-200 dark:border-white/10" />
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Withdrawn</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.withdrawn' })}</span>
                   <span className="font-medium text-gray-600">{formatAmount(admin.totalWithdrawn)}</span>
                 </div>
               </div>
@@ -619,24 +619,24 @@ const AdminGroupAdminDetail: React.FC = () => {
             <div className={UI.card + " p-6"}>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-blue-500" />
-                Statistics
+                {intl.formatMessage({ id: 'groupAdmin.admin.detail.statistics' })}
               </h2>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Total Clients</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.totalClients' })}</span>
                   <span className="font-bold text-xl text-gray-900 dark:text-white">{admin.totalClients}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Admins Recruited</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.adminsRecruited' })}</span>
                   <span className="font-medium text-gray-900 dark:text-white">{admin.totalRecruits}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Total Commissions</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.totalCommissions' })}</span>
                   <span className="font-medium text-gray-900 dark:text-white">{admin.totalCommissions}</span>
                 </div>
                 {admin.currentMonthRank && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Monthly Rank</span>
+                    <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.monthlyRank' })}</span>
                     <span className="font-medium text-purple-600">#{admin.currentMonthRank}</span>
                   </div>
                 )}
@@ -646,19 +646,19 @@ const AdminGroupAdminDetail: React.FC = () => {
             {/* This Month */}
             <div className={UI.card + " p-6"}>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                This Month ({admin.currentMonthStats.month})
+                {intl.formatMessage({ id: 'groupAdmin.admin.detail.thisMonth' }, { month: admin.currentMonthStats.month })}
               </h2>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Clients</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.clients' })}</span>
                   <span className="font-medium text-gray-900 dark:text-white">{admin.currentMonthStats.clients}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Recruits</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.recruits' })}</span>
                   <span className="font-medium text-gray-900 dark:text-white">{admin.currentMonthStats.recruits}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Earnings</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.earnings' })}</span>
                   <span className="font-medium text-green-600">{formatAmount(admin.currentMonthStats.earnings)}</span>
                 </div>
               </div>
@@ -668,7 +668,7 @@ const AdminGroupAdminDetail: React.FC = () => {
             {admin.badges.length > 0 && (
               <div className={UI.card + " p-6"}>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Badges
+                  {intl.formatMessage({ id: 'groupAdmin.admin.detail.badges' })}
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {admin.badges.map(badge => (
@@ -683,7 +683,7 @@ const AdminGroupAdminDetail: React.FC = () => {
             {/* Actions */}
             <div className={UI.card + " p-6"}>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Actions
+                {intl.formatMessage({ id: 'groupAdmin.admin.detail.actions' })}
               </h2>
               <div className="space-y-2">
                 {admin.status !== 'active' && (
@@ -693,26 +693,26 @@ const AdminGroupAdminDetail: React.FC = () => {
                     className={`${UI.button.success} w-full px-4 py-2 flex items-center justify-center gap-2`}
                   >
                     <Play className="w-4 h-4" />
-                    Activate
+                    {intl.formatMessage({ id: 'groupAdmin.admin.detail.activate' })}
                   </button>
                 )}
                 {admin.status !== 'suspended' && (
                   <button
                     onClick={() => {
-                      const reason = window.prompt('Suspension reason (optional):');
+                      const reason = window.prompt(intl.formatMessage({ id: 'groupAdmin.admin.detail.suspensionPrompt' }));
                       handleStatusChange('suspended', reason || undefined);
                     }}
                     disabled={actionLoading}
                     className={`${UI.button.secondary} w-full px-4 py-2 flex items-center justify-center gap-2`}
                   >
                     <Pause className="w-4 h-4" />
-                    Suspend
+                    {intl.formatMessage({ id: 'groupAdmin.admin.detail.suspend' })}
                   </button>
                 )}
                 {admin.status !== 'blocked' && (
                   <button
                     onClick={() => {
-                      if (window.confirm('Are you sure you want to block this GroupAdmin?')) {
+                      if (window.confirm(intl.formatMessage({ id: 'groupAdmin.admin.detail.blockConfirm' }))) {
                         handleStatusChange('blocked');
                       }
                     }}
@@ -720,7 +720,7 @@ const AdminGroupAdminDetail: React.FC = () => {
                     className={`${UI.button.danger} w-full px-4 py-2 flex items-center justify-center gap-2`}
                   >
                     <Ban className="w-4 h-4" />
-                    Block
+                    {intl.formatMessage({ id: 'groupAdmin.admin.detail.block' })}
                   </button>
                 )}
               </div>
@@ -728,7 +728,7 @@ const AdminGroupAdminDetail: React.FC = () => {
               {admin.suspensionReason && (
                 <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
                   <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                    <strong>Suspension Reason:</strong> {admin.suspensionReason}
+                    <strong>{intl.formatMessage({ id: 'groupAdmin.admin.detail.suspensionReason' })}</strong> {admin.suspensionReason}
                   </p>
                 </div>
               )}

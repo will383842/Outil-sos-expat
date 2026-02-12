@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from "../../../hooks/useTranslation";
 import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
@@ -10,8 +9,8 @@ import {
   Save,
   RefreshCw,
   Search,
-  Settings,
 } from "lucide-react";
+import TelegramNav from "./TelegramNav";
 
 interface NotificationSettings {
   newRegistration: boolean;
@@ -33,20 +32,19 @@ interface ConfigData {
   updatedBy: string | null;
 }
 
-const TOGGLE_LABELS: Array<{ key: keyof NotificationSettings; labelKey: string }> = [
-  { key: "newRegistration", labelKey: "admin.telegram.toggle.newRegistration" },
-  { key: "callCompleted", labelKey: "admin.telegram.toggle.callCompleted" },
-  { key: "paymentReceived", labelKey: "admin.telegram.toggle.paymentReceived" },
-  { key: "dailyReport", labelKey: "admin.telegram.toggle.dailyReport" },
-  { key: "newProvider", labelKey: "admin.telegram.toggle.newProvider" },
-  { key: "newContactMessage", labelKey: "admin.telegram.toggle.newContactMessage" },
-  { key: "negativeReview", labelKey: "admin.telegram.toggle.negativeReview" },
-  { key: "securityAlert", labelKey: "admin.telegram.toggle.securityAlert" },
-  { key: "withdrawalRequest", labelKey: "admin.telegram.toggle.withdrawalRequest" },
+const TOGGLE_LABELS: Array<{ key: keyof NotificationSettings; label: string }> = [
+  { key: "newRegistration", label: "Nouvelle inscription" },
+  { key: "callCompleted", label: "Appel terminé" },
+  { key: "paymentReceived", label: "Paiement reçu" },
+  { key: "dailyReport", label: "Rapport quotidien" },
+  { key: "newProvider", label: "Nouveau prestataire" },
+  { key: "newContactMessage", label: "Nouveau message contact" },
+  { key: "negativeReview", label: "Avis négatif" },
+  { key: "securityAlert", label: "Alerte sécurité" },
+  { key: "withdrawalRequest", label: "Demande de retrait" },
 ];
 
 const AdminTelegramConfig: React.FC = () => {
-  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState<ConfigData | null>(null);
@@ -70,7 +68,7 @@ const AdminTelegramConfig: React.FC = () => {
       setBotStatus(botRes.data as { ok: boolean; botUsername?: string });
     } catch (err) {
       console.error("Failed to load config:", err);
-      setMessage({ type: "error", text: t("admin.telegram.loadError") });
+      setMessage({ type: "error", text: "Erreur de chargement de la configuration" });
     } finally {
       setLoading(false);
     }
@@ -89,10 +87,10 @@ const AdminTelegramConfig: React.FC = () => {
         recipientChatId: config.recipientChatId || undefined,
         notifications: config.notifications,
       });
-      setMessage({ type: "success", text: t("admin.telegram.configSaved") });
+      setMessage({ type: "success", text: "Configuration sauvegardée" });
     } catch (err) {
       console.error("Save failed:", err);
-      setMessage({ type: "error", text: t("admin.telegram.saveError") });
+      setMessage({ type: "error", text: "Erreur lors de la sauvegarde" });
     } finally {
       setSaving(false);
     }
@@ -106,13 +104,13 @@ const AdminTelegramConfig: React.FC = () => {
       const data = res.data as { ok: boolean; chatId?: string; error?: string };
       if (data.ok && data.chatId) {
         setConfig((prev) => (prev ? { ...prev, recipientChatId: data.chatId! } : prev));
-        setMessage({ type: "success", text: `Chat ID: ${data.chatId}` });
+        setMessage({ type: "success", text: `Chat ID détecté : ${data.chatId}` });
       } else {
-        setMessage({ type: "error", text: data.error || t("admin.telegram.noChatId") });
+        setMessage({ type: "error", text: data.error || "Chat ID non trouvé. Envoyez /start au bot d'abord." });
       }
     } catch (err) {
       console.error("Chat ID detection failed:", err);
-      setMessage({ type: "error", text: t("admin.telegram.detectError") });
+      setMessage({ type: "error", text: "Erreur lors de la détection du Chat ID" });
     } finally {
       setChatIdSearching(false);
     }
@@ -134,8 +132,11 @@ const AdminTelegramConfig: React.FC = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="p-6 flex items-center justify-center min-h-[400px]">
-          <RefreshCw className="h-8 w-8 text-gray-400 animate-spin" />
+        <div className="p-6 space-y-6">
+          <TelegramNav />
+          <div className="flex items-center justify-center min-h-[400px]">
+            <RefreshCw className="h-8 w-8 text-gray-400 animate-spin" />
+          </div>
         </div>
       </AdminLayout>
     );
@@ -144,17 +145,11 @@ const AdminTelegramConfig: React.FC = () => {
   return (
     <AdminLayout>
       <div className="p-6 space-y-6 max-w-3xl">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Settings className="h-7 w-7 text-sky-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {t("admin.telegram.config.title")}
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {t("admin.telegram.config.subtitle")}
-            </p>
-          </div>
+        <TelegramNav />
+
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Configuration</h2>
+          <p className="text-sm text-gray-500 mt-1">Paramètres du bot et des notifications Telegram</p>
         </div>
 
         {/* Message */}
@@ -174,19 +169,17 @@ const AdminTelegramConfig: React.FC = () => {
         <div className="bg-white rounded-xl border p-5">
           <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
             <Bot className="h-5 w-5" />
-            {t("admin.telegram.config.botSection")}
+            Validation du Bot
           </h2>
           {botStatus?.ok ? (
             <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg">
               <CheckCircle className="h-5 w-5" />
-              <span>
-                {t("admin.telegram.config.botConnected")} @{botStatus.botUsername}
-              </span>
+              <span>Bot connecté : @{botStatus.botUsername}</span>
             </div>
           ) : (
             <div className="flex items-center gap-2 text-red-700 bg-red-50 p-3 rounded-lg">
               <AlertTriangle className="h-5 w-5" />
-              <span>{t("admin.telegram.config.botDisconnected")}</span>
+              <span>Bot non connecté</span>
             </div>
           )}
         </div>
@@ -194,7 +187,7 @@ const AdminTelegramConfig: React.FC = () => {
         {/* Chat ID */}
         <div className="bg-white rounded-xl border p-5">
           <h2 className="font-semibold text-gray-900 mb-3">
-            {t("admin.telegram.config.chatId")}
+            Chat ID destinataire
           </h2>
           <div className="flex gap-2">
             <input
@@ -214,26 +207,26 @@ const AdminTelegramConfig: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 text-sm bg-sky-50 text-sky-700 border border-sky-200 rounded-lg hover:bg-sky-100 disabled:opacity-50"
             >
               <Search className={`h-4 w-4 ${chatIdSearching ? "animate-spin" : ""}`} />
-              {t("admin.telegram.config.detectChatId")}
+              Détecter
             </button>
           </div>
           <p className="text-xs text-gray-400 mt-2">
-            {t("admin.telegram.config.chatIdHelp")}
+            Envoyez /start au bot, puis cliquez sur Détecter
           </p>
         </div>
 
         {/* Notification Toggles */}
         <div className="bg-white rounded-xl border p-5">
           <h2 className="font-semibold text-gray-900 mb-4">
-            {t("admin.telegram.config.notifications")}
+            Notifications activées
           </h2>
           <div className="space-y-3">
-            {TOGGLE_LABELS.map(({ key, labelKey }) => (
+            {TOGGLE_LABELS.map(({ key, label }) => (
               <label
                 key={key}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
               >
-                <span className="text-sm text-gray-700">{t(labelKey)}</span>
+                <span className="text-sm text-gray-700">{label}</span>
                 <button
                   type="button"
                   role="switch"
@@ -262,7 +255,7 @@ const AdminTelegramConfig: React.FC = () => {
             className="flex items-center gap-2 px-6 py-2.5 bg-sky-600 text-white rounded-lg hover:bg-sky-700 disabled:opacity-50 font-medium text-sm"
           >
             <Save className="h-4 w-4" />
-            {saving ? t("admin.telegram.saving") : t("admin.telegram.save")}
+            {saving ? "Sauvegarde..." : "Sauvegarder"}
           </button>
         </div>
       </div>

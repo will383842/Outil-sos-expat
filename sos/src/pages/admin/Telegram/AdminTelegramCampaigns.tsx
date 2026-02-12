@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from "../../../hooks/useTranslation";
 import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
@@ -15,6 +14,7 @@ import {
   Ban,
   FileText,
 } from "lucide-react";
+import TelegramNav from "./TelegramNav";
 
 interface Campaign {
   id: string;
@@ -39,7 +39,6 @@ const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; bgCo
 };
 
 const AdminTelegramCampaigns: React.FC = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -94,24 +93,19 @@ const AdminTelegramCampaigns: React.FC = () => {
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
+        <TelegramNav />
+
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Megaphone className="h-7 w-7 text-sky-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {t("admin.telegram.campaigns.title")}
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {t("admin.telegram.campaigns.subtitle")}
-              </p>
-            </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Campagnes</h2>
+            <p className="text-sm text-gray-500 mt-1">Gérez vos campagnes d'envoi Telegram</p>
           </div>
           <button
             onClick={() => navigate("/admin/toolbox/telegram/campaigns/create")}
             className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium"
           >
             <Plus className="h-4 w-4" />
-            {t("admin.telegram.campaigns.create")}
+            Nouvelle campagne
           </button>
         </div>
 
@@ -122,12 +116,12 @@ const AdminTelegramCampaigns: React.FC = () => {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:ring-2 focus:ring-sky-500 outline-none"
           >
-            <option value="">{t("admin.telegram.campaigns.allStatuses")}</option>
-            <option value="draft">Draft</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="sending">Sending</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="">Tous les statuts</option>
+            <option value="draft">Brouillon</option>
+            <option value="scheduled">Programmé</option>
+            <option value="sending">En cours</option>
+            <option value="completed">Terminé</option>
+            <option value="cancelled">Annulé</option>
           </select>
           <button
             onClick={loadCampaigns}
@@ -135,7 +129,7 @@ const AdminTelegramCampaigns: React.FC = () => {
             className="flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            {t("admin.telegram.refresh")}
+            Rafraîchir
           </button>
         </div>
 
@@ -147,7 +141,7 @@ const AdminTelegramCampaigns: React.FC = () => {
         ) : campaigns.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl border">
             <Megaphone className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">{t("admin.telegram.campaigns.empty")}</p>
+            <p className="text-gray-500">Aucune campagne trouvée</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -175,29 +169,29 @@ const AdminTelegramCampaigns: React.FC = () => {
                         className="text-xs text-red-600 hover:text-red-700 px-2 py-1 rounded border border-red-200 hover:bg-red-50 disabled:opacity-50"
                       >
                         <XCircle className="h-3.5 w-3.5 inline mr-1" />
-                        {t("admin.telegram.campaigns.cancel")}
+                        Annuler
                       </button>
                     )}
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm text-gray-500">
                     <div>
-                      <span className="text-xs text-gray-400">{t("admin.telegram.campaigns.audience")}</span>
+                      <span className="text-xs text-gray-400">Audience</span>
                       <p className="font-medium text-gray-700">{campaign.targetAudience}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-400">{t("admin.telegram.campaigns.targets")}</span>
+                      <span className="text-xs text-gray-400">Cibles</span>
                       <p className="font-medium text-gray-700">{campaign.targetCount}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-400">{t("admin.telegram.sent")}</span>
+                      <span className="text-xs text-gray-400">Envoyés</span>
                       <p className="font-medium text-green-600">{campaign.sentCount}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-400">{t("admin.telegram.failed")}</span>
+                      <span className="text-xs text-gray-400">Échoués</span>
                       <p className="font-medium text-red-600">{campaign.failedCount}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-400">{t("admin.telegram.campaigns.created")}</span>
+                      <span className="text-xs text-gray-400">Créé le</span>
                       <p className="font-medium text-gray-700">{formatDate(campaign.createdAt)}</p>
                     </div>
                   </div>

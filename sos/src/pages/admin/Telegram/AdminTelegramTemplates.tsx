@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from "../../../hooks/useTranslation";
 import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
 import {
-  FileText,
   Save,
   RefreshCw,
   Eye,
   Send,
-  CheckCircle,
-  AlertTriangle,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import TelegramNav from "./TelegramNav";
 
 interface TemplateData {
   eventId: string;
@@ -25,19 +22,18 @@ interface TemplateData {
 }
 
 const EVENT_LABELS: Record<string, string> = {
-  new_registration: "admin.telegram.event.newRegistration",
-  call_completed: "admin.telegram.event.callCompleted",
-  payment_received: "admin.telegram.event.paymentReceived",
-  daily_report: "admin.telegram.event.dailyReport",
-  new_provider: "admin.telegram.event.newProvider",
-  new_contact_message: "admin.telegram.event.newContactMessage",
-  negative_review: "admin.telegram.event.negativeReview",
-  security_alert: "admin.telegram.event.securityAlert",
-  withdrawal_request: "admin.telegram.event.withdrawalRequest",
+  new_registration: "Nouvelle inscription",
+  call_completed: "Appel terminé",
+  payment_received: "Paiement reçu",
+  daily_report: "Rapport quotidien",
+  new_provider: "Nouveau prestataire",
+  new_contact_message: "Nouveau message contact",
+  negative_review: "Avis négatif",
+  security_alert: "Alerte sécurité",
+  withdrawal_request: "Demande de retrait",
 };
 
 const AdminTelegramTemplates: React.FC = () => {
-  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [templates, setTemplates] = useState<Record<string, TemplateData>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -89,10 +85,10 @@ const AdminTelegramTemplates: React.FC = () => {
           isDefault: false,
         },
       }));
-      setMessage({ type: "success", text: t("admin.telegram.templateSaved") });
+      setMessage({ type: "success", text: "Template sauvegardé" });
     } catch (err) {
       console.error("Save template failed:", err);
-      setMessage({ type: "error", text: t("admin.telegram.saveError") });
+      setMessage({ type: "error", text: "Erreur lors de la sauvegarde" });
     } finally {
       setSaving(null);
     }
@@ -124,13 +120,13 @@ const AdminTelegramTemplates: React.FC = () => {
       });
       const data = res.data as { success: boolean; error?: string };
       if (data.success) {
-        setMessage({ type: "success", text: t("admin.telegram.testSent") });
+        setMessage({ type: "success", text: "Message test envoyé" });
       } else {
-        setMessage({ type: "error", text: data.error || t("admin.telegram.testFailed") });
+        setMessage({ type: "error", text: data.error || "Échec de l'envoi test" });
       }
     } catch (err) {
       console.error("Test send failed:", err);
-      setMessage({ type: "error", text: t("admin.telegram.testFailed") });
+      setMessage({ type: "error", text: "Échec de l'envoi test" });
     } finally {
       setTesting(null);
     }
@@ -164,8 +160,11 @@ const AdminTelegramTemplates: React.FC = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="p-6 flex items-center justify-center min-h-[400px]">
-          <RefreshCw className="h-8 w-8 text-gray-400 animate-spin" />
+        <div className="p-6 space-y-6">
+          <TelegramNav />
+          <div className="flex items-center justify-center min-h-[400px]">
+            <RefreshCw className="h-8 w-8 text-gray-400 animate-spin" />
+          </div>
         </div>
       </AdminLayout>
     );
@@ -176,16 +175,11 @@ const AdminTelegramTemplates: React.FC = () => {
   return (
     <AdminLayout>
       <div className="p-6 space-y-6 max-w-4xl">
-        <div className="flex items-center gap-3">
-          <FileText className="h-7 w-7 text-sky-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {t("admin.telegram.templates.title")}
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {t("admin.telegram.templates.subtitle")}
-            </p>
-          </div>
+        <TelegramNav />
+
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Templates</h2>
+          <p className="text-sm text-gray-500 mt-1">Gérez vos modèles de notifications Telegram</p>
         </div>
 
         {message && (
@@ -207,7 +201,6 @@ const AdminTelegramTemplates: React.FC = () => {
 
             return (
               <div key={eventId} className="bg-white rounded-xl border overflow-hidden">
-                {/* Header Row */}
                 <div
                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
                   onClick={() => handleExpand(eventId)}
@@ -219,11 +212,11 @@ const AdminTelegramTemplates: React.FC = () => {
                       }`}
                     />
                     <span className="font-medium text-gray-900">
-                      {t(EVENT_LABELS[eventId] || eventId)}
+                      {EVENT_LABELS[eventId] || eventId}
                     </span>
                     {tmpl.isDefault && (
                       <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-                        {t("admin.telegram.default")}
+                        Par défaut
                       </span>
                     )}
                   </div>
@@ -252,13 +245,11 @@ const AdminTelegramTemplates: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Expanded Content */}
                 {isExpanded && (
                   <div className="border-t p-4 space-y-4">
-                    {/* Variables */}
                     <div>
                       <p className="text-xs font-medium text-gray-500 mb-1">
-                        {t("admin.telegram.availableVars")}
+                        Variables disponibles
                       </p>
                       <div className="flex flex-wrap gap-1">
                         {tmpl.variables.map((v) => (
@@ -275,7 +266,6 @@ const AdminTelegramTemplates: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Template Editor */}
                     <textarea
                       value={editingTemplate}
                       onChange={(e) => setEditingTemplate(e.target.value)}
@@ -283,18 +273,16 @@ const AdminTelegramTemplates: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none resize-y"
                     />
 
-                    {/* Preview */}
                     <div className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
                         <Eye className="h-3 w-3" />
-                        {t("admin.telegram.preview")}
+                        Aperçu
                       </div>
                       <pre className="text-sm whitespace-pre-wrap text-gray-700">
                         {previewMessage(editingTemplate, tmpl.variables)}
                       </pre>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-2 justify-end">
                       <button
                         onClick={() => handleTestSend(eventId)}
@@ -302,7 +290,7 @@ const AdminTelegramTemplates: React.FC = () => {
                         className="flex items-center gap-2 px-3 py-1.5 text-sm text-sky-700 bg-sky-50 border border-sky-200 rounded-lg hover:bg-sky-100 disabled:opacity-50"
                       >
                         <Send className={`h-3.5 w-3.5 ${testing === eventId ? "animate-spin" : ""}`} />
-                        {t("admin.telegram.sendTest")}
+                        Tester
                       </button>
                       <button
                         onClick={() => handleSaveTemplate(eventId)}
@@ -310,7 +298,7 @@ const AdminTelegramTemplates: React.FC = () => {
                         className="flex items-center gap-2 px-4 py-1.5 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-700 disabled:opacity-50"
                       >
                         <Save className="h-3.5 w-3.5" />
-                        {saving === eventId ? t("admin.telegram.saving") : t("admin.telegram.save")}
+                        {saving === eventId ? "Sauvegarde..." : "Sauvegarder"}
                       </button>
                     </div>
                   </div>

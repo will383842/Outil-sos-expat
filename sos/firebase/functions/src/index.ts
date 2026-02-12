@@ -2076,13 +2076,21 @@ export const stripeWebhook = onRequest(
         });
 
         // ✅ P0 SECURITY FIX: Idempotency check - prevent duplicate webhook processing
+        // P0 FIX 2026-02-12: Allow retry if previous processing failed (status "failed")
+        // This works WITH the 500 return code: Stripe retries → we re-process failed events
         const webhookEventRef = database.collection("processed_webhook_events").doc(event.id);
         const existingEvent = await webhookEventRef.get();
 
         if (existingEvent.exists) {
-          console.log(`⚠️ IDEMPOTENCY: Event ${event.id} already processed, skipping`);
-          res.status(200).json({ received: true, duplicate: true, eventId: event.id });
-          return;
+          const existingStatus = existingEvent.data()?.status;
+          if (existingStatus === "completed") {
+            // Already successfully processed - skip
+            console.log(`⚠️ IDEMPOTENCY: Event ${event.id} already completed, skipping`);
+            res.status(200).json({ received: true, duplicate: true, eventId: event.id });
+            return;
+          }
+          // Status is "processing" or "failed" - allow re-processing
+          console.log(`🔄 IDEMPOTENCY: Event ${event.id} status="${existingStatus}" - allowing re-processing`);
         }
 
         // Mark event as being processed (before processing to prevent race conditions)

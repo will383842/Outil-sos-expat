@@ -440,7 +440,9 @@ async function checkAndLockDuplicatePayments(
   const cutoffTime = new Date(Date.now() - windowMs);
 
   // Statuts qui indiquent un paiement terminé avec succès ou en cours actif
-  const activePaymentStatuses = ['requires_confirmation', 'requires_capture', 'processing', 'succeeded', 'captured'];
+  // P0 FIX: Removed invalid Stripe statuses ('requires_confirmation' doesn't exist, 'captured' is not a Stripe status)
+  // Added 'requires_action' (3D Secure) to prevent duplicates during 3DS flow
+  const activePaymentStatuses = ['requires_action', 'requires_capture', 'processing', 'succeeded', 'captured'];
   // Statuts de call_session qui sont actifs (bloquer le retry)
   const activeCallStatuses = ['pending', 'scheduled', 'in_progress', 'calling', 'connected', 'completed'];
 

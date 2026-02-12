@@ -29,6 +29,10 @@
  * - "processing" → Paiement en cours de traitement
  * - "payment_captured" → Paiement capturé avec succès
  * - "no_answer" → Appel non répondu (remboursement possible)
+ * - "voided" → Autorisation PayPal annulée (void)
+ * - "authorization_failed" → Échec de l'autorisation PayPal
+ * - "capture_failed" → Échec de la capture PayPal
+ * - "requires_action" → Action utilisateur requise (3D Secure)
  *
  * STATUTS PAYOUT:
  * - "pending" → Payout en attente
@@ -54,8 +58,20 @@ export type PaymentPendingCaptureStatus = typeof PAYMENT_PENDING_CAPTURE_STATUSE
 /**
  * Statuts indiquant qu'un paiement a échoué
  */
-export const PAYMENT_FAILED_STATUSES = ["failed", "cancelled", "expired"] as const;
+export const PAYMENT_FAILED_STATUSES = ["failed", "cancelled", "expired", "authorization_failed", "capture_failed"] as const;
 export type PaymentFailedStatus = typeof PAYMENT_FAILED_STATUSES[number];
+
+/**
+ * Statuts indiquant qu'un paiement a été annulé (void PayPal ou cancel Stripe)
+ */
+export const PAYMENT_VOIDED_STATUSES = ["voided", "cancelled"] as const;
+export type PaymentVoidedStatus = typeof PAYMENT_VOIDED_STATUSES[number];
+
+/**
+ * Statuts indiquant qu'une action utilisateur est requise (ex: 3D Secure)
+ */
+export const PAYMENT_REQUIRES_ACTION_STATUSES = ["requires_action"] as const;
+export type PaymentRequiresActionStatus = typeof PAYMENT_REQUIRES_ACTION_STATUSES[number];
 
 /**
  * Statuts indiquant qu'un paiement a été remboursé
@@ -123,6 +139,30 @@ export function isPaymentFailed(status: string | null | undefined): boolean {
 export function isPaymentRefunded(status: string | null | undefined): boolean {
   if (!status) return false;
   return PAYMENT_REFUNDED_STATUSES.includes(status as PaymentRefundedStatus);
+}
+
+/**
+ * Vérifie si un paiement a été annulé/void (PayPal void ou Stripe cancel)
+ */
+export function isPaymentVoided(status: string | null | undefined): boolean {
+  if (!status) return false;
+  return PAYMENT_VOIDED_STATUSES.includes(status as PaymentVoidedStatus);
+}
+
+/**
+ * Vérifie si un paiement nécessite une action utilisateur (3D Secure)
+ */
+export function isPaymentRequiresAction(status: string | null | undefined): boolean {
+  if (!status) return false;
+  return PAYMENT_REQUIRES_ACTION_STATUSES.includes(status as PaymentRequiresActionStatus);
+}
+
+/**
+ * Vérifie si un paiement est dans un état terminal (ne changera plus)
+ */
+export function isPaymentFinal(status: string | null | undefined): boolean {
+  if (!status) return false;
+  return isPaymentCompleted(status) || isPaymentFailed(status) || isPaymentRefunded(status) || isPaymentVoided(status);
 }
 
 /**

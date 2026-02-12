@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from "../../../hooks/useTranslation";
 import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
@@ -12,9 +11,10 @@ import {
   Send,
   Users,
   Inbox,
-  Clock,
   RefreshCw,
+  Clock,
 } from "lucide-react";
+import TelegramNav from "./TelegramNav";
 import {
   BarChart,
   Bar,
@@ -38,7 +38,6 @@ interface SubscriberStats {
 }
 
 const AdminTelegramDashboard: React.FC = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [botStatus, setBotStatus] = useState<{ ok: boolean; botUsername?: string } | null>(null);
@@ -68,7 +67,7 @@ const AdminTelegramDashboard: React.FC = () => {
   }, []);
 
   const chartData = queueStats?.dailyStats?.map((d) => ({
-    date: d.date.slice(5), // MM-DD
+    date: d.date.slice(5),
     sent: d.sent,
     failed: d.failed,
   })) || [];
@@ -76,35 +75,25 @@ const AdminTelegramDashboard: React.FC = () => {
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
-        {/* Header */}
+        <TelegramNav />
+
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Send className="h-7 w-7 text-sky-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {t("admin.telegram.dashboard.title")}
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {t("admin.telegram.dashboard.subtitle")}
-              </p>
-            </div>
-          </div>
+          <p className="text-sm text-gray-500">Vue d'ensemble du système de messagerie Telegram</p>
           <button
             onClick={loadData}
             disabled={loading}
             className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            {t("admin.telegram.refresh")}
+            Rafraîchir
           </button>
         </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Bot Status */}
           <div className="bg-white rounded-xl border p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-500">{t("admin.telegram.botStatus")}</span>
+              <span className="text-sm text-gray-500">Statut du Bot</span>
               <Bot className="h-5 w-5 text-gray-400" />
             </div>
             {loading ? (
@@ -117,15 +106,14 @@ const AdminTelegramDashboard: React.FC = () => {
             ) : (
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-red-500" />
-                <span className="font-semibold text-red-700">{t("admin.telegram.botOffline")}</span>
+                <span className="font-semibold text-red-700">Hors ligne</span>
               </div>
             )}
           </div>
 
-          {/* Subscribers */}
           <div className="bg-white rounded-xl border p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-500">{t("admin.telegram.subscribers")}</span>
+              <span className="text-sm text-gray-500">Abonnés Telegram</span>
               <Users className="h-5 w-5 text-gray-400" />
             </div>
             {loading ? (
@@ -135,10 +123,9 @@ const AdminTelegramDashboard: React.FC = () => {
             )}
           </div>
 
-          {/* Queue Depth */}
           <div className="bg-white rounded-xl border p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-500">{t("admin.telegram.queueDepth")}</span>
+              <span className="text-sm text-gray-500">File d'attente</span>
               <Inbox className="h-5 w-5 text-gray-400" />
             </div>
             {loading ? (
@@ -150,10 +137,9 @@ const AdminTelegramDashboard: React.FC = () => {
             )}
           </div>
 
-          {/* Dead Letters */}
           <div className="bg-white rounded-xl border p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-500">{t("admin.telegram.deadLetters")}</span>
+              <span className="text-sm text-gray-500">Messages échoués</span>
               <AlertTriangle className="h-5 w-5 text-gray-400" />
             </div>
             {loading ? (
@@ -171,7 +157,7 @@ const AdminTelegramDashboard: React.FC = () => {
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="h-5 w-5 text-gray-500" />
             <h2 className="text-lg font-semibold text-gray-900">
-              {t("admin.telegram.last7Days")}
+              Envois des 7 derniers jours
             </h2>
           </div>
           {loading ? (
@@ -184,8 +170,8 @@ const AdminTelegramDashboard: React.FC = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="sent" fill="#22c55e" name={t("admin.telegram.sent")} />
-                <Bar dataKey="failed" fill="#ef4444" name={t("admin.telegram.failed")} />
+                <Bar dataKey="sent" fill="#22c55e" name="Envoyés" />
+                <Bar dataKey="failed" fill="#ef4444" name="Échoués" />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -201,8 +187,8 @@ const AdminTelegramDashboard: React.FC = () => {
               <Bot className="h-5 w-5 text-sky-600" />
             </div>
             <div>
-              <p className="font-medium text-gray-900">{t("admin.telegram.configureBot")}</p>
-              <p className="text-xs text-gray-500">{t("admin.telegram.configureBot.desc")}</p>
+              <p className="font-medium text-gray-900">Configurer le Bot</p>
+              <p className="text-xs text-gray-500">Paramètres du bot et notifications</p>
             </div>
           </button>
           <button
@@ -213,8 +199,8 @@ const AdminTelegramDashboard: React.FC = () => {
               <Send className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="font-medium text-gray-900">{t("admin.telegram.newCampaign")}</p>
-              <p className="text-xs text-gray-500">{t("admin.telegram.newCampaign.desc")}</p>
+              <p className="font-medium text-gray-900">Nouvelle campagne</p>
+              <p className="text-xs text-gray-500">Créer et envoyer une campagne</p>
             </div>
           </button>
           <button
@@ -225,8 +211,8 @@ const AdminTelegramDashboard: React.FC = () => {
               <Clock className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <p className="font-medium text-gray-900">{t("admin.telegram.viewLogs")}</p>
-              <p className="text-xs text-gray-500">{t("admin.telegram.viewLogs.desc")}</p>
+              <p className="font-medium text-gray-900">Voir les logs</p>
+              <p className="text-xs text-gray-500">Historique des envois</p>
             </div>
           </button>
         </div>

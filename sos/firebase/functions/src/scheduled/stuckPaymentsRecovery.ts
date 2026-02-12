@@ -103,6 +103,9 @@ export const stuckPaymentsRecovery = onSchedule(
       // 3. Find and refund very old stuck Stripe payments
       await refundOldStuckPayments(db, results);
 
+      // 3b. P0 FIX 2026-02-12: Cancel abandoned 3D Secure payments (requires_action)
+      await cancelAbandonedRequiresActionPayments(db, results);
+
       // 4. Alert about remaining stuck payments
       await alertStuckPayments(db, results);
 
@@ -583,6 +586,97 @@ async function refundOldStuckPayments(
 }
 
 /**
+ * P0 FIX 2026-02-12: Cancel payments stuck in 'requires_action' (3D Secure abandoned)
+ * If a client starts 3D Secure but never completes it, the payment stays stuck forever.
+ * This recovers those payments by canceling them after the refund threshold.
+ */
+async function cancelAbandonedRequiresActionPayments(
+  db: admin.firestore.Firestore,
+  results: { refunded: number; errors: number }
+): Promise<void> {
+  const cutoffTime = new Date(
+    Date.now() - RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS * 60 * 60 * 1000
+  );
+
+  console.log(`🔐 [StuckPayments] Looking for abandoned 3D Secure payments (requires_action > ${RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS}h)`);
+
+  try {
+    const stuckPayments = await db
+      .collection("payments")
+      .where("status", "==", "requires_action")
+      .where("createdAt", "<", admin.firestore.Timestamp.fromDate(cutoffTime))
+      .limit(RECOVERY_CONFIG.BATCH_SIZE)
+      .get();
+
+    if (stuckPayments.empty) {
+      console.log("🔐 [StuckPayments] No abandoned 3D Secure payments found");
+      return;
+    }
+
+    console.log(`🔐 [StuckPayments] Found ${stuckPayments.size} abandoned 3D Secure payments`);
+    const stripe = getStripeInstance();
+
+    for (const paymentDoc of stuckPayments.docs) {
+      const paymentData = paymentDoc.data();
+      const paymentIntentId = paymentData.paymentIntentId || paymentDoc.id;
+
+      try {
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+        if (paymentIntent.status === "requires_action" || paymentIntent.status === "requires_payment_method") {
+          console.log(`🔐 [StuckPayments] Canceling abandoned 3DS payment ${paymentIntentId}`);
+
+          await stripe.paymentIntents.cancel(paymentIntentId, {
+            cancellation_reason: "abandoned",
+          });
+
+          // Find and update call session
+          const sessionQuery = await db
+            .collection("call_sessions")
+            .where("paymentId", "==", paymentDoc.id)
+            .limit(1)
+            .get();
+
+          const sessionId = !sessionQuery.empty ? sessionQuery.docs[0].id : null;
+
+          await syncPaymentStatus(db, paymentDoc.id, sessionId, {
+            status: "cancelled",
+            cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+            cancelledBy: "stuck_payments_recovery",
+            cancellationReason: `3D Secure abandoned - stuck for ${RECOVERY_CONFIG.REFUND_THRESHOLD_HOURS}+ hour(s)`,
+          });
+
+          if (sessionId) {
+            await db.collection("call_sessions").doc(sessionId).update({
+              status: "cancelled",
+              cancelledReason: "Payment 3D Secure abandoned",
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+
+          results.refunded++;
+          console.log(`✅ [StuckPayments] Successfully cancelled 3DS payment ${paymentIntentId}`);
+        } else {
+          // Status changed on Stripe side - sync our status
+          console.log(`ℹ️ [StuckPayments] 3DS payment ${paymentIntentId} is now ${paymentIntent.status}`);
+          await db.collection("payments").doc(paymentDoc.id).update({
+            status: paymentIntent.status === "succeeded" ? "captured" : paymentIntent.status,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            syncedFromStripe: true,
+          });
+        }
+      } catch (error) {
+        console.error(`❌ [StuckPayments] Error processing 3DS payment ${paymentDoc.id}:`, error);
+        results.errors++;
+      }
+    }
+  } catch (error) {
+    console.error("❌ [StuckPayments] Error in cancelAbandonedRequiresActionPayments:", error);
+    results.errors++;
+  }
+}
+
+/**
  * Alert admins about stuck payments that need manual review
  */
 async function alertStuckPayments(
@@ -683,6 +777,8 @@ export const triggerStuckPaymentsRecovery = onCall(
       // P0 FIX 2026-02-01: Add PayPal recovery
       await captureCompletedPayPalPayments(db, results);
       await refundOldStuckPayments(db, results);
+      // P0 FIX 2026-02-12: Cancel abandoned 3D Secure payments
+      await cancelAbandonedRequiresActionPayments(db, results);
       await alertStuckPayments(db, results);
 
       return {

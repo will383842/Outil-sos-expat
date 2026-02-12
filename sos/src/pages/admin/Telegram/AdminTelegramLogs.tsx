@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useTranslation } from "../../../hooks/useTranslation";
 import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
 import {
-  Clock,
   CheckCircle,
   XCircle,
   RefreshCw,
@@ -12,6 +10,7 @@ import {
   ChevronRight,
   Filter,
 } from "lucide-react";
+import TelegramNav from "./TelegramNav";
 
 interface LogEntry {
   id: string;
@@ -36,7 +35,6 @@ const EVENT_TYPES = [
 ];
 
 const AdminTelegramLogs: React.FC = () => {
-  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -115,16 +113,11 @@ const AdminTelegramLogs: React.FC = () => {
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <Clock className="h-7 w-7 text-sky-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {t("admin.telegram.logs.title")}
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {t("admin.telegram.logs.subtitle")}
-            </p>
-          </div>
+        <TelegramNav />
+
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Logs</h2>
+          <p className="text-sm text-gray-500 mt-1">Historique des notifications Telegram</p>
         </div>
 
         {/* Filters */}
@@ -136,7 +129,7 @@ const AdminTelegramLogs: React.FC = () => {
               onChange={(e) => setFilterEvent(e.target.value)}
               className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:ring-2 focus:ring-sky-500 outline-none"
             >
-              <option value="">{t("admin.telegram.logs.allEvents")}</option>
+              <option value="">Tous les événements</option>
               {EVENT_TYPES.map((e) => (
                 <option key={e} value={e}>
                   {e}
@@ -149,9 +142,9 @@ const AdminTelegramLogs: React.FC = () => {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:ring-2 focus:ring-sky-500 outline-none"
           >
-            <option value="">{t("admin.telegram.logs.allStatuses")}</option>
-            <option value="sent">{t("admin.telegram.sent")}</option>
-            <option value="failed">{t("admin.telegram.failed")}</option>
+            <option value="">Tous les statuts</option>
+            <option value="sent">Envoyé</option>
+            <option value="failed">Échoué</option>
           </select>
           <button
             onClick={() => loadLogs()}
@@ -159,7 +152,7 @@ const AdminTelegramLogs: React.FC = () => {
             className="flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            {t("admin.telegram.refresh")}
+            Rafraîchir
           </button>
         </div>
 
@@ -169,21 +162,11 @@ const AdminTelegramLogs: React.FC = () => {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-left p-3 font-medium text-gray-600">
-                    {t("admin.telegram.logs.date")}
-                  </th>
-                  <th className="text-left p-3 font-medium text-gray-600">
-                    {t("admin.telegram.logs.event")}
-                  </th>
-                  <th className="text-left p-3 font-medium text-gray-600">
-                    {t("admin.telegram.logs.status")}
-                  </th>
-                  <th className="text-left p-3 font-medium text-gray-600">
-                    {t("admin.telegram.logs.chatId")}
-                  </th>
-                  <th className="text-left p-3 font-medium text-gray-600">
-                    {t("admin.telegram.logs.error")}
-                  </th>
+                  <th className="text-left p-3 font-medium text-gray-600">Date</th>
+                  <th className="text-left p-3 font-medium text-gray-600">Événement</th>
+                  <th className="text-left p-3 font-medium text-gray-600">Statut</th>
+                  <th className="text-left p-3 font-medium text-gray-600">Chat ID</th>
+                  <th className="text-left p-3 font-medium text-gray-600">Erreur</th>
                 </tr>
               </thead>
               <tbody>
@@ -191,13 +174,13 @@ const AdminTelegramLogs: React.FC = () => {
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-gray-400">
                       <RefreshCw className="h-6 w-6 mx-auto animate-spin mb-2" />
-                      {t("admin.telegram.loading")}
+                      Chargement...
                     </td>
                   </tr>
                 ) : logs.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-gray-400">
-                      {t("admin.telegram.logs.noLogs")}
+                      Aucun log trouvé
                     </td>
                   </tr>
                 ) : (
@@ -215,12 +198,12 @@ const AdminTelegramLogs: React.FC = () => {
                         {log.status === "sent" ? (
                           <span className="flex items-center gap-1 text-green-700">
                             <CheckCircle className="h-3.5 w-3.5" />
-                            {t("admin.telegram.sent")}
+                            Envoyé
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 text-red-700">
                             <XCircle className="h-3.5 w-3.5" />
-                            {t("admin.telegram.failed")}
+                            Échoué
                           </span>
                         )}
                       </td>
@@ -240,7 +223,7 @@ const AdminTelegramLogs: React.FC = () => {
           {/* Pagination */}
           <div className="flex items-center justify-between p-3 border-t bg-gray-50">
             <span className="text-xs text-gray-500">
-              {logs.length} {t("admin.telegram.logs.results")}
+              {logs.length} résultats
             </span>
             <div className="flex items-center gap-2">
               <button

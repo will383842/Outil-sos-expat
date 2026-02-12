@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
   Image,
@@ -73,6 +73,7 @@ interface Resource {
 
 const AdminGroupAdminsResources: React.FC = () => {
   const functions = getFunctions(undefined, 'europe-west1');
+  const intl = useIntl();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +110,7 @@ const AdminGroupAdminsResources: React.FC = () => {
       setResources((result.data as { resources: Resource[] }).resources);
     } catch (err) {
       console.error('Error fetching resources:', err);
-      setError('Failed to load resources');
+      setError(intl.formatMessage({ id: 'groupAdmin.admin.resources.error' }));
     } finally {
       setLoading(false);
     }
@@ -210,7 +211,7 @@ const AdminGroupAdminsResources: React.FC = () => {
               <FormattedMessage id="groupAdmin.admin.resources" defaultMessage="GroupAdmin Resources" />
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Manage banners, images, and text resources
+              {intl.formatMessage({ id: 'groupAdmin.admin.resources.description' })}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -225,7 +226,7 @@ const AdminGroupAdminsResources: React.FC = () => {
               className={`${UI.button.primary} px-4 py-2 flex items-center gap-2`}
             >
               <Plus className="w-4 h-4" />
-              Add Resource
+              {intl.formatMessage({ id: 'groupAdmin.admin.resources.addResource' })}
             </button>
           </div>
         </div>
@@ -237,9 +238,9 @@ const AdminGroupAdminsResources: React.FC = () => {
             onChange={(e) => setCategoryFilter(e.target.value)}
             className={UI.select}
           >
-            <option value="all">All Categories</option>
+            <option value="all">{intl.formatMessage({ id: 'groupAdmin.admin.resources.filter.allCategories' })}</option>
             {RESOURCE_CATEGORIES.map(cat => (
-              <option key={cat.code} value={cat.code}>{cat.name}</option>
+              <option key={cat.code} value={cat.code}>{intl.formatMessage({ id: `groupAdmin.resourceCategory.${cat.code}` })}</option>
             ))}
           </select>
         </div>
@@ -249,7 +250,7 @@ const AdminGroupAdminsResources: React.FC = () => {
           <div className={UI.card + " p-6"}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {editingResource ? 'Edit Resource' : 'Create Resource'}
+                {editingResource ? intl.formatMessage({ id: 'groupAdmin.admin.resources.editResource' }) : intl.formatMessage({ id: 'groupAdmin.admin.resources.createResource' })}
               </h2>
               <button onClick={resetForm} className={`${UI.button.secondary} p-2`}>
                 <X className="w-4 h-4" />
@@ -258,31 +259,31 @@ const AdminGroupAdminsResources: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className={UI.label}>Category</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.resources.category' })}</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className={UI.input}
                 >
                   {RESOURCE_CATEGORIES.map(cat => (
-                    <option key={cat.code} value={cat.code}>{cat.name}</option>
+                    <option key={cat.code} value={cat.code}>{intl.formatMessage({ id: `groupAdmin.resourceCategory.${cat.code}` })}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className={UI.label}>Type</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.resources.type' })}</label>
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   className={UI.input}
                 >
                   {RESOURCE_TYPES.map(type => (
-                    <option key={type.code} value={type.code}>{type.name}</option>
+                    <option key={type.code} value={type.code}>{intl.formatMessage({ id: `groupAdmin.resourceType.${type.code}` })}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className={UI.label}>Name (Default)</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.resources.nameDefault' })}</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -291,7 +292,7 @@ const AdminGroupAdminsResources: React.FC = () => {
                 />
               </div>
               <div>
-                <label className={UI.label}>Order</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.resources.order' })}</label>
                 <input
                   type="number"
                   value={formData.order}
@@ -300,7 +301,7 @@ const AdminGroupAdminsResources: React.FC = () => {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className={UI.label}>Description</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.resources.descriptionLabel' })}</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -309,7 +310,7 @@ const AdminGroupAdminsResources: React.FC = () => {
               </div>
               {formData.type === 'image' && (
                 <div className="md:col-span-2">
-                  <label className={UI.label}>File URL</label>
+                  <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.resources.fileUrl' })}</label>
                   <input
                     type="url"
                     value={formData.fileUrl}
@@ -321,7 +322,7 @@ const AdminGroupAdminsResources: React.FC = () => {
               )}
               {(formData.type === 'text' || formData.type === 'template') && (
                 <div className="md:col-span-2">
-                  <label className={UI.label}>Content (Default Language)</label>
+                  <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.resources.contentDefault' })}</label>
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -331,7 +332,7 @@ const AdminGroupAdminsResources: React.FC = () => {
               )}
               {formData.type === 'template' && (
                 <div className="md:col-span-2">
-                  <label className={UI.label}>Placeholders (comma-separated)</label>
+                  <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.resources.placeholders' })}</label>
                   <input
                     type="text"
                     value={formData.placeholders}
@@ -349,14 +350,14 @@ const AdminGroupAdminsResources: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                     className="w-4 h-4 rounded text-blue-500"
                   />
-                  <span className="text-gray-700 dark:text-gray-300">Active</span>
+                  <span className="text-gray-700 dark:text-gray-300">{intl.formatMessage({ id: 'groupAdmin.admin.resources.active' })}</span>
                 </label>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 mt-6">
               <button onClick={resetForm} className={`${UI.button.secondary} px-4 py-2`}>
-                Cancel
+                {intl.formatMessage({ id: 'groupAdmin.admin.resources.cancel' })}
               </button>
               <button
                 onClick={handleSave}
@@ -364,7 +365,7 @@ const AdminGroupAdminsResources: React.FC = () => {
                 className={`${UI.button.primary} px-4 py-2 flex items-center gap-2`}
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                {editingResource ? 'Update' : 'Create'}
+                {editingResource ? intl.formatMessage({ id: 'groupAdmin.admin.resources.update' }) : intl.formatMessage({ id: 'groupAdmin.admin.resources.create' })}
               </button>
             </div>
           </div>
@@ -399,15 +400,15 @@ const AdminGroupAdminsResources: React.FC = () => {
                           {resource.name}
                           {!resource.isActive && (
                             <span className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
-                              Inactive
+                              {intl.formatMessage({ id: 'groupAdmin.admin.resources.inactive' })}
                             </span>
                           )}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {RESOURCE_CATEGORIES.find(c => c.code === resource.category)?.name} • {resource.type}
+                          {intl.formatMessage({ id: `groupAdmin.resourceCategory.${resource.category}` })} • {resource.type}
                         </p>
                         <p className="text-xs text-gray-400">
-                          {resource.downloadCount} downloads • {resource.copyCount} copies
+                          {intl.formatMessage({ id: 'groupAdmin.admin.resources.downloads' }, { count: resource.downloadCount })} • {intl.formatMessage({ id: 'groupAdmin.admin.resources.copies' }, { count: resource.copyCount })}
                         </p>
                       </div>
                     </div>
@@ -432,7 +433,7 @@ const AdminGroupAdminsResources: React.FC = () => {
               {resources.length === 0 && (
                 <div className="flex flex-col items-center justify-center p-12 text-gray-500">
                   <Image className="w-12 h-12 mb-4 opacity-50" />
-                  <p>No resources found</p>
+                  <p>{intl.formatMessage({ id: 'groupAdmin.admin.resources.noResults' })}</p>
                 </div>
               )}
             </div>

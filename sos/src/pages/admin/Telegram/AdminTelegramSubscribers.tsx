@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from "../../../hooks/useTranslation";
 import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
-import { Users, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -12,6 +11,7 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
+import TelegramNav from "./TelegramNav";
 
 interface SubscriberStats {
   total: number;
@@ -30,7 +30,6 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const AdminTelegramSubscribers: React.FC = () => {
-  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<SubscriberStats | null>(null);
 
@@ -62,17 +61,12 @@ const AdminTelegramSubscribers: React.FC = () => {
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
+        <TelegramNav />
+
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Users className="h-7 w-7 text-sky-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {t("admin.telegram.subscribers.title")}
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {t("admin.telegram.subscribers.subtitle")}
-              </p>
-            </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Abonnés</h2>
+            <p className="text-sm text-gray-500 mt-1">Statistiques des abonnés Telegram</p>
           </div>
           <button
             onClick={loadStats}
@@ -80,7 +74,7 @@ const AdminTelegramSubscribers: React.FC = () => {
             className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            {t("admin.telegram.refresh")}
+            Rafraîchir
           </button>
         </div>
 
@@ -92,9 +86,7 @@ const AdminTelegramSubscribers: React.FC = () => {
             ) : (
               <>
                 <p className="text-5xl font-bold text-sky-600">{stats?.total || 0}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  {t("admin.telegram.subscribers.totalConnected")}
-                </p>
+                <p className="text-sm text-gray-500 mt-2">Abonnés connectés à Telegram</p>
               </>
             )}
           </div>
@@ -103,14 +95,12 @@ const AdminTelegramSubscribers: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Pie Chart */}
           <div className="bg-white rounded-xl border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {t("admin.telegram.subscribers.byRole")}
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Répartition par rôle</h2>
             {loading ? (
               <div className="h-64 bg-gray-50 rounded animate-pulse" />
             ) : pieData.length === 0 ? (
               <div className="flex items-center justify-center h-64 text-gray-400">
-                {t("admin.telegram.subscribers.noData")}
+                Aucune donnée
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
@@ -139,9 +129,7 @@ const AdminTelegramSubscribers: React.FC = () => {
 
           {/* Breakdown Table */}
           <div className="bg-white rounded-xl border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {t("admin.telegram.subscribers.breakdown")}
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Détail par rôle</h2>
             {loading ? (
               <div className="space-y-3">
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -167,7 +155,6 @@ const AdminTelegramSubscribers: React.FC = () => {
                     <span className="text-sm font-bold text-gray-900">{count}</span>
                   </div>
                 ))}
-                {/* Total row */}
                 <div className="flex items-center justify-between p-3 bg-sky-50 rounded-lg border border-sky-100 mt-3">
                   <span className="text-sm font-semibold text-sky-700">Total</span>
                   <span className="text-sm font-bold text-sky-700">{stats?.total || 0}</span>
@@ -176,7 +163,7 @@ const AdminTelegramSubscribers: React.FC = () => {
             )}
             {stats?.countedAt && (
               <p className="text-xs text-gray-400 mt-4">
-                {t("admin.telegram.subscribers.lastCount")}{" "}
+                Dernière mise à jour :{" "}
                 {new Date(stats.countedAt).toLocaleString("fr-FR", {
                   timeZone: "Europe/Paris",
                 })}

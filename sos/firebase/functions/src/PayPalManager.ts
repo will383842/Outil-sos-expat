@@ -3361,9 +3361,15 @@ export const paypalWebhook = onRequest(
 
       const existingEvent = await webhookEventRef.get();
       if (existingEvent.exists) {
-        console.log(`⚠️ [PAYPAL] IDEMPOTENCY: Event ${event.id} already processed, skipping`);
-        res.status(200).json({ received: true, duplicate: true, eventId: event.id });
-        return;
+        const existingStatus = existingEvent.data()?.status;
+        if (existingStatus === "completed") {
+          // Already successfully processed - skip
+          console.log(`⚠️ [PAYPAL] IDEMPOTENCY: Event ${event.id} already completed, skipping`);
+          res.status(200).json({ received: true, duplicate: true, eventId: event.id });
+          return;
+        }
+        // Status is "processing" or "failed" - allow re-processing
+        console.log(`🔄 [PAYPAL] IDEMPOTENCY: Event ${event.id} status="${existingStatus}" - allowing re-processing`);
       }
 
       // Mark event as being processed BEFORE processing (prevents race conditions)
@@ -3387,6 +3393,69 @@ export const paypalWebhook = onRequest(
 
       // Traiter selon le type d'événement
       switch (eventType) {
+        // ===== P0 FIX 2026-02-12: Handle PAYMENT.AUTHORIZATION.* events =====
+        // Without these handlers, if PayPal voids/expires an authorization unilaterally,
+        // SOS-Expat is never notified and Firestore gets out of sync.
+        case "PAYMENT.AUTHORIZATION.CREATED": {
+          const authResource = event.resource;
+          const authOrderId = authResource?.supplementary_data?.related_ids?.order_id;
+          console.log(`✅ [PAYPAL] Authorization created: ${authResource?.id} for order ${authOrderId}`);
+          if (authOrderId && authResource?.id) {
+            await db.collection("paypal_orders").doc(authOrderId).update({
+              authorizationId: authResource.id,
+              authorizationStatus: "CREATED",
+              authorizationCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+          break;
+        }
+
+        case "PAYMENT.AUTHORIZATION.VOIDED":
+        case "PAYMENT.AUTHORIZATION.EXPIRED": {
+          const voidedAuthResource = event.resource;
+          const voidedAuthId = voidedAuthResource?.id;
+          const voidedOrderId = voidedAuthResource?.supplementary_data?.related_ids?.order_id;
+          const voidReason = eventType === "PAYMENT.AUTHORIZATION.EXPIRED" ? "EXPIRED" : "VOIDED";
+          console.log(`🚫 [PAYPAL] Authorization ${voidReason}: ${voidedAuthId} for order ${voidedOrderId}`);
+
+          if (voidedOrderId) {
+            // Update PayPal order
+            await db.collection("paypal_orders").doc(voidedOrderId).update({
+              status: voidReason,
+              [`${voidReason.toLowerCase()}At`]: admin.firestore.FieldValue.serverTimestamp(),
+              [`${voidReason.toLowerCase()}By`]: "paypal_webhook",
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            // Update call_session if exists
+            const orderDoc = await db.collection("paypal_orders").doc(voidedOrderId).get();
+            const orderData = orderDoc.data();
+            if (orderData?.callSessionId) {
+              await db.collection("call_sessions").doc(orderData.callSessionId).update({
+                "payment.status": "voided",
+                "payment.voidedAt": admin.firestore.FieldValue.serverTimestamp(),
+                "payment.voidedBy": `paypal_${voidReason.toLowerCase()}`,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+
+            // Alert admin for unexpected voids
+            await db.collection("admin_alerts").add({
+              type: `paypal_authorization_${voidReason.toLowerCase()}`,
+              priority: "high",
+              title: `Autorisation PayPal ${voidReason}`,
+              message: `L'autorisation ${voidedAuthId} pour l'ordre ${voidedOrderId} a été ${voidReason === "EXPIRED" ? "expirée" : "annulée"} par PayPal.`,
+              orderId: voidedOrderId,
+              authorizationId: voidedAuthId,
+              read: false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+          break;
+        }
+        // ===== END P0 FIX 2026-02-12 =====
+
         case "CHECKOUT.ORDER.APPROVED":
           // L'utilisateur a approuvé le paiement
           const approvedOrderId = event.resource?.id;
@@ -3521,8 +3590,22 @@ export const paypalWebhook = onRequest(
                   const { ProviderEarningsService } = await import("./ProviderEarningsService");
                   const earningsService = new ProviderEarningsService(db);
 
-                  // Calculer le montant provider (61% comme Stripe)
-                  const providerRefundAmount = refundAmount * 0.61;
+                  // P0 FIX 2026-02-12: Use stored provider amount ratio instead of hardcoded 61%
+                  // If the payment doc has providerAmount and amount, compute the actual ratio
+                  // Fallback to 61% only for legacy payments without stored amounts
+                  let providerRefundAmount: number;
+                  const storedProviderAmount = paymentData.providerAmountEuros || paymentData.providerAmount;
+                  const storedTotalAmount = paymentData.amountInEuros || paymentData.amount;
+                  if (storedProviderAmount && storedTotalAmount && storedTotalAmount > 0) {
+                    // Use the actual ratio from the original payment
+                    const providerRatio = storedProviderAmount / storedTotalAmount;
+                    providerRefundAmount = refundAmount * providerRatio;
+                    console.log(`💰 [PAYPAL] Using stored ratio: ${(providerRatio * 100).toFixed(1)}% (provider: ${storedProviderAmount}, total: ${storedTotalAmount})`);
+                  } else {
+                    // Legacy fallback - 61% matches historical commission structure
+                    providerRefundAmount = refundAmount * 0.61;
+                    console.warn(`⚠️ [PAYPAL] Using legacy 61% ratio - no stored amounts found in payment doc`);
+                  }
 
                   await earningsService.deductProviderBalance({
                     providerId,
@@ -3993,6 +4076,13 @@ export const paypalWebhook = onRequest(
           console.log("📋 [PAYPAL] Unhandled event type:", eventType);
       }
 
+      // P0 FIX 2026-02-12: Mark webhook event as completed for proper idempotence
+      // Without this, retried events are rejected as duplicates even if previous processing failed
+      await webhookEventRef.update({
+        status: "completed",
+        completedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
       // ===== PRODUCTION TEST LOG =====
       logWebhookTest.paypal.success(eventType, event.id, {
         resourceId: event.resource?.id,
@@ -4002,6 +4092,19 @@ export const paypalWebhook = onRequest(
       res.status(200).json({ received: true });
     } catch (error) {
       console.error("❌ [PAYPAL] Webhook error:", error);
+
+      // P0 FIX 2026-02-12: Mark as failed so retries can re-process
+      try {
+        const failedWebhookKey = `paypal_${(error as any)?.eventId || req.body?.id || 'unknown'}`;
+        const failedRef = admin.firestore().collection("processed_webhook_events").doc(failedWebhookKey);
+        await failedRef.update({
+          status: "failed",
+          failedAt: admin.firestore.FieldValue.serverTimestamp(),
+          error: error instanceof Error ? error.message : String(error),
+        });
+      } catch (updateErr) {
+        // Ignore update error - don't mask the original error
+      }
 
       // ===== PRODUCTION TEST LOG =====
       logWebhookTest.paypal.error(req.body?.event_type || 'unknown', error as Error, {

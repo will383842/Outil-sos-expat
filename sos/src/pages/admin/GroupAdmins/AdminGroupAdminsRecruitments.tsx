@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useIntl } from 'react-intl';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -60,6 +61,7 @@ interface Stats {
 
 const AdminGroupAdminsRecruitments: React.FC = () => {
   const functions = getFunctions(undefined, 'europe-west1');
+  const intl = useIntl();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -113,25 +115,25 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
       case 'paid':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-            <CheckCircle className="w-3 h-3" /> Paid
+            <CheckCircle className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.recruitments.status.paid' })}
           </span>
         );
       case 'pending':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400">
-            <Clock className="w-3 h-3" /> Pending
+            <Clock className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.recruitments.status.pending' })}
           </span>
         );
       case 'eligible':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-            <DollarSign className="w-3 h-3" /> Eligible
+            <DollarSign className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.recruitments.status.eligible' })}
           </span>
         );
       case 'expired':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-            <XCircle className="w-3 h-3" /> Expired
+            <XCircle className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.recruitments.status.expired' })}
           </span>
         );
     }
@@ -145,10 +147,10 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <UserPlus className="w-6 h-6 text-blue-500" />
-              GroupAdmin Recruitments
+              {intl.formatMessage({ id: 'groupAdmin.admin.recruitments.title' })}
             </h1>
             <p className="text-gray-500 text-sm mt-1">
-              Track recruitment pipeline and commission eligibility
+              {intl.formatMessage({ id: 'groupAdmin.admin.recruitments.description' })}
             </p>
           </div>
           <button
@@ -165,35 +167,35 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
           <div className={UI.card + " p-4"}>
             <div className="flex items-center gap-2 mb-1">
               <Users className="w-4 h-4 text-gray-400" />
-              <p className="text-sm text-gray-500">Total</p>
+              <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.stats.total' })}</p>
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
           </div>
           <div className={UI.card + " p-4"}>
             <div className="flex items-center gap-2 mb-1">
               <Clock className="w-4 h-4 text-gray-400" />
-              <p className="text-sm text-gray-500">Pending</p>
+              <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.stats.pending' })}</p>
             </div>
             <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
           </div>
           <div className={UI.card + " p-4"}>
             <div className="flex items-center gap-2 mb-1">
               <DollarSign className="w-4 h-4 text-blue-400" />
-              <p className="text-sm text-gray-500">Eligible</p>
+              <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.stats.eligible' })}</p>
             </div>
             <p className="text-2xl font-bold text-blue-600">{stats.eligible}</p>
           </div>
           <div className={UI.card + " p-4"}>
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle className="w-4 h-4 text-green-400" />
-              <p className="text-sm text-gray-500">Paid</p>
+              <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.stats.paid' })}</p>
             </div>
             <p className="text-2xl font-bold text-green-600">{stats.paid}</p>
           </div>
           <div className={UI.card + " p-4"}>
             <div className="flex items-center gap-2 mb-1">
               <XCircle className="w-4 h-4 text-red-400" />
-              <p className="text-sm text-gray-500">Expired</p>
+              <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.stats.expired' })}</p>
             </div>
             <p className="text-2xl font-bold text-red-600">{stats.expired}</p>
           </div>
@@ -209,18 +211,18 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
             }}
             className={UI.select}
           >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="eligible">Eligible</option>
-            <option value="paid">Paid</option>
-            <option value="expired">Expired</option>
+            <option value="all">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.filter.all' })}</option>
+            <option value="pending">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.filter.pending' })}</option>
+            <option value="eligible">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.filter.eligible' })}</option>
+            <option value="paid">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.filter.paid' })}</option>
+            <option value="expired">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.filter.expired' })}</option>
           </select>
           <div className="flex gap-2 flex-1">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by name, email, group..."
+                placeholder={intl.formatMessage({ id: 'groupAdmin.admin.recruitments.searchPlaceholder' })}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -228,7 +230,7 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
               />
             </div>
             <button onClick={handleSearch} className={`${UI.button.primary} px-4 py-2`}>
-              Search
+              {intl.formatMessage({ id: 'groupAdmin.admin.recruitments.search' })}
             </button>
           </div>
         </div>
@@ -242,19 +244,19 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
           ) : recruitments.length === 0 ? (
             <div className="text-center py-12">
               <UserPlus className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No recruitments found</p>
+              <p className="text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.noResults' })}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-white/10">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Recruiter</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Recruited</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Progress</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Window End</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.col.recruiter' })}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.col.recruited' })}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.col.date' })}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.col.progress' })}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.col.status' })}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: 'groupAdmin.admin.recruitments.col.windowEnd' })}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -321,7 +323,7 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
           {!loading && recruitments.length > 0 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-white/10">
               <p className="text-sm text-gray-500">
-                Page {page}
+                {intl.formatMessage({ id: 'groupAdmin.admin.recruitments.page' }, { page })}
               </p>
               <div className="flex gap-2">
                 <button
@@ -329,14 +331,14 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
                   disabled={page === 1}
                   className={`${UI.button.secondary} px-3 py-1.5 text-sm flex items-center gap-1 disabled:opacity-50`}
                 >
-                  <ChevronLeft className="w-4 h-4" /> Prev
+                  <ChevronLeft className="w-4 h-4" /> {intl.formatMessage({ id: 'groupAdmin.admin.recruitments.prev' })}
                 </button>
                 <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={!hasMore}
                   className={`${UI.button.secondary} px-3 py-1.5 text-sm flex items-center gap-1 disabled:opacity-50`}
                 >
-                  Next <ChevronRight className="w-4 h-4" />
+                  {intl.formatMessage({ id: 'groupAdmin.admin.recruitments.next' })} <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </div>

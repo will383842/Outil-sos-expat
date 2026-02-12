@@ -265,32 +265,32 @@ export const telegram_getSubscriberStats = onCall(
     const db = getDb();
 
     // Count users with telegram_id set (non-empty)
+    // Use single-field queries to avoid needing composite indexes
     const roles = ["chatter", "influencer", "blogger", "groupAdmin", "admin"] as const;
     const breakdown: Record<string, number> = {};
     let total = 0;
 
-    for (const role of roles) {
-      const snap = await db
-        .collection(FIRESTORE_PATHS.USERS)
-        .where("telegram_id", "!=", "")
-        .where("role", "==", role)
-        .count()
-        .get();
-      const count = snap.data().count;
-      breakdown[role] = count;
-      total += count;
+    // Get all users with telegram_id set, grouped by role
+    // Single filter avoids composite index requirement
+    const telegramUsersSnap = await db
+      .collection(FIRESTORE_PATHS.USERS)
+      .where("telegram_id", ">", "")
+      .select("role")
+      .get();
+
+    for (const doc of telegramUsersSnap.docs) {
+      const role = doc.data().role as string;
+      breakdown[role] = (breakdown[role] || 0) + 1;
+      total++;
     }
 
-    // Also get users with telegram_id but no role match (admin users typically)
-    const allTelegramSnap = await db
-      .collection(FIRESTORE_PATHS.USERS)
-      .where("telegram_id", "!=", "")
-      .count()
-      .get();
-    const totalWithTelegram = allTelegramSnap.data().count;
+    // Ensure all roles appear in breakdown
+    for (const role of roles) {
+      if (!(role in breakdown)) breakdown[role] = 0;
+    }
 
     return {
-      total: totalWithTelegram,
+      total,
       breakdown,
       countedAt: new Date().toISOString(),
     };

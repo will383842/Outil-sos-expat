@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
   Settings,
@@ -48,6 +48,7 @@ interface GroupAdminConfig {
 
 const AdminGroupAdminsConfig: React.FC = () => {
   const functions = getFunctions(undefined, 'europe-west1');
+  const intl = useIntl();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -65,7 +66,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
       setConfig(result.data as GroupAdminConfig);
     } catch (err) {
       console.error('Error fetching config:', err);
-      setError('Failed to load configuration');
+      setError(intl.formatMessage({ id: 'groupAdmin.admin.config.error' }));
     } finally {
       setLoading(false);
     }
@@ -91,7 +92,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
       fetchConfig();
     } catch (err) {
       console.error('Error saving config:', err);
-      setError('Failed to save configuration');
+      setError(intl.formatMessage({ id: 'groupAdmin.admin.config.saveError' }));
     } finally {
       setSaving(false);
     }
@@ -118,9 +119,9 @@ const AdminGroupAdminsConfig: React.FC = () => {
       <AdminLayout>
         <div className="flex flex-col items-center justify-center min-h-screen text-red-500">
           <AlertTriangle className="w-12 h-12 mb-4" />
-          <p>{error || 'Failed to load configuration'}</p>
+          <p>{error || intl.formatMessage({ id: 'groupAdmin.admin.config.error' })}</p>
           <button onClick={fetchConfig} className={`${UI.button.secondary} px-4 py-2 mt-4`}>
-            Retry
+            {intl.formatMessage({ id: 'groupAdmin.admin.config.retry' })}
           </button>
         </div>
       </AdminLayout>
@@ -138,7 +139,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
               <FormattedMessage id="groupAdmin.admin.config" defaultMessage="GroupAdmin Configuration" />
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
-              System settings for the GroupAdmin program
+              {intl.formatMessage({ id: 'groupAdmin.admin.config.description' })}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -151,7 +152,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
               className={`${UI.button.primary} px-4 py-2 flex items-center gap-2`}
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save Changes
+              {intl.formatMessage({ id: 'groupAdmin.admin.config.saveChanges' })}
             </button>
           </div>
         </div>
@@ -167,7 +168,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
         {success && (
           <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl flex items-center gap-2 text-green-700 dark:text-green-400">
             <CheckCircle className="w-5 h-5" />
-            Configuration saved successfully
+            {intl.formatMessage({ id: 'groupAdmin.admin.config.savedSuccess' })}
           </div>
         )}
 
@@ -175,7 +176,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
         <div className={UI.card + " p-6"}>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <Settings className="w-5 h-5" />
-            System Status
+            {intl.formatMessage({ id: 'groupAdmin.admin.config.systemStatus' })}
           </h2>
           <div className="space-y-4">
             <label className="flex items-center gap-3">
@@ -185,7 +186,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 onChange={(e) => updateField('isSystemActive', e.target.checked)}
                 className="w-5 h-5 rounded text-blue-500 focus:ring-blue-500"
               />
-              <span className="text-gray-700 dark:text-gray-300">System Active</span>
+              <span className="text-gray-700 dark:text-gray-300">{intl.formatMessage({ id: 'groupAdmin.admin.config.systemActive' })}</span>
             </label>
             <label className="flex items-center gap-3">
               <input
@@ -194,7 +195,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 onChange={(e) => updateField('newRegistrationsEnabled', e.target.checked)}
                 className="w-5 h-5 rounded text-blue-500 focus:ring-blue-500"
               />
-              <span className="text-gray-700 dark:text-gray-300">New Registrations Enabled</span>
+              <span className="text-gray-700 dark:text-gray-300">{intl.formatMessage({ id: 'groupAdmin.admin.config.newRegistrations' })}</span>
             </label>
             <label className="flex items-center gap-3">
               <input
@@ -203,7 +204,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 onChange={(e) => updateField('withdrawalsEnabled', e.target.checked)}
                 className="w-5 h-5 rounded text-blue-500 focus:ring-blue-500"
               />
-              <span className="text-gray-700 dark:text-gray-300">Withdrawals Enabled</span>
+              <span className="text-gray-700 dark:text-gray-300">{intl.formatMessage({ id: 'groupAdmin.admin.config.withdrawalsEnabled' })}</span>
             </label>
           </div>
         </div>
@@ -212,11 +213,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
         <div className={UI.card + " p-6"}>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-green-500" />
-            Commission Settings
+            {intl.formatMessage({ id: 'groupAdmin.admin.config.commissionSettings' })}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={UI.label}>Client Commission (cents)</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.clientCommission' })}</label>
               <input
                 type="number"
                 value={config.commissionClientAmount}
@@ -224,11 +225,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Current: ${(config.commissionClientAmount / 100).toFixed(2)} per client
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.currentPerClient' }, { amount: (config.commissionClientAmount / 100).toFixed(2) })}
               </p>
             </div>
             <div>
-              <label className={UI.label}>Recruitment Commission (cents)</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.recruitmentCommission' })}</label>
               <input
                 type="number"
                 value={config.commissionRecruitmentAmount}
@@ -236,11 +237,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Current: ${(config.commissionRecruitmentAmount / 100).toFixed(2)} per recruit
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.currentPerRecruit' }, { amount: (config.commissionRecruitmentAmount / 100).toFixed(2) })}
               </p>
             </div>
             <div>
-              <label className={UI.label}>Client Discount Amount (cents)</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.clientDiscount' })}</label>
               <input
                 type="number"
                 value={config.clientDiscountAmount}
@@ -248,11 +249,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Current: ${(config.clientDiscountAmount / 100).toFixed(2)} discount for clients
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.currentDiscount' }, { amount: (config.clientDiscountAmount / 100).toFixed(2) })}
               </p>
             </div>
             <div>
-              <label className={UI.label}>Recruitment Commission Threshold (cents)</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.recruitmentThreshold' })}</label>
               <input
                 type="number"
                 value={config.recruitmentCommissionThreshold}
@@ -260,11 +261,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Recruit must earn ${(config.recruitmentCommissionThreshold / 100).toFixed(2)} before recruiter gets commission
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.thresholdDesc' }, { amount: (config.recruitmentCommissionThreshold / 100).toFixed(2) })}
               </p>
             </div>
             <div>
-              <label className={UI.label}>Recruitment Window (months)</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.recruitmentWindow' })}</label>
               <input
                 type="number"
                 value={config.recruitmentWindowMonths}
@@ -272,7 +273,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                How long recruiter earns from recruit's activity
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.recruitmentWindowDesc' })}
               </p>
             </div>
           </div>
@@ -282,11 +283,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
         <div className={UI.card + " p-6"}>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5 text-blue-500" />
-            Payment Settings
+            {intl.formatMessage({ id: 'groupAdmin.admin.config.paymentSettings' })}
           </h2>
           <div className="space-y-4 mb-4">
             <div>
-              <label className={UI.label}>Payment Mode</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.paymentMode' })}</label>
               <div className="flex items-center gap-4 mt-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -297,7 +298,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
                     onChange={() => updateField('paymentMode', 'manual')}
                     className="w-4 h-4 text-blue-500 focus:ring-blue-500"
                   />
-                  <span className="text-gray-700 dark:text-gray-300">Manual</span>
+                  <span className="text-gray-700 dark:text-gray-300">{intl.formatMessage({ id: 'groupAdmin.admin.config.manual' })}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -308,17 +309,17 @@ const AdminGroupAdminsConfig: React.FC = () => {
                     onChange={() => updateField('paymentMode', 'automatic')}
                     className="w-4 h-4 text-blue-500 focus:ring-blue-500"
                   />
-                  <span className="text-gray-700 dark:text-gray-300">Automatic</span>
+                  <span className="text-gray-700 dark:text-gray-300">{intl.formatMessage({ id: 'groupAdmin.admin.config.automatic' })}</span>
                 </label>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Automatic: coming soon - requires Wise/PayPal API integration
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.automaticNote' })}
               </p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={UI.label}>Minimum Withdrawal (cents)</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.minWithdrawal' })}</label>
               <input
                 type="number"
                 value={config.minimumWithdrawalAmount}
@@ -326,11 +327,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Current: ${(config.minimumWithdrawalAmount / 100).toFixed(2)} minimum
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.currentMinimum' }, { amount: (config.minimumWithdrawalAmount / 100).toFixed(2) })}
               </p>
             </div>
             <div>
-              <label className={UI.label}>Validation Hold Period (days)</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.validationHold' })}</label>
               <input
                 type="number"
                 value={config.validationHoldPeriodDays}
@@ -338,11 +339,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Days before pending commission becomes validated
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.validationHoldDesc' })}
               </p>
             </div>
             <div>
-              <label className={UI.label}>Release Delay (hours)</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.releaseDelay' })}</label>
               <input
                 type="number"
                 value={config.releaseDelayHours}
@@ -350,11 +351,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Hours after validation before funds become available
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.releaseDelayDesc' })}
               </p>
             </div>
             <div>
-              <label className={UI.label}>Attribution Window (days)</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.attributionWindow' })}</label>
               <input
                 type="number"
                 value={config.attributionWindowDays}
@@ -362,7 +363,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Days a click is attributed to the GroupAdmin
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.attributionWindowDesc' })}
               </p>
             </div>
           </div>
@@ -371,11 +372,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
         {/* Other Settings */}
         <div className={UI.card + " p-6"}>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Other Settings
+            {intl.formatMessage({ id: 'groupAdmin.admin.config.otherSettings' })}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={UI.label}>Leaderboard Size</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.leaderboardSize' })}</label>
               <input
                 type="number"
                 value={config.leaderboardSize}
@@ -383,11 +384,11 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Number of top performers shown
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.leaderboardSizeDesc' })}
               </p>
             </div>
             <div>
-              <label className={UI.label}>Config Version</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.configVersion' })}</label>
               <input
                 type="number"
                 value={config.version}
@@ -395,7 +396,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
                 className={UI.input + " opacity-50"}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Auto-incremented on save
+                {intl.formatMessage({ id: 'groupAdmin.admin.config.versionDesc' })}
               </p>
             </div>
           </div>

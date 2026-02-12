@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
   FileText,
@@ -74,6 +74,7 @@ interface Post {
 
 const AdminGroupAdminsPosts: React.FC = () => {
   const functions = getFunctions(undefined, 'europe-west1');
+  const intl = useIntl();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +112,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
       setPosts((result.data as { posts: Post[] }).posts);
     } catch (err) {
       console.error('Error fetching posts:', err);
-      setError('Failed to load posts');
+      setError(intl.formatMessage({ id: 'groupAdmin.admin.posts.error' }));
     } finally {
       setLoading(false);
     }
@@ -215,7 +216,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
               <FormattedMessage id="groupAdmin.admin.posts" defaultMessage="GroupAdmin Posts" />
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Manage ready-to-use Facebook posts for GroupAdmins
+              {intl.formatMessage({ id: 'groupAdmin.admin.posts.description' })}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -230,7 +231,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
               className={`${UI.button.primary} px-4 py-2 flex items-center gap-2`}
             >
               <Plus className="w-4 h-4" />
-              Add Post
+              {intl.formatMessage({ id: 'groupAdmin.admin.posts.addPost' })}
             </button>
           </div>
         </div>
@@ -242,9 +243,9 @@ const AdminGroupAdminsPosts: React.FC = () => {
             onChange={(e) => setCategoryFilter(e.target.value)}
             className={UI.select}
           >
-            <option value="all">All Categories</option>
+            <option value="all">{intl.formatMessage({ id: 'groupAdmin.admin.posts.filter.allCategories' })}</option>
             {POST_CATEGORIES.map(cat => (
-              <option key={cat.code} value={cat.code}>{cat.name}</option>
+              <option key={cat.code} value={cat.code}>{intl.formatMessage({ id: `groupAdmin.postCategory.${cat.code}` })}</option>
             ))}
           </select>
         </div>
@@ -254,7 +255,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
           <div className={UI.card + " p-6"}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {editingPost ? 'Edit Post' : 'Create Post'}
+                {editingPost ? intl.formatMessage({ id: 'groupAdmin.admin.posts.editPost' }) : intl.formatMessage({ id: 'groupAdmin.admin.posts.createPost' })}
               </h2>
               <button onClick={resetForm} className={`${UI.button.secondary} p-2`}>
                 <X className="w-4 h-4" />
@@ -263,7 +264,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className={UI.label}>Name (Default)</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.posts.nameDefault' })}</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -273,19 +274,19 @@ const AdminGroupAdminsPosts: React.FC = () => {
                 />
               </div>
               <div>
-                <label className={UI.label}>Category</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.posts.category' })}</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className={UI.input}
                 >
                   {POST_CATEGORIES.map(cat => (
-                    <option key={cat.code} value={cat.code}>{cat.name}</option>
+                    <option key={cat.code} value={cat.code}>{intl.formatMessage({ id: `groupAdmin.postCategory.${cat.code}` })}</option>
                   ))}
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className={UI.label}>Content (Default Language - English)</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.posts.contentDefault' })}</label>
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -294,7 +295,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
                 />
               </div>
               <div>
-                <label className={UI.label}>Placeholders (comma-separated)</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.posts.placeholders' })}</label>
                 <input
                   type="text"
                   value={formData.placeholders}
@@ -304,7 +305,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
                 />
               </div>
               <div>
-                <label className={UI.label}>Order</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.posts.order' })}</label>
                 <input
                   type="number"
                   value={formData.order}
@@ -313,7 +314,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
                 />
               </div>
               <div>
-                <label className={UI.label}>Recommended Pin Duration</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.posts.pinDuration' })}</label>
                 <input
                   type="text"
                   value={formData.recommendedPinDuration}
@@ -323,7 +324,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
                 />
               </div>
               <div>
-                <label className={UI.label}>Best Time to Post</label>
+                <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.posts.bestTime' })}</label>
                 <input
                   type="text"
                   value={formData.bestTimeToPost}
@@ -340,14 +341,14 @@ const AdminGroupAdminsPosts: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                     className="w-4 h-4 rounded text-blue-500"
                   />
-                  <span className="text-gray-700 dark:text-gray-300">Active</span>
+                  <span className="text-gray-700 dark:text-gray-300">{intl.formatMessage({ id: 'groupAdmin.admin.posts.active' })}</span>
                 </label>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 mt-6">
               <button onClick={resetForm} className={`${UI.button.secondary} px-4 py-2`}>
-                Cancel
+                {intl.formatMessage({ id: 'groupAdmin.admin.posts.cancel' })}
               </button>
               <button
                 onClick={handleSave}
@@ -355,7 +356,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
                 className={`${UI.button.primary} px-4 py-2 flex items-center gap-2`}
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                {editingPost ? 'Update' : 'Create'}
+                {editingPost ? intl.formatMessage({ id: 'groupAdmin.admin.posts.update' }) : intl.formatMessage({ id: 'groupAdmin.admin.posts.create' })}
               </button>
             </div>
           </div>
@@ -367,7 +368,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
             <div className={UI.card + " max-w-2xl w-full max-h-[80vh] overflow-auto p-6"}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Preview: {previewPost.name}
+                  {intl.formatMessage({ id: 'groupAdmin.admin.posts.preview' }, { name: previewPost.name })}
                 </h2>
                 <div className="flex items-center gap-2">
                   <select
@@ -391,8 +392,8 @@ const AdminGroupAdminsPosts: React.FC = () => {
                     GA
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">GroupAdmin Name</p>
-                    <p className="text-xs text-gray-500">Just now</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{intl.formatMessage({ id: 'groupAdmin.admin.posts.previewAuthor' })}</p>
+                    <p className="text-xs text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.posts.justNow' })}</p>
                   </div>
                 </div>
                 <div className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">
@@ -401,14 +402,14 @@ const AdminGroupAdminsPosts: React.FC = () => {
               </div>
 
               <div className="mt-4 text-sm text-gray-500">
-                <p><strong>Category:</strong> {POST_CATEGORIES.find(c => c.code === previewPost.category)?.name}</p>
+                <p><strong>{intl.formatMessage({ id: 'groupAdmin.admin.posts.categoryLabel' })}</strong> {POST_CATEGORIES.find(c => c.code === previewPost.category)?.name}</p>
                 {previewPost.recommendedPinDuration && (
-                  <p><strong>Recommended Pin:</strong> {previewPost.recommendedPinDuration}</p>
+                  <p><strong>{intl.formatMessage({ id: 'groupAdmin.admin.posts.recommendedPin' })}</strong> {previewPost.recommendedPinDuration}</p>
                 )}
                 {previewPost.bestTimeToPost && (
-                  <p><strong>Best Time:</strong> {previewPost.bestTimeToPost}</p>
+                  <p><strong>{intl.formatMessage({ id: 'groupAdmin.admin.posts.bestTimeLabel' })}</strong> {previewPost.bestTimeToPost}</p>
                 )}
-                <p><strong>Usage Count:</strong> {previewPost.usageCount}</p>
+                <p><strong>{intl.formatMessage({ id: 'groupAdmin.admin.posts.usageCount' })}</strong> {previewPost.usageCount}</p>
               </div>
             </div>
           </div>
@@ -441,12 +442,12 @@ const AdminGroupAdminsPosts: React.FC = () => {
                         {post.name}
                         {!post.isActive && (
                           <span className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
-                            Inactive
+                            {intl.formatMessage({ id: 'groupAdmin.admin.posts.inactive' })}
                           </span>
                         )}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {POST_CATEGORIES.find(c => c.code === post.category)?.name}
+                        {intl.formatMessage({ id: `groupAdmin.postCategory.${post.category}` })}
                       </p>
                       <p className="text-xs text-gray-400 truncate max-w-md">
                         {post.content.substring(0, 100)}...
@@ -485,7 +486,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
               {posts.length === 0 && (
                 <div className="flex flex-col items-center justify-center p-12 text-gray-500">
                   <FileText className="w-12 h-12 mb-4 opacity-50" />
-                  <p>No posts found</p>
+                  <p>{intl.formatMessage({ id: 'groupAdmin.admin.posts.noResults' })}</p>
                 </div>
               )}
             </div>

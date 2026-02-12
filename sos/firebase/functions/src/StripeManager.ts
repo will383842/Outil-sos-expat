@@ -955,6 +955,17 @@ export class StripeManager {
       });
 
       // ===== P1 FIX: Vérification KYC du provider AVANT capture =====
+      // P0 FIX 2026-02-12: Defer AAA external transfer AFTER capture to prevent money loss
+      // if capture fails. We save the transfer params here and execute after capture succeeds.
+      let deferredAaaExternalTransfer: {
+        providerAmountCents: number;
+        currency: string;
+        accountId: string;
+        accountName: string;
+        externalAccountId: string;
+        providerId: string;
+      } | null = null;
+
       const providerId = paymentIntent.metadata?.providerId;
       if (providerId) {
         try {
@@ -1033,43 +1044,18 @@ export class StripeManager {
                       });
                       // Skip transfer - providerAmountCents is missing
                     } else {
-                      // Créer un transfert vers le compte Stripe externe consolidé
-                      // P0 FIX 2026-01-30: Wrap transfer with circuit breaker
-                      const transfer = await stripeCircuitBreaker.execute(() =>
-                        this.stripe!.transfers.create({
-                          amount: providerAmountCents,
-                          currency: paymentIntent.currency,
-                          destination: aaaAccount.accountId,
-                          transfer_group: `aaa_${sessionId || paymentIntentId}`,
-                          metadata: {
-                            type: 'aaa_external_payout',
-                            originalProviderId: providerId,
-                            externalAccountId: aaaAccount.id,
-                            externalAccountName: aaaAccount.name,
-                            paymentIntentId: paymentIntentId,
-                            sessionId: sessionId || '',
-                          },
-                        }, {
-                          idempotencyKey: `aaa_transfer_${paymentIntentId}_${aaaAccount.id}`.substring(0, 255),
-                        })
-                      );
-
-                      // Log le payout externe
-                      await this.db.collection('aaa_external_payouts').add({
-                        paymentIntentId: paymentIntentId,
-                        providerId: providerId,
-                        amount: providerAmountCents,
+                      // P0 FIX 2026-02-12: DEFER transfer to AFTER capture succeeds
+                      // Previously this transfer was executed before capture, which could
+                      // send money to AAA account even if capture fails afterwards.
+                      deferredAaaExternalTransfer = {
+                        providerAmountCents,
                         currency: paymentIntent.currency,
-                        mode: 'external',
+                        accountId: aaaAccount.accountId,
+                        accountName: aaaAccount.name,
                         externalAccountId: aaaAccount.id,
-                        externalAccountName: aaaAccount.name,
-                        transferId: transfer.id,
-                        sessionId: sessionId || null,
-                        success: true,
-                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                      });
-
-                      console.log(`[capturePayment] AAA External payout SUCCESS to ${aaaAccount.name}: ${transfer.id}`);
+                        providerId: providerId,
+                      };
+                      console.log(`[capturePayment] AAA External transfer DEFERRED until after capture`);
                     }
                   } catch (transferError) {
                     console.error('[capturePayment] AAA External transfer failed:', transferError);
@@ -1175,6 +1161,63 @@ export class StripeManager {
         }
         throw error;
       }
+
+      // ===== P0 FIX 2026-02-12: Execute deferred AAA external transfer AFTER capture =====
+      if (deferredAaaExternalTransfer) {
+        const aat = deferredAaaExternalTransfer;
+        try {
+          const transfer = await stripeCircuitBreaker.execute(() =>
+            this.stripe!.transfers.create({
+              amount: aat.providerAmountCents,
+              currency: aat.currency,
+              destination: aat.accountId,
+              transfer_group: `aaa_${sessionId || paymentIntentId}`,
+              metadata: {
+                type: 'aaa_external_payout',
+                originalProviderId: aat.providerId,
+                externalAccountId: aat.externalAccountId,
+                externalAccountName: aat.accountName,
+                paymentIntentId: paymentIntentId,
+                sessionId: sessionId || '',
+              },
+            }, {
+              idempotencyKey: `aaa_transfer_${paymentIntentId}_${aat.externalAccountId}`.substring(0, 255),
+            })
+          );
+
+          await this.db.collection('aaa_external_payouts').add({
+            paymentIntentId: paymentIntentId,
+            providerId: aat.providerId,
+            amount: aat.providerAmountCents,
+            currency: aat.currency,
+            mode: 'external',
+            externalAccountId: aat.externalAccountId,
+            externalAccountName: aat.accountName,
+            transferId: transfer.id,
+            sessionId: sessionId || null,
+            success: true,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          console.log(`[capturePayment] AAA External payout SUCCESS (post-capture) to ${aat.accountName}: ${transfer.id}`);
+        } catch (transferError) {
+          console.error('[capturePayment] AAA External transfer failed (post-capture):', transferError);
+          await this.db.collection('aaa_external_payouts').add({
+            paymentIntentId: paymentIntentId,
+            providerId: aat.providerId,
+            amount: aat.providerAmountCents,
+            currency: aat.currency,
+            mode: 'external',
+            externalAccountId: aat.externalAccountId,
+            externalAccountName: aat.accountName,
+            error: String(transferError),
+            sessionId: sessionId || null,
+            success: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      }
+      // ===== END P0 FIX 2026-02-12 =====
 
       // Recuperer l'ID du transfert auto-cree par Stripe (Destination Charges)
       // Le transfert est disponible directement sur le PaymentIntent apres capture
@@ -1889,7 +1932,9 @@ export class StripeManager {
       // Create the transfer
       // FIX: Utilise la devise originale du paiement au lieu de hardcoder EUR
       // P0 FIX: Add idempotency key to prevent duplicate transfers on retry
-      const transferIdempotencyKey = `transfer_${sessionId}_${stripeAccountId}_${Date.now().toString(36)}`;
+      // P0 FIX 2026-02-12: REMOVED Date.now() - it defeats idempotency (each retry gets a different key)
+      // IMPORTANT: NE PAS inclure Date.now() - un transfert ne doit se faire qu'une seule fois
+      const transferIdempotencyKey = `transfer_${sessionId}_${stripeAccountId}`;
       const transfer = await this.stripe.transfers.create(
         {
           amount: Math.round(providerAmount * 100), // Convert to cents

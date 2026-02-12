@@ -154,7 +154,7 @@ const AdminGroupAdminsList: React.FC = () => {
       setStats(result.data.stats);
     } catch (err) {
       console.error('Error fetching group admins:', err);
-      setError('Failed to load group admins');
+      setError(intl.formatMessage({ id: 'groupAdmin.admin.list.error' }));
     } finally {
       setLoading(false);
     }
@@ -275,7 +275,7 @@ const AdminGroupAdminsList: React.FC = () => {
               <FormattedMessage id="groupAdmin.admin.title" defaultMessage="GroupAdmins Management" />
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Manage Facebook group administrators and their commissions
+              {intl.formatMessage({ id: 'groupAdmin.admin.list.description' })}
             </p>
           </div>
 
@@ -293,7 +293,7 @@ const AdminGroupAdminsList: React.FC = () => {
               className={`${UI.button.secondary} px-4 py-2 flex items-center gap-2`}
             >
               {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              Export
+              {intl.formatMessage({ id: 'groupAdmin.admin.list.export' })}
             </button>
           </div>
         </div>
@@ -307,7 +307,7 @@ const AdminGroupAdminsList: React.FC = () => {
                   <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.active' })}</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalActive}</p>
                 </div>
               </div>
@@ -318,7 +318,7 @@ const AdminGroupAdminsList: React.FC = () => {
                   <Pause className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Suspended</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.suspended' })}</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalSuspended}</p>
                 </div>
               </div>
@@ -329,7 +329,7 @@ const AdminGroupAdminsList: React.FC = () => {
                   <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Earnings</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.totalEarnings' })}</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">{formatAmount(stats.totalEarnings)}</p>
                 </div>
               </div>
@@ -340,7 +340,7 @@ const AdminGroupAdminsList: React.FC = () => {
                   <UserPlus className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">New This Month</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.newThisMonth' })}</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.newThisMonth}</p>
                 </div>
               </div>
@@ -351,7 +351,7 @@ const AdminGroupAdminsList: React.FC = () => {
                   <Shield className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Verified Groups</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.verifiedGroups' })}</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.verifiedGroups}</p>
                 </div>
               </div>
@@ -400,9 +400,9 @@ const AdminGroupAdminsList: React.FC = () => {
               onChange={(e) => setGroupTypeFilter(e.target.value)}
               className={UI.select}
             >
-              <option value="all">All Group Types</option>
+              <option value="all">{intl.formatMessage({ id: 'groupAdmin.admin.list.filter.allGroupTypes' })}</option>
               {GROUP_TYPES.map(type => (
-                <option key={type.code} value={type.code}>{type.name}</option>
+                <option key={type.code} value={type.code}>{intl.formatMessage({ id: `groupAdmin.groupType.${type.code}` })}</option>
               ))}
             </select>
 
@@ -412,7 +412,7 @@ const AdminGroupAdminsList: React.FC = () => {
               onChange={(e) => setGroupSizeFilter(e.target.value)}
               className={UI.select}
             >
-              <option value="all">All Sizes</option>
+              <option value="all">{intl.formatMessage({ id: 'groupAdmin.admin.list.filter.allSizes' })}</option>
               {GROUP_SIZES.map(size => (
                 <option key={size.code} value={size.code}>{size.name}</option>
               ))}
@@ -424,7 +424,7 @@ const AdminGroupAdminsList: React.FC = () => {
         {selectedIds.size > 0 && (
           <div className={UI.card + " p-4 flex items-center justify-between"}>
             <span className="text-sm text-gray-600 dark:text-gray-300">
-              {selectedIds.size} selected
+              {intl.formatMessage({ id: 'groupAdmin.admin.list.selected' }, { count: selectedIds.size })}
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -432,21 +432,21 @@ const AdminGroupAdminsList: React.FC = () => {
                 disabled={bulkActionLoading}
                 className={`${UI.button.secondary} px-3 py-1 text-sm flex items-center gap-1`}
               >
-                <Play className="w-4 h-4" /> Activate
+                <Play className="w-4 h-4" /> {intl.formatMessage({ id: 'groupAdmin.admin.list.activate' })}
               </button>
               <button
                 onClick={() => handleBulkAction('suspend')}
                 disabled={bulkActionLoading}
                 className={`${UI.button.secondary} px-3 py-1 text-sm flex items-center gap-1`}
               >
-                <Pause className="w-4 h-4" /> Suspend
+                <Pause className="w-4 h-4" /> {intl.formatMessage({ id: 'groupAdmin.admin.list.suspend' })}
               </button>
               <button
                 onClick={() => handleBulkAction('block')}
                 disabled={bulkActionLoading}
                 className={`${UI.button.danger} px-3 py-1 text-sm flex items-center gap-1`}
               >
-                <X className="w-4 h-4" /> Block
+                <X className="w-4 h-4" /> {intl.formatMessage({ id: 'groupAdmin.admin.list.block' })}
               </button>
             </div>
           </div>
@@ -478,22 +478,22 @@ const AdminGroupAdminsList: React.FC = () => {
                         />
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Admin
+                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.admin' })}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Group
+                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.group' })}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type / Size
+                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.typeSize' })}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.status' })}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Clients
+                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.clients' })}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Earnings
+                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.earnings' })}
                       </th>
                       <th className="px-4 py-3"></th>
                     </tr>
@@ -528,7 +528,7 @@ const AdminGroupAdminsList: React.FC = () => {
                             )}
                             <div>
                               <p className="font-medium text-gray-900 dark:text-white truncate max-w-[200px]">
-                                {admin.groupName || 'N/A'}
+                                {admin.groupName || intl.formatMessage({ id: 'groupAdmin.admin.list.na' })}
                               </p>
                               {admin.groupUrl && (
                                 <a
@@ -539,7 +539,7 @@ const AdminGroupAdminsList: React.FC = () => {
                                   className="text-sm text-blue-500 hover:underline flex items-center gap-1"
                                 >
                                   <ExternalLink className="w-3 h-3" />
-                                  View Group
+                                  {intl.formatMessage({ id: 'groupAdmin.admin.list.viewGroup' })}
                                 </a>
                               )}
                             </div>
@@ -548,10 +548,10 @@ const AdminGroupAdminsList: React.FC = () => {
                         <td className="px-4 py-4">
                           <div>
                             <p className="text-sm text-gray-900 dark:text-white">
-                              {GROUP_TYPES.find(t => t.code === admin.groupType)?.name || admin.groupType || 'N/A'}
+                              {admin.groupType ? intl.formatMessage({ id: `groupAdmin.groupType.${admin.groupType}`, defaultMessage: admin.groupType }) : intl.formatMessage({ id: 'groupAdmin.admin.list.na' })}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {GROUP_SIZES.find(s => s.code === admin.groupSize)?.name || admin.groupSize || 'N/A'}
+                              {GROUP_SIZES.find(s => s.code === admin.groupSize)?.name || admin.groupSize || intl.formatMessage({ id: 'groupAdmin.admin.list.na' })}
                             </p>
                           </div>
                         </td>
@@ -577,7 +577,7 @@ const AdminGroupAdminsList: React.FC = () => {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-white/10">
                   <p className="text-sm text-gray-500">
-                    Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total}
+                    {intl.formatMessage({ id: 'groupAdmin.admin.list.showing' }, { from: (page - 1) * limit + 1, to: Math.min(page * limit, total), total })}
                   </p>
                   <div className="flex items-center gap-2">
                     <button
@@ -585,17 +585,17 @@ const AdminGroupAdminsList: React.FC = () => {
                       disabled={page === 1}
                       className={`${UI.button.secondary} px-3 py-1 disabled:opacity-50`}
                     >
-                      Previous
+                      {intl.formatMessage({ id: 'groupAdmin.admin.list.previous' })}
                     </button>
                     <span className="text-sm text-gray-600 dark:text-gray-300">
-                      Page {page} of {totalPages}
+                      {intl.formatMessage({ id: 'groupAdmin.admin.list.page' }, { page, totalPages })}
                     </span>
                     <button
                       onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages}
                       className={`${UI.button.secondary} px-3 py-1 disabled:opacity-50`}
                     >
-                      Next
+                      {intl.formatMessage({ id: 'groupAdmin.admin.list.next' })}
                     </button>
                   </div>
                 </div>
@@ -604,7 +604,7 @@ const AdminGroupAdminsList: React.FC = () => {
               {groupAdmins.length === 0 && (
                 <div className="flex flex-col items-center justify-center p-12 text-gray-500">
                   <Users className="w-12 h-12 mb-4 opacity-50" />
-                  <p>No group admins found</p>
+                  <p>{intl.formatMessage({ id: 'groupAdmin.admin.list.noResults' })}</p>
                 </div>
               )}
             </>

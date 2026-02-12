@@ -26,8 +26,8 @@ interface ToolCard {
 const tools: ToolCard[] = [
   {
     id: "telegram-marketing",
-    titleKey: "admin.toolbox.telegramMarketing",
-    descriptionKey: "admin.toolbox.telegramMarketing.description",
+    titleKey: "Telegram Marketing",
+    descriptionKey: "Campagnes, templates, abonnés et monitoring",
     url: "",
     icon: <Send className="h-8 w-8" />,
     color: "bg-sky-600",

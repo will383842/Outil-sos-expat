@@ -2220,8 +2220,10 @@ export class TwilioCallManager {
               console.log(`✅ [PAYPAL] Void result:`, voidResult);
             } catch (voidError) {
               console.error(`❌ [PAYPAL] Void error:`, voidError);
-              // Ne pas bloquer - l'ordre expirera automatiquement
-              result = { success: true, error: "Void failed but order will expire automatically" };
+              // P0 FIX 2026-02-12: Report void failure accurately instead of hiding it
+              // The order will expire automatically (29 days), but Firestore status should
+              // reflect that the void was NOT confirmed by PayPal
+              result = { success: false, error: "Void failed - order will expire automatically in 29 days" };
             }
           }
         } else if (paymentStatus === "captured" && callSession.payment.paypalCaptureId) {
@@ -2413,17 +2415,18 @@ export class TwilioCallManager {
       }
 
       // P0 FIX 2026-01-20: Also check if session is already completed
+      // P0 FIX 2026-02-12: Prevent state regression (e.g. "failed" → "completed")
       const finalSessionStatuses = ['completed', 'failed', 'cancelled'];
       if (finalSessionStatuses.includes(callSession.status)) {
         console.log(`✅ [${completionId}] ⚠️ IDEMPOTENCY: Session already in final state: ${callSession.status}`);
-        console.log(`✅ [${completionId}]   Skipping handleCallCompletion to prevent duplicate processing`);
+        console.log(`✅ [${completionId}]   Skipping status update to prevent state regression`);
         // Don't return early here - we still might need to capture/refund the payment
-        // But log for visibility
+        // But DO NOT overwrite the session status to prevent regression (e.g. failed → completed)
+      } else {
+        console.log(`✅ [${completionId}] Setting session.status = "completed"...`);
+        await this.updateCallSessionStatus(sessionId, "completed");
+        console.log(`✅ [${completionId}] ✅ Session marked as completed`);
       }
-
-      console.log(`✅ [${completionId}] Setting session.status = "completed"...`);
-      await this.updateCallSessionStatus(sessionId, "completed");
-      console.log(`✅ [${completionId}] ✅ Session marked as completed`);
 
       // SMS/WhatsApp notifications removed - call completion logged
       const minutes = Math.floor(duration / 60);
