@@ -291,7 +291,7 @@ const ChatterLanding: React.FC = () => {
     // Ne montrer les conversions que pour les devises à fort taux (FCFA, etc.)
     // Masquer pour EUR, GBP, CHF où 1$ = 0,XX€ (pas vendeur)
     const hideConversionCurrencies = ['EUR', 'GBP', 'CHF', 'USD', 'CAD', 'AUD'];
-    if (hideConversionCurrencies.includes(countryConfig.currency)) {
+    if (hideConversionCurrencies.includes(countryConfig.currency.code)) {
       return ''; // Pas de conversion pour les petits montants
     }
     const str = convertToLocal(usd, countryConfig.currency);

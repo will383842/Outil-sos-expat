@@ -21,7 +21,7 @@ const TelegramBreadcrumb: React.FC = () => {
     const items = buildTelegramBreadcrumb(location.pathname);
 
     // Toujours ajouter "Home" au début
-    const homeItem = {
+    const homeItem: { id: string; labelKey: string; path: string; label: string } = {
       id: 'home',
       labelKey: 'telegram.breadcrumb.home',
       path: '/admin/toolbox',
@@ -29,14 +29,14 @@ const TelegramBreadcrumb: React.FC = () => {
     };
 
     // Ajouter "Telegram" après Home
-    const telegramItem = {
+    const telegramItem: { id: string; labelKey: string; path: string; label: string } = {
       id: 'telegram',
       labelKey: 'telegram.breadcrumb.telegram',
       path: '/admin/toolbox/telegram/dashboard',
       label: t('telegram.breadcrumb.telegram'),
     };
 
-    const fullItems = [homeItem, telegramItem];
+    const fullItems: Array<{ id: string; labelKey: string; path?: string; label: string }> = [homeItem, telegramItem];
 
     // Ajouter les items du menu
     items.forEach((item) => {

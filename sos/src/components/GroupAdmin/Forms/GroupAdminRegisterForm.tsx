@@ -300,7 +300,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     return phoneCodesData.filter(entry =>
       strip(getCountryName(entry, locale)).includes(search) ||
       entry.code.toLowerCase().includes(search) ||
-      entry.dial_code.includes(search)
+      entry.phoneCode.includes(search)
     );
   }, [phoneCountrySearch, locale]);
 
@@ -339,7 +339,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
   // Update formData.phone when phone number or country changes
   useEffect(() => {
     if (phoneNumber || phoneCountryCode) {
-      const dialCode = selectedPhoneCountry?.dial_code || '';
+      const dialCode = selectedPhoneCountry?.phoneCode || '';
       // Format: +33612345678 (dial code + number without leading 0)
       const cleanNumber = phoneNumber.replace(/^0+/, '').replace(/\D/g, '');
       const fullPhone = cleanNumber ? `${dialCode}${cleanNumber}` : '';
@@ -626,7 +626,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                   selectedLabel={selectedPhoneCountry ? (
                     <span className="flex items-center gap-2">
                       <span className="text-lg">{getFlag(selectedPhoneCountry.code)}</span>
-                      <span className="text-white font-medium">{selectedPhoneCountry.dial_code}</span>
+                      <span className="text-white font-medium">{selectedPhoneCountry.phoneCode}</span>
                     </span>
                   ) : null}
                   placeholder={intl.formatMessage({ id: 'form.phone.selectCountry', defaultMessage: 'Code' })}
@@ -659,7 +659,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                       >
                         <span className="text-xl">{getFlag(entry.code)}</span>
                         <span className="flex-1 text-left text-sm">{getCountryName(entry, locale)}</span>
-                        <span className="text-xs text-gray-400">{entry.dial_code}</span>
+                        <span className="text-xs text-gray-400">{entry.phoneCode}</span>
                         {entry.code === phoneCountryCode && <Check className="w-4 h-4 text-indigo-400" />}
                       </button>
                     ))}

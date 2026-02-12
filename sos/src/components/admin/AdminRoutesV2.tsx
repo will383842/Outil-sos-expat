@@ -83,7 +83,7 @@ const AdminDashboard = lazy(() => import("../../pages/admin/AdminDashboard"));
 // ===== LAZY IMPORTS - FINANCE =====
 const AdminPayments = lazy(() => import("../../pages/admin/AdminPayments"));
 const AdminInvoices = lazy(() => import("../../pages/admin/AdminInvoices"));
-const PaymentsMonitoringDashboard = lazy(() => import("../../pages/admin/payments/PaymentsMonitoringDashboard"));
+const PaymentsMonitoringDashboard = lazy(() => import("../../pages/admin/Payments/PaymentsMonitoringDashboard"));
 const AdminFinanceTaxes = lazy(() => import("../../pages/admin/Finance/Taxes"));
 const AdminFinanceTaxesByCountry = lazy(
   () => import("../../pages/admin/Finance/TaxesByCountry")

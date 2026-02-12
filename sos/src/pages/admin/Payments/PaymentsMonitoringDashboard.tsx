@@ -19,7 +19,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
-import { useAuth } from '../../../hooks/useAuth';
+import { useAuth } from '../../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 interface PaymentRecord {
@@ -455,3 +455,5 @@ export function PaymentsMonitoringDashboard() {
     </div>
   );
 }
+
+export default PaymentsMonitoringDashboard;

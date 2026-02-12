@@ -197,7 +197,7 @@ const InfluencerLanding: React.FC = () => {
   // VENDEUR: Ne montrer la conversion QUE si le montant reste attractif (pas en Europe avec des 0,XX€)
   const local = (usd: number) => {
     const hideConversionCurrencies = ['EUR', 'GBP', 'CHF', 'USD', 'CAD', 'AUD'];
-    if (hideConversionCurrencies.includes(countryConfig.currency)) {
+    if (hideConversionCurrencies.includes(countryConfig.currency.code)) {
       return ''; // Pas de conversion pour les petits montants
     }
     const str = convertToLocal(usd, countryConfig.currency);
