@@ -107,7 +107,7 @@ const AdminTelegramCampaigns: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => navigate("/admin/telegram/campaigns/create")}
+            onClick={() => navigate("/admin/toolbox/telegram/campaigns/create")}
             className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium"
           >
             <Plus className="h-4 w-4" />

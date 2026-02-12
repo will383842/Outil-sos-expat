@@ -535,6 +535,16 @@ const AdminMetaAnalytics = lazy(() => import("../../pages/admin/AdminMetaAnalyti
 const AdminGoogleAdsAnalytics = lazy(() => import("../../pages/admin/AdminGoogleAdsAnalytics"));
 const AdminLandingPages = lazy(() => import("../../pages/admin/AdminLandingPages"));
 
+// ===== LAZY IMPORTS - TELEGRAM =====
+const AdminTelegramDashboard = lazy(() => import("../../pages/admin/Telegram/AdminTelegramDashboard"));
+const AdminTelegramCampaigns = lazy(() => import("../../pages/admin/Telegram/AdminTelegramCampaigns"));
+const AdminTelegramCampaignCreate = lazy(() => import("../../pages/admin/Telegram/AdminTelegramCampaignCreate"));
+const AdminTelegramTemplates = lazy(() => import("../../pages/admin/Telegram/AdminTelegramTemplates"));
+const AdminTelegramSubscribers = lazy(() => import("../../pages/admin/Telegram/AdminTelegramSubscribers"));
+const AdminTelegramQueue = lazy(() => import("../../pages/admin/Telegram/AdminTelegramQueue"));
+const AdminTelegramLogs = lazy(() => import("../../pages/admin/Telegram/AdminTelegramLogs"));
+const AdminTelegramConfig = lazy(() => import("../../pages/admin/Telegram/AdminTelegramConfig"));
+
 // ===== LAYOUT PROTÉGÉ ADMIN =====
 const AdminProtectedLayout: React.FC = () => (
   <ProtectedRoute allowedRoles="admin">
@@ -1450,6 +1460,16 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+
+      {/* 📱 TELEGRAM MARKETING */}
+      <Route path="toolbox/telegram" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramDashboard /></Suspense>} />
+      <Route path="toolbox/telegram/campaigns" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramCampaigns /></Suspense>} />
+      <Route path="toolbox/telegram/campaigns/create" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramCampaignCreate /></Suspense>} />
+      <Route path="toolbox/telegram/templates" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramTemplates /></Suspense>} />
+      <Route path="toolbox/telegram/subscribers" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramSubscribers /></Suspense>} />
+      <Route path="toolbox/telegram/queue" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramQueue /></Suspense>} />
+      <Route path="toolbox/telegram/logs" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramLogs /></Suspense>} />
+      <Route path="toolbox/telegram/config" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramConfig /></Suspense>} />
 
       {/* ⚙️ CONFIG & OUTILS */}
       <Route

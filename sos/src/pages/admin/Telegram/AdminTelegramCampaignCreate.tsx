@@ -61,7 +61,7 @@ const AdminTelegramCampaignCreate: React.FC = () => {
       const data = res.data as { ok: boolean; campaignId: string; targetCount: number };
 
       if (data.ok) {
-        navigate("/admin/telegram/campaigns");
+        navigate("/admin/toolbox/telegram/campaigns");
       }
     } catch (err) {
       console.error("Campaign creation failed:", err);
@@ -77,7 +77,7 @@ const AdminTelegramCampaignCreate: React.FC = () => {
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
-            onClick={() => navigate("/admin/telegram/campaigns")}
+            onClick={() => navigate("/admin/toolbox/telegram/campaigns")}
             className="p-2 hover:bg-gray-100 rounded-lg"
           >
             <ArrowLeft className="h-5 w-5 text-gray-500" />
@@ -207,7 +207,7 @@ const AdminTelegramCampaignCreate: React.FC = () => {
           <div className="flex justify-end gap-3">
             <button
               type="button"
-              onClick={() => navigate("/admin/telegram/campaigns")}
+              onClick={() => navigate("/admin/toolbox/telegram/campaigns")}
               className="px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
             >
               {t("admin.telegram.cancel")}

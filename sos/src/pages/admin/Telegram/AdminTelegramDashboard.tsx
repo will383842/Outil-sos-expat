@@ -194,7 +194,7 @@ const AdminTelegramDashboard: React.FC = () => {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
-            onClick={() => navigate("/admin/telegram/config")}
+            onClick={() => navigate("/admin/toolbox/telegram/config")}
             className="flex items-center gap-3 p-4 bg-white rounded-xl border hover:bg-gray-50 transition-colors text-left"
           >
             <div className="p-2 bg-sky-50 rounded-lg">
@@ -206,7 +206,7 @@ const AdminTelegramDashboard: React.FC = () => {
             </div>
           </button>
           <button
-            onClick={() => navigate("/admin/telegram/campaigns/create")}
+            onClick={() => navigate("/admin/toolbox/telegram/campaigns/create")}
             className="flex items-center gap-3 p-4 bg-white rounded-xl border hover:bg-gray-50 transition-colors text-left"
           >
             <div className="p-2 bg-green-50 rounded-lg">
@@ -218,7 +218,7 @@ const AdminTelegramDashboard: React.FC = () => {
             </div>
           </button>
           <button
-            onClick={() => navigate("/admin/telegram/logs")}
+            onClick={() => navigate("/admin/toolbox/telegram/logs")}
             className="flex items-center gap-3 p-4 bg-white rounded-xl border hover:bg-gray-50 transition-colors text-left"
           >
             <div className="p-2 bg-purple-50 rounded-lg">

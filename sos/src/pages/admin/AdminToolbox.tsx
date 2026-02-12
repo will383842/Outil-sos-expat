@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { Bot, Database, ExternalLink, Link2, Mail, Server, Settings, Users, Wrench } from "lucide-react";
+import { Bot, Database, ExternalLink, Link2, Mail, Send, Server, Settings, Users, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.sos-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
@@ -24,6 +24,16 @@ interface ToolCard {
 }
 
 const tools: ToolCard[] = [
+  {
+    id: "telegram-marketing",
+    titleKey: "admin.toolbox.telegramMarketing",
+    descriptionKey: "admin.toolbox.telegramMarketing.description",
+    url: "",
+    icon: <Send className="h-8 w-8" />,
+    color: "bg-sky-600",
+    status: "live",
+    internalRoute: "/admin/toolbox/telegram",
+  },
   {
     id: "backlink-engine",
     titleKey: "admin.toolbox.backlinkEngine",
