@@ -260,9 +260,11 @@ export const trackMetaPurchase = (params: {
   content_type?: string;
   content_id?: string;
   order_id?: string;
+  country?: string;
   eventID?: string;
 }): string | undefined => {
   const eventID = params.eventID || generateEventID();
+  const country = getCountryForTracking(params.country);
 
   if (!isFbqAvailable()) {
     if (process.env.NODE_ENV === 'development') {
@@ -287,6 +289,7 @@ export const trackMetaPurchase = (params: {
       content_name: params.content_name || 'call_service',
       content_type: params.content_type || 'service',
       content_ids: params.content_id ? [params.content_id] : undefined,
+      contents: country ? [{ id: country, quantity: 1 }] : undefined,
       num_items: 1,
     }, { eventID });
 

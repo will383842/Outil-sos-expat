@@ -73,7 +73,7 @@ import PhoneField from "@/components/PhoneField";
 import { smartNormalizePhone } from "@/utils/phone";
 import { FormattedMessage, useIntl } from "react-intl";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
-import { trackMetaLead, trackMetaInitiateCheckout, getMetaIdentifiers } from "@/utils/metaPixel";
+import { trackMetaLead, trackMetaInitiateCheckout, getMetaIdentifiers, setMetaPixelUserData } from "@/utils/metaPixel";
 import { trackGoogleAdsLead, trackGoogleAdsBeginCheckout } from "@/utils/googleAds";
 import { trackAdLead, trackAdInitiateCheckout } from "@/services/adAttributionService";
 import { generateEventIdForType } from "@/utils/sharedEventId";
@@ -2964,6 +2964,15 @@ const BookingRequest: React.FC = () => {
         eventID: leadEventId,
       });
 
+      // Advanced Matching - send user data for better attribution
+      if (user?.email) {
+        setMetaPixelUserData({
+          email: user.email,
+          firstName: user.displayName?.split(' ')[0],
+          lastName: user.displayName?.split(' ').slice(1).join(' '),
+        });
+      }
+
       // Track InitiateCheckout - debut du processus de paiement
       trackMetaInitiateCheckout({
         value: eurTotalForDisplay,
@@ -3330,6 +3339,16 @@ const BookingRequest: React.FC = () => {
           currency: 'EUR',
           eventID: leadEventId,
         });
+
+        // Advanced Matching for Lead
+        if (user?.email) {
+          setMetaPixelUserData({
+            email: user.email,
+            firstName: user.displayName?.split(' ')[0],
+            lastName: user.displayName?.split(' ').slice(1).join(' '),
+            country: bookingRequest.clientCurrentCountry,
+          });
+        }
 
         // Track InitiateCheckout
         trackMetaInitiateCheckout({

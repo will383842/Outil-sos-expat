@@ -35,7 +35,7 @@ import { useIntl, FormattedMessage } from "react-intl";
 import { generateBothInvoices } from "../services/invoiceGenerator";
 import { usePricingConfig } from "../services/pricingService";
 import { navigationLogger, firestoreLogger, callLogger } from "../utils/debugLogger";
-import { trackMetaPurchase } from "../utils/metaPixel";
+import { trackMetaPurchase, setMetaPixelUserData } from "../utils/metaPixel";
 import { trackGoogleAdsPurchase } from "../utils/googleAds";
 import { trackAdPurchase } from "../services/adAttributionService";
 import { getOrCreateEventId } from "../utils/sharedEventId";
@@ -1041,6 +1041,15 @@ const SuccessPayment: React.FC = () => {
         order_id: orderId || undefined,
         eventID: purchaseEventId,
       });
+
+      // Advanced Matching - send user data for better attribution
+      if (user?.email) {
+        setMetaPixelUserData({
+          email: user.email,
+          firstName: user.displayName?.split(' ')[0],
+          lastName: user.displayName?.split(' ').slice(1).join(' '),
+        });
+      }
 
       // Google Ads tracking
       trackGoogleAdsPurchase({
