@@ -145,6 +145,20 @@ const AdminLandingPages: React.FC = () => {
     [getConfig],
   );
 
+  /** Get all languages that have a config for a given country+role */
+  const getConfiguredLangs = useCallback(
+    (country: string, role: LandingRole): string[] => {
+      const langs: string[] = [];
+      LANGS.forEach((l) => {
+        if (configs.has(buildDocumentId(role, country, l))) {
+          langs.push(l);
+        }
+      });
+      return langs;
+    },
+    [configs],
+  );
+
   // ============================================================================
   // FILTERED COUNTRIES
   // ============================================================================
@@ -191,30 +205,43 @@ const AdminLandingPages: React.FC = () => {
   // ============================================================================
 
   const stats = useMemo(() => {
-    const total = COUNTRIES_CATALOG.length * ROLES.length;
+    // Total possible = countries × roles × langs
+    const totalCombinations = COUNTRIES_CATALOG.length * ROLES.length * LANGS.length;
     let published = 0;
     let draft = 0;
     let review = 0;
     let todo = 0;
+    let totalConfigs = 0;
 
+    // Count all configs across all languages
+    configs.forEach((cfg) => {
+      totalConfigs++;
+      if (cfg.status === 'published') published++;
+      else if (cfg.status === 'draft') draft++;
+      else if (cfg.status === 'review') review++;
+      else if (cfg.status === 'todo') todo++;
+    });
+
+    // For the filtered language view
+    const totalFilteredLang = COUNTRIES_CATALOG.length * ROLES.length;
+    let publishedFiltered = 0;
     COUNTRIES_CATALOG.forEach((c) => {
       ROLES.forEach((r) => {
-        const s = getStatus(c.code, r, filterLang);
-        if (s === 'published') published++;
-        else if (s === 'draft') draft++;
-        else if (s === 'review') review++;
-        else if (s === 'todo') todo++;
+        if (getStatus(c.code, r, filterLang) === 'published') publishedFiltered++;
       });
     });
 
     return {
-      total,
+      total: totalCombinations,
+      totalConfigs,
       published,
       draft,
       review,
       todo,
-      configured: published + draft + review + todo,
-      progress: total > 0 ? Math.round((published / total) * 100) : 0,
+      configured: totalConfigs,
+      progress: totalFilteredLang > 0 ? Math.round((publishedFiltered / totalFilteredLang) * 100) : 0,
+      totalLangFiltered: totalFilteredLang,
+      publishedFiltered,
     };
   }, [configs, filterLang, getStatus]);
 
@@ -253,7 +280,7 @@ const AdminLandingPages: React.FC = () => {
             Landing Pages par Pays
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {stats.configured} configs / {stats.total} combinaisons ({stats.progress}% publié)
+            {stats.totalConfigs} configs créées | {filterLang.toUpperCase()}: {stats.publishedFiltered}/{stats.totalLangFiltered} publiées ({stats.progress}%)
           </p>
         </div>
       </div>
@@ -403,6 +430,7 @@ const AdminLandingPages: React.FC = () => {
                         {ROLES.map((role) => {
                           const status = getStatus(country.code, role, filterLang);
                           const sc = STATUS_COLORS[status];
+                          const configuredLangs = getConfiguredLangs(country.code, role);
                           return (
                             <td key={role} className="text-center px-3 py-2.5">
                               <button
@@ -417,6 +445,30 @@ const AdminLandingPages: React.FC = () => {
                               >
                                 {sc.label}
                               </button>
+                              {configuredLangs.length > 0 && (
+                                <div className="flex items-center justify-center gap-0.5 mt-1 flex-wrap">
+                                  {configuredLangs.map((l) => (
+                                    <button
+                                      key={l}
+                                      onClick={() =>
+                                        setEditModal({
+                                          countryCode: country.code,
+                                          role,
+                                          lang: l,
+                                        })
+                                      }
+                                      className={`text-[10px] leading-tight px-1 rounded cursor-pointer hover:opacity-70 ${
+                                        l === filterLang
+                                          ? 'bg-red-100 text-red-600 font-bold'
+                                          : 'bg-gray-100 text-gray-500'
+                                      }`}
+                                      title={`Éditer ${l.toUpperCase()}`}
+                                    >
+                                      {l.toUpperCase()}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
                             </td>
                           );
                         })}
@@ -462,8 +514,11 @@ const AdminLandingPages: React.FC = () => {
           role={editModal.role}
           lang={editModal.lang}
           config={getConfig(editModal.countryCode, editModal.role, editModal.lang)}
+          allConfigs={configs}
+          configuredLangs={getConfiguredLangs(editModal.countryCode, editModal.role)}
           userId={user?.uid || ''}
           onClose={() => setEditModal(null)}
+          onSwitchLang={(newLang) => setEditModal({ ...editModal, lang: newLang })}
         />
       )}
 
@@ -489,8 +544,11 @@ interface EditConfigModalProps {
   role: LandingRole;
   lang: string;
   config: CountryLandingConfig | null;
+  allConfigs: Map<string, CountryLandingConfig>;
+  configuredLangs: string[];
   userId: string;
   onClose: () => void;
+  onSwitchLang: (lang: string) => void;
 }
 
 const EditConfigModal: React.FC<EditConfigModalProps> = ({
@@ -498,8 +556,11 @@ const EditConfigModal: React.FC<EditConfigModalProps> = ({
   role,
   lang,
   config,
+  allConfigs,
+  configuredLangs,
   userId,
   onClose,
+  onSwitchLang,
 }) => {
   const defaults = getDefaultConfigForCountry(countryCode);
   const [activeTab, setActiveTab] = useState<'payments' | 'currency' | 'testimonials' | 'seo' | 'status'>('payments');
@@ -521,6 +582,52 @@ const EditConfigModal: React.FC<EditConfigModalProps> = ({
   const [seo, setSeo] = useState<SEOOverrides>(config?.seoOverrides || {});
 
   const countryInfo = COUNTRIES_CATALOG.find((c) => c.code === countryCode);
+  const [showAddLang, setShowAddLang] = useState(false);
+  const [addingLangs, setAddingLangs] = useState(false);
+  const [selectedNewLangs, setSelectedNewLangs] = useState<Set<string>>(new Set());
+  const availableLangs = LANGS.filter((l) => !configuredLangs.includes(l));
+
+  /** Duplicate current form values to selected new languages */
+  const handleAddLanguages = async () => {
+    if (selectedNewLangs.size === 0) return;
+    setAddingLangs(true);
+    try {
+      const promises = Array.from(selectedNewLangs).map((newLang) => {
+        const docId = buildDocumentId(role, countryCode, newLang);
+        const data: CountryLandingConfig = {
+          role,
+          countryCode,
+          lang: newLang,
+          status,
+          notes: notes || `Dupliqué depuis ${lang.toUpperCase()}`,
+          paymentMethods,
+          currency,
+          testimonials,
+          seoOverrides: seo,
+          isActive,
+          lastUpdatedAt: Timestamp.now(),
+          updatedBy: userId,
+        };
+        return setDoc(doc(db, 'country_landing_configs', docId), data);
+      });
+      await Promise.all(promises);
+      setShowAddLang(false);
+      setSelectedNewLangs(new Set());
+    } catch (e) {
+      console.error('Error adding languages:', e);
+    } finally {
+      setAddingLangs(false);
+    }
+  };
+
+  const toggleNewLang = (l: string) => {
+    setSelectedNewLangs((prev) => {
+      const next = new Set(prev);
+      if (next.has(l)) next.delete(l);
+      else next.add(l);
+      return next;
+    });
+  };
 
   // Save
   const handleSave = async () => {
@@ -589,16 +696,105 @@ const EditConfigModal: React.FC<EditConfigModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              {countryInfo?.flag} {countryInfo?.name || countryCode} — {ROLE_LABELS[role]}
-            </h2>
-            <p className="text-xs text-gray-400">Langue: {lang.toUpperCase()} | ID: {buildDocumentId(role, countryCode, lang)}</p>
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                {countryInfo?.flag} {countryInfo?.name || countryCode} — {ROLE_LABELS[role]}
+              </h2>
+              <p className="text-xs text-gray-400">ID: {buildDocumentId(role, countryCode, lang)}</p>
+            </div>
+            <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
-            <X className="w-5 h-5" />
-          </button>
+
+          {/* Language bar */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs text-gray-400 mr-1">Langues :</span>
+            {LANGS.map((l) => {
+              const isConfigured = configuredLangs.includes(l);
+              const isCurrent = l === lang;
+              if (!isConfigured && !isCurrent) return null;
+              return (
+                <button
+                  key={l}
+                  onClick={() => { if (!isCurrent) onSwitchLang(l); }}
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
+                    isCurrent
+                      ? 'bg-red-600 text-white'
+                      : isConfigured
+                        ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        : 'bg-gray-50 text-gray-300'
+                  }`}
+                >
+                  {l.toUpperCase()}
+                </button>
+              );
+            })}
+            {availableLangs.length > 0 && (
+              <button
+                onClick={() => setShowAddLang(!showAddLang)}
+                className="px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 transition-all"
+                title="Ajouter une langue"
+              >
+                + Langue
+              </button>
+            )}
+          </div>
+
+          {/* Add language panel */}
+          {showAddLang && availableLangs.length > 0 && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-xs font-medium text-green-700 mb-2">
+                Dupliquer cette config vers d'autres langues :
+              </p>
+              <div className="flex items-center gap-1.5 flex-wrap mb-3">
+                {availableLangs.map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => toggleNewLang(l)}
+                    className={`px-2.5 py-1 rounded text-xs font-medium border transition-all ${
+                      selectedNewLangs.has(l)
+                        ? 'bg-green-600 text-white border-green-600'
+                        : 'bg-white text-gray-600 border-gray-300 hover:border-green-400'
+                    }`}
+                  >
+                    {l.toUpperCase()}
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    if (selectedNewLangs.size === availableLangs.length) {
+                      setSelectedNewLangs(new Set());
+                    } else {
+                      setSelectedNewLangs(new Set(availableLangs));
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded text-xs font-medium bg-white text-gray-500 border border-gray-300 hover:border-green-400 ml-1"
+                >
+                  {selectedNewLangs.size === availableLangs.length ? 'Aucune' : 'Toutes'}
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleAddLanguages}
+                  disabled={selectedNewLangs.size === 0 || addingLangs}
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                >
+                  {addingLangs
+                    ? 'Création...'
+                    : `Créer ${selectedNewLangs.size} langue${selectedNewLangs.size > 1 ? 's' : ''}`}
+                </button>
+                <button
+                  onClick={() => { setShowAddLang(false); setSelectedNewLangs(new Set()); }}
+                  className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -908,35 +1104,60 @@ interface DuplicateModalProps {
 
 const DuplicateModal: React.FC<DuplicateModalProps> = ({ source, configs, userId, onClose }) => {
   const [targetCountry, setTargetCountry] = useState('');
-  const [targetRole, setTargetRole] = useState<LandingRole>(source.sourceRole);
-  const [targetLang, setTargetLang] = useState(source.sourceLang);
+  const [targetRoles, setTargetRoles] = useState<Set<LandingRole>>(new Set([source.sourceRole]));
+  const [targetLangs, setTargetLangs] = useState<Set<string>>(new Set([source.sourceLang]));
   const [saving, setSaving] = useState(false);
+
+  const toggleRole = (r: LandingRole) => {
+    setTargetRoles((prev) => {
+      const next = new Set(prev);
+      if (next.has(r)) { if (next.size > 1) next.delete(r); }
+      else next.add(r);
+      return next;
+    });
+  };
+
+  const toggleLang = (l: string) => {
+    setTargetLangs((prev) => {
+      const next = new Set(prev);
+      if (next.has(l)) { if (next.size > 1) next.delete(l); }
+      else next.add(l);
+      return next;
+    });
+  };
+
+  const totalCombinations = targetRoles.size * targetLangs.size;
 
   const handleDuplicate = async () => {
     if (!targetCountry) return;
     setSaving(true);
     try {
-      // Get source config or defaults
       const sourceDocId = buildDocumentId(source.sourceRole, source.sourceCountry, source.sourceLang);
       const sourceConfig = configs.get(sourceDocId);
       const defaults = getDefaultConfigForCountry(source.sourceCountry);
 
-      const targetDocId = buildDocumentId(targetRole, targetCountry, targetLang);
-      const data: CountryLandingConfig = {
-        role: targetRole,
-        countryCode: targetCountry,
-        lang: targetLang,
-        status: 'draft',
-        notes: `Dupliqué depuis ${source.sourceCountry}/${source.sourceRole}/${source.sourceLang}`,
-        paymentMethods: sourceConfig?.paymentMethods || defaults.paymentMethods,
-        currency: sourceConfig?.currency || defaults.currency,
-        testimonials: sourceConfig?.testimonials || defaults.testimonials,
-        seoOverrides: {},
-        isActive: false,
-        lastUpdatedAt: Timestamp.now(),
-        updatedBy: userId,
-      };
-      await setDoc(doc(db, 'country_landing_configs', targetDocId), data);
+      const promises: Promise<void>[] = [];
+      targetRoles.forEach((role) => {
+        targetLangs.forEach((lang) => {
+          const targetDocId = buildDocumentId(role, targetCountry, lang);
+          const data: CountryLandingConfig = {
+            role,
+            countryCode: targetCountry,
+            lang,
+            status: 'draft',
+            notes: `Dupliqué depuis ${source.sourceCountry}/${source.sourceRole}/${source.sourceLang}`,
+            paymentMethods: sourceConfig?.paymentMethods || defaults.paymentMethods,
+            currency: sourceConfig?.currency || defaults.currency,
+            testimonials: sourceConfig?.testimonials || defaults.testimonials,
+            seoOverrides: {},
+            isActive: false,
+            lastUpdatedAt: Timestamp.now(),
+            updatedBy: userId,
+          };
+          promises.push(setDoc(doc(db, 'country_landing_configs', targetDocId), data));
+        });
+      });
+      await Promise.all(promises);
       onClose();
     } catch (e) {
       console.error('Error duplicating config:', e);
@@ -955,7 +1176,7 @@ const DuplicateModal: React.FC<DuplicateModalProps> = ({ source, configs, userId
           Source : {source.sourceCountry} / {ROLE_LABELS[source.sourceRole]} / {source.sourceLang.toUpperCase()}
         </p>
 
-        <div className="space-y-3 mb-6">
+        <div className="space-y-4 mb-6">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Pays cible</label>
             <select
@@ -969,32 +1190,57 @@ const DuplicateModal: React.FC<DuplicateModalProps> = ({ source, configs, userId
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Rôle</label>
-              <select
-                value={targetRole}
-                onChange={(e) => setTargetRole(e.target.value as LandingRole)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-              >
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Langue</label>
-              <select
-                value={targetLang}
-                onChange={(e) => setTargetLang(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-              >
-                {LANGS.map((l) => (
-                  <option key={l} value={l}>{l.toUpperCase()}</option>
-                ))}
-              </select>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Rôles cibles (multi-sélection)</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {ROLES.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => toggleRole(r)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                    targetRoles.has(r)
+                      ? 'bg-red-50 text-red-600 border-red-300'
+                      : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {ROLE_LABELS[r]}
+                </button>
+              ))}
             </div>
           </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Langues cibles (multi-sélection)</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {LANGS.map((l) => (
+                <button
+                  key={l}
+                  onClick={() => toggleLang(l)}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                    targetLangs.has(l)
+                      ? 'bg-red-50 text-red-600 border-red-300'
+                      : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+              <button
+                onClick={() => setTargetLangs(targetLangs.size === LANGS.length ? new Set([source.sourceLang]) : new Set(LANGS))}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-50 text-gray-500 border border-gray-200 hover:border-gray-300"
+              >
+                {targetLangs.size === LANGS.length ? 'Reset' : 'Toutes'}
+              </button>
+            </div>
+          </div>
+
+          {totalCombinations > 1 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 text-xs text-blue-700">
+              {totalCombinations} config{totalCombinations > 1 ? 's' : ''} seront créées
+              ({targetRoles.size} rôle{targetRoles.size > 1 ? 's' : ''} × {targetLangs.size} langue{targetLangs.size > 1 ? 's' : ''})
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-3">
@@ -1010,7 +1256,7 @@ const DuplicateModal: React.FC<DuplicateModalProps> = ({ source, configs, userId
             className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
           >
             <Copy className="w-4 h-4" />
-            {saving ? 'Copie...' : 'Dupliquer'}
+            {saving ? 'Copie...' : `Dupliquer${totalCombinations > 1 ? ` (${totalCombinations})` : ''}`}
           </button>
         </div>
       </div>
