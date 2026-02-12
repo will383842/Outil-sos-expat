@@ -169,21 +169,6 @@ export const registerBlogger = onCall(
         );
       }
 
-      // 5b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
-      const fraudResult = await checkReferralFraud(
-        input.recruiterCode || "direct",
-        input.email,
-        request.rawRequest?.ip || null,
-        null
-      );
-      if (!fraudResult.allowed) {
-        logger.warn("[registerBlogger] Fraud check blocked registration", {
-          uid, email: input.email, riskScore: fraudResult.riskScore,
-          issues: fraudResult.issues, blockReason: fraudResult.blockReason,
-        });
-        throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
-      }
-
       // 6. Check if blog URL is already registered by another blogger
       const blogUrlQuery = await db
         .collection("bloggers")
@@ -229,6 +214,24 @@ export const registerBlogger = onCall(
             recruitedByCode = input.recruiterCode.toUpperCase();
           }
         }
+      }
+
+      // 7b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
+      const fraudResult = await checkReferralFraud(
+        recruitedBy || uid,
+        input.email.toLowerCase(),
+        request.rawRequest?.ip || null,
+        null
+      );
+      if (!fraudResult.allowed) {
+        logger.warn("[registerBlogger] Fraud check blocked registration", {
+          uid,
+          email: input.email,
+          riskScore: fraudResult.riskScore,
+          issues: fraudResult.issues,
+          blockReason: fraudResult.blockReason,
+        });
+        throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
       }
 
       // 8. Generate affiliate codes

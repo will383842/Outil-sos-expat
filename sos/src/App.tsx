@@ -135,6 +135,7 @@ const AffiliateReferrals = lazy(() => import('./pages/Affiliate/AffiliateReferra
 const AffiliateWithdraw = lazy(() => import('./pages/Affiliate/AffiliateWithdraw'));
 const AffiliateBankDetails = lazy(() => import('./pages/Affiliate/AffiliateBankDetails'));
 const AffiliateTools = lazy(() => import('./pages/Affiliate/AffiliateTools'));
+const AffiliateTelegramOnboarding = lazy(() => import('./pages/Affiliate/AffiliateTelegramOnboarding'));
 
 // Multi-Provider Dashboard (standalone, password-protected)
 const MultiProviderDashboard = lazy(() => import('./pages/MultiProviderDashboard'));
@@ -348,6 +349,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/affiliate/withdraw", component: AffiliateWithdraw, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-withdraw" },
   { path: "/affiliate/bank-details", component: AffiliateBankDetails, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-bank-details" },
   { path: "/affiliate/tools", component: AffiliateTools, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-tools" },
+  { path: "/affiliate/telegram", component: AffiliateTelegramOnboarding, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-telegram" },
   // Chatter System Routes - Protected routes for registered chatters
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un chatter ne peut pas être client/lawyer/expat.
   // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants

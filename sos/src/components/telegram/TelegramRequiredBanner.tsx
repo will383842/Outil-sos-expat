@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { MessageSquare, AlertTriangle, ArrowRight, CheckCircle } from 'lucide-react';
 
 interface TelegramRequiredBannerProps {
-  role: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin';
+  role: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'affiliate';
   onboardingPath: string;
   availableBalance?: number;
 }

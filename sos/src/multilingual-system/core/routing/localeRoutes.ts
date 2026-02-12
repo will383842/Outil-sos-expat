@@ -288,6 +288,7 @@ export type RouteKey =
   | "affiliate-withdraw"   // /affiliate/withdraw -> /parrainage/retrait, etc.
   | "affiliate-bank-details" // /affiliate/bank-details -> /parrainage/coordonnees-bancaires, etc.
   | "affiliate-tools" // /affiliate/tools -> /parrainage/outils, etc.
+  | "affiliate-telegram" // /affiliate/telegram -> /parrainage/telegram, etc.
   // Chatter routes
   | "chatter-landing"      // /devenir-chatter -> /become-chatter, etc.
   | "chatter-register"     // /chatter/inscription -> /chatter/register, etc.
@@ -865,6 +866,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "tuiguang/gongju",
     hi: "sahbhagi/upkaran",
     ar: "برنامج-الإحالة/أدوات",
+  },
+  "affiliate-telegram": {
+    fr: "parrainage/telegram",
+    en: "affiliate/telegram",
+    es: "afiliado/telegram",
+    de: "partnerprogramm/telegram",
+    ru: "partnerskaya-programma/telegram",
+    pt: "afiliado/telegram",
+    ch: "tuiguang/telegram",
+    hi: "sahbhagi/telegram",
+    ar: "برنامج-الإحالة/telegram",
   },
   // Chatter routes
   "chatter-landing": {

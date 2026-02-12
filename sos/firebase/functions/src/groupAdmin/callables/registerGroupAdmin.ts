@@ -215,21 +215,6 @@ export const registerGroupAdmin = onCall(
         }
       }
 
-      // 5b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
-      const fraudResult = await checkReferralFraud(
-        input.recruitmentCode || "direct",
-        input.email,
-        request.rawRequest?.ip || null,
-        null
-      );
-      if (!fraudResult.allowed) {
-        logger.warn("[registerGroupAdmin] Fraud check blocked registration", {
-          userId, email: input.email, riskScore: fraudResult.riskScore,
-          issues: fraudResult.issues, blockReason: fraudResult.blockReason,
-        });
-        throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
-      }
-
       // 6. Check for duplicate email
       const emailQuery = await db
         .collection("group_admins")
@@ -288,6 +273,24 @@ export const registerGroupAdmin = onCall(
             recruitedByCode = input.recruitmentCode.toUpperCase();
           }
         }
+      }
+
+      // 9b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
+      const fraudResult = await checkReferralFraud(
+        recruitedBy || userId,
+        input.email.toLowerCase(),
+        request.rawRequest?.ip || null,
+        null
+      );
+      if (!fraudResult.allowed) {
+        logger.warn("[registerGroupAdmin] Fraud check blocked registration", {
+          userId,
+          email: input.email,
+          riskScore: fraudResult.riskScore,
+          issues: fraudResult.issues,
+          blockReason: fraudResult.blockReason,
+        });
+        throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
       }
 
       // 10. Generate unique affiliate codes with retry loop

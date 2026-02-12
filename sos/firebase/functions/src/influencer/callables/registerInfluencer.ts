@@ -194,21 +194,6 @@ export const registerInfluencer = onCall(
         }
       }
 
-      // 5b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
-      const fraudResult = await checkReferralFraud(
-        input.recruiterCode || "direct",
-        input.email,
-        request.rawRequest?.ip || null,
-        null
-      );
-      if (!fraudResult.allowed) {
-        logger.warn("[registerInfluencer] Fraud check blocked registration", {
-          userId, email: input.email, riskScore: fraudResult.riskScore,
-          issues: fraudResult.issues, blockReason: fraudResult.blockReason,
-        });
-        throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
-      }
-
       // 6. Check for duplicate email
       const emailQuery = await db
         .collection("influencers")
@@ -252,6 +237,24 @@ export const registerInfluencer = onCall(
             recruitedByCode = input.recruiterCode.toUpperCase();
           }
         }
+      }
+
+      // 7b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
+      const fraudResult = await checkReferralFraud(
+        recruitedBy || userId,
+        input.email.toLowerCase(),
+        request.rawRequest?.ip || null,
+        null
+      );
+      if (!fraudResult.allowed) {
+        logger.warn("[registerInfluencer] Fraud check blocked registration", {
+          userId,
+          email: input.email,
+          riskScore: fraudResult.riskScore,
+          issues: fraudResult.issues,
+          blockReason: fraudResult.blockReason,
+        });
+        throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
       }
 
       // 8. Generate affiliate codes

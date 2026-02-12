@@ -25,7 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAffiliate } from "@/hooks/useAffiliate";
 import { formatCents, getPayoutStatusLabel } from "@/types/affiliate";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import TelegramConnect from "@/components/shared/TelegramConnect";
+import TelegramRequiredBanner from "@/components/Telegram/TelegramRequiredBanner";
 
 // Design tokens
 const UI = {
@@ -264,10 +264,14 @@ const AffiliateWithdraw: React.FC = () => {
                 </div>
               )}
 
-              {/* Telegram connection required */}
+              {/* Telegram Required Banner - Show if not linked */}
               {!hasTelegram && (
                 <div className="mb-6">
-                  <TelegramConnect role="affiliate" onConnected={refreshUser} />
+                  <TelegramRequiredBanner
+                    role="affiliate"
+                    onboardingPath="/affiliate/telegram"
+                    availableBalance={affiliateData ? affiliateData.availableBalance / 100 : 0}
+                  />
                 </div>
               )}
 
