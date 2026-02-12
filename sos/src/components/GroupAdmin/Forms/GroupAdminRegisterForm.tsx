@@ -185,6 +185,28 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
   const { language } = useApp();
   const locale = (language || 'en') as string;
 
+  // Load saved group URLs from localStorage
+  const getSavedGroupUrls = useCallback((): string[] => {
+    try {
+      const saved = localStorage.getItem('groupAdmin_savedUrls');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const saveGroupUrl = useCallback((url: string) => {
+    try {
+      const saved = getSavedGroupUrls();
+      // Add new URL at the beginning, remove duplicates, keep max 5
+      const updated = [url, ...saved.filter(u => u !== url)].slice(0, 5);
+      localStorage.setItem('groupAdmin_savedUrls', JSON.stringify(updated));
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [getSavedGroupUrls]);
+
+  const [savedUrls] = useState<string[]>(() => getSavedGroupUrls());
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<GroupAdminRegistrationData>({
     firstName: initialData?.firstName || '',
@@ -194,7 +216,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     phone: '',
     country: initialData?.country || '',
     language: 'en',
-    groupUrl: '',
+    groupUrl: savedUrls[0] || '', // Pre-fill with last used URL
     groupName: '',
     groupType: '',
     groupSize: '',
@@ -209,18 +231,27 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
+  // Phone country state (separate from residence country)
+  const [phoneCountryCode, setPhoneCountryCode] = useState<string>(initialData?.country || '');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [showUrlHistoryDropdown, setShowUrlHistoryDropdown] = useState(false);
+  const urlHistoryDropdownRef = useRef<HTMLDivElement>(null);
+
   // Dropdown states
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [showPhoneCountryDropdown, setShowPhoneCountryDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [showGroupCountryDropdown, setShowGroupCountryDropdown] = useState(false);
   const [showGroupLanguageDropdown, setShowGroupLanguageDropdown] = useState(false);
   const [showGroupTypeDropdown, setShowGroupTypeDropdown] = useState(false);
   const [showGroupSizeDropdown, setShowGroupSizeDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
+  const [phoneCountrySearch, setPhoneCountrySearch] = useState('');
   const [groupCountrySearch, setGroupCountrySearch] = useState('');
 
   // Refs
   const countryDropdownRef = useRef<HTMLDivElement>(null);
+  const phoneCountryDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const groupCountryDropdownRef = useRef<HTMLDivElement>(null);
   const groupLanguageDropdownRef = useRef<HTMLDivElement>(null);
@@ -232,11 +263,13 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     const handleClickOutside = (e: MouseEvent) => {
       const refs = [
         { ref: countryDropdownRef, setter: setShowCountryDropdown, searchSetter: setCountrySearch },
+        { ref: phoneCountryDropdownRef, setter: setShowPhoneCountryDropdown, searchSetter: setPhoneCountrySearch },
         { ref: languageDropdownRef, setter: setShowLanguageDropdown },
         { ref: groupCountryDropdownRef, setter: setShowGroupCountryDropdown, searchSetter: setGroupCountrySearch },
         { ref: groupLanguageDropdownRef, setter: setShowGroupLanguageDropdown },
         { ref: groupTypeDropdownRef, setter: setShowGroupTypeDropdown },
         { ref: groupSizeDropdownRef, setter: setShowGroupSizeDropdown },
+        { ref: urlHistoryDropdownRef, setter: setShowUrlHistoryDropdown },
       ];
       refs.forEach(({ ref, setter, searchSetter }) => {
         if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -260,6 +293,17 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     );
   }, [countrySearch, locale]);
 
+  const filteredPhoneCountries = useMemo(() => {
+    if (!phoneCountrySearch) return phoneCodesData;
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const search = strip(phoneCountrySearch);
+    return phoneCodesData.filter(entry =>
+      strip(getCountryName(entry, locale)).includes(search) ||
+      entry.code.toLowerCase().includes(search) ||
+      entry.dial_code.includes(search)
+    );
+  }, [phoneCountrySearch, locale]);
+
   const filteredGroupCountries = useMemo(() => {
     if (!groupCountrySearch) return phoneCodesData;
     const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -273,6 +317,8 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
   // Selected entries
   const selectedCountry = useMemo(() =>
     phoneCodesData.find(e => e.code === formData.country), [formData.country]);
+  const selectedPhoneCountry = useMemo(() =>
+    phoneCodesData.find(e => e.code === phoneCountryCode), [phoneCountryCode]);
   const selectedGroupCountry = useMemo(() =>
     phoneCodesData.find(e => e.code === formData.groupCountry), [formData.groupCountry]);
   const selectedLanguage = useMemo(() =>
@@ -283,6 +329,26 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
   const passwordStrength = useMemo(() =>
     evaluatePasswordStrength(formData.password), [formData.password]);
 
+  // Sync phone country with residence country when residence country changes
+  useEffect(() => {
+    if (formData.country && !phoneCountryCode) {
+      setPhoneCountryCode(formData.country);
+    }
+  }, [formData.country, phoneCountryCode]);
+
+  // Update formData.phone when phone number or country changes
+  useEffect(() => {
+    if (phoneNumber || phoneCountryCode) {
+      const dialCode = selectedPhoneCountry?.dial_code || '';
+      // Format: +33612345678 (dial code + number without leading 0)
+      const cleanNumber = phoneNumber.replace(/^0+/, '').replace(/\D/g, '');
+      const fullPhone = cleanNumber ? `${dialCode}${cleanNumber}` : '';
+      setFormData(prev => ({ ...prev, phone: fullPhone }));
+    } else {
+      setFormData(prev => ({ ...prev, phone: '' }));
+    }
+  }, [phoneNumber, phoneCountryCode, selectedPhoneCountry]);
+
   // Field handlers
   const handleChange = useCallback((field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -291,6 +357,16 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
       setValidationErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
     }
   }, [onErrorClear, validationErrors]);
+
+  const handlePhoneNumberChange = useCallback((value: string) => {
+    // Allow only digits, spaces, dashes, parentheses
+    const cleaned = value.replace(/[^\d\s\-()]/g, '');
+    setPhoneNumber(cleaned);
+    onErrorClear?.();
+    if (validationErrors.phone) {
+      setValidationErrors(prev => { const n = { ...prev }; delete n.phone; return n; });
+    }
+  }, [onErrorClear, validationErrors.phone]);
 
   const handleBlur = useCallback((field: string) => {
     setTouchedFields(prev => new Set(prev).add(field));
@@ -337,6 +413,11 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateStep2()) return;
+
+    // Save group URL to localStorage for future use
+    if (formData.groupUrl) {
+      saveGroupUrl(formData.groupUrl);
+    }
 
     const now = new Date();
     const submissionData: GroupAdminRegistrationData = {
@@ -530,21 +611,84 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             </div>
           )}
 
-          {/* Phone (optional) */}
+          {/* Phone (optional) with country code selector */}
           <div className="space-y-1">
             <label className={darkStyles.label}>
               <FormattedMessage id="groupadmin.register.phone" defaultMessage="Phone (optional)" />
             </label>
-            <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder="+1 234 567 8900"
-                className={`${darkStyles.input} pl-12 ${formData.phone ? darkStyles.inputFilled : ''}`}
-              />
+            <div className="grid grid-cols-12 gap-2">
+              {/* Country code dropdown */}
+              <div className="col-span-5">
+                <DarkDropdown
+                  refObj={phoneCountryDropdownRef}
+                  isOpen={showPhoneCountryDropdown}
+                  setIsOpen={setShowPhoneCountryDropdown}
+                  selectedLabel={selectedPhoneCountry ? (
+                    <span className="flex items-center gap-2">
+                      <span className="text-lg">{getFlag(selectedPhoneCountry.code)}</span>
+                      <span className="text-white font-medium">{selectedPhoneCountry.dial_code}</span>
+                    </span>
+                  ) : null}
+                  placeholder={intl.formatMessage({ id: 'form.phone.selectCountry', defaultMessage: 'Code' })}
+                  icon={<Globe className="w-5 h-5" />}
+                >
+                  <div className="p-2 border-b border-white/10">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={phoneCountrySearch}
+                        onChange={(e) => setPhoneCountrySearch(e.target.value)}
+                        placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search...' })}
+                        className={darkStyles.dropdownSearch}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-[280px] overflow-y-auto">
+                    {filteredPhoneCountries.map(entry => (
+                      <button
+                        key={entry.code}
+                        type="button"
+                        onClick={() => {
+                          setPhoneCountryCode(entry.code);
+                          setShowPhoneCountryDropdown(false);
+                          setPhoneCountrySearch('');
+                        }}
+                        className={`${darkStyles.dropdownItem} ${entry.code === phoneCountryCode ? 'bg-indigo-500/10' : ''}`}
+                      >
+                        <span className="text-xl">{getFlag(entry.code)}</span>
+                        <span className="flex-1 text-left text-sm">{getCountryName(entry, locale)}</span>
+                        <span className="text-xs text-gray-400">{entry.dial_code}</span>
+                        {entry.code === phoneCountryCode && <Check className="w-4 h-4 text-indigo-400" />}
+                      </button>
+                    ))}
+                  </div>
+                </DarkDropdown>
+              </div>
+
+              {/* Phone number input */}
+              <div className="col-span-7">
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => handlePhoneNumberChange(e.target.value)}
+                    onBlur={() => handleBlur('phone')}
+                    placeholder={intl.formatMessage({ id: 'form.phone.placeholder', defaultMessage: '612345678' })}
+                    className={`${darkStyles.input} pl-12 ${phoneNumber ? darkStyles.inputFilled : ''}`}
+                    inputMode="tel"
+                  />
+                </div>
+              </div>
             </div>
+            {/* Display full formatted phone number */}
+            {formData.phone && (
+              <p className="text-xs text-gray-400 mt-1">
+                <FormattedMessage id="form.phone.formatted" defaultMessage="Full number:" /> <span className="text-white font-mono">{formData.phone}</span>
+              </p>
+            )}
           </div>
 
           {/* Country + Language row */}
@@ -656,21 +800,65 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             <FormattedMessage id="groupadmin.register.step2.title" defaultMessage="Your Group / Community" />
           </h3>
 
-          {/* Group URL */}
+          {/* Group URL with history */}
           <div className="space-y-1">
             <label className={darkStyles.label}>
               <FormattedMessage id="groupadmin.register.groupUrl" defaultMessage="Group / Community URL" /> <span className="text-red-400">*</span>
+              {savedUrls.length > 0 && (
+                <span className="ml-2 text-xs text-green-400">
+                  <FormattedMessage id="groupadmin.register.groupUrl.prefilled" defaultMessage="(pre-filled from history)" />
+                </span>
+              )}
             </label>
-            <div className="relative">
-              <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            <div className="relative" ref={urlHistoryDropdownRef}>
+              <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
               <input
                 type="url"
                 value={formData.groupUrl}
                 onChange={(e) => handleChange('groupUrl', e.target.value)}
                 onBlur={() => handleBlur('groupUrl')}
                 placeholder="https://www.facebook.com/groups/... or any group URL"
-                className={`${darkStyles.input} pl-12 ${validationErrors.groupUrl ? darkStyles.inputError : formData.groupUrl ? darkStyles.inputFilled : ''}`}
+                className={`${darkStyles.input} pl-12 ${savedUrls.length > 0 ? 'pr-10' : ''} ${validationErrors.groupUrl ? darkStyles.inputError : formData.groupUrl ? darkStyles.inputFilled : ''}`}
               />
+              {/* History button */}
+              {savedUrls.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowUrlHistoryDropdown(!showUrlHistoryDropdown)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-400 transition-colors p-1 rounded-lg hover:bg-white/5 z-10"
+                  title={intl.formatMessage({ id: 'groupadmin.register.groupUrl.showHistory', defaultMessage: 'Show history' })}
+                >
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showUrlHistoryDropdown ? 'rotate-180' : ''}`} />
+                </button>
+              )}
+
+              {/* History dropdown */}
+              {showUrlHistoryDropdown && savedUrls.length > 0 && (
+                <div className={darkStyles.dropdown}>
+                  <div className="p-2 border-b border-white/10">
+                    <p className="text-xs text-gray-400">
+                      <FormattedMessage id="groupadmin.register.groupUrl.history" defaultMessage="Previously used URLs:" />
+                    </p>
+                  </div>
+                  <div className="max-h-[200px] overflow-y-auto">
+                    {savedUrls.map((url, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          handleChange('groupUrl', url);
+                          setShowUrlHistoryDropdown(false);
+                        }}
+                        className={`${darkStyles.dropdownItem} ${url === formData.groupUrl ? 'bg-indigo-500/10' : ''}`}
+                      >
+                        <Link2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span className="flex-1 text-sm truncate text-left">{url}</span>
+                        {url === formData.groupUrl && <Check className="w-4 h-4 text-indigo-400 flex-shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             {validationErrors.groupUrl && <p className={darkStyles.errorText}><AlertCircle className="w-3.5 h-3.5" />{validationErrors.groupUrl}</p>}
           </div>

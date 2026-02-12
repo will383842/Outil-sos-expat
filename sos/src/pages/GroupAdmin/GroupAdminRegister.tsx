@@ -145,9 +145,9 @@ const GroupAdminRegister: React.FC = () => {
           termsVersion: data.termsVersion,
           termsType: data.termsType,
           termsAcceptanceMeta: data.termsAcceptanceMeta,
-          // Meta Pixel/CAPI tracking identifiers
-          fbp: metaIds.fbp,
-          fbc: metaIds.fbc,
+          // Meta Pixel/CAPI tracking identifiers (filter undefined to avoid Firestore error)
+          ...(metaIds.fbp && { fbp: metaIds.fbp }),
+          ...(metaIds.fbc && { fbc: metaIds.fbc }),
           country: data.country,
           metaEventId,
         }, data.password);

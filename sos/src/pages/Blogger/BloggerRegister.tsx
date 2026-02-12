@@ -440,9 +440,9 @@ const BloggerRegister: React.FC = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         role: 'blogger',
-        // Meta Pixel/CAPI tracking identifiers
-        fbp: metaIds.fbp,
-        fbc: metaIds.fbc,
+        // Meta Pixel/CAPI tracking identifiers (filter undefined to avoid Firestore error)
+        ...(metaIds.fbp && { fbp: metaIds.fbp }),
+        ...(metaIds.fbc && { fbc: metaIds.fbc }),
         country: formData.country,
         metaEventId,
       }, formData.password);

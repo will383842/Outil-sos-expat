@@ -12,7 +12,8 @@
 export type GroupAdminStatus = "active" | "suspended" | "blocked";
 
 export type SupportedGroupAdminLanguage =
-  | "fr" | "en" | "es" | "pt" | "ar" | "de" | "it" | "nl" | "zh";
+  | "fr" | "en" | "es" | "pt" | "ar" | "de" | "it" | "nl" | "zh"
+  | "ru" | "hi" | "ja" | "ko" | "tr" | "pl" | "sv" | "no" | "da" | "fi";
 
 export type GroupType =
   | "travel"
@@ -26,6 +27,17 @@ export type GroupType =
   | "family"
   | "student"
   | "retirement"
+  | "affiliation"
+  | "press"
+  | "media"
+  | "lawyers"
+  | "translators"
+  | "movers"
+  | "real_estate"
+  | "insurance"
+  | "finance"
+  | "healthcare"
+  | "education"
   | "other";
 
 export type GroupSizeTier =
@@ -618,6 +630,17 @@ export const GROUP_TYPE_LABELS: Record<GroupType, { en: string; fr: string; es: 
   family: { en: "Expatriate Families", fr: "Familles Expatriées", es: "Familias Expatriadas" },
   student: { en: "Students Abroad", fr: "Étudiants à l'Étranger", es: "Estudiantes en el Extranjero" },
   retirement: { en: "Retirement Abroad", fr: "Retraite à l'Étranger", es: "Jubilación en el Extranjero" },
+  affiliation: { en: "Affiliate Marketing", fr: "Marketing d'Affiliation", es: "Marketing de Afiliación" },
+  press: { en: "Press & Journalism", fr: "Presse & Journalisme", es: "Prensa y Periodismo" },
+  media: { en: "Media & Communication", fr: "Médias & Communication", es: "Medios y Comunicación" },
+  lawyers: { en: "Legal Professionals", fr: "Avocats & Juristes", es: "Abogados y Juristas" },
+  translators: { en: "Translators & Interpreters", fr: "Traducteurs & Interprètes", es: "Traductores e Intérpretes" },
+  movers: { en: "Moving & Relocation Services", fr: "Déménageurs & Services", es: "Mudanzas y Servicios" },
+  real_estate: { en: "Real Estate & Property", fr: "Immobilier & Propriété", es: "Bienes Raíces" },
+  insurance: { en: "Insurance & Protection", fr: "Assurance & Protection", es: "Seguros y Protección" },
+  finance: { en: "Finance & Banking", fr: "Finance & Banque", es: "Finanzas y Banca" },
+  healthcare: { en: "Healthcare & Medical", fr: "Santé & Médical", es: "Salud y Medicina" },
+  education: { en: "Education & Training", fr: "Éducation & Formation", es: "Educación y Formación" },
   other: { en: "Other", fr: "Autre", es: "Otro" },
 };
 
