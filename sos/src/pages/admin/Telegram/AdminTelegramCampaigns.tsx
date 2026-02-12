@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +13,6 @@ import {
   Ban,
   FileText,
 } from "lucide-react";
-import TelegramNav from "./TelegramNav";
 
 interface Campaign {
   id: string;
@@ -91,9 +89,7 @@ const AdminTelegramCampaigns: React.FC = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6">
-        <TelegramNav />
+    <div className="space-y-6">
 
         <div className="flex items-center justify-between">
           <div>
@@ -201,7 +197,6 @@ const AdminTelegramCampaigns: React.FC = () => {
           </div>
         )}
       </div>
-    </AdminLayout>
   );
 };
 

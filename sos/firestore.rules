@@ -49,6 +49,18 @@ service cloud.firestore {
       return isAdmin();
     }
 
+    // Vérifie si l'utilisateur est agency_manager (pour dashboard multi-prestataire)
+    function isAgencyManager() {
+      return request.auth != null &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'agency_manager';
+    }
+
+    // Vérifie si l'utilisateur est agency_manager avec accès au provider
+    function hasAgencyAccessToProvider(providerId) {
+      return isAgencyManager() &&
+             providerId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds;
+    }
+
     // Super admin: admin avec tous les droits
     function isSuperAdmin() {
       return isAdmin();
@@ -98,9 +110,11 @@ service cloud.firestore {
       // NOTE: stripeAccountId, paypalMerchantId ne sont pas inclus dans les projections frontend
       // P1-6 SECURITY FIX: Restreindre la lecture aux profils visibles ou au propriétaire
       // Empêche l'énumération de tous les providers et protège les données sensibles
+      // AJOUT 2026-02-12: Les agency_managers peuvent lire les profils de leurs providers liés
       allow read: if resource.data.isVisible == true
                   || (isAuthenticated() && request.auth.uid == profileId)
-                  || isAdmin() || isDev();
+                  || isAdmin() || isDev()
+                  || hasAgencyAccessToProvider(profileId);
 
       // Écriture : propriétaire ou admin
       // NOTE: On ne peut pas utiliser isProvider() ici car les custom claims
@@ -960,13 +974,12 @@ service cloud.firestore {
     // ================= BOOKING REQUESTS COLLECTION =================
     match /booking_requests/{bookingId} {
       // Lecture : client ou provider concerné, agency_manager pour ses providers liés, ou admin/dev
+      // OPTIMISATION 2026-02-12: Utilisation de la fonction helper hasAgencyAccessToProvider
       allow read: if isAuthenticated() &&
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
                    isAdmin() || isDev() ||
-                   ((get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'agency_manager' ||
-                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') &&
-                    resource.data.providerId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds));
+                   hasAgencyAccessToProvider(resource.data.providerId));
 
       // Création : client authentifié avec validation des champs requis
       allow create: if isAuthenticated() &&
@@ -982,11 +995,10 @@ service cloud.firestore {
                      isAdmin() || isDev());
 
       // Suppression : admin, dev, ou agency_manager pour ses providers liés
+      // OPTIMISATION 2026-02-12: Utilisation de la fonction helper hasAgencyAccessToProvider
       allow delete: if isAuthenticated() &&
                     (isAdmin() || isDev() ||
-                     ((get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'agency_manager' ||
-                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') &&
-                      resource.data.providerId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds));
+                     hasAgencyAccessToProvider(resource.data.providerId));
     }
 
     // ================= AUTH LOGS COLLECTION =================
@@ -2765,8 +2777,10 @@ service cloud.firestore {
 
     // ================= PROVIDER STATS =================
     // Statistiques mensuelles des prestataires
+    // AJOUT 2026-02-12: Les agency_managers peuvent lire les stats de leurs providers liés
     match /provider_stats/{statId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin() || isDev() ||
+                     hasAgencyAccessToProvider(resource.data.providerId);
       allow write: if false;
     }
 

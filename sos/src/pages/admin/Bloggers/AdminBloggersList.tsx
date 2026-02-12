@@ -428,7 +428,7 @@ const AdminBloggersList: React.FC = () => {
               <p className="text-xs text-purple-600 dark:text-purple-400">
                 <FormattedMessage
                   id="admin.bloggers.fixedCommissionsDesc"
-                  defaultMessage="10$ par client référé • 5$ par prestataire recruté • Pas de bonus ni de niveaux"
+                  defaultMessage="10$ par appel référé • 5$ par partenaire • Pas de bonus ni de niveaux"
                 />
               </p>
             </div>

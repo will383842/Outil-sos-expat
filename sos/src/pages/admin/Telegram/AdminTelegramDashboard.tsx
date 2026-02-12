@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +13,6 @@ import {
   RefreshCw,
   Clock,
 } from "lucide-react";
-import TelegramNav from "./TelegramNav";
 import {
   BarChart,
   Bar,
@@ -73,11 +71,8 @@ const AdminTelegramDashboard: React.FC = () => {
   })) || [];
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6">
-        <TelegramNav />
-
-        <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">Vue d'ensemble du système de messagerie Telegram</p>
           <button
             onClick={loadData}
@@ -217,7 +212,6 @@ const AdminTelegramDashboard: React.FC = () => {
           </button>
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

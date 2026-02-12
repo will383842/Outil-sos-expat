@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
 import { RefreshCw } from "lucide-react";
@@ -11,7 +10,6 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
-import TelegramNav from "./TelegramNav";
 
 interface SubscriberStats {
   total: number;
@@ -59,9 +57,7 @@ const AdminTelegramSubscribers: React.FC = () => {
     : [];
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6">
-        <TelegramNav />
+    <div className="space-y-6">
 
         <div className="flex items-center justify-between">
           <div>
@@ -172,7 +168,6 @@ const AdminTelegramSubscribers: React.FC = () => {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

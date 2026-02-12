@@ -83,6 +83,7 @@ const AdminDashboard = lazy(() => import("../../pages/admin/AdminDashboard"));
 // ===== LAZY IMPORTS - FINANCE =====
 const AdminPayments = lazy(() => import("../../pages/admin/AdminPayments"));
 const AdminInvoices = lazy(() => import("../../pages/admin/AdminInvoices"));
+const PaymentsMonitoringDashboard = lazy(() => import("../../pages/admin/payments/PaymentsMonitoringDashboard"));
 const AdminFinanceTaxes = lazy(() => import("../../pages/admin/Finance/Taxes"));
 const AdminFinanceTaxesByCountry = lazy(
   () => import("../../pages/admin/Finance/TaxesByCountry")
@@ -536,6 +537,7 @@ const AdminGoogleAdsAnalytics = lazy(() => import("../../pages/admin/AdminGoogle
 const AdminLandingPages = lazy(() => import("../../pages/admin/AdminLandingPages"));
 
 // ===== LAZY IMPORTS - TELEGRAM =====
+import TelegramLayout from "../telegram/TelegramLayout";
 const AdminTelegramDashboard = lazy(() => import("../../pages/admin/Telegram/AdminTelegramDashboard"));
 const AdminTelegramCampaigns = lazy(() => import("../../pages/admin/Telegram/AdminTelegramCampaigns"));
 const AdminTelegramCampaignCreate = lazy(() => import("../../pages/admin/Telegram/AdminTelegramCampaignCreate"));
@@ -1427,6 +1429,14 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
+        path="payments/monitoring"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <PaymentsMonitoringDashboard />
+          </Suspense>
+        }
+      />
+      <Route
         path="payments/withdrawals"
         element={
           <Suspense fallback={<LoadingSpinner />}>
@@ -1461,15 +1471,31 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
-      {/* 📱 TELEGRAM MARKETING */}
-      <Route path="toolbox/telegram" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramDashboard /></Suspense>} />
-      <Route path="toolbox/telegram/campaigns" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramCampaigns /></Suspense>} />
-      <Route path="toolbox/telegram/campaigns/create" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramCampaignCreate /></Suspense>} />
-      <Route path="toolbox/telegram/templates" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramTemplates /></Suspense>} />
-      <Route path="toolbox/telegram/subscribers" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramSubscribers /></Suspense>} />
-      <Route path="toolbox/telegram/queue" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramQueue /></Suspense>} />
-      <Route path="toolbox/telegram/logs" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramLogs /></Suspense>} />
-      <Route path="toolbox/telegram/config" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramConfig /></Suspense>} />
+      {/* 📱 TELEGRAM MARKETING - Wrapped with TelegramLayout */}
+      <Route path="toolbox/telegram" element={<TelegramLayout />}>
+        {/* Index route: /admin/toolbox/telegram redirects to dashboard */}
+        <Route index element={<Navigate to="dashboard" replace />} />
+
+        {/* Dashboard */}
+        <Route path="dashboard" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramDashboard /></Suspense>} />
+
+        {/* Campaigns */}
+        <Route path="campaigns" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramCampaigns /></Suspense>} />
+        <Route path="campaigns/create" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramCampaignCreate /></Suspense>} />
+
+        {/* Content */}
+        <Route path="templates" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramTemplates /></Suspense>} />
+
+        {/* Subscribers */}
+        <Route path="subscribers" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramSubscribers /></Suspense>} />
+
+        {/* Monitoring */}
+        <Route path="queue" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramQueue /></Suspense>} />
+        <Route path="logs" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramLogs /></Suspense>} />
+
+        {/* Configuration */}
+        <Route path="config" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramConfig /></Suspense>} />
+      </Route>
 
       {/* ⚙️ CONFIG & OUTILS */}
       <Route

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
 import {
@@ -18,7 +17,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import TelegramNav from "./TelegramNav";
 
 interface QueueStats {
   queueDepth: { pending: number; sending: number; dead: number; total: number };
@@ -57,9 +55,7 @@ const AdminTelegramQueue: React.FC = () => {
     : [];
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6">
-        <TelegramNav />
+    <div className="space-y-6">
 
         <div className="flex items-center justify-between">
           <div>
@@ -191,7 +187,6 @@ const AdminTelegramQueue: React.FC = () => {
           )}
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

@@ -276,15 +276,15 @@ const AdminBloggersConfig: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-4 bg-white dark:bg-white/5 rounded-xl">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Commission par client référé</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Commission par appel référé</p>
               <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">$10.00</p>
               <p className="text-xs text-gray-400 mt-1">Montant fixe</p>
             </div>
 
             <div className="p-4 bg-white dark:bg-white/5 rounded-xl">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Commission par appel recruté</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Commission par appel partenaire</p>
               <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">$5.00</p>
-              <p className="text-xs text-gray-400 mt-1">Par appel du prestataire recruté</p>
+              <p className="text-xs text-gray-400 mt-1">Par appel du partenaire</p>
             </div>
 
             <div className="p-4 bg-white dark:bg-white/5 rounded-xl">
@@ -370,7 +370,7 @@ const AdminBloggersConfig: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                <FormattedMessage id="admin.config.recruitWindow" defaultMessage="Fenêtre recrutement (mois)" />
+                <FormattedMessage id="admin.config.recruitWindow" defaultMessage="Fenêtre partenaires (mois)" />
               </label>
               <input
                 type="number"
@@ -383,7 +383,7 @@ const AdminBloggersConfig: React.FC = () => {
               <p className="mt-1 text-xs text-gray-500">
                 <FormattedMessage
                   id="admin.config.recruitWindowHelp"
-                  defaultMessage="Durée de suivi des prestataires recrutés"
+                  defaultMessage="Durée de suivi des partenaires"
                 />
               </p>
             </div>

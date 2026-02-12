@@ -128,6 +128,30 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "invoice.created",
+      "roles": ["client"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "您的 SOS Expat 发票 - {{invoiceNumber}}",
+        "body": "您好，{{clientName}}，<br><br>感谢您使用 SOS Expat 进行咨询。<br><br>请查收附件中的发票，编号为 <strong>{{invoiceNumber}}</strong>，金额为 <strong>{{amount}} {{currency}}</strong>。<br><br>您也可以点击以下链接下载发票：<br><br><a href=\"{{downloadUrl}}\" style=\"display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;\">下载发票</a><br><br>如有任何问题，请通过 support@sos-expat.app 联系我们<br><br>此致敬礼，<br>SOS Expat 团队",
+        "attachmentKey": "downloadUrl"
+      },
+      "inapp": {
+        "title": "发票已生成",
+        "body": "您的发票 {{invoiceNumber}} 已准备好",
+        "action": {
+          "label": "下载",
+          "deeplink": "/invoices/{{invoiceId}}"
+        }
+      }
     }
   ]
 }

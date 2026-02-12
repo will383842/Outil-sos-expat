@@ -207,6 +207,15 @@ export {
   checkInvoicesExist,
 } from "./triggers/onInvoiceCreated";
 
+// P2 FIX 2026-02-12: Automatic invoice email delivery (multilingual)
+export { onInvoiceCreatedSendEmail } from "./triggers/onInvoiceCreatedSendEmail";
+
+// P2 FIX 2026-02-12: Payment error alerts system
+export {
+  onPaymentRecordCreated,
+  onPaymentRecordUpdated,
+} from "./triggers/onPaymentError";
+
 // Dispute handling
 import {
   handleDisputeCreated,
@@ -5795,6 +5804,11 @@ export {
   // DISABLED 2026-01-30: One-time seed - removed to free quota
   // adminSeedChatterTrainingModules,
   adminReorderChatterTrainingModules,
+  // Drip Messages (62 automated motivation messages over 90 days)
+  sendChatterDripMessages,
+  chatter_sendDripMessage,
+  chatter_getDripStats,
+  chatter_previewDripMessage,
 } from './chatter';
 
 // ========== INFLUENCER SYSTEM ==========

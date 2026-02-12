@@ -128,6 +128,30 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "invoice.created",
+      "roles": ["client"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Ваш счет SOS Expat - {{invoiceNumber}}",
+        "body": "Здравствуйте, {{clientName}},<br><br>Спасибо за использование SOS Expat для вашей консультации.<br><br>Пожалуйста, найдите во вложении ваш счет номер <strong>{{invoiceNumber}}</strong> на сумму <strong>{{amount}} {{currency}}</strong>.<br><br>Вы также можете скачать ваш счет, перейдя по ссылке ниже:<br><br><a href=\"{{downloadUrl}}\" style=\"display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;\">Скачать счет</a><br><br>Если у вас есть вопросы, пожалуйста, свяжитесь с нами по адресу support@sos-expat.app<br><br>С уважением,<br>Команда SOS Expat",
+        "attachmentKey": "downloadUrl"
+      },
+      "inapp": {
+        "title": "Счет доступен",
+        "body": "Ваш счет {{invoiceNumber}} готов",
+        "action": {
+          "label": "Скачать",
+          "deeplink": "/invoices/{{invoiceId}}"
+        }
+      }
     }
   ]
 }

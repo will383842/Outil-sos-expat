@@ -128,6 +128,30 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "invoice.created",
+      "roles": ["client"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Ihre SOS Expat Rechnung - {{invoiceNumber}}",
+        "body": "Hallo {{clientName}},<br><br>Vielen Dank, dass Sie SOS Expat für Ihre Beratung genutzt haben.<br><br>Im Anhang finden Sie Ihre Rechnung Nummer <strong>{{invoiceNumber}}</strong> über den Betrag von <strong>{{amount}} {{currency}}</strong>.<br><br>Sie können Ihre Rechnung auch über den folgenden Link herunterladen:<br><br><a href=\"{{downloadUrl}}\" style=\"display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;\">Rechnung herunterladen</a><br><br>Wenn Sie Fragen haben, kontaktieren Sie uns bitte unter support@sos-expat.app<br><br>Mit freundlichen Grüßen,<br>Das SOS Expat Team",
+        "attachmentKey": "downloadUrl"
+      },
+      "inapp": {
+        "title": "Rechnung verfügbar",
+        "body": "Ihre Rechnung {{invoiceNumber}} ist bereit",
+        "action": {
+          "label": "Herunterladen",
+          "deeplink": "/invoices/{{invoiceId}}"
+        }
+      }
     }
   ]
 }

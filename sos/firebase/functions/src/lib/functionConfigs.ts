@@ -116,7 +116,7 @@ export const webhookConfig = {
  * - Longer timeout for batch operations
  */
 export const scheduledConfig = {
-  region: "europe-west3" as const,
+  region: "europe-west1" as const,
   memory: "512MiB" as const,
   cpu: 0.25,  // Reduced from 0.5 - scheduled tasks mostly do DB operations
   maxInstances: 1,

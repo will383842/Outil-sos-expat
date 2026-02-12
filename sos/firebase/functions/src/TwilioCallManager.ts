@@ -3138,6 +3138,8 @@ export class TwilioCallManager {
 
       // Import your invoice function - adjust path as needed
       const { generateInvoice } = await import("./utils/generateInvoice");
+      // P2 FIX 2026-02-12: Import sequential invoice number generator
+      const { generateSequentialInvoiceNumber } = await import("./utils/sequentialInvoiceNumber");
 
       // Get amounts from admin pricing config instead of hardcoded percentages
       const { getPricingConfig } = await import("./services/pricingService");
@@ -3152,9 +3154,18 @@ export class TwilioCallManager {
       console.log(`📄 Creating invoices with admin pricing - Platform: ${platformFee} ${currency.toUpperCase()}, Provider: ${providerAmount} ${currency.toUpperCase()}`);
       console.log(`📄 Invoice status: ${invoiceStatus} (payment status: ${session.payment.status})`);
 
+      // P2 FIX 2026-02-12: Generate sequential invoice numbers (international compliance)
+      const platformInvoiceNumberResult = await generateSequentialInvoiceNumber();
+      const providerInvoiceNumberResult = await generateSequentialInvoiceNumber();
+
+      console.log(`📄 Generated sequential invoice numbers:`, {
+        platform: platformInvoiceNumberResult.invoiceNumber,
+        provider: providerInvoiceNumberResult.invoiceNumber,
+      });
+
       // Create platform invoice
       const platformInvoice: InvoiceRecord = {
-        invoiceNumber: `PLT-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+        invoiceNumber: platformInvoiceNumberResult.invoiceNumber,
         type: "platform",
         callId: sessionId,
         clientId: session.metadata.clientId,
@@ -3183,7 +3194,7 @@ export class TwilioCallManager {
 
       // Create provider invoice
       const providerInvoice: InvoiceRecord = {
-        invoiceNumber: `PRV-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+        invoiceNumber: providerInvoiceNumberResult.invoiceNumber,
         type: "provider",
         callId: sessionId,
         clientId: session.metadata.clientId,

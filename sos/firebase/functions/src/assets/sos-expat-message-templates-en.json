@@ -425,6 +425,30 @@
         "inapp": false,
         "whatsapp": false
       }
+    },
+    {
+      "id": "invoice.created",
+      "roles": ["client"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Your SOS Expat Invoice - {{invoiceNumber}}",
+        "body": "Hello {{clientName}},<br><br>Thank you for using SOS Expat for your consultation.<br><br>Please find attached your invoice number <strong>{{invoiceNumber}}</strong> for the amount of <strong>{{amount}} {{currency}}</strong>.<br><br>You can also download your invoice by clicking the link below:<br><br><a href=\"{{downloadUrl}}\" style=\"display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;\">Download Invoice</a><br><br>If you have any questions, please contact us at support@sos-expat.app<br><br>Best regards,<br>The SOS Expat Team",
+        "attachmentKey": "downloadUrl"
+      },
+      "inapp": {
+        "title": "Invoice available",
+        "body": "Your invoice {{invoiceNumber}} is ready",
+        "action": {
+          "label": "Download",
+          "deeplink": "/invoices/{{invoiceId}}"
+        }
+      }
     }
   ]
 }

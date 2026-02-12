@@ -128,6 +128,30 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "invoice.created",
+      "roles": ["client"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Sua fatura SOS Expat - {{invoiceNumber}}",
+        "body": "Olá {{clientName}},<br><br>Obrigado por usar o SOS Expat para sua consulta.<br><br>Segue em anexo sua fatura número <strong>{{invoiceNumber}}</strong> no valor de <strong>{{amount}} {{currency}}</strong>.<br><br>Você também pode baixar sua fatura clicando no link abaixo:<br><br><a href=\"{{downloadUrl}}\" style=\"display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;\">Baixar fatura</a><br><br>Se tiver alguma dúvida, entre em contato conosco em support@sos-expat.app<br><br>Atenciosamente,<br>A equipe SOS Expat",
+        "attachmentKey": "downloadUrl"
+      },
+      "inapp": {
+        "title": "Fatura disponível",
+        "body": "Sua fatura {{invoiceNumber}} está pronta",
+        "action": {
+          "label": "Baixar",
+          "deeplink": "/invoices/{{invoiceId}}"
+        }
+      }
     }
   ]
 }

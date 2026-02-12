@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
 import {
@@ -10,7 +9,6 @@ import {
   ChevronRight,
   Filter,
 } from "lucide-react";
-import TelegramNav from "./TelegramNav";
 
 interface LogEntry {
   id: string;
@@ -111,9 +109,7 @@ const AdminTelegramLogs: React.FC = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6">
-        <TelegramNav />
+    <div className="space-y-6">
 
         <div>
           <h2 className="text-xl font-bold text-gray-900">Logs</h2>
@@ -244,7 +240,6 @@ const AdminTelegramLogs: React.FC = () => {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

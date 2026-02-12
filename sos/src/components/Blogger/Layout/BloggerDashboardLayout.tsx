@@ -242,13 +242,13 @@ const BloggerDashboardLayout: React.FC<BloggerDashboardLayoutProps> = ({ childre
                       <div>
                         <span className="text-lg font-bold text-purple-600 dark:text-purple-400">$10</span>
                         <p className="text-xs text-gray-500">
-                          <FormattedMessage id="blogger.sidebar.perClient" defaultMessage="/client" />
+                          <FormattedMessage id="blogger.sidebar.perClient" defaultMessage="/appel" />
                         </p>
                       </div>
                       <div>
                         <span className="text-lg font-bold text-purple-600 dark:text-purple-400">$5</span>
                         <p className="text-xs text-gray-500">
-                          <FormattedMessage id="blogger.sidebar.perRecruit" defaultMessage="/recrutement" />
+                          <FormattedMessage id="blogger.sidebar.perRecruit" defaultMessage="/partenaire" />
                         </p>
                       </div>
                     </div>

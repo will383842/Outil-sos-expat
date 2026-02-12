@@ -1,12 +1,19 @@
 import { db, storage, FieldValue } from './firebase';
 import { InvoiceRecord } from './types';
 import { logError } from '../utils/logs/logError';
+import {
+  getInvoiceTranslations,
+  formatInvoiceDate,
+  formatInvoiceCurrency,
+} from './invoiceTranslations';
 
 /**
  * P1-5 FIX: Improved server-side invoice generation
+ * P2 FIX 2026-02-12: Added multilingual support (9 languages)
  *
  * Generates a proper HTML invoice that can be rendered or converted to PDF.
  * Uses hierarchical storage path matching Firebase Storage rules.
+ * Supports 9 languages: FR, EN, ES, DE, PT, RU, ZH, HI, AR
  */
 
 // Extended invoice data with optional fields
@@ -15,31 +22,42 @@ import { logError } from '../utils/logs/logError';
 interface ExtendedInvoiceData extends InvoiceRecord {
   providerAddress?: string;
   description?: string;
+  locale?: string; // P2 FIX: Added locale support
 }
 
-// Invoice template
+// Invoice template with multilingual support
 const generateInvoiceHTML = (invoice: ExtendedInvoiceData): string => {
   const date = new Date();
-  const formattedDate = date.toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const locale = invoice.locale || 'en';
+  const t = getInvoiceTranslations(locale);
+  const formattedDate = formatInvoiceDate(date, locale);
 
   const isPlatform = invoice.type === 'platform';
-  const title = isPlatform ? 'Facture de mise en relation' : 'Facture prestataire';
-  const companyName = isPlatform ? 'SOS Expat' : (invoice.providerName || 'Prestataire');
+  const title = isPlatform ? t.platformInvoiceTitle : t.providerInvoiceTitle;
+  const companyName = isPlatform ? t.companyName : (invoice.providerName || 'Provider');
+
+  // Format currency
+  const formattedAmount = formatInvoiceCurrency(
+    invoice.amount || 0,
+    invoice.currency || 'EUR',
+    locale
+  );
+
+  // RTL support for Arabic
+  const isRTL = locale.startsWith('ar');
+  const direction = isRTL ? 'rtl' : 'ltr';
+  const textAlign = isRTL ? 'right' : 'left';
 
   return `<!DOCTYPE html>
-<html lang="fr">
+<html lang="${locale.split('-')[0]}" dir="${direction}">
 <head>
   <meta charset="UTF-8">
   <title>${title} - ${invoice.invoiceNumber}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; color: #333; }
+    body { font-family: Arial, sans-serif; margin: 40px; color: #333; direction: ${direction}; }
     .header { display: flex; justify-content: space-between; margin-bottom: 40px; }
     .logo { font-size: 24px; font-weight: bold; color: #2563eb; }
-    .invoice-info { text-align: right; }
+    .invoice-info { text-align: ${isRTL ? 'left' : 'right'}; }
     .invoice-number { font-size: 20px; font-weight: bold; color: #2563eb; }
     .date { color: #666; margin-top: 5px; }
     .parties { display: flex; justify-content: space-between; margin-bottom: 40px; }
@@ -49,9 +67,9 @@ const generateInvoiceHTML = (invoice: ExtendedInvoiceData): string => {
     .party-details { color: #666; font-size: 14px; }
     .items { margin-bottom: 40px; }
     .items-table { width: 100%; border-collapse: collapse; }
-    .items-table th, .items-table td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    .items-table th, .items-table td { padding: 12px; text-align: ${textAlign}; border-bottom: 1px solid #eee; }
     .items-table th { background: #f8f9fa; font-weight: bold; }
-    .items-table .amount { text-align: right; }
+    .items-table .amount { text-align: ${isRTL ? 'left' : 'right'}; }
     .total-row { font-weight: bold; background: #f0f7ff; }
     .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px; text-align: center; }
     .legal { margin-top: 20px; font-size: 10px; color: #999; }
@@ -61,22 +79,22 @@ const generateInvoiceHTML = (invoice: ExtendedInvoiceData): string => {
   <div class="header">
     <div class="logo">${companyName}</div>
     <div class="invoice-info">
-      <div class="invoice-number">${invoice.invoiceNumber}</div>
+      <div class="invoice-number">${t.invoiceNumber} ${invoice.invoiceNumber}</div>
       <div class="date">${formattedDate}</div>
     </div>
   </div>
 
   <div class="parties">
     <div class="party">
-      <div class="party-title">ÉMETTEUR</div>
+      <div class="party-title">${t.issuer}</div>
       <div class="party-name">${companyName}</div>
       <div class="party-details">
-        ${isPlatform ? 'SOS Expat SAS<br>Service de mise en relation' : (invoice.providerAddress || '')}
+        ${isPlatform ? t.platformDescription : (invoice.providerAddress || '')}
       </div>
     </div>
     <div class="party">
-      <div class="party-title">CLIENT</div>
-      <div class="party-name">${invoice.clientName || 'Client'}</div>
+      <div class="party-title">${t.client}</div>
+      <div class="party-name">${invoice.clientName || t.client}</div>
       <div class="party-details">
         ${invoice.clientEmail || ''}
       </div>
@@ -87,28 +105,28 @@ const generateInvoiceHTML = (invoice: ExtendedInvoiceData): string => {
     <table class="items-table">
       <thead>
         <tr>
-          <th>Description</th>
-          <th class="amount">Montant</th>
+          <th>${t.description}</th>
+          <th class="amount">${t.amount}</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>${invoice.description || (isPlatform ? 'Frais de mise en relation' : 'Prestation de conseil')}</td>
-          <td class="amount">${invoice.amount?.toFixed(2) || '0.00'} ${invoice.currency || 'EUR'}</td>
+          <td>${invoice.description || (isPlatform ? t.platformFeeDescription : t.consultationDescription)}</td>
+          <td class="amount">${formattedAmount}</td>
         </tr>
         <tr class="total-row">
-          <td>TOTAL</td>
-          <td class="amount">${invoice.amount?.toFixed(2) || '0.00'} ${invoice.currency || 'EUR'}</td>
+          <td>${t.total}</td>
+          <td class="amount">${formattedAmount}</td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <div class="footer">
-    <p>Merci pour votre confiance.</p>
+    <p>${t.thankYouMessage}</p>
     <p class="legal">
-      ${isPlatform ? 'SOS Expat SAS - Service de mise en relation entre expatriés et professionnels' : ''}
-      <br>Document généré automatiquement - Valide sans signature
+      ${isPlatform ? t.legalNotice : ''}
+      <br>${t.validWithoutSignature}
     </p>
   </div>
 </body>

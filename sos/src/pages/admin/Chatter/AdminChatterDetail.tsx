@@ -352,7 +352,7 @@ const AdminChatterDetail: React.FC = () => {
               <span className="font-semibold">{chatter.totalClientConversions}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Prestataires recrutés</span>
+              <span className="text-gray-500 dark:text-gray-400">Partenaires</span>
               <span className="font-semibold">{chatter.totalRecruitmentConversions}</span>
             </div>
             <div className="flex justify-between items-center">

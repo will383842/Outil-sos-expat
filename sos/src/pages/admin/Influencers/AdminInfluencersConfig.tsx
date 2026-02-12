@@ -69,7 +69,7 @@ const DEFAULT_COMMISSION_RULES: InfluencerCommissionRule[] = [
     conditions: {},
     holdPeriodDays: 7,
     releaseDelayHours: 24,
-    description: 'Commission par client référé',
+    description: 'Commission par appel référé',
   },
   {
     id: 'recruitment',
@@ -81,7 +81,7 @@ const DEFAULT_COMMISSION_RULES: InfluencerCommissionRule[] = [
     conditions: {},
     holdPeriodDays: 7,
     releaseDelayHours: 24,
-    description: 'Commission par appel de prestataire recruté',
+    description: 'Commission par appel partenaire',
   },
 ];
 
@@ -409,7 +409,7 @@ const AdminInfluencersConfig: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    <FormattedMessage id="admin.config.recruitCommission" defaultMessage="Commission recrutement prestataire" />
+                    <FormattedMessage id="admin.config.recruitCommission" defaultMessage="Commission partenaire" />
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
@@ -515,7 +515,7 @@ const AdminInfluencersConfig: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    <FormattedMessage id="admin.config.recruitWindow" defaultMessage="Fenêtre recrutement (mois)" />
+                    <FormattedMessage id="admin.config.recruitWindow" defaultMessage="Fenêtre partenaires (mois)" />
                   </label>
                   <input
                     type="number"

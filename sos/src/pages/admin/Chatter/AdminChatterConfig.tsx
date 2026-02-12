@@ -302,7 +302,7 @@ const AdminChatterConfig: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.clientCommission" defaultMessage="Commission par client référé (cents)" />
+              <FormattedMessage id="admin.chatterConfig.clientCommission" defaultMessage="Commission par appel référé (cents)" />
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -324,7 +324,7 @@ const AdminChatterConfig: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.recruitmentCommission" defaultMessage="Commission par recrutement (cents)" />
+              <FormattedMessage id="admin.chatterConfig.recruitmentCommission" defaultMessage="Commission par partenaire (cents)" />
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -340,7 +340,7 @@ const AdminChatterConfig: React.FC = () => {
               </span>
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="admin.chatterConfig.recruitmentCommission.desc" defaultMessage="Commission pour chaque appel reçu par un prestataire recruté (6 mois)" />
+              <FormattedMessage id="admin.chatterConfig.recruitmentCommission.desc" defaultMessage="Commission pour chaque appel reçu par un partenaire (6 mois)" />
             </p>
           </div>
         </div>
@@ -351,12 +351,12 @@ const AdminChatterConfig: React.FC = () => {
             <Info className="w-5 h-5 text-red-500 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-red-800 dark:text-red-300">
-                <FormattedMessage id="admin.chatterConfig.recruiterBonus" defaultMessage="Bonus recruteur automatique" />
+                <FormattedMessage id="admin.chatterConfig.recruiterBonus" defaultMessage="Bonus partenaire automatique" />
               </p>
               <p className="text-xs text-red-700 dark:text-red-400 mt-1">
                 <FormattedMessage
                   id="admin.chatterConfig.recruiterBonus.desc"
-                  defaultMessage="$50 automatiquement versés au recruteur quand son filleul atteint $500 de commissions."
+                  defaultMessage="$50 automatiquement versés au partenaire quand son filleul atteint $500 de commissions."
                 />
               </p>
             </div>
@@ -647,7 +647,7 @@ const AdminChatterConfig: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.recruitmentDuration" defaultMessage="Durée du lien de recrutement (mois)" />
+              <FormattedMessage id="admin.chatterConfig.recruitmentDuration" defaultMessage="Durée du lien partenaires (mois)" />
             </label>
             <input
               type="number"
@@ -657,7 +657,7 @@ const AdminChatterConfig: React.FC = () => {
               min={1}
             />
             <p className="mt-1 text-xs text-gray-500">
-              <FormattedMessage id="admin.chatterConfig.recruitmentDuration.desc" defaultMessage="Période pendant laquelle les commissions de recrutement sont versées" />
+              <FormattedMessage id="admin.chatterConfig.recruitmentDuration.desc" defaultMessage="Période pendant laquelle les commissions partenaires sont versées" />
             </p>
           </div>
 

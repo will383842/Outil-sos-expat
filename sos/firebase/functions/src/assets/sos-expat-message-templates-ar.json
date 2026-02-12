@@ -128,6 +128,30 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "invoice.created",
+      "roles": ["client"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "فاتورتك من SOS Expat - {{invoiceNumber}}",
+        "body": "مرحباً {{clientName}}،<br><br>شكراً لاستخدامك SOS Expat لاستشارتك.<br><br>يرجى العثور على فاتورتك المرفقة رقم <strong>{{invoiceNumber}}</strong> بمبلغ <strong>{{amount}} {{currency}}</strong>.<br><br>يمكنك أيضاً تنزيل فاتورتك بالنقر على الرابط أدناه:<br><br><a href=\"{{downloadUrl}}\" style=\"display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;\">تحميل الفاتورة</a><br><br>إذا كان لديك أي أسئلة، يرجى الاتصال بنا على support@sos-expat.app<br><br>مع أطيب التحيات،<br>فريق SOS Expat",
+        "attachmentKey": "downloadUrl"
+      },
+      "inapp": {
+        "title": "الفاتورة متاحة",
+        "body": "فاتورتك {{invoiceNumber}} جاهزة",
+        "action": {
+          "label": "تحميل",
+          "deeplink": "/invoices/{{invoiceId}}"
+        }
+      }
     }
   ]
 }

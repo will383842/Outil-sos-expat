@@ -425,6 +425,30 @@
         "inapp": false,
         "whatsapp": false
       }
+    },
+    {
+      "id": "invoice.created",
+      "roles": ["client"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Votre facture SOS Expat - {{invoiceNumber}}",
+        "body": "Bonjour {{clientName}},<br><br>Merci d'avoir utilisé SOS Expat pour votre consultation.<br><br>Veuillez trouver ci-joint votre facture n° <strong>{{invoiceNumber}}</strong> d'un montant de <strong>{{amount}} {{currency}}</strong>.<br><br>Vous pouvez également télécharger votre facture en cliquant sur le lien ci-dessous :<br><br><a href=\"{{downloadUrl}}\" style=\"display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;\">Télécharger la facture</a><br><br>Si vous avez des questions, n'hésitez pas à nous contacter à support@sos-expat.app<br><br>Cordialement,<br>L'équipe SOS Expat",
+        "attachmentKey": "downloadUrl"
+      },
+      "inapp": {
+        "title": "Facture disponible",
+        "body": "Votre facture {{invoiceNumber}} est prête",
+        "action": {
+          "label": "Télécharger",
+          "deeplink": "/invoices/{{invoiceId}}"
+        }
+      }
     }
   ]
 }

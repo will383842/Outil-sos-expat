@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +9,6 @@ import {
   Calendar,
   MessageSquare,
 } from "lucide-react";
-import TelegramNav from "./TelegramNav";
 
 const AUDIENCES = [
   { value: "all", label: "Tous" },
@@ -71,9 +69,7 @@ const AdminTelegramCampaignCreate: React.FC = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6">
-        <TelegramNav />
+    <div className="space-y-6">
 
         <div className="max-w-2xl">
           {/* Header */}
@@ -226,7 +222,6 @@ const AdminTelegramCampaignCreate: React.FC = () => {
           </form>
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

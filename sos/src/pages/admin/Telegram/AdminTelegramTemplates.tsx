@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
 import {
@@ -10,7 +9,6 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import TelegramNav from "./TelegramNav";
 
 interface TemplateData {
   eventId: string;
@@ -159,14 +157,11 @@ const AdminTelegramTemplates: React.FC = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="p-6 space-y-6">
-          <TelegramNav />
+    <div className="space-y-6">
           <div className="flex items-center justify-center min-h-[400px]">
             <RefreshCw className="h-8 w-8 text-gray-400 animate-spin" />
           </div>
         </div>
-      </AdminLayout>
     );
   }
 
@@ -308,7 +303,6 @@ const AdminTelegramTemplates: React.FC = () => {
           })}
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

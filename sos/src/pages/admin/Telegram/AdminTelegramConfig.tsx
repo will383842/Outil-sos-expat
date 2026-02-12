@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import AdminLayout from "../../../components/admin/AdminLayout";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
 import {
@@ -10,7 +9,6 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
-import TelegramNav from "./TelegramNav";
 
 interface NotificationSettings {
   newRegistration: boolean;
@@ -131,14 +129,11 @@ const AdminTelegramConfig: React.FC = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="p-6 space-y-6">
-          <TelegramNav />
+    <div className="space-y-6">
           <div className="flex items-center justify-center min-h-[400px]">
             <RefreshCw className="h-8 w-8 text-gray-400 animate-spin" />
           </div>
         </div>
-      </AdminLayout>
     );
   }
 
@@ -259,7 +254,6 @@ const AdminTelegramConfig: React.FC = () => {
           </button>
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

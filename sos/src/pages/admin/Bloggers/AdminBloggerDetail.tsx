@@ -397,7 +397,7 @@ const AdminBloggerDetail: React.FC = () => {
 
                 {/* Recruit Link */}
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Lien recrutement ($5/appel)</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Lien partenaires ($5/appel)</p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-gray-100 dark:bg-white/5 px-3 py-2 rounded-lg text-xs overflow-x-auto">
                       {blogger.affiliateCodeRecruitment}
@@ -484,7 +484,7 @@ const AdminBloggerDetail: React.FC = () => {
                   <p className="text-lg font-bold text-gray-900 dark:text-white">{blogger.totalClientsReferred}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Prestataires recrutés</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Partenaires</p>
                   <p className="text-lg font-bold text-gray-900 dark:text-white">{blogger.totalProvidersRecruited}</p>
                 </div>
                 <div>
