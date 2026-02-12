@@ -1814,6 +1814,10 @@ export class PayPalManager {
       };
     }
 
+    // Récupérer orderData après la transaction réussie
+    const orderDoc = await orderRef.get();
+    orderData = orderDoc.data()!;
+
     // Vérifier si le service a été délivré via la session d'appel
     if (orderData.callSessionId && !forceRefund) {
       const sessionDoc = await this.db.collection("call_sessions").doc(orderData.callSessionId).get();
