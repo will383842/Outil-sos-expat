@@ -1034,7 +1034,7 @@
         },
         {
           "fieldPath": "registeredAt",
-          "order": "DESCENDING"
+          "order": "ASCENDING"
         }
       ]
     },

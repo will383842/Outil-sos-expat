@@ -10,7 +10,8 @@
  */
 
 import * as admin from "firebase-admin";
-import { ultraLogger, traceFunction } from "../utils/ultraDebugLogger";
+import { logger } from "firebase-functions/v2";
+// import { ultraLogger, traceFunction } from "../utils/ultraDebugLogger";
 import { decryptPhoneNumber } from "../utils/encryption";
 import { OUTIL_SYNC_API_KEY, ENCRYPTION_KEY } from "../lib/secrets";
 import { getCountryName } from "../utils/countryUtils";
@@ -195,7 +196,7 @@ export async function syncCallSessionToOutil(
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`❌ [${debugId}] Outil sync failed: HTTP ${response.status}: ${errorText}`);
-        ultraLogger.error("OUTIL_SYNC", "Échec sync vers Outil après paiement", {
+        logger.error("OUTIL_SYNC", "Échec sync vers Outil après paiement", {
           callSessionId,
           status: response.status,
           error: errorText,
@@ -203,7 +204,7 @@ export async function syncCallSessionToOutil(
       } else {
         const result = await response.json() as { bookingId?: string };
         console.log(`✅ [${debugId}] Outil sync success! OutilBookingId: ${result.bookingId}`);
-        ultraLogger.info("OUTIL_SYNC", "Sync vers Outil réussi après paiement", {
+        logger.info("OUTIL_SYNC", "Sync vers Outil réussi après paiement", {
           callSessionId,
           outilBookingId: result.bookingId,
         });
@@ -212,7 +213,7 @@ export async function syncCallSessionToOutil(
       clearTimeout(timeoutId);
       if (fetchError instanceof Error && fetchError.name === 'AbortError') {
         console.error(`⏱️ [${debugId}] Outil sync timeout after ${OUTIL_TIMEOUT_MS}ms`);
-        ultraLogger.warn("OUTIL_SYNC", "Timeout sync vers Outil", {
+        logger.warn("OUTIL_SYNC", "Timeout sync vers Outil", {
           callSessionId,
           timeoutMs: OUTIL_TIMEOUT_MS,
         });
@@ -222,7 +223,7 @@ export async function syncCallSessionToOutil(
     }
   } catch (error) {
     console.error(`❌ [${debugId}] Outil sync exception:`, error);
-    ultraLogger.error("OUTIL_SYNC", "Exception sync vers Outil", {
+    logger.error("OUTIL_SYNC", "Exception sync vers Outil", {
       callSessionId,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -238,8 +239,7 @@ export async function syncCallSessionToOutil(
  * - Stripe webhook (checkout.session.completed, payment_intent.succeeded)
  * - PayPal authorizePayPalOrderHttp (after successful authorization)
  */
-export const sendPaymentNotifications = traceFunction(
-  async (callSessionId: string, database: admin.firestore.Firestore) => {
+export const sendPaymentNotifications = async (callSessionId: string, database: admin.firestore.Firestore) => {
     const debugId = `notif_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
 
     console.log(`\n`);
@@ -250,7 +250,7 @@ export const sendPaymentNotifications = traceFunction(
     console.log(`📨 [${debugId}] Timestamp: ${new Date().toISOString()}`);
 
     try {
-      ultraLogger.info(
+      logger.info(
         "PAYMENT_NOTIFICATIONS",
         "Envoi des notifications post-paiement",
         { callSessionId, debugId }
@@ -267,7 +267,7 @@ export const sendPaymentNotifications = traceFunction(
 
       if (!snap.exists) {
         console.error(`❌ [${debugId}] CRITICAL: Session ${callSessionId} NOT FOUND!`);
-        ultraLogger.warn("PAYMENT_NOTIFICATIONS", "Session introuvable", {
+        logger.warn("PAYMENT_NOTIFICATIONS", "Session introuvable", {
           callSessionId,
           debugId,
         });
@@ -363,7 +363,7 @@ export const sendPaymentNotifications = traceFunction(
 
         const clientEventRef = await database.collection("message_events").add(clientEventData);
         console.log(`✅ [${debugId}] Client notification created: ${clientEventRef.id}`);
-        ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification client créée", { callSessionId, clientId, eventDocId: clientEventRef.id, debugId });
+        logger.info("PAYMENT_NOTIFICATIONS", "Notification client créée", { callSessionId, clientId, eventDocId: clientEventRef.id, debugId });
       } else {
         console.log(`⚠️ [${debugId}] SKIPPED client notification - no clientId or clientEmail`);
       }
@@ -429,7 +429,7 @@ export const sendPaymentNotifications = traceFunction(
         const providerEventRef = await database.collection("message_events").add(providerEventData);
         console.log(`✅ [${debugId}] Provider notification created: ${providerEventRef.id}`);
         console.log(`✅ [${debugId}]   → SMS will be sent: "Client: ${clientName} (${interventionCountry}) - Langue: ${clientLanguagesFormatted}"`);
-        ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification provider créée (SMS enabled)", { callSessionId, providerId, eventDocId: providerEventRef.id, debugId });
+        logger.info("PAYMENT_NOTIFICATIONS", "Notification provider créée (SMS enabled)", { callSessionId, providerId, eventDocId: providerEventRef.id, debugId });
       } else {
         console.log(`⚠️ [${debugId}] SKIPPED provider notification - no providerId or providerEmail`);
       }
@@ -444,7 +444,7 @@ export const sendPaymentNotifications = traceFunction(
       console.log(`✅ [${debugId}] Provider notified: ${!!(providerId || providerEmail)}`);
       console.log(`=======================================================================\n`);
 
-      ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notifications envoyées avec succès", {
+      logger.info("PAYMENT_NOTIFICATIONS", "Notifications envoyées avec succès", {
         callSessionId,
         debugId,
         clientNotified: !!(clientId || clientEmail),
@@ -460,7 +460,7 @@ export const sendPaymentNotifications = traceFunction(
       console.error(`❌ [${debugId}] Error stack:`, error instanceof Error ? error.stack : 'No stack');
       console.error(`=======================================================================\n`);
 
-      ultraLogger.error(
+      logger.error(
         "PAYMENT_NOTIFICATIONS",
         "Erreur envoi notifications",
         {
@@ -471,10 +471,7 @@ export const sendPaymentNotifications = traceFunction(
         error instanceof Error ? error : undefined
       );
     }
-  },
-  "sendPaymentNotifications",
-  "PAYMENT_WEBHOOKS"
-);
+};
 
 // Re-export secrets for convenience
 export { ENCRYPTION_KEY, OUTIL_SYNC_API_KEY };
