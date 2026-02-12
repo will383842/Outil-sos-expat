@@ -303,6 +303,7 @@ const AdminTelegramTemplates: React.FC = () => {
           })}
         </div>
       </div>
+    </AdminLayout>
   );
 };
 

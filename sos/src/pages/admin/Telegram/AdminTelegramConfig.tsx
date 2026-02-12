@@ -254,6 +254,7 @@ const AdminTelegramConfig: React.FC = () => {
           </button>
         </div>
       </div>
+    </AdminLayout>
   );
 };
 
