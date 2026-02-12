@@ -57,7 +57,7 @@ export const twilioConferenceWebhook = onRequest(
     cpu: 0.25,         // P0 FIX: Reduced to save quota (function mostly waits for API responses)
     timeoutSeconds: 300, // P0 FIX: 5 minutes timeout for payment capture
     maxInstances: 10,  // P0 FIX: Increased for better scalability during peak
-    minInstances: 1,   // P0 FIX: Keep warm to avoid cold start delays on conference events
+    minInstances: 0,   // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
     concurrency: 1,
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + Stripe secrets for payment capture
     // P0 FIX 2026-01-18: Added TASKS_AUTH_SECRET for scheduleProviderAvailableTask (provider cooldown)

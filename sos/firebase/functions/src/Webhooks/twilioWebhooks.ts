@@ -81,7 +81,7 @@ export const twilioCallWebhook = onRequest(
     memory: '256MiB',
     cpu: 0.25,
     maxInstances: 10,  // P1 FIX: Increased from 3 for better scalability
-    minInstances: 1,   // P0 FIX: Keep warm to avoid cold start delays on call status updates
+    minInstances: 0,   // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
     concurrency: 1,    // Keep at 1 to avoid race conditions with Firestore updates
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + hangup calls to voicemail
     // P0 FIX 2026-01-18: Added TASKS_AUTH_SECRET for scheduleProviderAvailableTask (provider cooldown)
@@ -1937,7 +1937,7 @@ export const twilioGatherResponse = onRequest(
     memory: '256MiB',
     cpu: 0.25,
     maxInstances: 10,
-    minInstances: 1,  // P0 FIX: Keep warm for instant DTMF response handling
+    minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
     concurrency: 1,
     // P0 FIX: Add secrets for Twilio signature validation
     secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]

@@ -52,12 +52,16 @@ service cloud.firestore {
     // Vérifie si l'utilisateur est agency_manager (pour dashboard multi-prestataire)
     function isAgencyManager() {
       return request.auth != null &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'agency_manager';
     }
 
     // Vérifie si l'utilisateur est agency_manager avec accès au provider
     function hasAgencyAccessToProvider(providerId) {
-      return isAgencyManager() &&
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'agency_manager' ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') &&
              providerId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds;
     }
 

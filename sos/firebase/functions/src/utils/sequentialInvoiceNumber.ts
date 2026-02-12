@@ -85,7 +85,7 @@ export async function generateSequentialInvoiceNumber(): Promise<InvoiceNumberRe
         const invoiceNumber = `SOSEXPAT-${currentYear}-${sequenceStr}`;
 
         // Update or create counter document
-        const counterData = {
+        const counterData: any = {
           year: currentYear,
           counter,
           lastInvoiceNumber: invoiceNumber,

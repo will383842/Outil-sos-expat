@@ -27,7 +27,8 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "../../lib/firebase";
+import { db, functions } from "../../lib/firebase";
+import { httpsCallable } from "firebase/functions";
 import { getMockData } from "../components/DevTestTools";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -870,14 +871,50 @@ export default function ConversationDetail() {
       }
 
       if (!foundInCollection) {
-        console.error("[ConversationDetail] ❌ Booking not found", {
-          id,
-          isFromMultiDashboard,
-          originalBookingRequestId,
-        });
-        setError(t("dossierDetail.notFound"));
-        setLoading(false);
-        return;
+        // Strategy 3: Auto-create booking from multi-dashboard booking_request
+        if (isFromMultiDashboard && activeProvider?.id) {
+          console.log("[ConversationDetail] 🚀 Creating booking from multi-dashboard request...", {
+            bookingRequestId: originalBookingRequestId || id,
+            providerId: activeProvider.id,
+          });
+
+          try {
+            const createBooking = httpsCallable<
+              { bookingRequestId: string; providerId: string },
+              { success: boolean; bookingId?: string; conversationId?: string; error?: string }
+            >(functions, "createBookingFromRequest");
+
+            const result = await createBooking({
+              bookingRequestId: originalBookingRequestId || id,
+              providerId: activeProvider.id,
+            });
+
+            if (result.data.success && result.data.bookingId) {
+              foundInCollection = "bookings";
+              actualBookingId = result.data.bookingId;
+              console.log("[ConversationDetail] ✅ Booking created successfully", {
+                bookingId: actualBookingId,
+                conversationId: result.data.conversationId,
+              });
+            } else {
+              throw new Error(result.data.error || "Failed to create booking");
+            }
+          } catch (createError) {
+            console.error("[ConversationDetail] ❌ Failed to create booking", createError);
+            setError(t("dossierDetail.creationFailed"));
+            setLoading(false);
+            return;
+          }
+        } else {
+          console.error("[ConversationDetail] ❌ Booking not found", {
+            id,
+            isFromMultiDashboard,
+            originalBookingRequestId,
+          });
+          setError(t("dossierDetail.notFound"));
+          setLoading(false);
+          return;
+        }
       }
 
       // Store the booking source for conversation creation logic

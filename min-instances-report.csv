@@ -1,0 +1,9 @@
+Service,Region,MinInstances,CPU,Memory
+twiliocallwebhook,europe-west3,1,0.25,256Mi
+twilioconferencewebhook,europe-west3,1,0.25,512Mi
+twiliogatherresponse,europe-west3,1,0.25,256Mi
+executecalltask,europe-west3,1,0.25,512Mi
+createpaymentintent,europe-west3,1,1,256Mi
+stripewebhook,europe-west1,1,0.5,512Mi
+createpaypalorderhttp,europe-west1,1,0.3333,512Mi
+capturepaypalorderhttp,europe-west1,1,0.3333,512Mi

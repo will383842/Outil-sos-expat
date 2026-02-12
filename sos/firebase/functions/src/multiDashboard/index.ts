@@ -4,3 +4,4 @@
  */
 
 export { onBookingRequestCreatedGenerateAi } from "./onBookingRequestCreatedGenerateAi";
+export { ensureUserDocument } from "./ensureUserDocument";

@@ -109,6 +109,7 @@ export {
   getProviderConversations,
   sendMultiDashboardMessage,
   migrateOldPendingBookings,
+  createBookingFromRequest,
 } from "./multiDashboard";
 
 // =============================================================================

@@ -83,6 +83,8 @@ import { addToDeadLetterQueue } from "./subscription/deadLetterQueue";
 // Multi-Dashboard authentication & AI generation
 export { validateDashboardPassword } from "./multiDashboard/validateDashboardPassword";
 export { onBookingRequestCreatedGenerateAi } from "./multiDashboard/onBookingRequestCreatedGenerateAi";
+// FIXED 2026-02-12: Migrated to v2 API (onCall, HttpsError, logger)
+export { ensureUserDocument } from "./multiDashboard/ensureUserDocument";
 
 // kyc
 export { createLawyerStripeAccount } from "./createLawyerAccount";
@@ -1051,7 +1053,7 @@ export const executeCallTask = onRequest(
     // 0.25 CPU is sufficient since function mostly waits for Twilio API responses
     cpu: 0.25,
     maxInstances: 10,
-    minInstances: 1,  // P0 FIX 2026-02-04: Restored to 1 since we now have dedicated region with separate quota
+    minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
     concurrency: 1,   // P0 FIX: Set to 1 to allow fractional CPU (concurrency > 1 requires cpu >= 1)
     // Secrets: TASKS_AUTH_SECRET for Cloud Tasks auth + Twilio + ENCRYPTION_KEY + Stripe/PayPal (for refunds/voids)
     secrets: [TASKS_AUTH_SECRET, ENCRYPTION_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
@@ -1929,7 +1931,7 @@ export const stripeWebhook = onRequest(
     ],
     concurrency: 1,
     timeoutSeconds: 60, // P2-4 FIX: Augmenté de 30s à 60s pour éviter les timeouts
-    minInstances: 1, // P0 FIX: Garder une instance chaude pour éviter cold starts et timeouts webhook
+    minInstances: 0, // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
     maxInstances: 5,
   },
   // @ts-ignore - Type compatibility issue between firebase-functions and express types

@@ -13,3 +13,4 @@ export { generateMultiDashboardOutilToken } from "./generateMultiDashboardOutilT
 export { getProviderConversations, sendMultiDashboardMessage } from "./getProviderConversations";
 export { generateMultiDashboardAiResponse } from "./generateAiResponseCallable";
 export { migrateOldPendingBookings } from "./migrateOldBookings";
+export { createBookingFromRequest } from "./createBookingFromRequest";

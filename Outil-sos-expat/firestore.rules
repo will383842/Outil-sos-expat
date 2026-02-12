@@ -44,6 +44,7 @@ service cloud.firestore {
       return isSignedIn() && (
         request.auth.token.role == 'provider' ||
         request.auth.token.provider == true ||
+        request.auth.token.multiDashboardAccess == true ||
         (userDocExists() && getUserData().role == 'provider') ||
         isAdmin()
       );
@@ -122,11 +123,12 @@ service cloud.firestore {
     // BOOKING_REQUESTS - Demandes multi-dashboard (SOS → Outil IA)
     // ==========================================================================
     match /booking_requests/{requestId} {
-      // Lecture: admin ou provider assigné
+      // Lecture: admin, provider assigné, ou multi-dashboard SSO
       allow read: if isAdmin() || (
         isProvider() &&
         hasActiveSubscription() &&
-        isAssignedProvider(resource.data.providerId)
+        (isAssignedProvider(resource.data.providerId) ||
+         request.auth.token.multiDashboardAccess == true)
       );
 
       // Création: admin ou système (Cloud Functions)
@@ -149,11 +151,12 @@ service cloud.firestore {
     // BOOKINGS - Dossiers clients
     // ==========================================================================
     match /bookings/{bookingId} {
-      // Lecture: admin ou provider assigné
+      // Lecture: admin, provider assigné, ou multi-dashboard SSO
       allow read: if isAdmin() || (
         isProvider() &&
         hasActiveSubscription() &&
-        isAssignedProvider(resource.data.providerId)
+        (isAssignedProvider(resource.data.providerId) ||
+         request.auth.token.multiDashboardAccess == true)
       );
 
       // Création: admin ou via webhook (vérifié côté Cloud Function)
@@ -176,11 +179,12 @@ service cloud.firestore {
     // CONVERSATIONS - Discussions avec sous-collection messages
     // ==========================================================================
     match /conversations/{convId} {
-      // Lecture: admin ou provider assigné
+      // Lecture: admin, provider assigné, ou multi-dashboard SSO avec forcedAccess
       allow read: if isAdmin() || (
         isProvider() &&
         hasActiveSubscription() &&
-        isAssignedProvider(resource.data.providerId)
+        (isAssignedProvider(resource.data.providerId) ||
+         request.auth.token.multiDashboardAccess == true)
       );
 
       // Création: admin, système (Cloud Functions), ou provider pour ses propres conversations
@@ -202,11 +206,12 @@ service cloud.firestore {
 
       // Messages dans la conversation
       match /messages/{msgId} {
-        // Lecture: même règle que la conversation parente
+        // Lecture: même règle que la conversation parente + multi-dashboard SSO
         allow read: if isAdmin() || (
           isProvider() &&
           hasActiveSubscription() &&
-          isAssignedProvider(get(/databases/$(database)/documents/conversations/$(convId)).data.providerId)
+          (isAssignedProvider(get(/databases/$(database)/documents/conversations/$(convId)).data.providerId) ||
+           request.auth.token.multiDashboardAccess == true)
         );
 
         // Création: admin, provider assigné, ou système
