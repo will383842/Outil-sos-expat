@@ -252,6 +252,3 @@ Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLandi
 
 # IndexNow pour indexation instantanée
 # Clé: sosexpat2025indexnowkey
-
-# Délai par défaut entre requêtes
-Crawl-delay: 1
