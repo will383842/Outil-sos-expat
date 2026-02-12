@@ -360,6 +360,9 @@ const AdminCommissionTracker = lazy(
 const AdminChatterCountryRotation = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterCountryRotation")
 );
+const AdminChatterDripMessages = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterDripMessages")
+);
 
 // ===== LAZY IMPORTS - INFLUENCER =====
 const AdminInfluencersList = lazy(
@@ -1223,6 +1226,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminChatterCountryRotation />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/drip-messages"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterDripMessages />
           </Suspense>
         }
       />

@@ -6,25 +6,27 @@
 const path = require("path");
 const fs = require("fs");
 const admin = require("firebase-admin");
+const { execSync } = require("child_process");
 
-// Service account
+// Try service account first, fallback to Application Default Credentials
 const saPath = path.resolve(__dirname, "..", "..", "serviceAccount.json");
 
-if (!fs.existsSync(saPath)) {
-  console.error("❌ serviceAccount.json introuvable à", saPath);
-  console.log("💡 Créez ce fichier depuis la console Firebase");
-  console.log("   ou utilisez GOOGLE_APPLICATION_CREDENTIALS");
-  process.exit(1);
+if (fs.existsSync(saPath)) {
+  console.log("✅ Utilisation du serviceAccount.json");
+  admin.initializeApp({
+    credential: admin.credential.cert(require(saPath)),
+  });
+} else {
+  console.log("✅ Utilisation des Application Default Credentials (gcloud)");
+  admin.initializeApp({
+    projectId: "sos-urgently-ac307",
+  });
 }
-
-admin.initializeApp({
-  credential: admin.credential.cert(require(saPath)),
-});
 
 const db = admin.firestore();
 
-// Lire le fichier TS et extraire les messages
-const MESSAGES_FILE = path.resolve(
+// Compiler et importer le fichier TS
+const TS_FILE = path.resolve(
   __dirname,
   "..",
   "src",
@@ -34,46 +36,33 @@ const MESSAGES_FILE = path.resolve(
 );
 
 async function parseMessagesFromTS() {
-  console.log("📖 Lecture du fichier TypeScript...");
-  const content = fs.readFileSync(MESSAGES_FILE, "utf8");
+  console.log("📖 Import du fichier TypeScript compilé...");
 
-  // Pattern pour extraire les messages
-  const messagesArray = [];
+  // Vérifier si le fichier lib existe déjà
+  const libFile = path.resolve(__dirname, "..", "lib", "chatter", "data", "chatterDripMessages.js");
 
-  // Regex pour trouver chaque objet message
-  const messageRegex = /\{\s*\/\/[^\n]*\n\s*day:\s*(\d+),\s*messages:\s*\{([^}]+(?:\{[^}]*\}[^}]*)*)\}/gs;
-
-  let match;
-  while ((match = messageRegex.exec(content)) !== null) {
-    const day = parseInt(match[1]);
-    const messagesBlock = match[2];
-
-    // Extraire chaque langue
-    const languages = {};
-    const langRegex = /(\w+):\s*"([^"\\]*(?:\\.[^"\\]*)*)"/g;
-
-    let langMatch;
-    while ((langMatch = langRegex.exec(messagesBlock)) !== null) {
-      const lang = langMatch[1];
-      let message = langMatch[2];
-
-      // Unescape les caractères échappés
-      message = message
-        .replace(/\\n/g, "\n")
-        .replace(/\\"/g, '"')
-        .replace(/\\'/g, "'")
-        .replace(/\\\\/g, "\\");
-
-      languages[lang] = message;
-    }
-
-    if (Object.keys(languages).length > 0) {
-      messagesArray.push({ day, messages: languages });
+  if (!fs.existsSync(libFile)) {
+    console.log("⚙️  Compilation du TypeScript en cours...");
+    try {
+      execSync("npm run build", {
+        cwd: path.resolve(__dirname, ".."),
+        stdio: "inherit"
+      });
+    } catch (error) {
+      console.error("❌ Erreur de compilation TypeScript");
+      throw error;
     }
   }
 
-  console.log(`✅ ${messagesArray.length} messages extraits du fichier TypeScript`);
-  return messagesArray;
+  // Importer le fichier compilé
+  const { CHATTER_DRIP_MESSAGES } = require(libFile);
+
+  if (!CHATTER_DRIP_MESSAGES || !Array.isArray(CHATTER_DRIP_MESSAGES)) {
+    throw new Error("CHATTER_DRIP_MESSAGES n'est pas un tableau valide");
+  }
+
+  console.log(`✅ ${CHATTER_DRIP_MESSAGES.length} messages importés depuis le fichier compilé`);
+  return CHATTER_DRIP_MESSAGES;
 }
 
 async function seedDripMessages() {

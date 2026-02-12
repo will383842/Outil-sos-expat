@@ -22,6 +22,7 @@ import * as crypto from "crypto";
 import { REFERRAL_CONFIG } from "../types";
 import { handleWithdrawalCallback } from "../../telegram/withdrawalConfirmation";
 import { TELEGRAM_SECRETS, getTelegramBotToken, getTelegramWebhookSecret } from "../../lib/secrets";
+import { enqueueTelegramMessage } from "../../telegram/queue";
 
 // ============================================================================
 // TYPES
@@ -901,6 +902,53 @@ export const telegramChatterBotWebhook = onRequest(
           `📱 Retournez dans l'application pour accéder à votre dashboard.\n\n` +
           `🚀 Vous recevrez ici des notifications exclusives et des opportunités de bonus!`
       );
+
+      // ═══════════════════════════════════════════════════════════════════
+      // SEND DAY 0 DRIP MESSAGE IMMEDIATELY (motivation message)
+      // ═══════════════════════════════════════════════════════════════════
+      try {
+        // Get user's language preference (default to 'fr')
+        const userDoc = await db.collection("users").doc(link.userId).get();
+        const userData = userDoc.data();
+        const userLanguage = userData?.language || "fr";
+
+        // Fetch day 0 message from Firestore
+        const day0Doc = await db.collection("chatter_drip_messages").doc("day_0").get();
+
+        if (day0Doc.exists) {
+          const messageData = day0Doc.data();
+          let welcomeMessage = messageData?.messages?.[userLanguage] || messageData?.messages?.fr || "";
+
+          // Personalize with firstName
+          const firstName = userData?.firstName || telegramFirstName || "Champion";
+          welcomeMessage = welcomeMessage.replace(/\{\{firstName\}\}/g, firstName);
+
+          // Enqueue the message with high priority (realtime)
+          await enqueueTelegramMessage(
+            telegramId.toString(),
+            welcomeMessage,
+            {
+              parseMode: "HTML",
+              priority: "realtime",
+              sourceEventType: "drip_campaign_day_0",
+            }
+          );
+
+          logger.info("[telegramChatterBotWebhook] Day 0 drip message enqueued", {
+            userId: link.userId,
+            telegramId,
+            language: userLanguage,
+          });
+        } else {
+          logger.warn("[telegramChatterBotWebhook] Day 0 message not found in Firestore");
+        }
+      } catch (dripError) {
+        // Don't fail the whole onboarding if drip message fails
+        logger.error("[telegramChatterBotWebhook] Failed to send day 0 drip message", {
+          error: dripError,
+          userId: link.userId,
+        });
+      }
 
       res.status(200).send("OK");
     } catch (error) {
