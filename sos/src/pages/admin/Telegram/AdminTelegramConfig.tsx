@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../config/firebase";
+import AdminLayout from "../../../components/admin/AdminLayout";
+import TelegramNav from "../../../components/telegram/TelegramNav";
 import {
   Bot,
   CheckCircle,

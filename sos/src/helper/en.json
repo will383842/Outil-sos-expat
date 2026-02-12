@@ -2605,6 +2605,8 @@
   "admin.menu.invoices.description": "Invoice generation and sending",
   "admin.menu.kycProviders": "Provider KYC",
   "admin.menu.kycProviders.description": "Provider identity verification",
+  "admin.menu.landingPages": "Landing Pages by Country",
+  "admin.menu.landingPages.description": "Manage landing pages per country (payments, currencies, testimonials, SEO)",
   "admin.menu.lawyers": "Lawyer",
   "admin.menu.lawyers.description": "Partner lawyers",
   "admin.menu.ledger": "General Ledger",
