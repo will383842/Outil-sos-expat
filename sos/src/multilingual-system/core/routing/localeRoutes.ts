@@ -343,7 +343,10 @@ export type RouteKey =
   | "groupadmin-leaderboard"  // /groupadmin/classement -> /groupadmin/leaderboard, etc.
   | "groupadmin-guide"        // /groupadmin/guide -> /groupadmin/guide, etc.
   | "groupadmin-suspended"    // /groupadmin/suspendu -> /groupadmin/suspended, etc.
-  | "groupadmin-profile";     // /groupadmin/profil -> /groupadmin/profile, etc.
+  | "groupadmin-profile"      // /groupadmin/profil -> /groupadmin/profile, etc.
+  | "influencer-telegram"     // /influencer/telegram -> /influencer/telegram, etc.
+  | "blogger-telegram"        // /blogger/telegram -> /blogger/telegram, etc.
+  | "groupadmin-telegram";    // /group-admin/telegram -> /group-admin/telegram, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -1438,6 +1441,39 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "group-admin/ziliao",
     hi: "group-admin/profail",
     ar: "مسؤول-مجموعة/ملف-شخصي",
+  },
+  "influencer-telegram": {
+    fr: "influencer/telegram",
+    en: "influencer/telegram",
+    es: "influencer/telegram",
+    de: "influencer/telegram",
+    ru: "influencer/telegram",
+    pt: "influencer/telegram",
+    ch: "influencer/telegram",
+    hi: "influencer/telegram",
+    ar: "influencer/telegram",
+  },
+  "blogger-telegram": {
+    fr: "blogger/telegram",
+    en: "blogger/telegram",
+    es: "blogger/telegram",
+    de: "blogger/telegram",
+    ru: "blogger/telegram",
+    pt: "blogger/telegram",
+    ch: "blogger/telegram",
+    hi: "blogger/telegram",
+    ar: "blogger/telegram",
+  },
+  "groupadmin-telegram": {
+    fr: "group-admin/telegram",
+    en: "group-admin/telegram",
+    es: "group-admin/telegram",
+    de: "group-admin/telegram",
+    ru: "group-admin/telegram",
+    pt: "group-admin/telegram",
+    ch: "group-admin/telegram",
+    hi: "group-admin/telegram",
+    ar: "group-admin/telegram",
   },
 };
 

@@ -1,0 +1,13 @@
+{
+  "name": "functions-calls",
+  "version": "1.0.0",
+  "description": "Firebase Functions - Appels & Paiements (europe-west4)",
+  "main": "lib/index.calls.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "deploy": "firebase deploy --config firebase.calls.json"
+  }
+}

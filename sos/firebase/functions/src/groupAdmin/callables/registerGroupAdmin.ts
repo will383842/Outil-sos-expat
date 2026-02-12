@@ -20,6 +20,7 @@ import {
 } from "../types";
 import { areNewRegistrationsEnabled, getGroupAdminConfig } from "../groupAdminConfig";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
+import { hashIP } from "../../chatter/utils";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -461,7 +462,7 @@ export const registerGroupAdmin = onCall(
             groupAdminId: recruitedBy,
             affiliateCode: recruitedByCode,
             clickType: "recruitment",
-            ipHash: "registration",
+            ipHash: hashIP(request.rawRequest?.ip || "unknown"),
             converted: true,
             conversionId: userId,
             createdAt: now,

@@ -32,7 +32,6 @@
     "clean:tmp:recursive": "node -e \"const fs = require('fs'); const path = require('path'); let count = 0; const walk = (dir) => { try { fs.readdirSync(dir).forEach(f => { const p = path.join(dir, f); const s = fs.statSync(p); if (s.isDirectory() && !f.includes('node_modules')) walk(p); if (f.startsWith('tmpclaude-')) { if (s.isDirectory()) fs.rmSync(p, {recursive:true}); else fs.unlinkSync(p); count++; } }); } catch {} }; walk(path.join(__dirname, '..')); console.log('Cleaned ' + count + ' temp files recursively');\""
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.60.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@headlessui/react": "^2.2.7",
@@ -43,6 +42,7 @@
     "@stripe/react-connect-js": "^3.3.30",
     "@stripe/react-stripe-js": "^3.10.0",
     "@stripe/stripe-js": "^7.9.0",
+    "@tanstack/react-query": "^5.60.0",
     "@types/dompurify": "^3.0.5",
     "@types/recharts": "^2.0.1",
     "date-fns": "^4.1.0",
@@ -57,6 +57,7 @@
     "leaflet.markercluster": "^1.5.3",
     "libphonenumber-js": "^1.12.15",
     "lucide-react": "^0.539.0",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-confetti": "^6.4.0",
     "react-dom": "^18.3.1",
@@ -87,6 +88,7 @@
     "@types/leaflet.markercluster": "^1.5.5",
     "@types/node": "^24.3.0",
     "@types/node-fetch": "^2.6.13",
+    "@types/qrcode.react": "^1.0.5",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^8.42.0",

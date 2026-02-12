@@ -23,6 +23,7 @@ import {
 import { getBloggerConfigCached } from "../utils/bloggerConfigService";
 import { generateBloggerAffiliateCodes } from "../utils/bloggerCodeGenerator";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
+import { hashIP } from "../../chatter/utils";
 
 // ============================================================================
 // VALIDATION
@@ -359,27 +360,43 @@ export const registerBlogger = onCall(
             updatedAt: now,
           });
         }
-      });
 
-      // 9b. Create recruitment tracking document if recruited
-      if (recruitedBy) {
-        const sixMonthsFromNow = new Date();
-        sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
-        const recruitTrackingRef = db.collection("blogger_recruited_bloggers").doc();
-        await recruitTrackingRef.set({
-          id: recruitTrackingRef.id,
-          recruiterId: recruitedBy,
-          recruitedId: uid,
-          recruitedEmail: input.email.toLowerCase().trim(),
-          recruitedName: `${input.firstName.trim()} ${input.lastName.trim()}`,
-          recruitmentCode: recruitedByCode,
-          recruitedAt: now,
-          commissionWindowEnd: Timestamp.fromDate(sixMonthsFromNow),
-          commissionPaid: false,
-          commissionId: null,
-          commissionPaidAt: null,
+        // ✅ Track registration click (INSIDE transaction)
+        const clickRef = db.collection("blogger_affiliate_clicks").doc();
+        transaction.set(clickRef, {
+          id: clickRef.id,
+          bloggerCode: recruitedBy ? recruitedByCode : affiliateCodeClient,
+          bloggerId: recruitedBy || uid,
+          linkType: recruitedBy ? "recruitment" as const : "client" as const,
+          landingPage: "/devenir-blogueur",
+          ipHash: hashIP(request.rawRequest?.ip || "unknown"),
+          converted: true,
+          conversionId: uid,
+          conversionType: "blogger_signup" as const,
+          clickedAt: now,
+          convertedAt: now,
         });
-      }
+
+        // ✅ Track recruitment (INSIDE transaction)
+        if (recruitedBy) {
+          const windowEnd = new Date();
+          windowEnd.setMonth(windowEnd.getMonth() + config.recruitmentWindowMonths);
+          const recruitTrackingRef = db.collection("blogger_recruited_bloggers").doc();
+          transaction.set(recruitTrackingRef, {
+            id: recruitTrackingRef.id,
+            recruiterId: recruitedBy,
+            recruitedId: uid,
+            recruitedEmail: input.email.toLowerCase().trim(),
+            recruitedName: `${input.firstName.trim()} ${input.lastName.trim()}`,
+            recruitmentCode: recruitedByCode,
+            recruitedAt: now,
+            commissionWindowEnd: Timestamp.fromDate(windowEnd),
+            commissionPaid: false,
+            commissionId: null,
+            commissionPaidAt: null,
+          });
+        }
+      });
 
       // 10. Create welcome notification
       await db.collection("blogger_notifications").add({

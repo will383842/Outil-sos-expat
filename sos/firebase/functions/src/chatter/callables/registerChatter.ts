@@ -468,8 +468,8 @@ export const registerChatter = onCall(
           });
 
           // Create recruitment tracking document (for harmonized $5 commission system)
-          const sixMonthsFromNow = new Date();
-          sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+          const windowEnd = new Date();
+          windowEnd.setMonth(windowEnd.getMonth() + config.recruitmentWindowMonths);
           const recruitTrackingRef = db.collection("chatter_recruited_chatters").doc();
           transaction.set(recruitTrackingRef, {
             id: recruitTrackingRef.id,
@@ -479,7 +479,7 @@ export const registerChatter = onCall(
             recruitedName: `${input.firstName.trim()} ${input.lastName.trim()}`,
             recruitmentCode: recruitedByCode,
             recruitedAt: now,
-            commissionWindowEnd: Timestamp.fromDate(sixMonthsFromNow),
+            commissionWindowEnd: Timestamp.fromDate(windowEnd),
             commissionPaid: false,
             commissionId: null,
             commissionPaidAt: null,

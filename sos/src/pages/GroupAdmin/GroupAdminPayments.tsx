@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DollarSign, CreditCard, Clock, CheckCircle, XCircle, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import TelegramConnect from '@/components/shared/TelegramConnect';
 import TelegramConfirmationWaiting from '@/components/shared/TelegramConfirmationWaiting';
+import TelegramRequiredBanner from '@/components/Telegram/TelegramRequiredBanner';
 import {
   GroupAdmin,
   GroupAdminCommission,
@@ -215,10 +216,14 @@ const GroupAdminPayments: React.FC = () => {
             </div>
           )}
 
-          {/* Telegram Connect Gate */}
-          {!user?.telegramId && (
+          {/* Telegram Required Banner - Show if not linked */}
+          {!user?.telegramId && profile && (
             <div className="mb-8">
-              <TelegramConnect role="groupAdmin" onConnected={refreshUser} />
+              <TelegramRequiredBanner
+                role="groupAdmin"
+                onboardingPath="/group-admin/telegram"
+                availableBalance={profile.availableBalance / 100}
+              />
             </div>
           )}
 

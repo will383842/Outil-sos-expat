@@ -156,6 +156,7 @@ const ChatterRefer = lazy(() => import('./pages/Chatter/ChatterRefer'));
 // Influencer System
 const InfluencerLanding = lazy(() => import('./pages/Influencer/InfluencerLanding'));
 const InfluencerRegister = lazy(() => import('./pages/Influencer/InfluencerRegister'));
+const InfluencerTelegramOnboarding = lazy(() => import('./pages/Influencer/InfluencerTelegramOnboarding'));
 const InfluencerDashboard = lazy(() => import('./pages/Influencer/InfluencerDashboard'));
 const InfluencerEarnings = lazy(() => import('./pages/Influencer/InfluencerEarnings'));
 const InfluencerReferrals = lazy(() => import('./pages/Influencer/InfluencerReferrals'));
@@ -169,6 +170,7 @@ const InfluencerSuspended = lazy(() => import('./pages/Influencer/InfluencerSusp
 // Blogger System
 const BloggerLanding = lazy(() => import('./pages/Blogger/BloggerLanding'));
 const BloggerRegister = lazy(() => import('./pages/Blogger/BloggerRegister'));
+const BloggerTelegramOnboarding = lazy(() => import('./pages/Blogger/BloggerTelegramOnboarding'));
 const BloggerDashboard = lazy(() => import('./pages/Blogger/BloggerDashboard'));
 const BloggerEarnings = lazy(() => import('./pages/Blogger/BloggerEarnings'));
 const BloggerReferrals = lazy(() => import('./pages/Blogger/BloggerReferrals'));
@@ -181,6 +183,7 @@ const BloggerSuspended = lazy(() => import('./pages/Blogger/BloggerSuspended'));
 // GroupAdmin System (Facebook Group Administrators)
 const GroupAdminLanding = lazy(() => import('./pages/GroupAdmin/GroupAdminLanding'));
 const GroupAdminRegister = lazy(() => import('./pages/GroupAdmin/GroupAdminRegister'));
+const GroupAdminTelegramOnboarding = lazy(() => import('./pages/GroupAdmin/GroupAdminTelegramOnboarding'));
 const GroupAdminDashboard = lazy(() => import('./pages/GroupAdmin/GroupAdminDashboard'));
 const GroupAdminResources = lazy(() => import('./pages/GroupAdmin/GroupAdminResources'));
 const GroupAdminPosts = lazy(() => import('./pages/GroupAdmin/GroupAdminPosts'));
@@ -365,6 +368,8 @@ const protectedUserRoutes: RouteConfig[] = [
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un influenceur ne peut pas être client/lawyer/expat/chatter.
   // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
   { path: "/influencer/inscription", component: InfluencerRegister, translated: "influencer-register" },
+  // Après inscription, l'utilisateur passe par l'onboarding Telegram (optionnel mais incentivé)
+  { path: "/influencer/telegram", component: InfluencerTelegramOnboarding, protected: true, role: 'influencer', translated: "influencer-telegram" },
   // Après inscription, l'utilisateur a role="influencer" - toutes les autres routes sont réservées aux influenceurs
   { path: "/influencer/tableau-de-bord", component: InfluencerDashboard, protected: true, role: 'influencer', translated: "influencer-dashboard" },
   { path: "/influencer/gains", component: InfluencerEarnings, protected: true, role: 'influencer', translated: "influencer-earnings" },
@@ -380,6 +385,8 @@ const protectedUserRoutes: RouteConfig[] = [
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un blogueur ne peut pas devenir chatter/influencer/client/lawyer/expat.
   // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
   { path: "/blogger/inscription", component: BloggerRegister, translated: "blogger-register" },
+  // Après inscription, l'utilisateur passe par l'onboarding Telegram (optionnel mais incentivé)
+  { path: "/blogger/telegram", component: BloggerTelegramOnboarding, protected: true, role: 'blogger', translated: "blogger-telegram" },
   // Après inscription, l'utilisateur a role="blogger" - toutes les autres routes sont réservées aux blogueurs
   { path: "/blogger/tableau-de-bord", component: BloggerDashboard, protected: true, role: 'blogger', translated: "blogger-dashboard" },
   { path: "/blogger/gains", component: BloggerEarnings, protected: true, role: 'blogger', translated: "blogger-earnings" },
@@ -394,6 +401,8 @@ const protectedUserRoutes: RouteConfig[] = [
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un groupAdmin ne peut pas être client/lawyer/expat/chatter/influencer/blogger.
   // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
   { path: "/group-admin/inscription", component: GroupAdminRegister, translated: "groupadmin-register" },
+  // Après inscription, l'utilisateur passe par l'onboarding Telegram (optionnel mais incentivé)
+  { path: "/group-admin/telegram", component: GroupAdminTelegramOnboarding, protected: true, role: 'groupAdmin', translated: "groupadmin-telegram" },
   // Après inscription, l'utilisateur a role="groupAdmin" - toutes les autres routes sont réservées aux groupAdmins
   { path: "/group-admin/tableau-de-bord", component: GroupAdminDashboard, protected: true, role: 'groupAdmin', translated: "groupadmin-dashboard" },
   { path: "/group-admin/ressources", component: GroupAdminResources, protected: true, role: 'groupAdmin', translated: "groupadmin-resources" },

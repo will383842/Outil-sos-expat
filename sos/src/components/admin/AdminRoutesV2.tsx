@@ -540,7 +540,7 @@ const AdminGoogleAdsAnalytics = lazy(() => import("../../pages/admin/AdminGoogle
 const AdminLandingPages = lazy(() => import("../../pages/admin/AdminLandingPages"));
 
 // ===== LAZY IMPORTS - TELEGRAM =====
-import TelegramLayout from "../telegram/TelegramLayout";
+import TelegramLayout from "../Telegram/TelegramLayout";
 const AdminTelegramDashboard = lazy(() => import("../../pages/admin/Telegram/AdminTelegramDashboard"));
 const AdminTelegramCampaigns = lazy(() => import("../../pages/admin/Telegram/AdminTelegramCampaigns"));
 const AdminTelegramCampaignCreate = lazy(() => import("../../pages/admin/Telegram/AdminTelegramCampaignCreate"));

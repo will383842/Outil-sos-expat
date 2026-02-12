@@ -390,8 +390,8 @@ export const registerInfluencer = onCall(
 
         // Create recruitment tracking document if recruited
         if (recruitedBy) {
-          const sixMonthsFromNow = new Date();
-          sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+          const windowEnd = new Date();
+          windowEnd.setMonth(windowEnd.getMonth() + config.recruitmentWindowMonths);
           const recruitTrackingRef = db.collection("influencer_recruited_influencers").doc();
           transaction.set(recruitTrackingRef, {
             id: recruitTrackingRef.id,
@@ -401,7 +401,7 @@ export const registerInfluencer = onCall(
             recruitedName: `${input.firstName.trim()} ${input.lastName.trim()}`,
             recruitmentCode: recruitedByCode,
             recruitedAt: now,
-            commissionWindowEnd: Timestamp.fromDate(sixMonthsFromNow),
+            commissionWindowEnd: Timestamp.fromDate(windowEnd),
             commissionPaid: false,
             commissionId: null,
             commissionPaidAt: null,

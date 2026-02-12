@@ -33,6 +33,7 @@ import {
   WithdrawalRequestForm,
   WithdrawalTracker,
 } from '@/components/payment';
+import TelegramRequiredBanner from '@/components/Telegram/TelegramRequiredBanner';
 import {
   Wallet,
   CreditCard,
@@ -504,6 +505,15 @@ const InfluencerPayments: React.FC = () => {
         {/* Tab Content */}
         {activeTab === 'withdraw' && (
           <div className="space-y-6">
+            {/* Telegram Required Banner - Show if not linked */}
+            {!user?.telegramId && (
+              <TelegramRequiredBanner
+                role="influencer"
+                onboardingPath="/influencer/telegram"
+                availableBalance={availableBalance}
+              />
+            )}
+
             {/* Withdrawal Form using centralized component */}
             <WithdrawalRequestForm
               availableBalance={availableBalance}
