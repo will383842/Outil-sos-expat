@@ -4,6 +4,7 @@ import { twilioCallManager } from '../TwilioCallManager';
 import { logError } from '../utils/logs/logError';
 // P0 FIX: Import call region from centralized config - dedicated region for call functions
 import { CALL_FUNCTIONS_REGION } from '../configs/callRegion';
+import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET } from '../lib/twilio';
 
 // Helper to escape XML
 function escapeXml(s: string): string {
@@ -54,10 +55,26 @@ export const providerNoAnswerTwiML = onRequest(
     cpu: 0.25,
     maxInstances: 3,
     minInstances: 0,
-    concurrency: 1
+    concurrency: 1,
+    // P0 FIX: Add secrets for Twilio signature validation
+    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]
   },
   async (req: Request, res: Response) => {
     try {
+      // P0 SECURITY: Validate Twilio signature
+      if (!validateTwilioWebhookSignature(req as any, res as any)) {
+        console.error("[providerNoAnswerTwiML] Invalid Twilio signature - rejecting request");
+        return;
+      }
+
+      // P1 SECURITY: CallSid guard - reject requests without a valid CallSid
+      const callSid = req.body?.CallSid;
+      if (!callSid || typeof callSid !== 'string' || !callSid.startsWith('CA')) {
+        console.error(`[providerNoAnswerTwiML] Missing or invalid CallSid: ${callSid}`);
+        res.status(400).send('Missing or invalid CallSid');
+        return;
+      }
+
       const sessionId = req.query.sessionId as string;
       const lang = (req.query.lang as string) || 'en';
 

@@ -924,8 +924,7 @@ export { twilioConferenceWebhook } from "./Webhooks/TwilioConferenceWebhook";
 export { providerNoAnswerTwiML } from "./Webhooks/providerNoAnswerTwiML";
 export { enqueueMessageEvent } from "./messaging/enqueueMessageEvent";
 
-// Webhooks
-export { unifiedWebhook } from "./Webhooks/unifiedWebhook";
+// REMOVED: unifiedWebhook deleted (P0 security - no signature validation, dead code duplicate of individual webhooks)
 
 // P0 SECURITY: Contact form with rate limiting (replaces direct Firestore writes)
 export { createContactMessage } from "./contact/createContactMessage";
@@ -2897,8 +2896,10 @@ export const stripeWebhook = onRequest(
             }
           );
 
-          // Still return 200 to acknowledge receipt
-          res.status(200).json({
+          // P0 FIX: Return 500 for handler errors so Stripe retries transient failures
+          // (Firestore contention, network timeouts, etc.)
+          // Stripe uses exponential backoff and will stop after ~3 days of retries.
+          res.status(500).json({
             received: true,
             eventId: event.id,
             handlerError:
@@ -3272,9 +3273,9 @@ const handlePaymentIntentCanceled = traceFunction(
       if (!paymentsSnapshot.empty) {
         const paymentDoc = paymentsSnapshot.docs[0];
         await paymentDoc.ref.update({
-          status: "canceled",
+          status: "cancelled",
           currency: paymentIntent.currency ?? "eur",
-          canceledAt: admin.firestore.FieldValue.serverTimestamp(),
+          cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       }
@@ -5202,6 +5203,7 @@ export {
   onBookingRequestCreatedTrackLead,
   onUserCreatedTrackRegistration,
   onCallSessionPaymentAuthorized,
+  onCallSessionPaymentCaptured,
   onContactSubmittedTrackLead,
 } from './triggers/capiTracking';
 

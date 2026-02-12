@@ -17,6 +17,7 @@ import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/cor
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
+import { trackMetaViewContent } from '@/utils/metaPixel';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import FAQPageSchema from '@/components/seo/FAQPageSchema';
 import {
@@ -48,7 +49,7 @@ const globalStyles = `
     .blogger-landing h1 { font-size: 2.25rem !important; }
     .blogger-landing h2 { font-size: 1.875rem !important; }
     .blogger-landing h3 { font-size: 1.5rem !important; }
-    .blogger-landing p { font-size: 1rem !important; }
+    /* p tags: NO override — let Tailwind classes control each <p> individually */
   }
   @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
@@ -164,6 +165,10 @@ const BloggerLanding: React.FC = () => {
 
   const registerRoute = `/${getTranslatedRouteSlug('blogger-register' as RouteKey, langCode)}`;
   const goToRegister = () => navigate(registerRoute);
+
+  useEffect(() => {
+    trackMetaViewContent({ content_name: 'blogger_landing', content_category: 'landing_page', content_type: 'page' });
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setShowStickyCTA(window.scrollY > window.innerHeight * 0.8);

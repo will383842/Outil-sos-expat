@@ -38,6 +38,7 @@ import { navigationLogger, firestoreLogger, callLogger } from "../utils/debugLog
 import { trackMetaPurchase } from "../utils/metaPixel";
 import { trackGoogleAdsPurchase } from "../utils/googleAds";
 import { trackAdPurchase } from "../services/adAttributionService";
+import { getOrCreateEventId } from "../utils/sharedEventId";
 
 /* =========================
    Types pour l'order / coupon / metadata
@@ -1029,7 +1030,8 @@ const SuccessPayment: React.FC = () => {
     const currency = orderCurrency || 'eur';
 
     if (amount > 0) {
-      // Meta Pixel tracking
+      // Meta Pixel tracking - use same eventId as CallCheckout for CAPI deduplication
+      const purchaseEventId = getOrCreateEventId(`purchase_${callId}`, 'purchase');
       trackMetaPurchase({
         value: amount,
         currency: currency.toUpperCase(),
@@ -1037,6 +1039,7 @@ const SuccessPayment: React.FC = () => {
         content_type: 'service',
         content_id: callId || undefined,
         order_id: orderId || undefined,
+        eventID: purchaseEventId,
       });
 
       // Google Ads tracking

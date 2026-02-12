@@ -29,6 +29,9 @@ import { FieldError, FieldSuccess } from '../shared/FieldFeedback';
 import { countriesData } from '@/data/countries';
 import { LocaleLink } from '../../../multilingual-system';
 
+import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
+import { generateEventIdForType } from '@/utils/sharedEventId';
+
 import '@/styles/registration-dark.css';
 import '@/styles/multi-language-select.css';
 
@@ -316,6 +319,9 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       const ln = sanitizeStringFinal(form.lastName);
       const bio = sanitizeStringFinal(form.bio);
 
+      const metaEventId = generateEventIdForType('registration');
+      const metaIds = getMetaIdentifiers();
+
       const userData = {
         role: 'lawyer' as const,
         type: 'lawyer' as const,
@@ -376,6 +382,9 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
           const tracking = getStoredReferralTracking();
           return tracking ? { referralTracking: tracking } : {};
         })(),
+        fbp: metaIds.fbp,
+        fbc: metaIds.fbc,
+        metaEventId,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -386,8 +395,9 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
 
       if (!isCountrySupportedByStripe(stripeCountryCode)) {
         hasNavigatedRef.current = true;
-        trackMetaComplete({ content_name: 'lawyer_registration', status: 'completed' });
+        trackMetaComplete({ content_name: 'lawyer_registration', status: 'completed', country: form.currentCountry, eventID: metaEventId });
         trackAdRegistration({ contentName: 'lawyer_registration' });
+        setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: fn, lastName: ln, country: form.currentCountry });
         navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerLawyer.success.registered' }), type: 'success' } });
         return;
       }
@@ -402,8 +412,9 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       }
 
       hasNavigatedRef.current = true;
-      trackMetaComplete({ content_name: 'lawyer_registration', status: 'completed' });
+      trackMetaComplete({ content_name: 'lawyer_registration', status: 'completed', country: form.currentCountry, eventID: metaEventId });
       trackAdRegistration({ contentName: 'lawyer_registration' });
+      setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: fn, lastName: ln, country: form.currentCountry });
       navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerLawyer.success.registered' }), type: 'success' } });
 
     } catch (err: unknown) {

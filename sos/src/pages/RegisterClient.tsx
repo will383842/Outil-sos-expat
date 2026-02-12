@@ -13,8 +13,9 @@ import { doc, updateDoc } from 'firebase/firestore';
 import type { Provider } from '../types/provider';
 import { setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
-import { trackMetaCompleteRegistration, trackMetaStartRegistration } from '../utils/metaPixel';
+import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '../utils/metaPixel';
 import { trackAdRegistration } from '../services/adAttributionService';
+import { generateEventIdForType } from '../utils/sharedEventId';
 import { getStoredReferralTracking, clearStoredReferral } from '../hooks/useAffiliate';
 import { getStoredReferralCode as getStoredRefCode } from '../utils/referralStorage';
 
@@ -338,8 +339,12 @@ const RegisterClient: React.FC = () => {
         } catch { /* warn silently */ }
       }
 
-      trackMetaCompleteRegistration({ content_name: 'client_registration_google', status: 'completed' });
+      const googleMetaEventId = generateEventIdForType('registration');
+      trackMetaCompleteRegistration({ content_name: 'client_registration_google', status: 'completed', eventID: googleMetaEventId });
       trackAdRegistration({ contentName: 'client_registration_google' });
+      if (auth.currentUser?.email) {
+        setMetaPixelUserData({ email: auth.currentUser.email });
+      }
       clearStoredReferral();
     } catch (err) {
       if (googleTimeoutRef.current) {

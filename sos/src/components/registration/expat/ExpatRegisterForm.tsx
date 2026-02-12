@@ -30,6 +30,9 @@ import { countriesData } from '@/data/countries';
 import { expatHelpTypesData, getExpatHelpTypeLabel } from '@/data/expat-help-types';
 import { LocaleLink } from '../../../multilingual-system';
 
+import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
+import { generateEventIdForType } from '@/utils/sharedEventId';
+
 import '@/styles/registration-dark.css';
 import '@/styles/multi-language-select.css';
 
@@ -314,6 +317,9 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       const languageCodes = (selectedLanguages as LanguageOption[]).map(l => l.value);
       const residenceCountryCode = getCountryCode(form.currentPresenceCountry);
 
+      const metaEventId = generateEventIdForType('registration');
+      const metaIds = getMetaIdentifiers();
+
       const userData = {
         role: 'expat' as const,
         type: 'expat' as const,
@@ -375,6 +381,9 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
           const tracking = getStoredReferralTracking();
           return tracking ? { referralTracking: tracking } : {};
         })(),
+        fbp: metaIds.fbp,
+        fbc: metaIds.fbc,
+        metaEventId,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -385,8 +394,9 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
 
       if (!isCountrySupportedByStripe(stripeCountryCode)) {
         hasNavigatedRef.current = true;
-        trackMetaComplete({ content_name: 'expat_registration', status: 'completed' });
+        trackMetaComplete({ content_name: 'expat_registration', status: 'completed', country: form.currentPresenceCountry, eventID: metaEventId });
         trackAdRegistration({ contentName: 'expat_registration' });
+        setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: sanitizeString(form.firstName), lastName: sanitizeString(form.lastName), country: form.currentPresenceCountry });
         navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerExpat.success.registered' }), type: 'success' } });
         return;
       }
@@ -401,8 +411,9 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       }
 
       hasNavigatedRef.current = true;
-      trackMetaComplete({ content_name: 'expat_registration', status: 'completed' });
+      trackMetaComplete({ content_name: 'expat_registration', status: 'completed', country: form.currentPresenceCountry, eventID: metaEventId });
       trackAdRegistration({ contentName: 'expat_registration' });
+      setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: sanitizeString(form.firstName), lastName: sanitizeString(form.lastName), country: form.currentPresenceCountry });
       navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerExpat.success.registered' }), type: 'success' } });
 
     } catch (err: unknown) {

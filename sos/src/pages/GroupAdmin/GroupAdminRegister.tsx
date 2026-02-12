@@ -19,6 +19,9 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
 import { Users, ArrowLeft, ArrowRight, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
+import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
+import { trackAdRegistration } from '@/services/adAttributionService';
+import { generateEventIdForType } from '@/utils/sharedEventId';
 
 const UI = {
   card: "bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg",
@@ -73,6 +76,11 @@ const GroupAdminRegister: React.FC = () => {
     }
   }, [authInitialized, authLoading, loading, isAlreadyGroupAdmin, navigate, dashboardRoute, success]);
 
+  // Meta Pixel: Track StartRegistration on mount
+  useEffect(() => {
+    trackMetaStartRegistration({ content_name: 'groupadmin_registration' });
+  }, []);
+
   // Show role conflict
   if (authInitialized && !authLoading && hasExistingRole && !isAlreadyGroupAdmin) {
     const roleLabels: Record<string, string> = {
@@ -120,6 +128,10 @@ const GroupAdminRegister: React.FC = () => {
     setEmailAlreadyExists(false);
     setExistingEmail(data.email);
 
+    // Meta Pixel: Generate event ID for deduplication + get fbp/fbc
+    const metaEventId = generateEventIdForType('registration');
+    const metaIds = getMetaIdentifiers();
+
     try {
       // Step 1: Create Firebase Auth account
       if (!user) {
@@ -133,6 +145,11 @@ const GroupAdminRegister: React.FC = () => {
           termsVersion: data.termsVersion,
           termsType: data.termsType,
           termsAcceptanceMeta: data.termsAcceptanceMeta,
+          // Meta Pixel/CAPI tracking identifiers
+          fbp: metaIds.fbp,
+          fbc: metaIds.fbc,
+          country: data.country,
+          metaEventId,
         }, data.password);
       }
 
@@ -168,6 +185,22 @@ const GroupAdminRegister: React.FC = () => {
         await refreshUser();
         setAffiliateCodes({ client: responseData.affiliateCodeClient, recruitment: responseData.affiliateCodeRecruitment });
         setSuccess(true);
+
+        // Meta Pixel: Track CompleteRegistration + Ad Attribution + Advanced Matching
+        trackMetaCompleteRegistration({
+          content_name: 'groupadmin_registration',
+          status: 'completed',
+          country: data.country,
+          eventID: metaEventId,
+        });
+        trackAdRegistration({ contentName: 'groupadmin_registration' });
+        setMetaPixelUserData({
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          country: data.country,
+        });
+
         setTimeout(() => {
           navigate(dashboardRoute, { replace: true });
         }, 3000);

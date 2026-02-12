@@ -350,20 +350,28 @@ export const trackMetaInitiateCheckout = (params?: {
 export const trackMetaContact = (params?: {
   content_name?: string;
   content_category?: string;
-}): void => {
-  if (!isFbqAvailable()) return;
+  country?: string;
+  eventID?: string;
+}): string | undefined => {
+  const eventID = params?.eventID || generateEventID();
+
+  if (!isFbqAvailable()) return eventID;
 
   try {
+    const country = getCountryForTracking(params?.country);
     window.fbq!('track', 'Contact', {
       content_name: params?.content_name || 'contact_form',
       content_category: params?.content_category || 'support',
-    });
+      contents: country ? [{ id: country, quantity: 1 }] : undefined,
+    }, { eventID });
     if (process.env.NODE_ENV === 'development') {
-      console.log('%c[MetaPixel] Contact tracked', 'color: #1877F2; font-weight: bold', params);
+      console.log('%c[MetaPixel] Contact tracked', 'color: #1877F2; font-weight: bold', { ...params, eventID });
     }
   } catch (error) {
     console.error('[MetaPixel] Erreur Contact:', error);
   }
+
+  return eventID;
 };
 
 /**

@@ -11,6 +11,8 @@
  * - Lead: When a booking request is created
  * - CompleteRegistration: When a user is created
  * - InitiateCheckout: When a call session payment is authorized
+ * - Purchase: When a call session payment is captured (completed)
+ * - Contact/Lead: When a contact form is submitted
  */
 
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
@@ -19,6 +21,7 @@ import {
   trackCAPILead,
   trackCAPICompleteRegistration,
   trackCAPIInitiateCheckout,
+  trackCAPIPurchase,
   UserData,
   META_CAPI_TOKEN,
   CAPIEventResult,
@@ -56,18 +59,20 @@ interface UserDocument {
   firstName?: string;
   lastName?: string;
   fullName?: string;
-  role?: "client" | "lawyer" | "expat" | "admin";
+  role?: "client" | "lawyer" | "expat" | "admin" | "chatter" | "influencer" | "blogger" | "groupAdmin";
   country?: string;
   city?: string;
   fbclid?: string;
   fbp?: string;
   fbc?: string;
+  metaEventId?: string;
 }
 
 interface CallSession {
   clientEmail?: string;
   clientPhone?: string;
   clientName?: string;
+  clientId?: string;
   providerId?: string;
   providerType?: "lawyer" | "expat";
   serviceType?: string;
@@ -83,6 +88,7 @@ interface CallSession {
   fbc?: string;
   client_ip_address?: string;
   client_user_agent?: string;
+  pixelEventId?: string;
 }
 
 interface ContactSubmission {
@@ -381,6 +387,7 @@ export const onUserCreatedTrackRegistration = onDocumentCreated(
         contentName: `${data.role || "user"}_registration`,
         status: "completed",
         eventSourceUrl: "https://sos-expat.com",
+        eventId: data.metaEventId, // Pixel/CAPI deduplication
       });
 
       if (result.success) {
@@ -612,6 +619,94 @@ export const onContactSubmittedTrackLead = onDocumentCreated(
       }
     } catch (error) {
       console.error(`[CAPI Contact] ❌ Error for submission ${submissionId}:`, error);
+    }
+  }
+);
+
+// ============================================================================
+// TRIGGER: Purchase - Call Session Payment Captured (Completed)
+// ============================================================================
+
+/**
+ * Track Purchase event when a call session payment is fully captured.
+ * Uses pixelEventId from the document for Pixel/CAPI deduplication.
+ */
+export const onCallSessionPaymentCaptured = onDocumentUpdated(
+  {
+    document: "call_sessions/{sessionId}",
+    region: "europe-west3",
+    secrets: [META_CAPI_TOKEN],
+  },
+  async (event) => {
+    const sessionId = event.params.sessionId;
+    const beforeData = event.data?.before.data() as CallSession | undefined;
+    const afterData = event.data?.after.data() as CallSession | undefined;
+
+    if (!beforeData || !afterData) {
+      return;
+    }
+
+    // Check if payment status changed to "captured"
+    const oldStatus = beforeData.payment?.status;
+    const newStatus = afterData.payment?.status;
+
+    if (oldStatus === newStatus || newStatus !== "captured") {
+      return; // Only track when status changes TO "captured"
+    }
+
+    // Rate limit check
+    if (!checkTriggerRateLimit(sessionId, "purchase")) {
+      console.log("[CAPI Purchase] Rate limited, skipping:", sessionId);
+      return;
+    }
+
+    console.log(`[CAPI Purchase] Payment captured for session ${sessionId}`);
+
+    try {
+      const userData = extractUserData(afterData);
+
+      const amount = afterData.payment?.amount || afterData.amount || 0;
+      const currency = afterData.payment?.currency || afterData.currency || "EUR";
+
+      const result = await trackCAPIPurchase({
+        userData,
+        value: amount,
+        currency: currency.toUpperCase(),
+        orderId: sessionId,
+        contentName: `${afterData.providerType || "service"}_call`,
+        contentCategory: afterData.providerType || "service",
+        contentIds: afterData.providerId ? [afterData.providerId] : undefined,
+        serviceType: afterData.serviceType,
+        providerType: afterData.providerType,
+        eventSourceUrl: "https://sos-expat.com",
+        eventId: afterData.pixelEventId, // Pixel/CAPI deduplication
+      });
+
+      if (result.success) {
+        console.log(`[CAPI Purchase] ✅ Tracked for session ${sessionId}`, {
+          eventId: result.eventId,
+          amount,
+          currency,
+        });
+
+        // Log to capi_events for analytics dashboard
+        await logCAPIEventToFirestore({
+          eventType: "Purchase",
+          eventId: result.eventId,
+          source: "trigger_call",
+          documentId: sessionId,
+          userData,
+          value: amount,
+          currency: currency.toUpperCase(),
+          contentName: `${afterData.providerType || "service"}_call`,
+          contentCategory: afterData.providerType || "service",
+          metaEventsReceived: result.eventsReceived,
+        });
+      } else {
+        console.warn(`[CAPI Purchase] ⚠️ Failed for session ${sessionId}:`, result.error);
+      }
+    } catch (error) {
+      console.error(`[CAPI Purchase] ❌ Error for session ${sessionId}:`, error);
     }
   }
 );

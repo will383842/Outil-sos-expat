@@ -18,6 +18,9 @@ import { httpsCallable } from 'firebase/functions';
 import { functions, auth } from '@/config/firebase';
 import { Star, ArrowLeft, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
+import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
+import { trackAdRegistration } from '@/services/adAttributionService';
+import { generateEventIdForType } from '@/utils/sharedEventId';
 
 // Design tokens - Harmonized with ChatterLanding dark theme
 const UI = {
@@ -85,6 +88,11 @@ const ChatterRegister: React.FC = () => {
     }
   }, [authInitialized, authLoading, loading, isAlreadyChatter, user?.telegramOnboardingCompleted, navigate, telegramRoute, dashboardRoute, success]);
 
+  // Meta Pixel: Track StartRegistration on mount
+  useEffect(() => {
+    trackMetaStartRegistration({ content_name: 'chatter_registration' });
+  }, []);
+
   // Show error if user has another role
   if (authInitialized && !authLoading && hasExistingRole && !isAlreadyChatter) {
     const roleLabels: Record<string, string> = {
@@ -132,6 +140,10 @@ const ChatterRegister: React.FC = () => {
     setExistingEmail(data.email); // Save email for "already exists" UI
 
     try {
+      // Meta Pixel: Generate event ID for deduplication + get fbp/fbc
+      const metaEventId = generateEventIdForType('registration');
+      const metaIds = getMetaIdentifiers();
+
       // Step 1: Create Firebase Auth account with role 'chatter'
       // This creates the user in Firebase Auth AND in Firestore users collection
       await register(
@@ -146,6 +158,11 @@ const ChatterRegister: React.FC = () => {
           termsVersion: data.termsVersion,
           termsType: data.termsType,
           termsAcceptanceMeta: data.termsAcceptanceMeta,
+          // Meta Pixel/CAPI tracking identifiers
+          fbp: metaIds.fbp,
+          fbc: metaIds.fbc,
+          country: data.country,
+          metaEventId,
         },
         data.password
       );
@@ -193,6 +210,21 @@ const ChatterRegister: React.FC = () => {
       await refreshUser();
 
       setSuccess(true);
+
+      // Meta Pixel: Track CompleteRegistration + Ad Attribution + Advanced Matching
+      trackMetaCompleteRegistration({
+        content_name: 'chatter_registration',
+        status: 'completed',
+        country: data.country,
+        eventID: metaEventId,
+      });
+      trackAdRegistration({ contentName: 'chatter_registration' });
+      setMetaPixelUserData({
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        country: data.country,
+      });
 
       // Redirect to Telegram onboarding after short delay (mandatory step)
       setTimeout(() => {

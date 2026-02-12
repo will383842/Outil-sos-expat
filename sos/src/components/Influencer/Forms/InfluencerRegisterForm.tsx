@@ -36,6 +36,9 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
 import { clearStoredReferral } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
+import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
+import { trackAdRegistration } from '@/services/adAttributionService';
+import { generateEventIdForType } from '@/utils/sharedEventId';
 
 // ============================================================================
 // PASSWORD STRENGTH UTILITY
@@ -242,6 +245,11 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
     setFocusedDropdownIndex(-1);
   }, [showCountryDropdown, showLanguageDropdown]);
 
+  // Meta Pixel: Track StartRegistration on mount
+  useEffect(() => {
+    trackMetaStartRegistration({ content_name: 'influencer_registration' });
+  }, []);
+
   // Scroll focused item into view
   useEffect(() => {
     if (showCountryDropdown && focusedDropdownIndex >= 0 && countryListRef.current) {
@@ -446,12 +454,21 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
     setLoading(true);
     setError(null);
 
+    // Meta Pixel: Generate event ID for deduplication + get fbp/fbc
+    const metaEventId = generateEventIdForType('registration');
+    const metaIds = getMetaIdentifiers();
+
     try {
       await register({
         email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
         role: 'influencer',
+        // Meta Pixel/CAPI tracking identifiers
+        fbp: metaIds.fbp,
+        fbc: metaIds.fbc,
+        country: formData.country,
+        metaEventId,
       }, formData.password);
 
       const functions = getFunctions(undefined, 'europe-west1');
@@ -484,6 +501,22 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
       if (data.success) {
         setSuccess(true);
         clearStoredReferral('influencer');
+
+        // Meta Pixel: Track CompleteRegistration + Ad Attribution + Advanced Matching
+        trackMetaCompleteRegistration({
+          content_name: 'influencer_registration',
+          status: 'completed',
+          country: formData.country,
+          eventID: metaEventId,
+        });
+        trackAdRegistration({ contentName: 'influencer_registration' });
+        setMetaPixelUserData({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          country: formData.country,
+        });
+
         await refreshUser();
         setTimeout(() => {
           navigate(`/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`, { replace: true });

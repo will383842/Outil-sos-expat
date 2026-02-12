@@ -1183,8 +1183,15 @@ export const twilioRecordingWebhook = onRequest(
     maxInstances: 1,
     minInstances: 0,
     concurrency: 1,
+    // P0 FIX: Add secrets for Twilio signature validation
+    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]
   },
-  async (_req: Request, res: Response) => {
+  async (req: Request, res: Response) => {
+    // P0 SECURITY: Validate Twilio signature even for disabled endpoint
+    if (!validateTwilioWebhookSignature(req as any, res as any)) {
+      console.error("[twilioRecordingWebhook] Invalid Twilio signature - rejecting request");
+      return;
+    }
     // Recording desactive - retourner 200 OK pour eviter les retries Twilio
     console.log('[twilioRecordingWebhook] Recording desactive - ignoring callback');
     res.status(200).send('Recording disabled for GDPR compliance');
@@ -1214,12 +1221,28 @@ export const twilioAmdTwiml = onRequest(
     cpu: 0.25,
     maxInstances: 10,
     minInstances: 0,  // Reduced to 0 to free CPU quota for createPaymentIntent. AMD TwiML is called after AMD detection completes, brief cold start acceptable.
-    concurrency: 1
+    concurrency: 1,
+    // P0 FIX: Add secrets for Twilio signature validation
+    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]
   },
   async (req: Request, res: Response) => {
     const amdId = `amd_${Date.now().toString(36)}`;
 
     try {
+      // P0 SECURITY: Validate Twilio signature
+      if (!validateTwilioWebhookSignature(req as any, res as any)) {
+        console.error("[twilioAmdTwiml] Invalid Twilio signature - rejecting request");
+        return;
+      }
+
+      // P1 SECURITY: CallSid guard - reject requests without a valid CallSid
+      const guardCallSid = req.body?.CallSid || req.query.CallSid;
+      if (!guardCallSid || typeof guardCallSid !== 'string' || !guardCallSid.startsWith('CA')) {
+        console.error(`[twilioAmdTwiml] Missing or invalid CallSid: ${guardCallSid}`);
+        res.status(400).send('Missing or invalid CallSid');
+        return;
+      }
+
       // Parse query parameters
       const sessionId = req.query.sessionId as string;
       const participantType = req.query.participantType as 'client' | 'provider';
@@ -1915,12 +1938,28 @@ export const twilioGatherResponse = onRequest(
     cpu: 0.25,
     maxInstances: 10,
     minInstances: 1,  // P0 FIX: Keep warm for instant DTMF response handling
-    concurrency: 1
+    concurrency: 1,
+    // P0 FIX: Add secrets for Twilio signature validation
+    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]
   },
   async (req: Request, res: Response) => {
     const gatherId = `gather_${Date.now().toString(36)}`;
 
     try {
+      // P0 SECURITY: Validate Twilio signature
+      if (!validateTwilioWebhookSignature(req as any, res as any)) {
+        console.error("[twilioGatherResponse] Invalid Twilio signature - rejecting request");
+        return;
+      }
+
+      // P1 SECURITY: CallSid guard - reject requests without a valid CallSid
+      const callSidCheck = req.body?.CallSid;
+      if (!callSidCheck || typeof callSidCheck !== 'string' || !callSidCheck.startsWith('CA')) {
+        console.error(`[twilioGatherResponse] Missing or invalid CallSid: ${callSidCheck}`);
+        res.status(400).send('Missing or invalid CallSid');
+        return;
+      }
+
       // Parse query parameters (from Gather action URL)
       const sessionId = req.query.sessionId as string;
       const participantType = req.query.participantType as 'client' | 'provider';

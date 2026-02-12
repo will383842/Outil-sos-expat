@@ -16,6 +16,9 @@ import DarkCheckbox from '../shared/DarkCheckbox';
 import { FieldError, FieldSuccess } from '../shared/FieldFeedback';
 import FAQSection from '../shared/FAQSection';
 
+import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
+import { generateEventIdForType } from '@/utils/sharedEventId';
+
 import '@/styles/registration-dark.css';
 import '@/styles/multi-language-select.css';
 
@@ -300,6 +303,9 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
       const capitalFirst = trimmedFirst.charAt(0).toUpperCase() + trimmedFirst.slice(1).toLowerCase();
       const capitalLast = trimmedLast.charAt(0).toUpperCase() + trimmedLast.slice(1).toLowerCase();
 
+      const metaEventId = generateEventIdForType('registration');
+      const metaIds = getMetaIdentifiers();
+
       const userData: Record<string, unknown> = {
         role: 'client',
         firstName: capitalFirst,
@@ -309,6 +315,10 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
         languagesSpoken: form.languagesSpoken,
         phone: phoneE164,
         currentCountry: phoneCountry,
+        country: phoneCountry,
+        fbp: metaIds.fbp,
+        fbc: metaIds.fbc,
+        metaEventId,
         isApproved: true,
         approvalStatus: 'approved',
         verificationStatus: 'approved',
@@ -344,8 +354,9 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
       if (!isMountedRef.current) return;
 
       // Analytics
-      trackMetaComplete({ content_name: 'client_registration', status: 'completed' });
+      trackMetaComplete({ content_name: 'client_registration', status: 'completed', country: phoneCountry, eventID: metaEventId });
       trackAdRegistration({ contentName: 'client_registration' });
+      setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: capitalFirst, lastName: capitalLast, country: phoneCountry });
 
       hasNavigatedRef.current = true;
       navigate(redirect, {

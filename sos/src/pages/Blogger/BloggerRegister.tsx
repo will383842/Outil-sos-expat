@@ -56,6 +56,9 @@ import {
 } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, clearStoredReferral } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
+import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
+import { trackAdRegistration } from '@/services/adAttributionService';
+import { generateEventIdForType } from '@/utils/sharedEventId';
 
 // ============================================================================
 // PASSWORD STRENGTH
@@ -246,6 +249,11 @@ const BloggerRegister: React.FC = () => {
     }
   }, [authInitialized, authLoading, isAlreadyBlogger, navigate, dashboardRoute, success]);
 
+  // Meta Pixel: Track StartRegistration on mount
+  useEffect(() => {
+    trackMetaStartRegistration({ content_name: 'blogger_registration' });
+  }, []);
+
   // Dropdown states
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
@@ -420,12 +428,21 @@ const BloggerRegister: React.FC = () => {
     setIsSubmitting(true);
     setError(null);
 
+    // Meta Pixel: Generate event ID for deduplication + get fbp/fbc
+    const metaEventId = generateEventIdForType('registration');
+    const metaIds = getMetaIdentifiers();
+
     try {
       await register({
         email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
         role: 'blogger',
+        // Meta Pixel/CAPI tracking identifiers
+        fbp: metaIds.fbp,
+        fbc: metaIds.fbc,
+        country: formData.country,
+        metaEventId,
       }, formData.password);
 
       const registerBlogger = httpsCallable<RegisterBloggerInput, RegisterBloggerResponse>(functions, 'registerBlogger');
@@ -461,6 +478,22 @@ const BloggerRegister: React.FC = () => {
       if (result.data.success) {
         setSuccess(true);
         clearStoredReferral('blogger');
+
+        // Meta Pixel: Track CompleteRegistration + Ad Attribution + Advanced Matching
+        trackMetaCompleteRegistration({
+          content_name: 'blogger_registration',
+          status: 'completed',
+          country: formData.country,
+          eventID: metaEventId,
+        });
+        trackAdRegistration({ contentName: 'blogger_registration' });
+        setMetaPixelUserData({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          country: formData.country,
+        });
+
         await refreshUser();
         setTimeout(() => {
           navigate(dashboardRoute, { replace: true });

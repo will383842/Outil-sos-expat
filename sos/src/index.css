@@ -305,10 +305,8 @@ body.wizard-scroll-lock {
   h2 { font-size: clamp(1.25rem, 5vw, 2rem); }
   h3 { font-size: clamp(1.125rem, 4vw, 1.5rem); }
 
-  /* Override for landing pages - use Tailwind sizes */
-  .chatter-landing h1 { font-size: 2.25rem !important; } /* text-4xl = 36px */
-  .chatter-landing h2 { font-size: 1.875rem !important; } /* text-3xl = 30px */
-  .chatter-landing h3 { font-size: 1.5rem !important; } /* text-2xl = 24px */
+  /* Landing pages: heading overrides handled by each component's <style> block */
+  /* (chatter-landing, blogger-landing, influencer-landing, groupadmin-landing) */
 
   /* Labels et textes d'info */
   label, .label {

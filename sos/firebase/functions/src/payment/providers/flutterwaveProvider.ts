@@ -966,12 +966,8 @@ export class FlutterwaveProvider {
    * Get callback URL for transfer notifications
    */
   private getCallbackUrl(): string {
-    // In production, this should point to your webhook endpoint
-    const baseUrl =
-      this.environment === 'production'
-        ? 'https://us-central1-sos-expat.cloudfunctions.net'
-        : 'https://us-central1-sos-expat.cloudfunctions.net'; // Use same for sandbox testing
-
+    // P0 FIX: Correct project ID (sos-urgently-ac307) and region (europe-west1)
+    const baseUrl = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net';
     return `${baseUrl}/flutterwaveWebhook`;
   }
 

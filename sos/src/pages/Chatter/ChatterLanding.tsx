@@ -18,6 +18,7 @@ import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/cor
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
+import { trackMetaViewContent } from '@/utils/metaPixel';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import {
   ArrowRight,
@@ -33,12 +34,12 @@ import {
 // STYLES - Mobile-first with performance hints
 // ============================================================================
 const globalStyles = `
-  /* FORCE font sizes on mobile - override index.css clamp() rules */
+  /* Override index.css clamp() rules for headings only */
   @media (max-width: 768px) {
     .chatter-landing h1 { font-size: 2.25rem !important; } /* 36px */
     .chatter-landing h2 { font-size: 1.875rem !important; } /* 30px */
     .chatter-landing h3 { font-size: 1.5rem !important; } /* 24px */
-    .chatter-landing p { font-size: 1rem !important; } /* 16px base */
+    /* p tags: NO override — let Tailwind classes control each <p> individually */
   }
 
   /* Animations */
@@ -254,6 +255,10 @@ const ChatterLanding: React.FC = () => {
   const ctaAriaLabel = intl.formatMessage({ id: 'chatter.aria.cta.main', defaultMessage: 'Start earning money now - Register as a Chatter for free' });
 
   useEffect(() => {
+    trackMetaViewContent({ content_name: 'chatter_landing', content_category: 'landing_page', content_type: 'page' });
+  }, []);
+
+  useEffect(() => {
     const onScroll = () => setShowStickyCTA(window.scrollY > window.innerHeight * 0.8);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -302,11 +307,11 @@ const ChatterLanding: React.FC = () => {
               <span className="text-amber-400"><FormattedMessage id="chatter.landing.hero.desktop.highlight" defaultMessage="expatriés, voyageurs et vacanciers." /></span>
             </h1>
 
-            <p style={{ fontSize: '1.5rem' }} className="text-white font-bold mb-2 sm:mb-4">
+            <p className="text-xl sm:text-2xl text-white font-bold mb-2 sm:mb-4">
               <span className="text-amber-400">10$</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
             </p>
 
-            <p style={{ fontSize: '1rem' }} className="text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
               <FormattedMessage id="chatter.landing.hero.desktop.desc" defaultMessage="Parlez de SOS-Expat et partagez votre lien affilié à tous ceux qui ont besoin de tous types d'aide. Quand ils appellent, vous gagnez." />
             </p>
 

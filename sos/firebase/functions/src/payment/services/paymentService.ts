@@ -821,25 +821,39 @@ export class PaymentService {
     withdrawalId: string,
     adminId?: string
   ): Promise<ProviderTransactionResult> {
-    const withdrawal = await this.getWithdrawal(withdrawalId);
+    // P0 FIX: TOCTOU - Atomic status check + update in transaction to prevent double payouts
+    const db = this.db;
+    const withdrawalRef = db.collection(COLLECTIONS.WITHDRAWALS).doc(withdrawalId);
 
-    if (!withdrawal) {
-      throw new Error('Withdrawal not found');
-    }
+    let withdrawal!: WithdrawalRequest;
+    await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(withdrawalRef);
+      if (!doc.exists) {
+        throw new Error('Withdrawal not found');
+      }
 
-    if (withdrawal.status !== 'approved' && withdrawal.status !== 'queued') {
-      throw new Error(`Cannot process withdrawal with status: ${withdrawal.status}`);
-    }
+      const data = doc.data()!;
+      if (data.status !== 'approved' && data.status !== 'queued') {
+        throw new Error(`Cannot process withdrawal with status: ${data.status}`);
+      }
 
-    // Mark as processing
-    await this.updateWithdrawalStatus(
-      withdrawalId,
-      'processing',
-      adminId || 'system',
-      adminId ? 'admin' : 'system',
-      'Payment processing started',
-      { processedAt: new Date().toISOString() }
-    );
+      withdrawal = { ...data, id: doc.id } as WithdrawalRequest;
+
+      const now = new Date().toISOString();
+      const historyEntry: StatusHistoryEntry = {
+        status: 'processing',
+        timestamp: now,
+        actor: adminId || 'system',
+        actorType: adminId ? 'admin' : 'system',
+        note: 'Payment processing started',
+      };
+
+      transaction.update(withdrawalRef, {
+        status: 'processing',
+        statusHistory: FieldValue.arrayUnion(historyEntry),
+        processedAt: now,
+      });
+    });
 
     logger.info('[PaymentService.processWithdrawal] Processing withdrawal via provider', {
       withdrawalId,

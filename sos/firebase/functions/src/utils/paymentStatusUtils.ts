@@ -135,6 +135,10 @@ export function normalizePaymentStatus(stripeStatus: string): string {
   if (stripeStatus === "succeeded") {
     return "captured";
   }
+  // P0 FIX: Stripe envoie "canceled" (US spelling) mais notre système utilise "cancelled" (UK spelling)
+  if (stripeStatus === "canceled") {
+    return "cancelled";
+  }
   return stripeStatus;
 }
 

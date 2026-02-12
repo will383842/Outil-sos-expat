@@ -36,8 +36,9 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { useIntl } from "react-intl";
-import { trackMetaContact } from "../utils/metaPixel";
+import { trackMetaContact, getMetaIdentifiers } from "../utils/metaPixel";
 import { trackAdContact } from "../services/adAttributionService";
+import { generateEventIdForType } from "../utils/sharedEventId";
 
 // Interface pour Navigator avec connection
 interface NavigatorConnection {
@@ -678,6 +679,13 @@ const Contact: React.FC = () => {
         estimatedResponseTime: "24h",
         formVersion: "3.2",
         source: "contact_form_web_fun",
+        ...(() => {
+          const metaIds = getMetaIdentifiers();
+          return {
+            ...(metaIds.fbp && { fbp: metaIds.fbp }),
+            ...(metaIds.fbc && { fbc: metaIds.fbc }),
+          };
+        })(),
 
         // Métadonnées enrichies
         metadata: {
@@ -776,9 +784,12 @@ const Contact: React.FC = () => {
       });
 
       // Track Meta Pixel Contact - formulaire contact soumis avec succes
+      const contactEventId = generateEventIdForType('contact');
       trackMetaContact({
         content_name: 'contact_form_submitted',
         content_category: formData.category || 'general',
+        country: formData.originCountry || formData.interventionCountry,
+        eventID: contactEventId,
       });
 
       // Track Ad Attribution Contact (Firestore - pour dashboard admin)

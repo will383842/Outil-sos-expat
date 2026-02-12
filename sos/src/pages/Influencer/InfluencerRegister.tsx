@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
+import { trackMetaStartRegistration } from '@/utils/metaPixel';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import InfluencerRegisterForm from '@/components/Influencer/Forms/InfluencerRegisterForm';
 import { CheckCircle, Gift, Users, Image, Megaphone, ArrowLeft, LogIn, Mail } from 'lucide-react';
@@ -58,6 +59,10 @@ const InfluencerRegister: React.FC = () => {
   const userRole = user?.role;
   const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'groupAdmin', 'lawyer', 'expat', 'client'].includes(userRole);
   const isAlreadyInfluencer = userRole === 'influencer';
+
+  useEffect(() => {
+    trackMetaStartRegistration({ content_name: 'influencer_registration' });
+  }, []);
 
   useEffect(() => {
     if (authInitialized && !authLoading && isAlreadyInfluencer) {

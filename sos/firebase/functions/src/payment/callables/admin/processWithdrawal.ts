@@ -6,7 +6,7 @@
  */
 
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
-import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { adminConfig } from '../../../lib/functionConfigs';
@@ -137,57 +137,58 @@ export const adminProcessWithdrawal = onCall(
         withdrawalId,
       });
 
-      // Get withdrawal
+      // P0 FIX: TOCTOU - Atomic status check + update in transaction to prevent double payouts
       const withdrawalRef = db.collection('payment_withdrawals').doc(withdrawalId);
-      const withdrawalDoc = await withdrawalRef.get();
 
-      if (!withdrawalDoc.exists) {
-        throw new HttpsError('not-found', 'Withdrawal not found');
-      }
+      let withdrawal!: WithdrawalRequest;
+      await db.runTransaction(async (transaction) => {
+        const withdrawalDoc = await transaction.get(withdrawalRef);
 
-      const withdrawal = {
-        ...withdrawalDoc.data(),
-        id: withdrawalDoc.id,
-      } as WithdrawalRequest;
+        if (!withdrawalDoc.exists) {
+          throw new HttpsError('not-found', 'Withdrawal not found');
+        }
 
-      // Validate current status
-      const processableStatuses: WithdrawalStatus[] = ['approved', 'queued'];
-      if (!processableStatuses.includes(withdrawal.status)) {
-        throw new HttpsError(
-          'failed-precondition',
-          `Cannot process withdrawal with status: ${withdrawal.status}. Expected: ${processableStatuses.join(', ')}`
-        );
-      }
+        const data = withdrawalDoc.data()!;
+        const processableStatuses: WithdrawalStatus[] = ['approved', 'queued'];
+        if (!processableStatuses.includes(data.status as WithdrawalStatus)) {
+          throw new HttpsError(
+            'failed-precondition',
+            `Cannot process withdrawal with status: ${data.status}. Expected: ${processableStatuses.join(', ')}`
+          );
+        }
 
-      // Check if provider is enabled
+        withdrawal = { ...data, id: withdrawalDoc.id } as WithdrawalRequest;
+
+        const now = new Date().toISOString();
+        const processingHistory: StatusHistoryEntry = {
+          status: 'processing',
+          timestamp: now,
+          actor: adminId,
+          actorType: 'admin',
+          note: note || 'Processing initiated by admin',
+        };
+
+        transaction.update(withdrawalRef, {
+          status: 'processing',
+          processedAt: now,
+          processedBy: adminId,
+          statusHistory: [...(data.statusHistory || []), processingHistory],
+        });
+      });
+
+      // Check if provider is enabled (after transaction - read-only check)
       const configDoc = await db.collection('config').doc('payment_config').get();
       const config = configDoc.exists
         ? (configDoc.data() as PaymentConfig)
         : { ...DEFAULT_PAYMENT_CONFIG, updatedAt: '', updatedBy: '' };
 
-      if (withdrawal.provider === 'wise' && !config.wiseEnabled) {
+      if (withdrawal!.provider === 'wise' && !config.wiseEnabled) {
         throw new HttpsError('failed-precondition', 'Wise payments are currently disabled');
       }
 
-      if (withdrawal.provider === 'flutterwave' && !config.flutterwaveEnabled) {
+      if (withdrawal!.provider === 'flutterwave' && !config.flutterwaveEnabled) {
         throw new HttpsError('failed-precondition', 'Flutterwave payments are currently disabled');
       }
-
-      // Update status to processing
-      const processingHistory: StatusHistoryEntry = {
-        status: 'processing',
-        timestamp: new Date().toISOString(),
-        actor: adminId,
-        actorType: 'admin',
-        note: note || 'Processing initiated by admin',
-      };
-
-      await withdrawalRef.update({
-        status: 'processing',
-        processedAt: new Date().toISOString(),
-        processedBy: adminId,
-        statusHistory: [...withdrawal.statusHistory, processingHistory],
-      });
 
       // Process payment via appropriate provider
       let result: ProviderTransactionResult;
@@ -224,7 +225,7 @@ export const adminProcessWithdrawal = onCall(
           errorMessage: providerError instanceof Error ? providerError.message : 'Unknown error',
           retryCount: withdrawal.retryCount + 1,
           lastRetryAt: new Date().toISOString(),
-          statusHistory: [...withdrawal.statusHistory, processingHistory, failedHistory],
+          statusHistory: FieldValue.arrayUnion(failedHistory),
         });
 
         throw new HttpsError(
@@ -272,7 +273,7 @@ export const adminProcessWithdrawal = onCall(
         errorMessage: !result.success ? result.message : null,
         retryCount: !result.success ? withdrawal.retryCount + 1 : withdrawal.retryCount,
         lastRetryAt: !result.success ? new Date().toISOString() : withdrawal.lastRetryAt,
-        statusHistory: [...withdrawal.statusHistory, processingHistory, newHistory],
+        statusHistory: FieldValue.arrayUnion(newHistory),
       });
 
       // Create audit log

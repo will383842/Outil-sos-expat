@@ -17,6 +17,7 @@ import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/cor
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
+import { trackMetaViewContent } from '@/utils/metaPixel';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import FAQPageSchema from '@/components/seo/FAQPageSchema';
 import {
@@ -46,7 +47,7 @@ const globalStyles = `
     .influencer-landing h1 { font-size: 2.25rem !important; }
     .influencer-landing h2 { font-size: 1.875rem !important; }
     .influencer-landing h3 { font-size: 1.5rem !important; }
-    .influencer-landing p { font-size: 1rem !important; }
+    /* p tags: NO override — let Tailwind classes control each <p> individually */
   }
   @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
@@ -193,6 +194,10 @@ const InfluencerLanding: React.FC = () => {
   const goToRegister = () => navigate(registerRoute);
 
   useEffect(() => {
+    trackMetaViewContent({ content_name: 'influencer_landing', content_category: 'landing_page', content_type: 'page' });
+  }, []);
+
+  useEffect(() => {
     const onScroll = () => setShowStickyCTA(window.scrollY > window.innerHeight * 0.8);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -264,7 +269,7 @@ const InfluencerLanding: React.FC = () => {
               </span>
             </h1>
 
-            <p style={{ fontSize: '1rem' }} className="text-gray-300 mb-5 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-gray-300 mb-5 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
               <FormattedMessage id="influencer.hero.subtitle" defaultMessage="YouTube, Instagram, TikTok, Blog... Promote SOS-Expat to your followers. Get banners, widgets, QR codes. Your followers get 5% off!" />
             </p>
 
