@@ -565,6 +565,69 @@ export async function releaseValidatedCommissions(): Promise<number> {
 }
 
 /**
+ * P0 FIX 2026-02-12: Cancel all group admin commissions related to a call session
+ */
+export async function cancelCommissionsForCallSession(
+  callSessionId: string,
+  reason: string
+): Promise<{ success: boolean; cancelledCount: number; errors: string[] }> {
+  const db = getDb();
+  const errors: string[] = [];
+  let cancelledCount = 0;
+
+  try {
+    const commissionsQuery = await db
+      .collection("group_admin_commissions")
+      .where("sourceId", "==", callSessionId)
+      .get();
+
+    const commissionsQuery2 = await db
+      .collection("group_admin_commissions")
+      .where("sourceDetails.callSessionId", "==", callSessionId)
+      .get();
+
+    const allCommissions = [...commissionsQuery.docs, ...commissionsQuery2.docs];
+    const uniqueCommissions = new Map();
+    for (const doc of allCommissions) {
+      uniqueCommissions.set(doc.id, doc);
+    }
+
+    logger.info("[groupAdmin.cancelCommissionsForCallSession] Found commissions", {
+      callSessionId,
+      count: uniqueCommissions.size,
+    });
+
+    for (const [commissionId] of uniqueCommissions.entries()) {
+      const result = await cancelCommission(commissionId, reason);
+
+      if (result) {
+        cancelledCount++;
+      } else {
+        errors.push(`${commissionId}: Failed to cancel`);
+      }
+    }
+
+    logger.info("[groupAdmin.cancelCommissionsForCallSession] Complete", {
+      callSessionId,
+      cancelledCount,
+      errorsCount: errors.length,
+    });
+
+    return { success: errors.length === 0, cancelledCount, errors };
+  } catch (error) {
+    logger.error("[groupAdmin.cancelCommissionsForCallSession] Error", {
+      callSessionId,
+      error,
+    });
+    return {
+      success: false,
+      cancelledCount,
+      errors: [error instanceof Error ? error.message : "Failed to cancel commissions"],
+    };
+  }
+}
+
+/**
  * Cancel a commission
  */
 export async function cancelCommission(

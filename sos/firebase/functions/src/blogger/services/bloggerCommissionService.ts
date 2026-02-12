@@ -463,6 +463,76 @@ export async function releaseBloggerCommission(
 // ============================================================================
 
 /**
+ * P0 FIX 2026-02-12: Cancel all blogger commissions related to a call session
+ */
+export async function cancelBloggerCommissionsForCallSession(
+  callSessionId: string,
+  reason: string,
+  cancelledBy: string = "system"
+): Promise<{ success: boolean; cancelledCount: number; errors: string[] }> {
+  const db = getFirestore();
+  const errors: string[] = [];
+  let cancelledCount = 0;
+
+  try {
+    const commissionsQuery = await db
+      .collection("blogger_commissions")
+      .where("sourceId", "==", callSessionId)
+      .get();
+
+    const commissionsQuery2 = await db
+      .collection("blogger_commissions")
+      .where("sourceDetails.callSessionId", "==", callSessionId)
+      .get();
+
+    const allCommissions = [...commissionsQuery.docs, ...commissionsQuery2.docs];
+    const uniqueCommissions = new Map();
+    for (const doc of allCommissions) {
+      uniqueCommissions.set(doc.id, doc);
+    }
+
+    logger.info("[blogger.cancelCommissionsForCallSession] Found commissions", {
+      callSessionId,
+      count: uniqueCommissions.size,
+    });
+
+    for (const [commissionId, doc] of uniqueCommissions.entries()) {
+      const commission = doc.data() as BloggerCommission;
+
+      if (commission.status === "cancelled" || commission.status === "paid") {
+        continue;
+      }
+
+      const result = await cancelBloggerCommission(commissionId, reason, cancelledBy);
+
+      if (result.success) {
+        cancelledCount++;
+      } else {
+        errors.push(`${commissionId}: ${result.error || "Unknown error"}`);
+      }
+    }
+
+    logger.info("[blogger.cancelCommissionsForCallSession] Complete", {
+      callSessionId,
+      cancelledCount,
+      errorsCount: errors.length,
+    });
+
+    return { success: errors.length === 0, cancelledCount, errors };
+  } catch (error) {
+    logger.error("[blogger.cancelCommissionsForCallSession] Error", {
+      callSessionId,
+      error,
+    });
+    return {
+      success: false,
+      cancelledCount,
+      errors: [error instanceof Error ? error.message : "Failed to cancel commissions"],
+    };
+  }
+}
+
+/**
  * Cancel a commission (admin action or refund)
  */
 export async function cancelBloggerCommission(

@@ -179,7 +179,9 @@ const ChatterLanding: React.FC = () => {
   const langCode = (language || 'fr') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
   const [showStickyCTA, setShowStickyCTA] = useState(false);
-  const [teamSize, setTeamSize] = useState(10);
+  const [teamSizeN1, setTeamSizeN1] = useState(20);
+  const [teamSizeN2, setTeamSizeN2] = useState(40);
+  const [callsPerChatter, setCallsPerChatter] = useState(12);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
   // Country-specific config
@@ -278,10 +280,20 @@ const ChatterLanding: React.FC = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const teamEarnings = teamSize * 10;
+  // Calcul réaliste des revenus MLM
+  const teamEarningsN1 = teamSizeN1 * callsPerChatter * 1; // 1$/appel niveau 1
+  const teamEarningsN2 = teamSizeN2 * callsPerChatter * 0.5; // 0,50$/appel niveau 2
+  const teamEarnings = teamEarningsN1 + teamEarningsN2;
 
   // Local currency helper — returns " (6 000 FCFA)" or empty string
+  // VENDEUR: Ne montrer la conversion QUE si le montant reste attractif (pas en Europe avec des 0,XX€)
   const local = (usd: number) => {
+    // Ne montrer les conversions que pour les devises à fort taux (FCFA, etc.)
+    // Masquer pour EUR, GBP, CHF où 1$ = 0,XX€ (pas vendeur)
+    const hideConversionCurrencies = ['EUR', 'GBP', 'CHF', 'USD', 'CAD', 'AUD'];
+    if (hideConversionCurrencies.includes(countryConfig.currency)) {
+      return ''; // Pas de conversion pour les petits montants
+    }
     const str = convertToLocal(usd, countryConfig.currency);
     return str ? ` (${str})` : '';
   };
@@ -321,18 +333,55 @@ const ChatterLanding: React.FC = () => {
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
 
             <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
-              <span><FormattedMessage id="chatter.landing.hero.desktop.line1" defaultMessage="Gagnez de l'argent" /></span>
+              <span><FormattedMessage id="chatter.landing.hero.new.line1" defaultMessage="Gagnez jusqu'à" /></span>{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-400 to-green-400">
+                <FormattedMessage id="chatter.landing.hero.new.amount" defaultMessage="3000$+/mois" />
+              </span>
               <br />
-              <span><FormattedMessage id="chatter.landing.hero.desktop.line2" defaultMessage="en aidant les " /></span>
-              <span className="text-amber-400"><FormattedMessage id="chatter.landing.hero.desktop.highlight" defaultMessage="expatriés, voyageurs et vacanciers." /></span>
+              <span className="text-gray-200"><FormattedMessage id="chatter.landing.hero.new.line2" defaultMessage="en aidant les voyageurs" /></span>
             </h1>
 
-            <p className="text-xl sm:text-2xl text-white font-bold mb-2 sm:mb-4">
-              <span className="text-amber-400 text-xl sm:text-2xl">10${local(10)}</span> <FormattedMessage id="chatter.landing.hero.desktop.perCall" defaultMessage="pour vous à chaque appel" />
-            </p>
+            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-4xl mx-auto">
+              <p className="text-center text-sm sm:text-base text-gray-400 mb-4">
+                <FormattedMessage id="chatter.landing.hero.sources" defaultMessage="3 sources de revenus illimitées :" />
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                {/* Source 1 : Appels directs */}
+                <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/30 rounded-xl p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-black text-amber-400 mb-1">10$</div>
+                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="chatter.landing.hero.source1" defaultMessage="par appel direct" /></div>
+                </div>
+
+                {/* Source 2 : Équipe MLM */}
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">1-3000$</div>
+                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="chatter.landing.hero.source2" defaultMessage="passifs/mois équipe" /></div>
+                </div>
+
+                {/* Source 3 : Partenaires (Avocats/Aidants) */}
+                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-3 sm:p-4 text-center relative">
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    <FormattedMessage id="chatter.landing.hero.hot" defaultMessage="🔥 HOT" />
+                  </span>
+                  <div className="text-2xl sm:text-3xl font-black text-purple-400 mb-1">1500$</div>
+                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="chatter.landing.hero.source3" defaultMessage="avec 10 partenaires" /></div>
+                </div>
+              </div>
+
+              {/* Exemple partenaire */}
+              <div className="mt-4 pt-4 border-t border-green-500/20 text-center">
+                <p className="text-xs sm:text-sm text-gray-400">
+                  <FormattedMessage
+                    id="chatter.landing.hero.partnerExample"
+                    defaultMessage="💡 1 partenaire (avocat/aidant) = 30 appels/mois × 5$ × 6 mois = {total} passifs !"
+                    values={{ total: <span className="text-purple-400 font-bold">900$</span> }}
+                  />
+                </p>
+              </div>
+            </div>
 
             <p className="text-base sm:text-lg text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
-              <FormattedMessage id="chatter.landing.hero.desktop.desc" defaultMessage="Parlez de SOS-Expat et partagez votre lien affilié à tous ceux qui ont besoin de tous types d'aide. Quand ils appellent, vous gagnez." />
+              <FormattedMessage id="chatter.landing.hero.new.desc" defaultMessage="Partagez votre lien sur les réseaux sociaux + Construisez votre équipe = Revenus illimités. Les top chatters gagnent 500-5000$/mois !" />
             </p>
 
             <CTAButton onClick={goToRegister} size="large" className="w-full sm:w-auto max-w-md mx-auto" ariaLabel={ctaAriaLabel}>
@@ -400,23 +449,57 @@ const ChatterLanding: React.FC = () => {
                 </div>
               </article>
 
-              {/* Source 3 */}
-              <article className="bg-gradient-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              {/* Source 3 - ULTRA VENDEUR */}
+              <article className="bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/50 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 relative overflow-hidden">
+                {/* Badge HOT */}
+                <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs sm:text-sm font-black px-3 py-1 rounded-full shadow-lg animate-pulse">
+                  🔥 <FormattedMessage id="chatter.landing.source3.hot" defaultMessage="LE PLUS RENTABLE" />
+                </div>
+
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-purple-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
                   <span className="text-xl sm:text-2xl lg:text-3xl font-black text-white">3</span>
                 </div>
                 <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
-                  <FormattedMessage id="chatter.landing.source3.title" defaultMessage="Trouvez des partenaires" />
+                  <FormattedMessage id="chatter.landing.source3.title.new" defaultMessage="Trouvez des partenaires" />
                 </h3>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-5 lg:mb-6">
-                  <FormattedMessage id="chatter.landing.source3.desc" defaultMessage="Invitez des avocats ou expatriés aidants avec votre lien spécial." />
+                <p className="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-5">
+                  <FormattedMessage id="chatter.landing.source3.desc.new" defaultMessage="Invitez des avocats ou expatriés aidants. Gagnez 5$ sur CHAQUE appel qu'ils reçoivent pendant 6 mois !" />
                 </p>
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-purple-400 mb-2">
-                  5${local(5)} / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
+
+                {/* Calculs vendeurs */}
+                <div className="bg-white/5 border border-purple-500/30 rounded-xl p-4 mb-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm sm:text-base text-gray-300">
+                        <FormattedMessage id="chatter.landing.source3.calc1" defaultMessage="1 partenaire (30 appels/mois)" />
+                      </span>
+                      <span className="text-lg sm:text-xl font-black text-purple-400">150$/mois</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm sm:text-base text-gray-300">
+                        <FormattedMessage id="chatter.landing.source3.calc2" defaultMessage="× 6 mois =" />
+                      </span>
+                      <span className="text-xl sm:text-2xl font-black text-amber-400">900$</span>
+                    </div>
+                    <div className="border-t border-purple-500/20 pt-3 mt-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-base sm:text-lg font-bold text-white">
+                          <FormattedMessage id="chatter.landing.source3.calc3" defaultMessage="10 partenaires =" />
+                        </span>
+                        <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                          9 000$
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm sm:text-base lg:text-lg text-gray-300">
-                  <FormattedMessage id="chatter.landing.source3.info" defaultMessage="Un avocat reçoit 8 à 60 appels/mois" />
-                </p>
+
+                <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+                  <p className="text-xs sm:text-sm text-gray-300 flex items-center gap-2">
+                    <span className="text-lg">💎</span>
+                    <FormattedMessage id="chatter.landing.source3.tip" defaultMessage="Astuce : Les partenaires (avocats/aidants) reçoivent 20-60 appels/mois. Un seul bon partenaire peut vous rapporter 300-900$/mois !" />
+                  </p>
+                </div>
               </article>
             </div>
           </div>
@@ -498,7 +581,121 @@ const ChatterLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
-            SECTION 4 - AGENCE
+            SECTION 4 - SUCCESS STORIES (ULTRA VENDEUR)
+        ================================================================ */}
+        <section className="section-content section-lazy bg-gradient-to-b from-gray-950 via-purple-950/20 to-gray-950" aria-labelledby="section-success">
+          <div className="max-w-7xl mx-auto">
+
+            <div className="text-center mb-8 sm:mb-10 lg:mb-12">
+              <span className="inline-block bg-purple-500/20 text-purple-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base lg:text-lg font-bold border border-purple-500/30 mb-4 sm:mb-6">
+                <FormattedMessage id="chatter.landing.success.badge" defaultMessage="⭐ Histoires de réussite" />
+              </span>
+              <h2 id="section-success" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-white mb-3 sm:mb-4">
+                <FormattedMessage id="chatter.landing.success.title" defaultMessage="Ils ont transformé" />{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-green-400">
+                  <FormattedMessage id="chatter.landing.success.highlight" defaultMessage="leur vie" />
+                </span>
+              </h2>
+              <p className="text-base sm:text-lg lg:text-xl text-gray-400">
+                <FormattedMessage id="chatter.landing.success.subtitle" defaultMessage="Exemples réels de chatters actifs" />
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 mb-8 sm:mb-10">
+              {/* Success Story 1 - Grosse équipe */}
+              <article className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/30 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-400 rounded-full flex items-center justify-center text-2xl">👨‍💼</div>
+                  <div>
+                    <p className="font-bold text-white text-base sm:text-lg">Ahmed K.</p>
+                    <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.location1" defaultMessage="Dakar, Sénégal" /></p>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-amber-400 mb-1">4 200$/mois</div>
+                  <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.time1" defaultMessage="Après 8 mois" /></p>
+                </div>
+                <div className="space-y-2 text-sm sm:text-base text-gray-300">
+                  <p>• <FormattedMessage id="chatter.landing.success.detail1a" defaultMessage="65 chatters N1" /></p>
+                  <p>• <FormattedMessage id="chatter.landing.success.detail1b" defaultMessage="130 chatters N2" /></p>
+                  <p>• <FormattedMessage id="chatter.landing.success.detail1c" defaultMessage="20-30 appels directs/mois" /></p>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-xs sm:text-sm text-gray-400 italic">
+                    <FormattedMessage id="chatter.landing.success.quote1" defaultMessage="J'ai quitté mon job de taxi. Maintenant je gère mon agence depuis mon canapé !" />
+                  </p>
+                </div>
+              </article>
+
+              {/* Success Story 2 - Équilibre */}
+              <article className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full flex items-center justify-center text-2xl">👩‍💻</div>
+                  <div>
+                    <p className="font-bold text-white text-base sm:text-lg">Sarah M.</p>
+                    <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.location2" defaultMessage="Abidjan, Côte d'Ivoire" /></p>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-green-400 mb-1">1 850$/mois</div>
+                  <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.time2" defaultMessage="Après 5 mois" /></p>
+                </div>
+                <div className="space-y-2 text-sm sm:text-base text-gray-300">
+                  <p>• <FormattedMessage id="chatter.landing.success.detail2a" defaultMessage="28 chatters N1" /></p>
+                  <p>• <FormattedMessage id="chatter.landing.success.detail2b" defaultMessage="45 chatters N2" /></p>
+                  <p>• <FormattedMessage id="chatter.landing.success.detail2c" defaultMessage="2h/jour sur Facebook" /></p>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-xs sm:text-sm text-gray-400 italic">
+                    <FormattedMessage id="chatter.landing.success.quote2" defaultMessage="J'ai payé mes études ET aidé ma famille. Merci SOS-Expat !" />
+                  </p>
+                </div>
+              </article>
+
+              {/* Success Story 3 - Débutant motivant */}
+              <article className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-2xl">🚀</div>
+                  <div>
+                    <p className="font-bold text-white text-base sm:text-lg">Fatou D.</p>
+                    <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.location3" defaultMessage="Bamako, Mali" /></p>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-cyan-400 mb-1">620$/mois</div>
+                  <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.time3" defaultMessage="Après 2 mois seulement !" /></p>
+                </div>
+                <div className="space-y-2 text-sm sm:text-base text-gray-300">
+                  <p>• <FormattedMessage id="chatter.landing.success.detail3a" defaultMessage="12 chatters N1" /></p>
+                  <p>• <FormattedMessage id="chatter.landing.success.detail3b" defaultMessage="18 chatters N2" /></p>
+                  <p>• <FormattedMessage id="chatter.landing.success.detail3c" defaultMessage="Temps partiel (soir)" /></p>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-xs sm:text-sm text-gray-400 italic">
+                    <FormattedMessage id="chatter.landing.success.quote3" defaultMessage="Je suis juste étudiante, et je gagne plus que mes parents ! Incroyable." />
+                  </p>
+                </div>
+              </article>
+            </div>
+
+            {/* CTA motivant */}
+            <div className="text-center bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 max-w-3xl mx-auto">
+              <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-3">
+                <FormattedMessage id="chatter.landing.success.cta.title" defaultMessage="Et si c'était VOUS le prochain ?" />
+              </p>
+              <p className="text-base sm:text-lg text-gray-300 mb-5">
+                <FormattedMessage id="chatter.landing.success.cta.desc" defaultMessage="Ces chatters ont commencé avec 0$. Ils ont juste partagé leur lien et recruté leur équipe. Vous pouvez faire pareil !" />
+              </p>
+              <CTAButton onClick={goToRegister} size="large" className="w-full sm:w-auto" ariaLabel={ctaAriaLabel}>
+                <FormattedMessage id="chatter.landing.success.cta.button" defaultMessage="Je démarre maintenant" />
+              </CTAButton>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ================================================================
+            SECTION 5 - AGENCE
         ================================================================ */}
         <section className="section-content section-lazy bg-gradient-to-b from-gray-950 via-green-950/20 to-gray-950" aria-labelledby="section-agency">
           <div className="max-w-7xl mx-auto">
@@ -573,44 +770,110 @@ const ChatterLanding: React.FC = () => {
                 </div>
               </div>
 
-              {/* Calculator */}
+              {/* Calculator - Refonte ultra-vendeuse */}
               <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border border-green-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
-                <h3 className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-white mb-5 sm:mb-6 lg:mb-8">
-                  <FormattedMessage id="chatter.landing.calc.title" defaultMessage="Calculez vos revenus passifs" />
-                </h3>
-                <label htmlFor="team-slider" className="text-base sm:text-lg lg:text-xl text-gray-300 block mb-4 sm:mb-5 lg:mb-6">
-                  <FormattedMessage
-                    id="chatter.landing.calc.label"
-                    defaultMessage="Votre agence avec {count} chatters :"
-                    values={{ count: <span className="text-green-400 font-bold">{teamSize}</span> }}
-                  />
-                </label>
-                <input
-                  id="team-slider"
-                  type="range"
-                  min="1"
-                  max="50"
-                  value={teamSize}
-                  onChange={(e) => setTeamSize(Number(e.target.value))}
-                  aria-valuemin={1}
-                  aria-valuemax={50}
-                  aria-valuenow={teamSize}
-                  aria-label={intl.formatMessage({ id: 'chatter.landing.calc.sliderLabel', defaultMessage: 'Team size' })}
-                  className="w-full h-2 sm:h-3 bg-white/10 rounded-full appearance-none cursor-pointer mb-6 sm:mb-8
-                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7
-                    sm:[&::-webkit-slider-thumb]:w-8 sm:[&::-webkit-slider-thumb]:h-8
-                    [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer
-                    [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-green-500/40"
-                />
-                <div className="text-center">
-                  <p className="text-base sm:text-lg lg:text-xl text-gray-400 mb-2 sm:mb-3">
-                    <FormattedMessage id="chatter.landing.calc.passive" defaultMessage="Revenus passifs mensuels" />
+                <div className="text-center mb-6">
+                  <span className="inline-block bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-xs sm:text-sm font-bold border border-amber-500/30 mb-2">
+                    <FormattedMessage id="chatter.landing.calc.badge" defaultMessage="💰 Calculateur de revenus" />
+                  </span>
+                  <h3 className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-white">
+                    <FormattedMessage id="chatter.landing.calc.title.new" defaultMessage="Découvrez VOTRE potentiel" />
+                  </h3>
+                </div>
+
+                {/* Sliders */}
+                <div className="space-y-5 mb-6">
+                  {/* Niveau 1 */}
+                  <div>
+                    <label htmlFor="team-n1-slider" className="text-sm sm:text-base text-gray-300 block mb-2">
+                      <FormattedMessage
+                        id="chatter.landing.calc.level1"
+                        defaultMessage="Vos chatters N1 : {count}"
+                        values={{ count: <span className="text-green-400 font-bold">{teamSizeN1}</span> }}
+                      />
+                    </label>
+                    <input
+                      id="team-n1-slider"
+                      type="range"
+                      min="5"
+                      max="100"
+                      value={teamSizeN1}
+                      onChange={(e) => setTeamSizeN1(Number(e.target.value))}
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
+                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
+                        [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-green-500/40"
+                    />
+                  </div>
+
+                  {/* Niveau 2 */}
+                  <div>
+                    <label htmlFor="team-n2-slider" className="text-sm sm:text-base text-gray-300 block mb-2">
+                      <FormattedMessage
+                        id="chatter.landing.calc.level2"
+                        defaultMessage="Leurs recrues N2 : {count}"
+                        values={{ count: <span className="text-cyan-400 font-bold">{teamSizeN2}</span> }}
+                      />
+                    </label>
+                    <input
+                      id="team-n2-slider"
+                      type="range"
+                      min="10"
+                      max="200"
+                      value={teamSizeN2}
+                      onChange={(e) => setTeamSizeN2(Number(e.target.value))}
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
+                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
+                        [&::-webkit-slider-thumb]:bg-cyan-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-cyan-500/40"
+                    />
+                  </div>
+
+                  {/* Appels par chatter */}
+                  <div>
+                    <label htmlFor="calls-slider" className="text-sm sm:text-base text-gray-300 block mb-2">
+                      <FormattedMessage
+                        id="chatter.landing.calc.calls"
+                        defaultMessage="Appels/mois par chatter : {count}"
+                        values={{ count: <span className="text-amber-400 font-bold">{callsPerChatter}</span> }}
+                      />
+                    </label>
+                    <input
+                      id="calls-slider"
+                      type="range"
+                      min="5"
+                      max="30"
+                      value={callsPerChatter}
+                      onChange={(e) => setCallsPerChatter(Number(e.target.value))}
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
+                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
+                        [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-amber-500/40"
+                    />
+                  </div>
+                </div>
+
+                {/* Résultat ULTRA VENDEUR */}
+                <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border-2 border-amber-500/50 rounded-xl p-5 text-center">
+                  <p className="text-xs sm:text-sm text-gray-300 mb-1">
+                    <FormattedMessage id="chatter.landing.calc.yourPassive" defaultMessage="VOS REVENUS PASSIFS MENSUELS" />
                   </p>
-                  <p className="text-4xl sm:text-5xl lg:text-6xl font-black text-green-400" aria-live="polite">
-                    +{teamEarnings}${local(teamEarnings)}
+                  <p className="text-5xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-400 to-green-400 mb-2" aria-live="polite">
+                    +{teamEarnings}$
                   </p>
-                  <p className="text-sm sm:text-base lg:text-lg text-gray-400 mt-3 sm:mt-4 flex items-center justify-center gap-2">
-                    <Infinity className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+
+                  {/* Détails */}
+                  <div className="flex items-center justify-center gap-4 text-xs sm:text-sm text-gray-400 mb-3">
+                    <span className="text-green-400">N1: +{teamEarningsN1}$</span>
+                    <span>+</span>
+                    <span className="text-cyan-400">N2: +{teamEarningsN2}$</span>
+                  </div>
+
+                  {/* Message motivant */}
+                  <p className="text-sm sm:text-base font-bold text-white mb-2">
+                    <FormattedMessage id="chatter.landing.calc.motivation" defaultMessage="🎯 Sans compter VOS appels directs à 10$ !" />
+                  </p>
+                  <p className="text-xs sm:text-sm text-amber-400">
                     <FormattedMessage id="chatter.landing.calc.forever" defaultMessage="À vie. Tant que votre agence tourne." />
                   </p>
                 </div>
@@ -620,7 +883,7 @@ const ChatterLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
-            SECTION 5 - ZÉRO RISQUE
+            SECTION 6 - ZÉRO RISQUE
         ================================================================ */}
         <section className="section-content section-lazy bg-gray-950" aria-labelledby="section-risk">
           <div className="max-w-7xl mx-auto">
@@ -665,7 +928,7 @@ const ChatterLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
-            SECTION 6 - FAQ (Google Snippet 0 + Microdata)
+            SECTION 7 - FAQ (Google Snippet 0 + Microdata)
         ================================================================ */}
         <section className="section-content section-lazy bg-gradient-to-b from-gray-950 to-gray-950" id="faq" aria-labelledby="section-faq" itemScope itemType="https://schema.org/FAQPage">
           <div className="max-w-3xl mx-auto">
@@ -692,7 +955,7 @@ const ChatterLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
-            SECTION 7 - CTA FINAL
+            SECTION 8 - CTA FINAL
         ================================================================ */}
         <section className="section-content bg-gradient-to-b from-gray-950 via-red-950/20 to-black relative" aria-labelledby="section-cta-final">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,191,36,0.06),transparent_50%)]" aria-hidden="true" />

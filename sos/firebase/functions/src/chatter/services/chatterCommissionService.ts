@@ -598,6 +598,102 @@ export async function releaseCommission(
 // ============================================================================
 
 /**
+ * P0 FIX 2026-02-12: Cancel all commissions related to a call session
+ * Called when a payment is refunded to prevent chatters from keeping commissions
+ *
+ * @param callSessionId - The call session ID
+ * @param reason - Cancellation reason (e.g., "Payment refunded")
+ * @param cancelledBy - Who cancelled (e.g., "system", admin UID)
+ * @returns Number of commissions cancelled
+ */
+export async function cancelCommissionsForCallSession(
+  callSessionId: string,
+  reason: string,
+  cancelledBy: string = "system"
+): Promise<{ success: boolean; cancelledCount: number; errors: string[] }> {
+  const db = getFirestore();
+  const errors: string[] = [];
+  let cancelledCount = 0;
+
+  try {
+    // Find all commissions related to this call session
+    // Commissions can be linked via:
+    // 1. sourceId = callSessionId (direct)
+    // 2. sourceDetails.callSessionId = callSessionId (nested)
+    const commissionsQuery = await db
+      .collection("chatter_commissions")
+      .where("sourceId", "==", callSessionId)
+      .get();
+
+    // Also check sourceDetails.callSessionId for nested refs
+    const commissionsQuery2 = await db
+      .collection("chatter_commissions")
+      .where("sourceDetails.callSessionId", "==", callSessionId)
+      .get();
+
+    const allCommissions = [
+      ...commissionsQuery.docs,
+      ...commissionsQuery2.docs,
+    ];
+
+    // Deduplicate by commission ID
+    const uniqueCommissions = new Map();
+    for (const doc of allCommissions) {
+      uniqueCommissions.set(doc.id, doc);
+    }
+
+    logger.info("[cancelCommissionsForCallSession] Found commissions to cancel", {
+      callSessionId,
+      count: uniqueCommissions.size,
+    });
+
+    // Cancel each commission
+    for (const [commissionId, doc] of uniqueCommissions.entries()) {
+      const commission = doc.data() as ChatterCommission;
+
+      // Skip if already cancelled or paid
+      if (commission.status === "cancelled" || commission.status === "paid") {
+        logger.info("[cancelCommissionsForCallSession] Skipping already cancelled/paid", {
+          commissionId,
+          status: commission.status,
+        });
+        continue;
+      }
+
+      const result = await cancelCommission(commissionId, reason, cancelledBy);
+
+      if (result.success) {
+        cancelledCount++;
+      } else {
+        errors.push(`${commissionId}: ${result.error || "Unknown error"}`);
+      }
+    }
+
+    logger.info("[cancelCommissionsForCallSession] Complete", {
+      callSessionId,
+      cancelledCount,
+      errorsCount: errors.length,
+    });
+
+    return {
+      success: errors.length === 0,
+      cancelledCount,
+      errors,
+    };
+  } catch (error) {
+    logger.error("[cancelCommissionsForCallSession] Error", {
+      callSessionId,
+      error,
+    });
+    return {
+      success: false,
+      cancelledCount,
+      errors: [error instanceof Error ? error.message : "Failed to cancel commissions"],
+    };
+  }
+}
+
+/**
  * Cancel a commission (admin action or refund)
  */
 export async function cancelCommission(

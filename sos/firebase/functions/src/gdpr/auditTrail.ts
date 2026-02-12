@@ -15,6 +15,8 @@
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
+import { makeStripeClient } from '../StripeManager';
+import { getStripeSecretKey } from '../lib/stripe';
 
 // ============================================================================
 // CONFIGURATION
@@ -910,8 +912,19 @@ async function anonymizeUserData(userId: string): Promise<void> {
   const db = admin.firestore();
   const batch = db.batch();
 
-  // Anonymiser le profil utilisateur
+  // Récupérer les stripeCustomerId AVANT de les anonymiser
   const userRef = db.collection('users').doc(userId);
+  const userSnapshot = await userRef.get();
+  const userData = userSnapshot.data();
+  const userStripeCustomerId = userData?.stripeCustomerId as string | undefined;
+
+  // Vérifier aussi si le user a un customer Stripe pour les subscriptions (providers)
+  const subscriptionRef = db.collection('subscriptions').doc(userId);
+  const subscriptionSnapshot = await subscriptionRef.get();
+  const subscriptionData = subscriptionSnapshot.data();
+  const subscriptionStripeCustomerId = subscriptionData?.stripeCustomerId as string | undefined;
+
+  // Anonymiser le profil utilisateur
   batch.update(userRef, {
     email: `deleted_${userId}@anonymized.local`,
     displayName: 'Utilisateur supprimé',
@@ -919,6 +932,7 @@ async function anonymizeUserData(userId: string): Promise<void> {
     photoURL: null,
     address: null,
     'preferences.consents': null,
+    stripeCustomerId: null, // Supprimer la référence
     deletedAt: admin.firestore.Timestamp.now(),
     isDeleted: true
   });
@@ -953,16 +967,69 @@ async function anonymizeUserData(userId: string): Promise<void> {
     .get();
   ipRegistryQuery.docs.forEach(doc => batch.delete(doc.ref));
 
+  // Anonymiser/supprimer le document subscription si existant
+  if (subscriptionSnapshot.exists) {
+    // Supprimer la référence au customer Stripe mais conserver l'historique de facturation
+    batch.update(subscriptionRef, {
+      stripeCustomerId: null,
+      deletedAt: admin.firestore.Timestamp.now(),
+      isDeleted: true
+    });
+  }
+
   // Note: Les commissions et retraits sont conservés (obligation comptable)
   // mais les données personnelles dans chatters sont anonymisées
 
   await batch.commit();
+
+  // RGPD Art. 17: Supprimer les customers Stripe avec toutes leurs données personnelles
+  const customersToDelete = [userStripeCustomerId, subscriptionStripeCustomerId].filter(Boolean) as string[];
+
+  for (const customerId of customersToDelete) {
+    try {
+      await deleteStripeCustomer(customerId);
+      logger.info(`[GDPR] Stripe customer deleted: ${customerId.substring(0, 12)}...`);
+    } catch (stripeError) {
+      logger.error(`[GDPR] Failed to delete Stripe customer ${customerId}:`, stripeError);
+      // On continue quand même pour ne pas bloquer la suppression du compte
+    }
+  }
 
   // Supprimer le compte Firebase Auth
   try {
     await admin.auth().deleteUser(userId);
   } catch (authError) {
     logger.warn(`[GDPR] Could not delete auth user ${userId}:`, authError);
+  }
+}
+
+/**
+ * Supprime un customer Stripe (RGPD Art. 17 - Droit à l'effacement)
+ * @param stripeCustomerId - L'ID du customer Stripe (cus_xxx)
+ */
+async function deleteStripeCustomer(stripeCustomerId: string): Promise<void> {
+  try {
+    // Récupérer la clé Stripe appropriée
+    const stripeSecretKey = getStripeSecretKey();
+    const stripe = makeStripeClient(stripeSecretKey);
+
+    // Supprimer le customer Stripe - Cela supprime:
+    // - Les données personnelles (nom, email, téléphone, adresse)
+    // - Les méthodes de paiement attachées
+    // - Les abonnements actifs (annulés automatiquement)
+    // - Les sources de paiement
+    // Note: Les PaymentIntents et Charges historiques sont conservés chez Stripe
+    // pour obligations légales/comptables mais ne contiennent plus de référence au customer
+    await stripe.customers.del(stripeCustomerId);
+
+    logger.info(`[GDPR] Stripe customer successfully deleted: ${stripeCustomerId}`);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(`[GDPR] Failed to delete Stripe customer ${stripeCustomerId}:`, {
+      error: err.message,
+      stack: err.stack
+    });
+    throw err;
   }
 }
 

@@ -114,8 +114,8 @@ const InfluencerRegister: React.FC = () => {
   const seoDescription = intl.formatMessage({ id: 'influencer.register.seo.description', defaultMessage: 'Inscrivez-vous au programme Influenceur SOS-Expat.' });
 
   const benefits = [
-    { icon: <Gift className="w-5 h-5 text-red-400" />, text: intl.formatMessage({ id: 'influencer.register.benefit1', defaultMessage: '$10 par client refere' }) },
-    { icon: <Users className="w-5 h-5 text-purple-400" />, text: intl.formatMessage({ id: 'influencer.register.benefit2.v3', defaultMessage: '$5/appel avocat ou expatrie aidant recrute' }) },
+    { icon: <Gift className="w-5 h-5 text-red-400" />, text: intl.formatMessage({ id: 'influencer.register.benefit1', defaultMessage: '$10 par appel référé' }) },
+    { icon: <Users className="w-5 h-5 text-purple-400" />, text: intl.formatMessage({ id: 'influencer.register.benefit2.v3', defaultMessage: '$5 par appel à vos partenaires avocats ou expatriés aidants' }) },
     { icon: <Image className="w-5 h-5 text-blue-400" />, text: intl.formatMessage({ id: 'influencer.register.benefit3', defaultMessage: 'Bannieres, widgets, QR codes inclus' }) },
     { icon: <CheckCircle className="w-5 h-5 text-green-400" />, text: intl.formatMessage({ id: 'influencer.register.benefit4', defaultMessage: 'Activation immediate (pas de quiz)' }) },
   ];

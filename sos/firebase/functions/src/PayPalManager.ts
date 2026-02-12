@@ -31,6 +31,12 @@ import { META_CAPI_TOKEN, trackCAPIPurchase, UserData } from "./metaConversionsA
 import { sendPaymentNotifications, ENCRYPTION_KEY, OUTIL_SYNC_API_KEY } from "./notifications/paymentNotifications";
 // P0 FIX: Import encryptPhoneNumber for Twilio call compatibility (phones must be encrypted in call_sessions)
 import { encryptPhoneNumber } from "./utils/encryption";
+// P0 FIX 2026-02-12: Cancel ALL affiliate commissions on refund (5 systems)
+import { cancelCommissionsForCallSession as cancelChatterCommissions } from "./chatter/services/chatterCommissionService";
+import { cancelCommissionsForCallSession as cancelInfluencerCommissions } from "./influencer/services/influencerCommissionService";
+import { cancelBloggerCommissionsForCallSession as cancelBloggerCommissions } from "./blogger/services/bloggerCommissionService";
+import { cancelCommissionsForCallSession as cancelGroupAdminCommissions } from "./groupAdmin/services/groupAdminCommissionService";
+import { cancelCommissionsForCallSession as cancelAffiliateCommissions } from "./affiliate/services/commissionService";
 // P0 FIX: Import setProviderBusy to reserve provider immediately after payment authorization
 import { setProviderBusy } from "./callables/providerStatusManager";
 import { PAYMENT_FUNCTIONS_REGION } from "./configs/callRegion";
@@ -1748,23 +1754,85 @@ export class PayPalManager {
       .limit(1)
       .get();
 
-    if (!ordersQuery.empty) {
-      const orderData = ordersQuery.docs[0].data();
+    if (ordersQuery.empty) {
+      console.error(`❌ [PAYPAL] Order not found for capture: ${captureId}`);
+      return {
+        success: false,
+        refundId: "",
+        status: "NOT_FOUND",
+        blocked: true,
+        blockReason: "Ordre PayPal introuvable",
+      };
+    }
 
-      // Vérifier si le remboursement est bloqué
-      if (orderData.refundBlocked && !forceRefund) {
-        console.warn(`🚫 [PAYPAL] Refund BLOCKED for capture ${captureId}: ${orderData.refundBlockReason}`);
+    // P0 FIX 2026-02-12: Atomic check to prevent double refund race condition
+    const orderRef = ordersQuery.docs[0].ref;
+    let orderData: FirebaseFirestore.DocumentData;
 
-        // Logger la tentative de remboursement bloquée
+    try {
+      await this.db.runTransaction(async (transaction) => {
+        const orderDoc = await transaction.get(orderRef);
+        orderData = orderDoc.data()!;
+
+        // CRITICAL: Prevent double refund - check if already refunded
+        if (orderData.status === "REFUNDED" || orderData.refunded === true) {
+          throw new Error(`Order ${orderRef.id} is already refunded (refundId: ${orderData.refundId || 'unknown'})`);
+        }
+
+        // Vérifier si le remboursement est bloqué (INSIDE transaction to prevent race)
+        if (orderData.refundBlocked && !forceRefund) {
+          throw new Error(`Refund blocked: ${orderData.refundBlockReason || "Service has been delivered"}`);
+        }
+
+        // Mark as refunding to prevent concurrent refunds
+        transaction.update(orderRef, {
+          status: "REFUNDING",
+          refundingAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`🚫 [PAYPAL] Cannot refund: ${errorMessage}`);
+
+      // Log blocked refund attempt if it was blocked
+      if (errorMessage.includes("Refund blocked")) {
         await this.db.collection("refund_attempts_blocked").add({
           captureId,
-          orderId: orderData.orderId,
-          callSessionId: orderData.callSessionId,
-          providerId: orderData.providerId,
-          clientId: orderData.clientId,
-          amount: amount || orderData.capturedGrossAmount,
+          orderId: orderRef.id,
           reason,
-          blockReason: orderData.refundBlockReason || "Service has been delivered",
+          blockReason: errorMessage,
+          attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+
+      return {
+        success: false,
+        refundId: "",
+        status: errorMessage.includes("already refunded") ? "ALREADY_REFUNDED" : "BLOCKED",
+        blocked: true,
+        blockReason: errorMessage,
+      };
+    }
+
+    // Vérifier si le service a été délivré via la session d'appel
+    if (orderData.callSessionId && !forceRefund) {
+      const sessionDoc = await this.db.collection("call_sessions").doc(orderData.callSessionId).get();
+      const sessionData = sessionDoc.data();
+
+      if (sessionData?.status === "completed" || sessionData?.payment?.serviceDelivered) {
+        // Revert status
+        await orderRef.update({
+          status: orderData.status || "CAPTURED",
+          refundingAt: null,
+        });
+
+        console.warn(`🚫 [PAYPAL] Refund BLOCKED: Call session ${orderData.callSessionId} is completed`);
+
+        await this.db.collection("refund_attempts_blocked").add({
+          captureId,
+          orderId: orderRef.id,
+          callSessionId: orderData.callSessionId,
+          reason: "Call session completed",
           attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
@@ -1773,36 +1841,8 @@ export class PayPalManager {
           refundId: "",
           status: "BLOCKED",
           blocked: true,
-          blockReason: orderData.refundBlockReason || "Le remboursement est impossible car la prestation a été effectuée.",
+          blockReason: "Le remboursement est impossible car la consultation a eu lieu.",
         };
-      }
-
-      // Vérifier si le service a été délivré via la session d'appel
-      if (orderData.callSessionId) {
-        const sessionDoc = await this.db.collection("call_sessions").doc(orderData.callSessionId).get();
-        const sessionData = sessionDoc.data();
-
-        if (sessionData?.status === "completed" || sessionData?.payment?.serviceDelivered) {
-          if (!forceRefund) {
-            console.warn(`🚫 [PAYPAL] Refund BLOCKED: Call session ${orderData.callSessionId} is completed`);
-
-            await this.db.collection("refund_attempts_blocked").add({
-              captureId,
-              orderId: orderData.orderId,
-              callSessionId: orderData.callSessionId,
-              reason: "Call session completed",
-              attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
-
-            return {
-              success: false,
-              refundId: "",
-              status: "BLOCKED",
-              blocked: true,
-              blockReason: "Le remboursement est impossible car la consultation a eu lieu.",
-            };
-          }
-        }
       }
     }
 
@@ -1811,11 +1851,16 @@ export class PayPalManager {
 
     // P1-4 SECURITY FIX: Valider que le montant de remboursement <= montant capturé
     // Empêche les remboursements supérieurs au paiement original
-    if (amount !== undefined && !ordersQuery.empty) {
-      const orderData = ordersQuery.docs[0].data();
-      const capturedAmount = orderData.capturedGrossAmount || orderData.amount || 0;
+    if (amount !== undefined) {
+      const capturedAmount = orderData!.capturedGrossAmount || orderData!.amount || 0;
 
       if (amount > capturedAmount) {
+        // Revert status
+        await orderRef.update({
+          status: orderData!.status || "CAPTURED",
+          refundingAt: null,
+        });
+
         console.error(`🚫 [PAYPAL] Refund amount ${amount} exceeds captured amount ${capturedAmount}`);
         return {
           success: false,
@@ -1840,19 +1885,85 @@ export class PayPalManager {
       refundData.note_to_payer = reason;
     }
 
-    const response = await this.apiRequest<any>(
-      "POST",
-      `/v2/payments/captures/${captureId}/refund`,
-      Object.keys(refundData).length > 0 ? refundData : {}
-    );
+    // P0 FIX 2026-02-12: Wrap refund with try-catch to revert status on failure
+    let response: any;
+    try {
+      response = await this.apiRequest<any>(
+        "POST",
+        `/v2/payments/captures/${captureId}/refund`,
+        Object.keys(refundData).length > 0 ? refundData : {}
+      );
 
-    console.log("✅ [PAYPAL] Refund processed:", response.id);
+      console.log("✅ [PAYPAL] Refund processed:", response.id);
 
-    return {
-      success: response.status === "COMPLETED",
-      refundId: response.id,
-      status: response.status,
-    };
+      // Update order status to REFUNDED on success
+      await orderRef.update({
+        status: "REFUNDED",
+        refunded: true,
+        refundId: response.id,
+        refundStatus: response.status,
+        refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // ===== P0 FIX 2026-02-12: Cancel ALL affiliate commissions on refund (5 systems) =====
+      // Prevent all affiliates from keeping commissions when payment is refunded
+      const callSessionId = orderData!.callSessionId;
+      if (callSessionId) {
+        try {
+          const cancelReason = `PayPal payment refunded${reason ? `: ${reason}` : ""}`;
+          const [
+            chatterResult,
+            influencerResult,
+            bloggerResult,
+            groupAdminResult,
+            affiliateResult
+          ] = await Promise.all([
+            cancelChatterCommissions(callSessionId, cancelReason, "system_refund"),
+            cancelInfluencerCommissions(callSessionId, cancelReason, "system_refund"),
+            cancelBloggerCommissions(callSessionId, cancelReason, "system_refund"),
+            cancelGroupAdminCommissions(callSessionId, cancelReason),
+            cancelAffiliateCommissions(callSessionId, cancelReason, "system_refund"),
+          ]);
+
+          const totalCancelled =
+            chatterResult.cancelledCount +
+            influencerResult.cancelledCount +
+            bloggerResult.cancelledCount +
+            groupAdminResult.cancelledCount +
+            affiliateResult.cancelledCount;
+
+          console.log("✅ [PAYPAL] All commissions cancelled:", {
+            callSessionId,
+            chatters: chatterResult.cancelledCount,
+            influencers: influencerResult.cancelledCount,
+            bloggers: bloggerResult.cancelledCount,
+            groupAdmins: groupAdminResult.cancelledCount,
+            affiliates: affiliateResult.cancelledCount,
+            total: totalCancelled,
+          });
+        } catch (commissionError) {
+          // Log but don't fail the refund - commission cancellation is best-effort
+          console.error("❌ [PAYPAL] Failed to cancel commissions:", commissionError);
+        }
+      }
+
+      return {
+        success: response.status === "COMPLETED",
+        refundId: response.id,
+        status: response.status,
+      };
+    } catch (error) {
+      // Revert status on failure
+      await orderRef.update({
+        status: orderData!.status || "CAPTURED",
+        refundingAt: null,
+        refundError: error instanceof Error ? error.message : String(error),
+        refundFailedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      console.error(`❌ [PAYPAL] Refund failed:`, error);
+      throw error;
+    }
   }
 
   /**

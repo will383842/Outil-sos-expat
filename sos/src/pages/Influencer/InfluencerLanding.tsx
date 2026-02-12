@@ -193,7 +193,16 @@ const InfluencerLanding: React.FC = () => {
   // Country-specific config
   const { countryCode, lang: urlLang } = useCountryFromUrl();
   const { config: countryConfig } = useCountryLandingConfig('influencer', countryCode, urlLang || langCode);
-  const local = (usd: number) => { const s = convertToLocal(usd, countryConfig.currency); return s ? ` (${s})` : ''; };
+
+  // VENDEUR: Ne montrer la conversion QUE si le montant reste attractif (pas en Europe avec des 0,XX€)
+  const local = (usd: number) => {
+    const hideConversionCurrencies = ['EUR', 'GBP', 'CHF', 'USD', 'CAD', 'AUD'];
+    if (hideConversionCurrencies.includes(countryConfig.currency)) {
+      return ''; // Pas de conversion pour les petits montants
+    }
+    const str = convertToLocal(usd, countryConfig.currency);
+    return str ? ` (${str})` : '';
+  };
 
   // Calculator state
   const [calcVideos, setCalcVideos] = useState(4);
@@ -219,12 +228,12 @@ const InfluencerLanding: React.FC = () => {
   }, []);
 
   const seoTitle = intl.formatMessage({ id: 'influencer.landing.seo.title', defaultMessage: 'Become a SOS-Expat Influencer | Earn $10/client helping people find legal help' });
-  const seoDescription = intl.formatMessage({ id: 'influencer.landing.seo.description', defaultMessage: 'Promote SOS-Expat on YouTube, Instagram, TikTok. Earn $10 per client, $5 per lawyer/helper partner. Promo tools included. Withdraw via Wise or PayPal.' });
+  const seoDescription = intl.formatMessage({ id: 'influencer.landing.seo.description', defaultMessage: 'Promote SOS-Expat on YouTube, Instagram, TikTok. Earn $10 per call, $5 per call to lawyer or expat helper partners. Promo tools included. Withdraw via Wise or PayPal.' });
   const ctaAriaLabel = intl.formatMessage({ id: 'influencer.hero.cta', defaultMessage: 'Become an Influencer - It\'s Free' });
 
   const faqs = [
     { question: intl.formatMessage({ id: 'influencer.faq.q1', defaultMessage: "What exactly do I have to do as an Influencer?" }), answer: intl.formatMessage({ id: 'influencer.faq.a1', defaultMessage: "Create content about expat life, travel, or immigration on YouTube, Instagram, TikTok or your blog. Include your unique affiliate link. When your followers call a lawyer or expat helper, you earn $10. That's it!" }) },
-    { question: intl.formatMessage({ id: 'influencer.faq.q2', defaultMessage: "How much can I realistically earn?" }), answer: intl.formatMessage({ id: 'influencer.faq.a2', defaultMessage: "It depends on your audience size. 10 clients = $100. 50 clients = $500. Some influencers earn $1000-5000/month by finding lawyer/helper partners and earning $5 per call they receive." }) },
+    { question: intl.formatMessage({ id: 'influencer.faq.q2', defaultMessage: "How much can I realistically earn?" }), answer: intl.formatMessage({ id: 'influencer.faq.a2', defaultMessage: "It depends on your audience size. 10 calls = $100. 50 calls = $500. Some influencers earn $1000-5000/month by finding lawyer or expat helper partners and earning $5 per call they receive." }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q3', defaultMessage: "What is an 'expat helper'?" }), answer: intl.formatMessage({ id: 'influencer.faq.a3', defaultMessage: "Expat helpers are experienced expats who provide practical advice and guidance. They're not lawyers, but they know the local system well and can help with everyday questions about visas, administration, housing, etc." }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q4', defaultMessage: "What promo tools do I get?" }), answer: intl.formatMessage({ id: 'influencer.faq.a4', defaultMessage: "You get ready-made banners, interactive widgets for your website, personalized QR codes, promo texts in 9 languages, and high-quality logos. Everything you need to promote professionally." }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q5', defaultMessage: "How and when do I get paid?" }), answer: intl.formatMessage({ id: 'influencer.faq.a5', defaultMessage: "Withdraw anytime once you reach $50. We support Wise, PayPal, Mobile Money, and bank transfers. Payments processed within 48 hours." }) },
@@ -581,7 +590,7 @@ const InfluencerLanding: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-2xl sm:text-3xl font-black text-purple-400">$5{local(5)}</div>
-                    <div className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="influencer.earnings.partner" defaultMessage="Per call to your lawyer/helper partners" /></div>
+                    <div className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="influencer.earnings.partner" defaultMessage="Per call to your lawyer or expat helper partners" /></div>
                   </div>
                 </div>
                 <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="influencer.earnings.partner.desc" defaultMessage="Find a lawyer or expat helper to join. Earn $5 passively every time they receive a call!" /></p>

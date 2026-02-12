@@ -11,6 +11,12 @@ import { getStripeSecretKey, getStripeSecretKeyLegacy, getStripeMode, validateSt
 import { PayPalManager } from './PayPalManager';
 // P0 FIX 2026-01-30: Circuit breaker for Stripe API resilience
 import { stripeCircuitBreaker, CircuitBreakerError } from './lib/circuitBreaker';
+// P0 FIX 2026-02-12: Cancel ALL affiliate commissions on refund (5 systems)
+import { cancelCommissionsForCallSession as cancelChatterCommissions } from './chatter/services/chatterCommissionService';
+import { cancelCommissionsForCallSession as cancelInfluencerCommissions } from './influencer/services/influencerCommissionService';
+import { cancelBloggerCommissionsForCallSession as cancelBloggerCommissions } from './blogger/services/bloggerCommissionService';
+import { cancelCommissionsForCallSession as cancelGroupAdminCommissions } from './groupAdmin/services/groupAdminCommissionService';
+import { cancelCommissionsForCallSession as cancelAffiliateCommissions } from './affiliate/services/commissionService';
 
 /* ===================================================================
  * Utils
@@ -1641,13 +1647,38 @@ export class StripeManager {
       this.validateConfiguration(secretKey);
       if (!this.stripe) throw new HttpsError('internal', 'Stripe non initialisé');
 
-      // Verifier si ce paiement utilisait Destination Charges ou Direct Charges
-      const paymentDoc = await this.db.collection('payments').doc(paymentIntentId).get();
-      // P1 FIX: Vérifier que le document existe avant d'utiliser les données
-      if (!paymentDoc.exists) {
-        throw new HttpsError('not-found', `Payment document not found: ${paymentIntentId}`);
+      // P0 FIX 2026-02-12: Atomic check to prevent double refund race condition
+      // Use Firestore transaction to check status before refunding
+      const paymentRef = this.db.collection('payments').doc(paymentIntentId);
+      let paymentData: FirebaseFirestore.DocumentData | undefined;
+
+      await this.db.runTransaction(async (transaction) => {
+        const paymentDoc = await transaction.get(paymentRef);
+
+        if (!paymentDoc.exists) {
+          throw new HttpsError('not-found', `Payment document not found: ${paymentIntentId}`);
+        }
+
+        paymentData = paymentDoc.data();
+
+        // CRITICAL: Prevent double refund - check if already refunded
+        if (paymentData?.status === 'refunded') {
+          throw new HttpsError(
+            'failed-precondition',
+            `Payment ${paymentIntentId} is already refunded (refundId: ${paymentData.refundId})`
+          );
+        }
+
+        // Mark as refunding to prevent concurrent refunds
+        transaction.update(paymentRef, {
+          status: 'refunding',
+          refundingAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      });
+
+      if (!paymentData) {
+        throw new HttpsError('internal', 'Transaction failed to retrieve payment data');
       }
-      const paymentData = paymentDoc.data();
       // P0-5 FIX: Vérifier AUSSI useDirectCharges (nouveau modèle)
       // - useDestinationCharges: ancien modèle (transfer_data vers provider)
       // - useDirectCharges: nouveau modèle (charge sur compte provider avec application_fee)
@@ -1715,12 +1746,21 @@ export class StripeManager {
       stripeOptions.idempotencyKey = refundIdempotencyKey.substring(0, 255);
 
       // P0 FIX 2026-01-30: Wrap refund with circuit breaker
+      // P0 FIX 2026-02-12: If refund fails, revert status to prevent stuck "refunding" state
       let refund: Stripe.Refund;
       try {
         refund = await stripeCircuitBreaker.execute(() =>
           this.stripe!.refunds.create(refundData, stripeOptions)
         );
       } catch (error) {
+        // Revert status back to previous state (captured/succeeded)
+        await paymentRef.update({
+          status: paymentData?.status || 'captured',
+          refundingAt: null,
+          refundError: error instanceof Error ? error.message : String(error),
+          refundFailedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
         if (error instanceof CircuitBreakerError) {
           console.error('[refundPayment] Circuit breaker OPEN - Stripe API unavailable');
           throw new HttpsError('unavailable', 'Service de paiement temporairement indisponible. Le remboursement sera retenté.');
@@ -1775,6 +1815,48 @@ export class StripeManager {
 
       await this.db.collection('refunds').doc(refund.id).set(refundRecord);
       console.log('[refundPayment] Refund record saved to refunds collection:', refund.id);
+
+      // ===== P0 FIX 2026-02-12: Cancel ALL affiliate commissions on refund (5 systems) =====
+      // Prevent all affiliates from keeping commissions when payment is refunded
+      const callSessionId = sessionId || paymentData?.callSessionId;
+      if (callSessionId) {
+        try {
+          const cancelReason = `Payment refunded: ${reason}`;
+          const [
+            chatterResult,
+            influencerResult,
+            bloggerResult,
+            groupAdminResult,
+            affiliateResult
+          ] = await Promise.all([
+            cancelChatterCommissions(callSessionId, cancelReason, 'system_refund'),
+            cancelInfluencerCommissions(callSessionId, cancelReason, 'system_refund'),
+            cancelBloggerCommissions(callSessionId, cancelReason, 'system_refund'),
+            cancelGroupAdminCommissions(callSessionId, cancelReason),
+            cancelAffiliateCommissions(callSessionId, cancelReason, 'system_refund'),
+          ]);
+
+          const totalCancelled =
+            chatterResult.cancelledCount +
+            influencerResult.cancelledCount +
+            bloggerResult.cancelledCount +
+            groupAdminResult.cancelledCount +
+            affiliateResult.cancelledCount;
+
+          console.log('[refundPayment] All commissions cancelled:', {
+            callSessionId,
+            chatters: chatterResult.cancelledCount,
+            influencers: influencerResult.cancelledCount,
+            bloggers: bloggerResult.cancelledCount,
+            groupAdmins: groupAdminResult.cancelledCount,
+            affiliates: affiliateResult.cancelledCount,
+            total: totalCancelled,
+          });
+        } catch (commissionError) {
+          // Log but don't fail the refund - commission cancellation is best-effort
+          console.error('[refundPayment] Failed to cancel commissions:', commissionError);
+        }
+      }
 
       // ===== P0 FIX: Notification de remboursement au client =====
       if (paymentData?.clientId) {

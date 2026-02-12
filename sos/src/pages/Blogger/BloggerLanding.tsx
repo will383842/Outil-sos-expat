@@ -168,7 +168,16 @@ const BloggerLanding: React.FC = () => {
   // Country-specific config
   const { countryCode, lang: urlLang } = useCountryFromUrl();
   const { config: countryConfig } = useCountryLandingConfig('blogger', countryCode, urlLang || langCode);
-  const local = (usd: number) => { const s = convertToLocal(usd, countryConfig.currency); return s ? ` (${s})` : ''; };
+
+  // VENDEUR: Ne montrer la conversion QUE si le montant reste attractif (pas en Europe avec des 0,XX€)
+  const local = (usd: number) => {
+    const hideConversionCurrencies = ['EUR', 'GBP', 'CHF', 'USD', 'CAD', 'AUD'];
+    if (hideConversionCurrencies.includes(countryConfig.currency)) {
+      return ''; // Pas de conversion pour les petits montants
+    }
+    const str = convertToLocal(usd, countryConfig.currency);
+    return str ? ` (${str})` : '';
+  };
 
   // Calculator
   const [calcArticles, setCalcArticles] = useState(20);
@@ -193,7 +202,7 @@ const BloggerLanding: React.FC = () => {
 
   // SEO
   const seoTitle = intl.formatMessage({ id: 'blogger.landing.seo.title', defaultMessage: 'Become a SOS-Expat Blogger Partner | Earn $10/client with your blog' });
-  const seoDescription = intl.formatMessage({ id: 'blogger.landing.seo.description', defaultMessage: 'Write articles about expat life. Earn $10 per client, $5 per lawyer/helper partner. Templates, logos, and resources included. Withdraw via Wise or PayPal.' });
+  const seoDescription = intl.formatMessage({ id: 'blogger.landing.seo.description', defaultMessage: 'Write articles about expat life. Earn $10 per call, $5 per call to lawyer or expat helper partners. Templates, logos, and resources included. Withdraw via Wise or PayPal.' });
   const ctaAriaLabel = intl.formatMessage({ id: 'blogger.aria.cta.main', defaultMessage: 'Start earning money with your blog - Register as a Blogger Partner for free' });
 
   // FAQ
@@ -269,35 +278,59 @@ const BloggerLanding: React.FC = () => {
               </span>
             </div>
 
-            {/* H1 */}
+            {/* H1 - ULTRA VENDEUR */}
             <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
-              <FormattedMessage id="blogger.hero.title" defaultMessage="Monetize Your Blog: $10 Per Client" />
+              <span><FormattedMessage id="blogger.hero.new.line1" defaultMessage="Gagnez jusqu'à" /></span>{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400">
+                <FormattedMessage id="blogger.hero.new.amount" defaultMessage="5000$+/mois" />
+              </span>
+              <br />
+              <span className="text-gray-200"><FormattedMessage id="blogger.hero.new.line2" defaultMessage="avec votre blog" /></span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-lg sm:text-xl text-white/80 max-w-3xl mx-auto mb-4 sm:mb-6">
-              <FormattedMessage id="blogger.hero.subtitle" defaultMessage="Write articles about expat life. Include your link. Readers call a lawyer or expat helper. You earn $10." />
+              <FormattedMessage id="blogger.hero.new.subtitle" defaultMessage="Écrivez sur la vie d'expatrié. Intégrez votre lien. Vos lecteurs appellent. Vous gagnez 10$/appel. SEO = revenus passifs !" />
             </p>
 
-            {/* Simple flow box */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 max-w-2xl mx-auto mb-6 sm:mb-8 border border-white/10">
-              <p className="text-base sm:text-lg font-semibold text-white/90">
-                <FormattedMessage id="blogger.hero.simple" defaultMessage="Your job: Write articles → Add your link → Readers call → You earn $10" />
+            {/* 3 SOURCES DE REVENUS - ULTRA VENDEUR */}
+            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-4xl mx-auto">
+              <p className="text-center text-sm sm:text-base text-gray-400 mb-4">
+                <FormattedMessage id="blogger.hero.sources" defaultMessage="3 sources de revenus illimitées :" />
               </p>
-            </div>
-
-            {/* Key numbers */}
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-              {[
-                { value: '$10', label: intl.formatMessage({ id: 'blogger.hero.trust.client', defaultMessage: 'per client' }) },
-                { value: '$5', label: intl.formatMessage({ id: 'blogger.hero.trust.partner', defaultMessage: 'per partner call' }) },
-                { value: 'SEO', label: intl.formatMessage({ id: 'blogger.hero.trust.seo', defaultMessage: 'passive traffic' }) },
-              ].map((item, i) => (
-                <div key={i} className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl px-5 py-3 min-w-[100px]">
-                  <span className="text-xl sm:text-2xl font-black text-purple-400">{item.value}</span>
-                  <span className="text-xs sm:text-sm text-white/60">{item.label}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                {/* Source 1 : Appels lecteurs */}
+                <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/30 rounded-xl p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-black text-amber-400 mb-1">10$</div>
+                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="blogger.hero.source1" defaultMessage="par appel lecteur" /></div>
                 </div>
-              ))}
+
+                {/* Source 2 : SEO passif */}
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">♾️</div>
+                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="blogger.hero.source2" defaultMessage="trafic SEO passif" /></div>
+                </div>
+
+                {/* Source 3 : Partenaires */}
+                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-3 sm:p-4 text-center relative">
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    <FormattedMessage id="blogger.hero.hot" defaultMessage="🔥 HOT" />
+                  </span>
+                  <div className="text-2xl sm:text-3xl font-black text-purple-400 mb-1">1500$</div>
+                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="blogger.hero.source3" defaultMessage="avec 10 partenaires" /></div>
+                </div>
+              </div>
+
+              {/* Exemple partenaire */}
+              <div className="mt-4 pt-4 border-t border-purple-500/20 text-center">
+                <p className="text-xs sm:text-sm text-gray-400">
+                  <FormattedMessage
+                    id="blogger.hero.partnerExample"
+                    defaultMessage="💡 1 partenaire (avocat/expatrié aidant) = 30 appels/mois × 5$ × 6 mois = {total} passifs !"
+                    values={{ total: <span className="text-purple-400 font-bold">900$</span> }}
+                  />
+                </p>
+              </div>
             </div>
 
             {/* CTA */}
@@ -847,7 +880,7 @@ const BloggerLanding: React.FC = () => {
                   <div>
                     <div className="text-2xl sm:text-3xl font-black text-purple-400">$5</div>
                     <div className="text-xs sm:text-sm text-gray-400">
-                      <FormattedMessage id="blogger.earnings.partner" defaultMessage="Per call to your lawyer/helper partners" />
+                      <FormattedMessage id="blogger.earnings.partner" defaultMessage="Per call to your lawyer or expat helper partners" />
                     </div>
                   </div>
                 </div>

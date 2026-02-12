@@ -194,6 +194,20 @@ export {
   chatterAggregateActivityFeed,
 } from "./scheduled";
 
+// ============================================================================
+// DRIP MESSAGES - 60+ Motivation Messages via Telegram
+// ============================================================================
+
+export {
+  sendChatterDripMessages,
+} from "./triggers/sendDripMessage";
+
+export {
+  chatter_sendDripMessage,
+  chatter_getDripStats,
+  chatter_previewDripMessage,
+} from "./callables/manageDripMessages";
+
 // Weekly Challenges Callables
 export {
   getCurrentChallenge,
