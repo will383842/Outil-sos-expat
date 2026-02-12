@@ -2,14 +2,13 @@ import React from "react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { Bot, Database, ExternalLink, Link2, Mail, MessageCircle, Send, Server, Settings, SettingsIcon, Users, Wrench } from "lucide-react";
+import { Bot, Database, ExternalLink, Link2, Mail, Server, Settings, Users, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.sos-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
 const MAILWIZZ_BACKEND_URL = "https://mail.sos-expat.com/backend";
 const MULTI_DASHBOARD_URL = "https://multi.sos-expat.com";
 const IA_TOOL_URL = "https://ia.sos-expat.com";
-const TELEGRAM_ENGINE_URL = "https://telegram.sos-expat.com";
 const SCRAPER_PRO_URL = "https://scraper.sos-expat.com";
 const EMAIL_ENGINE_URL = "https://engine.sos-expat.com";
 
@@ -68,15 +67,6 @@ const tools: ToolCard[] = [
     url: IA_TOOL_URL,
     icon: <Bot className="h-8 w-8" />,
     color: "bg-indigo-600",
-    status: "live",
-  },
-  {
-    id: "telegram-engine",
-    titleKey: "admin.toolbox.telegramEngine",
-    descriptionKey: "admin.toolbox.telegramEngine.description",
-    url: TELEGRAM_ENGINE_URL,
-    icon: <MessageCircle className="h-8 w-8" />,
-    color: "bg-sky-500",
     status: "live",
   },
   {

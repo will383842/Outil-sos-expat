@@ -47,6 +47,7 @@ import MobileBottomNav from "../components/dashboard/MobileBottomNav";
 import MobileSideDrawer from "../components/dashboard/MobileSideDrawer";
 import KYCBannerCompact from "../components/dashboard/KYCBannerCompact";
 import DashboardStats from "../components/dashboard/DashboardStats";
+import DashboardAffiliateCard from "../components/dashboard/DashboardAffiliateCard";
 import QuickActions from "../components/dashboard/QuickActions";
 import PWAInstallCards from "../components/dashboard/PWAInstallCards";
 // RecentActivity removed - was causing layout issues
@@ -2340,6 +2341,9 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                 }))}
                 loading={!userDataReady}
               />
+
+              {/* AFFILIATE LINK - Always visible */}
+              <DashboardAffiliateCard />
 
               {/* QUICK ACTIONS - Visible on profile tab */}
               {activeTab === "profile" && (

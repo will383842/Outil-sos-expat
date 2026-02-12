@@ -440,11 +440,6 @@ const AdminPaymentConfig = lazy(
   () => import("../../pages/admin/Payments/AdminPaymentConfig")
 );
 
-// ===== LAZY IMPORTS - TELEGRAM (redirects to standalone Telegram Engine) =====
-const AdminTelegramRedirect = lazy(
-  () => import("../../pages/admin/Telegram/AdminTelegramRedirect")
-);
-
 // ===== LAZY IMPORTS - TOOLBOX =====
 const AdminToolbox = lazy(
   () => import("../../pages/admin/AdminToolbox")
@@ -1445,16 +1440,6 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
-      {/* 📨 TELEGRAM — redirects to standalone Telegram Engine */}
-      <Route
-        path="telegram/*"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminTelegramRedirect />
-          </Suspense>
-        }
-      />
-
       {/* 🧰 BOITE A OUTILS */}
       <Route
         path="toolbox"
@@ -1895,7 +1880,6 @@ export const useAdminRouteValidation = () => {
       "/admin/marketing/google-ads-analytics",
       "/admin/analytics/unified",
       "/admin/feedback",
-      "/admin/telegram",
     ];
     return validPaths.includes(path);
   };

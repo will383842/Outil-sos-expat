@@ -51,8 +51,6 @@ import {
   Cloud,
   // Toolbox icons
   Wrench,
-  // Telegram icons
-  Send,
   Inbox,
   // Affiliate icons
   Handshake,
@@ -921,23 +919,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.securityAlerts.description",
           },
         ],
-      },
-    ],
-  },
-
-  // ===== TELEGRAM (redirects to standalone Telegram Engine) =====
-  {
-    id: "telegram",
-    labelKey: "admin.menu.telegram",
-    icon: Send,
-    descriptionKey: "admin.menu.telegram.description",
-    children: [
-      {
-        id: "telegram-engine",
-        labelKey: "admin.menu.telegramEngine",
-        path: "/admin/telegram",
-        icon: Send,
-        descriptionKey: "admin.menu.telegramEngine.description",
       },
     ],
   },

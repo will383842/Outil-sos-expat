@@ -1,0 +1,295 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── Dashboard admin users (JWT auth) ───────────────────
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String
+  role         String   @default("admin")
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// ─── Telegram subscribers (synced from SOS Firestore) ───
+model Subscriber {
+  id               Int      @id @default(autoincrement())
+  telegramChatId   String   @unique
+  telegramUsername  String?
+  firstName        String?
+  lastName         String?
+  sosUserId        String?  @unique
+  role             String   // chatter, influencer, blogger, groupAdmin
+  language         String   @default("en")
+  country          String?  @db.VarChar(3)
+  status           String   @default("active") // active, blocked, unsubscribed
+  subscribedAt     DateTime @default(now())
+  lastMessageAt    DateTime?
+  metadata         Json?
+
+  tags        SubscriberTag[]
+  deliveries  MessageDelivery[]
+  enrollments AutomationEnrollment[]
+
+  @@index([role])
+  @@index([language])
+  @@index([status])
+  @@index([country])
+  @@index([subscribedAt])
+  @@index([lastMessageAt])
+  @@index([status, role])
+  @@index([status, role, language])
+}
+
+// ─── Tags for subscriber segmentation ───────────────────
+model Tag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  color     String   @default("#6B7280")
+  createdAt DateTime @default(now())
+
+  subscribers SubscriberTag[]
+}
+
+model SubscriberTag {
+  subscriberId Int
+  tagId        Int
+  assignedAt   DateTime @default(now())
+
+  subscriber Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  tag        Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([subscriberId, tagId])
+}
+
+// ─── Marketing campaigns ────────────────────────────────
+model Campaign {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  type        String   @default("broadcast") // broadcast, action_triggered, scheduled
+  status      String   @default("draft") // draft, scheduled, sending, paused, completed, cancelled
+
+  // Targeting (null = all)
+  targetRoles     Json? // ["chatter", "influencer"]
+  targetTags      Json? // [1, 2, 3] tag IDs
+  targetLanguages Json? // ["fr", "en"]
+  targetCountries Json? // ["FR", "US"]
+
+  // Action trigger config (type=action_triggered)
+  triggerAction String? // registration, first_call, first_payment, etc.
+  triggerDelay  Int?    // Delay in minutes after trigger
+
+  // Schedule
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  // Stats
+  targetCount Int @default(0)
+  sentCount   Int @default(0)
+  failedCount Int @default(0)
+  pausedAt    DateTime?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages   CampaignMessage[]
+  deliveries MessageDelivery[]
+
+  @@index([status])
+  @@index([type])
+  @@index([triggerAction])
+  @@index([scheduledAt])
+  @@index([status, scheduledAt])
+}
+
+// ─── Per-language message variants for campaigns ────────
+model CampaignMessage {
+  id         Int    @id @default(autoincrement())
+  campaignId Int
+  language   String // fr, en, es, de, pt, ru, zh, hi, ar
+  content    String // Message text with {{variables}}
+  parseMode  String @default("HTML") // HTML or MarkdownV2
+  mediaType  String? // photo, document, video, audio (null = text only)
+  mediaUrl   String? // URL of the media to attach
+  replyMarkup Json?  // Inline keyboard buttons: [[{text, url}], [{text, callback_data}]]
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, language])
+}
+
+// ─── Individual message delivery tracking ───────────────
+model MessageDelivery {
+  id             Int       @id @default(autoincrement())
+  campaignId     Int?
+  automationId   Int?
+  enrollmentId   Int?
+  subscriberId   Int
+  telegramChatId String
+  content        String
+  status         String    @default("pending") // pending, queued, sent, failed, rate_limited
+  telegramMsgId  String?
+  errorMessage   String?
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  campaign   Campaign?  @relation(fields: [campaignId], references: [id])
+  subscriber Subscriber @relation(fields: [subscriberId], references: [id])
+
+  @@index([campaignId])
+  @@index([automationId])
+  @@index([enrollmentId])
+  @@index([subscriberId])
+  @@index([status])
+  @@index([sentAt])
+  @@index([createdAt])
+  @@index([campaignId, status])
+  @@index([automationId, status])
+  @@index([enrollmentId, status])
+}
+
+// ─── Reusable notification templates (per event + lang) ─
+model Template {
+  id        Int      @id @default(autoincrement())
+  eventType String
+  language  String
+  name      String
+  content   String   // {{userName}}, {{amount}}, etc.
+  parseMode String   @default("HTML")
+  variables Json     // ["userName", "amount"]
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventType, language])
+  @@index([eventType])
+  @@index([isActive])
+}
+
+// ─── Saved audience segments ────────────────────────────
+model Segment {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  filters   Json     // { roles, tags, languages, countries, statuses }
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Action-triggered automations ───────────────────────
+model Automation {
+  id                Int      @id @default(autoincrement())
+  name              String
+  triggerEvent      String   // new_registration, first_call, first_payment, etc.
+  conditions        Json?    // { role: "chatter", language: "fr" }
+  isActive          Boolean  @default(true)
+  allowReenrollment Boolean  @default(false) // Allow same subscriber to enroll again after completion
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  steps       AutomationStep[]
+  enrollments AutomationEnrollment[]
+
+  @@index([triggerEvent])
+  @@index([isActive])
+  @@index([triggerEvent, isActive])
+}
+
+model AutomationStep {
+  id           Int    @id @default(autoincrement())
+  automationId Int
+  stepOrder    Int
+  type         String // send_message, wait, condition
+  config       Json   // { templateId, delay, ... }
+
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@unique([automationId, stepOrder])
+}
+
+// ─── Notification logs (append-only audit trail) ────────
+model NotificationLog {
+  id               Int      @id @default(autoincrement())
+  eventType        String
+  subscriberChatId String?
+  status           String   // sent, failed
+  content          String?
+  errorMessage     String?
+  telegramMsgId    String?
+  metadata         Json?
+  createdAt        DateTime @default(now())
+
+  @@index([eventType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ─── Aggregated daily statistics ────────────────────────
+model DailyStats {
+  id             Int      @id @default(autoincrement())
+  date           DateTime @unique @db.Date
+  sent           Int      @default(0)
+  failed         Int      @default(0)
+  newSubscribers Int      @default(0)
+  unsubscribed   Int      @default(0)
+
+  @@index([date])
+}
+
+// ─── Key-value application settings ─────────────────────
+model AppSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Automation enrollment (subscriber journey tracking) ─
+model AutomationEnrollment {
+  id            Int       @id @default(autoincrement())
+  automationId  Int
+  subscriberId  Int
+  currentStep   Int       @default(0)
+  status        String    @default("active") // active, completed, cancelled
+  nextExecuteAt DateTime?
+  eventPayload  Json?
+  version       Int       @default(0)  // Optimistic locking
+  enrolledAt    DateTime  @default(now())
+  completedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  subscriber Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@unique([automationId, subscriberId])
+  @@index([status, nextExecuteAt])
+  @@index([nextExecuteAt])
+  @@index([subscriberId])
+  @@index([automationId])
+}
+
+// ─── Incoming events from SOS (audit trail) ──────────────
+model IncomingEvent {
+  id             Int       @id @default(autoincrement())
+  eventType      String
+  sosUserId      String?
+  payload        Json
+  eventSignature String?   @unique // SHA-256 hash for deduplication
+  processed      Boolean   @default(false)
+  processedAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([eventType])
+  @@index([processed])
+  @@index([sosUserId])
+}
