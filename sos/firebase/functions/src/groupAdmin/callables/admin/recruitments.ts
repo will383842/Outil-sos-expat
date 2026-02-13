@@ -93,7 +93,7 @@ interface RecruitmentsListInput {
  */
 export const adminGetRecruitmentsList = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,
@@ -233,7 +233,7 @@ interface GetRecruitsInput {
  */
 export const adminGetGroupAdminRecruits = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,

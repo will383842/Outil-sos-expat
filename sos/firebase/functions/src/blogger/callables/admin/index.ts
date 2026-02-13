@@ -67,7 +67,7 @@ async function checkAdmin(uid: string): Promise<void> {
 
 export const adminGetBloggersList = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,
@@ -162,7 +162,7 @@ export const adminGetBloggersList = onCall(
 
 export const adminGetBloggerDetail = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,
@@ -283,7 +283,7 @@ export const adminGetBloggerDetail = onCall(
 
 export const adminProcessBloggerWithdrawal = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,
@@ -335,7 +335,7 @@ export const adminProcessBloggerWithdrawal = onCall(
 
 export const adminUpdateBloggerStatus = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -409,7 +409,7 @@ export const adminUpdateBloggerStatus = onCall(
 
 export const adminGetBloggerConfig = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -433,7 +433,7 @@ export const adminGetBloggerConfig = onCall(
 
 export const adminUpdateBloggerConfig = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -477,7 +477,7 @@ export const adminUpdateBloggerConfig = onCall(
 
 export const adminCreateBloggerResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -534,7 +534,7 @@ export const adminCreateBloggerResource = onCall(
 
 export const adminUpdateBloggerResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -572,7 +572,7 @@ export const adminUpdateBloggerResource = onCall(
 
 export const adminDeleteBloggerResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -604,7 +604,7 @@ export const adminDeleteBloggerResource = onCall(
 // Similar CRUD for resource texts
 export const adminCreateBloggerResourceText = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -655,7 +655,7 @@ export const adminCreateBloggerResourceText = onCall(
 
 export const adminCreateBloggerGuideTemplate = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -705,7 +705,7 @@ export const adminCreateBloggerGuideTemplate = onCall(
 
 export const adminUpdateBloggerGuideTemplate = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -745,7 +745,7 @@ export const adminUpdateBloggerGuideTemplate = onCall(
 
 export const adminCreateBloggerGuideCopyText = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -792,7 +792,7 @@ export const adminCreateBloggerGuideCopyText = onCall(
 
 export const adminUpdateBloggerGuideCopyText = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -839,7 +839,7 @@ export const adminUpdateBloggerGuideCopyText = onCall(
 
 export const adminCreateBloggerGuideBestPractice = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -885,7 +885,7 @@ export const adminCreateBloggerGuideBestPractice = onCall(
 
 export const adminUpdateBloggerGuideBestPractice = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -925,7 +925,7 @@ export const adminUpdateBloggerGuideBestPractice = onCall(
 
 export const adminExportBloggers = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "1GiB",
     timeoutSeconds: 300,
   },
@@ -1001,7 +1001,7 @@ export const adminExportBloggers = onCall(
 
 export const adminGetBloggerLeaderboard = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },

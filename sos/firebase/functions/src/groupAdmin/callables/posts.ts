@@ -29,7 +29,7 @@ function ensureInitialized() {
  */
 export const getGroupAdminPosts = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -120,7 +120,7 @@ interface PostContentResponse {
  */
 export const getGroupAdminPostContent = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -222,7 +222,7 @@ interface ProcessedPostResponse {
  */
 export const getGroupAdminProcessedPost = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -380,7 +380,7 @@ interface TrackPostUsageInput {
  */
 export const trackGroupAdminPostUsage = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,

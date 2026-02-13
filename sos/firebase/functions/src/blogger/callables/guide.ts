@@ -28,7 +28,7 @@ import {
 
 export const getBloggerGuide = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -148,7 +148,7 @@ export const getBloggerGuide = onCall(
 
 export const copyBloggerGuideText = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -270,7 +270,7 @@ export const copyBloggerGuideText = onCall(
 
 export const trackBloggerGuideUsage = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "128MiB",
     timeoutSeconds: 15,
     cors: true,

@@ -452,7 +452,7 @@ export async function resetMessageTemplatesToDefaults(
 export const getChatterMessageTemplates = onCall(
   {
     cors: true,
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
   },
   async (request) => {
@@ -481,7 +481,7 @@ export const getChatterMessageTemplates = onCall(
 export const adminSeedMessageTemplates = onCall(
   {
     cors: true,
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
   },
   async (request) => {
@@ -515,7 +515,7 @@ export const adminSeedMessageTemplates = onCall(
 export const adminCreateMessageTemplate = onCall(
   {
     cors: true,
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
   },
   async (request) => {
@@ -566,7 +566,7 @@ export const adminCreateMessageTemplate = onCall(
 export const adminUpdateMessageTemplate = onCall(
   {
     cors: true,
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
   },
   async (request) => {
@@ -619,7 +619,7 @@ export const adminUpdateMessageTemplate = onCall(
 export const adminDeleteMessageTemplate = onCall(
   {
     cors: true,
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
   },
   async (request) => {
@@ -669,7 +669,7 @@ export const adminDeleteMessageTemplate = onCall(
 export const adminResetMessageTemplatesToDefaults = onCall(
   {
     cors: true,
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
   },
   async (request) => {

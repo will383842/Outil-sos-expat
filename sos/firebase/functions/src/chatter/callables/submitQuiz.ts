@@ -33,7 +33,7 @@ function ensureInitialized() {
 
 export const submitQuiz = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -273,7 +273,7 @@ export const submitQuiz = onCall(
  */
 export const getQuizQuestions = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },

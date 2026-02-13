@@ -29,7 +29,7 @@ import {
 
 export const getBloggerResources = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -143,7 +143,7 @@ export const getBloggerResources = onCall(
 
 export const downloadBloggerResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -238,7 +238,7 @@ export const downloadBloggerResource = onCall(
 
 export const copyBloggerResourceText = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,

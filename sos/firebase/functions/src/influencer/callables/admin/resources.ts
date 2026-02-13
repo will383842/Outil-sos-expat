@@ -29,7 +29,7 @@ async function checkAdmin(uid: string): Promise<void> {
 
 export const adminGetInfluencerResources = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -83,7 +83,7 @@ export const adminGetInfluencerResources = onCall(
 
 export const adminCreateInfluencerResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -144,7 +144,7 @@ export const adminCreateInfluencerResource = onCall(
 
 export const adminUpdateInfluencerResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -184,7 +184,7 @@ export const adminUpdateInfluencerResource = onCall(
 
 export const adminDeleteInfluencerResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -219,7 +219,7 @@ export const adminDeleteInfluencerResource = onCall(
 
 export const adminCreateInfluencerResourceText = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -270,7 +270,7 @@ export const adminCreateInfluencerResourceText = onCall(
 
 export const adminUpdateInfluencerResourceText = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -310,7 +310,7 @@ export const adminUpdateInfluencerResourceText = onCall(
 
 export const adminDeleteInfluencerResourceText = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,

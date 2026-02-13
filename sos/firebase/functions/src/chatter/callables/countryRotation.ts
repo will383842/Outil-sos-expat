@@ -68,7 +68,7 @@ async function assertAdmin(request: CallableRequest): Promise<string> {
  */
 export const getAvailableCountriesForChatter = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -105,7 +105,7 @@ export const getAvailableCountriesForChatter = onCall(
  */
 export const assignCountriesToCurrentChatter = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -161,7 +161,7 @@ export const assignCountriesToCurrentChatter = onCall(
  */
 export const adminInitializeCountryRotation = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
     cors: true,
@@ -185,7 +185,7 @@ export const adminInitializeCountryRotation = onCall(
  */
 export const adminGetCountryRotationStatus = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -219,7 +219,7 @@ export const adminGetCountryRotationStatus = onCall(
  */
 export const adminAdvanceCycle = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -253,7 +253,7 @@ export const adminAdvanceCycle = onCall(
  */
 export const adminUpdateCycleThreshold = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,

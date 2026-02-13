@@ -96,7 +96,7 @@ function convertToPaymentMethodDetails(
 
 export const requestGroupAdminWithdrawal = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,

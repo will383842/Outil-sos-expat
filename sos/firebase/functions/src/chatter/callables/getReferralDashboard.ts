@@ -33,7 +33,7 @@ function ensureInitialized() {
 
 export const getReferralDashboard = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
     cors: true,

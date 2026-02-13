@@ -42,7 +42,7 @@ function ensureInitialized() {
  */
 export const getInfluencerTrainingModules = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -165,7 +165,7 @@ export const getInfluencerTrainingModules = onCall(
  */
 export const getInfluencerTrainingModuleContent = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -325,7 +325,7 @@ export const getInfluencerTrainingModuleContent = onCall(
  */
 export const updateInfluencerTrainingProgress = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -385,7 +385,7 @@ export const updateInfluencerTrainingProgress = onCall(
  */
 export const submitInfluencerTrainingQuiz = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
     cors: true,
@@ -615,7 +615,7 @@ export const submitInfluencerTrainingQuiz = onCall(
  */
 export const getInfluencerTrainingCertificate = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },

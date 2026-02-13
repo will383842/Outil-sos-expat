@@ -36,7 +36,7 @@ async function checkAdminRole(uid: string): Promise<boolean> {
 
 export const adminGetInfluencerTrainingModules = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -113,7 +113,7 @@ interface CreateModuleInput {
 
 export const adminCreateInfluencerTrainingModule = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
   },
@@ -212,7 +212,7 @@ interface UpdateModuleInput {
 
 export const adminUpdateInfluencerTrainingModule = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
   },
@@ -286,7 +286,7 @@ export const adminUpdateInfluencerTrainingModule = onCall(
 
 export const adminDeleteInfluencerTrainingModule = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -350,7 +350,7 @@ export const adminDeleteInfluencerTrainingModule = onCall(
 
 export const adminSeedInfluencerTrainingModules = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 120,
   },

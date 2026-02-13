@@ -73,7 +73,7 @@ interface UpdateProfileInput {
 
 export const updateGroupAdminProfile = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,

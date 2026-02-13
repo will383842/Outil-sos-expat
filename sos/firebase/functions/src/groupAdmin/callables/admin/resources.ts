@@ -69,7 +69,7 @@ interface CreateResourceInput {
  */
 export const adminCreateResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -174,7 +174,7 @@ interface UpdateResourceInput {
  */
 export const adminUpdateResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -244,7 +244,7 @@ export const adminUpdateResource = onCall(
  */
 export const adminDeleteResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -308,7 +308,7 @@ interface GetResourcesListInput {
  */
 export const adminGetResourcesList = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,

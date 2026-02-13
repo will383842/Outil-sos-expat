@@ -29,7 +29,7 @@ import {
 
 export const getInfluencerResources = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -129,7 +129,7 @@ export const getInfluencerResources = onCall(
 
 export const downloadInfluencerResource = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -214,7 +214,7 @@ export const downloadInfluencerResource = onCall(
 
 export const copyInfluencerResourceText = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,

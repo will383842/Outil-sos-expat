@@ -47,7 +47,7 @@ const VALID_PLATFORMS: ChatterPlatform[] = [
 
 export const registerChatter = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: [

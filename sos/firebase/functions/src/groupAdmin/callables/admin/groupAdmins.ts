@@ -95,7 +95,7 @@ interface GetGroupAdminsListResponse {
  */
 export const adminGetGroupAdminsList = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,
@@ -235,7 +235,7 @@ export const adminGetGroupAdminsList = onCall(
  */
 export const adminGetGroupAdminDetail = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -314,7 +314,7 @@ interface UpdateStatusInput {
  */
 export const adminUpdateGroupAdminStatus = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -396,7 +396,7 @@ interface VerifyGroupInput {
  */
 export const adminVerifyGroup = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -471,7 +471,7 @@ interface ProcessWithdrawalInput {
  */
 export const adminProcessWithdrawal = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,
@@ -642,7 +642,7 @@ interface WithdrawalStats {
  */
 export const adminGetWithdrawalsList = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,
@@ -777,7 +777,7 @@ interface ExportGroupAdminItem {
  */
 export const adminExportGroupAdmins = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,

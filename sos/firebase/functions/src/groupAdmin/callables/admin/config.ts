@@ -46,7 +46,7 @@ async function verifyAdmin(userId: string, authToken?: Record<string, unknown>):
  */
 export const adminGetGroupAdminConfig = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -93,7 +93,7 @@ interface UpdateConfigInput {
  */
 export const adminUpdateGroupAdminConfig = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,

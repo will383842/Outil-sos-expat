@@ -70,7 +70,7 @@ async function checkAdmin(auth: { uid: string } | undefined): Promise<string> {
 
 export const adminGetInfluencersList = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
   },
@@ -174,7 +174,7 @@ export const adminGetInfluencersList = onCall(
 
 export const adminGetInfluencerDetail = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
   },
@@ -269,7 +269,7 @@ export const adminGetInfluencerDetail = onCall(
 
 export const adminProcessInfluencerWithdrawal = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
   },
@@ -344,7 +344,7 @@ export const adminProcessInfluencerWithdrawal = onCall(
 
 export const adminUpdateInfluencerStatus = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -424,7 +424,7 @@ export const adminUpdateInfluencerStatus = onCall(
 
 export const adminGetPendingInfluencerWithdrawals = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -448,7 +448,7 @@ export const adminGetPendingInfluencerWithdrawals = onCall(
 
 export const adminGetInfluencerConfig = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -468,7 +468,7 @@ export const adminGetInfluencerConfig = onCall(
 
 export const adminUpdateInfluencerConfig = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -507,7 +507,7 @@ export const adminUpdateInfluencerConfig = onCall(
 
 export const adminUpdateCommissionRules = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -566,7 +566,7 @@ export const adminUpdateCommissionRules = onCall(
 
 export const adminGetRateHistory = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -599,7 +599,7 @@ export const adminGetRateHistory = onCall(
 
 export const adminUpdateAntiFraudConfig = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -638,7 +638,7 @@ export const adminUpdateAntiFraudConfig = onCall(
 
 export const adminGetInfluencerLeaderboard = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
   },
@@ -702,7 +702,7 @@ export const adminGetInfluencerLeaderboard = onCall(
 
 export const adminExportInfluencers = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 120,
   },
@@ -816,7 +816,7 @@ export const adminExportInfluencers = onCall(
 
 export const adminBulkInfluencerAction = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 120,
   },

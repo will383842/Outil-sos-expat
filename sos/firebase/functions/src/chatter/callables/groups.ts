@@ -68,7 +68,7 @@ async function assertAdmin(request: CallableRequest): Promise<string> {
  */
 export const submitGroup = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -146,7 +146,7 @@ export const submitGroup = onCall(
  */
 export const getAvailableGroups = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -193,7 +193,7 @@ export const getAvailableGroups = onCall(
  */
 export const getMyGroups = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -226,7 +226,7 @@ export const getMyGroups = onCall(
  */
 export const joinGroupAsChatter = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -290,7 +290,7 @@ export const joinGroupAsChatter = onCall(
  */
 export const adminGetGroups = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
@@ -338,7 +338,7 @@ export const adminGetGroups = onCall(
  */
 export const adminUpdateGroupStatus = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: true,
