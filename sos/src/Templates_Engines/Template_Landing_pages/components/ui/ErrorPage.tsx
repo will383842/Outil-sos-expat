@@ -7,7 +7,7 @@
 import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, Home, RefreshCw, Phone } from 'lucide-react';
-import { useLocalePath } from '../../../../../multilingual-system';
+import { useLocalePath } from '../../../../multilingual-system';
 
 export interface ErrorPageProps {
   /** Message d'erreur technique */
