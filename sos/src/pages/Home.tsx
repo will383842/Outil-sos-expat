@@ -44,6 +44,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { useApp } from "../contexts/AppContext";
 import { formatCurrency } from "../utils/localeFormatters";
 import { getTranslatedRouteSlug, getLocaleString } from "../multilingual-system/core/routing/localeRoutes";
+import { useLocalePath } from "../multilingual-system";
 
 /* ================================
    CONSTANTES SEO (NE PAS TRADUIRE)
@@ -444,6 +445,7 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
 const OptimizedHomePage: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
+  const getLocalePath = useLocalePath();
 
   // ======= Aggregate Rating for Google Stars =======
   const aggregateRating = useAggregateRatingWithDefault({ minRating: 4 });
@@ -972,7 +974,7 @@ const OptimizedHomePage: React.FC = () => {
 
           <div className="mt-8 md:mt-auto">
             <Link
-              to="/sos-appel"
+              to={getLocalePath("/sos-appel")}
               className={`inline-flex items-center justify-center w-full px-6 py-4 rounded-2xl font-bold text-lg text-white transition-colors duration-150 md:transition-all md:duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white active:scale-[0.98] md:hover:scale-105 touch-manipulation ${`bg-gradient-to-r ${accentGradient}`}`}
               aria-label={intl.formatMessage({ id: "aria.bookConsultation" })}
             >
@@ -1293,7 +1295,7 @@ const OptimizedHomePage: React.FC = () => {
               {/* Bouton principal d'appel - "Appeler maintenant" avec icône téléphone */}
               {/* Mobile: texte plus gros (text-xl), padding plus grand (py-5 px-8) */}
               <Link
-                to="/sos-appel"
+                to={getLocalePath("/sos-appel")}
                 className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 active:scale-[0.98] text-white px-8 sm:px-10 md:px-12 py-5 sm:py-5 md:py-6 rounded-2xl sm:rounded-3xl transition-colors duration-150 md:transition-all md:duration-200 md:hover:scale-105 md:hover:shadow-2xl md:hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-3 md:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent] w-full sm:w-auto max-w-sm sm:max-w-none"
                 aria-label={intl.formatMessage({ id: "aria.urgentCall" })}
                 style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
@@ -1307,7 +1309,7 @@ const OptimizedHomePage: React.FC = () => {
 
               {/* Bouton "Voir les experts" - masqué sur mobile, visible sur desktop */}
               <Link
-                to="/sos-appel"
+                to={getLocalePath("/sos-appel")}
                 className="group hidden md:flex items-center space-x-3 px-10 py-6 rounded-3xl bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-105 backdrop-blur-sm font-bold text-lg touch-manipulation"
                 aria-label={intl.formatMessage({ id: "aria.viewExperts" })}
               >
@@ -1780,7 +1782,7 @@ const OptimizedHomePage: React.FC = () => {
               aria-label={intl.formatMessage({ id: "aria.ctaActions" })}
             >
               <Link
-                to="/register"
+                to={getLocalePath("/register")}
                 className="group relative overflow-hidden bg-white text-red-600 md:hover:text-red-700 px-12 py-6 rounded-3xl font-black text-xl transition-colors duration-150 md:transition-all md:duration-200 active:scale-[0.98] md:hover:scale-105 md:hover:shadow-2xl flex items-center gap-4 touch-manipulation"
                 aria-label={intl.formatMessage({ id: "aria.startFreeNow" })}
               >
@@ -1792,7 +1794,7 @@ const OptimizedHomePage: React.FC = () => {
               </Link>
 
               <Link
-                to="/sos-appel"
+                to={getLocalePath("/sos-appel")}
                 className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-12 py-6 rounded-3xl font-bold text-xl transition-colors duration-150 md:transition-all md:duration-200 active:scale-[0.98] md:hover:scale-105 md:hover:bg-white/10 flex items-center gap-4 touch-manipulation"
                 aria-label={intl.formatMessage({ id: "aria.urgentCallNow" })}
               >

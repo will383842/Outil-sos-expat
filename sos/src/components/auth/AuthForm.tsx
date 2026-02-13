@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useLocalePath } from '../../multilingual-system';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import Layout from '../layout/Layout';
@@ -20,6 +21,7 @@ interface FormState {
 
 const AuthForm: React.FC = () => {
   const intl = useIntl();
+  const getLocalePath = useLocalePath();
 
   const [formState, setFormState] = useState<FormState>({
     isLoading: false,
@@ -125,7 +127,7 @@ const AuthForm: React.FC = () => {
                 </p>
                 <div className="mt-6">
                   <Link
-                    to="/login"
+                    to={getLocalePath("/login")}
                     className="text-sm font-medium text-red-600 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
                   >
                     {intl.formatMessage({ id: 'auth.backToLogin' })}
@@ -182,7 +184,7 @@ const AuthForm: React.FC = () => {
 
                 <div className="flex items-center justify-center">
                   <Link
-                    to="/login"
+                    to={getLocalePath("/login")}
                     className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1"
                   >
                     <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />

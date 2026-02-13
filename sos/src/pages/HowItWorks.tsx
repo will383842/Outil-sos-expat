@@ -5,10 +5,12 @@ import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useApp } from "../contexts/AppContext";
+import { useLocalePath } from "../multilingual-system";
 
 const HowItWorksPage: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
+  const getLocalePath = useLocalePath();
 
   const pageTitle = `${intl.formatMessage({ id: "howItWorks.title1" })} ${intl.formatMessage({ id: "howItWorks.title2" })} - SOS Expat`;
   const pageDescription = intl.formatMessage({ id: "howItWorks.subtitle" });
@@ -271,14 +273,14 @@ const HowItWorksPage: React.FC = () => {
             {/* CTA buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-12">
               <Link
-                to="/tarifs"
+                to={getLocalePath("/tarifs")}
                 className="group relative overflow-hidden bg-white hover:bg-gray-100 text-red-600 px-12 py-6 rounded-3xl font-black text-2xl transition-all duration-300 hover:scale-110 hover:shadow-2xl flex items-center space-x-4 border-2 border-white/50"
               >
                 <span><FormattedMessage id="howItWorks.ctaButton" /></span>
               </Link>
 
               <Link
-                to="/sos-appel"
+                to={getLocalePath("/sos-appel")}
                 className="group bg-transparent border-2 border-white hover:bg-white hover:text-red-600 text-white px-12 py-6 rounded-3xl font-bold text-xl transition-all duration-300 hover:scale-105 flex items-center space-x-4"
               >
                 <span><FormattedMessage id="howItWorks.ctaButtonSecondary" /></span>

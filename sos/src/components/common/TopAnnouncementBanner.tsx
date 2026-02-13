@@ -3,6 +3,7 @@ import { X, Phone, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useIntl } from 'react-intl';
+import { useLocalePath } from '../../multilingual-system';
 
 interface Props { className?: string }
 
@@ -15,6 +16,7 @@ interface Props { className?: string }
 const TopAnnouncementBanner: React.FC<Props> = ({ className = '' }) => {
   const { language: _language } = useApp();
   const intl = useIntl();
+  const getLocalePath = useLocalePath();
   const [closed, setClosed] = useState(false);
 
   useEffect(() => {
@@ -42,11 +44,11 @@ const TopAnnouncementBanner: React.FC<Props> = ({ className = '' }) => {
           <p className="text-xs sm:text-sm opacity-90">{L.subtitle}</p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <Link to="/sos-appel" className="inline-flex items-center gap-2 bg-white text-red-600 font-semibold px-3 sm:px-4 py-2 rounded-lg shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60">
+          <Link to={getLocalePath("/sos-appel")} className="inline-flex items-center gap-2 bg-white text-red-600 font-semibold px-3 sm:px-4 py-2 rounded-lg shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60">
             <Phone className="w-4 h-4" aria-hidden />
             <span className="text-sm sm:text-base">{L.call}</span>
           </Link>
-          <Link to="/whatsapp" className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 font-semibold px-3 sm:px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60">
+          <Link to={getLocalePath("/whatsapp")} className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 font-semibold px-3 sm:px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60">
             <MessageCircle className="w-4 h-4" aria-hidden />
             <span className="text-sm sm:text-base">{L.chat}</span>
           </Link>

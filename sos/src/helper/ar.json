@@ -1043,23 +1043,23 @@
   "chatter.landing.proof.title": "إنهم يربحون",
   "chatter.landing.reassurance": "مجاني 100% - بدون استثمار - 197 دولة",
   "chatter.landing.recap.countries": "197 دولة",
-  "chatter.landing.recap.free": "مجاني 100%",
-  "chatter.landing.recap.revenue": "$10 لكل مكالمة",
+  "chatter.landing.recap.free": "100٪ مجاني",
+  "chatter.landing.recap.revenue": "3 مصادر دخل",
   "chatter.landing.recap.team": "فريق غير محدود",
   "chatter.landing.revenue.subtitle": "اجمع أرباحك. بلا حدود.",
   "chatter.landing.revenue.title": "للربح",
   "chatter.landing.revenue.title.highlight": "3 طرق",
   "chatter.landing.risk.countries": "197 دولة",
-  "chatter.landing.risk.countries.desc": "متاح في كل مكان",
-  "chatter.landing.risk.free": "مجاني 100%",
-  "chatter.landing.risk.free.desc": "بدون استثمار",
+  "chatter.landing.risk.countries.desc": "اعمل من أي مكان في العالم",
+  "chatter.landing.risk.free": "100٪ مجاني",
+  "chatter.landing.risk.free.desc": "لا يتطلب استثمار",
   "chatter.landing.risk.highlight": "بلا حدود.",
   "chatter.landing.risk.languages": "9 لغات",
-  "chatter.landing.risk.languages.desc": "بلا حواجز",
+  "chatter.landing.risk.languages.desc": "موارد متعددة اللغات مضمنة",
   "chatter.landing.risk.noCommit": "بدون التزام",
-  "chatter.landing.risk.noCommit.desc": "حر متى تشاء",
-  "chatter.landing.risk.phone": "هاتف واحد",
-  "chatter.landing.risk.phone.desc": "هذا كل ما تحتاجه",
+  "chatter.landing.risk.noCommit.desc": "توقف في أي وقت",
+  "chatter.landing.risk.phone": "لا حاجة لهاتف احترافي",
+  "chatter.landing.risk.phone.desc": "استخدم هاتفك الذكي",
   "chatter.landing.risk.title": "صفر مخاطر.",
   "chatter.landing.role.community": "ساعد مجتمعك",
   "chatter.landing.role.community.desc": "اربط المغتربين بالخدمات التي يحتاجونها",
@@ -2349,18 +2349,18 @@
   "groupAdmin.landing.benefit1.desc": "اكسب $15 عن كل عميل يحجز من خلال رابطك",
   "groupAdmin.landing.benefit1.title": "عمولات عالية",
   "groupAdmin.landing.benefit2.desc": "وظف مسؤولي مجموعات آخرين واكسب $5 عن كل عميل يحيلونه",
-  "groupAdmin.landing.benefit2.title": "مكافأة التوظيف",
+  "groupAdmin.landing.benefit2.title": "أدوات جاهزة",
   "groupAdmin.landing.benefit3.desc": "يحصل أعضاؤك على خصم $5 على أول استشارة",
-  "groupAdmin.landing.benefit3.title": "خصم للأعضاء",
+  "groupAdmin.landing.benefit3.title": "9 لغات",
   "groupAdmin.landing.benefit4.desc": "منشورات للتثبيت ولافتات وصور جاهزة بـ 9 لغات",
-  "groupAdmin.landing.benefit4.title": "موارد مجانية",
-  "groupAdmin.landing.benefits.title": "لماذا تصبح شريكاً؟",
-  "groupAdmin.landing.hero.cta": "كن شريكاً - مجاناً",
+  "groupAdmin.landing.benefit4.title": "خصم $5 على كل مكالمة",
+  "groupAdmin.landing.benefits.title": "لماذا الانضمام؟",
+  "groupAdmin.landing.hero.cta": "كن شريكًا",
   "groupAdmin.landing.hero.subtitle": "ساعد أعضاء مجموعة فيسبوك في الحصول على المساعدة القانونية. اكسب $15 لكل عميل. الأعضاء يحصلون على خصم $5.",
   "groupAdmin.landing.hero.title": "اكسب $15 لكل عميل من مجموعة فيسبوك",
   "groupAdmin.landing.howItWorks.title": "كيف يعمل؟",
-  "groupAdmin.landing.seo.description": "حقق دخلاً من مجموعة فيسبوك مع SOS-Expat. اكسب $15 لكل عميل، $5 لكل مسؤول موظف. منشورات للتثبيت ولافتات وموارد بـ 9 لغات.",
-  "groupAdmin.landing.seo.title": "كن شريك مسؤول مجموعة SOS-Expat | اكسب $15/عميل من مجموعة فيسبوك",
+  "groupAdmin.landing.seo.description": "حقق أرباحًا من مجموعتك أو مجتمعك. اكسب $10 لكل مكالمة يتم إنشاؤها عبر رابط الشراكة الخاص بك، بالإضافة إلى خصم $5 لأعضائك على كل مكالمة. أدوات جاهزة للاستخدام بـ 9 لغات.",
+  "groupAdmin.landing.seo.title": "كن شريك مسؤول مجموعة - اكسب $10 لكل مكالمة + خصم $5 | SOS-Expat",
   "groupAdmin.leaderboard.clients": "العملاء",
   "groupAdmin.leaderboard.monthly": "الترتيب الشهري",
   "groupAdmin.leaderboard.title": "أفضل 10 مسؤولي مجموعات",
@@ -4705,5 +4705,72 @@
   "wizard.step3.lawyer": "محامٍ",
   "wizard.step3.lawyer.desc": "استشارة قانونية مهنية",
   "wizard.step3.subtitle": "اختر نوع الخبير",
-  "wizard.step3.title": "من تريد الاتصال به؟"
+  "wizard.step3.title": "من تريد الاتصال به؟",
+  "groupAdmin.landing.badge": "لمسؤولي المجموعات والمجتمعات",
+  "groupAdmin.landing.hero.new.line1": "اكسب حتى",
+  "groupAdmin.landing.hero.new.amount": "$5000+/شهر",
+  "groupAdmin.landing.hero.new.line2": "مع مجموعتك",
+  "groupAdmin.landing.hero.new.subtitle": "حقق أرباحًا من مجتمعك على Facebook أو Discord أو WhatsApp أو المنتدى. يوفر أعضاؤك $5/مكالمة، وتكسب أنت $10/مكالمة. الكل يربح!",
+  "groupAdmin.landing.hero.sources": "3 مصادر دخل غير محدودة:",
+  "groupAdmin.landing.hero.source1": "لكل مكالمة عضو",
+  "groupAdmin.landing.hero.source2": "فريق المسؤولين",
+  "groupAdmin.landing.hero.source3": "مع 10 شركاء",
+  "groupAdmin.landing.hero.hot": "🔥 ساخن",
+  "groupAdmin.landing.hero.partnerExample": "💡 شريك واحد (محامي/مساعد) = 30 مكالمة/شهر × $5 × 6 أشهر = {total} دخل سلبي!",
+  "groupAdmin.landing.hero.free": "100% مجاني - بدون التزام",
+  "groupAdmin.landing.scroll": "اكتشف",
+  "groupAdmin.landing.howItWorks.subtitle": "ثلاث خطوات بسيطة لبدء الكسب",
+  "groupAdmin.landing.step1.label": "الخطوة 1",
+  "groupAdmin.landing.step1.title": "سجل مجانًا",
+  "groupAdmin.landing.step1.description": "سجل وأضف مجموعتك أو مجتمعك. احصل على روابط الشراكة الفريدة الخاصة بك على الفور.",
+  "groupAdmin.landing.step2.label": "الخطوة 2",
+  "groupAdmin.landing.step2.title": "شارك المنشورات الجاهزة",
+  "groupAdmin.landing.step2.description": "استخدم منشوراتنا ولافتاتنا وصورنا الجاهزة للنسخ واللصق. متوفرة بـ 9 لغات!",
+  "groupAdmin.landing.step3.label": "الخطوة 3",
+  "groupAdmin.landing.step3.title": "اكسب عمولات",
+  "groupAdmin.landing.step3.description": "اكسب $10 لكل مكالمة يتم إنشاؤها عبر رابطك. يحصل أعضاؤك على خصم $5 على كل مكالمة. اسحب في أي وقت.",
+  "groupAdmin.landing.calc.badge": "💰 حاسبة الدخل",
+  "groupAdmin.landing.calc.title": "كم يمكنك أن تكسب؟",
+  "groupAdmin.landing.calc.subtitle": "قدّر دخلك الشهري بناءً على مجتمعك",
+  "groupAdmin.landing.calc.members": "الأعضاء في مجموعتك: {count}",
+  "groupAdmin.landing.calc.conversion": "معدل التحويل: {rate}%",
+  "groupAdmin.landing.calc.conversionHelp": "% من الأعضاء الذين يستخدمون الخدمة شهريًا",
+  "groupAdmin.landing.calc.monthlyEarnings": "دخلك الشهري المقدر",
+  "groupAdmin.landing.calc.details": "{members} عضو × {rate}% تحويل × $10 = ${earnings}/شهر",
+  "groupAdmin.landing.calc.motivation": "🎯 بدون احتساب المحامين/المساعدين الذين يمكنك تجنيدهم!",
+  "groupAdmin.landing.calc.recurring": "دخل متكرر كل شهر",
+  "groupAdmin.landing.benefit1.description": "اكسب $10 لكل مكالمة يتم إنشاؤها من خلال رابط الشراكة الخاص بك.",
+  "groupAdmin.landing.benefit2.description": "منشورات، لافتات، صور - كلها جاهزة للاستخدام. فقط انسخ والصق!",
+  "groupAdmin.landing.benefit3.description": "جميع الموارد متاحة بـ FR، EN، ES، PT، AR، DE، IT، NL، ZH.",
+  "groupAdmin.landing.benefit4.description": "يحصل أعضاء مجتمعك على خصم $5 على كل مكالمة تتم عبر رابطك.",
+  "groupAdmin.landing.targetGroups.title": "مثالي لمجموعتك",
+  "groupAdmin.landing.targetGroups.subtitle": "سواء كنت تدير مجموعة Facebook أو خادم Discord أو مجتمع WhatsApp أو منتدى أو أي مجموعة أخرى - لدينا الأدوات المناسبة لك.",
+  "groupAdmin.landing.groupType.travel": "مجموعات السفر",
+  "groupAdmin.landing.groupType.expat": "مجتمعات المغتربين",
+  "groupAdmin.landing.groupType.nomad": "الرحالة الرقميون",
+  "groupAdmin.landing.groupType.immigration": "الهجرة",
+  "groupAdmin.landing.groupType.relocation": "الانتقال",
+  "groupAdmin.landing.groupType.student": "الطلاب بالخارج",
+  "groupAdmin.landing.groupType.family": "عائلات المغتربين",
+  "groupAdmin.landing.groupType.retirement": "التقاعد بالخارج",
+  "groupAdmin.landing.faq.title": "الأسئلة الشائعة",
+  "groupAdmin.landing.faq.subtitle": "كل ما تحتاج معرفته قبل البدء",
+  "groupAdmin.landing.faq.q1": "هل الانضمام مجاني حقًا؟",
+  "groupAdmin.landing.faq.a1": "نعم! التسجيل مجاني 100%. لا توجد رسوم، ولا التزامات، ولا متطلبات دنيا.",
+  "groupAdmin.landing.faq.q2": "متى أتقاضى؟",
+  "groupAdmin.landing.faq.a2": "تصبح العمولات متاحة بعد 7 أيام من استشارة العميل. يمكنك السحب في أي وقت بمجرد أن يكون لديك على الأقل $25.",
+  "groupAdmin.landing.faq.q3": "ما هي طرق الدفع المتاحة؟",
+  "groupAdmin.landing.faq.a3": "ندعم PayPal وWise وMobile Money والتحويلات البنكية إلى أكثر من 100 دولة.",
+  "groupAdmin.landing.faq.q4": "كيف يعمل خصم $5 لأعضائي؟",
+  "groupAdmin.landing.faq.a4": "كل مكالمة تتم من خلال رابط الشراكة الخاص بك تمنح أعضاء مجتمعك خصم $5. هذا يجعل الترويج سهلاً - يوفر أعضاؤك المال بينما تكسب أنت $10 لكل مكالمة.",
+  "groupAdmin.landing.faq.q5": "ما نوع المجموعات المؤهلة؟",
+  "groupAdmin.landing.faq.a5": "أي مجموعة أو مجتمع متعلق بالسفر أو الاغتراب أو الهجرة أو الانتقال الدولي أو العيش بالخارج مؤهل. مجموعات Facebook، خوادم Discord، مجتمعات WhatsApp، المنتديات والمزيد!",
+  "groupAdmin.landing.finalCta.title": "جاهز لبدء الكسب؟",
+  "groupAdmin.landing.finalCta.subtitle": "انضم إلى مئات مسؤولي المجموعات الذين يكسبون بالفعل مع SOS-Expat.",
+  "groupAdmin.landing.recap.perCall": "$10 لكل مكالمة",
+  "groupAdmin.landing.recap.discount": "خصم $5 للأعضاء",
+  "groupAdmin.landing.recap.languages": "9 لغات",
+  "groupAdmin.landing.recap.free": "100% مجاني",
+  "groupAdmin.landing.finalCta.cta": "سجل الآن - مجاني",
+  "groupAdmin.landing.finalCta.footer": "تسجيل مجاني • ابدأ في 5 دقائق"
 }

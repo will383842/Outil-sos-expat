@@ -6,7 +6,7 @@ import { Helmet } from "react-helmet-async";
 import Layout from "../components/layout/Layout";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
-import { parseLocaleFromPath, getLocaleString, useLocaleNavigate } from "../multilingual-system";
+import { parseLocaleFromPath, getLocaleString, useLocaleNavigate, useLocalePath } from "../multilingual-system";
 import {
   listHelpArticles,
   HelpArticle as HelpArticleType,
@@ -96,6 +96,7 @@ const mdToHtml = (md: string): string => {
 const HelpArticle: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useLocaleNavigate();
+  const getLocalePath = useLocalePath();
   const location = useLocation();
   const intl = useIntl();
   const { language } = useApp();
@@ -227,7 +228,7 @@ const HelpArticle: React.FC = () => {
               {intl.formatMessage({ id: "helpCenter.noArticlesFound" })}
             </p>
             <Link
-              to="/centre-aide"
+              to={getLocalePath("/centre-aide")}
               className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
             >
               <ChevronLeft size={20} />
@@ -265,7 +266,7 @@ const HelpArticle: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
           <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <Link
-              to="/centre-aide"
+              to={getLocalePath("/centre-aide")}
               className="inline-flex items-center gap-2 text-white/90 hover:text-white transition-colors font-semibold"
             >
               <ChevronLeft size={20} />

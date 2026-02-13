@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Phone, Clock, AlertTriangle, Globe, Users, LucideIcon } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { Link } from 'react-router-dom';
+import { useLocalePath } from '../../multilingual-system';
 
 // Types pour une meilleure sécurité de type
 interface StatCardProps {
@@ -61,7 +62,8 @@ const content = {
 
 const HeroSection: React.FC = memo(() => {
   const { language } = useApp();
-  
+  const getLocalePath = useLocalePath();
+
   // Fallback sécurisé pour éviter les erreurs de rendu
   const currentLanguage = (language === 'fr' || language === 'en') ? language : 'en';
   const t = content[currentLanguage];
@@ -112,16 +114,16 @@ const HeroSection: React.FC = memo(() => {
           {/* Boutons CTA optimisés pour mobile */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8 px-4">
             <Link
-              to="/sos-appel"
+              to={getLocalePath("/sos-appel")}
               className="w-full sm:w-auto bg-white text-red-700 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-red-50 focus:bg-red-50 focus:outline-none focus:ring-4 focus:ring-white/30 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg min-h-[3rem]"
               aria-describedby="urgent-call-desc"
             >
               <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" aria-hidden="true" />
               <span>{t.buttons.urgent}</span>
             </Link>
-            
+
             <Link
-              to="/sos-appel?type=expat"
+              to={getLocalePath("/sos-appel?type=expat")}
               className="w-full sm:w-auto bg-red-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-red-500 focus:bg-red-500 focus:outline-none focus:ring-4 focus:ring-white/30 transition-all duration-200 flex items-center justify-center gap-3 border-2 border-white/20 min-h-[3rem]"
               aria-describedby="expat-call-desc"
             >

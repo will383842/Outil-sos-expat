@@ -7,6 +7,7 @@
 import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, Home, RefreshCw, Phone } from 'lucide-react';
+import { useLocalePath } from '../../../../../multilingual-system';
 
 export interface ErrorPageProps {
   /** Message d'erreur technique */
@@ -32,6 +33,8 @@ export const ErrorPage = memo<ErrorPageProps>(({
   onRetry,
   errorCode = 404,
 }) => {
+  const getLocalePath = useLocalePath();
+
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="max-w-2xl w-full text-center">
@@ -81,7 +84,7 @@ export const ErrorPage = memo<ErrorPageProps>(({
 
           {/* Home link */}
           <Link
-            to="/"
+            to={getLocalePath("/")}
             className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-lg border border-white/20 hover:border-white/30 transition-all duration-300"
           >
             <Home className="w-5 h-5" />
@@ -95,7 +98,7 @@ export const ErrorPage = memo<ErrorPageProps>(({
             Besoin d'aide urgente ?
           </p>
           <Link
-            to="/sos-appel"
+            to={getLocalePath("/sos-appel")}
             className="inline-flex items-center gap-2 text-red-400 hover:text-red-300 font-semibold transition-colors"
           >
             <Phone className="w-4 h-4" />
