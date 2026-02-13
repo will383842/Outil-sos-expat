@@ -74,7 +74,7 @@ const AdminChatterDetail: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
   const { chatterId } = useParams<{ chatterId: string }>();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   const [chatter, setChatter] = useState<ChatterDetail | null>(null);
   const [loading, setLoading] = useState(true);

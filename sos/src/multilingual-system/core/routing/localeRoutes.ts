@@ -343,6 +343,7 @@ export type RouteKey =
   | "groupadmin-posts"        // /groupadmin/posts -> /groupadmin/posts, etc.
   | "groupadmin-payments"     // /groupadmin/paiements -> /groupadmin/payments, etc.
   | "groupadmin-referrals"    // /groupadmin/filleuls -> /groupadmin/referrals, etc.
+  | "groupadmin-admin-recruitment" // /groupadmin/parrainage-admins -> /groupadmin/admin-recruitment, etc.
   | "groupadmin-leaderboard"  // /groupadmin/classement -> /groupadmin/leaderboard, etc.
   | "groupadmin-guide"        // /groupadmin/guide -> /groupadmin/guide, etc.
   | "groupadmin-suspended"    // /groupadmin/suspendu -> /groupadmin/suspended, etc.
@@ -1179,17 +1180,6 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     hi: "influencer/nilambit",
     ar: "مؤثر/معلق",
   },
-  "influencer-training": {
-    fr: "influencer/formation",
-    en: "influencer/training",
-    es: "influencer/formacion",
-    de: "influencer/schulung",
-    ru: "influencer/obuchenie",
-    pt: "influencer/formacao",
-    ch: "influencer/peixun",
-    hi: "influencer/prashikshan",
-    ar: "مؤثر/تدريب",
-  },
   "influencer-resources": {
     fr: "influencer/ressources",
     en: "influencer/resources",
@@ -1433,6 +1423,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "groupadmin/tuijian",
     hi: "groupadmin/referral",
     ar: "مسؤول-مجموعة/الإحالات",
+  },
+  "groupadmin-admin-recruitment": {
+    fr: "groupadmin/parrainage-admins",
+    en: "groupadmin/admin-recruitment",
+    es: "groupadmin/reclutamiento-admins",
+    de: "groupadmin/admin-rekrutierung",
+    ru: "groupadmin/rekrutirovaniye-adminov",
+    pt: "groupadmin/recrutamento-admins",
+    ch: "groupadmin/admin-zhaomu",
+    hi: "groupadmin/admin-bharti",
+    ar: "مسؤول-مجموعة/توظيف-المشرفين",
   },
   "groupadmin-leaderboard": {
     fr: "groupadmin/classement",

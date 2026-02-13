@@ -1,0 +1,318 @@
+{
+  "audit_date": "2026-02-13",
+  "module": "Chatter (Affiliate/Referral System)",
+  "total_hooks": 7,
+  "hooks_used": 4,
+  "hooks_deprecated": 2,
+  "hooks_orphaned": 1,
+
+  "hooks": [
+    {
+      "name": "useChatter",
+      "path": "src/hooks/useChatter.ts",
+      "status": "ACTIVE",
+      "lines": 496,
+      "uses": ["ChatterDashboard.tsx", "ChatterLeaderboard.tsx", "ChatterPayments.tsx", "ChatterReferralEarnings.tsx", "ChatterReferrals.tsx"],
+      "cloud_functions": [
+        "getChatterDashboard",
+        "chatterRequestWithdrawal",
+        "updateChatterProfile"
+      ],
+      "key_data": ["dashboardData", "commissions", "withdrawals", "notifications", "canWithdraw"],
+      "issues": []
+    },
+    {
+      "name": "useChatterMissions",
+      "path": "src/hooks/useChatterMissions.ts",
+      "status": "ACTIVE",
+      "lines": 381,
+      "uses": ["DailyMissionsCard.tsx", "TeamMessagesCard.tsx"],
+      "cloud_functions": [],
+      "key_data": ["progress", "missions", "completedCount", "totalXP"],
+      "storage": ["localStorage", "Firestore (doc: chatters/{uid}/dailyMissions/{date})"],
+      "issues": ["localStorage key hardcoded"]
+    },
+    {
+      "name": "useChatterReferrals",
+      "path": "src/hooks/useChatterReferrals.ts",
+      "status": "ACTIVE",
+      "lines": 168,
+      "uses": ["ChatterDashboard.tsx", "ChatterReferrals.tsx", "ChatterReferralEarnings.tsx", "ChatterRefer.tsx"],
+      "cloud_functions": ["getReferralDashboard"],
+      "key_data": ["dashboardData", "filleulsN1", "filleulsN2", "tierProgress"],
+      "issues": []
+    },
+    {
+      "name": "useChatterPromotion",
+      "path": "src/hooks/useChatterPromotion.ts",
+      "status": "ORPHAN",
+      "lines": 125,
+      "uses": [],
+      "cloud_functions": ["getReferralDashboard"],
+      "issues": ["NOT USED ANYWHERE", "allPromotions always empty", "promotionEndsIn not reactive"],
+      "recommendation": "DELETE or ARCHIVE"
+    },
+    {
+      "name": "useChatterQuiz",
+      "path": "src/hooks/useChatterQuiz.ts",
+      "status": "DEPRECATED",
+      "lines": 193,
+      "uses": [],
+      "cloud_functions": ["getQuizQuestions", "submitQuiz"],
+      "reason_deprecated": "Route /chatter/quiz removed from App.tsx (flow simplified 2026-02-06)",
+      "issues": ["NOT USED", "Route removed from navigation"],
+      "recommendation": "DELETE"
+    },
+    {
+      "name": "useChatterTraining",
+      "path": "src/hooks/useChatterTraining.ts",
+      "status": "UNDER_CONSTRUCTION",
+      "lines": 218,
+      "uses": [],
+      "cloud_functions": [
+        "getChatterTrainingModules",
+        "getChatterTrainingModuleContent",
+        "updateChatterTrainingProgress",
+        "submitChatterTrainingQuiz",
+        "getChatterTrainingCertificate"
+      ],
+      "issues": ["Different import pattern (direct functions instead of getFunctions)", "No page component yet"],
+      "notes": "Well-structured, integrates with useChatterMissions for video tracking",
+      "recommendation": "VERIFY region for Cloud Functions"
+    },
+    {
+      "name": "useChatterWithdrawal",
+      "path": "src/hooks/useChatterWithdrawal.ts",
+      "status": "DEPRECATED",
+      "lines": 300,
+      "uses": [],
+      "cloud_functions": ["chatterRequestWithdrawal"],
+      "reason_deprecated": "Duplicate of useChatter.requestWithdrawal(), centralized payment system in place",
+      "issues": ["NOT USED", "Duplicate functionality"],
+      "recommendation": "DELETE"
+    }
+  ],
+
+  "helper_functions": [
+    {
+      "name": "useChatterReferralCapture",
+      "parent_hook": "useChatter",
+      "purpose": "Capture affiliate codes from URL (?ref=, ?code=)",
+      "uses": ["ChatterRegister.tsx"],
+      "helpers": [
+        "getStoredChatterCode()",
+        "clearStoredChatterCode()"
+      ]
+    }
+  ],
+
+  "cloud_functions_mapping": {
+    "getChatterDashboard": {
+      "hooks": ["useChatter"],
+      "region": "europe-west1",
+      "frequency": "mount + refresh"
+    },
+    "chatterRequestWithdrawal": {
+      "hooks": ["useChatter", "useChatterWithdrawal (deprecated)"],
+      "region": "europe-west1",
+      "frequency": "on-demand"
+    },
+    "updateChatterProfile": {
+      "hooks": ["useChatter"],
+      "region": "europe-west1",
+      "frequency": "on-demand"
+    },
+    "getReferralDashboard": {
+      "hooks": ["useChatterReferrals", "useChatterPromotion (orphan)"],
+      "region": "europe-west1",
+      "frequency": "mount + refresh"
+    },
+    "getChatterTrainingModules": {
+      "hooks": ["useChatterTraining"],
+      "region": "UNKNOWN - verify",
+      "status": "under_construction"
+    },
+    "getChatterTrainingModuleContent": {
+      "hooks": ["useChatterTraining"],
+      "region": "UNKNOWN - verify"
+    },
+    "updateChatterTrainingProgress": {
+      "hooks": ["useChatterTraining"],
+      "region": "UNKNOWN - verify"
+    },
+    "submitChatterTrainingQuiz": {
+      "hooks": ["useChatterTraining"],
+      "region": "UNKNOWN - verify"
+    },
+    "getChatterTrainingCertificate": {
+      "hooks": ["useChatterTraining"],
+      "region": "UNKNOWN - verify"
+    },
+    "getQuizQuestions": {
+      "hooks": ["useChatterQuiz (deprecated)"],
+      "status": "DISABLED - route removed"
+    },
+    "submitQuiz": {
+      "hooks": ["useChatterQuiz (deprecated)"],
+      "status": "DISABLED - route removed"
+    }
+  },
+
+  "pages_analyzed": [
+    {
+      "name": "ChatterDashboard.tsx",
+      "hooks_used": ["useChatter", "useChatterReferrals"],
+      "status": "ACTIVE"
+    },
+    {
+      "name": "ChatterLeaderboard.tsx",
+      "hooks_used": ["useChatter"],
+      "status": "ACTIVE"
+    },
+    {
+      "name": "ChatterPayments.tsx",
+      "hooks_used": ["useChatter"],
+      "status": "ACTIVE"
+    },
+    {
+      "name": "ChatterReferrals.tsx",
+      "hooks_used": ["useChatter", "useChatterReferrals"],
+      "status": "ACTIVE"
+    },
+    {
+      "name": "ChatterReferralEarnings.tsx",
+      "hooks_used": ["useChatter", "useChatterReferrals"],
+      "status": "ACTIVE"
+    },
+    {
+      "name": "ChatterRefer.tsx",
+      "hooks_used": ["useChatterReferrals"],
+      "status": "ACTIVE"
+    },
+    {
+      "name": "ChatterTraining.tsx",
+      "hooks_used": [],
+      "status": "MISSING useChatterTraining import"
+    }
+  ],
+
+  "components_using_chatter_hooks": [
+    {
+      "name": "DailyMissionsCard.tsx",
+      "hooks": ["useChatterMissions"],
+      "path": "src/components/Chatter/Cards/"
+    },
+    {
+      "name": "TeamMessagesCard.tsx",
+      "hooks": ["useChatterMissions (trackMessageSent)"],
+      "path": "src/components/Chatter/Cards/"
+    }
+  ],
+
+  "daily_missions_config": {
+    "reset_time": "midnight UTC (per user's date)",
+    "total_possible_xp": 220,
+    "bonus_xp": 150,
+    "missions": [
+      {
+        "id": "share",
+        "target": 3,
+        "xp": 50,
+        "auto_tracked": true
+      },
+      {
+        "id": "login",
+        "target": 1,
+        "xp": 15,
+        "auto_tracked": true
+      },
+      {
+        "id": "message",
+        "target": 1,
+        "xp": 30,
+        "auto_tracked": true
+      },
+      {
+        "id": "video",
+        "target": 1,
+        "xp": 25,
+        "auto_tracked": true
+      },
+      {
+        "id": "call",
+        "target": 1,
+        "xp": 100,
+        "auto_tracked": true
+      }
+    ]
+  },
+
+  "referral_tiers": {
+    "thresholds": {
+      "N1_level_1": "1000 cents ($10)",
+      "N1_level_2": "5000 cents ($50)"
+    },
+    "bonus_tiers": [5, 10, 20, 50, 100, 500],
+    "bonus_amounts": {
+      "5": "$15",
+      "10": "$35",
+      "20": "$75",
+      "50": "$250",
+      "100": "$600",
+      "500": "$4,000"
+    }
+  },
+
+  "issues_summary": {
+    "CRITICAL": [
+      {
+        "issue": "Delete orphaned/deprecated hooks",
+        "hooks": ["useChatterWithdrawal", "useChatterQuiz", "useChatterPromotion"],
+        "action": "rm or mv to deprecated/ folder"
+      }
+    ],
+    "HIGH": [
+      {
+        "issue": "Verify Cloud Functions region for Training",
+        "hook": "useChatterTraining",
+        "problem": "Uses different import pattern",
+        "check": "europe-west1?"
+      }
+    ],
+    "MEDIUM": [
+      {
+        "issue": "useChatterPromotion not reactive",
+        "problem": "promotionEndsIn calculated once at return",
+        "solution": "Add useEffect with interval"
+      },
+      {
+        "issue": "useChatterMissions localStorage hardcoded",
+        "solution": "Use global STORAGE_KEYS constant"
+      }
+    ],
+    "LOW": [
+      {
+        "issue": "Missing JSDoc on types",
+        "solution": "Document ChatterDashboardData, ChatterReferralDashboardData"
+      }
+    ]
+  },
+
+  "recommendations": {
+    "PRIORITY_1": [
+      "DELETE src/hooks/useChatterWithdrawal.ts (duplicate functionality)",
+      "DELETE src/hooks/useChatterQuiz.ts (route removed, deprecated)",
+      "ARCHIVE or DELETE src/hooks/useChatterPromotion.ts (unused, partial implementation)"
+    ],
+    "PRIORITY_2": [
+      "Verify Cloud Functions region in useChatterTraining",
+      "Make useChatterPromotion.promotionEndsIn reactive with useEffect",
+      "Add ChatterTraining integration to ChatterTraining.tsx page component"
+    ],
+    "PRIORITY_3": [
+      "Add tests for daily mission reset at midnight",
+      "Document localStorage sync strategy in useChatterMissions",
+      "Add monitoring/logging for Cloud Function errors"
+    ]
+  }
+}

@@ -246,6 +246,20 @@ export interface ChatterData {
   threshold50Reached: boolean;
   tierBonusesPaid: number[];
 
+  // Telegram Integration
+  telegram_id?: string | null;
+  telegram_username?: string | null;
+  telegram_linked_at?: string | null;
+  telegram_onboarding_code?: string | null;
+
+  // Legal & Compliance
+  legal_terms_accepted?: boolean;
+  legal_terms_accepted_at?: string | null;
+  legal_privacy_accepted?: boolean;
+  legal_privacy_accepted_at?: string | null;
+  legal_ip_address?: string | null;
+  legal_user_agent?: string | null;
+
   createdAt: string;
   updatedAt: string;
   lastLoginAt: string | null;

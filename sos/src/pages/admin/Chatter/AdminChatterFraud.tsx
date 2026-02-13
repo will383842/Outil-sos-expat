@@ -86,7 +86,7 @@ const AdminChatterFraud: React.FC = () => {
   const [reviewNotes, setReviewNotes] = useState("");
   const [isReviewing, setIsReviewing] = useState(false);
 
-  const functions = getFunctions(undefined, "europe-west1");
+  const functions = getFunctions(undefined, "europe-west2");
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);

@@ -78,7 +78,7 @@ interface ChatterConfig {
 
 const AdminChatterConfig: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   // State
   const [config, setConfig] = useState<ChatterConfig | null>(null);

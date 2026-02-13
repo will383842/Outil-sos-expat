@@ -111,7 +111,7 @@ type StatusFilter = 'all' | 'active' | 'suspended' | 'banned';
 const AdminInfluencersList: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   // State
   const [influencers, setInfluencers] = useState<Influencer[]>([]);

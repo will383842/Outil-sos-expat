@@ -1,0 +1,941 @@
+{
+  "metadata": {
+    "totalMissingKeys": 202,
+    "totalCategories": 146,
+    "generatedAt": "2026-02-13T11:54:23.681Z"
+  },
+  "categories": {
+    "chatter.register.error": {
+      "count": 11,
+      "keys": [
+        "chatter.register.error.alreadyChatter",
+        "chatter.register.error.banned",
+        "chatter.register.error.blocked",
+        "chatter.register.error.countryNotSupported",
+        "chatter.register.error.invalidEmail",
+        "chatter.register.error.isActiveClient",
+        "chatter.register.error.isExpat",
+        "chatter.register.error.isLawyer",
+        "chatter.register.error.network",
+        "chatter.register.error.registrationDisabled",
+        "chatter.register.error.weakPassword"
+      ]
+    },
+    "chatter.calc.example": {
+      "count": 8,
+      "keys": [
+        "chatter.calc.example.badge",
+        "chatter.calc.example.bonus",
+        "chatter.calc.example.direct",
+        "chatter.calc.example.note",
+        "chatter.calc.example.onetime",
+        "chatter.calc.example.team",
+        "chatter.calc.example.title",
+        "chatter.calc.example.total"
+      ]
+    },
+    "chatter.schema.job": {
+      "count": 6,
+      "keys": [
+        "chatter.schema.job.description",
+        "chatter.schema.job.incentive",
+        "chatter.schema.job.qualifications",
+        "chatter.schema.job.responsibilities",
+        "chatter.schema.job.skills",
+        "chatter.schema.job.title"
+      ]
+    },
+    "chatter.register.emailExists": {
+      "count": 5,
+      "keys": [
+        "chatter.register.emailExists.hint",
+        "chatter.register.emailExists.loginButton",
+        "chatter.register.emailExists.message",
+        "chatter.register.emailExists.title",
+        "chatter.register.emailExists.tryDifferent"
+      ]
+    },
+    "chatter.posts.filter": {
+      "count": 4,
+      "keys": [
+        "chatter.posts.filter.all",
+        "chatter.posts.filter.approved",
+        "chatter.posts.filter.pending",
+        "chatter.posts.filter.rejected"
+      ]
+    },
+    "chatter.schema.offer": {
+      "count": 4,
+      "keys": [
+        "chatter.schema.offer.direct",
+        "chatter.schema.offer.direct.desc",
+        "chatter.schema.offer.team",
+        "chatter.schema.offer.team.desc"
+      ]
+    },
+    "chatter.aria.cta": {
+      "count": 3,
+      "keys": [
+        "chatter.aria.cta.final",
+        "chatter.aria.cta.sticky",
+        "chatter.aria.cta.team"
+      ]
+    },
+    "chatter.leaderboard.bonus": {
+      "count": 3,
+      "keys": [
+        "chatter.leaderboard.bonus.top1",
+        "chatter.leaderboard.bonus.top2",
+        "chatter.leaderboard.bonus.top3"
+      ]
+    },
+    "chatter.posts.status": {
+      "count": 3,
+      "keys": [
+        "chatter.posts.status.approved",
+        "chatter.posts.status.pending",
+        "chatter.posts.status.rejected"
+      ]
+    },
+    "chatter.training.level": {
+      "count": 3,
+      "keys": [
+        "chatter.training.level.advanced",
+        "chatter.training.level.beginner",
+        "chatter.training.level.intermediate"
+      ]
+    },
+    "chatter.content.blog": {
+      "count": 2,
+      "keys": [
+        "chatter.content.blog",
+        "chatter.content.blog.name"
+      ]
+    },
+    "chatter.dashboard.startSharing": {
+      "count": 2,
+      "keys": [
+        "chatter.dashboard.startSharing",
+        "chatter.dashboard.startSharing.aria"
+      ]
+    },
+    "chatter.hero.become": {
+      "count": 2,
+      "keys": [
+        "chatter.hero.become",
+        "chatter.hero.become.sub"
+      ]
+    },
+    "chatter.posts.form": {
+      "count": 2,
+      "keys": [
+        "chatter.posts.form.contentPlaceholder",
+        "chatter.posts.form.language"
+      ]
+    },
+    "chatter.provider.benefit1": {
+      "count": 2,
+      "keys": [
+        "chatter.provider.benefit1.desc",
+        "chatter.provider.benefit1.title"
+      ]
+    },
+    "chatter.provider.benefit2": {
+      "count": 2,
+      "keys": [
+        "chatter.provider.benefit2.desc",
+        "chatter.provider.benefit2.title"
+      ]
+    },
+    "chatter.provider.benefit3": {
+      "count": 2,
+      "keys": [
+        "chatter.provider.benefit3.desc",
+        "chatter.provider.benefit3.title"
+      ]
+    },
+    "chatter.referrals.recruitFirst": {
+      "count": 2,
+      "keys": [
+        "chatter.referrals.recruitFirst",
+        "chatter.referrals.recruitFirst.aria"
+      ]
+    },
+    "chatter.register.seo": {
+      "count": 2,
+      "keys": [
+        "chatter.register.seo.description",
+        "chatter.register.seo.title"
+      ]
+    },
+    "chatter.schema.howto": {
+      "count": 2,
+      "keys": [
+        "chatter.schema.howto.description",
+        "chatter.schema.howto.name"
+      ]
+    },
+    "chatter.schema.service": {
+      "count": 2,
+      "keys": [
+        "chatter.schema.service.description",
+        "chatter.schema.service.name"
+      ]
+    },
+    "chatter.schema.step1": {
+      "count": 2,
+      "keys": [
+        "chatter.schema.step1.name",
+        "chatter.schema.step1.text"
+      ]
+    },
+    "chatter.schema.step2": {
+      "count": 2,
+      "keys": [
+        "chatter.schema.step2.name",
+        "chatter.schema.step2.text"
+      ]
+    },
+    "chatter.schema.step3": {
+      "count": 2,
+      "keys": [
+        "chatter.schema.step3.name",
+        "chatter.schema.step3.text"
+      ]
+    },
+    "chatter.schema.step4": {
+      "count": 2,
+      "keys": [
+        "chatter.schema.step4.name",
+        "chatter.schema.step4.text"
+      ]
+    },
+    "chatter.schema.tool": {
+      "count": 2,
+      "keys": [
+        "chatter.schema.tool.internet",
+        "chatter.schema.tool.smartphone"
+      ]
+    },
+    "chatter.affiliateCodeClient": {
+      "count": 1,
+      "keys": [
+        "chatter.affiliateCodeClient"
+      ]
+    },
+    "chatter.affiliateCodeRecruitment": {
+      "count": 1,
+      "keys": [
+        "chatter.affiliateCodeRecruitment"
+      ]
+    },
+    "chatter.alerts.inactive": {
+      "count": 1,
+      "keys": [
+        "chatter.alerts.inactive"
+      ]
+    },
+    "chatter.alerts.inactiveCount": {
+      "count": 1,
+      "keys": [
+        "chatter.alerts.inactiveCount"
+      ]
+    },
+    "chatter.alerts.motivate": {
+      "count": 1,
+      "keys": [
+        "chatter.alerts.motivate"
+      ]
+    },
+    "chatter.alerts.teamTitle": {
+      "count": 1,
+      "keys": [
+        "chatter.alerts.teamTitle"
+      ]
+    },
+    "chatter.aria.faq": {
+      "count": 1,
+      "keys": [
+        "chatter.aria.faq.toggle"
+      ]
+    },
+    "chatter.availableBalance": {
+      "count": 1,
+      "keys": [
+        "chatter.availableBalance"
+      ]
+    },
+    "chatter.badges": {
+      "count": 1,
+      "keys": [
+        "chatter.badges"
+      ]
+    },
+    "chatter.bestRank": {
+      "count": 1,
+      "keys": [
+        "chatter.bestRank"
+      ]
+    },
+    "chatter.bestStreak": {
+      "count": 1,
+      "keys": [
+        "chatter.bestStreak"
+      ]
+    },
+    "chatter.calc.calls": {
+      "count": 1,
+      "keys": [
+        "chatter.calc.calls"
+      ]
+    },
+    "chatter.commissions.clientCall": {
+      "count": 1,
+      "keys": [
+        "chatter.commissions.clientCall"
+      ]
+    },
+    "chatter.commissions.n1Call": {
+      "count": 1,
+      "keys": [
+        "chatter.commissions.n1Call"
+      ]
+    },
+    "chatter.commissions.n2Call": {
+      "count": 1,
+      "keys": [
+        "chatter.commissions.n2Call"
+      ]
+    },
+    "chatter.commissions.rates": {
+      "count": 1,
+      "keys": [
+        "chatter.commissions.rates"
+      ]
+    },
+    "chatter.content.badge": {
+      "count": 1,
+      "keys": [
+        "chatter.content.badge"
+      ]
+    },
+    "chatter.content.instagram": {
+      "count": 1,
+      "keys": [
+        "chatter.content.instagram"
+      ]
+    },
+    "chatter.content.note": {
+      "count": 1,
+      "keys": [
+        "chatter.content.note"
+      ]
+    },
+    "chatter.content.subtitle": {
+      "count": 1,
+      "keys": [
+        "chatter.content.subtitle"
+      ]
+    },
+    "chatter.content.tiktok": {
+      "count": 1,
+      "keys": [
+        "chatter.content.tiktok"
+      ]
+    },
+    "chatter.content.title": {
+      "count": 1,
+      "keys": [
+        "chatter.content.title"
+      ]
+    },
+    "chatter.content.youtube": {
+      "count": 1,
+      "keys": [
+        "chatter.content.youtube"
+      ]
+    },
+    "chatter.createdAt": {
+      "count": 1,
+      "keys": [
+        "chatter.createdAt"
+      ]
+    },
+    "chatter.currentMonthRank": {
+      "count": 1,
+      "keys": [
+        "chatter.currentMonthRank"
+      ]
+    },
+    "chatter.currentStreak": {
+      "count": 1,
+      "keys": [
+        "chatter.currentStreak"
+      ]
+    },
+    "chatter.dashboard.viewAllCommissions": {
+      "count": 1,
+      "keys": [
+        "chatter.dashboard.viewAllCommissions"
+      ]
+    },
+    "chatter.firstName": {
+      "count": 1,
+      "keys": [
+        "chatter.firstName"
+      ]
+    },
+    "chatter.id": {
+      "count": 1,
+      "keys": [
+        "chatter.id"
+      ]
+    },
+    "chatter.insights.title": {
+      "count": 1,
+      "keys": [
+        "chatter.insights.title"
+      ]
+    },
+    "chatter.landing.seo": {
+      "count": 1,
+      "keys": [
+        "chatter.landing.seo.ogDescription"
+      ]
+    },
+    "chatter.leaderboard.bonusEligible": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.bonusEligible"
+      ]
+    },
+    "chatter.leaderboard.bonusTitle": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.bonusTitle"
+      ]
+    },
+    "chatter.leaderboard.daysRemaining": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.daysRemaining"
+      ]
+    },
+    "chatter.leaderboard.monthlyReset": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.monthlyReset"
+      ]
+    },
+    "chatter.leaderboard.monthlyResetDesc": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.monthlyResetDesc"
+      ]
+    },
+    "chatter.leaderboard.motivational": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.motivational"
+      ]
+    },
+    "chatter.leaderboard.motivationalSub": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.motivationalSub"
+      ]
+    },
+    "chatter.leaderboard.otherRankings": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.otherRankings"
+      ]
+    },
+    "chatter.leaderboard.outOf": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.outOf"
+      ]
+    },
+    "chatter.leaderboard.previousWinners": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.previousWinners"
+      ]
+    },
+    "chatter.leaderboard.resetInfo": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.resetInfo"
+      ]
+    },
+    "chatter.leaderboard.teamCalls": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.teamCalls"
+      ]
+    },
+    "chatter.leaderboard.teamCompetition": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.teamCompetition"
+      ]
+    },
+    "chatter.leaderboard.teamCompetitionDesc": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.teamCompetitionDesc"
+      ]
+    },
+    "chatter.leaderboard.top3congrats": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.top3congrats"
+      ]
+    },
+    "chatter.leaderboard.viewIndividual": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.viewIndividual"
+      ]
+    },
+    "chatter.leaderboard.viewTeam": {
+      "count": 1,
+      "keys": [
+        "chatter.leaderboard.viewTeam"
+      ]
+    },
+    "chatter.level": {
+      "count": 1,
+      "keys": [
+        "chatter.level"
+      ]
+    },
+    "chatter.payments.addMethodHint": {
+      "count": 1,
+      "keys": [
+        "chatter.payments.addMethodHint"
+      ]
+    },
+    "chatter.payments.addPaymentMethod": {
+      "count": 1,
+      "keys": [
+        "chatter.payments.addPaymentMethod"
+      ]
+    },
+    "chatter.payments.delete": {
+      "count": 1,
+      "keys": [
+        "chatter.payments.delete"
+      ]
+    },
+    "chatter.payments.noTrackingData": {
+      "count": 1,
+      "keys": [
+        "chatter.payments.noTrackingData"
+      ]
+    },
+    "chatter.payments.selectWithdrawal": {
+      "count": 1,
+      "keys": [
+        "chatter.payments.selectWithdrawal"
+      ]
+    },
+    "chatter.payments.setDefault": {
+      "count": 1,
+      "keys": [
+        "chatter.payments.setDefault"
+      ]
+    },
+    "chatter.payments.trackingDetails": {
+      "count": 1,
+      "keys": [
+        "chatter.payments.trackingDetails"
+      ]
+    },
+    "chatter.pendingBalance": {
+      "count": 1,
+      "keys": [
+        "chatter.pendingBalance"
+      ]
+    },
+    "chatter.pendingWithdrawalId": {
+      "count": 1,
+      "keys": [
+        "chatter.pendingWithdrawalId"
+      ]
+    },
+    "chatter.piggyBank.keepGoing": {
+      "count": 1,
+      "keys": [
+        "chatter.piggyBank.keepGoing"
+      ]
+    },
+    "chatter.piggyBank.needMoreSales": {
+      "count": 1,
+      "keys": [
+        "chatter.piggyBank.needMoreSales"
+      ]
+    },
+    "chatter.posts.clicks": {
+      "count": 1,
+      "keys": [
+        "chatter.posts.clicks"
+      ]
+    },
+    "chatter.posts.conversions": {
+      "count": 1,
+      "keys": [
+        "chatter.posts.conversions"
+      ]
+    },
+    "chatter.posts.earnings": {
+      "count": 1,
+      "keys": [
+        "chatter.posts.earnings"
+      ]
+    },
+    "chatter.posts.empty": {
+      "count": 1,
+      "keys": [
+        "chatter.posts.empty.message"
+      ]
+    },
+    "chatter.posts.fetchError": {
+      "count": 1,
+      "keys": [
+        "chatter.posts.fetchError"
+      ]
+    },
+    "chatter.posts.newPost": {
+      "count": 1,
+      "keys": [
+        "chatter.posts.newPost.title"
+      ]
+    },
+    "chatter.posts.rejectionReason": {
+      "count": 1,
+      "keys": [
+        "chatter.posts.rejectionReason"
+      ]
+    },
+    "chatter.posts.submitSuccess": {
+      "count": 1,
+      "keys": [
+        "chatter.posts.submitSuccess"
+      ]
+    },
+    "chatter.provider.badge": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.badge"
+      ]
+    },
+    "chatter.provider.duration": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.duration"
+      ]
+    },
+    "chatter.provider.example": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.example.title"
+      ]
+    },
+    "chatter.provider.helper": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.helper"
+      ]
+    },
+    "chatter.provider.lawyer": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.lawyer"
+      ]
+    },
+    "chatter.provider.link1": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.link1.label"
+      ]
+    },
+    "chatter.provider.link2": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.link2.label"
+      ]
+    },
+    "chatter.provider.links": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.links.title"
+      ]
+    },
+    "chatter.provider.monthly": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.monthly"
+      ]
+    },
+    "chatter.provider.months": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.months"
+      ]
+    },
+    "chatter.provider.perProvider": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.perProvider"
+      ]
+    },
+    "chatter.provider.subtitle": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.subtitle"
+      ]
+    },
+    "chatter.provider.title": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.title"
+      ]
+    },
+    "chatter.provider.total": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.total"
+      ]
+    },
+    "chatter.provider.you": {
+      "count": 1,
+      "keys": [
+        "chatter.provider.you"
+      ]
+    },
+    "chatter.referralEarnings": {
+      "count": 1,
+      "keys": [
+        "chatter.referralEarnings"
+      ]
+    },
+    "chatter.referrals.directN1": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.directN1"
+      ]
+    },
+    "chatter.referrals.howItWorks4": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.howItWorks4"
+      ]
+    },
+    "chatter.referrals.indirectN2": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.indirectN2"
+      ]
+    },
+    "chatter.referrals.manageTeam": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.manageTeam"
+      ]
+    },
+    "chatter.referrals.myTeam": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.myTeam"
+      ]
+    },
+    "chatter.referrals.noTeamYet": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.noTeamYet"
+      ]
+    },
+    "chatter.referrals.passiveDesc": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.passiveDesc"
+      ]
+    },
+    "chatter.referrals.passiveIncome": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.passiveIncome"
+      ]
+    },
+    "chatter.referrals.perCallN1": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.perCallN1"
+      ]
+    },
+    "chatter.referrals.qualifiedReferrals": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.qualifiedReferrals"
+      ]
+    },
+    "chatter.referrals.ratesReminder": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.ratesReminder"
+      ]
+    },
+    "chatter.referrals.recurring": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.recurring"
+      ]
+    },
+    "chatter.referrals.refer": {
+      "count": 1,
+      "keys": [
+        "chatter.referrals.refer.aria"
+      ]
+    },
+    "chatter.register.alreadyRegistered": {
+      "count": 1,
+      "keys": [
+        "chatter.register.alreadyRegistered"
+      ]
+    },
+    "chatter.register.loginLink": {
+      "count": 1,
+      "keys": [
+        "chatter.register.loginLink"
+      ]
+    },
+    "chatter.stats.passiveIncome": {
+      "count": 1,
+      "keys": [
+        "chatter.stats.passiveIncome"
+      ]
+    },
+    "chatter.status.": {
+      "count": 1,
+      "keys": [
+        "chatter.status."
+      ]
+    },
+    "chatter.suspended.date": {
+      "count": 1,
+      "keys": [
+        "chatter.suspended.date"
+      ]
+    },
+    "chatter.suspended.info": {
+      "count": 1,
+      "keys": [
+        "chatter.suspended.info"
+      ]
+    },
+    "chatter.suspended.subtitle": {
+      "count": 1,
+      "keys": [
+        "chatter.suspended.subtitle"
+      ]
+    },
+    "chatter.tier.bonus": {
+      "count": 1,
+      "keys": [
+        "chatter.tier.bonus"
+      ]
+    },
+    "chatter.tier.needed": {
+      "count": 1,
+      "keys": [
+        "chatter.tier.needed"
+      ]
+    },
+    "chatter.tier.progress": {
+      "count": 1,
+      "keys": [
+        "chatter.tier.progress"
+      ]
+    },
+    "chatter.totalClients": {
+      "count": 1,
+      "keys": [
+        "chatter.totalClients"
+      ]
+    },
+    "chatter.totalCommissions": {
+      "count": 1,
+      "keys": [
+        "chatter.totalCommissions"
+      ]
+    },
+    "chatter.totalEarned": {
+      "count": 1,
+      "keys": [
+        "chatter.totalEarned"
+      ]
+    },
+    "chatter.totalRecruits": {
+      "count": 1,
+      "keys": [
+        "chatter.totalRecruits"
+      ]
+    },
+    "chatter.tour.completed": {
+      "count": 1,
+      "keys": [
+        "chatter.tour.completed"
+      ]
+    },
+    "chatter.tour.startEarning": {
+      "count": 1,
+      "keys": [
+        "chatter.tour.startEarning"
+      ]
+    },
+    "chatter.training.lessons": {
+      "count": 1,
+      "keys": [
+        "chatter.training.lessons"
+      ]
+    },
+    "chatter.training.progress": {
+      "count": 1,
+      "keys": [
+        "chatter.training.progress.subtitle"
+      ]
+    },
+    "chatter.training.review": {
+      "count": 1,
+      "keys": [
+        "chatter.training.review"
+      ]
+    },
+    "chatter.training.start": {
+      "count": 1,
+      "keys": [
+        "chatter.training.start"
+      ]
+    },
+    "chatter.training.tips": {
+      "count": 1,
+      "keys": [
+        "chatter.training.tips.title"
+      ]
+    },
+    "chatter.validatedBalance": {
+      "count": 1,
+      "keys": [
+        "chatter.validatedBalance"
+      ]
+    },
+    "chatter.zoomMeetingsAttended": {
+      "count": 1,
+      "keys": [
+        "chatter.zoomMeetingsAttended"
+      ]
+    }
+  }
+}

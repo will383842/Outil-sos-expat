@@ -350,6 +350,147 @@ const BloggerLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
+            SECTION VALUE - Vous apportez de la VRAIE valeur
+        ================================================================ */}
+        <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="blogger-value-title">
+          <div className="max-w-5xl mx-auto">
+            {/* Badge + Titre */}
+            <div className="text-center mb-8 sm:mb-12">
+              <div className="inline-flex items-center gap-2 bg-purple-500/20 text-purple-300 px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base font-bold border border-purple-500/30 mb-4">
+                <FormattedMessage id="blogger.landing.value.badge" defaultMessage="Gagnant-Gagnant" />
+              </div>
+              <h2 id="blogger-value-title" className="!text-3xl sm:!text-4xl lg:!text-5xl font-black mb-4">
+                <FormattedMessage id="blogger.landing.value.title" defaultMessage="Vous apportez de la VRAIE valeur" />
+              </h2>
+              <p className="text-base sm:text-lg lg:text-xl max-w-3xl mx-auto text-white/90">
+                <FormattedMessage id="blogger.landing.value.subtitle" defaultMessage="Vous ne vendez pas, vous AIDEZ. Vos articles guident les expats dans leurs galères quotidiennes." />
+              </p>
+            </div>
+
+            {/* 4 Scénarios problème/solution */}
+            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10">
+              {/* Problème 1 */}
+              <article className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-3xl" aria-hidden="true">😰</span>
+                  <div className="flex-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                      <FormattedMessage id="blogger.landing.value.problem1.title" defaultMessage="Perdu dans les démarches" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-white/80 mb-3">
+                      <FormattedMessage id="blogger.landing.value.problem1.desc" defaultMessage="Nouveau expat, ne sait pas par où commencer : visa, logement, banque, sécu..." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-black/30 border border-purple-500/30 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-xs sm:text-sm font-bold text-green-400">
+                      <FormattedMessage id="blogger.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white/90">
+                    <FormattedMessage id="blogger.landing.value.problem1.solution" defaultMessage="Votre article explique chaque étape en détail. Checklist complète + lien vers expert si besoin. Lecteur guidé." />
+                  </p>
+                </div>
+              </article>
+
+              {/* Problème 2 */}
+              <article className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-3xl" aria-hidden="true">😱</span>
+                  <div className="flex-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                      <FormattedMessage id="blogger.landing.value.problem2.title" defaultMessage="Panique visa refusé" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-white/80 mb-3">
+                      <FormattedMessage id="blogger.landing.value.problem2.desc" defaultMessage="Lecteur stressé : son visa a été refusé, ne sait pas quoi faire, risque d'expulsion." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-black/30 border border-purple-500/30 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-xs sm:text-sm font-bold text-green-400">
+                      <FormattedMessage id="blogger.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white/90">
+                    <FormattedMessage id="blogger.landing.value.problem2.solution" defaultMessage="Votre article rassure + donne solutions. Lien vers avocat spécialisé. Aide accessible. Problème résolu." />
+                  </p>
+                </div>
+              </article>
+
+              {/* Problème 3 */}
+              <article className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-3xl" aria-hidden="true">😔</span>
+                  <div className="flex-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                      <FormattedMessage id="blogger.landing.value.problem3.title" defaultMessage="Seul dans nouveau pays" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-white/80 mb-3">
+                      <FormattedMessage id="blogger.landing.value.problem3.desc" defaultMessage="Expatrié isolé, besoin de conseils mais personne à qui parler, tout est nouveau." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-black/30 border border-purple-500/30 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-xs sm:text-sm font-bold text-green-400">
+                      <FormattedMessage id="blogger.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white/90">
+                    <FormattedMessage id="blogger.landing.value.problem3.solution" defaultMessage="Votre blog = communauté bienveillante. Conseils pratiques + aide 24/7 via votre lien. Plus seul." />
+                  </p>
+                </div>
+              </article>
+
+              {/* Problème 4 */}
+              <article className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-3xl" aria-hidden="true">💸</span>
+                  <div className="flex-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                      <FormattedMessage id="blogger.landing.value.problem4.title" defaultMessage="Budget trop serré" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-white/80 mb-3">
+                      <FormattedMessage id="blogger.landing.value.problem4.desc" defaultMessage="Besoin d'aide pro mais cabinet d'avocats trop cher (500$/heure = impossible)." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-black/30 border border-purple-500/30 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-xs sm:text-sm font-bold text-green-400">
+                      <FormattedMessage id="blogger.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white/90">
+                    <FormattedMessage id="blogger.landing.value.problem4.solution" defaultMessage="Articles gratuits + réduction 5$ via VOTRE lien. Aide pro accessible. Lecteur reconnaissant." />
+                  </p>
+                </div>
+              </article>
+            </div>
+
+            {/* Win-Win final */}
+            <div className="bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-amber-500/20 border-2 border-purple-500/30 rounded-2xl p-5 sm:p-8 text-center">
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-3">
+                <FormattedMessage id="blogger.landing.value.winwin.title" defaultMessage="🎯 Vous créez du contenu utile. Vous aidez ET gagnez." />
+              </h3>
+              <p className="text-base sm:text-lg text-white/90 mb-4">
+                <FormattedMessage id="blogger.landing.value.winwin.desc" defaultMessage="Chaque lecteur aidé = problème résolu + infos gratuites + 5$ économisés pour lui + 10$ gagnés pour vous. Tout le monde gagne." />
+              </p>
+              <div className="inline-flex items-center gap-2 bg-purple-500/30 border border-purple-400/50 rounded-full px-4 py-2 text-sm sm:text-base font-bold">
+                <Check className="w-4 h-4 text-green-400" aria-hidden="true" />
+                <FormattedMessage id="blogger.landing.value.winwin.tag" defaultMessage="Contenu utile + Revenus passifs" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ================================================================
             SECTION 2 - HOW IT WORKS (3 steps)
         ================================================================ */}
         <section className="section-content" aria-labelledby="blogger-steps-title">

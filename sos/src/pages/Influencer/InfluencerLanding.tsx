@@ -318,6 +318,147 @@ const InfluencerLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
+            SECTION VALUE - Vous apportez de la VRAIE valeur
+        ================================================================ */}
+        <section className="section-content bg-black" aria-labelledby="influencer-value-title">
+          <div className="max-w-5xl mx-auto">
+            {/* Badge + Titre */}
+            <div className="text-center mb-8 sm:mb-12">
+              <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-300 px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base font-bold border border-red-500/30 mb-4">
+                <FormattedMessage id="influencer.landing.value.badge" defaultMessage="Gagnant-Gagnant" />
+              </div>
+              <h2 id="influencer-value-title" className="!text-3xl sm:!text-4xl lg:!text-5xl font-black mb-4">
+                <FormattedMessage id="influencer.landing.value.title" defaultMessage="Vous apportez de la VRAIE valeur" />
+              </h2>
+              <p className="text-base sm:text-lg lg:text-xl max-w-3xl mx-auto text-white/90">
+                <FormattedMessage id="influencer.landing.value.subtitle" defaultMessage="Vous ne vendez pas, vous AIDEZ. Votre contenu guide vos followers dans leur vie d'expat." />
+              </p>
+            </div>
+
+            {/* 4 Scénarios problème/solution */}
+            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10">
+              {/* Méthode 1 */}
+              <article className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-3xl" aria-hidden="true">🚀</span>
+                  <div className="flex-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                      <FormattedMessage id="influencer.landing.value.problem1.title" defaultMessage="Bloqué dans démarches visa" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-white/80 mb-3">
+                      <FormattedMessage id="influencer.landing.value.problem1.desc" defaultMessage="Follower stressé : visa compliqué, ne comprend pas les documents, risque de refus." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-black/30 border border-red-500/30 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-xs sm:text-sm font-bold text-green-400">
+                      <FormattedMessage id="influencer.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white/90">
+                    <FormattedMessage id="influencer.landing.value.problem1.solution" defaultMessage="Votre vidéo explique les bases + lien vers avocat spécialisé pour aide détaillée. Follower guidé." />
+                  </p>
+                </div>
+              </article>
+
+              {/* Méthode 2 */}
+              <article className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-3xl" aria-hidden="true">📱</span>
+                  <div className="flex-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                      <FormattedMessage id="influencer.landing.value.problem2.title" defaultMessage="Nouveau expat perdu" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-white/80 mb-3">
+                      <FormattedMessage id="influencer.landing.value.problem2.desc" defaultMessage="Follower vient d'arriver dans nouveau pays, tout est flou, ne sait pas par où commencer." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-black/30 border border-red-500/30 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-xs sm:text-sm font-bold text-green-400">
+                      <FormattedMessage id="influencer.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white/90">
+                    <FormattedMessage id="influencer.landing.value.problem2.solution" defaultMessage="Votre content rassure + donne tips pratiques. Accès aide 24/7 + 5% réduction. Follower rassuré." />
+                  </p>
+                </div>
+              </article>
+
+              {/* Méthode 3 */}
+              <article className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-3xl" aria-hidden="true">👥</span>
+                  <div className="flex-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                      <FormattedMessage id="influencer.landing.value.problem3.title" defaultMessage="Urgence administrative" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-white/80 mb-3">
+                      <FormattedMessage id="influencer.landing.value.problem3.desc" defaultMessage="Follower panique : contrôle demain, documents pas en règle, stress maximum." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-black/30 border border-red-500/30 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-xs sm:text-sm font-bold text-green-400">
+                      <FormattedMessage id="influencer.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white/90">
+                    <FormattedMessage id="influencer.landing.value.problem3.solution" defaultMessage="Vous partagez votre expérience. Communauté + experts accessibles via votre lien. Urgence résolue." />
+                  </p>
+                </div>
+              </article>
+
+              {/* Méthode 4 */}
+              <article className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-3xl" aria-hidden="true">💎</span>
+                  <div className="flex-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                      <FormattedMessage id="influencer.landing.value.problem4.title" defaultMessage="Budget serré" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-white/80 mb-3">
+                      <FormattedMessage id="influencer.landing.value.problem4.desc" defaultMessage="Follower besoin aide légale mais cabinet classique = 500$/heure (trop cher)." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-black/30 border border-red-500/30 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-xs sm:text-sm font-bold text-green-400">
+                      <FormattedMessage id="influencer.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white/90">
+                    <FormattedMessage id="influencer.landing.value.problem4.solution" defaultMessage="Tips gratuits dans vos vidéos + 5% réduction via VOTRE lien. Aide pro accessible. Follower reconnaissant." />
+                  </p>
+                </div>
+              </article>
+            </div>
+
+            {/* Win-Win final */}
+            <div className="bg-gradient-to-r from-red-500/20 via-orange-500/20 to-amber-500/20 border-2 border-red-500/30 rounded-2xl p-5 sm:p-8 text-center">
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-3">
+                <FormattedMessage id="influencer.landing.value.winwin.title" defaultMessage="🎯 Vous créez du contenu utile. Vous aidez ET gagnez." />
+              </h3>
+              <p className="text-base sm:text-lg text-white/90 mb-4">
+                <FormattedMessage id="influencer.landing.value.winwin.desc" defaultMessage="Chaque follower aidé = problème résolu + tips gratuits + 5% économisés + 10$ gagnés pour vous. Tout le monde gagne." />
+              </p>
+              <div className="inline-flex items-center gap-2 bg-red-500/30 border border-red-400/50 rounded-full px-4 py-2 text-sm sm:text-base font-bold">
+                <Check className="w-4 h-4 text-green-400" aria-hidden="true" />
+                <FormattedMessage id="influencer.landing.value.winwin.tag" defaultMessage="Contenu utile + Revenus récurrents" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ================================================================
             SECTION 2 - HOW IT WORKS (3 steps)
         ================================================================ */}
         <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="section-role">

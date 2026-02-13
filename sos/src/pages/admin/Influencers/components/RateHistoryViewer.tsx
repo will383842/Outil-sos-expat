@@ -30,7 +30,7 @@ const COMMISSION_TYPE_LABELS: Record<string, string> = {
 
 const RateHistoryViewer: React.FC<RateHistoryViewerProps> = ({ onClose }) => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
   const [history, setHistory] = useState<InfluencerRateHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -407,6 +407,161 @@ const GroupAdminLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
+            NOUVELLE SECTION - VALEUR APPORTÉE À LA COMMUNAUTÉ
+        ================================================================ */}
+        <section className="section-content bg-gradient-to-b from-indigo-950 via-blue-950 to-black" aria-labelledby="section-value">
+          <div className="max-w-6xl mx-auto">
+
+            {/* Badge + Titre */}
+            <div className="text-center mb-8 sm:mb-12">
+              <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-4 sm:px-6 py-2 rounded-full sm:text-base font-bold border mb-4">
+                <span className="text-xl">🤝</span>
+                <FormattedMessage id="groupAdmin.landing.value.badge" defaultMessage="Gagnant-Gagnant" />
+              </div>
+              <h2 id="section-value" className="!text-3xl sm:!text-4xl lg:!text-5xl font-black text-white mb-3 sm:mb-4">
+                <FormattedMessage id="groupAdmin.landing.value.title" defaultMessage="Vous apportez de la VRAIE valeur" />
+              </h2>
+              <p className="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto">
+                <FormattedMessage id="groupAdmin.landing.value.subtitle" defaultMessage="Vous ne vendez pas, vous AIDEZ. Vos membres obtiennent une aide concrète pour leurs problèmes d'expat." />
+              </p>
+            </div>
+
+            {/* Grid 2x2 - Problèmes résolus */}
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-8">
+
+              {/* Problème 1 : Visa refusé */}
+              <div className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl">😰</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg sm:text-xl text-white mb-2">
+                      <FormattedMessage id="groupAdmin.landing.value.problem1.title" defaultMessage="Visa refusé, expulsion proche" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-300 mb-3">
+                      <FormattedMessage id="groupAdmin.landing.value.problem1.desc" defaultMessage="Un membre panique : son visa a été refusé, il risque l'expulsion dans 15 jours." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">✅</span>
+                    <span className="font-bold text-green-400">
+                      <FormattedMessage id="groupAdmin.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white">
+                    <FormattedMessage id="groupAdmin.landing.value.problem1.solution" defaultMessage="Appel immédiat avec un avocat spécialisé immigration. Conseils concrets + plan d'action. Membre sauvé." />
+                  </p>
+                </div>
+              </div>
+
+              {/* Problème 2 : Démarches administratives */}
+              <div className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-yellow-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl">😕</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg sm:text-xl text-white mb-2">
+                      <FormattedMessage id="groupAdmin.landing.value.problem2.title" defaultMessage="Perdu dans les démarches" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-300 mb-3">
+                      <FormattedMessage id="groupAdmin.landing.value.problem2.desc" defaultMessage="Nouvelle arrivée, ne parle pas la langue, ne comprend rien aux formulaires administratifs." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">✅</span>
+                    <span className="font-bold text-green-400">
+                      <FormattedMessage id="groupAdmin.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white">
+                    <FormattedMessage id="groupAdmin.landing.value.problem2.solution" defaultMessage="Expat helper bilingue explique étape par étape. Formulaires remplis correctement. Stress disparu." />
+                  </p>
+                </div>
+              </div>
+
+              {/* Problème 3 : Question urgente 22h */}
+              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl">🌙</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg sm:text-xl text-white mb-2">
+                      <FormattedMessage id="groupAdmin.landing.value.problem3.title" defaultMessage="Urgence en pleine nuit" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-300 mb-3">
+                      <FormattedMessage id="groupAdmin.landing.value.problem3.desc" defaultMessage="22h, famille en détresse : contrôle police demain matin, documents pas prêts." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">✅</span>
+                    <span className="font-bold text-green-400">
+                      <FormattedMessage id="groupAdmin.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white">
+                    <FormattedMessage id="groupAdmin.landing.value.problem3.solution" defaultMessage="Aide 24/7 disponible. Expert appelle en 5 min, guide la préparation. Contrôle passé sans problème." />
+                  </p>
+                </div>
+              </div>
+
+              {/* Problème 4 : Budget serré */}
+              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl">💸</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg sm:text-xl text-white mb-2">
+                      <FormattedMessage id="groupAdmin.landing.value.problem4.title" defaultMessage="Budget trop serré" />
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-300 mb-3">
+                      <FormattedMessage id="groupAdmin.landing.value.problem4.desc" defaultMessage="Besoin d'aide légale mais peut pas se payer un cabinet d'avocats à 500$/heure." />
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">✅</span>
+                    <span className="font-bold text-green-400">
+                      <FormattedMessage id="groupAdmin.landing.value.solution" defaultMessage="Votre solution" />
+                    </span>
+                  </div>
+                  <p className="text-sm sm:text-base text-white">
+                    <FormattedMessage id="groupAdmin.landing.value.problem4.solution" defaultMessage="Avec VOTRE lien = 5$ de réduction. Aide pro accessible. Membre reconnaissant." />
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Message final WIN-WIN */}
+            <div className="bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border-2 border-amber-500/30 rounded-2xl p-6 sm:p-8 text-center">
+              <div className="text-3xl sm:text-4xl mb-4">🤝</div>
+              <h3 className="text-xl sm:text-2xl font-black text-white mb-3">
+                <FormattedMessage id="groupAdmin.landing.value.winwin.title" defaultMessage="Vous ne vendez pas. Vous AIDEZ et gagnez." />
+              </h3>
+              <p className="text-base sm:text-lg text-gray-200 max-w-2xl mx-auto mb-4">
+                <FormattedMessage id="groupAdmin.landing.value.winwin.desc" defaultMessage="Chaque membre aidé = problème résolu + 5$ économisés pour lui + 10$ gagnés pour vous. Tout le monde gagne." />
+              </p>
+              <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-300 px-4 py-2 rounded-full font-bold">
+                <span>✅</span>
+                <FormattedMessage id="groupAdmin.landing.value.winwin.tag" defaultMessage="Service utile + Revenus récurrents" />
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ================================================================
             SECTION 2 - HOW IT WORKS (3 steps)
         ================================================================ */}
         <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="section-how">

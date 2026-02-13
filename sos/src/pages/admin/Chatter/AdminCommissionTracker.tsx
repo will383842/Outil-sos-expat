@@ -291,7 +291,7 @@ const AdminCommissionTracker: React.FC = () => {
   const [offset, setOffset] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
 
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   // Fetch stats
   const fetchStats = useCallback(async () => {

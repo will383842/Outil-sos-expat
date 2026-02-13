@@ -74,21 +74,21 @@ export function ReferralLinkCard({ variant = "full" }: ReferralLinkCardProps) {
           className="flex-1 bg-white text-purple-600 font-semibold py-3 px-4 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
         >
           <ExternalLink className="w-5 h-5" />
-          {t("chatter.referrals.previewLink", "Voir la page d'invitation")}
+          {t("chatter.referrals.previewLink", undefined, "Voir la page d'invitation")}
         </a>
         <button
           onClick={copyLink}
           className="flex-1 bg-white/20 backdrop-blur-sm text-white font-semibold py-3 px-4 rounded-lg hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
         >
           {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-          {copied ? t("common.copied", "Copié !") : t("common.copy", "Copier le lien")}
+          {copied ? t("common.copied", undefined, "Copié !") : t("common.copy", undefined, "Copier le lien")}
         </button>
       </div>
 
       {/* Referral Code */}
       <div className="bg-white/10 rounded-lg p-4">
         <label className="text-purple-100 text-xs font-medium mb-2 block">
-          {t("chatter.referrals.codeLabel", "Votre code")}
+          {t("chatter.referrals.codeLabel", undefined, "Votre code")}
         </label>
         <div className="flex gap-2">
           <div className="flex-1 px-4 py-2 bg-white/20 rounded-md font-mono text-xl text-white font-bold">
@@ -104,7 +104,7 @@ export function ReferralLinkCard({ variant = "full" }: ReferralLinkCardProps) {
       </div>
 
       <p className="text-purple-100 text-sm mt-4">
-        {t("chatter.referrals.shareLinkDesc", "Partagez ce lien pour inviter d'autres personnes et gagner des commissions.")}
+        {t("chatter.referrals.shareLinkDesc", undefined, "Partagez ce lien pour inviter d'autres personnes et gagner des commissions.")}
       </p>
     </div>
   );

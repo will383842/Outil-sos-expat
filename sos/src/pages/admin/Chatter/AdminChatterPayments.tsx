@@ -51,7 +51,7 @@ type TabType = 'pending' | 'processing' | 'completed' | 'failed';
 
 const AdminChatterPayments: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);

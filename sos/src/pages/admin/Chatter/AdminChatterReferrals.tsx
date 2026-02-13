@@ -81,7 +81,7 @@ const AdminChatterReferrals: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
-  const functions = getFunctions(undefined, "europe-west1");
+  const functions = getFunctions(undefined, "europe-west2");
 
   const fetchStats = useCallback(async () => {
     try {

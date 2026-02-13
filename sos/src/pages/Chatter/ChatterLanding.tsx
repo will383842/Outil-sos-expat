@@ -28,6 +28,7 @@ import {
   Infinity,
   Plus,
   Minus,
+  DollarSign,
 } from 'lucide-react';
 import { useCountryFromUrl, useCountryLandingConfig, formatPaymentMethodDisplay, convertToLocal } from '@/country-landing';
 
@@ -385,6 +386,135 @@ const ChatterLanding: React.FC = () => {
           </div>
 
           <ScrollIndicator label={intl.formatMessage({ id: 'chatter.landing.scroll', defaultMessage: 'Découvrir' })} />
+        </section>
+
+        {/* ================================================================
+            SECTION MONEY GUIDE - Comment GAGNER rapidement
+        ================================================================ */}
+        <section className="section-content bg-black" aria-labelledby="chatter-money-title">
+          <div className="max-w-5xl mx-auto">
+            {/* Badge + Titre */}
+            <div className="text-center mb-8 sm:mb-12">
+              <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base font-bold border border-amber-500/30 mb-4">
+                <FormattedMessage id="chatter.landing.money.badge" defaultMessage="💰 Guide Pratique" />
+              </div>
+              <h2 id="chatter-money-title" className="!text-3xl sm:!text-4xl lg:!text-5xl font-black mb-4">
+                <FormattedMessage id="chatter.landing.money.title" defaultMessage="Comment GAGNER rapidement et facilement" />
+              </h2>
+              <p className="text-base sm:text-lg lg:text-xl max-w-3xl mx-auto text-white/90">
+                <FormattedMessage id="chatter.landing.money.subtitle" defaultMessage="Pas de blabla. Voici EXACTEMENT comment faire vos premiers 500$ ce mois-ci." />
+              </p>
+            </div>
+
+            {/* 4 Méthodes concrètes */}
+            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10">
+              {/* Méthode 1 */}
+              <article className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="text-3xl" aria-hidden="true">
+                    <FormattedMessage id="chatter.landing.money.method1.title" defaultMessage="🚀 Démarrage rapide (2 min)" />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <span className="inline-flex items-center gap-1.5 bg-green-500/20 border border-green-500/30 rounded-full px-3 py-1 text-xs sm:text-sm font-bold text-green-400">
+                    <Check className="w-3 h-3" aria-hidden="true" />
+                    <FormattedMessage id="chatter.landing.money.method1.time" defaultMessage="Aujourd'hui" />
+                  </span>
+                </div>
+                <p className="text-sm sm:text-base text-white/90 mb-3">
+                  <FormattedMessage id="chatter.landing.money.method1.desc" defaultMessage="Créer compte + lier Telegram + obtenir vos codes affiliés. C'est tout. Vous êtes prêt à gagner." />
+                </p>
+                <div className="bg-black/30 border border-amber-500/30 rounded-xl p-3">
+                  <p className="text-xs sm:text-sm font-bold text-amber-400">
+                    ✓ <FormattedMessage id="chatter.landing.money.method1.action" defaultMessage="S'inscrire maintenant" />
+                  </p>
+                </div>
+              </article>
+
+              {/* Méthode 2 */}
+              <article className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="text-3xl" aria-hidden="true">
+                    <FormattedMessage id="chatter.landing.money.method2.title" defaultMessage="📱 Partager son lien (5 min/jour)" />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <span className="inline-flex items-center gap-1.5 bg-green-500/20 border border-green-500/30 rounded-full px-3 py-1 text-xs sm:text-sm font-bold text-green-400">
+                    <Check className="w-3 h-3" aria-hidden="true" />
+                    <FormattedMessage id="chatter.landing.money.method2.time" defaultMessage="Dès maintenant" />
+                  </span>
+                </div>
+                <p className="text-sm sm:text-base text-white/90 mb-3">
+                  <FormattedMessage id="chatter.landing.money.method2.desc" defaultMessage="Poster dans groupes Facebook/Telegram/WhatsApp d'expats. Copier-coller simple. 1 appel = 10$." />
+                </p>
+                <div className="bg-black/30 border border-amber-500/30 rounded-xl p-3">
+                  <p className="text-xs sm:text-sm font-bold text-amber-400">
+                    ✓ <FormattedMessage id="chatter.landing.money.method2.action" defaultMessage="Templates prêts fournis" />
+                  </p>
+                </div>
+              </article>
+
+              {/* Méthode 3 */}
+              <article className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="text-3xl" aria-hidden="true">
+                    <FormattedMessage id="chatter.landing.money.method3.title" defaultMessage="👥 Construire équipe (passif)" />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <span className="inline-flex items-center gap-1.5 bg-purple-500/20 border border-purple-500/30 rounded-full px-3 py-1 text-xs sm:text-sm font-bold text-purple-400">
+                    <Infinity className="w-3 h-3" aria-hidden="true" />
+                    <FormattedMessage id="chatter.landing.money.method3.time" defaultMessage="Revenus à vie" />
+                  </span>
+                </div>
+                <p className="text-sm sm:text-base text-white/90 mb-3">
+                  <FormattedMessage id="chatter.landing.money.method3.desc" defaultMessage="Recruter d'autres chatters avec votre code. 1$/appel (niveau 1) + 0,50$/appel (niveau 2). Vos filleuls travaillent = vous gagnez." />
+                </p>
+                <div className="bg-black/30 border border-green-500/30 rounded-xl p-3">
+                  <p className="text-xs sm:text-sm font-bold text-green-400">
+                    ∞ <FormattedMessage id="chatter.landing.money.method3.action" defaultMessage="MLM sans limite" />
+                  </p>
+                </div>
+              </article>
+
+              {/* Méthode 4 */}
+              <article className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 sm:p-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="text-3xl" aria-hidden="true">
+                    <FormattedMessage id="chatter.landing.money.method4.title" defaultMessage="⚖️ Recruter partenaires (5$/appel)" />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <span className="inline-flex items-center gap-1.5 bg-purple-500/20 border border-purple-500/30 rounded-full px-3 py-1 text-xs sm:text-sm font-bold text-purple-400">
+                    <DollarSign className="w-3 h-3" aria-hidden="true" />
+                    <FormattedMessage id="chatter.landing.money.method4.time" defaultMessage="900$/partenaire" />
+                  </span>
+                </div>
+                <p className="text-sm sm:text-base text-white/90 mb-3">
+                  <FormattedMessage id="chatter.landing.money.method4.desc" defaultMessage="Trouver 1 avocat/expat helper. Il fait 30 appels/mois × 5$ × 6 mois = 900$ passifs pour VOUS. Répétable à l'infini." />
+                </p>
+                <div className="bg-black/30 border border-purple-500/30 rounded-xl p-3">
+                  <p className="text-xs sm:text-sm font-bold text-purple-400">
+                    🔥 <FormattedMessage id="chatter.landing.money.method4.action" defaultMessage="10 partenaires = 9000$" />
+                  </p>
+                </div>
+              </article>
+            </div>
+
+            {/* Reality Check */}
+            <div className="bg-gradient-to-r from-amber-500/20 via-green-500/20 to-purple-500/20 border-2 border-amber-500/30 rounded-2xl p-5 sm:p-8 text-center">
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-3">
+                <FormattedMessage id="chatter.landing.money.reality.title" defaultMessage="💡 Réalité terrain : Top chatters gagnent 500-5000$/mois" />
+              </h3>
+              <p className="text-base sm:text-lg text-white/90 mb-4">
+                <FormattedMessage id="chatter.landing.money.reality.desc" defaultMessage="Combinaison des 4 méthodes = revenus illimités. Plus tu partages + recrutes, plus tu gagnes. C'est mathématique." />
+              </p>
+              <div className="inline-flex items-center gap-2 bg-amber-500/30 border border-amber-400/50 rounded-full px-4 py-2 text-sm sm:text-base font-bold">
+                <Check className="w-4 h-4 text-green-400" aria-hidden="true" />
+                <FormattedMessage id="chatter.landing.money.reality.tag" defaultMessage="Facile + Rapide + Passif" />
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* ================================================================

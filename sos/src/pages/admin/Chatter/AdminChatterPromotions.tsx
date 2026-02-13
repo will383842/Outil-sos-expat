@@ -101,7 +101,7 @@ const AdminChatterPromotions: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  const functions = getFunctions(undefined, "europe-west1");
+  const functions = getFunctions(undefined, "europe-west2");
 
   const fetchPromotions = useCallback(async () => {
     setIsLoading(true);

@@ -7,11 +7,8 @@
 // Chatter hooks
 export { useChatterMissions, type Mission } from './useChatterMissions';
 export { useChatter } from './useChatter';
-export { useChatterQuiz } from './useChatterQuiz';
 export { useChatterReferrals, getNextTierInfo } from './useChatterReferrals';
 export { useChatterTraining } from './useChatterTraining';
-export { useChatterWithdrawal } from './useChatterWithdrawal';
-export { useChatterPromotion } from './useChatterPromotion';
 
 // Influencer/Blogger hooks
 export { useInfluencer } from './useInfluencer';

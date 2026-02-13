@@ -100,7 +100,7 @@ type Tab = 'general' | 'rules' | 'antifraud' | 'history';
 
 const AdminInfluencersConfig: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [config, setConfig] = useState<InfluencerConfig>(DEFAULT_CONFIG);

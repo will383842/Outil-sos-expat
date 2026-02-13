@@ -94,7 +94,7 @@ const AdminInfluencerDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   const [influencer, setInfluencer] = useState<Influencer | null>(null);
   const [commissions, setCommissions] = useState<Commission[]>([]);

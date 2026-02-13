@@ -122,16 +122,20 @@ export interface InfluencerRateHistoryEntry {
 
 export interface Influencer {
   id: string;
+  /** @deprecated Legacy field - no longer used */
   odooId?: number;
-  userId: string;
+  /** @deprecated Use id instead */
+  userId?: string;
 
   // Personal info
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
+  photoUrl?: string;
   country: string;
   language: string;
+  additionalLanguages?: string[];
 
   // Profile info
   platforms: InfluencerPlatform[];
@@ -155,16 +159,34 @@ export interface Influencer {
   validatedBalance: number;
   totalEarned: number;
   totalWithdrawn: number;
-  pendingWithdrawalId?: string;
+  pendingWithdrawalId?: string | null;
 
   // Statistics
-  totalClicks: number;
-  totalReferrals: number;
-  totalClientsReferred: number;
-  totalProvidersRecruited: number;
-  conversionRate: number;
-  currentMonthEarnings: number;
-  currentMonthRank?: number;
+  /** @deprecated Use totalClients instead */
+  totalClicks?: number;
+  /** @deprecated No longer tracked separately */
+  totalReferrals?: number;
+  /** @deprecated Use totalClients instead */
+  totalClientsReferred?: number;
+  /** @deprecated Use totalRecruits instead */
+  totalProvidersRecruited?: number;
+  /** @deprecated No longer calculated */
+  conversionRate?: number;
+  /** @deprecated Use currentMonthStats.earnings instead */
+  currentMonthEarnings?: number;
+
+  // Statistics (V2 - aligned with backend)
+  totalClients: number;
+  totalRecruits: number;
+  totalCommissions: number;
+  currentMonthRank: number | null;
+  currentMonthStats?: {
+    clients: number;
+    recruits: number;
+    earnings: number;
+    month: string;
+  };
+  bestRank: number | null;
 
   // Level & bonuses
   level?: 1 | 2 | 3 | 4 | 5;
@@ -174,9 +196,26 @@ export interface Influencer {
   bestStreak?: number;
 
   // Activity tracking
+  /** @deprecated Split into lastActivityDate and lastLoginAt */
   lastActivityAt?: string;
+  /** @deprecated Use bestStreak instead */
+  longestStreak?: number;
   currentStreak: number;
-  longestStreak: number;
+  lastActivityDate?: string | null;
+  lastLoginAt?: string | null;
+
+  // Referral tracking (aligned with backend)
+  recruitedBy?: string | null;
+  recruitedByCode?: string | null;
+  recruitedAt?: string | null;
+
+  // Payment preferences
+  preferredPaymentMethod?: string | null;
+
+  // Legal / Terms tracking
+  termsAccepted?: boolean;
+  termsAcceptedAt?: string | null;
+  termsVersion?: string | null;
 
   // V2: Captured rates (frozen at registration)
   capturedRates?: InfluencerCapturedRates;

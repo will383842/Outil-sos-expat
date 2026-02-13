@@ -78,7 +78,7 @@ const AdminChatterCountryRotation: React.FC = () => {
     setError(null);
 
     try {
-      const functions = getFunctions(undefined, 'europe-west1');
+      const functions = getFunctions(undefined, 'europe-west2');
       const adminGetCountryRotationStatus = httpsCallable(
         functions,
         'adminGetCountryRotationStatus'
@@ -128,7 +128,7 @@ const AdminChatterCountryRotation: React.FC = () => {
     setError(null);
 
     try {
-      const functions = getFunctions(undefined, 'europe-west1');
+      const functions = getFunctions(undefined, 'europe-west2');
       const adminInitializeCountryRotation = httpsCallable(
         functions,
         'adminInitializeCountryRotation'
@@ -168,7 +168,7 @@ const AdminChatterCountryRotation: React.FC = () => {
     setError(null);
 
     try {
-      const functions = getFunctions(undefined, 'europe-west1');
+      const functions = getFunctions(undefined, 'europe-west2');
       const adminAdvanceCycle = httpsCallable(functions, 'adminAdvanceCycle');
 
       const result = await adminAdvanceCycle();
@@ -206,7 +206,7 @@ const AdminChatterCountryRotation: React.FC = () => {
     setError(null);
 
     try {
-      const functions = getFunctions(undefined, 'europe-west1');
+      const functions = getFunctions(undefined, 'europe-west2');
       const adminUpdateCycleThreshold = httpsCallable(
         functions,
         'adminUpdateCycleThreshold'
