@@ -840,17 +840,16 @@ export function generateSlug(options: GenerateSlugOptions): string {
     baseLang = 'fr';
   }
 
-  // Déterminer le locale (région/pays de l'utilisateur ou défaut)
-  // Format: {lang}-{region} ex: fr-fr, en-us, fr-de (français en Allemagne)
+  // ✅ FIX SEO: Utilise UNIQUEMENT les locales par défaut (empêche es-FR, zh-HR, etc.)
+  // Les combinaisons langue-pays invalides causent des erreurs Google Search Console
   const defaultLocales: Record<string, string> = {
-    'fr': 'fr', 'en': 'us', 'es': 'es', 'de': 'de', 'pt': 'br',
+    'fr': 'fr', 'en': 'us', 'es': 'es', 'de': 'de', 'pt': 'pt',
     'ru': 'ru', 'zh': 'cn', 'ar': 'sa', 'hi': 'in'
   };
 
-  // Si userCountry est fourni, l'utiliser comme locale
-  const localeRegion = userCountry
-    ? getCountryCode(userCountry)
-    : defaultLocales[baseLang] || baseLang;
+  // ❌ ANCIEN CODE: permettait n'importe quelle combinaison (es-FR, zh-HR, etc.)
+  // ✅ NOUVEAU: utilise toujours la locale par défaut pour la langue
+  const localeRegion = defaultLocales[baseLang] || baseLang;
 
   const langLocale = `${baseLang}-${localeRegion}`;
 

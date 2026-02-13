@@ -39,6 +39,34 @@ const LANGUAGE_TO_COUNTRY: Record<string, string> = {
   ar: 'sa',  // Arabic -> Saudi Arabia
 };
 
+// ✅ WHITELIST: Locales valides pour SEO (empêche es-FR, zh-HR, etc.)
+const VALID_LOCALES = new Set([
+  'fr-fr', 'fr-ca', 'fr-be', 'fr-ch',
+  'en-us', 'en-gb', 'en-ca', 'en-au',
+  'es-es', 'es-mx', 'es-ar',
+  'de-de', 'de-at', 'de-ch',
+  'pt-pt', 'pt-br',
+  'ru-ru',
+  'zh-cn', 'zh-tw',
+  'ar-sa',
+  'hi-in'
+]);
+
+/**
+ * Valide si une locale est valide (ex: "fr-fr" OK, "es-FR" NOK)
+ */
+function isValidLocale(locale: string): boolean {
+  return VALID_LOCALES.has(locale.toLowerCase());
+}
+
+/**
+ * Extrait la locale d'un slug (ex: "es-FR/avocat-thailand/..." → "es-FR")
+ */
+function extractLocaleFromSlug(slug: string): string | null {
+  const match = slug.match(/^([a-z]{2}-[a-z]{2})\//i);
+  return match ? match[1].toLowerCase() : null;
+}
+
 /**
  * Get locale string in format "lang-country" (e.g., "hi-in", "fr-fr")
  * This must match the format expected by the frontend LocaleRouter
@@ -120,19 +148,36 @@ export const sitemapProfiles = onRequest(
             const slug = slugs[lang];
             if (!slug) return;
 
+            // ✅ VALIDATION: Vérifier que le slug a une locale valide
+            const slugLocale = extractLocaleFromSlug(slug);
+            if (!slugLocale || !isValidLocale(slugLocale)) {
+              // ❌ Locale invalide détectée (ex: es-FR, zh-HR)
+              console.warn(`⚠️ Slug invalide ignoré (${doc.id}, ${lang}): ${slug} (locale: ${slugLocale || 'none'})`);
+              return; // Exclure du sitemap
+            }
+
             // Le slug contient déjà le chemin complet avec locale
             // Ex: "fr-fr/avocat-thailand/julien-k7m2p9"
             const url = `${SITE_URL}/${slug}`;
 
-            // Génère tous les hreflang
+            // Génère tous les hreflang (uniquement pour slugs valides)
             const hreflangs = LANGUAGES.map(hrefLang => {
               const hrefSlug = slugs[hrefLang];
               if (!hrefSlug) return null;
+
+              // Vérifier aussi que le hreflang slug est valide
+              const hrefLocale = extractLocaleFromSlug(hrefSlug);
+              if (!hrefLocale || !isValidLocale(hrefLocale)) return null;
+
               return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefSlug}`)}"/>`;
             }).filter(Boolean).join('\n');
 
-            // x-default = français
-            const xDefaultSlug = slugs['fr'] || slug;
+            // x-default = français (si disponible et valide)
+            let xDefaultSlug = slugs['fr'] || slug;
+            const xDefaultLocale = extractLocaleFromSlug(xDefaultSlug);
+            if (!xDefaultLocale || !isValidLocale(xDefaultLocale)) {
+              xDefaultSlug = slug; // Fallback vers le slug actuel s'il est valide
+            }
             const xDefaultUrl = `${SITE_URL}/${xDefaultSlug}`;
 
             urlBlocks.push(`  <url>
