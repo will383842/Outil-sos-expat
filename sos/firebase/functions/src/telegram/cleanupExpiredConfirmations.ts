@@ -62,6 +62,16 @@ export const cleanupExpiredWithdrawalConfirmations = scheduler.onSchedule(
 
         try {
           await db.runTransaction(async (transaction) => {
+            // === ALL READS FIRST (Firestore requirement) ===
+            // For affiliate role, read the payout doc to get commissionIds
+            let payoutSnap: FirebaseFirestore.DocumentSnapshot | null = null;
+            if (confirmation.role === "affiliate") {
+              payoutSnap = await transaction.get(
+                db.collection("affiliate_payouts").doc(confirmation.withdrawalId)
+              );
+            }
+
+            // === ALL WRITES ===
             // 1. Mark confirmation as expired
             transaction.update(doc.ref, {
               status: "expired",
@@ -93,7 +103,29 @@ export const cleanupExpiredWithdrawalConfirmations = scheduler.onSchedule(
                 pendingWithdrawalId: null,
                 updatedAt: now,
               });
+            } else if (confirmation.role === "affiliate") {
+              // Affiliate: balance is on users/{userId} doc + restore commissions
+              const userRef = db.collection("users").doc(confirmation.userId);
+              transaction.update(userRef, {
+                availableBalance: FieldValue.increment(confirmation.amount),
+                pendingPayoutId: null,
+                updatedAt: now,
+              });
+
+              // Restore affiliate commissions to "available"
+              if (payoutSnap && payoutSnap.exists) {
+                const payoutData = payoutSnap.data();
+                if (payoutData && payoutData.commissionIds && Array.isArray(payoutData.commissionIds)) {
+                  for (const commissionId of payoutData.commissionIds) {
+                    transaction.update(
+                      db.collection("affiliate_commissions").doc(commissionId),
+                      { status: "available", payoutId: null, paidAt: null, updatedAt: now }
+                    );
+                  }
+                }
+              }
             } else {
+              // Chatter/Influencer/Blogger: refund to their collection
               const roleCollections: Record<string, string> = {
                 chatter: "chatters",
                 influencer: "influencers",
