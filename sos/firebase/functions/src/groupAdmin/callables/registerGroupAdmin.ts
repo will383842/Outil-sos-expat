@@ -405,7 +405,7 @@ export const registerGroupAdmin = onCall(
           language: input.language || "en",
           timestamp: Date.now(),
           acceptanceMethod: "checkbox_click",
-          ipAddress: request.rawRequest?.ip || "unknown",
+          ipHash: hashIP(request.rawRequest?.ip || "unknown"),
         },
       };
 
@@ -439,6 +439,19 @@ export const registerGroupAdmin = onCall(
           });
         }
 
+        // ✅ Track registration click (ALWAYS, even for direct signups)
+        const clickRef = db.collection("group_admin_clicks").doc();
+        transaction.set(clickRef, {
+          id: clickRef.id,
+          groupAdminId: recruitedBy || userId,
+          affiliateCode: recruitedBy ? recruitedByCode : affiliateCodeClient,
+          clickType: recruitedBy ? ("recruitment" as const) : ("client" as const),
+          ipHash: hashIP(request.rawRequest?.ip || "unknown"),
+          converted: true,
+          conversionId: userId,
+          createdAt: now,
+        });
+
         // Track recruitment if from recruiter
         if (recruitedBy && recruitedByCode) {
           const recruitRef = db.collection("group_admin_recruited_admins").doc();
@@ -456,19 +469,6 @@ export const registerGroupAdmin = onCall(
             recruitedAt: now,
             commissionWindowEnd: Timestamp.fromDate(commissionWindowEnd),
             commissionPaid: false,
-          });
-
-          // Track click conversion
-          const clickRef = db.collection("group_admin_clicks").doc();
-          transaction.set(clickRef, {
-            id: clickRef.id,
-            groupAdminId: recruitedBy,
-            affiliateCode: recruitedByCode,
-            clickType: "recruitment",
-            ipHash: hashIP(request.rawRequest?.ip || "unknown"),
-            converted: true,
-            conversionId: userId,
-            createdAt: now,
           });
         }
       });

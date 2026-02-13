@@ -406,7 +406,7 @@ export const registerChatter = onCall(
           language: input.language || "en",
           timestamp: Date.now(),
           acceptanceMethod: "checkbox_click",
-          ipAddress: request.rawRequest?.ip || "unknown",
+          ipHash: hashIP(request.rawRequest?.ip || "unknown"),
         },
       };
 
@@ -450,24 +450,24 @@ export const registerChatter = onCall(
           });
         }
 
-        // Track registration click if from recruitment
-        if (input.recruitmentCode && recruitedBy) {
-          const clickRef = db.collection("chatter_affiliate_clicks").doc();
-          transaction.set(clickRef, {
-            id: clickRef.id,
-            chatterCode: recruitedByCode,
-            chatterId: recruitedBy,
-            linkType: "recruitment",
-            landingPage: "/chatter/register",
-            ipHash: hashIP(request.rawRequest?.ip || "unknown"),
-            converted: true,
-            conversionId: userId,
-            conversionType: "chatter_signup",
-            clickedAt: now,
-            convertedAt: now,
-          });
+        // ✅ Track registration click (ALWAYS, even for direct signups)
+        const clickRef = db.collection("chatter_affiliate_clicks").doc();
+        transaction.set(clickRef, {
+          id: clickRef.id,
+          chatterCode: recruitedBy ? recruitedByCode : affiliateCodeClient,
+          chatterId: recruitedBy || userId,
+          linkType: recruitedBy ? ("recruitment" as const) : ("client" as const),
+          landingPage: "/chatter/register",
+          ipHash: hashIP(request.rawRequest?.ip || "unknown"),
+          converted: true,
+          conversionId: userId,
+          conversionType: "chatter_signup",
+          clickedAt: now,
+          convertedAt: now,
+        });
 
-          // Create recruitment tracking document (for harmonized $5 commission system)
+        // Create recruitment tracking document (for harmonized $5 commission system)
+        if (input.recruitmentCode && recruitedBy) {
           const windowEnd = new Date();
           windowEnd.setMonth(windowEnd.getMonth() + config.recruitmentWindowMonths);
           const recruitTrackingRef = db.collection("chatter_recruited_chatters").doc();

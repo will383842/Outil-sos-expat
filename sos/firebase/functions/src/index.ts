@@ -3,24 +3,33 @@
 // ====== FORCE REDEPLOY 2026-01-15 - AMD pending fix ======
 
 // ====== DEPLOYMENT ANALYSIS FIX 2026-02-12 ======
-// Force process exit after module load for Firebase CLI analysis
-const IS_DEPLOYMENT_ANALYSIS =
-  !process.env.K_REVISION &&
-  !process.env.K_SERVICE &&
-  !process.env.FUNCTION_TARGET &&
-  !process.env.FUNCTIONS_EMULATOR;
-
-if (IS_DEPLOYMENT_ANALYSIS) {
-  console.log('[DEPLOYMENT] Analysis mode - will exit after 9s');
-  // Force exit after 9 seconds (just before Firebase CLI 10s timeout)
-  setTimeout(() => {
-    console.log('[DEPLOYMENT] Forcing exit for Firebase CLI');
-    process.exit(0);
-  }, 9000);
-}
+// DISABLED: process.exit() is detected as error by Firebase CLI
+// Relying on natural process termination after reducing services from 212 to 111
+// const IS_DEPLOYMENT_ANALYSIS =
+//   !process.env.K_REVISION &&
+//   !process.env.K_SERVICE &&
+//   !process.env.FUNCTION_TARGET &&
+//   !process.env.FUNCTIONS_EMULATOR;
+//
+// if (IS_DEPLOYMENT_ANALYSIS) {
+//   console.log('[DEPLOYMENT] Analysis mode - will exit after 9s');
+//   setTimeout(() => {
+//     console.log('[DEPLOYMENT] Forcing exit for Firebase CLI');
+//     process.exit(0);
+//   }, 9000);
+// }
 
 // ====== P1-4: SENTRY (lazy initialization - called in functions, not at module load) ======
-// Usage: import { initSentry, captureError } from "./config/sentry"; initSentry();
+import { initSentry } from "./config/sentry";
+// Lazy init function - call once in index exports section
+let sentryInitCalled = false;
+function ensureSentryInit() {
+  if (!sentryInitCalled) {
+    initSentry();
+    sentryInitCalled = true;
+  }
+}
+// Note: captureError can be imported later when needed in specific functions
 
 // ====== ULTRA DEBUG (lazy - avoid deployment timeout) ======
 // TEMP DISABLED 2026-02-12: ultraLogger event handlers prevent deployment analysis from completing
@@ -528,6 +537,9 @@ setGlobalOptions({
   eventarc: { location: "europe-west1" },
   secrets: GLOBAL_SECRETS,
 } as any);
+
+// ✅ Initialize Sentry for error monitoring
+ensureSentryInit();
 
 // ✅ STRIPE CONNECT FUNCTIONS (Express Accounts)
 export {

@@ -317,7 +317,7 @@ export interface Influencer {
     language: string;
     timestamp: number;
     acceptanceMethod: string;
-    ipAddress?: string;
+    ipHash?: string;
   };
 }
 

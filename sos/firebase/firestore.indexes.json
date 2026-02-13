@@ -3515,6 +3515,34 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "chatters",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "affiliateCodeRecruitment",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "bloggers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "affiliateCodeRecruitment",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

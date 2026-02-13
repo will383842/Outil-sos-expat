@@ -345,7 +345,7 @@ export interface Blogger {
     language: string;
     timestamp: number;
     acceptanceMethod: string;
-    ipAddress?: string;
+    ipHash?: string;
   };
 }
 

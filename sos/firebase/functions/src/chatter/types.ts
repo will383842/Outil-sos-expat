@@ -461,7 +461,7 @@ export interface Chatter {
     language?: string;
     timestamp?: number;
     acceptanceMethod?: string; // "checkbox_click"
-    ipAddress?: string; // If captured server-side
+    ipHash?: string; // Hashed IP for RGPD compliance
   };
 }
 

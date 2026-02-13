@@ -327,7 +327,7 @@ export const registerBlogger = onCall(
           language: input.language || "en",
           timestamp: Date.now(),
           acceptanceMethod: "checkbox_click",
-          ipAddress: request.rawRequest?.ip || "unknown",
+          ipHash: hashIP(request.rawRequest?.ip || "unknown"),
         },
       };
 
@@ -399,27 +399,28 @@ export const registerBlogger = onCall(
             commissionPaidAt: null,
           });
         }
-      });
 
-      // 10. Create welcome notification
-      await db.collection("blogger_notifications").add({
-        id: "", // Will be set after creation
-        bloggerId: uid,
-        type: "system",
-        title: "Bienvenue dans le programme Blogueurs SOS-Expat !",
-        titleTranslations: {
-          en: "Welcome to the SOS-Expat Blogger Program!",
-          es: "¡Bienvenido al Programa de Bloggers de SOS-Expat!",
-          pt: "Bem-vindo ao Programa de Blogueiros SOS-Expat!",
-        },
-        message: `Félicitations ${input.firstName} ! Votre compte blogueur est maintenant actif. Découvrez vos outils de promotion et commencez à gagner des commissions dès aujourd'hui.`,
-        messageTranslations: {
-          en: `Congratulations ${input.firstName}! Your blogger account is now active. Discover your promotion tools and start earning commissions today.`,
-        },
-        actionUrl: "/blogger/tableau-de-bord",
-        isRead: false,
-        emailSent: false,
-        createdAt: now,
+        // 10. Create welcome notification (INSIDE transaction)
+        const notifRef = db.collection("blogger_notifications").doc();
+        transaction.set(notifRef, {
+          id: notifRef.id,
+          bloggerId: uid,
+          type: "system",
+          title: "Bienvenue dans le programme Blogueurs SOS-Expat !",
+          titleTranslations: {
+            en: "Welcome to the SOS-Expat Blogger Program!",
+            es: "¡Bienvenido al Programa de Bloggers de SOS-Expat!",
+            pt: "Bem-vindo ao Programa de Blogueiros SOS-Expat!",
+          },
+          message: `Félicitations ${input.firstName} ! Votre compte blogueur est maintenant actif. Découvrez vos outils de promotion et commencez à gagner des commissions dès aujourd'hui.`,
+          messageTranslations: {
+            en: `Congratulations ${input.firstName}! Your blogger account is now active. Discover your promotion tools and start earning commissions today.`,
+          },
+          actionUrl: "/blogger/tableau-de-bord",
+          isRead: false,
+          emailSent: false,
+          createdAt: now,
+        });
       });
 
       logger.info("[registerBlogger] Blogger registered successfully", {

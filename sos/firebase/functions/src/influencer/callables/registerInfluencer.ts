@@ -340,7 +340,7 @@ export const registerInfluencer = onCall(
           language: input.language || "en",
           timestamp: Date.now(),
           acceptanceMethod: "checkbox_click",
-          ipAddress: request.rawRequest?.ip || "unknown",
+          ipHash: hashIP(request.rawRequest?.ip || "unknown"),
         },
       };
 
@@ -374,14 +374,14 @@ export const registerInfluencer = onCall(
           });
         }
 
-        // Track registration click
+        // ✅ Track registration click (harmonized with Blogger pattern)
         const ip = request.rawRequest?.ip || "unknown";
         const clickRef = db.collection("influencer_affiliate_clicks").doc();
         transaction.set(clickRef, {
           id: clickRef.id,
-          influencerCode: affiliateCodeClient,
-          influencerId: userId,
-          linkType: "client",
+          influencerCode: recruitedBy ? recruitedByCode : affiliateCodeClient,
+          influencerId: recruitedBy || userId,
+          linkType: recruitedBy ? ("recruitment" as const) : ("client" as const),
           landingPage: "/devenir-influenceur",
           ipHash: hashIP(ip),
           converted: true,
