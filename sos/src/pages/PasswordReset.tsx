@@ -7,6 +7,7 @@ import Layout from '../components/layout/Layout';
 import Button from '../components/common/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
+import { useLocalePath } from '../multilingual-system';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../config/firebase';
 
@@ -321,6 +322,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ resetErrorBoundary }) => 
 const PasswordReset: React.FC = () => {
   const { t, language } = useTranslation();
   const navigate = useLocaleNavigate();
+  const getLocalePath = useLocalePath();
   const [searchParams] = useSearchParams();
   const { user, authInitialized, isFullyReady } = useAuth();
   
@@ -891,7 +893,7 @@ const PasswordReset: React.FC = () => {
               </p>
               
               <Link
-                to="/login"
+                to={getLocalePath("/login")}
                 className="group inline-flex items-center text-base font-bold text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 rounded-xl px-4 py-3 transition-all duration-300"
               >
                 <ArrowLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
@@ -1129,7 +1131,7 @@ const PasswordReset: React.FC = () => {
                         {t('help.team_message')}
                       </p>
                       <Link 
-                        to="/contact" 
+                        to={getLocalePath("/contact")} 
                         className="inline-flex items-center text-sm text-purple-300 hover:text-purple-200 font-bold transition-colors group"
                       >
                         {t('help.contact_support')}

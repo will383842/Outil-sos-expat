@@ -9,6 +9,7 @@ import Layout from '../components/layout/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
 import { useIntl, FormattedMessage } from 'react-intl';
+import { useLocalePath } from '../multilingual-system';
 import useAntiBot from '@/hooks/useAntiBot';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration } from '../utils/metaPixel';
 import { trackAdRegistration } from '../services/adAttributionService';
@@ -23,6 +24,7 @@ const theme = getTheme('lawyer');
 const RegisterLawyer: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
+  const getLocalePath = useLocalePath();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
   const prefillEmail = searchParams.get('email') || '';
@@ -245,13 +247,13 @@ const RegisterLawyer: React.FC = () => {
         <footer className="text-center py-8 px-4 border-t border-white/10">
           <nav aria-label={intl.formatMessage({ id: 'registerLawyer.footer.navigation' })}>
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500 font-medium">
-              <Link to="/politique-confidentialite" className={`${theme.linkHover} transition-colors`}>
+              <Link to={getLocalePath("/politique-confidentialite")} className={`${theme.linkHover} transition-colors`}>
                 <FormattedMessage id="registerLawyer.footer.privacy" />
               </Link>
-              <Link to="/cgu-avocats" className={`${theme.linkHover} transition-colors`}>
+              <Link to={getLocalePath("/cgu-avocats")} className={`${theme.linkHover} transition-colors`}>
                 <FormattedMessage id="registerLawyer.footer.terms" />
               </Link>
-              <Link to="/contact" className={`${theme.linkHover} transition-colors`}>
+              <Link to={getLocalePath("/contact")} className={`${theme.linkHover} transition-colors`}>
                 <FormattedMessage id="registerLawyer.footer.contact" />
               </Link>
             </div>

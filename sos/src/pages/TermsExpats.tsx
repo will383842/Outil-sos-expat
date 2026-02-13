@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import { useApp } from "../contexts/AppContext";
+import { useLocalePath } from "../multilingual-system";
 import {
   collection,
   query,
@@ -36,6 +37,7 @@ import { db } from "../config/firebase";
 
 const TermsExpats: React.FC = () => {
   const { language } = useApp();
+  const getLocalePath = useLocalePath();
 
   const [content, setContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -2916,7 +2918,7 @@ Para perguntas ou questões legais, entre em contato conosco:
 
               <div className="mt-8 flex items-center justify-center gap-4">
                 <Link
-                  to="/sos-appel"
+                  to={getLocalePath("/sos-appel")}
                   className="group inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-105 backdrop-blur-sm font-semibold"
                 >
                   <FileText className="w-5 h-5" />
@@ -3061,7 +3063,7 @@ Para perguntas ou questões legais, entre em contato conosco:
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <Link
-                to="/register"
+                to={getLocalePath("/register")}
                 className="group relative overflow-hidden bg-white text-red-600 hover:text-red-700 px-10 py-5 rounded-3xl font-black text-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl flex items-center gap-3"
               >
                 <span>{t.startNow}</span>

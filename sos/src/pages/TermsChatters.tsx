@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import { useApp } from "../contexts/AppContext";
+import { useLocalePath } from "../multilingual-system";
 import {
   collection,
   query,
@@ -40,6 +41,7 @@ type SupportedLanguage = "fr" | "en" | "es" | "de" | "ru" | "hi" | "ch" | "pt" |
 
 const TermsChatters: React.FC = () => {
   const { language } = useApp();
+  const getLocalePath = useLocalePath();
 
   const [content, setContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -1221,14 +1223,14 @@ For any questions about the Chatters program, contact us via the contact form or
           <p className="text-lg text-red-100 mb-8">{t.readySubtitle}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/chatter/register"
+              to={getLocalePath("/chatter/register")}
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-red-600 font-bold rounded-xl hover:bg-red-50 transition-all hover:scale-105 shadow-lg"
             >
               {t.startNow}
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
-              to="/contact"
+              to={getLocalePath("/contact")}
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-all border border-white/30"
             >
               {t.contactUs}

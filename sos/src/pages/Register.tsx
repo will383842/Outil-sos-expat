@@ -26,6 +26,7 @@ import {
 import Layout from "../components/layout/Layout";
 import { useApp } from "../contexts/AppContext";
 import { FormattedMessage, useIntl } from "react-intl";
+import { useLocalePath } from "../multilingual-system";
 
 /* ============ Safe gtag (no any) ============ */
 type GtagFunction = (...args: unknown[]) => void;
@@ -272,6 +273,7 @@ function PWAInstallSection({ canInstall, onInstall }: PWAInstallSectionProps) {
 const Register: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
+  const getLocalePath = useLocalePath();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const { language } = useApp();
@@ -724,7 +726,7 @@ const Register: React.FC = () => {
               <p className="text-gray-400 leading-relaxed text-sm sm:text-base">
                 <FormattedMessage id="register.termsAccept" />{" "}
                 <Link
-                  to="/cgu-clients"
+                  to={getLocalePath("/cgu-clients")}
                   className="text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text hover:from-blue-300 hover:to-purple-300 underline underline-offset-2 transition-all font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-sm touch-manipulation"
                   rel="noopener"
                 >
@@ -754,7 +756,7 @@ const Register: React.FC = () => {
                 <FormattedMessage id="register.needHelp" />
               </span>
               <Link
-                to="/contact"
+                to={getLocalePath("/contact")}
                 className="inline-flex items-center gap-1 text-transparent bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text hover:from-orange-300 hover:to-red-300 underline underline-offset-2 transition-all font-bold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-sm touch-manipulation"
               >
                 <FormattedMessage id="register.contactUs" />
