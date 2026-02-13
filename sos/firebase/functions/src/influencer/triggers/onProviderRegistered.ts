@@ -36,14 +36,7 @@ interface ProviderDocument {
   createdAt: Timestamp;
 }
 
-export const influencerOnProviderRegistered = onDocumentCreated(
-  {
-    document: "users/{userId}",
-    region: "europe-west3",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
-  async (event) => {
+export async function handleInfluencerProviderRegistered(event: any) {
     ensureInitialized();
 
     const snapshot = event.data;
@@ -204,7 +197,16 @@ export const influencerOnProviderRegistered = onDocumentCreated(
         error,
       });
     }
-  }
+}
+
+export const influencerOnProviderRegistered = onDocumentCreated(
+  {
+    document: "users/{userId}",
+    region: "europe-west3",
+    memory: "256MiB",
+    timeoutSeconds: 60,
+  },
+  handleInfluencerProviderRegistered
 );
 
 /**

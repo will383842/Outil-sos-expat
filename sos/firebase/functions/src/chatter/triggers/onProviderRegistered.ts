@@ -34,14 +34,7 @@ interface UserDocument {
   createdAt: Timestamp;
 }
 
-export const chatterOnProviderRegistered = onDocumentCreated(
-  {
-    document: "users/{userId}",
-    region: "europe-west3",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
-  async (event) => {
+export async function handleChatterProviderRegistered(event: any) {
     ensureInitialized();
 
     const snapshot = event.data;
@@ -170,20 +163,22 @@ export const chatterOnProviderRegistered = onDocumentCreated(
         error,
       });
     }
-  }
-);
+}
 
-/**
- * Also handle client registration with chatter referral code
- */
-export const chatterOnClientRegistered = onDocumentCreated(
+export const chatterOnProviderRegistered = onDocumentCreated(
   {
     document: "users/{userId}",
     region: "europe-west3",
     memory: "256MiB",
     timeoutSeconds: 60,
   },
-  async (event) => {
+  handleChatterProviderRegistered
+);
+
+/**
+ * Also handle client registration with chatter referral code
+ */
+export async function handleChatterClientRegistered(event: any) {
     ensureInitialized();
 
     const snapshot = event.data;
@@ -286,5 +281,14 @@ export const chatterOnClientRegistered = onDocumentCreated(
         error,
       });
     }
-  }
+}
+
+export const chatterOnClientRegistered = onDocumentCreated(
+  {
+    document: "users/{userId}",
+    region: "europe-west3",
+    memory: "256MiB",
+    timeoutSeconds: 60,
+  },
+  handleChatterClientRegistered
 );

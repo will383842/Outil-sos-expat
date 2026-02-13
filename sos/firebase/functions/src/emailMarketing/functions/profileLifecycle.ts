@@ -8,12 +8,7 @@ import { getLanguageCode } from "../config";
  * FUNCTION 8: Handle Profile Completion
  * Trigger: onUpdate on users/{userId} when profileCompleted changes to true
  */
-export const handleProfileCompleted = onDocumentUpdated(
-  {
-    document: "users/{userId}",
-    region: "europe-west3",
-  },
-  async (event) => {
+export async function profileCompletedHandler(event: any) {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
     const userId = event.params.userId;
@@ -66,19 +61,18 @@ export const handleProfileCompleted = onDocumentUpdated(
         });
       }
     }
-  }
+}
+
+export const handleProfileCompleted = onDocumentUpdated(
+  { document: "users/{userId}", region: "europe-west3" },
+  profileCompletedHandler
 );
 
 /**
  * FUNCTION 11: Handle User Login
  * Trigger: onUpdate on users/{userId} when lastLoginAt is set for first time
  */
-export const handleUserLogin = onDocumentUpdated(
-  {
-    document: "users/{userId}",
-    region: "europe-west3",
-  },
-  async (event) => {
+export async function userLoginHandler(event: any) {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
     const userId = event.params.userId;
@@ -135,19 +129,18 @@ export const handleUserLogin = onDocumentUpdated(
         console.error(`❌ Error updating last login:`, error);
       }
     }
-  }
+}
+
+export const handleUserLogin = onDocumentUpdated(
+  { document: "users/{userId}", region: "europe-west3" },
+  userLoginHandler
 );
 
 /**
  * FUNCTION 12: Handle Provider Online Status
  * Trigger: onUpdate on users/{userId} when onlineStatus or isOnline changes
  */
-export const handleProviderOnlineStatus = onDocumentUpdated(
-  {
-    document: "users/{userId}",
-    region: "europe-west3",
-  },
-  async (event) => {
+export async function providerOnlineStatusHandler(event: any) {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
     const userId = event.params.userId;
@@ -197,19 +190,18 @@ export const handleProviderOnlineStatus = onDocumentUpdated(
         console.error(`❌ Error in handleProviderOnlineStatus for ${userId}:`, error);
       }
     }
-  }
+}
+
+export const handleProviderOnlineStatus = onDocumentUpdated(
+  { document: "users/{userId}", region: "europe-west3" },
+  providerOnlineStatusHandler
 );
 
 /**
  * FUNCTION 13: Handle KYC Verification
  * Trigger: onUpdate on users/{userId} when kycStatus changes to 'verified'
  */
-export const handleKYCVerification = onDocumentUpdated(
-  {
-    document: "users/{userId}",
-    region: "europe-west3",
-  },
-  async (event) => {
+export async function kycVerificationHandler(event: any) {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
     const userId = event.params.userId;
@@ -262,19 +254,18 @@ export const handleKYCVerification = onDocumentUpdated(
         });
       }
     }
-  }
+}
+
+export const handleKYCVerification = onDocumentUpdated(
+  { document: "users/{userId}", region: "europe-west3" },
+  kycVerificationHandler
 );
 
 /**
  * FUNCTION 14: Handle PayPal Configuration
  * Trigger: onUpdate on users/{userId} when paypalEmail is set
  */
-export const handlePayPalConfiguration = onDocumentUpdated(
-  {
-    document: "users/{userId}",
-    region: "europe-west3",
-  },
-  async (event) => {
+export async function paypalConfigurationHandler(event: any) {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
     const userId = event.params.userId;
@@ -328,6 +319,10 @@ export const handlePayPalConfiguration = onDocumentUpdated(
         });
       }
     }
-  }
+}
+
+export const handlePayPalConfiguration = onDocumentUpdated(
+  { document: "users/{userId}", region: "europe-west3" },
+  paypalConfigurationHandler
 );
 

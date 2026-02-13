@@ -67,7 +67,7 @@ function getStripeInstance(): Stripe {
  */
 export const stuckPaymentsRecovery = onSchedule(
   {
-    schedule: "*/15 * * * *", // Every 15 minutes - catches stuck payments within 15min of threshold
+    schedule: "*/30 * * * *", // Every 30 minutes (optimized from 15min - refund threshold is 1h so 30min is safe)
     region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,

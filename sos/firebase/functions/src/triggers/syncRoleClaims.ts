@@ -28,13 +28,8 @@ interface UserData {
  * Trigger: users/{uid} - onCreate
  * Définit les Custom Claims Firebase quand un utilisateur est créé
  */
-export const onUserCreatedSyncClaims = onDocumentCreated(
-  {
-    document: "users/{uid}",
-    region: "europe-west3",
-  },
-  async (event) => {
-    const uid = event.params.uid;
+export async function handleSyncClaimsCreated(event: any) {
+    const uid = event.params.uid || event.params.userId;
     const data = event.data?.data() as UserData | undefined;
 
     if (!data) {
@@ -81,20 +76,22 @@ export const onUserCreatedSyncClaims = onDocumentCreated(
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
     }
-  }
+}
+
+export const onUserCreatedSyncClaims = onDocumentCreated(
+  {
+    document: "users/{uid}",
+    region: "europe-west3",
+  },
+  handleSyncClaimsCreated
 );
 
 /**
  * Trigger: users/{uid} - onUpdate
  * Synchronise les Custom Claims quand le rôle change
  */
-export const onUserUpdatedSyncClaims = onDocumentUpdated(
-  {
-    document: "users/{uid}",
-    region: "europe-west3",
-  },
-  async (event) => {
-    const uid = event.params.uid;
+export async function handleSyncClaimsUpdated(event: any) {
+    const uid = event.params.uid || event.params.userId;
     const beforeData = event.data?.before.data() as UserData | undefined;
     const afterData = event.data?.after.data() as UserData | undefined;
 
@@ -169,5 +166,12 @@ export const onUserUpdatedSyncClaims = onDocumentUpdated(
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
     }
-  }
+}
+
+export const onUserUpdatedSyncClaims = onDocumentUpdated(
+  {
+    document: "users/{uid}",
+    region: "europe-west3",
+  },
+  handleSyncClaimsUpdated
 );

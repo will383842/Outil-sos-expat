@@ -9,12 +9,7 @@ import { getLanguageCode } from "../config";
  * Trigger: onCreate on users/{userId}
  * Creates subscriber in MailWizz and sends welcome email
  */
-export const handleUserRegistration = onDocumentCreated(
-  {
-    document: "users/{userId}",
-    region: "europe-west3",
-  },
-  async (event) => {
+export async function handleEmailMarketingRegistration(event: any) {
     const user = event.data?.data();
     const userId = event.params.userId;
 
@@ -81,6 +76,13 @@ export const handleUserRegistration = onDocumentCreated(
         error: error.message || "Unknown error",
       });
     }
-  }
+}
+
+export const handleUserRegistration = onDocumentCreated(
+  {
+    document: "users/{userId}",
+    region: "europe-west3",
+  },
+  handleEmailMarketingRegistration
 );
 

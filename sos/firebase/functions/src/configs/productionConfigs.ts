@@ -1,15 +1,11 @@
 /**
- * RESTAURÉ: minInstances remis pour éviter les cold starts critiques
+ * Production function configurations
  *
- * ⚠️ ATTENTION: La réduction à 0 causait des cold starts de 5-30s
- * qui provoquaient des timeouts dans le frontend, résultant en
- * perte de rôles utilisateurs (fallback vers role='client')
- *
- * Configuration équilibrée:
- * - critical: 1 instance warm (auth, user data - CRITIQUE)
- * - webhook: 1 instance warm (paiements - CRITIQUE)
- * - standard: 0 (acceptable pour fonctions non-critiques)
- * - admin: 0 (acceptable pour fonctions admin)
+ * 2026-02-13: Toutes les configs réduites à minInstances: 0 pour optimisation coûts.
+ * - critical: 0 (cold start acceptable, frontend gère le retry)
+ * - webhook: 0 (Stripe retente automatiquement 7x, cold start acceptable)
+ * - standard: 0 (fonctions non-critiques)
+ * - admin: 0 (fonctions admin)
  */
 export const productionConfigs = {
   critical: {
@@ -25,7 +21,7 @@ export const productionConfigs = {
     memory: "512MiB",
     cpu: 1.0,
     maxInstances: 15,
-    minInstances: 1,  // Maintenu pour fiabilité paiements
+    minInstances: 0,  // Réduit de 1 à 0 - Stripe retente automatiquement (7x), cold start acceptable pour webhooks
     concurrency: 15
   },
   standard: {

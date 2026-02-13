@@ -29,43 +29,42 @@ function ensureInitialized() {
  *
  * Creates commission when a referred user completes a call
  */
-export const affiliateOnCallCompleted = onDocumentUpdated(
-  {
-    document: "call_sessions/{sessionId}",
-    region: "europe-west3",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
-  async (event) => {
-    ensureInitialized();
+/**
+ * Extracted handler for use by consolidated trigger.
+ * Contains the full affiliate onCallCompleted logic.
+ */
+export async function handleCallCompleted(
+  event: Parameters<Parameters<typeof onDocumentUpdated>[1]>[0]
+): Promise<void> {
+  ensureInitialized();
 
-    const before = event.data?.before?.data();
-    const after = event.data?.after?.data();
+  const before = event.data?.before?.data();
+  const after = event.data?.after?.data();
 
-    if (!before || !after) {
-      logger.warn("[affiliateOnCallCompleted] Missing data in event");
-      return;
-    }
+  if (!before || !after) {
+    logger.warn("[affiliateOnCallCompleted] Missing data in event");
+    return;
+  }
 
-    // Only process if status changed to completed
-    if (before.status === after.status || after.status !== "completed") {
-      return;
-    }
+  // Only process if status changed to completed
+  if (before.status === after.status || after.status !== "completed") {
+    return;
+  }
 
-    // IMPORTANT: Only create commission if the call was PAID
-    // Check payment status (payment.status or paymentStatus field)
-    const paymentStatus = after.payment?.status || after.paymentStatus;
-    if (!isPaymentCompleted(paymentStatus)) {
-      logger.info("[affiliateOnCallCompleted] Skipping - call not paid", {
-        sessionId: event.params.sessionId,
-        paymentStatus,
-      });
-      return;
-    }
+  // IMPORTANT: Only create commission if the call was PAID
+  // Check payment status (payment.status or paymentStatus field)
+  const paymentStatus = after.payment?.status || after.paymentStatus;
+  if (!isPaymentCompleted(paymentStatus)) {
+    logger.info("[affiliateOnCallCompleted] Skipping - call not paid", {
+      sessionId: event.params.sessionId,
+      paymentStatus,
+    });
+    return;
+  }
 
-    const sessionId = event.params.sessionId;
-    const clientId = after.metadata?.clientId || after.clientId;
-    const providerId = after.metadata?.providerId || after.providerId;
+  const sessionId = event.params.sessionId;
+  const clientId = after.metadata?.clientId || after.clientId;
+  const providerId = after.metadata?.providerId || after.providerId;
 
     logger.info("[affiliateOnCallCompleted] Processing PAID completed call", {
       sessionId,
@@ -281,5 +280,14 @@ export const affiliateOnCallCompleted = onDocumentUpdated(
       });
       throw error;
     }
-  }
+}
+
+export const affiliateOnCallCompleted = onDocumentUpdated(
+  {
+    document: "call_sessions/{sessionId}",
+    region: "europe-west3",
+    memory: "256MiB",
+    timeoutSeconds: 60,
+  },
+  handleCallCompleted
 );

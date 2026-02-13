@@ -207,7 +207,7 @@ async function awardBloggerCommission(
       createdAt: Timestamp.now(),
     });
 
-    // Check and pay recruitment commission (recruiter gets $5 when this blogger reaches $50)
+    // Check and pay recruitment commission (recruiter gets $50 when this blogger reaches $200)
     await checkAndPayRecruitmentCommission(bloggerId);
   }
 
@@ -219,6 +219,52 @@ async function awardBloggerCommission(
 }
 
 /**
+ * Extracted handler for use by consolidated trigger.
+ * Contains the full blogger onCallCompleted logic.
+ */
+export async function handleCallCompleted(
+  event: Parameters<Parameters<typeof onDocumentUpdated>[1]>[0]
+): Promise<void> {
+  const before = event.data?.before.data();
+  const after = event.data?.after.data();
+  const sessionId = event.params.sessionId;
+
+  if (!before || !after) return;
+
+  // Check if call just completed and is paid (isPaid set by Stripe/PayPal webhook on capture)
+  const wasNotPaid = before.status !== "completed" || !before.isPaid;
+  const isNowPaid = after.status === "completed" && after.isPaid === true;
+
+  if (wasNotPaid && isNowPaid) {
+    const clientId = after.clientId || after.userId;
+    const clientEmail = after.clientEmail || after.userEmail || "";
+    const duration = after.duration || after.callDuration || 0;
+    const connectionFee = after.connectionFee || after.amount || 0;
+
+    if (!clientId) {
+      logger.warn("[bloggerOnCallSessionCompleted] No clientId found", { sessionId });
+      return;
+    }
+
+    // Check for blogger referral and award commission
+    const result = await checkBloggerClientReferral(
+      sessionId,
+      clientId,
+      clientEmail,
+      duration,
+      connectionFee
+    );
+
+    if (result.awarded) {
+      logger.info("[bloggerOnCallSessionCompleted] Blogger commission awarded", {
+        sessionId,
+        commissionId: result.commissionId,
+      });
+    }
+  }
+}
+
+/**
  * Firestore trigger for call completion - awards blogger commissions
  */
 export const bloggerOnCallSessionCompleted = onDocumentUpdated(
@@ -226,43 +272,5 @@ export const bloggerOnCallSessionCompleted = onDocumentUpdated(
     document: "call_sessions/{sessionId}",
     region: "europe-west3",
   },
-  async (event) => {
-    const before = event.data?.before.data();
-    const after = event.data?.after.data();
-    const sessionId = event.params.sessionId;
-
-    if (!before || !after) return;
-
-    // Check if call just completed and is paid (isPaid set by Stripe/PayPal webhook on capture)
-    const wasNotPaid = before.status !== "completed" || !before.isPaid;
-    const isNowPaid = after.status === "completed" && after.isPaid === true;
-
-    if (wasNotPaid && isNowPaid) {
-      const clientId = after.clientId || after.userId;
-      const clientEmail = after.clientEmail || after.userEmail || "";
-      const duration = after.duration || after.callDuration || 0;
-      const connectionFee = after.connectionFee || after.amount || 0;
-
-      if (!clientId) {
-        logger.warn("[bloggerOnCallSessionCompleted] No clientId found", { sessionId });
-        return;
-      }
-
-      // Check for blogger referral and award commission
-      const result = await checkBloggerClientReferral(
-        sessionId,
-        clientId,
-        clientEmail,
-        duration,
-        connectionFee
-      );
-
-      if (result.awarded) {
-        logger.info("[bloggerOnCallSessionCompleted] Blogger commission awarded", {
-          sessionId,
-          commissionId: result.commissionId,
-        });
-      }
-    }
-  }
+  handleCallCompleted
 );

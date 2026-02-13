@@ -351,14 +351,8 @@ export const onBookingRequestCreatedTrackLead = onDocumentCreated(
 /**
  * Track CompleteRegistration event when a user is created
  */
-export const onUserCreatedTrackRegistration = onDocumentCreated(
-  {
-    document: "users/{uid}",
-    region: "europe-west3",
-    secrets: [META_CAPI_TOKEN],
-  },
-  async (event) => {
-    const uid = event.params.uid;
+export async function handleCAPIRegistration(event: any) {
+    const uid = event.params.uid || event.params.userId;
     const data = event.data?.data() as UserDocument | undefined;
 
     if (!data) {
@@ -422,7 +416,15 @@ export const onUserCreatedTrackRegistration = onDocumentCreated(
     } catch (error) {
       console.error(`[CAPI Registration] ❌ Error for user ${uid}:`, error);
     }
-  }
+}
+
+export const onUserCreatedTrackRegistration = onDocumentCreated(
+  {
+    document: "users/{uid}",
+    region: "europe-west3",
+    secrets: [META_CAPI_TOKEN],
+  },
+  handleCAPIRegistration
 );
 
 // ============================================================================

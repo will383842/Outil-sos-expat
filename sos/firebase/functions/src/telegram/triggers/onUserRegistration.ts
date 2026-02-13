@@ -106,15 +106,7 @@ interface UserData {
  * Listens to the users/{userId} collection and sends a Telegram
  * notification when a new user is created with an allowed role.
  */
-export const telegramOnUserRegistration = onDocumentCreated(
-  {
-    region: "europe-west3",
-    document: "users/{userId}",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-    secrets: [TELEGRAM_BOT_TOKEN],
-  },
-  async (event) => {
+export async function handleTelegramUserRegistration(event: any) {
     const userId = event.params.userId;
 
     logger.info("[telegramOnUserRegistration] New user created", { userId });
@@ -197,5 +189,15 @@ export const telegramOnUserRegistration = onDocumentCreated(
       });
       // Don't rethrow - we don't want to retry on notification failures
     }
-  }
+}
+
+export const telegramOnUserRegistration = onDocumentCreated(
+  {
+    region: "europe-west3",
+    document: "users/{userId}",
+    memory: "256MiB",
+    timeoutSeconds: 60,
+    secrets: [TELEGRAM_BOT_TOKEN],
+  },
+  handleTelegramUserRegistration
 );

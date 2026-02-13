@@ -43,14 +43,7 @@ function ensureInitialized() {
  *
  * Sets up affiliate data for new users
  */
-export const affiliateOnUserCreated = onDocumentCreated(
-  {
-    document: "users/{userId}",
-    region: "europe-west3",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
-  async (event) => {
+export async function handleAffiliateUserCreated(event: any) {
     ensureInitialized();
 
     const snapshot = event.data;
@@ -173,6 +166,9 @@ export const affiliateOnUserCreated = onDocumentCreated(
             referrerEmail = referrer.email;
             createSignupCommission = true;
 
+            // Store actor type for later use
+            (userData as any)._referrerActorType = referrer.actorType;
+
             // Log fraud warnings if any
             if (fraudCheck.shouldAlert) {
               logger.warn("[affiliateOnUserCreated] Fraud alert triggered", {
@@ -229,6 +225,36 @@ export const affiliateOnUserCreated = onDocumentCreated(
           userAgent: userData.referralTracking.userAgent,
           ip: userData.signupIP,
         };
+      }
+
+      // 8b. ✅ FIX: Create actor-specific fields for Blogger/Influencer/Chatter/GroupAdmin
+      // This ensures their specific triggers can find the referral
+      const actorType = (userData as any)._referrerActorType;
+      if (actorType === "blogger") {
+        (affiliateFields as any).bloggerReferredBy = referredBy;
+        (affiliateFields as any).referredByBlogger = referredBy;
+        logger.info("[affiliateOnUserCreated] Set blogger-specific referral fields", {
+          userId,
+          bloggerCode: referredBy,
+        });
+      } else if (actorType === "influencer") {
+        (affiliateFields as any).influencerReferredBy = referredBy;
+        logger.info("[affiliateOnUserCreated] Set influencer-specific referral fields", {
+          userId,
+          influencerCode: referredBy,
+        });
+      } else if (actorType === "chatter") {
+        (affiliateFields as any).chatterReferredBy = referredBy;
+        logger.info("[affiliateOnUserCreated] Set chatter-specific referral fields", {
+          userId,
+          chatterCode: referredBy,
+        });
+      } else if (actorType === "groupAdmin") {
+        (affiliateFields as any).groupAdminReferredBy = referredBy;
+        logger.info("[affiliateOnUserCreated] Set groupAdmin-specific referral fields", {
+          userId,
+          groupAdminCode: referredBy,
+        });
       }
 
       // 9. Update user document with affiliate fields
@@ -329,5 +355,14 @@ export const affiliateOnUserCreated = onDocumentCreated(
       });
       throw error;
     }
-  }
+}
+
+export const affiliateOnUserCreated = onDocumentCreated(
+  {
+    document: "users/{userId}",
+    region: "europe-west3",
+    memory: "256MiB",
+    timeoutSeconds: 60,
+  },
+  handleAffiliateUserCreated
 );

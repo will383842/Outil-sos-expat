@@ -287,10 +287,10 @@ async function processMessage(
 export const processTelegramQueue = onSchedule(
   {
     region: 'europe-west3',
-    schedule: '* * * * *', // Every minute
+    schedule: '*/5 * * * *', // Every 5 minutes (optimized from every minute - saves ~80% invocations)
     timeZone: 'Europe/Paris',
     memory: '256MiB',
-    timeoutSeconds: 55, // Under 60s to avoid overlap
+    timeoutSeconds: 120, // Increased to process larger batches per run
     maxInstances: 1,
     secrets: [TELEGRAM_BOT_TOKEN],
   },

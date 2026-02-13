@@ -4897,7 +4897,7 @@ export { providerCatalogFeed, generateProviderFeed } from './providerCatalogFeed
 // export * from './translation/updateProviderTranslation';
 
 // ========== EMAIL MARKETING AUTOMATION (MailWizz) ==========
-export { handleUserRegistration } from './emailMarketing/functions/userLifecycle';
+// handleUserRegistration,  // → consolidatedOnUserCreated
 export {
   handleReviewSubmitted,
   handleCallCompleted,
@@ -4906,13 +4906,9 @@ export {
   handlePayoutRequested,
   handlePayoutSent,
 } from './emailMarketing/functions/transactions';
-export {
-  handleProfileCompleted,
-  handleUserLogin,
-  handleProviderOnlineStatus,
-  handleKYCVerification,
-  handlePayPalConfiguration,
-} from './emailMarketing/functions/profileLifecycle';
+// profileLifecycle exports → consolidatedOnUserUpdated
+// handleProfileCompleted, handleUserLogin, handleProviderOnlineStatus,
+// handleKYCVerification, handlePayPalConfiguration
 export {
   stopAutoresponders,
   stopAutorespondersForUser,
@@ -5249,11 +5245,11 @@ export {
 // ========== P0 FIX: SYNC USER EMAIL TO SOS_PROFILES ==========
 // Synchronise automatiquement les changements d'email de users vers sos_profiles
 // Résout le problème où l'email modifié dans ProfileEdit n'était pas synchronisé
-export { onUserEmailUpdated } from './triggers/syncUserEmailToSosProfiles';
+// export { onUserEmailUpdated } from './triggers/syncUserEmailToSosProfiles';  // → consolidatedOnUserUpdated
 
 // ========== P0 FIX: SYNC ACCESS TO OUTIL-SOS-EXPAT ==========
 // Synchronise forcedAIAccess et freeTrialUntil vers Outil pour l'acces IA
-export { onUserAccessUpdated } from './triggers/syncAccessToOutil';
+// export { onUserAccessUpdated } from './triggers/syncAccessToOutil';  // → consolidatedOnUserUpdated
 
 // ========== AUTOMATIC STRIPE EXPRESS ACCOUNT CREATION ==========
 export { onProviderCreated } from './triggers/onProviderCreated';
@@ -5261,14 +5257,15 @@ export { onProviderCreated } from './triggers/onProviderCreated';
 // ========== SYNC ROLE TO CUSTOM CLAIMS (CRITICAL FOR AUTH) ==========
 // Ces triggers synchronisent le rôle Firestore avec les Custom Claims Firebase
 // Sans cela, les Firestore Rules qui vérifient request.auth.token.role ne fonctionnent pas
-export { onUserCreatedSyncClaims, onUserUpdatedSyncClaims } from './triggers/syncRoleClaims';
+// syncRoleClaims exports → consolidatedOnUserCreated + consolidatedOnUserUpdated
+// onUserCreatedSyncClaims, onUserUpdatedSyncClaims
 
 // ========== META CAPI TRACKING TRIGGERS ==========
 // These triggers send server-side conversion events to Meta CAPI
 // for accurate attribution even when browser tracking is blocked
 export {
   onBookingRequestCreatedTrackLead,
-  onUserCreatedTrackRegistration,
+  // onUserCreatedTrackRegistration,  // → consolidatedOnUserCreated
   onCallSessionPaymentAuthorized,
   onCallSessionPaymentCaptured,
   onContactSubmittedTrackLead,
@@ -5279,7 +5276,7 @@ export {
 // for accurate attribution with Enhanced Conversions
 export {
   onBookingRequestCreatedTrackGoogleAdsLead,
-  onUserCreatedTrackGoogleAdsSignUp,
+  // onUserCreatedTrackGoogleAdsSignUp,  // → consolidatedOnUserCreated
   onCallSessionPaymentAuthorizedTrackGoogleAdsCheckout,
 } from './triggers/googleAdsTracking';
 
@@ -5711,8 +5708,8 @@ export {
 // Complete affiliate/referral program with commissions and payouts
 export {
   // Triggers
-  affiliateOnUserCreated,
-  affiliateOnCallCompleted,
+  // affiliateOnUserCreated,  // → consolidatedOnUserCreated
+  // affiliateOnCallCompleted,  // → consolidatedOnCallCompleted
   affiliateOnSubscriptionCreated,
   affiliateOnSubscriptionRenewed,
   // User callables
@@ -5745,9 +5742,9 @@ export {
   chatterOnChatterCreated,
   // DISABLED 2026-02-08: Quiz feature removed from chatter flow
   // chatterOnQuizPassed,
-  chatterOnCallCompleted,
-  chatterOnProviderRegistered,
-  chatterOnClientRegistered,
+  // chatterOnCallCompleted,  // → consolidatedOnCallCompleted
+  // chatterOnProviderRegistered,  // → consolidatedOnUserCreated
+  // chatterOnClientRegistered,  // → consolidatedOnUserCreated
   chatterOnChatterEarningsUpdated,
   chatterOnCommissionCreated,
   // User callables
@@ -5830,9 +5827,9 @@ export {
   adminDeletePromotion,
   adminGetPromotionStats,
   adminDuplicatePromotion,
-  // Scheduled
-  chatterValidatePendingCommissions,
-  chatterReleaseValidatedCommissions,
+  // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
+  // chatterValidatePendingCommissions,  // → consolidatedValidateCommissions
+  // chatterReleaseValidatedCommissions,  // → consolidatedReleaseCommissions
   chatterMonthlyRecurringCommissions,
   chatterValidatePendingReferralCommissions,
   // Initialization
@@ -5867,8 +5864,8 @@ export {
 export {
   // Triggers
   influencerOnInfluencerCreated,
-  influencerOnCallCompleted,
-  influencerOnProviderRegistered,
+  // influencerOnCallCompleted,  // → consolidatedOnCallCompleted
+  // influencerOnProviderRegistered,  // → consolidatedOnUserCreated
   influencerOnProviderCallCompleted,
   // User callables
   registerInfluencer,
@@ -5885,9 +5882,9 @@ export {
   adminGetInfluencerConfig,
   adminUpdateInfluencerConfig,
   adminGetInfluencerLeaderboard,
-  // Scheduled
-  influencerValidatePendingCommissions,
-  influencerReleaseValidatedCommissions,
+  // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
+  // influencerValidatePendingCommissions,  // → consolidatedValidateCommissions
+  // influencerReleaseValidatedCommissions,  // → consolidatedReleaseCommissions
   influencerMonthlyTop3Rewards,
   // Initialization
   initializeInfluencerConfig,
@@ -5925,7 +5922,7 @@ export {
 export {
   // Triggers
   onBloggerCreated,
-  bloggerOnCallSessionCompleted,
+  // bloggerOnCallSessionCompleted,  // → consolidatedOnCallCompleted
   checkBloggerClientReferral,
   checkBloggerProviderRecruitment,
   awardBloggerRecruitmentCommission,
@@ -5970,9 +5967,9 @@ export {
   adminCreateBloggerArticle,
   adminUpdateBloggerArticle,
   adminDeleteBloggerArticle,
-  // Scheduled
-  bloggerValidatePendingCommissions,
-  bloggerReleaseValidatedCommissions,
+  // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
+  // bloggerValidatePendingCommissions,  // → consolidatedValidateCommissions
+  // bloggerReleaseValidatedCommissions,  // → consolidatedReleaseCommissions
   bloggerUpdateMonthlyRankings,
   bloggerDeactivateExpiredRecruitments,
   bloggerFinalizeMonthlyRankings,
@@ -6053,15 +6050,15 @@ export {
   adminGetRecruitmentsList,
   adminGetGroupAdminRecruits,
   // Triggers
-  onCallCompletedGroupAdmin,
+  // onCallCompletedGroupAdmin,  // → consolidatedOnCallCompleted
   onGroupAdminCreated,
-  // Scheduled
-  validatePendingGroupAdminCommissions,
-  releaseValidatedGroupAdminCommissions,
+  // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
+  // validatePendingGroupAdminCommissions,  // → consolidatedValidateCommissions
+  // releaseValidatedGroupAdminCommissions,  // → consolidatedReleaseCommissions
 } from './groupAdmin';
 
 // ========== TELEGRAM NOTIFICATIONS ==========
-export { telegramOnUserRegistration } from './telegram/triggers/onUserRegistration';
+// export { telegramOnUserRegistration } from './telegram/triggers/onUserRegistration';  // → consolidatedOnUserCreated
 export { telegramOnCallCompleted } from './telegram/triggers/onCallCompleted';
 export { telegramOnPaymentReceived } from './telegram/triggers/onPaymentReceived';
 export { telegramOnPayPalPaymentReceived } from './telegram/triggers/onPayPalPaymentReceived';
@@ -6106,6 +6103,42 @@ export { processTelegramCampaigns } from './telegram/queue/campaignProcessor';
 // ========== TELEGRAM WITHDRAWAL CONFIRMATION ==========
 export { getWithdrawalConfirmationStatus } from './telegram/withdrawalConfirmation';
 export { cleanupExpiredWithdrawalConfirmations } from './telegram/cleanupExpiredConfirmations';
+
+// ========== CONSOLIDATED COMMISSION PROCESSING ==========
+// Replaces 8 individual scheduled functions (4 validate + 4 release) with 2.
+// Each module (chatter, blogger, influencer, groupAdmin) runs independently.
+// Saves 6 Cloud Run services.
+export {
+  consolidatedValidateCommissions,
+  consolidatedReleaseCommissions,
+} from './scheduled/consolidatedCommissions';
+
+// ========== CONSOLIDATED onCallCompleted TRIGGER ==========
+// Replaces 5 individual onDocumentUpdated triggers on call_sessions/{sessionId}
+// (chatter, influencer, blogger, groupAdmin, affiliate) with 1 single dispatcher.
+// Each module runs independently with try/catch isolation.
+// Saves 4 Cloud Run services.
+export {
+  consolidatedOnCallCompleted,
+} from './triggers/consolidatedOnCallCompleted';
+
+// ========== CONSOLIDATED onUserCreated TRIGGER ==========
+// Replaces 9 individual onDocumentCreated triggers on users/{userId}
+// (affiliate, chatter x2, influencer, emailMktg, syncClaims, googleAds, metaCAPI, telegram)
+// with 1 single dispatcher. Each module runs independently with try/catch isolation.
+// Saves 8 Cloud Run services.
+export {
+  consolidatedOnUserCreated,
+} from './triggers/consolidatedOnUserCreated';
+
+// ========== CONSOLIDATED onUserUpdated TRIGGER ==========
+// Replaces 8 individual onDocumentUpdated triggers on users/{userId}
+// (profileCompleted, userLogin, onlineStatus, kycVerification, paypalConfig,
+// syncClaims, syncEmail, syncAccess) with 1 single dispatcher.
+// Saves 7 Cloud Run services.
+export {
+  consolidatedOnUserUpdated,
+} from './triggers/consolidatedOnUserUpdated';
 
 // ========== PROVIDER STATS - PERFORMANCE TRACKING ==========
 // Tracks provider availability and missed calls for compliance monitoring

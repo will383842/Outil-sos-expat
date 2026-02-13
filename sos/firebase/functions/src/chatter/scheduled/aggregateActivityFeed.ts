@@ -53,7 +53,7 @@ function anonymizeName(firstName: string, lastName: string): string {
  */
 export const chatterAggregateActivityFeed = onSchedule(
   {
-    schedule: "*/30 * * * *", // Every 30 minutes (reduced from 5 min to save costs)
+    schedule: "0 * * * *", // Every hour (optimized from 30min - activity feed doesn't need real-time updates)
     region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 120,

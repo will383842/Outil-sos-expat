@@ -43,13 +43,8 @@ interface UserData {
  * Trigger: users/{uid} - onUpdate
  * Synchronise l'email vers sos_profiles quand il change
  */
-export const onUserEmailUpdated = onDocumentUpdated(
-  {
-    document: "users/{uid}",
-    region: "europe-west3",
-  },
-  async (event) => {
-    const uid = event.params.uid;
+export async function handleUserEmailUpdated(event: any) {
+    const uid = event.params.uid || event.params.userId;
     const beforeData = event.data?.before?.data() as UserData | undefined;
     const afterData = event.data?.after?.data() as UserData | undefined;
 
@@ -131,5 +126,12 @@ export const onUserEmailUpdated = onDocumentUpdated(
       // En cas d'erreur, on ne throw pas pour ne pas faire échouer le trigger
       // Le prochain changement déclenchera une nouvelle tentative
     }
-  }
+}
+
+export const onUserEmailUpdated = onDocumentUpdated(
+  {
+    document: "users/{uid}",
+    region: "europe-west3",
+  },
+  handleUserEmailUpdated
 );

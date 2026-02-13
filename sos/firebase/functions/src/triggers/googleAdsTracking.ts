@@ -285,14 +285,8 @@ export const onBookingRequestCreatedTrackGoogleAdsLead = onDocumentCreated(
 /**
  * Track SignUp event when a user is created
  */
-export const onUserCreatedTrackGoogleAdsSignUp = onDocumentCreated(
-  {
-    document: "users/{uid}",
-    region: "europe-west3",
-    secrets: GOOGLE_ADS_SECRETS,
-  },
-  async (event) => {
-    const uid = event.params.uid;
+export async function handleGoogleAdsSignUp(event: any) {
+    const uid = event.params.uid || event.params.userId;
     const data = event.data?.data() as UserDocument | undefined;
 
     if (!data) {
@@ -369,7 +363,15 @@ export const onUserCreatedTrackGoogleAdsSignUp = onDocumentCreated(
         contentCategory: data.role || "user",
       });
     }
-  }
+}
+
+export const onUserCreatedTrackGoogleAdsSignUp = onDocumentCreated(
+  {
+    document: "users/{uid}",
+    region: "europe-west3",
+    secrets: GOOGLE_ADS_SECRETS,
+  },
+  handleGoogleAdsSignUp
 );
 
 // ============================================================================

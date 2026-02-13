@@ -99,14 +99,8 @@ async function syncAccessToOutil(
  * - forcedAIAccess change
  * - freeTrialUntil change
  */
-export const onUserAccessUpdated = onDocumentUpdated(
-  {
-    document: "users/{uid}",
-    region: "europe-west3",
-    secrets: [OUTIL_SYNC_API_KEY],
-  },
-  async (event) => {
-    const uid = event.params.uid;
+export async function handleUserAccessUpdated(event: any) {
+    const uid = event.params.uid || event.params.userId;
     const beforeData = event.data?.before?.data() as UserAccessData | undefined;
     const afterData = event.data?.after?.data() as UserAccessData | undefined;
 
@@ -174,5 +168,13 @@ export const onUserAccessUpdated = onDocumentUpdated(
     } else {
       logger.info("[onUserAccessUpdated] Acces synchronise vers Outil:", uid);
     }
-  }
+}
+
+export const onUserAccessUpdated = onDocumentUpdated(
+  {
+    document: "users/{uid}",
+    region: "europe-west3",
+    secrets: [OUTIL_SYNC_API_KEY],
+  },
+  handleUserAccessUpdated
 );

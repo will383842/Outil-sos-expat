@@ -90,7 +90,7 @@ export const highTrafficConfig = {
   memory: "512MiB" as const,
   cpu: 1,
   maxInstances: 50,
-  minInstances: 1, // Keep 1 warm for low latency
+  minInstances: 0, // Reduced from 1 to save costs - cold start is acceptable
   concurrency: 40,
   cors: ALLOWED_ORIGINS,
 };

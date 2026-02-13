@@ -107,7 +107,7 @@ export const weeklyForcedAccessAudit = onSchedule(
 
 export const cleanupStuckMessages = onSchedule(
   {
-    schedule: "every 5 minutes",
+    schedule: "every 15 minutes", // Optimized from 5min - stuck messages are >5min old anyway
     region: "europe-west1",
   },
   async () => {

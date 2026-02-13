@@ -48,48 +48,47 @@ interface CallSession {
   groupAdminCommissionPaid?: boolean;
 }
 
-export const onCallCompletedGroupAdmin = onDocumentUpdated(
-  {
-    document: "call_sessions/{sessionId}",
-    region: "europe-west3",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
-  async (event) => {
-    ensureInitialized();
+/**
+ * Extracted handler for use by consolidated trigger.
+ * Contains the full groupAdmin onCallCompleted logic.
+ */
+export async function handleCallCompleted(
+  event: Parameters<Parameters<typeof onDocumentUpdated>[1]>[0]
+): Promise<void> {
+  ensureInitialized();
 
-    const beforeData = event.data?.before.data() as CallSession | undefined;
-    const afterData = event.data?.after.data() as CallSession | undefined;
+  const beforeData = event.data?.before.data() as CallSession | undefined;
+  const afterData = event.data?.after.data() as CallSession | undefined;
 
-    if (!beforeData || !afterData) {
-      return;
-    }
+  if (!beforeData || !afterData) {
+    return;
+  }
 
-    // Only process when call becomes completed AND paid (payment captured)
-    const wasNotPaid = beforeData.status !== "completed" || !beforeData.isPaid;
-    const isNowPaid = afterData.status === "completed" && afterData.isPaid === true;
+  // Only process when call becomes completed AND paid (payment captured)
+  const wasNotPaid = beforeData.status !== "completed" || !beforeData.isPaid;
+  const isNowPaid = afterData.status === "completed" && afterData.isPaid === true;
 
-    if (!wasNotPaid || !isNowPaid) {
-      return;
-    }
+  if (!wasNotPaid || !isNowPaid) {
+    return;
+  }
 
-    // Minimum call duration check (anti-fraud: prevent 1-second call commissions)
-    if (!afterData.duration || afterData.duration < MIN_CALL_DURATION_SECONDS) {
-      logger.warn("[onCallCompletedGroupAdmin] Call too short for commission", {
-        sessionId: event.params.sessionId,
-        duration: afterData.duration,
-        minimum: MIN_CALL_DURATION_SECONDS,
-      });
-      return;
-    }
+  // Minimum call duration check (anti-fraud: prevent 1-second call commissions)
+  if (!afterData.duration || afterData.duration < MIN_CALL_DURATION_SECONDS) {
+    logger.warn("[onCallCompletedGroupAdmin] Call too short for commission", {
+      sessionId: event.params.sessionId,
+      duration: afterData.duration,
+      minimum: MIN_CALL_DURATION_SECONDS,
+    });
+    return;
+  }
 
-    // Quick idempotence check (non-transactional, just to avoid unnecessary work)
-    if (afterData.groupAdminCommissionPaid) {
-      return;
-    }
+  // Quick idempotence check (non-transactional, just to avoid unnecessary work)
+  if (afterData.groupAdminCommissionPaid) {
+    return;
+  }
 
-    const db = getFirestore();
-    const sessionId = event.params.sessionId;
+  const db = getFirestore();
+  const sessionId = event.params.sessionId;
 
     try {
       // ================================================================
@@ -235,5 +234,14 @@ export const onCallCompletedGroupAdmin = onDocumentUpdated(
         });
       }
     }
-  }
+}
+
+export const onCallCompletedGroupAdmin = onDocumentUpdated(
+  {
+    document: "call_sessions/{sessionId}",
+    region: "europe-west3",
+    memory: "256MiB",
+    timeoutSeconds: 60,
+  },
+  handleCallCompleted
 );

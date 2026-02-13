@@ -74,35 +74,34 @@ interface UserDocument {
   providerFirstCallReceived?: boolean; // Track if provider received first call
 }
 
-export const chatterOnCallCompleted = onDocumentUpdated(
-  {
-    document: "call_sessions/{sessionId}",
-    region: "europe-west3",
-    memory: "512MiB",
-    timeoutSeconds: 120,
-  },
-  async (event) => {
-    ensureInitialized();
+/**
+ * Extracted handler for use by consolidated trigger.
+ * Contains the full chatter onCallCompleted logic.
+ */
+export async function handleCallCompleted(
+  event: Parameters<Parameters<typeof onDocumentUpdated>[1]>[0]
+): Promise<void> {
+  ensureInitialized();
 
-    const beforeData = event.data?.before.data() as CallSession | undefined;
-    const afterData = event.data?.after.data() as CallSession | undefined;
+  const beforeData = event.data?.before.data() as CallSession | undefined;
+  const afterData = event.data?.after.data() as CallSession | undefined;
 
-    if (!beforeData || !afterData) {
-      return;
-    }
+  if (!beforeData || !afterData) {
+    return;
+  }
 
-    // Only trigger when call is marked as completed and paid
-    const wasNotCompleted =
-      beforeData.status !== "completed" || !beforeData.isPaid;
-    const isNowCompleted =
-      afterData.status === "completed" && afterData.isPaid;
+  // Only trigger when call is marked as completed and paid
+  const wasNotCompleted =
+    beforeData.status !== "completed" || !beforeData.isPaid;
+  const isNowCompleted =
+    afterData.status === "completed" && afterData.isPaid;
 
-    if (!wasNotCompleted || !isNowCompleted) {
-      return;
-    }
+  if (!wasNotCompleted || !isNowCompleted) {
+    return;
+  }
 
-    const sessionId = event.params.sessionId;
-    const session = afterData;
+  const sessionId = event.params.sessionId;
+  const session = afterData;
 
     // Minimum call duration check (anti-fraud: prevent 1-second call commissions)
     if (!session.duration || session.duration < MIN_CALL_DURATION_SECONDS) {
@@ -516,7 +515,16 @@ export const chatterOnCallCompleted = onDocumentUpdated(
     } catch (error) {
       logger.error("[chatterOnCallCompleted] Error", { sessionId, error });
     }
-  }
+}
+
+export const chatterOnCallCompleted = onDocumentUpdated(
+  {
+    document: "call_sessions/{sessionId}",
+    region: "europe-west3",
+    memory: "512MiB",
+    timeoutSeconds: 120,
+  },
+  handleCallCompleted
 );
 
 /**
