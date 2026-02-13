@@ -152,7 +152,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
 
   if (loadingCountries) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
+      <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 text-red-500 animate-spin mb-4" />
         <p className="text-gray-500 dark:text-gray-400">
           <FormattedMessage id="chatter.countries.loading" defaultMessage="Chargement des pays..." />
@@ -163,7 +163,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
 
   if (fetchError) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
+      <div className="flex items-center justify-center py-12">
         <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
         <p className="text-red-600 dark:text-red-400 mb-4">{fetchError}</p>
         <button
@@ -184,7 +184,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
         <div className="flex items-start gap-3">
           <Info className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-gray-700 dark:text-gray-300">
+            <p className="text-sm dark:text-gray-300">
               <FormattedMessage
                 id="chatter.countries.info"
                 defaultMessage="Sélectionnez de {min} à {max} pays où vous souhaitez interagir avec les clients. Une fois un pays sélectionné dans un cycle, il ne sera plus disponible jusqu'au prochain cycle."
@@ -192,7 +192,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
               />
             </p>
             {cycleInfo && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-xs dark:text-gray-400 mt-2">
                 <FormattedMessage
                   id="chatter.countries.cycleInfo"
                   defaultMessage="Cycle actuel: {cycle} • {available} pays disponibles sur {total} ({percent}% assignés)"
@@ -213,13 +213,13 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
       {error && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <p className="text-sm dark:text-red-300">{error}</p>
         </div>
       )}
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 dark:text-gray-400" />
         <input
           type="text"
           value={searchQuery}
@@ -237,7 +237,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
         <div className={`${UI.card} p-4`}>
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="w-4 h-4 text-red-500" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-sm dark:text-gray-300 font-medium">
               <FormattedMessage
                 id="chatter.countries.selected"
                 defaultMessage="Pays sélectionnés ({count}/{max})"
@@ -245,14 +245,14 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
               />
             </span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
             {selectedCountries.map(code => {
               const country = availableCountries.find(c => c.code === code);
               return (
                 <button
                   key={code}
                   onClick={() => toggleCountry(code)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full font-medium hover:opacity-90 transition-opacity"
                 >
                   <span>{getFlag(code)}</span>
                   <span>{country?.name || code}</span>
@@ -265,9 +265,9 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
       )}
 
       {/* Country Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto pr-2">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto pr-2">
         {filteredCountries.length === 0 ? (
-          <div className="col-span-full py-8 text-center text-gray-500 dark:text-gray-400">
+          <div className="col-span-full py-8 text-center dark:text-gray-400">
             <Globe className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p>
               <FormattedMessage
@@ -300,7 +300,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
                   <p className={`font-medium truncate ${isSelected ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>
                     {country.name}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs dark:text-gray-400">
                     {country.code}
                     {country.timesAssigned > 0 && (
                       <span className="ml-1">
@@ -349,7 +349,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
 
       {/* Validation Hint */}
       {selectedCountries.length < minSelection && (
-        <p className="text-sm text-center text-red-600 dark:text-red-400">
+        <p className="text-sm dark:text-red-400">
           <FormattedMessage
             id="chatter.countries.minHint"
             defaultMessage="Sélectionnez au moins {min} pays"

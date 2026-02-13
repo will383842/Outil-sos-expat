@@ -173,7 +173,7 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
             <div className={`h-4 w-24 ${UI.skeleton}`} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid gap-4 mb-4">
           <div className={`h-24 ${UI.skeleton} rounded-xl`} />
           <div className={`h-24 ${UI.skeleton} rounded-xl`} />
         </div>
@@ -193,14 +193,14 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
       {/* Header avec message motivant */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/20">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
             <TrendingUp className="w-6 h-6 text-white" />
           </div>
           <div>
             <h3 className="font-bold text-gray-900 dark:text-white">
               <FormattedMessage id="chatter.motivation.title" defaultMessage="Mes Gains" />
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <p className="text-sm dark:text-gray-400 flex items-center gap-1">
               <span>{motivationMessage.emoji}</span>
               <FormattedMessage
                 id={motivationMessage.key}
@@ -214,7 +214,7 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
         {currentStreak >= 3 && (
           <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
             <Flame className="w-4 h-4 text-orange-500" />
-            <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
+            <span className="text-sm dark:text-orange-400 font-bold">
               {currentStreak}j
             </span>
           </div>
@@ -222,12 +222,12 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
       </div>
 
       {/* Main earnings grid */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+      <div className="grid gap-3 sm:gap-4 mb-4">
         {/* Gains du mois */}
-        <div className="p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
+        <div className="p-3 sm:p-4 bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20 rounded-xl border dark:border-blue-800/30">
           <div className="flex items-center gap-1.5 mb-2">
             <Calendar className="w-4 h-4 text-blue-500" />
-            <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+            <span className="text-xs dark:text-blue-400 font-medium">
               <FormattedMessage id="chatter.motivation.thisMonth" defaultMessage="Ce mois" />
             </span>
           </div>
@@ -238,7 +238,7 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
             duration={1200}
             delay={animationDelay + 100}
             animateOnVisible
-            className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white"
+            className="text-xl dark:text-white sm:text-2xl font-bold"
           />
           {/* Monthly growth indicator */}
           {monthlyGrowth !== null && (
@@ -251,20 +251,20 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
                 <TrendingUp className="w-3 h-3 rotate-180" />
               )}
               <span>{monthlyGrowth >= 0 ? '+' : ''}{monthlyGrowth}%</span>
-              <span className="text-gray-400">vs mois dernier</span>
+              <span className="text-gray-600 dark:text-gray-400">vs mois dernier</span>
             </div>
           )}
           {/* Daily average */}
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs dark:text-gray-400 mt-1">
             ~{formatAmount(dailyAverage)}/jour
           </p>
         </div>
 
         {/* Gains totaux */}
-        <div className="p-3 sm:p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-100 dark:border-green-800/30">
+        <div className="p-3 sm:p-4 bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 rounded-xl border dark:border-green-800/30">
           <div className="flex items-center gap-1.5 mb-2">
             <Trophy className="w-4 h-4 text-green-500" />
-            <span className="text-xs font-medium text-green-600 dark:text-green-400">
+            <span className="text-xs dark:text-green-400 font-medium">
               <FormattedMessage id="chatter.motivation.total" defaultMessage="Total gagne" />
             </span>
           </div>
@@ -275,20 +275,20 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
             duration={1500}
             delay={animationDelay + 200}
             animateOnVisible
-            className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white"
+            className="text-xl dark:text-white sm:text-2xl font-bold"
           />
           {/* Current milestone */}
           {currentMilestone && (
             <div className="flex items-center gap-1 mt-1">
               <span className="text-sm">{currentMilestone.emoji}</span>
-              <span className="text-xs font-medium text-green-600 dark:text-green-400">
+              <span className="text-xs dark:text-green-400 font-medium">
                 {currentMilestone.label} atteint !
               </span>
             </div>
           )}
           {/* Member since */}
           {membershipDays > 0 && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs dark:text-gray-400 mt-1">
               Depuis {membershipDays} jours
             </p>
           )}
@@ -296,11 +296,11 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
       </div>
 
       {/* Progress to next milestone */}
-      <div className="p-3 sm:p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl border border-red-100 dark:border-red-800/30 mb-4">
+      <div className="p-3 sm:p-4 bg-gradient-to-r from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-xl border dark:border-red-800/30 mb-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4 text-red-500" />
-            <span className="text-xs font-medium text-red-600 dark:text-red-400">
+            <span className="text-xs dark:text-red-400 font-medium">
               <FormattedMessage id="chatter.motivation.nextMilestone" defaultMessage="Prochain objectif" />
             </span>
           </div>
@@ -335,7 +335,7 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
         </div>
 
         {/* Remaining amount */}
-        <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
+        <p className="text-xs dark:text-gray-400 mt-2">
           <FormattedMessage
             id="chatter.motivation.remaining"
             defaultMessage="Plus que {amount} pour debloquer !"
@@ -347,10 +347,10 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
       {/* Monthly goal progress */}
       <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          <span className="text-xs dark:text-gray-400 font-medium">
             <FormattedMessage id="chatter.motivation.monthlyGoal" defaultMessage="Objectif mensuel" />
           </span>
-          <span className="text-xs font-bold text-gray-900 dark:text-white">
+          <span className="text-xs dark:text-white font-bold">
             {formatAmount(monthlyEarnings)} / {monthlyGoal.label}
           </span>
         </div>
@@ -365,7 +365,7 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
           />
         </div>
         {monthlyProgress >= 100 && (
-          <p className="text-xs text-center text-green-600 dark:text-green-400 mt-2 flex items-center justify-center gap-1">
+          <p className="text-xs dark:text-green-400 mt-2 flex items-center justify-center gap-1">
             <Sparkles className="w-3 h-3" />
             <FormattedMessage id="chatter.motivation.goalReached" defaultMessage="Objectif atteint ! Bravo !" />
           </p>
@@ -373,16 +373,16 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
       </div>
 
       {/* Quick stats row */}
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid gap-2 text-center">
         <div className="p-2 bg-gray-50 dark:bg-white/5 rounded-lg">
-          <p className="text-lg font-bold text-gray-900 dark:text-white">{totalClients}</p>
-          <p className="text-[10px] text-gray-500 dark:text-gray-400">
+          <p className="text-lg dark:text-white font-bold">{totalClients}</p>
+          <p className="text-[10px] dark:text-gray-400">
             <FormattedMessage id="chatter.motivation.clients" defaultMessage="Clients" />
           </p>
         </div>
         <div className="p-2 bg-gray-50 dark:bg-white/5 rounded-lg">
-          <p className="text-lg font-bold text-gray-900 dark:text-white">{totalRecruits}</p>
-          <p className="text-[10px] text-gray-500 dark:text-gray-400">
+          <p className="text-lg dark:text-white font-bold">{totalRecruits}</p>
+          <p className="text-[10px] dark:text-gray-400">
             <FormattedMessage id="chatter.motivation.recruits" defaultMessage="Filleuls" />
           </p>
         </div>
@@ -401,7 +401,7 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
           }`}>
             {monthlyRank ? `#${monthlyRank}` : '-'}
           </p>
-          <p className="text-[10px] text-gray-500 dark:text-gray-400">
+          <p className="text-[10px] dark:text-gray-400">
             <FormattedMessage id="chatter.motivation.rank" defaultMessage="Classement" />
           </p>
         </div>

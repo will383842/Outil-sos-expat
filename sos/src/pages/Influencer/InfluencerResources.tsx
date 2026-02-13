@@ -96,16 +96,16 @@ const InfluencerResources: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl dark:text-white font-bold">
             <FormattedMessage id="influencer.resources.title" defaultMessage="Ressources" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700 dark:text-gray-700">
             <FormattedMessage id="influencer.resources.subtitle" defaultMessage="Logos, images et textes prêts à l'emploi pour vos promotions" />
           </p>
         </div>
 
         {/* Category Tabs */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex gap-3">
           {CATEGORIES.map((cat) => {
             const isActive = selectedCategory === cat.value;
             const colorClasses = {
@@ -132,13 +132,13 @@ const InfluencerResources: React.FC = () => {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600 dark:text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={intl.formatMessage({ id: 'influencer.resources.search', defaultMessage: 'Rechercher...' })}
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2"
           />
         </div>
 
@@ -151,7 +151,7 @@ const InfluencerResources: React.FC = () => {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-600 dark:text-red-400">
+          <div className="bg-red-50 dark:bg-red-900/20 border dark:border-red-800 rounded-xl p-4 text-red-600 dark:text-red-400">
             {error}
           </div>
         )}
@@ -159,15 +159,15 @@ const InfluencerResources: React.FC = () => {
         {/* Files Section */}
         {!isLoading && filteredFiles.length > 0 && (
           <div className={`${UI.card} p-6`}>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <h2 className="text-lg dark:text-white font-semibold mb-4 flex items-center gap-2">
               <Image className="w-5 h-5 text-red-500" />
               <FormattedMessage id="influencer.resources.files" defaultMessage="Fichiers téléchargeables" />
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredFiles.map((file) => (
                 <div
                   key={file.id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow"
+                  className="border dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow"
                 >
                   {file.previewUrl && (
                     <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg mb-3 overflow-hidden">
@@ -176,10 +176,10 @@ const InfluencerResources: React.FC = () => {
                   )}
                   <h3 className="font-medium text-gray-900 dark:text-white mb-1">{file.name}</h3>
                   {file.description && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{file.description}</p>
+                    <p className="text-sm dark:text-gray-700 mb-3">{file.description}</p>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">{file.format?.toUpperCase()} {file.sizeFormatted ? `• ${file.sizeFormatted}` : ''}</span>
+                    <span className="text-xs dark:text-gray-400">{file.format?.toUpperCase()} {file.sizeFormatted ? `• ${file.sizeFormatted}` : ''}</span>
                     <button
                       onClick={() => handleDownload(file.id)}
                       disabled={downloadingId === file.id}
@@ -204,7 +204,7 @@ const InfluencerResources: React.FC = () => {
         {/* Texts Section */}
         {!isLoading && filteredTexts.length > 0 && (
           <div className={`${UI.card} p-6`}>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <h2 className="text-lg dark:text-white font-semibold mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5 text-blue-500" />
               <FormattedMessage id="influencer.resources.texts" defaultMessage="Textes à copier" />
             </h2>
@@ -212,15 +212,15 @@ const InfluencerResources: React.FC = () => {
               {filteredTexts.map((text) => (
                 <div
                   key={text.id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-xl p-4"
+                  className="border dark:border-gray-700 rounded-xl p-4"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-medium text-gray-900 dark:text-white">{text.title}</h3>
-                    <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1 rounded">
+                    <span className="text-xs dark:text-gray-600 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                       {text.type}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 whitespace-pre-wrap line-clamp-4">
+                  <p className="text-sm dark:text-gray-700 mb-3 whitespace-pre-wrap line-clamp-4">
                     {text.content}
                   </p>
                   <button
@@ -248,8 +248,8 @@ const InfluencerResources: React.FC = () => {
         {/* Empty State */}
         {!isLoading && filteredFiles.length === 0 && filteredTexts.length === 0 && (
           <div className={`${UI.card} p-12 text-center`}>
-            <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">
+            <FolderOpen className="w-12 h-12 text-gray-600 dark:text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-700 dark:text-gray-700">
               {searchQuery ? (
                 <FormattedMessage id="influencer.resources.noResults" defaultMessage="Aucun résultat pour cette recherche" />
               ) : (
@@ -260,11 +260,11 @@ const InfluencerResources: React.FC = () => {
         )}
 
         {/* Usage Guidelines */}
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border dark:border-red-800 rounded-xl p-4">
           <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">
             <FormattedMessage id="influencer.resources.guidelines.title" defaultMessage="Conditions d'utilisation" />
           </h3>
-          <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
+          <ul className="text-sm dark:text-red-300 space-y-1">
             <li>
               • <FormattedMessage id="influencer.resources.guidelines.1" defaultMessage="Ces ressources sont réservées aux influenceurs partenaires" />
             </li>

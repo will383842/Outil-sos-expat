@@ -284,7 +284,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              className="absolute bottom-16 right-0 flex flex-col items-end gap-2 mb-2"
+              className="absolute bottom-16 right-0 flex items-end gap-2 mb-2"
               initial="hidden"
               animate="visible"
               exit="hidden"
@@ -307,7 +307,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
                 >
                   {/* Tooltip */}
                   <motion.span
-                    className="px-3 py-1.5 bg-gray-900 dark:bg-gray-800 text-white text-sm font-medium rounded-lg shadow-lg whitespace-nowrap"
+                    className="px-3 py-1.5 bg-gray-900 dark:bg-gray-800 text-white font-medium rounded-lg shadow-lg whitespace-nowrap"
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
@@ -318,21 +318,14 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
                   {/* Action Button */}
                   <button
                     onClick={item.onClick}
-                    className={`
-                      relative w-12 h-12 rounded-full shadow-lg
-                      flex items-center justify-center
-                      ${item.bgColor} ${item.color}
-                      hover:scale-110 active:scale-95
-                      transition-transform duration-200
-                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500
-                    `}
+                    className={`relative w-12 h-12 rounded-full shadow-lg flex items-center justify-center${item.bgColor}${item.color}hover:scale-110 active:scale-95 transition-transform duration-200 focus:outline-none focus:ring-2`}
                     aria-label={intl.formatMessage({ id: item.labelId, defaultMessage: item.defaultLabel })}
                   >
                     {item.icon}
 
                     {/* Badge indicator */}
                     {item.badge && (
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                      <span className="absolute -top-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
                     )}
                   </button>
                 </motion.div>
@@ -344,17 +337,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
         {/* Main FAB Button */}
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
-          className={`
-            relative w-14 h-14 rounded-full shadow-xl
-            bg-gradient-to-br from-pink-500 via-red-500 to-indigo-500
-            flex items-center justify-center
-            text-white
-            hover:shadow-2xl hover:shadow-pink-500/30
-            active:scale-95
-            transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500
-            ${!isOpen && showWithdrawalBadge ? 'animate-pulse-subtle' : ''}
-          `}
+          className={`relative w-14 h-14 rounded-full shadow-xl bg-gradient-to-br from-pink-500 via-red-500 to-indigo-500 flex items-center justify-center text-white hover:shadow-2xl active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2${!isOpen && showWithdrawalBadge ? 'animate-pulse-subtle' : ''}`}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           aria-expanded={isOpen}
@@ -370,7 +353,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
           {/* Badge for available withdrawal */}
           {!isOpen && showWithdrawalBadge && (
             <motion.span
-              className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white dark:border-gray-900"
+              className="absolute -top-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold border-2 dark:border-gray-900"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -487,7 +470,7 @@ const MessageTemplatesModal: React.FC<MessageTemplatesModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-pink-500/10 to-red-500/10">
+        <div className="px-6 py-4 border-b dark:border-gray-800 bg-gradient-to-r from-pink-500/10 to-red-500/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-xl">
@@ -497,7 +480,7 @@ const MessageTemplatesModal: React.FC<MessageTemplatesModalProps> = ({
                 <h3 className="font-semibold text-gray-900 dark:text-white">
                   <FormattedMessage id="templates.title" defaultMessage="Templates de messages" />
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs dark:text-gray-400">
                   <FormattedMessage id="templates.subtitle" defaultMessage="Copiez et partagez facilement" />
                 </p>
               </div>
@@ -516,10 +499,10 @@ const MessageTemplatesModal: React.FC<MessageTemplatesModalProps> = ({
           {MESSAGE_TEMPLATES.map((template) => (
             <div
               key={template.id}
-              className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700"
+              className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border dark:border-gray-700"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                <span className="text-sm dark:text-white font-medium">
                   <FormattedMessage id={template.labelId} defaultMessage={template.defaultLabel} />
                 </span>
                 <button
@@ -546,7 +529,7 @@ const MessageTemplatesModal: React.FC<MessageTemplatesModalProps> = ({
                   )}
                 </button>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              <p className="text-sm dark:text-gray-400 leading-relaxed">
                 <FormattedMessage
                   id={template.messageId}
                   defaultMessage={template.defaultMessage}
@@ -558,8 +541,8 @@ const MessageTemplatesModal: React.FC<MessageTemplatesModalProps> = ({
         </div>
 
         {/* Footer with tip */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-amber-50 dark:bg-amber-900/20">
-          <p className="text-xs text-amber-700 dark:text-amber-400 text-center">
+        <div className="px-6 py-4 border-t dark:border-gray-800 bg-amber-50 dark:bg-amber-900/20">
+          <p className="text-xs dark:text-amber-400">
             <FormattedMessage
               id="templates.tip"
               defaultMessage="Astuce : Personnalisez le message avant de l'envoyer pour de meilleurs resultats !"

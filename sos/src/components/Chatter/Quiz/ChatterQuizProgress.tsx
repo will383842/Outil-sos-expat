@@ -61,7 +61,7 @@ const ChatterQuizProgress: React.FC<ChatterQuizProgressProps> = ({
   const answeredPercent = (answeredCount / totalQuestions) * 100;
 
   return (
-    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-4">
+    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg p-4">
       {/* Timer */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -72,7 +72,7 @@ const ChatterQuizProgress: React.FC<ChatterQuizProgressProps> = ({
         </div>
 
         {isLowTime && (
-          <div className="flex items-center gap-1 text-red-500 text-sm">
+          <div className="flex items-center gap-1 text-red-500">
             <AlertTriangle className="w-4 h-4" />
             <FormattedMessage id="chatter.quiz.hurry" defaultMessage="Dépêchez-vous !" />
           </div>
@@ -81,7 +81,7 @@ const ChatterQuizProgress: React.FC<ChatterQuizProgressProps> = ({
 
       {/* Progress Bar */}
       <div className="mb-3">
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+        <div className="flex items-center justify-between text-xs dark:text-gray-400 mb-1">
           <span>
             <FormattedMessage
               id="chatter.quiz.question"

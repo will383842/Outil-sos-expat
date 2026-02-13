@@ -118,20 +118,20 @@ const EarningsBar: React.FC<EarningsBarProps> = ({
   return (
     <button
       type="button"
-      className="w-full p-3 sm:p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 min-h-[72px] touch-manipulation"
+      className="w-full p-3 sm:p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 dark:focus:ring-offset-gray-900 min-h-[72px] touch-manipulation"
       aria-label={`${intl.formatMessage({ id: config.labelKey, defaultMessage: config.defaultLabel })}: ${formatCurrency(amount)} (${percentage.toFixed(1)}%)`}
     >
       <div className="flex items-center gap-3 sm:gap-4 mb-2">
         {/* Icon */}
         <div
-          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${config.bgColor} flex items-center justify-center flex-shrink-0`}
+          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl${config.bgColor}flex items-center justify-center`}
         >
           <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${config.textColor}`} />
         </div>
 
         {/* Label and amount */}
         <div className="flex-1 min-w-0 text-left">
-          <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate">
+          <p className="text-sm dark:text-white sm:text-base font-medium truncate">
             {intl.formatMessage({
               id: config.labelKey,
               defaultMessage: config.defaultLabel,
@@ -141,7 +141,7 @@ const EarningsBar: React.FC<EarningsBarProps> = ({
             <span className={`text-lg sm:text-xl font-bold ${config.textColor}`}>
               {formatCurrency(amount)}
             </span>
-            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-xs dark:text-gray-700 sm:text-sm">
               ({percentage.toFixed(1)}%)
             </span>
           </div>
@@ -167,17 +167,17 @@ const EarningsBar: React.FC<EarningsBarProps> = ({
  */
 const EmptyState: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center mb-4">
-        <PieChart className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400 dark:text-gray-500" />
+    <div className="flex items-center justify-center py-8 px-4 text-center">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-100 dark:from-gray-800 to-gray-200 dark:to-gray-700 flex items-center justify-center mb-4">
+        <PieChart className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400 dark:text-gray-700" />
       </div>
-      <h4 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      <h4 className="text-base dark:text-gray-700 sm:text-lg font-semibold mb-2">
         <FormattedMessage
           id="influencer.earnings.emptyTitle"
           defaultMessage="No earnings yet"
         />
       </h4>
-      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+      <p className="text-sm dark:text-gray-700 max-w-xs">
         <FormattedMessage
           id="influencer.earnings.emptyDescription"
           defaultMessage="Start earning by sharing your referral link and recruiting new members!"
@@ -236,17 +236,17 @@ export const InfluencerEarningsBreakdownCard = memo(function InfluencerEarningsB
       {/* Header */}
       <div className="p-4 sm:p-6 pb-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
             <PieChart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg">
+            <h3 className="font-bold text-gray-900 dark:text-white sm:text-lg">
               <FormattedMessage
                 id="influencer.earnings.breakdownTitle"
                 defaultMessage="Earnings Breakdown"
               />
             </h3>
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-xs dark:text-gray-700 sm:text-sm">
               <FormattedMessage
                 id="influencer.earnings.breakdownSubtitle"
                 defaultMessage="Your earnings by category"
@@ -274,15 +274,15 @@ export const InfluencerEarningsBreakdownCard = memo(function InfluencerEarningsB
           ))}
 
           {/* Total */}
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-white/10">
+          <div className="mt-4 pt-4 border-t dark:border-white/10">
             <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-white/5 rounded-xl">
-              <span className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm dark:text-gray-700 sm:text-base font-medium">
                 <FormattedMessage
                   id="influencer.earnings.total"
                   defaultMessage="Total Earnings"
                 />
               </span>
-              <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              <span className="text-xl dark:text-white sm:text-2xl font-bold">
                 {formatCurrency(total)}
               </span>
             </div>

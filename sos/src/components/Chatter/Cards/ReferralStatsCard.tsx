@@ -81,19 +81,19 @@ export function ReferralStatsCard({ stats, isLoading }: ReferralStatsCardProps) 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4">
           {statItems.map((item, index) => (
             <div
               key={index}
-              className="flex flex-col p-3 bg-gray-50 rounded-lg"
+              className="flex p-3 bg-gray-50 rounded-lg"
             >
               <div className="flex items-center gap-2 mb-1">
                 <item.icon className={`h-4 w-4 ${item.color}`} />
-                <span className="text-sm text-gray-600">{item.label}</span>
+                <span className="text-sm">{item.label}</span>
               </div>
               <span className="text-2xl font-bold">{item.value}</span>
               {item.subtext && (
-                <span className="text-xs text-gray-500">{item.subtext}</span>
+                <span className="text-xs">{item.subtext}</span>
               )}
             </div>
           ))}

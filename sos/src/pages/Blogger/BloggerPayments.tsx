@@ -311,10 +311,10 @@ const BloggerPayments: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl dark:text-white sm:text-3xl font-bold">
             <FormattedMessage id="blogger.payments.title" defaultMessage="Mes paiements" />
           </h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-gray-700 dark:text-gray-700">
             <FormattedMessage
               id="blogger.payments.subtitle"
               defaultMessage="Gerez vos gains et retraits"
@@ -323,57 +323,57 @@ const BloggerPayments: React.FC = () => {
         </div>
 
         {/* Balance Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-3 gap-4">
           {/* Available Balance */}
           <div
-            className={`${UI.card} p-5 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20`}
+            className={`${UI.card}p-5 bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20`}
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
                 <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <span className="text-sm dark:text-gray-600 font-medium">
                 <FormattedMessage
                   id="blogger.payments.availableBalance"
                   defaultMessage="Disponible"
                 />
               </span>
             </div>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-2xl dark:text-green-400 font-bold">
               {formatAmount(availableBalance)}
             </p>
           </div>
 
           {/* Pending Balance */}
           <div
-            className={`${UI.card} p-5 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20`}
+            className={`${UI.card}p-5 bg-gradient-to-br from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20`}
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
                 <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </div>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <span className="text-sm dark:text-gray-600 font-medium">
                 <FormattedMessage id="blogger.payments.pendingBalance" defaultMessage="En attente" />
               </span>
             </div>
-            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+            <p className="text-2xl dark:text-amber-400 font-bold">
               {formatAmount(pendingBalance)}
             </p>
           </div>
 
           {/* Validated Balance */}
           <div
-            className={`${UI.card} p-5 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20`}
+            className={`${UI.card}p-5 bg-gradient-to-br from-purple-50 dark:from-purple-900/20 to-indigo-50 dark:to-indigo-900/20`}
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
                 <CheckCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <span className="text-sm dark:text-gray-600 font-medium">
                 <FormattedMessage id="blogger.payments.validatedBalance" defaultMessage="Valide" />
               </span>
             </div>
-            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            <p className="text-2xl dark:text-purple-400 font-bold">
               {formatAmount(validatedBalance)}
             </p>
           </div>
@@ -382,7 +382,7 @@ const BloggerPayments: React.FC = () => {
         {/* Pending Withdrawal Alert */}
         {hasPendingWithdrawal && pendingWithdrawal && (
           <div
-            className={`${UI.card} p-4 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-l-4 border-purple-500`}
+            className={`${UI.card}p-4 bg-gradient-to-r from-purple-50 dark:from-purple-900/20 to-indigo-50 dark:to-indigo-900/20 border-l-4`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -394,7 +394,7 @@ const BloggerPayments: React.FC = () => {
                       defaultMessage="Retrait en cours"
                     />
                   </p>
-                  <p className="text-sm text-purple-600 dark:text-purple-400">
+                  <p className="text-sm dark:text-purple-400">
                     {formatAmount(pendingWithdrawal.amount)} -{' '}
                     {intl.formatMessage({
                       id: `payment.status.${pendingWithdrawal.status}`,
@@ -418,7 +418,7 @@ const BloggerPayments: React.FC = () => {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-gray-200 dark:border-white/10 pb-2 overflow-x-auto">
+        <div className="flex gap-2 border-b dark:border-white/10 pb-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab('withdraw')}
             className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
@@ -503,7 +503,7 @@ const BloggerPayments: React.FC = () => {
             {showPaymentMethodForm ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg dark:text-white font-semibold">
                     <FormattedMessage
                       id="blogger.payments.addMethod"
                       defaultMessage="Ajouter une methode de paiement"
@@ -527,10 +527,10 @@ const BloggerPayments: React.FC = () => {
                 {/* Add Method Button */}
                 <button
                   onClick={() => setShowPaymentMethodForm(true)}
-                  className={`${UI.card} w-full p-4 border-2 border-dashed border-gray-300 dark:border-white/20 hover:border-purple-400 dark:hover:border-purple-400 transition-all flex items-center justify-center gap-3`}
+                  className={`${UI.card}w-full p-4 border-2 dark:border-white/20 hover:border-purple-400 dark:hover:border-purple-400 transition-all flex items-center justify-center gap-3`}
                 >
-                  <Plus className="w-5 h-5 text-gray-400" />
-                  <span className="font-medium text-gray-600 dark:text-gray-400">
+                  <Plus className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <span className="font-medium text-gray-600 dark:text-gray-600">
                     <FormattedMessage
                       id="blogger.payments.addPaymentMethod"
                       defaultMessage="Ajouter une methode de paiement"
@@ -551,13 +551,13 @@ const BloggerPayments: React.FC = () => {
                 ) : methods.length === 0 ? (
                   <div className={`${UI.card} p-8 text-center`}>
                     <CreditCard className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-                    <p className="text-gray-500 dark:text-gray-400">
+                    <p className="text-gray-700 dark:text-gray-700">
                       <FormattedMessage
                         id="blogger.payments.noMethods"
                         defaultMessage="Aucune methode de paiement enregistree"
                       />
                     </p>
-                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                    <p className="text-sm dark:text-gray-700 mt-1">
                       <FormattedMessage
                         id="blogger.payments.addMethodHint"
                         defaultMessage="Ajoutez une methode pour pouvoir effectuer des retraits"
@@ -581,7 +581,7 @@ const BloggerPayments: React.FC = () => {
                                 {method.displayName}
                               </p>
                               {method.isDefault && (
-                                <span className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400">
+                                <span className="flex items-center gap-1 text-xs dark:text-purple-400">
                                   <Star className="w-3 h-3 fill-current" />
                                   <FormattedMessage
                                     id="blogger.payments.default"
@@ -590,7 +590,7 @@ const BloggerPayments: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm dark:text-gray-700">
                               {method.methodType === 'mobile_money'
                                 ? 'Mobile Money'
                                 : method.methodType === 'wise'
@@ -638,10 +638,10 @@ const BloggerPayments: React.FC = () => {
         )}
 
         {activeTab === 'history' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-6">
             {/* Withdrawals List */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg dark:text-white font-semibold">
                 <FormattedMessage
                   id="blogger.payments.withdrawalHistory"
                   defaultMessage="Historique des retraits"
@@ -660,7 +660,7 @@ const BloggerPayments: React.FC = () => {
               ) : withdrawals.length === 0 ? (
                 <div className={`${UI.card} p-8 text-center`}>
                   <History className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-gray-700 dark:text-gray-700">
                     <FormattedMessage
                       id="blogger.payments.noWithdrawals"
                       defaultMessage="Aucun retrait effectue"
@@ -668,7 +668,7 @@ const BloggerPayments: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className={`${UI.card} overflow-hidden divide-y divide-gray-100 dark:divide-white/5`}>
+                <div className={`${UI.card}overflow-hidden divide-y dark:divide-white/5`}>
                   {withdrawals.map((withdrawal) => (
                     <button
                       key={withdrawal.id}
@@ -703,7 +703,7 @@ const BloggerPayments: React.FC = () => {
                           <p className="font-medium text-gray-900 dark:text-white">
                             {formatAmount(withdrawal.amount)}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-xs dark:text-gray-700">
                             {new Date(withdrawal.requestedAt).toLocaleDateString(intl.locale, {
                               day: 'numeric',
                               month: 'short',
@@ -719,7 +719,7 @@ const BloggerPayments: React.FC = () => {
                             defaultMessage: withdrawal.status,
                           })}
                         </span>
-                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                        <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       </div>
                     </button>
                   ))}
@@ -729,7 +729,7 @@ const BloggerPayments: React.FC = () => {
 
             {/* Withdrawal Tracking */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg dark:text-white font-semibold">
                 <FormattedMessage
                   id="blogger.payments.trackingDetails"
                   defaultMessage="Details du suivi"
@@ -751,7 +751,7 @@ const BloggerPayments: React.FC = () => {
                 ) : (
                   <div className={`${UI.card} p-6 text-center`}>
                     <AlertCircle className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-                    <p className="text-gray-500 dark:text-gray-400">
+                    <p className="text-gray-700 dark:text-gray-700">
                       <FormattedMessage
                         id="blogger.payments.noTrackingData"
                         defaultMessage="Impossible de charger les details"
@@ -762,7 +762,7 @@ const BloggerPayments: React.FC = () => {
               ) : (
                 <div className={`${UI.card} p-8 text-center`}>
                   <Eye className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-gray-700 dark:text-gray-700">
                     <FormattedMessage
                       id="blogger.payments.selectWithdrawal"
                       defaultMessage="Selectionnez un retrait pour voir les details"

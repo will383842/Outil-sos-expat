@@ -103,7 +103,7 @@ const evaluatePasswordStrength = (password: string, intl: ReturnType<typeof useI
 const s = {
   input: `
     w-full px-4 py-3.5
-    bg-white/5 border-2 border-white/10
+    bg-white/10 border-2 border-white/10
     rounded-2xl
     text-base text-white
     placeholder:text-gray-500
@@ -130,12 +130,12 @@ const s = {
     w-full px-4 py-3
     flex items-center gap-3
     text-left text-sm text-white
-    hover:bg-white/5
+    hover:bg-white/10
     transition-colors duration-150
     cursor-pointer
   `,
-  dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-white/5 text-white rounded-xl border-0 focus:ring-2 focus:ring-purple-400/30 placeholder:text-gray-500',
-  card: 'bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg',
+  dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-white/10 text-white rounded-xl border-0 focus:ring-2 focus:ring-purple-400/30 placeholder:text-gray-500',
+  card: 'bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg',
 };
 
 // ============================================================================
@@ -541,10 +541,10 @@ const BloggerRegister: React.FC = () => {
       <Layout>
         <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-b from-purple-950 via-gray-950 to-black">
           <div className={`max-w-md w-full ${s.card} p-8 text-center`}>
-            <div className="w-16 h-16 bg-purple-500/20 border border-purple-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-purple-500/20 border rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-purple-400" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-4">
+            <h1 className="text-2xl font-bold mb-4">
               <FormattedMessage id="blogger.register.roleConflict.title" defaultMessage="Registration Not Allowed" />
             </h1>
             <p className="text-gray-400 mb-6">
@@ -556,7 +556,7 @@ const BloggerRegister: React.FC = () => {
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-full px-6 py-3 min-h-[48px] bg-gradient-to-r from-purple-500 to-violet-500 text-white font-extrabold rounded-xl transition-all hover:shadow-lg hover:shadow-purple-500/30"
+              className="w-full px-6 py-3 min-h-[48px] bg-gradient-to-r from-purple-500 to-violet-500 text-white font-extrabold rounded-xl transition-all hover:shadow-lg"
             >
               <FormattedMessage id="blogger.register.roleConflict.button" defaultMessage="Go to My Dashboard" />
             </button>
@@ -600,13 +600,13 @@ const BloggerRegister: React.FC = () => {
 
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-lg">
               <FileText className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
               <FormattedMessage id="blogger.register.title" defaultMessage="Become a Partner Blogger" />
             </h1>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg max-w-2xl mx-auto">
               <FormattedMessage id="blogger.register.subtitle" defaultMessage="Earn $10 per referred client and $5 per recruited provider" />
             </p>
           </div>
@@ -615,10 +615,10 @@ const BloggerRegister: React.FC = () => {
           {emailAlreadyExists ? (
             <div className="max-w-lg mx-auto">
               <div className={`${s.card} p-8 text-center`}>
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border flex items-center justify-center">
                   <Mail className="w-8 h-8 text-blue-400" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-2">
+                <h2 className="text-xl font-bold mb-2">
                   <FormattedMessage id="blogger.register.emailExists.title" defaultMessage="You already have an account!" />
                 </h2>
                 <p className="text-gray-400 mb-2">
@@ -628,7 +628,7 @@ const BloggerRegister: React.FC = () => {
                     values={{ email: <strong className="text-white">{existingEmail}</strong> }}
                   />
                 </p>
-                <p className="text-gray-500 text-sm mb-6">
+                <p className="text-gray-500 mb-6">
                   <FormattedMessage id="blogger.register.emailExists.hint" defaultMessage="Log in to continue." />
                 </p>
                 <button
@@ -640,7 +640,7 @@ const BloggerRegister: React.FC = () => {
                 </button>
                 <button
                   onClick={() => { setEmailAlreadyExists(false); setExistingEmail(''); }}
-                  className="text-sm text-gray-400 hover:text-white underline"
+                  className="text-sm hover:text-white underline"
                 >
                   <FormattedMessage id="blogger.register.emailExists.tryDifferent" defaultMessage="Use a different email" />
                 </button>
@@ -649,10 +649,10 @@ const BloggerRegister: React.FC = () => {
           ) : success ? (
             <div className="max-w-lg mx-auto">
               <div className={`${s.card} p-8 text-center`}>
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center shadow-lg bg-green-500/20 border border-green-500/30 shadow-green-500/20">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center shadow-lg bg-green-500/20 border">
                   <Check className="w-10 h-10 text-green-400" />
                 </div>
-                <h2 className="text-2xl font-bold mb-2 text-white">
+                <h2 className="text-2xl font-bold mb-2">
                   <FormattedMessage id="blogger.register.success.title" defaultMessage="Registration successful!" />
                 </h2>
                 <p className="text-gray-400">
@@ -661,7 +661,7 @@ const BloggerRegister: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-8">
               {/* Benefits Sidebar */}
               <div className="lg:col-span-1">
                 <div className={`${s.card} p-6 sticky top-24`}>
@@ -672,12 +672,12 @@ const BloggerRegister: React.FC = () => {
                     {benefits.map((benefit, idx) => (
                       <div key={idx} className="flex items-center gap-3">
                         {benefit.icon}
-                        <span className="text-sm text-gray-400">{benefit.text}</span>
+                        <span className="text-sm">{benefit.text}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-6 pt-6 border-t border-white/10">
-                    <div className="text-sm text-gray-500">
+                  <div className="mt-6 pt-6 border-t">
+                    <div className="text-sm">
                       <FormattedMessage id="blogger.register.info" defaultMessage="Registration is free. Your account will be activated immediately." />
                     </div>
                   </div>
@@ -688,8 +688,8 @@ const BloggerRegister: React.FC = () => {
               <div className="lg:col-span-2">
                 <div className={`${s.card} p-6`}>
                   {/* Already registered link */}
-                  <div className="mb-6 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center">
-                    <p className="text-sm text-gray-400">
+                  <div className="mb-6 p-3 bg-blue-500/10 rounded-xl border text-center">
+                    <p className="text-sm">
                       <FormattedMessage id="blogger.register.alreadyRegistered" defaultMessage="Already registered?" />{' '}
                       <button onClick={() => navigate(loginRoute)} className="text-blue-400 hover:text-blue-300 font-medium underline">
                         <FormattedMessage id="blogger.register.loginLink" defaultMessage="Log in here" />
@@ -699,16 +699,16 @@ const BloggerRegister: React.FC = () => {
 
                   {/* Referral code banner */}
                   {referralCodeFromUrl && (
-                    <div className="mb-6 p-4 bg-green-500/10 rounded-xl border border-green-500/30">
+                    <div className="mb-6 p-4 bg-green-500/10 rounded-xl border">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 bg-green-500/20 border rounded-full flex items-center justify-center">
                           <Gift className="w-5 h-5 text-green-400" />
                         </div>
                         <div>
                           <p className="font-semibold text-green-300">
                             <FormattedMessage id="blogger.register.referralDetected" defaultMessage="You've been referred!" />
                           </p>
-                          <p className="text-sm text-green-400">
+                          <p className="text-sm">
                             <FormattedMessage
                               id="blogger.register.referralCode.applied"
                               defaultMessage="Referral code {code} will be applied automatically"
@@ -727,7 +727,7 @@ const BloggerRegister: React.FC = () => {
                     </div>
 
                     {error && (
-                      <div role="alert" className="flex items-start gap-3 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400">
+                      <div role="alert" className="flex items-start gap-3 p-4 rounded-2xl bg-red-500/10 border text-red-400">
                         <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                         <span className="text-sm">{error}</span>
                       </div>
@@ -739,7 +739,7 @@ const BloggerRegister: React.FC = () => {
                         <FormattedMessage id="blogger.register.personalInfo" defaultMessage="Personal Information" />
                       </h3>
                       <div className="space-y-4 mt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid md:grid-cols-2 gap-4">
                           {/* First Name */}
                           <div className="space-y-1">
                             <label htmlFor="firstName" className={s.label}><FormattedMessage id="form.firstName" defaultMessage="First name" /><span className="text-purple-400 ml-0.5">*</span></label>
@@ -747,7 +747,7 @@ const BloggerRegister: React.FC = () => {
                               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                               <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} onBlur={handleBlur} placeholder={intl.formatMessage({ id: 'form.firstName.placeholder', defaultMessage: 'Your first name' })} className={`${s.input} pl-12 ${validationErrors.firstName ? s.inputError : s.inputDefault} ${formData.firstName ? s.inputFilled : ''}`} aria-required="true" aria-invalid={!!validationErrors.firstName} autoComplete="given-name" enterKeyHint="next" />
                             </div>
-                            {validationErrors.firstName && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>{validationErrors.firstName}</p>}
+                            {validationErrors.firstName && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.firstName}</p>}
                           </div>
 
                           {/* Last Name */}
@@ -757,7 +757,7 @@ const BloggerRegister: React.FC = () => {
                               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                               <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} onBlur={handleBlur} placeholder={intl.formatMessage({ id: 'form.lastName.placeholder', defaultMessage: 'Your last name' })} className={`${s.input} pl-12 ${validationErrors.lastName ? s.inputError : s.inputDefault} ${formData.lastName ? s.inputFilled : ''}`} aria-required="true" aria-invalid={!!validationErrors.lastName} autoComplete="family-name" enterKeyHint="next" />
                             </div>
-                            {validationErrors.lastName && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>{validationErrors.lastName}</p>}
+                            {validationErrors.lastName && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.lastName}</p>}
                           </div>
                         </div>
 
@@ -768,7 +768,7 @@ const BloggerRegister: React.FC = () => {
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                             <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} placeholder={intl.formatMessage({ id: 'form.email.placeholder', defaultMessage: 'your@email.com' })} autoComplete="email" inputMode="email" enterKeyHint="next" className={`${s.input} pl-12 ${validationErrors.email ? s.inputError : s.inputDefault} ${formData.email ? s.inputFilled : ''}`} aria-required="true" aria-invalid={!!validationErrors.email} />
                           </div>
-                          {validationErrors.email && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>{validationErrors.email}</p>}
+                          {validationErrors.email && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.email}</p>}
                         </div>
 
                         {/* Password */}
@@ -777,7 +777,7 @@ const BloggerRegister: React.FC = () => {
                           <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                             <input id="password" name="password" type={showPassword ? 'text' : 'password'} value={formData.password} onChange={handleChange} onBlur={handleBlur} placeholder={intl.formatMessage({ id: 'form.password.placeholder', defaultMessage: 'Minimum 8 characters' })} autoComplete="new-password" enterKeyHint="next" className={`${s.input} pl-12 pr-12 ${validationErrors.password ? s.inputError : s.inputDefault}`} aria-required="true" aria-invalid={!!validationErrors.password} />
-                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors z-10 p-1 rounded-lg" aria-label={showPassword ? intl.formatMessage({ id: 'form.password.hide', defaultMessage: 'Hide password' }) : intl.formatMessage({ id: 'form.password.show', defaultMessage: 'Show password' })} aria-pressed={showPassword}>
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 hover:bg-white/10 transition-colors z-10 p-1 rounded-lg" aria-label={showPassword ? intl.formatMessage({ id: 'form.password.hide', defaultMessage: 'Hide password' }) : intl.formatMessage({ id: 'form.password.show', defaultMessage: 'Show password' })} aria-pressed={showPassword}>
                               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
                           </div>
@@ -788,15 +788,15 @@ const BloggerRegister: React.FC = () => {
                               </div>
                               <div className="flex items-center justify-between">
                                 <p className={`text-xs font-medium ${passwordStrength.color}`}>{passwordStrength.label}</p>
-                                {passwordStrength.feedback.length > 0 && <p className="text-xs text-gray-500">{passwordStrength.feedback[0]}</p>}
+                                {passwordStrength.feedback.length > 0 && <p className="text-xs">{passwordStrength.feedback[0]}</p>}
                               </div>
                             </div>
                           )}
-                          {validationErrors.password && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>{validationErrors.password}</p>}
+                          {validationErrors.password && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.password}</p>}
                         </div>
 
                         {/* Country + Language */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid md:grid-cols-2 gap-4">
                           {/* Country Dropdown */}
                           <div ref={countryDropdownRef} className="space-y-2">
                             <label className={s.label}><FormattedMessage id="form.country" defaultMessage="Country" /><span className="text-purple-400 ml-0.5">*</span></label>
@@ -810,7 +810,7 @@ const BloggerRegister: React.FC = () => {
                               </button>
                               {showCountryDropdown && (
                                 <div className={s.dropdown}>
-                                  <div className="p-2 border-b border-white/10"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)} placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search...' })} className={s.dropdownSearch} autoFocus /></div></div>
+                                  <div className="p-2 border-b"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)} placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search...' })} className={s.dropdownSearch} autoFocus /></div></div>
                                   <div className="max-h-[280px] overflow-y-auto overscroll-contain">
                                     {filteredCountries.map((entry) => (
                                       <button key={entry.code} type="button" onClick={() => { setFormData(prev => ({ ...prev, country: entry.code })); setShowCountryDropdown(false); setCountrySearch(''); clearValidationError('country'); }} className={`${s.dropdownItem} ${entry.code === formData.country ? 'bg-purple-500/10' : ''}`}>
@@ -821,7 +821,7 @@ const BloggerRegister: React.FC = () => {
                                 </div>
                               )}
                             </div>
-                            {validationErrors.country && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>{validationErrors.country}</p>}
+                            {validationErrors.country && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.country}</p>}
                           </div>
 
                           {/* Language */}
@@ -858,10 +858,10 @@ const BloggerRegister: React.FC = () => {
                             <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                             <input type="url" id="blogUrl" name="blogUrl" value={formData.blogUrl} onChange={handleChange} onBlur={handleBlur} placeholder="https://myblog.com" className={`${s.input} pl-12 ${validationErrors.blogUrl ? s.inputError : s.inputDefault} ${formData.blogUrl ? s.inputFilled : ''}`} aria-required="true" aria-invalid={!!validationErrors.blogUrl} inputMode="url" />
                           </div>
-                          {validationErrors.blogUrl && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>{validationErrors.blogUrl}</p>}
+                          {validationErrors.blogUrl && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.blogUrl}</p>}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid md:grid-cols-2 gap-4">
                           {/* Blog Name */}
                           <div className="space-y-1">
                             <label htmlFor="blogName" className={s.label}><FormattedMessage id="form.blogName" defaultMessage="Blog name" /><span className="text-purple-400 ml-0.5">*</span></label>
@@ -869,7 +869,7 @@ const BloggerRegister: React.FC = () => {
                               <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                               <input type="text" id="blogName" name="blogName" value={formData.blogName} onChange={handleChange} onBlur={handleBlur} placeholder={intl.formatMessage({ id: 'form.blogName.placeholder', defaultMessage: 'My Amazing Blog' })} className={`${s.input} pl-12 ${validationErrors.blogName ? s.inputError : s.inputDefault} ${formData.blogName ? s.inputFilled : ''}`} aria-required="true" aria-invalid={!!validationErrors.blogName} />
                             </div>
-                            {validationErrors.blogName && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>{validationErrors.blogName}</p>}
+                            {validationErrors.blogName && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.blogName}</p>}
                           </div>
 
                           {/* Blog Language */}
@@ -893,7 +893,7 @@ const BloggerRegister: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid md:grid-cols-2 gap-4">
                           {/* Blog Target Country */}
                           <div ref={blogCountryDropdownRef} className="space-y-2">
                             <label className={s.label}><FormattedMessage id="form.blogCountry" defaultMessage="Target country" /><span className="text-purple-400 ml-0.5">*</span></label>
@@ -907,7 +907,7 @@ const BloggerRegister: React.FC = () => {
                               </button>
                               {showBlogCountryDropdown && (
                                 <div className={s.dropdown}>
-                                  <div className="p-2 border-b border-white/10"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={blogCountrySearch} onChange={(e) => setBlogCountrySearch(e.target.value)} placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search...' })} className={s.dropdownSearch} autoFocus /></div></div>
+                                  <div className="p-2 border-b"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" value={blogCountrySearch} onChange={(e) => setBlogCountrySearch(e.target.value)} placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search...' })} className={s.dropdownSearch} autoFocus /></div></div>
                                   <div className="max-h-[280px] overflow-y-auto overscroll-contain">
                                     {filteredBlogCountries.map((entry) => (
                                       <button key={entry.code} type="button" onClick={() => { setFormData(prev => ({ ...prev, blogCountry: entry.code })); setShowBlogCountryDropdown(false); setBlogCountrySearch(''); clearValidationError('blogCountry'); }} className={`${s.dropdownItem} ${entry.code === formData.blogCountry ? 'bg-purple-500/10' : ''}`}>
@@ -918,7 +918,7 @@ const BloggerRegister: React.FC = () => {
                                 </div>
                               )}
                             </div>
-                            {validationErrors.blogCountry && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>{validationErrors.blogCountry}</p>}
+                            {validationErrors.blogCountry && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.blogCountry}</p>}
                           </div>
 
                           {/* Blog Theme */}
@@ -968,51 +968,51 @@ const BloggerRegister: React.FC = () => {
                         <div className="space-y-1">
                           <label htmlFor="blogDescription" className={s.label}><FormattedMessage id="form.blogDescription" defaultMessage="Blog description" /></label>
                           <textarea id="blogDescription" name="blogDescription" value={formData.blogDescription} onChange={handleChange} placeholder={intl.formatMessage({ id: 'form.blogDescription.placeholder', defaultMessage: 'Describe your blog and its audience...' })} rows={3} maxLength={500} className={`${s.input} resize-none ${formData.blogDescription ? s.inputFilled : ''}`} />
-                          <div className="flex justify-end"><span className="text-xs text-gray-500">{formData.blogDescription.length}/500</span></div>
+                          <div className="flex justify-end"><span className="text-xs">{formData.blogDescription.length}/500</span></div>
                         </div>
                       </div>
                     </div>
 
                     {/* ---- Definitive Role Warning ---- */}
-                    <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/30">
+                    <div className="p-4 bg-amber-500/10 rounded-2xl border">
                       <div className="flex items-start gap-3 mb-3">
                         <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="font-semibold text-amber-300"><FormattedMessage id="blogger.register.warning.title" defaultMessage="Important: Permanent Role" /></p>
-                          <p className="text-sm text-amber-400/80 mt-1"><FormattedMessage id="blogger.register.warning.message" defaultMessage="By becoming a partner blogger, you will not be able to become a Chatter or Influencer. This choice is final and irreversible." /></p>
+                          <p className="text-sm mt-1"><FormattedMessage id="blogger.register.warning.message" defaultMessage="By becoming a partner blogger, you will not be able to become a Chatter or Influencer. This choice is final and irreversible." /></p>
                         </div>
                       </div>
                       <label className="flex items-start gap-3 cursor-pointer select-none">
-                        <input type="checkbox" checked={formData.definitiveRoleAcknowledged} onChange={(e) => { setFormData(prev => ({ ...prev, definitiveRoleAcknowledged: e.target.checked })); clearValidationError('definitiveRoleAcknowledged'); }} className={`h-5 w-5 rounded border-2 mt-0.5 ${validationErrors.definitiveRoleAcknowledged ? 'border-red-500 bg-red-500/10' : formData.definitiveRoleAcknowledged ? 'border-amber-400 bg-amber-400 text-black' : 'border-white/20 bg-white/5'} focus:ring-2 focus:ring-amber-400/30 focus:ring-offset-0 transition-all duration-200 cursor-pointer`} aria-required="true" />
-                        <span className="text-sm text-gray-400"><FormattedMessage id="blogger.register.acknowledgment" defaultMessage="I understand and accept that this role is permanent" /></span>
+                        <input type="checkbox" checked={formData.definitiveRoleAcknowledged} onChange={(e) => { setFormData(prev => ({ ...prev, definitiveRoleAcknowledged: e.target.checked })); clearValidationError('definitiveRoleAcknowledged'); }} className={`h-5 w-5 rounded border-2 mt-0.5${validationErrors.definitiveRoleAcknowledged ? 'border-red-500 bg-red-500/10' : formData.definitiveRoleAcknowledged ? 'border-amber-400 bg-amber-400 text-black' : 'border-white/20 bg-white/10'}focus:ring-2 transition-all duration-200 cursor-pointer`} aria-required="true" />
+                        <span className="text-sm"><FormattedMessage id="blogger.register.acknowledgment" defaultMessage="I understand and accept that this role is permanent" /></span>
                       </label>
-                      {validationErrors.definitiveRoleAcknowledged && <p className={`${s.errorText} mt-2`} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>{validationErrors.definitiveRoleAcknowledged}</p>}
+                      {validationErrors.definitiveRoleAcknowledged && <p className={`${s.errorText} mt-2`} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.definitiveRoleAcknowledged}</p>}
                     </div>
 
                     {/* ---- Terms & Conditions ---- */}
                     <div className="space-y-2">
                       <label className="flex items-start gap-3 cursor-pointer select-none">
-                        <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => { setFormData(prev => ({ ...prev, acceptTerms: e.target.checked })); clearValidationError('acceptTerms'); }} className={`h-5 w-5 rounded border-2 mt-0.5 ${validationErrors.acceptTerms ? 'border-red-500 bg-red-500/10' : formData.acceptTerms ? 'border-purple-400 bg-purple-400 text-white' : 'border-white/20 bg-white/5'} focus:ring-2 focus:ring-purple-400/30 focus:ring-offset-0 transition-all duration-200 cursor-pointer`} aria-required="true" aria-invalid={!!validationErrors.acceptTerms} />
-                        <span className="text-sm leading-relaxed text-gray-400">
+                        <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => { setFormData(prev => ({ ...prev, acceptTerms: e.target.checked })); clearValidationError('acceptTerms'); }} className={`h-5 w-5 rounded border-2 mt-0.5${validationErrors.acceptTerms ? 'border-red-500 bg-red-500/10' : formData.acceptTerms ? 'border-purple-400 bg-purple-400 text-white' : 'border-white/20 bg-white/10'}focus:ring-2 transition-all duration-200 cursor-pointer`} aria-required="true" aria-invalid={!!validationErrors.acceptTerms} />
+                        <span className="text-sm leading-relaxed">
                           <FormattedMessage
                             id="blogger.register.acceptTerms"
                             defaultMessage="I accept the {termsLink} and the {privacyLink}"
                             values={{
-                              termsLink: <Link to="/cgu-bloggers" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 font-medium text-purple-400 hover:text-purple-300"><FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" /></Link>,
-                              privacyLink: <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 font-medium text-purple-400 hover:text-purple-300"><FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" /></Link>,
+                              termsLink: <Link to="/cgu-bloggers" target="_blank" rel="noopener noreferrer" className="underline font-medium text-purple-400 hover:text-purple-300"><FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" /></Link>,
+                              privacyLink: <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline font-medium text-purple-400 hover:text-purple-300"><FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" /></Link>,
                             }}
                           />
                           <span className="text-purple-400 ml-0.5">*</span>
                         </span>
                       </label>
-                      {validationErrors.acceptTerms && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>{validationErrors.acceptTerms}</p>}
+                      {validationErrors.acceptTerms && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.acceptTerms}</p>}
                     </div>
 
                     {/* Submit */}
-                    <button type="submit" disabled={isSubmitting || !formData.acceptTerms || !formData.definitiveRoleAcknowledged} aria-busy={isSubmitting} className="w-full py-4 px-6 font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:from-purple-400 hover:to-violet-400 active:scale-[0.98]">
+                    <button type="submit" disabled={isSubmitting || !formData.acceptTerms || !formData.definitiveRoleAcknowledged} aria-busy={isSubmitting} className="w-full py-4 px-6 font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg hover:shadow-xl hover:from-purple-400 hover:to-violet-400 active:scale-[0.98]">
                       {isSubmitting ? (
                         <>
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <div className="w-5 h-5 border-2 rounded-full animate-spin" />
                           <FormattedMessage id="form.submitting" defaultMessage="Processing..." />
                         </>
                       ) : (

@@ -95,16 +95,7 @@ const CTAButton: React.FC<{
   <button
     onClick={onClick}
     aria-label={ariaLabel}
-    className={`
-      flex items-center justify-center gap-2 sm:gap-3
-      bg-gradient-to-r from-amber-400 to-yellow-400
-      text-black font-extrabold rounded-2xl
-      shadow-lg shadow-amber-500/30
-      transition-all active:scale-[0.98] hover:shadow-xl hover:from-amber-300 hover:to-yellow-300
-      will-change-transform
-      ${size === 'large' ? 'min-h-[56px] sm:min-h-[64px] px-6 sm:px-8 py-4 sm:py-5 text-lg sm:text-xl' : 'min-h-[48px] sm:min-h-[56px] px-5 sm:px-6 py-3 sm:py-4 text-base sm:text-lg'}
-      ${className}
-    `}
+    className={`flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold rounded-2xl shadow-lg transition-all active:scale-[0.98] hover:shadow-xl hover:from-amber-300 hover:to-yellow-300 will-change-transform${size === 'large' ? 'min-h-[56px] sm:min-h-[64px] px-6 sm:px-8 py-4 sm:py-5 text-lg sm:text-xl' : 'min-h-[48px] sm:min-h-[56px] px-5 sm:px-6 py-3 sm:py-4 text-base sm:text-lg'}${className}`}
   >
     {children}
     <ArrowRight className={size === 'large' ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4 sm:w-5 sm:h-5'} aria-hidden="true" />
@@ -118,7 +109,7 @@ const FAQItem: React.FC<{
   onToggle: () => void;
   index: number;
 }> = ({ question, answer, isOpen, onToggle, index }) => (
-  <div className="border border-white/10 rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20">
+  <div className="border rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20">
     <button
       type="button"
       onClick={onToggle}
@@ -127,8 +118,8 @@ const FAQItem: React.FC<{
       aria-controls={`faq-answer-${index}`}
       id={`faq-question-${index}`}
     >
-      <span className="text-base sm:text-lg font-semibold text-white pr-2">{question}</span>
-      <span className={`flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
+      <span className="text-base sm:text-lg font-semibold pr-2">{question}</span>
+      <span className={`flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
         {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
       </span>
     </button>
@@ -138,7 +129,7 @@ const FAQItem: React.FC<{
       aria-labelledby={`faq-question-${index}`}
       className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
     >
-      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base text-gray-300 leading-relaxed">
+      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base leading-relaxed">
         {answer}
       </div>
     </div>
@@ -146,9 +137,9 @@ const FAQItem: React.FC<{
 );
 
 const ScrollIndicator: React.FC<{ label: string }> = ({ label }) => (
-  <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" aria-hidden="true">
-    <span className="text-white/60 text-xs sm:text-sm font-medium">{label}</span>
-    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-white/60 animate-bounce" />
+  <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2" aria-hidden="true">
+    <span className="text-white/80 sm:text-sm font-medium">{label}</span>
+    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-white/80 animate-bounce" />
   </div>
 );
 
@@ -237,7 +228,7 @@ const GroupAdminLanding: React.FC = () => {
             HERO - FULL VIEWPORT
         ================================================================ */}
         <section
-          className="min-h-[100svh] flex flex-col justify-center items-center relative bg-gradient-to-b from-blue-950 via-indigo-900 to-black overflow-hidden"
+          className="min-h-[100svh] flex justify-center items-center relative bg-gradient-to-b from-blue-950 via-indigo-900 to-black overflow-hidden"
           aria-label={intl.formatMessage({ id: 'groupAdmin.landing.seo.title', defaultMessage: 'Become a Group Admin Partner' })}
         >
           {/* Radial blue glow */}
@@ -246,7 +237,7 @@ const GroupAdminLanding: React.FC = () => {
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
 
             {/* Community Badge */}
-            <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-bold border border-blue-500/30 mb-4 sm:mb-6">
+            <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full sm:text-base font-bold border mb-4 sm:mb-6">
               <Users className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
               <FormattedMessage id="groupAdmin.landing.badge" defaultMessage="For Group & Community Admins" />
             </div>
@@ -254,7 +245,7 @@ const GroupAdminLanding: React.FC = () => {
             {/* Headline ULTRA-VENDEUR */}
             <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
               <span><FormattedMessage id="groupAdmin.landing.hero.new.line1" defaultMessage="Gagnez jusqu'à" /></span>{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
+              <span className="text-transparent bg-clip-text from-blue-400 via-indigo-400 to-purple-400">
                 <FormattedMessage id="groupAdmin.landing.hero.new.amount" defaultMessage="5000$+/mois" />
               </span>
               <br />
@@ -262,7 +253,7 @@ const GroupAdminLanding: React.FC = () => {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-base sm:text-lg text-gray-300 mb-5 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg mb-5 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
               <FormattedMessage
                 id="groupAdmin.landing.hero.new.subtitle"
                 defaultMessage="Monétisez votre communauté Facebook, Discord, WhatsApp ou forum. Vos membres économisent 5$/appel, vous gagnez 10$/appel. Win-win !"
@@ -270,36 +261,36 @@ const GroupAdminLanding: React.FC = () => {
             </p>
 
             {/* 3 sources de revenus */}
-            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-4xl mx-auto">
-              <p className="text-center text-sm sm:text-base text-gray-400 mb-4">
+            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-4xl mx-auto">
+              <p className="text-center sm:text-base mb-4">
                 <FormattedMessage id="groupAdmin.landing.hero.sources" defaultMessage="3 sources de revenus illimitées :" />
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
                 {/* Source 1 : Appels membres */}
-                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">10$</div>
-                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="groupAdmin.landing.hero.source1" defaultMessage="par appel membre" /></div>
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border rounded-xl p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-black mb-1">10$</div>
+                  <div className="text-xs sm:text-sm"><FormattedMessage id="groupAdmin.landing.hero.source1" defaultMessage="par appel membre" /></div>
                 </div>
 
                 {/* Source 2 : Recruter autres admins */}
-                <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/30 rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black text-blue-400 mb-1">500-2000$</div>
-                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="groupAdmin.landing.hero.source2" defaultMessage="équipe d'admins" /></div>
+                <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border rounded-xl p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-black mb-1">500-2000$</div>
+                  <div className="text-xs sm:text-sm"><FormattedMessage id="groupAdmin.landing.hero.source2" defaultMessage="équipe d'admins" /></div>
                 </div>
 
                 {/* Source 3 : Partenaires (Avocats/Aidants) */}
-                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-3 sm:p-4 text-center relative">
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border rounded-xl p-3 sm:p-4 text-center relative">
+                  <span className="absolute -top-2 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full">
                     <FormattedMessage id="groupAdmin.landing.hero.hot" defaultMessage="🔥 HOT" />
                   </span>
-                  <div className="text-2xl sm:text-3xl font-black text-purple-400 mb-1">1500$</div>
-                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="groupAdmin.landing.hero.source3" defaultMessage="avec 10 partenaires" /></div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">1500$</div>
+                  <div className="text-xs sm:text-sm"><FormattedMessage id="groupAdmin.landing.hero.source3" defaultMessage="avec 10 partenaires" /></div>
                 </div>
               </div>
 
               {/* Exemple partenaire */}
-              <div className="mt-4 pt-4 border-t border-blue-500/20 text-center">
-                <p className="text-xs sm:text-sm text-gray-400">
+              <div className="mt-4 pt-4 border-t text-center">
+                <p className="text-xs sm:text-sm">
                   <FormattedMessage
                     id="groupAdmin.landing.hero.partnerExample"
                     defaultMessage="💡 1 partenaire (avocat/aidant) = 30 appels/mois × 5$ × 6 mois = {total} passifs !"
@@ -314,7 +305,7 @@ const GroupAdminLanding: React.FC = () => {
               <FormattedMessage id="groupAdmin.landing.hero.cta" defaultMessage="Become a Partner" />
             </CTAButton>
 
-            <p className="text-gray-400 mt-4 sm:mt-6 text-sm sm:text-base">
+            <p className="text-gray-300 mt-4 sm:mt-6 sm:text-base">
               <FormattedMessage id="groupAdmin.landing.hero.free" defaultMessage="100% free - No commitment" />
             </p>
           </div>
@@ -325,62 +316,62 @@ const GroupAdminLanding: React.FC = () => {
         {/* ================================================================
             SECTION 2 - HOW IT WORKS (3 steps)
         ================================================================ */}
-        <section className="section-content section-lazy bg-gradient-to-b from-black to-gray-950" aria-labelledby="section-how">
+        <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="section-how">
           <div className="max-w-7xl mx-auto">
 
-            <h2 id="section-how" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
+            <h2 id="section-how" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <FormattedMessage id="groupAdmin.landing.howItWorks.title" defaultMessage="How It Works" />
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-400 text-center mb-10 sm:mb-12 lg:mb-16">
+            <p className="text-base sm:text-lg lg:text-xl mb-10 sm:mb-12 lg:mb-16">
               <FormattedMessage id="groupAdmin.landing.howItWorks.subtitle" defaultMessage="Three simple steps to start earning" />
             </p>
 
             <div className="grid lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
 
               {/* Step 1 */}
-              <article className="bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <article className="bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
                   <UserPlus className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
                 </div>
-                <div className="text-sm font-bold text-blue-400 mb-2">
+                <div className="text-sm font-bold mb-2">
                   <FormattedMessage id="groupAdmin.landing.step1.label" defaultMessage="STEP 1" />
                 </div>
                 <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
                   <FormattedMessage id="groupAdmin.landing.step1.title" defaultMessage="Register for Free" />
                 </h3>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-200">
+                <p className="text-base sm:text-lg lg:text-xl">
                   <FormattedMessage id="groupAdmin.landing.step1.description" defaultMessage="Sign up and add your group or community. Get your unique affiliate links instantly." />
                 </p>
               </article>
 
               {/* Step 2 */}
-              <article className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border border-green-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <article className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-green-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
                   <Copy className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
                 </div>
-                <div className="text-sm font-bold text-green-400 mb-2">
+                <div className="text-sm font-bold mb-2">
                   <FormattedMessage id="groupAdmin.landing.step2.label" defaultMessage="STEP 2" />
                 </div>
                 <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
                   <FormattedMessage id="groupAdmin.landing.step2.title" defaultMessage="Share Ready-Made Posts" />
                 </h3>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-200">
+                <p className="text-base sm:text-lg lg:text-xl">
                   <FormattedMessage id="groupAdmin.landing.step2.description" defaultMessage="Use our copy-paste posts, banners, and images. Available in 9 languages!" />
                 </p>
               </article>
 
               {/* Step 3 */}
-              <article className="bg-gradient-to-br from-yellow-500/20 to-amber-500/10 border border-yellow-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <article className="bg-gradient-to-br from-yellow-500/20 to-amber-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-yellow-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
                   <DollarSign className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-black" />
                 </div>
-                <div className="text-sm font-bold text-yellow-400 mb-2">
+                <div className="text-sm font-bold mb-2">
                   <FormattedMessage id="groupAdmin.landing.step3.label" defaultMessage="STEP 3" />
                 </div>
                 <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
                   <FormattedMessage id="groupAdmin.landing.step3.title" defaultMessage="Earn Commissions" />
                 </h3>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-200">
+                <p className="text-base sm:text-lg lg:text-xl">
                   <FormattedMessage id="groupAdmin.landing.step3.description" defaultMessage="Earn $10 for each call generated by your link. Your members get $5 off every call. Withdraw anytime." />
                 </p>
               </article>
@@ -391,29 +382,29 @@ const GroupAdminLanding: React.FC = () => {
         {/* ================================================================
             SECTION 3 - CALCULATEUR DE REVENUS (ULTRA VENDEUR)
         ================================================================ */}
-        <section className="section-content section-lazy bg-gradient-to-b from-black via-green-950/20 to-gray-950" aria-labelledby="section-calculator">
+        <section className="section-content bg-gradient-to-b from-black via-green-950/20 to-gray-950" aria-labelledby="section-calculator">
           <div className="max-w-7xl mx-auto">
 
             <div className="text-center mb-8 sm:mb-10 lg:mb-12">
-              <span className="inline-block bg-green-500/20 text-green-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base lg:text-lg font-bold border border-green-500/30 mb-4 sm:mb-6">
+              <span className="inline-block bg-green-500/20 text-green-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full sm:text-base lg:text-lg font-bold border mb-4 sm:mb-6">
                 <FormattedMessage id="groupAdmin.landing.calc.badge" defaultMessage="💰 Calculateur de revenus" />
               </span>
               <h2 id="section-calculator" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-white mb-3 sm:mb-4">
                 <FormattedMessage id="groupAdmin.landing.calc.title" defaultMessage="Combien pouvez-vous gagner ?" />
               </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-400">
+              <p className="text-base sm:text-lg lg:text-xl">
                 <FormattedMessage id="groupAdmin.landing.calc.subtitle" defaultMessage="Estimez vos revenus mensuels en fonction de votre communauté" />
               </p>
             </div>
 
             <div className="max-w-4xl mx-auto">
-              <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border border-green-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
 
                 {/* Sliders */}
                 <div className="space-y-5 mb-6">
                   {/* Membres du groupe */}
                   <div>
-                    <label htmlFor="members-slider" className="text-sm sm:text-base text-gray-300 block mb-2">
+                    <label htmlFor="members-slider" className="text-sm sm:text-base block mb-2">
                       <FormattedMessage
                         id="groupAdmin.landing.calc.members"
                         defaultMessage="Membres dans votre groupe : {count}"
@@ -428,16 +419,13 @@ const GroupAdminLanding: React.FC = () => {
                       step="1000"
                       value={groupMembers}
                       onChange={(e) => setGroupMembers(Number(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
-                        [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-green-500/40"
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
                     />
                   </div>
 
                   {/* Taux de conversion */}
                   <div>
-                    <label htmlFor="conversion-slider" className="text-sm sm:text-base text-gray-300 block mb-2">
+                    <label htmlFor="conversion-slider" className="text-sm sm:text-base block mb-2">
                       <FormattedMessage
                         id="groupAdmin.landing.calc.conversion"
                         defaultMessage="Taux de conversion : {rate}%"
@@ -452,28 +440,25 @@ const GroupAdminLanding: React.FC = () => {
                       step="0.5"
                       value={conversionRate}
                       onChange={(e) => setConversionRate(Number(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
-                        [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-blue-500/40"
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs mt-1">
                       <FormattedMessage id="groupAdmin.landing.calc.conversionHelp" defaultMessage="% de membres qui utilisent le service par mois" />
                     </p>
                   </div>
                 </div>
 
                 {/* Résultat ULTRA VENDEUR */}
-                <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border-2 border-amber-500/50 rounded-xl p-5 text-center">
-                  <p className="text-xs sm:text-sm text-gray-300 mb-1">
+                <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border-2 rounded-xl p-5 text-center">
+                  <p className="text-xs sm:text-sm mb-1">
                     <FormattedMessage id="groupAdmin.landing.calc.monthlyEarnings" defaultMessage="VOS REVENUS MENSUELS ESTIMÉS" />
                   </p>
-                  <p className="text-5xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400 mb-2" aria-live="polite">
+                  <p className="text-5xl sm:text-6xl lg:text-7xl font-black bg-clip-text from-green-400 via-emerald-400 to-blue-400 mb-2" aria-live="polite">
                     +{Math.round((groupMembers * conversionRate / 100) * 10)}$
                   </p>
 
                   {/* Détails */}
-                  <div className="text-xs sm:text-sm text-gray-400 mb-3">
+                  <div className="text-xs sm:text-sm mb-3">
                     <FormattedMessage
                       id="groupAdmin.landing.calc.details"
                       defaultMessage="{members} membres × {rate}% conversion × 10$ = {earnings}$/mois"
@@ -486,30 +471,30 @@ const GroupAdminLanding: React.FC = () => {
                   </div>
 
                   {/* Message motivant */}
-                  <p className="text-sm sm:text-base font-bold text-white mb-2">
+                  <p className="text-sm sm:text-base font-bold mb-2">
                     <FormattedMessage id="groupAdmin.landing.calc.motivation" defaultMessage="🎯 Sans compter les avocats/aidants que vous pouvez recruter !" />
                   </p>
-                  <p className="text-xs sm:text-sm text-green-400">
+                  <p className="text-xs sm:text-sm">
                     <FormattedMessage id="groupAdmin.landing.calc.recurring" defaultMessage="Revenus récurrents chaque mois" />
                   </p>
                 </div>
 
                 {/* Exemples concrets */}
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
-                    <div className="text-xs text-gray-500 mb-1"><FormattedMessage id="groupadmin.examples.small.title" /></div>
-                    <div className="text-lg font-bold text-white"><FormattedMessage id="groupadmin.examples.small.members" /></div>
-                    <div className="text-sm text-green-400"><FormattedMessage id="groupadmin.examples.small.earnings" /></div>
+                <div className="mt-6 grid sm:grid-cols-3 gap-3">
+                  <div className="bg-white/10 border rounded-lg p-3 text-center">
+                    <div className="text-xs mb-1"><FormattedMessage id="groupadmin.examples.small.title" /></div>
+                    <div className="text-lg font-bold"><FormattedMessage id="groupadmin.examples.small.members" /></div>
+                    <div className="text-sm"><FormattedMessage id="groupadmin.examples.small.earnings" /></div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
-                    <div className="text-xs text-gray-500 mb-1"><FormattedMessage id="groupadmin.examples.medium.title" /></div>
-                    <div className="text-lg font-bold text-white"><FormattedMessage id="groupadmin.examples.medium.members" /></div>
-                    <div className="text-sm text-green-400"><FormattedMessage id="groupadmin.examples.medium.earnings" /></div>
+                  <div className="bg-white/10 border rounded-lg p-3 text-center">
+                    <div className="text-xs mb-1"><FormattedMessage id="groupadmin.examples.medium.title" /></div>
+                    <div className="text-lg font-bold"><FormattedMessage id="groupadmin.examples.medium.members" /></div>
+                    <div className="text-sm"><FormattedMessage id="groupadmin.examples.medium.earnings" /></div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
-                    <div className="text-xs text-gray-500 mb-1"><FormattedMessage id="groupadmin.examples.large.title" /></div>
-                    <div className="text-lg font-bold text-white"><FormattedMessage id="groupadmin.examples.large.members" /></div>
-                    <div className="text-sm text-green-400"><FormattedMessage id="groupadmin.examples.large.earnings" /></div>
+                  <div className="bg-white/10 border rounded-lg p-3 text-center">
+                    <div className="text-xs mb-1"><FormattedMessage id="groupadmin.examples.large.title" /></div>
+                    <div className="text-lg font-bold"><FormattedMessage id="groupadmin.examples.large.members" /></div>
+                    <div className="text-sm"><FormattedMessage id="groupadmin.examples.large.earnings" /></div>
                   </div>
                 </div>
               </div>
@@ -521,63 +506,63 @@ const GroupAdminLanding: React.FC = () => {
         {/* ================================================================
             SECTION 4 - BENEFITS (4 cards)
         ================================================================ */}
-        <section className="section-content section-lazy bg-gray-950" aria-labelledby="section-benefits">
+        <section className="section-content bg-gray-950" aria-labelledby="section-benefits">
           <div className="max-w-7xl mx-auto">
 
-            <h2 id="section-benefits" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-8 sm:mb-12 lg:mb-16">
+            <h2 id="section-benefits" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-8 sm:mb-12 lg:mb-16">
               <FormattedMessage id="groupAdmin.landing.benefits.title" defaultMessage="Why Join?" />
             </h2>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+            <div className="grid lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
 
               {/* Benefit 1 */}
-              <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border border-green-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
+              <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-3 sm:mb-4" aria-hidden="true">
                   <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
                 </div>
-                <h3 className="font-bold text-base sm:text-lg lg:text-xl text-white mb-1 sm:mb-2">
+                <h3 className="font-bold text-base sm:text-lg lg:text-xl mb-1 sm:mb-2">
                   <FormattedMessage id="groupAdmin.landing.benefit1.title" defaultMessage="$10 Per Call" />
                 </h3>
-                <p className="text-xs sm:text-sm lg:text-base text-gray-400">
+                <p className="text-xs sm:text-sm lg:text-base">
                   <FormattedMessage id="groupAdmin.landing.benefit1.description" defaultMessage="Earn $10 for every call generated through your affiliate link." />
                 </p>
               </div>
 
               {/* Benefit 2 */}
-              <div className="bg-gradient-to-br from-blue-500/15 to-indigo-500/10 border border-blue-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
+              <div className="bg-gradient-to-br from-blue-500/15 to-indigo-500/10 border rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-3 sm:mb-4" aria-hidden="true">
                   <Image className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
                 </div>
-                <h3 className="font-bold text-base sm:text-lg lg:text-xl text-white mb-1 sm:mb-2">
+                <h3 className="font-bold text-base sm:text-lg lg:text-xl mb-1 sm:mb-2">
                   <FormattedMessage id="groupAdmin.landing.benefit2.title" defaultMessage="Ready-Made Tools" />
                 </h3>
-                <p className="text-xs sm:text-sm lg:text-base text-gray-400">
+                <p className="text-xs sm:text-sm lg:text-base">
                   <FormattedMessage id="groupAdmin.landing.benefit2.description" defaultMessage="Posts, banners, images - all ready to use. Just copy-paste!" />
                 </p>
               </div>
 
               {/* Benefit 3 */}
-              <div className="bg-gradient-to-br from-purple-500/15 to-violet-500/10 border border-purple-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
+              <div className="bg-gradient-to-br from-purple-500/15 to-violet-500/10 border rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-3 sm:mb-4" aria-hidden="true">
                   <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                 </div>
-                <h3 className="font-bold text-base sm:text-lg lg:text-xl text-white mb-1 sm:mb-2">
+                <h3 className="font-bold text-base sm:text-lg lg:text-xl mb-1 sm:mb-2">
                   <FormattedMessage id="groupAdmin.landing.benefit3.title" defaultMessage="9 Languages" />
                 </h3>
-                <p className="text-xs sm:text-sm lg:text-base text-gray-400">
+                <p className="text-xs sm:text-sm lg:text-base">
                   <FormattedMessage id="groupAdmin.landing.benefit3.description" defaultMessage="All resources available in FR, EN, ES, PT, AR, DE, IT, NL, ZH." />
                 </p>
               </div>
 
               {/* Benefit 4 */}
-              <div className="bg-gradient-to-br from-amber-500/15 to-yellow-500/10 border border-amber-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
+              <div className="bg-gradient-to-br from-amber-500/15 to-yellow-500/10 border rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500/20 rounded-xl flex items-center justify-center mb-3 sm:mb-4" aria-hidden="true">
                   <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
                 </div>
-                <h3 className="font-bold text-base sm:text-lg lg:text-xl text-white mb-1 sm:mb-2">
+                <h3 className="font-bold text-base sm:text-lg lg:text-xl mb-1 sm:mb-2">
                   <FormattedMessage id="groupAdmin.landing.benefit4.title" defaultMessage="$5 Off Every Call" />
                 </h3>
-                <p className="text-xs sm:text-sm lg:text-base text-gray-400">
+                <p className="text-xs sm:text-sm lg:text-base">
                   <FormattedMessage id="groupAdmin.landing.benefit4.description" defaultMessage="Your community members get $5 off on every call made through your link." />
                 </p>
               </div>
@@ -588,17 +573,17 @@ const GroupAdminLanding: React.FC = () => {
         {/* ================================================================
             SECTION 5 - TARGET GROUPS (pills)
         ================================================================ */}
-        <section className="section-content section-lazy bg-gradient-to-b from-gray-950 to-gray-950" aria-labelledby="section-targets">
+        <section className="section-content bg-gradient-to-b from-gray-950 to-gray-950" aria-labelledby="section-targets">
           <div className="max-w-7xl mx-auto">
 
-            <h2 id="section-targets" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
+            <h2 id="section-targets" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <FormattedMessage id="groupAdmin.landing.targetGroups.title" defaultMessage="Perfect For Your Group" />
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-400 text-center mb-8 sm:mb-10 lg:mb-12">
+            <p className="text-base sm:text-lg lg:text-xl mb-8 sm:mb-10 lg:mb-12">
               <FormattedMessage id="groupAdmin.landing.targetGroups.subtitle" defaultMessage="Whether you manage a Facebook group, Discord server, WhatsApp community, forum, or any other group - we have the right tools for you." />
             </p>
 
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4 max-w-4xl mx-auto">
+            <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4 max-w-4xl mx-auto">
               {[
                 { id: 'travel', icon: '✈️', label: 'Travel Groups' },
                 { id: 'expat', icon: '🌍', label: 'Expat Communities' },
@@ -611,10 +596,10 @@ const GroupAdminLanding: React.FC = () => {
               ].map((group) => (
                 <div
                   key={group.id}
-                  className="bg-white/5 border border-white/10 rounded-full px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 flex items-center gap-2 hover:border-white/20 transition-colors"
+                  className="bg-white/10 border rounded-full px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 flex items-center gap-2 hover:border-white/20 transition-colors"
                 >
                   <span className="text-lg sm:text-xl" aria-hidden="true">{group.icon}</span>
-                  <span className="font-medium text-sm sm:text-base lg:text-lg text-white">
+                  <span className="font-medium text-sm sm:text-base lg:text-lg">
                     <FormattedMessage id={`groupAdmin.landing.groupType.${group.id}`} defaultMessage={group.label} />
                   </span>
                 </div>
@@ -626,12 +611,12 @@ const GroupAdminLanding: React.FC = () => {
         {/* ================================================================
             SECTION 6 - FAQ (accessible accordion)
         ================================================================ */}
-        <section className="section-content section-lazy bg-gray-950" id="faq" aria-labelledby="section-faq">
+        <section className="section-content bg-gray-950" id="faq" aria-labelledby="section-faq">
           <div className="max-w-3xl mx-auto">
-            <h2 id="section-faq" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
+            <h2 id="section-faq" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <FormattedMessage id="groupAdmin.landing.faq.title" defaultMessage="Frequently Asked Questions" />
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-400 text-center mb-8 sm:mb-10 lg:mb-12">
+            <p className="text-base sm:text-lg lg:text-xl mb-8 sm:mb-10 lg:mb-12">
               <FormattedMessage id="groupAdmin.landing.faq.subtitle" defaultMessage="Everything you need to know before getting started" />
             </p>
 
@@ -662,19 +647,19 @@ const GroupAdminLanding: React.FC = () => {
               <FormattedMessage id="groupAdmin.landing.finalCta.title" defaultMessage="Ready to Start Earning?" />
             </h2>
 
-            <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8">
+            <p className="text-base sm:text-lg lg:text-xl mb-6 sm:mb-8">
               <FormattedMessage id="groupAdmin.landing.finalCta.subtitle" defaultMessage="Join hundreds of group admins already earning with SOS-Expat." />
             </p>
 
             {/* Recap pills */}
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4 mb-8 sm:mb-10">
+            <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4 mb-8 sm:mb-10">
               {[
                 { id: 'groupAdmin.landing.recap.perCall', defaultMessage: '$10 per call' },
                 { id: 'groupAdmin.landing.recap.discount', defaultMessage: '$5 discount for members' },
                 { id: 'groupAdmin.landing.recap.languages', defaultMessage: '9 languages' },
                 { id: 'groupAdmin.landing.recap.free', defaultMessage: '100% free' },
               ].map((item, i) => (
-                <span key={i} className="flex items-center gap-1.5 sm:gap-2 bg-amber-500/15 border border-amber-500/40 text-white rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-medium">
+                <span key={i} className="flex items-center gap-1.5 sm:gap-2 bg-amber-500/15 border text-white rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 sm:text-base lg:text-lg font-medium">
                   <Check className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" aria-hidden="true" />
                   <FormattedMessage id={item.id} defaultMessage={item.defaultMessage} />
                 </span>
@@ -685,7 +670,7 @@ const GroupAdminLanding: React.FC = () => {
               <FormattedMessage id="groupAdmin.landing.finalCta.cta" defaultMessage="Register Now - It's Free" />
             </CTAButton>
 
-            <p className="text-gray-500 mt-5 sm:mt-6 text-sm sm:text-base lg:text-lg">
+            <p className="text-gray-400 mt-5 sm:mt-6 sm:text-base lg:text-lg">
               <FormattedMessage id="groupAdmin.landing.finalCta.footer" defaultMessage="Free registration • Start in 5 minutes" />
             </p>
           </div>
@@ -701,11 +686,11 @@ const GroupAdminLanding: React.FC = () => {
             role="complementary"
             aria-label="CTA"
           >
-            <div className="bg-black/95 backdrop-blur-md border-t border-blue-500/40 px-4 py-3">
+            <div className="bg-black/95 backdrop-blur-md border-t px-4 py-3">
               <button
                 onClick={handleRegisterClick}
                 aria-label={ctaAriaLabel}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] text-base sm:text-lg will-change-transform"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] sm:text-lg will-change-transform"
               >
                 <FormattedMessage id="groupAdmin.landing.hero.cta" defaultMessage="Become a Partner" />
                 <ArrowRight className="w-5 h-5" aria-hidden="true" />

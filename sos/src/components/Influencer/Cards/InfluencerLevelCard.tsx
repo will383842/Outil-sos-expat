@@ -247,7 +247,7 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
           <LevelIcon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <h3 className="text-sm dark:text-white sm:text-base font-bold flex items-center gap-1.5 sm:gap-2">
             <FormattedMessage
               id="influencer.level.title"
               defaultMessage="Level {level}"
@@ -264,17 +264,17 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
               {levelConfig.name}
             </span>
             {levelConfig.bonusLabel && (
-              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+              <span className="text-xs dark:text-green-400 font-semibold px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30">
                 {levelConfig.bonusLabel}
               </span>
             )}
             {monthlyTopMultiplier && monthlyTopMultiplier > 1.0 && (
-              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 animate-pulse">
+              <span className="text-xs dark:text-yellow-400 font-semibold px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 animate-pulse">
                 x{monthlyTopMultiplier.toFixed(2)}
               </span>
             )}
           </h3>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-xs dark:text-gray-700 sm:text-sm">
             <FormattedMessage
               id="influencer.level.totalEarned"
               defaultMessage="Total earned: {amount}"
@@ -287,7 +287,7 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
       {/* Progress to Next Level - Animated fill */}
       {nextLevel && (
         <div className="mb-3 sm:mb-4">
-          <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1">
+          <div className="flex items-center justify-between text-[10px] dark:text-gray-700 sm:text-xs mb-1">
             <span className="truncate mr-2">
               <FormattedMessage
                 id="influencer.level.progress"
@@ -314,7 +314,7 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
               }}
             />
           </div>
-          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+          <p className="text-[10px] dark:text-gray-700 sm:text-xs mt-1 flex items-center gap-1">
             <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             <span className="truncate">
               <FormattedMessage
@@ -332,8 +332,8 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
 
       {/* Max Level Reached */}
       {!nextLevel && (
-        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-lg sm:rounded-xl text-center animate-pulse-subtle">
-          <p className="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-300">
+        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-yellow-50 dark:from-yellow-900/20 to-amber-50 dark:to-amber-900/20 rounded-lg sm:rounded-xl text-center animate-pulse-subtle">
+          <p className="text-xs dark:text-amber-300 sm:text-sm font-medium">
             <FormattedMessage
               id="influencer.level.maxReached"
               defaultMessage="Maximum level reached!"
@@ -345,13 +345,13 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
       {/* Achievement Badges */}
       {earnedBadges.length > 0 && (
         <div className="mt-3 sm:mt-4">
-          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-2">
+          <p className="text-[10px] dark:text-gray-700 sm:text-xs mb-2">
             <FormattedMessage
               id="influencer.level.badges"
               defaultMessage="Earned Badges"
             />
           </p>
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
             {earnedBadges.map((badge, index) => {
               const badgeStyle = BADGE_CONFIG[badge.badge];
               const BadgeIcon = badge.Icon;

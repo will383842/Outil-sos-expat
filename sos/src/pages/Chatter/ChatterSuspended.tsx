@@ -38,7 +38,7 @@ const ChatterSuspended: React.FC<ChatterSuspendedProps> = ({
 
   return (
     <Layout>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-red-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 dark:from-gray-950 via-red-50/30 dark:via-gray-950 to-white dark:to-black px-4 py-12">
         <div className="max-w-md w-full">
           <div className={`${UI.card} p-8 text-center`}>
             {/* Icon */}
@@ -47,7 +47,7 @@ const ChatterSuspended: React.FC<ChatterSuspendedProps> = ({
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl dark:text-white font-bold mb-2">
               <FormattedMessage id="chatter.suspended.title" defaultMessage="Compte suspendu" />
             </h1>
 
@@ -62,10 +62,10 @@ const ChatterSuspended: React.FC<ChatterSuspendedProps> = ({
             {/* Reason */}
             {reason && (
               <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl text-left">
-                <p className="text-sm font-medium text-red-700 dark:text-red-300 mb-1">
+                <p className="text-sm dark:text-red-300 font-medium mb-1">
                   <FormattedMessage id="chatter.suspended.reason" defaultMessage="Motif :" />
                 </p>
-                <p className="text-sm text-red-600 dark:text-red-400">
+                <p className="text-sm dark:text-red-400">
                   {reason}
                 </p>
               </div>
@@ -73,7 +73,7 @@ const ChatterSuspended: React.FC<ChatterSuspendedProps> = ({
 
             {/* Suspended Date */}
             {suspendedAt && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <p className="text-sm dark:text-gray-400 mb-6">
                 <FormattedMessage
                   id="chatter.suspended.date"
                   defaultMessage="Date de suspension : {date}"
@@ -90,13 +90,13 @@ const ChatterSuspended: React.FC<ChatterSuspendedProps> = ({
 
             {/* Contact Info */}
             <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl">
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+              <p className="text-sm dark:text-gray-300 mb-3">
                 <FormattedMessage
                   id="chatter.suspended.contact"
                   defaultMessage="Si vous pensez qu'il s'agit d'une erreur, contactez-nous :"
                 />
               </p>
-              <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
                 <a
                   href="mailto:support@sosexpat.com"
                   className="flex items-center justify-center gap-2 text-red-600 dark:text-red-400 hover:underline"
@@ -108,7 +108,7 @@ const ChatterSuspended: React.FC<ChatterSuspendedProps> = ({
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-3">
+            <div className="flex gap-3">
               <button
                 onClick={() => navigate(contactRoute)}
                 className={`${UI.button.secondary} w-full py-3 flex items-center justify-center gap-2`}
@@ -128,7 +128,7 @@ const ChatterSuspended: React.FC<ChatterSuspendedProps> = ({
           </div>
 
           {/* Info */}
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+          <p className="text-center dark:text-gray-400 mt-6">
             <FormattedMessage
               id="chatter.suspended.info"
               defaultMessage="Les comptes peuvent être suspendus pour violation des conditions d'utilisation du programme Chatter."

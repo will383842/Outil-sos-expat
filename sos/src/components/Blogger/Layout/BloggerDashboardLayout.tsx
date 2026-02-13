@@ -109,9 +109,9 @@ const BloggerDashboardLayout: React.FC<BloggerDashboardLayoutProps> = ({ childre
 
   return (
     <Layout showHeader={false} showFooter={false}>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-gray-950 to-white dark:to-black">
         {/* Mobile Header */}
-        <div className="lg:hidden sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/10">
+        <div className="lg:hidden sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b dark:border-white/10">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
@@ -131,7 +131,7 @@ const BloggerDashboardLayout: React.FC<BloggerDashboardLayoutProps> = ({ childre
 
           {/* Mobile Menu Dropdown */}
           {isMobileMenuOpen && (
-            <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-white/10 shadow-lg">
+            <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 border-b dark:border-white/10 shadow-lg">
               <nav className="p-4">
                 <ul className="space-y-2">
                   {menuItems.map((item) => {
@@ -189,15 +189,15 @@ const BloggerDashboardLayout: React.FC<BloggerDashboardLayoutProps> = ({ childre
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex lg:flex-row gap-6">
             {/* Sidebar - Desktop only */}
             <aside className="hidden lg:block lg:w-64 flex-shrink-0">
-              <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-4 sticky top-8">
-                <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg p-4 sticky top-8">
+                <div className="mb-6 pb-4 border-b dark:border-gray-700">
+                  <h2 className="text-lg dark:text-white font-bold">
                     <FormattedMessage id="blogger.sidebar.title" defaultMessage="Espace Blogueur" />
                   </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs dark:text-gray-300 mt-1">
                     <FormattedMessage id="blogger.sidebar.subtitle" defaultMessage="Programme Partenaire" />
                   </p>
                 </div>
@@ -217,7 +217,7 @@ const BloggerDashboardLayout: React.FC<BloggerDashboardLayoutProps> = ({ childre
                         }`}
                       >
                         {item.icon}
-                        <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+                        <span className="text-sm font-medium flex-1">{item.label}</span>
                         {item.exclusive && (
                           <span className={`text-xs px-1.5 py-0.5 rounded ${
                             active
@@ -233,21 +233,21 @@ const BloggerDashboardLayout: React.FC<BloggerDashboardLayoutProps> = ({ childre
                 </nav>
 
                 {/* Commission Info */}
-                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="mt-6 pt-4 border-t dark:border-gray-700">
                   <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3 text-center">
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                    <p className="text-xs dark:text-gray-600 mb-2">
                       <FormattedMessage id="blogger.sidebar.commissions" defaultMessage="Commissions fixes" />
                     </p>
                     <div className="flex justify-around">
                       <div>
-                        <span className="text-lg font-bold text-purple-600 dark:text-purple-400">$10</span>
-                        <p className="text-xs text-gray-500">
+                        <span className="text-lg dark:text-purple-400 font-bold">$10</span>
+                        <p className="text-xs dark:text-gray-700">
                           <FormattedMessage id="blogger.sidebar.perClient" defaultMessage="/appel" />
                         </p>
                       </div>
                       <div>
-                        <span className="text-lg font-bold text-purple-600 dark:text-purple-400">$5</span>
-                        <p className="text-xs text-gray-500">
+                        <span className="text-lg dark:text-purple-400 font-bold">$5</span>
+                        <p className="text-xs dark:text-gray-700">
                           <FormattedMessage id="blogger.sidebar.perRecruit" defaultMessage="/partenaire" />
                         </p>
                       </div>
@@ -258,7 +258,7 @@ const BloggerDashboardLayout: React.FC<BloggerDashboardLayoutProps> = ({ childre
                 <div className="mt-4">
                   <button
                     onClick={() => navigate('/')}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
                     <LogOut className="w-5 h-5" />
                     <span className="text-sm font-medium">

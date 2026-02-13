@@ -77,7 +77,7 @@ const LoadingSkeleton: React.FC = () => (
     </div>
 
     {/* Stats skeleton */}
-    <div className="grid grid-cols-3 gap-2 mb-4">
+    <div className="grid gap-2 mb-4">
       {[1, 2, 3].map((i) => (
         <div key={i} className="bg-gray-100 dark:bg-gray-800/50 rounded-xl p-3">
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12 mb-2" />
@@ -107,17 +107,17 @@ const LoadingSkeleton: React.FC = () => (
 
 // Empty state component
 const EmptyState: React.FC = () => (
-  <div className="flex flex-col items-center justify-center py-8 text-center">
+  <div className="flex items-center justify-center py-8 text-center">
     <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-      <UserPlus className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+      <UserPlus className="w-8 h-8 text-gray-400 dark:text-gray-700" />
     </div>
-    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+    <h3 className="text-base dark:text-white font-semibold mb-1">
       <FormattedMessage
         id="influencer.team.empty.title"
         defaultMessage="No team members yet"
       />
     </h3>
-    <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+    <p className="text-sm dark:text-gray-700 max-w-xs">
       <FormattedMessage
         id="influencer.team.empty.description"
         defaultMessage="Recruit lawyers, helpers, or other influencers to build your team and earn passive income."
@@ -150,18 +150,18 @@ const TeamMemberRow: React.FC<TeamMemberRowProps> = memo(({ member, formatCurren
       {/* Avatar */}
       <div className="relative">
         <div
-          className={`w-10 h-10 rounded-full ${getAvatarColor(firstLetter)} flex items-center justify-center text-white font-semibold text-sm`}
+          className={`w-10 h-10 rounded-full${getAvatarColor(firstLetter)}flex items-center justify-center text-white font-semibold`}
         >
           {firstLetter}
         </div>
         {member.isActive && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full" />
+          <div className="absolute -bottom-0.5 w-3 h-3 bg-green-500 border-2 dark:border-gray-900 rounded-full" />
         )}
       </div>
 
       {/* Name and type */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+        <p className="text-sm dark:text-white font-medium truncate">
           {displayName}
         </p>
         <span
@@ -173,10 +173,10 @@ const TeamMemberRow: React.FC<TeamMemberRowProps> = memo(({ member, formatCurren
 
       {/* Performance */}
       <div className="text-right">
-        <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+        <p className="text-sm dark:text-green-400 font-semibold">
           {formatCurrency(member.yourEarnings)}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs dark:text-gray-700">
           {member.totalCalls}{' '}
           <FormattedMessage
             id="influencer.team.calls"
@@ -228,7 +228,7 @@ const InfluencerTeamCard: React.FC<InfluencerTeamCardProps> = ({
 
   return (
     <div
-      className={`bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-4 sm:p-6 shadow-lg ${className}`}
+      className={`bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl p-4 sm:p-6 shadow-lg${className}`}
     >
       {isLoading ? (
         <LoadingSkeleton />
@@ -240,7 +240,7 @@ const InfluencerTeamCard: React.FC<InfluencerTeamCardProps> = ({
               <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                 <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg dark:text-white font-semibold">
                 <FormattedMessage
                   id="influencer.team.title"
                   defaultMessage="Your Team"
@@ -248,7 +248,7 @@ const InfluencerTeamCard: React.FC<InfluencerTeamCardProps> = ({
               </h3>
             </div>
             {teamMembers.length > 0 && (
-              <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full">
+              <span className="px-2 py-1 text-xs dark:text-gray-700 font-medium bg-gray-100 dark:bg-gray-800 rounded-full">
                 {teamMembers.length}{' '}
                 <FormattedMessage
                   id="influencer.team.members"
@@ -263,16 +263,16 @@ const InfluencerTeamCard: React.FC<InfluencerTeamCardProps> = ({
           ) : (
             <>
               {/* Summary stats */}
-              <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="grid gap-2 mb-4">
                 {/* Total team size */}
                 <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 text-center">
                   <div className="flex items-center justify-center gap-1 mb-1">
-                    <Users className="w-3.5 h-3.5 text-gray-400" />
+                    <Users className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" />
                   </div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                  <p className="text-lg dark:text-white font-bold">
                     {stats.totalTeamSize}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs dark:text-gray-700">
                     <FormattedMessage
                       id="influencer.team.stats.total"
                       defaultMessage="Total"
@@ -285,10 +285,10 @@ const InfluencerTeamCard: React.FC<InfluencerTeamCardProps> = ({
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <TrendingUp className="w-3.5 h-3.5 text-green-500" />
                   </div>
-                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                  <p className="text-lg dark:text-green-400 font-bold">
                     {stats.activeThisMonth}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs dark:text-gray-700">
                     <FormattedMessage
                       id="influencer.team.stats.active"
                       defaultMessage="Active"
@@ -301,10 +301,10 @@ const InfluencerTeamCard: React.FC<InfluencerTeamCardProps> = ({
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <Award className="w-3.5 h-3.5 text-yellow-500" />
                   </div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                  <p className="text-lg dark:text-white font-bold">
                     {formatCurrency(stats.totalPassiveEarnings)}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs dark:text-gray-700">
                     <FormattedMessage
                       id="influencer.team.stats.earnings"
                       defaultMessage="Earnings"
@@ -314,7 +314,7 @@ const InfluencerTeamCard: React.FC<InfluencerTeamCardProps> = ({
               </div>
 
               {/* Top members list */}
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              <div className="divide-y dark:divide-gray-800">
                 {topMembers.map((member) => (
                   <TeamMemberRow
                     key={member.id}
@@ -328,7 +328,7 @@ const InfluencerTeamCard: React.FC<InfluencerTeamCardProps> = ({
               {onViewAll && teamMembers.length > 5 && (
                 <button
                   onClick={onViewAll}
-                  className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl transition-colors"
+                  className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 px-4 text-sm dark:text-purple-400 font-medium bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl transition-colors"
                 >
                   <FormattedMessage
                     id="influencer.team.viewAll"

@@ -28,7 +28,7 @@ export function ReferralLinkCard({ variant = "full" }: ReferralLinkCardProps) {
   if (variant === "compact") {
     return (
       <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-        <Link className="h-4 w-4 text-gray-500" />
+        <Link className="h-4 w-4 text-gray-700 dark:text-gray-300" />
         <span className="flex-1 text-sm font-mono truncate">
           {formatReferralLink(referralLink, 30)}
         </span>
@@ -50,7 +50,7 @@ export function ReferralLinkCard({ variant = "full" }: ReferralLinkCardProps) {
       <CardContent className="space-y-4">
         {/* Full link */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-1 block">
+          <label className="text-sm font-medium mb-1 block">
             {t("chatter.referrals.linkLabel")}
           </label>
           <div className="flex gap-2">
@@ -81,11 +81,11 @@ export function ReferralLinkCard({ variant = "full" }: ReferralLinkCardProps) {
 
         {/* Code only */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-1 block">
+          <label className="text-sm font-medium mb-1 block">
             {t("chatter.referrals.codeLabel")}
           </label>
           <div className="flex gap-2">
-            <div className="flex-1 px-4 py-2 bg-gray-100 rounded-md font-mono font-bold text-lg text-center">
+            <div className="flex-1 px-4 py-2 bg-gray-100 rounded-md font-mono text-lg">
               {referralCode}
             </div>
             <Button variant="outline" onClick={copyCode}>

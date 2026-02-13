@@ -86,10 +86,10 @@ const GroupAdminPosts: React.FC = () => {
         <div className="flex items-center justify-center p-4 py-20">
           <div className="bg-white dark:bg-white/5 rounded-xl p-8 max-w-md w-full text-center shadow-lg dark:shadow-none">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-xl dark:text-white font-bold mb-2">
               <FormattedMessage id="groupAdmin.posts.error.title" defaultMessage="Error Loading Posts" />
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+            <p className="text-gray-600 dark:text-gray-600 mb-6">{error}</p>
             <button
               onClick={fetchPosts}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg"
@@ -109,16 +109,16 @@ const GroupAdminPosts: React.FC = () => {
       <div className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl dark:text-white md:text-3xl font-bold mb-2">
               <FormattedMessage id="groupAdmin.posts.heading" defaultMessage="Ready-to-Use Posts" />
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-600">
               <FormattedMessage id="groupAdmin.posts.subtitle" defaultMessage="Copy and paste these posts into your group or community" />
             </p>
           </div>
 
           {/* Category Filter */}
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex gap-2 mb-8">
             <button
               onClick={() => setSelectedCategory('all')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -148,7 +148,7 @@ const GroupAdminPosts: React.FC = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="font-bold text-gray-900 dark:text-white mb-1">{post.name}</h3>
-                      <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-3 text-sm dark:text-gray-700">
                         <span className="bg-gray-100 dark:bg-white/10 px-2 py-1 rounded">{POST_CATEGORY_LABELS[post.category].en}</span>
                         {post.recommendedPinDuration && (
                           <span className="flex items-center gap-1">
@@ -186,12 +186,12 @@ const GroupAdminPosts: React.FC = () => {
                   </div>
 
                   {/* Post Preview */}
-                  <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-4 whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 max-h-64 overflow-y-auto">
+                  <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-4 whitespace-pre-wrap text-sm dark:text-gray-700 max-h-64 overflow-y-auto">
                     {post.content}
                   </div>
 
                   {post.placeholders.length > 0 && (
-                    <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-3 text-xs dark:text-gray-700">
                       <FormattedMessage
                         id="groupAdmin.posts.placeholdersNote"
                         defaultMessage="Placeholders like {{AFFILIATE_LINK}} will be replaced with your actual values"
@@ -205,8 +205,8 @@ const GroupAdminPosts: React.FC = () => {
 
           {filteredPosts.length === 0 && (
             <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">No posts in this category yet</p>
+              <FileText className="w-12 h-12 text-gray-700 dark:text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-700 dark:text-gray-700">No posts in this category yet</p>
             </div>
           )}
         </div>

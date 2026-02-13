@@ -256,14 +256,14 @@ const NotificationItemComponent: React.FC<NotificationItemProps> = ({
         >
           {notification.message}
         </p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+        <p className="text-xs dark:text-gray-300 mt-1">
           {formatTimeAgo(notification.createdAt, locale, intl)}
         </p>
       </div>
 
       {/* Action indicator */}
       {notification.actionUrl && (
-        <ChevronRight className="flex-shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 mt-1" />
+        <ChevronRight className="flex-shrink-0 w-4 h-4 text-gray-400 dark:text-gray-300 mt-1" />
       )}
     </div>
   );
@@ -361,13 +361,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`
-          relative p-2 rounded-xl transition-all duration-200
-          hover:bg-gray-100 dark:hover:bg-white/10
-          focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
-          dark:focus:ring-offset-gray-900
-          ${isOpen ? 'bg-gray-100 dark:bg-white/10' : ''}
-        `}
+        className={`relative p-2 rounded-xl transition-all duration-200 hover:bg-gray-100 dark:hover:bg-white/10 focus:outline-none focus:ring-2 dark:focus:ring-offset-gray-900${isOpen ? 'bg-gray-100 dark:bg-white/10' : ''}`}
         aria-label={intl.formatMessage(
           { id: 'chatter.notifications.bell.label', defaultMessage: '{count} notifications non lues' },
           { count: unreadCount }
@@ -380,13 +374,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         {/* Unread Badge */}
         {unreadCount > 0 && (
           <span
-            className={`
-              absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1
-              flex items-center justify-center
-              text-[10px] font-bold text-white
-              bg-red-500 rounded-full
-              animate-pulse
-            `}
+            className={`absolute -top-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold bg-red-500 rounded-full animate-pulse`}
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
@@ -397,26 +385,18 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       {isOpen && (
         <div
           ref={dropdownRef}
-          className={`
-            absolute right-0 mt-2 z-50
-            w-80 sm:w-96 max-h-[70vh]
-            bg-white dark:bg-gray-900
-            border border-gray-200 dark:border-white/10
-            rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/50
-            overflow-hidden
-            animate-fade-in-up
-          `}
+          className={`absolute right-0 mt-2 z-50 w-80 sm:w-96 max-h-[70vh] bg-white dark:bg-gray-900 border dark:border-white/10 rounded-2xl shadow-2xl dark:shadow-black/50 overflow-hidden animate-fade-in-up`}
           style={{ animationDuration: '150ms' }}
           role="menu"
           aria-orientation="vertical"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+          <div className="flex items-center justify-between px-4 py-3 border-b dark:border-white/10 bg-gray-50 dark:bg-white/5">
             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Bell className="w-4 h-4" />
               <FormattedMessage id="chatter.notifications.title" defaultMessage="Notifications" />
               {unreadCount > 0 && (
-                <span className="text-xs font-medium text-red-500">({unreadCount})</span>
+                <span className="text-xs font-medium">({unreadCount})</span>
               )}
             </h3>
             <div className="flex items-center gap-2">
@@ -424,13 +404,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                 <button
                   onClick={handleMarkAllAsRead}
                   disabled={isMarkingAllRead}
-                  className={`
-                    flex items-center gap-1 px-2 py-1 text-xs font-medium
-                    text-red-600 dark:text-red-400
-                    hover:bg-red-50 dark:hover:bg-red-900/20
-                    rounded-lg transition-colors
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                  `}
+                  className={`flex items-center gap-1 px-2 py-1 text-xs dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
                   <FormattedMessage id="chatter.notifications.markAllRead" defaultMessage="Tout lire" />
@@ -451,15 +425,15 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
             {displayedNotifications.length === 0 ? (
               <div className="py-12 px-4 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center">
-                  <Bell className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                  <Bell className="w-8 h-8 text-gray-400 dark:text-gray-300" />
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm dark:text-gray-400">
                   <FormattedMessage
                     id="chatter.notifications.empty"
                     defaultMessage="Aucune notification"
                   />
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                <p className="text-xs dark:text-gray-300 mt-1">
                   <FormattedMessage
                     id="chatter.notifications.emptyHint"
                     defaultMessage="Les nouvelles notifications apparaitront ici"
@@ -467,7 +441,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100 dark:divide-white/5">
+              <div className="divide-y dark:divide-white/5">
                 {displayedNotifications.map((notification) => (
                   <NotificationItemComponent
                     key={notification.id}
@@ -483,14 +457,14 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
           {/* Footer - Show when there are more notifications */}
           {notifications.length > maxDisplayed && (
-            <div className="px-4 py-3 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+            <div className="px-4 py-3 border-t dark:border-white/10 bg-gray-50 dark:bg-white/5">
               <button
                 onClick={() => {
                   setIsOpen(false);
                   // Navigate to notifications page if one exists
                   // navigate('/chatter/notifications');
                 }}
-                className="w-full text-center text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+                className="w-full text-center dark:text-red-400 font-medium hover:text-red-700 dark:hover:text-red-300 transition-colors"
               >
                 <FormattedMessage
                   id="chatter.notifications.viewAll"

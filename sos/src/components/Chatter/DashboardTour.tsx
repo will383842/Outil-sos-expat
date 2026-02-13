@@ -366,7 +366,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
       transition={{ type: 'spring', damping: 25, stiffness: 400 }}
     >
       {/* Tooltip Card */}
-      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border dark:border-gray-700 overflow-hidden">
         {/* Arrow */}
         <div className={arrowStyles[position.arrowPosition]} />
 
@@ -413,7 +413,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
 
         {/* Content */}
         <div className="p-4">
-          <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
             {description}
           </p>
 
@@ -430,7 +430,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
         {/* Footer with navigation */}
         <div className="px-4 pb-4 flex items-center justify-between gap-3">
           {/* Step counter */}
-          <span className="text-xs text-gray-400 dark:text-gray-500">
+          <span className="text-xs dark:text-gray-500">
             {currentStep + 1} / {totalSteps}
           </span>
 
@@ -439,7 +439,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
             {!isFirstStep && (
               <button
                 onClick={onPrev}
-                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                className="flex items-center gap-1 px-3 py-2 text-sm dark:text-gray-300 font-medium hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span className="hidden sm:inline">
@@ -449,7 +449,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
             )}
             <button
               onClick={onNext}
-              className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
+              className="flex items-center gap-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
             >
               <span>
                 {isLastStep
@@ -532,7 +532,7 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({ targetRect, isVisib
 
       {/* Animated border around spotlight */}
       <motion.div
-        className="absolute border-2 border-red-500 rounded-2xl"
+        className="absolute border-2 rounded-2xl"
         style={{
           top: targetRect.top - padding,
           left: targetRect.left - padding,

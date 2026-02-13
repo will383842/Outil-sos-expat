@@ -57,10 +57,10 @@ const GroupAdminProfile: React.FC = () => {
     <GroupAdminDashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl dark:text-white font-bold">
             <FormattedMessage id="groupAdmin.profile.title" defaultMessage="Mon profil" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700 dark:text-gray-700">
             <FormattedMessage id="groupAdmin.profile.subtitle" defaultMessage="Vos informations personnelles et parametres" />
           </p>
         </div>
@@ -69,38 +69,38 @@ const GroupAdminProfile: React.FC = () => {
         <div className={`${UI.card} p-6`}>
           <div className="flex items-center gap-3 mb-4">
             <User className="w-5 h-5 text-indigo-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg dark:text-white font-semibold">
               <FormattedMessage id="groupAdmin.profile.personal" defaultMessage="Informations personnelles" />
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.name" defaultMessage="Nom" />
               </label>
               <p className="text-gray-900 dark:text-white">{profile?.firstName} {profile?.lastName}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.email" defaultMessage="Email" />
               </label>
               <p className="text-gray-900 dark:text-white">{profile?.email}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.country" defaultMessage="Pays" />
               </label>
               <p className="text-gray-900 dark:text-white">{profile?.country}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.language" defaultMessage="Langue" />
               </label>
               <p className="text-gray-900 dark:text-white">{profile?.language}</p>
             </div>
             {profile?.phone && (
               <div>
-                <label className="text-sm text-gray-500 dark:text-gray-400">
+                <label className="text-sm dark:text-gray-700">
                   <FormattedMessage id="groupAdmin.profile.phone" defaultMessage="Telephone" />
                 </label>
                 <p className="text-gray-900 dark:text-white">{profile.phone}</p>
@@ -113,25 +113,25 @@ const GroupAdminProfile: React.FC = () => {
         <div className={`${UI.card} p-6`}>
           <div className="flex items-center gap-3 mb-4">
             <Users className="w-5 h-5 text-blue-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg dark:text-white font-semibold">
               <FormattedMessage id="groupAdmin.profile.groupInfo" defaultMessage="Informations du groupe" />
             </h2>
             {profile?.isGroupVerified && (
-              <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
+              <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full font-medium">
                 <Shield className="w-3 h-3" />
                 <FormattedMessage id="groupAdmin.profile.verified" defaultMessage="Verifie" />
               </span>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.groupName" defaultMessage="Nom du groupe" />
               </label>
               <p className="text-gray-900 dark:text-white">{profile?.groupName}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.groupUrl" defaultMessage="URL du groupe" />
               </label>
               <p className="text-gray-900 dark:text-white truncate">
@@ -143,7 +143,7 @@ const GroupAdminProfile: React.FC = () => {
               </p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.groupType" defaultMessage="Type de groupe" />
               </label>
               <p className="text-gray-900 dark:text-white">
@@ -151,7 +151,7 @@ const GroupAdminProfile: React.FC = () => {
               </p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.groupSize" defaultMessage="Taille du groupe" />
               </label>
               <p className="text-gray-900 dark:text-white">
@@ -159,13 +159,13 @@ const GroupAdminProfile: React.FC = () => {
               </p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.groupCountry" defaultMessage="Pays du groupe" />
               </label>
               <p className="text-gray-900 dark:text-white">{profile?.groupCountry || '-'}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.groupLanguage" defaultMessage="Langue du groupe" />
               </label>
               <p className="text-gray-900 dark:text-white">{profile?.groupLanguage || '-'}</p>
@@ -173,10 +173,10 @@ const GroupAdminProfile: React.FC = () => {
           </div>
           {profile?.groupDescription && (
             <div className="mt-4">
-              <label className="text-sm text-gray-500 dark:text-gray-400 block mb-1">
+              <label className="text-sm dark:text-gray-700 block mb-1">
                 <FormattedMessage id="groupAdmin.profile.groupDescription" defaultMessage="Description" />
               </label>
-              <p className="text-gray-700 dark:text-gray-300">{profile.groupDescription}</p>
+              <p className="text-gray-700 dark:text-gray-700">{profile.groupDescription}</p>
             </div>
           )}
         </div>
@@ -185,24 +185,24 @@ const GroupAdminProfile: React.FC = () => {
         <div className={`${UI.card} p-6`}>
           <div className="flex items-center gap-3 mb-4">
             <Settings className="w-5 h-5 text-purple-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg dark:text-white font-semibold">
               <FormattedMessage id="groupAdmin.profile.codes" defaultMessage="Codes d'affiliation" />
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.clientCode" defaultMessage="Code client ($5 remise)" />
               </label>
-              <p className="text-xl font-mono font-bold text-indigo-600 dark:text-indigo-400">
+              <p className="text-xl dark:text-indigo-400 font-mono">
                 {profile?.affiliateCodeClient || '-'}
               </p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">
+              <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.profile.recruitCode" defaultMessage="Code recrutement" />
               </label>
-              <p className="text-xl font-mono font-bold text-purple-600 dark:text-purple-400">
+              <p className="text-xl dark:text-purple-400 font-mono">
                 {profile?.affiliateCodeRecruitment || '-'}
               </p>
             </div>
@@ -213,11 +213,11 @@ const GroupAdminProfile: React.FC = () => {
         <div className={`${UI.card} p-6`}>
           <div className="flex items-center gap-3 mb-4">
             <CreditCard className="w-5 h-5 text-green-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg dark:text-white font-semibold">
               <FormattedMessage id="groupAdmin.profile.payment" defaultMessage="Parametres de paiement" />
             </h2>
           </div>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700 dark:text-gray-700">
             <FormattedMessage
               id="groupAdmin.profile.paymentInfo"
               defaultMessage="Configurez votre methode de paiement lors de votre premiere demande de retrait."

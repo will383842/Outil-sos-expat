@@ -206,7 +206,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   }, [message, memberEmail, intl, onSendMessage, trackMessageSent]);
 
   return (
-    <div className="flex flex-wrap gap-2 mt-3">
+    <div className="flex gap-2 mt-3">
       {/* Copy Button */}
       <button
         onClick={handleCopy}
@@ -236,7 +236,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       {/* WhatsApp Button */}
       <button
         onClick={handleWhatsApp}
-        className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all active:scale-[0.98] touch-manipulation"
+        className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-sm font-medium bg-green-500 hover:bg-green-600 rounded-xl transition-all active:scale-[0.98] touch-manipulation"
       >
         <MessageCircle className="w-4 h-4" />
         <span>
@@ -247,7 +247,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       {/* Email Button */}
       <button
         onClick={handleEmail}
-        className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all active:scale-[0.98] touch-manipulation"
+        className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-sm font-medium bg-blue-500 hover:bg-blue-600 rounded-xl transition-all active:scale-[0.98] touch-manipulation"
       >
         <Mail className="w-4 h-4" />
         <span>
@@ -297,15 +297,15 @@ const MessageTemplateCard: React.FC<MessageTemplateCardProps> = ({
           <FormattedMessage id={template.titleKey} defaultMessage={template.defaultTitle} />
         </span>
         {isActive && (
-          <span className="ml-auto text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+          <span className="ml-auto text-xs dark:text-blue-400 font-medium bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
             <FormattedMessage id="teamMessages.recommended" defaultMessage="Recommande" />
           </span>
         )}
       </div>
 
       {/* Message Content */}
-      <div className="p-3 bg-white/60 dark:bg-white/5 rounded-lg border border-white/40 dark:border-white/10">
-        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+      <div className="p-3 bg-white/60 dark:bg-white/5 rounded-lg border dark:border-white/10">
+        <p className="text-sm dark:text-gray-300 whitespace-pre-wrap">
           {message}
         </p>
       </div>
@@ -351,7 +351,7 @@ const CustomMessageSection: React.FC<CustomMessageSectionProps> = ({
   );
 
   return (
-    <div className="border-t border-gray-200/50 dark:border-white/10 pt-4 mt-4">
+    <div className="border-t dark:border-white/10 pt-4 mt-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center justify-between w-full min-h-[44px] text-left group touch-manipulation active:scale-[0.99]"
@@ -360,7 +360,7 @@ const CustomMessageSection: React.FC<CustomMessageSectionProps> = ({
           <div className="p-1.5 bg-gray-100 dark:bg-white/10 rounded-lg text-gray-600 dark:text-gray-400">
             <Edit3 className="w-4 h-4" />
           </div>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm dark:text-gray-300 font-medium">
             <FormattedMessage
               id="teamMessages.custom.title"
               defaultMessage="Ecrire un message personnalise"
@@ -369,9 +369,9 @@ const CustomMessageSection: React.FC<CustomMessageSectionProps> = ({
         </div>
         <div className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
           {isExpanded ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
+            <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
+            <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           )}
         </div>
       </button>
@@ -383,7 +383,7 @@ const CustomMessageSection: React.FC<CustomMessageSectionProps> = ({
             onChange={(e) => setCustomMessage(e.target.value)}
             placeholder={placeholder}
             rows={4}
-            className="w-full px-4 py-3 text-sm bg-white/60 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-white transition-all"
+            className="w-full px-4 py-3 text-sm dark:text-white bg-white/60 dark:bg-white/5 border dark:border-white/10 rounded-xl focus:ring-2 focus:border-transparent resize-none placeholder:text-gray-600 dark:placeholder:text-gray-400 transition-all"
           />
 
           {customMessage.trim() && (
@@ -436,13 +436,13 @@ export const TeamMessagesCard: React.FC<TeamMessagesCardProps> = ({
   return (
     <div className={UI.card}>
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-gray-200/50 dark:border-white/10">
+      <div className="p-4 sm:p-6 border-b dark:border-white/10">
         <div className="flex items-center gap-3">
           <div className={`p-3 bg-gradient-to-br ${config.gradient} rounded-xl shadow-lg text-white`}>
             <MessageCircle className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h2 className="text-lg dark:text-white font-bold">
               <FormattedMessage
                 id="teamMessages.title"
                 defaultMessage="Messages pour {name}"
@@ -455,7 +455,7 @@ export const TeamMessagesCard: React.FC<TeamMessagesCardProps> = ({
                 <span className="capitalize">{statusLabel}</span>
               </span>
               {memberPhone && (
-                <span className="text-xs text-gray-400 dark:text-gray-500">
+                <span className="text-xs dark:text-gray-300">
                   • {memberPhone}
                 </span>
               )}
@@ -471,7 +471,7 @@ export const TeamMessagesCard: React.FC<TeamMessagesCardProps> = ({
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-4 h-4 text-blue-500" />
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <span className="text-xs dark:text-gray-400 font-medium uppercase tracking-wider">
                 <FormattedMessage
                   id="teamMessages.recommended.label"
                   defaultMessage="Message recommande"
@@ -492,7 +492,7 @@ export const TeamMessagesCard: React.FC<TeamMessagesCardProps> = ({
         {/* Other Templates Toggle */}
         <button
           onClick={() => setShowAllTemplates(!showAllTemplates)}
-          className="flex items-center gap-2 min-h-[44px] px-2 -mx-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors touch-manipulation active:scale-[0.98]"
+          className="flex items-center gap-2 min-h-[44px] px-2 -mx-2 text-sm dark:text-gray-400 font-medium hover:text-gray-900 dark:hover:text-white transition-colors touch-manipulation active:scale-[0.98]"
         >
           {showAllTemplates ? (
             <ChevronUp className="w-4 h-4" />

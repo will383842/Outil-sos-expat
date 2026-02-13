@@ -52,8 +52,8 @@ export function PromoAlertCard({ promotion, onDismiss }: PromoAlertCardProps) {
     <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 overflow-hidden relative">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-20 h-20 bg-white rounded-full -translate-x-10 -translate-y-10"></div>
-        <div className="absolute bottom-0 right-0 w-32 h-32 bg-white rounded-full translate-x-16 translate-y-16"></div>
+        <div className="absolute top-0 left-0 w-20 h-20 bg-white rounded-full -translate-x-10"></div>
+        <div className="absolute bottom-0 right-0 w-32 h-32 bg-white rounded-full translate-x-16"></div>
       </div>
 
       <CardContent className="p-4 relative">
@@ -69,7 +69,7 @@ export function PromoAlertCard({ promotion, onDismiss }: PromoAlertCardProps) {
 
         <div className="flex items-center gap-4">
           {/* Icon */}
-          <div className="flex-shrink-0 w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+          <div className="flex-shrink-0 w-12 h-12 bg-white/20 rounded-full items-center justify-center">
             <Zap className="h-6 w-6" />
           </div>
 
@@ -82,7 +82,7 @@ export function PromoAlertCard({ promotion, onDismiss }: PromoAlertCardProps) {
               </Badge>
             </div>
 
-            <div className="flex items-center gap-2 text-white/80 text-sm">
+            <div className="flex items-center gap-2 text-white/80">
               <Clock className="h-4 w-4" />
               <span>
                 {t("chatter.referrals.endsIn")} {getTimeRemaining()}
@@ -92,7 +92,7 @@ export function PromoAlertCard({ promotion, onDismiss }: PromoAlertCardProps) {
         </div>
 
         {/* CTA */}
-        <p className="text-sm text-white/90 mt-3">
+        <p className="text-sm mt-3">
           {t("chatter.referrals.promoDescription", {
             multiplier: promotion.multiplier,
           })}
@@ -119,11 +119,11 @@ export function PromoAlertBanner({
       <div className="flex items-center gap-2">
         <Zap className="h-4 w-4" />
         <span className="font-medium">{promotion.name}</span>
-        <Badge className="bg-yellow-400 text-yellow-900 font-bold text-xs">
+        <Badge className="bg-yellow-400 text-yellow-900 font-bold">
           x{promotion.multiplier}
         </Badge>
       </div>
-      <span className="text-sm text-white/80">
+      <span className="text-sm">
         <Clock className="h-3 w-3 inline mr-1" />
         {t("chatter.referrals.active")}
       </span>

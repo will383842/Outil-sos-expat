@@ -41,7 +41,7 @@ import type { ChatterBadgeType, ChatterData } from '@/types/chatter';
 
 // Design tokens - matching existing Chatter card styles
 const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
+  card: "bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   cardHover: `
     transition-all duration-300 ease-out
     hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-white/5
@@ -543,7 +543,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
             <div className={`h-4 w-24 ${UI.skeleton}`} />
           </div>
         </div>
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+        <div className="grid sm:grid-cols-6 gap-3">
           {[...Array(6)].map((_, i) => (
             <div key={i} className={`aspect-square rounded-xl ${UI.skeleton}`} />
           ))}
@@ -569,7 +569,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
               <Award className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -579,7 +579,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                   defaultMessage="Badges"
                 />
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm dark:text-gray-400">
                 <FormattedMessage
                   id="chatter.badges.progress"
                   defaultMessage="{earned}/{total} debloques"
@@ -613,7 +613,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs font-bold text-gray-900 dark:text-white">
+              <span className="text-xs dark:text-white font-bold">
                 {Math.round((stats.earnedCount / stats.totalBadges) * 100)}%
               </span>
             </div>
@@ -626,17 +626,17 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border border-amber-200 dark:border-amber-800/30"
+            className="mb-4 p-3 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20 rounded-xl border dark:border-amber-800/30"
           >
             <div className="flex items-center gap-3">
               <div className="relative">
                 <div className={`w-12 h-12 rounded-xl ${stats.recentBadge.bgColor} flex items-center justify-center shadow-lg ${stats.recentBadge.glowColor}`}>
                   <stats.recentBadge.icon className={`w-6 h-6 ${stats.recentBadge.color}`} />
                 </div>
-                <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-amber-500 animate-pulse" />
+                <Sparkles className="absolute -top-1 w-4 h-4 text-amber-500 animate-pulse" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                <p className="text-xs dark:text-amber-400 font-medium">
                   <FormattedMessage id="chatter.badges.recent" defaultMessage="Dernier badge obtenu" />
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white truncate">
@@ -649,19 +649,19 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
 
         {/* Next Badge to Earn */}
         {stats.nextBadge && (
-          <div className="mb-4 p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
+          <div className="mb-4 p-3 bg-gray-50 dark:bg-white/10 rounded-xl">
             <div className="flex items-center gap-3">
               <div className="relative opacity-50">
                 <div className={`w-10 h-10 rounded-xl ${stats.nextBadge.bgColor} flex items-center justify-center`}>
                   <stats.nextBadge.icon className={`w-5 h-5 ${stats.nextBadge.color}`} />
                 </div>
-                <Lock className="absolute -bottom-1 -right-1 w-4 h-4 text-gray-500" />
+                <Lock className="absolute -bottom-1 w-4 h-4 text-gray-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs dark:text-gray-400">
                   <FormattedMessage id="chatter.badges.next" defaultMessage="Prochain badge" />
                 </p>
-                <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                <p className="font-medium text-gray-900 dark:text-white truncate">
                   {intl.formatMessage({ id: stats.nextBadge.nameKey, defaultMessage: stats.nextBadge.defaultName })}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
@@ -671,7 +671,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                       style={{ width: `${stats.nextBadgeProgress}%` }}
                     />
                   </div>
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  <span className="text-xs dark:text-gray-400 font-medium">
                     {Math.round(stats.nextBadgeProgress)}%
                   </span>
                 </div>
@@ -681,7 +681,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
         )}
 
         {/* Badge Grid */}
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 sm:gap-3">
+        <div className="grid sm:grid-cols-6 gap-2 sm:gap-3">
           {displayBadges.map((badge, index) => {
             const isEarned = isBadgeEarned(badge.id);
             const progress = getBadgeProgress(badge);
@@ -700,7 +700,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                   transition-all duration-300
                   ${isEarned
                     ? `${badge.bgColor} shadow-lg ${badge.glowColor} hover:scale-110`
-                    : 'bg-gray-100 dark:bg-white/5 opacity-50 hover:opacity-70 hover:scale-105'
+                    : 'bg-gray-100 dark:bg-white/10 opacity-50 hover:opacity-70 hover:scale-105'
                   }
                   group
                 `}
@@ -756,7 +756,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
         {variant === 'compact' && BADGE_CONFIG.length > 6 && (
           <button
             onClick={() => setShowAllBadges(!showAllBadges)}
-            className="w-full mt-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors flex items-center justify-center gap-1"
+            className="w-full mt-4 py-2 text-sm dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors flex items-center justify-center gap-1"
           >
             {showAllBadges ? (
               <FormattedMessage id="chatter.badges.showLess" defaultMessage="Voir moins" />
@@ -805,7 +805,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                   relative inline-flex w-20 h-20 rounded-2xl items-center justify-center mx-auto mb-4
                   ${isBadgeEarned(selectedBadge.id)
                     ? `${selectedBadge.bgColor} shadow-xl ${selectedBadge.glowColor}`
-                    : 'bg-gray-100 dark:bg-white/5'
+                    : 'bg-gray-100 dark:bg-white/10'
                   }
                 `}>
                   <selectedBadge.icon
@@ -817,7 +817,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                 </div>
 
                 {/* Badge name */}
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                <h3 className="text-xl dark:text-white font-bold mb-1">
                   {intl.formatMessage({ id: selectedBadge.nameKey, defaultMessage: selectedBadge.defaultName })}
                 </h3>
 
@@ -856,7 +856,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                       />
                     </div>
                     {selectedBadge.requirement && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500">
+                      <p className="text-xs dark:text-gray-500">
                         <FormattedMessage
                           id={`chatter.badges.requirement.${selectedBadge.requirement.type}`}
                           defaultMessage="Objectif: {target}"

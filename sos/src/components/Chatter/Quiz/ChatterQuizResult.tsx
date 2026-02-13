@@ -87,7 +87,7 @@ const ChatterQuizResult: React.FC<ChatterQuizResultProps> = ({
 
       {/* Score */}
       <div className="mb-6">
-        <p className="text-5xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+        <p className="text-5xl font-bold bg-gradient-to-r from-red-500 to-orange-500">
           {score}%
         </p>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -97,7 +97,7 @@ const ChatterQuizResult: React.FC<ChatterQuizResultProps> = ({
             values={{ correct: correctAnswers, total: totalQuestions }}
           />
         </p>
-        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+        <p className="text-sm dark:text-gray-300 mt-1">
           <FormattedMessage
             id="chatter.quiz.result.passingScore"
             defaultMessage="Score requis : {score}%"
@@ -109,7 +109,7 @@ const ChatterQuizResult: React.FC<ChatterQuizResultProps> = ({
       {passed ? (
         <>
           {/* Success Message */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
+          <div className="mb-6 p-4 bg-gradient-to-r from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 rounded-xl">
             <Trophy className="w-8 h-8 mx-auto mb-2 text-red-500" />
             <p className="text-gray-700 dark:text-gray-300">
               <FormattedMessage
@@ -128,10 +128,10 @@ const ChatterQuizResult: React.FC<ChatterQuizResultProps> = ({
 
               {affiliateCodeClient && (
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  <p className="text-xs dark:text-gray-400 mb-1">
                     <FormattedMessage id="chatter.quiz.result.codeClient" defaultMessage="Code Client" />
                   </p>
-                  <p className="text-lg font-bold text-red-600 dark:text-red-400">
+                  <p className="text-lg dark:text-red-400 font-bold">
                     {affiliateCodeClient}
                   </p>
                 </div>
@@ -139,10 +139,10 @@ const ChatterQuizResult: React.FC<ChatterQuizResultProps> = ({
 
               {affiliateCodeRecruitment && (
                 <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  <p className="text-xs dark:text-gray-400 mb-1">
                     <FormattedMessage id="chatter.quiz.result.codeRecruitment" defaultMessage="Code Recrutement" />
                   </p>
-                  <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                  <p className="text-lg dark:text-orange-400 font-bold">
                     {affiliateCodeRecruitment}
                   </p>
                 </div>
@@ -189,7 +189,7 @@ const ChatterQuizResult: React.FC<ChatterQuizResultProps> = ({
             onClick={onRetry}
             disabled={!!retryTime}
             className={`w-full py-4 flex items-center justify-center gap-2 ${
-              retryTime ? 'bg-gray-100 dark:bg-white/10 text-gray-400 cursor-not-allowed' : UI.button.secondary
+              retryTime ? 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400 cursor-not-allowed' : UI.button.secondary
             } rounded-xl`}
           >
             <RefreshCw className="w-5 h-5" />

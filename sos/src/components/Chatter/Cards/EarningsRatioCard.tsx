@@ -68,7 +68,7 @@ export function EarningsRatioCard({
                 {t("chatter.referrals.affiliationEarnings")}
               </span>
             </div>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm">
               ${(affiliationEarnings / 100).toFixed(2)} ({affiliationPercent}%)
             </span>
           </div>
@@ -84,7 +84,7 @@ export function EarningsRatioCard({
                 {t("chatter.referrals.referralEarnings")}
               </span>
             </div>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm">
               ${(referralEarnings / 100).toFixed(2)} ({referralPercent}%)
             </span>
           </div>
@@ -105,7 +105,7 @@ export function EarningsRatioCard({
         </div>
 
         {/* Info text */}
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs mt-2">
           {t("chatter.referrals.ratioExplanation")}
         </p>
       </CardContent>

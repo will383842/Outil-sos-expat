@@ -67,16 +67,16 @@ const InfluencerPromoTools: React.FC = () => {
     <InfluencerDashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl dark:text-white font-bold">
             <FormattedMessage id="influencer.tools.title" defaultMessage="Outils promotionnels" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700 dark:text-gray-700">
             <FormattedMessage id="influencer.tools.subtitle" defaultMessage="Bannières, widgets et textes pour promouvoir SOS-Expat" />
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -97,7 +97,7 @@ const InfluencerPromoTools: React.FC = () => {
         <div className={`${UI.card} p-6`}>
           {activeTab === 'links' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg dark:text-white font-semibold">
                 <FormattedMessage id="influencer.tools.links.title" defaultMessage="Vos liens de parrainage" />
               </h2>
               <InfluencerAffiliateLinks
@@ -110,19 +110,19 @@ const InfluencerPromoTools: React.FC = () => {
 
           {activeTab === 'banners' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg dark:text-white font-semibold">
                 <FormattedMessage id="influencer.tools.banners.title" defaultMessage="Bannières prêtes à l'emploi" />
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-6">
                 {['728x90', '300x250', '160x600', '468x60'].map((size) => (
-                  <div key={size} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                  <div key={size} className="border dark:border-gray-700 rounded-xl p-4">
                     <div className="bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 flex items-center justify-center h-32">
-                      <span className="text-gray-500">{size}</span>
+                      <span className="text-gray-700 dark:text-gray-700">{size}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => copyToClipboard(generateBannerCode(size))}
-                        className={`${UI.button.secondary} px-3 py-2 flex-1 flex items-center justify-center gap-2`}
+                        className={`${UI.button.secondary}px-3 py-2 flex-1 items-center justify-center gap-2`}
                       >
                         {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         <FormattedMessage id="influencer.tools.copyCode" defaultMessage="Copier le code" />
@@ -136,15 +136,15 @@ const InfluencerPromoTools: React.FC = () => {
 
           {activeTab === 'widgets' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg dark:text-white font-semibold">
                 <FormattedMessage id="influencer.tools.widgets.title" defaultMessage="Widgets interactifs" />
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="border dark:border-gray-700 rounded-xl p-4">
                   <h3 className="font-medium text-gray-900 dark:text-white mb-2">
                     <FormattedMessage id="influencer.tools.widgets.search" defaultMessage="Widget de recherche" />
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-sm dark:text-gray-700 mb-4">
                     <FormattedMessage
                       id="influencer.tools.widgets.searchDesc"
                       defaultMessage="Permet à vos visiteurs de rechercher des experts directement depuis votre site"
@@ -167,20 +167,20 @@ const InfluencerPromoTools: React.FC = () => {
 
           {activeTab === 'qrcode' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg dark:text-white font-semibold">
                 <FormattedMessage id="influencer.tools.qrcode.title" defaultMessage="QR Code personnalisé" />
               </h2>
-              <div className="flex flex-col items-center">
+              <div className="flex items-center">
                 <div className="w-48 h-48 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center mb-4">
-                  <QrCode className="w-24 h-24 text-gray-400" />
+                  <QrCode className="w-24 h-24 text-gray-600 dark:text-gray-400" />
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">
+                <p className="text-sm dark:text-gray-700 mb-4">
                   <FormattedMessage
                     id="influencer.tools.qrcode.desc"
                     defaultMessage="Scannez pour accéder à votre lien de parrainage"
                   />
                 </p>
-                <p className="font-mono text-sm text-gray-700 dark:text-gray-300 mb-4">
+                <p className="font-mono text-sm dark:text-gray-700 mb-4">
                   {clientLink}
                 </p>
                 <button className={`${UI.button.primary} px-6 py-2 flex items-center gap-2`}>
@@ -193,7 +193,7 @@ const InfluencerPromoTools: React.FC = () => {
 
           {activeTab === 'texts' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg dark:text-white font-semibold">
                 <FormattedMessage id="influencer.tools.texts.title" defaultMessage="Textes promotionnels" />
               </h2>
               <div className="space-y-4">
@@ -211,9 +211,9 @@ const InfluencerPromoTools: React.FC = () => {
                     text: `SOS-Expat vous connecte en moins de 5 minutes avec un avocat ou expert local qui parle votre langue, dans 197 pays. Idéal pour les expatriés, voyageurs et digital nomads. Utilisez mon lien pour obtenir 5% de remise sur votre premier appel : ${clientLink}`,
                   },
                 ].map((item, idx) => (
-                  <div key={idx} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                  <div key={idx} className="border dark:border-gray-700 rounded-xl p-4">
                     <h3 className="font-medium text-gray-900 dark:text-white mb-2">{item.title}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{item.text}</p>
+                    <p className="text-sm dark:text-gray-600 mb-4">{item.text}</p>
                     <button
                       onClick={() => copyToClipboard(item.text)}
                       className={`${UI.button.secondary} px-3 py-2 flex items-center gap-2`}

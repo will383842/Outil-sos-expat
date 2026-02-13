@@ -42,7 +42,7 @@ export function ShareButtons({
 
   if (variant === "icons-only") {
     return (
-      <div className={`flex flex-wrap gap-2 ${className}`}>
+      <div className={`flex gap-2${className}`}>
         {platforms.map((platform) => {
           const Icon = PLATFORM_ICONS[platform.id] || Share2;
           return (
@@ -65,10 +65,10 @@ export function ShareButtons({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <h3 className="text-sm font-medium text-gray-700">
+      <h3 className="text-sm font-medium">
         {t("chatter.referrals.shareOn")}
       </h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <div className="grid sm:grid-cols-3 gap-2">
         {platforms.map((platform) => {
           const Icon = PLATFORM_ICONS[platform.id] || Share2;
           return (

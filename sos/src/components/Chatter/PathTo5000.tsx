@@ -148,14 +148,14 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
   // Compact version for dashboard
   if (variant === 'compact') {
     return (
-      <div className={`bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-2xl p-4 ${className}`}>
+      <div className={`bg-gradient-to-br from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-2xl p-4${className}`}>
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
             <Rocket className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 dark:text-white text-sm">Objectif $5,000</h3>
-            <p className="text-xs text-gray-500">{formatAmount(currentEarnings)} / $5,000</p>
+            <h3 className="font-bold text-gray-900 dark:text-white">Objectif $5,000</h3>
+            <p className="text-xs">{formatAmount(currentEarnings)} / $5,000</p>
           </div>
         </div>
 
@@ -167,7 +167,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
           />
         </div>
 
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs dark:text-gray-400">
           Prochain palier: {nextMilestone.emoji} {nextMilestone.label}
         </p>
       </div>
@@ -180,12 +180,12 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500/10 to-pink-500/10 rounded-full mb-4">
           <Rocket className="w-5 h-5 text-red-600" />
-          <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+          <span className="text-sm dark:text-red-400 font-semibold">
             Plan d'Action
           </span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          🚀 Comment Atteindre <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-pink-600">$5,000</span>
+        <h2 className="text-2xl dark:text-white md:text-3xl font-bold mb-2">
+          🚀 Comment Atteindre <span className="text-transparent bg-clip-text from-red-600 to-pink-600">$5,000</span>
         </h2>
         <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
           3 chemins possibles selon votre style. Choisissez celui qui vous convient le mieux.
@@ -194,10 +194,10 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
 
       {/* Progress (if dashboard variant) */}
       {variant === 'dashboard' && currentEarnings > 0 && (
-        <div className="mb-8 p-4 bg-white/80 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/10">
+        <div className="mb-8 p-4 bg-white/80 dark:bg-white/5 rounded-2xl border dark:border-white/10">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Votre progression</span>
-            <span className="text-sm font-bold text-red-600">{progressPercent.toFixed(1)}%</span>
+            <span className="text-sm dark:text-gray-400 font-medium">Votre progression</span>
+            <span className="text-sm font-bold">{progressPercent.toFixed(1)}%</span>
           </div>
           <div className="h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-3">
             <div
@@ -212,8 +212,8 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
             {MILESTONES.map((milestone, idx) => (
               <div
                 key={idx}
-                className={`flex flex-col items-center ${
-                  currentEarnings >= milestone.amount ? 'text-red-600' : 'text-gray-400'
+                className={`flex items-center${
+                  currentEarnings >= milestone.amount ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
                 }`}
               >
                 <span className="text-lg">{milestone.emoji}</span>
@@ -241,7 +241,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
           >
             {/* Recommended badge */}
             {path.recommended && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full flex items-center gap-1 shadow-lg">
+              <div className="absolute -top-3 left-1/2 px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-full flex items-center gap-1 shadow-lg">
                 <Star className="w-3 h-3" />
                 RECOMMANDÉ
               </div>
@@ -255,47 +255,47 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-gray-900 dark:text-white">{path.title}</h3>
-                  <p className="text-xs text-gray-500">{path.subtitle}</p>
+                  <p className="text-xs">{path.subtitle}</p>
                 </div>
                 {expandedPath === path.id ? (
-                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                  <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                  <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 )}
               </div>
 
               {/* Key stats */}
               <div className="flex gap-2 mb-3">
                 <div className="flex-1 p-2 bg-gray-100 dark:bg-white/10 rounded-lg text-center">
-                  <p className="text-xs text-gray-500">Durée</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{path.timeline}</p>
+                  <p className="text-xs">Durée</p>
+                  <p className="text-sm dark:text-white font-bold">{path.timeline}</p>
                 </div>
                 <div className="flex-1 p-2 bg-gray-100 dark:bg-white/10 rounded-lg text-center">
-                  <p className="text-xs text-gray-500">Objectif</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{path.monthlyTarget}</p>
+                  <p className="text-xs">Objectif</p>
+                  <p className="text-sm dark:text-white font-bold">{path.monthlyTarget}</p>
                 </div>
               </div>
 
               {/* Expanded content */}
               {expandedPath === path.id && (
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-white/10 animate-fade-in">
+                <div className="mt-4 pt-4 border-t dark:border-white/10 animate-fade-in">
                   {/* Steps */}
                   <div className="space-y-2 mb-4">
                     {path.steps.map((step, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-sm">
-                        <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${path.color} flex items-center justify-center text-white flex-shrink-0`}>
+                        <div className={`w-6 h-6 rounded-full bg-gradient-to-br${path.color}flex items-center justify-center text-white`}>
                           {step.icon}
                         </div>
                         <span className="flex-1 text-gray-700 dark:text-gray-300">{step.action}</span>
                         {step.earnings && (
-                          <span className="font-bold text-green-600 dark:text-green-400 text-xs">{step.earnings}</span>
+                          <span className="font-bold text-green-600 dark:text-green-400">{step.earnings}</span>
                         )}
                       </div>
                     ))}
                   </div>
 
                   {/* Pros & Cons */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid gap-2 text-xs">
                     <div>
                       <p className="font-semibold text-green-600 mb-1">✅ Avantages</p>
                       {path.pros.map((pro, idx) => (
@@ -317,12 +317,12 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
       </div>
 
       {/* Tier Bonuses Summary */}
-      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-6 mb-8">
+      <div className="bg-gradient-to-r from-yellow-50 dark:from-yellow-900/20 to-orange-50 dark:to-orange-900/20 rounded-2xl p-6 mb-8">
         <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <Trophy className="w-5 h-5 text-yellow-600" />
           Bonus de Paliers (Filleuls Qualifiés)
         </h3>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+        <div className="grid md:grid-cols-6 gap-2">
           {[
             { count: 5, bonus: '$15' },
             { count: 10, bonus: '$35' },
@@ -339,12 +339,12 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
                   : 'bg-white dark:bg-white/10'
               }`}
             >
-              <p className={`text-xs ${tier.highlight ? 'text-white/80' : 'text-gray-500'}`}>{tier.count} filleuls</p>
+              <p className={`text-xs ${tier.highlight ? 'text-white/80' : 'text-gray-700 dark:text-gray-300'}`}>{tier.count} filleuls</p>
               <p className={`text-lg font-bold ${tier.highlight ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{tier.bonus}</p>
             </div>
           ))}
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+        <p className="text-xs dark:text-gray-400 mt-3">
           * Filleul qualifié = a gagné $20+ en commissions directes
         </p>
       </div>
@@ -354,7 +354,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
         <div className="text-center">
           <button
             onClick={onCTAClick}
-            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-red-500/30 transition-all hover:scale-105 active:scale-95"
+            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95"
           >
             <Sparkles className="w-5 h-5" />
             Commencer Mon Chemin vers $5,000

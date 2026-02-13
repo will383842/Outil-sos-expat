@@ -262,8 +262,8 @@ const CounterBadge: React.FC<{
   return (
     <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
       {icon && <span className="text-yellow-400">{icon}</span>}
-      <span className="font-bold text-white text-sm sm:text-base">{displayCount.toLocaleString()}</span>
-      <span className="text-white/80 text-xs sm:text-sm">{label}</span>
+      <span className="font-bold text-white sm:text-base">{displayCount.toLocaleString()}</span>
+      <span className="text-white/80 sm:text-sm">{label}</span>
     </div>
   );
 };
@@ -283,8 +283,8 @@ const EarningsCalculator: React.FC<{
   }, [teamSize]);
 
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-white/20">
-      <h4 className="text-white font-bold text-base sm:text-lg mb-4 flex items-center gap-2">
+    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 border">
+      <h4 className="text-white font-bold sm:text-lg mb-4 flex items-center gap-2">
         <Sparkles className="w-5 h-5 text-yellow-400" />
         {t.title}
       </h4>
@@ -293,7 +293,7 @@ const EarningsCalculator: React.FC<{
         {/* Team Size Slider */}
         <div>
           <div className="flex justify-between items-center mb-2">
-            <label className="text-white/80 text-sm">{t.teamSize}</label>
+            <label className="text-white/80">{t.teamSize}</label>
             <span className="text-yellow-400 font-bold">{teamSize} {t.members}</span>
           </div>
           <input
@@ -304,7 +304,7 @@ const EarningsCalculator: React.FC<{
             onChange={(e) => setTeamSize(Number(e.target.value))}
             className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider-thumb-yellow"
           />
-          <div className="flex justify-between text-xs text-white/50 mt-1">
+          <div className="flex justify-between text-xs mt-1">
             <span>1</span>
             <span>50</span>
             <span>100</span>
@@ -312,24 +312,24 @@ const EarningsCalculator: React.FC<{
         </div>
 
         {/* Average Earnings Display */}
-        <div className="flex justify-between items-center text-white/80 text-sm">
+        <div className="flex justify-between items-center text-white/80">
           <span>{t.avgEarnings}</span>
           <span className="text-white font-medium">${avgEarningsPerMember}{t.perMonth}</span>
         </div>
 
         {/* Result */}
-        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border border-yellow-400/30">
-          <div className="text-white/80 text-sm mb-1">{t.yourPassiveIncome}</div>
+        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border">
+          <div className="text-white/80 mb-1">{t.yourPassiveIncome}</div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl sm:text-4xl font-bold text-yellow-400">
+            <span className="text-3xl sm:text-4xl font-bold">
               ${passiveIncome.toLocaleString()}
             </span>
-            <span className="text-white/60 text-sm">{t.perMonth}</span>
+            <span className="text-white/60">{t.perMonth}</span>
           </div>
         </div>
 
         {/* Disclaimer */}
-        <p className="text-white/50 text-xs flex items-start gap-1">
+        <p className="text-white/50 flex items-start gap-1">
           <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
           {t.disclaimer}
         </p>
@@ -444,7 +444,7 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
           )}
 
           {/* Top Section: Counter Badges */}
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6">
+          <div className="flex justify-center gap-2 sm:gap-4 mb-6">
             <CounterBadge
               count={stats.chattersJoinedThisWeek}
               label={t.socialProof.joinedThisWeek.replace('{count}', '')}
@@ -458,44 +458,44 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
           </div>
 
           {/* Main Headline */}
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-center text-white mb-4 sm:mb-6">
-            <span className="bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mb-4 sm:mb-6">
+            <span className="bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 text-transparent">
               {t.headline}
             </span>
           </h2>
 
           {/* Value Propositions */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
+          <div className="grid sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border">
               <DollarSign className="w-5 h-5 text-green-400 flex-shrink-0" />
-              <span className="text-white text-sm sm:text-base font-medium">{t.valueProps.commission}</span>
+              <span className="text-white sm:text-base font-medium">{t.valueProps.commission}</span>
             </div>
-            <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
+            <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border">
               <Users className="w-5 h-5 text-blue-400 flex-shrink-0" />
-              <span className="text-white text-sm sm:text-base font-medium">{t.valueProps.noLimit}</span>
+              <span className="text-white sm:text-base font-medium">{t.valueProps.noLimit}</span>
             </div>
-            <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
+            <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border">
               <Zap className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-              <span className="text-white text-sm sm:text-base font-medium">{t.valueProps.passive}</span>
+              <span className="text-white sm:text-base font-medium">{t.valueProps.passive}</span>
             </div>
           </div>
 
           {/* Social Proof: Top Recruiter */}
           <div className="text-center mb-6">
-            <p className="text-yellow-400 font-semibold text-sm sm:text-base">
+            <p className="text-yellow-400 font-semibold sm:text-base">
               {t.socialProof.topRecruiter.replace('{amount}', stats.topRecruiterEarnings.toLocaleString())}
             </p>
           </div>
 
           {/* Testimonial */}
           <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
-            <blockquote className="text-center text-white/80 italic text-sm sm:text-base">
+            <blockquote className="text-center italic sm:text-base">
               {t.socialProof.testimonial}
             </blockquote>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6">
+          <div className="flex sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6">
             <PulsingButton
               onClick={handleGetLink}
               variant="primary"
@@ -519,8 +519,8 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
           {/* Referral Link Display (if provided) */}
           {(referralLink || referralCode) && (
             <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="flex-1 max-w-md bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
-                <code className="text-white/90 text-sm truncate block">
+              <div className="flex-1 max-w-md bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border">
+                <code className="text-white/90 truncate block">
                   {referralLink || `sos-expat.com/devenir-chatter?ref=${referralCode}`}
                 </code>
               </div>
@@ -539,7 +539,7 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
           <div className="text-center">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="inline-flex items-center gap-2 text-white/70 hover:text-white text-sm transition-colors"
+              className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors"
             >
               {isExpanded ? (
                 <>

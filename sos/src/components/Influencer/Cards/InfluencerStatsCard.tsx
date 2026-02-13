@@ -26,14 +26,14 @@ const InfluencerStatsCard: React.FC<InfluencerStatsCardProps> = ({
   color,
 }) => {
   return (
-    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-4 shadow-lg">
+    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl p-4 shadow-lg">
       <div className="flex items-center gap-3">
         <div className={`w-10 h-10 rounded-xl ${colorClasses[color]} flex items-center justify-center`}>
           {icon}
         </div>
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">{value}</p>
+          <p className="text-sm dark:text-gray-700">{label}</p>
+          <p className="text-xl dark:text-white font-bold">{value}</p>
         </div>
       </div>
     </div>

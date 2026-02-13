@@ -87,7 +87,7 @@ const evaluatePasswordStrength = (password: string, intl: ReturnType<typeof useI
 const darkStyles = {
   input: `
     w-full px-4 py-3.5
-    bg-white/5 border-2 border-white/10
+    bg-white/10 border-2 border-white/10
     rounded-2xl
     text-base text-white
     placeholder:text-gray-500
@@ -111,11 +111,11 @@ const darkStyles = {
     w-full px-4 py-3
     flex items-center gap-3
     text-left text-sm text-white
-    hover:bg-white/5
+    hover:bg-white/10
     transition-colors duration-150
     cursor-pointer
   `,
-  dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-white/5 text-white rounded-xl border-0 focus:ring-2 focus:ring-amber-400/30 placeholder:text-gray-500',
+  dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-white/10 text-white rounded-xl border-0 focus:ring-2 focus:ring-amber-400/30 placeholder:text-gray-500',
 };
 
 export interface ChatterRegistrationData {
@@ -561,7 +561,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       />
 
       {/* Name Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-4">
         {/* First Name */}
         <div className="space-y-1">
           <label htmlFor="firstName" className={s.label}>
@@ -588,7 +588,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           </div>
           {validationErrors.firstName && (
             <p id="firstName-error" className={s.errorText} role="alert">
-              <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+              <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
               {validationErrors.firstName}
             </p>
           )}
@@ -620,7 +620,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           </div>
           {validationErrors.lastName && (
             <p id="lastName-error" className={s.errorText} role="alert">
-              <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+              <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
               {validationErrors.lastName}
             </p>
           )}
@@ -654,7 +654,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         </div>
         {validationErrors.email && (
           <p id="email-error" className={s.errorText} role="alert">
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
             {validationErrors.email}
           </p>
         )}
@@ -686,7 +686,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors z-10 p-1 rounded-lg ${darkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+            className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors z-10 p-1 rounded-lg ${darkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
             aria-label={showPassword
               ? intl.formatMessage({ id: 'form.password.hide', defaultMessage: 'Hide password' })
               : intl.formatMessage({ id: 'form.password.show', defaultMessage: 'Show password' })
@@ -726,7 +726,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
 
         {validationErrors.password && (
           <p id="password-error" className={s.errorText} role="alert">
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
             {validationErrors.password}
           </p>
         )}
@@ -814,7 +814,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         </div>
         {validationErrors.country && (
           <p id="country-error" className={s.errorText} role="alert">
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
             {validationErrors.country}
           </p>
         )}
@@ -899,7 +899,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     className={`${s.dropdownItem} ${lang.code === formData.language ? selectedBg : ''} ${idx === focusedDropdownIndex ? (darkMode ? 'bg-white/10' : 'bg-gray-100') : ''}`}
                   >
                     <span className="flex-1 text-sm">{getLanguageLabel(lang, locale)}</span>
-                    <span className="text-xs text-gray-500">{lang.nativeName}</span>
+                    <span className="text-xs">{lang.nativeName}</span>
                     {lang.code === formData.language && <Check className={`w-4 h-4 ${checkColor}`} />}
                   </button>
                 ))}
@@ -909,7 +909,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         </div>
         {validationErrors.language && (
           <p id="language-error" className={s.errorText} role="alert">
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
             {validationErrors.language}
           </p>
         )}
@@ -933,7 +933,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                       ? 'border-amber-400 bg-amber-400 text-black'
                       : 'border-green-500 bg-green-500 text-white'
                     : darkMode
-                      ? 'border-white/20 bg-white/5'
+                      ? 'border-white/20 bg-white/10'
                       : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                 }
                 focus:ring-2 ${darkMode ? 'focus:ring-amber-400/30' : 'focus:ring-red-500/30'} focus:ring-offset-0
@@ -953,7 +953,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     to="/cgu-chatters"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`underline underline-offset-2 font-medium ${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
+                    className={`underline font-medium${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
                   >
                     <FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" />
                   </Link>
@@ -963,7 +963,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     to="/privacy-policy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`underline underline-offset-2 font-medium ${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
+                    className={`underline font-medium${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
                   >
                     <FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" />
                   </Link>
@@ -975,7 +975,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         </label>
         {validationErrors.acceptTerms && (
           <p id="terms-error" className={s.errorText} role="alert">
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
             {validationErrors.acceptTerms}
           </p>
         )}

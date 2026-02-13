@@ -76,7 +76,7 @@ const CardSkeleton = memo<{ height?: string; className?: string }>(({
   height = 'h-48',
   className = '',
 }) => (
-  <div className={`bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg animate-pulse ${height} ${className}`}>
+  <div className={`bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg animate-pulse${height}${className}`}>
     <div className="p-4 sm:p-6 space-y-3">
       <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/3" />
       <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-2/3" />
@@ -89,12 +89,12 @@ CardSkeleton.displayName = 'CardSkeleton';
 const FullSkeleton = memo(() => (
   <div className="space-y-6 animate-pulse">
     <div className="h-12 bg-gray-200 dark:bg-white/10 rounded-xl w-1/2" />
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid lg:grid-cols-4 gap-4">
       {[...Array(4)].map((_, i) => (
         <div key={i} className="h-28 bg-gray-200 dark:bg-white/10 rounded-2xl" />
       ))}
     </div>
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid lg:grid-cols-2 gap-6">
       <CardSkeleton height="h-64" />
       <CardSkeleton height="h-64" />
     </div>
@@ -122,7 +122,7 @@ const CommissionItem = memo<CommissionItemProps>(({ commission, formatAmount, in
     }}
   >
     <div className="flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center${
         commission.status === 'available'
           ? 'bg-green-100 dark:bg-green-900/30'
           : commission.status === 'validated'
@@ -136,20 +136,20 @@ const CommissionItem = memo<CommissionItemProps>(({ commission, formatAmount, in
         )}
       </div>
       <div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white">
+        <p className="text-sm dark:text-white font-medium">
           {commission.type === 'client_referral'
             ? intl.formatMessage({ id: 'influencer.commissionType.client_referral', defaultMessage: 'Client référé' })
             : commission.type === 'recruitment'
             ? intl.formatMessage({ id: 'influencer.commissionType.provider_recruitment', defaultMessage: 'Recrutement' })
             : intl.formatMessage({ id: 'influencer.commissionType.manual_adjustment', defaultMessage: 'Ajustement' })}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs dark:text-gray-700">
           {new Date(commission.createdAt).toLocaleDateString()}
         </p>
       </div>
     </div>
     <div className="text-right">
-      <p className="text-sm font-bold text-green-600 dark:text-green-400">
+      <p className="text-sm dark:text-green-400 font-bold">
         +{formatAmount(commission.finalAmount)}
       </p>
       <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -356,14 +356,14 @@ const InfluencerDashboard: React.FC = () => {
   if (error) {
     return (
       <InfluencerDashboardLayout>
-        <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-4">
+        <div className="flex items-center justify-center min-h-[400px] text-center px-4">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
             <Zap className="w-8 h-8 text-red-500" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-xl dark:text-white font-bold mb-2">
             <FormattedMessage id="common.error.title" defaultMessage="Oops! Une erreur est survenue" />
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">{error}</p>
+          <p className="text-gray-700 dark:text-gray-700 mb-6 max-w-md">{error}</p>
           <button
             onClick={handleRefresh}
             className={`${UI.button.primary} px-6 py-3 flex items-center gap-2`}
@@ -418,23 +418,23 @@ const InfluencerDashboard: React.FC = () => {
         {/* ================================================================ */}
         {/* HEADER - Welcome + Refresh */}
         {/* ================================================================ */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up">
+        <div className="flex sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
+            <h1 className="text-2xl dark:text-white sm:text-3xl font-black">
               <FormattedMessage
                 id="influencer.dashboard.welcome"
                 defaultMessage="Bonjour {name} !"
                 values={{ name: influencer?.firstName || 'Influencer' }}
               />
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
+            <p className="text-gray-700 dark:text-gray-700 flex items-center gap-2">
               <FormattedMessage id="influencer.dashboard.subtitle" defaultMessage="Voici un aperçu de vos performances" />
               {isRefreshing && <RefreshCw className="w-4 h-4 animate-spin" />}
             </p>
             {influencer?.monthlyTopMultiplier && influencer.monthlyTopMultiplier > 1.0 && (
-              <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 border border-yellow-200 dark:border-yellow-800">
+              <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-100 dark:from-yellow-900/30 to-amber-100 dark:to-amber-900/30 border dark:border-yellow-800">
                 <Sparkles className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">
+                <span className="text-xs dark:text-yellow-300 font-semibold">
                   <FormattedMessage
                     id="influencer.dashboard.bonusActive"
                     defaultMessage="Bonus Top 3 actif : x{multiplier}"
@@ -449,7 +449,7 @@ const InfluencerDashboard: React.FC = () => {
             {unreadCount > 0 && (
               <button className="relative p-2 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
                   {unreadCount}
                 </span>
               </button>
@@ -479,7 +479,7 @@ const InfluencerDashboard: React.FC = () => {
         {/* ================================================================ */}
         {/* BALANCE CARDS - 4 columns */}
         {/* ================================================================ */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid lg:grid-cols-4 gap-3 sm:gap-4">
           {[
             { label: intl.formatMessage({ id: 'influencer.dashboard.balance.total', defaultMessage: 'Total gagné' }), amount: influencer?.totalEarned || 0, color: 'gray' as const, icon: <DollarSign className="w-5 h-5" />, delay: 150 },
             { label: intl.formatMessage({ id: 'influencer.dashboard.balance.available', defaultMessage: 'Disponible' }), amount: influencer?.availableBalance || 0, color: 'green' as const, icon: <DollarSign className="w-5 h-5" />, highlight: true, delay: 200 },
@@ -503,7 +503,7 @@ const InfluencerDashboard: React.FC = () => {
         {/* ================================================================ */}
         <Suspense fallback={<CardSkeleton height="h-48" />}>
           <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '350ms' }}>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <h2 className="text-lg dark:text-white font-bold mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-yellow-500" />
               <FormattedMessage id="influencer.dashboard.links.title" defaultMessage="Vos liens de parrainage" />
             </h2>
@@ -518,7 +518,7 @@ const InfluencerDashboard: React.FC = () => {
         {/* ================================================================ */}
         {/* LEVEL + STATS ROW */}
         {/* ================================================================ */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Level Card */}
           <Suspense fallback={<CardSkeleton height="h-48" />}>
             <div className="lg:col-span-1 animate-fade-in-up" style={{ animationDelay: '350ms' }}>
@@ -532,7 +532,7 @@ const InfluencerDashboard: React.FC = () => {
           </Suspense>
 
           {/* Monthly Stats */}
-          <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div className="lg:col-span-2 grid sm:grid-cols-4 gap-3 sm:gap-4">
             {[
               { label: intl.formatMessage({ id: 'influencer.dashboard.stats.monthlyEarnings', defaultMessage: 'Ce mois' }), value: formatAmount(influencer?.currentMonthEarnings || 0), icon: <DollarSign className="w-5 h-5" />, color: 'green' as const, delay: 400 },
               { label: intl.formatMessage({ id: 'influencer.dashboard.stats.clients', defaultMessage: 'Clients' }), value: (influencer?.totalClientsReferred || 0).toString(), icon: <Users className="w-5 h-5" />, color: 'red' as const, delay: 450 },
@@ -555,11 +555,11 @@ const InfluencerDashboard: React.FC = () => {
         {/* QUICK ACTIONS - Mobile-optimized grid */}
         {/* ================================================================ */}
         <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '600ms' }}>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <h2 className="text-lg dark:text-white font-bold mb-4 flex items-center gap-2">
             <Rocket className="w-5 h-5 text-red-500" />
             <FormattedMessage id="influencer.dashboard.actions.title" defaultMessage="Actions rapides" />
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid sm:grid-cols-4 gap-3">
             {[
               { label: intl.formatMessage({ id: 'influencer.dashboard.actions.tools', defaultMessage: 'Outils promo' }), icon: <Share2 className="w-6 h-6" />, route: routes.tools, color: 'from-red-500 to-orange-500' },
               { label: intl.formatMessage({ id: 'influencer.dashboard.actions.withdraw', defaultMessage: 'Retrait' }), icon: <DollarSign className="w-6 h-6" />, route: routes.payments, color: 'from-green-500 to-emerald-500' },
@@ -569,10 +569,10 @@ const InfluencerDashboard: React.FC = () => {
               <button
                 key={i}
                 onClick={() => navigate(action.route)}
-                className={`flex flex-col items-center justify-center p-4 rounded-2xl bg-gradient-to-br ${action.color} text-white transition-all hover:scale-105 active:scale-95 shadow-lg min-h-[100px]`}
+                className={`flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br${action.color}text-white transition-all hover:scale-105 active:scale-95 shadow-lg min-h-[100px]`}
               >
                 {action.icon}
-                <span className="mt-2 text-sm font-medium text-center">{action.label}</span>
+                <span className="mt-2 text-sm font-medium">{action.label}</span>
               </button>
             ))}
           </div>
@@ -581,7 +581,7 @@ const InfluencerDashboard: React.FC = () => {
         {/* ================================================================ */}
         {/* EARNINGS BREAKDOWN + ACTIVITY FEED */}
         {/* ================================================================ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Earnings Breakdown */}
           <Suspense fallback={<CardSkeleton height="h-72" />}>
             <div className="animate-fade-in-up" style={{ animationDelay: '700ms' }}>
@@ -605,12 +605,12 @@ const InfluencerDashboard: React.FC = () => {
         {/* ================================================================ */}
         <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '800ms' }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h2 className="text-lg dark:text-white font-bold">
               <FormattedMessage id="influencer.dashboard.commissions.title" defaultMessage="Dernières commissions" />
             </h2>
             <button
               onClick={() => navigate(routes.earnings)}
-              className="text-sm text-red-500 hover:text-red-600 flex items-center gap-1"
+              className="text-sm hover:text-red-600 flex items-center gap-1"
             >
               <FormattedMessage id="influencer.dashboard.commissions.viewAll" defaultMessage="Voir tout" />
               <ChevronRight className="w-4 h-4" />
@@ -632,9 +632,9 @@ const InfluencerDashboard: React.FC = () => {
           ) : (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <DollarSign className="w-8 h-8 text-gray-400" />
+                <DollarSign className="w-8 h-8 text-gray-600 dark:text-gray-400" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
+              <p className="text-gray-700 dark:text-gray-700 mb-4">
                 <FormattedMessage
                   id="influencer.dashboard.commissions.empty"
                   defaultMessage="Pas encore de commissions"
@@ -656,26 +656,26 @@ const InfluencerDashboard: React.FC = () => {
         {/* ================================================================ */}
         <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '850ms' }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h2 className="text-lg dark:text-white font-bold">
               <FormattedMessage id="influencer.dashboard.info.title" defaultMessage="Vos commissions" />
             </h2>
             {influencer?.capturedRates && (
-              <span className="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full">
+              <span className="text-xs dark:text-indigo-300 px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 rounded-full">
                 <FormattedMessage id="influencer.dashboard.info.frozen" defaultMessage="Taux figés à vie" />
               </span>
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-            <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-100 dark:border-red-800">
-              <p className="text-3xl font-black text-red-600 dark:text-red-400">$10</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <div className="grid sm:grid-cols-2 gap-4 text-center">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 dark:from-red-900/20 to-orange-50 dark:to-orange-900/20 border dark:border-red-800">
+              <p className="text-3xl dark:text-red-400 font-black">$10</p>
+              <p className="text-sm dark:text-gray-600 mt-1">
                 <FormattedMessage id="influencer.dashboard.info.client" defaultMessage="par client référé" />
               </p>
             </div>
-            <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-100 dark:border-purple-800">
-              <p className="text-3xl font-black text-purple-600 dark:text-purple-400">$5<span className="text-lg">/call</span></p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 dark:from-purple-900/20 to-pink-50 dark:to-pink-900/20 border dark:border-purple-800">
+              <p className="text-3xl dark:text-purple-400 font-black">$5<span className="text-lg">/call</span></p>
+              <p className="text-sm dark:text-gray-600 mt-1">
                 <FormattedMessage id="influencer.dashboard.info.partner" defaultMessage="par appel de vos partenaires (6 mois)" />
               </p>
             </div>

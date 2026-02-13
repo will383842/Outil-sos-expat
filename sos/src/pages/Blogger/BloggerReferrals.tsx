@@ -35,54 +35,54 @@ const BloggerReferrals: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl dark:text-white font-bold">
             <FormattedMessage id="blogger.referrals.title" defaultMessage="Mes filleuls" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700 dark:text-gray-700">
             <FormattedMessage id="blogger.referrals.subtitle" defaultMessage="Prestataires recrutés via votre lien" />
           </p>
         </div>
 
         {/* Stats Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-3 gap-4">
           <div className={`${UI.card} p-5`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500 dark:text-gray-400 text-sm">
+              <span className="text-gray-700 dark:text-gray-700">
                 <FormattedMessage id="blogger.referrals.totalRecruits" defaultMessage="Total recrutés" />
               </span>
               <Users className="w-5 h-5 text-blue-500" />
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-2xl dark:text-white font-bold">
               {blogger?.totalRecruits || 0}
             </p>
           </div>
           <div className={`${UI.card} p-5`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500 dark:text-gray-400 text-sm">
+              <span className="text-gray-700 dark:text-gray-700">
                 <FormattedMessage id="blogger.referrals.activeRecruits" defaultMessage="Actifs (6 mois)" />
               </span>
               <CheckCircle className="w-5 h-5 text-green-500" />
             </div>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-2xl dark:text-green-400 font-bold">
               {recruits.filter(r => r.isActive).length}
             </p>
           </div>
           <div className={`${UI.card} p-5`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500 dark:text-gray-400 text-sm">
+              <span className="text-gray-700 dark:text-gray-700">
                 <FormattedMessage id="blogger.referrals.totalEarned" defaultMessage="Gains recrutement" />
               </span>
               <DollarSign className="w-5 h-5 text-purple-500" />
             </div>
-            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            <p className="text-2xl dark:text-purple-400 font-bold">
               {formatCurrency(dashboardData?.recruitmentEarnings || 0)}
             </p>
           </div>
         </div>
 
         {/* Commission Explanation */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-          <p className="text-blue-700 dark:text-blue-300 text-sm">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border dark:border-blue-800 rounded-xl p-4">
+          <p className="text-blue-700 dark:text-blue-300">
             <FormattedMessage
               id="blogger.referrals.explanation"
               defaultMessage="Vous gagnez $5 pour chaque appel reçu par vos filleuls pendant 6 mois après leur inscription. La période de commission est calculée à partir de la date d'inscription du prestataire."
@@ -97,27 +97,27 @@ const BloggerReferrals: React.FC = () => {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-800/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="blogger.referrals.table.provider" defaultMessage="Prestataire" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="blogger.referrals.table.date" defaultMessage="Date d'inscription" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="blogger.referrals.table.expires" defaultMessage="Expire le" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="blogger.referrals.table.status" defaultMessage="Statut" />
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="blogger.referrals.table.calls" defaultMessage="Appels" />
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="blogger.referrals.table.earned" defaultMessage="Gagné" />
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y dark:divide-gray-700">
                   {recruits.map((recruit) => {
                     const registrationDate = new Date(recruit.registeredAt);
                     const expirationDate = new Date(recruit.commissionExpiresAt);
@@ -126,36 +126,36 @@ const BloggerReferrals: React.FC = () => {
                     return (
                       <tr key={recruit.providerId} className="hover:bg-gray-50 dark:hover:bg-gray-800/30">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          <div className="text-sm dark:text-white font-medium">
                             {recruit.providerDisplayName}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs dark:text-gray-600">
                             {recruit.providerSpecialty}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-700">
                           {registrationDate.toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-700">
                           {expirationDate.toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {recruit.isActive ? (
-                            <span className="flex items-center gap-1 text-green-600 dark:text-green-400 text-sm">
+                            <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
                               <CheckCircle className="w-4 h-4" />
                               <FormattedMessage id="blogger.referrals.active" defaultMessage="Actif" />
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-gray-500 text-sm">
+                            <span className="flex items-center gap-1 text-gray-700 dark:text-gray-700">
                               <Clock className="w-4 h-4" />
                               <FormattedMessage id="blogger.referrals.expired" defaultMessage="Expiré" />
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-white">
                           {recruit.totalCalls || 0}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-green-600 dark:text-green-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-green-400 font-medium">
                           {formatCurrency(recruit.totalEarned || 0)}
                         </td>
                       </tr>
@@ -166,8 +166,8 @@ const BloggerReferrals: React.FC = () => {
             </div>
           ) : (
             <div className={`p-8 text-center`}>
-              <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-500 dark:text-gray-400">
+              <Users className="w-12 h-12 mx-auto mb-4 text-gray-600 dark:text-gray-400" />
+              <p className="text-gray-700 dark:text-gray-700">
                 <FormattedMessage
                   id="blogger.referrals.empty"
                   defaultMessage="Vous n'avez pas encore recruté de prestataires. Partagez votre lien de recrutement pour gagner $5 par appel reçu pendant 6 mois."

@@ -92,10 +92,10 @@ const evaluatePasswordStrength = (password: string, intl: ReturnType<typeof useI
 const darkStyles = {
   input: `
     w-full px-4 py-3.5
-    bg-white/5 border-2 border-white/10
+    bg-white/10 border-2 border-white/10
     rounded-2xl
     text-base text-white
-    placeholder:text-gray-500
+    placeholder:text-gray-400
     focus:outline-none focus:ring-2 focus:ring-red-400/40 focus:ring-offset-0
     focus:border-red-400/50 focus:bg-white/10
     transition-all duration-200 ease-out
@@ -108,7 +108,7 @@ const darkStyles = {
   label: 'block text-sm font-semibold text-gray-300 mb-2',
   errorText: 'mt-1.5 text-xs text-red-400 flex items-center gap-1',
   sectionTitle: 'text-lg font-bold text-white mb-1',
-  sectionDescription: 'text-sm text-gray-400 mb-4',
+  sectionDescription: 'text-sm text-gray-300 mb-4',
   dropdown: `
     absolute z-50 mt-2 w-full
     bg-gray-900 border border-white/10
@@ -119,11 +119,11 @@ const darkStyles = {
     w-full px-4 py-3
     flex items-center gap-3
     text-left text-sm text-white
-    hover:bg-white/5
+    hover:bg-white/10
     transition-colors duration-150
     cursor-pointer
   `,
-  dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-white/5 text-white rounded-xl border-0 focus:ring-2 focus:ring-red-400/30 placeholder:text-gray-500',
+  dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-white/10 text-white rounded-xl border-0 focus:ring-2 focus:ring-red-400/30 placeholder:text-gray-400',
 };
 
 // ============================================================================
@@ -550,13 +550,13 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
   if (success) {
     return (
       <div className="text-center py-12">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center shadow-lg bg-green-500/20 border border-green-500/30 shadow-green-500/20">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center shadow-lg bg-green-500/20 border">
           <Check className="w-10 h-10 text-green-400" />
         </div>
-        <h2 className="text-2xl font-bold mb-2 text-white">
+        <h2 className="text-2xl font-bold mb-2">
           <FormattedMessage id="influencer.register.success.title" defaultMessage="Registration successful!" />
         </h2>
-        <p className="text-gray-400">
+        <p className="text-gray-300">
           <FormattedMessage id="influencer.register.success.message" defaultMessage="Your account is now active. Redirecting to your dashboard..." />
         </p>
       </div>
@@ -577,7 +577,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
 
       {/* Error display */}
       {error && (
-        <div role="alert" className="flex items-start gap-3 p-4 mb-2 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400">
+        <div role="alert" className="flex items-start gap-3 p-4 mb-2 rounded-2xl bg-red-500/10 border text-red-400">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <span className="text-sm">{error}</span>
         </div>
@@ -594,7 +594,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
 
         <div className="space-y-4">
           {/* Name fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             {/* First Name */}
             <div className="space-y-1">
               <label htmlFor="firstName" className={s.label}>
@@ -602,7 +602,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                 <span className="text-red-400 ml-0.5">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
                 <input
                   type="text"
                   id="firstName"
@@ -620,7 +620,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               </div>
               {validationErrors.firstName && (
                 <p className={s.errorText} role="alert">
-                  <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+                  <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
                   {validationErrors.firstName}
                 </p>
               )}
@@ -633,7 +633,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                 <span className="text-red-400 ml-0.5">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
                 <input
                   type="text"
                   id="lastName"
@@ -651,7 +651,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               </div>
               {validationErrors.lastName && (
                 <p className={s.errorText} role="alert">
-                  <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+                  <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
                   {validationErrors.lastName}
                 </p>
               )}
@@ -665,7 +665,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               <span className="text-red-400 ml-0.5">*</span>
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
               <input
                 type="email"
                 id="email"
@@ -684,7 +684,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
             </div>
             {validationErrors.email && (
               <p className={s.errorText} role="alert">
-                <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+                <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
                 {validationErrors.email}
               </p>
             )}
@@ -697,7 +697,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               <span className="text-red-400 ml-0.5">*</span>
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
               <input
                 id="password"
                 name="password"
@@ -716,7 +716,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors z-10 p-1 rounded-lg"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 hover:bg-white/10 transition-colors z-10 p-1 rounded-lg"
                 aria-label={showPassword
                   ? intl.formatMessage({ id: 'form.password.hide', defaultMessage: 'Hide password' })
                   : intl.formatMessage({ id: 'form.password.show', defaultMessage: 'Show password' })
@@ -746,7 +746,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                     {passwordStrength.label}
                   </p>
                   {passwordStrength.feedback.length > 0 && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs">
                       {passwordStrength.feedback[0]}
                     </p>
                   )}
@@ -756,14 +756,14 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
 
             {validationErrors.password && (
               <p id="password-error" className={s.errorText} role="alert">
-                <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+                <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
                 {validationErrors.password}
               </p>
             )}
           </div>
 
           {/* Country + Language */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             {/* Country Dropdown */}
             <div ref={countryDropdownRef} className="space-y-2">
               <label id="country-label" className={s.label}>
@@ -771,7 +771,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                 <span className="text-red-400 ml-0.5">*</span>
               </label>
               <div className="relative">
-                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10" />
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
                 <button
                   type="button"
                   onClick={() => setShowCountryDropdown(!showCountryDropdown)}
@@ -786,7 +786,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                   aria-expanded={showCountryDropdown}
                   aria-labelledby="country-label"
                 >
-                  <span className={selectedCountryEntry ? 'text-white' : 'text-gray-500'}>
+                  <span className={selectedCountryEntry ? 'text-white' : 'text-gray-400'}>
                     {selectedCountryEntry ? (
                       <span className="flex items-center gap-2">
                         <span className="text-lg">{getFlag(selectedCountryEntry.code)}</span>
@@ -796,14 +796,14 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                       intl.formatMessage({ id: 'form.country.placeholder', defaultMessage: 'Select country' })
                     )}
                   </span>
-                  <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${showCountryDropdown ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showCountryDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showCountryDropdown && (
                   <div className={s.dropdown} role="listbox" aria-labelledby="country-label">
-                    <div className="p-2 border-b border-white/10">
+                    <div className="p-2 border-b">
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                         <input
                           type="text"
                           value={countrySearch}
@@ -843,7 +843,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               </div>
               {validationErrors.country && (
                 <p className={s.errorText} role="alert">
-                  <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+                  <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
                   {validationErrors.country}
                 </p>
               )}
@@ -864,7 +864,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                   aria-labelledby="language-label"
                 >
                   <span className="text-white">{selectedLanguage?.label || 'Select language'}</span>
-                  <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${showLanguageDropdown ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showLanguageDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showLanguageDropdown && (
@@ -904,7 +904,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
           <span className="text-red-400 ml-0.5">*</span>
         </p>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           {PLATFORMS.map((platform) => {
             const isSelected = formData.platforms.includes(platform.value);
             return (
@@ -917,7 +917,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                   border-2 transition-all duration-200
                   ${isSelected
                     ? 'bg-red-500/20 border-red-400/40 text-red-300'
-                    : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20 hover:text-gray-300'
+                    : 'bg-white/10 border-white/10 text-gray-300 hover:border-white/20 hover:text-gray-300'
                   }
                 `}
               >
@@ -929,7 +929,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         </div>
         {validationErrors.platforms && (
           <p className={`${s.errorText} mt-2`} role="alert">
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
             {validationErrors.platforms}
           </p>
         )}
@@ -945,14 +945,14 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         </p>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             {/* Community Size */}
             <div className="space-y-1">
               <label htmlFor="communitySize" className={s.label}>
                 <FormattedMessage id="form.communitySize" defaultMessage="Community size" />
               </label>
               <div className="relative">
-                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
+                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
                 <input
                   type="number"
                   id="communitySize"
@@ -972,7 +972,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                 <FormattedMessage id="form.communityNiche" defaultMessage="Niche / Theme" />
               </label>
               <div className="relative">
-                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
+                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
                 <input
                   type="text"
                   id="communityNiche"
@@ -1004,7 +1004,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               />
             </div>
             <div className="flex justify-end">
-              <span className="text-xs text-gray-500">{formData.bio.length}/500</span>
+              <span className="text-xs">{formData.bio.length}/500</span>
             </div>
           </div>
         </div>
@@ -1019,22 +1019,17 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               id="acceptTerms"
               checked={formData.acceptTerms}
               onChange={handleTermsChange}
-              className={`
-                h-5 w-5 rounded border-2
-                ${validationErrors.acceptTerms
+              className={`h-5 w-5 rounded border-2${validationErrors.acceptTerms
                   ? 'border-red-500 bg-red-500/10'
                   : formData.acceptTerms
                     ? 'border-red-400 bg-red-400 text-white'
-                    : 'border-white/20 bg-white/5'
-                }
-                focus:ring-2 focus:ring-red-400/30 focus:ring-offset-0
-                transition-all duration-200 cursor-pointer
-              `}
+                    : 'border-white/20 bg-white/10'
+                }focus:ring-2 transition-all duration-200 cursor-pointer`}
               aria-required="true"
               aria-invalid={!!validationErrors.acceptTerms}
             />
           </div>
-          <span className="text-sm leading-relaxed text-gray-400">
+          <span className="text-sm leading-relaxed">
             <FormattedMessage
               id="influencer.register.acceptTerms"
               defaultMessage="I accept the {termsLink} and the {privacyLink}"
@@ -1044,7 +1039,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                     to="/cgu-influenceurs"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline underline-offset-2 font-medium text-red-400 hover:text-red-300"
+                    className="underline font-medium text-red-400 hover:text-red-300"
                   >
                     <FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" />
                   </Link>
@@ -1054,7 +1049,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                     to="/privacy-policy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline underline-offset-2 font-medium text-red-400 hover:text-red-300"
+                    className="underline font-medium text-red-400 hover:text-red-300"
                   >
                     <FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" />
                   </Link>
@@ -1066,7 +1061,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         </label>
         {validationErrors.acceptTerms && (
           <p className={s.errorText} role="alert">
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] flex-shrink-0">!</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
             {validationErrors.acceptTerms}
           </p>
         )}
@@ -1077,20 +1072,11 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         type="submit"
         disabled={loading || !formData.acceptTerms}
         aria-busy={loading}
-        className={`
-          w-full py-4 px-6 font-extrabold rounded-2xl
-          flex items-center justify-center gap-2
-          transition-all duration-200 ease-out
-          disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
-          bg-gradient-to-r from-red-500 to-rose-500 text-white
-          shadow-lg shadow-red-500/30
-          hover:shadow-xl hover:shadow-red-500/40 hover:from-red-400 hover:to-rose-400
-          active:scale-[0.98]
-        `}
+        className={`w-full py-4 px-6 font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg hover:shadow-xl hover:from-red-400 hover:to-rose-400 active:scale-[0.98]`}
       >
         {loading ? (
           <>
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 rounded-full animate-spin" />
             <FormattedMessage id="form.submitting" defaultMessage="Processing..." />
           </>
         ) : (

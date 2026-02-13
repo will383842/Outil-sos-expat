@@ -67,51 +67,51 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
     <div className="space-y-4 sm:space-y-6">
       {/* Client Referral Link - Mobile optimized */}
       <div className={`${UI.card} p-4 sm:p-6`}>
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+        <div className="flex sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/30 flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white text-base">
+              <h3 className="font-semibold text-gray-900 dark:text-white">
                 <FormattedMessage id="chatter.links.client.title" defaultMessage="Lien Client" />
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm dark:text-gray-400">
                 <FormattedMessage id="chatter.links.client.desc" defaultMessage="Partagez pour gagner sur chaque appel payé" />
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4 sm:block sm:text-right bg-red-50 dark:bg-red-900/20 sm:bg-transparent rounded-xl p-3 sm:p-0">
-            <p className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-400">
+            <p className="text-2xl dark:text-red-400 sm:text-3xl font-bold">
               {totalClientConversions}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs dark:text-gray-400">
               <FormattedMessage id="chatter.links.conversions" defaultMessage="conversions" />
             </p>
           </div>
         </div>
 
         {/* Code Display - Prominent */}
-        <div className="mb-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl border border-red-200/50 dark:border-red-800/30">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+        <div className="mb-4 p-4 bg-gradient-to-r from-red-50 dark:from-red-900/20 to-orange-50 dark:to-orange-900/20 rounded-xl border dark:border-red-800/30">
+          <p className="text-xs dark:text-gray-400 mb-1">
             <FormattedMessage id="chatter.links.yourCode" defaultMessage="Votre code" />
           </p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400 tracking-wider">
+          <p className="text-2xl dark:text-red-400 font-bold tracking-wider">
             {affiliateCodeClient}
           </p>
         </div>
 
         {/* Link Display - Mobile optimized with stacked layout */}
         <div className="space-y-2 mb-4">
-          <div className="flex items-center px-4 py-3 min-h-[48px] bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10">
-            <span className="text-sm text-gray-600 dark:text-gray-300 truncate">
+          <div className="flex items-center px-4 py-3 min-h-[48px] bg-gray-50 dark:bg-white/5 rounded-xl border dark:border-white/10">
+            <span className="text-sm dark:text-gray-300 truncate">
               {clientLinkUrl}
             </span>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => copyLink(clientLinkUrl, 'client')}
-              className={`flex-1 min-h-[48px] rounded-xl font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${
+              className={`flex-1 min-h-[48px] rounded-xl font-medium transition-all items-center justify-center gap-2 active:scale-[0.98]${
                 copiedClient
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200'
@@ -131,7 +131,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
                   intl.formatMessage({ id: 'chatter.links.share.title', defaultMessage: 'Rejoignez SOS-Expat' }),
                   intl.formatMessage({ id: 'chatter.links.share.text', defaultMessage: 'Obtenez de l\'aide de professionnels expatriés' })
                 )}
-                className={`${UI.button.primary} min-h-[48px] min-w-[48px] flex items-center justify-center active:scale-[0.98]`}
+                className={`${UI.button.primary}min-h-[48px] flex items-center justify-center active:scale-[0.98]`}
                 title={intl.formatMessage({ id: 'common.share' })}
               >
                 <Share2 className="w-5 h-5" />
@@ -141,7 +141,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         </div>
 
         {/* Commission Info */}
-        <p className="text-sm text-gray-500 dark:text-gray-400 bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-2">
+        <p className="text-sm dark:text-gray-400 bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-2">
           💰 <FormattedMessage
             id="chatter.links.client.commission"
             defaultMessage="Commission : $10 par appel payé"
@@ -151,51 +151,51 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
 
       {/* Recruitment Referral Link - Mobile optimized */}
       <div className={`${UI.card} p-4 sm:p-6`}>
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+        <div className="flex sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center shadow-lg shadow-red-500/30 flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center shadow-lg">
               <UserPlus className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white text-base">
+              <h3 className="font-semibold text-gray-900 dark:text-white">
                 <FormattedMessage id="chatter.links.recruitment.title" defaultMessage="Lien Recrutement" />
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm dark:text-gray-400">
                 <FormattedMessage id="chatter.links.recruitment.desc" defaultMessage="Recrutez des prestataires, gagnez pendant 6 mois" />
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4 sm:block sm:text-right bg-red-50 dark:bg-red-900/20 sm:bg-transparent rounded-xl p-3 sm:p-0">
-            <p className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-400">
+            <p className="text-2xl dark:text-red-400 sm:text-3xl font-bold">
               {totalRecruitmentConversions}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs dark:text-gray-400">
               <FormattedMessage id="chatter.links.recruits" defaultMessage="recrutés" />
             </p>
           </div>
         </div>
 
         {/* Code Display - Prominent */}
-        <div className="mb-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl border border-red-200/50 dark:border-red-800/30">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+        <div className="mb-4 p-4 bg-gradient-to-r from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-xl border dark:border-red-800/30">
+          <p className="text-xs dark:text-gray-400 mb-1">
             <FormattedMessage id="chatter.links.yourCode" defaultMessage="Votre code" />
           </p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400 tracking-wider">
+          <p className="text-2xl dark:text-red-400 font-bold tracking-wider">
             {affiliateCodeRecruitment}
           </p>
         </div>
 
         {/* Link Display - Mobile optimized with stacked layout */}
         <div className="space-y-2 mb-4">
-          <div className="flex items-center px-4 py-3 min-h-[48px] bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10">
-            <span className="text-sm text-gray-600 dark:text-gray-300 truncate">
+          <div className="flex items-center px-4 py-3 min-h-[48px] bg-gray-50 dark:bg-white/5 rounded-xl border dark:border-white/10">
+            <span className="text-sm dark:text-gray-300 truncate">
               {recruitmentLinkUrl}
             </span>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => copyLink(recruitmentLinkUrl, 'recruitment')}
-              className={`flex-1 min-h-[48px] rounded-xl font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${
+              className={`flex-1 min-h-[48px] rounded-xl font-medium transition-all items-center justify-center gap-2 active:scale-[0.98]${
                 copiedRecruitment
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200'
@@ -215,7 +215,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
                   intl.formatMessage({ id: 'chatter.links.recruitment.share.title', defaultMessage: 'Devenez prestataire SOS-Expat' }),
                   intl.formatMessage({ id: 'chatter.links.recruitment.share.text', defaultMessage: 'Rejoignez notre réseau et aidez les expatriés' })
                 )}
-                className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-medium rounded-xl min-h-[48px] min-w-[48px] flex items-center justify-center active:scale-[0.98] transition-all"
+                className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-medium rounded-xl min-h-[48px] flex items-center justify-center active:scale-[0.98] transition-all"
                 title={intl.formatMessage({ id: 'common.share' })}
               >
                 <Share2 className="w-5 h-5" />
@@ -225,7 +225,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         </div>
 
         {/* Commission Info */}
-        <p className="text-sm text-gray-500 dark:text-gray-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+        <p className="text-sm dark:text-gray-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
           💰 <FormattedMessage
             id="chatter.links.recruitment.commission"
             defaultMessage="Commission : $5 par appel du prestataire recruté (pendant 6 mois)"

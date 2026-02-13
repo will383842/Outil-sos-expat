@@ -16,7 +16,7 @@ const GroupAdminSuspended: React.FC = () => {
             <AlertTriangle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-2xl dark:text-white font-bold mb-4">
             <FormattedMessage id="groupadmin.suspended.title" defaultMessage="Account Suspended" />
           </h1>
 
@@ -28,7 +28,7 @@ const GroupAdminSuspended: React.FC = () => {
           </p>
 
           <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+            <p className="text-sm dark:text-gray-300 mb-3">
               <FormattedMessage
                 id="groupadmin.suspended.appealInfo"
                 defaultMessage="If you believe this is an error, please contact our support team:"
@@ -45,7 +45,7 @@ const GroupAdminSuspended: React.FC = () => {
             </div>
           </div>
 
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs dark:text-gray-300">
             <FormattedMessage
               id="groupadmin.suspended.note"
               defaultMessage="Please include your account email and group name in your appeal."

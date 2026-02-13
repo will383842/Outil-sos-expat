@@ -134,17 +134,17 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
+        <h3 className="font-bold text-gray-900 dark:text-white sm:text-base">
           {title}
         </h3>
         {subtitle && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          <p className="text-xs dark:text-gray-400 truncate">
             {subtitle}
           </p>
         )}
       </div>
       {collapsible && (
-        <div className="flex-shrink-0 text-gray-400">
+        <div className="flex-shrink-0 text-gray-600 dark:text-gray-400">
           {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </div>
       )}
@@ -155,7 +155,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
     return (
       <button
         onClick={onToggle}
-        className="w-full text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg p-1 -m-1"
+        className="w-full text-left focus:outline-none focus:ring-2 rounded-lg p-1 -m-1"
       >
         {content}
       </button>
@@ -186,8 +186,8 @@ const StatLine: React.FC<StatLineProps> = ({
 }) => {
   return (
     <div className={`flex items-center justify-between py-2 ${highlight ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 -mx-3 px-3 rounded-lg' : ''}`}>
-      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-        {icon && <span className="text-gray-400">{icon}</span>}
+      <div className="flex items-center gap-2 text-sm dark:text-gray-400">
+        {icon && <span className="text-gray-600 dark:text-gray-400">{icon}</span>}
         <span>{label}</span>
       </div>
       <div className="text-right">
@@ -195,7 +195,7 @@ const StatLine: React.FC<StatLineProps> = ({
           {value}
         </span>
         {subValue && (
-          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+          <span className="text-xs dark:text-gray-400 ml-1">
             ({subValue})
           </span>
         )}
@@ -234,7 +234,7 @@ const InputSlider: React.FC<InputSliderProps> = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <span className="text-sm dark:text-gray-300 font-medium">
           {label}
         </span>
         <span className={`text-lg font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
@@ -249,26 +249,7 @@ const InputSlider: React.FC<InputSliderProps> = ({
           step={step}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer
-            [&::-webkit-slider-thumb]:appearance-none
-            [&::-webkit-slider-thumb]:w-5
-            [&::-webkit-slider-thumb]:h-5
-            [&::-webkit-slider-thumb]:rounded-full
-            [&::-webkit-slider-thumb]:bg-gradient-to-r
-            [&::-webkit-slider-thumb]:from-blue-500
-            [&::-webkit-slider-thumb]:to-red-500
-            [&::-webkit-slider-thumb]:shadow-lg
-            [&::-webkit-slider-thumb]:cursor-pointer
-            [&::-webkit-slider-thumb]:transition-transform
-            [&::-webkit-slider-thumb]:hover:scale-110
-            [&::-moz-range-thumb]:w-5
-            [&::-moz-range-thumb]:h-5
-            [&::-moz-range-thumb]:rounded-full
-            [&::-moz-range-thumb]:bg-gradient-to-r
-            [&::-moz-range-thumb]:from-blue-500
-            [&::-moz-range-thumb]:to-red-500
-            [&::-moz-range-thumb]:border-0
-            [&::-moz-range-thumb]:cursor-pointer"
+          className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
           style={{
             background: `linear-gradient(to right, #3B82F6 0%, #EF4444 ${percentage}%, #E5E7EB ${percentage}%, #E5E7EB 100%)`,
           }}
@@ -294,7 +275,7 @@ const GoalInput: React.FC<GoalInputProps> = ({ value, onChange }) => {
   return (
     <div className="space-y-3">
       <div className="relative">
-        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 dark:text-gray-400" />
         <input
           type="number"
           value={value}
@@ -303,13 +284,13 @@ const GoalInput: React.FC<GoalInputProps> = ({ value, onChange }) => {
             id: 'calculator.goal.placeholder',
             defaultMessage: 'Enter your goal',
           })}
-          className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-lg font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl text-lg dark:text-white font-semibold focus:ring-2 focus:border-transparent transition-all"
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm">
           /month
         </span>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2">
         {presets.map((preset) => (
           <button
             key={preset}
@@ -361,7 +342,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
         : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-white/5'
     }`}>
       {recommended && (
-        <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
+        <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-full flex items-center gap-1">
           <Sparkles className="w-3 h-3" />
           <FormattedMessage id="calculator.recommended" defaultMessage="Recommended" />
         </div>
@@ -373,14 +354,14 @@ const OptionCard: React.FC<OptionCardProps> = ({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">
+            <span className="text-xs dark:text-gray-300 font-bold uppercase">
               {option}
             </span>
           </div>
           <h4 className="font-bold text-gray-900 dark:text-white mb-1">
             {title}
           </h4>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          <p className="text-xs dark:text-gray-400 mb-3">
             {description}
           </p>
           <div className="space-y-1">
@@ -413,7 +394,7 @@ const TierBonusIndicator: React.FC<TierBonusIndicatorProps> = ({
   paidTiers,
 }) => {
   return (
-    <div className="flex items-center gap-1 flex-wrap">
+    <div className="flex items-center gap-1">
       {TIER_THRESHOLDS.map((tier) => {
         const isPaid = paidTiers.includes(tier);
         const willUnlock = !isPaid && simulatedCount >= tier;
@@ -570,7 +551,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
   // Loading state
   if (loading) {
     return (
-      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-6">
+      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
           <div className="space-y-3">
@@ -584,18 +565,18 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
   }
 
   return (
-    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden">
+    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-gray-200/50 dark:border-white/10">
+      <div className="p-4 sm:p-6 border-b dark:border-white/10">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
             <Calculator className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-xl dark:text-white font-bold">
               <FormattedMessage id="calculator.title" defaultMessage="Revenue Calculator" />
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm dark:text-gray-400">
               <FormattedMessage id="calculator.subtitle" defaultMessage="Simulate your earnings potential" />
             </p>
           </div>
@@ -673,7 +654,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
               <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <div className="flex items-start gap-2">
                   <Lightbulb className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                  <div className="text-xs text-blue-700 dark:text-blue-300">
+                  <div className="text-xs dark:text-blue-300">
                     <FormattedMessage
                       id="calculator.rates.info"
                       defaultMessage="Rates: Your calls = $10 | N1 calls = $1 | N2 calls = $0.50"
@@ -715,7 +696,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                 gradient="from-red-500 to-pink-500"
               />
 
-              <div className="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl space-y-3">
+              <div className="p-4 bg-gradient-to-br from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-xl space-y-3">
                 <StatLine
                   label={
                     <FormattedMessage
@@ -729,7 +710,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
 
                 {/* Tier Bonuses */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-2 text-sm dark:text-gray-400">
                     <Award className="w-4 h-4 text-yellow-500" />
                     <FormattedMessage
                       id="calculator.simulation.tierBonuses"
@@ -742,7 +723,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                     paidTiers={paidTierBonuses}
                   />
                   {simulationResults.tierBonusTotal > 0 && (
-                    <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                    <p className="text-sm dark:text-green-400 font-semibold">
                       +{formatCents(simulationResults.tierBonusTotal)} <FormattedMessage id="calculator.simulation.tierUnlock" defaultMessage="in tier bonuses!" />
                     </p>
                   )}
@@ -769,11 +750,11 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                     />
                   </span>
                   <div className="text-right">
-                    <p className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                    <p className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600">
                       {formatCents(simulationResults.newMonthlyEstimate)}/month
                     </p>
                     {simulationResults.oneTimeBonus > 0 && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs dark:text-gray-400">
                         +{formatCents(simulationResults.oneTimeBonus)} <FormattedMessage id="calculator.simulation.oneTime" defaultMessage="one-time bonus" />
                       </p>
                     )}
@@ -801,7 +782,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
           {expandedSections.objective && (
             <div className="space-y-4 pl-2 animate-in slide-in-from-top-2 duration-300">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="text-sm dark:text-gray-300 font-medium">
                   <FormattedMessage
                     id="calculator.objective.goalLabel"
                     defaultMessage="I want to earn..."
@@ -880,7 +861,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
         {onRecruit && (
           <button
             onClick={onRecruit}
-            className="w-full flex items-center justify-center gap-2 sm:gap-3 min-h-[56px] p-4 bg-gradient-to-r from-blue-500 via-red-500 to-pink-500 text-white rounded-2xl font-bold text-base sm:text-lg shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 active:scale-[0.98] transition-all touch-manipulation group"
+            className="w-full flex items-center justify-center gap-2 sm:gap-3 min-h-[56px] p-4 bg-gradient-to-r from-blue-500 via-red-500 to-pink-500 text-white rounded-2xl font-bold sm:text-lg shadow-lg hover:shadow-xl active:scale-[0.98] transition-all touch-manipulation group"
           >
             <Rocket className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-bounce flex-shrink-0" />
             <span className="truncate">

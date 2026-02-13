@@ -82,7 +82,7 @@ const LoadingSkeleton: React.FC = () => (
           </div>
           <div className={`${UI.skeleton} h-8 w-20 rounded-lg`} />
         </div>
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="mt-4 grid gap-2">
           {[1, 2, 3].map((j) => (
             <div key={j} className={`${UI.skeleton} h-16 rounded-xl`} />
           ))}
@@ -108,18 +108,18 @@ const EmptyState: React.FC<{ recruitmentShareUrl: string }> = ({ recruitmentShar
 
   return (
     <div className={`${UI.card} p-8 text-center`}>
-      <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center">
+      <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-100 dark:from-purple-900/30 to-pink-100 dark:to-pink-900/30 flex items-center justify-center">
         <UserPlus className="w-10 h-10 text-purple-500" />
       </div>
 
-      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+      <h3 className="text-xl dark:text-white font-bold mb-2">
         <FormattedMessage
           id="influencer.referrals.empty.title"
           defaultMessage="Aucun filleul pour le moment"
         />
       </h3>
 
-      <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+      <p className="text-gray-700 dark:text-gray-700 max-w-md mx-auto mb-6">
         <FormattedMessage
           id="influencer.referrals.empty.description"
           defaultMessage="Recrutez des avocats et helpers pour gagner $5 par appel qu'ils recoivent pendant 6 mois !"
@@ -127,15 +127,15 @@ const EmptyState: React.FC<{ recruitmentShareUrl: string }> = ({ recruitmentShar
       </p>
 
       {/* Commission explanation */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 mb-6 max-w-sm mx-auto">
+      <div className="bg-gradient-to-r from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 rounded-xl p-4 mb-6 max-w-sm mx-auto">
         <div className="flex items-center justify-center gap-2 mb-2">
           <DollarSign className="w-5 h-5 text-green-600" />
           <span className="font-bold text-green-700 dark:text-green-400">$5</span>
-          <span className="text-green-600 dark:text-green-500 text-sm">
+          <span className="text-green-600 dark:text-green-500">
             <FormattedMessage id="influencer.referrals.perCall" defaultMessage="par appel" />
           </span>
         </div>
-        <p className="text-xs text-green-600 dark:text-green-500">
+        <p className="text-xs dark:text-green-500">
           <FormattedMessage
             id="influencer.referrals.duration"
             defaultMessage="pendant 6 mois apres l'inscription"
@@ -146,7 +146,7 @@ const EmptyState: React.FC<{ recruitmentShareUrl: string }> = ({ recruitmentShar
       {/* Share link */}
       {recruitmentShareUrl && (
         <div className="space-y-3">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <p className="text-sm dark:text-white font-semibold">
             <FormattedMessage
               id="influencer.referrals.shareLink"
               defaultMessage="Partagez votre lien de recrutement :"
@@ -154,7 +154,7 @@ const EmptyState: React.FC<{ recruitmentShareUrl: string }> = ({ recruitmentShar
           </p>
 
           <div className="flex items-center gap-2 max-w-md mx-auto">
-            <div className="flex-1 bg-gray-100 dark:bg-white/10 rounded-lg px-3 py-2 text-sm text-gray-600 dark:text-gray-400 truncate">
+            <div className="flex-1 bg-gray-100 dark:bg-white/10 rounded-lg px-3 py-2 text-sm dark:text-gray-600 truncate">
               {recruitmentShareUrl}
             </div>
             <button
@@ -243,8 +243,8 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ referral, locale }) => {
                 <FormattedMessage id="provider.type.expat" defaultMessage="Helper" />
               )}
             </span>
-            <span className="text-gray-400">-</span>
-            <span className="text-gray-500 dark:text-gray-400">
+            <span className="text-gray-600 dark:text-gray-400">-</span>
+            <span className="text-gray-700 dark:text-gray-700">
               <FormattedMessage id="influencer.referrals.since" defaultMessage="depuis" />{' '}
               {formatDate(referral.createdAt, locale)}
             </span>
@@ -256,7 +256,7 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ referral, locale }) => {
           className={`px-3 py-1 rounded-full text-xs font-medium ${
             isActive
               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-              : 'bg-gray-100 dark:bg-gray-800 text-gray-500'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
           }`}
         >
           {isActive ? (
@@ -268,29 +268,29 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ referral, locale }) => {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid gap-2">
         {/* Calls received */}
         <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Phone className="w-4 h-4 text-blue-500" />
           </div>
-          <p className="text-lg font-bold text-gray-900 dark:text-white">
+          <p className="text-lg dark:text-white font-bold">
             {referral.totalCallsReceived}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs dark:text-gray-700">
             <FormattedMessage id="influencer.referrals.calls" defaultMessage="appels" />
           </p>
         </div>
 
         {/* Commissions earned */}
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-3 text-center">
+        <div className="bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <DollarSign className="w-4 h-4 text-green-500" />
           </div>
-          <p className="text-lg font-bold text-green-600 dark:text-green-400">
+          <p className="text-lg dark:text-green-400 font-bold">
             {formatCurrency(referral.totalCommissionsEarned)}
           </p>
-          <p className="text-xs text-green-600 dark:text-green-500">
+          <p className="text-xs dark:text-green-500">
             <FormattedMessage id="influencer.referrals.earned" defaultMessage="gagnes" />
           </p>
         </div>
@@ -300,10 +300,10 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ referral, locale }) => {
           <div className="flex items-center justify-center gap-1 mb-1">
             <Clock className="w-4 h-4 text-purple-500" />
           </div>
-          <p className="text-lg font-bold text-gray-900 dark:text-white">
+          <p className="text-lg dark:text-white font-bold">
             {daysRemaining}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs dark:text-gray-700">
             <FormattedMessage id="influencer.referrals.daysLeft" defaultMessage="jours" />
           </p>
         </div>
@@ -312,7 +312,7 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ referral, locale }) => {
       {/* Progress indicator for commission window */}
       {isActive && (
         <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+          <div className="flex items-center justify-between text-xs dark:text-gray-700 mb-1">
             <span>
               <FormattedMessage
                 id="influencer.referrals.windowProgress"
@@ -350,13 +350,13 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({
   totalEarned,
 }) => (
   <div className={`${UI.card} p-4`}>
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div className="grid sm:grid-cols-4 gap-4">
       <div className="text-center">
         <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
           <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
         </div>
-        <p className="text-xl font-bold text-gray-900 dark:text-white">{totalReferrals}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xl dark:text-white font-bold">{totalReferrals}</p>
+        <p className="text-xs dark:text-gray-700">
           <FormattedMessage id="influencer.referrals.total" defaultMessage="Total filleuls" />
         </p>
       </div>
@@ -365,8 +365,8 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({
         <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
           <Sparkles className="w-5 h-5 text-green-600 dark:text-green-400" />
         </div>
-        <p className="text-xl font-bold text-gray-900 dark:text-white">{activeReferrals}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xl dark:text-white font-bold">{activeReferrals}</p>
+        <p className="text-xs dark:text-gray-700">
           <FormattedMessage id="influencer.referrals.activeCount" defaultMessage="Actifs" />
         </p>
       </div>
@@ -375,20 +375,20 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({
         <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
           <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
         </div>
-        <p className="text-xl font-bold text-gray-900 dark:text-white">{totalCalls}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xl dark:text-white font-bold">{totalCalls}</p>
+        <p className="text-xs dark:text-gray-700">
           <FormattedMessage id="influencer.referrals.totalCalls" defaultMessage="Appels generes" />
         </p>
       </div>
 
       <div className="text-center">
-        <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 flex items-center justify-center">
+        <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br from-green-100 dark:from-green-900/30 to-emerald-100 dark:to-emerald-900/30 flex items-center justify-center">
           <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
         </div>
-        <p className="text-xl font-bold text-green-600 dark:text-green-400">
+        <p className="text-xl dark:text-green-400 font-bold">
           {formatCurrency(totalEarned)}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs dark:text-gray-700">
           <FormattedMessage id="influencer.referrals.totalEarned" defaultMessage="Total gagne" />
         </p>
       </div>
@@ -436,10 +436,10 @@ const InfluencerReferrals: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl dark:text-white font-bold">
             <FormattedMessage id="influencer.referrals.title" defaultMessage="Mes filleuls" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700 dark:text-gray-700">
             <FormattedMessage
               id="influencer.referrals.subtitle"
               defaultMessage="Prestataires recrutes via votre lien"
@@ -449,7 +449,7 @@ const InfluencerReferrals: React.FC = () => {
 
         {/* Error state */}
         {error && (
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400">
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border dark:border-red-800 rounded-xl text-red-600 dark:text-red-400">
             {error}
           </div>
         )}
@@ -470,7 +470,7 @@ const InfluencerReferrals: React.FC = () => {
               <div className="flex items-center justify-between bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <Share2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  <span className="text-sm text-purple-700 dark:text-purple-300">
+                  <span className="text-sm dark:text-purple-300">
                     <FormattedMessage
                       id="influencer.referrals.keepSharing"
                       defaultMessage="Continuez a partager pour recruter plus !"
@@ -479,7 +479,7 @@ const InfluencerReferrals: React.FC = () => {
                 </div>
                 <button
                   onClick={() => navigator.clipboard.writeText(recruitmentShareUrl)}
-                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors"
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
                 >
                   <FormattedMessage id="common.copy" defaultMessage="Copier" />
                 </button>
@@ -488,7 +488,7 @@ const InfluencerReferrals: React.FC = () => {
 
             {/* Referrals list */}
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-lg dark:text-white font-semibold flex items-center gap-2">
                 <Users className="w-5 h-5 text-purple-500" />
                 <FormattedMessage
                   id="influencer.referrals.listTitle"

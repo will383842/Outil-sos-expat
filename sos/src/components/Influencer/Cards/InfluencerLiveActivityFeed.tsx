@@ -159,13 +159,13 @@ const LoadingSkeleton: React.FC<{ className?: string }> = ({ className = '' }) =
 const EmptyState: React.FC = () => (
   <div className="text-center py-8">
     <Sparkles className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+    <p className="text-gray-700 dark:text-gray-300 font-medium">
       <FormattedMessage
         id="influencer.activity.empty"
         defaultMessage="No recent activity"
       />
     </p>
-    <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
+    <p className="text-gray-400 dark:text-gray-300 mt-1">
       <FormattedMessage
         id="influencer.activity.emptyHint"
         defaultMessage="Your earnings and referrals will appear here"
@@ -207,14 +207,14 @@ const ActivityItemRow: React.FC<{
       >
         {/* Icon */}
         <div
-          className={`w-9 h-9 rounded-xl ${config.bgColor} flex items-center justify-center flex-shrink-0`}
+          className={`w-9 h-9 rounded-xl${config.bgColor}flex items-center justify-center`}
         >
           <Icon className={`w-4 h-4 ${config.color}`} />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+          <p className="text-sm dark:text-white font-medium truncate">
             {activity.description || (
               <FormattedMessage
                 id={config.messageKey}
@@ -231,7 +231,7 @@ const ActivityItemRow: React.FC<{
         </div>
 
         {/* Time */}
-        <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+        <div className="flex items-center gap-1 text-xs dark:text-gray-300">
           <Clock className="w-3 h-3" />
           <span>{formatRelativeTime(activity.createdAt, locale)}</span>
         </div>
@@ -272,20 +272,20 @@ const InfluencerLiveActivityFeed: React.FC<InfluencerLiveActivityFeedProps> = me
               </div>
               {/* Pulse indicator when there are activities */}
               {displayedActivities.length > 0 && (
-                <div className="absolute -top-1 -right-1 w-3 h-3">
+                <div className="absolute -top-1 w-3 h-3">
                   <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
                 </div>
               )}
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
+              <h3 className="font-semibold text-gray-900 dark:text-white sm:text-base">
                 <FormattedMessage
                   id="influencer.activity.title"
                   defaultMessage="Recent Activity"
                 />
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs dark:text-gray-300">
                 <FormattedMessage
                   id="influencer.activity.subtitle"
                   defaultMessage="Your latest earnings"
@@ -294,7 +294,7 @@ const InfluencerLiveActivityFeed: React.FC<InfluencerLiveActivityFeedProps> = me
             </div>
           </div>
           {displayedActivities.length > 0 && (
-            <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded-full">
+            <div className="flex items-center gap-1 text-xs dark:text-gray-300 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded-full">
               <CheckCircle className="w-3 h-3" />
               <span>{displayedActivities.length}</span>
             </div>
@@ -321,8 +321,8 @@ const InfluencerLiveActivityFeed: React.FC<InfluencerLiveActivityFeedProps> = me
 
         {/* Footer */}
         {displayedActivities.length > 0 && (
-          <div className="px-4 py-3 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10">
-            <div className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="px-4 py-3 bg-gray-50 dark:bg-white/5 border-t dark:border-white/10">
+            <div className="flex items-center justify-center gap-2 text-xs dark:text-gray-300">
               <Activity className="w-3.5 h-3.5" />
               <FormattedMessage
                 id="influencer.activity.footer"

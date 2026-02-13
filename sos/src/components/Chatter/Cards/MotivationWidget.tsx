@@ -305,7 +305,7 @@ const MotivationWidget = memo(function MotivationWidget({
           <div className="animate-pulse">
             <div className="h-6 w-40 bg-gray-200 dark:bg-white/10 rounded mb-4" />
             <div className="h-20 bg-gray-200 dark:bg-white/10 rounded-xl mb-4" />
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid gap-2">
               <div className="h-10 bg-gray-200 dark:bg-white/10 rounded-xl" />
               <div className="h-10 bg-gray-200 dark:bg-white/10 rounded-xl" />
               <div className="h-10 bg-gray-200 dark:bg-white/10 rounded-xl" />
@@ -321,17 +321,17 @@ const MotivationWidget = memo(function MotivationWidget({
       {/* Header with collapse toggle */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 sm:px-6 py-4 flex items-center justify-between bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:via-orange-500/20 dark:to-red-500/20 hover:from-amber-500/20 hover:via-orange-500/20 hover:to-red-500/20 transition-all"
+        className="w-full px-4 sm:px-6 py-4 flex items-center justify-between bg-gradient-to-r from-amber-500/10 dark:from-amber-500/20 via-orange-500/10 dark:via-orange-500/20 to-red-500/10 dark:to-red-500/20 hover:from-amber-500/20 hover:via-orange-500/20 hover:to-red-500/20 transition-all"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-lg shadow-orange-500/30">
+          <div className="p-2 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-lg">
             <Lightbulb className="w-5 h-5 text-white" />
           </div>
           <div className="text-left">
             <h3 className="font-semibold text-gray-900 dark:text-white">
               <FormattedMessage id="motivation.title" defaultMessage="Tips & Motivation" />
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs dark:text-gray-400">
               <FormattedMessage id="motivation.subtitle" defaultMessage="Astuces pour gagner plus" />
             </p>
           </div>
@@ -360,7 +360,7 @@ const MotivationWidget = memo(function MotivationWidget({
             onTouchEnd={onTouchEnd}
             className="relative"
           >
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-red-900/20 border border-amber-200/50 dark:border-amber-800/30 p-4">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-amber-50 dark:from-amber-900/20 via-orange-50 dark:via-orange-900/20 to-red-50 dark:to-red-900/20 border dark:border-amber-800/30 p-4">
               {/* Tip content with fade animation */}
               <div
                 className={`transition-opacity duration-300 ${
@@ -372,13 +372,13 @@ const MotivationWidget = memo(function MotivationWidget({
                     {currentTip?.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <p className="text-sm dark:text-white font-medium">
                       <FormattedMessage
                         id={currentTip?.id}
                         defaultMessage={getTipDefaultMessage(currentTip?.id || '')}
                       />
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize">
+                    <p className="text-xs dark:text-gray-400 mt-1 capitalize">
                       <FormattedMessage
                         id={`motivation.category.${currentTip?.category}`}
                         defaultMessage={currentTip?.category}
@@ -430,20 +430,20 @@ const MotivationWidget = memo(function MotivationWidget({
             </div>
 
             {/* Swipe hint for mobile */}
-            <p className="text-[10px] text-center text-gray-400 dark:text-gray-500 mt-1.5 sm:hidden">
+            <p className="text-[10px] dark:text-gray-300 mt-1.5 sm:hidden">
               <FormattedMessage id="motivation.swipe.hint" defaultMessage="Glissez pour plus de conseils" />
             </p>
           </div>
 
           {/* Motivational Quote / Weekly Stats */}
-          <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200/50 dark:border-green-800/30">
+          <div className="p-4 bg-gradient-to-r from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 rounded-xl border dark:border-green-800/30">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-4 h-4 text-green-600 dark:text-green-400" />
-              <span className="text-xs font-medium text-green-700 dark:text-green-400 uppercase tracking-wider">
+              <span className="text-xs dark:text-green-400 font-medium uppercase tracking-wider">
                 <FormattedMessage id="motivation.weekly.highlight" defaultMessage="Cette semaine" />
               </span>
             </div>
-            <p className="text-sm text-gray-900 dark:text-white">
+            <p className="text-sm dark:text-white">
               <FormattedMessage
                 id="motivation.weekly.earnings"
                 defaultMessage="{count} chatters ont gagne {amount} cette semaine !"
@@ -458,7 +458,7 @@ const MotivationWidget = memo(function MotivationWidget({
           {/* Personalized Insights */}
           {insights.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <p className="text-xs dark:text-gray-400 font-medium uppercase tracking-wider">
                 <FormattedMessage id="motivation.insights.title" defaultMessage="Vos insights" />
               </p>
               <div className="space-y-2">
@@ -470,7 +470,7 @@ const MotivationWidget = memo(function MotivationWidget({
                     <div className="p-1.5 bg-white dark:bg-white/10 rounded-lg text-gray-600 dark:text-gray-400">
                       {insight.icon}
                     </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                    <p className="text-sm dark:text-gray-300 flex-1">
                       {insight.type === 'progress' && (
                         <FormattedMessage
                           id="motivation.insight.level.progress"
@@ -503,26 +503,26 @@ const MotivationWidget = memo(function MotivationWidget({
 
           {/* Quick Actions - Touch-friendly with 48px+ targets */}
           <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <p className="text-xs dark:text-gray-400 font-medium uppercase tracking-wider">
               <FormattedMessage id="motivation.actions.title" defaultMessage="Actions rapides" />
             </p>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid gap-2 sm:gap-3">
               {/* Copy Link */}
               <button
                 onClick={handleCopyLink}
                 disabled={!clientShareUrl && !recruitmentShareUrl}
-                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] transition-all active:scale-[0.98] touch-manipulation ${
+                className={`flex items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] transition-all active:scale-[0.98] touch-manipulation${
                   copied
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                }disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {copied ? (
                   <CheckCircle className="w-5 h-5" />
                 ) : (
                   <Copy className="w-5 h-5" />
                 )}
-                <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">
+                <span className="text-[10px] sm:text-xs font-medium leading-tight">
                   {copied ? (
                     <FormattedMessage id="common.copied" defaultMessage="Copie !" />
                   ) : (
@@ -535,10 +535,10 @@ const MotivationWidget = memo(function MotivationWidget({
               <button
                 onClick={handleShareWhatsApp}
                 disabled={!clientShareUrl && !recruitmentShareUrl}
-                className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] bg-green-500 hover:bg-green-600 text-white transition-all active:scale-[0.98] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] bg-green-500 hover:bg-green-600 text-white transition-all active:scale-[0.98] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Share2 className="w-5 h-5" />
-                <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">
+                <span className="text-[10px] sm:text-xs font-medium leading-tight">
                   <FormattedMessage id="motivation.action.whatsapp" defaultMessage="WhatsApp" />
                 </span>
               </button>
@@ -546,10 +546,10 @@ const MotivationWidget = memo(function MotivationWidget({
               {/* View Leaderboard */}
               <button
                 onClick={onViewLeaderboard}
-                className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white transition-all active:scale-[0.98] touch-manipulation"
+                className="flex items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white transition-all active:scale-[0.98] touch-manipulation"
               >
                 <Trophy className="w-5 h-5" />
-                <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">
+                <span className="text-[10px] sm:text-xs font-medium leading-tight">
                   <FormattedMessage id="motivation.action.leaderboard" defaultMessage="Top Chatters" />
                 </span>
               </button>
@@ -558,10 +558,10 @@ const MotivationWidget = memo(function MotivationWidget({
 
           {/* Current Streak Motivation */}
           {currentStreak > 0 && (
-            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl border border-orange-200/50 dark:border-orange-800/30">
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 dark:from-orange-900/20 to-red-50 dark:to-red-900/20 rounded-xl border dark:border-orange-800/30">
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-orange-500" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                <span className="text-sm dark:text-white font-medium">
                   <FormattedMessage
                     id="motivation.streak"
                     defaultMessage="Streak de {days} jours !"
@@ -569,7 +569,7 @@ const MotivationWidget = memo(function MotivationWidget({
                   />
                 </span>
               </div>
-              <span className="text-xs text-orange-600 dark:text-orange-400">
+              <span className="text-xs dark:text-orange-400">
                 <FormattedMessage id="motivation.streak.keep" defaultMessage="Continuez !" />
               </span>
             </div>

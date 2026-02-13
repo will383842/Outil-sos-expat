@@ -119,10 +119,10 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
   if (!user || !authInitialized) {
     return (
       <Layout showHeader={false} showFooter={false}>
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-gray-950 via-red-50/20 dark:via-gray-950 to-white dark:to-black flex items-center justify-center">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 border-4 rounded-full animate-spin" />
+            <p className="text-sm dark:text-gray-600">
               {intl.formatMessage({ id: 'common.loading', defaultMessage: 'Chargement...' })}
             </p>
           </div>
@@ -242,9 +242,9 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
 
   return (
     <Layout showHeader={false} showFooter={false}>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-gray-950 via-red-50/20 dark:via-gray-950 to-white dark:to-black">
         {/* Mobile Header */}
-        <div className="lg:hidden sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/10">
+        <div className="lg:hidden sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b dark:border-white/10">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 ${CHATTER_THEME.accentBg} rounded-full flex items-center justify-center`}>
@@ -264,7 +264,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
 
           {/* Mobile Menu Dropdown */}
           {isMobileMenuOpen && (
-            <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-white/10 shadow-lg">
+            <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 border-b dark:border-white/10 shadow-lg">
               <nav className="p-4">
                 <ul className="space-y-2">
                   {menuItems.map((item) => (
@@ -310,7 +310,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+          <div className="grid lg:grid-cols-4 gap-6 lg:gap-8">
             {/* SIDEBAR - Hidden on mobile */}
             <div className="hidden lg:block lg:col-span-1">
               <div className={`${UI.card} overflow-hidden sticky top-8`}>
@@ -321,7 +321,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
                       <img
                         src={`${user.profilePhoto}?v=${Date.now()}`}
                         alt={getUserFirstName()}
-                        className="w-16 h-16 rounded-full object-cover ring-2 ring-white/80"
+                        className="w-16 h-16 rounded-full object-cover ring-2"
                         loading="eager"
                       />
                     ) : (
@@ -368,7 +368,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
                           {item.icon}
                           {item.labels[language] ?? item.labels.en}
                           {currentKey === item.key && (
-                            <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-white/10 dark:text-red-400">
+                            <span className="ml-auto text-[10px] dark:text-red-400 px-1.5 py-0.5 rounded bg-red-100 dark:bg-white/10">
                               {intl.formatMessage({ id: "dashboard.active", defaultMessage: "Actif" })}
                             </span>
                           )}
@@ -377,7 +377,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
                     ))}
 
                     {/* Logout */}
-                    <li className="pt-4 border-t border-gray-200 dark:border-white/10">
+                    <li className="pt-4 border-t dark:border-white/10">
                       <button
                         onClick={handleLogout}
                         disabled={loggingOut}
@@ -389,7 +389,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
                       >
                         {loggingOut ? (
                           <>
-                            <div className="mr-3 h-5 w-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                            <div className="mr-3 h-5 w-5 border-2 rounded-full animate-spin" />
                             {intl.formatMessage({ id: "dashboard.loggingOut", defaultMessage: "Déconnexion..." })}
                           </>
                         ) : (

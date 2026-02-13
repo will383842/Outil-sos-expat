@@ -92,12 +92,12 @@ const MetricComparison: React.FC<MetricComparisonProps> = ({
 
       {/* Values */}
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{label}</p>
+        <p className="text-xs dark:text-gray-400 truncate">{label}</p>
         <div className="flex items-baseline gap-2">
-          <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+          <span className="text-base dark:text-white sm:text-lg font-bold">
             {thisValue}
           </span>
-          <span className="text-xs text-gray-400 dark:text-gray-500">
+          <span className="text-xs dark:text-gray-300">
             vs {lastValue}
           </span>
         </div>
@@ -108,7 +108,7 @@ const MetricComparison: React.FC<MetricComparisonProps> = ({
         className={`
           flex items-center gap-0.5 px-2 py-1 rounded-full text-xs font-semibold
           ${isNeutral
-            ? 'bg-gray-100 dark:bg-gray-800 text-gray-500'
+            ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
             : isPositive
               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
               : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
@@ -188,13 +188,13 @@ const ComparisonStatsCard = memo(function ComparisonStatsCard({
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-sm dark:text-white font-semibold">
           <FormattedMessage
             id="chatter.comparison.title"
             defaultMessage="Comparaison mensuelle"
           />
         </h3>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs dark:text-gray-400">
           <FormattedMessage
             id="chatter.comparison.vsLastMonth"
             defaultMessage="vs mois dernier"
@@ -255,7 +255,7 @@ const ComparisonStatsCard = memo(function ComparisonStatsCard({
       </div>
 
       {/* Overall Summary */}
-      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/10">
+      <div className="mt-4 pt-3 border-t dark:border-white/10">
         <div className="flex items-center justify-center gap-2 text-xs">
           {comparisons.earnings.isPositive &&
            comparisons.clients.isPositive &&

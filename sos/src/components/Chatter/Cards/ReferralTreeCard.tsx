@@ -173,7 +173,7 @@ const NodeTooltip: React.FC<NodeTooltipProps> = ({ data, onClose, onView }) => {
 
   return (
     <div
-      className="fixed z-50 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 min-w-[200px] max-w-[280px] animate-in fade-in zoom-in-95 duration-200"
+      className="fixed z-50 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border dark:border-gray-700 min-w-[200px] max-w-[280px] animate-in fade-in zoom-in-95 duration-200"
       style={{
         left: Math.min(x, window.innerWidth - 300),
         top: Math.min(y + 10, window.innerHeight - 200),
@@ -182,14 +182,14 @@ const NodeTooltip: React.FC<NodeTooltipProps> = ({ data, onClose, onView }) => {
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        className="absolute top-2 right-2 p-1 text-gray-600 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
       >
         <X className="w-4 h-4" />
       </button>
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
-        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getNodeColors(node.level, node.isQualified, node.isActive).bg} flex items-center justify-center text-white font-bold text-sm shadow-lg`}>
+        <div className={`w-10 h-10 rounded-full bg-gradient-to-br${getNodeColors(node.level, node.isQualified, node.isActive).bg}flex items-center justify-center text-white font-bold shadow-lg`}>
           {getInitials(node.name)}
         </div>
         <div className="flex-1 min-w-0">
@@ -201,7 +201,7 @@ const NodeTooltip: React.FC<NodeTooltipProps> = ({ data, onClose, onView }) => {
               N{node.level}
             </span>
             {node.isQualified && (
-              <span className="flex items-center gap-0.5 text-xs text-emerald-600 dark:text-emerald-400">
+              <span className="flex items-center gap-0.5 text-xs dark:text-emerald-400">
                 <Star className="w-3 h-3 fill-current" />
                 <FormattedMessage id="referralTree.qualified" defaultMessage="Qualified" />
               </span>
@@ -255,7 +255,7 @@ const NodeTooltip: React.FC<NodeTooltipProps> = ({ data, onClose, onView }) => {
       {onView && (
         <button
           onClick={() => onView(node.id)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm dark:text-gray-300 font-medium transition-colors"
         >
           <Eye className="w-4 h-4" />
           <FormattedMessage id="referralTree.viewProfile" defaultMessage="View Profile" />
@@ -289,38 +289,32 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const fontSize = node.level === 1 ? 'text-sm' : 'text-xs';
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex items-center">
       {/* Node */}
       <button
         onClick={(e) => onClick(e, node)}
-        className={`
-          relative ${nodeSize} rounded-full bg-gradient-to-br ${colors.bg}
-          flex items-center justify-center ${colors.text} font-bold ${fontSize}
-          shadow-lg ring-2 ${colors.ring} ring-offset-2 ring-offset-white dark:ring-offset-gray-900
-          transition-all duration-200 hover:scale-110 hover:shadow-xl
-          cursor-pointer
-        `}
+        className={`relative${nodeSize}rounded-full bg-gradient-to-br${colors.bg}flex items-center justify-center${colors.text}font-bold${fontSize}shadow-lg ring-2${colors.ring}ring-offset-2 dark:ring-offset-gray-900 transition-all duration-200 hover:scale-110 hover:shadow-xl cursor-pointer`}
       >
         {getInitials(node.name)}
 
         {/* Qualified badge */}
         {node.isQualified && (
-          <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center shadow-md">
+          <div className="absolute -top-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center shadow-md">
             <Star className="w-3 h-3 text-yellow-800 fill-current" />
           </div>
         )}
 
         {/* Active indicator */}
-        <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${node.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+        <div className={`absolute -bottom-0.5 w-3.5 h-3.5 rounded-full border-2 dark:border-gray-900${node.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
       </button>
 
       {/* Name label */}
-      <span className="mt-2 text-xs font-medium text-gray-700 dark:text-gray-300 text-center max-w-[80px] truncate">
+      <span className="mt-2 text-xs dark:text-gray-300 font-medium max-w-[80px] truncate">
         {node.name.split(' ')[0]}
       </span>
 
       {/* Earnings */}
-      <span className="text-[10px] text-green-600 dark:text-green-400 font-medium">
+      <span className="text-[10px] dark:text-green-400 font-medium">
         {formatCurrency(node.earnings)}
       </span>
 
@@ -334,9 +328,9 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           className="mt-1 p-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
         >
           {isExpanded ? (
-            <ChevronDown className="w-3 h-3 text-gray-500" />
+            <ChevronDown className="w-3 h-3 text-gray-700 dark:text-gray-300" />
           ) : (
-            <ChevronRight className="w-3 h-3 text-gray-500" />
+            <ChevronRight className="w-3 h-3 text-gray-700 dark:text-gray-300" />
           )}
         </button>
       )}
@@ -360,22 +354,22 @@ const MobileCard: React.FC<MobileCardProps> = ({ node, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 w-[140px] p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
+      className="flex-shrink-0 w-[140px] p-3 bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
     >
-      <div className="flex flex-col items-center">
+      <div className="flex items-center">
         {/* Avatar */}
-        <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br ${colors.bg} flex items-center justify-center text-white font-bold text-sm shadow-lg mb-2`}>
+        <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br${colors.bg}flex items-center justify-center text-white font-bold shadow-lg mb-2`}>
           {getInitials(node.name)}
           {node.isQualified && (
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
+            <div className="absolute -top-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
               <Star className="w-2.5 h-2.5 text-yellow-800 fill-current" />
             </div>
           )}
-          <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${node.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+          <div className={`absolute -bottom-0.5 w-3 h-3 rounded-full border-2 dark:border-gray-800${node.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
         </div>
 
         {/* Name */}
-        <span className="text-sm font-medium text-gray-900 dark:text-white text-center truncate w-full">
+        <span className="text-sm dark:text-white font-medium truncate w-full">
           {node.name.split(' ')[0]}
         </span>
 
@@ -385,7 +379,7 @@ const MobileCard: React.FC<MobileCardProps> = ({ node, onClick }) => {
         </span>
 
         {/* Earnings */}
-        <span className="mt-1 text-xs font-semibold text-green-600 dark:text-green-400">
+        <span className="mt-1 text-xs dark:text-green-400 font-semibold">
           {formatCurrency(node.earnings)}
         </span>
       </div>
@@ -413,17 +407,17 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
   networkEarnings,
 }) => {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="grid sm:grid-cols-4 gap-3">
       {/* Total N1 */}
       <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
         <div className="flex items-center gap-2 mb-1">
           <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          <span className="text-xs text-gray-600 dark:text-gray-400">N1</span>
+          <span className="text-xs dark:text-gray-400">N1</span>
         </div>
-        <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+        <p className="text-xl dark:text-blue-400 font-bold">
           {totalN1}
         </p>
-        <p className="text-[10px] text-gray-500 dark:text-gray-500">
+        <p className="text-[10px] dark:text-gray-300">
           {qualifiedN1} <FormattedMessage id="referralTree.qualifiedShort" defaultMessage="qualified" />
         </p>
       </div>
@@ -432,12 +426,12 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
       <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
         <div className="flex items-center gap-2 mb-1">
           <Users className="w-4 h-4 text-red-600 dark:text-red-400" />
-          <span className="text-xs text-gray-600 dark:text-gray-400">N2</span>
+          <span className="text-xs dark:text-gray-400">N2</span>
         </div>
-        <p className="text-xl font-bold text-red-600 dark:text-red-400">
+        <p className="text-xl dark:text-red-400 font-bold">
           {totalN2}
         </p>
-        <p className="text-[10px] text-gray-500 dark:text-gray-500">
+        <p className="text-[10px] dark:text-gray-300">
           <FormattedMessage id="referralTree.indirect" defaultMessage="indirect" />
         </p>
       </div>
@@ -446,14 +440,14 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
       <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
         <div className="flex items-center gap-2 mb-1">
           <Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          <span className="text-xs text-gray-600 dark:text-gray-400">
+          <span className="text-xs dark:text-gray-400">
             <FormattedMessage id="referralTree.total" defaultMessage="Total" />
           </span>
         </div>
-        <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+        <p className="text-xl dark:text-emerald-400 font-bold">
           {totalNetworkSize}
         </p>
-        <p className="text-[10px] text-gray-500 dark:text-gray-500">
+        <p className="text-[10px] dark:text-gray-300">
           <FormattedMessage id="referralTree.members" defaultMessage="members" />
         </p>
       </div>
@@ -462,14 +456,14 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
       <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
         <div className="flex items-center gap-2 mb-1">
           <DollarSign className="w-4 h-4 text-green-600 dark:text-green-400" />
-          <span className="text-xs text-gray-600 dark:text-gray-400">
+          <span className="text-xs dark:text-gray-400">
             <FormattedMessage id="referralTree.earnings" defaultMessage="Earnings" />
           </span>
         </div>
-        <p className="text-xl font-bold text-green-600 dark:text-green-400">
+        <p className="text-xl dark:text-green-400 font-bold">
           {formatCurrency(networkEarnings)}
         </p>
-        <p className="text-[10px] text-gray-500 dark:text-gray-500">
+        <p className="text-[10px] dark:text-gray-300">
           <FormattedMessage id="referralTree.fromNetwork" defaultMessage="from network" />
         </p>
       </div>
@@ -495,8 +489,8 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({ currentFilter, onChange, 
   ];
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <Filter className="w-4 h-4 text-gray-400" />
+    <div className="flex items-center gap-2">
+      <Filter className="w-4 h-4 text-gray-600 dark:text-gray-400" />
       {filters.map(filter => (
         <button
           key={filter.key}
@@ -802,7 +796,7 @@ const MobileCarousel: React.FC<MobileCarouselProps> = ({
 
   if (nodes.length === 0) {
     return (
-      <div className="py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+      <div className="py-4 text-center dark:text-gray-400">
         {emptyMessage || 'No members'}
       </div>
     );
@@ -811,7 +805,7 @@ const MobileCarousel: React.FC<MobileCarouselProps> = ({
   return (
     <div className="relative">
       {/* Title */}
-      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 px-1">
+      <h4 className="text-sm dark:text-gray-300 font-medium mb-3 px-1">
         {title} ({nodes.length})
       </h4>
 
@@ -991,7 +985,7 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
       <div className={`${UI.card} p-6`}>
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid gap-3">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl" />
             ))}
@@ -1008,9 +1002,9 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
       <div className={`${UI.card} p-6`}>
         <div className="text-center py-8">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-            <Users className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+            <Users className="w-8 h-8 text-gray-400 dark:text-gray-300" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          <h3 className="text-lg dark:text-white font-semibold mb-2">
             <FormattedMessage id="referralTree.empty.title" defaultMessage="No Network Yet" />
           </h3>
           <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
@@ -1037,8 +1031,8 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
 
       <div className={`${UI.card} overflow-hidden`}>
         {/* Header */}
-        <div className="px-4 sm:px-6 py-4 border-b border-gray-200/50 dark:border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="px-4 sm:px-6 py-4 border-b dark:border-white/10">
+          <div className="flex sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl shadow-lg">
                 <Sparkles className="w-5 h-5 text-white" />
@@ -1047,7 +1041,7 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
                 <h3 className="font-semibold text-gray-900 dark:text-white">
                   <FormattedMessage id="referralTree.title" defaultMessage="My Referral Network" />
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs dark:text-gray-400">
                   <FormattedMessage
                     id="referralTree.subtitle"
                     defaultMessage="Visual tree of your N1 & N2 team"
@@ -1089,12 +1083,12 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
             <div className="space-y-6">
               {/* YOU indicator */}
               <div className="flex justify-center">
-                <div className="flex flex-col items-center">
-                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg shadow-xl ring-4 ring-red-200 dark:ring-red-900">
+                <div className="flex items-center">
+                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-bold shadow-xl ring-4 dark:ring-red-900">
                     YOU
-                    <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 text-yellow-400 fill-yellow-400" />
+                    <Crown className="absolute -top-3 left-1/2 w-6 h-6 text-yellow-400 fill-yellow-400" />
                   </div>
-                  <span className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  <span className="mt-2 text-xs dark:text-gray-400">
                     <FormattedMessage id="referralTree.you" defaultMessage="Your Position" />
                   </span>
                 </div>
@@ -1128,24 +1122,24 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
           )}
 
           {/* Legend */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-gray-200/50 dark:border-white/10">
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-center gap-4 pt-4 border-t dark:border-white/10">
+            <div className="flex items-center gap-2 text-xs dark:text-gray-400">
               <div className="w-3 h-3 rounded-full bg-green-500" />
               <span><FormattedMessage id="referralTree.legend.active" defaultMessage="Active" /></span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-xs dark:text-gray-400">
               <div className="w-3 h-3 rounded-full bg-gray-400" />
               <span><FormattedMessage id="referralTree.legend.inactive" defaultMessage="Inactive" /></span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-xs dark:text-gray-400">
               <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
               <span><FormattedMessage id="referralTree.legend.qualified" defaultMessage="Qualified ($20+)" /></span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-xs dark:text-gray-400">
               <div className="w-3 h-3 rounded-full bg-blue-500" />
               <span>N1</span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-xs dark:text-gray-400">
               <div className="w-3 h-3 rounded-full bg-red-500" />
               <span>N2</span>
             </div>

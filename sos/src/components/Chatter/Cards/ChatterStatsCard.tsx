@@ -109,7 +109,7 @@ const ChatterStatsCard = memo(function ChatterStatsCard({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+          <p className="text-xs dark:text-gray-400 sm:text-sm font-medium truncate">
             {label}
           </p>
           <div className="flex items-baseline gap-2 mt-1">
@@ -145,7 +145,7 @@ const ChatterStatsCard = memo(function ChatterStatsCard({
             )}
           </div>
           {subValue && (
-            <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+            <p className="mt-1 text-xs dark:text-gray-400 sm:text-sm truncate">
               {subValue}
             </p>
           )}

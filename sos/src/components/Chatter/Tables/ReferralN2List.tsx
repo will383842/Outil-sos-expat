@@ -61,7 +61,7 @@ export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-6 text-gray-500">
+          <div className="text-center py-6">
             <p className="text-sm">{t("chatter.referrals.noFilleulsN2Yet")}</p>
             <p className="text-xs mt-1">
               {t("chatter.referrals.n2Explanation")}
@@ -92,13 +92,13 @@ export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
             >
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">{filleul.name}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs">
                   {t("chatter.referrals.viaParrain")} {filleul.parrainN1Name}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 {filleul.threshold50Reached ? (
-                  <Badge className="bg-green-100 text-green-800 text-xs">
+                  <Badge className="bg-green-100 text-green-800">
                     <Check className="h-3 w-3 mr-1" />
                     $50+
                   </Badge>
@@ -127,7 +127,7 @@ export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
         )}
 
         {/* Info */}
-        <p className="text-xs text-gray-500 mt-3 text-center">
+        <p className="text-xs mt-3">
           {t("chatter.referrals.n2BonusInfo")}
         </p>
       </CardContent>

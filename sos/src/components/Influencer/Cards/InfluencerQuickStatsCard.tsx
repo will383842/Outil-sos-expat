@@ -153,7 +153,7 @@ const StatItem = memo(function StatItem({
           <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${colors.icon}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
+          <p className="text-[10px] dark:text-gray-700 sm:text-xs truncate">
             <FormattedMessage id={labelKey} />
           </p>
           <div className="flex items-baseline gap-1.5 mt-0.5">
@@ -207,7 +207,7 @@ const InfluencerQuickStatsCard = memo(function InfluencerQuickStatsCard({
   return (
     <div className={`${UI.card} ${UI.cardHover} p-2 sm:p-3 ${className}`}>
       {/* 2x2 grid on mobile, horizontal on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 sm:gap-2">
+      <div className="grid lg:grid-cols-4 gap-1 sm:gap-2">
         <StatItem
           icon={DollarSign}
           labelKey="influencer.stats.thisMonthEarnings"

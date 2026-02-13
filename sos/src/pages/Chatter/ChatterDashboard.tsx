@@ -127,7 +127,7 @@ const CardSkeleton = memo<{ height?: string; className?: string }>(({
   className = '',
 }) => (
   <div
-    className={`bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg animate-pulse ${height} ${className}`}
+    className={`bg-white/80 dark:bg-white/10 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg animate-pulse${height}${className}`}
   >
     <div className="p-4 sm:p-6 space-y-3">
       <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/3" />
@@ -142,7 +142,7 @@ CardSkeleton.displayName = 'CardSkeleton';
  * Inline skeleton for small components like buttons and badges
  */
 const InlineSkeleton = memo<{ width?: string }>(({ width = 'w-24' }) => (
-  <div className={`h-10 ${width} bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse`} />
+  <div className={`h-10${width}bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse`} />
 ));
 InlineSkeleton.displayName = 'InlineSkeleton';
 
@@ -150,11 +150,11 @@ InlineSkeleton.displayName = 'InlineSkeleton';
  * Large card skeleton for team management and other heavy components
  */
 const LargeCardSkeleton = memo(() => (
-  <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg animate-pulse h-96">
+  <div className="bg-white/80 dark:bg-white/10 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg animate-pulse h-96">
     <div className="p-4 sm:p-6 space-y-4">
       <div className="h-8 bg-gray-200 dark:bg-white/10 rounded w-1/4" />
       <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/2" />
-      <div className="grid grid-cols-2 gap-4 mt-4">
+      <div className="grid gap-4 mt-4">
         <div className="h-24 bg-gray-200 dark:bg-white/10 rounded-xl" />
         <div className="h-24 bg-gray-200 dark:bg-white/10 rounded-xl" />
       </div>
@@ -193,9 +193,9 @@ const CommissionItem = memo<CommissionItemProps>(({ commission, formatAmount, lo
   );
 
   return (
-    <div className="px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5 transition-colors min-h-[72px]">
+    <div className="px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/10 transition-colors min-h-[72px]">
       <div className="flex items-center gap-3">
-        <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${
+        <div className={`w-11 h-11 rounded-full flex items-center justify-center${
           commission.status === 'available'
             ? 'bg-green-100 dark:bg-green-900/30'
             : commission.status === 'pending'
@@ -209,13 +209,13 @@ const CommissionItem = memo<CommissionItemProps>(({ commission, formatAmount, lo
           )}
         </div>
         <div className="min-w-0">
-          <p className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">
+          <p className="font-medium text-gray-900 dark:text-white sm:text-base truncate">
             <FormattedMessage
               id={commission.type === 'client_referral' ? 'chatter.commission.client' : 'chatter.commission.recruitment'}
               defaultMessage={commission.type === 'client_referral' ? 'Commission Client' : 'Commission Recrutement'}
             />
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{formattedDate}</p>
+          <p className="text-xs dark:text-gray-400">{formattedDate}</p>
         </div>
       </div>
       <div className="text-right flex-shrink-0 ml-2">
@@ -262,17 +262,17 @@ const InactiveMemberItem = memo<InactiveMemberItemProps>(({ member, onMotivate }
         {member.firstName?.[0]?.toUpperCase() || '?'}
       </div>
       <div>
-        <p className="font-medium text-gray-900 dark:text-white text-sm">
+        <p className="font-medium text-gray-900 dark:text-white">
           {member.firstName} {member.lastName?.[0]}.
         </p>
-        <p className="text-xs text-amber-600 dark:text-amber-400">
+        <p className="text-xs dark:text-amber-400">
           <FormattedMessage id="chatter.alerts.inactive" defaultMessage="Inactif depuis 14+ jours" />
         </p>
       </div>
     </div>
     <button
       onClick={onMotivate}
-      className="px-3 py-1.5 text-xs font-medium bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+      className="px-3 py-1.5 text-xs font-medium bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors"
     >
       <FormattedMessage id="chatter.alerts.motivate" defaultMessage="Motiver" />
     </button>
@@ -286,7 +286,7 @@ InactiveMemberItem.displayName = 'InactiveMemberItem';
 
 // Design tokens
 const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
+  card: "bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
 } as const;
 
 // Level thresholds in cents
@@ -827,7 +827,7 @@ const ChatterDashboard: React.FC = () => {
       <ChatterDashboardLayout>
         <div className={`${UI.card} p-8 text-center`}>
           <AlertCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-xl dark:text-white font-bold mb-2">
             <FormattedMessage id="chatter.dashboard.notChatter.title" defaultMessage="Pas encore Chatter" />
           </h2>
           <p className="text-gray-500 dark:text-gray-400">
@@ -859,7 +859,7 @@ const ChatterDashboard: React.FC = () => {
             className="flex justify-center items-center transition-all duration-200 overflow-hidden"
             style={{ height: pullDistance > 0 ? `${pullDistance}px` : '0px' }}
           >
-            <div className={`flex items-center gap-2 text-gray-500 dark:text-gray-400 ${pullDistance > 60 ? 'text-red-500 dark:text-red-400' : ''}`}>
+            <div className={`flex items-center gap-2 text-gray-500 dark:text-gray-400${pullDistance > 60 ? 'text-red-500 dark:text-red-400' : ''}`}>
               <RefreshCw className={`w-5 h-5 ${pullDistance > 60 ? 'animate-spin' : ''}`} style={{ transform: `rotate(${pullDistance * 3.6}deg)` }} />
               <span className="text-sm">
                 {pullDistance > 60
@@ -872,15 +872,15 @@ const ChatterDashboard: React.FC = () => {
         )}
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+        <div className="flex sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <h1 className="text-xl dark:text-white sm:text-2xl lg:text-3xl font-bold flex items-center gap-2">
               <Rocket className="w-6 h-6 sm:w-7 sm:h-7 text-red-500 flex-shrink-0" />
               <span className="truncate">
                 <FormattedMessage id="chatter.dashboard.title" defaultMessage="Tableau de bord" />
               </span>
             </h1>
-            <p className="mt-1 text-sm sm:text-base text-gray-500 dark:text-gray-400 truncate">
+            <p className="mt-1 text-sm dark:text-gray-400 sm:text-base truncate">
               <FormattedMessage
                 id="chatter.dashboard.welcome"
                 defaultMessage="Bienvenue, {name} !"
@@ -892,7 +892,7 @@ const ChatterDashboard: React.FC = () => {
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50 min-h-[32px] px-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5"
+                className="inline-flex items-center gap-1.5 text-xs dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50 min-h-[32px] px-2 -ml-2 rounded-lg hover:bg-gray-100"
                 title={intl.formatMessage({ id: 'chatter.dashboard.refresh', defaultMessage: 'Refresh' })}
                 aria-label={intl.formatMessage({ id: 'chatter.dashboard.refreshDashboard', defaultMessage: 'Refresh dashboard' })}
               >
@@ -905,7 +905,7 @@ const ChatterDashboard: React.FC = () => {
                 </span>
               </button>
               {isRefreshing && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <FormattedMessage id="common.refreshing" defaultMessage="Actualisation..." />
                 </span>
@@ -928,7 +928,7 @@ const ChatterDashboard: React.FC = () => {
             {/* Refer button */}
             <button
               onClick={navigateToRefer}
-              className="flex items-center justify-center gap-2 min-h-[48px] px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-medium hover:opacity-90 transition-all active:scale-[0.98] shadow-lg shadow-red-500/30 flex-1 sm:flex-none"
+              className="flex items-center justify-center gap-2 min-h-[48px] px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-medium hover:opacity-90 transition-all active:scale-[0.98] shadow-lg sm:flex-none"
               aria-label={intl.formatMessage({ id: 'chatter.referrals.refer.aria', defaultMessage: 'Share referral links' })}
             >
               <Share2 className="w-5 h-5" aria-hidden="true" />
@@ -939,7 +939,7 @@ const ChatterDashboard: React.FC = () => {
 
         {/* Team Alerts Section */}
         {inactiveMembers.length > 0 && (
-          <div className={`${UI.card} p-4 sm:p-6 border-l-4 border-amber-500`}>
+          <div className={`${UI.card}p-4 sm:p-6 border-l-4`}>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
                 <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -949,7 +949,7 @@ const ChatterDashboard: React.FC = () => {
                   <Bell className="w-4 h-4 text-amber-500" />
                   <FormattedMessage id="chatter.alerts.teamTitle" defaultMessage="Alertes Equipe" />
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs dark:text-gray-400">
                   <FormattedMessage
                     id="chatter.alerts.inactiveCount"
                     defaultMessage="{count} membres inactifs necessitent votre attention"
@@ -980,7 +980,7 @@ const ChatterDashboard: React.FC = () => {
             onClick={(e) => { if (e.target === e.currentTarget) handleCloseInactiveMemberModal(); }}
             onKeyDown={(e) => { if (e.key === 'Escape') handleCloseInactiveMemberModal(); }}
           >
-            <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="w-full max-w-lg overflow-y-auto">
               <Suspense fallback={<CardSkeleton height="h-64" />}>
                 <TeamMessagesCard
                   memberName={selectedInactiveMember.firstName || 'Membre'}
@@ -1014,24 +1014,24 @@ const ChatterDashboard: React.FC = () => {
         )}
 
         {/* Commission Rates Info Banner */}
-        <div className={`${UI.card} p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800/30`}>
-          <div className="flex items-center gap-3 flex-wrap">
+        <div className={`${UI.card}p-4 bg-gradient-to-r from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 border-green-200 dark:border-green-800/30`}>
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <Info className="w-4 h-4 text-green-600 dark:text-green-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm dark:text-gray-300 font-medium">
                 <FormattedMessage id="chatter.commissions.rates" defaultMessage="Vos commissions:" />
               </span>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full text-sm font-semibold">
+            <div className="flex gap-3">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full font-semibold">
                 <Phone className="w-3.5 h-3.5" />
                 <FormattedMessage id="chatter.commissions.clientCall" defaultMessage="Client = 10$" />
               </span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-full text-sm font-semibold">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-full font-semibold">
                 <Users className="w-3.5 h-3.5" />
                 <FormattedMessage id="chatter.commissions.n1Call" defaultMessage="N1 = 1$" />
               </span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 rounded-full text-sm font-semibold">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 rounded-full font-semibold">
                 <Users className="w-3.5 h-3.5" />
                 <FormattedMessage id="chatter.commissions.n2Call" defaultMessage="N2 = 0.50$" />
               </span>
@@ -1054,23 +1054,15 @@ const ChatterDashboard: React.FC = () => {
         </div>
 
         {/* Stats Grid - Critical above-fold, loaded synchronously */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid lg:grid-cols-4 gap-3 sm:gap-4">
           {/* This Month - Most Prominent */}
           <div
-            className={`
-              ${UI.card} p-4 sm:p-5 min-h-[140px]
-              bg-gradient-to-br from-green-500/10 to-emerald-500/10
-              dark:from-green-500/20 dark:to-emerald-500/20
-              border-green-300 dark:border-green-700/50
-              opacity-0 animate-fade-in-up
-              transition-all duration-300 ease-out
-              hover:shadow-xl hover:shadow-green-500/10 hover:-translate-y-1
-            `}
+            className={`${UI.card}p-4 sm:p-5 min-h-[140px] bg-gradient-to-br from-green-500/10 dark:from-green-500/20 to-emerald-500/10 dark:to-emerald-500/20 border-green-300 dark:border-green-700/50 opacity-0 animate-fade-in-up transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1`}
             style={{ animationDelay: '0ms', animationFillMode: 'forwards' }}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                <p className="text-xs dark:text-gray-400 sm:text-sm font-medium truncate">
                   <FormattedMessage id="chatter.stats.thisMonth" defaultMessage="Ce mois" />
                 </p>
                 <div className="mt-1">
@@ -1081,12 +1073,12 @@ const ChatterDashboard: React.FC = () => {
                     duration={1500}
                     delay={200}
                     animateOnVisible
-                    className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400"
+                    className="text-3xl dark:text-green-400 sm:text-4xl font-bold"
                   />
                 </div>
-                <div className="mt-2 flex flex-col gap-1">
+                <div className="mt-2 flex gap-1">
                   {commissionBreakdown.clientCalls > 0 && (
-                    <p className="text-xs text-green-600 dark:text-green-400">
+                    <p className="text-xs dark:text-green-400">
                       <FormattedMessage
                         id="chatter.dashboard.clientsCount"
                         defaultMessage="{count} clients ($10/ea)"
@@ -1095,7 +1087,7 @@ const ChatterDashboard: React.FC = () => {
                     </p>
                   )}
                   {teamPassiveIncome > 0 && (
-                    <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                    <p className="text-xs dark:text-red-400 font-medium">
                       <FormattedMessage
                         id="chatter.stats.passiveIncome"
                         defaultMessage="Passif: {amount}"
@@ -1152,21 +1144,21 @@ const ChatterDashboard: React.FC = () => {
 
         {/* Tier Progress Card */}
         {nextTier && (
-          <div className={`${UI.card} p-4 sm:p-5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800/30`}>
-            <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className={`${UI.card}p-4 sm:p-5 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20 border-amber-200 dark:border-amber-800/30`}>
+            <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg">
                   <Award className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                  <h4 className="font-semibold text-gray-900 dark:text-white">
                     <FormattedMessage
                       id="chatter.tier.progress"
                       defaultMessage="Prochain palier: {tier} filleuls"
                       values={{ tier: nextTier.tier }}
                     />
                   </h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs dark:text-gray-400">
                     <FormattedMessage
                       id="chatter.tier.needed"
                       defaultMessage="Plus que {needed} recrutements pour debloquer"
@@ -1176,8 +1168,8 @@ const ChatterDashboard: React.FC = () => {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{nextTier.bonus}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-2xl dark:text-amber-400 font-bold">{nextTier.bonus}</p>
+                <p className="text-xs dark:text-gray-400">
                   <FormattedMessage id="chatter.tier.bonus" defaultMessage="Bonus" />
                 </p>
               </div>
@@ -1189,7 +1181,7 @@ const ChatterDashboard: React.FC = () => {
                   style={{ width: `${Math.min(100, ((tierProgress?.qualifiedFilleulsCount || 0) / nextTier.tier) * 100)}%` }}
                 />
               </div>
-              <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex justify-between mt-1 text-xs dark:text-gray-400">
                 <span>
                   <FormattedMessage
                     id="chatter.dashboard.tierQualified"
@@ -1228,11 +1220,11 @@ const ChatterDashboard: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-blue-500" />
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg dark:text-white font-semibold">
                 <FormattedMessage id="chatter.insights.title" defaultMessage="Insights & Projections" />
               </h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {dashboardData?.trends && (
                 <Suspense fallback={<CardSkeleton height="h-48" />}>
                   <TrendsChartCard
@@ -1276,7 +1268,7 @@ const ChatterDashboard: React.FC = () => {
         )}
 
         {/* Daily Missions & Weekly Challenge - Lazy loaded */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-2 gap-6">
           <div data-tour="missions-card">
             <Suspense fallback={<CardSkeleton height="h-80" />}>
               <DailyMissionsCard
@@ -1302,7 +1294,7 @@ const ChatterDashboard: React.FC = () => {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Motivation Widget - Lazy loaded */}
@@ -1323,14 +1315,14 @@ const ChatterDashboard: React.FC = () => {
 
             {/* Recent Commissions - Using memoized items */}
             <div className={`${UI.card} overflow-hidden`}>
-              <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+              <div className="px-4 sm:px-6 py-4 border-b dark:border-white/10 flex items-center justify-between">
                 <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Clock className="w-5 h-5 text-gray-400" />
                   <FormattedMessage id="chatter.dashboard.recentCommissions" defaultMessage="Commissions récentes" />
                 </h3>
                 <button
                   onClick={navigateToPayments}
-                  className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 flex items-center gap-1 min-h-[44px] px-3 -mr-3 active:opacity-70"
+                  className="text-sm dark:text-red-400 hover:text-red-700 flex items-center gap-1 min-h-[44px] px-3 -mr-3 active:opacity-70"
                   aria-label={intl.formatMessage({ id: 'chatter.dashboard.viewAllCommissions', defaultMessage: 'View all commissions' })}
                 >
                   <FormattedMessage id="common.viewAll" defaultMessage="Voir tout" />
@@ -1345,12 +1337,12 @@ const ChatterDashboard: React.FC = () => {
                   <p className="text-gray-500 dark:text-gray-400">
                     <FormattedMessage id="chatter.dashboard.noCommissions" defaultMessage="Aucune commission pour l'instant" />
                   </p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-sm dark:text-gray-500 mt-1">
                     <FormattedMessage id="chatter.dashboard.shareLinks" defaultMessage="Partagez vos liens pour commencer à gagner" />
                   </p>
                   <button
                     onClick={navigateToRefer}
-                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
                     aria-label={intl.formatMessage({ id: 'chatter.dashboard.startSharing.aria', defaultMessage: 'Start sharing referral links' })}
                   >
                     <Share2 className="w-4 h-4" aria-hidden="true" />
@@ -1358,7 +1350,7 @@ const ChatterDashboard: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100 dark:divide-white/5">
+                <div className="divide-y dark:divide-white/5">
                   {recentCommissions.map((commission) => (
                     <CommissionItem
                       key={commission.id}
@@ -1483,7 +1475,7 @@ const ChatterDashboard: React.FC = () => {
                   </h3>
                   <button
                     onClick={navigateToReferrals}
-                    className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 flex items-center gap-1 min-h-[44px] px-2 -mr-2 active:opacity-70"
+                    className="text-sm dark:text-red-400 hover:text-red-700 flex items-center gap-1 min-h-[44px] px-2 -mr-2 active:opacity-70"
                     aria-label={intl.formatMessage({ id: 'chatter.referrals.manageTeam', defaultMessage: 'Manage team' })}
                   >
                     <FormattedMessage id="common.manage" defaultMessage="Gerer" />
@@ -1495,12 +1487,12 @@ const ChatterDashboard: React.FC = () => {
                     <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                       <Users className="w-6 h-6 text-red-500" />
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    <p className="text-sm dark:text-gray-400 mb-3">
                       <FormattedMessage id="chatter.referrals.noTeamYet" defaultMessage="Pas encore d'equipe" />
                     </p>
                     <button
                       onClick={navigateToRefer}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
                       aria-label={intl.formatMessage({ id: 'chatter.referrals.recruitFirst.aria', defaultMessage: 'Recruit your first team member' })}
                     >
                       <Share2 className="w-4 h-4" aria-hidden="true" />
@@ -1509,52 +1501,52 @@ const ChatterDashboard: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid gap-3">
                       <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                        <p className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-400">
+                        <p className="text-2xl dark:text-red-400 sm:text-3xl font-bold">
                           {referralStats.totalFilleulsN1}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs dark:text-gray-400 mt-1">
                           <FormattedMessage id="chatter.referrals.directN1" defaultMessage="Directs (N1)" />
                         </p>
-                        <p className="text-xs text-red-600 dark:text-red-400 font-medium mt-0.5">
+                        <p className="text-xs dark:text-red-400 font-medium mt-0.5">
                           <FormattedMessage id="chatter.dashboard.n1RatePerCall" defaultMessage="$1/call" />
                         </p>
                       </div>
                       <div className="text-center p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
-                        <p className="text-2xl sm:text-3xl font-bold text-pink-600 dark:text-pink-400">
+                        <p className="text-2xl dark:text-pink-400 sm:text-3xl font-bold">
                           {referralStats.totalFilleulsN2}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs dark:text-gray-400 mt-1">
                           <FormattedMessage id="chatter.referrals.indirectN2" defaultMessage="Indirects (N2)" />
                         </p>
-                        <p className="text-xs text-pink-600 dark:text-pink-400 font-medium mt-0.5">
+                        <p className="text-xs dark:text-pink-400 font-medium mt-0.5">
                           <FormattedMessage id="chatter.dashboard.n2RatePerCall" defaultMessage="$0.50/call" />
                         </p>
                       </div>
                     </div>
-                    <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl border border-red-200 dark:border-red-800/30">
+                    <div className="mt-4 p-4 bg-gradient-to-r from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-xl border dark:border-red-800/30">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <DollarSign className="w-4 h-4 text-red-500" />
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <p className="text-sm dark:text-gray-300 font-medium">
                             <FormattedMessage id="chatter.referrals.passiveIncome" defaultMessage="Revenus passifs" />
                           </p>
                         </div>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full font-medium">
                           <TrendingUp className="w-3 h-3" />
                           <FormattedMessage id="chatter.referrals.recurring" defaultMessage="Recurrent" />
                         </span>
                       </div>
-                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                      <p className="text-2xl dark:text-red-400 font-bold">
                         +{formatAmount(referralStats.monthlyReferralEarnings || 0)}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs dark:text-gray-400 mt-1">
                         <FormattedMessage id="chatter.referrals.passiveDesc" defaultMessage="Ce mois, sans rien faire de plus" />
                       </p>
                     </div>
-                    <div className="mt-3 p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    <div className="mt-3 p-3 bg-gray-50 dark:bg-white/10 rounded-lg">
+                      <p className="text-xs dark:text-gray-400 flex items-center gap-1">
                         <Info className="w-3.5 h-3.5" />
                         <FormattedMessage id="chatter.referrals.ratesReminder" defaultMessage="Chaque appel de votre equipe vous rapporte automatiquement !" />
                       </p>

@@ -24,7 +24,7 @@ import { generateEventIdForType } from '@/utils/sharedEventId';
 
 // Design tokens - Harmonized with ChatterLanding dark theme
 const UI = {
-  card: "bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg",
+  card: "bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg",
 } as const;
 
 const ChatterRegister: React.FC = () => {
@@ -106,11 +106,11 @@ const ChatterRegister: React.FC = () => {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-b from-red-950 via-gray-950 to-black">
-          <div className="max-w-md w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="max-w-md w-full bg-white/10 backdrop-blur-xl border rounded-2xl shadow-xl p-8 text-center">
+            <div className="w-16 h-16 bg-amber-500/20 border rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">⚠️</span>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-4">
+            <h1 className="text-2xl font-bold mb-4">
               <FormattedMessage id="chatter.register.roleConflict.title" defaultMessage="Registration Not Allowed" />
             </h1>
             <p className="text-gray-400 mb-6">
@@ -122,7 +122,7 @@ const ChatterRegister: React.FC = () => {
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-full px-6 py-3 min-h-[48px] bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold rounded-xl transition-all hover:shadow-lg hover:shadow-amber-500/30"
+              className="w-full px-6 py-3 min-h-[48px] bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold rounded-xl transition-all hover:shadow-lg"
             >
               <FormattedMessage id="chatter.register.roleConflict.button" defaultMessage="Go to My Dashboard" />
             </button>
@@ -321,7 +321,7 @@ const ChatterRegister: React.FC = () => {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-950 via-gray-950 to-black">
-          <div className="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 rounded-full animate-spin" />
         </div>
       </Layout>
     );
@@ -355,10 +355,10 @@ const ChatterRegister: React.FC = () => {
 
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-400 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/30">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-400 to-yellow-400 flex items-center justify-center shadow-lg">
               <Star className="w-8 h-8 text-black" />
             </div>
-            <h1 className="text-2xl font-black text-white mb-2">
+            <h1 className="text-2xl font-black mb-2">
               <FormattedMessage id="chatter.register.title" defaultMessage="Inscription Chatter" />
             </h1>
             <p className="text-gray-400">
@@ -369,24 +369,24 @@ const ChatterRegister: React.FC = () => {
           {/* Success State */}
           {success ? (
             <div className={`${UI.card} p-8 text-center`}>
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 border flex items-center justify-center">
                 <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">
+              <h2 className="text-xl font-bold mb-2">
                 <FormattedMessage id="chatter.register.success.title" defaultMessage="Inscription réussie !" />
               </h2>
               <p className="text-gray-400 mb-4">
                 <FormattedMessage id="chatter.register.success.subtitle" defaultMessage="Vous allez être redirigé vers la configuration Telegram..." />
               </p>
-              <div className="w-6 h-6 mx-auto border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 mx-auto border-2 rounded-full animate-spin" />
             </div>
           ) : emailAlreadyExists ? (
             /* Email Already Exists - Show Login Prompt */
             <div className={`${UI.card} p-8 text-center`}>
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border flex items-center justify-center">
                 <Mail className="w-8 h-8 text-blue-400" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">
+              <h2 className="text-xl font-bold mb-2">
                 <FormattedMessage id="chatter.register.emailExists.title" defaultMessage="Vous avez déjà un compte !" />
               </h2>
               <p className="text-gray-400 mb-2">
@@ -396,7 +396,7 @@ const ChatterRegister: React.FC = () => {
                   values={{ email: <strong className="text-white">{existingEmail}</strong> }}
                 />
               </p>
-              <p className="text-gray-500 text-sm mb-6">
+              <p className="text-gray-500 mb-6">
                 <FormattedMessage
                   id="chatter.register.emailExists.hint"
                   defaultMessage="Connectez-vous pour continuer votre inscription et recevoir votre bonus de $50."
@@ -418,7 +418,7 @@ const ChatterRegister: React.FC = () => {
                   setEmailAlreadyExists(false);
                   setExistingEmail('');
                 }}
-                className="text-sm text-gray-400 hover:text-white underline"
+                className="text-sm hover:text-white underline"
               >
                 <FormattedMessage id="chatter.register.emailExists.tryDifferent" defaultMessage="Utiliser un autre email" />
               </button>
@@ -427,8 +427,8 @@ const ChatterRegister: React.FC = () => {
             /* Registration Form */
             <div className={`${UI.card} p-6`}>
               {/* Already registered link */}
-              <div className="mb-6 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center">
-                <p className="text-sm text-gray-400">
+              <div className="mb-6 p-3 bg-blue-500/10 rounded-xl border text-center">
+                <p className="text-sm">
                   <FormattedMessage id="chatter.register.alreadyRegistered" defaultMessage="Déjà inscrit ?" />{' '}
                   <button
                     onClick={() => navigate(loginRoute)}
@@ -441,16 +441,16 @@ const ChatterRegister: React.FC = () => {
 
               {/* Referral code banner if present */}
               {referralCodeFromUrl && (
-                <div className="mb-6 p-4 bg-green-500/10 rounded-xl border border-green-500/30">
+                <div className="mb-6 p-4 bg-green-500/10 rounded-xl border">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-green-500/20 border rounded-full flex items-center justify-center">
                       <Gift className="w-5 h-5 text-green-400" />
                     </div>
                     <div>
                       <p className="font-semibold text-green-300">
                         <FormattedMessage id="chatter.register.referralDetected" defaultMessage="You've been referred!" />
                       </p>
-                      <p className="text-sm text-green-400">
+                      <p className="text-sm">
                         <FormattedMessage
                           id="chatter.register.referralCode.applied"
                           defaultMessage="Referral code {code} will be applied automatically"
@@ -480,7 +480,7 @@ const ChatterRegister: React.FC = () => {
 
           {/* Info */}
           {!success && (
-            <p className="text-center text-sm text-gray-500 mt-6">
+            <p className="text-center mt-6">
               <FormattedMessage
                 id="chatter.register.info"
                 defaultMessage="En vous inscrivant, vous acceptez les conditions du programme Chatter"

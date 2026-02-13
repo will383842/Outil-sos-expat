@@ -186,7 +186,7 @@ const ForecastCard = memo(function ForecastCard({
       defaultMessage: 'Chaque client compte ! Partage ton lien.',
     },
     starting: {
-      icon: <ArrowRight className="w-4 h-4 text-gray-500" />,
+      icon: <ArrowRight className="w-4 h-4 text-gray-700 dark:text-gray-300" />,
       messageId: 'chatter.forecast.motivation.starting',
       defaultMessage: 'Pret a commencer ? Partage ton lien !',
     },
@@ -203,7 +203,7 @@ const ForecastCard = memo(function ForecastCard({
           <div className={`${UI.skeleton} h-5 w-32`} />
         </div>
         <div className={`${UI.skeleton} h-20 rounded-xl mb-3`} />
-        <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="grid gap-3 mb-3">
           <div className={`${UI.skeleton} h-16 rounded-xl`} />
           <div className={`${UI.skeleton} h-16 rounded-xl`} />
         </div>
@@ -223,7 +223,7 @@ const ForecastCard = memo(function ForecastCard({
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <Target className="w-5 h-5 text-red-500" />
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-sm dark:text-white font-semibold">
           <FormattedMessage
             id="chatter.forecast.title"
             defaultMessage="A ce rythme..."
@@ -232,16 +232,16 @@ const ForecastCard = memo(function ForecastCard({
       </div>
 
       {/* Projected Month-End */}
-      <div className="p-4 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl mb-3">
+      <div className="p-4 bg-gradient-to-br from-red-50 dark:from-red-900/20 to-orange-50 dark:to-orange-900/20 rounded-xl mb-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <p className="text-xs dark:text-gray-400 mb-1">
               <FormattedMessage
                 id="chatter.forecast.projectedEarnings"
                 defaultMessage="Gains estimes fin de mois"
               />
             </p>
-            <p className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+            <p className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600">
               <AnimatedNumber
                 value={projections.projectedMonthEnd}
                 isCurrency
@@ -253,28 +253,28 @@ const ForecastCard = memo(function ForecastCard({
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs dark:text-gray-400">
               <FormattedMessage
                 id="chatter.forecast.daysRemaining"
                 defaultMessage="{days} jours restants"
                 values={{ days: projections.daysRemaining }}
               />
             </p>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <p className="text-sm dark:text-gray-300 font-medium">
               ~{formatAmountWhole(projections.dailyAverage)}
-              <span className="text-xs text-gray-500 dark:text-gray-400">/jour</span>
+              <span className="text-xs dark:text-gray-400">/jour</span>
             </p>
           </div>
         </div>
       </div>
 
       {/* Next Level & Next Tier */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      <div className="grid gap-3 mb-3">
         {/* Next Level */}
         <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
           <div className="flex items-center gap-1.5 mb-1">
             <Calendar className="w-3.5 h-3.5 text-red-500" />
-            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-[10px] dark:text-gray-400 sm:text-xs">
               <FormattedMessage
                 id="chatter.forecast.nextLevel"
                 defaultMessage="Prochain niveau"
@@ -283,11 +283,11 @@ const ForecastCard = memo(function ForecastCard({
           </div>
           {projections.nextLevelConfig ? (
             <>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              <p className="text-sm dark:text-white font-semibold">
                 {projections.nextLevelConfig.name}
               </p>
               {projections.daysToNextLevel !== null ? (
-                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-[10px] dark:text-gray-400 sm:text-xs">
                   <FormattedMessage
                     id="chatter.forecast.etaDays"
                     defaultMessage="ETA: ~{days} jours"
@@ -295,7 +295,7 @@ const ForecastCard = memo(function ForecastCard({
                   />
                 </p>
               ) : (
-                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-[10px] dark:text-gray-400 sm:text-xs">
                   {formatAmountWhole(projections.amountToNextLevel)}
                   <FormattedMessage
                     id="chatter.forecast.remaining"
@@ -305,7 +305,7 @@ const ForecastCard = memo(function ForecastCard({
               )}
             </>
           ) : (
-            <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+            <p className="text-sm dark:text-red-400 font-semibold">
               <FormattedMessage
                 id="chatter.forecast.maxLevel"
                 defaultMessage="Niveau max !"
@@ -318,7 +318,7 @@ const ForecastCard = memo(function ForecastCard({
         <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
           <div className="flex items-center gap-1.5 mb-1">
             <Gift className="w-3.5 h-3.5 text-green-500" />
-            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-[10px] dark:text-gray-400 sm:text-xs">
               <FormattedMessage
                 id="chatter.forecast.nextBonus"
                 defaultMessage="Prochain bonus"
@@ -327,10 +327,10 @@ const ForecastCard = memo(function ForecastCard({
           </div>
           {projections.nextTier ? (
             <>
-              <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+              <p className="text-sm dark:text-green-400 font-semibold">
                 {formatAmount(projections.nextTierBonus)}
               </p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-[10px] dark:text-gray-400 sm:text-xs">
                 <FormattedMessage
                   id="chatter.forecast.referralsNeeded"
                   defaultMessage="{count} recrues de plus"
@@ -339,7 +339,7 @@ const ForecastCard = memo(function ForecastCard({
               </p>
             </>
           ) : (
-            <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+            <p className="text-sm dark:text-green-400 font-semibold">
               <FormattedMessage
                 id="chatter.forecast.allBonuses"
                 defaultMessage="Tous obtenus !"
@@ -366,7 +366,7 @@ const ForecastCard = memo(function ForecastCard({
         `}
       >
         {motivation.icon}
-        <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+        <p className="text-xs dark:text-gray-300 sm:text-sm font-medium">
           <FormattedMessage
             id={motivation.messageId}
             defaultMessage={motivation.defaultMessage}

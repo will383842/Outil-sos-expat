@@ -76,7 +76,7 @@ const GroupAdminLeaderboard: React.FC = () => {
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1: return <Trophy className="w-6 h-6 text-yellow-500" />;
-      case 2: return <Medal className="w-6 h-6 text-gray-400" />;
+      case 2: return <Medal className="w-6 h-6 text-gray-600 dark:text-gray-400" />;
       case 3: return <Award className="w-6 h-6 text-amber-600" />;
       default: return null;
     }
@@ -119,7 +119,7 @@ const GroupAdminLeaderboard: React.FC = () => {
           );
         })}
         {remaining > 0 && (
-          <span className="text-xs text-gray-400 ml-1">+{remaining}</span>
+          <span className="text-xs dark:text-gray-400 ml-1">+{remaining}</span>
         )}
       </div>
     );
@@ -131,7 +131,7 @@ const GroupAdminLeaderboard: React.FC = () => {
 
       <div className="p-4 md:p-8">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+          <h1 className="text-2xl dark:text-white md:text-3xl font-bold mb-2">
             <FormattedMessage id="groupAdmin.leaderboard.heading" defaultMessage="Leaderboard" />
           </h1>
 
@@ -165,15 +165,15 @@ const GroupAdminLeaderboard: React.FC = () => {
           {!isAllTime && (
             <div className="flex items-center justify-center gap-4 mb-4">
               <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg">
-                <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-600" />
               </button>
-              <span className="text-lg font-medium min-w-[180px] text-center text-gray-900 dark:text-white">{monthLabel}</span>
+              <span className="text-lg dark:text-white font-medium min-w-[180px]">{monthLabel}</span>
               <button
                 onClick={() => changeMonth(1)}
                 disabled={month >= new Date().toISOString().substring(0, 7)}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg disabled:opacity-50"
               >
-                <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-600" />
               </button>
             </div>
           )}
@@ -205,7 +205,7 @@ const GroupAdminLeaderboard: React.FC = () => {
                 {badgeFilter && (
                   <button
                     onClick={() => setBadgeFilter(null)}
-                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
+                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-700 hover:bg-gray-100 rounded-lg"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -214,7 +214,7 @@ const GroupAdminLeaderboard: React.FC = () => {
 
               {/* Badge Filter Dropdown */}
               {showBadgeFilterDropdown && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl shadow-lg dark:shadow-none z-10 p-2 min-w-[200px]">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white dark:bg-gray-900 border dark:border-white/10 rounded-xl shadow-lg dark:shadow-none z-10 p-2 min-w-[200px]">
                   {availableBadges.map((badge) => {
                     const badgeInfo = GROUP_ADMIN_BADGES[badge];
                     return (
@@ -229,7 +229,7 @@ const GroupAdminLeaderboard: React.FC = () => {
                         }`}
                       >
                         <span className="text-lg">{badgeInfo.icon}</span>
-                        <span className="text-sm text-gray-700 dark:text-gray-300">{badgeInfo.name}</span>
+                        <span className="text-sm dark:text-gray-700">{badgeInfo.name}</span>
                       </button>
                     );
                   })}
@@ -240,10 +240,10 @@ const GroupAdminLeaderboard: React.FC = () => {
 
           {/* Current Rank Banner */}
           {currentRank && (
-            <div className="bg-indigo-600 text-white rounded-xl p-4 mb-6 text-center">
-              <p className="text-indigo-200 text-sm">Your Rank</p>
+            <div className="bg-indigo-600 text-white rounded-xl p-4 mb-6">
+              <p className="text-indigo-200">Your Rank</p>
               <p className="text-3xl font-bold">#{currentRank}</p>
-              <p className="text-indigo-200 text-sm">of {totalParticipants} participants</p>
+              <p className="text-indigo-200">of {totalParticipants} participants</p>
             </div>
           )}
 
@@ -254,7 +254,7 @@ const GroupAdminLeaderboard: React.FC = () => {
           ) : filteredRankings.length > 0 ? (
             <div className="space-y-3">
               {badgeFilter && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">
+                <p className="text-sm dark:text-gray-700 mb-4">
                   <FormattedMessage
                     id="groupAdmin.leaderboard.showingWithBadge"
                     defaultMessage="Showing {count} {count, plural, one {admin} other {admins}} with {badge} badge"
@@ -273,20 +273,20 @@ const GroupAdminLeaderboard: React.FC = () => {
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 flex items-center justify-center">
                       {getRankIcon(entry.rank) || (
-                        <span className="text-2xl font-bold text-gray-400">#{entry.rank}</span>
+                        <span className="text-2xl dark:text-gray-400 font-bold">#{entry.rank}</span>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-gray-900 dark:text-white truncate">{entry.groupAdminName}</p>
                       {entry.groupName && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{entry.groupName}</p>
+                        <p className="text-sm dark:text-gray-700 truncate">{entry.groupName}</p>
                       )}
                       {renderBadges(entry.badges)}
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-xl font-bold text-green-600">{formatGroupAdminAmount(entry.earnings)}</p>
+                      <p className="text-xl font-bold">{formatGroupAdminAmount(entry.earnings)}</p>
                       {entry.clients !== undefined && entry.clients > 0 && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs dark:text-gray-700">
                           {entry.clients} {intl.formatMessage({ id: 'groupAdmin.leaderboard.clients', defaultMessage: 'clients' })}
                         </p>
                       )}
@@ -297,8 +297,8 @@ const GroupAdminLeaderboard: React.FC = () => {
             </div>
           ) : badgeFilter ? (
             <div className="text-center py-12">
-              <Filter className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">
+              <Filter className="w-12 h-12 text-gray-700 dark:text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-700 dark:text-gray-700">
                 <FormattedMessage
                   id="groupAdmin.leaderboard.noAdminsWithBadge"
                   defaultMessage="No admins found with the {badge} badge"
@@ -307,15 +307,15 @@ const GroupAdminLeaderboard: React.FC = () => {
               </p>
               <button
                 onClick={() => setBadgeFilter(null)}
-                className="mt-4 text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+                className="mt-4 text-indigo-600 hover:text-indigo-700 font-medium"
               >
                 <FormattedMessage id="groupAdmin.leaderboard.clearFilter" defaultMessage="Clear filter" />
               </button>
             </div>
           ) : (
             <div className="text-center py-12">
-              <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">
+              <Trophy className="w-12 h-12 text-gray-700 dark:text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-700 dark:text-gray-700">
                 {isAllTime ? (
                   <FormattedMessage id="groupAdmin.leaderboard.noRankingsAllTime" defaultMessage="No rankings yet" />
                 ) : (

@@ -93,16 +93,7 @@ const CTAButton: React.FC<{
   <button
     onClick={onClick}
     aria-label={ariaLabel}
-    className={`
-      flex items-center justify-center gap-2 sm:gap-3
-      bg-gradient-to-r from-amber-400 to-yellow-400
-      text-black font-extrabold rounded-2xl
-      shadow-lg shadow-amber-500/30
-      transition-all active:scale-[0.98] hover:shadow-xl hover:from-amber-300 hover:to-yellow-300
-      will-change-transform
-      ${size === 'large' ? 'min-h-[56px] sm:min-h-[64px] px-6 sm:px-8 py-4 sm:py-5 text-lg sm:text-xl' : 'min-h-[48px] sm:min-h-[56px] px-5 sm:px-6 py-3 sm:py-4 text-base sm:text-lg'}
-      ${className}
-    `}
+    className={`flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold rounded-2xl shadow-lg transition-all active:scale-[0.98] hover:shadow-xl hover:from-amber-300 hover:to-yellow-300 will-change-transform${size === 'large' ? 'min-h-[56px] sm:min-h-[64px] px-6 sm:px-8 py-4 sm:py-5 text-lg sm:text-xl' : 'min-h-[48px] sm:min-h-[56px] px-5 sm:px-6 py-3 sm:py-4 text-base sm:text-lg'}${className}`}
   >
     {children}
     <ArrowRight className={size === 'large' ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4 sm:w-5 sm:h-5'} aria-hidden="true" />
@@ -117,7 +108,7 @@ const FAQItem: React.FC<{
   onToggle: () => void;
   index: number;
 }> = ({ question, answer, isOpen, onToggle, index }) => (
-  <div className="border border-white/10 rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+  <div className="border rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
     <button
       type="button"
       onClick={onToggle}
@@ -126,8 +117,8 @@ const FAQItem: React.FC<{
       aria-controls={`faq-answer-${index}`}
       id={`faq-question-${index}`}
     >
-      <span className="text-base sm:text-lg font-semibold text-white pr-2" itemProp="name">{question}</span>
-      <span className={`flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
+      <span className="text-base sm:text-lg font-semibold pr-2" itemProp="name">{question}</span>
+      <span className={`flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
         {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
       </span>
     </button>
@@ -138,7 +129,7 @@ const FAQItem: React.FC<{
       className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
       itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer"
     >
-      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base text-gray-300 leading-relaxed" itemProp="text">
+      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base leading-relaxed" itemProp="text">
         {answer}
       </div>
     </div>
@@ -146,9 +137,9 @@ const FAQItem: React.FC<{
 );
 
 const ScrollIndicator: React.FC<{ label: string }> = ({ label }) => (
-  <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" aria-hidden="true">
-    <span className="text-white/60 text-xs sm:text-sm font-medium">{label}</span>
-    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-white/60 animate-bounce" />
+  <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2" aria-hidden="true">
+    <span className="text-white/80 sm:text-sm font-medium">{label}</span>
+    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-white/80 animate-bounce" />
   </div>
 );
 
@@ -327,50 +318,50 @@ const ChatterLanding: React.FC = () => {
         {/* ================================================================
             HERO - MOBILE-FIRST
         ================================================================ */}
-        <section className="min-h-[100svh] flex flex-col justify-center items-center relative bg-gradient-to-b from-red-950 via-red-900 to-black overflow-hidden" aria-label={intl.formatMessage({ id: 'chatter.landing.seo.ogTitle', defaultMessage: 'Become a Chatter' })}>
+        <section className="min-h-[100svh] flex justify-center items-center relative bg-gradient-to-b from-red-950 via-red-900 to-black overflow-hidden" aria-label={intl.formatMessage({ id: 'chatter.landing.seo.ogTitle', defaultMessage: 'Become a Chatter' })}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(251,191,36,0.15),transparent_50%)]" aria-hidden="true" />
 
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
 
             <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
               <span><FormattedMessage id="chatter.landing.hero.new.line1" defaultMessage="Gagnez jusqu'à" /></span>{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-400 to-green-400">
+              <span className="text-transparent bg-clip-text from-amber-400 via-yellow-400 to-green-400">
                 <FormattedMessage id="chatter.landing.hero.new.amount" defaultMessage="3000$+/mois" />
               </span>
               <br />
               <span className="text-gray-200"><FormattedMessage id="chatter.landing.hero.new.line2" defaultMessage="en aidant les voyageurs" /></span>
             </h1>
 
-            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-4xl mx-auto">
-              <p className="text-center text-sm sm:text-base text-gray-400 mb-4">
+            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-4xl mx-auto">
+              <p className="text-center sm:text-base mb-4">
                 <FormattedMessage id="chatter.landing.hero.sources" defaultMessage="3 sources de revenus illimitées :" />
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
                 {/* Source 1 : Appels directs */}
-                <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/30 rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black text-amber-400 mb-1">10$</div>
-                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="chatter.landing.hero.source1" defaultMessage="par appel direct" /></div>
+                <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border rounded-xl p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-black mb-1">10$</div>
+                  <div className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.hero.source1" defaultMessage="par appel direct" /></div>
                 </div>
 
                 {/* Source 2 : Équipe MLM */}
-                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">1-3000$</div>
-                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="chatter.landing.hero.source2" defaultMessage="passifs/mois équipe" /></div>
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border rounded-xl p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-black mb-1">1-3000$</div>
+                  <div className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.hero.source2" defaultMessage="passifs/mois équipe" /></div>
                 </div>
 
                 {/* Source 3 : Partenaires (Avocats/Aidants) */}
-                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-3 sm:p-4 text-center relative">
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border rounded-xl p-3 sm:p-4 text-center relative">
+                  <span className="absolute -top-2 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full">
                     <FormattedMessage id="chatter.landing.hero.hot" defaultMessage="🔥 HOT" />
                   </span>
-                  <div className="text-2xl sm:text-3xl font-black text-purple-400 mb-1">1500$</div>
-                  <div className="text-xs sm:text-sm text-gray-300"><FormattedMessage id="chatter.landing.hero.source3" defaultMessage="avec 10 partenaires" /></div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">1500$</div>
+                  <div className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.hero.source3" defaultMessage="avec 10 partenaires" /></div>
                 </div>
               </div>
 
               {/* Exemple partenaire */}
-              <div className="mt-4 pt-4 border-t border-green-500/20 text-center">
-                <p className="text-xs sm:text-sm text-gray-400">
+              <div className="mt-4 pt-4 border-t text-center">
+                <p className="text-xs sm:text-sm">
                   <FormattedMessage
                     id="chatter.landing.hero.partnerExample"
                     defaultMessage="💡 1 partenaire (avocat/aidant) = 30 appels/mois × 5$ × 6 mois = {total} passifs !"
@@ -380,7 +371,7 @@ const ChatterLanding: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-base sm:text-lg text-gray-300 mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
               <FormattedMessage id="chatter.landing.hero.new.desc" defaultMessage="Partagez votre lien sur les réseaux sociaux + Construisez votre équipe = Revenus illimités. Les top chatters gagnent 500-5000$/mois !" />
             </p>
 
@@ -388,7 +379,7 @@ const ChatterLanding: React.FC = () => {
               <FormattedMessage id="chatter.landing.cta.start" defaultMessage="Commencer gratuitement" />
             </CTAButton>
 
-            <p className="text-gray-400 mt-4 sm:mt-6 text-sm sm:text-base">
+            <p className="text-gray-400 mt-4 sm:mt-6 sm:text-base">
               <FormattedMessage id="chatter.landing.reassurance" defaultMessage="100% gratuit • Aucun investissement • 197 pays" />
             </p>
           </div>
@@ -399,44 +390,44 @@ const ChatterLanding: React.FC = () => {
         {/* ================================================================
             SECTION 2 - 3 SOURCES DE REVENUS
         ================================================================ */}
-        <section className="section-content section-lazy bg-gradient-to-b from-black to-gray-950" aria-labelledby="section-revenue">
+        <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="section-revenue">
           <div className="max-w-7xl mx-auto">
 
-            <h2 id="section-revenue" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
+            <h2 id="section-revenue" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <span className="text-amber-400"><FormattedMessage id="chatter.landing.revenue.title.highlight" defaultMessage="3 façons" /></span>{' '}
               <FormattedMessage id="chatter.landing.revenue.title" defaultMessage="de gagner" />
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-300 text-center mb-10 sm:mb-12 lg:mb-16">
+            <p className="text-base sm:text-lg lg:text-xl mb-10 sm:mb-12 lg:mb-16">
               <FormattedMessage id="chatter.landing.revenue.subtitle" defaultMessage="Cumulez vos revenus. Sans limite." />
             </p>
 
             <div className="grid lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
 
               {/* Source 1 */}
-              <article className="bg-gradient-to-br from-amber-500/20 to-yellow-500/10 border border-amber-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <article className="bg-gradient-to-br from-amber-500/20 to-yellow-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-amber-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
-                  <span className="text-xl sm:text-2xl lg:text-3xl font-black text-black">1</span>
+                  <span className="text-xl sm:text-2xl lg:text-3xl font-black">1</span>
                 </div>
                 <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
                   <FormattedMessage id="chatter.landing.source1.title" defaultMessage="Scrollez, aidez, gagnez" />
                 </h3>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-5 lg:mb-6">
+                <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5 lg:mb-6">
                   <FormattedMessage id="chatter.landing.source1.desc" defaultMessage="Parcourez les groupes Facebook et forums. Aidez ceux qui ont besoin en partageant votre lien." />
                 </p>
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-amber-400">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-black">
                   10${local(10)} / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
                 </div>
               </article>
 
               {/* Source 2 */}
-              <article className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border border-green-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <article className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-green-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
-                  <span className="text-xl sm:text-2xl lg:text-3xl font-black text-black">2</span>
+                  <span className="text-xl sm:text-2xl lg:text-3xl font-black">2</span>
                 </div>
                 <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
                   <FormattedMessage id="chatter.landing.source2.title" defaultMessage="Recrutez des chatters" />
                 </h3>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-5 lg:mb-6">
+                <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5 lg:mb-6">
                   <FormattedMessage id="chatter.landing.source2.desc" defaultMessage="Créez une équipe ILLIMITÉE. Sur chaque appel de vos recrues :" />
                 </p>
                 <div className="space-y-1 sm:space-y-2">
@@ -450,43 +441,43 @@ const ChatterLanding: React.FC = () => {
               </article>
 
               {/* Source 3 - ULTRA VENDEUR */}
-              <article className="bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/50 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 relative overflow-hidden">
+              <article className="bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 relative overflow-hidden">
                 {/* Badge HOT */}
-                <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs sm:text-sm font-black px-3 py-1 rounded-full shadow-lg animate-pulse">
+                <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-orange-500 text-white sm:text-sm font-black px-3 py-1 rounded-full shadow-lg animate-pulse">
                   🔥 <FormattedMessage id="chatter.landing.source3.hot" defaultMessage="LE PLUS RENTABLE" />
                 </div>
 
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-purple-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
-                  <span className="text-xl sm:text-2xl lg:text-3xl font-black text-white">3</span>
+                  <span className="text-xl sm:text-2xl lg:text-3xl font-black">3</span>
                 </div>
                 <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
                   <FormattedMessage id="chatter.landing.source3.title.new" defaultMessage="Trouvez des partenaires" />
                 </h3>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-5">
+                <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5">
                   <FormattedMessage id="chatter.landing.source3.desc.new" defaultMessage="Invitez des avocats ou expatriés aidants. Gagnez 5$ sur CHAQUE appel qu'ils reçoivent pendant 6 mois !" />
                 </p>
 
                 {/* Calculs vendeurs */}
-                <div className="bg-white/5 border border-purple-500/30 rounded-xl p-4 mb-4">
+                <div className="bg-white/10 border rounded-xl p-4 mb-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm sm:text-base text-gray-300">
+                      <span className="text-sm sm:text-base">
                         <FormattedMessage id="chatter.landing.source3.calc1" defaultMessage="1 partenaire (30 appels/mois)" />
                       </span>
-                      <span className="text-lg sm:text-xl font-black text-purple-400">150$/mois</span>
+                      <span className="text-lg sm:text-xl font-black">150$/mois</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm sm:text-base text-gray-300">
+                      <span className="text-sm sm:text-base">
                         <FormattedMessage id="chatter.landing.source3.calc2" defaultMessage="× 6 mois =" />
                       </span>
-                      <span className="text-xl sm:text-2xl font-black text-amber-400">900$</span>
+                      <span className="text-xl sm:text-2xl font-black">900$</span>
                     </div>
-                    <div className="border-t border-purple-500/20 pt-3 mt-3">
+                    <div className="border-t pt-3 mt-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-base sm:text-lg font-bold text-white">
+                        <span className="text-base sm:text-lg font-bold">
                           <FormattedMessage id="chatter.landing.source3.calc3" defaultMessage="10 partenaires =" />
                         </span>
-                        <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                        <span className="text-2xl sm:text-3xl lg:text-4xl font-black bg-clip-text from-purple-400 to-pink-400">
                           9 000$
                         </span>
                       </div>
@@ -494,8 +485,8 @@ const ChatterLanding: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
-                  <p className="text-xs sm:text-sm text-gray-300 flex items-center gap-2">
+                <div className="bg-purple-500/10 border rounded-lg p-3">
+                  <p className="text-xs sm:text-sm flex items-center gap-2">
                     <span className="text-lg">💎</span>
                     <FormattedMessage id="chatter.landing.source3.tip" defaultMessage="Astuce : Les partenaires (avocats/aidants) reçoivent 20-60 appels/mois. Un seul bon partenaire peut vous rapporter 300-900$/mois !" />
                   </p>
@@ -508,14 +499,14 @@ const ChatterLanding: React.FC = () => {
         {/* ================================================================
             SECTION 3 - PREUVE SOCIALE
         ================================================================ */}
-        <section className="section-content section-lazy bg-gray-950" aria-labelledby="section-proof">
+        <section className="section-content bg-gray-950" aria-labelledby="section-proof">
           <div className="max-w-7xl mx-auto">
 
-            <h2 id="section-proof" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
+            <h2 id="section-proof" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <FormattedMessage id="chatter.landing.proof.title" defaultMessage="Ils gagnent" />{' '}
               <span className="text-green-400"><FormattedMessage id="chatter.landing.proof.highlight" defaultMessage="vraiment" /></span>
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-400 text-center mb-10 sm:mb-12 lg:mb-16">
+            <p className="text-base sm:text-lg lg:text-xl mb-10 sm:mb-12 lg:mb-16">
               <FormattedMessage id="chatter.landing.proof.subtitle" defaultMessage="Chatters vérifiés ce mois" />
             </p>
 
@@ -529,32 +520,32 @@ const ChatterLanding: React.FC = () => {
                 <div className="flex items-end justify-center gap-2 sm:gap-4 lg:gap-8 mb-10 sm:mb-12 lg:mb-16" role="list" aria-label={intl.formatMessage({ id: 'chatter.landing.proof.podium', defaultMessage: 'Top earners' })}>
                   {/* 2nd */}
                   {second && (
-                    <div className="flex flex-col items-center" role="listitem">
+                    <div className="flex items-center" role="listitem">
                       <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gray-400 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3" aria-hidden="true">🥈</div>
-                      <div className="bg-gradient-to-t from-gray-500/20 to-gray-400/10 border border-gray-400/40 rounded-t-xl sm:rounded-t-2xl px-3 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-5 sm:pb-8 text-center">
-                        <p className="text-white font-bold text-sm sm:text-base lg:text-xl">{second.name}</p>
-                        <p className="text-xl sm:text-2xl lg:text-4xl font-black text-gray-300">{second.earningsDisplay}</p>
+                      <div className="bg-gradient-to-t from-gray-500/20 to-gray-400/10 border rounded-t-xl sm:rounded-t-2xl px-3 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-5 sm:pb-8 text-center">
+                        <p className="text-white font-bold sm:text-base lg:text-xl">{second.name}</p>
+                        <p className="text-xl sm:text-2xl lg:text-4xl font-black">{second.earningsDisplay}</p>
                       </div>
                     </div>
                   )}
                   {/* 1st */}
                   {first && (
-                    <div className="flex flex-col items-center -mb-4 sm:-mb-6" role="listitem">
+                    <div className="flex items-center -mb-4 sm:-mb-6" role="listitem">
                       <div className="w-14 h-14 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-amber-500 rounded-full flex items-center justify-center text-3xl sm:text-4xl lg:text-5xl mb-2 sm:mb-3" aria-hidden="true">🥇</div>
-                      <div className="bg-gradient-to-t from-amber-500/20 to-yellow-400/10 border-2 border-amber-500/50 rounded-t-xl sm:rounded-t-2xl px-4 sm:px-8 lg:px-14 pt-5 sm:pt-8 pb-6 sm:pb-10 text-center">
-                        <p className="text-white font-bold text-base sm:text-lg lg:text-2xl">{first.name}</p>
-                        <p className="text-2xl sm:text-3xl lg:text-5xl font-black text-amber-400">{first.earningsDisplay}</p>
-                        <p className="text-xs sm:text-sm lg:text-base text-gray-400 mt-1">{intl.formatMessage({ id: 'chatter.landing.topEarnerBadge', defaultMessage: 'TOP EARNER' })}</p>
+                      <div className="bg-gradient-to-t from-amber-500/20 to-yellow-400/10 border-2 rounded-t-xl sm:rounded-t-2xl px-4 sm:px-8 lg:px-14 pt-5 sm:pt-8 pb-6 sm:pb-10 text-center">
+                        <p className="text-white font-bold sm:text-lg lg:text-2xl">{first.name}</p>
+                        <p className="text-2xl sm:text-3xl lg:text-5xl font-black">{first.earningsDisplay}</p>
+                        <p className="text-xs sm:text-sm lg:text-base mt-1">{intl.formatMessage({ id: 'chatter.landing.topEarnerBadge', defaultMessage: 'TOP EARNER' })}</p>
                       </div>
                     </div>
                   )}
                   {/* 3rd */}
                   {third && (
-                    <div className="flex flex-col items-center" role="listitem">
+                    <div className="flex items-center" role="listitem">
                       <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-orange-700 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3" aria-hidden="true">🥉</div>
-                      <div className="bg-gradient-to-t from-orange-700/20 to-orange-600/10 border border-orange-600/40 rounded-t-xl sm:rounded-t-2xl px-3 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-5 sm:pb-8 text-center">
-                        <p className="text-white font-bold text-sm sm:text-base lg:text-xl">{third.name}</p>
-                        <p className="text-xl sm:text-2xl lg:text-4xl font-black text-orange-400">{third.earningsDisplay}</p>
+                      <div className="bg-gradient-to-t from-orange-700/20 to-orange-600/10 border rounded-t-xl sm:rounded-t-2xl px-3 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-5 sm:pb-8 text-center">
+                        <p className="text-white font-bold sm:text-base lg:text-xl">{third.name}</p>
+                        <p className="text-xl sm:text-2xl lg:text-4xl font-black">{third.earningsDisplay}</p>
                       </div>
                     </div>
                   )}
@@ -563,16 +554,16 @@ const ChatterLanding: React.FC = () => {
             })()}
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-sm sm:max-w-lg mx-auto">
-              <div className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-white">1 200+</div>
-                <div className="text-sm sm:text-base lg:text-lg text-gray-400 mt-1 sm:mt-2">
+            <div className="grid gap-4 sm:gap-6 max-w-sm sm:max-w-lg mx-auto">
+              <div className="bg-white/10 border rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-black">1 200+</div>
+                <div className="text-sm sm:text-base lg:text-lg mt-1 sm:mt-2">
                   <FormattedMessage id="chatter.landing.stats.chatters" defaultMessage="Chatters actifs" />
                 </div>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-white">197</div>
-                <div className="text-sm sm:text-base lg:text-lg text-gray-400 mt-1 sm:mt-2">
+              <div className="bg-white/10 border rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-black">197</div>
+                <div className="text-sm sm:text-base lg:text-lg mt-1 sm:mt-2">
                   <FormattedMessage id="chatter.landing.stats.countries" defaultMessage="Pays" />
                 </div>
               </div>
@@ -583,95 +574,95 @@ const ChatterLanding: React.FC = () => {
         {/* ================================================================
             SECTION 4 - SUCCESS STORIES (ULTRA VENDEUR)
         ================================================================ */}
-        <section className="section-content section-lazy bg-gradient-to-b from-gray-950 via-purple-950/20 to-gray-950" aria-labelledby="section-success">
+        <section className="section-content bg-gradient-to-b from-gray-950 via-purple-950/20 to-gray-950" aria-labelledby="section-success">
           <div className="max-w-7xl mx-auto">
 
             <div className="text-center mb-8 sm:mb-10 lg:mb-12">
-              <span className="inline-block bg-purple-500/20 text-purple-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base lg:text-lg font-bold border border-purple-500/30 mb-4 sm:mb-6">
+              <span className="inline-block bg-purple-500/20 text-purple-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full sm:text-base lg:text-lg font-bold border mb-4 sm:mb-6">
                 <FormattedMessage id="chatter.landing.success.badge" defaultMessage="⭐ Histoires de réussite" />
               </span>
               <h2 id="section-success" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-white mb-3 sm:mb-4">
                 <FormattedMessage id="chatter.landing.success.title" defaultMessage="Ils ont transformé" />{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-green-400">
+                <span className="text-transparent bg-clip-text from-amber-400 to-green-400">
                   <FormattedMessage id="chatter.landing.success.highlight" defaultMessage="leur vie" />
                 </span>
               </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-400">
+              <p className="text-base sm:text-lg lg:text-xl">
                 <FormattedMessage id="chatter.landing.success.subtitle" defaultMessage="Exemples réels de chatters actifs" />
               </p>
             </div>
 
             <div className="grid lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 mb-8 sm:mb-10">
               {/* Success Story 1 - Grosse équipe */}
-              <article className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/30 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <article className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-400 rounded-full flex items-center justify-center text-2xl">👨‍💼</div>
                   <div>
-                    <p className="font-bold text-white text-base sm:text-lg">Ahmed K.</p>
-                    <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.location1" defaultMessage="Dakar, Sénégal" /></p>
+                    <p className="font-bold text-white sm:text-lg">Ahmed K.</p>
+                    <p className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.success.location1" defaultMessage="Dakar, Sénégal" /></p>
                   </div>
                 </div>
                 <div className="mb-4">
-                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-amber-400 mb-1">4 200$/mois</div>
-                  <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.time1" defaultMessage="Après 8 mois" /></p>
+                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black mb-1">4 200$/mois</div>
+                  <p className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.success.time1" defaultMessage="Après 8 mois" /></p>
                 </div>
-                <div className="space-y-2 text-sm sm:text-base text-gray-300">
+                <div className="space-y-2 text-sm sm:text-base">
                   <p>• <FormattedMessage id="chatter.landing.success.detail1a" defaultMessage="65 chatters N1" /></p>
                   <p>• <FormattedMessage id="chatter.landing.success.detail1b" defaultMessage="130 chatters N2" /></p>
                   <p>• <FormattedMessage id="chatter.landing.success.detail1c" defaultMessage="20-30 appels directs/mois" /></p>
                 </div>
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <p className="text-xs sm:text-sm text-gray-400 italic">
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs sm:text-sm italic">
                     <FormattedMessage id="chatter.landing.success.quote1" defaultMessage="J'ai quitté mon job de taxi. Maintenant je gère mon agence depuis mon canapé !" />
                   </p>
                 </div>
               </article>
 
               {/* Success Story 2 - Équilibre */}
-              <article className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <article className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full flex items-center justify-center text-2xl">👩‍💻</div>
                   <div>
-                    <p className="font-bold text-white text-base sm:text-lg">Sarah M.</p>
-                    <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.location2" defaultMessage="Abidjan, Côte d'Ivoire" /></p>
+                    <p className="font-bold text-white sm:text-lg">Sarah M.</p>
+                    <p className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.success.location2" defaultMessage="Abidjan, Côte d'Ivoire" /></p>
                   </div>
                 </div>
                 <div className="mb-4">
-                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-green-400 mb-1">1 850$/mois</div>
-                  <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.time2" defaultMessage="Après 5 mois" /></p>
+                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black mb-1">1 850$/mois</div>
+                  <p className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.success.time2" defaultMessage="Après 5 mois" /></p>
                 </div>
-                <div className="space-y-2 text-sm sm:text-base text-gray-300">
+                <div className="space-y-2 text-sm sm:text-base">
                   <p>• <FormattedMessage id="chatter.landing.success.detail2a" defaultMessage="28 chatters N1" /></p>
                   <p>• <FormattedMessage id="chatter.landing.success.detail2b" defaultMessage="45 chatters N2" /></p>
                   <p>• <FormattedMessage id="chatter.landing.success.detail2c" defaultMessage="2h/jour sur Facebook" /></p>
                 </div>
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <p className="text-xs sm:text-sm text-gray-400 italic">
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs sm:text-sm italic">
                     <FormattedMessage id="chatter.landing.success.quote2" defaultMessage="J'ai payé mes études ET aidé ma famille. Merci SOS-Expat !" />
                   </p>
                 </div>
               </article>
 
               {/* Success Story 3 - Débutant motivant */}
-              <article className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <article className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-2xl">🚀</div>
                   <div>
-                    <p className="font-bold text-white text-base sm:text-lg">Fatou D.</p>
-                    <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.location3" defaultMessage="Bamako, Mali" /></p>
+                    <p className="font-bold text-white sm:text-lg">Fatou D.</p>
+                    <p className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.success.location3" defaultMessage="Bamako, Mali" /></p>
                   </div>
                 </div>
                 <div className="mb-4">
-                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-cyan-400 mb-1">620$/mois</div>
-                  <p className="text-xs sm:text-sm text-gray-400"><FormattedMessage id="chatter.landing.success.time3" defaultMessage="Après 2 mois seulement !" /></p>
+                  <div className="text-3xl sm:text-4xl lg:text-5xl font-black mb-1">620$/mois</div>
+                  <p className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.success.time3" defaultMessage="Après 2 mois seulement !" /></p>
                 </div>
-                <div className="space-y-2 text-sm sm:text-base text-gray-300">
+                <div className="space-y-2 text-sm sm:text-base">
                   <p>• <FormattedMessage id="chatter.landing.success.detail3a" defaultMessage="12 chatters N1" /></p>
                   <p>• <FormattedMessage id="chatter.landing.success.detail3b" defaultMessage="18 chatters N2" /></p>
                   <p>• <FormattedMessage id="chatter.landing.success.detail3c" defaultMessage="Temps partiel (soir)" /></p>
                 </div>
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <p className="text-xs sm:text-sm text-gray-400 italic">
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs sm:text-sm italic">
                     <FormattedMessage id="chatter.landing.success.quote3" defaultMessage="Je suis juste étudiante, et je gagne plus que mes parents ! Incroyable." />
                   </p>
                 </div>
@@ -679,11 +670,11 @@ const ChatterLanding: React.FC = () => {
             </div>
 
             {/* CTA motivant */}
-            <div className="text-center bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 max-w-3xl mx-auto">
-              <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-3">
+            <div className="text-center bg-gradient-to-r from-purple-500/10 to-pink-500/10 border rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 max-w-3xl mx-auto">
+              <p className="text-xl sm:text-2xl lg:text-3xl font-black mb-3">
                 <FormattedMessage id="chatter.landing.success.cta.title" defaultMessage="Et si c'était VOUS le prochain ?" />
               </p>
-              <p className="text-base sm:text-lg text-gray-300 mb-5">
+              <p className="text-base sm:text-lg mb-5">
                 <FormattedMessage id="chatter.landing.success.cta.desc" defaultMessage="Ces chatters ont commencé avec 0$. Ils ont juste partagé leur lien et recruté leur équipe. Vous pouvez faire pareil !" />
               </p>
               <CTAButton onClick={goToRegister} size="large" className="w-full sm:w-auto" ariaLabel={ctaAriaLabel}>
@@ -697,35 +688,35 @@ const ChatterLanding: React.FC = () => {
         {/* ================================================================
             SECTION 5 - AGENCE
         ================================================================ */}
-        <section className="section-content section-lazy bg-gradient-to-b from-gray-950 via-green-950/20 to-gray-950" aria-labelledby="section-agency">
+        <section className="section-content bg-gradient-to-b from-gray-950 via-green-950/20 to-gray-950" aria-labelledby="section-agency">
           <div className="max-w-7xl mx-auto">
 
             <div className="text-center mb-8 sm:mb-10 lg:mb-12">
-              <span className="inline-block bg-green-500/20 text-green-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base lg:text-lg font-bold border border-green-500/30 mb-4 sm:mb-6">
+              <span className="inline-block bg-green-500/20 text-green-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full sm:text-base lg:text-lg font-bold border mb-4 sm:mb-6">
                 <FormattedMessage id="chatter.landing.agency.badge" defaultMessage="🏢 Modèle Agence" />
               </span>
               <h2 id="section-agency" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-white mb-3 sm:mb-4">
                 <FormattedMessage id="chatter.landing.agency.title" defaultMessage="De chatter solo à" />{' '}
                 <span className="text-green-400"><FormattedMessage id="chatter.landing.agency.highlight" defaultMessage="agence" /></span>
               </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-400">
+              <p className="text-base sm:text-lg lg:text-xl">
                 <FormattedMessage id="chatter.landing.agency.subtitle" defaultMessage="Recrutez des chatters. Gagnez sur leur activité. Sans limite." />
               </p>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 max-w-5xl mx-auto">
               {/* Structure */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <div className="bg-white/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
                 <h3 className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-white mb-5 sm:mb-6 lg:mb-8">
                   <FormattedMessage id="chatter.landing.agency.structure" defaultMessage="Structure de votre agence" />
                 </h3>
                 <div className="space-y-4 sm:space-y-5 lg:space-y-6">
                   <div className="flex items-center gap-3 sm:gap-4 lg:gap-5">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0" aria-hidden="true">
-                      <span className="text-xs sm:text-sm font-black text-black">{intl.formatMessage({ id: 'chatter.landing.bossBadge', defaultMessage: 'BOSS' })}</span>
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-amber-500 rounded-full flex items-center justify-center" aria-hidden="true">
+                      <span className="text-xs sm:text-sm font-black">{intl.formatMessage({ id: 'chatter.landing.bossBadge', defaultMessage: 'BOSS' })}</span>
                     </div>
                     <div>
-                      <div className="text-base sm:text-lg lg:text-xl text-white font-bold">
+                      <div className="text-base sm:text-lg lg:text-xl font-bold">
                         <FormattedMessage id="chatter.landing.agency.you" defaultMessage="Vous = Le directeur" />
                       </div>
                       <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-amber-400">
@@ -734,14 +725,14 @@ const ChatterLanding: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="border-l-2 border-dashed border-green-500/50 ml-6 sm:ml-7 lg:ml-8 h-6 sm:h-8" aria-hidden="true" />
+                  <div className="border-l-2 ml-6 sm:ml-7 lg:ml-8 h-6 sm:h-8" aria-hidden="true" />
 
                   <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 ml-2 sm:ml-3 lg:ml-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0" aria-hidden="true">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-green-600 rounded-full flex items-center justify-center" aria-hidden="true">
                       <Users className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
                     </div>
                     <div>
-                      <div className="text-sm sm:text-base lg:text-lg text-white">
+                      <div className="text-sm sm:text-base lg:text-lg">
                         <FormattedMessage id="chatter.landing.agency.team" defaultMessage="Votre équipe" />{' '}
                         <span className="text-green-400 font-bold">(<FormattedMessage id="chatter.landing.unlimited" defaultMessage="illimitée" />)</span>
                       </div>
@@ -751,14 +742,14 @@ const ChatterLanding: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="border-l-2 border-dashed border-cyan-500/50 ml-6 sm:ml-7 lg:ml-8 h-6 sm:h-8" aria-hidden="true" />
+                  <div className="border-l-2 ml-6 sm:ml-7 lg:ml-8 h-6 sm:h-8" aria-hidden="true" />
 
                   <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 ml-4 sm:ml-6 lg:ml-8">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-cyan-600 rounded-full flex items-center justify-center flex-shrink-0" aria-hidden="true">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-cyan-600 rounded-full flex items-center justify-center" aria-hidden="true">
                       <Users className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
                     </div>
                     <div>
-                      <div className="text-sm sm:text-base lg:text-lg text-white">
+                      <div className="text-sm sm:text-base lg:text-lg">
                         <FormattedMessage id="chatter.landing.agency.recruits" defaultMessage="Leurs recrues" />{' '}
                         <span className="text-cyan-400 font-bold">(<FormattedMessage id="chatter.landing.unlimited" defaultMessage="illimitées" />)</span>
                       </div>
@@ -771,9 +762,9 @@ const ChatterLanding: React.FC = () => {
               </div>
 
               {/* Calculator - Refonte ultra-vendeuse */}
-              <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border border-green-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
                 <div className="text-center mb-6">
-                  <span className="inline-block bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-xs sm:text-sm font-bold border border-amber-500/30 mb-2">
+                  <span className="inline-block bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full sm:text-sm font-bold border mb-2">
                     <FormattedMessage id="chatter.landing.calc.badge" defaultMessage="💰 Calculateur de revenus" />
                   </span>
                   <h3 className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-white">
@@ -785,7 +776,7 @@ const ChatterLanding: React.FC = () => {
                 <div className="space-y-5 mb-6">
                   {/* Niveau 1 */}
                   <div>
-                    <label htmlFor="team-n1-slider" className="text-sm sm:text-base text-gray-300 block mb-2">
+                    <label htmlFor="team-n1-slider" className="text-sm sm:text-base block mb-2">
                       <FormattedMessage
                         id="chatter.landing.calc.level1"
                         defaultMessage="Vos chatters N1 : {count}"
@@ -799,16 +790,13 @@ const ChatterLanding: React.FC = () => {
                       max="100"
                       value={teamSizeN1}
                       onChange={(e) => setTeamSizeN1(Number(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
-                        [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-green-500/40"
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
                     />
                   </div>
 
                   {/* Niveau 2 */}
                   <div>
-                    <label htmlFor="team-n2-slider" className="text-sm sm:text-base text-gray-300 block mb-2">
+                    <label htmlFor="team-n2-slider" className="text-sm sm:text-base block mb-2">
                       <FormattedMessage
                         id="chatter.landing.calc.level2"
                         defaultMessage="Leurs recrues N2 : {count}"
@@ -822,16 +810,13 @@ const ChatterLanding: React.FC = () => {
                       max="200"
                       value={teamSizeN2}
                       onChange={(e) => setTeamSizeN2(Number(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
-                        [&::-webkit-slider-thumb]:bg-cyan-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-cyan-500/40"
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
                     />
                   </div>
 
                   {/* Appels par chatter */}
                   <div>
-                    <label htmlFor="calls-slider" className="text-sm sm:text-base text-gray-300 block mb-2">
+                    <label htmlFor="calls-slider" className="text-sm sm:text-base block mb-2">
                       <FormattedMessage
                         id="chatter.landing.calc.calls"
                         defaultMessage="Appels/mois par chatter : {count}"
@@ -845,35 +830,32 @@ const ChatterLanding: React.FC = () => {
                       max="30"
                       value={callsPerChatter}
                       onChange={(e) => setCallsPerChatter(Number(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
-                        [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-amber-500/40"
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
                     />
                   </div>
                 </div>
 
                 {/* Résultat ULTRA VENDEUR */}
-                <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border-2 border-amber-500/50 rounded-xl p-5 text-center">
-                  <p className="text-xs sm:text-sm text-gray-300 mb-1">
+                <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border-2 rounded-xl p-5 text-center">
+                  <p className="text-xs sm:text-sm mb-1">
                     <FormattedMessage id="chatter.landing.calc.yourPassive" defaultMessage="VOS REVENUS PASSIFS MENSUELS" />
                   </p>
-                  <p className="text-5xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-400 to-green-400 mb-2" aria-live="polite">
+                  <p className="text-5xl sm:text-6xl lg:text-7xl font-black bg-clip-text from-amber-400 via-yellow-400 to-green-400 mb-2" aria-live="polite">
                     +{teamEarnings}$
                   </p>
 
                   {/* Détails */}
-                  <div className="flex items-center justify-center gap-4 text-xs sm:text-sm text-gray-400 mb-3">
+                  <div className="flex items-center justify-center gap-4 text-xs sm:text-sm mb-3">
                     <span className="text-green-400">N1: +{teamEarningsN1}$</span>
                     <span>+</span>
                     <span className="text-cyan-400">N2: +{teamEarningsN2}$</span>
                   </div>
 
                   {/* Message motivant */}
-                  <p className="text-sm sm:text-base font-bold text-white mb-2">
+                  <p className="text-sm sm:text-base font-bold mb-2">
                     <FormattedMessage id="chatter.landing.calc.motivation" defaultMessage="🎯 Sans compter VOS appels directs à 10$ !" />
                   </p>
-                  <p className="text-xs sm:text-sm text-amber-400">
+                  <p className="text-xs sm:text-sm">
                     <FormattedMessage id="chatter.landing.calc.forever" defaultMessage="À vie. Tant que votre agence tourne." />
                   </p>
                 </div>
@@ -885,15 +867,15 @@ const ChatterLanding: React.FC = () => {
         {/* ================================================================
             SECTION 6 - ZÉRO RISQUE
         ================================================================ */}
-        <section className="section-content section-lazy bg-gray-950" aria-labelledby="section-risk">
+        <section className="section-content bg-gray-950" aria-labelledby="section-risk">
           <div className="max-w-7xl mx-auto">
 
-            <h2 id="section-risk" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-8 sm:mb-12 lg:mb-16">
+            <h2 id="section-risk" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-8 sm:mb-12 lg:mb-16">
               <FormattedMessage id="chatter.landing.risk.title" defaultMessage="Zéro risque." />{' '}
               <span className="text-green-400"><FormattedMessage id="chatter.landing.risk.highlight" defaultMessage="Zéro limite." /></span>
             </h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-8 sm:mb-10 lg:mb-12">
+            <div className="grid sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-8 sm:mb-10 lg:mb-12">
               {[
                 { emoji: '🌍', titleKey: 'chatter.landing.risk.countries', descKey: 'chatter.landing.risk.countries.desc', color: 'text-blue-400' },
                 { emoji: '🗣️', titleKey: 'chatter.landing.risk.languages', descKey: 'chatter.landing.risk.languages.desc', color: 'text-purple-400' },
@@ -901,12 +883,12 @@ const ChatterLanding: React.FC = () => {
                 { emoji: '📱', titleKey: 'chatter.landing.risk.phone', descKey: 'chatter.landing.risk.phone.desc', color: 'text-amber-400' },
                 { emoji: '⏰', titleKey: 'chatter.landing.risk.noCommit', descKey: 'chatter.landing.risk.noCommit.desc', color: 'text-red-400' },
               ].map((item, i) => (
-                <div key={i} className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center">
+                <div key={i} className="bg-white/10 border rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center">
                   <span className="text-3xl sm:text-4xl lg:text-5xl mb-2 sm:mb-3 lg:mb-4 block" aria-hidden="true">{item.emoji}</span>
                   <div className={`font-bold text-sm sm:text-base lg:text-xl ${item.color} mb-0.5 sm:mb-1`}>
                     <FormattedMessage id={item.titleKey} />
                   </div>
-                  <div className="text-gray-400 text-xs sm:text-sm lg:text-base">
+                  <div className="text-gray-400 sm:text-sm lg:text-base">
                     <FormattedMessage id={item.descKey} />
                   </div>
                 </div>
@@ -914,13 +896,13 @@ const ChatterLanding: React.FC = () => {
             </div>
 
             {/* Payments */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 text-center max-w-3xl mx-auto">
-              <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-4 sm:mb-5 lg:mb-6">
+            <div className="bg-white/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 text-center max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5 lg:mb-6">
                 <FormattedMessage id="chatter.landing.payment.info" defaultMessage="Retrait dès 25$ • Reçu en 48h" />
               </p>
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4">
+              <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4">
                 {formatPaymentMethodDisplay(countryConfig.paymentMethods).map((m, i) => (
-                  <span key={i} className="bg-white/10 text-white rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-medium">{m}</span>
+                  <span key={i} className="bg-white/10 text-white rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 sm:text-base lg:text-lg font-medium">{m}</span>
                 ))}
               </div>
             </div>
@@ -930,12 +912,12 @@ const ChatterLanding: React.FC = () => {
         {/* ================================================================
             SECTION 7 - FAQ (Google Snippet 0 + Microdata)
         ================================================================ */}
-        <section className="section-content section-lazy bg-gradient-to-b from-gray-950 to-gray-950" id="faq" aria-labelledby="section-faq" itemScope itemType="https://schema.org/FAQPage">
+        <section className="section-content bg-gradient-to-b from-gray-950 to-gray-950" id="faq" aria-labelledby="section-faq" itemScope itemType="https://schema.org/FAQPage">
           <div className="max-w-3xl mx-auto">
-            <h2 id="section-faq" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center text-white mb-3 sm:mb-4">
+            <h2 id="section-faq" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <FormattedMessage id="chatter.faq.title" defaultMessage="Questions ?" />
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-400 text-center mb-8 sm:mb-10 lg:mb-12">
+            <p className="text-base sm:text-lg lg:text-xl mb-8 sm:mb-10 lg:mb-12">
               <FormattedMessage id="chatter.faq.subtitle" defaultMessage="Everything you need to know before getting started" />
             </p>
 
@@ -962,7 +944,7 @@ const ChatterLanding: React.FC = () => {
 
           <div className="relative z-10 max-w-4xl mx-auto text-center">
 
-            <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-4 sm:mb-5 lg:mb-6">
+            <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5 lg:mb-6">
               <FormattedMessage id="chatter.landing.cta.join" defaultMessage="Rejoignez 1 200+ chatters dans 197 pays" />
             </p>
 
@@ -973,14 +955,14 @@ const ChatterLanding: React.FC = () => {
             </h2>
 
             {/* Recap */}
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4 mb-8 sm:mb-10">
+            <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4 mb-8 sm:mb-10">
               {[
                 'chatter.landing.recap.revenue',
                 'chatter.landing.recap.team',
                 'chatter.landing.recap.countries',
                 'chatter.landing.recap.free',
               ].map((key, i) => (
-                <span key={i} className="flex items-center gap-1.5 sm:gap-2 bg-amber-500/15 border border-amber-500/40 text-white rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-medium">
+                <span key={i} className="flex items-center gap-1.5 sm:gap-2 bg-amber-500/15 border text-white rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 sm:text-base lg:text-lg font-medium">
                   <Check className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" aria-hidden="true" />
                   <FormattedMessage id={key} />
                 </span>
@@ -991,7 +973,7 @@ const ChatterLanding: React.FC = () => {
               <FormattedMessage id="chatter.landing.cta.final" defaultMessage="Devenir Chatter maintenant" />
             </CTAButton>
 
-            <p className="text-gray-500 mt-5 sm:mt-6 text-sm sm:text-base lg:text-lg">
+            <p className="text-gray-500 mt-5 sm:mt-6 sm:text-base lg:text-lg">
               <FormattedMessage id="chatter.landing.cta.footer" defaultMessage="Inscription gratuite • Démarrez en 5 minutes" />
             </p>
           </div>
@@ -1007,11 +989,11 @@ const ChatterLanding: React.FC = () => {
             role="complementary"
             aria-label={intl.formatMessage({ id: 'chatter.landing.ctaAriaLabel', defaultMessage: 'Call to action - Register now' })}
           >
-            <div className="bg-black/95 backdrop-blur-md border-t border-amber-500/40 px-4 py-3">
+            <div className="bg-black/95 backdrop-blur-md border-t px-4 py-3">
               <button
                 onClick={goToRegister}
                 aria-label={ctaAriaLabel}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] text-base sm:text-lg will-change-transform"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] sm:text-lg will-change-transform"
               >
                 <FormattedMessage id="chatter.landing.cta.start" defaultMessage="Commencer gratuitement" />
                 <ArrowRight className="w-5 h-5" aria-hidden="true" />

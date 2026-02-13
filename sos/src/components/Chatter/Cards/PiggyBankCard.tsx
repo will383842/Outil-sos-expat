@@ -79,12 +79,12 @@ const PiggyBankCard = memo(function PiggyBankCard({
   if (loading || !piggyBank) {
     return (
       <div className={`${UI.card} p-4 sm:p-6`}>
-        <div className="flex flex-col items-center">
+        <div className="flex items-center">
           <div className={`${UI.skeleton} w-24 h-24 rounded-full mb-4`} />
           <div className={`${UI.skeleton} h-6 w-32 mb-2`} />
           <div className={`${UI.skeleton} h-8 w-24 mb-4`} />
           <div className={`${UI.skeleton} h-3 w-full rounded-full mb-4`} />
-          <div className="grid grid-cols-3 gap-2 w-full mb-4">
+          <div className="grid gap-2 w-full mb-4">
             {[1, 2, 3].map(i => (
               <div key={i} className={`${UI.skeleton} h-12 rounded-lg`} />
             ))}
@@ -125,7 +125,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
               className="text-center"
             >
               <PartyPopper className="w-12 h-12 text-pink-500 mx-auto mb-2" />
-              <p className="text-lg font-bold text-pink-600 dark:text-pink-400">
+              <p className="text-lg dark:text-pink-400 font-bold">
                 <FormattedMessage
                   id="chatter.piggyBank.unlocked"
                   defaultMessage="Unlocked!"
@@ -139,7 +139,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
       <div className="p-4 sm:p-6">
         {/* Header */}
         <div className="text-center mb-4">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center justify-center gap-2">
+          <h3 className="text-lg dark:text-white font-bold flex items-center justify-center gap-2">
             <span className="text-2xl">🐷</span>
             <FormattedMessage
               id="chatter.piggyBank.title"
@@ -153,10 +153,10 @@ const PiggyBankCard = memo(function PiggyBankCard({
           {/* Piggy bank container */}
           <div className="relative w-full h-full">
             {/* Background piggy shape */}
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/30 dark:to-rose-900/30 border-4 border-pink-200 dark:border-pink-800/50 overflow-hidden">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-pink-100 dark:from-pink-900/30 to-rose-100 dark:to-rose-900/30 border-4 dark:border-pink-800/50 overflow-hidden">
               {/* Fill level animation */}
               <motion.div
-                className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-pink-400 to-pink-300 dark:from-pink-600 dark:to-pink-500"
+                className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-pink-400 dark:from-pink-600 to-pink-300 dark:to-pink-500"
                 initial={{ height: 0 }}
                 animate={{ height: `${progressPercent}%` }}
                 transition={{ duration: 1, ease: 'easeOut' }}
@@ -179,7 +179,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
             </div>
 
             {/* Lock/Unlock indicator */}
-            <div className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center shadow-lg ${
+            <div className={`absolute -bottom-1 w-8 h-8 rounded-full flex items-center justify-center shadow-lg${
               isUnlocked
                 ? 'bg-green-500'
                 : 'bg-gray-400 dark:bg-gray-600'
@@ -200,7 +200,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
             transition={{ delay: 0.5 }}
           >
             <div className="bg-white/90 dark:bg-gray-900/90 px-3 py-1 rounded-full shadow-lg backdrop-blur-sm">
-              <span className="text-sm font-bold text-pink-600 dark:text-pink-400">
+              <span className="text-sm dark:text-pink-400 font-bold">
                 {formatAmount(totalPending)}
               </span>
             </div>
@@ -237,7 +237,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
           {/* Status message */}
           <div className="mt-2 text-center">
             {isUnlocked ? (
-              <p className="text-sm text-green-600 dark:text-green-400 flex items-center justify-center gap-1.5">
+              <p className="text-sm dark:text-green-400 flex items-center justify-center gap-1.5">
                 <Sparkles className="w-4 h-4" />
                 <FormattedMessage
                   id="chatter.piggyBank.readyToClaim"
@@ -245,7 +245,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
                 />
               </p>
             ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1.5">
+              <p className="text-sm dark:text-gray-400 flex items-center justify-center gap-1.5">
                 <Lock className="w-3.5 h-3.5" />
                 <FormattedMessage
                   id="chatter.piggyBank.amountToUnlock"
@@ -258,16 +258,16 @@ const PiggyBankCard = memo(function PiggyBankCard({
         </div>
 
         {/* Total Pending Display */}
-        <div className="p-3 bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-xl mb-4">
+        <div className="p-3 bg-gradient-to-r from-pink-50 dark:from-pink-900/20 to-rose-50 dark:to-rose-900/20 rounded-xl mb-4">
           <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <p className="text-xs dark:text-gray-400 mb-1">
               <FormattedMessage
                 id="chatter.piggyBank.totalAvailable"
                 defaultMessage="Total available"
               />
             </p>
             <motion.p
-              className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent"
+              className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600"
               key={totalPending}
               initial={{ scale: 1.1 }}
               animate={{ scale: 1 }}
@@ -280,7 +280,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
 
         {/* Message */}
         {message && (
-          <p className="text-xs text-center text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-xs dark:text-gray-400 mb-4">
             {message}
           </p>
         )}
@@ -298,7 +298,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
           {claiming ? (
             <>
               <motion.div
-                className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                className="w-5 h-5 border-2 rounded-full"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               />

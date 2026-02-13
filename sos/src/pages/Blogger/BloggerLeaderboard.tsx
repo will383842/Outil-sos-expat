@@ -25,9 +25,9 @@ const BloggerLeaderboard: React.FC = () => {
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1: return <Trophy className="w-6 h-6 text-yellow-500" />;
-      case 2: return <Medal className="w-6 h-6 text-gray-400" />;
+      case 2: return <Medal className="w-6 h-6 text-gray-600 dark:text-gray-400" />;
       case 3: return <Medal className="w-6 h-6 text-amber-600" />;
-      default: return <span className="w-6 h-6 flex items-center justify-center text-gray-500 font-bold">#{rank}</span>;
+      default: return <span className="w-6 h-6 flex items-center justify-center text-gray-700 dark:text-gray-700 font-bold">#{rank}</span>;
     }
   };
 
@@ -46,10 +46,10 @@ const BloggerLeaderboard: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl dark:text-white font-bold">
             <FormattedMessage id="blogger.leaderboard.title" defaultMessage="Classement mensuel" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700 dark:text-gray-700">
             <FormattedMessage
               id="blogger.leaderboard.subtitle"
               defaultMessage="Top 10 des blogueurs - {month}"
@@ -59,9 +59,9 @@ const BloggerLeaderboard: React.FC = () => {
         </div>
 
         {/* Info Banner */}
-        <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4 flex items-start gap-3">
+        <div className="bg-purple-50 dark:bg-purple-900/20 border dark:border-purple-800 rounded-xl p-4 flex items-start gap-3">
           <Info className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-purple-700 dark:text-purple-300">
+          <p className="text-sm dark:text-purple-300">
             <FormattedMessage
               id="blogger.leaderboard.info"
               defaultMessage="Classement informatif uniquement - pas de bonus associé. Les blogueurs gagnent des commissions fixes ($10 par client, $5 par recrutement) sans bonus de classement."
@@ -72,13 +72,13 @@ const BloggerLeaderboard: React.FC = () => {
         {/* Your Position */}
         {leaderboard?.currentUserRank && (
           <div className={`${UI.card} p-6`}>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-lg dark:text-white font-semibold mb-4">
               <FormattedMessage id="blogger.leaderboard.yourPosition" defaultMessage="Votre position" />
             </h2>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                  <span className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                  <span className="text-xl dark:text-purple-400 font-bold">
                     #{leaderboard.currentUserRank.rank}
                   </span>
                 </div>
@@ -86,14 +86,14 @@ const BloggerLeaderboard: React.FC = () => {
                   <p className="font-medium text-gray-900 dark:text-white">
                     <FormattedMessage id="blogger.leaderboard.you" defaultMessage="Vous" />
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm dark:text-gray-700">
                     {formatCurrency(leaderboard.currentUserRank.earnings || 0)}
                     <FormattedMessage id="blogger.leaderboard.thisMonth" defaultMessage=" ce mois" />
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm dark:text-gray-700">
                   {leaderboard.currentUserRank.clients || 0}
                   <FormattedMessage id="blogger.leaderboard.clients" defaultMessage=" clients" />
                 </p>
@@ -105,7 +105,7 @@ const BloggerLeaderboard: React.FC = () => {
         {/* Rankings */}
         <div className={`${UI.card} overflow-hidden`}>
           {leaderboard?.entries && leaderboard.entries.length > 0 ? (
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="divide-y dark:divide-gray-700">
               {leaderboard.entries.map((entry: BloggerLeaderboardEntry) => (
                 <div
                   key={entry.bloggerId}
@@ -122,12 +122,12 @@ const BloggerLeaderboard: React.FC = () => {
                     }`}>
                       {entry.displayName}
                       {entry.isCurrentUser && (
-                        <span className="ml-2 text-xs text-purple-500">
+                        <span className="ml-2 text-xs">
                           (<FormattedMessage id="blogger.leaderboard.you" defaultMessage="Vous" />)
                         </span>
                       )}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm dark:text-gray-700">
                       {entry.blogName}
                     </p>
                   </div>
@@ -135,7 +135,7 @@ const BloggerLeaderboard: React.FC = () => {
                     <p className="font-bold text-green-600 dark:text-green-400">
                       {formatCurrency(entry.earnings)}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs dark:text-gray-700">
                       {entry.clients}
                       <FormattedMessage id="blogger.leaderboard.clientsShort" defaultMessage=" clients" />
                     </p>
@@ -144,7 +144,7 @@ const BloggerLeaderboard: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <div className="text-center dark:text-gray-700 py-12">
               <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <FormattedMessage
                 id="blogger.leaderboard.empty"
@@ -159,7 +159,7 @@ const BloggerLeaderboard: React.FC = () => {
           <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
             <FormattedMessage id="blogger.leaderboard.howItWorks" defaultMessage="Comment fonctionne le classement ?" />
           </h3>
-          <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+          <ul className="space-y-2 text-sm dark:text-gray-700">
             <li className="flex items-start gap-2">
               <span className="text-purple-500">•</span>
               <FormattedMessage

@@ -32,9 +32,9 @@ const InfluencerLeaderboard: React.FC = () => {
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1: return <Crown className="w-6 h-6 text-yellow-500 drop-shadow-sm" />;
-      case 2: return <Star className="w-6 h-6 text-gray-400" />;
+      case 2: return <Star className="w-6 h-6 text-gray-600 dark:text-gray-400" />;
       case 3: return <Star className="w-6 h-6 text-amber-600" />;
-      default: return <span className="w-6 h-6 flex items-center justify-center text-gray-500 font-bold">#{rank}</span>;
+      default: return <span className="w-6 h-6 flex items-center justify-center text-gray-700 dark:text-gray-700 font-bold">#{rank}</span>;
     }
   };
 
@@ -52,10 +52,10 @@ const InfluencerLeaderboard: React.FC = () => {
     <InfluencerDashboardLayout>
       <div className="space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl dark:text-white font-bold">
             <FormattedMessage id="influencer.leaderboard.title" defaultMessage="Classement mensuel" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700 dark:text-gray-700">
             <FormattedMessage
               id="influencer.leaderboard.subtitle"
               defaultMessage="Top 10 des influenceurs - {month}"
@@ -65,11 +65,11 @@ const InfluencerLeaderboard: React.FC = () => {
         </div>
 
         {/* Top 3 Bonus Cards */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid gap-3">
           {TOP3_BONUSES.map((bonus) => (
             <div
               key={bonus.rank}
-              className={`${bonus.bgColor} rounded-xl p-3 text-center border border-white/20 dark:border-white/10`}
+              className={`${bonus.bgColor}rounded-xl p-3 text-center border dark:border-white/10`}
             >
               <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br ${bonus.color} mb-1.5`}>
                 {bonus.rank === 1 ? (
@@ -79,7 +79,7 @@ const InfluencerLeaderboard: React.FC = () => {
                 )}
               </div>
               <p className={`text-lg font-bold ${bonus.textColor}`}>{bonus.multiplier}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-[10px] dark:text-gray-700 sm:text-xs">
                 <FormattedMessage
                   id={`influencer.leaderboard.bonus.rank${bonus.rank}`}
                   defaultMessage={`Top ${bonus.rank} bonus`}
@@ -92,13 +92,13 @@ const InfluencerLeaderboard: React.FC = () => {
         {/* Your Position */}
         {leaderboard?.currentUserRank && (
           <div className={`${UI.card} p-6`}>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-lg dark:text-white font-semibold mb-4">
               <FormattedMessage id="influencer.leaderboard.yourPosition" defaultMessage="Votre position" />
             </h2>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                  <span className="text-xl font-bold text-red-600 dark:text-red-400">
+                  <span className="text-xl dark:text-red-400 font-bold">
                     #{leaderboard.currentUserRank.rank}
                   </span>
                 </div>
@@ -106,14 +106,14 @@ const InfluencerLeaderboard: React.FC = () => {
                   <p className="font-medium text-gray-900 dark:text-white">
                     <FormattedMessage id="influencer.leaderboard.you" defaultMessage="Vous" />
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm dark:text-gray-700">
                     {formatCurrency(leaderboard.currentUserRank.earnings || 0)}
                     <FormattedMessage id="influencer.leaderboard.thisMonth" defaultMessage=" ce mois" />
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm dark:text-gray-700">
                   {leaderboard.currentUserRank.referrals || 0}
                   <FormattedMessage id="influencer.leaderboard.clients" defaultMessage=" clients" />
                 </p>
@@ -125,7 +125,7 @@ const InfluencerLeaderboard: React.FC = () => {
         {/* Rankings */}
         <div className={`${UI.card} overflow-hidden`}>
           {leaderboard?.entries && leaderboard.entries.length > 0 ? (
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="divide-y dark:divide-gray-700">
               {leaderboard.entries.map((entry: InfluencerLeaderboardEntry) => (
                 <div
                   key={entry.influencerId}
@@ -142,12 +142,12 @@ const InfluencerLeaderboard: React.FC = () => {
                     }`}>
                       {entry.displayName}
                       {entry.isCurrentUser && (
-                        <span className="ml-2 text-xs text-red-500">
+                        <span className="ml-2 text-xs">
                           (<FormattedMessage id="influencer.leaderboard.you" defaultMessage="Vous" />)
                         </span>
                       )}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm dark:text-gray-700">
                       {entry.country}
                     </p>
                   </div>
@@ -155,7 +155,7 @@ const InfluencerLeaderboard: React.FC = () => {
                     <p className="font-bold text-green-600 dark:text-green-400">
                       {formatCurrency(entry.earnings)}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs dark:text-gray-700">
                       {entry.referrals}
                       <FormattedMessage id="influencer.leaderboard.clientsShort" defaultMessage=" réf." />
                     </p>
@@ -172,7 +172,7 @@ const InfluencerLeaderboard: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <div className="text-center dark:text-gray-700 py-12">
               <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <FormattedMessage
                 id="influencer.leaderboard.empty"

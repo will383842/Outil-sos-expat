@@ -144,10 +144,10 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
           <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        <h3 className="text-xl dark:text-white font-bold mb-2">
           <FormattedMessage id="influencer.withdrawal.success.title" defaultMessage="Demande envoyée !" />
         </h3>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-gray-700 dark:text-gray-700">
           <FormattedMessage id="influencer.withdrawal.success.message" defaultMessage="Votre demande de retrait sera traitée sous 48h." />
         </p>
       </div>
@@ -165,11 +165,11 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
 
       {/* Amount */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm dark:text-white font-semibold mb-1">
           <FormattedMessage id="influencer.withdrawal.amount" defaultMessage="Montant à retirer" />
         </label>
         <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-gray-900 dark:text-white">$</span>
+          <span className="text-2xl dark:text-white font-bold">$</span>
           <input
             type="number"
             min={minimumAmount / 100}
@@ -177,10 +177,10 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
             step="0.01"
             value={(formData.amount / 100).toFixed(2)}
             onChange={(e) => setFormData({ ...formData, amount: Math.round(parseFloat(e.target.value) * 100) })}
-            className="flex-1 px-4 py-3 text-2xl font-bold rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            className="flex-1 px-4 py-3 text-2xl dark:text-white font-bold rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:border-transparent"
           />
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm dark:text-gray-700 mt-1">
           <FormattedMessage
             id="influencer.withdrawal.available"
             defaultMessage="Disponible : {amount}"
@@ -191,10 +191,10 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
 
       {/* Payment Method */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm dark:text-white font-semibold mb-2">
           <FormattedMessage id="influencer.withdrawal.method" defaultMessage="Méthode de paiement" />
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid sm:grid-cols-4 gap-2">
           {(['wise', 'paypal', 'mobile_money', 'bank_transfer'] as PaymentMethod[]).map((method) => (
             <button
               key={method}
@@ -219,7 +219,7 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
       {paymentMethod === 'wise' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm dark:text-white font-semibold mb-1">
               <FormattedMessage id="influencer.withdrawal.wiseEmail" defaultMessage="Email Wise" /> *
             </label>
             <input
@@ -227,11 +227,11 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
               required
               value={formData.wiseEmail}
               onChange={(e) => setFormData({ ...formData, wiseEmail: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm dark:text-white font-semibold mb-1">
               <FormattedMessage id="influencer.withdrawal.accountHolder" defaultMessage="Nom du titulaire" /> *
             </label>
             <input
@@ -239,7 +239,7 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
               required
               value={formData.wiseAccountHolder}
               onChange={(e) => setFormData({ ...formData, wiseAccountHolder: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
         </div>
@@ -248,7 +248,7 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
       {paymentMethod === 'paypal' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm dark:text-white font-semibold mb-1">
               <FormattedMessage id="influencer.withdrawal.paypalEmail" defaultMessage="Email PayPal" /> *
             </label>
             <input
@@ -256,11 +256,11 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
               required
               value={formData.paypalEmail}
               onChange={(e) => setFormData({ ...formData, paypalEmail: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm dark:text-white font-semibold mb-1">
               <FormattedMessage id="influencer.withdrawal.accountHolder" defaultMessage="Nom du titulaire" /> *
             </label>
             <input
@@ -268,7 +268,7 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
               required
               value={formData.paypalAccountHolder}
               onChange={(e) => setFormData({ ...formData, paypalAccountHolder: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
         </div>
@@ -276,16 +276,16 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
 
       {paymentMethod === 'mobile_money' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm dark:text-white font-semibold mb-1">
                 <FormattedMessage id="influencer.withdrawal.country" defaultMessage="Pays" /> *
               </label>
               <select
                 required
                 value={formData.mobileCountry}
                 onChange={(e) => setFormData({ ...formData, mobileCountry: e.target.value, mobileProvider: '' })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
               >
                 <option value="">Sélectionner un pays</option>
                 <option value="SN">Sénégal</option>
@@ -303,14 +303,14 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm dark:text-white font-semibold mb-1">
                 <FormattedMessage id="influencer.withdrawal.provider" defaultMessage="Opérateur" /> *
               </label>
               <select
                 required
                 value={formData.mobileProvider}
                 onChange={(e) => setFormData({ ...formData, mobileProvider: e.target.value as typeof formData.mobileProvider })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
               >
                 <option value="">Sélectionner un opérateur</option>
                 <option value="orange_money">Orange Money</option>
@@ -323,7 +323,7 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm dark:text-white font-semibold mb-1">
               <FormattedMessage id="influencer.withdrawal.phoneNumber" defaultMessage="Numéro de téléphone" /> *
             </label>
             <input
@@ -332,11 +332,11 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
               value={formData.mobilePhoneNumber}
               onChange={(e) => setFormData({ ...formData, mobilePhoneNumber: e.target.value })}
               placeholder="+221 77 123 45 67"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm dark:text-white font-semibold mb-1">
               <FormattedMessage id="influencer.withdrawal.accountName" defaultMessage="Nom du compte" /> *
             </label>
             <input
@@ -345,7 +345,7 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
               value={formData.mobileAccountName}
               onChange={(e) => setFormData({ ...formData, mobileAccountName: e.target.value })}
               placeholder="Nom enregistré sur le compte"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
         </div>
@@ -353,9 +353,9 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
 
       {paymentMethod === 'bank_transfer' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm dark:text-white font-semibold mb-1">
                 <FormattedMessage id="influencer.withdrawal.bankName" defaultMessage="Nom de la banque" /> *
               </label>
               <input
@@ -363,11 +363,11 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
                 required
                 value={formData.bankName}
                 onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm dark:text-white font-semibold mb-1">
                 <FormattedMessage id="influencer.withdrawal.bankCountry" defaultMessage="Pays" /> *
               </label>
               <input
@@ -377,12 +377,12 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
                 placeholder="FR"
                 value={formData.bankCountry}
                 onChange={(e) => setFormData({ ...formData, bankCountry: e.target.value.toUpperCase() })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm dark:text-white font-semibold mb-1">
               <FormattedMessage id="influencer.withdrawal.accountHolder" defaultMessage="Nom du titulaire" /> *
             </label>
             <input
@@ -390,22 +390,22 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
               required
               value={formData.bankAccountHolder}
               onChange={(e) => setFormData({ ...formData, bankAccountHolder: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm dark:text-white font-semibold mb-1">
               <FormattedMessage id="influencer.withdrawal.iban" defaultMessage="IBAN" />
             </label>
             <input
               type="text"
               value={formData.bankIban}
               onChange={(e) => setFormData({ ...formData, bankIban: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm dark:text-white font-semibold mb-1">
               <FormattedMessage id="influencer.withdrawal.accountNumber" defaultMessage="Numéro de compte" /> *
             </label>
             <input
@@ -413,7 +413,7 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
               required
               value={formData.bankAccountNumber}
               onChange={(e) => setFormData({ ...formData, bankAccountNumber: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
         </div>
@@ -424,14 +424,14 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          className="flex-1 px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-700 font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
         >
           <FormattedMessage id="common.cancel" defaultMessage="Annuler" />
         </button>
         <button
           type="submit"
           disabled={loading || formData.amount < minimumAmount}
-          className="flex-1 px-6 py-3 rounded-xl bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white font-medium transition-colors flex items-center justify-center gap-2"
+          className="flex-1 px-6 py-3 rounded-xl bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white font-medium transition-colors items-center justify-center gap-2"
         >
           {loading ? (
             <>

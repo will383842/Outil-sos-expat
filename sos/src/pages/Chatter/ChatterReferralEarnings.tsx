@@ -84,12 +84,12 @@ export default function ChatterReferralEarnings() {
     <ChatterDashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Link
                 to={`/${locale}/chatter/filleuls`}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-700 dark:text-gray-300 hover:text-gray-700"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Link>
@@ -133,14 +133,14 @@ export default function ChatterReferralEarnings() {
         {dashboardData && (
           <>
             {/* Top stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-1">
+                    <p className="text-sm mb-1">
                       {t("chatter.referrals.totalReferralEarnings")}
                     </p>
-                    <p className="text-3xl font-bold text-green-600">
+                    <p className="text-3xl font-bold">
                       ${(referralEarnings / 100).toFixed(2)}
                     </p>
                   </div>
@@ -149,10 +149,10 @@ export default function ChatterReferralEarnings() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-1">
+                    <p className="text-sm mb-1">
                       {t("chatter.referrals.thisMonth")}
                     </p>
-                    <p className="text-3xl font-bold text-blue-600">
+                    <p className="text-3xl font-bold">
                       ${((stats?.monthlyReferralEarnings || 0) / 100).toFixed(2)}
                     </p>
                   </div>
@@ -161,10 +161,10 @@ export default function ChatterReferralEarnings() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-1">
+                    <p className="text-sm mb-1">
                       {t("chatter.referrals.qualifiedReferrals")}
                     </p>
-                    <p className="text-3xl font-bold text-red-600">
+                    <p className="text-3xl font-bold">
                       {stats?.qualifiedFilleulsN1 || 0}
                     </p>
                   </div>
@@ -186,11 +186,11 @@ export default function ChatterReferralEarnings() {
               </CardHeader>
               <CardContent>
                 {Object.keys(commissionBreakdown).length === 0 ? (
-                  <p className="text-center text-gray-500 py-4">
+                  <p className="text-center py-4">
                     {t("chatter.referrals.noCommissionsYet")}
                   </p>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {Object.entries(commissionBreakdown).map(([type, data]) => {
                       const TypeIcon = getTypeIcon(type);
                       return (
@@ -205,7 +205,7 @@ export default function ChatterReferralEarnings() {
                             <p className="text-sm font-medium">
                               {getTypeLabel(type)}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs">
                               {data.count} commission{data.count > 1 ? "s" : ""}
                             </p>
                           </div>

@@ -217,8 +217,8 @@ const GroupAdminResources: React.FC = () => {
         <div className="flex items-center justify-center p-4 py-20">
           <div className="bg-white dark:bg-white/5 rounded-xl p-8 max-w-md w-full text-center shadow-lg dark:shadow-none">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Error</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+            <h2 className="text-xl dark:text-white font-bold mb-2">Error</h2>
+            <p className="text-gray-600 dark:text-gray-600 mb-6">{error}</p>
             <button onClick={fetchResources} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg">
               Retry
             </button>
@@ -236,16 +236,16 @@ const GroupAdminResources: React.FC = () => {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl dark:text-white md:text-3xl font-bold mb-2">
               <FormattedMessage id="groupAdmin.resources.heading" defaultMessage="Resources" />
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-600">
               <FormattedMessage id="groupAdmin.resources.subtitle" defaultMessage="Ready-to-use images, banners, and texts for your group" />
             </p>
           </div>
 
           {/* Category Filter */}
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex gap-2 mb-8">
             <button
               onClick={() => setSelectedCategory('all')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -269,12 +269,12 @@ const GroupAdminResources: React.FC = () => {
 
           {/* Copy Error Toast */}
           {copyError && (
-            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4 flex items-center gap-3">
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border dark:border-red-800/50 rounded-lg p-4 flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
-              <p className="text-red-700 dark:text-red-300 text-sm">{copyError}</p>
+              <p className="text-red-700 dark:text-red-300">{copyError}</p>
               <button
                 onClick={() => setCopyError(null)}
-                className="ml-auto p-1 text-red-400 hover:text-red-600 dark:hover:text-red-300 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                className="ml-auto p-1 text-red-400 hover:text-red-600 dark:hover:text-red-300 rounded-full hover:bg-red-100 transition-colors"
                 aria-label="Dismiss"
               >
                 <X className="w-4 h-4" />
@@ -283,7 +283,7 @@ const GroupAdminResources: React.FC = () => {
           )}
 
           {/* Resources Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredResources.map((resource) => (
               <div key={resource.id} className="bg-white dark:bg-white/5 rounded-xl shadow-sm dark:shadow-none overflow-hidden">
                 {/* Preview */}
@@ -298,7 +298,7 @@ const GroupAdminResources: React.FC = () => {
                 )}
                 {(resource.type === 'text' || resource.type === 'template') && (
                   <div className="aspect-video bg-gray-50 dark:bg-white/5 p-4 overflow-hidden">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-6">{resource.content}</p>
+                    <p className="text-sm dark:text-gray-600 line-clamp-6">{resource.content}</p>
                   </div>
                 )}
 
@@ -306,10 +306,10 @@ const GroupAdminResources: React.FC = () => {
                 <div className="p-4">
                   <h3 className="font-bold text-gray-900 dark:text-white mb-1">{resource.name}</h3>
                   {resource.description && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{resource.description}</p>
+                    <p className="text-sm dark:text-gray-700 mb-3">{resource.description}</p>
                   )}
                   {resource.dimensions && (
-                    <p className="text-xs text-gray-400 mb-3">
+                    <p className="text-xs dark:text-gray-400 mb-3">
                       {resource.dimensions.width} x {resource.dimensions.height}px
                     </p>
                   )}
@@ -320,7 +320,7 @@ const GroupAdminResources: React.FC = () => {
                       <button
                         onClick={() => copyContent(resource)}
                         disabled={loadingContent === resource.id}
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium py-2 px-4 rounded-lg items-center justify-center gap-2"
                       >
                         {loadingContent === resource.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -340,7 +340,7 @@ const GroupAdminResources: React.FC = () => {
                     {resource.type === 'image' && resource.fileUrl && (
                       <button
                         onClick={() => downloadResource(resource)}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg items-center justify-center gap-2"
                       >
                         <Download className="w-4 h-4" />
                         <FormattedMessage id="groupAdmin.resources.download" defaultMessage="Download" />
@@ -354,8 +354,8 @@ const GroupAdminResources: React.FC = () => {
 
           {filteredResources.length === 0 && (
             <div className="text-center py-12">
-              <Image className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">
+              <Image className="w-12 h-12 text-gray-700 dark:text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-700 dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.resources.noResources" defaultMessage="No resources in this category yet" />
               </p>
             </div>

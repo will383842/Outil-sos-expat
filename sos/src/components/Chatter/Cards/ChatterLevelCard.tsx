@@ -113,7 +113,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
           </div>
         </div>
         <div className={`h-1.5 sm:h-2 w-full mb-3 sm:mb-4 ${UI.skeleton} rounded-full`} />
-        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        <div className="grid gap-2 sm:gap-3">
           <div className={`h-14 sm:h-16 rounded-lg sm:rounded-xl ${UI.skeleton}`} />
           <div className={`h-14 sm:h-16 rounded-lg sm:rounded-xl ${UI.skeleton}`} />
         </div>
@@ -142,7 +142,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
           <LevelIcon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <h3 className="text-sm dark:text-white sm:text-base font-bold flex items-center gap-1.5 sm:gap-2">
             <FormattedMessage
               id={`chatter.level.${level}`}
               defaultMessage="Niveau {level}"
@@ -159,7 +159,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
               {levelConfig.name}
             </span>
           </h3>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-xs dark:text-gray-400 sm:text-sm">
             <FormattedMessage
               id="chatter.level.bonus"
               defaultMessage="Bonus: +{percent}%"
@@ -172,7 +172,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
       {/* Progress to Next Level - Animated fill */}
       {nextLevel && (
         <div className="mb-3 sm:mb-4">
-          <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1">
+          <div className="flex items-center justify-between text-[10px] dark:text-gray-400 sm:text-xs mb-1">
             <span className="truncate mr-2">
               <FormattedMessage id="chatter.level.progress" defaultMessage="Progression vers niveau {level}" values={{ level: level + 1 }} />
             </span>
@@ -195,7 +195,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
               }}
             />
           </div>
-          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+          <p className="text-[10px] dark:text-gray-400 sm:text-xs mt-1 flex items-center gap-1">
             <ArrowUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             <span className="truncate">
               <FormattedMessage
@@ -213,50 +213,44 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
 
       {/* Max Level Reached */}
       {!nextLevel && (
-        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg sm:rounded-xl text-center animate-pulse-subtle">
-          <p className="text-xs sm:text-sm font-medium text-red-700 dark:text-red-300">
+        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-lg sm:rounded-xl text-center animate-pulse-subtle">
+          <p className="text-xs dark:text-red-300 sm:text-sm font-medium">
             <FormattedMessage id="chatter.level.maxReached" defaultMessage="Niveau maximum atteint !" />
           </p>
         </div>
       )}
 
       {/* Streak and Rank */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+      <div className="grid gap-2 sm:gap-3">
         {/* Current Streak */}
         <div
-          className={`
-            p-2 sm:p-3 bg-gradient-to-br from-orange-50 to-red-50
-            dark:from-orange-900/20 dark:to-red-900/20
-            rounded-lg sm:rounded-xl
-            transition-transform hover:scale-[1.02]
-            ${currentStreak >= 7 ? 'ring-2 ring-orange-400/50' : ''}
-          `}
+          className={`p-2 sm:p-3 bg-gradient-to-br from-orange-50 dark:from-orange-900/20 to-red-50 dark:to-red-900/20 rounded-lg sm:rounded-xl transition-transform hover:scale-[1.02]${currentStreak >= 7 ? 'ring-2 ring-orange-400/50' : ''}`}
         >
           <div className="flex items-center gap-1 sm:gap-2 mb-1">
             <Flame
               className={`
                 w-3 h-3 sm:w-4 sm:h-4
-                ${currentStreak > 0 ? 'text-orange-500' : 'text-gray-400'}
+                ${currentStreak > 0 ? 'text-orange-500' : 'text-gray-600 dark:text-gray-400'}
                 ${currentStreak >= 7 ? 'animate-pulse' : ''}
               `}
             />
-            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
+            <span className="text-[10px] dark:text-gray-400 sm:text-xs truncate">
               <FormattedMessage id="chatter.streak.current" defaultMessage="Streak actuel" />
             </span>
           </div>
-          <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+          <p className="text-lg dark:text-white sm:text-xl font-bold">
             <AnimatedNumber
               value={currentStreak}
               duration={800}
               delay={animationDelay + 500}
               animateOnVisible
             />
-            <span className="text-xs sm:text-sm font-normal text-gray-500 dark:text-gray-400 ml-0.5 sm:ml-1">
+            <span className="text-xs dark:text-gray-400 sm:text-sm font-normal ml-0.5 sm:ml-1">
               <FormattedMessage id="chatter.streak.days" defaultMessage="jours" />
             </span>
           </p>
           {bestStreak > currentStreak && (
-            <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
+            <p className="text-[10px] dark:text-gray-400 sm:text-xs mt-0.5 sm:mt-1">
               <FormattedMessage
                 id="chatter.streak.best"
                 defaultMessage="Record: {days}j"
@@ -268,28 +262,22 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
 
         {/* Monthly Rank */}
         <div
-          className={`
-            p-2 sm:p-3 bg-gradient-to-br from-red-50 to-orange-50
-            dark:from-red-900/20 dark:to-orange-900/20
-            rounded-lg sm:rounded-xl
-            transition-transform hover:scale-[1.02]
-            ${monthlyRank && monthlyRank <= 3 ? 'ring-2 ring-red-400/50 animate-pulse-subtle' : ''}
-          `}
+          className={`p-2 sm:p-3 bg-gradient-to-br from-red-50 dark:from-red-900/20 to-orange-50 dark:to-orange-900/20 rounded-lg sm:rounded-xl transition-transform hover:scale-[1.02]${monthlyRank && monthlyRank <= 3 ? 'ring-2 ring-red-400/50 animate-pulse-subtle' : ''}`}
         >
           <div className="flex items-center gap-1 sm:gap-2 mb-1">
             <Trophy
               className={`
                 w-3 h-3 sm:w-4 sm:h-4
-                ${monthlyRank && monthlyRank <= 3 ? 'text-red-500' : 'text-gray-400'}
+                ${monthlyRank && monthlyRank <= 3 ? 'text-red-500' : 'text-gray-600 dark:text-gray-400'}
               `}
             />
-            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
+            <span className="text-[10px] dark:text-gray-400 sm:text-xs truncate">
               <FormattedMessage id="chatter.rank.monthly" defaultMessage="Classement" />
             </span>
           </div>
           {monthlyRank ? (
             <>
-              <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+              <p className="text-lg dark:text-white sm:text-xl font-bold">
                 #<AnimatedNumber
                   value={monthlyRank}
                   duration={600}
@@ -298,7 +286,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
                 />
               </p>
               {monthlyRank <= 3 && (
-                <p className="text-[10px] sm:text-xs text-red-600 dark:text-red-400 mt-0.5 sm:mt-1 font-medium">
+                <p className="text-[10px] dark:text-red-400 sm:text-xs mt-0.5 sm:mt-1 font-medium">
                   <FormattedMessage
                     id={`chatter.rank.top${monthlyRank}`}
                     defaultMessage="Top {rank} ce mois!"
@@ -308,7 +296,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
               )}
             </>
           ) : (
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-xs dark:text-gray-400 sm:text-sm">
               <FormattedMessage id="chatter.rank.notRanked" defaultMessage="Non classe" />
             </p>
           )}

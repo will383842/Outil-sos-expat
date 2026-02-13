@@ -89,7 +89,7 @@ export function MilestoneProgressCard({
               </span>
             </div>
             <Progress value={progressPercent} className="h-3" />
-            <p className="text-sm text-gray-600">
+            <p className="text-sm">
               {t("chatter.referrals.filleulsNeeded", {
                 count: nextTierInfo.tier - qualifiedCount,
               })}
@@ -105,7 +105,7 @@ export function MilestoneProgressCard({
         )}
 
         {/* Tier milestones */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4">
+        <div className="grid sm:grid-cols-6 gap-2 mt-4">
           {TIER_INFO.map((tier) => {
             const isAchieved = paidTiers.includes(tier.tier);
             const isCurrent =
@@ -114,7 +114,7 @@ export function MilestoneProgressCard({
             return (
               <div
                 key={tier.tier}
-                className={`relative flex flex-col items-center p-2 rounded-lg border-2 transition-all ${
+                className={`relative flex items-center p-2 rounded-lg border-2 transition-all${
                   isAchieved
                     ? "border-green-500 bg-green-50"
                     : isCurrent
@@ -123,7 +123,7 @@ export function MilestoneProgressCard({
                 }`}
               >
                 {isAchieved && (
-                  <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <div className="absolute -top-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                     <Check className="h-3 w-3 text-white" />
                   </div>
                 )}
@@ -134,11 +134,11 @@ export function MilestoneProgressCard({
                       ? "text-green-600"
                       : isCurrent
                       ? "text-blue-600"
-                      : "text-gray-400"
+                      : "text-gray-600 dark:text-gray-400"
                   }`}
                 />
                 <span className="text-xs font-bold">{tier.tier}</span>
-                <span className="text-[10px] text-gray-600">{tier.label}</span>
+                <span className="text-[10px]">{tier.label}</span>
                 <Badge
                   variant="secondary"
                   className={`text-[10px] mt-1 ${
@@ -153,7 +153,7 @@ export function MilestoneProgressCard({
         </div>
 
         {/* Legend */}
-        <div className="flex justify-center gap-4 text-xs text-gray-500 mt-2">
+        <div className="flex justify-center gap-4 text-xs mt-2">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded bg-green-500"></div>
             <span>{t("chatter.referrals.achieved")}</span>

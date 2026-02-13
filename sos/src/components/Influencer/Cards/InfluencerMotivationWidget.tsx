@@ -147,25 +147,14 @@ const InfluencerMotivationWidget = memo(function InfluencerMotivationWidget({
 
   return (
     <div
-      className={`
-        relative overflow-hidden rounded-2xl
-        bg-gradient-to-br from-red-500/90 via-orange-500/90 to-amber-500/90
-        dark:from-red-600/80 dark:via-orange-600/80 dark:to-amber-600/80
-        backdrop-blur-xl
-        border border-white/20 dark:border-white/10
-        shadow-lg shadow-red-500/20 dark:shadow-red-900/30
-        p-4 sm:p-5
-        transform transition-all duration-500 ease-out
-        ${hasEntered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}
-        ${className}
-      `}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500/90 dark:from-red-600/80 via-orange-500/90 dark:via-orange-600/80 to-amber-500/90 dark:to-amber-600/80 backdrop-blur-xl border dark:border-white/10 shadow-lg dark:shadow-red-900/30 p-4 sm:p-5 transform transition-all duration-500 ease-out${hasEntered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}${className}`}
     >
       {/* Glassmorphism overlay */}
       <div className="absolute inset-0 bg-white/10 dark:bg-black/10 pointer-events-none" />
 
       {/* Decorative gradient circles */}
-      <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-      <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute -bottom-10 w-24 h-24 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
       <div className="relative z-10">
         {/* Content with fade animation */}
@@ -185,7 +174,7 @@ const InfluencerMotivationWidget = memo(function InfluencerMotivationWidget({
 
           {/* Message content */}
           <div className="flex-1 min-w-0 pt-0.5">
-            <p className="text-sm sm:text-base font-medium text-white leading-snug">
+            <p className="text-sm sm:text-base font-medium leading-snug">
               <FormattedMessage
                 id={currentMessage.id}
                 defaultMessage={currentMessage.defaultMessage}

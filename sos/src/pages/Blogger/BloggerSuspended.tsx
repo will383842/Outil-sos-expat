@@ -27,7 +27,7 @@ const BloggerSuspended: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-gray-950 to-white dark:to-black flex items-center justify-center p-4">
         <div className={`${UI.card} p-8 max-w-lg w-full text-center`}>
           <div className={`w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center ${
             isBlocked ? 'bg-red-100 dark:bg-red-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'
@@ -35,7 +35,7 @@ const BloggerSuspended: React.FC = () => {
             <AlertTriangle className={`w-8 h-8 ${isBlocked ? 'text-red-600' : 'text-yellow-600'}`} />
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-2xl dark:text-white font-bold mb-4">
             {isBlocked ? (
               <FormattedMessage id="blogger.suspended.blockedTitle" defaultMessage="Compte bloqué" />
             ) : (
@@ -61,7 +61,7 @@ const BloggerSuspended: React.FC = () => {
             <div className={`p-4 rounded-xl mb-6 text-left ${
               isBlocked ? 'bg-red-50 dark:bg-red-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'
             }`}>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <p className="text-sm dark:text-gray-300 font-medium mb-1">
                 <FormattedMessage id="blogger.suspended.reason" defaultMessage="Raison :" />
               </p>
               <p className={`text-sm ${isBlocked ? 'text-red-700 dark:text-red-300' : 'text-yellow-700 dark:text-yellow-300'}`}>
@@ -71,8 +71,8 @@ const BloggerSuspended: React.FC = () => {
           )}
 
           {!isBlocked && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6 text-left">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border dark:border-blue-800 rounded-xl p-4 mb-6 text-left">
+              <p className="text-sm dark:text-blue-300">
                 <FormattedMessage
                   id="blogger.suspended.howToResolve"
                   defaultMessage="Pour résoudre cette situation, veuillez contacter notre équipe support. Nous examinerons votre cas et vous informerons des étapes à suivre."
@@ -99,7 +99,7 @@ const BloggerSuspended: React.FC = () => {
             </button>
           </div>
 
-          <p className="text-xs text-gray-500 mt-6">
+          <p className="text-xs mt-6">
             <FormattedMessage
               id="blogger.suspended.supportEmail"
               defaultMessage="Email: support@sos-expat.com"

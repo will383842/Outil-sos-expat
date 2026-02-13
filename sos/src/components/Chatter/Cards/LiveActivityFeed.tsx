@@ -276,7 +276,7 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
       <div className={`${UI.card} p-4 ${className}`}>
         <div className="text-center py-4">
           <Activity className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-          <p className="text-gray-500 dark:text-gray-400 text-sm">{error}</p>
+          <p className="text-gray-500 dark:text-gray-400">{error}</p>
         </div>
       </div>
     );
@@ -301,13 +301,13 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
         )}
         <div className="text-center py-6">
           <Sparkles className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-gray-500 dark:text-gray-400">
             <FormattedMessage
               id="chatter.activityFeed.empty"
               defaultMessage="No recent activity"
             />
           </p>
-          <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
+          <p className="text-gray-400 dark:text-gray-300 mt-1">
             <FormattedMessage
               id="chatter.activityFeed.emptyHint"
               defaultMessage="Be the first to earn today!"
@@ -329,19 +329,19 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
                 <Zap className="w-4 h-4 text-white" />
               </div>
               {/* Pulse indicator */}
-              <div className="absolute -top-1 -right-1 w-3 h-3">
+              <div className="absolute -top-1 w-3 h-3">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
+              <h3 className="font-semibold text-gray-900 dark:text-white sm:text-base">
                 <FormattedMessage
                   id="chatter.activityFeed.title"
                   defaultMessage="Live Activity"
                 />
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs dark:text-gray-400">
                 <FormattedMessage
                   id="chatter.activityFeed.subtitle"
                   defaultMessage="Real-time earnings"
@@ -349,7 +349,7 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
               </p>
             </div>
           </div>
-          <div className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded-full">
+          <div className="text-xs dark:text-gray-300 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded-full">
             <FormattedMessage
               id="chatter.activityFeed.live"
               defaultMessage="LIVE"
@@ -389,27 +389,27 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
                 >
                   {/* Icon */}
                   <div
-                    className={`w-9 h-9 rounded-xl ${activity.config.bgColor} flex items-center justify-center flex-shrink-0`}
+                    className={`w-9 h-9 rounded-xl${activity.config.bgColor}flex items-center justify-center`}
                   >
                     <Icon className={`w-4 h-4 ${activity.config.color}`} />
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    <p className="text-sm dark:text-white font-medium truncate">
                       <span className="mr-1">{activity.config.emoji}</span>
                       <span className="font-semibold">{activity.chatterName}</span>
-                      <span className="mx-1 text-gray-400">
+                      <span className="mx-1 text-gray-600 dark:text-gray-400">
                         ({activity.flag} {activity.country})
                       </span>
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs dark:text-gray-400">
                       {activity.message}
                     </p>
                   </div>
 
                   {/* Time */}
-                  <div className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+                  <div className="text-xs dark:text-gray-300 flex-shrink-0">
                     {activity.relativeTime}
                   </div>
                 </div>
@@ -420,8 +420,8 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10">
-        <div className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+      <div className="px-4 py-3 bg-gray-50 dark:bg-white/5 border-t dark:border-white/10">
+        <div className="flex items-center justify-center gap-2 text-xs dark:text-gray-400">
           <Activity className="w-3.5 h-3.5" />
           <FormattedMessage
             id="chatter.activityFeed.footer"

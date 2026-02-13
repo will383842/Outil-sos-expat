@@ -45,7 +45,7 @@ import {
 // SKELETON COMPONENTS
 // ============================================================================
 const CardSkeleton: React.FC = () => (
-  <div className="bg-white dark:bg-white/5 rounded-xl p-6 shadow-sm dark:shadow-none dark:border dark:border-white/10 animate-pulse">
+  <div className="bg-white dark:bg-white/5 rounded-xl p-6 shadow-sm dark:shadow-none dark:border animate-pulse">
     <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-4" />
     <div className="h-8 bg-gray-200 dark:bg-white/10 rounded w-1/2 mb-2" />
     <div className="h-3 bg-gray-200 dark:bg-white/10 rounded w-2/3" />
@@ -93,7 +93,7 @@ const GroupAdminDashboard: React.FC = () => {
     return (
       <GroupAdminDashboardLayout>
         <SEOHead title={intl.formatMessage({ id: 'groupAdmin.dashboard.loading', defaultMessage: 'Loading Dashboard...' })} description="Group Admin Dashboard - SOS-Expat" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           <CardSkeleton />
           <CardSkeleton />
           <CardSkeleton />
@@ -106,12 +106,12 @@ const GroupAdminDashboard: React.FC = () => {
     return (
       <GroupAdminDashboardLayout>
         <div className="flex items-center justify-center p-4 min-h-[60vh]">
-          <div className="bg-white dark:bg-white/5 rounded-xl p-8 max-w-md w-full text-center shadow-lg dark:shadow-none dark:border dark:border-white/10">
+          <div className="bg-white dark:bg-white/5 rounded-xl p-8 max-w-md w-full text-center shadow-lg dark:shadow-none dark:border">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-xl dark:text-white font-bold mb-2">
               <FormattedMessage id="groupAdmin.dashboard.error.title" defaultMessage="Error Loading Dashboard" />
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+            <p className="text-gray-600 dark:text-gray-600 mb-6">{error}</p>
             <button
               onClick={fetchDashboard}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg"
@@ -135,7 +135,7 @@ const GroupAdminDashboard: React.FC = () => {
       <div>
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl dark:text-white md:text-3xl font-bold mb-2">
               <FormattedMessage
                 id="groupAdmin.dashboard.welcome"
                 defaultMessage="Welcome, {name}!"
@@ -158,7 +158,7 @@ const GroupAdminDashboard: React.FC = () => {
           </div>
 
           {/* Balance Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
             {/* Available Balance */}
             <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white">
               <div className="flex items-center justify-between mb-4">
@@ -170,7 +170,7 @@ const GroupAdminDashboard: React.FC = () => {
               <div className="text-3xl font-bold mb-2">{formatGroupAdminAmount(profile.availableBalance)}</div>
               <button
                 onClick={() => navigate('/group-admin/paiements')}
-                className="text-sm text-green-100 hover:text-white flex items-center gap-1"
+                className="text-sm hover:text-white flex items-center gap-1"
               >
                 <FormattedMessage id="groupAdmin.dashboard.withdraw" defaultMessage="Withdraw" />
                 <ArrowRight className="w-4 h-4" />
@@ -180,13 +180,13 @@ const GroupAdminDashboard: React.FC = () => {
             {/* Pending Balance */}
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-500">
+                <span className="text-gray-700 dark:text-gray-700">
                   <FormattedMessage id="groupAdmin.dashboard.pendingBalance" defaultMessage="Pending" />
                 </span>
                 <TrendingUp className="w-6 h-6 text-amber-500" />
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">{formatGroupAdminAmount(profile.pendingBalance)}</div>
-              <p className="text-sm text-gray-500">
+              <div className="text-3xl font-bold mb-2">{formatGroupAdminAmount(profile.pendingBalance)}</div>
+              <p className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.dashboard.pendingInfo" defaultMessage="Processing..." />
               </p>
             </div>
@@ -194,31 +194,31 @@ const GroupAdminDashboard: React.FC = () => {
             {/* Total Earned */}
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-500">
+                <span className="text-gray-700 dark:text-gray-700">
                   <FormattedMessage id="groupAdmin.dashboard.totalEarned" defaultMessage="Total Earned" />
                 </span>
                 <Award className="w-6 h-6 text-purple-500" />
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">{formatGroupAdminAmount(profile.totalEarned)}</div>
-              <p className="text-sm text-gray-500">
+              <div className="text-3xl font-bold mb-2">{formatGroupAdminAmount(profile.totalEarned)}</div>
+              <p className="text-sm dark:text-gray-700">
                 {profile.totalClients} <FormattedMessage id="groupAdmin.dashboard.clients" defaultMessage="clients" /> · {profile.totalRecruits} <FormattedMessage id="groupAdmin.dashboard.recruits" defaultMessage="recruits" />
               </p>
             </div>
           </div>
 
           {/* Affiliate Links */}
-          <div className="bg-white dark:bg-white/5 rounded-xl p-4 sm:p-6 shadow-sm dark:shadow-none dark:border dark:border-white/10 mb-8">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-white/5 rounded-xl p-4 sm:p-6 shadow-sm dark:shadow-none dark:border mb-8">
+            <h2 className="text-lg dark:text-white font-bold mb-4">
               <FormattedMessage id="groupAdmin.dashboard.affiliateLinks" defaultMessage="Your Affiliate Links" />
             </h2>
-            <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-4">
+            <div className="space-y-4 md:space-y-0 md:grid md:gap-4">
               {/* Client Link */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-800/20 rounded-xl p-4">
+              <div className="bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-100 dark:to-emerald-800/20 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-sm dark:text-white font-semibold">
                     <FormattedMessage id="groupAdmin.dashboard.clientLink" defaultMessage="Client link ($10 per client)" />
                   </span>
-                  <span className="text-sm font-bold bg-green-200 text-green-800 dark:bg-green-800/50 dark:text-green-300 px-3 py-1.5 rounded-full">
+                  <span className="text-sm dark:text-green-300 font-bold bg-green-200 dark:bg-green-800/50 px-3 py-1.5 rounded-full">
                     {profile.affiliateCodeClient}
                   </span>
                 </div>
@@ -227,12 +227,12 @@ const GroupAdminDashboard: React.FC = () => {
                     type="text"
                     readOnly
                     value={affiliateLink}
-                    className="w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px] font-mono"
+                    className="w-full text-sm bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px] font-mono"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={() => copyToClipboard(affiliateLink, 'client')}
-                      className="flex-1 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                      className="flex-1 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
                     >
                       {copiedCode === 'client' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                       <span>
@@ -246,7 +246,7 @@ const GroupAdminDashboard: React.FC = () => {
                       href={affiliateLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="min-h-[48px] min-w-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
+                      className="min-h-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-700 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
                     >
                       <ExternalLink className="w-5 h-5" />
                     </a>
@@ -255,12 +255,12 @@ const GroupAdminDashboard: React.FC = () => {
               </div>
 
               {/* Recruitment Link */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-800/20 rounded-xl p-4">
+              <div className="bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-100 dark:to-indigo-800/20 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-sm dark:text-white font-semibold">
                     <FormattedMessage id="groupAdmin.dashboard.recruitLink" defaultMessage="Recruitment link ($5 when recruit reaches $50)" />
                   </span>
-                  <span className="text-sm font-bold bg-blue-200 text-blue-800 dark:bg-blue-800/50 dark:text-blue-300 px-3 py-1.5 rounded-full">
+                  <span className="text-sm dark:text-blue-300 font-bold bg-blue-200 dark:bg-blue-800/50 px-3 py-1.5 rounded-full">
                     {profile.affiliateCodeRecruitment}
                   </span>
                 </div>
@@ -269,12 +269,12 @@ const GroupAdminDashboard: React.FC = () => {
                     type="text"
                     readOnly
                     value={recruitmentLink}
-                    className="w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px] font-mono"
+                    className="w-full text-sm bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px] font-mono"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={() => copyToClipboard(recruitmentLink, 'recruit')}
-                      className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                      className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
                     >
                       {copiedCode === 'recruit' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                       <span>
@@ -288,7 +288,7 @@ const GroupAdminDashboard: React.FC = () => {
                       href={recruitmentLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="min-h-[48px] min-w-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
+                      className="min-h-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-700 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
                     >
                       <ExternalLink className="w-5 h-5" />
                     </a>
@@ -299,10 +299,10 @@ const GroupAdminDashboard: React.FC = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid md:grid-cols-4 gap-4 mb-8">
             <button
               onClick={() => navigate('/group-admin/ressources')}
-              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center gap-2"
+              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-2"
             >
               <Image className="w-8 h-8 text-blue-500" />
               <span className="text-sm font-medium">
@@ -311,7 +311,7 @@ const GroupAdminDashboard: React.FC = () => {
             </button>
             <button
               onClick={() => navigate('/group-admin/posts')}
-              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center gap-2"
+              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-2"
             >
               <FileText className="w-8 h-8 text-green-500" />
               <span className="text-sm font-medium">
@@ -320,7 +320,7 @@ const GroupAdminDashboard: React.FC = () => {
             </button>
             <button
               onClick={() => navigate('/group-admin/classement')}
-              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center gap-2"
+              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-2"
             >
               <BarChart3 className="w-8 h-8 text-purple-500" />
               <span className="text-sm font-medium">
@@ -329,7 +329,7 @@ const GroupAdminDashboard: React.FC = () => {
             </button>
             <button
               onClick={() => navigate('/group-admin/guide')}
-              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center gap-2"
+              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-2"
             >
               <BookOpen className="w-8 h-8 text-amber-500" />
               <span className="text-sm font-medium">
@@ -346,17 +346,17 @@ const GroupAdminDashboard: React.FC = () => {
                 <h3 className="font-bold">
                   <FormattedMessage id="groupAdmin.dashboard.recentCommissions" defaultMessage="Recent Commissions" />
                 </h3>
-                <button onClick={() => navigate('/group-admin/paiements')} className="text-indigo-600 text-sm hover:underline">
+                <button onClick={() => navigate('/group-admin/paiements')} className="text-indigo-600 hover:underline">
                   <FormattedMessage id="groupAdmin.dashboard.viewAll" defaultMessage="View all" />
                 </button>
               </div>
               {recentCommissions.length > 0 ? (
                 <div className="space-y-3">
                   {recentCommissions.slice(0, 5).map((commission) => (
-                    <div key={commission.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                    <div key={commission.id} className="flex items-center justify-between py-2 border-b last:border-0">
                       <div>
                         <div className="font-medium text-sm">{commission.description}</div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs dark:text-gray-600">
                           {new Date(commission.createdAt).toLocaleDateString()}
                         </div>
                       </div>
@@ -367,7 +367,7 @@ const GroupAdminDashboard: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm text-center py-4">
+                <p className="text-gray-700 dark:text-gray-700 py-4">
                   <FormattedMessage id="groupAdmin.dashboard.noCommissions" defaultMessage="No commissions yet. Share your link!" />
                 </p>
               )}
@@ -379,20 +379,20 @@ const GroupAdminDashboard: React.FC = () => {
                 <h3 className="font-bold">
                   <FormattedMessage id="groupAdmin.dashboard.leaderboardPreview" defaultMessage="Monthly Leaderboard" />
                 </h3>
-                <button onClick={() => navigate('/group-admin/classement')} className="text-indigo-600 text-sm hover:underline">
+                <button onClick={() => navigate('/group-admin/classement')} className="text-indigo-600 hover:underline">
                   <FormattedMessage id="groupAdmin.dashboard.viewAll" defaultMessage="View all" />
                 </button>
               </div>
               {leaderboard.length > 0 ? (
                 <div className="space-y-3">
                   {leaderboard.slice(0, 5).map((entry) => (
-                    <div key={entry.groupAdminId} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                    <div key={entry.groupAdminId} className="flex items-center justify-between py-2 border-b last:border-0">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                          entry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
-                          entry.rank === 2 ? 'bg-gray-100 text-gray-700' :
-                          entry.rank === 3 ? 'bg-amber-100 text-amber-700' :
-                          'bg-gray-50 text-gray-500'
+                          entry.rank === 1 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                          entry.rank === 2 ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' :
+                          entry.rank === 3 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
+                          'bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300'
                         }`}>
                           {entry.rank}
                         </div>
@@ -403,13 +403,13 @@ const GroupAdminDashboard: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm text-center py-4">
+                <p className="text-gray-700 dark:text-gray-700 py-4">
                   <FormattedMessage id="groupAdmin.dashboard.noLeaderboard" defaultMessage="Leaderboard not available yet" />
                 </p>
               )}
               {profile.currentMonthRank && (
                 <div className="mt-4 p-3 bg-indigo-50 rounded-lg text-center">
-                  <span className="text-sm text-indigo-700">
+                  <span className="text-sm">
                     <FormattedMessage
                       id="groupAdmin.dashboard.yourRank"
                       defaultMessage="Your rank: #{rank}"
@@ -427,7 +427,7 @@ const GroupAdminDashboard: React.FC = () => {
               <h3 className="font-bold mb-4">
                 <FormattedMessage id="groupAdmin.dashboard.badges" defaultMessage="Your Badges" />
               </h3>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex gap-3">
                 {profile.badges.map((badgeType) => {
                   const badge = GROUP_ADMIN_BADGES[badgeType];
                   return (

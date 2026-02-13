@@ -27,7 +27,7 @@ import {
 
 // Design tokens
 const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
+  card: "bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
     primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 rounded-xl transition-all",
@@ -156,19 +156,19 @@ const ChatterTraining: React.FC = () => {
     switch (level) {
       case 'beginner':
         return (
-          <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
+          <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full font-medium">
             <FormattedMessage id="chatter.training.level.beginner" defaultMessage="Débutant" />
           </span>
         );
       case 'intermediate':
         return (
-          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium">
+          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full font-medium">
             <FormattedMessage id="chatter.training.level.intermediate" defaultMessage="Intermédiaire" />
           </span>
         );
       case 'advanced':
         return (
-          <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-medium">
+          <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full font-medium">
             <FormattedMessage id="chatter.training.level.advanced" defaultMessage="Avancé" />
           </span>
         );
@@ -196,7 +196,7 @@ const ChatterTraining: React.FC = () => {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl dark:text-white font-bold">
               <FormattedMessage id="chatter.training.title" defaultMessage="Formation" />
             </h1>
             <p className="text-gray-500 dark:text-gray-400">
@@ -206,12 +206,12 @@ const ChatterTraining: React.FC = () => {
 
           {/* Progress Card */}
           <div className={`${UI.card} p-6`}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div className="flex sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white">
                   <FormattedMessage id="chatter.training.progress.title" defaultMessage="Votre progression" />
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm dark:text-gray-400">
                   <FormattedMessage
                     id="chatter.training.progress.subtitle"
                     defaultMessage="{completed} sur {total} modules complétés"
@@ -219,7 +219,7 @@ const ChatterTraining: React.FC = () => {
                   />
                 </p>
               </div>
-              <div className="text-3xl font-bold text-red-600 dark:text-red-400">
+              <div className="text-3xl dark:text-red-400 font-bold">
                 {progressPercent.toFixed(0)}%
               </div>
             </div>
@@ -237,15 +237,15 @@ const ChatterTraining: React.FC = () => {
               <Lightbulb className="w-5 h-5 text-red-500" />
               <FormattedMessage id="chatter.training.tips.title" defaultMessage="Conseils rapides" />
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
               {TIPS.map((tip, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
+                <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-white/10 rounded-xl">
                   <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
                     {tip.icon}
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white text-sm">{tip.title}</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{tip.description}</p>
+                    <h4 className="font-medium text-gray-900 dark:text-white">{tip.title}</h4>
+                    <p className="text-xs dark:text-gray-400">{tip.description}</p>
                   </div>
                 </div>
               ))}
@@ -259,7 +259,7 @@ const ChatterTraining: React.FC = () => {
               <FormattedMessage id="chatter.training.modules.title" defaultMessage="Modules de formation" />
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
               {TRAINING_MODULES.map((module) => (
                 <div
                   key={module.id}
@@ -277,15 +277,15 @@ const ChatterTraining: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         {getLevelBadge(module.level)}
-                        <span className="text-xs text-gray-500">{module.duration}</span>
+                        <span className="text-xs">{module.duration}</span>
                       </div>
                       <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
                         {module.title}
                       </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                      <p className="text-sm dark:text-gray-400 line-clamp-2">
                         {module.description}
                       </p>
-                      <div className="flex items-center gap-2 mt-3 text-sm text-red-600 dark:text-red-400 font-medium">
+                      <div className="flex items-center gap-2 mt-3 text-sm dark:text-red-400 font-medium">
                         {module.completed ? (
                           <FormattedMessage id="chatter.training.review" defaultMessage="Revoir" />
                         ) : (
@@ -307,38 +307,38 @@ const ChatterTraining: React.FC = () => {
               <FormattedMessage id="chatter.training.resources.title" defaultMessage="Ressources téléchargeables" />
             </h3>
             <div className="space-y-3">
-              <a href="#" className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+              <a href="#" className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-3">
                   <FileText className="w-5 h-5 text-blue-500" />
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white text-sm">
+                    <p className="font-medium text-gray-900 dark:text-white">
                       <FormattedMessage id="chatter.training.resources.guide" defaultMessage="Guide complet du Chatter" />
                     </p>
-                    <p className="text-xs text-gray-500">PDF • 2.5 MB</p>
+                    <p className="text-xs">PDF • 2.5 MB</p>
                   </div>
                 </div>
                 <Download className="w-4 h-4 text-gray-400" />
               </a>
-              <a href="#" className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+              <a href="#" className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-3">
                   <FileText className="w-5 h-5 text-green-500" />
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white text-sm">
+                    <p className="font-medium text-gray-900 dark:text-white">
                       <FormattedMessage id="chatter.training.resources.templates" defaultMessage="Templates de messages" />
                     </p>
-                    <p className="text-xs text-gray-500">DOCX • 500 KB</p>
+                    <p className="text-xs">DOCX • 500 KB</p>
                   </div>
                 </div>
                 <Download className="w-4 h-4 text-gray-400" />
               </a>
-              <a href="#" className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+              <a href="#" className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-3">
                   <FileText className="w-5 h-5 text-red-500" />
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white text-sm">
+                    <p className="font-medium text-gray-900 dark:text-white">
                       <FormattedMessage id="chatter.training.resources.images" defaultMessage="Kit d'images promotionnelles" />
                     </p>
-                    <p className="text-xs text-gray-500">ZIP • 15 MB</p>
+                    <p className="text-xs">ZIP • 15 MB</p>
                   </div>
                 </div>
                 <Download className="w-4 h-4 text-gray-400" />
@@ -350,7 +350,7 @@ const ChatterTraining: React.FC = () => {
         {/* Module Detail Modal */}
         {selectedModule && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className={`${UI.card} p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto`}>
+            <div className={`${UI.card}p-6 max-w-lg w-full overflow-y-auto`}>
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className={`p-3 rounded-xl ${
@@ -364,7 +364,7 @@ const ChatterTraining: React.FC = () => {
                     <div className="flex items-center gap-2 mb-1">
                       {getLevelBadge(selectedModule.level)}
                     </div>
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    <h2 className="text-lg dark:text-white font-bold">
                       {selectedModule.title}
                     </h2>
                   </div>
@@ -383,7 +383,7 @@ const ChatterTraining: React.FC = () => {
                 {selectedModule.lessons.map((lesson, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-xl"
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/10 rounded-xl"
                   >
                     <div className="flex items-center gap-3">
                       {lesson.completed ? (
@@ -395,7 +395,7 @@ const ChatterTraining: React.FC = () => {
                         {lesson.title}
                       </span>
                     </div>
-                    <span className="text-xs text-gray-500">{lesson.duration}</span>
+                    <span className="text-xs">{lesson.duration}</span>
                   </div>
                 ))}
               </div>
@@ -408,7 +408,7 @@ const ChatterTraining: React.FC = () => {
                   <FormattedMessage id="common.close" defaultMessage="Fermer" />
                 </button>
                 <button
-                  className={`${UI.button.primary} flex-1 py-2 flex items-center justify-center gap-2`}
+                  className={`${UI.button.primary}flex-1 py-2 items-center justify-center gap-2`}
                 >
                   <Play className="w-4 h-4" />
                   {selectedModule.completed ? (

@@ -43,7 +43,7 @@ export default function ChatterReferrals() {
     <ChatterDashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Users className="h-7 w-7" />
@@ -97,7 +97,7 @@ export default function ChatterReferrals() {
             )}
 
             {/* Stats and milestones */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid lg:grid-cols-2 gap-6">
               <ReferralStatsCard stats={stats} isLoading={isLoading} />
               <MilestoneProgressCard
                 tierProgress={tierProgress}
@@ -115,7 +115,7 @@ export default function ChatterReferrals() {
               <Info className="h-4 w-4" />
               <AlertDescription className="ml-2">
                 <strong>{t("chatter.referrals.howItWorks")}</strong>
-                <ul className="list-disc list-inside mt-2 text-sm space-y-1">
+                <ul className="list-disc mt-2 text-sm space-y-1">
                   <li>
                     {t("chatter.referrals.howItWorks1")}
                   </li>
@@ -133,7 +133,7 @@ export default function ChatterReferrals() {
             </Alert>
 
             {/* Filleuls tables */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid xl:grid-cols-3 gap-6">
               <div className="xl:col-span-2">
                 <ReferralN1Table
                   filleuls={filleulsN1}

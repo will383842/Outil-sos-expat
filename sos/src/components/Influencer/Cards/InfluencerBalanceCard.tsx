@@ -59,7 +59,7 @@ const InfluencerBalanceCard: React.FC<InfluencerBalanceCardProps> = ({
     <div className={`${colors.bg} rounded-2xl p-6 border ${highlight ? 'border-2 border-green-500 ring-2 ring-green-500/20' : 'border-white/20 dark:border-white/10'}`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</p>
+          <p className="text-sm dark:text-gray-700 mb-1">{label}</p>
           <p className={`text-3xl font-bold ${colors.text}`}>{formattedAmount}</p>
         </div>
         <div className={`w-12 h-12 rounded-xl ${colors.icon} flex items-center justify-center ${colors.text}`}>

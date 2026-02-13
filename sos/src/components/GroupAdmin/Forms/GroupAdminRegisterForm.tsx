@@ -73,10 +73,10 @@ const evaluatePasswordStrength = (password: string) => {
 const darkStyles = {
   input: `
     w-full px-4 py-3.5
-    bg-white/5 border-2 border-white/10
+    bg-white/10 border-2 border-white/10
     rounded-2xl
     text-base text-white
-    placeholder:text-gray-500
+    placeholder:text-gray-400
     focus:outline-none focus:ring-2 focus:ring-indigo-400/40 focus:ring-offset-0
     focus:border-indigo-400/50 focus:bg-white/10
     transition-all duration-200 ease-out
@@ -96,11 +96,11 @@ const darkStyles = {
     w-full px-4 py-3
     flex items-center gap-3
     text-left text-sm text-white
-    hover:bg-white/5
+    hover:bg-white/10
     transition-colors duration-150
     cursor-pointer
   `,
-  dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-white/5 text-white rounded-xl border-0 focus:ring-2 focus:ring-indigo-400/30 placeholder:text-gray-500',
+  dropdownSearch: 'w-full pl-9 pr-3 py-2.5 text-sm bg-white/10 text-white rounded-xl border-0 focus:ring-2 focus:ring-indigo-400/30 placeholder:text-gray-400',
 };
 
 // ============================================================================
@@ -458,7 +458,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     children: React.ReactNode;
   }) => (
     <div ref={refObj} className="relative">
-      {icon && <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">{icon}</div>}
+      {icon && <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none z-10">{icon}</div>}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -469,8 +469,8 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
           ${error ? darkStyles.inputError : selectedLabel ? darkStyles.inputFilled : ''}
         `}
       >
-        <span className={selectedLabel ? '' : 'text-gray-500'}>{selectedLabel || placeholder}</span>
-        <ChevronDown className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <span className={selectedLabel ? '' : 'text-gray-400'}>{selectedLabel || placeholder}</span>
+        <ChevronDown className={`w-5 h-5 text-gray-300 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
         <div className={darkStyles.dropdown}>
@@ -487,7 +487,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Error alert */}
       {error && (
-        <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400">
+        <div className="flex items-start gap-3 p-4 bg-red-500/10 border rounded-2xl text-red-400">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <p className="text-sm">{error}</p>
         </div>
@@ -495,26 +495,26 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
 
       {/* Progress indicator */}
       <div className="flex items-center justify-center gap-4 mb-2">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step >= 1 ? 'bg-indigo-500 text-white' : 'bg-white/10 text-gray-500'}`}>1</div>
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step >= 1 ? 'bg-indigo-500 text-white' : 'bg-white/10 text-gray-400'}`}>1</div>
         <div className={`w-16 h-1 rounded-full transition-colors ${step >= 2 ? 'bg-indigo-500' : 'bg-white/10'}`} />
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step >= 2 ? 'bg-indigo-500 text-white' : 'bg-white/10 text-gray-500'}`}>2</div>
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step >= 2 ? 'bg-indigo-500 text-white' : 'bg-white/10 text-gray-400'}`}>2</div>
       </div>
 
       {/* STEP 1: Personal Info */}
       {step === 1 && (
         <div className="space-y-5">
-          <h3 className="text-lg font-bold text-white">
+          <h3 className="text-lg font-bold">
             <FormattedMessage id="groupadmin.register.step1.title" defaultMessage="Your Information" />
           </h3>
 
           {/* Name row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className={darkStyles.label}>
                 <FormattedMessage id="form.firstName" defaultMessage="First name" /> <span className="text-red-400">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none" />
                 <input
                   type="text"
                   value={formData.firstName}
@@ -532,7 +532,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                 <FormattedMessage id="form.lastName" defaultMessage="Last name" /> <span className="text-red-400">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none" />
                 <input
                   type="text"
                   value={formData.lastName}
@@ -552,7 +552,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
               <FormattedMessage id="form.email" defaultMessage="Email" /> <span className="text-red-400">*</span>
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none" />
               <input
                 type="email"
                 value={formData.email}
@@ -573,7 +573,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                 <FormattedMessage id="form.password" defaultMessage="Password" /> <span className="text-red-400">*</span>
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
@@ -586,7 +586,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -598,9 +598,9 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                     <div className={`h-full ${passwordStrength.color} rounded-full transition-all duration-300`} style={{ width: passwordStrength.width }} />
                   </div>
                   <div className="flex justify-between mt-1">
-                    <span className="text-xs text-gray-400">{passwordStrength.label}</span>
+                    <span className="text-xs">{passwordStrength.label}</span>
                     {passwordStrength.feedback.length > 0 && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs">
                         <FormattedMessage id="form.password.add" defaultMessage="Add:" /> {passwordStrength.feedback.join(', ')}
                       </span>
                     )}
@@ -616,7 +616,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             <label className={darkStyles.label}>
               <FormattedMessage id="groupadmin.register.phone" defaultMessage="Phone (optional)" />
             </label>
-            <div className="grid grid-cols-12 gap-2">
+            <div className="grid gap-2">
               {/* Country code dropdown */}
               <div className="col-span-5">
                 <DarkDropdown
@@ -632,9 +632,9 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                   placeholder={intl.formatMessage({ id: 'form.phone.selectCountry', defaultMessage: 'Code' })}
                   icon={<Globe className="w-5 h-5" />}
                 >
-                  <div className="p-2 border-b border-white/10">
+                  <div className="p-2 border-b">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                       <input
                         type="text"
                         value={phoneCountrySearch}
@@ -658,8 +658,8 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                         className={`${darkStyles.dropdownItem} ${entry.code === phoneCountryCode ? 'bg-indigo-500/10' : ''}`}
                       >
                         <span className="text-xl">{getFlag(entry.code)}</span>
-                        <span className="flex-1 text-left text-sm">{getCountryName(entry, locale)}</span>
-                        <span className="text-xs text-gray-400">{entry.phoneCode}</span>
+                        <span className="flex-1 text-left">{getCountryName(entry, locale)}</span>
+                        <span className="text-xs">{entry.phoneCode}</span>
                         {entry.code === phoneCountryCode && <Check className="w-4 h-4 text-indigo-400" />}
                       </button>
                     ))}
@@ -670,7 +670,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
               {/* Phone number input */}
               <div className="col-span-7">
                 <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none z-10" />
                   <input
                     type="tel"
                     value={phoneNumber}
@@ -685,14 +685,14 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             </div>
             {/* Display full formatted phone number */}
             {formData.phone && (
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs mt-1">
                 <FormattedMessage id="form.phone.formatted" defaultMessage="Full number:" /> <span className="text-white font-mono">{formData.phone}</span>
               </p>
             )}
           </div>
 
           {/* Country + Language row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             {/* Country dropdown */}
             <div className="space-y-1">
               <label className={darkStyles.label}>
@@ -712,9 +712,9 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                 icon={<Globe className="w-5 h-5" />}
                 error={validationErrors.country}
               >
-                <div className="p-2 border-b border-white/10">
+                <div className="p-2 border-b">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                     <input
                       type="text"
                       value={countrySearch}
@@ -785,7 +785,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
           <button
             type="button"
             onClick={handleNextStep}
-            className="w-full py-4 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/30 transition-all duration-200 flex items-center justify-center gap-2 min-h-[48px]"
+            className="w-full py-4 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-indigo-500/30 transition-all duration-200 flex items-center justify-center gap-2 min-h-[48px]"
           >
             <FormattedMessage id="groupadmin.register.next" defaultMessage="Next" />
             <ArrowRight className="w-5 h-5" />
@@ -796,7 +796,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
       {/* STEP 2: Group Info */}
       {step === 2 && (
         <div className="space-y-5">
-          <h3 className="text-lg font-bold text-white">
+          <h3 className="text-lg font-bold">
             <FormattedMessage id="groupadmin.register.step2.title" defaultMessage="Your Group / Community" />
           </h3>
 
@@ -805,13 +805,13 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             <label className={darkStyles.label}>
               <FormattedMessage id="groupadmin.register.groupUrl" defaultMessage="Group / Community URL" /> <span className="text-red-400">*</span>
               {savedUrls.length > 0 && (
-                <span className="ml-2 text-xs text-green-400">
+                <span className="ml-2 text-xs">
                   <FormattedMessage id="groupadmin.register.groupUrl.prefilled" defaultMessage="(pre-filled from history)" />
                 </span>
               )}
             </label>
             <div className="relative" ref={urlHistoryDropdownRef}>
-              <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+              <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none z-10" />
               <input
                 type="url"
                 value={formData.groupUrl}
@@ -825,7 +825,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowUrlHistoryDropdown(!showUrlHistoryDropdown)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-400 transition-colors p-1 rounded-lg hover:bg-white/5 z-10"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-indigo-400 transition-colors p-1 rounded-lg hover:bg-white/10 z-10"
                   title={intl.formatMessage({ id: 'groupadmin.register.groupUrl.showHistory', defaultMessage: 'Show history' })}
                 >
                   <ChevronDown className={`w-4 h-4 transition-transform ${showUrlHistoryDropdown ? 'rotate-180' : ''}`} />
@@ -835,8 +835,8 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
               {/* History dropdown */}
               {showUrlHistoryDropdown && savedUrls.length > 0 && (
                 <div className={darkStyles.dropdown}>
-                  <div className="p-2 border-b border-white/10">
-                    <p className="text-xs text-gray-400">
+                  <div className="p-2 border-b">
+                    <p className="text-xs">
                       <FormattedMessage id="groupadmin.register.groupUrl.history" defaultMessage="Previously used URLs:" />
                     </p>
                   </div>
@@ -851,8 +851,8 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                         }}
                         className={`${darkStyles.dropdownItem} ${url === formData.groupUrl ? 'bg-indigo-500/10' : ''}`}
                       >
-                        <Link2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="flex-1 text-sm truncate text-left">{url}</span>
+                        <Link2 className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                        <span className="flex-1 text-sm truncate">{url}</span>
                         {url === formData.groupUrl && <Check className="w-4 h-4 text-indigo-400 flex-shrink-0" />}
                       </button>
                     ))}
@@ -869,7 +869,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
               <FormattedMessage id="groupadmin.register.groupName" defaultMessage="Group Name" /> <span className="text-red-400">*</span>
             </label>
             <div className="relative">
-              <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none" />
               <input
                 type="text"
                 value={formData.groupName}
@@ -883,7 +883,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
           </div>
 
           {/* Group Type + Group Size */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             {/* Group Type */}
             <div className="space-y-1">
               <label className={darkStyles.label}>
@@ -954,7 +954,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
           </div>
 
           {/* Group Country + Group Language */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             {/* Group Country */}
             <div className="space-y-1">
               <label className={darkStyles.label}>
@@ -974,9 +974,9 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
                 icon={<Globe className="w-5 h-5" />}
                 error={validationErrors.groupCountry}
               >
-                <div className="p-2 border-b border-white/10">
+                <div className="p-2 border-b">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                     <input
                       type="text"
                       value={groupCountrySearch}
@@ -1057,24 +1057,24 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
               className={`${darkStyles.input} resize-none ${formData.groupDescription ? darkStyles.inputFilled : ''}`}
             />
             <div className="flex justify-end">
-              <span className={`text-xs ${formData.groupDescription.length >= 500 ? 'text-red-400' : 'text-gray-500'}`}>
+              <span className={`text-xs ${formData.groupDescription.length >= 500 ? 'text-red-400' : 'text-gray-400'}`}>
                 {formData.groupDescription.length}/500
               </span>
             </div>
           </div>
 
           {/* Terms acceptance */}
-          <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+          <div className="p-4 bg-white/10 border rounded-2xl">
             <label className="flex items-start gap-3 cursor-pointer group">
               <div className="relative flex-shrink-0 mt-0.5">
                 <input
                   type="checkbox"
                   checked={formData.acceptTerms}
                   onChange={(e) => handleChange('acceptTerms', e.target.checked)}
-                  className="w-5 h-5 rounded-md border-2 border-white/20 bg-white/5 text-indigo-500 focus:ring-2 focus:ring-indigo-400/40 focus:ring-offset-0 transition-all duration-200"
+                  className="w-5 h-5 rounded-md border-2 bg-white/10 text-indigo-500 focus:ring-2 transition-all duration-200"
                 />
               </div>
-              <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+              <span className="text-sm group-hover:text-white transition-colors">
                 <FormattedMessage
                   id="groupadmin.register.terms"
                   defaultMessage="I accept the {terms} and {privacy}"
@@ -1093,7 +1093,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             <button
               type="button"
               onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-white font-medium rounded-2xl transition-colors flex items-center justify-center gap-2 min-h-[48px] border border-white/10"
+              className="flex-1 py-4 bg-white/10 hover:bg-white/10 text-white font-medium rounded-2xl transition-colors items-center justify-center gap-2 min-h-[48px] border"
             >
               <ArrowLeft className="w-5 h-5" />
               <FormattedMessage id="groupadmin.register.back" defaultMessage="Back" />
@@ -1102,11 +1102,11 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/30 transition-all duration-200 flex items-center justify-center gap-2 min-h-[48px]"
+              className="flex-1 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-2xl shadow-lg hover:shadow-indigo-500/30 transition-all duration-200 items-center justify-center gap-2 min-h-[48px]"
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 rounded-full animate-spin" />
                   <FormattedMessage id="groupadmin.register.submitting" defaultMessage="Submitting..." />
                 </>
               ) : (

@@ -75,12 +75,12 @@ export default function ChatterRefer() {
 
         {/* Stats summary */}
         {stats && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid sm:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4 text-center">
                 <Users className="h-6 w-6 mx-auto text-primary mb-2" />
                 <p className="text-2xl font-bold">{stats.totalFilleulsN1}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs">
                   {t("chatter.referrals.filleulsN1")}
                 </p>
               </CardContent>
@@ -89,7 +89,7 @@ export default function ChatterRefer() {
               <CardContent className="p-4 text-center">
                 <Users className="h-6 w-6 mx-auto text-red-500 mb-2" />
                 <p className="text-2xl font-bold">{stats.qualifiedFilleulsN1}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs">
                   {t("chatter.referrals.qualified")}
                 </p>
               </CardContent>
@@ -100,7 +100,7 @@ export default function ChatterRefer() {
                 <p className="text-2xl font-bold">
                   ${(stats.totalReferralEarnings / 100).toFixed(0)}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs">
                   {t("chatter.referrals.earned")}
                 </p>
               </CardContent>
@@ -111,7 +111,7 @@ export default function ChatterRefer() {
                 <p className="text-2xl font-bold">
                   ${(stats.monthlyReferralEarnings / 100).toFixed(0)}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs">
                   {t("chatter.referrals.thisMonth")}
                 </p>
               </CardContent>
@@ -120,7 +120,7 @@ export default function ChatterRefer() {
         )}
 
         {/* Main content grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-2 gap-6">
           {/* Left column */}
           <div className="space-y-6">
             {/* Referral link */}
@@ -163,7 +163,7 @@ export default function ChatterRefer() {
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                   >
                     <div className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4 text-gray-500" />
+                      <item.icon className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                       <span className="text-sm">{item.label}</span>
                     </div>
                     <Badge variant="secondary" className="font-bold">
@@ -186,16 +186,16 @@ export default function ChatterRefer() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                <div className="grid sm:grid-cols-4 gap-2 sm:gap-3">
                   {tierBonuses.map((tier) => (
                     <div
                       key={tier.filleuls}
-                      className="text-center p-3 sm:p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200"
+                      className="text-center p-3 sm:p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border"
                     >
-                      <p className="text-xl sm:text-2xl font-bold text-yellow-600">
+                      <p className="text-xl sm:text-2xl font-bold">
                         {tier.filleuls}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs">
                         {t("chatter.referrals.filleuls")}
                       </p>
                       <Badge className="mt-2 bg-yellow-500 text-xs sm:text-sm">

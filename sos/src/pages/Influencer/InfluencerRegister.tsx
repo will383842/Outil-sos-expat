@@ -20,7 +20,7 @@ import { CheckCircle, Gift, Users, Image, Megaphone, ArrowLeft, LogIn, Mail } fr
 import { storeReferralCode, getStoredReferralCode } from '@/utils/referralStorage';
 
 const UI = {
-  card: "bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg",
+  card: "bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg",
 } as const;
 
 const InfluencerRegister: React.FC = () => {
@@ -84,14 +84,14 @@ const InfluencerRegister: React.FC = () => {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-b from-red-950 via-gray-950 to-black">
-          <div className="max-w-md w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="max-w-md w-full bg-white/10 backdrop-blur-xl border rounded-2xl shadow-xl p-8 text-center">
+            <div className="w-16 h-16 bg-red-500/20 border rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">&#9888;&#65039;</span>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-4">
+            <h1 className="text-2xl font-bold mb-4">
               <FormattedMessage id="influencer.register.roleConflict.title" defaultMessage="Registration Not Allowed" />
             </h1>
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-300 mb-6">
               <FormattedMessage
                 id="influencer.register.roleConflict.message"
                 defaultMessage="You are already registered as {role}. Each account can only have one role."
@@ -100,7 +100,7 @@ const InfluencerRegister: React.FC = () => {
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-full px-6 py-3 min-h-[48px] bg-gradient-to-r from-red-500 to-rose-500 text-white font-extrabold rounded-xl transition-all hover:shadow-lg hover:shadow-red-500/30"
+              className="w-full px-6 py-3 min-h-[48px] bg-gradient-to-r from-red-500 to-rose-500 text-white font-extrabold rounded-xl transition-all hover:shadow-lg"
             >
               <FormattedMessage id="influencer.register.roleConflict.button" defaultMessage="Go to My Dashboard" />
             </button>
@@ -133,7 +133,7 @@ const InfluencerRegister: React.FC = () => {
           {/* Back Button */}
           <button
             onClick={() => navigate(landingRoute)}
-            className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors mb-6 min-h-[44px]"
+            className="flex items-center gap-2 text-gray-300 hover:text-red-400 transition-colors mb-6 min-h-[44px]"
           >
             <ArrowLeft className="w-4 h-4" />
             <FormattedMessage id="common.back" defaultMessage="Retour" />
@@ -141,13 +141,13 @@ const InfluencerRegister: React.FC = () => {
 
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center shadow-lg shadow-red-500/30">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center shadow-lg">
               <Megaphone className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
               <FormattedMessage id="influencer.register.title" defaultMessage="Devenir Influenceur SOS-Expat" />
             </h1>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg max-w-2xl mx-auto">
               <FormattedMessage id="influencer.register.subtitle" defaultMessage="Creez votre compte et commencez a gagner immediatement" />
             </p>
           </div>
@@ -156,20 +156,20 @@ const InfluencerRegister: React.FC = () => {
           {emailAlreadyExists ? (
             <div className="max-w-lg mx-auto">
               <div className={`${UI.card} p-8 text-center`}>
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border flex items-center justify-center">
                   <Mail className="w-8 h-8 text-blue-400" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-2">
+                <h2 className="text-xl font-bold mb-2">
                   <FormattedMessage id="influencer.register.emailExists.title" defaultMessage="You already have an account!" />
                 </h2>
-                <p className="text-gray-400 mb-2">
+                <p className="text-gray-300 mb-2">
                   <FormattedMessage
                     id="influencer.register.emailExists.message"
                     defaultMessage="The email {email} is already registered."
                     values={{ email: <strong className="text-white">{existingEmail}</strong> }}
                   />
                 </p>
-                <p className="text-gray-500 text-sm mb-6">
+                <p className="text-gray-400 mb-6">
                   <FormattedMessage id="influencer.register.emailExists.hint" defaultMessage="Log in to continue." />
                 </p>
                 <button
@@ -181,14 +181,14 @@ const InfluencerRegister: React.FC = () => {
                 </button>
                 <button
                   onClick={() => { setEmailAlreadyExists(false); setExistingEmail(''); }}
-                  className="text-sm text-gray-400 hover:text-white underline"
+                  className="text-sm hover:text-white underline"
                 >
                   <FormattedMessage id="influencer.register.emailExists.tryDifferent" defaultMessage="Use a different email" />
                 </button>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-8">
               {/* Benefits Sidebar */}
               <div className="lg:col-span-1">
                 <div className={`${UI.card} p-6 sticky top-24`}>
@@ -199,13 +199,13 @@ const InfluencerRegister: React.FC = () => {
                     {benefits.map((benefit, idx) => (
                       <div key={idx} className="flex items-center gap-3">
                         {benefit.icon}
-                        <span className="text-sm text-gray-400">{benefit.text}</span>
+                        <span className="text-sm">{benefit.text}</span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-white/10">
-                    <div className="text-sm text-gray-500">
+                  <div className="mt-6 pt-6 border-t">
+                    <div className="text-sm">
                       <FormattedMessage id="influencer.register.info" defaultMessage="L'inscription est gratuite. Votre compte sera active immediatement." />
                     </div>
                   </div>
@@ -216,8 +216,8 @@ const InfluencerRegister: React.FC = () => {
               <div className="lg:col-span-2">
                 <div className={`${UI.card} p-6`}>
                   {/* Already registered link */}
-                  <div className="mb-6 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center">
-                    <p className="text-sm text-gray-400">
+                  <div className="mb-6 p-3 bg-blue-500/10 rounded-xl border text-center">
+                    <p className="text-sm">
                       <FormattedMessage id="influencer.register.alreadyRegistered" defaultMessage="Already registered?" />{' '}
                       <button
                         onClick={() => navigate(loginRoute)}
@@ -230,16 +230,16 @@ const InfluencerRegister: React.FC = () => {
 
                   {/* Referral code banner */}
                   {referralCodeFromUrl && (
-                    <div className="mb-6 p-4 bg-green-500/10 rounded-xl border border-green-500/30">
+                    <div className="mb-6 p-4 bg-green-500/10 rounded-xl border">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 bg-green-500/20 border rounded-full flex items-center justify-center">
                           <Gift className="w-5 h-5 text-green-400" />
                         </div>
                         <div>
                           <p className="font-semibold text-green-300">
                             <FormattedMessage id="influencer.register.referralDetected" defaultMessage="You've been referred!" />
                           </p>
-                          <p className="text-sm text-green-400">
+                          <p className="text-sm">
                             <FormattedMessage
                               id="influencer.register.referralCode.applied"
                               defaultMessage="Referral code {code} will be applied automatically"

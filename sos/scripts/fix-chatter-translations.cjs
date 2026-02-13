@@ -62,7 +62,7 @@ function extractDefaultMessages(tsxFilePath) {
 const TRANSLATIONS = {
   // SEO
   'chatter.landing.seo.title': {
-    fr: 'Devenir Chatter - Gagnez jusqu\'à 3000$/mois en aidant les voyageurs',
+    fr: "Devenir Chatter - Gagnez jusqu'à 3000$/mois en aidant les voyageurs",
     en: 'Become a Chatter - Earn up to $3000+/month helping travelers',
     es: 'Conviértete en Chatter - Gana hasta $3000+/mes ayudando a viajeros',
     de: 'Chatter werden - Verdienen Sie bis zu $3000+/Monat mit Hilfe für Reisende',
@@ -73,7 +73,7 @@ const TRANSLATIONS = {
     ar: 'كن مسوقًا - اكسب حتى 3000 دولار شهريًا بمساعدة المسافرين'
   },
   'chatter.landing.seo.description': {
-    fr: 'Gagnez jusqu\'à 3000$/mois avec 3 sources de revenus : appels directs (10$/appel), équipe MLM illimitée, et partenaires (avocats/aidants). Rejoignez 1200+ chatters dans 197 pays. 100% gratuit.',
+    fr: "Gagnez jusqu'à 3000$/mois avec 3 sources de revenus : appels directs (10$/appel), équipe MLM illimitée, et partenaires (avocats/aidants). Rejoignez 1200+ chatters dans 197 pays. 100% gratuit.",
     en: 'Earn up to $3000/month with 3 revenue streams: direct calls ($10/call), unlimited MLM team, and partners (lawyers/helpers). Join 1200+ chatters in 197 countries. 100% free.',
     es: 'Gana hasta $3000/mes con 3 fuentes de ingresos: llamadas directas ($10/llamada), equipo MLM ilimitado y socios (abogados/ayudantes). Únete a 1200+ chatters en 197 países. 100% gratis.',
     de: 'Verdienen Sie bis zu $3000/Monat mit 3 Einnahmequellen: Direktanrufe ($10/Anruf), unbegrenztes MLM-Team und Partner (Anwälte/Helfer). Schließen Sie sich 1200+ Chattern in 197 Ländern an. 100% kostenlos.',
@@ -97,7 +97,7 @@ const TRANSLATIONS = {
 
   // Hero Section
   'chatter.landing.hero.new.line1': {
-    fr: 'Gagnez jusqu\'à',
+    fr: "Gagnez jusqu'à",
     en: 'Earn up to',
     es: 'Gana hasta',
     de: 'Verdienen Sie bis zu',
@@ -374,7 +374,7 @@ const TRANSLATIONS = {
     ar: 'ابحث عن شركاء'
   },
   'chatter.landing.source3.desc.new': {
-    fr: 'Invitez des avocats ou expatriés aidants. Gagnez 5$ sur CHAQUE appel qu\'ils reçoivent pendant 6 mois !',
+    fr: "Invitez des avocats ou expatriés aidants. Gagnez 5$ sur CHAQUE appel qu'ils reçoivent pendant 6 mois !",
     en: 'Invite lawyers or expat helpers. Earn $5 on EVERY call they receive for 6 months!',
     es: 'Invita abogados o expatriados ayudantes. ¡Gana $5 en CADA llamada que reciban durante 6 meses!',
     de: 'Laden Sie Anwälte oder Expat-Helfer ein. Verdienen Sie $5 bei JEDEM Anruf, den sie 6 Monate lang erhalten!',
@@ -429,6 +429,876 @@ const TRANSLATIONS = {
     ar: 'نصيحة: يتلقى الشركاء (محامون/مساعدون) 20-60 مكالمة/شهر. يمكن لشريك جيد واحد أن يجلب لك 300-900 دولار شهريًا!'
   },
 
+  // Proof Section
+  'chatter.landing.proof.title': {
+    fr: 'Ils gagnent',
+    en: 'They earn',
+    es: 'Ellos ganan',
+    de: 'Sie verdienen',
+    ru: 'Они зарабатывают',
+    pt: 'Eles ganham',
+    ch: '他们赚',
+    hi: 'वे कमाते हैं',
+    ar: 'هم يكسبون'
+  },
+  'chatter.landing.proof.highlight': {
+    fr: 'vraiment',
+    en: 'really',
+    es: 'realmente',
+    de: 'wirklich',
+    ru: 'действительно',
+    pt: 'realmente',
+    ch: '真的',
+    hi: 'वास्तव में',
+    ar: 'حقًا'
+  },
+  'chatter.landing.proof.subtitle': {
+    fr: 'Chatters vérifiés ce mois',
+    en: 'Verified chatters this month',
+    es: 'Chatters verificados este mes',
+    de: 'Verifizierte Chatter diesen Monat',
+    ru: 'Проверенные чаттеры в этом месяце',
+    pt: 'Chatters verificados este mês',
+    ch: '本月验证的聊天员',
+    hi: 'इस महीने सत्यापित चैटर्स',
+    ar: 'المسوقون المعتمدون هذا الشهر'
+  },
+  'chatter.landing.proof.podium': {
+    fr: 'Top earners',
+    en: 'Top earners',
+    es: 'Mejores ganadores',
+    de: 'Top-Verdiener',
+    ru: 'Лучшие заработки',
+    pt: 'Maiores ganhadores',
+    ch: '顶级收入者',
+    hi: 'शीर्ष कमाने वाले',
+    ar: 'أفضل الكاسبين'
+  },
+  'chatter.landing.topEarnerBadge': {
+    fr: 'TOP EARNER',
+    en: 'TOP EARNER',
+    es: 'MEJOR GANADOR',
+    de: 'TOP-VERDIENER',
+    ru: 'ЛУЧШИЙ ЗАРАБОТОК',
+    pt: 'MELHOR GANHADOR',
+    ch: '顶级收入者',
+    hi: 'शीर्ष कमाने वाला',
+    ar: 'أفضل كاسب'
+  },
+  'chatter.landing.stats.chatters': {
+    fr: 'Chatters actifs',
+    en: 'Active chatters',
+    es: 'Chatters activos',
+    de: 'Aktive Chatter',
+    ru: 'Активные чаттеры',
+    pt: 'Chatters ativos',
+    ch: '活跃聊天员',
+    hi: 'सक्रिय चैटर्स',
+    ar: 'المسوقون النشطون'
+  },
+  'chatter.landing.stats.countries': {
+    fr: 'Pays',
+    en: 'Countries',
+    es: 'Países',
+    de: 'Länder',
+    ru: 'Страны',
+    pt: 'Países',
+    ch: '国家',
+    hi: 'देश',
+    ar: 'دول'
+  },
+
+  // Success Stories
+  'chatter.landing.success.badge': {
+    fr: '⭐ Histoires de réussite',
+    en: '⭐ Success stories',
+    es: '⭐ Historias de éxito',
+    de: '⭐ Erfolgsgeschichten',
+    ru: '⭐ Истории успеха',
+    pt: '⭐ Histórias de sucesso',
+    ch: '⭐ 成功故事',
+    hi: '⭐ सफलता की कहानियां',
+    ar: '⭐ قصص نجاح'
+  },
+  'chatter.landing.success.title': {
+    fr: 'Ils ont transformé',
+    en: 'They transformed',
+    es: 'Ellos transformaron',
+    de: 'Sie haben verwandelt',
+    ru: 'Они изменили',
+    pt: 'Eles transformaram',
+    ch: '他们改变了',
+    hi: 'उन्होंने बदल दिया',
+    ar: 'لقد غيروا'
+  },
+  'chatter.landing.success.highlight': {
+    fr: 'leur vie',
+    en: 'their life',
+    es: 'su vida',
+    de: 'ihr Leben',
+    ru: 'свою жизнь',
+    pt: 'suas vidas',
+    ch: '他们的生活',
+    hi: 'अपनी जिंदगी',
+    ar: 'حياتهم'
+  },
+  'chatter.landing.success.subtitle': {
+    fr: 'Exemples réels de chatters actifs',
+    en: 'Real examples of active chatters',
+    es: 'Ejemplos reales de chatters activos',
+    de: 'Echte Beispiele aktiver Chatter',
+    ru: 'Реальные примеры активных чаттеров',
+    pt: 'Exemplos reais de chatters ativos',
+    ch: '活跃聊天员的真实例子',
+    hi: 'सक्रिय चैटर्स के वास्तविक उदाहरण',
+    ar: 'أمثلة حقيقية للمسوقين النشطين'
+  },
+  'chatter.landing.success.location1': {
+    fr: 'Dakar, Sénégal',
+    en: 'Dakar, Senegal',
+    es: 'Dakar, Senegal',
+    de: 'Dakar, Senegal',
+    ru: 'Дакар, Сенегал',
+    pt: 'Dakar, Senegal',
+    ch: '达喀尔，塞内加尔',
+    hi: 'दकार, सेनेगल',
+    ar: 'داكار، السنغال'
+  },
+  'chatter.landing.success.time1': {
+    fr: 'Après 8 mois',
+    en: 'After 8 months',
+    es: 'Después de 8 meses',
+    de: 'Nach 8 Monaten',
+    ru: 'Через 8 месяцев',
+    pt: 'Após 8 meses',
+    ch: '8个月后',
+    hi: '8 महीने बाद',
+    ar: 'بعد 8 أشهر'
+  },
+  'chatter.landing.success.detail1a': {
+    fr: '65 chatters N1',
+    en: '65 level 1 chatters',
+    es: '65 chatters N1',
+    de: '65 Chatter Stufe 1',
+    ru: '65 чаттеров уровня 1',
+    pt: '65 chatters nível 1',
+    ch: '65个1级聊天员',
+    hi: '65 स्तर 1 चैटर्स',
+    ar: '65 مسوقًا من المستوى 1'
+  },
+  'chatter.landing.success.detail1b': {
+    fr: '130 chatters N2',
+    en: '130 level 2 chatters',
+    es: '130 chatters N2',
+    de: '130 Chatter Stufe 2',
+    ru: '130 чаттеров уровня 2',
+    pt: '130 chatters nível 2',
+    ch: '130个2级聊天员',
+    hi: '130 स्तर 2 चैटर्स',
+    ar: '130 مسوقًا من المستوى 2'
+  },
+  'chatter.landing.success.detail1c': {
+    fr: '20-30 appels directs/mois',
+    en: '20-30 direct calls/month',
+    es: '20-30 llamadas directas/mes',
+    de: '20-30 Direktanrufe/Monat',
+    ru: '20-30 прямых звонков/месяц',
+    pt: '20-30 chamadas diretas/mês',
+    ch: '20-30次直接通话/月',
+    hi: '20-30 सीधी कॉलें/महीना',
+    ar: '20-30 مكالمة مباشرة/شهر'
+  },
+  'chatter.landing.success.quote1': {
+    fr: "J'ai quitté mon job de taxi. Maintenant je gère mon agence depuis mon canapé !",
+    en: 'I quit my taxi job. Now I manage my agency from my couch!',
+    es: '¡Dejé mi trabajo de taxi. Ahora gestiono mi agencia desde mi sofá!',
+    de: 'Ich habe meinen Taxi-Job gekündigt. Jetzt verwalte ich meine Agentur von meiner Couch aus!',
+    ru: 'Я бросил работу таксиста. Теперь я управляю своим агентством с дивана!',
+    pt: 'Larguei meu trabalho de táxi. Agora gerencio minha agência do meu sofá!',
+    ch: '我辞掉了出租车工作。现在我从沙发上管理我的代理！',
+    hi: 'मैंने अपनी टैक्सी की नौकरी छोड़ दी। अब मैं अपने सोफे से अपनी एजेंसी चलाता हूं!',
+    ar: 'تركت وظيفتي كسائق تاكسي. الآن أدير وكالتي من أريكتي!'
+  },
+  'chatter.landing.success.location2': {
+    fr: "Abidjan, Côte d'Ivoire",
+    en: 'Abidjan, Ivory Coast',
+    es: 'Abidjan, Costa de Marfil',
+    de: 'Abidjan, Elfenbeinküste',
+    ru: "Абиджан, Кот-д'Ивуар",
+    pt: 'Abidjan, Costa do Marfim',
+    ch: '阿比让，科特迪瓦',
+    hi: 'अबिदजान, आइवरी कोस्ट',
+    ar: 'أبيدجان، ساحل العاج'
+  },
+  'chatter.landing.success.time2': {
+    fr: 'Après 5 mois',
+    en: 'After 5 months',
+    es: 'Después de 5 meses',
+    de: 'Nach 5 Monaten',
+    ru: 'Через 5 месяцев',
+    pt: 'Após 5 meses',
+    ch: '5个月后',
+    hi: '5 महीने बाद',
+    ar: 'بعد 5 أشهر'
+  },
+  'chatter.landing.success.detail2a': {
+    fr: '28 chatters N1',
+    en: '28 level 1 chatters',
+    es: '28 chatters N1',
+    de: '28 Chatter Stufe 1',
+    ru: '28 чаттеров уровня 1',
+    pt: '28 chatters nível 1',
+    ch: '28个1级聊天员',
+    hi: '28 स्तर 1 चैटर्स',
+    ar: '28 مسوقًا من المستوى 1'
+  },
+  'chatter.landing.success.detail2b': {
+    fr: '45 chatters N2',
+    en: '45 level 2 chatters',
+    es: '45 chatters N2',
+    de: '45 Chatter Stufe 2',
+    ru: '45 чаттеров уровня 2',
+    pt: '45 chatters nível 2',
+    ch: '45个2级聊天员',
+    hi: '45 स्तर 2 चैटर्स',
+    ar: '45 مسوقًا من المستوى 2'
+  },
+  'chatter.landing.success.detail2c': {
+    fr: '2h/jour sur Facebook',
+    en: '2h/day on Facebook',
+    es: '2h/día en Facebook',
+    de: '2h/Tag auf Facebook',
+    ru: '2 часа/день на Facebook',
+    pt: '2h/dia no Facebook',
+    ch: '每天2小时在Facebook',
+    hi: 'Facebook पर 2 घंटे/दिन',
+    ar: 'ساعتان/يوم على فيسبوك'
+  },
+  'chatter.landing.success.quote2': {
+    fr: "J'ai payé mes études ET aidé ma famille. Merci SOS-Expat !",
+    en: 'I paid for my studies AND helped my family. Thank you SOS-Expat!',
+    es: '¡Pagué mis estudios Y ayudé a mi familia. ¡Gracias SOS-Expat!',
+    de: 'Ich habe mein Studium bezahlt UND meiner Familie geholfen. Danke SOS-Expat!',
+    ru: 'Я оплатил учебу И помог семье. Спасибо SOS-Expat!',
+    pt: 'Paguei meus estudos E ajudei minha família. Obrigado SOS-Expat!',
+    ch: '我支付了学费并帮助了我的家人。感谢 SOS-Expat！',
+    hi: 'मैंने अपनी पढ़ाई का भुगतान किया और अपने परिवार की मदद की। धन्यवाद SOS-Expat!',
+    ar: 'دفعت ثمن دراستي وساعدت عائلتي. شكرًا SOS-Expat!'
+  },
+  'chatter.landing.success.location3': {
+    fr: 'Bamako, Mali',
+    en: 'Bamako, Mali',
+    es: 'Bamako, Malí',
+    de: 'Bamako, Mali',
+    ru: 'Бамако, Мали',
+    pt: 'Bamako, Mali',
+    ch: '巴马科，马里',
+    hi: 'बमाको, माली',
+    ar: 'باماكو، مالي'
+  },
+  'chatter.landing.success.time3': {
+    fr: 'Après 2 mois seulement !',
+    en: 'After only 2 months!',
+    es: '¡Después de solo 2 meses!',
+    de: 'Nach nur 2 Monaten!',
+    ru: 'Всего через 2 месяца!',
+    pt: 'Após apenas 2 meses!',
+    ch: '仅2个月后！',
+    hi: 'केवल 2 महीने बाद!',
+    ar: 'بعد شهرين فقط!'
+  },
+  'chatter.landing.success.detail3a': {
+    fr: '12 chatters N1',
+    en: '12 level 1 chatters',
+    es: '12 chatters N1',
+    de: '12 Chatter Stufe 1',
+    ru: '12 чаттеров уровня 1',
+    pt: '12 chatters nível 1',
+    ch: '12个1级聊天员',
+    hi: '12 स्तर 1 चैटर्स',
+    ar: '12 مسوقًا من المستوى 1'
+  },
+  'chatter.landing.success.detail3b': {
+    fr: '18 chatters N2',
+    en: '18 level 2 chatters',
+    es: '18 chatters N2',
+    de: '18 Chatter Stufe 2',
+    ru: '18 чаттеров уровня 2',
+    pt: '18 chatters nível 2',
+    ch: '18个2级聊天员',
+    hi: '18 स्तर 2 चैटर्स',
+    ar: '18 مسوقًا من المستوى 2'
+  },
+  'chatter.landing.success.detail3c': {
+    fr: 'Temps partiel (soir)',
+    en: 'Part-time (evening)',
+    es: 'Tiempo parcial (noche)',
+    de: 'Teilzeit (Abend)',
+    ru: 'Неполный рабочий день (вечер)',
+    pt: 'Meio período (noite)',
+    ch: '兼职（晚上）',
+    hi: 'अंशकालिक (शाम)',
+    ar: 'دوام جزئي (مساءً)'
+  },
+  'chatter.landing.success.quote3': {
+    fr: "Je suis juste étudiante, et je gagne plus que mes parents ! Incroyable.",
+    en: "I'm just a student, and I earn more than my parents! Incredible.",
+    es: '¡Solo soy estudiante y gano más que mis padres! Increíble.',
+    de: 'Ich bin nur eine Studentin und verdiene mehr als meine Eltern! Unglaublich.',
+    ru: 'Я всего лишь студентка, а зарабатываю больше родителей! Невероятно.',
+    pt: 'Sou apenas uma estudante e ganho mais que meus pais! Incrível.',
+    ch: '我只是一名学生，赚得比我父母还多！难以置信。',
+    hi: 'मैं सिर्फ एक छात्रा हूं, और मैं अपने माता-पिता से अधिक कमाती हूं! अविश्वसनीय।',
+    ar: 'أنا مجرد طالبة، وأكسب أكثر من والدي! لا يصدق.'
+  },
+  'chatter.landing.success.cta.title': {
+    fr: "Et si c'était VOUS le prochain ?",
+    en: 'What if YOU were next?',
+    es: '¿Y si TÚ fueras el siguiente?',
+    de: 'Was wäre, wenn SIE der Nächste wären?',
+    ru: 'А что, если следующим будете ВЫ?',
+    pt: 'E se VOCÊ fosse o próximo?',
+    ch: '如果下一个是您呢？',
+    hi: 'अगर अगले आप होते तो?',
+    ar: 'ماذا لو كنت أنت التالي؟'
+  },
+  'chatter.landing.success.cta.desc': {
+    fr: 'Ces chatters ont commencé avec 0$. Ils ont juste partagé leur lien et recruté leur équipe. Vous pouvez faire pareil !',
+    en: 'These chatters started with $0. They just shared their link and recruited their team. You can do the same!',
+    es: 'Estos chatters comenzaron con $0. Simplemente compartieron su enlace y reclutaron su equipo. ¡Tú puedes hacer lo mismo!',
+    de: 'Diese Chatter haben mit $0 angefangen. Sie haben einfach ihren Link geteilt und ihr Team rekrutiert. Sie können dasselbe tun!',
+    ru: 'Эти чаттеры начинали с $0. Они просто делились ссылкой и набирали команду. Вы можете сделать то же самое!',
+    pt: 'Esses chatters começaram com $0. Eles apenas compartilharam seu link e recrutaram sua equipe. Você pode fazer o mesmo!',
+    ch: '这些聊天员从0美元开始。他们只是分享了链接并招募了团队。你也可以做到！',
+    hi: 'ये चैटर्स $0 से शुरू हुए। उन्होंने बस अपना लिंक साझा किया और अपनी टीम की भर्ती की। आप भी ऐसा कर सकते हैं!',
+    ar: 'بدأ هؤلاء المسوقون بـ 0 دولار. لقد شاركوا رابطهم فقط وجندوا فريقهم. يمكنك أن تفعل الشيء نفسه!'
+  },
+  'chatter.landing.success.cta.button': {
+    fr: 'Je démarre maintenant',
+    en: 'I start now',
+    es: 'Empiezo ahora',
+    de: 'Ich starte jetzt',
+    ru: 'Я начинаю сейчас',
+    pt: 'Eu começo agora',
+    ch: '我现在开始',
+    hi: 'मैं अभी शुरू करता हूं',
+    ar: 'أبدأ الآن'
+  },
+
+  // Agency Section
+  'chatter.landing.agency.badge': {
+    fr: '🏢 Modèle Agence',
+    en: '🏢 Agency Model',
+    es: '🏢 Modelo de Agencia',
+    de: '🏢 Agentur-Modell',
+    ru: '🏢 Агентская модель',
+    pt: '🏢 Modelo de Agência',
+    ch: '🏢 代理模式',
+    hi: '🏢 एजेंसी मॉडल',
+    ar: '🏢 نموذج الوكالة'
+  },
+  'chatter.landing.agency.title': {
+    fr: 'De chatter solo à',
+    en: 'From solo chatter to',
+    es: 'De chatter solo a',
+    de: 'Vom Solo-Chatter zur',
+    ru: 'От одиночного чаттера к',
+    pt: 'De chatter solo a',
+    ch: '从单独聊天员到',
+    hi: 'एकल चैटर से',
+    ar: 'من مسوق منفرد إلى'
+  },
+  'chatter.landing.agency.highlight': {
+    fr: 'agence',
+    en: 'agency',
+    es: 'agencia',
+    de: 'Agentur',
+    ru: 'агентство',
+    pt: 'agência',
+    ch: '代理',
+    hi: 'एजेंसी',
+    ar: 'وكالة'
+  },
+  'chatter.landing.agency.subtitle': {
+    fr: 'Recrutez des chatters. Gagnez sur leur activité. Sans limite.',
+    en: 'Recruit chatters. Earn on their activity. No limit.',
+    es: 'Recluta chatters. Gana con su actividad. Sin límite.',
+    de: 'Chatter rekrutieren. Verdienen Sie mit ihrer Aktivität. Keine Grenzen.',
+    ru: 'Нанимайте чаттеров. Зарабатывайте на их активности. Без ограничений.',
+    pt: 'Recrute chatters. Ganhe com a atividade deles. Sem limite.',
+    ch: '招募聊天员。通过他们的活动赚钱。无限制。',
+    hi: 'चैटर्स भर्ती करें। उनकी गतिविधि पर कमाएं। कोई सीमा नहीं।',
+    ar: 'جند مسوقين. اكسب من نشاطهم. بلا حدود.'
+  },
+  'chatter.landing.agency.structure': {
+    fr: 'Structure de votre agence',
+    en: 'Your agency structure',
+    es: 'Estructura de tu agencia',
+    de: 'Ihre Agenturstruktur',
+    ru: 'Структура вашего агентства',
+    pt: 'Estrutura da sua agência',
+    ch: '您的代理结构',
+    hi: 'आपकी एजेंसी संरचना',
+    ar: 'هيكل وكالتك'
+  },
+  'chatter.landing.bossBadge': {
+    fr: 'BOSS',
+    en: 'BOSS',
+    es: 'JEFE',
+    de: 'CHEF',
+    ru: 'БОСС',
+    pt: 'CHEFE',
+    ch: '老板',
+    hi: 'बॉस',
+    ar: 'رئيس'
+  },
+  'chatter.landing.agency.you': {
+    fr: 'Vous = Le directeur',
+    en: 'You = The director',
+    es: 'Tú = El director',
+    de: 'Sie = Der Direktor',
+    ru: 'Вы = Директор',
+    pt: 'Você = O diretor',
+    ch: '您 = 总监',
+    hi: 'आप = निदेशक',
+    ar: 'أنت = المدير'
+  },
+  'chatter.landing.agency.persoCall': {
+    fr: 'appel perso',
+    en: 'personal call',
+    es: 'llamada personal',
+    de: 'persönlicher Anruf',
+    ru: 'личный звонок',
+    pt: 'chamada pessoal',
+    ch: '个人通话',
+    hi: 'व्यक्तिगत कॉल',
+    ar: 'مكالمة شخصية'
+  },
+  'chatter.landing.agency.team': {
+    fr: 'Votre équipe',
+    en: 'Your team',
+    es: 'Tu equipo',
+    de: 'Ihr Team',
+    ru: 'Ваша команда',
+    pt: 'Sua equipe',
+    ch: '您的团队',
+    hi: 'आपकी टीम',
+    ar: 'فريقك'
+  },
+  'chatter.landing.unlimited': {
+    fr: 'illimitée',
+    en: 'unlimited',
+    es: 'ilimitada',
+    de: 'unbegrenzt',
+    ru: 'неограниченная',
+    pt: 'ilimitada',
+    ch: '无限',
+    hi: 'असीमित',
+    ar: 'غير محدودة'
+  },
+  'chatter.landing.agency.perCall': {
+    fr: 'sur chaque appel',
+    en: 'on each call',
+    es: 'en cada llamada',
+    de: 'bei jedem Anruf',
+    ru: 'за каждый звонок',
+    pt: 'em cada chamada',
+    ch: '每次通话',
+    hi: 'प्रत्येक कॉल पर',
+    ar: 'على كل مكالمة'
+  },
+  'chatter.landing.agency.recruits': {
+    fr: 'Leurs recrues',
+    en: 'Their recruits',
+    es: 'Sus reclutas',
+    de: 'Ihre Rekruten',
+    ru: 'Их рекруты',
+    pt: 'Seus recrutas',
+    ch: '他们的招募',
+    hi: 'उनकी भर्तियां',
+    ar: 'مجنديهم'
+  },
+  'chatter.landing.calc.badge': {
+    fr: '💰 Calculateur de revenus',
+    en: '💰 Income calculator',
+    es: '💰 Calculadora de ingresos',
+    de: '💰 Einkommensrechner',
+    ru: '💰 Калькулятор дохода',
+    pt: '💰 Calculadora de renda',
+    ch: '💰 收入计算器',
+    hi: '💰 आय कैलकुलेटर',
+    ar: '💰 حاسبة الدخل'
+  },
+  'chatter.landing.calc.title.new': {
+    fr: 'Découvrez VOTRE potentiel',
+    en: 'Discover YOUR potential',
+    es: 'Descubre TU potencial',
+    de: 'Entdecken Sie IHR Potenzial',
+    ru: 'Откройте СВОЙ потенциал',
+    pt: 'Descubra SEU potencial',
+    ch: '发现您的潜力',
+    hi: 'अपनी क्षमता खोजें',
+    ar: 'اكتشف إمكاناتك'
+  },
+  'chatter.landing.calc.level1': {
+    fr: 'Vos chatters N1 : {count}',
+    en: 'Your level 1 chatters: {count}',
+    es: 'Tus chatters N1: {count}',
+    de: 'Ihre Stufe 1 Chatter: {count}',
+    ru: 'Ваши чаттеры уровня 1: {count}',
+    pt: 'Seus chatters nível 1: {count}',
+    ch: '您的1级聊天员：{count}',
+    hi: 'आपके स्तर 1 चैटर्स: {count}',
+    ar: 'مسوقوك من المستوى 1: {count}'
+  },
+  'chatter.landing.calc.level2': {
+    fr: 'Leurs recrues N2 : {count}',
+    en: 'Their level 2 recruits: {count}',
+    es: 'Sus reclutas N2: {count}',
+    de: 'Ihre Stufe 2 Rekruten: {count}',
+    ru: 'Их рекруты уровня 2: {count}',
+    pt: 'Seus recrutas nível 2: {count}',
+    ch: '他们的2级招募：{count}',
+    hi: 'उनकी स्तर 2 भर्तियां: {count}',
+    ar: 'مجنديهم من المستوى 2: {count}'
+  },
+  'chatter.landing.calc.calls': {
+    fr: 'Appels/mois par chatter : {count}',
+    en: 'Calls/month per chatter: {count}',
+    es: 'Llamadas/mes por chatter: {count}',
+    de: 'Anrufe/Monat pro Chatter: {count}',
+    ru: 'Звонков/месяц на чаттера: {count}',
+    pt: 'Chamadas/mês por chatter: {count}',
+    ch: '每个聊天员的通话数/月：{count}',
+    hi: 'प्रति चैटर कॉलें/महीना: {count}',
+    ar: 'مكالمات/شهر لكل مسوق: {count}'
+  },
+  'chatter.landing.calc.yourPassive': {
+    fr: 'VOS REVENUS PASSIFS MENSUELS',
+    en: 'YOUR MONTHLY PASSIVE INCOME',
+    es: 'TUS INGRESOS PASIVOS MENSUALES',
+    de: 'IHR MONATLICHES PASSIVES EINKOMMEN',
+    ru: 'ВАШ ЕЖЕМЕСЯЧНЫЙ ПАССИВНЫЙ ДОХОД',
+    pt: 'SUA RENDA PASSIVA MENSAL',
+    ch: '您的每月被动收入',
+    hi: 'आपकी मासिक निष्क्रिय आय',
+    ar: 'دخلك السلبي الشهري'
+  },
+  'chatter.landing.calc.motivation': {
+    fr: '🎯 Sans compter VOS appels directs à 10$ !',
+    en: '🎯 Not counting YOUR direct calls at $10!',
+    es: '🎯 ¡Sin contar TUS llamadas directas a $10!',
+    de: '🎯 Ohne Ihre direkten Anrufe zu $10!',
+    ru: '🎯 Не считая ВАШИХ прямых звонков по $10!',
+    pt: '🎯 Sem contar SUAS chamadas diretas a $10!',
+    ch: '🎯 不包括您的 $10 直接通话！',
+    hi: '🎯 $10 की आपकी सीधी कॉलों की गिनती नहीं!',
+    ar: '🎯 لا تحسب مكالماتك المباشرة بسعر 10 دولارات!'
+  },
+  'chatter.landing.calc.forever': {
+    fr: 'À vie. Tant que votre agence tourne.',
+    en: 'For life. As long as your agency runs.',
+    es: 'De por vida. Mientras tu agencia funcione.',
+    de: 'Lebenslang. Solange Ihre Agentur läuft.',
+    ru: 'На всю жизнь. Пока работает ваше агентство.',
+    pt: 'Para sempre. Enquanto sua agência funcionar.',
+    ch: '终身。只要您的代理运营。',
+    hi: 'जीवन भर। जब तक आपकी एजेंसी चलती है।',
+    ar: 'مدى الحياة. طالما وكالتك تعمل.'
+  },
+
+  // Risk Section
+  'chatter.landing.risk.title': {
+    fr: 'Zéro risque.',
+    en: 'Zero risk.',
+    es: 'Cero riesgo.',
+    de: 'Null Risiko.',
+    ru: 'Нулевой риск.',
+    pt: 'Zero risco.',
+    ch: '零风险。',
+    hi: 'शून्य जोखिम।',
+    ar: 'صفر مخاطرة.'
+  },
+  'chatter.landing.risk.highlight': {
+    fr: 'Zéro limite.',
+    en: 'Zero limit.',
+    es: 'Cero límite.',
+    de: 'Null Grenze.',
+    ru: 'Без ограничений.',
+    pt: 'Zero limite.',
+    ch: '零限制。',
+    hi: 'शून्य सीमा।',
+    ar: 'صفر حد.'
+  },
+  'chatter.landing.risk.countries': {
+    fr: '197 pays',
+    en: '197 countries',
+    es: '197 países',
+    de: '197 Länder',
+    ru: '197 стран',
+    pt: '197 países',
+    ch: '197个国家',
+    hi: '197 देश',
+    ar: '197 دولة'
+  },
+  'chatter.landing.risk.countries.desc': {
+    fr: 'Mondial',
+    en: 'Worldwide',
+    es: 'Mundial',
+    de: 'Weltweit',
+    ru: 'По всему миру',
+    pt: 'Mundial',
+    ch: '全球',
+    hi: 'विश्वव्यापी',
+    ar: 'عالمي'
+  },
+  'chatter.landing.risk.languages': {
+    fr: '9 langues',
+    en: '9 languages',
+    es: '9 idiomas',
+    de: '9 Sprachen',
+    ru: '9 языков',
+    pt: '9 idiomas',
+    ch: '9种语言',
+    hi: '9 भाषाएं',
+    ar: '9 لغات'
+  },
+  'chatter.landing.risk.languages.desc': {
+    fr: 'Support multilingue',
+    en: 'Multilingual support',
+    es: 'Soporte multilingüe',
+    de: 'Mehrsprachiger Support',
+    ru: 'Многоязычная поддержка',
+    pt: 'Suporte multilíngue',
+    ch: '多语言支持',
+    hi: 'बहुभाषी सहायता',
+    ar: 'دعم متعدد اللغات'
+  },
+  'chatter.landing.risk.free': {
+    fr: '100% gratuit',
+    en: '100% free',
+    es: '100% gratis',
+    de: '100% kostenlos',
+    ru: '100% бесплатно',
+    pt: '100% grátis',
+    ch: '100%免费',
+    hi: '100% मुफ्त',
+    ar: 'مجاني 100%'
+  },
+  'chatter.landing.risk.free.desc': {
+    fr: 'Aucun investissement',
+    en: 'No investment',
+    es: 'Sin inversión',
+    de: 'Keine Investition',
+    ru: 'Без вложений',
+    pt: 'Sem investimento',
+    ch: '无需投资',
+    hi: 'कोई निवेश नहीं',
+    ar: 'بدون استثمار'
+  },
+  'chatter.landing.risk.phone': {
+    fr: 'Juste un smartphone',
+    en: 'Just a smartphone',
+    es: 'Solo un smartphone',
+    de: 'Nur ein Smartphone',
+    ru: 'Только смартфон',
+    pt: 'Apenas um smartphone',
+    ch: '只需一部智能手机',
+    hi: 'बस एक स्मार्टफोन',
+    ar: 'هاتف ذكي فقط'
+  },
+  'chatter.landing.risk.phone.desc': {
+    fr: "C'est tout !",
+    en: "That's it!",
+    es: '¡Eso es todo!',
+    de: 'Das ist alles!',
+    ru: 'Вот и все!',
+    pt: 'É isso!',
+    ch: '就是这样！',
+    hi: 'बस इतना ही!',
+    ar: 'هذا كل شيء!'
+  },
+  'chatter.landing.risk.noCommit': {
+    fr: 'Aucun engagement',
+    en: 'No commitment',
+    es: 'Sin compromiso',
+    de: 'Keine Verpflichtung',
+    ru: 'Без обязательств',
+    pt: 'Sem compromisso',
+    ch: '无承诺',
+    hi: 'कोई प्रतिबद्धता नहीं',
+    ar: 'بدون التزام'
+  },
+  'chatter.landing.risk.noCommit.desc': {
+    fr: 'Travaillez quand vous voulez',
+    en: 'Work whenever you want',
+    es: 'Trabaja cuando quieras',
+    de: 'Arbeiten Sie, wann Sie wollen',
+    ru: 'Работайте когда хотите',
+    pt: 'Trabalhe quando quiser',
+    ch: '随时工作',
+    hi: 'जब चाहें काम करें',
+    ar: 'اعمل متى تشاء'
+  },
+  'chatter.landing.payment.info': {
+    fr: 'Retrait dès 25$ • Reçu en 48h',
+    en: 'Withdrawal from $25 • Received in 48h',
+    es: 'Retiro desde $25 • Recibido en 48h',
+    de: 'Auszahlung ab $25 • Erhalten in 48h',
+    ru: 'Вывод от $25 • Получено за 48 часов',
+    pt: 'Saque a partir de $25 • Recebido em 48h',
+    ch: '从 $25 提款 • 48小时内收到',
+    hi: '$25 से निकासी • 48 घंटे में प्राप्त',
+    ar: 'السحب من 25 دولارًا • يتم الاستلام خلال 48 ساعة'
+  },
+
+  // FAQ
+  'chatter.faq.title': {
+    fr: 'Questions ?',
+    en: 'Questions?',
+    es: '¿Preguntas?',
+    de: 'Fragen?',
+    ru: 'Вопросы?',
+    pt: 'Perguntas?',
+    ch: '问题？',
+    hi: 'प्रश्न?',
+    ar: 'أسئلة؟'
+  },
+  'chatter.faq.subtitle': {
+    fr: 'Tout ce que vous devez savoir avant de commencer',
+    en: 'Everything you need to know before getting started',
+    es: 'Todo lo que necesitas saber antes de empezar',
+    de: 'Alles, was Sie wissen müssen, bevor Sie anfangen',
+    ru: 'Все, что вам нужно знать перед началом',
+    pt: 'Tudo o que você precisa saber antes de começar',
+    ch: '开始之前您需要了解的一切',
+    hi: 'शुरू करने से पहले आपको जो कुछ भी जानना चाहिए',
+    ar: 'كل ما تحتاج معرفته قبل البدء'
+  },
+
+  // CTA Final
+  'chatter.landing.cta.join': {
+    fr: 'Rejoignez 1 200+ chatters dans 197 pays',
+    en: 'Join 1,200+ chatters in 197 countries',
+    es: 'Únete a 1,200+ chatters en 197 países',
+    de: 'Treten Sie 1.200+ Chattern in 197 Ländern bei',
+    ru: 'Присоединяйтесь к 1200+ чаттерам в 197 странах',
+    pt: 'Junte-se a 1.200+ chatters em 197 países',
+    ch: '加入197个国家的1200+聊天员',
+    hi: '197 देशों में 1,200+ चैटर्स से जुड़ें',
+    ar: 'انضم إلى 1200+ مسوق في 197 دولة'
+  },
+  'chatter.landing.cta.title': {
+    fr: 'Commencez à gagner',
+    en: 'Start earning',
+    es: 'Comienza a ganar',
+    de: 'Beginnen Sie zu verdienen',
+    ru: 'Начните зарабатывать',
+    pt: 'Comece a ganhar',
+    ch: '开始赚钱',
+    hi: 'कमाना शुरू करें',
+    ar: 'ابدأ الكسب'
+  },
+  'chatter.landing.cta.highlight': {
+    fr: "aujourd'hui",
+    en: 'today',
+    es: 'hoy',
+    de: 'heute',
+    ru: 'сегодня',
+    pt: 'hoje',
+    ch: '今天',
+    hi: 'आज',
+    ar: 'اليوم'
+  },
+  'chatter.landing.recap.revenue': {
+    fr: '3 sources de revenus',
+    en: '3 revenue streams',
+    es: '3 fuentes de ingresos',
+    de: '3 Einnahmequellen',
+    ru: '3 источника дохода',
+    pt: '3 fontes de renda',
+    ch: '3种收入来源',
+    hi: '3 राजस्व धाराएं',
+    ar: '3 مصادر دخل'
+  },
+  'chatter.landing.recap.team': {
+    fr: 'Équipe illimitée',
+    en: 'Unlimited team',
+    es: 'Equipo ilimitado',
+    de: 'Unbegrenztes Team',
+    ru: 'Неограниченная команда',
+    pt: 'Equipe ilimitada',
+    ch: '无限团队',
+    hi: 'असीमित टीम',
+    ar: 'فريق غير محدود'
+  },
+  'chatter.landing.recap.countries': {
+    fr: '197 pays',
+    en: '197 countries',
+    es: '197 países',
+    de: '197 Länder',
+    ru: '197 стран',
+    pt: '197 países',
+    ch: '197个国家',
+    hi: '197 देश',
+    ar: '197 دولة'
+  },
+  'chatter.landing.recap.free': {
+    fr: '100% gratuit',
+    en: '100% free',
+    es: '100% gratis',
+    de: '100% kostenlos',
+    ru: '100% бесплатно',
+    pt: '100% grátis',
+    ch: '100%免费',
+    hi: '100% मुफ्त',
+    ar: 'مجاني 100%'
+  },
+  'chatter.landing.cta.final': {
+    fr: 'Devenir Chatter maintenant',
+    en: 'Become a Chatter now',
+    es: 'Conviértete en Chatter ahora',
+    de: 'Jetzt Chatter werden',
+    ru: 'Стать чаттером сейчас',
+    pt: 'Tornar-se Chatter agora',
+    ch: '立即成为 Chatter',
+    hi: 'अभी चैटर बनें',
+    ar: 'كن مسوقًا الآن'
+  },
+  'chatter.landing.cta.footer': {
+    fr: 'Inscription gratuite • Démarrez en 5 minutes',
+    en: 'Free registration • Start in 5 minutes',
+    es: 'Registro gratuito • Empieza en 5 minutos',
+    de: 'Kostenlose Registrierung • Start in 5 Minuten',
+    ru: 'Бесплатная регистрация • Начните через 5 минут',
+    pt: 'Registro gratuito • Comece em 5 minutos',
+    ch: '免费注册 • 5分钟开始',
+    hi: 'मुफ्त पंजीकरण • 5 मिनट में शुरू करें',
+    ar: 'تسجيل مجاني • ابدأ خلال 5 دقائق'
+  },
+  'chatter.landing.ctaAriaLabel': {
+    fr: "Appel à l'action - Inscrivez-vous maintenant",
+    en: 'Call to action - Register now',
+    es: 'Llamado a la acción - Regístrate ahora',
+    de: 'Handlungsaufforderung - Jetzt registrieren',
+    ru: 'Призыв к действию - Зарегистрируйтесь сейчас',
+    pt: 'Chamada para ação - Registre-se agora',
+    ch: '行动号召 - 立即注册',
+    hi: 'कार्रवाई के लिए कॉल - अभी पंजीकरण करें',
+    ar: 'دعوة للعمل - سجل الآن'
+  },
+  'chatter.aria.cta.main': {
+    fr: "Commencez à gagner de l'argent maintenant - Inscrivez-vous gratuitement en tant que Chatter",
+    en: 'Start earning money now - Register as a Chatter for free',
+    es: 'Comienza a ganar dinero ahora - Regístrate como Chatter gratis',
+    de: 'Beginnen Sie jetzt Geld zu verdienen - Registrieren Sie sich kostenlos als Chatter',
+    ru: 'Начните зарабатывать сейчас - Зарегистрируйтесь бесплатно как чаттер',
+    pt: 'Comece a ganhar dinheiro agora - Registre-se como Chatter gratuitamente',
+    ch: '现在开始赚钱 - 免费注册为 Chatter',
+    hi: 'अभी पैसे कमाना शुरू करें - मुफ्त में चैटर के रूप में पंजीकरण करें',
+    ar: 'ابدأ في كسب المال الآن - سجل كمسوق مجانًا'
+  },
+
   // Pour toutes les autres clés, utiliser le defaultMessage français comme fallback
 };
 
@@ -450,12 +1320,12 @@ function updateTranslationFile(lang, messages) {
   let addedCount = 0;
   let skippedCount = 0;
 
-  // Ajouter les nouvelles clés
+  let updatedCount = 0;
+
+  // Ajouter/Mettre à jour les clés
   for (const [id, defaultMsg] of messages.entries()) {
-    if (translations[id]) {
-      skippedCount++;
-      continue; // Déjà existant, on ne touche pas
-    }
+    const existingValue = translations[id];
+    const hasAutoPrefix = existingValue && existingValue.startsWith('[AUTO]');
 
     // Utiliser la traduction manuelle si disponible, sinon le defaultMessage
     let translation = defaultMsg;
@@ -468,8 +1338,30 @@ function updateTranslationFile(lang, messages) {
       translation = `[AUTO] ${defaultMsg}`;
     }
 
-    translations[id] = translation;
-    addedCount++;
+    // Si la clé existe déjà
+    if (existingValue) {
+      // Mettre à jour si :
+      // 1. C'est une traduction manuelle disponible
+      // 2. OU si c'est AUTO
+      // 3. OU si la valeur actuelle est différente de la nouvelle
+      if (TRANSLATIONS[id] && TRANSLATIONS[id][lang]) {
+        // Toujours mettre à jour avec la traduction manuelle
+        translations[id] = translation;
+        updatedCount++;
+      } else if (hasAutoPrefix) {
+        translations[id] = translation;
+        updatedCount++;
+      } else if (existingValue !== translation) {
+        translations[id] = translation;
+        updatedCount++;
+      } else {
+        skippedCount++;
+      }
+    } else {
+      // Nouvelle clé
+      translations[id] = translation;
+      addedCount++;
+    }
   }
 
   // Trier les clés alphabétiquement
@@ -483,7 +1375,7 @@ function updateTranslationFile(lang, messages) {
   // Écrire le fichier
   fs.writeFileSync(filePath, JSON.stringify(sorted, null, 2) + '\n', 'utf-8');
 
-  console.log(`  ✅ ${addedCount} clés ajoutées, ${skippedCount} déjà existantes`);
+  console.log(`  ✅ ${addedCount} clés ajoutées, ${updatedCount} mises à jour, ${skippedCount} inchangées`);
 }
 
 // ============================================================================

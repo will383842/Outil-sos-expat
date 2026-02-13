@@ -125,10 +125,10 @@ const BloggerResources: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl dark:text-white font-bold">
             <FormattedMessage id="blogger.resources.title" defaultMessage="Ressources" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700 dark:text-gray-700">
             <FormattedMessage id="blogger.resources.subtitle" defaultMessage="Logos, articles et textes prêts à l'emploi pour votre blog" />
           </p>
         </div>
@@ -139,7 +139,7 @@ const BloggerResources: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setSearchQuery(''); }}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className={`flex-1 items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all${
                 activeTab === tab.id
                   ? 'bg-purple-600 text-white shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -155,13 +155,13 @@ const BloggerResources: React.FC = () => {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600 dark:text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={intl.formatMessage({ id: 'blogger.resources.search', defaultMessage: 'Rechercher...' })}
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2"
           />
         </div>
 
@@ -169,7 +169,7 @@ const BloggerResources: React.FC = () => {
         {activeTab === 'images' && (
           <>
             {/* Category Tabs */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               {CATEGORIES.map((cat) => {
                 const isActive = selectedCategory === cat.value;
                 return (
@@ -196,24 +196,24 @@ const BloggerResources: React.FC = () => {
             )}
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-600 dark:text-red-400">
+              <div className="bg-red-50 dark:bg-red-900/20 border dark:border-red-800 rounded-xl p-4 text-red-600 dark:text-red-400">
                 {error}
               </div>
             )}
 
             {!isLoading && filteredFiles.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredFiles.map((file) => (
-                  <div key={file.id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow bg-white dark:bg-white/5">
+                  <div key={file.id} className="border dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow bg-white dark:bg-white/5">
                     {file.previewUrl && (
                       <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg mb-3 overflow-hidden">
                         <img src={file.previewUrl} alt={file.name} className="w-full h-full object-contain" />
                       </div>
                     )}
                     <h3 className="font-medium text-gray-900 dark:text-white mb-1">{file.name}</h3>
-                    {file.description && <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{file.description}</p>}
+                    {file.description && <p className="text-sm dark:text-gray-700 mb-3">{file.description}</p>}
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">{file.format?.toUpperCase()} {file.sizeFormatted ? `• ${file.sizeFormatted}` : ''}</span>
+                      <span className="text-xs dark:text-gray-400">{file.format?.toUpperCase()} {file.sizeFormatted ? `• ${file.sizeFormatted}` : ''}</span>
                       <button
                         onClick={() => handleDownload(file.id)}
                         disabled={downloadingId === file.id}
@@ -233,8 +233,8 @@ const BloggerResources: React.FC = () => {
 
             {!isLoading && filteredFiles.length === 0 && (
               <div className={`${UI.card} p-12 text-center`}>
-                <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">
+                <FolderOpen className="w-12 h-12 text-gray-600 dark:text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-700 dark:text-gray-700">
                   <FormattedMessage id="blogger.resources.empty" defaultMessage="Aucune ressource disponible pour cette catégorie" />
                 </p>
               </div>
@@ -246,7 +246,7 @@ const BloggerResources: React.FC = () => {
         {activeTab === 'articles' && (
           <>
             {/* Category filter */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               <button
                 onClick={() => setArticleFilter('all')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
@@ -275,7 +275,7 @@ const BloggerResources: React.FC = () => {
             )}
 
             {articlesError && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-600 dark:text-red-400">
+              <div className="bg-red-50 dark:bg-red-900/20 border dark:border-red-800 rounded-xl p-4 text-red-600 dark:text-red-400">
                 {articlesError}
               </div>
             )}
@@ -286,16 +286,16 @@ const BloggerResources: React.FC = () => {
                   <div key={article.id} className={`${UI.card} p-6`}>
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{article.title}</h3>
+                        <h3 className="text-lg dark:text-white font-semibold">{article.title}</h3>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded">
+                          <span className="text-xs dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded">
                             {ARTICLE_CATEGORIES[article.category] || article.category}
                           </span>
                           {article.estimatedWordCount && (
-                            <span className="text-xs text-gray-400">~{article.estimatedWordCount} mots</span>
+                            <span className="text-xs dark:text-gray-400">~{article.estimatedWordCount} mots</span>
                           )}
                           {article.seoKeywords && article.seoKeywords.length > 0 && (
-                            <span className="text-xs text-gray-400 flex items-center gap-1">
+                            <span className="text-xs dark:text-gray-400 flex items-center gap-1">
                               <Tag className="w-3 h-3" />
                               {article.seoKeywords.slice(0, 3).join(', ')}
                             </span>
@@ -304,7 +304,7 @@ const BloggerResources: React.FC = () => {
                       </div>
                       <button
                         onClick={() => handleCopyArticle(article.id)}
-                        className={`${UI.button.primary} px-4 py-2 text-sm flex items-center gap-2 flex-shrink-0`}
+                        className={`${UI.button.primary}px-4 py-2 text-sm flex items-center gap-2`}
                       >
                         {copiedId === article.id ? (
                           <><CheckCircle className="w-4 h-4" /> <FormattedMessage id="blogger.resources.copied" defaultMessage="Copié !" /></>
@@ -313,10 +313,10 @@ const BloggerResources: React.FC = () => {
                         )}
                       </button>
                     </div>
-                    <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                    <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 text-sm dark:text-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
                       {article.content.substring(0, 500)}{article.content.length > 500 ? '...' : ''}
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs dark:text-gray-400 mt-2">
                       <FormattedMessage id="blogger.resources.affiliateReplace" defaultMessage="Les liens {{AFFILIATE_LINK}} seront remplacés par votre lien personnel lors de la copie" />
                     </p>
                   </div>
@@ -326,8 +326,8 @@ const BloggerResources: React.FC = () => {
 
             {!articlesLoading && filteredArticles.length === 0 && (
               <div className={`${UI.card} p-12 text-center`}>
-                <Newspaper className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">
+                <Newspaper className="w-12 h-12 text-gray-600 dark:text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-700 dark:text-gray-700">
                   <FormattedMessage id="blogger.resources.noArticles" defaultMessage="Aucun article disponible" />
                 </p>
               </div>
@@ -339,7 +339,7 @@ const BloggerResources: React.FC = () => {
         {activeTab === 'texts' && (
           <>
             {/* Category Tabs for texts too */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               {CATEGORIES.map((cat) => {
                 const isActive = selectedCategory === cat.value;
                 return (
@@ -368,14 +368,14 @@ const BloggerResources: React.FC = () => {
             {!isLoading && filteredTexts.length > 0 && (
               <div className="space-y-4">
                 {filteredTexts.map((text) => (
-                  <div key={text.id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-white dark:bg-white/5">
+                  <div key={text.id} className="border dark:border-gray-700 rounded-xl p-4 bg-white dark:bg-white/5">
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-medium text-gray-900 dark:text-white">{text.title}</h3>
-                      <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1 rounded">
+                      <span className="text-xs dark:text-gray-600 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                         {text.type}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 whitespace-pre-wrap line-clamp-4">
+                    <p className="text-sm dark:text-gray-700 mb-3 whitespace-pre-wrap line-clamp-4">
                       {text.content}
                     </p>
                     <button
@@ -395,8 +395,8 @@ const BloggerResources: React.FC = () => {
 
             {!isLoading && filteredTexts.length === 0 && (
               <div className={`${UI.card} p-12 text-center`}>
-                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">
+                <FileText className="w-12 h-12 text-gray-600 dark:text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-700 dark:text-gray-700">
                   <FormattedMessage id="blogger.resources.noTexts" defaultMessage="Aucun texte disponible pour cette catégorie" />
                 </p>
               </div>
@@ -405,11 +405,11 @@ const BloggerResources: React.FC = () => {
         )}
 
         {/* Usage Guidelines */}
-        <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
+        <div className="bg-purple-50 dark:bg-purple-900/20 border dark:border-purple-800 rounded-xl p-4">
           <h3 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">
             <FormattedMessage id="blogger.resources.guidelines.title" defaultMessage="Conditions d'utilisation" />
           </h3>
-          <ul className="text-sm text-purple-700 dark:text-purple-300 space-y-1">
+          <ul className="text-sm dark:text-purple-300 space-y-1">
             <li>• <FormattedMessage id="blogger.resources.guidelines.1" defaultMessage="Ces ressources sont réservées aux blogueurs partenaires" /></li>
             <li>• <FormattedMessage id="blogger.resources.guidelines.2" defaultMessage="Utilisez-les uniquement pour promouvoir SOS-Expat sur votre blog" /></li>
             <li>• <FormattedMessage id="blogger.resources.guidelines.3" defaultMessage="Ne modifiez pas les logos sans autorisation" /></li>

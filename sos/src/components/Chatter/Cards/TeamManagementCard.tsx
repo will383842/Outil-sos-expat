@@ -241,7 +241,7 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({ milestone, onClose 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="relative w-full max-w-md p-8 text-center bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-500">
+      <div className="relative w-full max-w-md p-8 text-center bg-gradient-to-br from-white dark:from-gray-800 to-gray-50 dark:to-gray-900 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-500">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -270,14 +270,14 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({ milestone, onClose 
             <PartyPopper className="w-10 h-10 text-white" />
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-2xl dark:text-white font-bold mb-2">
             <FormattedMessage
               id="team.celebration.title"
               defaultMessage="Congratulations!"
             />
           </h2>
 
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
+          <p className="text-lg dark:text-gray-300 mb-4">
             <FormattedMessage
               id="team.celebration.milestone"
               defaultMessage="You reached {count} team members!"
@@ -330,7 +330,7 @@ const TeamTree: React.FC<TeamTreeProps> = ({ members, onViewMember }) => {
 
   if (members.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
+      <div className="flex items-center justify-center py-12 text-gray-400 dark:text-gray-500">
         <Users className="w-16 h-16 mb-4 opacity-50" />
         <p className="text-center">
           <FormattedMessage
@@ -495,7 +495,7 @@ const TeamTree: React.FC<TeamTreeProps> = ({ members, onViewMember }) => {
               onClick={() => onViewMember?.(member.id)}
             >
               {/* Avatar circle */}
-              <circle r="22" className="fill-white dark:fill-gray-700 stroke-blue-400 stroke-2" />
+              <circle r="22" className="fill-white dark:fill-gray-700 stroke-blue-400" />
 
               {/* Status indicator */}
               <circle
@@ -553,7 +553,7 @@ const TeamTree: React.FC<TeamTreeProps> = ({ members, onViewMember }) => {
               onClick={() => onViewMember?.(member.id)}
             >
               {/* Avatar circle (smaller) */}
-              <circle r="18" className="fill-white dark:fill-gray-700 stroke-red-400 stroke-2" />
+              <circle r="18" className="fill-white dark:fill-gray-700 stroke-red-400" />
 
               {/* Status indicator */}
               <circle
@@ -698,13 +698,7 @@ const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       ref={ref}
-      className={`
-        relative overflow-hidden p-4 rounded-2xl
-        bg-white/80 dark:bg-white/5 backdrop-blur-xl
-        border border-white/20 dark:border-white/10
-        shadow-lg hover:shadow-xl transition-all duration-300
-        group hover:scale-[1.02]
-      `}
+      className={`relative overflow-hidden p-4 rounded-2xl bg-white/80 dark:bg-white/10 backdrop-blur-xl border dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 group hover:scale-[1.02]`}
     >
       {/* Background gradient */}
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
@@ -714,14 +708,14 @@ const StatCard: React.FC<StatCardProps> = ({
           {icon}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{label}</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          <p className="text-sm dark:text-gray-400 truncate">{label}</p>
+          <p className="text-2xl dark:text-white font-bold">
             {prefix}
             {typeof value === 'number' ? animatedValue.toLocaleString() : value}
             {suffix}
           </p>
           {subValue && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{subValue}</p>
+            <p className="text-xs dark:text-gray-500 mt-0.5">{subValue}</p>
           )}
         </div>
       </div>
@@ -771,25 +765,25 @@ const MemberCard: React.FC<MemberCardProps> = ({
   const config = statusConfig[member.status];
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-white/20 dark:border-white/10 hover:shadow-lg transition-all group">
+    <div className="flex items-center gap-4 p-4 bg-white/60 dark:bg-white/10 backdrop-blur-sm rounded-xl border dark:border-white/10 hover:shadow-lg transition-all group">
       {/* Avatar */}
       <div className="relative flex-shrink-0">
         {member.photoUrl ? (
           <img
             src={member.photoUrl}
             alt={member.name}
-            className="w-12 h-12 rounded-full object-cover ring-2 ring-white dark:ring-gray-700 shadow-md"
+            className="w-12 h-12 rounded-full object-cover ring-2 dark:ring-gray-700 shadow-md"
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-red-500 flex items-center justify-center text-white font-bold ring-2 ring-white dark:ring-gray-700 shadow-md">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-red-500 flex items-center justify-center text-white font-bold ring-2 dark:ring-gray-700 shadow-md">
             {member.name.charAt(0).toUpperCase()}
           </div>
         )}
         {/* Status dot */}
-        <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ${config.dot} ring-2 ring-white dark:ring-gray-800`} />
+        <div className={`absolute -bottom-0.5 w-4 h-4 rounded-full${config.dot}ring-2 dark:ring-gray-800`} />
 
         {/* Level badge */}
-        <div className={`absolute -top-1 -left-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white ${member.level === 1 ? 'bg-blue-500' : 'bg-red-500'}`}>
+        <div className={`absolute -top-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold${member.level === 1 ? 'bg-blue-500' : 'bg-red-500'}`}>
           N{member.level}
         </div>
       </div>
@@ -806,7 +800,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
             <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
           )}
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm dark:text-gray-400">
           <FormattedMessage
             id="team.member.joined"
             defaultMessage="Joined {date}"
@@ -818,7 +812,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
             <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
             {config.label}
           </span>
-          <span className="text-sm font-medium text-green-600 dark:text-green-400">
+          <span className="text-sm dark:text-green-400 font-medium">
             ${(member.earnings / 100).toFixed(2)}
           </span>
         </div>
@@ -881,7 +875,7 @@ const GoalProgress: React.FC<GoalProgressProps> = ({ current, paidTiers, onCeleb
   }, [current, paidTiers, onCelebrate]);
 
   return (
-    <div className="p-4 bg-gradient-to-r from-blue-50 to-red-50 dark:from-blue-900/20 dark:to-red-900/20 rounded-2xl">
+    <div className="p-4 bg-gradient-to-r from-blue-50 dark:from-blue-900/20 to-red-50 dark:to-red-900/20 rounded-2xl">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -892,7 +886,7 @@ const GoalProgress: React.FC<GoalProgressProps> = ({ current, paidTiers, onCeleb
             />
           </span>
         </div>
-        <span className="text-sm text-gray-600 dark:text-gray-400">
+        <span className="text-sm dark:text-gray-400">
           {current} / {nextMilestone}
         </span>
       </div>
@@ -912,23 +906,23 @@ const GoalProgress: React.FC<GoalProgressProps> = ({ current, paidTiers, onCeleb
           return (
             <div
               key={milestone}
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
+              className="absolute top-1/2 -translate-y-1/2"
               style={{ left: `${position}%` }}
             >
-              <div className={`w-3 h-3 rounded-full ${isAchieved ? 'bg-green-500' : 'bg-white dark:bg-gray-600'} ring-2 ring-white dark:ring-gray-800`} />
+              <div className={`w-3 h-3 rounded-full${isAchieved ? 'bg-green-500' : 'bg-white dark:bg-gray-600'}ring-2 dark:ring-gray-800`} />
             </div>
           );
         })}
       </div>
 
       {/* Milestone labels */}
-      <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex justify-between mt-2 text-xs dark:text-gray-400">
         {MILESTONES.slice(0, 4).map(milestone => {
           const isAchieved = current >= milestone || paidTiers.includes(milestone);
           const reward = MILESTONE_REWARDS[milestone as keyof typeof MILESTONE_REWARDS];
 
           return (
-            <div key={milestone} className={`flex flex-col items-center ${isAchieved ? 'text-green-600 dark:text-green-400' : ''}`}>
+            <div key={milestone} className={`flex items-center${isAchieved ? 'text-green-600 dark:text-green-400' : ''}`}>
               <span className="font-medium">{milestone}</span>
               <span className="text-[10px]">${reward.bonus}</span>
             </div>
@@ -951,22 +945,22 @@ const BestPerformerHighlight: React.FC<BestPerformerProps> = ({ member }) => {
   if (!member) return null;
 
   return (
-    <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl border border-yellow-200/50 dark:border-yellow-500/20">
+    <div className="p-4 bg-gradient-to-r from-yellow-50 dark:from-yellow-900/20 to-orange-50 dark:to-orange-900/20 rounded-2xl border dark:border-yellow-500/20">
       <div className="flex items-center gap-3">
         <div className="relative">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold shadow-lg">
             {member.name.charAt(0).toUpperCase()}
           </div>
-          <Crown className="absolute -top-2 -right-1 w-6 h-6 text-yellow-500 fill-yellow-500" />
+          <Crown className="absolute -top-2 w-6 h-6 text-yellow-500 fill-yellow-500" />
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 px-2 py-0.5 rounded-full">
+            <span className="text-xs dark:text-yellow-400 font-medium bg-yellow-100 dark:bg-yellow-900/30 px-2 py-0.5 rounded-full">
               <FormattedMessage id="team.bestPerformer" defaultMessage="Best Performer" />
             </span>
           </div>
           <h4 className="font-bold text-gray-900 dark:text-white mt-1">{member.name}</h4>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm dark:text-gray-400">
             <span className="font-semibold text-green-600 dark:text-green-400">
               ${(member.earnings / 100).toFixed(2)}
             </span>
@@ -998,18 +992,18 @@ const GrowthTips: React.FC = () => {
   const TipIcon = tip.icon;
 
   return (
-    <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl">
+    <div className="p-4 bg-gradient-to-r from-emerald-50 dark:from-emerald-900/20 to-teal-50 dark:to-teal-900/20 rounded-2xl">
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
           <Lightbulb className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">
+          <p className="text-xs dark:text-emerald-400 font-medium mb-1">
             <FormattedMessage id="team.tips.title" defaultMessage="Growth Tip" />
           </p>
           <div className="flex items-center gap-2">
             <TipIcon className="w-4 h-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
-            <p className="text-sm text-gray-700 dark:text-gray-300">
+            <p className="text-sm dark:text-gray-300">
               {intl.formatMessage({ id: tip.key, defaultMessage: 'Share your success story to inspire others!' })}
             </p>
           </div>
@@ -1053,7 +1047,7 @@ const UrgentActionsSection: React.FC<UrgentActionsSectionProps> = ({
   }
 
   return (
-    <div className="p-4 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl border border-orange-200/50 dark:border-orange-500/20">
+    <div className="p-4 bg-gradient-to-r from-orange-50 dark:from-orange-900/20 to-red-50 dark:to-red-900/20 rounded-2xl border dark:border-orange-500/20">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
@@ -1066,7 +1060,7 @@ const UrgentActionsSection: React.FC<UrgentActionsSectionProps> = ({
       </div>
 
       {/* Divider */}
-      <div className="border-t border-orange-300/50 dark:border-orange-600/30 mb-4" />
+      <div className="border-t dark:border-orange-600/30 mb-4" />
 
       {/* Alert Items */}
       <div className="space-y-3">
@@ -1076,10 +1070,10 @@ const UrgentActionsSection: React.FC<UrgentActionsSectionProps> = ({
           return (
             <div
               key={alert.memberId}
-              className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-xl ${config.bgColor} border ${config.borderColor}`}
+              className={`flex sm:flex-row sm:items-center gap-3 p-3 rounded-xl${config.bgColor}border${config.borderColor}`}
             >
               {/* Alert Icon and Message */}
-              <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
                 <span className="text-lg flex-shrink-0">{config.icon}</span>
                 <span className={`text-sm font-medium ${config.color} truncate`}>
                   {alert.message}
@@ -1087,11 +1081,11 @@ const UrgentActionsSection: React.FC<UrgentActionsSectionProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2">
                 {/* Message Button */}
                 <button
                   onClick={() => onMessageClick(alert.memberId, alert.messageStatus)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white rounded-lg transition-all active:scale-[0.98] ${config.buttonColor}`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all active:scale-[0.98]${config.buttonColor}`}
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                   {config.buttonLabel}
@@ -1101,7 +1095,7 @@ const UrgentActionsSection: React.FC<UrgentActionsSectionProps> = ({
                 {alert.whatsapp ? (
                   <button
                     onClick={() => onWhatsAppClick(alert.memberId, alert.whatsapp!)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-green-500 hover:bg-green-600 rounded-lg transition-all active:scale-[0.98]"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-green-500 hover:bg-green-600 rounded-lg transition-all active:scale-[0.98]"
                     title={intl.formatMessage({ id: 'team.action.whatsapp', defaultMessage: 'WhatsApp' })}
                   >
                     <Phone className="w-3.5 h-3.5" />
@@ -1110,7 +1104,7 @@ const UrgentActionsSection: React.FC<UrgentActionsSectionProps> = ({
                 ) : (
                   <button
                     onClick={() => onRequestWhatsApp?.(alert.memberId)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-all active:scale-[0.98]"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs dark:text-gray-300 font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-all active:scale-[0.98]"
                   >
                     <Phone className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">
@@ -1211,9 +1205,9 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
     return (
       <button
         onClick={() => onWhatsAppClick?.(memberId, whatsapp)}
-        className={`flex items-center gap-1.5 ${
+        className={`flex items-center gap-1.5${
           compact ? 'p-2' : 'px-3 py-1.5'
-        } text-xs font-medium text-white bg-green-500 hover:bg-green-600 rounded-lg transition-all active:scale-[0.98]`}
+        }text-xs font-medium bg-green-500 hover:bg-green-600 rounded-lg transition-all active:scale-[0.98]`}
         title={intl.formatMessage({ id: 'team.action.whatsapp', defaultMessage: 'WhatsApp' })}
       >
         <Phone className="w-4 h-4" />
@@ -1225,9 +1219,9 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
   return (
     <button
       onClick={() => onRequestWhatsApp?.(memberId)}
-      className={`flex items-center gap-1.5 ${
+      className={`flex items-center gap-1.5${
         compact ? 'p-2' : 'px-3 py-1.5'
-      } text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-lg transition-all active:scale-[0.98]`}
+      }text-xs dark:text-gray-400 font-medium bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-lg transition-all active:scale-[0.98]`}
       title={intl.formatMessage({ id: 'team.action.requestWhatsapp', defaultMessage: 'Demander WhatsApp' })}
     >
       <Phone className="w-4 h-4" />
@@ -1532,10 +1526,10 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
   // Loading state
   if (isLoading) {
     return (
-      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-6">
+      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4">
             <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl" />
             <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl" />
           </div>
@@ -1567,19 +1561,19 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
         />
       )}
 
-      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden">
+      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200/50 dark:border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-4 sm:p-6 border-b dark:border-white/10">
+          <div className="flex sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-gradient-to-br from-blue-500 to-red-600 rounded-xl shadow-lg">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl dark:text-white font-bold">
                   <FormattedMessage id="team.title" defaultMessage="Team Management" />
                 </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm dark:text-gray-400">
                   <FormattedMessage
                     id="team.subtitle"
                     defaultMessage="{count} members in your network"
@@ -1601,7 +1595,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
               {onInvite && (
                 <button
                   onClick={onInvite}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-red-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98]"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-red-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg active:scale-[0.98]"
                 >
                   <UserPlus className="w-5 h-5" />
                   <span className="hidden sm:inline">
@@ -1638,7 +1632,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
             </button>
 
             {expandedSection === 'stats' && (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 animate-in slide-in-from-top-2">
+              <div className="grid lg:grid-cols-4 gap-3 animate-in slide-in-from-top-2">
                 <StatCard
                   icon={<Users className="w-5 h-5" />}
                   label={intl.formatMessage({ id: 'team.stats.totalSize', defaultMessage: 'Total Team' })}
@@ -1722,7 +1716,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
             ) : (
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                 {teamMembers.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400 dark:text-gray-500">
+                  <div className="text-center dark:text-gray-500 py-12">
                     <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
                     <p>
                       <FormattedMessage
@@ -1769,7 +1763,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
           <div className="sm:hidden">
             <button
               onClick={onInvite}
-              className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-blue-500 via-red-500 to-pink-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-red-500/30 active:scale-[0.98] transition-transform"
+              className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-blue-500 via-red-500 to-pink-500 text-white rounded-2xl font-bold shadow-lg active:scale-[0.98] transition-transform"
             >
               <Gift className="w-6 h-6" />
               <FormattedMessage id="team.cta.growTeam" defaultMessage="Grow Your Team" />

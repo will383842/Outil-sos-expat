@@ -150,7 +150,7 @@ const TrendsChartCard = memo(function TrendsChartCard({
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-sm dark:text-white font-semibold">
           <FormattedMessage
             id="chatter.trends.weeklyEarnings"
             defaultMessage="Tendance hebdomadaire"
@@ -271,7 +271,7 @@ const TrendsChartCard = memo(function TrendsChartCard({
           {dayLabels.map((day, index) => (
             <span
               key={index}
-              className="text-[9px] text-gray-400 dark:text-gray-500"
+              className="text-[9px] dark:text-gray-300"
             >
               {day}
             </span>

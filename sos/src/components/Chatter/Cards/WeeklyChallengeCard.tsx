@@ -93,9 +93,9 @@ const PRIZE_CONFIG = {
   },
   2: {
     icon: Medal,
-    color: "text-gray-400",
+    color: "text-gray-600 dark:text-gray-400",
     bgColor: "bg-gray-100 dark:bg-gray-700/30",
-    borderColor: "border-gray-400",
+    borderColor: "border-gray-600 dark:border-gray-400",
     label: "2nd",
   },
   3: {
@@ -288,7 +288,7 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
               defaultMessage="No active challenge this week"
             />
           </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-sm dark:text-gray-300 mt-1">
             <FormattedMessage
               id="chatter.weeklyChallenge.checkBack"
               defaultMessage="Check back Monday for a new challenge!"
@@ -311,10 +311,10 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
               <TypeIcon className={`w-5 h-5 ${typeConfig?.color}`} />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
+              <h3 className="font-bold text-gray-900 dark:text-white sm:text-base">
                 {title}
               </h3>
-              <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-1 text-xs dark:text-gray-400">
                 <Clock className="w-3 h-3" />
                 <span>
                   <FormattedMessage
@@ -328,9 +328,9 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
           </div>
 
           {/* Prize Pool Badge */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-yellow-50 dark:from-yellow-900/20 to-orange-50 dark:to-orange-900/20 border dark:border-yellow-800">
             <Trophy className="w-4 h-4 text-yellow-500" />
-            <span className="text-sm font-bold text-gray-900 dark:text-white">
+            <span className="text-sm dark:text-white font-bold">
               {formatPrize(
                 challenge.prizes[1] + challenge.prizes[2] + challenge.prizes[3]
               )}
@@ -339,7 +339,7 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
         </div>
 
         {/* Description */}
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm dark:text-gray-400 mb-4">
           {description}
         </p>
       </div>
@@ -368,7 +368,7 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
                 >
                   {/* Rank Badge */}
                   <div
-                    className={`w-8 h-8 rounded-full ${config.bgColor} flex items-center justify-center flex-shrink-0`}
+                    className={`w-8 h-8 rounded-full${config.bgColor}flex items-center justify-center`}
                   >
                     <PrizeIcon className={`w-4 h-4 ${config.color}`} />
                   </div>
@@ -382,7 +382,7 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-medium">
+                      <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 font-medium">
                         {entry.name.charAt(0)}
                       </div>
                     )}
@@ -410,11 +410,11 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
                   </div>
 
                   {/* Score */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm dark:text-gray-300 font-bold">
                       {entry.score}
                     </span>
-                    <span className="text-xs text-gray-400">pts</span>
+                    <span className="text-xs">pts</span>
                   </div>
 
                   {/* Prize */}
@@ -430,7 +430,7 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
             })
           ) : (
             <div className="text-center py-4">
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+              <p className="text-gray-500 dark:text-gray-400">
                 <FormattedMessage
                   id="chatter.weeklyChallenge.noParticipants"
                   defaultMessage="Be the first to participate!"
@@ -444,29 +444,29 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
       {/* User's Position (if not in top 3) */}
       {myRank && myRank > 3 && (
         <div className="px-4 sm:px-6 pb-4">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800">
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20 border dark:border-blue-800">
+            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
               <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+              <p className="text-sm dark:text-blue-300 font-medium">
                 <FormattedMessage
                   id="chatter.weeklyChallenge.yourPosition"
                   defaultMessage="Your Position"
                 />
               </p>
-              <p className="text-xs text-blue-600 dark:text-blue-400">
+              <p className="text-xs dark:text-blue-400">
                 <FormattedMessage
                   id="chatter.weeklyChallenge.keepGoing"
                   defaultMessage="Keep going to reach Top 3!"
                 />
               </p>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-lg font-bold text-blue-700 dark:text-blue-300">
+            <div className="flex items-center gap-2">
+              <span className="text-lg dark:text-blue-300 font-bold">
                 #{myRank}
               </span>
-              <span className="text-sm text-blue-600 dark:text-blue-400">
+              <span className="text-sm dark:text-blue-400">
                 ({myScore} pts)
               </span>
             </div>
@@ -493,8 +493,8 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
 
       {/* Footer - Total Participants */}
       {challenge.leaderboard.length > 0 && (
-        <div className="px-4 sm:px-6 py-3 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10">
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+        <div className="px-4 sm:px-6 py-3 bg-gray-50 dark:bg-white/5 border-t dark:border-white/10">
+          <div className="flex items-center justify-center gap-2 text-sm dark:text-gray-400">
             <Users className="w-4 h-4" />
             <FormattedMessage
               id="chatter.weeklyChallenge.participants"

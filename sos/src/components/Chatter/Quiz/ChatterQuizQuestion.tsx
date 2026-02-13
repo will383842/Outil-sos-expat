@@ -36,7 +36,7 @@ const ChatterQuizQuestion: React.FC<ChatterQuizQuestionProps> = ({
       {/* Question Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-red-600 dark:text-red-400">
+          <span className="text-sm dark:text-red-400 font-medium">
             Question {questionNumber}/{totalQuestions}
           </span>
           {showResult && (
@@ -49,7 +49,7 @@ const ChatterQuizQuestion: React.FC<ChatterQuizQuestionProps> = ({
             </span>
           )}
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-lg dark:text-white font-semibold">
           {question.question}
         </h3>
       </div>
@@ -84,8 +84,8 @@ const ChatterQuizQuestion: React.FC<ChatterQuizQuestionProps> = ({
                   isCorrectAnswer ? (
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   ) : isWrongSelection ? (
-                    <div className="w-5 h-5 rounded-full border-2 border-red-500 bg-red-500 flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">✕</span>
+                    <div className="w-5 h-5 rounded-full border-2 bg-red-500 flex items-center justify-center">
+                      <span className="text-white font-bold">✕</span>
                     </div>
                   ) : (
                     <Circle className="w-5 h-5 text-gray-300 dark:text-gray-600" />

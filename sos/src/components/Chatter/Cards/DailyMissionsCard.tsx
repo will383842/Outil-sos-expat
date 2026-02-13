@@ -313,7 +313,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.2, type: 'spring', damping: 10 }}
-                className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30"
+                className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg"
               >
                 <Sparkles className="w-10 h-10 text-white" />
               </motion.div>
@@ -322,7 +322,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-2xl font-bold text-gray-900 dark:text-white mb-2"
+                className="text-2xl dark:text-white font-bold mb-2"
               >
                 <FormattedMessage
                   id="chatter.dailyMissions.allComplete.title"
@@ -362,7 +362,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
         <div className="p-4 sm:p-6 pb-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/20">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
                 <Target className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -372,7 +372,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
                     defaultMessage="Daily Missions"
                   />
                 </h3>
-                <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-1 text-xs dark:text-gray-400">
                   <Clock className="w-3 h-3" />
                   <span>
                     <FormattedMessage
@@ -386,10 +386,10 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
             </div>
 
             {/* Streak Badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20">
-              <Flame className={`w-4 h-4 ${streak > 0 ? 'text-orange-500' : 'text-gray-400'}`} />
-              <span className="text-sm font-bold text-gray-900 dark:text-white">{streak}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-50 dark:from-orange-900/20 to-red-50 dark:to-red-900/20">
+              <Flame className={`w-4 h-4 ${streak > 0 ? 'text-orange-500' : 'text-gray-600 dark:text-gray-400'}`} />
+              <span className="text-sm dark:text-white font-bold">{streak}</span>
+              <span className="text-xs dark:text-gray-400">
                 <FormattedMessage id="chatter.dailyMissions.streak" defaultMessage="streak" />
               </span>
             </div>
@@ -408,7 +408,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
               <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
                 <Zap className="w-4 h-4" />
                 <span className="font-bold">{totalXpEarned}</span>
-                <span className="text-gray-400">/ {totalPossibleXp} XP</span>
+                <span className="text-gray-600 dark:text-gray-400">/ {totalPossibleXp} XP</span>
               </div>
             </div>
 
@@ -424,7 +424,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
 
             {/* Bonus Indicator */}
             {!allCompleted && (
-              <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-1.5 mt-2 text-xs dark:text-gray-400">
                 <Gift className="w-3.5 h-3.5 text-red-500" />
                 <FormattedMessage
                   id="chatter.dailyMissions.bonusHint"
@@ -435,7 +435,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
             )}
 
             {allCompleted && (
-              <div className="flex items-center gap-1.5 mt-2 text-xs text-green-600 dark:text-green-400 font-medium">
+              <div className="flex items-center gap-1.5 mt-2 text-xs dark:text-green-400 font-medium">
                 <Check className="w-3.5 h-3.5" />
                 <FormattedMessage
                   id="chatter.dailyMissions.bonusEarned"
@@ -481,7 +481,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
             <button
               onClick={() => goToCard(currentCardIndex - 1)}
               disabled={currentCardIndex === 0}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-11 h-11 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg disabled:opacity-30 disabled:cursor-not-allowed z-10 touch-manipulation active:scale-95"
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg disabled:opacity-30 disabled:cursor-not-allowed z-10 touch-manipulation active:scale-95"
               aria-label={intl.formatMessage({ id: 'chatter.missions.previousTask', defaultMessage: 'Previous task' })}
             >
               <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -506,7 +506,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
                 <button
                   key={task.id}
                   onClick={() => goToCard(index)}
-                  className={`min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation`}
+                  className={`min-w-[44px] flex items-center justify-center touch-manipulation`}
                   aria-label={intl.formatMessage({ id: 'chatter.missions.goToTask', defaultMessage: 'Go to task {number}' }, { number: index + 1 })}
                 >
                   <span className={`block rounded-full transition-all ${
@@ -540,7 +540,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
           {DAILY_TASKS.length > 3 && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="w-full mt-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              className="w-full mt-3 py-2 text-sm dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
               {isExpanded ? (
                 <FormattedMessage id="chatter.dailyMissions.showLess" defaultMessage="Show less" />
@@ -553,7 +553,7 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
 
         {/* Best Streak Footer */}
         {bestStreak > 0 && (
-          <div className="px-4 sm:px-6 py-3 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/10 dark:to-red-900/10 border-t border-orange-100 dark:border-orange-900/20">
+          <div className="px-4 sm:px-6 py-3 bg-gradient-to-r from-orange-50 dark:from-orange-900/10 to-red-50 dark:to-red-900/10 border-t dark:border-orange-900/20">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">
                 <FormattedMessage id="chatter.dailyMissions.bestStreak" defaultMessage="Best streak" />
@@ -598,7 +598,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     >
       <div className="flex items-start gap-4">
         {/* Icon */}
-        <div className={`w-14 h-14 rounded-xl ${task.bgColor} flex items-center justify-center flex-shrink-0`}>
+        <div className={`w-14 h-14 rounded-xl${task.bgColor}flex items-center justify-center`}>
           <Icon className={`w-7 h-7 ${task.color}`} />
         </div>
 
@@ -607,14 +607,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
           <h4 className={`font-semibold mb-1 ${isCompleted ? 'text-green-700 dark:text-green-300 line-through' : 'text-gray-900 dark:text-white'}`}>
             {intl.formatMessage({ id: task.titleKey, defaultMessage: task.defaultTitle })}
           </h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          <p className="text-sm dark:text-gray-400 mb-3">
             {intl.formatMessage({ id: task.descriptionKey, defaultMessage: task.defaultDescription })}
           </p>
 
           {/* Progress indicator for multi-step missions */}
           {showProgress && !isCompleted && (
             <div className="mb-3">
-              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+              <div className="flex items-center justify-between text-xs dark:text-gray-400 mb-1">
                 <span>{current}/{target}</span>
               </div>
               <div className="h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
@@ -704,7 +704,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
     >
       {/* Checkbox / Status indicator */}
       <div
-        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all${
           isCompleted
             ? 'bg-green-500 border-green-500'
             : 'border-gray-300 dark:border-gray-600'
@@ -725,7 +725,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
       </div>
 
       {/* Icon */}
-      <div className={`w-9 h-9 rounded-lg ${task.bgColor} flex items-center justify-center flex-shrink-0`}>
+      <div className={`w-9 h-9 rounded-lg${task.bgColor}flex items-center justify-center`}>
         <Icon className={`w-4.5 h-4.5 ${task.color}`} />
       </div>
 
@@ -737,7 +737,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
           {intl.formatMessage({ id: task.titleKey, defaultMessage: task.defaultTitle })}
         </p>
         <div className="flex items-center gap-2">
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          <p className="text-xs dark:text-gray-400 truncate">
             {intl.formatMessage({ id: task.descriptionKey, defaultMessage: task.defaultDescription })}
           </p>
           {/* Progress indicator for multi-step missions */}
@@ -754,7 +754,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
       </div>
 
       {/* XP Badge */}
-      <div className={`px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 flex-shrink-0 ${
+      <div className={`px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1${
         isCompleted
           ? 'bg-green-200 dark:bg-green-800 text-green-700 dark:text-green-300'
           : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'

@@ -156,12 +156,12 @@ const InfluencerEarnings: React.FC = () => {
     <InfluencerDashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl dark:text-white font-bold">
               <FormattedMessage id="influencer.earnings.title" defaultMessage="Mes gains" />
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-700 dark:text-gray-700">
               <FormattedMessage id="influencer.earnings.subtitle" defaultMessage="Historique de toutes vos commissions" />
             </p>
           </div>
@@ -180,38 +180,38 @@ const InfluencerEarnings: React.FC = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-4 gap-4">
           <div className={`${UI.card} p-4`}>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm dark:text-gray-700">
               <FormattedMessage id="influencer.earnings.total" defaultMessage="Total gagné" />
             </p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-2xl dark:text-white font-bold">
               {formatCurrency(dashboard?.influencer?.totalEarned || 0)}
             </p>
           </div>
           <div className={`${UI.card} p-4`}>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm dark:text-gray-700">
               <FormattedMessage id="influencer.earnings.available" defaultMessage="Disponible" />
             </p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-2xl dark:text-green-400 font-bold">
               {formatCurrency(dashboard?.influencer?.availableBalance || 0)}
             </p>
           </div>
           <div className={`${UI.card} p-4`}>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm dark:text-gray-700">
               <FormattedMessage id="influencer.earnings.pending" defaultMessage="En attente" />
             </p>
-            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+            <p className="text-2xl dark:text-yellow-400 font-bold">
               {formatCurrency((dashboard?.influencer?.pendingBalance || 0) + (dashboard?.influencer?.validatedBalance || 0))}
             </p>
           </div>
           <div className={`${UI.card} p-4`}>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm dark:text-gray-700">
               <FormattedMessage id="influencer.earnings.filtered" defaultMessage="Filtré" />
             </p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-2xl dark:text-white font-bold">
               {filteredCommissions.length}
-              <span className="text-sm font-normal text-gray-500 ml-1">
+              <span className="text-sm dark:text-gray-700 font-normal ml-1">
                 <FormattedMessage id="influencer.earnings.commissions" defaultMessage="commissions" />
               </span>
             </p>
@@ -220,8 +220,8 @@ const InfluencerEarnings: React.FC = () => {
 
         {/* Filters - V2: Enhanced with status and date filters */}
         <div className={`${UI.card} p-4`}>
-          <div className="flex flex-wrap items-center gap-4">
-            <Filter className="w-5 h-5 text-gray-400" />
+          <div className="flex items-center gap-4">
+            <Filter className="w-5 h-5 text-gray-600 dark:text-gray-400" />
 
             {/* Type Filter */}
             <select
@@ -271,7 +271,7 @@ const InfluencerEarnings: React.FC = () => {
 
             {/* Date From */}
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-gray-400" />
+              <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
               <input
                 type="date"
                 value={dateFrom}
@@ -283,7 +283,7 @@ const InfluencerEarnings: React.FC = () => {
 
             {/* Date To */}
             <div className="flex items-center gap-2">
-              <span className="text-gray-400">-</span>
+              <span className="text-gray-600 dark:text-gray-400">-</span>
               <input
                 type="date"
                 value={dateTo}
@@ -297,7 +297,7 @@ const InfluencerEarnings: React.FC = () => {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
+                className="flex items-center gap-1 text-sm hover:text-red-600"
               >
                 <X className="w-4 h-4" />
                 <FormattedMessage id="influencer.earnings.clearFilters" defaultMessage="Effacer" />
@@ -307,7 +307,7 @@ const InfluencerEarnings: React.FC = () => {
 
           {/* Filter Summary */}
           {hasActiveFilters && (
-            <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+            <div className="mt-3 text-sm dark:text-gray-700">
               <FormattedMessage
                 id="influencer.earnings.filterSummary"
                 defaultMessage="{count} commission(s) - Total: {total}"
@@ -327,27 +327,27 @@ const InfluencerEarnings: React.FC = () => {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-800/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="influencer.earnings.table.date" defaultMessage="Date" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="influencer.earnings.table.type" defaultMessage="Type" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="influencer.earnings.table.description" defaultMessage="Description" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="influencer.earnings.table.status" defaultMessage="Statut" />
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right dark:text-gray-700 font-medium uppercase tracking-wider">
                       <FormattedMessage id="influencer.earnings.table.amount" defaultMessage="Montant" />
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y dark:divide-gray-700">
                   {filteredCommissions.map((commission: InfluencerCommission) => (
                     <tr key={commission.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-white">
                         {new Date(commission.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -365,7 +365,7 @@ const InfluencerEarnings: React.FC = () => {
                             : intl.formatMessage({ id: 'influencer.type.adjustment', defaultMessage: 'Ajustement' })}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">
+                      <td className="px-6 py-4 text-sm dark:text-gray-700 max-w-xs truncate">
                         {commission.referenceId || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -373,7 +373,7 @@ const InfluencerEarnings: React.FC = () => {
                           {getStatusLabel(commission.status)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-green-600 dark:text-green-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-green-400 font-medium">
                         {formatCurrency(commission.finalAmount)}
                       </td>
                     </tr>
@@ -382,7 +382,7 @@ const InfluencerEarnings: React.FC = () => {
               </table>
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <div className="text-center dark:text-gray-700 py-12">
               <DollarSign className="w-12 h-12 mx-auto mb-4 opacity-50" />
               {hasActiveFilters ? (
                 <FormattedMessage

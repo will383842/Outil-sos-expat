@@ -71,7 +71,7 @@ export function ReferralN1Table({ filleuls, isLoading }: ReferralN1TableProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8">
             <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>{t("chatter.referrals.noFilleulsYet")}</p>
             <p className="text-sm mt-2">
@@ -115,7 +115,7 @@ export function ReferralN1Table({ filleuls, isLoading }: ReferralN1TableProps) {
                     <TableCell>
                       <div>
                         <p className="font-medium">{filleul.name}</p>
-                        <p className="text-xs text-gray-500">{filleul.email}</p>
+                        <p className="text-xs">{filleul.email}</p>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -133,7 +133,7 @@ export function ReferralN1Table({ filleuls, isLoading }: ReferralN1TableProps) {
                           }
                           className="h-2"
                         />
-                        <div className="flex justify-between text-xs text-gray-500">
+                        <div className="flex justify-between text-xs">
                           <span>
                             {filleul.threshold10Reached ? (
                               <Check className="h-3 w-3 text-green-500 inline" />
@@ -172,7 +172,7 @@ export function ReferralN1Table({ filleuls, isLoading }: ReferralN1TableProps) {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500">
+                    <TableCell className="text-sm">
                       {new Date(filleul.joinedAt).toLocaleDateString()}
                     </TableCell>
                   </TableRow>

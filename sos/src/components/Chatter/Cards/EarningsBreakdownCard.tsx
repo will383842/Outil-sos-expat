@@ -328,10 +328,10 @@ const Tooltip: React.FC<TooltipProps> = ({ config, value, percentage, position }
         </div>
         <div className="flex items-baseline gap-2">
           <span className="text-lg font-bold">{formatCurrency(value)}</span>
-          <span className="text-gray-400 text-sm">({percentage.toFixed(1)}%)</span>
+          <span className="text-gray-600 dark:text-gray-400">({percentage.toFixed(1)}%)</span>
         </div>
         {/* Arrow */}
-        <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 bg-gray-900 dark:bg-gray-800 rotate-45" />
+        <div className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-800 rotate-45" />
       </div>
     </motion.div>
   );
@@ -375,18 +375,18 @@ const LegendItem: React.FC<LegendItemProps> = ({
       whileTap={{ scale: 0.98 }}
     >
       <div
-        className={`w-8 h-8 rounded-lg ${config.bgColor} flex items-center justify-center flex-shrink-0`}
+        className={`w-8 h-8 rounded-lg${config.bgColor}flex items-center justify-center`}
       >
         <Icon className={`w-4 h-4 ${config.textColor}`} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+        <p className="text-sm dark:text-white font-medium truncate">
           {intl.formatMessage({
             id: config.labelKey,
             defaultMessage: config.defaultLabel,
           })}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs dark:text-gray-400">
           {formatCurrency(value)} ({percentage.toFixed(1)}%)
         </p>
       </div>
@@ -404,22 +404,22 @@ const EmptyState: React.FC = () => {
   const intl = useIntl();
 
   return (
-    <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+    <div className="flex items-center justify-center py-8 px-4 text-center">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.4 }}
-        className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center mb-4"
+        className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 dark:from-gray-800 to-gray-200 dark:to-gray-700 flex items-center justify-center mb-4"
       >
-        <PieChart className="w-10 h-10 text-gray-400 dark:text-gray-500" />
+        <PieChart className="w-10 h-10 text-gray-400 dark:text-gray-300" />
       </motion.div>
-      <h4 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      <h4 className="text-lg dark:text-gray-300 font-semibold mb-2">
         <FormattedMessage
           id="chatter.earnings.emptyTitle"
           defaultMessage="No earnings yet"
         />
       </h4>
-      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+      <p className="text-sm dark:text-gray-400 max-w-xs">
         <FormattedMessage
           id="chatter.earnings.emptyDescription"
           defaultMessage="Start earning to see your breakdown. Share your link to get your first commission!"
@@ -429,7 +429,7 @@ const EmptyState: React.FC = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="mt-4 flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400"
+        className="mt-4 flex items-center gap-2 text-sm dark:text-blue-400"
       >
         <TrendingUp className="w-4 h-4" />
         <FormattedMessage
@@ -451,7 +451,7 @@ const LoadingSkeleton: React.FC = () => {
         <div className={`${UI.skeleton} w-10 h-10 rounded-xl`} />
         <div className={`${UI.skeleton} h-6 w-40`} />
       </div>
-      <div className="flex flex-col sm:flex-row items-center gap-6">
+      <div className="flex sm:flex-row items-center gap-6">
         <div className={`${UI.skeleton} w-[200px] h-[200px] rounded-full`} />
         <div className="flex-1 space-y-3 w-full">
           {[1, 2, 3, 4].map((i) => (
@@ -564,7 +564,7 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
       {/* Header */}
       <div className="p-4 sm:p-6 pb-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
             <PieChart className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -574,7 +574,7 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
                 defaultMessage="Earnings Breakdown"
               />
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs dark:text-gray-400">
               <FormattedMessage
                 id="chatter.earnings.breakdownSubtitle"
                 defaultMessage="See where your money comes from"
@@ -589,7 +589,7 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
         <EmptyState />
       ) : (
         <div className="p-4 sm:p-6 pt-2">
-          <div className="flex flex-col lg:flex-row items-center gap-6">
+          <div className="flex lg:flex-row items-center gap-6">
             {/* Donut Chart */}
             <div className="relative flex-shrink-0">
               <svg
@@ -629,20 +629,20 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
               </svg>
 
               {/* Center content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4 }}
                   className="text-center"
                 >
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <p className="text-xs dark:text-gray-400 uppercase tracking-wider">
                     <FormattedMessage
                       id="chatter.earnings.total"
                       defaultMessage="Total"
                     />
                   </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-2xl dark:text-white font-bold">
                     {formatCurrencyCompact(total)}
                   </p>
                 </motion.div>
@@ -662,7 +662,7 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
             </div>
 
             {/* Legend */}
-            <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1">
+            <div className="flex-1 w-full grid sm:grid-cols-2 lg:grid-cols-1 gap-1">
               {segments.map((segment) => (
                 <LegendItem
                   key={segment.config.key}
@@ -683,10 +683,10 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-4 pt-4 border-t border-gray-200 dark:border-white/10"
+                className="mt-4 pt-4 border-t dark:border-white/10"
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm dark:text-gray-400">
                     <FormattedMessage
                       id="chatter.earnings.filterActive"
                       defaultMessage="Filtering by category"
@@ -694,7 +694,7 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
                   </p>
                   <button
                     onClick={() => onSegmentClick?.(selectedCategory)}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                    className="text-sm dark:text-blue-400 hover:underline"
                   >
                     <FormattedMessage
                       id="chatter.earnings.clearFilter"

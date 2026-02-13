@@ -58,7 +58,7 @@ export function QRCodeDisplay({
           {t("chatter.referrals.qrCode")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col items-center space-y-4">
+      <CardContent className="flex items-center space-y-4">
         {/* QR Code */}
         <div
           className="relative bg-white p-4 rounded-lg border"
@@ -66,12 +66,12 @@ export function QRCodeDisplay({
         >
           {!imageLoaded && !imageError && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              <Loader2 className="h-8 w-8 animate-spin text-gray-600 dark:text-gray-400" />
             </div>
           )}
 
           {imageError ? (
-            <div className="flex items-center justify-center h-full text-gray-400">
+            <div className="flex items-center justify-center h-full text-gray-600 dark:text-gray-400">
               <QrCode className="h-12 w-12" />
             </div>
           ) : (
@@ -89,10 +89,10 @@ export function QRCodeDisplay({
 
         {/* Code display */}
         <div className="text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm">
             {t("chatter.referrals.scanToJoin")}
           </p>
-          <p className="font-mono font-bold text-lg mt-1">{referralCode}</p>
+          <p className="font-mono text-lg mt-1">{referralCode}</p>
         </div>
 
         {/* Download button */}

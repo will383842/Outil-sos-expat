@@ -172,6 +172,10 @@ function generateCoverageReport(translations) {
   console.log('\n📊 Rapport de couverture des traductions:\n');
 
   const bloggerKeys = Object.keys(translations).filter(k => k.startsWith('blogger.'));
+  const stats = {
+    total: bloggerKeys.length,
+    byLang: {}
+  };
 
   for (const [langCode, langName] of Object.entries(LANGUAGES)) {
     const commonJsonPath = path.join(LOCALES_DIR, langCode, 'common.json');
@@ -183,9 +187,29 @@ function generateCoverageReport(translations) {
     const commonJson = JSON.parse(fs.readFileSync(commonJsonPath, 'utf8'));
     const existingKeys = bloggerKeys.filter(key => commonJson[key]);
     const missingKeys = bloggerKeys.filter(key => !commonJson[key]);
+    const toTranslateKeys = bloggerKeys.filter(key =>
+      commonJson[key] && typeof commonJson[key] === 'string' && commonJson[key].startsWith('[TO TRANSLATE]')
+    );
 
     const coverage = ((existingKeys.length / bloggerKeys.length) * 100).toFixed(1);
-    console.log(`  ${coverage === '100.0' ? '✅' : '⚠️ '} ${langCode} (${langName}): ${existingKeys.length}/${bloggerKeys.length} (${coverage}%)`);
+    const translated = existingKeys.length - toTranslateKeys.length;
+    const translatedPct = ((translated / bloggerKeys.length) * 100).toFixed(1);
+
+    stats.byLang[langCode] = {
+      existing: existingKeys.length,
+      missing: missingKeys.length,
+      toTranslate: toTranslateKeys.length,
+      translated,
+      coverage: parseFloat(coverage),
+      translatedPct: parseFloat(translatedPct)
+    };
+
+    const icon = coverage === '100.0' ? (toTranslateKeys.length === 0 ? '✅' : '⚠️ ') : '❌';
+    console.log(`  ${icon} ${langCode} (${langName}): ${existingKeys.length}/${bloggerKeys.length} (${coverage}%)`);
+
+    if (toTranslateKeys.length > 0) {
+      console.log(`      🔄 ${toTranslateKeys.length} marquées [TO TRANSLATE]`);
+    }
 
     if (missingKeys.length > 0 && missingKeys.length <= 10) {
       console.log(`      Manquantes: ${missingKeys.join(', ')}`);
@@ -193,6 +217,8 @@ function generateCoverageReport(translations) {
       console.log(`      ${missingKeys.length} clés manquantes`);
     }
   }
+
+  return stats;
 }
 
 // Fonction principale

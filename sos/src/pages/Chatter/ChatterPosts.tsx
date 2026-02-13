@@ -24,12 +24,12 @@ import {
 
 // Design tokens
 const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
+  card: "bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
     primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 rounded-xl transition-all",
   },
-  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all",
+  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all",
 } as const;
 
 interface Post {
@@ -172,21 +172,21 @@ const ChatterPosts: React.FC = () => {
     switch (status) {
       case 'approved':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full font-medium">
             <Check className="w-3 h-3" />
             <FormattedMessage id="chatter.posts.status.approved" defaultMessage="Approuvé" />
           </span>
         );
       case 'rejected':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-medium">
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full font-medium">
             <X className="w-3 h-3" />
             <FormattedMessage id="chatter.posts.status.rejected" defaultMessage="Rejeté" />
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full text-xs font-medium">
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full font-medium">
             <Clock className="w-3 h-3" />
             <FormattedMessage id="chatter.posts.status.pending" defaultMessage="En attente" />
           </span>
@@ -199,9 +199,9 @@ const ChatterPosts: React.FC = () => {
       <ChatterDashboardLayout>
         <div className="space-y-6">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl dark:text-white font-bold">
                 <FormattedMessage id="chatter.posts.title" defaultMessage="Mes Posts" />
               </h1>
               <p className="text-gray-500 dark:text-gray-400">
@@ -221,7 +221,7 @@ const ChatterPosts: React.FC = () => {
           {submitSuccess && (
             <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl flex items-center gap-3">
               <Check className="w-5 h-5 text-green-500" />
-              <p className="text-sm text-green-700 dark:text-green-300">
+              <p className="text-sm dark:text-green-300">
                 <FormattedMessage id="chatter.posts.submitSuccess" defaultMessage="Post soumis avec succès !" />
               </p>
             </div>
@@ -231,7 +231,7 @@ const ChatterPosts: React.FC = () => {
           {error && (
             <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-500" />
-              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+              <p className="text-sm dark:text-red-300">{error}</p>
             </div>
           )}
 
@@ -242,7 +242,7 @@ const ChatterPosts: React.FC = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
-                className="bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="bg-transparent border-none focus:ring-0 text-sm dark:text-gray-300 font-medium"
               >
                 <option value="all">{intl.formatMessage({ id: 'chatter.posts.filter.all', defaultMessage: 'Tous les posts' })}</option>
                 <option value="pending">{intl.formatMessage({ id: 'chatter.posts.filter.pending', defaultMessage: 'En attente' })}</option>
@@ -260,7 +260,7 @@ const ChatterPosts: React.FC = () => {
           ) : posts.length === 0 ? (
             <div className={`${UI.card} p-8 text-center`}>
               <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <h3 className="text-lg dark:text-white font-medium mb-2">
                 <FormattedMessage id="chatter.posts.empty.title" defaultMessage="Aucun post" />
               </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-4">
@@ -277,11 +277,11 @@ const ChatterPosts: React.FC = () => {
             <div className="space-y-4">
               {posts.map((post) => (
                 <div key={post.id} className={`${UI.card} p-4`}>
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex sm:flex-row sm:items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
                         {getStatusBadge(post.status)}
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs">
                           {PLATFORMS.find(p => p.value === post.platform)?.label || post.platform}
                         </span>
                       </div>
@@ -289,22 +289,22 @@ const ChatterPosts: React.FC = () => {
                         href={post.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-medium text-red-600 dark:text-red-400 hover:underline flex items-center gap-1 break-all"
+                        className="text-sm dark:text-red-400 font-medium hover:underline flex items-center gap-1 break-all"
                       >
                         {post.url}
                         <ExternalLink className="w-3 h-3 flex-shrink-0" />
                       </a>
                       {post.content && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
+                        <p className="text-sm dark:text-gray-400 mt-2 line-clamp-2">
                           {post.content}
                         </p>
                       )}
                       {post.rejectionReason && (
-                        <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+                        <p className="text-sm dark:text-red-400 mt-2">
                           <FormattedMessage id="chatter.posts.rejectionReason" defaultMessage="Raison:" /> {post.rejectionReason}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs mt-2">
                         {new Date(post.submittedAt._seconds * 1000).toLocaleDateString()}
                       </p>
                     </div>
@@ -312,20 +312,20 @@ const ChatterPosts: React.FC = () => {
                     {post.status === 'approved' && (
                       <div className="flex gap-4 text-center">
                         <div>
-                          <p className="text-lg font-bold text-gray-900 dark:text-white">{post.clickCount}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-lg dark:text-white font-bold">{post.clickCount}</p>
+                          <p className="text-xs">
                             <FormattedMessage id="chatter.posts.clicks" defaultMessage="Clics" />
                           </p>
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-green-600 dark:text-green-400">{post.conversionCount}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-lg dark:text-green-400 font-bold">{post.conversionCount}</p>
+                          <p className="text-xs">
                             <FormattedMessage id="chatter.posts.conversions" defaultMessage="Conversions" />
                           </p>
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-red-600 dark:text-red-400">${(post.earningsGenerated / 100).toFixed(2)}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-lg dark:text-red-400 font-bold">${(post.earningsGenerated / 100).toFixed(2)}</p>
+                          <p className="text-xs">
                             <FormattedMessage id="chatter.posts.earnings" defaultMessage="Gains" />
                           </p>
                         </div>
@@ -341,14 +341,14 @@ const ChatterPosts: React.FC = () => {
         {/* New Post Modal */}
         {showNewPostModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className={`${UI.card} p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto`}>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            <div className={`${UI.card}p-6 max-w-lg w-full overflow-y-auto`}>
+              <h2 className="text-xl dark:text-white font-bold mb-4">
                 <FormattedMessage id="chatter.posts.newPost.title" defaultMessage="Nouveau post" />
               </h2>
 
               <form onSubmit={handleSubmitPost} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm dark:text-gray-300 font-medium mb-1">
                     <FormattedMessage id="chatter.posts.form.url" defaultMessage="URL du post *" />
                   </label>
                   <input
@@ -361,9 +361,9 @@ const ChatterPosts: React.FC = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm dark:text-gray-300 font-medium mb-1">
                       <FormattedMessage id="chatter.posts.form.platform" defaultMessage="Plateforme *" />
                     </label>
                     <select
@@ -379,7 +379,7 @@ const ChatterPosts: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm dark:text-gray-300 font-medium mb-1">
                       <FormattedMessage id="chatter.posts.form.language" defaultMessage="Langue *" />
                     </label>
                     <select
@@ -396,7 +396,7 @@ const ChatterPosts: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm dark:text-gray-300 font-medium mb-1">
                     <FormattedMessage id="chatter.posts.form.content" defaultMessage="Contenu du post (optionnel)" />
                   </label>
                   <textarea
@@ -421,7 +421,7 @@ const ChatterPosts: React.FC = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className={`${UI.button.primary} flex-1 py-2 flex items-center justify-center gap-2`}
+                    className={`${UI.button.primary}flex-1 py-2 items-center justify-center gap-2`}
                   >
                     {submitting ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

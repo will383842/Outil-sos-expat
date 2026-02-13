@@ -151,7 +151,7 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
   // Method selection step
   const renderMethodStep = () => (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <h3 className="text-lg dark:text-white font-semibold mb-4">
         <FormattedMessage id="chatter.withdraw.selectMethod" defaultMessage="Choisissez votre méthode de paiement" />
       </h3>
 
@@ -160,17 +160,17 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
         className={`${UI.card} w-full p-4 flex items-center justify-between hover:shadow-lg transition-all`}
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-100 dark:from-green-900/30 to-emerald-100 dark:to-emerald-900/30 flex items-center justify-center">
             <Wallet className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
           <div className="text-left">
             <p className="font-semibold text-gray-900 dark:text-white">Wise</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm dark:text-gray-400">
               <FormattedMessage id="chatter.withdraw.wiseDesc" defaultMessage="Virement international rapide" />
             </p>
           </div>
         </div>
-        <ChevronRight className="w-5 h-5 text-gray-400" />
+        <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
       </button>
 
       <button
@@ -178,17 +178,17 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
         className={`${UI.card} w-full p-4 flex items-center justify-between hover:shadow-lg transition-all`}
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-100 dark:from-orange-900/30 to-red-100 dark:to-red-900/30 flex items-center justify-center">
             <Smartphone className="w-6 h-6 text-orange-600 dark:text-orange-400" />
           </div>
           <div className="text-left">
             <p className="font-semibold text-gray-900 dark:text-white">Mobile Money</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm dark:text-gray-400">
               <FormattedMessage id="chatter.withdraw.mobileDesc" defaultMessage="Orange Money, Wave, MTN..." />
             </p>
           </div>
         </div>
-        <ChevronRight className="w-5 h-5 text-gray-400" />
+        <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
       </button>
 
       <button
@@ -196,19 +196,19 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
         className={`${UI.card} w-full p-4 flex items-center justify-between hover:shadow-lg transition-all`}
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 dark:from-blue-900/30 to-indigo-100 dark:to-indigo-900/30 flex items-center justify-center">
             <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="text-left">
             <p className="font-semibold text-gray-900 dark:text-white">
               <FormattedMessage id="chatter.withdraw.bankTransfer" defaultMessage="Virement bancaire" />
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm dark:text-gray-400">
               <FormattedMessage id="chatter.withdraw.bankDesc" defaultMessage="IBAN ou compte local" />
             </p>
           </div>
         </div>
-        <ChevronRight className="w-5 h-5 text-gray-400" />
+        <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
       </button>
     </div>
   );
@@ -368,7 +368,7 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-4">
         <div>
           <label className={UI.label}>
             <FormattedMessage id="chatter.withdraw.country" defaultMessage="Pays" />
@@ -402,13 +402,13 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
     <div className="space-y-6">
       <button
         onClick={() => setStep('method')}
-        className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        className="flex items-center gap-2 text-gray-700 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
       >
         <ChevronRight className="w-4 h-4 rotate-180" />
         <FormattedMessage id="common.back" defaultMessage="Retour" />
       </button>
 
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+      <h3 className="text-lg dark:text-white font-semibold">
         {selectedMethod === 'wise' && 'Wise'}
         {selectedMethod === 'mobile_money' && 'Mobile Money'}
         {selectedMethod === 'bank_transfer' && intl.formatMessage({ id: 'chatter.withdraw.bankTransfer', defaultMessage: 'Virement bancaire' })}
@@ -466,7 +466,7 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
       {error && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <p className="text-sm dark:text-red-300">{error}</p>
         </div>
       )}
 
@@ -474,7 +474,7 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
       {success && (
         <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl flex items-start gap-3">
           <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-green-700 dark:text-green-300">
+          <p className="text-sm dark:text-green-300">
             <FormattedMessage id="chatter.withdraw.success" defaultMessage="Demande de retrait envoyée avec succès !" />
           </p>
         </div>

@@ -66,7 +66,7 @@ const BloggerDashboard: React.FC = () => {
   if (error) {
     return (
       <BloggerDashboardLayout>
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+        <div className="bg-red-50 dark:bg-red-900/20 border dark:border-red-800 rounded-xl p-6 text-center">
           <p className="text-red-600 dark:text-red-400">{error}</p>
         </div>
       </BloggerDashboardLayout>
@@ -98,24 +98,24 @@ const BloggerDashboard: React.FC = () => {
         </div>
 
         {/* Stats Cards - Mobile optimized with 2x2 grid on mobile */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Balance */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border dark:border-gray-700 shadow-sm">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+              <span className="text-gray-700 dark:text-gray-700 sm:text-sm font-medium">
                 <FormattedMessage id="blogger.dashboard.balance" defaultMessage="Solde disponible" />
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                 <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
               </div>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-xl dark:text-white sm:text-2xl font-bold">
               ${(blogger.availableBalance / 100).toFixed(2)}
             </p>
             {canWithdraw && (
               <button
                 onClick={() => navigate('/blogger/paiements')}
-                className="text-sm text-purple-600 hover:text-purple-700 mt-2 flex items-center gap-1 min-h-[44px] active:opacity-70"
+                className="text-sm hover:text-purple-700 mt-2 flex items-center gap-1 min-h-[44px] active:opacity-70"
               >
                 <FormattedMessage id="blogger.dashboard.withdraw" defaultMessage="Retirer" />
                 <ArrowRight className="w-4 h-4" />
@@ -124,19 +124,19 @@ const BloggerDashboard: React.FC = () => {
           </div>
 
           {/* Monthly Earnings */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border dark:border-gray-700 shadow-sm">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+              <span className="text-gray-700 dark:text-gray-700 sm:text-sm">
                 <FormattedMessage id="blogger.dashboard.monthlyEarnings" defaultMessage="Gains ce mois" />
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-xl dark:text-white sm:text-2xl font-bold">
               ${(stats.earnings / 100).toFixed(2)}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs dark:text-gray-600 mt-1">
               <FormattedMessage
                 id="blogger.dashboard.monthlyTotal"
                 defaultMessage="Total: ${total}"
@@ -146,19 +146,19 @@ const BloggerDashboard: React.FC = () => {
           </div>
 
           {/* Clients */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border dark:border-gray-700 shadow-sm">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+              <span className="text-gray-700 dark:text-gray-700 sm:text-sm">
                 <FormattedMessage id="blogger.dashboard.clients" defaultMessage="Clients référés" />
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-xl dark:text-white sm:text-2xl font-bold">
               {stats.clients}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs dark:text-gray-600 mt-1">
               <FormattedMessage
                 id="blogger.dashboard.totalClients"
                 defaultMessage="Total: {total}"
@@ -168,38 +168,38 @@ const BloggerDashboard: React.FC = () => {
           </div>
 
           {/* Rank */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border dark:border-gray-700 shadow-sm">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+              <span className="text-gray-700 dark:text-gray-700 sm:text-sm">
                 <FormattedMessage id="blogger.dashboard.rank" defaultMessage="Classement" />
               </span>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
                 <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 dark:text-yellow-500" />
               </div>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-xl dark:text-white sm:text-2xl font-bold">
               {stats.rank ? `#${stats.rank}` : '-'}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs dark:text-gray-600 mt-1">
               <FormattedMessage id="blogger.dashboard.top10" defaultMessage="Top 10 mensuel" />
             </p>
           </div>
         </div>
 
         {/* Affiliate Links - Mobile optimized with 48px touch targets */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+          <h2 className="text-lg dark:text-white font-semibold mb-4">
             <FormattedMessage id="blogger.dashboard.affiliateLinks" defaultMessage="Vos liens d'affiliation" />
           </h2>
 
-          <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-4">
+          <div className="space-y-4 md:space-y-0 md:grid md:gap-4">
             {/* Client Link */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-4">
+            <div className="bg-gradient-to-br from-green-50 dark:from-green-900/20 to-green-100 dark:to-green-800/20 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-sm dark:text-white font-semibold">
                   <FormattedMessage id="blogger.dashboard.clientLink" defaultMessage="Lien client (10$/appel)" />
                 </span>
-                <span className="text-sm font-bold bg-green-200 text-green-800 dark:bg-green-800/50 dark:text-green-300 px-3 py-1.5 rounded-full">
+                <span className="text-sm dark:text-green-300 font-bold bg-green-200 dark:bg-green-800/50 px-3 py-1.5 rounded-full">
                   {blogger.affiliateCodeClient}
                 </span>
               </div>
@@ -209,12 +209,12 @@ const BloggerDashboard: React.FC = () => {
                   type="text"
                   value={clientShareUrl}
                   readOnly
-                  className="w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px]"
+                  className="w-full text-sm bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px]"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={() => copyToClipboard(clientShareUrl)}
-                    className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                    className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
                   >
                     <Copy className="w-5 h-5" />
                     <span className="sm:inline">
@@ -225,7 +225,7 @@ const BloggerDashboard: React.FC = () => {
                     href={clientShareUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="min-h-[48px] min-w-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
+                    className="min-h-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-700 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
                   >
                     <ExternalLink className="w-5 h-5" />
                   </a>
@@ -234,12 +234,12 @@ const BloggerDashboard: React.FC = () => {
             </div>
 
             {/* Recruitment Link */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4">
+            <div className="bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-blue-100 dark:to-blue-800/20 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-sm dark:text-white font-semibold">
                   <FormattedMessage id="blogger.dashboard.recruitLink" defaultMessage="Lien recrutement (5$/appel, 6 mois)" />
                 </span>
-                <span className="text-sm font-bold bg-blue-200 text-blue-800 dark:bg-blue-800/50 dark:text-blue-300 px-3 py-1.5 rounded-full">
+                <span className="text-sm dark:text-blue-300 font-bold bg-blue-200 dark:bg-blue-800/50 px-3 py-1.5 rounded-full">
                   {blogger.affiliateCodeRecruitment}
                 </span>
               </div>
@@ -249,12 +249,12 @@ const BloggerDashboard: React.FC = () => {
                   type="text"
                   value={recruitmentShareUrl}
                   readOnly
-                  className="w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px]"
+                  className="w-full text-sm bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px]"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={() => copyToClipboard(recruitmentShareUrl)}
-                    className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                    className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
                   >
                     <Copy className="w-5 h-5" />
                     <span className="sm:inline">
@@ -265,7 +265,7 @@ const BloggerDashboard: React.FC = () => {
                     href={recruitmentShareUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="min-h-[48px] min-w-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
+                    className="min-h-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-700 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
                   >
                     <ExternalLink className="w-5 h-5" />
                   </a>
@@ -276,14 +276,14 @@ const BloggerDashboard: React.FC = () => {
         </div>
 
         {/* Recent Commissions - Mobile optimized */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg dark:text-white font-semibold">
               <FormattedMessage id="blogger.dashboard.recentCommissions" defaultMessage="Commissions récentes" />
             </h2>
             <button
               onClick={() => navigate('/blogger/gains')}
-              className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1 min-h-[44px] px-2 active:opacity-70"
+              className="text-sm hover:text-purple-700 flex items-center gap-1 min-h-[44px] px-2 active:opacity-70"
             >
               <FormattedMessage id="blogger.dashboard.viewAll" defaultMessage="Voir tout" />
               <ArrowRight className="w-4 h-4" />
@@ -298,7 +298,7 @@ const BloggerDashboard: React.FC = () => {
                   className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 min-h-[64px]"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center${
                       commission.status === 'available' ? 'bg-green-100 dark:bg-green-900/30' :
                       commission.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30' :
                       'bg-gray-100 dark:bg-gray-700'
@@ -310,10 +310,10 @@ const BloggerDashboard: React.FC = () => {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <p className="text-sm dark:text-white font-medium truncate">
                         {commission.description}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs dark:text-gray-700">
                         {new Date(commission.createdAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -329,7 +329,7 @@ const BloggerDashboard: React.FC = () => {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                 <DollarSign className="w-8 h-8 text-purple-600 dark:text-purple-400" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-gray-700 dark:text-gray-700">
                 <FormattedMessage
                   id="blogger.dashboard.noCommissions"
                   defaultMessage="Aucune commission pour le moment. Partagez vos liens pour commencer à gagner !"
@@ -340,15 +340,15 @@ const BloggerDashboard: React.FC = () => {
         </div>
 
         {/* Quick Actions - Mobile optimized with 48px min height */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
           <button
             onClick={() => navigate('/blogger/ressources')}
-            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-2xl p-5 sm:p-6 text-left hover:from-purple-600 hover:to-purple-700 transition-all min-h-[80px] active:scale-[0.98] shadow-lg shadow-purple-500/20"
+            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-2xl p-5 sm:p-6 hover:from-purple-600 hover:to-purple-700 transition-all min-h-[80px] active:scale-[0.98] shadow-lg"
           >
             <h3 className="font-semibold mb-1 text-base sm:text-lg">
               <FormattedMessage id="blogger.dashboard.resourcesCta" defaultMessage="Ressources exclusives" />
             </h3>
-            <p className="text-sm text-purple-100 opacity-90">
+            <p className="text-sm opacity-90">
               <FormattedMessage
                 id="blogger.dashboard.resourcesDesc"
                 defaultMessage="Logos, images et textes prêts à l'emploi"
@@ -358,12 +358,12 @@ const BloggerDashboard: React.FC = () => {
 
           <button
             onClick={() => navigate('/blogger/guide')}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl p-5 sm:p-6 text-left hover:from-blue-600 hover:to-blue-700 transition-all min-h-[80px] active:scale-[0.98] shadow-lg shadow-blue-500/20"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl p-5 sm:p-6 hover:from-blue-600 hover:to-blue-700 transition-all min-h-[80px] active:scale-[0.98] shadow-lg"
           >
             <h3 className="font-semibold mb-1 text-base sm:text-lg">
               <FormattedMessage id="blogger.dashboard.guideCta" defaultMessage="Guide d'intégration" />
             </h3>
-            <p className="text-sm text-blue-100 opacity-90">
+            <p className="text-sm opacity-90">
               <FormattedMessage
                 id="blogger.dashboard.guideDesc"
                 defaultMessage="Templates d'articles et textes à copier"

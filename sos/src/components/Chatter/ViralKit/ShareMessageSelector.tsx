@@ -48,7 +48,7 @@ export function ShareMessageSelector({
           value={selectedLanguage}
           onValueChange={(v: string) => setSelectedLanguage(v as "fr" | "en")}
         >
-          <TabsList className="grid grid-cols-2 w-40">
+          <TabsList className="grid w-40">
             <TabsTrigger value="fr">Francais</TabsTrigger>
             <TabsTrigger value="en">English</TabsTrigger>
           </TabsList>
@@ -131,7 +131,7 @@ export function ShareMessageSelector({
         </div>
 
         {/* Tip */}
-        <p className="text-xs text-gray-500">
+        <p className="text-xs">
           {t("chatter.referrals.messagesTip")}
         </p>
       </CardContent>

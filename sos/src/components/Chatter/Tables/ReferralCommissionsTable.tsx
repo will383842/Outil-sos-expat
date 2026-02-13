@@ -122,7 +122,7 @@ export function ReferralCommissionsTable({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8">
             <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>{t("chatter.referrals.noCommissionsYet")}</p>
           </div>
@@ -173,7 +173,7 @@ export function ReferralCommissionsTable({
                         +${(commission.amount / 100).toFixed(2)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500">
+                    <TableCell className="text-sm">
                       {new Date(commission.createdAt).toLocaleDateString()}
                     </TableCell>
                   </TableRow>
