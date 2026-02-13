@@ -8,6 +8,7 @@ export { getBloggerDashboard } from "./getBloggerDashboard";
 export { updateBloggerProfile } from "./updateBloggerProfile";
 export { bloggerRequestWithdrawal } from "./requestWithdrawal";
 export { getBloggerLeaderboard } from "./getBloggerLeaderboard";
+export { getBloggerRecruits } from "./getBloggerRecruits";
 
 // Resources (EXCLUSIVE)
 export {
@@ -53,4 +54,17 @@ export {
   adminUpdateBloggerGuideBestPractice,
   adminExportBloggers,
   adminGetBloggerLeaderboard,
+  // NEW: Admin GET/SAVE/DELETE functions for console
+  adminGetBloggerResources,
+  adminGetBloggerGuide,
+  adminSaveBloggerResourceFile,
+  adminSaveBloggerResourceText,
+  adminDeleteBloggerResourceFile,
+  adminDeleteBloggerResourceText,
+  adminSaveBloggerGuideTemplate,
+  adminSaveBloggerGuideCopyText,
+  adminSaveBloggerGuideBestPractice,
+  adminDeleteBloggerGuideTemplate,
+  adminDeleteBloggerGuideCopyText,
+  adminDeleteBloggerGuideBestPractice,
 } from "./admin/index";

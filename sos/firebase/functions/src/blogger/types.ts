@@ -1310,7 +1310,7 @@ export const DEFAULT_BLOGGER_CONFIG: Omit<
 
   leaderboardSize: 10,               // Top 10 only (informational)
 
-  recruitmentCommissionThreshold: 5000, // $50 — recruited blogger must earn this before recruiter gets $5
+  recruitmentCommissionThreshold: 20000, // $200 — recruited blogger must earn this before recruiter gets $50
 
   version: 1,
 };

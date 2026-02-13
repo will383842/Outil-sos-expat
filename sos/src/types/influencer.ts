@@ -702,3 +702,28 @@ export interface InfluencerResourcesData {
   files: InfluencerResourceFile[];
   texts: InfluencerResourceText[];
 }
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get affiliate link for client referrals (influencer referring clients)
+ */
+export function getInfluencerAffiliateLink(affiliateCode: string): string {
+  return `https://sos-expat.com?ref=${affiliateCode}`;
+}
+
+/**
+ * Get recruitment link for influencer-to-influencer referrals
+ */
+export function getInfluencerRecruitmentLink(affiliateCode: string): string {
+  return `https://sos-expat.com/influencer/inscription?ref=${affiliateCode}`;
+}
+
+/**
+ * Format amount in cents to display currency
+ */
+export function formatInfluencerAmount(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}

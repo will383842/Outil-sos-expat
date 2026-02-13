@@ -22,11 +22,14 @@ import {
   Trophy,
   CreditCard,
   FolderOpen,
+  BookOpen,
+  Code,
   User,
   LogOut,
   Menu,
   X,
   PenTool,
+  Gift,
 } from 'lucide-react';
 
 interface BloggerDashboardLayoutProps {
@@ -64,6 +67,13 @@ const BloggerDashboardLayout: React.FC<BloggerDashboardLayoutProps> = ({ childre
       exclusive: false,
     },
     {
+      id: 'blogger-recruitment',
+      label: intl.formatMessage({ id: 'blogger.menu.bloggerRecruitment', defaultMessage: 'Parrainage blogueurs' }),
+      icon: <Gift className="w-5 h-5" />,
+      path: '/blogger/parrainage-blogueurs',
+      exclusive: false,
+    },
+    {
       id: 'leaderboard',
       label: intl.formatMessage({ id: 'blogger.menu.leaderboard', defaultMessage: 'Classement' }),
       icon: <Trophy className="w-5 h-5" />,
@@ -82,6 +92,20 @@ const BloggerDashboardLayout: React.FC<BloggerDashboardLayoutProps> = ({ childre
       label: intl.formatMessage({ id: 'blogger.menu.resources', defaultMessage: 'Ressources' }),
       icon: <FolderOpen className="w-5 h-5" />,
       path: '/blogger/ressources',
+      exclusive: false,
+    },
+    {
+      id: 'guide',
+      label: intl.formatMessage({ id: 'blogger.menu.guide', defaultMessage: 'Guide' }),
+      icon: <BookOpen className="w-5 h-5" />,
+      path: '/blogger/guide',
+      exclusive: false,
+    },
+    {
+      id: 'widgets',
+      label: intl.formatMessage({ id: 'blogger.menu.widgets', defaultMessage: 'Widgets' }),
+      icon: <Code className="w-5 h-5" />,
+      path: '/blogger/widgets',
       exclusive: false,
     },
     {

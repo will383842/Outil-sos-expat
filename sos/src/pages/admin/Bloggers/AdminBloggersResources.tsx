@@ -118,7 +118,7 @@ type EditingResource = {
 
 const AdminBloggersResources: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   const [files, setFiles] = useState<ResourceFile[]>([]);
   const [texts, setTexts] = useState<ResourceText[]>([]);

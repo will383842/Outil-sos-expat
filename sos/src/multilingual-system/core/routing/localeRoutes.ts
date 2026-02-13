@@ -326,10 +326,12 @@ export type RouteKey =
   | "blogger-dashboard"       // /blogger/tableau-de-bord -> /blogger/dashboard, etc.
   | "blogger-earnings"        // /blogger/gains -> /blogger/earnings, etc.
   | "blogger-referrals"       // /blogger/filleuls -> /blogger/referrals, etc.
+  | "blogger-blogger-recruitment" // /blogger/parrainage-blogueurs -> /blogger/blogger-recruitment, etc.
   | "blogger-leaderboard"     // /blogger/classement -> /blogger/leaderboard, etc.
   | "blogger-payments"        // /blogger/paiements -> /blogger/payments, etc.
   | "blogger-resources"       // /blogger/ressources -> /blogger/resources, etc.
   | "blogger-guide"           // /blogger/guide -> /blogger/guide, etc.
+  | "blogger-widgets"         // /blogger/widgets -> /blogger/widgets, etc.
   | "blogger-promo-tools"     // /blogger/outils -> /blogger/promo-tools, etc.
   | "blogger-profile"         // /blogger/profil -> /blogger/profile, etc.
   | "blogger-suspended"       // /blogger/suspendu -> /blogger/suspended, etc.
@@ -1255,6 +1257,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     hi: "blogger/sandarbh",
     ar: "مدون/الإحالات",
   },
+  "blogger-blogger-recruitment": {
+    fr: "blogger/parrainage-blogueurs",
+    en: "blogger/blogger-recruitment",
+    es: "blogger/reclutamiento-bloggers",
+    de: "blogger/blogger-rekrutierung",
+    ru: "blogger/nabor-bloggerov",
+    pt: "blogger/recrutamento-bloggers",
+    ch: "blogger/boke-zhaom",
+    hi: "blogger/blogger-bharti",
+    ar: "مدون/توظيف-المدونين",
+  },
   "blogger-leaderboard": {
     fr: "blogger/classement",
     en: "blogger/leaderboard",
@@ -1298,6 +1311,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "blogger/zhinan",
     hi: "blogger/margdarshak",
     ar: "مدون/الدليل",
+  },
+  "blogger-widgets": {
+    fr: "blogger/widgets",
+    en: "blogger/widgets",
+    es: "blogger/widgets",
+    de: "blogger/widgets",
+    ru: "blogger/vidzhety",
+    pt: "blogger/widgets",
+    ch: "blogger/xiaogongju",
+    hi: "blogger/widgets",
+    ar: "مدون/الودجات",
   },
   "blogger-promo-tools": {
     fr: "blogger/outils",

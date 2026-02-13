@@ -24,6 +24,7 @@ import {
   Menu,
   X,
   Shield,
+  Gift,
 } from 'lucide-react';
 
 interface GroupAdminDashboardLayoutProps {
@@ -75,6 +76,13 @@ const GroupAdminDashboardLayout: React.FC<GroupAdminDashboardLayoutProps> = ({ c
       icon: <Users className="w-5 h-5" />,
       path: `/group-admin/filleuls`,
       routeKey: 'groupadmin-referrals' as RouteKey,
+    },
+    {
+      id: 'groupAdminRecruitment',
+      label: intl.formatMessage({ id: 'groupAdmin.menu.groupAdminRecruitment', defaultMessage: 'Parrainage Admins' }),
+      icon: <Gift className="w-5 h-5" />,
+      path: `/group-admin/parrainage-admins`,
+      routeKey: 'groupadmin-admin-recruitment' as RouteKey,
     },
     {
       id: 'leaderboard',

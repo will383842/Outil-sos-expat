@@ -73,7 +73,7 @@ interface Post {
 }
 
 const AdminGroupAdminsPosts: React.FC = () => {
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
   const intl = useIntl();
 
   const [loading, setLoading] = useState(true);

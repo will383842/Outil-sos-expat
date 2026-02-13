@@ -403,6 +403,7 @@ const InfluencerReferrals: React.FC = () => {
   const intl = useIntl();
   const locale = intl.locale.split('-')[0];
   const { referrals, recruitmentShareUrl, isLoading, error } = useInfluencer();
+  const [copied, setCopied] = React.useState(false);
 
   // Calculate summary stats
   const summaryStats = useMemo(() => {
@@ -465,24 +466,72 @@ const InfluencerReferrals: React.FC = () => {
             {/* Summary stats */}
             <SummaryStats {...summaryStats} />
 
-            {/* Share link reminder */}
+            {/* Recruitment Link Card - Enhanced with action buttons */}
             {recruitmentShareUrl && (
-              <div className="flex items-center justify-between bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <Share2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  <span className="text-sm dark:text-purple-300">
+              <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl p-6 text-white">
+                <div className="flex items-center gap-3 mb-4">
+                  <Users className="w-6 h-6" />
+                  <span className="font-bold">
                     <FormattedMessage
-                      id="influencer.referrals.keepSharing"
-                      defaultMessage="Continuez a partager pour recruter plus !"
+                      id="influencer.referrals.yourLink"
+                      defaultMessage="Votre lien de recrutement"
                     />
                   </span>
                 </div>
-                <button
-                  onClick={() => navigator.clipboard.writeText(recruitmentShareUrl)}
-                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-                >
-                  <FormattedMessage id="common.copy" defaultMessage="Copier" />
-                </button>
+                <div className="flex items-center gap-2 bg-white/10 rounded-lg p-3 mb-4">
+                  <input
+                    type="text"
+                    readOnly
+                    value={recruitmentShareUrl}
+                    className="flex-1 bg-transparent text-white font-mono text-sm outline-none"
+                  />
+                  <button
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(recruitmentShareUrl);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="bg-white text-purple-600 p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                    title={intl.formatMessage({ id: 'common.copy', defaultMessage: 'Copier' })}
+                  >
+                    {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                  </button>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                  <a
+                    href={recruitmentShareUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-white text-purple-600 font-semibold py-3 px-4 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Share2 className="w-5 h-5" />
+                    <FormattedMessage id="influencer.recruitment.viewInvitationPage" defaultMessage="Voir la page d'invitation" />
+                  </a>
+                  <button
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(recruitmentShareUrl);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="flex-1 bg-white/20 backdrop-blur-sm text-white font-semibold py-3 px-4 rounded-lg hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    {copied ? (
+                      <FormattedMessage id="common.copied" defaultMessage="Copié !" />
+                    ) : (
+                      <FormattedMessage id="common.copy" defaultMessage="Copier le lien" />
+                    )}
+                  </button>
+                </div>
+
+                <p className="text-purple-100 text-sm">
+                  <FormattedMessage
+                    id="influencer.referrals.shareLinkDesc"
+                    defaultMessage="Partagez ce lien pour recruter des prestataires et gagner des commissions sur leurs appels."
+                  />
+                </p>
               </div>
             )}
 

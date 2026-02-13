@@ -2,7 +2,7 @@
  * Blogger Recruitment Service
  *
  * Harmonized recruitment commission system (mirrors GroupAdmin):
- * $5 ONE-TIME when the recruited blogger reaches $50 in client earnings.
+ * $50 ONE-TIME when the recruited blogger reaches $200 in client earnings (direct commissions only).
  *
  * Uses atomic Firestore transaction to prevent double payment.
  */
@@ -14,7 +14,7 @@ import { getBloggerConfigCached } from "../utils/bloggerConfigService";
 
 /**
  * Check if a recruited blogger has reached the earning threshold
- * and pay the recruiter a one-time $5 commission.
+ * and pay the recruiter a one-time $50 commission.
  *
  * Should be called after each client_referral commission is created.
  */
@@ -85,7 +85,7 @@ export async function checkAndPayRecruitmentCommission(bloggerId: string): Promi
     // 5. Atomic transaction: mark recruit as paid + create commission
     const recruitRef = recruitDoc.ref;
     const recruiterRef = db.collection("bloggers").doc(blogger.recruitedBy);
-    const amount = 500; // $5 fixed
+    const amount = 5000; // $50 fixed
 
     await db.runTransaction(async (tx) => {
       // Re-read inside transaction to guard against concurrent writes

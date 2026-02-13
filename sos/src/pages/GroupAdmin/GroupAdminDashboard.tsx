@@ -29,11 +29,6 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import {
-  GroupAdmin,
-  GroupAdminCommission,
-  GroupAdminRecruit,
-  GroupAdminNotification,
-  GroupAdminLeaderboardEntry,
   GroupAdminDashboardResponse,
   formatGroupAdminAmount,
   getGroupAdminAffiliateLink,

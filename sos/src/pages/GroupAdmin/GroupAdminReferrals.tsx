@@ -101,16 +101,47 @@ const GroupAdminReferrals: React.FC = () => {
                 type="text"
                 readOnly
                 value={recruitmentLink}
-                className="flex-1 bg-transparent text-white font-mono outline-none"
+                className="flex-1 bg-transparent text-white font-mono text-sm outline-none"
               />
               <button
                 onClick={copyLink}
-                className="bg-white text-purple-600 p-2 rounded-lg hover:bg-gray-100"
+                className="bg-white text-purple-600 p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                title={intl.formatMessage({ id: 'groupAdmin.referrals.copyLink', defaultMessage: 'Copy link' })}
               >
                 {copied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
               </button>
             </div>
-            <p className="text-purple-100">
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-4">
+              <a
+                href={recruitmentLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 bg-white text-purple-600 font-semibold py-3 px-4 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-5 h-5" />
+                <FormattedMessage id="groupAdmin.referrals.viewInvitationPage" defaultMessage="View Invitation Page" />
+              </a>
+              <button
+                onClick={copyLink}
+                className="flex-1 bg-white/20 backdrop-blur-sm text-white font-semibold py-3 px-4 rounded-lg hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+              >
+                {copied ? (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    <FormattedMessage id="groupAdmin.referrals.linkCopied" defaultMessage="Link Copied!" />
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-5 h-5" />
+                    <FormattedMessage id="groupAdmin.referrals.copyLinkButton" defaultMessage="Copy Link" />
+                  </>
+                )}
+              </button>
+            </div>
+
+            <p className="text-purple-100 text-sm">
               <FormattedMessage id="groupAdmin.referrals.shareLinkDesc" defaultMessage="Share this link with other community/group admins. Earn $5 when your recruit reaches $50 in earnings." />
             </p>
           </div>

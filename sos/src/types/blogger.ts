@@ -999,3 +999,28 @@ export const PROMO_WIDGET_BUTTON_PRESETS: {
     },
   },
 ];
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get affiliate link for client referrals (blogger referring clients)
+ */
+export function getBloggerAffiliateLink(affiliateCode: string): string {
+  return `https://sos-expat.com?ref=${affiliateCode}`;
+}
+
+/**
+ * Get recruitment link for blogger-to-blogger referrals
+ */
+export function getBloggerRecruitmentLink(affiliateCode: string): string {
+  return `https://sos-expat.com/blogger/inscription?ref=${affiliateCode}`;
+}
+
+/**
+ * Format amount in cents to display currency
+ */
+export function formatBloggerAmount(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}

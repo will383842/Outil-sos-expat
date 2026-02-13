@@ -120,7 +120,7 @@ const AdminBloggerDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   const [blogger, setBlogger] = useState<Blogger | null>(null);
   const [commissions, setCommissions] = useState<Commission[]>([]);

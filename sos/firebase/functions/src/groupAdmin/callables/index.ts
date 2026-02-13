@@ -10,6 +10,7 @@ export { getGroupAdminNotifications } from "./getGroupAdminNotifications";
 export { getGroupAdminLeaderboard } from "./getGroupAdminLeaderboard";
 export { updateGroupAdminProfile } from "./updateGroupAdminProfile";
 export { requestGroupAdminWithdrawal } from "./requestWithdrawal";
+export { getGroupAdminRecruits } from "./getGroupAdminRecruits";
 
 // Resource Callables
 export {

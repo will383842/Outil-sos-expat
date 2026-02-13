@@ -7,8 +7,6 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  GroupAdminPaymentMethod,
-  GroupAdminPaymentDetails,
   RequestWithdrawalRequest,
 } from '@/types/groupAdmin';
 

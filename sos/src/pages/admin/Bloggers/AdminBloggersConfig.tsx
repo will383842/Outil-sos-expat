@@ -70,7 +70,7 @@ const DEFAULT_CONFIG: BloggerConfig = {
 
 const AdminBloggersConfig: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   const [config, setConfig] = useState<BloggerConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);

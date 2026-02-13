@@ -175,9 +175,12 @@ const BloggerTelegramOnboarding = lazy(() => import('./pages/Blogger/BloggerTele
 const BloggerDashboard = lazy(() => import('./pages/Blogger/BloggerDashboard'));
 const BloggerEarnings = lazy(() => import('./pages/Blogger/BloggerEarnings'));
 const BloggerReferrals = lazy(() => import('./pages/Blogger/BloggerReferrals'));
+const BloggerBloggerRecruitment = lazy(() => import('./pages/Blogger/BloggerBloggerRecruitment'));
 const BloggerLeaderboard = lazy(() => import('./pages/Blogger/BloggerLeaderboard'));
 const BloggerPayments = lazy(() => import('./pages/Blogger/BloggerPayments'));
 const BloggerResources = lazy(() => import('./pages/Blogger/BloggerResources'));
+const BloggerGuide = lazy(() => import('./pages/Blogger/BloggerGuide'));
+const BloggerWidgets = lazy(() => import('./pages/Blogger/BloggerWidgets'));
 const BloggerProfile = lazy(() => import('./pages/Blogger/BloggerProfile'));
 const BloggerSuspended = lazy(() => import('./pages/Blogger/BloggerSuspended'));
 
@@ -190,6 +193,7 @@ const GroupAdminResources = lazy(() => import('./pages/GroupAdmin/GroupAdminReso
 const GroupAdminPosts = lazy(() => import('./pages/GroupAdmin/GroupAdminPosts'));
 const GroupAdminPayments = lazy(() => import('./pages/GroupAdmin/GroupAdminPayments'));
 const GroupAdminReferrals = lazy(() => import('./pages/GroupAdmin/GroupAdminReferrals'));
+const GroupAdminGroupAdminRecruitment = lazy(() => import('./pages/GroupAdmin/GroupAdminGroupAdminRecruitment'));
 const GroupAdminLeaderboard = lazy(() => import('./pages/GroupAdmin/GroupAdminLeaderboard'));
 const GroupAdminProfile = lazy(() => import('./pages/GroupAdmin/GroupAdminProfile'));
 const GroupAdminSuspended = lazy(() => import('./pages/GroupAdmin/GroupAdminSuspended'));
@@ -393,9 +397,12 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/blogger/tableau-de-bord", component: BloggerDashboard, protected: true, role: 'blogger', translated: "blogger-dashboard" },
   { path: "/blogger/gains", component: BloggerEarnings, protected: true, role: 'blogger', translated: "blogger-earnings" },
   { path: "/blogger/filleuls", component: BloggerReferrals, protected: true, role: 'blogger', translated: "blogger-referrals" },
+  { path: "/blogger/parrainage-blogueurs", component: BloggerBloggerRecruitment, protected: true, role: 'blogger', translated: "blogger-blogger-recruitment" },
   { path: "/blogger/classement", component: BloggerLeaderboard, protected: true, role: 'blogger', translated: "blogger-leaderboard" },
   { path: "/blogger/paiements", component: BloggerPayments, protected: true, role: 'blogger', translated: "blogger-payments" },
   { path: "/blogger/ressources", component: BloggerResources, protected: true, role: 'blogger', translated: "blogger-resources" },
+  { path: "/blogger/guide", component: BloggerGuide, protected: true, role: 'blogger', translated: "blogger-guide" },
+  { path: "/blogger/widgets", component: BloggerWidgets, protected: true, role: 'blogger', translated: "blogger-widgets" },
   { path: "/blogger/profil", component: BloggerProfile, protected: true, role: 'blogger', translated: "blogger-profile" },
   { path: "/blogger/suspendu", component: BloggerSuspended, protected: true, role: 'blogger', translated: "blogger-suspended" },
 
@@ -411,6 +418,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/group-admin/posts", component: GroupAdminPosts, protected: true, role: 'groupAdmin', translated: "groupadmin-posts" },
   { path: "/group-admin/paiements", component: GroupAdminPayments, protected: true, role: 'groupAdmin', translated: "groupadmin-payments" },
   { path: "/group-admin/filleuls", component: GroupAdminReferrals, protected: true, role: 'groupAdmin', translated: "groupadmin-referrals" },
+  { path: "/group-admin/parrainage-admins", component: GroupAdminGroupAdminRecruitment, protected: true, role: 'groupAdmin', translated: "groupadmin-admin-recruitment" },
   { path: "/group-admin/classement", component: GroupAdminLeaderboard, protected: true, role: 'groupAdmin', translated: "groupadmin-leaderboard" },
   { path: "/group-admin/profil", component: GroupAdminProfile, protected: true, role: 'groupAdmin', translated: "groupadmin-profile" },
   { path: "/group-admin/suspendu", component: GroupAdminSuspended, protected: true, role: 'groupAdmin', translated: "groupadmin-suspended" },

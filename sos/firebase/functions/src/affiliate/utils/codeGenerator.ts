@@ -175,11 +175,11 @@ export function normalizeAffiliateCode(code: string): string {
  * Resolve an affiliate code to a user ID
  *
  * @param code Affiliate code to resolve
- * @returns User ID or null if not found
+ * @returns User ID, email, and actor type or null if not found
  */
 export async function resolveAffiliateCode(
   code: string
-): Promise<{ userId: string; email: string } | null> {
+): Promise<{ userId: string; email: string; actorType?: string } | null> {
   if (!isValidAffiliateCode(code)) {
     logger.warn(`[AffiliateCode] Invalid code format: ${code}`);
     return null;
@@ -188,25 +188,68 @@ export async function resolveAffiliateCode(
   const normalizedCode = normalizeAffiliateCode(code);
   const db = getFirestore();
 
-  // Query users by affiliate code
-  const querySnapshot = await db
+  // 1. First try: Generic affiliate code (default system)
+  let querySnapshot = await db
     .collection("users")
     .where("affiliateCode", "==", normalizedCode)
     .limit(1)
     .get();
 
-  if (querySnapshot.empty) {
-    logger.info(`[AffiliateCode] Code not found: ${normalizedCode}`);
-    return null;
+  if (!querySnapshot.empty) {
+    const doc = querySnapshot.docs[0];
+    const data = doc.data();
+    logger.info(`[AffiliateCode] Code resolved (generic): ${normalizedCode}`);
+    return {
+      userId: doc.id,
+      email: data.email || "",
+      actorType: "generic",
+    };
   }
 
-  const doc = querySnapshot.docs[0];
-  const data = doc.data();
+  // 2. Second try: Blogger/Influencer/Chatter/GroupAdmin client code
+  querySnapshot = await db
+    .collection("users")
+    .where("affiliateCodeClient", "==", normalizedCode)
+    .limit(1)
+    .get();
 
-  return {
-    userId: doc.id,
-    email: data.email || "",
-  };
+  if (!querySnapshot.empty) {
+    const doc = querySnapshot.docs[0];
+    const data = doc.data();
+    const role = data.role || "";
+    logger.info(`[AffiliateCode] Code resolved (client code): ${normalizedCode}`, {
+      role,
+    });
+    return {
+      userId: doc.id,
+      email: data.email || "",
+      actorType: role, // "blogger", "influencer", "chatter", "groupAdmin"
+    };
+  }
+
+  // 3. Third try: Recruitment code (for provider recruitment)
+  querySnapshot = await db
+    .collection("users")
+    .where("affiliateCodeRecruitment", "==", normalizedCode)
+    .limit(1)
+    .get();
+
+  if (!querySnapshot.empty) {
+    const doc = querySnapshot.docs[0];
+    const data = doc.data();
+    const role = data.role || "";
+    logger.info(`[AffiliateCode] Code resolved (recruitment code): ${normalizedCode}`, {
+      role,
+    });
+    return {
+      userId: doc.id,
+      email: data.email || "",
+      actorType: `${role}_recruitment`, // "blogger_recruitment", etc.
+    };
+  }
+
+  logger.info(`[AffiliateCode] Code not found: ${normalizedCode}`);
+  return null;
 }
 
 /**

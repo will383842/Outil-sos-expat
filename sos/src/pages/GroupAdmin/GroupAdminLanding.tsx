@@ -242,61 +242,154 @@ const GroupAdminLanding: React.FC = () => {
               <FormattedMessage id="groupAdmin.landing.badge" defaultMessage="For Group & Community Admins" />
             </div>
 
-            {/* Headline ULTRA-VENDEUR */}
+            {/* Headline ULTRA-VENDEUR avec focus COMMUNAUTÉ */}
             <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
-              <span><FormattedMessage id="groupAdmin.landing.hero.new.line1" defaultMessage="Gagnez jusqu'à" /></span>{' '}
-              <span className="text-transparent bg-clip-text from-blue-400 via-indigo-400 to-purple-400">
-                <FormattedMessage id="groupAdmin.landing.hero.new.amount" defaultMessage="5000$+/mois" />
+              <span className="text-gray-200"><FormattedMessage id="groupAdmin.landing.hero.new.line1" defaultMessage="Transformez votre communauté en" /></span>
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400 animate-pulse-glow-blue">
+                <FormattedMessage id="groupAdmin.landing.hero.new.amount" defaultMessage="MACHINE À CASH" />
               </span>
               <br />
-              <span className="text-gray-200"><FormattedMessage id="groupAdmin.landing.hero.new.line2" defaultMessage="avec votre groupe" /></span>
+              <span className="text-xl sm:text-3xl lg:text-4xl text-amber-400"><FormattedMessage id="groupAdmin.landing.hero.new.line2" defaultMessage="5000-15000$/mois possibles" /></span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-base sm:text-lg mb-5 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
-              <FormattedMessage
-                id="groupAdmin.landing.hero.new.subtitle"
-                defaultMessage="Monétisez votre communauté Facebook, Discord, WhatsApp ou forum. Vos membres économisent 5$/appel, vous gagnez 10$/appel. Win-win !"
-              />
-            </p>
-
-            {/* 3 sources de revenus */}
-            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-4xl mx-auto">
-              <p className="text-center sm:text-base mb-4">
-                <FormattedMessage id="groupAdmin.landing.hero.sources" defaultMessage="3 sources de revenus illimitées :" />
+            {/* Subtitle avec PREUVE SOCIALE RÉALISTE */}
+            <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-2xl p-4 sm:p-5 mb-5 sm:mb-8 max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg mb-3 leading-relaxed font-semibold text-green-300">
+                <FormattedMessage
+                  id="groupAdmin.landing.hero.new.subtitle"
+                  defaultMessage="📱 Votre communauté = votre mine d'or ! Plus elle est active, plus vous gagnez."
+                />
               </p>
-              <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
-                {/* Source 1 : Appels membres */}
-                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black mb-1">10$</div>
-                  <div className="text-xs sm:text-sm"><FormattedMessage id="groupAdmin.landing.hero.source1" defaultMessage="par appel membre" /></div>
+              <div className="grid sm:grid-cols-2 gap-3 text-sm sm:text-base">
+                <div className="bg-white/10 rounded-lg p-2 sm:p-3">
+                  <div className="font-bold text-amber-400 mb-1">
+                    <FormattedMessage id="groupAdmin.landing.hero.example.small" defaultMessage="Groupe moyen (5K membres)" />
+                  </div>
+                  <div className="text-white/90">
+                    <FormattedMessage id="groupAdmin.landing.hero.example.small.calc" defaultMessage="50-100 appels/mois = 500-1000$" />
+                  </div>
+                </div>
+                <div className="bg-white/10 rounded-lg p-2 sm:p-3">
+                  <div className="font-bold text-green-400 mb-1">
+                    <FormattedMessage id="groupAdmin.landing.hero.example.large" defaultMessage="Gros groupe (20K+ membres)" />
+                  </div>
+                  <div className="text-white/90">
+                    <FormattedMessage id="groupAdmin.landing.hero.example.large.calc" defaultMessage="200-500 appels/mois = 2000-5000$" />
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm sm:text-base text-white/90 mt-3 text-center">
+                <FormattedMessage
+                  id="groupAdmin.landing.hero.new.subtitle2"
+                  defaultMessage="💡 Vos membres économisent 5$/appel = Win-win total !"
+                />
+              </p>
+            </div>
+
+            {/* 3 sources de revenus ULTRA VENDEUSES */}
+            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-2 border-amber-500/30 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-5xl mx-auto shadow-2xl">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <span className="text-2xl" aria-hidden="true">💰</span>
+                <p className="text-center text-lg sm:text-xl font-black text-amber-400">
+                  <FormattedMessage id="groupAdmin.landing.hero.sources" defaultMessage="3 SOURCES DE REVENUS ILLIMITÉES" />
+                </p>
+                <span className="text-2xl" aria-hidden="true">💰</span>
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-3 sm:gap-4 mb-5">
+                {/* Source 1 : Appels membres - VALORISÉ */}
+                <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/15 border-2 border-green-500/30 rounded-xl p-4 sm:p-5 text-center hover:scale-105 transition-transform">
+                  <div className="text-xs uppercase font-bold text-green-400 mb-2">
+                    <FormattedMessage id="groupAdmin.landing.hero.source1.label" defaultMessage="📱 VOS MEMBRES" />
+                  </div>
+                  <div className="text-3xl sm:text-4xl font-black text-green-400 mb-1">300-3000$</div>
+                  <div className="text-sm font-semibold mb-2">
+                    <FormattedMessage id="groupAdmin.landing.hero.source1.subtitle" defaultMessage="par mois" />
+                  </div>
+                  <div className="text-xs opacity-80">
+                    <FormattedMessage id="groupAdmin.landing.hero.source1.detail" defaultMessage="10$/appel × votre trafic" />
+                  </div>
                 </div>
 
-                {/* Source 2 : Recruter autres admins */}
-                <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black mb-1">500-2000$</div>
-                  <div className="text-xs sm:text-sm"><FormattedMessage id="groupAdmin.landing.hero.source2" defaultMessage="équipe d'admins" /></div>
+                {/* Source 2 : Recruter autres admins - VALORISÉ */}
+                <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/15 border-2 border-blue-500/30 rounded-xl p-4 sm:p-5 text-center hover:scale-105 transition-transform">
+                  <div className="text-xs uppercase font-bold text-blue-400 mb-2">
+                    <FormattedMessage id="groupAdmin.landing.hero.source2.label" defaultMessage="👥 ÉQUIPE D'ADMINS" />
+                  </div>
+                  <div className="text-3xl sm:text-4xl font-black text-blue-400 mb-1">500-5000$</div>
+                  <div className="text-sm font-semibold mb-2">
+                    <FormattedMessage id="groupAdmin.landing.hero.source2.subtitle" defaultMessage="bonus récurrents" />
+                  </div>
+                  <div className="text-xs opacity-80">
+                    <FormattedMessage id="groupAdmin.landing.hero.source2.detail" defaultMessage="50$ × chaque admin actif" />
+                  </div>
                 </div>
 
-                {/* Source 3 : Partenaires (Avocats/Aidants) */}
-                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border rounded-xl p-3 sm:p-4 text-center relative">
-                  <span className="absolute -top-2 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full">
-                    <FormattedMessage id="groupAdmin.landing.hero.hot" defaultMessage="🔥 HOT" />
+                {/* Source 3 : Partenaires (Avocats/Aidants) - AVEC TAG HOT */}
+                <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/15 border-2 border-purple-500/30 rounded-xl p-4 sm:p-5 text-center relative hover:scale-105 transition-transform">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg animate-pulse">
+                    <FormattedMessage id="groupAdmin.landing.hero.hot" defaultMessage="🔥 PASSIF" />
                   </span>
-                  <div className="text-2xl sm:text-3xl font-black mb-1">1500$</div>
-                  <div className="text-xs sm:text-sm"><FormattedMessage id="groupAdmin.landing.hero.source3" defaultMessage="avec 10 partenaires" /></div>
+                  <div className="text-xs uppercase font-bold text-purple-400 mb-2 mt-1">
+                    <FormattedMessage id="groupAdmin.landing.hero.source3.label" defaultMessage="⚖️ AVOCATS/AIDANTS" />
+                  </div>
+                  <div className="text-3xl sm:text-4xl font-black text-purple-400 mb-1">900-9000$</div>
+                  <div className="text-sm font-semibold mb-2">
+                    <FormattedMessage id="groupAdmin.landing.hero.source3.subtitle" defaultMessage="100% passifs" />
+                  </div>
+                  <div className="text-xs opacity-80">
+                    <FormattedMessage id="groupAdmin.landing.hero.source3.detail" defaultMessage="5$/appel × partenaires" />
+                  </div>
                 </div>
               </div>
 
-              {/* Exemple partenaire */}
-              <div className="mt-4 pt-4 border-t text-center">
-                <p className="text-xs sm:text-sm">
-                  <FormattedMessage
-                    id="groupAdmin.landing.hero.partnerExample"
-                    defaultMessage="💡 1 partenaire (avocat/aidant) = 30 appels/mois × 5$ × 6 mois = {total} passifs !"
-                    values={{ total: <span className="text-purple-400 font-bold">900$</span> }}
-                  />
-                </p>
+              {/* EXEMPLES CONCRETS ULTRA VENDEURS */}
+              <div className="bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-500/30 rounded-xl p-4">
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {/* Exemple 1 : Équipe d'admins */}
+                  <div className="bg-black/30 rounded-lg p-3 border border-blue-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">👥</span>
+                      <span className="font-bold text-sm text-blue-400">
+                        <FormattedMessage id="groupAdmin.landing.hero.example1.title" defaultMessage="Équipe de 20 admins" />
+                      </span>
+                    </div>
+                    <div className="text-xs opacity-90 mb-1">
+                      <FormattedMessage id="groupAdmin.landing.hero.example1.calc" defaultMessage="20 admins × 50$ bonus" />
+                    </div>
+                    <div className="text-2xl font-black text-green-400">
+                      = 1000$ <span className="text-sm font-normal text-white/80">
+                        <FormattedMessage id="groupAdmin.landing.hero.example1.frequency" defaultMessage="bonus" />
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Exemple 2 : Partenaires passifs */}
+                  <div className="bg-black/30 rounded-lg p-3 border border-purple-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">⚖️</span>
+                      <span className="font-bold text-sm text-purple-400">
+                        <FormattedMessage id="groupAdmin.landing.hero.example2.title" defaultMessage="10 avocats partenaires" />
+                      </span>
+                    </div>
+                    <div className="text-xs opacity-90 mb-1">
+                      <FormattedMessage id="groupAdmin.landing.hero.example2.calc" defaultMessage="300 appels/mois × 5$" />
+                    </div>
+                    <div className="text-2xl font-black text-green-400">
+                      = 1500$ <span className="text-sm font-normal text-white/80">
+                        <FormattedMessage id="groupAdmin.landing.hero.example2.frequency" defaultMessage="/mois passifs" />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Message motivant */}
+                <div className="mt-3 text-center">
+                  <p className="text-sm font-bold text-amber-300">
+                    <FormattedMessage id="groupAdmin.landing.hero.motivation" defaultMessage="🎯 Combinez les 3 sources = 5000-15000$/mois possibles !" />
+                  </p>
+                </div>
               </div>
             </div>
 

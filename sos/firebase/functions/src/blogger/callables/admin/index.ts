@@ -1037,3 +1037,703 @@ export const adminGetBloggerLeaderboard = onCall(
     }
   }
 );
+
+// ============================================================================
+// GET RESOURCES (for Admin Console)
+// ============================================================================
+
+export const adminGetBloggerResources = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ files: unknown[]; texts: unknown[] }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const db = getFirestore();
+
+    try {
+      const [filesSnapshot, textsSnapshot] = await Promise.all([
+        db.collection("blogger_resources").orderBy("order", "asc").get(),
+        db.collection("blogger_resource_texts").orderBy("order", "asc").get(),
+      ]);
+
+      const files = filesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
+          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || "",
+        };
+      });
+
+      const texts = textsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
+          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || "",
+        };
+      });
+
+      return { files, texts };
+    } catch (error) {
+      logger.error("[adminGetBloggerResources] Error", { error });
+      throw new HttpsError("internal", "Failed to get resources");
+    }
+  }
+);
+
+// ============================================================================
+// GET GUIDE (for Admin Console)
+// ============================================================================
+
+export const adminGetBloggerGuide = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{
+    templates: unknown[];
+    copyTexts: unknown[];
+    bestPractices: unknown[];
+  }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const db = getFirestore();
+
+    try {
+      const [templatesSnapshot, copyTextsSnapshot, bestPracticesSnapshot] = await Promise.all([
+        db.collection("blogger_guide_templates").orderBy("order", "asc").get(),
+        db.collection("blogger_guide_copy_texts").orderBy("order", "asc").get(),
+        db.collection("blogger_guide_best_practices").orderBy("order", "asc").get(),
+      ]);
+
+      const templates = templatesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
+          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || "",
+        };
+      });
+
+      const copyTexts = copyTextsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
+          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || "",
+        };
+      });
+
+      const bestPractices = bestPracticesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
+          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || "",
+        };
+      });
+
+      return { templates, copyTexts, bestPractices };
+    } catch (error) {
+      logger.error("[adminGetBloggerGuide] Error", { error });
+      throw new HttpsError("internal", "Failed to get guide");
+    }
+  }
+);
+
+// ============================================================================
+// SAVE RESOURCE FILE (Create OR Update)
+// ============================================================================
+
+export const adminSaveBloggerResourceFile = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ success: boolean; resourceId: string }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { resource, isNew } = request.data as { resource: any; isNew: boolean };
+    const db = getFirestore();
+
+    try {
+      const now = Timestamp.now();
+
+      if (isNew) {
+        // Create new resource
+        const resourceRef = db.collection("blogger_resources").doc();
+        const newResource: BloggerResource = {
+          id: resourceRef.id,
+          category: resource.category,
+          type: resource.type,
+          name: resource.name,
+          nameTranslations: resource.nameTranslations,
+          description: resource.description,
+          descriptionTranslations: resource.descriptionTranslations,
+          fileUrl: resource.fileUrl,
+          thumbnailUrl: resource.thumbnailUrl,
+          fileSize: resource.fileSize,
+          fileFormat: resource.fileFormat,
+          dimensions: resource.dimensions,
+          isActive: resource.isActive !== false,
+          order: resource.order || 0,
+          downloadCount: 0,
+          createdAt: now,
+          updatedAt: now,
+          createdBy: request.auth.uid,
+        };
+
+        await resourceRef.set(newResource);
+        return { success: true, resourceId: resourceRef.id };
+      } else {
+        // Update existing resource
+        if (!resource.id) {
+          throw new HttpsError("invalid-argument", "Resource ID is required for updates");
+        }
+
+        await db.collection("blogger_resources").doc(resource.id).update({
+          category: resource.category,
+          type: resource.type,
+          name: resource.name,
+          nameTranslations: resource.nameTranslations,
+          description: resource.description,
+          descriptionTranslations: resource.descriptionTranslations,
+          fileUrl: resource.fileUrl,
+          thumbnailUrl: resource.thumbnailUrl,
+          fileSize: resource.fileSize,
+          fileFormat: resource.fileFormat,
+          dimensions: resource.dimensions,
+          isActive: resource.isActive,
+          order: resource.order,
+          updatedAt: now,
+        });
+
+        return { success: true, resourceId: resource.id };
+      }
+    } catch (error) {
+      logger.error("[adminSaveBloggerResourceFile] Error", { error });
+      throw new HttpsError("internal", "Failed to save resource file");
+    }
+  }
+);
+
+// ============================================================================
+// SAVE RESOURCE TEXT (Create OR Update)
+// ============================================================================
+
+export const adminSaveBloggerResourceText = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ success: boolean; resourceId: string }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { resource, isNew } = request.data as { resource: any; isNew: boolean };
+    const db = getFirestore();
+
+    try {
+      const now = Timestamp.now();
+
+      if (isNew) {
+        // Create new resource text
+        const textRef = db.collection("blogger_resource_texts").doc();
+        const newText: BloggerResourceText = {
+          id: textRef.id,
+          category: resource.category,
+          type: resource.type,
+          title: resource.title,
+          titleTranslations: resource.titleTranslations,
+          content: resource.content,
+          contentTranslations: resource.contentTranslations,
+          isActive: resource.isActive !== false,
+          order: resource.order || 0,
+          copyCount: 0,
+          createdAt: now,
+          updatedAt: now,
+          createdBy: request.auth.uid,
+        };
+
+        await textRef.set(newText);
+        return { success: true, resourceId: textRef.id };
+      } else {
+        // Update existing resource text
+        if (!resource.id) {
+          throw new HttpsError("invalid-argument", "Resource ID is required for updates");
+        }
+
+        await db.collection("blogger_resource_texts").doc(resource.id).update({
+          category: resource.category,
+          type: resource.type,
+          title: resource.title,
+          titleTranslations: resource.titleTranslations,
+          content: resource.content,
+          contentTranslations: resource.contentTranslations,
+          isActive: resource.isActive,
+          order: resource.order,
+          updatedAt: now,
+        });
+
+        return { success: true, resourceId: resource.id };
+      }
+    } catch (error) {
+      logger.error("[adminSaveBloggerResourceText] Error", { error });
+      throw new HttpsError("internal", "Failed to save resource text");
+    }
+  }
+);
+
+// ============================================================================
+// DELETE RESOURCE FILE
+// ============================================================================
+
+export const adminDeleteBloggerResourceFile = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ success: boolean }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { resourceId } = request.data as { resourceId: string };
+    const db = getFirestore();
+
+    if (!resourceId) {
+      throw new HttpsError("invalid-argument", "Resource ID is required");
+    }
+
+    try {
+      await db.collection("blogger_resources").doc(resourceId).delete();
+      return { success: true };
+    } catch (error) {
+      logger.error("[adminDeleteBloggerResourceFile] Error", { error });
+      throw new HttpsError("internal", "Failed to delete resource file");
+    }
+  }
+);
+
+// ============================================================================
+// DELETE RESOURCE TEXT
+// ============================================================================
+
+export const adminDeleteBloggerResourceText = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ success: boolean }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { resourceId } = request.data as { resourceId: string };
+    const db = getFirestore();
+
+    if (!resourceId) {
+      throw new HttpsError("invalid-argument", "Resource ID is required");
+    }
+
+    try {
+      await db.collection("blogger_resource_texts").doc(resourceId).delete();
+      return { success: true };
+    } catch (error) {
+      logger.error("[adminDeleteBloggerResourceText] Error", { error });
+      throw new HttpsError("internal", "Failed to delete resource text");
+    }
+  }
+);
+
+// ============================================================================
+// SAVE GUIDE TEMPLATE (Create OR Update)
+// ============================================================================
+
+export const adminSaveBloggerGuideTemplate = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ success: boolean; templateId: string }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { item, isNew } = request.data as { item: any; isNew: boolean };
+    const db = getFirestore();
+
+    try {
+      const now = Timestamp.now();
+
+      if (isNew) {
+        // Create new template
+        const templateRef = db.collection("blogger_guide_templates").doc();
+        const newTemplate: BloggerGuideTemplate = {
+          id: templateRef.id,
+          name: item.titleFr || item.name || "",
+          nameTranslations: {
+            en: item.titleEn || item.nameTranslations?.en || "",
+          },
+          description: item.descriptionFr || item.description,
+          descriptionTranslations: {
+            en: item.descriptionEn || item.descriptionTranslations?.en,
+          },
+          content: item.contentFr || item.content || "",
+          contentTranslations: {
+            en: item.contentEn || item.contentTranslations?.en || "",
+          },
+          targetAudience: item.targetAudience || item.category,
+          recommendedWordCount: item.recommendedWordCount,
+          seoKeywords: item.seoKeywords,
+          isActive: item.isActive !== false,
+          order: item.order || 0,
+          usageCount: 0,
+          createdAt: now,
+          updatedAt: now,
+          createdBy: request.auth.uid,
+        };
+
+        await templateRef.set(newTemplate);
+        return { success: true, templateId: templateRef.id };
+      } else {
+        // Update existing template
+        if (!item.id) {
+          throw new HttpsError("invalid-argument", "Template ID is required for updates");
+        }
+
+        await db.collection("blogger_guide_templates").doc(item.id).update({
+          name: item.titleFr || item.name,
+          nameTranslations: {
+            en: item.titleEn || item.nameTranslations?.en || "",
+          },
+          description: item.descriptionFr || item.description,
+          descriptionTranslations: {
+            en: item.descriptionEn || item.descriptionTranslations?.en,
+          },
+          content: item.contentFr || item.content,
+          contentTranslations: {
+            en: item.contentEn || item.contentTranslations?.en || "",
+          },
+          targetAudience: item.targetAudience || item.category,
+          recommendedWordCount: item.recommendedWordCount,
+          seoKeywords: item.seoKeywords,
+          isActive: item.isActive,
+          order: item.order,
+          updatedAt: now,
+        });
+
+        return { success: true, templateId: item.id };
+      }
+    } catch (error) {
+      logger.error("[adminSaveBloggerGuideTemplate] Error", { error });
+      throw new HttpsError("internal", "Failed to save guide template");
+    }
+  }
+);
+
+// ============================================================================
+// SAVE GUIDE COPY TEXT (Create OR Update)
+// ============================================================================
+
+export const adminSaveBloggerGuideCopyText = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ success: boolean; textId: string }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { item, isNew } = request.data as { item: any; isNew: boolean };
+    const db = getFirestore();
+
+    try {
+      const now = Timestamp.now();
+
+      if (isNew) {
+        // Create new copy text
+        const textRef = db.collection("blogger_guide_copy_texts").doc();
+        const newText: BloggerGuideCopyText = {
+          id: textRef.id,
+          name: item.nameFr || item.name || "",
+          nameTranslations: {
+            en: item.nameEn || item.nameTranslations?.en || "",
+          },
+          content: item.textFr || item.content || "",
+          contentTranslations: {
+            en: item.textEn || item.contentTranslations?.en || "",
+          },
+          category: item.category || item.context,
+          isActive: item.isActive !== false,
+          order: item.order || 0,
+          copyCount: 0,
+          characterCount: (item.textFr || item.content || "").length,
+          createdAt: now,
+          updatedAt: now,
+          createdBy: request.auth.uid,
+        };
+
+        await textRef.set(newText);
+        return { success: true, textId: textRef.id };
+      } else {
+        // Update existing copy text
+        if (!item.id) {
+          throw new HttpsError("invalid-argument", "Text ID is required for updates");
+        }
+
+        await db.collection("blogger_guide_copy_texts").doc(item.id).update({
+          name: item.nameFr || item.name,
+          nameTranslations: {
+            en: item.nameEn || item.nameTranslations?.en || "",
+          },
+          content: item.textFr || item.content,
+          contentTranslations: {
+            en: item.textEn || item.contentTranslations?.en || "",
+          },
+          category: item.category || item.context,
+          isActive: item.isActive,
+          order: item.order,
+          updatedAt: now,
+        });
+
+        return { success: true, textId: item.id };
+      }
+    } catch (error) {
+      logger.error("[adminSaveBloggerGuideCopyText] Error", { error });
+      throw new HttpsError("internal", "Failed to save guide copy text");
+    }
+  }
+);
+
+// ============================================================================
+// SAVE GUIDE BEST PRACTICE (Create OR Update)
+// ============================================================================
+
+export const adminSaveBloggerGuideBestPractice = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ success: boolean; practiceId: string }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { item, isNew } = request.data as { item: any; isNew: boolean };
+    const db = getFirestore();
+
+    try {
+      const now = Timestamp.now();
+
+      if (isNew) {
+        // Create new best practice
+        const practiceRef = db.collection("blogger_guide_best_practices").doc();
+        const newPractice: BloggerGuideBestPractice = {
+          id: practiceRef.id,
+          title: item.titleFr || item.title || "",
+          titleTranslations: {
+            en: item.titleEn || item.titleTranslations?.en || "",
+          },
+          content: item.contentFr || item.content || "",
+          contentTranslations: {
+            en: item.contentEn || item.contentTranslations?.en || "",
+          },
+          category: item.category,
+          icon: item.icon,
+          isActive: item.isActive !== false,
+          order: item.order || 0,
+          createdAt: now,
+          updatedAt: now,
+          createdBy: request.auth.uid,
+        };
+
+        await practiceRef.set(newPractice);
+        return { success: true, practiceId: practiceRef.id };
+      } else {
+        // Update existing best practice
+        if (!item.id) {
+          throw new HttpsError("invalid-argument", "Practice ID is required for updates");
+        }
+
+        await db.collection("blogger_guide_best_practices").doc(item.id).update({
+          title: item.titleFr || item.title,
+          titleTranslations: {
+            en: item.titleEn || item.titleTranslations?.en || "",
+          },
+          content: item.contentFr || item.content,
+          contentTranslations: {
+            en: item.contentEn || item.contentTranslations?.en || "",
+          },
+          category: item.category,
+          icon: item.icon,
+          isActive: item.isActive,
+          order: item.order,
+          updatedAt: now,
+        });
+
+        return { success: true, practiceId: item.id };
+      }
+    } catch (error) {
+      logger.error("[adminSaveBloggerGuideBestPractice] Error", { error });
+      throw new HttpsError("internal", "Failed to save guide best practice");
+    }
+  }
+);
+
+// ============================================================================
+// DELETE GUIDE TEMPLATE
+// ============================================================================
+
+export const adminDeleteBloggerGuideTemplate = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ success: boolean }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { templateId } = request.data as { templateId: string };
+    const db = getFirestore();
+
+    if (!templateId) {
+      throw new HttpsError("invalid-argument", "Template ID is required");
+    }
+
+    try {
+      await db.collection("blogger_guide_templates").doc(templateId).delete();
+      return { success: true };
+    } catch (error) {
+      logger.error("[adminDeleteBloggerGuideTemplate] Error", { error });
+      throw new HttpsError("internal", "Failed to delete guide template");
+    }
+  }
+);
+
+// ============================================================================
+// DELETE GUIDE COPY TEXT
+// ============================================================================
+
+export const adminDeleteBloggerGuideCopyText = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ success: boolean }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { textId } = request.data as { textId: string };
+    const db = getFirestore();
+
+    if (!textId) {
+      throw new HttpsError("invalid-argument", "Text ID is required");
+    }
+
+    try {
+      await db.collection("blogger_guide_copy_texts").doc(textId).delete();
+      return { success: true };
+    } catch (error) {
+      logger.error("[adminDeleteBloggerGuideCopyText] Error", { error });
+      throw new HttpsError("internal", "Failed to delete guide copy text");
+    }
+  }
+);
+
+// ============================================================================
+// DELETE GUIDE BEST PRACTICE
+// ============================================================================
+
+export const adminDeleteBloggerGuideBestPractice = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  async (request): Promise<{ success: boolean }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { practiceId } = request.data as { practiceId: string };
+    const db = getFirestore();
+
+    if (!practiceId) {
+      throw new HttpsError("invalid-argument", "Practice ID is required");
+    }
+
+    try {
+      await db.collection("blogger_guide_best_practices").doc(practiceId).delete();
+      return { success: true };
+    } catch (error) {
+      logger.error("[adminDeleteBloggerGuideBestPractice] Error", { error });
+      throw new HttpsError("internal", "Failed to delete guide best practice");
+    }
+  }
+);

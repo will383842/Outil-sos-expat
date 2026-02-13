@@ -40,70 +40,72 @@ export function ReferralLinkCard({ variant = "full" }: ReferralLinkCardProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Link className="h-5 w-5" />
+    <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-6 text-white">
+      <div className="flex items-center gap-3 mb-4">
+        <Link className="w-6 h-6" />
+        <span className="font-bold">
           {t("chatter.referrals.yourReferralLink")}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Full link */}
-        <div>
-          <label className="text-sm font-medium mb-1 block">
-            {t("chatter.referrals.linkLabel")}
-          </label>
-          <div className="flex gap-2">
-            <Input
-              value={referralLink}
-              readOnly
-              className="font-mono text-sm flex-1"
-            />
-            <Button
-              variant={copied ? "default" : "outline"}
-              onClick={copyLink}
-              className="gap-2"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  {t("common.copied")}
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  {t("common.copy")}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        </span>
+      </div>
 
-        {/* Code only */}
-        <div>
-          <label className="text-sm font-medium mb-1 block">
-            {t("chatter.referrals.codeLabel")}
-          </label>
-          <div className="flex gap-2">
-            <div className="flex-1 px-4 py-2 bg-gray-100 rounded-md font-mono text-lg">
-              {referralCode}
-            </div>
-            <Button variant="outline" onClick={copyCode}>
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Open link */}
-        <Button
-          variant="outline"
-          className="w-full gap-2"
-          onClick={() => window.open(referralLink, "_blank")}
+      {/* Link input with quick copy */}
+      <div className="flex items-center gap-2 bg-white/10 rounded-lg p-3 mb-4">
+        <input
+          type="text"
+          readOnly
+          value={referralLink}
+          className="flex-1 bg-transparent text-white font-mono text-sm outline-none"
+        />
+        <button
+          onClick={copyLink}
+          className="bg-white text-purple-600 p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+          title={t("common.copy")}
         >
-          <ExternalLink className="h-4 w-4" />
-          {t("chatter.referrals.previewLink")}
-        </Button>
-      </CardContent>
-    </Card>
+          {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <a
+          href={referralLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 bg-white text-purple-600 font-semibold py-3 px-4 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
+        >
+          <ExternalLink className="w-5 h-5" />
+          {t("chatter.referrals.previewLink", "Voir la page d'invitation")}
+        </a>
+        <button
+          onClick={copyLink}
+          className="flex-1 bg-white/20 backdrop-blur-sm text-white font-semibold py-3 px-4 rounded-lg hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+        >
+          {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+          {copied ? t("common.copied", "Copié !") : t("common.copy", "Copier le lien")}
+        </button>
+      </div>
+
+      {/* Referral Code */}
+      <div className="bg-white/10 rounded-lg p-4">
+        <label className="text-purple-100 text-xs font-medium mb-2 block">
+          {t("chatter.referrals.codeLabel", "Votre code")}
+        </label>
+        <div className="flex gap-2">
+          <div className="flex-1 px-4 py-2 bg-white/20 rounded-md font-mono text-xl text-white font-bold">
+            {referralCode}
+          </div>
+          <button
+            onClick={copyCode}
+            className="bg-white text-purple-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Copy className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      <p className="text-purple-100 text-sm mt-4">
+        {t("chatter.referrals.shareLinkDesc", "Partagez ce lien pour inviter d'autres personnes et gagner des commissions.")}
+      </p>
+    </div>
   );
 }

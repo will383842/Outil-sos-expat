@@ -925,3 +925,28 @@ export interface ActivityFeedItem {
   createdAt: string; // ISO timestamp
   expiresAt: string; // TTL 24h
 }
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get affiliate link for client referrals (chatter referring clients)
+ */
+export function getChatterAffiliateLink(affiliateCode: string): string {
+  return `https://sos-expat.com?ref=${affiliateCode}`;
+}
+
+/**
+ * Get recruitment link for chatter-to-chatter referrals
+ */
+export function getChatterRecruitmentLink(affiliateCode: string): string {
+  return `https://sos-expat.com/chatter/inscription?ref=${affiliateCode}`;
+}
+
+/**
+ * Format amount in cents to display currency
+ */
+export function formatChatterAmount(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}

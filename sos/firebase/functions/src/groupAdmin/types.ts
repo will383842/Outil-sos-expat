@@ -72,7 +72,7 @@ export type GroupSizeTier =
  */
 export type GroupAdminCommissionType =
   | "client_referral"    // $10 per client booking
-  | "recruitment"        // $5 per recruited admin
+  | "recruitment"        // $50 per recruited admin
   | "manual_adjustment"; // Admin manual adjustment
 
 /**
@@ -968,13 +968,13 @@ export interface GroupAdminConfig {
   /** Client referral commission ($10 = 1000) */
   commissionClientAmount: number;
 
-  /** Recruitment commission ($5 = 500) */
+  /** Recruitment commission ($50 = 5000) */
   commissionRecruitmentAmount: number;
 
   /** Client discount amount in cents ($5 = 500) */
   clientDiscountAmount: number;
 
-  /** Minimum totalEarned (cents) a recruited admin must reach before recruiter gets $5 */
+  /** Minimum totalEarned (cents) a recruited admin must reach before recruiter gets $50 */
   recruitmentCommissionThreshold: number;
 
   /** Payment processing mode */
@@ -1027,9 +1027,9 @@ export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "u
 
   // All amounts in USD cents — fixed values, independent of call currency (EUR/USD/etc.)
   commissionClientAmount: 1000,        // $10 per client referral
-  commissionRecruitmentAmount: 500,    // $5 per recruited admin (paid once threshold met)
+  commissionRecruitmentAmount: 5000,    // $50 per recruited admin (paid once threshold met)
   clientDiscountAmount: 500,           // $5 discount for client
-  recruitmentCommissionThreshold: 5000, // $50 — recruited admin must earn this in commissions before recruiter gets $5
+  recruitmentCommissionThreshold: 20000, // $200 — recruited admin must earn this in commissions before recruiter gets $50
   paymentMode: "manual",               // manual | automatic
 
   recruitmentWindowMonths: 6,

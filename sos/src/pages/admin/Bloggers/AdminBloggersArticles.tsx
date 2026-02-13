@@ -70,7 +70,7 @@ interface EditingArticle {
 
 const AdminBloggersArticles: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);

@@ -115,7 +115,7 @@ type StatusFilter = 'all' | 'active' | 'suspended' | 'blocked';
 const AdminBloggersList: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
-  const functions = getFunctions(undefined, 'europe-west1');
+  const functions = getFunctions(undefined, 'europe-west2');
 
   // State
   const [bloggers, setBloggers] = useState<Blogger[]>([]);
