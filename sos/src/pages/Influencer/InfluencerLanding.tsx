@@ -254,10 +254,10 @@ const InfluencerLanding: React.FC = () => {
   ];
 
   const platforms = [
-    { name: 'YouTube', icon: '🎬', desc: intl.formatMessage({ id: 'influencer.platform.youtube', defaultMessage: 'Video content & tutorials' }), highlight: true },
-    { name: 'Instagram', icon: '📸', desc: intl.formatMessage({ id: 'influencer.platform.instagram', defaultMessage: 'Stories & Reels' }) },
-    { name: 'TikTok', icon: '🎵', desc: intl.formatMessage({ id: 'influencer.platform.tiktok', defaultMessage: 'Short-form videos' }) },
-    { name: intl.formatMessage({ id: 'influencer.platform.blog.name', defaultMessage: 'Your Blog' }), icon: '📝', desc: intl.formatMessage({ id: 'influencer.platform.blog', defaultMessage: 'SEO articles' }) },
+    { name: intl.formatMessage({ id: 'influencer.platform.youtube.name', defaultMessage: 'YouTube' }), icon: '🎬', desc: intl.formatMessage({ id: 'influencer.platform.youtube', defaultMessage: 'Video content & tutorials' }), highlight: true },
+    { name: intl.formatMessage({ id: 'influencer.platform.instagram.name', defaultMessage: 'Instagram' }), icon: '📸', desc: intl.formatMessage({ id: 'influencer.platform.instagram', defaultMessage: 'Stories & Reels' }) },
+    { name: intl.formatMessage({ id: 'influencer.platform.tiktok.name', defaultMessage: 'TikTok' }), icon: '🎵', desc: intl.formatMessage({ id: 'influencer.platform.tiktok', defaultMessage: 'Short-form videos' }) },
+    { name: intl.formatMessage({ id: 'influencer.platform.blog.name', defaultMessage: 'Blog' }), icon: '📝', desc: intl.formatMessage({ id: 'influencer.platform.blog', defaultMessage: 'SEO articles' }) },
     { name: 'Twitter/X', icon: '🐦', desc: intl.formatMessage({ id: 'influencer.platform.twitter', defaultMessage: 'Quick tips & threads' }) },
     { name: 'Facebook', icon: '👤', desc: intl.formatMessage({ id: 'influencer.platform.facebook', defaultMessage: 'Page & Groups' }) },
   ];
@@ -351,8 +351,10 @@ const InfluencerLanding: React.FC = () => {
                   <FormattedMessage id="influencer.step1.desc" defaultMessage="Make videos about expat life, travel tips, visa advice, living abroad. Use our banners and promo texts to promote SOS-Expat naturally." />
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {['YouTube', 'Instagram', 'TikTok', 'Blog'].map((p) => (
-                    <span key={p} className="px-3 py-1 bg-white/10 text-white rounded-full text-xs font-medium">{p}</span>
+                  {['youtube', 'instagram', 'tiktok', 'blog'].map((p) => (
+                    <span key={p} className="px-3 py-1 bg-white/10 text-white rounded-full text-xs font-medium">
+                      <FormattedMessage id={`influencer.platform.${p}.name`} />
+                    </span>
                   ))}
                 </div>
               </article>

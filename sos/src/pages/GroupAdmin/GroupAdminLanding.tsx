@@ -497,19 +497,19 @@ const GroupAdminLanding: React.FC = () => {
                 {/* Exemples concrets */}
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
-                    <div className="text-xs text-gray-500 mb-1">Petit groupe</div>
-                    <div className="text-lg font-bold text-white">5K membres</div>
-                    <div className="text-sm text-green-400">~1000$/mois</div>
+                    <div className="text-xs text-gray-500 mb-1"><FormattedMessage id="groupadmin.examples.small.title" /></div>
+                    <div className="text-lg font-bold text-white"><FormattedMessage id="groupadmin.examples.small.members" /></div>
+                    <div className="text-sm text-green-400"><FormattedMessage id="groupadmin.examples.small.earnings" /></div>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
-                    <div className="text-xs text-gray-500 mb-1">Moyen groupe</div>
-                    <div className="text-lg font-bold text-white">20K membres</div>
-                    <div className="text-sm text-green-400">~4000$/mois</div>
+                    <div className="text-xs text-gray-500 mb-1"><FormattedMessage id="groupadmin.examples.medium.title" /></div>
+                    <div className="text-lg font-bold text-white"><FormattedMessage id="groupadmin.examples.medium.members" /></div>
+                    <div className="text-sm text-green-400"><FormattedMessage id="groupadmin.examples.medium.earnings" /></div>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
-                    <div className="text-xs text-gray-500 mb-1">Grand groupe</div>
-                    <div className="text-lg font-bold text-white">50K membres</div>
-                    <div className="text-sm text-green-400">~10 000$/mois</div>
+                    <div className="text-xs text-gray-500 mb-1"><FormattedMessage id="groupadmin.examples.large.title" /></div>
+                    <div className="text-lg font-bold text-white"><FormattedMessage id="groupadmin.examples.large.members" /></div>
+                    <div className="text-sm text-green-400"><FormattedMessage id="groupadmin.examples.large.earnings" /></div>
                   </div>
                 </div>
               </div>

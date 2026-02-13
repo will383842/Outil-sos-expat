@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useIntl } from "react-intl";
 import { getLocaleString, parseLocaleFromPath, getRouteKeyFromSlug, getTranslatedRouteSlug, useLocaleNavigate, useLocalePath } from "../../multilingual-system";
 import {
@@ -778,7 +778,7 @@ const LanguageDropdown = memo<LanguageDropdownProps>(function LanguageDropdown({
   const intl = useIntl();
   const { language, setLanguage } = useApp();
   const location = useLocation();
-  const navigate = useLocaleNavigate();
+  const navigate = useNavigate(); // FIX: Use React Router navigate directly (not useLocaleNavigate)
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
