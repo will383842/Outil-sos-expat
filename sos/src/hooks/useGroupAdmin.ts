@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/config/firebase';
+import { functionsWest2 } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   GroupAdmin,
@@ -51,7 +51,7 @@ export function useGroupAdmin(): UseGroupAdminReturn {
     try {
       setIsLoading(true);
       setError(null);
-      const getDashboard = httpsCallable(functions, 'getGroupAdminDashboard');
+      const getDashboard = httpsCallable(functionsWest2, 'getGroupAdminDashboard');
       const result = await getDashboard({});
       const data = result.data as GroupAdminDashboardResponse;
 
@@ -113,7 +113,7 @@ export function useGroupAdminCommissions(pageSize: number = 20): UseGroupAdminCo
     try {
       setIsLoading(true);
       setError(null);
-      const fn = httpsCallable(functions, 'getGroupAdminCommissions');
+      const fn = httpsCallable(functionsWest2, 'getGroupAdminCommissions');
       const result = await fn({ page: targetPage, limit: pageSize });
       const data = result.data as {
         commissions: GroupAdminCommission[];
@@ -176,7 +176,7 @@ export function useGroupAdminNotifications(pageSize: number = 20): UseGroupAdmin
     try {
       setIsLoading(true);
       setError(null);
-      const fn = httpsCallable(functions, 'getGroupAdminNotifications');
+      const fn = httpsCallable(functionsWest2, 'getGroupAdminNotifications');
       const result = await fn({ page: targetPage, limit: pageSize });
       const data = result.data as {
         notifications: GroupAdminNotification[];

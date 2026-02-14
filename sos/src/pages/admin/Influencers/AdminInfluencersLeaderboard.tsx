@@ -6,7 +6,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   Trophy,
   Medal,
@@ -47,7 +48,6 @@ interface LeaderboardData {
 const AdminInfluencersLeaderboard: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +66,7 @@ const AdminInfluencersLeaderboard: React.FC = () => {
 
     try {
       const getLeaderboard = httpsCallable<{ month?: number; year?: number }, LeaderboardData>(
-        functions,
+        functionsWest2,
         'getInfluencerLeaderboard'
       );
 
@@ -82,7 +82,7 @@ const AdminInfluencersLeaderboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, functions]);
+  }, [selectedDate]);
 
   useEffect(() => {
     fetchLeaderboard();

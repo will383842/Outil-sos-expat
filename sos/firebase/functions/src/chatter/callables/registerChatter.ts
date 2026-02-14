@@ -50,14 +50,7 @@ export const registerChatter = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: true,
   },
   async (request): Promise<RegisterChatterResponse> => {
     ensureInitialized();
@@ -73,8 +66,28 @@ export const registerChatter = onCall(
     // 2. Validate input
     const input = request.data as RegisterChatterInput;
 
+    // Names validation (reasonable limits, not too strict)
     if (!input.firstName || !input.lastName) {
       throw new HttpsError("invalid-argument", "First name and last name are required");
+    }
+    if (input.firstName.trim().length < 2 || input.firstName.trim().length > 50) {
+      throw new HttpsError("invalid-argument", "First name must be between 2 and 50 characters");
+    }
+    if (input.lastName.trim().length < 2 || input.lastName.trim().length > 50) {
+      throw new HttpsError("invalid-argument", "Last name must be between 2 and 50 characters");
+    }
+
+    // Email validation (simple but effective)
+    if (!input.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
+      throw new HttpsError("invalid-argument", "Valid email is required");
+    }
+
+    // Phone validation (optional, but check format if provided)
+    if (input.phone) {
+      const phoneLength = input.phone.replace(/\D/g, '').length;
+      if (phoneLength < 8 || phoneLength > 15) {
+        throw new HttpsError("invalid-argument", "Phone number format is invalid (must be 8-15 digits)");
+      }
     }
 
     if (!input.country || input.country.length !== 2) {
@@ -82,9 +95,22 @@ export const registerChatter = onCall(
     }
 
     // interventionCountries is now optional - defaults to user's country if not provided
+    // Validate interventionCountries if provided
+    if (input.interventionCountries && input.interventionCountries.length > 0) {
+      for (const countryCode of input.interventionCountries) {
+        if (!countryCode || countryCode.length !== 2) {
+          throw new HttpsError("invalid-argument", `Invalid country code in interventionCountries: ${countryCode}`);
+        }
+      }
+    }
 
     if (!input.language || !VALID_LANGUAGES.includes(input.language)) {
       throw new HttpsError("invalid-argument", "Valid language is required");
+    }
+
+    // Bio validation (max length to prevent abuse)
+    if (input.bio && input.bio.length > 1000) {
+      throw new HttpsError("invalid-argument", "Bio must be less than 1000 characters");
     }
 
     // Validate platforms if provided (optional field)

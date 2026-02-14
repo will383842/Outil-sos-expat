@@ -160,6 +160,9 @@ export interface Influencer {
   /** Community niche/focus (e.g., "expatriés", "voyageurs", "digital nomads") */
   communityNiche?: string;
 
+  /** Countries where influencer can promote (ISO alpha-2 codes) */
+  interventionCountries?: string[];
+
   /** Social links for verification */
   socialLinks?: {
     facebook?: string;
@@ -1490,6 +1493,7 @@ export interface RegisterInfluencerInput {
   bio?: string;
   communitySize?: number;
   communityNiche?: string;
+  interventionCountries?: string[]; // Countries where influencer can promote
   socialLinks?: {
     facebook?: string;
     instagram?: string;

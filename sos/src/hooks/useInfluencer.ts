@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
 import {
   getFirestore,
   collection,
@@ -21,6 +21,7 @@ import {
   limit,
   onSnapshot,
 } from "firebase/firestore";
+import { functionsWest2 } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { useApp } from "../contexts/AppContext";
 import { getTranslatedRouteSlug } from "@/multilingual-system/core/routing/localeRoutes";
@@ -90,7 +91,6 @@ export function useInfluencer(): UseInfluencerReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const functions = getFunctions(undefined, "europe-west1");
   const db = getFirestore();
 
   // Check if user is an influencer
@@ -111,7 +111,7 @@ export function useInfluencer(): UseInfluencerReturn {
 
     try {
       const getInfluencerDashboardFn = httpsCallable<void, InfluencerDashboardData>(
-        functions,
+        functionsWest2,
         "getInfluencerDashboard"
       );
 
@@ -129,7 +129,7 @@ export function useInfluencer(): UseInfluencerReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.uid, functions]);
+  }, [user?.uid, functionsWest2]);
 
   // Fetch leaderboard data
   const refreshLeaderboard = useCallback(async () => {
@@ -137,7 +137,7 @@ export function useInfluencer(): UseInfluencerReturn {
 
     try {
       const getLeaderboardFn = httpsCallable<void, InfluencerLeaderboardData>(
-        functions,
+        functionsWest2,
         "getInfluencerLeaderboard"
       );
 
@@ -146,7 +146,7 @@ export function useInfluencer(): UseInfluencerReturn {
     } catch (err) {
       console.error("[useInfluencer] Error fetching leaderboard:", err);
     }
-  }, [user?.uid, functions]);
+  }, [user?.uid, functionsWest2]);
 
   /**
    * @deprecated This method is deprecated.
@@ -167,7 +167,7 @@ export function useInfluencer(): UseInfluencerReturn {
       const requestWithdrawalFn = httpsCallable<
         RequestInfluencerWithdrawalInput,
         { success: boolean; withdrawalId: string; amount: number; message: string }
-      >(functions, "influencerRequestWithdrawal");
+      >(functionsWest2, "influencerRequestWithdrawal");
 
       const result = await requestWithdrawalFn(input);
       await refreshDashboard();
@@ -177,7 +177,7 @@ export function useInfluencer(): UseInfluencerReturn {
         message: result.data.message,
       };
     },
-    [user?.uid, functions, refreshDashboard]
+    [user?.uid, functionsWest2, refreshDashboard]
   );
 
   // Update profile
@@ -192,13 +192,13 @@ export function useInfluencer(): UseInfluencerReturn {
       const updateProfileFn = httpsCallable<
         UpdateInfluencerProfileInput,
         { success: boolean; message: string }
-      >(functions, "updateInfluencerProfile");
+      >(functionsWest2, "updateInfluencerProfile");
 
       const result = await updateProfileFn(input);
       await refreshDashboard();
       return result.data;
     },
-    [user?.uid, functions, refreshDashboard]
+    [user?.uid, functionsWest2, refreshDashboard]
   );
 
   // Mark notification as read

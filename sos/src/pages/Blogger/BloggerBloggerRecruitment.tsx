@@ -12,7 +12,8 @@ import React, { useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { BloggerDashboardLayout } from '@/components/Blogger';
 import { useBlogger } from '@/hooks/useBlogger';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import toast from 'react-hot-toast';
 import {
   Users,
@@ -93,9 +94,8 @@ const BloggerBloggerRecruitment: React.FC = () => {
     setError(null);
 
     try {
-      const functions = getFunctions();
       const getBloggerRecruits = httpsCallable<void, GetBloggerRecruitsResponse>(
-        functions,
+        functionsWest2,
         'getBloggerRecruits'
       );
 

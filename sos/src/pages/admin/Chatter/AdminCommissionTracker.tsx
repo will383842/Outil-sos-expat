@@ -12,7 +12,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSearchParams } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from "@/config/firebase";
 import {
   DollarSign,
   TrendingUp,
@@ -291,15 +292,13 @@ const AdminCommissionTracker: React.FC = () => {
   const [offset, setOffset] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
 
-  const functions = getFunctions(undefined, 'europe-west2');
-
   // Fetch stats
   const fetchStats = useCallback(async () => {
     try {
       const adminGetCommissionStats = httpsCallable<
         { dateRange?: { start: string; end: string } },
         CommissionStats
-      >(functions, 'adminGetCommissionStats');
+      >(functionsWest2, 'adminGetCommissionStats');
 
       const result = await adminGetCommissionStats({
         dateRange: dateRange.start && dateRange.end ? dateRange : undefined,
@@ -309,7 +308,7 @@ const AdminCommissionTracker: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     }
-  }, [functions, dateRange]);
+  }, [dateRange]);
 
   // Fetch commissions
   const fetchCommissions = useCallback(
@@ -334,7 +333,7 @@ const AdminCommissionTracker: React.FC = () => {
             stats: { total: number };
             hasMore: boolean;
           }
-        >(functions, 'adminGetCommissionsDetailed');
+        >(functionsWest2, 'adminGetCommissionsDetailed');
 
         const result = await adminGetCommissionsDetailed({
           chatterId: chatterId || undefined,
@@ -360,7 +359,7 @@ const AdminCommissionTracker: React.FC = () => {
         setLoading(false);
       }
     },
-    [functions, chatterId, dateRange, type, status, sourceType, search, offset]
+    [chatterId, dateRange, type, status, sourceType, search, offset]
   );
 
   // Export CSV
@@ -376,7 +375,7 @@ const AdminCommissionTracker: React.FC = () => {
           sourceType?: string;
         },
         { success: boolean; csv: string; count: number }
-      >(functions, 'adminExportCommissionsCSV');
+      >(functionsWest2, 'adminExportCommissionsCSV');
 
       const result = await adminExportCommissionsCSV({
         chatterId: chatterId || undefined,

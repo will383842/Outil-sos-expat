@@ -5,7 +5,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   ArrowLeft,
   User,
@@ -94,7 +95,6 @@ const AdminInfluencerDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [influencer, setInfluencer] = useState<Influencer | null>(null);
   const [commissions, setCommissions] = useState<Commission[]>([]);
@@ -117,7 +117,7 @@ const AdminInfluencerDetail: React.FC = () => {
         influencer: Influencer;
         recentCommissions: Commission[];
         recentWithdrawals: Withdrawal[];
-      }>(functions, 'adminGetInfluencerDetail');
+      }>(functionsWest2, 'adminGetInfluencerDetail');
 
       const result = await adminGetInfluencerDetail({ influencerId: id });
       setInfluencer(result.data.influencer);
@@ -129,7 +129,7 @@ const AdminInfluencerDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, functions]);
+  }, [id]);
 
   useEffect(() => {
     fetchInfluencer();
@@ -141,7 +141,7 @@ const AdminInfluencerDetail: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const adminUpdateInfluencerStatus = httpsCallable(functions, 'adminUpdateInfluencerStatus');
+      const adminUpdateInfluencerStatus = httpsCallable(functionsWest2, 'adminUpdateInfluencerStatus');
       await adminUpdateInfluencerStatus({
         influencerId: id,
         status: newStatus,

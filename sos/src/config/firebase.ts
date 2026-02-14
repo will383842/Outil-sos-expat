@@ -483,6 +483,10 @@ export const functionsPayment = getFunctions(app, PAYMENT_REGION);
 const TRIGGERS_REGION = (import.meta.env.VITE_FUNCTIONS_TRIGGERS_REGION ?? "europe-west3").toString();
 export const functionsWest3 = getFunctions(app, TRIGGERS_REGION);
 
+// ✅ Instance Functions pour chatter/influencer/blogger/groupAdmin (europe-west2)
+const AFFILIATE_REGION = (import.meta.env.VITE_FUNCTIONS_AFFILIATE_REGION ?? "europe-west2").toString();
+export const functionsWest2 = getFunctions(app, AFFILIATE_REGION);
+
 /** ----------------------------------------
  *  Emulateurs (optionnels en local)
  * ---------------------------------------- */
@@ -517,6 +521,9 @@ if (USE_EMULATORS && typeof window !== "undefined") {
     connectFunctionsEmulator(functionsWest3, EMU_HOST, PORT_FUNC);
   } catch { /* noop */ }
   try {
+    connectFunctionsEmulator(functionsWest2, EMU_HOST, PORT_FUNC);
+  } catch { /* noop */ }
+  try {
     connectStorageEmulator(storage, EMU_HOST, PORT_STORAGE);
   } catch { /* noop */ }
 }
@@ -528,6 +535,9 @@ console.log("✅ Firebase initialisé :", {
   projectId: app.options.projectId,
   usingEmulators: USE_EMULATORS,
   functionsRegion: REGION,
+  functionsPaymentRegion: PAYMENT_REGION,
+  functionsTriggersRegion: TRIGGERS_REGION,
+  functionsAffiliateRegion: AFFILIATE_REGION,
 });
 
 /** ----------------------------------------

@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
 import {
   getFirestore,
   collection,
@@ -20,6 +20,7 @@ import {
   limit,
   onSnapshot,
 } from "firebase/firestore";
+import { functionsWest2 } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { useApp } from "../contexts/AppContext";
 import { getTranslatedRouteSlug } from "@/multilingual-system/core/routing/localeRoutes";
@@ -85,7 +86,6 @@ export function useChatter(): UseChatterReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const functions = getFunctions(undefined, "europe-west1");
   const db = getFirestore();
 
   // Check if user is a chatter
@@ -106,7 +106,7 @@ export function useChatter(): UseChatterReturn {
 
     try {
       const getChatterDashboardFn = httpsCallable<void, ChatterDashboardData>(
-        functions,
+        functionsWest2,
         "getChatterDashboard"
       );
 
@@ -124,7 +124,7 @@ export function useChatter(): UseChatterReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.uid, functions]);
+  }, [user?.uid, functionsWest2]);
 
   // Request withdrawal
   const requestWithdrawal = useCallback(
@@ -138,7 +138,7 @@ export function useChatter(): UseChatterReturn {
       const requestWithdrawalFn = httpsCallable<
         RequestWithdrawalInput,
         { success: boolean; withdrawalId: string; amount: number; message: string }
-      >(functions, "chatterRequestWithdrawal");
+      >(functionsWest2, "chatterRequestWithdrawal");
 
       const result = await requestWithdrawalFn(input);
       await refreshDashboard();
@@ -148,7 +148,7 @@ export function useChatter(): UseChatterReturn {
         message: result.data.message,
       };
     },
-    [user?.uid, functions, refreshDashboard]
+    [user?.uid, functionsWest2, refreshDashboard]
   );
 
   // Update profile
@@ -163,13 +163,13 @@ export function useChatter(): UseChatterReturn {
       const updateProfileFn = httpsCallable<
         UpdateChatterProfileInput,
         { success: boolean; message: string }
-      >(functions, "updateChatterProfile");
+      >(functionsWest2, "updateChatterProfile");
 
       const result = await updateProfileFn(input);
       await refreshDashboard();
       return result.data;
     },
-    [user?.uid, functions, refreshDashboard]
+    [user?.uid, functionsWest2, refreshDashboard]
   );
 
   // Mark notification as read

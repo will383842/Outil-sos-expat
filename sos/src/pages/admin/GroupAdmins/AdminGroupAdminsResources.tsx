@@ -5,7 +5,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable, getFunctions } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   Image,
   FileText,
@@ -72,7 +73,6 @@ interface Resource {
 }
 
 const AdminGroupAdminsResources: React.FC = () => {
-  const functions = getFunctions(undefined, 'europe-west2');
   const intl = useIntl();
 
   const [loading, setLoading] = useState(true);
@@ -103,7 +103,7 @@ const AdminGroupAdminsResources: React.FC = () => {
     setError(null);
 
     try {
-      const getResources = httpsCallable(functions, 'adminGetGroupAdminResourcesList');
+      const getResources = httpsCallable(functionsWest2, 'adminGetGroupAdminResourcesList');
       const result = await getResources({
         category: categoryFilter !== 'all' ? categoryFilter : undefined,
       });
@@ -114,7 +114,7 @@ const AdminGroupAdminsResources: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions, categoryFilter]);
+  }, [functionsWest2, categoryFilter]);
 
   useEffect(() => {
     fetchResources();
@@ -167,10 +167,10 @@ const AdminGroupAdminsResources: React.FC = () => {
       };
 
       if (editingResource) {
-        const updateResource = httpsCallable(functions, 'adminUpdateGroupAdminResource');
+        const updateResource = httpsCallable(functionsWest2, 'adminUpdateGroupAdminResource');
         await updateResource({ resourceId: editingResource.id, ...data });
       } else {
-        const createResource = httpsCallable(functions, 'adminCreateGroupAdminResource');
+        const createResource = httpsCallable(functionsWest2, 'adminCreateGroupAdminResource');
         await createResource(data);
       }
 
@@ -187,7 +187,7 @@ const AdminGroupAdminsResources: React.FC = () => {
     if (!window.confirm(`Delete resource "${resource.name}"?`)) return;
 
     try {
-      const deleteResource = httpsCallable(functions, 'adminDeleteGroupAdminResource');
+      const deleteResource = httpsCallable(functionsWest2, 'adminDeleteGroupAdminResource');
       await deleteResource({ resourceId: resource.id });
       fetchResources();
     } catch (err) {

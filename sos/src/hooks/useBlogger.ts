@@ -18,7 +18,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '../config/firebase';
+import { db, functionsWest2 } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Blogger,
@@ -117,7 +117,7 @@ export function useBlogger(): UseBloggerReturn {
 
     try {
       const getBloggerDashboard = httpsCallable<unknown, BloggerDashboardData>(
-        functions,
+        functionsWest2,
         'getBloggerDashboard'
       );
 
@@ -147,7 +147,7 @@ export function useBlogger(): UseBloggerReturn {
 
     try {
       const getBloggerLeaderboard = httpsCallable<unknown, BloggerLeaderboardData>(
-        functions,
+        functionsWest2,
         'getBloggerLeaderboard'
       );
 
@@ -263,7 +263,7 @@ export function useBlogger(): UseBloggerReturn {
         const registerBlogger = httpsCallable<
           Partial<RegisterBloggerInput>,
           RegisterBloggerResponse
-        >(functions, 'registerBlogger');
+        >(functionsWest2, 'registerBlogger');
 
         const result = await registerBlogger(input);
 
@@ -298,7 +298,7 @@ export function useBlogger(): UseBloggerReturn {
         const bloggerRequestWithdrawal = httpsCallable<
           RequestBloggerWithdrawalInput,
           RequestBloggerWithdrawalResponse
-        >(functions, 'bloggerRequestWithdrawal');
+        >(functionsWest2, 'bloggerRequestWithdrawal');
 
         const result = await bloggerRequestWithdrawal(input);
 
@@ -332,7 +332,7 @@ export function useBlogger(): UseBloggerReturn {
         const updateBloggerProfile = httpsCallable<
           UpdateBloggerProfileInput,
           { success: boolean; message: string }
-        >(functions, 'updateBloggerProfile');
+        >(functionsWest2, 'updateBloggerProfile');
 
         const result = await updateBloggerProfile(input);
 

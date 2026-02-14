@@ -9,7 +9,8 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
+import { functionsWest2 } from "@/config/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   ChatterReferralDashboardData,
@@ -45,8 +46,6 @@ export function useChatterReferrals(): UseChatterReferralsReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const functions = getFunctions(undefined, "europe-west1");
-
   const fetchDashboard = useCallback(async () => {
     if (!user) return;
 
@@ -55,7 +54,7 @@ export function useChatterReferrals(): UseChatterReferralsReturn {
 
     try {
       const getReferralDashboard = httpsCallable<void, ChatterReferralDashboardData>(
-        functions,
+        functionsWest2,
         "getReferralDashboard"
       );
 
@@ -67,7 +66,7 @@ export function useChatterReferrals(): UseChatterReferralsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user, functions]);
+  }, [user]);
 
   // Initial fetch
   useEffect(() => {

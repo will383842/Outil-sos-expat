@@ -32,7 +32,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
 import { clearStoredReferral } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
@@ -169,6 +169,7 @@ interface InfluencerFormData {
   bio: string;
   communitySize: string;
   communityNiche: string;
+  interventionCountries: string[]; // Geographic targeting (optional)
   referralCode: string;
   acceptTerms: boolean;
 }
@@ -210,18 +211,23 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
     bio: '',
     communitySize: '',
     communityNiche: '',
+    interventionCountries: [], // Optional geographic targeting
     referralCode: referralCode,
     acceptTerms: false,
   });
 
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [showInterventionCountriesDropdown, setShowInterventionCountriesDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
+  const [interventionCountriesSearch, setInterventionCountriesSearch] = useState('');
   const [focusedDropdownIndex, setFocusedDropdownIndex] = useState(-1);
 
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
+  const interventionCountriesDropdownRef = useRef<HTMLDivElement>(null);
   const countryListRef = useRef<HTMLDivElement>(null);
+  const interventionCountriesListRef = useRef<HTMLDivElement>(null);
 
   const s = darkStyles;
 
@@ -235,6 +241,10 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
       if (languageDropdownRef.current && !languageDropdownRef.current.contains(e.target as Node)) {
         setShowLanguageDropdown(false);
       }
+      if (interventionCountriesDropdownRef.current && !interventionCountriesDropdownRef.current.contains(e.target as Node)) {
+        setShowInterventionCountriesDropdown(false);
+        setInterventionCountriesSearch('');
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -243,7 +253,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
   // Reset focused index when dropdown opens/closes
   useEffect(() => {
     setFocusedDropdownIndex(-1);
-  }, [showCountryDropdown, showLanguageDropdown]);
+  }, [showCountryDropdown, showLanguageDropdown, showInterventionCountriesDropdown]);
 
   // Meta Pixel: Track StartRegistration on mount
   useEffect(() => {
@@ -268,6 +278,17 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
       entry.code.toLowerCase().includes(search)
     );
   }, [countrySearch, locale]);
+
+  // Filter intervention countries based on search
+  const filteredInterventionCountries = useMemo(() => {
+    if (!interventionCountriesSearch) return phoneCodesData;
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const search = strip(interventionCountriesSearch);
+    return phoneCodesData.filter(entry =>
+      strip(getCountryName(entry, locale)).includes(search) ||
+      entry.code.toLowerCase().includes(search)
+    );
+  }, [interventionCountriesSearch, locale]);
 
   const selectedCountryEntry = useMemo(() =>
     phoneCodesData.find(e => e.code === formData.country),
@@ -379,6 +400,15 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
     }
   };
 
+  const toggleInterventionCountry = (countryCode: string) => {
+    setFormData(prev => {
+      const countries = prev.interventionCountries.includes(countryCode)
+        ? prev.interventionCountries.filter(c => c !== countryCode)
+        : [...prev.interventionCountries, countryCode];
+      return { ...prev, interventionCountries: countries };
+    });
+  };
+
   const handleTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, acceptTerms: e.target.checked }));
     if (validationErrors.acceptTerms) {
@@ -472,8 +502,8 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         metaEventId,
       }, formData.password);
 
-      const functions = getFunctions(undefined, 'europe-west1');
-      const registerInfluencer = httpsCallable(functions, 'registerInfluencer');
+      const { functionsWest2 } = await import('@/config/firebase');
+      const registerInfluencer = httpsCallable(functionsWest2, 'registerInfluencer');
 
       const result = await registerInfluencer({
         firstName: formData.firstName,
@@ -485,6 +515,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         bio: formData.bio || undefined,
         communitySize: formData.communitySize ? parseInt(formData.communitySize) : undefined,
         communityNiche: formData.communityNiche || undefined,
+        interventionCountries: formData.interventionCountries.length > 0 ? formData.interventionCountries : undefined,
         recruiterCode: formData.referralCode || undefined,
         termsAcceptedAt: new Date().toISOString(),
         termsVersion: "3.0",
@@ -1006,6 +1037,112 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
             <div className="flex justify-end">
               <span className="text-xs">{formData.bio.length}/500</span>
             </div>
+          </div>
+
+          {/* Intervention Countries (Optional) */}
+          <div ref={interventionCountriesDropdownRef} className="space-y-2">
+            <label id="intervention-countries-label" className={s.label}>
+              <FormattedMessage id="form.interventionCountries" defaultMessage="Target countries" />
+              <span className="ml-2 text-xs text-gray-400">(<FormattedMessage id="common.optional" defaultMessage="Optional" />)</span>
+            </label>
+            <p className="text-xs text-gray-400 mb-2">
+              <FormattedMessage
+                id="form.interventionCountries.hint"
+                defaultMessage="Select the countries where you can promote our services (helps target your audience)"
+              />
+            </p>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowInterventionCountriesDropdown(!showInterventionCountriesDropdown)}
+                className={`${s.input} pr-10 text-left flex items-center justify-between`}
+                aria-haspopup="listbox"
+                aria-expanded={showInterventionCountriesDropdown}
+                aria-labelledby="intervention-countries-label"
+              >
+                <span className={formData.interventionCountries.length > 0 ? 'text-white' : 'text-gray-400'}>
+                  {formData.interventionCountries.length > 0 ? (
+                    <span className="flex items-center gap-2">
+                      <Globe className="w-4 h-4" />
+                      {formData.interventionCountries.length} {intl.formatMessage({
+                        id: 'form.countriesSelected',
+                        defaultMessage: formData.interventionCountries.length === 1 ? 'country selected' : 'countries selected'
+                      })}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Globe className="w-4 h-4" />
+                      {intl.formatMessage({ id: 'form.interventionCountries.placeholder', defaultMessage: 'Select countries...' })}
+                    </span>
+                  )}
+                </span>
+                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showInterventionCountriesDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showInterventionCountriesDropdown && (
+                <div className={s.dropdown} role="listbox" aria-labelledby="intervention-countries-label">
+                  <div className="p-2 border-b border-white/10">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                      <input
+                        type="text"
+                        value={interventionCountriesSearch}
+                        onChange={(e) => setInterventionCountriesSearch(e.target.value)}
+                        placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search country...' })}
+                        className={s.dropdownSearch}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <div ref={interventionCountriesListRef} className="max-h-[280px] overflow-y-auto overscroll-contain">
+                    {filteredInterventionCountries.map((entry) => {
+                      const isSelected = formData.interventionCountries.includes(entry.code);
+                      return (
+                        <button
+                          key={entry.code}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          onClick={() => toggleInterventionCountry(entry.code)}
+                          className={`${s.dropdownItem} ${isSelected ? 'bg-red-500/10' : ''}`}
+                        >
+                          <span className="text-xl">{getFlag(entry.code)}</span>
+                          <span className="flex-1 text-sm">{getCountryName(entry, locale)}</span>
+                          {isSelected && (
+                            <Check className="w-4 h-4 text-red-400" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+            {formData.interventionCountries.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.interventionCountries.map(code => {
+                  const entry = phoneCodesData.find(e => e.code === code);
+                  if (!entry) return null;
+                  return (
+                    <span
+                      key={code}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-400/30 rounded-lg text-sm text-red-300"
+                    >
+                      <span className="text-base">{getFlag(code)}</span>
+                      {getCountryName(entry, locale)}
+                      <button
+                        type="button"
+                        onClick={() => toggleInterventionCountry(code)}
+                        className="ml-1 hover:text-red-200 transition-colors"
+                        aria-label={`Remove ${getCountryName(entry, locale)}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

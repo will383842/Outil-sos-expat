@@ -7,8 +7,8 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/config/firebase';
+import {  httpsCallable  } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   Download,
   Copy,
@@ -47,7 +47,7 @@ const GroupAdminResources: React.FC = () => {
   const fetchResources = async () => {
     try {
       setLoading(true);
-      const getResources = httpsCallable(functions, 'getGroupAdminResources');
+      const getResources = httpsCallable(functionsWest2, 'getGroupAdminResources');
       const result = await getResources({});
       const data = result.data as { resources: GroupAdminResource[] };
       setResources(data.resources);
@@ -132,7 +132,7 @@ const GroupAdminResources: React.FC = () => {
     if (!processedContent[resource.id]) {
       setLoadingContent(resource.id);
       try {
-        const getContent = httpsCallable(functions, 'getGroupAdminProcessedResourceContent');
+        const getContent = httpsCallable(functionsWest2, 'getGroupAdminProcessedResourceContent');
         const result = await getContent({ resourceId: resource.id, language: user?.preferredLanguage || 'en' });
         const data = result.data as { content: string };
         setProcessedContent((prev) => ({ ...prev, [resource.id]: data.content }));
@@ -168,7 +168,7 @@ const GroupAdminResources: React.FC = () => {
 
     // Track usage
     try {
-      const trackUsage = httpsCallable(functions, 'trackGroupAdminResourceUsage');
+      const trackUsage = httpsCallable(functionsWest2, 'trackGroupAdminResourceUsage');
       await trackUsage({ resourceId: resource.id, action: 'copy', language: user?.preferredLanguage || 'en' });
     } catch (err) {
       console.error('Failed to track usage:', err);
@@ -183,7 +183,7 @@ const GroupAdminResources: React.FC = () => {
 
     // Track usage
     try {
-      const trackUsage = httpsCallable(functions, 'trackGroupAdminResourceUsage');
+      const trackUsage = httpsCallable(functionsWest2, 'trackGroupAdminResourceUsage');
       await trackUsage({ resourceId: resource.id, action: 'download', language: user?.preferredLanguage || 'en' });
     } catch (err) {
       console.error('Failed to track usage:', err);

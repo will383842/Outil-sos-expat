@@ -5,7 +5,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   Settings,
   Save,
@@ -100,7 +101,6 @@ type Tab = 'general' | 'rules' | 'antifraud' | 'history';
 
 const AdminInfluencersConfig: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [config, setConfig] = useState<InfluencerConfig>(DEFAULT_CONFIG);
@@ -119,7 +119,7 @@ const AdminInfluencersConfig: React.FC = () => {
 
     try {
       const adminGetInfluencerConfig = httpsCallable<void, { config: InfluencerConfig }>(
-        functions,
+        functionsWest2,
         'adminGetInfluencerConfig'
       );
 
@@ -140,7 +140,7 @@ const AdminInfluencersConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions]);
+  }, []);
 
   useEffect(() => {
     fetchConfig();
@@ -153,7 +153,7 @@ const AdminInfluencersConfig: React.FC = () => {
     setSuccess(false);
 
     try {
-      const adminUpdateInfluencerConfig = httpsCallable(functions, 'adminUpdateInfluencerConfig');
+      const adminUpdateInfluencerConfig = httpsCallable(functionsWest2, 'adminUpdateInfluencerConfig');
       await adminUpdateInfluencerConfig({
         updates: {
           clientReferralCommission: config.clientReferralCommission,
@@ -181,7 +181,7 @@ const AdminInfluencersConfig: React.FC = () => {
     setError(null);
 
     try {
-      const adminUpdateCommissionRules = httpsCallable(functions, 'adminUpdateCommissionRules');
+      const adminUpdateCommissionRules = httpsCallable(functionsWest2, 'adminUpdateCommissionRules');
       await adminUpdateCommissionRules({ rules, reason });
       setCommissionRules(rules);
       setSuccess(true);
@@ -201,7 +201,7 @@ const AdminInfluencersConfig: React.FC = () => {
     setError(null);
 
     try {
-      const adminUpdateAntiFraudConfig = httpsCallable(functions, 'adminUpdateAntiFraudConfig');
+      const adminUpdateAntiFraudConfig = httpsCallable(functionsWest2, 'adminUpdateAntiFraudConfig');
       await adminUpdateAntiFraudConfig({ antiFraud });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

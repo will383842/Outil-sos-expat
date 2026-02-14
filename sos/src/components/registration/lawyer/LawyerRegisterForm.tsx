@@ -11,7 +11,7 @@ import {
   MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH,
   LANG_TO_COUNTRY_PROP,
 } from '../shared/constants';
-import { sanitizeString, sanitizeStringFinal, sanitizeEmail, sanitizeName } from '../shared/sanitize';
+import { sanitizeString, sanitizeStringFinal, sanitizeEmailInput, sanitizeEmailFinal, sanitizeName, sanitizeEmail } from '../shared/sanitize';
 import { getCountryCode, isCountrySupportedByStripe } from '../shared/stripeCountries';
 import { getRegistrationErrorMessage } from '../shared/registrationErrors';
 
@@ -162,6 +162,11 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
     setTouched(p => ({ ...p, [name]: true }));
   }, []);
 
+  const onEmailBlur = useCallback(() => {
+    markTouched('email');
+    setForm(prev => ({ ...prev, email: sanitizeEmailFinal(prev.email) }));
+  }, [markTouched]);
+
   const clearError = useCallback((name: string) => {
     setFieldErrors(prev => {
       if (!prev[name]) return prev;
@@ -181,7 +186,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
     const { name, value } = e.target;
     let processed = value;
     if (name === 'email') {
-      processed = value.toLowerCase().replace(/\s/g, '');
+      processed = sanitizeEmailInput(value);
     } else if (name === 'firstName' || name === 'lastName') {
       processed = sanitizeName(value);
     } else if (name === 'bio') {
@@ -403,8 +408,8 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       }
 
       try {
-        const { getFunctions, httpsCallable } = await import('firebase/functions');
-        const functions = getFunctions(undefined, 'europe-west1');
+        const { httpsCallable } = await import('firebase/functions');
+        const { functions } = await import('@/config/firebase');
         const createStripeAccount = httpsCallable(functions, 'createStripeAccount');
         await createStripeAccount({ email: sanitizeEmail(form.email), currentCountry: stripeCountryCode, firstName: fn, lastName: ln, userType: 'lawyer' });
       } catch (stripeErr) {
@@ -514,7 +519,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
               label={intl.formatMessage({ id: 'registerLawyer.fields.email' })}
               value={form.email}
               onChange={onTextChange}
-              onBlur={() => markTouched('email')}
+              onBlur={onEmailBlur}
               autoComplete="email"
               inputMode="email"
               placeholder={intl.formatMessage({ id: 'registerLawyer.placeholder.email' })}
@@ -718,8 +723,8 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
               name="yearsOfExperience"
               type="number"
               label={intl.formatMessage({ id: 'registerLawyer.fields.yearsOfExperience' })}
-              value={form.yearsOfExperience}
-              onChange={(e) => setField('yearsOfExperience', Number(e.target.value))}
+              value={form.yearsOfExperience || ''}
+              onChange={(e) => setField('yearsOfExperience', e.target.value === '' ? 0 : Number(e.target.value))}
               min={0}
               max={60}
               inputMode="numeric"

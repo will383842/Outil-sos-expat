@@ -7,7 +7,7 @@ import type { MultiValue } from 'react-select';
 
 import { getTheme } from '../shared/theme';
 import { EMAIL_REGEX, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from '../shared/constants';
-import { sanitizeString, sanitizeEmail } from '../shared/sanitize';
+import { sanitizeString, sanitizeEmailInput, sanitizeEmailFinal, sanitizeEmail } from '../shared/sanitize';
 
 import DarkInput from '../shared/DarkInput';
 import DarkPasswordInput from '../shared/DarkPasswordInput';
@@ -154,12 +154,16 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
 
   const onTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const sanitized = name === 'email' ? sanitizeEmail(value) : sanitizeString(value);
+    const sanitized = name === 'email' ? sanitizeEmailInput(value) : sanitizeString(value);
     setField(name as keyof ClientFormData, sanitized as never);
   }, [setField]);
 
   const onTextBlur = useCallback((name: string) => {
     markTouched(name);
+    // Apply final sanitization for email (lowercase)
+    if (name === 'email') {
+      setField('email', sanitizeEmailFinal(form.email));
+    }
     // Inline validation on blur
     const val = form[name as keyof ClientFormData];
     if (name === 'firstName' || name === 'lastName') {
@@ -171,7 +175,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
         setFieldErrors(prev => ({ ...prev, email: intl.formatMessage({ id: 'registerClient.errors.emailInvalid' }) }));
       }
     }
-  }, [form, intl, markTouched]);
+  }, [form, intl, markTouched, setField]);
 
   const onPhoneChange = useCallback((val: string) => {
     setField('phone', val);

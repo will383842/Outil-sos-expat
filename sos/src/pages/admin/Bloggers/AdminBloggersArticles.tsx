@@ -7,7 +7,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   FileText,
   Plus,
@@ -70,7 +71,6 @@ interface EditingArticle {
 
 const AdminBloggersArticles: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +88,7 @@ const AdminBloggersArticles: React.FC = () => {
 
     try {
       const adminGetBloggerArticles = httpsCallable<void, { articles: Article[] }>(
-        functions,
+        functionsWest2,
         'adminGetBloggerArticles'
       );
       const result = await adminGetBloggerArticles();
@@ -100,7 +100,7 @@ const AdminBloggersArticles: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions]);
+  }, []);
 
   useEffect(() => {
     fetchArticles();
@@ -155,10 +155,10 @@ const AdminBloggersArticles: React.FC = () => {
       };
 
       if (editingArticle.isNew) {
-        const createFn = httpsCallable(functions, 'adminCreateBloggerArticle');
+        const createFn = httpsCallable(functionsWest2, 'adminCreateBloggerArticle');
         await createFn({ article: payload });
       } else {
-        const updateFn = httpsCallable(functions, 'adminUpdateBloggerArticle');
+        const updateFn = httpsCallable(functionsWest2, 'adminUpdateBloggerArticle');
         await updateFn({ articleId: articleData.id, article: payload });
       }
 
@@ -179,7 +179,7 @@ const AdminBloggersArticles: React.FC = () => {
     if (!confirm('Supprimer cet article ?')) return;
 
     try {
-      const deleteFn = httpsCallable(functions, 'adminDeleteBloggerArticle');
+      const deleteFn = httpsCallable(functionsWest2, 'adminDeleteBloggerArticle');
       await deleteFn({ articleId: article.id });
       fetchArticles();
     } catch (err: unknown) {

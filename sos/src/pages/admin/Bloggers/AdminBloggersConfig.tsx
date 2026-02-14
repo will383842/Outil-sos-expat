@@ -7,7 +7,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   Settings,
   Save,
@@ -70,7 +71,6 @@ const DEFAULT_CONFIG: BloggerConfig = {
 
 const AdminBloggersConfig: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [config, setConfig] = useState<BloggerConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
@@ -85,7 +85,7 @@ const AdminBloggersConfig: React.FC = () => {
 
     try {
       const adminGetBloggerConfig = httpsCallable<void, { config: BloggerConfig }>(
-        functions,
+        functionsWest2,
         'adminGetBloggerConfig'
       );
 
@@ -104,7 +104,7 @@ const AdminBloggersConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions]);
+  }, []);
 
   useEffect(() => {
     fetchConfig();
@@ -117,7 +117,7 @@ const AdminBloggersConfig: React.FC = () => {
     setSuccess(false);
 
     try {
-      const adminUpdateBloggerConfig = httpsCallable(functions, 'adminUpdateBloggerConfig');
+      const adminUpdateBloggerConfig = httpsCallable(functionsWest2, 'adminUpdateBloggerConfig');
       await adminUpdateBloggerConfig({
         updates: {
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,

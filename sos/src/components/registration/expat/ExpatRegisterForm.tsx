@@ -11,7 +11,7 @@ import {
   MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH,
   LANG_TO_COUNTRY_PROP, LANG_TO_HELP_LOCALE,
 } from '../shared/constants';
-import { sanitizeString, sanitizeStringFinal, sanitizeEmail } from '../shared/sanitize';
+import { sanitizeString, sanitizeStringFinal, sanitizeEmailInput, sanitizeEmailFinal, sanitizeEmail } from '../shared/sanitize';
 import { getCountryCode, isCountrySupportedByStripe } from '../shared/stripeCountries';
 import { getRegistrationErrorMessage } from '../shared/registrationErrors';
 
@@ -49,7 +49,7 @@ interface ExpatFormData {
   phone: string;
   currentCountry: string;
   currentPresenceCountry: string;
-  interventionCountry: string;
+  interventionCountries: string[]; // Changed from interventionCountries (single) to interventionCountries (multiple)
   preferredLanguage: string;
   helpTypes: string[];
   customHelpType: string;
@@ -122,7 +122,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
     phone: '',
     currentCountry: '',
     currentPresenceCountry: '',
-    interventionCountry: '',
+    interventionCountries: [],
     preferredLanguage: lang,
     helpTypes: [],
     customHelpType: '',
@@ -148,6 +148,10 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       .map(c => ({ value: (c as unknown as Record<string, unknown>)[prop] as string, label: (c as unknown as Record<string, unknown>)[prop] as string }));
   }, [lang]);
 
+  const countrySelectOptions = useMemo(() =>
+    countryOptions.map(c => ({ value: c.value, label: c.label })),
+  [countryOptions]);
+
   // Help type options
   const helpTypeOptions = useMemo(() => {
     const mappedLocale = LANG_TO_HELP_LOCALE[lang] || 'fr';
@@ -162,6 +166,11 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
   const markTouched = useCallback((name: string) => {
     setTouched(p => ({ ...p, [name]: true }));
   }, []);
+
+  const onEmailBlur = useCallback(() => {
+    markTouched('email');
+    setForm(prev => ({ ...prev, email: sanitizeEmailFinal(prev.email) }));
+  }, [markTouched]);
 
   const clearError = useCallback((name: string) => {
     setFieldErrors(prev => {
@@ -181,7 +190,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
     const { name, value } = e.target;
     let processed = value;
     if (name === 'email') {
-      processed = sanitizeEmail(value);
+      processed = sanitizeEmailInput(value);
     } else if (name === 'firstName' || name === 'lastName') {
       processed = sanitizeString(value).replace(/[^a-zA-Z\u00C0-\u017F\s'\-]/g, '');
     } else {
@@ -259,9 +268,9 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
     const e: Record<string, string> = {};
     if (!form.currentCountry) e.currentCountry = intl.formatMessage({ id: 'registerExpat.errors.needCountry' });
     if (!form.currentPresenceCountry) e.currentPresenceCountry = intl.formatMessage({ id: 'registerExpat.errors.needPresence' });
-    if (!form.interventionCountry) e.interventionCountry = intl.formatMessage({ id: 'registerExpat.errors.needIntervention' });
+    if (form.interventionCountries.length === 0) e.interventionCountries = intl.formatMessage({ id: 'registerExpat.errors.needIntervention' });
     setFieldErrors(prev => ({ ...prev, ...e }));
-    setTouched(prev => ({ ...prev, currentCountry: true, currentPresenceCountry: true, interventionCountry: true }));
+    setTouched(prev => ({ ...prev, currentCountry: true, currentPresenceCountry: true, interventionCountries: true }));
     return Object.keys(e).length === 0;
   }, [form, intl]);
 
@@ -333,10 +342,9 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
         currentPresenceCountry: form.currentPresenceCountry,
         country: form.currentPresenceCountry,
         countryCode: residenceCountryCode,
-        interventionCountry: form.interventionCountry,
-        practiceCountries: [form.interventionCountry],
-        interventionCountries: [form.interventionCountry],
-        operatingCountries: [form.interventionCountry],
+        interventionCountries: form.interventionCountries,
+        practiceCountries: form.interventionCountries,
+        operatingCountries: form.interventionCountries,
         profilePhoto: form.profilePhoto,
         photoURL: form.profilePhoto,
         avatar: form.profilePhoto,
@@ -402,8 +410,8 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       }
 
       try {
-        const { getFunctions, httpsCallable } = await import('firebase/functions');
-        const functions = getFunctions(undefined, 'europe-west1');
+        const { httpsCallable } = await import('firebase/functions');
+        const { functions } = await import('@/config/firebase');
         const createStripeAccount = httpsCallable(functions, 'createStripeAccount');
         await createStripeAccount({ email: sanitizeEmail(form.email), currentCountry: stripeCountryCode, firstName: sanitizeStringFinal(form.firstName), lastName: sanitizeStringFinal(form.lastName), userType: 'expat' });
       } catch (stripeErr) {
@@ -436,7 +444,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       !!form.phone && !!parsed?.isValid() &&
       !!form.currentCountry &&
       !!form.currentPresenceCountry &&
-      !!form.interventionCountry &&
+      form.interventionCountries.length > 0 &&
       form.bio.trim().length >= MIN_BIO_LENGTH &&
       form.bio.trim().length <= MAX_BIO_LENGTH &&
       !!form.profilePhoto &&
@@ -517,7 +525,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
               label={intl.formatMessage({ id: 'registerExpat.fields.email' })}
               value={form.email}
               onChange={onTextChange}
-              onBlur={() => markTouched('email')}
+              onBlur={onEmailBlur}
               autoComplete="email"
               inputMode="email"
               placeholder={intl.formatMessage({ id: 'registerExpat.placeholders.email' })}
@@ -583,7 +591,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
             onChange={(v) => {
               setField('currentCountry', v);
               if (!form.currentPresenceCountry) setForm(prev => ({ ...prev, currentPresenceCountry: v }));
-              if (!form.interventionCountry) setForm(prev => ({ ...prev, interventionCountry: v }));
+              if (form.interventionCountries.length === 0) setForm(prev => ({ ...prev, interventionCountries: [v] }));
             }}
             onBlur={() => markTouched('currentCountry')}
             placeholder={intl.formatMessage({ id: 'registerExpat.select.selectCountry' })}
@@ -608,20 +616,18 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
           />
           <FieldError error={fieldErrors.currentPresenceCountry} show={!!(fieldErrors.currentPresenceCountry && touched.currentPresenceCountry)} />
 
-          <DarkSelect
+          <DarkMultiSelect
             theme={theme}
-            id="interventionCountry"
-            label={intl.formatMessage({ id: 'registerExpat.fields.interventionCountry' })}
-            options={countryOptions}
-            value={form.interventionCountry}
-            onChange={(v) => setField('interventionCountry', v)}
-            onBlur={() => markTouched('interventionCountry')}
+            id="interventionCountries"
+            label={intl.formatMessage({ id: 'registerExpat.fields.interventionCountries' })}
+            options={countrySelectOptions}
+            value={form.interventionCountries}
+            onChange={(vals) => setField('interventionCountries', vals)}
             placeholder={intl.formatMessage({ id: 'registerExpat.select.selectInterventionCountry' })}
-            error={fieldErrors.interventionCountry}
-            touched={touched.interventionCountry}
+            error={fieldErrors.interventionCountries}
             required
           />
-          <FieldError error={fieldErrors.interventionCountry} show={!!(fieldErrors.interventionCountry && touched.interventionCountry)} />
+          <FieldError error={fieldErrors.interventionCountries} show={!!(fieldErrors.interventionCountries && touched.interventionCountries)} />
 
           <DarkSelect
             theme={theme}

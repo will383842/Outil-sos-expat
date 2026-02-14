@@ -9,7 +9,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   FolderOpen,
   Plus,
@@ -98,7 +99,6 @@ type EditingResource = {
 
 const AdminInfluencersResources: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [files, setFiles] = useState<ResourceFile[]>([]);
   const [texts, setTexts] = useState<ResourceText[]>([]);
@@ -115,7 +115,7 @@ const AdminInfluencersResources: React.FC = () => {
 
     try {
       const adminGetInfluencerResources = httpsCallable<void, { files: ResourceFile[]; texts: ResourceText[] }>(
-        functions,
+        functionsWest2,
         'adminGetInfluencerResources'
       );
 
@@ -128,7 +128,7 @@ const AdminInfluencersResources: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions]);
+  }, [functionsWest2]);
 
   useEffect(() => {
     fetchResources();
@@ -173,18 +173,18 @@ const AdminInfluencersResources: React.FC = () => {
     try {
       if (editingResource.isNew) {
         if (editingResource.type === 'file') {
-          const fn = httpsCallable(functions, 'adminCreateInfluencerResource');
+          const fn = httpsCallable(functionsWest2, 'adminCreateInfluencerResource');
           await fn(editingResource.data);
         } else {
-          const fn = httpsCallable(functions, 'adminCreateInfluencerResourceText');
+          const fn = httpsCallable(functionsWest2, 'adminCreateInfluencerResourceText');
           await fn(editingResource.data);
         }
       } else {
         if (editingResource.type === 'file') {
-          const fn = httpsCallable(functions, 'adminUpdateInfluencerResource');
+          const fn = httpsCallable(functionsWest2, 'adminUpdateInfluencerResource');
           await fn({ resourceId: (editingResource.data as ResourceFile).id, ...editingResource.data });
         } else {
-          const fn = httpsCallable(functions, 'adminUpdateInfluencerResourceText');
+          const fn = httpsCallable(functionsWest2, 'adminUpdateInfluencerResourceText');
           await fn({ textId: (editingResource.data as ResourceText).id, ...editingResource.data });
         }
       }
@@ -206,10 +206,10 @@ const AdminInfluencersResources: React.FC = () => {
 
     try {
       if (type === 'file') {
-        const fn = httpsCallable(functions, 'adminDeleteInfluencerResource');
+        const fn = httpsCallable(functionsWest2, 'adminDeleteInfluencerResource');
         await fn({ resourceId: resource.id });
       } else {
-        const fn = httpsCallable(functions, 'adminDeleteInfluencerResourceText');
+        const fn = httpsCallable(functionsWest2, 'adminDeleteInfluencerResourceText');
         await fn({ textId: resource.id });
       }
 

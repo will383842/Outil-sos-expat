@@ -4,7 +4,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import type { InfluencerRateHistoryEntry, InfluencerCommissionRule } from '@/types/influencer';
 import { History, ChevronDown, ChevronUp, Clock, User } from 'lucide-react';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -30,7 +31,6 @@ const COMMISSION_TYPE_LABELS: Record<string, string> = {
 
 const RateHistoryViewer: React.FC<RateHistoryViewerProps> = ({ onClose }) => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
   const [history, setHistory] = useState<InfluencerRateHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +46,7 @@ const RateHistoryViewer: React.FC<RateHistoryViewerProps> = ({ onClose }) => {
 
     try {
       const adminGetRateHistory = httpsCallable<{ limit?: number }, { history: InfluencerRateHistoryEntry[] }>(
-        functions,
+        functionsWest2,
         'adminGetRateHistory'
       );
       const result = await adminGetRateHistory({ limit: 20 });

@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/config/firebase';
+import { functionsWest2 } from '@/config/firebase';
 import { useChatterMissions } from '@/hooks/useChatterMissions';
 import {
   ChatterTrainingModule,
@@ -60,7 +60,7 @@ export function useChatterTraining(): UseChatterTrainingReturn {
     setError(null);
 
     try {
-      const getTrainingModules = httpsCallable(functions, 'getChatterTrainingModules');
+      const getTrainingModules = httpsCallable(functionsWest2, 'getChatterTrainingModules');
       const result = await getTrainingModules();
       const data = result.data as {
         modules: TrainingModuleListItem[];
@@ -90,7 +90,7 @@ export function useChatterTraining(): UseChatterTrainingReturn {
     setError(null);
 
     try {
-      const getModuleContent = httpsCallable(functions, 'getChatterTrainingModuleContent');
+      const getModuleContent = httpsCallable(functionsWest2, 'getChatterTrainingModuleContent');
       const result = await getModuleContent({ moduleId });
       const data = result.data as {
         module: ChatterTrainingModule;
@@ -117,7 +117,7 @@ export function useChatterTraining(): UseChatterTrainingReturn {
   // Update slide progress
   const updateProgress = useCallback(async (moduleId: string, slideIndex: number) => {
     try {
-      const updateTrainingProgress = httpsCallable(functions, 'updateChatterTrainingProgress');
+      const updateTrainingProgress = httpsCallable(functionsWest2, 'updateChatterTrainingProgress');
       await updateTrainingProgress({ moduleId, slideIndex });
 
       // Update local state
@@ -142,7 +142,7 @@ export function useChatterTraining(): UseChatterTrainingReturn {
     setError(null);
 
     try {
-      const submitTrainingQuiz = httpsCallable(functions, 'submitChatterTrainingQuiz');
+      const submitTrainingQuiz = httpsCallable(functionsWest2, 'submitChatterTrainingQuiz');
       const result = await submitTrainingQuiz({ moduleId, answers });
       const data = result.data as SubmitTrainingQuizResult;
 
@@ -177,7 +177,7 @@ export function useChatterTraining(): UseChatterTrainingReturn {
     setError(null);
 
     try {
-      const getCertificate = httpsCallable(functions, 'getChatterTrainingCertificate');
+      const getCertificate = httpsCallable(functionsWest2, 'getChatterTrainingCertificate');
       const result = await getCertificate({ certificateId });
       const data = result.data as {
         certificate: ChatterTrainingCertificate;

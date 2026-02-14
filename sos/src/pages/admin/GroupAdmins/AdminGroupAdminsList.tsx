@@ -6,7 +6,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   Users,
   Search,
@@ -106,7 +107,6 @@ type StatusFilter = 'all' | 'active' | 'suspended' | 'blocked';
 const AdminGroupAdminsList: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   // State
   const [groupAdmins, setGroupAdmins] = useState<GroupAdmin[]>([]);
@@ -136,7 +136,7 @@ const AdminGroupAdminsList: React.FC = () => {
 
     try {
       const adminGetGroupAdminsList = httpsCallable<unknown, GroupAdminListResponse>(
-        functions,
+        functionsWest2,
         'adminGetGroupAdminsList'
       );
 
@@ -158,7 +158,7 @@ const AdminGroupAdminsList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions, page, searchQuery, statusFilter, groupTypeFilter, groupSizeFilter]);
+  }, [page, searchQuery, statusFilter, groupTypeFilter, groupSizeFilter]);
 
   useEffect(() => {
     fetchGroupAdmins();
@@ -192,7 +192,7 @@ const AdminGroupAdminsList: React.FC = () => {
     try {
       const ids = Array.from(selectedIds);
       for (const id of ids) {
-        const updateStatus = httpsCallable(functions, 'adminUpdateGroupAdminStatus');
+        const updateStatus = httpsCallable(functionsWest2, 'adminUpdateGroupAdminStatus');
         await updateStatus({ groupAdminId: id, status: action === 'activate' ? 'active' : action === 'suspend' ? 'suspended' : 'blocked' });
       }
       setSelectedIds(new Set());
@@ -208,7 +208,7 @@ const AdminGroupAdminsList: React.FC = () => {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const exportFn = httpsCallable(functions, 'adminExportGroupAdmins');
+      const exportFn = httpsCallable(functionsWest2, 'adminExportGroupAdmins');
       const result = await exportFn({
         status: statusFilter !== 'all' ? statusFilter : undefined,
         groupType: groupTypeFilter !== 'all' ? groupTypeFilter : undefined,

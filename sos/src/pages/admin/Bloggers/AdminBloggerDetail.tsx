@@ -8,7 +8,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   ArrowLeft,
   User,
@@ -120,7 +121,6 @@ const AdminBloggerDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [blogger, setBlogger] = useState<Blogger | null>(null);
   const [commissions, setCommissions] = useState<Commission[]>([]);
@@ -143,7 +143,7 @@ const AdminBloggerDetail: React.FC = () => {
         blogger: Blogger;
         recentCommissions: Commission[];
         recentWithdrawals: Withdrawal[];
-      }>(functions, 'adminGetBloggerDetail');
+      }>(functionsWest2, 'adminGetBloggerDetail');
 
       const result = await adminGetBloggerDetail({ bloggerId: id });
       setBlogger(result.data.blogger);
@@ -155,7 +155,7 @@ const AdminBloggerDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, functions]);
+  }, [id]);
 
   useEffect(() => {
     fetchBlogger();
@@ -167,7 +167,7 @@ const AdminBloggerDetail: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const adminUpdateBloggerStatus = httpsCallable(functions, 'adminUpdateBloggerStatus');
+      const adminUpdateBloggerStatus = httpsCallable(functionsWest2, 'adminUpdateBloggerStatus');
       await adminUpdateBloggerStatus({
         bloggerId: id,
         status: newStatus,

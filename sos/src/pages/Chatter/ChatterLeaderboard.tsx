@@ -12,8 +12,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { useApp } from '@/contexts/AppContext';
+import { functionsWest2 } from '@/config/firebase';
 import { useChatter } from '@/hooks/useChatter';
 import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
 import {
@@ -168,9 +169,8 @@ const ChatterLeaderboard: React.FC = () => {
       setError(null);
 
       try {
-        const functions = getFunctions(undefined, 'europe-west1');
         const getLeaderboard = httpsCallable<{ month: string }, LeaderboardResponse>(
-          functions,
+          functionsWest2,
           'getChatterLeaderboard'
         );
 

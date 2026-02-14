@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '../config/firebase';
+import { functionsWest2 } from '../config/firebase';
 import {
   InfluencerResourcesData,
   InfluencerResourceCategory,
@@ -34,7 +34,7 @@ export function useInfluencerResources(): UseInfluencerResourcesReturn {
       const getInfluencerResources = httpsCallable<
         { category?: InfluencerResourceCategory },
         { resources: InfluencerResourcesData['files']; texts: InfluencerResourcesData['texts'] }
-      >(functions, 'getInfluencerResources');
+      >(functionsWest2, 'getInfluencerResources');
 
       const result = await getInfluencerResources({ category });
       setResources({
@@ -58,7 +58,7 @@ export function useInfluencerResources(): UseInfluencerResourcesReturn {
       const downloadInfluencerResource = httpsCallable<
         { resourceId: string },
         { success: boolean; downloadUrl: string }
-      >(functions, 'downloadInfluencerResource');
+      >(functionsWest2, 'downloadInfluencerResource');
 
       const result = await downloadInfluencerResource({ resourceId });
       return {
@@ -83,7 +83,7 @@ export function useInfluencerResources(): UseInfluencerResourcesReturn {
       const copyInfluencerResourceText = httpsCallable<
         { textId: string },
         { success: boolean; content: string }
-      >(functions, 'copyInfluencerResourceText');
+      >(functionsWest2, 'copyInfluencerResourceText');
 
       const result = await copyInfluencerResourceText({ textId });
 

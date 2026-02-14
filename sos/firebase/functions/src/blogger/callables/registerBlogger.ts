@@ -43,19 +43,43 @@ const BLOG_TRAFFIC_TIERS: BlogTrafficTier[] = [
 ];
 
 function validateInput(input: RegisterBloggerInput): void {
-  // Required fields
+  // Names validation (reasonable limits, not too strict)
   if (!input.firstName?.trim()) {
     throw new HttpsError("invalid-argument", "First name is required");
+  }
+  if (input.firstName.trim().length < 2 || input.firstName.trim().length > 50) {
+    throw new HttpsError("invalid-argument", "First name must be between 2 and 50 characters");
   }
   if (!input.lastName?.trim()) {
     throw new HttpsError("invalid-argument", "Last name is required");
   }
+  if (input.lastName.trim().length < 2 || input.lastName.trim().length > 50) {
+    throw new HttpsError("invalid-argument", "Last name must be between 2 and 50 characters");
+  }
+
+  // Email validation (simple but effective)
   if (!input.email?.trim()) {
     throw new HttpsError("invalid-argument", "Email is required");
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
+    throw new HttpsError("invalid-argument", "Valid email format is required");
+  }
+
+  // Phone validation (optional, but check format if provided)
+  if (input.phone) {
+    const phoneLength = input.phone.replace(/\D/g, '').length;
+    if (phoneLength < 8 || phoneLength > 15) {
+      throw new HttpsError("invalid-argument", "Phone number format is invalid (must be 8-15 digits)");
+    }
+  }
+
   if (!input.country?.trim()) {
     throw new HttpsError("invalid-argument", "Country is required");
   }
+  if (input.country.length !== 2) {
+    throw new HttpsError("invalid-argument", "Country must be a valid 2-letter code");
+  }
+
   if (!input.language || !SUPPORTED_LANGUAGES.includes(input.language)) {
     throw new HttpsError("invalid-argument", "Valid language is required");
   }

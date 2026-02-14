@@ -6,7 +6,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
+import { functionsWest2 } from "@/config/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -86,8 +87,6 @@ const AdminChatterFraud: React.FC = () => {
   const [reviewNotes, setReviewNotes] = useState("");
   const [isReviewing, setIsReviewing] = useState(false);
 
-  const functions = getFunctions(undefined, "europe-west2");
-
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -95,7 +94,7 @@ const AdminChatterFraud: React.FC = () => {
       const getAlertsFn = httpsCallable<
         { statusFilter?: string; typeFilter?: string },
         { alerts: FraudAlert[]; stats: FraudStats }
-      >(functions, "adminGetReferralFraudAlerts");
+      >(functionsWest2, "adminGetReferralFraudAlerts");
 
       const result = await getAlertsFn({
         statusFilter: statusFilter !== "all" ? statusFilter : undefined,
@@ -109,7 +108,7 @@ const AdminChatterFraud: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [functions, statusFilter, typeFilter]);
+  }, [statusFilter, typeFilter]);
 
   useEffect(() => {
     fetchData();
@@ -121,7 +120,7 @@ const AdminChatterFraud: React.FC = () => {
       const reviewFn = httpsCallable<
         { alertId: string; action: string; notes: string },
         { success: boolean }
-      >(functions, "adminReviewFraudAlert");
+      >(functionsWest2, "adminReviewFraudAlert");
 
       await reviewFn({
         alertId,

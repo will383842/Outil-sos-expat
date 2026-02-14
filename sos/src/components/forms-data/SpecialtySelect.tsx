@@ -106,7 +106,7 @@ const SpecialtySelect: React.FC<SpecialtySelectProps> = ({
     }),
     placeholder: (base) => ({
       ...base,
-      color: '#9ca3af',
+      color: '#d1d5db', // Lighter gray for dark backgrounds
       fontSize: '15px',
       fontWeight: '500',
     }),
@@ -114,7 +114,7 @@ const SpecialtySelect: React.FC<SpecialtySelectProps> = ({
       ...base,
       margin: '0',
       padding: '0',
-      color: '#111827',
+      color: '#f3f4f6', // Light color for dark backgrounds
       fontSize: '15px',
       fontWeight: '500',
     }),

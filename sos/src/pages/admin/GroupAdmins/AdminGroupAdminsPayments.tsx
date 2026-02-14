@@ -4,7 +4,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   DollarSign,
   CheckCircle,
@@ -56,7 +57,6 @@ interface WithdrawalStats {
 }
 
 const AdminGroupAdminsPayments: React.FC = () => {
-  const functions = getFunctions(undefined, 'europe-west2');
   const intl = useIntl();
 
   const [loading, setLoading] = useState(true);
@@ -71,7 +71,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
     setError(null);
 
     try {
-      const getWithdrawals = httpsCallable(functions, 'adminGetGroupAdminWithdrawalsList');
+      const getWithdrawals = httpsCallable(functionsWest2, 'adminGetGroupAdminWithdrawalsList');
       const result = await getWithdrawals({ status: statusFilter !== 'all' ? statusFilter : undefined });
       const data = result.data as { withdrawals: Withdrawal[]; stats: WithdrawalStats };
       setWithdrawals(data.withdrawals);
@@ -82,7 +82,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions, statusFilter]);
+  }, [statusFilter]);
 
   useEffect(() => {
     fetchWithdrawals();
@@ -91,7 +91,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
   const handleApprove = async (withdrawal: Withdrawal) => {
     setProcessingId(withdrawal.id);
     try {
-      const processWithdrawal = httpsCallable(functions, 'adminProcessGroupAdminWithdrawal');
+      const processWithdrawal = httpsCallable(functionsWest2, 'adminProcessGroupAdminWithdrawal');
       await processWithdrawal({
         withdrawalId: withdrawal.id,
         action: 'approve',
@@ -110,7 +110,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
 
     setProcessingId(withdrawal.id);
     try {
-      const processWithdrawal = httpsCallable(functions, 'adminProcessGroupAdminWithdrawal');
+      const processWithdrawal = httpsCallable(functionsWest2, 'adminProcessGroupAdminWithdrawal');
       await processWithdrawal({
         withdrawalId: withdrawal.id,
         action: 'reject',
@@ -127,7 +127,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
   const handleComplete = async (withdrawal: Withdrawal) => {
     setProcessingId(withdrawal.id);
     try {
-      const processWithdrawal = httpsCallable(functions, 'adminProcessGroupAdminWithdrawal');
+      const processWithdrawal = httpsCallable(functionsWest2, 'adminProcessGroupAdminWithdrawal');
       await processWithdrawal({
         withdrawalId: withdrawal.id,
         action: 'complete',

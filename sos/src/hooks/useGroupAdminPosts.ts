@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/config/firebase';
+import { functionsWest2 } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   GroupAdminPost,
@@ -44,7 +44,7 @@ export function useGroupAdminPosts(): UseGroupAdminPostsReturn {
     try {
       setIsLoading(true);
       setError(null);
-      const getPosts = httpsCallable(functions, 'getGroupAdminPosts');
+      const getPosts = httpsCallable(functionsWest2, 'getGroupAdminPosts');
       const result = await getPosts({});
       const data = result.data as GroupAdminPostsResponse;
 
@@ -81,7 +81,7 @@ export function useGroupAdminPosts(): UseGroupAdminPostsReturn {
           },
         };
       }
-      const getPost = httpsCallable(functions, 'getGroupAdminProcessedPost');
+      const getPost = httpsCallable(functionsWest2, 'getGroupAdminProcessedPost');
       const result = await getPost({ postId, language });
       return result.data as ProcessedPostResult;
     } catch (err: unknown) {
@@ -105,7 +105,7 @@ export function useGroupAdminPosts(): UseGroupAdminPostsReturn {
     language: SupportedGroupAdminLanguage = 'en'
   ): Promise<void> => {
     try {
-      const track = httpsCallable(functions, 'trackGroupAdminPostUsage');
+      const track = httpsCallable(functionsWest2, 'trackGroupAdminPostUsage');
       await track({ postId, action, language });
     } catch (err) {
       console.error('Failed to track post usage:', err);

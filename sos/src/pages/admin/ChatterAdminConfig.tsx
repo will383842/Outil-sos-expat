@@ -11,7 +11,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   Settings,
   DollarSign,
@@ -222,7 +223,6 @@ const Toggle: React.FC<{
 
 const ChatterAdminConfig: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west1');
 
   // State
   const [config, setConfig] = useState<ChatterConfigSettings>(DEFAULT_CONFIG);
@@ -246,7 +246,7 @@ const ChatterAdminConfig: React.FC = () => {
 
     try {
       const adminGetChatterConfigSettings = httpsCallable<void, { config: ChatterConfigSettings }>(
-        functions,
+        functionsWest2,
         'adminGetChatterConfigSettings'
       );
 
@@ -264,7 +264,7 @@ const ChatterAdminConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions]);
+  }, [functionsWest2]);
 
   useEffect(() => {
     fetchConfig();
@@ -298,7 +298,7 @@ const ChatterAdminConfig: React.FC = () => {
       const adminUpdateChatterConfigSettings = httpsCallable<
         { config: Partial<ChatterConfigSettings> },
         { success: boolean; config: ChatterConfigSettings }
-      >(functions, 'adminUpdateChatterConfigSettings');
+      >(functionsWest2, 'adminUpdateChatterConfigSettings');
 
       const result = await adminUpdateChatterConfigSettings({ config });
 
@@ -330,7 +330,7 @@ const ChatterAdminConfig: React.FC = () => {
       const adminToggleFlashBonus = httpsCallable<
         { enabled: boolean; multiplier: number; durationHours: number },
         { success: boolean; endsAt: string }
-      >(functions, 'adminToggleFlashBonus');
+      >(functionsWest2, 'adminToggleFlashBonus');
 
       const result = await adminToggleFlashBonus({
         enabled: true,

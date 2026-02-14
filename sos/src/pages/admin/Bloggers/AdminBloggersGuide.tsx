@@ -9,7 +9,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   BookOpen,
   Plus,
@@ -119,7 +120,6 @@ type EditingItem = {
 
 const AdminBloggersGuide: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [templates, setTemplates] = useState<GuideTemplate[]>([]);
   const [copyTexts, setCopyTexts] = useState<GuideCopyText[]>([]);
@@ -141,7 +141,7 @@ const AdminBloggersGuide: React.FC = () => {
         templates: GuideTemplate[];
         copyTexts: GuideCopyText[];
         bestPractices: GuideBestPractice[];
-      }>(functions, 'adminGetBloggerGuide');
+      }>(functionsWest2, 'adminGetBloggerGuide');
 
       const result = await adminGetBloggerGuide();
       setTemplates(result.data.templates || []);
@@ -153,7 +153,7 @@ const AdminBloggersGuide: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions]);
+  }, []);
 
   useEffect(() => {
     fetchGuide();
@@ -233,7 +233,7 @@ const AdminBloggersGuide: React.FC = () => {
           break;
       }
 
-      const saveFunction = httpsCallable(functions, functionName);
+      const saveFunction = httpsCallable(functionsWest2, functionName);
       await saveFunction({
         item: editingItem.data,
         isNew: editingItem.isNew,
@@ -272,7 +272,7 @@ const AdminBloggersGuide: React.FC = () => {
           break;
       }
 
-      const deleteFunction = httpsCallable(functions, functionName);
+      const deleteFunction = httpsCallable(functionsWest2, functionName);
       await deleteFunction({ itemId: item.id });
       fetchGuide();
     } catch (err: any) {

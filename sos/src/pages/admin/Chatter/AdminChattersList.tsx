@@ -7,7 +7,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from "@/config/firebase";
 import {
   Users,
   Search,
@@ -166,7 +167,6 @@ type StatusFilter = 'all' | 'active' | 'pending' | 'quiz_required' | 'suspended'
 const AdminChattersList: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   // State
   const [chatters, setChatters] = useState<Chatter[]>([]);
@@ -197,7 +197,7 @@ const AdminChattersList: React.FC = () => {
 
     try {
       const adminGetChattersList = httpsCallable<any, ChatterListResponse>(
-        functions,
+        functionsWest2,
         'adminGetChattersList'
       );
 
@@ -222,7 +222,7 @@ const AdminChattersList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, countryFilter, languageFilter, searchQuery, functions]);
+  }, [page, statusFilter, countryFilter, languageFilter, searchQuery]);
 
   useEffect(() => {
     fetchChatters();
@@ -307,7 +307,7 @@ const AdminChattersList: React.FC = () => {
     setExporting(true);
     try {
       const adminExportChatters = httpsCallable<any, { csv: string }>(
-        functions,
+        functionsWest2,
         'adminExportChatters'
       );
 
@@ -338,7 +338,7 @@ const AdminChattersList: React.FC = () => {
 
     setBulkActionLoading(true);
     try {
-      const adminBulkChatterAction = httpsCallable(functions, 'adminBulkChatterAction');
+      const adminBulkChatterAction = httpsCallable(functionsWest2, 'adminBulkChatterAction');
       await adminBulkChatterAction({
         chatterIds: Array.from(selectedIds),
         action,

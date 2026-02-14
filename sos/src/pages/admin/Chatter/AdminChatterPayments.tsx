@@ -5,7 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from "@/config/firebase";
 import {
   Wallet,
   Clock,
@@ -51,7 +52,6 @@ type TabType = 'pending' | 'processing' | 'completed' | 'failed';
 
 const AdminChatterPayments: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +68,7 @@ const AdminChatterPayments: React.FC = () => {
       // Note: This would need a proper admin function to list all withdrawals
       // For now, we'll simulate with a placeholder
       const adminGetWithdrawals = httpsCallable<{ status?: string }, { withdrawals: Withdrawal[] }>(
-        functions,
+        functionsWest2,
         'adminGetPendingChatterWithdrawals'
       );
 
@@ -91,10 +91,10 @@ const AdminChatterPayments: React.FC = () => {
   const formatAmount = (cents: number) => {
     return new Intl.NumberFormat(intl.locale, {
       style: 'currency',
-      currency: 'XOF',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(cents);
+    }).format(cents / 100);
   };
 
   // Handle approve
@@ -102,7 +102,7 @@ const AdminChatterPayments: React.FC = () => {
     setProcessingId(withdrawalId);
 
     try {
-      const adminProcessWithdrawal = httpsCallable(functions, 'adminProcessWithdrawal');
+      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessWithdrawal');
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'approve',
@@ -125,7 +125,7 @@ const AdminChatterPayments: React.FC = () => {
     setProcessingId(withdrawalId);
 
     try {
-      const adminProcessWithdrawal = httpsCallable(functions, 'adminProcessWithdrawal');
+      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessWithdrawal');
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'reject',
@@ -148,7 +148,7 @@ const AdminChatterPayments: React.FC = () => {
     setProcessingId(withdrawalId);
 
     try {
-      const adminProcessWithdrawal = httpsCallable(functions, 'adminProcessWithdrawal');
+      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessWithdrawal');
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'complete',

@@ -4,7 +4,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable, getFunctions } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   FileText,
   Plus,
@@ -73,7 +74,6 @@ interface Post {
 }
 
 const AdminGroupAdminsPosts: React.FC = () => {
-  const functions = getFunctions(undefined, 'europe-west2');
   const intl = useIntl();
 
   const [loading, setLoading] = useState(true);
@@ -105,7 +105,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
     setError(null);
 
     try {
-      const getPosts = httpsCallable(functions, 'adminGetGroupAdminPostsList');
+      const getPosts = httpsCallable(functionsWest2, 'adminGetGroupAdminPostsList');
       const result = await getPosts({
         category: categoryFilter !== 'all' ? categoryFilter : undefined,
       });
@@ -116,7 +116,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions, categoryFilter]);
+  }, [functionsWest2, categoryFilter]);
 
   useEffect(() => {
     fetchPosts();
@@ -167,10 +167,10 @@ const AdminGroupAdminsPosts: React.FC = () => {
       };
 
       if (editingPost) {
-        const updatePost = httpsCallable(functions, 'adminUpdateGroupAdminPost');
+        const updatePost = httpsCallable(functionsWest2, 'adminUpdateGroupAdminPost');
         await updatePost({ postId: editingPost.id, ...data });
       } else {
-        const createPost = httpsCallable(functions, 'adminCreateGroupAdminPost');
+        const createPost = httpsCallable(functionsWest2, 'adminCreateGroupAdminPost');
         await createPost(data);
       }
 
@@ -187,7 +187,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
     if (!window.confirm(`Delete post "${post.name}"?`)) return;
 
     try {
-      const deletePost = httpsCallable(functions, 'adminDeleteGroupAdminPost');
+      const deletePost = httpsCallable(functionsWest2, 'adminDeleteGroupAdminPost');
       await deletePost({ postId: post.id });
       fetchPosts();
     } catch (err) {

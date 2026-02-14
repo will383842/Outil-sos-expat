@@ -20,7 +20,8 @@ import {
   Percent,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from "@/config/firebase";
 
 // Design tokens
 const UI = {
@@ -78,9 +79,8 @@ const AdminChatterCountryRotation: React.FC = () => {
     setError(null);
 
     try {
-      const functions = getFunctions(undefined, 'europe-west2');
       const adminGetCountryRotationStatus = httpsCallable(
-        functions,
+        functionsWest2,
         'adminGetCountryRotationStatus'
       );
 
@@ -128,9 +128,8 @@ const AdminChatterCountryRotation: React.FC = () => {
     setError(null);
 
     try {
-      const functions = getFunctions(undefined, 'europe-west2');
       const adminInitializeCountryRotation = httpsCallable(
-        functions,
+        functionsWest2,
         'adminInitializeCountryRotation'
       );
 
@@ -168,8 +167,7 @@ const AdminChatterCountryRotation: React.FC = () => {
     setError(null);
 
     try {
-      const functions = getFunctions(undefined, 'europe-west2');
-      const adminAdvanceCycle = httpsCallable(functions, 'adminAdvanceCycle');
+      const adminAdvanceCycle = httpsCallable(functionsWest2, 'adminAdvanceCycle');
 
       const result = await adminAdvanceCycle();
       const data = result.data as { success: boolean; newCycle: number; message?: string };
@@ -206,9 +204,8 @@ const AdminChatterCountryRotation: React.FC = () => {
     setError(null);
 
     try {
-      const functions = getFunctions(undefined, 'europe-west2');
       const adminUpdateCycleThreshold = httpsCallable(
-        functions,
+        functionsWest2,
         'adminUpdateCycleThreshold'
       );
 

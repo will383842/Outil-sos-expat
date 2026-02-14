@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/config/firebase';
+import { functionsWest2 } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   GroupAdminResource,
@@ -34,7 +34,7 @@ export function useGroupAdminResources(): UseGroupAdminResourcesReturn {
     try {
       setIsLoading(true);
       setError(null);
-      const getResources = httpsCallable(functions, 'getGroupAdminResources');
+      const getResources = httpsCallable(functionsWest2, 'getGroupAdminResources');
       const result = await getResources({});
       const data = result.data as GroupAdminResourcesResponse;
 
@@ -63,7 +63,7 @@ export function useGroupAdminResources(): UseGroupAdminResourcesReturn {
         console.error('User not authenticated');
         return '';
       }
-      const getContent = httpsCallable(functions, 'getGroupAdminProcessedResourceContent');
+      const getContent = httpsCallable(functionsWest2, 'getGroupAdminProcessedResourceContent');
       const result = await getContent({ resourceId, language });
       const data = result.data as { content: string };
       return data.content;
@@ -80,7 +80,7 @@ export function useGroupAdminResources(): UseGroupAdminResourcesReturn {
     language: SupportedGroupAdminLanguage = 'en'
   ): Promise<void> => {
     try {
-      const track = httpsCallable(functions, 'trackGroupAdminResourceUsage');
+      const track = httpsCallable(functionsWest2, 'trackGroupAdminResourceUsage');
       await track({ resourceId, action, language });
     } catch (err) {
       console.error('Failed to track resource usage:', err);

@@ -7,7 +7,8 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from "@/config/firebase";
 import {
   ArrowLeft,
   User,
@@ -74,7 +75,6 @@ const AdminChatterDetail: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
   const { chatterId } = useParams<{ chatterId: string }>();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [chatter, setChatter] = useState<ChatterDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,7 +90,7 @@ const AdminChatterDetail: React.FC = () => {
 
     try {
       const adminGetChatterDetail = httpsCallable<{ chatterId: string }, ChatterDetail>(
-        functions,
+        functionsWest2,
         'adminGetChatterDetail'
       );
 
@@ -137,7 +137,7 @@ const AdminChatterDetail: React.FC = () => {
     setActionLoading(true);
 
     try {
-      const adminUpdateChatterStatus = httpsCallable(functions, 'adminUpdateChatterStatus');
+      const adminUpdateChatterStatus = httpsCallable(functionsWest2, 'adminUpdateChatterStatus');
       await adminUpdateChatterStatus({
         chatterId,
         status: newStatus,

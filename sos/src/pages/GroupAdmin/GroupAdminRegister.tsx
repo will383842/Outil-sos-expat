@@ -16,7 +16,7 @@ import Layout from '@/components/layout/Layout';
 import GroupAdminRegisterForm from '@/components/GroupAdmin/Forms/GroupAdminRegisterForm';
 import type { GroupAdminRegistrationData } from '@/components/GroupAdmin/Forms/GroupAdminRegisterForm';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/config/firebase';
+import { functionsWest2 } from '@/config/firebase';
 import { Users, ArrowLeft, ArrowRight, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
@@ -154,7 +154,7 @@ const GroupAdminRegister: React.FC = () => {
       }
 
       // Step 2: Call Cloud Function
-      const registerGroupAdmin = httpsCallable(functions, 'registerGroupAdmin');
+      const registerGroupAdmin = httpsCallable(functionsWest2, 'registerGroupAdmin');
       const result = await registerGroupAdmin({
         firstName: data.firstName,
         lastName: data.lastName,

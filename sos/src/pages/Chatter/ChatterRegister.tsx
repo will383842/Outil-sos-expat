@@ -15,7 +15,7 @@ import Layout from '@/components/layout/Layout';
 import ChatterRegisterForm from '@/components/Chatter/Forms/ChatterRegisterForm';
 import type { ChatterRegistrationData } from '@/components/Chatter/Forms/ChatterRegisterForm';
 import { httpsCallable } from 'firebase/functions';
-import { functions, auth } from '@/config/firebase';
+import { functionsWest2, auth } from '@/config/firebase';
 import { Star, ArrowLeft, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
@@ -169,7 +169,7 @@ const ChatterRegister: React.FC = () => {
 
       // Step 2: Now that user is authenticated, call registerChatter Cloud Function
       // to create the chatter profile with additional data
-      const registerChatterFn = httpsCallable(functions, 'registerChatter');
+      const registerChatterFn = httpsCallable(functionsWest2, 'registerChatter');
       try {
         await registerChatterFn({
           firstName: data.firstName,

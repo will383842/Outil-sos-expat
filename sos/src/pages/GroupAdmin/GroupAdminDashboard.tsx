@@ -8,8 +8,8 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { useAuth } from '@/contexts/AuthContext';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/config/firebase';
+import {  httpsCallable  } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   DollarSign,
   Users,
@@ -67,7 +67,7 @@ const GroupAdminDashboard: React.FC = () => {
   const fetchDashboard = async () => {
     try {
       setLoading(true);
-      const getDashboard = httpsCallable(functions, 'getGroupAdminDashboard');
+      const getDashboard = httpsCallable(functionsWest2, 'getGroupAdminDashboard');
       const result = await getDashboard({});
       setDashboardData(result.data as GroupAdminDashboardResponse);
     } catch (err: unknown) {

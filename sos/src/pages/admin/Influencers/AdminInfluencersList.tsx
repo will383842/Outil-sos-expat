@@ -6,7 +6,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   Users,
   Search,
@@ -111,7 +112,6 @@ type StatusFilter = 'all' | 'active' | 'suspended' | 'banned';
 const AdminInfluencersList: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   // State
   const [influencers, setInfluencers] = useState<Influencer[]>([]);
@@ -141,7 +141,7 @@ const AdminInfluencersList: React.FC = () => {
 
     try {
       const adminGetInfluencersList = httpsCallable<any, InfluencerListResponse>(
-        functions,
+        functionsWest2,
         'adminGetInfluencersList'
       );
 
@@ -166,7 +166,7 @@ const AdminInfluencersList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, countryFilter, languageFilter, searchQuery, functions]);
+  }, [page, statusFilter, countryFilter, languageFilter, searchQuery]);
 
   useEffect(() => {
     fetchInfluencers();
@@ -227,7 +227,7 @@ const AdminInfluencersList: React.FC = () => {
     setExporting(true);
     try {
       const adminExportInfluencers = httpsCallable<any, { csv: string }>(
-        functions,
+        functionsWest2,
         'adminExportInfluencers'
       );
 
@@ -258,7 +258,7 @@ const AdminInfluencersList: React.FC = () => {
 
     setBulkActionLoading(true);
     try {
-      const adminBulkInfluencerAction = httpsCallable(functions, 'adminBulkInfluencerAction');
+      const adminBulkInfluencerAction = httpsCallable(functionsWest2, 'adminBulkInfluencerAction');
       await adminBulkInfluencerAction({
         influencerIds: Array.from(selectedIds),
         action,

@@ -6,7 +6,8 @@
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   ArrowLeft,
   User,
@@ -125,7 +126,6 @@ const AdminGroupAdminDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,7 +145,7 @@ const AdminGroupAdminDetail: React.FC = () => {
     setError(null);
 
     try {
-      const getDetail = httpsCallable(functions, 'adminGetGroupAdminDetail');
+      const getDetail = httpsCallable(functionsWest2, 'adminGetGroupAdminDetail');
       const result = await getDetail({ groupAdminId: id });
       const data = result.data as { groupAdmin: GroupAdminDetail; commissions: Commission[] };
       setAdmin(data.groupAdmin);
@@ -162,7 +162,7 @@ const AdminGroupAdminDetail: React.FC = () => {
     if (!id) return;
     setRecruitsLoading(true);
     try {
-      const getRecruits = httpsCallable(functions, 'adminGetGroupAdminRecruits');
+      const getRecruits = httpsCallable(functionsWest2, 'adminGetGroupAdminRecruits');
       const result = await getRecruits({ recruiterId: id });
       const data = result.data as { recruits: Recruit[] };
       setRecruits(data.recruits || []);
@@ -189,7 +189,7 @@ const AdminGroupAdminDetail: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const updateStatus = httpsCallable(functions, 'adminUpdateGroupAdminStatus');
+      const updateStatus = httpsCallable(functionsWest2, 'adminUpdateGroupAdminStatus');
       await updateStatus({
         groupAdminId: admin.id,
         status: newStatus,
@@ -209,7 +209,7 @@ const AdminGroupAdminDetail: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const verifyGroup = httpsCallable(functions, 'adminVerifyGroup');
+      const verifyGroup = httpsCallable(functionsWest2, 'adminVerifyGroup');
       await verifyGroup({ groupAdminId: admin.id });
       fetchDetails();
     } catch (err) {

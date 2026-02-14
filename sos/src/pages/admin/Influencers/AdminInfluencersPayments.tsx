@@ -5,7 +5,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   Wallet,
   Search,
@@ -70,7 +71,6 @@ type StatusFilter = 'all' | 'pending' | 'processing' | 'completed' | 'rejected' 
 const AdminInfluencersPayments: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   // State
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -96,7 +96,7 @@ const AdminInfluencersPayments: React.FC = () => {
 
     try {
       const adminGetInfluencerWithdrawals = httpsCallable<any, WithdrawalListResponse>(
-        functions,
+        functionsWest2,
         'adminGetInfluencerWithdrawals'
       );
 
@@ -119,7 +119,7 @@ const AdminInfluencersPayments: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, searchQuery, functions]);
+  }, [page, statusFilter, searchQuery]);
 
   useEffect(() => {
     fetchWithdrawals();
@@ -190,7 +190,7 @@ const AdminInfluencersPayments: React.FC = () => {
   const handleApprove = async (withdrawalId: string) => {
     setActionLoading(withdrawalId);
     try {
-      const adminProcessInfluencerWithdrawal = httpsCallable(functions, 'adminProcessInfluencerWithdrawal');
+      const adminProcessInfluencerWithdrawal = httpsCallable(functionsWest2, 'adminProcessInfluencerWithdrawal');
       await adminProcessInfluencerWithdrawal({
         withdrawalId,
         action: 'approve',
@@ -208,7 +208,7 @@ const AdminInfluencersPayments: React.FC = () => {
   const handleComplete = async (withdrawalId: string, transactionId?: string) => {
     setActionLoading(withdrawalId);
     try {
-      const adminProcessInfluencerWithdrawal = httpsCallable(functions, 'adminProcessInfluencerWithdrawal');
+      const adminProcessInfluencerWithdrawal = httpsCallable(functionsWest2, 'adminProcessInfluencerWithdrawal');
       await adminProcessInfluencerWithdrawal({
         withdrawalId,
         action: 'complete',
@@ -229,7 +229,7 @@ const AdminInfluencersPayments: React.FC = () => {
 
     setActionLoading(showRejectModal);
     try {
-      const adminProcessInfluencerWithdrawal = httpsCallable(functions, 'adminProcessInfluencerWithdrawal');
+      const adminProcessInfluencerWithdrawal = httpsCallable(functionsWest2, 'adminProcessInfluencerWithdrawal');
       await adminProcessInfluencerWithdrawal({
         withdrawalId: showRejectModal,
         action: 'reject',

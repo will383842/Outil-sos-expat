@@ -6,8 +6,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/config/firebase';
+import {  httpsCallable  } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import { Trophy, Medal, Award, Loader2, ChevronLeft, ChevronRight, Filter, X, Calendar, Clock } from 'lucide-react';
 import { GroupAdminLeaderboardEntry, GroupAdminBadgeType, GROUP_ADMIN_BADGES, formatGroupAdminAmount } from '@/types/groupAdmin';
 
@@ -29,7 +29,7 @@ const GroupAdminLeaderboard: React.FC = () => {
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const getLeaderboard = httpsCallable(functions, 'getGroupAdminLeaderboard');
+      const getLeaderboard = httpsCallable(functionsWest2, 'getGroupAdminLeaderboard');
       const result = await getLeaderboard({ month: isAllTime ? 'all-time' : month });
       const data = result.data as {
         rankings: GroupAdminLeaderboardEntry[];

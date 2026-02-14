@@ -4,7 +4,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import {
   Settings,
   DollarSign,
@@ -47,7 +48,6 @@ interface GroupAdminConfig {
 }
 
 const AdminGroupAdminsConfig: React.FC = () => {
-  const functions = getFunctions(undefined, 'europe-west2');
   const intl = useIntl();
 
   const [loading, setLoading] = useState(true);
@@ -61,7 +61,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const getConfig = httpsCallable(functions, 'adminGetGroupAdminConfig');
+      const getConfig = httpsCallable(functionsWest2, 'adminGetGroupAdminConfig');
       const result = await getConfig({});
       setConfig(result.data as GroupAdminConfig);
     } catch (err) {
@@ -85,7 +85,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
     setSuccess(false);
 
     try {
-      const updateConfig = httpsCallable(functions, 'adminUpdateGroupAdminConfig');
+      const updateConfig = httpsCallable(functionsWest2, 'adminUpdateGroupAdminConfig');
       await updateConfig(config);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

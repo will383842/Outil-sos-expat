@@ -1180,6 +1180,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     hi: "influencer/nilambit",
     ar: "مؤثر/معلق",
   },
+  "influencer-training": {
+    fr: "influencer/formation",
+    en: "influencer/training",
+    es: "influencer/formacion",
+    de: "influencer/schulung",
+    ru: "influencer/obuchenie",
+    pt: "influencer/treinamento",
+    ch: "influencer/peixun",
+    hi: "influencer/prashikshan",
+    ar: "مؤثر/تدريب",
+  },
   "influencer-resources": {
     fr: "influencer/ressources",
     en: "influencer/resources",

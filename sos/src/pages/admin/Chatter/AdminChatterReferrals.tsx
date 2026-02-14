@@ -6,7 +6,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
+import { functionsWest2 } from "@/config/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,12 +82,10 @@ const AdminChatterReferrals: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
-  const functions = getFunctions(undefined, "europe-west2");
-
   const fetchStats = useCallback(async () => {
     try {
       const getStatsFn = httpsCallable<void, { stats: ReferralStats }>(
-        functions,
+        functionsWest2,
         "adminGetReferralStats"
       );
       const result = await getStatsFn();
@@ -94,14 +93,14 @@ const AdminChatterReferrals: React.FC = () => {
     } catch (err) {
       console.error("Error fetching stats:", err);
     }
-  }, [functions]);
+  }, []);
 
   const fetchCommissions = useCallback(async () => {
     try {
       const getCommissionsFn = httpsCallable<
         { limit: number; statusFilter?: string; typeFilter?: string },
         { commissions: ReferralCommission[] }
-      >(functions, "adminGetReferralCommissions");
+      >(functionsWest2, "adminGetReferralCommissions");
       const result = await getCommissionsFn({
         limit: 100,
         statusFilter: statusFilter !== "all" ? statusFilter : undefined,
@@ -111,14 +110,14 @@ const AdminChatterReferrals: React.FC = () => {
     } catch (err) {
       console.error("Error fetching commissions:", err);
     }
-  }, [functions, statusFilter, typeFilter]);
+  }, [statusFilter, typeFilter]);
 
   const fetchReferralTree = useCallback(async () => {
     try {
       const getTreeFn = httpsCallable<
         { searchTerm?: string },
         { tree: ReferralTreeNode[] }
-      >(functions, "adminGetReferralTree");
+      >(functionsWest2, "adminGetReferralTree");
       const result = await getTreeFn({
         searchTerm: searchTerm || undefined,
       });
@@ -126,7 +125,7 @@ const AdminChatterReferrals: React.FC = () => {
     } catch (err) {
       console.error("Error fetching referral tree:", err);
     }
-  }, [functions, searchTerm]);
+  }, [searchTerm]);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);

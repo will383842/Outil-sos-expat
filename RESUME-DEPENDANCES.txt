@@ -1,0 +1,275 @@
+================================================================================
+ANALYSE COMPLETE DES DEPENDANCES - SOS EXPAT PROJECT
+================================================================================
+Date: 14 Février 2026
+Analysé par: Claude Code
+
+================================================================================
+RESUME EXECUTIF
+================================================================================
+
+STRUCTURE:
+  Frontend: sos/ (109 dependencies)
+  Backend: sos/firebase/functions/ (17 dependencies)
+  Node.js: 20.x (frontend), 22 (backend)
+
+SANTE GLOBALE: Modérée-Bonne (75/100)
+
+Packages à jour: 62/109 (frontend), 10/17 (backend)
+Packages outdated: 47 (frontend), 7 (backend)
+Sécurité: Aucune vulnérabilité critique
+
+================================================================================
+DÉPENDANCES CRITIQUES
+================================================================================
+
+1. FIREBASE ECOSYSTEM
+   Frontend: firebase@12.7.0 (up-to-date minor)
+   Backend: firebase-admin@12.7.0 (outdated major, 13.6.1 available)
+   Backend: firebase-functions@7.0.5 (outdated major, 8.10.0 available)
+   Action: Firebase major sprint Q2 (3-4 days)
+   Risk: MEDIUM
+
+2. REACT & JSX
+   react: 18.3.1 (stable, 19.2.4 available)
+   react-dom: 18.3.1 (sync)
+   Status: LTS, stay until Q3 2026
+   Risk: LOW
+
+3. TYPESCRIPT
+   typescript: 5.9.2 (up-to-date)
+   Status: Latest of 5.9 cycle
+   Risk: LOW
+
+4. TELEPHONE
+   libphonenumber-js: 1.12.33 (1.12.36 available)
+   Status: Patch available, safe to update
+   Risk: LOW
+
+5. STRIPE (FROZEN)
+   @stripe/stripe-js: 7.9.0 (8.7.0 available)
+   @stripe/react-stripe-js: 3.10.0 (5.6.0 available)
+   stripe (backend): 14.25.0 (20.3.1 available)
+   Status: INTENTIONALLY FROZEN
+   Reason: Payment production critical
+   Plan: Q2 2026 full audit (2 weeks)
+   Risk: VERY HIGH
+
+6. TWILIO (FROZEN)
+   twilio: 4.23.0 (5.12.1 available)
+   Status: INTENTIONALLY FROZEN
+   Reason: Call infrastructure critical
+   Plan: Q3 2026 full audit (2-3 weeks)
+   Risk: VERY HIGH
+
+================================================================================
+ACTIONS A FAIRE CETTE SEMAINE (IMMÉDIAT)
+================================================================================
+
+1. Sentry patches (sécurité)
+   cd sos
+   npm update @sentry/react @sentry/node
+   npm run build && npm run test:run
+
+2. Zod patch
+   npm update zod
+
+3. Vérification
+   npm run typecheck
+   npm run build
+
+Time: ~1 heure
+Risk: LOW
+
+================================================================================
+MISES À JOUR À FAIRE FÉVRIER 2026
+================================================================================
+
+1. Firebase minor (safe)
+   npm update firebase@12.9.0
+
+2. Phone validation (safe)
+   npm update libphonenumber-js@1.12.36
+
+3. UI components (safe)
+   npm update @mui/material puppeteer recharts
+
+4. Tests E2E
+   npm run test:e2e
+
+Time: ~4 hours
+Risk: LOW
+
+================================================================================
+SPRINTS PLANIFIÉS
+================================================================================
+
+Q1 2026:
+  - Firebase major upgrade (3-4 days)
+    firebase-admin@12 -> 13
+    firebase-functions@7 -> 8
+  Risk: MEDIUM
+
+Q2 2026:
+  - Stripe full audit (2 weeks) 🔴 VERY HIGH RISK
+    stripe@14 -> 20
+    @stripe/* packages
+    Webhooks + payment flows
+
+Q3 2026:
+  - Twilio full audit (2-3 weeks) 🔴 VERY HIGH RISK
+    twilio@4 -> 5
+    Call infrastructure
+    Conference management
+
+Q4 2026:
+  - React 19 migration (2-3 weeks)
+  - Vite 7 migration
+  - Tailwind 4 migration
+
+================================================================================
+PACKAGES À NE JAMAIS UPGRADER SANS AUDIT COMPLET
+================================================================================
+
+GELÉS INTENTIONNELLEMENT:
+  stripe@14.25.0              -> 20.3.1 (5 majeures)
+  @stripe/stripe-js@7.9.0     -> 8.7.0 (1 majeure)
+  @stripe/react-stripe-js@3.10.0 -> 5.6.0 (2 majeures)
+  twilio@4.23.0               -> 5.12.1 (1 majeure)
+
+Raison: Production workflows affectés
+
+================================================================================
+RÉSULTATS NPM OUTDATED
+================================================================================
+
+FRONTEND (47 packages):
+  Critiques (breaking changes):
+    react 18.3.1 -> 19.2.4
+    stripe-js 7.9.0 -> 8.7.0 (FROZEN)
+    react-stripe-js 3.10.0 -> 5.6.0 (FROZEN)
+    react-intl 7.1.14 -> 8.1.3
+    vite 5.4.21 -> 7.3.1
+    tailwindcss 3.4.19 -> 4.1.18
+    
+  Recommandées (safe):
+    firebase 12.7.0 -> 12.9.0
+    @sentry/react 10.34.0 -> 10.38.0
+    libphonenumber-js 1.12.33 -> 1.12.36
+    puppeteer 24.35.0 -> 24.37.3
+
+BACKEND (7 packages):
+  Critiques (freezés):
+    stripe 14.25.0 -> 20.3.1 (FROZEN)
+    twilio 4.23.0 -> 5.12.1 (FROZEN)
+    
+  À planifier:
+    firebase-admin 12.7.0 -> 13.6.1
+    firebase-functions 7.0.5 -> 8.10.0
+    nodemailer 6.10.1 -> 8.0.1
+    
+  Recommandées (safe):
+    @sentry/node 10.32.1 -> 10.38.0
+    axios 1.13.2 -> 1.13.5
+    puppeteer-core 23.6.0 -> 24.37.3
+
+================================================================================
+COMMANDES UTILES
+================================================================================
+
+Vérifier packages outdated:
+  npm outdated
+
+Audit de sécurité:
+  npm audit
+
+Vérifier versions critiques:
+  npm list firebase firebase-admin firebase-functions
+  npm list stripe twilio
+
+TypeScript check:
+  npm run typecheck
+
+Build complet:
+  npm run build
+
+Tests:
+  npm run test:run
+  npm run test:e2e
+
+Déploiement functions:
+  firebase deploy --only functions
+
+================================================================================
+POINTS D'ATTENTION
+================================================================================
+
+1. Désynchronisation Firebase (BAS)
+   Frontend firebase@12.7 vs Backend firebase-admin@12.7 = OK
+   À upgrader ensemble en Q2
+
+2. Stripe Production Critical
+   Ne pas toucher sans audit complet
+   2 semaines de travail planifié
+
+3. Twilio Call Infrastructure
+   Ne pas toucher sans audit complet
+   2-3 semaines de travail planifié
+
+4. React 18 Fin de Vie
+   Q3 2026 = fin de support
+   Planifier React 19 migration pour Q4 2026
+
+5. TypeScript Stable
+   Déjà à jour (5.9.2)
+   Utiliser --skipLibCheck pour build
+
+================================================================================
+RECOMMANDATIONS FINALES
+================================================================================
+
+THIS WEEK (30 minutes):
+  ✓ Sentry patches
+  ✓ Zod patches
+  ✓ Tests complets
+
+FEBRUARY 2026:
+  ✓ Firebase minor
+  ✓ Phone & UI updates
+  ✓ E2E testing
+
+Q1 2026:
+  ✓ Firebase major sprint (3-4 days)
+  ✓ React Router audit
+
+Q2 2026:
+  ⚠ Stripe full audit (2 weeks, VERY HIGH RISK)
+
+Q3 2026:
+  ⚠ Twilio full audit (2-3 weeks, VERY HIGH RISK)
+
+Q4 2026:
+  ✓ React 19 migration
+  ✓ Vite 7 upgrade
+
+================================================================================
+RESPONSABILITÉS
+================================================================================
+
+Maintenance hebdomadaire:
+  npm outdated | grep -v FROZEN
+  npm audit
+
+Responsable de l'audit Q1:
+  À définir pour Firebase major
+
+Responsable du suivi Stripe:
+  À définir pour Q2 (compétences Stripe + tests)
+
+Responsable du suivi Twilio:
+  À définir pour Q3 (compétences Twilio + call testing)
+
+================================================================================
+Généré: 2026-02-14
+Révision: 1.0
+================================================================================

@@ -5,7 +5,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from "@/config/firebase";
 import {
   Settings,
   DollarSign,
@@ -78,7 +79,6 @@ interface ChatterConfig {
 
 const AdminChatterConfig: React.FC = () => {
   const intl = useIntl();
-  const functions = getFunctions(undefined, 'europe-west2');
 
   // State
   const [config, setConfig] = useState<ChatterConfig | null>(null);
@@ -98,7 +98,7 @@ const AdminChatterConfig: React.FC = () => {
 
     try {
       const adminGetChatterConfig = httpsCallable<void, { config: ChatterConfig }>(
-        functions,
+        functionsWest2,
         'adminGetChatterConfig'
       );
 
@@ -112,7 +112,7 @@ const AdminChatterConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functions]);
+  }, []);
 
   useEffect(() => {
     fetchConfig();
@@ -150,7 +150,7 @@ const AdminChatterConfig: React.FC = () => {
 
     try {
       const adminUpdateChatterConfig = httpsCallable<Partial<ChatterConfig>, { success: boolean }>(
-        functions,
+        functionsWest2,
         'adminUpdateChatterConfig'
       );
 

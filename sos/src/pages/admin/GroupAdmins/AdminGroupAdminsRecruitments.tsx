@@ -4,7 +4,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useIntl } from 'react-intl';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable, getFunctions } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 import { useNavigate } from 'react-router-dom';
 import {
   UserPlus,
@@ -60,7 +61,6 @@ interface Stats {
 }
 
 const AdminGroupAdminsRecruitments: React.FC = () => {
-  const functions = getFunctions(undefined, 'europe-west2');
   const intl = useIntl();
   const navigate = useNavigate();
 
@@ -78,7 +78,7 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const getList = httpsCallable(functions, 'adminGetRecruitmentsList');
+      const getList = httpsCallable(functionsWest2, 'adminGetRecruitmentsList');
       const result = await getList({ page, limit, status: statusFilter, search });
       const data = result.data as {
         recruitments: Recruitment[];

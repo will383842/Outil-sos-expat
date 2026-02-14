@@ -6,7 +6,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
+import { functionsWest2 } from "@/config/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,8 +102,6 @@ const AdminChatterPromotions: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  const functions = getFunctions(undefined, "europe-west2");
-
   const fetchPromotions = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -110,7 +109,7 @@ const AdminChatterPromotions: React.FC = () => {
       const getPromosFn = httpsCallable<
         { includeInactive?: boolean },
         { promotions: ChatterPromotion[] }
-      >(functions, "adminGetPromotions");
+      >(functionsWest2, "adminGetPromotions");
 
       const result = await getPromosFn({ includeInactive: true });
       setPromotions(result.data.promotions);
@@ -119,7 +118,7 @@ const AdminChatterPromotions: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [functions]);
+  }, []);
 
   useEffect(() => {
     fetchPromotions();
@@ -152,7 +151,7 @@ const AdminChatterPromotions: React.FC = () => {
         const updateFn = httpsCallable<
           { id: string; updates: Partial<PromotionFormData> },
           { success: boolean }
-        >(functions, "adminUpdatePromotion");
+        >(functionsWest2, "adminUpdatePromotion");
 
         await updateFn({
           id: editingPromo.id,
@@ -165,7 +164,7 @@ const AdminChatterPromotions: React.FC = () => {
         const createFn = httpsCallable<
           Omit<PromotionFormData, "countryFilter"> & { countryFilter: string | null },
           { success: boolean; promoId: string }
-        >(functions, "adminCreatePromotion");
+        >(functionsWest2, "adminCreatePromotion");
 
         await createFn({
           ...formData,
@@ -188,7 +187,7 @@ const AdminChatterPromotions: React.FC = () => {
     setIsDeleting(promoId);
     try {
       const deleteFn = httpsCallable<{ id: string }, { success: boolean }>(
-        functions,
+        functionsWest2,
         "adminDeletePromotion"
       );
 
@@ -204,7 +203,7 @@ const AdminChatterPromotions: React.FC = () => {
   const handleDuplicate = async (promo: ChatterPromotion) => {
     try {
       const duplicateFn = httpsCallable<{ id: string }, { success: boolean; promoId: string }>(
-        functions,
+        functionsWest2,
         "adminDuplicatePromotion"
       );
 
