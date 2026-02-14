@@ -9,7 +9,7 @@ const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
 const MAILWIZZ_BACKEND_URL = "https://mail.sos-expat.com/backend";
 const MULTI_DASHBOARD_URL = "https://multi.sos-expat.com";
 const IA_TOOL_URL = "https://ia.sos-expat.com";
-const SCRAPER_PRO_URL = "https://scraper.sos-expat.com";
+const SCRAPER_PRO_URL = "https://scraper.providers-expat.com";
 const EMAIL_ENGINE_URL = "https://engine.sos-expat.com";
 
 interface ToolCard {
