@@ -42,8 +42,11 @@ service firebase.storage {
     // REGISTRATION TEMP: Uploads during registration (user not yet authenticated)
     // Security: Anonymous uploads allowed with strict limits (images only, 5MB max)
     // Files are cleaned up by Cloud Function after 24h
+    // ⚠️ IMPORTANT: Public read access required for preview during registration
     match /registration_temp/{fileName} {
-      allow read: if isAuthenticated() || isAdmin();
+      // ✅ FIX: Allow public read for registration preview (user not authenticated yet)
+      // Security: URLs contain random tokens, files auto-deleted after 24h
+      allow read: if true;
       // Allow anonymous uploads during registration with strict validation
       // - Images only (jpeg, png, webp, gif)
       // - Max 5MB for anonymous uploads (reduced from 15MB)
@@ -56,7 +59,9 @@ service firebase.storage {
     // TEMP PROFILES: Temporary profile photos during registration
     // Same rules as registration_temp
     match /temp_profiles/{fileName} {
-      allow read: if isAuthenticated() || isAdmin();
+      // ✅ FIX: Allow public read for registration preview (user not authenticated yet)
+      // Security: URLs contain random tokens, files auto-deleted after 24h
+      allow read: if true;
       // Allow anonymous uploads during registration with strict validation
       allow write: if isImage() &&
                    request.resource != null &&
