@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
 import { Bot, Database, ExternalLink, Link2, Mail, Send, Server, Settings, Users, Wrench } from "lucide-react";
 
-const BACKLINK_ENGINE_URL = "https://backlinks.sos-expat.com";
+const BACKLINK_ENGINE_URL = "https://backlinks.life-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
 const MAILWIZZ_BACKEND_URL = "https://mail.sos-expat.com/backend";
 const MULTI_DASHBOARD_URL = "https://multi.sos-expat.com";
