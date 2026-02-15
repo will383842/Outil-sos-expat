@@ -568,6 +568,14 @@ import * as admin from "firebase-admin";
 import Stripe from "stripe";
 import type { Request as ExpressRequest, Response } from "express";
 
+// ====== FIREBASE ADMIN INITIALIZATION (GLOBAL) ======
+// Initialize Firebase Admin once at module level
+// This prevents "default Firebase app does not exist" errors in Cloud Functions v2
+if (!admin.apps.length) {
+  admin.initializeApp();
+  console.log('[INIT] Firebase Admin SDK initialized globally');
+}
+
 // 🦾 Cloud Tasks helper
 // P0 FIX: scheduleCallTask n'est plus utilisé ici - scheduling géré dans createAndScheduleCallHTTPS
 // import { scheduleCallTask } from "./lib/tasks";

@@ -17,7 +17,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, Transaction } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
-import { getApps, initializeApp } from "firebase-admin/app";
 
 import {
   GetAffiliateDataResponse,
@@ -28,13 +27,6 @@ import {
 } from "../types";
 import { generateAffiliateCode } from "../utils/codeGenerator";
 import { getAffiliateConfigCached } from "../utils/configService";
-
-// Lazy initialization
-function ensureInitialized() {
-  if (!getApps().length) {
-    initializeApp();
-  }
-}
 
 export const getMyAffiliateData = onCall(
   {
@@ -51,7 +43,7 @@ export const getMyAffiliateData = onCall(
     ],
   },
   async (request): Promise<GetAffiliateDataResponse> => {
-    ensureInitialized();
+    // Firebase Admin is initialized globally in index.ts
 
     // 1. Check authentication
     if (!request.auth) {
