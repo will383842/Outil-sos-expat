@@ -580,16 +580,13 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
   // ============================================================================
   if (success) {
     return (
-      <div className="text-center py-12">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center shadow-lg bg-green-500/20 border">
-          <Check className="w-10 h-10 text-green-400" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-red-950 via-gray-950 to-black px-4">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-3xl font-bold text-white mb-3">✅ Inscription réussie !</h2>
+          <p className="text-lg text-gray-300 mb-2">Votre compte Influenceur a été créé avec succès.</p>
+          <p className="text-sm text-gray-400">Redirection vers votre tableau de bord...</p>
         </div>
-        <h2 className="text-2xl font-bold mb-2">
-          <FormattedMessage id="influencer.register.success.title" defaultMessage="Registration successful!" />
-        </h2>
-        <p className="text-gray-300">
-          <FormattedMessage id="influencer.register.success.message" defaultMessage="Your account is now active. Redirecting to your dashboard..." />
-        </p>
       </div>
     );
   }
@@ -630,7 +627,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
             <div className="space-y-1">
               <label htmlFor="firstName" className={s.label}>
                 <FormattedMessage id="form.firstName" defaultMessage="First name" />
-                <span className="text-red-400 ml-0.5">*</span>
+                <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
               </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
@@ -661,7 +658,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
             <div className="space-y-1">
               <label htmlFor="lastName" className={s.label}>
                 <FormattedMessage id="form.lastName" defaultMessage="Last name" />
-                <span className="text-red-400 ml-0.5">*</span>
+                <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
               </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
@@ -693,7 +690,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
           <div className="space-y-1">
             <label htmlFor="email" className={s.label}>
               <FormattedMessage id="form.email" defaultMessage="Email" />
-              <span className="text-red-400 ml-0.5">*</span>
+              <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
             </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
@@ -725,7 +722,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
           <div className="space-y-2">
             <label htmlFor="password" className={s.label}>
               <FormattedMessage id="form.password" defaultMessage="Password" />
-              <span className="text-red-400 ml-0.5">*</span>
+              <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
             </label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
@@ -799,7 +796,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
             <div ref={countryDropdownRef} className="space-y-2">
               <label id="country-label" className={s.label}>
                 <FormattedMessage id="form.country" defaultMessage="Country" />
-                <span className="text-red-400 ml-0.5">*</span>
+                <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
               </label>
               <div className="relative">
                 <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
@@ -932,10 +929,10 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         </h3>
         <p className={s.sectionDescription}>
           <FormattedMessage id="influencer.register.platformsHint" defaultMessage="Select at least one platform where you create content" />
-          <span className="text-red-400 ml-0.5">*</span>
+          <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
         </p>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {PLATFORMS.map((platform) => {
             const isSelected = formData.platforms.includes(platform.value);
             return (
@@ -1014,28 +1011,6 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                   className={`${s.input} pl-12 ${formData.communityNiche ? s.inputFilled : ''}`}
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Bio */}
-          <div className="space-y-1">
-            <label htmlFor="bio" className={s.label}>
-              <FormattedMessage id="form.bio" defaultMessage="Bio / Description" />
-            </label>
-            <div className="relative">
-              <textarea
-                id="bio"
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                placeholder={intl.formatMessage({ id: 'form.bio.placeholder', defaultMessage: 'Tell us about your community and content...' })}
-                rows={3}
-                maxLength={500}
-                className={`${s.input} resize-none ${formData.bio ? s.inputFilled : ''}`}
-              />
-            </div>
-            <div className="flex justify-end">
-              <span className="text-xs">{formData.bio.length}/500</span>
             </div>
           </div>
 
@@ -1193,7 +1168,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                 ),
               }}
             />
-            <span className="text-red-400 ml-0.5">*</span>
+            <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
           </span>
         </label>
         {validationErrors.acceptTerms && (

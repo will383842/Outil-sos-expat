@@ -596,12 +596,12 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4  overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={t.title}
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[95vh] flex flex-col my-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[98vh] sm:max-h-[95vh] flex flex-col overflow-hidden">
         <div className="flex justify-between items-center border-b px-4 py-1">
           <h3 className="text-lg font-semibold">{t.title}</h3>
           <button
@@ -706,10 +706,10 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
           )}
         </div>
 
-        {/* Controls */}
-        <div className="px-4  bg-gray-50 rounded-xl">
+        {/* Controls - Sticky at bottom */}
+        <div className="px-4 py-3 bg-gray-50 border-t flex-shrink-0">
           {/* Preview */}
-          <div className="flex items-center gap-4 bg-white p-3 rounded-lg border">
+          <div className="flex items-center gap-4 bg-white p-3 rounded-lg border mb-3">
             <div>
               <div className="text-[12px]  font-medium text-gray-700 mb-1">
                 {t.preview}
@@ -743,9 +743,9 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             </div>
           </div>
 
-          {/* Zoom moderne */}
-          <div className="flex items-center gap-3 w-full">
-            <ZoomIn size={18} className="text-gray-600" />
+          {/* Zoom + Rotate - Compact layout */}
+          <div className="flex items-center gap-2 mb-3">
+            <ZoomIn size={16} className="text-gray-600 flex-shrink-0" />
             <input
               type="range"
               value={scale}
@@ -756,53 +756,49 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
               disabled={!isInitialized || isProcessing}
               aria-label={t.zoom}
               className="flex-1 appearance-none h-2 bg-gray-200 rounded-lg accent-blue-600 cursor-pointer
-               [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5
+               [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4
                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600
                [&::-webkit-slider-thumb]:hover:bg-blue-700
-               [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5
+               [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4
                [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blue-600"
             />
-            <span className="text-sm text-gray-600 min-w-[3rem] text-right">
+            <span className="text-xs text-gray-600 min-w-[2.5rem] text-right">
               {Math.round(scale * 100)}%
             </span>
-          </div>
-
-          {/* Rotate */}
-          <div className="flex items-center ">
             <button
               onClick={handleRotate}
               disabled={isProcessing || !isInitialized}
-              className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+              title={t.rotate}
             >
-              <RotateCw size={16} />
-              {t.rotate}
+              <RotateCw size={14} />
+              <span className="hidden sm:inline">{rotation}°</span>
             </button>
-            <span className="text-sm text-gray-600">{rotation}°</span>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 mb-2">
+          {/* Actions - Always visible */}
+          <div className="flex gap-2">
             <button
               onClick={onCancel}
               disabled={isProcessing}
-              className="flex-1 p-1  text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 touch-manipulation min-h-[44px]"
             >
               {t.cancel}
             </button>
             <button
               onClick={handleCrop}
               disabled={isProcessing || !isInitialized}
-              className="flex-1  p-1 text-[12px]  bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 touch-manipulation min-h-[44px] shadow-lg"
             >
               {isProcessing ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  {t.processing}
+                  <span>{t.processing}</span>
                 </>
               ) : (
                 <>
-                  <Check size={16} />
-                  {t.validate}
+                  <Check size={18} />
+                  <span>{t.validate}</span>
                 </>
               )}
             </button>

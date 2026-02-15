@@ -338,7 +338,18 @@ const ChatterRegister: React.FC = () => {
         <meta name="theme-color" content="#991B1B" />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-red-950 via-gray-950 to-black py-12 px-4">
+      {/* Écran de redirection après inscription réussie */}
+      {success ? (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-red-950 via-gray-950 to-black px-4">
+          <div className="text-center max-w-md">
+            <div className="w-20 h-20 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+            <h2 className="text-3xl font-bold text-white mb-3">✅ Inscription réussie !</h2>
+            <p className="text-lg text-gray-300 mb-2">Votre compte Chatter a été créé avec succès.</p>
+            <p className="text-sm text-gray-400">Redirection vers l'activation Telegram...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="min-h-screen bg-gradient-to-b from-red-950 via-gray-950 to-black py-12 px-4">
         {/* Radial glow effect matching landing */}
         <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(251,191,36,0.08),transparent_50%)] pointer-events-none" />
 
@@ -489,6 +500,7 @@ const ChatterRegister: React.FC = () => {
           )}
         </div>
       </div>
+      )}
     </Layout>
   );
 };

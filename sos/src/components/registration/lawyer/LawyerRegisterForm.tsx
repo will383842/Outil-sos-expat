@@ -144,6 +144,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [botError, setBotError] = useState('');
 
   // Country options
@@ -430,8 +431,8 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
           const tracking = getStoredReferralTracking();
           return tracking ? { referralTracking: tracking } : {};
         })(),
-        fbp: metaIds.fbp,
-        fbc: metaIds.fbc,
+        ...(metaIds.fbp ? { fbp: metaIds.fbp } : {}),
+        ...(metaIds.fbc ? { fbc: metaIds.fbc } : {}),
         metaEventId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -497,6 +498,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         });
       }
 
+      setIsRedirecting(true);
       hasNavigatedRef.current = true;
       trackMetaComplete({ content_name: 'lawyer_registration', status: 'completed', country: form.currentCountry, eventID: metaEventId });
       trackAdRegistration({ contentName: 'lawyer_registration' });
@@ -750,7 +752,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
           <div className="dark-reg-form">
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerLawyer.fields.specialties" />
-              <span className="text-red-400 ml-1">*</span>
+              <span className="text-red-400 font-bold text-lg ml-1">*</span>
             </label>
             <Suspense fallback={<div className="h-14 animate-pulse rounded-2xl bg-white/5 border border-white/10" />}>
               <SpecialtySelect
@@ -771,7 +773,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
           <div>
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerLawyer.fields.education" />
-              <span className="text-red-400 ml-1">*</span>
+              <span className="text-red-400 font-bold text-lg ml-1">*</span>
             </label>
             <div className="space-y-3">
               {form.educations.map((ed, idx) => (
@@ -879,7 +881,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
           <div className="dark-reg-form">
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerLawyer.fields.languages" />
-              <span className="text-red-400 ml-1">*</span>
+              <span className="text-red-400 font-bold text-lg ml-1">*</span>
             </label>
             <Suspense fallback={<div className="h-14 animate-pulse rounded-2xl bg-white/5 border border-white/10" />}>
               <MultiLanguageSelect
@@ -942,7 +944,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
             >
               <FormattedMessage id="registerLawyer.ui.termsLink" />
             </LocaleLink>
-            <span className="text-red-400 ml-1">*</span>
+            <span className="text-red-400 font-bold text-lg ml-1">*</span>
           </DarkCheckbox>
           <FieldError error={fieldErrors.acceptTerms} show={!!fieldErrors.acceptTerms} />
 
@@ -961,6 +963,20 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       ),
     },
   ], [form, fieldErrors, touched, selectedLanguages, selectedSpecialties, selectedPracticeCountries, countrySelectOptions, countryOptions, intl, lang, onTextChange, markTouched, setField, onPhoneChange, updateEducation, addEducation, removeEducation, validateStep1, validateStep2, validateStep3, validateStep4, validateStep5]);
+
+  // Écran de redirection après inscription réussie
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800 px-4">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-3xl font-bold text-white mb-3">✅ Inscription réussie !</h2>
+          <p className="text-lg text-gray-300 mb-2">Votre compte avocat a été créé avec succès.</p>
+          <p className="text-sm text-gray-400">Redirection vers votre tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <RegistrationWizard

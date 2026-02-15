@@ -3051,8 +3051,8 @@ const BookingRequest: React.FC = () => {
         providerPhone: bookingRequest.providerPhone,
         // Meta tracking identifiers for CAPI deduplication
         metaEventId: leadEventId,
-        fbp: metaIds.fbp,
-        fbc: metaIds.fbc,
+        ...(metaIds.fbp ? { fbp: metaIds.fbp } : {}),
+        ...(metaIds.fbc ? { fbc: metaIds.fbc } : {}),
         clientEmail: user?.email || undefined,
       });
 

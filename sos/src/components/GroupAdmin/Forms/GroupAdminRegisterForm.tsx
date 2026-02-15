@@ -511,7 +511,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className={darkStyles.label}>
-                <FormattedMessage id="form.firstName" defaultMessage="First name" /> <span className="text-red-400">*</span>
+                <FormattedMessage id="form.firstName" defaultMessage="First name" /> <span className="text-red-400 font-bold text-lg">*</span>
               </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none" />
@@ -529,7 +529,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
 
             <div className="space-y-1">
               <label className={darkStyles.label}>
-                <FormattedMessage id="form.lastName" defaultMessage="Last name" /> <span className="text-red-400">*</span>
+                <FormattedMessage id="form.lastName" defaultMessage="Last name" /> <span className="text-red-400 font-bold text-lg">*</span>
               </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none" />
@@ -549,7 +549,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
           {/* Email */}
           <div className="space-y-1">
             <label className={darkStyles.label}>
-              <FormattedMessage id="form.email" defaultMessage="Email" /> <span className="text-red-400">*</span>
+              <FormattedMessage id="form.email" defaultMessage="Email" /> <span className="text-red-400 font-bold text-lg">*</span>
             </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none" />
@@ -570,7 +570,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
           {!isLoggedIn && (
             <div className="space-y-1">
               <label className={darkStyles.label}>
-                <FormattedMessage id="form.password" defaultMessage="Password" /> <span className="text-red-400">*</span>
+                <FormattedMessage id="form.password" defaultMessage="Password" /> <span className="text-red-400 font-bold text-lg">*</span>
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none" />
@@ -696,7 +696,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             {/* Country dropdown */}
             <div className="space-y-1">
               <label className={darkStyles.label}>
-                <FormattedMessage id="form.country" defaultMessage="Country" /> <span className="text-red-400">*</span>
+                <FormattedMessage id="form.country" defaultMessage="Country" /> <span className="text-red-400 font-bold text-lg">*</span>
               </label>
               <DarkDropdown
                 refObj={countryDropdownRef}
@@ -750,7 +750,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             {/* Language dropdown */}
             <div className="space-y-1">
               <label className={darkStyles.label}>
-                <FormattedMessage id="form.language" defaultMessage="Language" /> <span className="text-red-400">*</span>
+                <FormattedMessage id="form.language" defaultMessage="Language" /> <span className="text-red-400 font-bold text-lg">*</span>
               </label>
               <DarkDropdown
                 refObj={languageDropdownRef}
@@ -803,7 +803,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
           {/* Group URL with history */}
           <div className="space-y-1">
             <label className={darkStyles.label}>
-              <FormattedMessage id="groupadmin.register.groupUrl" defaultMessage="Group / Community URL" /> <span className="text-red-400">*</span>
+              <FormattedMessage id="groupadmin.register.groupUrl" defaultMessage="Group / Community URL" /> <span className="text-red-400 font-bold text-lg">*</span>
               {savedUrls.length > 0 && (
                 <span className="ml-2 text-xs">
                   <FormattedMessage id="groupadmin.register.groupUrl.prefilled" defaultMessage="(pre-filled from history)" />
@@ -866,7 +866,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
           {/* Group Name */}
           <div className="space-y-1">
             <label className={darkStyles.label}>
-              <FormattedMessage id="groupadmin.register.groupName" defaultMessage="Group Name" /> <span className="text-red-400">*</span>
+              <FormattedMessage id="groupadmin.register.groupName" defaultMessage="Group Name" /> <span className="text-red-400 font-bold text-lg">*</span>
             </label>
             <div className="relative">
               <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none" />
@@ -887,7 +887,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             {/* Group Type */}
             <div className="space-y-1">
               <label className={darkStyles.label}>
-                <FormattedMessage id="groupadmin.register.groupType" defaultMessage="Group Type" /> <span className="text-red-400">*</span>
+                <FormattedMessage id="groupadmin.register.groupType" defaultMessage="Group Type" /> <span className="text-red-400 font-bold text-lg">*</span>
               </label>
               <DarkDropdown
                 refObj={groupTypeDropdownRef}
@@ -921,7 +921,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             {/* Group Size */}
             <div className="space-y-1">
               <label className={darkStyles.label}>
-                <FormattedMessage id="groupadmin.register.groupSize" defaultMessage="Group Size" /> <span className="text-red-400">*</span>
+                <FormattedMessage id="groupadmin.register.groupSize" defaultMessage="Group Size" /> <span className="text-red-400 font-bold text-lg">*</span>
               </label>
               <DarkDropdown
                 refObj={groupSizeDropdownRef}
@@ -958,7 +958,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             {/* Group Country */}
             <div className="space-y-1">
               <label className={darkStyles.label}>
-                <FormattedMessage id="groupadmin.register.groupCountry" defaultMessage="Group Country" /> <span className="text-red-400">*</span>
+                <FormattedMessage id="groupadmin.register.groupCountry" defaultMessage="Group Country" /> <span className="text-red-400 font-bold text-lg">*</span>
               </label>
               <DarkDropdown
                 refObj={groupCountryDropdownRef}

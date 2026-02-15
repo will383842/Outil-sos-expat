@@ -566,7 +566,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         <div className="space-y-1">
           <label htmlFor="firstName" className={s.label}>
             <FormattedMessage id="form.firstName" defaultMessage="First name" />
-            <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+            <span className={`font-bold text-lg ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
           </label>
           <div className="relative">
             <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
@@ -598,7 +598,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         <div className="space-y-1">
           <label htmlFor="lastName" className={s.label}>
             <FormattedMessage id="form.lastName" defaultMessage="Last name" />
-            <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+            <span className={`font-bold text-lg ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
           </label>
           <div className="relative">
             <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
@@ -631,7 +631,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       <div className="space-y-1">
         <label htmlFor="email" className={s.label}>
           <FormattedMessage id="form.email" defaultMessage="Email" />
-          <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+          <span className={`font-bold text-lg ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
         </label>
         <div className="relative">
           <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
@@ -664,7 +664,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       <div className="space-y-2">
         <label htmlFor="password" className={s.label}>
           <FormattedMessage id="form.password" defaultMessage="Password" />
-          <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+          <span className={`font-bold text-lg ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
         </label>
         <div className="relative">
           <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
@@ -736,7 +736,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       <div ref={countryDropdownRef} className="space-y-2">
         <label id="country-label" className={s.label}>
           <FormattedMessage id="form.country" defaultMessage="Country of residence" />
-          <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+          <span className={`font-bold text-lg ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
         </label>
         <div className="relative">
           <Globe className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10`} />
@@ -824,7 +824,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       <div ref={languageDropdownRef} className="space-y-2">
         <label id="language-label" className={s.label}>
           <FormattedMessage id="form.primaryLanguage" defaultMessage="Primary language" />
-          <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+          <span className={`font-bold text-lg ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
         </label>
         <div className="relative">
           <Languages className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
@@ -970,7 +970,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                 ),
               }}
             />
-            <span className={`ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+            <span className={`font-bold text-lg ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
           </span>
         </label>
         {validationErrors.acceptTerms && (

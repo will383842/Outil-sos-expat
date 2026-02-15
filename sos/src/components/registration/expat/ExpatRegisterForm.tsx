@@ -137,6 +137,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [botError, setBotError] = useState('');
   const [showCustomHelp, setShowCustomHelp] = useState(false);
 
@@ -433,8 +434,8 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
           const tracking = getStoredReferralTracking();
           return tracking ? { referralTracking: tracking } : {};
         })(),
-        fbp: metaIds.fbp,
-        fbc: metaIds.fbc,
+        ...(metaIds.fbp ? { fbp: metaIds.fbp } : {}),
+        ...(metaIds.fbc ? { fbc: metaIds.fbc } : {}),
         metaEventId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -501,6 +502,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
         });
       }
 
+      setIsRedirecting(true);
       hasNavigatedRef.current = true;
       trackMetaComplete({ content_name: 'expat_registration', status: 'completed', country: form.currentPresenceCountry, eventID: metaEventId });
       trackAdRegistration({ contentName: 'expat_registration' });
@@ -879,7 +881,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
           <div className="dark-reg-form">
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerExpat.fields.languages" />
-              <span className="text-red-400 ml-1">*</span>
+              <span className="text-red-400 font-bold text-lg ml-1">*</span>
             </label>
             <Suspense fallback={<div className="h-14 animate-pulse rounded-2xl bg-white/5 border border-white/10" />}>
               <MultiLanguageSelect
@@ -941,7 +943,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
             >
               <FormattedMessage id="registerExpat.ui.termsLink" />
             </LocaleLink>
-            <span className="text-red-400 ml-1">*</span>
+            <span className="text-red-400 font-bold text-lg ml-1">*</span>
           </DarkCheckbox>
           <FieldError error={fieldErrors.acceptTerms} show={!!fieldErrors.acceptTerms} />
 
@@ -960,6 +962,20 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       ),
     },
   ], [form, fieldErrors, touched, selectedLanguages, countryOptions, helpTypeOptions, showCustomHelp, intl, lang, onTextChange, markTouched, setField, onPhoneChange, clearError, addCustomHelp, helpDisplayLabel, validateStep1, validateStep2, validateStep3, validateStep4, validateStep5]);
+
+  // Écran de redirection après inscription réussie
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-emerald-900 to-emerald-800 px-4">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-3xl font-bold text-white mb-3">✅ Inscription réussie !</h2>
+          <p className="text-lg text-gray-300 mb-2">Votre compte expatrié a été créé avec succès.</p>
+          <p className="text-sm text-gray-400">Redirection vers votre tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <RegistrationWizard

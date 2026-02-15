@@ -130,6 +130,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [generalError, setGeneralError] = useState('');
 
   // Refs for focus management
@@ -331,8 +332,8 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
         phone: phoneE164,
         currentCountry: phoneCountry,
         country: phoneCountry,
-        fbp: metaIds.fbp,
-        fbc: metaIds.fbc,
+        ...(metaIds.fbp ? { fbp: metaIds.fbp } : {}),
+        ...(metaIds.fbc ? { fbc: metaIds.fbc } : {}),
         metaEventId,
         isApproved: true,
         approvalStatus: 'approved',
@@ -382,6 +383,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
       trackAdRegistration({ contentName: 'client_registration' });
       setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: capitalFirst, lastName: capitalLast, country: phoneCountry });
 
+      setIsRedirecting(true);
       hasNavigatedRef.current = true;
       navigate(redirect, {
         replace: true,
@@ -428,6 +430,20 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
   const effectiveLoading = isLoading || isSubmitting || googleLoading;
 
   // ---------- Render ----------
+
+  // Écran de redirection après inscription réussie
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-900 to-blue-800 px-4">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-3xl font-bold text-white mb-3">✅ Inscription réussie !</h2>
+          <p className="text-lg text-gray-300 mb-2">Votre compte client a été créé avec succès.</p>
+          <p className="text-sm text-gray-400">Redirection vers votre tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <article className="w-full max-w-md">
@@ -597,7 +613,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
           <div>
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerClient.fields.languagesSpoken" />
-              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+              <span className="text-red-400 font-bold text-lg ml-1" aria-hidden="true">*</span>
             </label>
             <Suspense
               fallback={
@@ -663,7 +679,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
             >
               <FormattedMessage id="registerClient.ui.termsLink" />
             </Link>
-            <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+            <span className="text-red-400 font-bold text-lg ml-1" aria-hidden="true">*</span>
           </DarkCheckbox>
 
           {/* Submit */}

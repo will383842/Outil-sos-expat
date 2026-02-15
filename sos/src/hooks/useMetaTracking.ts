@@ -84,9 +84,9 @@ export const useMetaTracking = () => {
         eventType,
         eventId,
         ...eventData,
-        // Ajouter les identifiants Meta
-        fbp: metaIds.fbp,
-        fbc: metaIds.fbc,
+        // Ajouter les identifiants Meta (filter undefined)
+        ...(metaIds.fbp ? { fbp: metaIds.fbp } : {}),
+        ...(metaIds.fbc ? { fbc: metaIds.fbc } : {}),
         // Ajouter les donnees utilisateur stockees
         email: storedUserData.em,
         phone: storedUserData.ph,
