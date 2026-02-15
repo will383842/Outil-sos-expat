@@ -290,12 +290,12 @@ export const registerBlogger = onCall(
         email: input.email.toLowerCase().trim(),
         firstName: input.firstName.trim(),
         lastName: input.lastName.trim(),
-        phone: input.phone?.trim() || undefined,
+        ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
         photoUrl: undefined,
         country: input.country.trim(),
         language: input.language,
         additionalLanguages: input.additionalLanguages || [],
-        bio: input.bio?.trim() || undefined,
+        ...(input.bio?.trim() ? { bio: input.bio.trim() } : {}),
 
         // Blog-specific fields
         blogUrl: input.blogUrl.toLowerCase().trim(),
@@ -304,7 +304,7 @@ export const registerBlogger = onCall(
         blogCountry: input.blogCountry.trim(),
         blogTheme: input.blogTheme,
         blogTraffic: input.blogTraffic,
-        blogDescription: input.blogDescription?.trim() || undefined,
+        ...(input.blogDescription?.trim() ? { blogDescription: input.blogDescription.trim() } : {}),
 
         // Status - ACTIVE immediately (no quiz required)
         status: "active" as BloggerStatus,
@@ -498,7 +498,7 @@ export const registerBlogger = onCall(
         userType: "blogger",
         firstName: input.firstName.trim(),
         lastName: input.lastName.trim(),
-        phone: input.phone?.trim(),
+        ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
         metadata: {
           country: input.country,
           language: input.language,

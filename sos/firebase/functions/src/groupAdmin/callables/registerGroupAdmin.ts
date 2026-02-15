@@ -371,7 +371,7 @@ export const registerGroupAdmin = onCall(
         email: input.email.toLowerCase(),
         firstName: input.firstName.trim(),
         lastName: input.lastName.trim(),
-        phone: input.phone?.trim(),
+        ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
         country: input.country.toUpperCase(),
         language: input.language,
         additionalLanguages: input.additionalLanguages || [],
@@ -382,7 +382,7 @@ export const registerGroupAdmin = onCall(
         groupSize: input.groupSize,
         groupCountry: input.groupCountry.toUpperCase(),
         groupLanguage: input.groupLanguage,
-        groupDescription: input.groupDescription?.trim(),
+        ...(input.groupDescription?.trim() ? { groupDescription: input.groupDescription.trim() } : {}),
         isGroupVerified: false,
 
         status: "active",
@@ -537,7 +537,7 @@ export const registerGroupAdmin = onCall(
         userType: "group_admin",
         firstName: input.firstName.trim(),
         lastName: input.lastName.trim(),
-        phone: input.phone?.trim(),
+        ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
         metadata: {
           country: input.country,
           language: input.language,

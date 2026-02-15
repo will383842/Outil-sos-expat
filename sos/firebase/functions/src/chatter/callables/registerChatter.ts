@@ -358,13 +358,13 @@ export const registerChatter = onCall(
         email: input.email.toLowerCase(),
         firstName: input.firstName.trim(),
         lastName: input.lastName.trim(),
-        phone: input.phone?.trim(),
+        ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}), // Only include phone if provided
         country: input.country.toUpperCase(),
         interventionCountries: input.interventionCountries?.map((c) => c.toUpperCase()) || [input.country.toUpperCase()],
         language: input.language,
         additionalLanguages: input.additionalLanguages || [],
         platforms: input.platforms ?? [],
-        bio: input.bio?.trim(),
+        ...(input.bio?.trim() ? { bio: input.bio.trim() } : {}), // Only include bio if provided
 
         status: "active", // Direct activation - no quiz required
         level: 1,
