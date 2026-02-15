@@ -1,15 +1,13 @@
-// Service Worker - DÉSACTIVÉ - Version 2
-// Ce SW se désinstalle et laisse TOUTES les requêtes passer
-
-console.log('[SW] Mode désactivation - toutes requêtes passent au réseau');
+// Service Worker - DÉSACTIVÉ - Version 3
+// Nettoyage des caches et désinstallation propre
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installation - skipWaiting immédiat');
+  console.log('[SW] Installation - activation immédiate');
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activation - nettoyage et désinstallation');
+  console.log('[SW] Activation - nettoyage des caches');
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -18,19 +16,10 @@ self.addEventListener('activate', (event) => {
       })
       .then(() => {
         console.log('[SW] ✅ Caches supprimés');
-        return self.registration.unregister();
-      })
-      .then(() => {
-        console.log('[SW] ✅ Désinstallé - rechargement des clients');
-        return self.clients.claim();
+        // Ne PAS appeler unregister() depuis le SW lui-même
+        // La désinstallation doit se faire depuis le client (navigateur)
       })
   );
 });
 
-// CRITIQUE : Laisser TOUTES les requêtes passer au réseau
-self.addEventListener('fetch', (event) => {
-  // Ne rien faire = laisse la requête passer normalement au réseau
-  // PAS de event.respondWith() = pas d'interception
-});
-
-console.log('[SW] ✅ Prêt - aucune requête ne sera interceptée');
+console.log('[SW] ✅ Service Worker désactivé - pas de mise en cache');
