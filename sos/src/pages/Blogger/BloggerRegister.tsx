@@ -447,7 +447,7 @@ const BloggerRegister: React.FC = () => {
         metaEventId,
       }, formData.password);
 
-      const registerBlogger = httpsCallable<RegisterBloggerInput, RegisterBloggerResponse>(functionsWest2, 'registerBlogger');
+      const registerBlogger = httpsCallable<RegisterBloggerInput, RegisterBloggerResponse>(functions, 'registerBlogger');
 
       const result = await registerBlogger({
         firstName: formData.firstName,

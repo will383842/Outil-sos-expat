@@ -154,7 +154,7 @@ const GroupAdminRegister: React.FC = () => {
       }
 
       // Step 2: Call Cloud Function
-      const registerGroupAdmin = httpsCallable(functionsWest2, 'registerGroupAdmin');
+      const registerGroupAdmin = httpsCallable(functions, 'registerGroupAdmin');
       const result = await registerGroupAdmin({
         firstName: data.firstName,
         lastName: data.lastName,

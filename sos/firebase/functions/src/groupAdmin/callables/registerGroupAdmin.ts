@@ -71,8 +71,8 @@ function isValidGroupUrl(url: string): boolean {
 
 export const registerGroupAdmin = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "europe-west1",
+    memory: "512MiB",
     cpu: 0.25,
     timeoutSeconds: 60,
     cors: true,

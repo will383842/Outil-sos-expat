@@ -169,7 +169,7 @@ const ChatterRegister: React.FC = () => {
 
       // Step 2: Now that user is authenticated, call registerChatter Cloud Function
       // to create the chatter profile with additional data
-      const registerChatterFn = httpsCallable(functionsWest2, 'registerChatter');
+      const registerChatterFn = httpsCallable(functions, 'registerChatter');
       try {
         await registerChatterFn({
           firstName: data.firstName,

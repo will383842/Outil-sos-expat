@@ -127,7 +127,7 @@ function validateInput(input: RegisterBloggerInput): void {
 
 export const registerBlogger = onCall(
   {
-    region: "europe-west2",
+    region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,

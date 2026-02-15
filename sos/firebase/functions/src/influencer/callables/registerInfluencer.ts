@@ -51,7 +51,7 @@ const VALID_PLATFORMS: InfluencerPlatform[] = [
 
 export const registerInfluencer = onCall(
   {
-    region: "europe-west2",
+    region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,
