@@ -502,7 +502,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         metaEventId,
       }, formData.password);
 
-      const { functionsWest2 } = await import('@/config/firebase');
+      const { functions } = await import('@/config/firebase');
       const registerInfluencer = httpsCallable(functions, 'registerInfluencer');
 
       const result = await registerInfluencer({

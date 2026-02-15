@@ -16,7 +16,7 @@ import Layout from '@/components/layout/Layout';
 import GroupAdminRegisterForm from '@/components/GroupAdmin/Forms/GroupAdminRegisterForm';
 import type { GroupAdminRegistrationData } from '@/components/GroupAdmin/Forms/GroupAdminRegisterForm';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functions } from '@/config/firebase';
 import { Users, ArrowLeft, ArrowRight, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
