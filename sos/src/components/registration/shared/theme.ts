@@ -207,19 +207,19 @@ export const getTheme = (role: RegistrationRole): ThemeTokens => {
 // Shared dark input base classes (glassmorphism)
 export const darkInputBase = `
   w-full px-4 py-3.5
-  bg-white/5 border-2 border-white/10
+  bg-white/15 border-2 border-white/20
   rounded-2xl
   text-base text-white
   placeholder:text-gray-500
   focus:outline-none focus:ring-2 focus:ring-offset-0
-  focus:bg-white/10
+  focus:bg-white/20
   transition-all duration-200 ease-out
   disabled:opacity-50 disabled:cursor-not-allowed
   min-h-[48px]
 `.replace(/\s+/g, ' ').trim();
 
 export const darkInputError = 'border-red-500/60 focus:ring-red-500/30 bg-red-500/10';
-export const darkInputFilled = 'bg-white/10 border-white/20';
+export const darkInputFilled = 'bg-white/18 border-white/25';
 
 // Shared dark card style
 export const darkCard = 'bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg';

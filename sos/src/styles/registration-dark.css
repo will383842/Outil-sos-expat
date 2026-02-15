@@ -95,8 +95,8 @@
 }
 
 .dark-phone-wrapper .react-tel-input .flag-dropdown {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
   border-right: none !important;
   border-radius: 16px 0 0 16px !important;
   cursor: pointer !important;
@@ -105,19 +105,19 @@
 }
 
 .dark-phone-wrapper .react-tel-input .flag-dropdown:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 .dark-phone-wrapper .react-tel-input .flag-dropdown.open {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.20) !important;
   border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 .dark-phone-wrapper .react-tel-input .form-control {
   width: 100% !important;
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 16px !important;
   color: #ffffff !important;
   padding: 14px 16px 14px 64px !important;
@@ -130,14 +130,14 @@
 }
 
 .dark-phone-wrapper .react-tel-input .form-control:hover {
-  background-color: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 /* Theme-aware focus ring using CSS custom properties */
 .dark-phone-wrapper .react-tel-input .form-control:focus-visible {
   outline: none !important;
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.20) !important;
   border-color: rgba(255, 255, 255, 0.3) !important;
   box-shadow: 0 0 0 3px rgba(var(--phone-accent-rgb, 255, 255, 255), 0.2) !important;
 }
@@ -193,14 +193,15 @@
 
 /* MultiLanguageSelect / SpecialtySelect dark theme overrides */
 .dark-reg-form [class*="-control"] {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 16px !important;
   min-height: 48px !important;
 }
 
 .dark-reg-form [class*="-control"]:hover {
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  background-color: rgba(255, 255, 255, 0.18) !important;
 }
 
 .dark-reg-form [class*="-menu"] {

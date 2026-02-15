@@ -618,7 +618,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerClient.fields.languagesSpoken" />
               <span className="text-red-400 font-bold text-lg ml-1" aria-hidden="true">*</span>
-              <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
+              
             </label>
             <Suspense
               fallback={
@@ -685,7 +685,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
               <FormattedMessage id="registerClient.ui.termsLink" />
             </Link>
             <span className="text-red-400 font-bold text-lg ml-1" aria-hidden="true">*</span>
-            <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
+            
           </DarkCheckbox>
 
           {/* Submit */}
