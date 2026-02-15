@@ -483,7 +483,7 @@ export const functionsPayment = getFunctions(app, PAYMENT_REGION);
 const TRIGGERS_REGION = (import.meta.env.VITE_FUNCTIONS_TRIGGERS_REGION ?? "europe-west3").toString();
 export const functionsWest3 = getFunctions(app, TRIGGERS_REGION);
 
-// ✅ Instance Functions pour chatter/influencer/blogger/groupAdmin (europe-west2)
+// ✅ Instance Functions pour chatter/influencer/blogger/groupAdmin (europe-west2 - Load balancing)
 const AFFILIATE_REGION = (import.meta.env.VITE_FUNCTIONS_AFFILIATE_REGION ?? "europe-west2").toString();
 export const functionsWest2 = getFunctions(app, AFFILIATE_REGION);
 

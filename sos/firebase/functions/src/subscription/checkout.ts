@@ -409,7 +409,7 @@ function getAppBaseUrl(): string {
  */
 export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<CheckoutResult>>(
   {
-    region: 'europe-west1',
+    region: 'europe-west3', // ✅ MIGRATED 2026-02-15: Cohérence avec autres payments (PAYMENT_FUNCTIONS_REGION)
     secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, META_CAPI_TOKEN],
     memory: '256MiB',
     timeoutSeconds: 60,

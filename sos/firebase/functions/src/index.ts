@@ -1969,7 +1969,7 @@ export const sendPaymentNotifications = traceFunction(
 // @ts-ignore - Type compatibility issue between firebase-functions and express types
 export const stripeWebhook = onRequest(
   {
-    region: "europe-west1",
+    region: "europe-west3", // ✅ MIGRATED 2026-02-15: Cohérence avec createPaymentIntent (payments en west3)
     // P0 CRITICAL FIX: Allow unauthenticated access for Stripe webhooks (Cloud Run requires explicit public access)
     invoker: "public",
     memory: "512MiB",

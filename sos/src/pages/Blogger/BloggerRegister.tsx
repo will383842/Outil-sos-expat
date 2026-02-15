@@ -19,7 +19,7 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/config/firebase';
+import { functionsWest2 } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
@@ -447,7 +447,7 @@ const BloggerRegister: React.FC = () => {
         metaEventId,
       }, formData.password);
 
-      const registerBlogger = httpsCallable<RegisterBloggerInput, RegisterBloggerResponse>(functions, 'registerBlogger');
+      const registerBlogger = httpsCallable<RegisterBloggerInput, RegisterBloggerResponse>(functionsWest2, 'registerBlogger');
 
       const result = await registerBlogger({
         firstName: formData.firstName,
