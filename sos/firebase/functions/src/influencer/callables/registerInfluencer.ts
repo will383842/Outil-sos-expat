@@ -11,7 +11,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
-import { getApps, initializeApp } from "firebase-admin/app";
 
 import {
   Influencer,
@@ -29,13 +28,7 @@ import {
   captureCurrentRates,
 } from "../utils";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
-
-// Lazy initialization
-function ensureInitialized() {
-  if (!getApps().length) {
-    initializeApp();
-  }
-}
+import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedInfluencerLanguage[] = [
@@ -58,7 +51,7 @@ export const registerInfluencer = onCall(
   },
   async (request): Promise<RegisterInfluencerResponse> => {
     const startTime = Date.now();
-    ensureInitialized();
+    // Firebase Admin is initialized globally in index.ts
 
     // 1. Check authentication
     if (!request.auth) {
@@ -487,6 +480,23 @@ export const registerInfluencer = onCall(
         affiliateCodeClient,
         affiliateCodeRecruitment,
         totalDuration: Date.now() - startTime
+      });
+
+      // ✅ NOUVEAU : Notify Backlink Engine to stop prospecting campaigns
+      await notifyBacklinkEngineUserRegistered({
+        email: input.email.toLowerCase(),
+        userId,
+        userType: "influencer",
+        firstName: input.firstName.trim(),
+        lastName: input.lastName.trim(),
+        phone: input.phone?.trim(),
+        metadata: {
+          country: input.country,
+          language: input.language,
+          source: "registerInfluencer",
+        },
+      }).catch((err) => {
+        logger.warn("[registerInfluencer] Failed to notify Backlink Engine", { error: err });
       });
 
       return {

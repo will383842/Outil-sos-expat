@@ -30,6 +30,7 @@ import {
 import { checkReferralFraud } from "../utils/fraudDetection";
 import { createCommission } from "../services/commissionService";
 import { CapturedRates, UserAffiliateFields } from "../types";
+import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -348,6 +349,43 @@ export async function handleAffiliateUserCreated(event: any) {
         referredBy,
         createSignupCommission,
       });
+
+      // ==========================================
+      // NOTIFY BACKLINK ENGINE (stop prospecting)
+      // ==========================================
+      // Only notify for roles not already handled by their dedicated registration functions
+      // (chatter, blogger, influencer, group_admin, lawyer are handled in their own functions)
+      const userRole = userData.role || "client";
+      const rolesToNotify = ["client", "expat"];
+
+      if (rolesToNotify.includes(userRole) && userData.email) {
+        try {
+          await notifyBacklinkEngineUserRegistered({
+            email: userData.email.toLowerCase(),
+            userId,
+            userType: userRole === "expat" ? "provider" : userRole,
+            firstName: userData.firstName || userData.fullName?.split(" ")[0],
+            lastName: userData.lastName || userData.fullName?.split(" ").slice(1).join(" "),
+            phone: userData.phone,
+            metadata: {
+              role: userRole,
+              source: "affiliateOnUserCreated",
+              affiliateCode,
+            },
+          });
+          logger.info("[affiliateOnUserCreated] Notified Backlink Engine", {
+            userId,
+            userRole,
+            email: userData.email,
+          });
+        } catch (notifyError) {
+          // Don't fail the trigger if webhook fails
+          logger.warn("[affiliateOnUserCreated] Failed to notify Backlink Engine", {
+            userId,
+            error: notifyError,
+          });
+        }
+      }
     } catch (error) {
       logger.error("[affiliateOnUserCreated] Error processing user", {
         userId,

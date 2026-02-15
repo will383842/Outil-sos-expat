@@ -24,6 +24,7 @@ import { getBloggerConfigCached } from "../utils/bloggerConfigService";
 import { generateBloggerAffiliateCodes } from "../utils/bloggerCodeGenerator";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 import { hashIP } from "../../chatter/utils";
+import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 
 // ============================================================================
 // VALIDATION
@@ -488,6 +489,24 @@ export const registerBlogger = onCall(
         affiliateCodeClient,
         affiliateCodeRecruitment,
         totalDuration: Date.now() - startTime
+      });
+
+      // ✅ NOUVEAU : Notify Backlink Engine to stop prospecting campaigns
+      await notifyBacklinkEngineUserRegistered({
+        email: input.email.toLowerCase(),
+        userId: uid,
+        userType: "blogger",
+        firstName: input.firstName.trim(),
+        lastName: input.lastName.trim(),
+        phone: input.phone?.trim(),
+        metadata: {
+          country: input.country,
+          language: input.language,
+          blogUrl: input.blogUrl,
+          source: "registerBlogger",
+        },
+      }).catch((err) => {
+        logger.warn("[registerBlogger] Failed to notify Backlink Engine", { error: err });
       });
 
       return {

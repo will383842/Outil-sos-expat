@@ -4,10 +4,12 @@ import { defineSecret } from "firebase-functions/params";
 import { getStripe } from "./index";
 import { trackCAPILead, UserData } from "./metaConversionsApi";
 import { STRIPE_API_SECRETS } from "./lib/secrets";
+import { notifyBacklinkEngineUserRegistered } from "./Webhooks/notifyBacklinkEngine";
 
 // Secret for Meta CAPI - used in secrets array below
 const META_CAPI_TOKEN = defineSecret("META_CAPI_TOKEN");
 void META_CAPI_TOKEN; // Suppress TS unused warning - actually used in secrets array
+void notifyBacklinkEngineUserRegistered; // Suppress TS unused warning - may be used in future
 
 interface LawyerOnboardingData {
   firstName: string;
@@ -195,6 +197,26 @@ export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
         // Don't fail the onboarding if CAPI tracking fails
         console.error(`❌ [CAPI Lawyer] Error tracking lead:`, capiError);
       }
+
+      // ==========================================
+      // STEP 4.5: NOTIFY BACKLINK ENGINE
+      // ==========================================
+      // ✅ NOUVEAU : Stop prospecting campaigns for lawyers
+      await notifyBacklinkEngineUserRegistered({
+        email: data.email.toLowerCase(),
+        userId,
+        userType: "provider",
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        metadata: {
+          country: data.currentCountry || data.currentPresenceCountry,
+          role: "lawyer",
+          source: "completeLawyerOnboarding",
+        },
+      }).catch((err) => {
+        console.warn("Failed to notify Backlink Engine:", err);
+      });
 
       // ==========================================
       // STEP 5: Return Onboarding URL
