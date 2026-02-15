@@ -125,7 +125,12 @@ const SpecialtySelect: React.FC<SpecialtySelectProps> = ({
       border: '2px solid #e5e7eb',
       boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
       overflow: 'hidden',
-      zIndex: 9999,
+      zIndex: 99999, // Augmenté pour être au-dessus de tout
+      backgroundColor: '#ffffff', // Fond blanc explicite
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 99999, // Même z-index très élevé pour le portal
     }),
     menuList: (base) => ({
       ...base,

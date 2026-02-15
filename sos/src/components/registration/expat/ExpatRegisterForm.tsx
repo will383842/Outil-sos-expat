@@ -466,11 +466,16 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       const stripeCountryCode = getCountryCode(form.currentPresenceCountry);
 
       if (!isCountrySupportedByStripe(stripeCountryCode)) {
+        setIsRedirecting(true);
         hasNavigatedRef.current = true;
         trackMetaComplete({ content_name: 'expat_registration', status: 'completed', country: form.currentPresenceCountry, eventID: metaEventId });
         trackAdRegistration({ contentName: 'expat_registration' });
         setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: sanitizeString(form.firstName), lastName: sanitizeString(form.lastName), country: form.currentPresenceCountry });
-        navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerExpat.success.registered' }), type: 'success' } });
+
+        // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
+        setTimeout(() => {
+          navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerExpat.success.registered' }), type: 'success' } });
+        }, 1500);
         return;
       }
 
@@ -507,7 +512,11 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       trackMetaComplete({ content_name: 'expat_registration', status: 'completed', country: form.currentPresenceCountry, eventID: metaEventId });
       trackAdRegistration({ contentName: 'expat_registration' });
       setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: sanitizeString(form.firstName), lastName: sanitizeString(form.lastName), country: form.currentPresenceCountry });
-      navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerExpat.success.registered' }), type: 'success' } });
+
+      // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
+      setTimeout(() => {
+        navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerExpat.success.registered' }), type: 'success' } });
+      }, 1500);
 
     } catch (err: unknown) {
       console.error('[ExpatRegisterForm] ❌ ERREUR INSCRIPTION', {
@@ -882,6 +891,8 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerExpat.fields.languages" />
               <span className="text-red-400 font-bold text-lg ml-1">*</span>
+            <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
             </label>
             <Suspense fallback={<div className="h-14 animate-pulse rounded-2xl bg-white/5 border border-white/10" />}>
               <MultiLanguageSelect
@@ -944,6 +955,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
               <FormattedMessage id="registerExpat.ui.termsLink" />
             </LocaleLink>
             <span className="text-red-400 font-bold text-lg ml-1">*</span>
+            <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
           </DarkCheckbox>
           <FieldError error={fieldErrors.acceptTerms} show={!!fieldErrors.acceptTerms} />
 

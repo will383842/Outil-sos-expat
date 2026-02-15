@@ -385,13 +385,17 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
 
       setIsRedirecting(true);
       hasNavigatedRef.current = true;
-      navigate(redirect, {
-        replace: true,
-        state: {
-          message: intl.formatMessage({ id: 'registerClient.success.registered' }),
-          type: 'success',
-        },
-      });
+
+      // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
+      setTimeout(() => {
+        navigate(redirect, {
+          replace: true,
+          state: {
+            message: intl.formatMessage({ id: 'registerClient.success.registered' }),
+            type: 'success',
+          },
+        });
+      }, 1500);
     } catch (err) {
       console.log('[ClientRegisterForm] ❌ ERROR:', {
         errorType: err?.constructor?.name,
@@ -614,6 +618,8 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerClient.fields.languagesSpoken" />
               <span className="text-red-400 font-bold text-lg ml-1" aria-hidden="true">*</span>
+            <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
             </label>
             <Suspense
               fallback={
@@ -680,6 +686,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
               <FormattedMessage id="registerClient.ui.termsLink" />
             </Link>
             <span className="text-red-400 font-bold text-lg ml-1" aria-hidden="true">*</span>
+            <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
           </DarkCheckbox>
 
           {/* Submit */}

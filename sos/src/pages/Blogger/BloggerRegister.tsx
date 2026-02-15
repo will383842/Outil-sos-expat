@@ -737,7 +737,7 @@ const BloggerRegister: React.FC = () => {
                         <div className="grid md:grid-cols-2 gap-4">
                           {/* First Name */}
                           <div className="space-y-1">
-                            <label htmlFor="firstName" className={s.label}><FormattedMessage id="form.firstName" defaultMessage="First name" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span></label>
+                            <label htmlFor="firstName" className={s.label}><FormattedMessage id="form.firstName" defaultMessage="First name" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span><span className="text-xs text-purple-400/80 ml-1 font-semibold">(obligatoire)</span></label>
                             <div className="relative">
                               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                               <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} onBlur={handleBlur} placeholder={intl.formatMessage({ id: 'form.firstName.placeholder', defaultMessage: 'Your first name' })} className={`${s.input} pl-12 ${validationErrors.firstName ? s.inputError : s.inputDefault} ${formData.firstName ? s.inputFilled : ''}`} aria-required="true" aria-invalid={!!validationErrors.firstName} autoComplete="given-name" enterKeyHint="next" />
@@ -747,7 +747,7 @@ const BloggerRegister: React.FC = () => {
 
                           {/* Last Name */}
                           <div className="space-y-1">
-                            <label htmlFor="lastName" className={s.label}><FormattedMessage id="form.lastName" defaultMessage="Last name" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span></label>
+                            <label htmlFor="lastName" className={s.label}><FormattedMessage id="form.lastName" defaultMessage="Last name" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span><span className="text-xs text-purple-400/80 ml-1 font-semibold">(obligatoire)</span></label>
                             <div className="relative">
                               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                               <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} onBlur={handleBlur} placeholder={intl.formatMessage({ id: 'form.lastName.placeholder', defaultMessage: 'Your last name' })} className={`${s.input} pl-12 ${validationErrors.lastName ? s.inputError : s.inputDefault} ${formData.lastName ? s.inputFilled : ''}`} aria-required="true" aria-invalid={!!validationErrors.lastName} autoComplete="family-name" enterKeyHint="next" />
@@ -758,7 +758,7 @@ const BloggerRegister: React.FC = () => {
 
                         {/* Email */}
                         <div className="space-y-1">
-                          <label htmlFor="email" className={s.label}><FormattedMessage id="form.email" defaultMessage="Email" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span></label>
+                          <label htmlFor="email" className={s.label}><FormattedMessage id="form.email" defaultMessage="Email" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span><span className="text-xs text-purple-400/80 ml-1 font-semibold">(obligatoire)</span></label>
                           <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                             <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} placeholder={intl.formatMessage({ id: 'form.email.placeholder', defaultMessage: 'your@email.com' })} autoComplete="email" inputMode="email" enterKeyHint="next" className={`${s.input} pl-12 ${validationErrors.email ? s.inputError : s.inputDefault} ${formData.email ? s.inputFilled : ''}`} aria-required="true" aria-invalid={!!validationErrors.email} />
@@ -768,7 +768,7 @@ const BloggerRegister: React.FC = () => {
 
                         {/* Password */}
                         <div className="space-y-2">
-                          <label htmlFor="password" className={s.label}><FormattedMessage id="form.password" defaultMessage="Password" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span></label>
+                          <label htmlFor="password" className={s.label}><FormattedMessage id="form.password" defaultMessage="Password" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span><span className="text-xs text-purple-400/80 ml-1 font-semibold">(obligatoire)</span></label>
                           <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                             <input id="password" name="password" type={showPassword ? 'text' : 'password'} value={formData.password} onChange={handleChange} onBlur={handleBlur} placeholder={intl.formatMessage({ id: 'form.password.placeholder', defaultMessage: 'Minimum 8 characters' })} autoComplete="new-password" enterKeyHint="next" className={`${s.input} pl-12 pr-12 ${validationErrors.password ? s.inputError : s.inputDefault}`} aria-required="true" aria-invalid={!!validationErrors.password} />
@@ -794,7 +794,7 @@ const BloggerRegister: React.FC = () => {
                         <div className="grid md:grid-cols-2 gap-4">
                           {/* Country Dropdown */}
                           <div ref={countryDropdownRef} className="space-y-2">
-                            <label className={s.label}><FormattedMessage id="form.country" defaultMessage="Country" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span></label>
+                            <label className={s.label}><FormattedMessage id="form.country" defaultMessage="Country" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span><span className="text-xs text-purple-400/80 ml-1 font-semibold">(obligatoire)</span></label>
                             <div className="relative">
                               <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10" />
                               <button type="button" onClick={() => setShowCountryDropdown(!showCountryDropdown)} className={`${s.input} pl-12 pr-10 text-left flex items-center justify-between ${validationErrors.country ? s.inputError : s.inputDefault}`} aria-haspopup="listbox" aria-expanded={showCountryDropdown}>
@@ -848,7 +848,7 @@ const BloggerRegister: React.FC = () => {
                       <div className="space-y-4 mt-4">
                         {/* Blog URL */}
                         <div className="space-y-1">
-                          <label htmlFor="blogUrl" className={s.label}><FormattedMessage id="form.blogUrl" defaultMessage="Blog URL" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span></label>
+                          <label htmlFor="blogUrl" className={s.label}><FormattedMessage id="form.blogUrl" defaultMessage="Blog URL" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span><span className="text-xs text-purple-400/80 ml-1 font-semibold">(obligatoire)</span></label>
                           <div className="relative">
                             <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                             <input type="url" id="blogUrl" name="blogUrl" value={formData.blogUrl} onChange={handleChange} onBlur={handleBlur} placeholder="https://myblog.com" className={`${s.input} pl-12 ${validationErrors.blogUrl ? s.inputError : s.inputDefault} ${formData.blogUrl ? s.inputFilled : ''}`} aria-required="true" aria-invalid={!!validationErrors.blogUrl} inputMode="url" />
@@ -859,7 +859,7 @@ const BloggerRegister: React.FC = () => {
                         <div className="grid md:grid-cols-2 gap-4">
                           {/* Blog Name */}
                           <div className="space-y-1">
-                            <label htmlFor="blogName" className={s.label}><FormattedMessage id="form.blogName" defaultMessage="Blog name" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span></label>
+                            <label htmlFor="blogName" className={s.label}><FormattedMessage id="form.blogName" defaultMessage="Blog name" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span><span className="text-xs text-purple-400/80 ml-1 font-semibold">(obligatoire)</span></label>
                             <div className="relative">
                               <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10 pointer-events-none" />
                               <input type="text" id="blogName" name="blogName" value={formData.blogName} onChange={handleChange} onBlur={handleBlur} placeholder={intl.formatMessage({ id: 'form.blogName.placeholder', defaultMessage: 'My Amazing Blog' })} className={`${s.input} pl-12 ${validationErrors.blogName ? s.inputError : s.inputDefault} ${formData.blogName ? s.inputFilled : ''}`} aria-required="true" aria-invalid={!!validationErrors.blogName} />
@@ -891,7 +891,7 @@ const BloggerRegister: React.FC = () => {
                         <div className="grid md:grid-cols-2 gap-4">
                           {/* Blog Target Country */}
                           <div ref={blogCountryDropdownRef} className="space-y-2">
-                            <label className={s.label}><FormattedMessage id="form.blogCountry" defaultMessage="Target country" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span></label>
+                            <label className={s.label}><FormattedMessage id="form.blogCountry" defaultMessage="Target country" /><span className="text-purple-400 font-bold text-lg ml-0.5">*</span><span className="text-xs text-purple-400/80 ml-1 font-semibold">(obligatoire)</span></label>
                             <div className="relative">
                               <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10" />
                               <button type="button" onClick={() => setShowBlogCountryDropdown(!showBlogCountryDropdown)} className={`${s.input} pl-12 pr-10 text-left flex items-center justify-between ${validationErrors.blogCountry ? s.inputError : s.inputDefault}`} aria-haspopup="listbox" aria-expanded={showBlogCountryDropdown}>
@@ -997,7 +997,7 @@ const BloggerRegister: React.FC = () => {
                               privacyLink: <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline font-medium text-purple-400 hover:text-purple-300"><FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" /></Link>,
                             }}
                           />
-                          <span className="text-purple-400 font-bold text-lg ml-0.5">*</span>
+                          <span className="text-purple-400 font-bold text-lg ml-0.5">*</span><span className="text-xs text-purple-400/80 ml-1 font-semibold">(obligatoire)</span>
                         </span>
                       </label>
                       {validationErrors.acceptTerms && <p className={s.errorText} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.acceptTerms}</p>}

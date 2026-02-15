@@ -462,11 +462,16 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       const stripeCountryCode = getCountryCode(form.currentCountry);
 
       if (!isCountrySupportedByStripe(stripeCountryCode)) {
+        setIsRedirecting(true);
         hasNavigatedRef.current = true;
         trackMetaComplete({ content_name: 'lawyer_registration', status: 'completed', country: form.currentCountry, eventID: metaEventId });
         trackAdRegistration({ contentName: 'lawyer_registration' });
         setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: fn, lastName: ln, country: form.currentCountry });
-        navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerLawyer.success.registered' }), type: 'success' } });
+
+        // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
+        setTimeout(() => {
+          navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerLawyer.success.registered' }), type: 'success' } });
+        }, 1500);
         return;
       }
 
@@ -503,7 +508,11 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       trackMetaComplete({ content_name: 'lawyer_registration', status: 'completed', country: form.currentCountry, eventID: metaEventId });
       trackAdRegistration({ contentName: 'lawyer_registration' });
       setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: fn, lastName: ln, country: form.currentCountry });
-      navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerLawyer.success.registered' }), type: 'success' } });
+
+      // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
+      setTimeout(() => {
+        navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerLawyer.success.registered' }), type: 'success' } });
+      }, 1500);
 
     } catch (err: unknown) {
       console.error('[LawyerRegisterForm] ❌ ERREUR INSCRIPTION', {
@@ -753,6 +762,8 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerLawyer.fields.specialties" />
               <span className="text-red-400 font-bold text-lg ml-1">*</span>
+            <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
             </label>
             <Suspense fallback={<div className="h-14 animate-pulse rounded-2xl bg-white/5 border border-white/10" />}>
               <SpecialtySelect
@@ -774,6 +785,8 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerLawyer.fields.education" />
               <span className="text-red-400 font-bold text-lg ml-1">*</span>
+            <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
             </label>
             <div className="space-y-3">
               {form.educations.map((ed, idx) => (
@@ -882,6 +895,8 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerLawyer.fields.languages" />
               <span className="text-red-400 font-bold text-lg ml-1">*</span>
+            <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
             </label>
             <Suspense fallback={<div className="h-14 animate-pulse rounded-2xl bg-white/5 border border-white/10" />}>
               <MultiLanguageSelect
@@ -945,6 +960,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
               <FormattedMessage id="registerLawyer.ui.termsLink" />
             </LocaleLink>
             <span className="text-red-400 font-bold text-lg ml-1">*</span>
+            <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
           </DarkCheckbox>
           <FieldError error={fieldErrors.acceptTerms} show={!!fieldErrors.acceptTerms} />
 
