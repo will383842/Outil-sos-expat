@@ -49,7 +49,6 @@ import KYCBannerCompact from "../components/dashboard/KYCBannerCompact";
 import DashboardStats from "../components/dashboard/DashboardStats";
 import DashboardAffiliateCard from "../components/dashboard/DashboardAffiliateCard";
 import QuickActions from "../components/dashboard/QuickActions";
-import PWAInstallCards from "../components/dashboard/PWAInstallCards";
 // RecentActivity removed - was causing layout issues
 
 import { useAuth } from "../contexts/AuthContext";
@@ -1628,14 +1627,6 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       ) : null}
 
       {/* ========================================== */}
-      {/* PWA INSTALL CARDS */}
-      {/* ========================================== */}
-      {userDataReady && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <PWAInstallCards />
-        </div>
-      )}
-
       {/* ========================================== */}
       {/* LOADING STATE (while fetching user data) */}
       {/* ========================================== */}

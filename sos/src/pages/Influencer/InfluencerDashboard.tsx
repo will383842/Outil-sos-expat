@@ -49,7 +49,6 @@ const InfluencerTeamCard = lazy(() =>
 const InfluencerAffiliateLinks = lazy(() =>
   import('@/components/Influencer/Links/InfluencerAffiliateLinks')
 );
-import PWAInstallCards from '@/components/dashboard/PWAInstallCards';
 
 // Icons
 import {
@@ -682,12 +681,6 @@ const InfluencerDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* ================================================================ */}
-        {/* PWA INSTALL CARDS */}
-        {/* ================================================================ */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '900ms' }}>
-          <PWAInstallCards />
-        </div>
       </div>
     </InfluencerDashboardLayout>
   );

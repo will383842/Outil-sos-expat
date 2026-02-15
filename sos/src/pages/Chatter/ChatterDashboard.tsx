@@ -86,11 +86,8 @@ const ChatterAffiliateLinks = lazy(() =>
 const NotificationBell = lazy(() =>
   import('@/components/Chatter/NotificationBell').then(m => ({ default: m.NotificationBell }))
 );
-// PWAInstallPrompt removed — now handled by PWAInstallCards in dashboard content
 const QuickActionsMenu = lazy(() => import('@/components/Chatter/QuickActionsMenu'));
 const DashboardTour = lazy(() => import('@/components/Chatter/DashboardTour'));
-
-import PWAInstallCards from '@/components/dashboard/PWAInstallCards';
 
 // Icons - imported synchronously as they're small and used everywhere
 import {
@@ -682,14 +679,6 @@ const ChatterDashboard: React.FC = () => {
     // Missions completed - no additional UI feedback needed as the card handles it
   }, []);
 
-  // PWA handlers - memoized for PWAInstallPrompt
-  const handlePwaInstall = useCallback(() => {
-    // PWA was installed successfully - no additional action needed
-  }, []);
-
-  const handlePwaDismiss = useCallback(() => {
-    // User dismissed the PWA prompt - no additional action needed
-  }, []);
 
   // Tour skip handler - memoized for DashboardTour
   const handleTourSkip = useCallback(() => {
@@ -1589,11 +1578,6 @@ const ChatterDashboard: React.FC = () => {
             />
           </Suspense>
         )}
-
-        {/* PWA Install Cards - inline in dashboard */}
-        <div className="px-4 sm:px-6 py-3">
-          <PWAInstallCards />
-        </div>
       </div>
 
       {/* Success Feedback */}
