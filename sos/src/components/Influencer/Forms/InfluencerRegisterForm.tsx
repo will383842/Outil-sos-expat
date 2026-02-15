@@ -628,9 +628,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               <label htmlFor="firstName" className={s.label}>
                 <FormattedMessage id="form.firstName" defaultMessage="First name" />
                 <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
-          <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
-              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
-                <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+                <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
               </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
@@ -662,9 +660,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               <label htmlFor="lastName" className={s.label}>
                 <FormattedMessage id="form.lastName" defaultMessage="Last name" />
                 <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
-          <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
-              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
-                <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+                <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
               </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
@@ -697,8 +693,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
             <label htmlFor="email" className={s.label}>
               <FormattedMessage id="form.email" defaultMessage="Email" />
               <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
-          <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
-              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+              <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
             </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
@@ -731,8 +726,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
             <label htmlFor="password" className={s.label}>
               <FormattedMessage id="form.password" defaultMessage="Password" />
               <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
-          <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
-              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+              <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
             </label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
@@ -807,9 +801,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               <label id="country-label" className={s.label}>
                 <FormattedMessage id="form.country" defaultMessage="Country" />
                 <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
-          <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
-              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
-                <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+                <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
               </label>
               <div className="relative">
                 <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
@@ -943,7 +935,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         <p className={s.sectionDescription}>
           <FormattedMessage id="influencer.register.platformsHint" defaultMessage="Select at least one platform where you create content" />
           <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
-          <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+          <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -1183,7 +1175,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               }}
             />
             <span className="text-red-400 font-bold text-lg ml-0.5">*</span>
-          <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+            <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
           </span>
         </label>
         {validationErrors.acceptTerms && (
