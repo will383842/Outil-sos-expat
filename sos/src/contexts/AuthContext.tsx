@@ -2083,7 +2083,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       // Sans cela, les règles Firestore voient request.auth == null → permission-denied
       console.log("[DEBUG] " + "🔄 REGISTER: Token refresh pour Firestore...");
       await cred.user.getIdToken(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log("[DEBUG] " + "⏱️ REGISTER: Waiting 2s for Firestore sync (increased from 1s)...");
+      // ✅ AUGMENTÉ de 1s à 2s: connexions lentes (3G/4G) nécessitent plus de temps
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       let finalProfilePhotoURL = '/default-avatar.png';
       if (userData.profilePhoto?.startsWith('data:image')) {
@@ -2108,6 +2110,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             isVisible: false,
           };
 
+      console.log("[DEBUG] " + "📝 REGISTER: Creating user document in Firestore", {
+        uid: cred.user.uid,
+        role: userData.role,
+        email: email,
+        timestamp: new Date().toISOString()
+      });
+
       try {
         await createUserDocumentInFirestore(cred.user, {
           ...userData,
@@ -2119,7 +2128,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           provider: 'password',
           ...approvalData,
         });
+        console.log("[DEBUG] " + "✅ REGISTER: User document created successfully");
       } catch (docErr) {
+        console.log("[DEBUG] " + "❌ REGISTER: Document creation failed, rolling back auth user", {
+          error: docErr,
+          timestamp: new Date().toISOString()
+        });
         try { await deleteUser(cred.user); } catch { /* no-op */ }
         throw docErr;
       }

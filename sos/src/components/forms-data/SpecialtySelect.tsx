@@ -37,42 +37,42 @@ const SpecialtySelect: React.FC<SpecialtySelectProps> = ({
   isDisabled = false,
   'aria-label': ariaLabel,
 }) => {
-  // Fonction pour obtenir le label traduit d'un groupe
-  const getGroupLabel = (group: LawyerSpecialityGroup): string => {
-    const localeMap: Record<SupportedLocale, keyof LawyerSpecialityGroup> = {
-      fr: 'labelFr',
-      en: 'labelEn',
-      es: 'labelEs',
-      de: 'labelDe',
-      pt: 'labelPt',
-      ru: 'labelRu',
-      ch: 'labelZh',
-      ar: 'labelAr',
-      hi: 'labelHi',
-    };
-    const key = localeMap[locale] || 'labelFr';
-    return (group[key] as string) || group.labelFr;
-  };
-
-  // Fonction pour obtenir le label traduit d'une spécialité
-  const getItemLabel = (item: LawyerSpecialityItem): string => {
-    const localeMap: Record<SupportedLocale, keyof LawyerSpecialityItem> = {
-      fr: 'labelFr',
-      en: 'labelEn',
-      es: 'labelEs',
-      de: 'labelDe',
-      pt: 'labelPt',
-      ru: 'labelRu',
-      ch: 'labelZh',
-      ar: 'labelAr',
-      hi: 'labelHi',
-    };
-    const key = localeMap[locale] || 'labelFr';
-    return (item[key] as string) || item.labelFr;
-  };
-
   // Préparer les options groupées
   const groupedOptions = useMemo((): GroupedOption[] => {
+    // Fonction pour obtenir le label traduit d'un groupe
+    const getGroupLabel = (group: LawyerSpecialityGroup): string => {
+      const localeMap: Record<SupportedLocale, keyof LawyerSpecialityGroup> = {
+        fr: 'labelFr',
+        en: 'labelEn',
+        es: 'labelEs',
+        de: 'labelDe',
+        pt: 'labelPt',
+        ru: 'labelRu',
+        ch: 'labelZh',
+        ar: 'labelAr',
+        hi: 'labelHi',
+      };
+      const key = localeMap[locale] || 'labelFr';
+      return (group[key] as string) || group.labelFr;
+    };
+
+    // Fonction pour obtenir le label traduit d'une spécialité
+    const getItemLabel = (item: LawyerSpecialityItem): string => {
+      const localeMap: Record<SupportedLocale, keyof LawyerSpecialityItem> = {
+        fr: 'labelFr',
+        en: 'labelEn',
+        es: 'labelEs',
+        de: 'labelDe',
+        pt: 'labelPt',
+        ru: 'labelRu',
+        ch: 'labelZh',
+        ar: 'labelAr',
+        hi: 'labelHi',
+      };
+      const key = localeMap[locale] || 'labelFr';
+      return (item[key] as string) || item.labelFr;
+    };
+
     return lawyerSpecialitiesData
       .filter(group => !group.disabled)
       .map(group => ({

@@ -192,7 +192,8 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
     if (name === 'email') {
       processed = sanitizeEmailInput(value);
     } else if (name === 'firstName' || name === 'lastName') {
-      processed = sanitizeString(value).replace(/[^a-zA-Z\u00C0-\u017F\s'\-]/g, '');
+      // ✅ FIX: Suppression du filtre restrictif - laisse NAME_REGEX valider Unicode
+      processed = sanitizeString(value);
     } else {
       processed = sanitizeString(value);
     }

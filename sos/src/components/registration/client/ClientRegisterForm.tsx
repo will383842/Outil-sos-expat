@@ -282,7 +282,18 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting || hasNavigatedRef.current) return;
+
+    console.log('[ClientRegisterForm] 🔵 handleSubmit() START', {
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      phone: form.phone,
+      languagesCount: form.languagesSpoken.length,
+      timestamp: new Date().toISOString()
+    });
+
     if (!validateAll()) {
+      console.log('[ClientRegisterForm] ❌ Validation failed');
       firstNameRef.current?.focus();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -353,7 +364,16 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
         userData.referralCapturedAt = new Date().toISOString();
       }
 
+      console.log('[ClientRegisterForm] 📤 Calling onRegister()', {
+        role: 'client',
+        email: userData.email,
+        hasPhone: !!userData.phone,
+        timestamp: new Date().toISOString()
+      });
+
       await onRegister(userData, form.password);
+
+      console.log('[ClientRegisterForm] ✅ onRegister() succeeded');
 
       if (!isMountedRef.current) return;
 
@@ -371,6 +391,14 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
         },
       });
     } catch (err) {
+      console.log('[ClientRegisterForm] ❌ ERROR:', {
+        errorType: err?.constructor?.name,
+        errorCode: (err as any)?.code,
+        errorMessage: (err as Error)?.message,
+        errorStack: (err as Error)?.stack?.split('\n').slice(0, 3),
+        timestamp: new Date().toISOString()
+      });
+
       if (!isMountedRef.current) return;
 
       let msg = intl.formatMessage({ id: 'registerClient.errors.registrationError' });

@@ -48,12 +48,13 @@ export const sanitizeEmailFinal = (email: string): string => {
 // Deprecated: use sanitizeEmailInput for onChange, sanitizeEmailFinal for onBlur/submit
 export const sanitizeEmail = sanitizeEmailFinal;
 
-// Name sanitization - preserves accents, hyphens, apostrophes, spaces
+// Name sanitization - preserves all Unicode characters (Cyrillic, Arabic, Chinese, etc.)
+// ✅ FIX: Suppression du filtre restrictif - laisse NAME_REGEX valider Unicode
 export const sanitizeName = (name: string): string => {
   if (!name) return '';
   return name
     .replace(/[<>]/g, '')
     .replace(/javascript:/gi, '')
-    .replace(/on\w+=/gi, '')
-    .replace(/[^a-zA-Z\u00C0-\u017F '\-]/g, '');
+    .replace(/on\w+=/gi, '');
+  // Removed: .replace(/[^a-zA-Z\u00C0-\u017F '\-]/g, '') - trop restrictif
 };

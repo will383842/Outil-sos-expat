@@ -15,7 +15,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 
 // Minimum time in seconds for form fill (bots fill forms too fast)
-const MIN_FORM_FILL_TIME = 10;
+// ✅ RÉDUIT de 10s à 5s: 10s trop strict (bloque autofill Chrome/Firefox)
+const MIN_FORM_FILL_TIME = 5;
 
 // TypeScript declaration for grecaptcha
 declare global {
@@ -145,9 +146,21 @@ export const useAntiBot = (): UseAntiBotReturn => {
         recaptchaToken: null as string | null,
       };
 
+      console.log('[useAntiBot] 🔍 validateHuman() called', {
+        action,
+        formFillTime: timeSpent,
+        mouseMovements,
+        keystrokes,
+        honeypotValue: honeypotValue ? 'FILLED (BOT!)' : 'empty (OK)',
+        timestamp: new Date().toISOString()
+      });
+
       // 1. Check honeypot (hidden field that bots fill)
       if (honeypotValue) {
-        console.warn('[useAntiBot] Honeypot triggered');
+        console.log('[useAntiBot] 🚨 HONEYPOT TRIGGERED - Blocking registration', {
+          honeypotValue,
+          timestamp: new Date().toISOString()
+        });
         return {
           isValid: false,
           reason: 'Suspicious activity detected',
@@ -157,7 +170,11 @@ export const useAntiBot = (): UseAntiBotReturn => {
 
       // 2. Check minimum fill time
       if (timeSpent < MIN_FORM_FILL_TIME) {
-        console.warn(`[useAntiBot] Form filled too fast: ${timeSpent}s`);
+        console.log('[useAntiBot] ⏱️ FORM FILLED TOO FAST - Blocking registration', {
+          timeSpent,
+          minimum: MIN_FORM_FILL_TIME,
+          timestamp: new Date().toISOString()
+        });
         return {
           isValid: false,
           reason: 'Please take your time to fill the form',
@@ -176,6 +193,12 @@ export const useAntiBot = (): UseAntiBotReturn => {
       // 4. Execute reCAPTCHA v3
       const recaptchaToken = await executeRecaptcha(action);
       securityMeta.recaptchaToken = recaptchaToken;
+
+      console.log('[useAntiBot] ✅ Validation passed', {
+        isValid: true,
+        hasRecaptchaToken: !!recaptchaToken,
+        timestamp: new Date().toISOString()
+      });
 
       return {
         isValid: true,
