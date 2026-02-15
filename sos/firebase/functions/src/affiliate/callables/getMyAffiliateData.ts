@@ -31,7 +31,7 @@ import { getAffiliateConfigCached } from "../utils/configService";
 export const getMyAffiliateData = onCall(
   {
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "512MiB",
     timeoutSeconds: 30,
     cors: [
       "https://sos-expat.com",
