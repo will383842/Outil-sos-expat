@@ -1,42 +1,36 @@
-// Service Worker - DÉSACTIVÉ TEMPORAIREMENT
-// Ce SW se désinstalle automatiquement pour résoudre les problèmes de 503
+// Service Worker - DÉSACTIVÉ - Version 2
+// Ce SW se désinstalle et laisse TOUTES les requêtes passer
 
-console.log('[SW] Désinstallation automatique en cours...');
+console.log('[SW] Mode désactivation - toutes requêtes passent au réseau');
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installation détectée - désinstallation immédiate');
+  console.log('[SW] Installation - skipWaiting immédiat');
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activation - nettoyage de tous les caches');
+  console.log('[SW] Activation - nettoyage et désinstallation');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          console.log('[SW] Suppression cache:', cacheName);
-          return caches.delete(cacheName);
-        })
-      );
-    }).then(() => {
-      console.log('[SW] ✅ Tous les caches supprimés');
-      return self.registration.unregister();
-    }).then(() => {
-      console.log('[SW] ✅ Service Worker désinstallé');
-      return clients.matchAll();
-    }).then((clients) => {
-      clients.forEach((client) => {
-        console.log('[SW] 🔄 Rechargement client:', client.url);
-        client.navigate(client.url);
-      });
-    })
+    caches.keys()
+      .then((cacheNames) => {
+        console.log('[SW] Suppression de', cacheNames.length, 'caches');
+        return Promise.all(cacheNames.map((c) => caches.delete(c)));
+      })
+      .then(() => {
+        console.log('[SW] ✅ Caches supprimés');
+        return self.registration.unregister();
+      })
+      .then(() => {
+        console.log('[SW] ✅ Désinstallé - rechargement des clients');
+        return self.clients.claim();
+      })
   );
 });
 
-// Intercepte toutes les requêtes et les laisse passer sans cache
+// CRITIQUE : Laisser TOUTES les requêtes passer au réseau
 self.addEventListener('fetch', (event) => {
-  // Ne rien faire - laisser passer toutes les requêtes normalement
-  return;
+  // Ne rien faire = laisse la requête passer normalement au réseau
+  // PAS de event.respondWith() = pas d'interception
 });
 
-console.log('[SW] ⚠️ Service Worker en mode désactivation - aucune requête ne sera interceptée');
+console.log('[SW] ✅ Prêt - aucune requête ne sera interceptée');
