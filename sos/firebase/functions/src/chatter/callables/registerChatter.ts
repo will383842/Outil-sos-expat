@@ -53,10 +53,15 @@ export const registerChatter = onCall(
     cors: true,
   },
   async (request): Promise<RegisterChatterResponse> => {
+    const startTime = Date.now();
     ensureInitialized();
 
     // 1. Check authentication
     if (!request.auth) {
+      logger.error("[registerChatter] ❌ UNAUTHENTICATED", {
+        timestamp: new Date().toISOString(),
+        hasAuth: !!request.auth
+      });
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
@@ -65,6 +70,21 @@ export const registerChatter = onCall(
 
     // 2. Validate input
     const input = request.data as RegisterChatterInput;
+
+    logger.info("[registerChatter] 🔵 DÉBUT INSCRIPTION", {
+      timestamp: new Date().toISOString(),
+      userId,
+      email: input.email,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      country: input.country,
+      language: input.language,
+      hasPhone: !!input.phone,
+      interventionCountriesCount: input.interventionCountries?.length || 0,
+      platformsCount: input.platforms?.length || 0,
+      additionalLanguagesCount: input.additionalLanguages?.length || 0,
+      dataKeys: Object.keys(input)
+    });
 
     // Names validation (reasonable limits, not too strict)
     if (!input.firstName || !input.lastName) {
@@ -438,6 +458,14 @@ export const registerChatter = onCall(
 
       // 12. Create user document and chatter document in transaction
       // IMPORTANT: Chatters get a dedicated role, not shared with other roles
+      logger.info("[registerChatter] 📝 DÉBUT TRANSACTION FIRESTORE", {
+        timestamp: new Date().toISOString(),
+        userId,
+        email: input.email,
+        collections: ["chatters", "users", "chatter_affiliate_clicks", "chatter_recruited_chatters"],
+        elapsedSinceStart: Date.now() - startTime
+      });
+
       await db.runTransaction(async (transaction) => {
         // Create chatter
         const chatterRef = db.collection("chatters").doc(userId);
@@ -513,11 +541,22 @@ export const registerChatter = onCall(
         }
       });
 
-      logger.info("[registerChatter] Chatter registered", {
+      logger.info("[registerChatter] ✅ TRANSACTION FIRESTORE RÉUSSIE", {
+        timestamp: new Date().toISOString(),
+        userId,
+        email: input.email,
+        duration: Date.now() - startTime
+      });
+
+      logger.info("[registerChatter] ✅ INSCRIPTION TERMINÉE", {
+        timestamp: new Date().toISOString(),
         chatterId: userId,
         email: input.email,
         country: input.country,
         recruitedBy,
+        affiliateCodeClient,
+        affiliateCodeRecruitment,
+        totalDuration: Date.now() - startTime
       });
 
       return {
@@ -528,11 +567,22 @@ export const registerChatter = onCall(
         message: "Registration successful. Your account is now active!",
       };
     } catch (error) {
+      logger.error("[registerChatter] ❌ ERREUR INSCRIPTION", {
+        timestamp: new Date().toISOString(),
+        userId,
+        email: input?.email,
+        errorType: error?.constructor?.name,
+        errorCode: (error as any)?.code,
+        errorMessage: (error as Error)?.message,
+        errorStack: (error as Error)?.stack,
+        duration: Date.now() - startTime,
+        isHttpsError: error instanceof HttpsError
+      });
+
       if (error instanceof HttpsError) {
         throw error;
       }
 
-      logger.error("[registerChatter] Error", { userId, error });
       throw new HttpsError("internal", "Failed to register chatter");
     }
   }

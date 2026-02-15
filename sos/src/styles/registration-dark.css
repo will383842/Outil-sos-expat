@@ -207,7 +207,7 @@
   background-color: #0f172a !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 16px !important;
-  z-index: 100 !important;
+  z-index: 9999 !important;
 }
 
 .dark-reg-form [class*="-option"] {

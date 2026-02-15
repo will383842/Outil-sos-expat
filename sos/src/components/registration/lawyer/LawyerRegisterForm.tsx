@@ -302,8 +302,51 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
     setBotError('');
     setIsSubmitting(true);
 
+    const startTime = Date.now();
+    console.log('[LawyerRegisterForm] 🔵 DÉBUT INSCRIPTION', {
+      timestamp: new Date().toISOString(),
+      email: form.email,
+      firstName: form.firstName,
+      lastName: form.lastName,
+      currentCountry: form.currentCountry,
+      specialtiesCount: form.specialties.length,
+      languagesCount: selectedLanguages.length,
+      educationsCount: form.educations.length,
+      yearsOfExperience: form.yearsOfExperience,
+      hasProfilePhoto: !!form.profilePhoto,
+      userAgent: navigator.userAgent,
+      online: navigator.onLine,
+      serviceWorkerActive: !!navigator.serviceWorker?.controller,
+      formFillTime: stats.timeSpent,
+      mouseMovements: stats.mouseMovements,
+      keystrokes: stats.keystrokes
+    });
+
+    console.log('[LawyerRegisterForm] 🤖 ANTI-BOT CHECK - Début', {
+      timestamp: new Date().toISOString(),
+      formFillTime: stats.timeSpent,
+      mouseMovements: stats.mouseMovements,
+      keystrokes: stats.keystrokes
+    });
+
     const botCheck = await validateHuman('register_lawyer');
+
+    console.log('[LawyerRegisterForm] 🤖 ANTI-BOT CHECK - Résultat', {
+      timestamp: new Date().toISOString(),
+      isValid: botCheck.isValid,
+      reason: botCheck.reason,
+      hasRecaptchaToken: !!botCheck.recaptchaToken,
+      securityMeta: botCheck.securityMeta
+    });
+
     if (!botCheck.isValid) {
+      console.log('[LawyerRegisterForm] 🚨 ANTI-BOT BLOQUÉ', {
+        timestamp: new Date().toISOString(),
+        reason: botCheck.reason,
+        formFillTime: stats.timeSpent,
+        mouseMovements: stats.mouseMovements,
+        keystrokes: stats.keystrokes
+      });
       const msgs: Record<string, string> = {
         'Suspicious activity detected': 'A validation error occurred. Please try again.',
         'Please take your time to fill the form': 'Please take your time to fill out the form correctly.',
@@ -394,7 +437,26 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         updatedAt: new Date(),
       };
 
+      console.log('[LawyerRegisterForm] 📤 APPEL BACKEND - Début', {
+        timestamp: new Date().toISOString(),
+        function: 'onRegister (registerLawyer)',
+        email: userData.email,
+        role: userData.role,
+        country: userData.currentCountry,
+        specialtiesCount: userData.specialties.length,
+        languagesCount: userData.languages.length,
+        hasRecaptchaToken: !!userData._securityMeta.recaptchaToken,
+        dataKeys: Object.keys(userData).filter(k => !k.startsWith('_')),
+        elapsedSinceStart: Date.now() - startTime
+      });
+
       await onRegister(userData, form.password);
+
+      console.log('[LawyerRegisterForm] ✅ BACKEND OK - onRegister réussi', {
+        timestamp: new Date().toISOString(),
+        email: userData.email,
+        duration: Date.now() - startTime
+      });
 
       const stripeCountryCode = getCountryCode(form.currentCountry);
 
@@ -407,13 +469,32 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         return;
       }
 
+      console.log('[LawyerRegisterForm] 💳 CRÉATION COMPTE STRIPE - Début', {
+        timestamp: new Date().toISOString(),
+        email: userData.email,
+        country: stripeCountryCode,
+        userType: 'lawyer'
+      });
+
       try {
         const { httpsCallable } = await import('firebase/functions');
         const { functions } = await import('@/config/firebase');
         const createStripeAccount = httpsCallable(functions, 'createStripeAccount');
         await createStripeAccount({ email: sanitizeEmail(form.email), currentCountry: stripeCountryCode, firstName: fn, lastName: ln, userType: 'lawyer' });
+
+        console.log('[LawyerRegisterForm] ✅ STRIPE OK - Compte créé', {
+          timestamp: new Date().toISOString(),
+          email: userData.email,
+          duration: Date.now() - startTime
+        });
       } catch (stripeErr) {
-        console.error('[RegisterLawyer] Stripe error (account created):', stripeErr);
+        console.error('[LawyerRegisterForm] ❌ STRIPE ERREUR (non bloquant)', {
+          timestamp: new Date().toISOString(),
+          error: stripeErr,
+          errorCode: (stripeErr as any)?.code,
+          errorMessage: (stripeErr as Error)?.message,
+          email: userData.email
+        });
       }
 
       hasNavigatedRef.current = true;
@@ -423,7 +504,30 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerLawyer.success.registered' }), type: 'success' } });
 
     } catch (err: unknown) {
-      console.error('[RegisterLawyer] Registration error:', err);
+      console.error('[LawyerRegisterForm] ❌ ERREUR INSCRIPTION', {
+        timestamp: new Date().toISOString(),
+        email: form.email,
+        errorType: err?.constructor?.name,
+        errorCode: (err as any)?.code,
+        errorMessage: (err as Error)?.message,
+        errorDetails: (err as any)?.details,
+        errorStack: (err as Error)?.stack?.split('\n').slice(0, 10),
+        duration: Date.now() - startTime,
+        formData: {
+          email: form.email,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          country: form.currentCountry,
+          hasPhoto: !!form.profilePhoto,
+          specialtiesCount: form.specialties.length
+        },
+        network: {
+          online: navigator.onLine,
+          serviceWorker: !!navigator.serviceWorker?.controller,
+          userAgent: navigator.userAgent
+        }
+      });
+
       if (!isMountedRef.current || hasNavigatedRef.current) return;
       const msg = getRegistrationErrorMessage(err, intl, 'registerLawyer', form.currentCountry, getCountryCode(form.currentCountry));
       setFieldErrors(prev => ({ ...prev, general: msg }));

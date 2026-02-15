@@ -133,13 +133,31 @@ export const registerBlogger = onCall(
     cors: true,
   },
   async (request): Promise<RegisterBloggerResponse> => {
+    const startTime = Date.now();
+
     // 1. Check authentication
     if (!request.auth) {
+      logger.error("[registerBlogger] ❌ UNAUTHENTICATED", {
+        timestamp: new Date().toISOString(),
+        hasAuth: !!request.auth
+      });
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
     const uid = request.auth.uid;
     const input = request.data as RegisterBloggerInput;
+
+    logger.info("[registerBlogger] 🔵 DÉBUT INSCRIPTION", {
+      timestamp: new Date().toISOString(),
+      userId: uid,
+      email: input.email,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      country: input.country,
+      language: input.language,
+      blogUrl: input.blogUrl,
+      dataKeys: Object.keys(input)
+    });
 
     // 2. Validate input
     validateInput(input);
@@ -356,6 +374,14 @@ export const registerBlogger = onCall(
       };
 
       // 9. Save blogger profile + update users doc (in transaction for consistency)
+      logger.info("[registerBlogger] 📝 DÉBUT TRANSACTION FIRESTORE", {
+        timestamp: new Date().toISOString(),
+        userId: uid,
+        email: input.email,
+        collections: ["bloggers", "users", "blogger_notifications"],
+        elapsedSinceStart: Date.now() - startTime
+      });
+
       await db.runTransaction(async (transaction) => {
         const bloggerRef = db.collection("bloggers").doc(uid);
         transaction.set(bloggerRef, blogger);
@@ -447,12 +473,21 @@ export const registerBlogger = onCall(
         });
       });
 
-      logger.info("[registerBlogger] Blogger registered successfully", {
+      logger.info("[registerBlogger] ✅ TRANSACTION FIRESTORE RÉUSSIE", {
+        timestamp: new Date().toISOString(),
+        userId: uid,
+        email: input.email,
+        duration: Date.now() - startTime
+      });
+
+      logger.info("[registerBlogger] ✅ INSCRIPTION TERMINÉE", {
+        timestamp: new Date().toISOString(),
         bloggerId: uid,
         email: input.email,
         blogUrl: input.blogUrl,
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        totalDuration: Date.now() - startTime
       });
 
       return {
@@ -463,11 +498,22 @@ export const registerBlogger = onCall(
         message: "Inscription réussie ! Votre compte blogueur est maintenant actif.",
       };
     } catch (error) {
+      logger.error("[registerBlogger] ❌ ERREUR INSCRIPTION", {
+        timestamp: new Date().toISOString(),
+        userId: uid,
+        email: input?.email,
+        errorType: error?.constructor?.name,
+        errorCode: (error as any)?.code,
+        errorMessage: (error as Error)?.message,
+        errorStack: (error as Error)?.stack,
+        duration: Date.now() - startTime,
+        isHttpsError: error instanceof HttpsError
+      });
+
       if (error instanceof HttpsError) {
         throw error;
       }
 
-      logger.error("[registerBlogger] Error", { uid, error });
       throw new HttpsError("internal", "Failed to register blogger");
     }
   }

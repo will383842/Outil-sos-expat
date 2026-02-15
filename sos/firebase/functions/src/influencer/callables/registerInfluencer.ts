@@ -57,10 +57,15 @@ export const registerInfluencer = onCall(
     cors: true,
   },
   async (request): Promise<RegisterInfluencerResponse> => {
+    const startTime = Date.now();
     ensureInitialized();
 
     // 1. Check authentication
     if (!request.auth) {
+      logger.error("[registerInfluencer] ❌ UNAUTHENTICATED", {
+        timestamp: new Date().toISOString(),
+        hasAuth: !!request.auth
+      });
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
@@ -69,6 +74,18 @@ export const registerInfluencer = onCall(
 
     // 2. Validate input
     const input = request.data as RegisterInfluencerInput;
+
+    logger.info("[registerInfluencer] 🔵 DÉBUT INSCRIPTION", {
+      timestamp: new Date().toISOString(),
+      userId,
+      email: input.email,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      country: input.country,
+      language: input.language,
+      platformsCount: input.platforms?.length || 0,
+      dataKeys: Object.keys(input)
+    });
 
     // Names validation (reasonable limits, not too strict)
     if (!input.firstName || !input.lastName) {
@@ -380,6 +397,14 @@ export const registerInfluencer = onCall(
       };
 
       // 10. Create user document and influencer document in transaction
+      logger.info("[registerInfluencer] 📝 DÉBUT TRANSACTION FIRESTORE", {
+        timestamp: new Date().toISOString(),
+        userId,
+        email: input.email,
+        collections: ["influencers", "users", "influencer_affiliate_clicks"],
+        elapsedSinceStart: Date.now() - startTime
+      });
+
       await db.runTransaction(async (transaction) => {
         // Create influencer
         const influencerRef = db.collection("influencers").doc(userId);
@@ -447,11 +472,21 @@ export const registerInfluencer = onCall(
         }
       });
 
-      logger.info("[registerInfluencer] Influencer registered", {
+      logger.info("[registerInfluencer] ✅ TRANSACTION FIRESTORE RÉUSSIE", {
+        timestamp: new Date().toISOString(),
+        userId,
+        email: input.email,
+        duration: Date.now() - startTime
+      });
+
+      logger.info("[registerInfluencer] ✅ INSCRIPTION TERMINÉE", {
+        timestamp: new Date().toISOString(),
         influencerId: userId,
         email: input.email,
         country: input.country,
         affiliateCodeClient,
+        affiliateCodeRecruitment,
+        totalDuration: Date.now() - startTime
       });
 
       return {
@@ -462,11 +497,22 @@ export const registerInfluencer = onCall(
         message: "Registration successful. Your account is now active!",
       };
     } catch (error) {
+      logger.error("[registerInfluencer] ❌ ERREUR INSCRIPTION", {
+        timestamp: new Date().toISOString(),
+        userId,
+        email: input?.email,
+        errorType: error?.constructor?.name,
+        errorCode: (error as any)?.code,
+        errorMessage: (error as Error)?.message,
+        errorStack: (error as Error)?.stack,
+        duration: Date.now() - startTime,
+        isHttpsError: error instanceof HttpsError
+      });
+
       if (error instanceof HttpsError) {
         throw error;
       }
 
-      logger.error("[registerInfluencer] Error", { userId, error });
       throw new HttpsError("internal", "Failed to register influencer");
     }
   }

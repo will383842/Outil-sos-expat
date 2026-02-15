@@ -78,10 +78,15 @@ export const registerGroupAdmin = onCall(
     cors: true,
   },
   async (request): Promise<RegisterGroupAdminResponse> => {
+    const startTime = Date.now();
     ensureInitialized();
 
     // 1. Check authentication
     if (!request.auth) {
+      logger.error("[registerGroupAdmin] ❌ UNAUTHENTICATED", {
+        timestamp: new Date().toISOString(),
+        hasAuth: !!request.auth
+      });
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
@@ -90,6 +95,18 @@ export const registerGroupAdmin = onCall(
 
     // 2. Validate input
     const input = request.data as RegisterGroupAdminRequest;
+
+    logger.info("[registerGroupAdmin] 🔵 DÉBUT INSCRIPTION", {
+      timestamp: new Date().toISOString(),
+      userId,
+      email: input.email,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      groupName: input.groupName,
+      groupType: input.groupType,
+      groupCountry: input.groupCountry,
+      dataKeys: Object.keys(input)
+    });
 
     // Names validation (reasonable limits, not too strict)
     if (!input.firstName || !input.lastName) {
@@ -430,6 +447,14 @@ export const registerGroupAdmin = onCall(
       };
 
       // 12. Create documents in transaction
+      logger.info("[registerGroupAdmin] 📝 DÉBUT TRANSACTION FIRESTORE", {
+        timestamp: new Date().toISOString(),
+        userId,
+        email: input.email,
+        collections: ["group_admins", "users", "group_admin_recruited_admins"],
+        elapsedSinceStart: Date.now() - startTime
+      });
+
       await db.runTransaction(async (transaction) => {
         // Create GroupAdmin
         const groupAdminRef = db.collection("group_admins").doc(userId);
@@ -493,12 +518,23 @@ export const registerGroupAdmin = onCall(
         }
       });
 
-      logger.info("[registerGroupAdmin] GroupAdmin registered", {
+      logger.info("[registerGroupAdmin] ✅ TRANSACTION FIRESTORE RÉUSSIE", {
+        timestamp: new Date().toISOString(),
+        userId,
+        email: input.email,
+        duration: Date.now() - startTime
+      });
+
+      logger.info("[registerGroupAdmin] ✅ INSCRIPTION TERMINÉE", {
+        timestamp: new Date().toISOString(),
         groupAdminId: userId,
         email: input.email,
         groupName: input.groupName,
         groupType: input.groupType,
+        affiliateCodeClient,
+        affiliateCodeRecruitment,
         recruitedBy,
+        totalDuration: Date.now() - startTime
       });
 
       return {
@@ -508,11 +544,22 @@ export const registerGroupAdmin = onCall(
         affiliateCodeRecruitment,
       };
     } catch (error) {
+      logger.error("[registerGroupAdmin] ❌ ERREUR INSCRIPTION", {
+        timestamp: new Date().toISOString(),
+        userId,
+        email: input?.email,
+        errorType: error?.constructor?.name,
+        errorCode: (error as any)?.code,
+        errorMessage: (error as Error)?.message,
+        errorStack: (error as Error)?.stack,
+        duration: Date.now() - startTime,
+        isHttpsError: error instanceof HttpsError
+      });
+
       if (error instanceof HttpsError) {
         throw error;
       }
 
-      logger.error("[registerGroupAdmin] Error", { userId, error });
       throw new HttpsError("internal", "Failed to register GroupAdmin");
     }
   }
