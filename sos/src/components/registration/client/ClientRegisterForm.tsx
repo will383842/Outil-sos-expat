@@ -395,7 +395,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
             type: 'success',
           },
         });
-      }, 1500);
+      }, 300);
     } catch (err) {
       console.log('[ClientRegisterForm] ❌ ERROR:', {
         errorType: err?.constructor?.name,

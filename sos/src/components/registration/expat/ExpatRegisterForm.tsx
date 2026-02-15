@@ -475,7 +475,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
         // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
         setTimeout(() => {
           navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerExpat.success.registered' }), type: 'success' } });
-        }, 1500);
+        }, 300);
         return;
       }
 
