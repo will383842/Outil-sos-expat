@@ -891,8 +891,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <FormattedMessage id="registerExpat.fields.languages" />
               <span className="text-red-400 font-bold text-lg ml-1">*</span>
-            <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
-              <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+              <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
             </label>
             <Suspense fallback={<div className="h-14 animate-pulse rounded-2xl bg-white/5 border border-white/10" />}>
               <MultiLanguageSelect
@@ -955,7 +954,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
               <FormattedMessage id="registerExpat.ui.termsLink" />
             </LocaleLink>
             <span className="text-red-400 font-bold text-lg ml-1">*</span>
-            <span className="text-xs text-red-400/80 ml-1 font-semibold">(obligatoire)</span>
+            <span className="inline-flex items-center px-2 py-0.5 ml-2 text-[10px] font-bold text-white bg-red-500 rounded-md">OBLIGATOIRE</span>
           </DarkCheckbox>
           <FieldError error={fieldErrors.acceptTerms} show={!!fieldErrors.acceptTerms} />
 
