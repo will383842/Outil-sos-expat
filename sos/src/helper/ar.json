@@ -3915,13 +3915,8 @@
   "profileValidation.loading": "جاري تحميل الملفات المعلقة...",
   "profileValidation.loadingError": "خطأ في تحميل الملفات المعلقة",
   "profileValidation.noPending": "لا توجد ملفات معلقة",
-  "profileValidation.pending.description": "ملفك الشخصي قيد المراجعة حاليًا من قبل فريقنا.",
-  "profileValidation.pending.steps.emailNotification": "ستتلقى بريدًا إلكترونيًا بمجرد الموافقة على ملفك الشخصي",
-  "profileValidation.pending.steps.profileVisible": "بمجرد الموافقة عليه، سيكون ملفك الشخصي مرئيًا لجميع العملاء",
-  "profileValidation.pending.steps.teamVerifies": "فريقنا يتحقق من معلومات ملفك الشخصي",
+  "profileValidation.pending.description": "سيتم التحقق من ملفك الشخصي في غضون 1 إلى 12 ساعة. بعد ذلك يمكنك الاتصال بالإنترنت لتلقي المكالمات متى شئت.",
   "profileValidation.pending.title": "الملف الشخصي قيد المراجعة",
-  "profileValidation.pending.validationTime": "وقت التحقق المعتاد:",
-  "profileValidation.pending.whatHappensNow": "📋 ماذا يحدث الآن؟",
   "profileValidation.pendingBadge": "في انتظار التحقق",
   "profileValidation.processing": "جاري المعالجة...",
   "profileValidation.reject": "رفض",

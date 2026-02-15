@@ -60,6 +60,11 @@ const RegistrationWizard: React.FC<RegistrationWizardProps> = ({
   const isLastStep = currentStep === totalSteps;
   const currentStepData = steps[currentStep - 1];
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
   // Focus management: move focus to step content area after transition
   useEffect(() => {
     if (stepContentRef.current) {
@@ -84,13 +89,11 @@ const RegistrationWizard: React.FC<RegistrationWizardProps> = ({
     setStepErrors(prev => ({ ...prev, [currentStep]: false }));
     setDirection(1);
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentStep, currentStepData, totalSteps]);
 
   const goPrev = useCallback(() => {
     setDirection(-1);
     setCurrentStep(prev => Math.max(prev - 1, 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {

@@ -30,34 +30,9 @@ const ProfileStatusAlert: React.FC<ProfileStatusAlertProps> = ({ user }) => {
               <span>⏳</span>
               {intl.formatMessage({ id: 'profileValidation.pending.title' })}
             </h3>
-            <p className="text-orange-800 mb-4 leading-relaxed">
+            <p className="text-orange-800 leading-relaxed">
               {intl.formatMessage({ id: 'profileValidation.pending.description' })}
             </p>
-            <div className="bg-white bg-opacity-60 rounded-lg p-4 mb-4">
-              <h4 className="font-semibold text-orange-900 mb-2">
-                {intl.formatMessage({ id: 'profileValidation.pending.whatHappensNow' })}
-              </h4>
-              <ul className="space-y-2 text-sm text-orange-800">
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-500 mt-1">•</span>
-                  <span>{intl.formatMessage({ id: 'profileValidation.pending.steps.teamVerifies' })}</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-500 mt-1">•</span>
-                  <span>{intl.formatMessage({ id: 'profileValidation.pending.steps.emailNotification' })}</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-500 mt-1">•</span>
-                  <span>{intl.formatMessage({ id: 'profileValidation.pending.steps.profileVisible' })}</span>
-                </li>
-              </ul>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-orange-700">
-              <Mail className="w-4 h-4" />
-              <span>
-                {intl.formatMessage({ id: 'profileValidation.pending.validationTime' })} <strong>24-48 heures</strong>
-              </span>
-            </div>
           </div>
         </div>
       </div>
