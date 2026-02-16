@@ -41,6 +41,37 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json
           gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
 
+      - name: Create .env file
+        working-directory: sos/firebase/functions
+        run: |
+          cat > .env << 'EOF'
+          FUNCTIONS_REGION=europe-west1
+          FRONTEND_URL=https://www.sosexpats.com
+          FUNCTIONS_URL=https://europe-west1-sos-urgently-ac307.cloudfunctions.net
+          FUNCTIONS_BASE_URL=https://europe-west1-sos-urgently-ac307.cloudfunctions.net
+          CLOUD_TASKS_QUEUE=call-scheduler-queue
+          CLOUD_TASKS_LOCATION=europe-west3
+          CLOUD_TASKS_PAYOUT_QUEUE=payout-retry-queue
+          EXECUTE_CALL_TASK_URL=https://executecalltask-5tfnuxa2hq-ey.a.run.app
+          SET_PROVIDER_AVAILABLE_TASK_URL=https://setprovideravailabletask-5tfnuxa2hq-ey.a.run.app
+          TWILIO_CALL_WEBHOOK_URL=https://twiliocallwebhook-5tfnuxa2hq-ey.a.run.app
+          TWILIO_CONFERENCE_WEBHOOK_URL=https://twilioconferencewebhook-5tfnuxa2hq-ey.a.run.app
+          PROVIDER_NO_ANSWER_TWIML_URL=https://providernoanswertwiml-5tfnuxa2hq-ey.a.run.app
+          TWILIO_AMD_TWIML_URL=https://twilioamdtwiml-5tfnuxa2hq-ey.a.run.app
+          TWILIO_GATHER_RESPONSE_URL=https://twiliogatherresponse-5tfnuxa2hq-ey.a.run.app
+          FORCE_END_CALL_TASK_URL=https://forceendcalltask-5tfnuxa2hq-ey.a.run.app
+          BUSY_SAFETY_TIMEOUT_TASK_URL=https://busysafetytimeouttask-5tfnuxa2hq-ey.a.run.app
+          RECORDING_RETENTION_DAYS=90
+          STRIPE_MODE=live
+          PAYPAL_MODE=live
+          GA4_MEASUREMENT_ID=G-6855B6E2FB
+          WISE_MODE=sandbox
+          FLUTTERWAVE_MODE=sandbox
+          MAILWIZZ_API_URL=https://mail.sos-expat.com/api/index.php
+          MAILWIZZ_LIST_UID=yl089ehqpgb96
+          MAILWIZZ_CUSTOMER_ID=2
+          EOF
+
       - name: Deploy to Firebase
         working-directory: sos/firebase
         run: firebase deploy --only functions --project sos-urgently-ac307 --force
