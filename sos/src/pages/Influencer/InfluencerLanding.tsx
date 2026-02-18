@@ -51,6 +51,13 @@ const globalStyles = `
     /* p tags: NO override — let Tailwind classes control each <p> individually */
   }
 
+  /* FIX: Force white color on all headings - Tailwind inheritance unreliable */
+  .influencer-landing h1,
+  .influencer-landing h2,
+  .influencer-landing h3 {
+    color: white;
+  }
+
   /* FIX: index.css forces "span { font-size: 14px }" on mobile.
      Colored highlight spans inside headings MUST inherit the heading font-size. */
   .influencer-landing h1 span,

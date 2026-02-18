@@ -46,6 +46,13 @@ const globalStyles = `
     /* p tags: NO override — let Tailwind classes control each <p> individually */
   }
 
+  /* FIX: Force white color on all headings - Tailwind inheritance unreliable */
+  .groupadmin-landing h1,
+  .groupadmin-landing h2,
+  .groupadmin-landing h3 {
+    color: white;
+  }
+
   /* FIX: index.css forces "span { font-size: 14px }" on mobile.
      Colored highlight spans inside headings MUST inherit the heading font-size. */
   .groupadmin-landing h1 span,

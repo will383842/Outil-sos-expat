@@ -44,6 +44,13 @@ const globalStyles = `
     /* p tags: NO override — let Tailwind classes control each <p> individually */
   }
 
+  /* FIX: Force white color on all headings - Tailwind inheritance unreliable */
+  .chatter-landing h1,
+  .chatter-landing h2,
+  .chatter-landing h3 {
+    color: white;
+  }
+
   /* FIX: index.css forces "span { font-size: 14px }" on mobile.
      Colored highlight spans inside headings MUST inherit the heading font-size,
      not shrink to 14px. Specificity (0,1,2) beats element selector (0,0,1). */
