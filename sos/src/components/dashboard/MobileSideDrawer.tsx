@@ -266,7 +266,7 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-white/10">
           <div className="flex items-center gap-3">
-            {user?.profilePhoto ? (
+            {user?.profilePhoto?.startsWith('http') ? (
               <img
                 src={user.profilePhoto}
                 alt={`${user?.firstName || 'User'} profile photo`}
