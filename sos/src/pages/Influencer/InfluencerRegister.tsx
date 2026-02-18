@@ -88,7 +88,7 @@ const InfluencerRegister: React.FC = () => {
             <div className="w-16 h-16 bg-red-500/20 border rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">&#9888;&#65039;</span>
             </div>
-            <h1 className="text-2xl font-bold mb-4">
+            <h1 className="text-2xl font-bold mb-4 text-white">
               <FormattedMessage id="influencer.register.roleConflict.title" defaultMessage="Registration Not Allowed" />
             </h1>
             <p className="text-gray-300 mb-6">
@@ -144,10 +144,10 @@ const InfluencerRegister: React.FC = () => {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center shadow-lg">
               <Megaphone className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               <FormattedMessage id="influencer.register.title" defaultMessage="Devenir Influenceur SOS-Expat" />
             </h1>
-            <p className="text-lg max-w-2xl mx-auto">
+            <p className="text-lg max-w-2xl mx-auto text-gray-300">
               <FormattedMessage id="influencer.register.subtitle" defaultMessage="Creez votre compte et commencez a gagner immediatement" />
             </p>
           </div>
@@ -159,7 +159,7 @@ const InfluencerRegister: React.FC = () => {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border flex items-center justify-center">
                   <Mail className="w-8 h-8 text-blue-400" />
                 </div>
-                <h2 className="text-xl font-bold mb-2">
+                <h2 className="text-xl font-bold mb-2 text-white">
                   <FormattedMessage id="influencer.register.emailExists.title" defaultMessage="You already have an account!" />
                 </h2>
                 <p className="text-gray-300 mb-2">
@@ -181,7 +181,7 @@ const InfluencerRegister: React.FC = () => {
                 </button>
                 <button
                   onClick={() => { setEmailAlreadyExists(false); setExistingEmail(''); }}
-                  className="text-sm hover:text-white underline"
+                  className="text-gray-400 text-sm hover:text-white underline"
                 >
                   <FormattedMessage id="influencer.register.emailExists.tryDifferent" defaultMessage="Use a different email" />
                 </button>
@@ -199,13 +199,13 @@ const InfluencerRegister: React.FC = () => {
                     {benefits.map((benefit, idx) => (
                       <div key={idx} className="flex items-center gap-3">
                         {benefit.icon}
-                        <span className="text-sm">{benefit.text}</span>
+                        <span className="text-sm text-gray-300">{benefit.text}</span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-6 pt-6 border-t">
-                    <div className="text-sm">
+                  <div className="mt-6 pt-6 border-t border-white/10">
+                    <div className="text-sm text-gray-400">
                       <FormattedMessage id="influencer.register.info" defaultMessage="L'inscription est gratuite. Votre compte sera active immediatement." />
                     </div>
                   </div>
@@ -217,7 +217,7 @@ const InfluencerRegister: React.FC = () => {
                 <div className={`${UI.card} p-6`}>
                   {/* Already registered link */}
                   <div className="mb-6 p-3 bg-blue-500/10 rounded-xl border text-center">
-                    <p className="text-sm">
+                    <p className="text-sm text-gray-300">
                       <FormattedMessage id="influencer.register.alreadyRegistered" defaultMessage="Already registered?" />{' '}
                       <button
                         onClick={() => navigate(loginRoute)}
@@ -239,7 +239,7 @@ const InfluencerRegister: React.FC = () => {
                           <p className="font-semibold text-green-300">
                             <FormattedMessage id="influencer.register.referralDetected" defaultMessage="You've been referred!" />
                           </p>
-                          <p className="text-sm">
+                          <p className="text-sm text-gray-300">
                             <FormattedMessage
                               id="influencer.register.referralCode.applied"
                               defaultMessage="Referral code {code} will be applied automatically"

@@ -99,7 +99,7 @@ const GroupAdminRegister: React.FC = () => {
             <div className="w-16 h-16 bg-indigo-500/20 border rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">&#9888;&#65039;</span>
             </div>
-            <h1 className="text-2xl font-bold mb-4">
+            <h1 className="text-2xl font-bold mb-4 text-white">
               <FormattedMessage id="groupadmin.register.roleConflict.title" defaultMessage="Registration Not Allowed" />
             </h1>
             <p className="text-gray-300 mb-6">
@@ -274,7 +274,7 @@ const GroupAdminRegister: React.FC = () => {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center shadow-lg">
               <Users className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-black mb-2">
+            <h1 className="text-2xl font-black mb-2 text-white">
               <FormattedMessage id="groupadmin.register.title" defaultMessage="Group Admin Registration" />
             </h1>
             <p className="text-gray-300">
@@ -298,7 +298,7 @@ const GroupAdminRegister: React.FC = () => {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border flex items-center justify-center">
                 <Mail className="w-8 h-8 text-blue-400" />
               </div>
-              <h2 className="text-xl font-bold mb-2">
+              <h2 className="text-xl font-bold mb-2 text-white">
                 <FormattedMessage id="groupadmin.register.emailExists.title" defaultMessage="You already have an account!" />
               </h2>
               <p className="text-gray-300 mb-2">
@@ -320,7 +320,7 @@ const GroupAdminRegister: React.FC = () => {
               </button>
               <button
                 onClick={() => { setEmailAlreadyExists(false); setExistingEmail(''); }}
-                className="text-sm hover:text-white underline"
+                className="text-gray-400 text-sm hover:text-white underline"
               >
                 <FormattedMessage id="groupadmin.register.emailExists.tryDifferent" defaultMessage="Use a different email" />
               </button>
@@ -330,7 +330,7 @@ const GroupAdminRegister: React.FC = () => {
             <div className={`${UI.card} p-6`}>
               {/* Already registered link */}
               <div className="mb-6 p-3 bg-blue-500/10 rounded-xl border text-center">
-                <p className="text-sm">
+                <p className="text-sm text-gray-300">
                   <FormattedMessage id="groupadmin.register.alreadyRegistered" defaultMessage="Already registered?" />{' '}
                   <button
                     onClick={() => navigate(loginRoute)}
@@ -352,7 +352,7 @@ const GroupAdminRegister: React.FC = () => {
                       <p className="font-semibold text-green-300">
                         <FormattedMessage id="groupadmin.register.referralDetected" defaultMessage="You've been referred!" />
                       </p>
-                      <p className="text-sm">
+                      <p className="text-sm text-gray-300">
                         <FormattedMessage
                           id="groupadmin.register.referralCode.applied"
                           defaultMessage="Referral code {code} will be applied automatically"
@@ -383,7 +383,7 @@ const GroupAdminRegister: React.FC = () => {
 
           {/* Info footer */}
           {!success && (
-            <p className="text-center mt-6">
+            <p className="text-center mt-6 text-gray-400">
               <FormattedMessage
                 id="groupadmin.register.info"
                 defaultMessage="By registering, you accept the Group Admin program terms"
