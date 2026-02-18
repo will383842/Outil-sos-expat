@@ -5,17 +5,20 @@
  */
 
 import React from 'react';
+import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 import TelegramOnboarding from '../../components/Telegram/TelegramOnboarding';
 
 const ChatterTelegramOnboarding: React.FC = () => {
   return (
-    <TelegramOnboarding
-      role="chatter"
-      dashboardPath="/chatter/dashboard"
-      skipPath="/chatter/dashboard"
-      title="🎉 Dernière étape : Liez votre Telegram"
-      subtitle="Recevez $50 de bonus + notifications de commissions + messages de motivation quotidiens"
-    />
+    <ChatterDashboardLayout>
+      <TelegramOnboarding
+        role="chatter"
+        dashboardPath="/chatter/dashboard"
+        skipPath="/chatter/dashboard"
+        title="🎉 Dernière étape : Liez votre Telegram"
+        subtitle="Recevez $50 de bonus + notifications de commissions + messages de motivation quotidiens"
+      />
+    </ChatterDashboardLayout>
   );
 };
 

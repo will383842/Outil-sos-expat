@@ -132,86 +132,8 @@ const BloggerDashboardLayout: React.FC<BloggerDashboardLayoutProps> = ({ childre
   }, [logout, navigate]);
 
   return (
-    <Layout showHeader={false} showFooter={false}>
+    <Layout showFooter={false}>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-gray-950 to-white dark:to-black">
-        {/* Mobile Header */}
-        <div className="lg:hidden sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b dark:border-white/10">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                <PenTool className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-semibold text-gray-900 dark:text-white">
-                {intl.formatMessage({ id: 'blogger.sidebar.title', defaultMessage: 'Espace Blogueur' })}
-              </span>
-            </div>
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
-            >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-
-          {/* Mobile Menu Dropdown */}
-          {isMobileMenuOpen && (
-            <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 border-b dark:border-white/10 shadow-lg">
-              <nav className="p-4">
-                <ul className="space-y-2">
-                  {menuItems.map((item) => {
-                    const active = isActive(item.path);
-
-                    return (
-                      <li key={item.id}>
-                        <button
-                          onClick={() => {
-                            navigate(item.path);
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all ${
-                            active
-                              ? 'bg-purple-50 text-purple-700 dark:bg-white/5 dark:text-purple-400'
-                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'
-                          }`}
-                        >
-                          {item.icon}
-                          <span className="flex-1 text-left">{item.label}</span>
-                          {item.exclusive && (
-                            <span className={`text-xs px-1.5 py-0.5 rounded ${
-                              active
-                                ? 'bg-purple-200/50 text-purple-700 dark:bg-white/10 dark:text-purple-300'
-                                : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                            }`}>
-                              <FormattedMessage id="blogger.menu.exclusive" defaultMessage="Exclusif" />
-                            </span>
-                          )}
-                        </button>
-                      </li>
-                    );
-                  })}
-                  <li>
-                    <button
-                      onClick={handleLogout}
-                      disabled={loggingOut}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all ${
-                        loggingOut
-                          ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'
-                      }`}
-                    >
-                      <LogOut className="w-5 h-5" />
-                      {loggingOut
-                        ? intl.formatMessage({ id: 'dashboard.loggingOut', defaultMessage: 'Déconnexion...' })
-                        : intl.formatMessage({ id: 'dashboard.logout', defaultMessage: 'Déconnexion' })
-                      }
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-          )}
-        </div>
-
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex lg:flex-row gap-6">
             {/* Sidebar - Desktop only */}

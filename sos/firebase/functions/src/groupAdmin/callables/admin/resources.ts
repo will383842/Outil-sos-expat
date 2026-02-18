@@ -6,6 +6,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
 import {
   GroupAdminResource,
@@ -72,7 +73,7 @@ export const adminCreateResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; resourceId: string }> => {
     ensureInitialized();
@@ -177,7 +178,7 @@ export const adminUpdateResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -247,7 +248,7 @@ export const adminDeleteResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -311,7 +312,7 @@ export const adminGetResourcesList = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ resources: GroupAdminResource[] }> => {
     ensureInitialized();

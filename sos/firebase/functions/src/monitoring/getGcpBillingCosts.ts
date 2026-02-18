@@ -18,6 +18,7 @@
 import * as functions from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
 // ============================================================================
 // TYPES
@@ -623,12 +624,7 @@ export const getGcpBillingCosts = functions.onCall(
     region: 'europe-west1',
     memory: '512MiB',
     timeoutSeconds: 120,
-    cors: [
-      'http://localhost:5173',           // Local Vite dev
-      'http://127.0.0.1:5000',           // Hosting emulator
-      'https://sos-urgently-ac307.web.app', // Firebase Hosting prod
-      'https://sos-expat.com',           // Custom domain prod
-    ],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GcpBillingCostsResponse> => {
     // Authentication verification

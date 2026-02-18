@@ -15,7 +15,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
-import fetch from 'node-fetch';
+// fetch is available natively in Node.js 22 - no import needed
 import nodemailer from 'nodemailer';
 import { EMAIL_USER, EMAIL_PASS } from '../lib/secrets';
 

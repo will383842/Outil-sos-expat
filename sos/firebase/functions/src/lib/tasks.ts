@@ -1,5 +1,6 @@
 // firebase/functions/src/lib/tasks.ts
-import { CloudTasksClient } from "@google-cloud/tasks";
+// LAZY IMPORT: @google-cloud/tasks takes ~400ms to load — use type-only import + require() in getter
+import type { CloudTasksClient } from "@google-cloud/tasks";
 import { defineString } from "firebase-functions/params";
 import { logError } from "../utils/logs/logError";
 import { logger as prodLogger } from "../utils/productionLogger";
@@ -152,9 +153,11 @@ let tasksClient: CloudTasksClient | null = null;
 
 function getTasksClient(): CloudTasksClient {
   if (!tasksClient) {
-    tasksClient = new CloudTasksClient();
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { CloudTasksClient: CloudTasksClientClass } = require("@google-cloud/tasks");
+    tasksClient = new CloudTasksClientClass();
   }
-  return tasksClient;
+  return tasksClient!;
 }
 
 // ------------------------------------------------------

@@ -11,6 +11,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
 import { WISE_PAYOUT_SECRETS, ENCRYPTION_KEY } from "../../../lib/secrets";
 import { AffiliatePayout, PayoutStatus } from "../../types";
@@ -52,7 +53,7 @@ export const adminProcessPayoutWise = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 120,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     secrets: WISE_PAYOUT_SECRETS,
   },
   async (request) => {
@@ -236,7 +237,7 @@ export const adminProcessPayoutManual = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     secrets: [ENCRYPTION_KEY],
   },
   async (request) => {
@@ -358,7 +359,7 @@ export const adminRejectPayout = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -482,7 +483,7 @@ export const adminApprovePayout = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -576,7 +577,7 @@ export const adminGetPendingPayouts = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();

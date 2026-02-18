@@ -13,6 +13,7 @@ import * as functions from 'firebase-functions/v2/https';
 import * as scheduler from 'firebase-functions/v2/scheduler';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
 // ============================================================================
 // LAZY INITIALIZATION
@@ -175,10 +176,10 @@ function calculatePercentiles(values: number[]): { p50: number; p95: number; p99
  */
 export const getAgentMetrics = functions.onCall(
   {
-    region: 'europe-west3',
+    region: 'europe-west1',
     memory: '512MiB',
     timeoutSeconds: 60,
-    cors: [/sos-expat\.com$/, /localhost/],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AgentMetricsSummary> => {
     const db = admin.firestore();

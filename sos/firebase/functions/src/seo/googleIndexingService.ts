@@ -9,9 +9,16 @@
  * Service Account: firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com
  */
 
-import { google } from 'googleapis';
+// LAZY IMPORT: googleapis takes ~6s to load — import inside functions to avoid deployment timeout
+// import { google } from 'googleapis';
 
 const SCOPES = ['https://www.googleapis.com/auth/indexing'];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getGoogleLib(): any {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  return require('googleapis').google;
+}
 
 interface GoogleIndexingResult {
   success: boolean;
@@ -33,6 +40,7 @@ interface BatchResult {
  * Utilise les credentials du service account Firebase (ADC)
  */
 function getGoogleAuth() {
+  const google = getGoogleLib();
   return new google.auth.GoogleAuth({
     scopes: SCOPES,
   });
@@ -48,6 +56,7 @@ export async function submitToGoogleIndexing(
   type: 'URL_UPDATED' | 'URL_DELETED' = 'URL_UPDATED'
 ): Promise<GoogleIndexingResult> {
   try {
+    const google = getGoogleLib();
     const auth = getGoogleAuth();
     const indexing = google.indexing({ version: 'v3', auth });
 
@@ -155,6 +164,7 @@ export async function getUrlIndexingStatus(url: string): Promise<{
   error?: string;
 }> {
   try {
+    const google = getGoogleLib();
     const auth = getGoogleAuth();
     const indexing = google.indexing({ version: 'v3', auth });
 

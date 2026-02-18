@@ -953,7 +953,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     to="/cgu-chatters"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`underline font-medium${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
+                    className={`underline font-medium ${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
                   >
                     <FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" />
                   </Link>
@@ -963,7 +963,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     to="/privacy-policy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`underline font-medium${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
+                    className={`underline font-medium ${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
                   >
                     <FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" />
                   </Link>

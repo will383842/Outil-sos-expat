@@ -14,6 +14,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
+import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 import {
   AdminGetBloggersListInput,
   AdminGetBloggersListResponse,
@@ -70,7 +71,7 @@ export const adminGetBloggersList = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetBloggersListResponse> => {
     if (!request.auth) {
@@ -165,7 +166,7 @@ export const adminGetBloggerDetail = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetBloggerDetailResponse> => {
     if (!request.auth) {
@@ -286,7 +287,7 @@ export const adminProcessBloggerWithdrawal = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     if (!request.auth) {
@@ -338,7 +339,7 @@ export const adminUpdateBloggerStatus = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     if (!request.auth) {
@@ -412,7 +413,7 @@ export const adminGetBloggerConfig = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetBloggerConfigResponse> => {
     if (!request.auth) {
@@ -436,7 +437,7 @@ export const adminUpdateBloggerConfig = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     if (!request.auth) {
@@ -480,7 +481,7 @@ export const adminCreateBloggerResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; resourceId: string }> => {
     if (!request.auth) {
@@ -537,7 +538,7 @@ export const adminUpdateBloggerResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -575,7 +576,7 @@ export const adminDeleteBloggerResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -607,7 +608,7 @@ export const adminCreateBloggerResourceText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; textId: string }> => {
     if (!request.auth) {
@@ -658,7 +659,7 @@ export const adminCreateBloggerGuideTemplate = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; templateId: string }> => {
     if (!request.auth) {
@@ -708,7 +709,7 @@ export const adminUpdateBloggerGuideTemplate = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -748,7 +749,7 @@ export const adminCreateBloggerGuideCopyText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; textId: string }> => {
     if (!request.auth) {
@@ -795,7 +796,7 @@ export const adminUpdateBloggerGuideCopyText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -842,7 +843,7 @@ export const adminCreateBloggerGuideBestPractice = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; practiceId: string }> => {
     if (!request.auth) {
@@ -888,7 +889,7 @@ export const adminUpdateBloggerGuideBestPractice = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -1047,7 +1048,7 @@ export const adminGetBloggerResources = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ files: unknown[]; texts: unknown[] }> => {
     if (!request.auth) {
@@ -1101,7 +1102,7 @@ export const adminGetBloggerGuide = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{
     templates: unknown[];
@@ -1170,7 +1171,7 @@ export const adminSaveBloggerResourceFile = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; resourceId: string }> => {
     if (!request.auth) {
@@ -1252,7 +1253,7 @@ export const adminSaveBloggerResourceText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; resourceId: string }> => {
     if (!request.auth) {
@@ -1324,7 +1325,7 @@ export const adminDeleteBloggerResourceFile = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -1359,7 +1360,7 @@ export const adminDeleteBloggerResourceText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -1394,7 +1395,7 @@ export const adminSaveBloggerGuideTemplate = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; templateId: string }> => {
     if (!request.auth) {
@@ -1484,7 +1485,7 @@ export const adminSaveBloggerGuideCopyText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; textId: string }> => {
     if (!request.auth) {
@@ -1563,7 +1564,7 @@ export const adminSaveBloggerGuideBestPractice = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; practiceId: string }> => {
     if (!request.auth) {
@@ -1642,7 +1643,7 @@ export const adminDeleteBloggerGuideTemplate = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -1677,7 +1678,7 @@ export const adminDeleteBloggerGuideCopyText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -1712,7 +1713,7 @@ export const adminDeleteBloggerGuideBestPractice = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {

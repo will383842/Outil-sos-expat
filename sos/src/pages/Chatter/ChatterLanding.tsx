@@ -94,7 +94,7 @@ const CTAButton: React.FC<{
   <button
     onClick={onClick}
     aria-label={ariaLabel}
-    className={`flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold rounded-2xl shadow-lg transition-all active:scale-[0.98] hover:shadow-xl hover:from-amber-300 hover:to-yellow-300 will-change-transform${size === 'large' ? 'min-h-[56px] sm:min-h-[64px] px-6 sm:px-8 py-4 sm:py-5 text-lg sm:text-xl' : 'min-h-[48px] sm:min-h-[56px] px-5 sm:px-6 py-3 sm:py-4 text-base sm:text-lg'}${className}`}
+    className={`flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold rounded-2xl shadow-lg transition-all active:scale-[0.98] hover:shadow-xl hover:from-amber-300 hover:to-yellow-300 will-change-transform ${size === 'large' ? 'min-h-[56px] sm:min-h-[64px] px-6 sm:px-8 py-4 sm:py-5 text-lg sm:text-xl' : 'min-h-[48px] sm:min-h-[56px] px-5 sm:px-6 py-3 sm:py-4 text-base sm:text-lg'} ${className}`}
   >
     {children}
     <ArrowRight className={size === 'large' ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4 sm:w-5 sm:h-5'} aria-hidden="true" />
@@ -119,7 +119,7 @@ const FAQItem: React.FC<{
       id={`faq-question-${index}`}
     >
       <span className="text-base sm:text-lg font-semibold pr-2" itemProp="name">{question}</span>
-      <span className={`flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
+      <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
         {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
       </span>
     </button>
@@ -326,7 +326,7 @@ const ChatterLanding: React.FC = () => {
 
             <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
               <span><FormattedMessage id="chatter.landing.hero.new.line1" defaultMessage="Gagnez jusqu'à" /></span>{' '}
-              <span className="text-transparent bg-clip-text from-amber-400 via-yellow-400 to-green-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-400 to-green-400">
                 <FormattedMessage id="chatter.landing.hero.new.amount" defaultMessage="3000$+/mois" />
               </span>
               <br />
@@ -607,7 +607,7 @@ const ChatterLanding: React.FC = () => {
                         <span className="text-base sm:text-lg font-bold">
                           <FormattedMessage id="chatter.landing.source3.calc3" defaultMessage="10 partenaires =" />
                         </span>
-                        <span className="text-2xl sm:text-3xl lg:text-4xl font-black bg-clip-text from-purple-400 to-pink-400">
+                        <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                           9 000$
                         </span>
                       </div>
@@ -713,7 +713,7 @@ const ChatterLanding: React.FC = () => {
               </span>
               <h2 id="section-success" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-white mb-3 sm:mb-4">
                 <FormattedMessage id="chatter.landing.success.title" defaultMessage="Ils ont transformé" />{' '}
-                <span className="text-transparent bg-clip-text from-amber-400 to-green-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-green-400">
                   <FormattedMessage id="chatter.landing.success.highlight" defaultMessage="leur vie" />
                 </span>
               </h2>

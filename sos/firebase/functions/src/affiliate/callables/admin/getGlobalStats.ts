@@ -8,6 +8,7 @@ import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
 import { AdminGetGlobalStatsResponse } from "../../types";
 import { getPendingFraudAlertsCount } from "../../utils/fraudDetection";
@@ -50,7 +51,7 @@ export const getAffiliateGlobalStats = onCall(
     region: "europe-west1",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetGlobalStatsResponse> => {
     ensureInitialized();

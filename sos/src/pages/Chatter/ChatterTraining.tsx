@@ -5,7 +5,6 @@
 
 import React, { useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import Layout from '@/components/layout/Layout';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 import {
   BookOpen,
@@ -191,8 +190,7 @@ const ChatterTraining: React.FC = () => {
   const progressPercent = (completedModules / totalModules) * 100;
 
   return (
-    <Layout showFooter={false}>
-      <ChatterDashboardLayout>
+    <ChatterDashboardLayout>
         <div className="space-y-6">
           {/* Header */}
           <div>
@@ -421,8 +419,7 @@ const ChatterTraining: React.FC = () => {
             </div>
           </div>
         )}
-      </ChatterDashboardLayout>
-    </Layout>
+    </ChatterDashboardLayout>
   );
 };
 

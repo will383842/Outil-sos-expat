@@ -17,7 +17,7 @@
 // CORS CONFIGURATION
 // ============================================================================
 
-const ALLOWED_ORIGINS = [
+export const ALLOWED_ORIGINS = [
   "https://sos-expat.com",
   "https://www.sos-expat.com",
   "https://ia.sos-expat.com",
@@ -58,6 +58,36 @@ export const adminConfig = {
   region: "europe-west1" as const,
   memory: "512MiB" as const,
   cpu: 0.25,  // Reduced from 0.5 - admin functions mostly do simple DB operations
+  maxInstances: 5,
+  minInstances: 0,
+  concurrency: 1,
+  cors: ALLOWED_ORIGINS,
+};
+
+/**
+ * Chatter admin config - for admin functions managing chatters/affiliate (europe-west2)
+ * Colocated with chatter user functions for load balancing consistency.
+ * - maxInstances: 5 (few concurrent admins expected)
+ * - concurrency: 1 (cpu < 1 requires concurrency = 1)
+ */
+export const chatterAdminConfig = {
+  region: "europe-west2" as const,
+  memory: "512MiB" as const,
+  cpu: 0.25,
+  maxInstances: 5,
+  minInstances: 0,
+  concurrency: 1,
+  cors: ALLOWED_ORIGINS,
+};
+
+/**
+ * Affiliate admin config (europe-west2) - shared by influencer, blogger, groupAdmin admins
+ * Same region as chatter admin for load balancing consistency.
+ */
+export const affiliateAdminConfig = {
+  region: "europe-west2" as const,
+  memory: "512MiB" as const,
+  cpu: 0.25,
   maxInstances: 5,
   minInstances: 0,
   concurrency: 1,

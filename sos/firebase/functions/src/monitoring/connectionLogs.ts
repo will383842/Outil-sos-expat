@@ -20,7 +20,8 @@ import * as functions from 'firebase-functions/v1';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
-import fetch from 'node-fetch';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
+// fetch is available natively in Node.js 22 - no import needed
 
 // ============================================================================
 // CONFIGURATION
@@ -356,7 +357,7 @@ export const logConnection = onCall(
     region: CONFIG.REGION,
     memory: '256MiB',
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     const data = request.data as LogConnectionInput;
@@ -435,7 +436,7 @@ export const getConnectionLogs = onCall(
     region: CONFIG.REGION,
     memory: '256MiB',
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     // Require authentication
@@ -529,7 +530,7 @@ export const getConnectionStats = onCall(
     region: CONFIG.REGION,
     memory: '512MiB',
     timeoutSeconds: 120,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     // Require authentication

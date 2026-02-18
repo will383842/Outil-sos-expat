@@ -1543,7 +1543,10 @@ const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useLocaleNavigate();
   const getLocalePath = useLocalePath();
-  const { isLoading } = useAuth();
+  const { isLoading, user } = useAuth();
+  const typedUser = user as WithAuthExtras | null;
+  const affiliateRole = typedUser?.role as string | undefined;
+  const isAffiliateRole = ['chatter', 'influencer', 'blogger', 'groupAdmin'].includes(affiliateRole ?? '');
   const scrolled = useScrolled();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { trackLead } = useMetaTracking();
@@ -1585,6 +1588,62 @@ const Header: React.FC = () => {
     }),
     [intl]
   );
+
+  // Nav items spécifiques aux rôles affiliés (mobile hamburger)
+  const affiliateNavItems = useMemo(() => {
+    if (!isAffiliateRole) return [];
+    if (affiliateRole === 'chatter') {
+      return [
+        { path: '/chatter/tableau-de-bord', label: intl.formatMessage({ id: 'chatter.menu.dashboard', defaultMessage: 'Tableau de bord' }) },
+        { path: '/chatter/gains', label: intl.formatMessage({ id: 'chatter.menu.earnings', defaultMessage: 'Mes gains' }) },
+        { path: '/chatter/filleuls', label: intl.formatMessage({ id: 'chatter.menu.referrals', defaultMessage: 'Mes filleuls' }) },
+        { path: '/chatter/formations', label: intl.formatMessage({ id: 'chatter.menu.training', defaultMessage: 'Formations' }) },
+        { path: '/chatter/posts', label: intl.formatMessage({ id: 'chatter.menu.posts', defaultMessage: 'Posts' }) },
+        { path: '/chatter/classement', label: intl.formatMessage({ id: 'chatter.menu.leaderboard', defaultMessage: 'Classement' }) },
+        { path: '/chatter/paiements', label: intl.formatMessage({ id: 'chatter.menu.payments', defaultMessage: 'Paiements' }) },
+        { path: '/chatter/profil', label: intl.formatMessage({ id: 'chatter.menu.profile', defaultMessage: 'Mon profil' }) },
+      ];
+    }
+    if (affiliateRole === 'influencer') {
+      return [
+        { path: '/influencer/tableau-de-bord', label: intl.formatMessage({ id: 'influencer.menu.dashboard', defaultMessage: 'Tableau de bord' }) },
+        { path: '/influencer/gains', label: intl.formatMessage({ id: 'influencer.menu.earnings', defaultMessage: 'Mes gains' }) },
+        { path: '/influencer/filleuls', label: intl.formatMessage({ id: 'influencer.menu.referrals', defaultMessage: 'Mes filleuls' }) },
+        { path: '/influencer/classement', label: intl.formatMessage({ id: 'influencer.menu.leaderboard', defaultMessage: 'Classement' }) },
+        { path: '/influencer/paiements', label: intl.formatMessage({ id: 'influencer.menu.payments', defaultMessage: 'Paiements' }) },
+        { path: '/influencer/ressources', label: intl.formatMessage({ id: 'influencer.menu.resources', defaultMessage: 'Ressources' }) },
+        { path: '/influencer/outils', label: intl.formatMessage({ id: 'influencer.menu.tools', defaultMessage: 'Outils promo' }) },
+        { path: '/influencer/profil', label: intl.formatMessage({ id: 'influencer.menu.profile', defaultMessage: 'Mon profil' }) },
+      ];
+    }
+    if (affiliateRole === 'blogger') {
+      return [
+        { path: '/blogger/tableau-de-bord', label: intl.formatMessage({ id: 'blogger.menu.dashboard', defaultMessage: 'Tableau de bord' }) },
+        { path: '/blogger/gains', label: intl.formatMessage({ id: 'blogger.menu.earnings', defaultMessage: 'Mes gains' }) },
+        { path: '/blogger/filleuls', label: intl.formatMessage({ id: 'blogger.menu.referrals', defaultMessage: 'Mes filleuls' }) },
+        { path: '/blogger/parrainage-blogueurs', label: intl.formatMessage({ id: 'blogger.menu.bloggerRecruitment', defaultMessage: 'Parrainage blogueurs' }) },
+        { path: '/blogger/classement', label: intl.formatMessage({ id: 'blogger.menu.leaderboard', defaultMessage: 'Classement' }) },
+        { path: '/blogger/paiements', label: intl.formatMessage({ id: 'blogger.menu.payments', defaultMessage: 'Paiements' }) },
+        { path: '/blogger/ressources', label: intl.formatMessage({ id: 'blogger.menu.resources', defaultMessage: 'Ressources' }) },
+        { path: '/blogger/guide', label: intl.formatMessage({ id: 'blogger.menu.guide', defaultMessage: 'Guide' }) },
+        { path: '/blogger/widgets', label: intl.formatMessage({ id: 'blogger.menu.widgets', defaultMessage: 'Widgets' }) },
+        { path: '/blogger/profil', label: intl.formatMessage({ id: 'blogger.menu.profile', defaultMessage: 'Mon profil' }) },
+      ];
+    }
+    if (affiliateRole === 'groupAdmin') {
+      return [
+        { path: '/group-admin/tableau-de-bord', label: intl.formatMessage({ id: 'groupAdmin.menu.dashboard', defaultMessage: 'Tableau de bord' }) },
+        { path: '/group-admin/ressources', label: intl.formatMessage({ id: 'groupAdmin.menu.resources', defaultMessage: 'Ressources' }) },
+        { path: '/group-admin/posts', label: intl.formatMessage({ id: 'groupAdmin.menu.posts', defaultMessage: 'Posts' }) },
+        { path: '/group-admin/paiements', label: intl.formatMessage({ id: 'groupAdmin.menu.payments', defaultMessage: 'Paiements' }) },
+        { path: '/group-admin/filleuls', label: intl.formatMessage({ id: 'groupAdmin.menu.referrals', defaultMessage: 'Filleuls' }) },
+        { path: '/group-admin/parrainage-admins', label: intl.formatMessage({ id: 'groupAdmin.menu.groupAdminRecruitment', defaultMessage: 'Parrainage Admins' }) },
+        { path: '/group-admin/classement', label: intl.formatMessage({ id: 'groupAdmin.menu.leaderboard', defaultMessage: 'Classement' }) },
+        { path: '/group-admin/profil', label: intl.formatMessage({ id: 'groupAdmin.menu.profile', defaultMessage: 'Profil' }) },
+      ];
+    }
+    return [];
+  }, [isAffiliateRole, affiliateRole, intl]);
 
   // Fonction pour obtenir le label traduit d'un item de navigation
   const getNavigationLabel = useCallback(
@@ -1820,29 +1879,47 @@ const Header: React.FC = () => {
               <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 space-y-4">
                 <nav aria-label={t.mobileNav}>
                   <ul className="space-y-2" role="list">
-                    {MOBILE_NAVIGATION_ITEMS.map((item) => (
-                      <li key={item.path}>
-                        <Link
-                          to={getLocalePath(item.path)}
-                          className={`flex items-center space-x-3 p-3 rounded-xl text-gray-300
-                            hover:bg-white/10 transition-colors
-                            ${isActive(item.path) ? "bg-white/10" : ""}`}
-                          onClick={() => setIsMenuOpen(false)}
-                          aria-current={
-                            isActive(item.path) ? "page" : undefined
-                          }
-                        >
-                          {item.mobileIcon && (
-                            <span className="text-xl" aria-hidden="true">
-                              {item.mobileIcon}
+                    {isAffiliateRole ? (
+                      affiliateNavItems.map((item) => (
+                        <li key={item.path}>
+                          <button
+                            onClick={() => {
+                              navigate(item.path);
+                              setIsMenuOpen(false);
+                            }}
+                            className={`w-full flex items-center space-x-3 p-3 rounded-xl text-gray-300
+                              hover:bg-white/10 transition-colors text-left
+                              ${location.pathname.includes(item.path) ? "bg-white/10" : ""}`}
+                          >
+                            <span className="font-semibold text-base">{item.label}</span>
+                          </button>
+                        </li>
+                      ))
+                    ) : (
+                      MOBILE_NAVIGATION_ITEMS.map((item) => (
+                        <li key={item.path}>
+                          <Link
+                            to={getLocalePath(item.path)}
+                            className={`flex items-center space-x-3 p-3 rounded-xl text-gray-300
+                              hover:bg-white/10 transition-colors
+                              ${isActive(item.path) ? "bg-white/10" : ""}`}
+                            onClick={() => setIsMenuOpen(false)}
+                            aria-current={
+                              isActive(item.path) ? "page" : undefined
+                            }
+                          >
+                            {item.mobileIcon && (
+                              <span className="text-xl" aria-hidden="true">
+                                {item.mobileIcon}
+                              </span>
+                            )}
+                            <span className="font-semibold text-base">
+                              {getNavigationLabel(item.labelKey)}
                             </span>
-                          )}
-                          <span className="font-semibold text-base">
-                            {getNavigationLabel(item.labelKey)}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
+                          </Link>
+                        </li>
+                      ))
+                    )}
                   </ul>
                 </nav>
 

@@ -978,7 +978,7 @@ const BloggerRegister: React.FC = () => {
                         </div>
                       </div>
                       <label className="flex items-start gap-3 cursor-pointer select-none">
-                        <input type="checkbox" checked={formData.definitiveRoleAcknowledged} onChange={(e) => { setFormData(prev => ({ ...prev, definitiveRoleAcknowledged: e.target.checked })); clearValidationError('definitiveRoleAcknowledged'); }} className={`h-5 w-5 rounded border-2 mt-0.5${validationErrors.definitiveRoleAcknowledged ? 'border-red-500 bg-red-500/10' : formData.definitiveRoleAcknowledged ? 'border-amber-400 bg-amber-400 text-black' : 'border-white/20 bg-white/10'}focus:ring-2 transition-all duration-200 cursor-pointer`} aria-required="true" />
+                        <input type="checkbox" checked={formData.definitiveRoleAcknowledged} onChange={(e) => { setFormData(prev => ({ ...prev, definitiveRoleAcknowledged: e.target.checked })); clearValidationError('definitiveRoleAcknowledged'); }} className={`h-5 w-5 rounded border-2 mt-0.5 ${validationErrors.definitiveRoleAcknowledged ? 'border-red-500 bg-red-500/10' : formData.definitiveRoleAcknowledged ? 'border-amber-400 bg-amber-400 text-black' : 'border-white/20 bg-white/10'} focus:ring-2 transition-all duration-200 cursor-pointer`} aria-required="true" />
                         <span className="text-sm"><FormattedMessage id="blogger.register.acknowledgment" defaultMessage="I understand and accept that this role is permanent" /></span>
                       </label>
                       {validationErrors.definitiveRoleAcknowledged && <p className={`${s.errorText} mt-2`} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.definitiveRoleAcknowledged}</p>}
@@ -987,7 +987,7 @@ const BloggerRegister: React.FC = () => {
                     {/* ---- Terms & Conditions ---- */}
                     <div className="space-y-2">
                       <label className="flex items-start gap-3 cursor-pointer select-none">
-                        <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => { setFormData(prev => ({ ...prev, acceptTerms: e.target.checked })); clearValidationError('acceptTerms'); }} className={`h-5 w-5 rounded border-2 mt-0.5${validationErrors.acceptTerms ? 'border-red-500 bg-red-500/10' : formData.acceptTerms ? 'border-purple-400 bg-purple-400 text-white' : 'border-white/20 bg-white/10'}focus:ring-2 transition-all duration-200 cursor-pointer`} aria-required="true" aria-invalid={!!validationErrors.acceptTerms} />
+                        <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => { setFormData(prev => ({ ...prev, acceptTerms: e.target.checked })); clearValidationError('acceptTerms'); }} className={`h-5 w-5 rounded border-2 mt-0.5 ${validationErrors.acceptTerms ? 'border-red-500 bg-red-500/10' : formData.acceptTerms ? 'border-purple-400 bg-purple-400 text-white' : 'border-white/20 bg-white/10'} focus:ring-2 transition-all duration-200 cursor-pointer`} aria-required="true" aria-invalid={!!validationErrors.acceptTerms} />
                         <span className="text-sm leading-relaxed">
                           <FormattedMessage
                             id="blogger.register.acceptTerms"

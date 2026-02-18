@@ -11,7 +11,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
-import { adminConfig } from "../../../lib/functionConfigs";
+import { chatterAdminConfig as adminConfig } from "../../../lib/functionConfigs";
 
 import {
   Chatter,

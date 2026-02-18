@@ -10,7 +10,8 @@
  * - Retryés automatiquement après 5 minutes (max 3 tentatives)
  */
 
-import { CloudTasksClient } from "@google-cloud/tasks";
+// LAZY IMPORT: @google-cloud/tasks takes ~400ms to load — use type-only import + require() in getter
+import type { CloudTasksClient } from "@google-cloud/tasks";
 import { defineString } from "firebase-functions/params";
 import { onRequest, onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
@@ -59,9 +60,11 @@ let tasksClient: CloudTasksClient | null = null;
 
 function getTasksClient(): CloudTasksClient {
   if (!tasksClient) {
-    tasksClient = new CloudTasksClient();
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { CloudTasksClient: CloudTasksClientClass } = require("@google-cloud/tasks");
+    tasksClient = new CloudTasksClientClass();
   }
-  return tasksClient;
+  return tasksClient!;
 }
 
 function getProjectId(): string {

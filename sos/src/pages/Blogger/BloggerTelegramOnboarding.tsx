@@ -4,17 +4,20 @@
  */
 
 import React from 'react';
+import { BloggerDashboardLayout } from '@/components/Blogger';
 import TelegramOnboarding from '../../components/Telegram/TelegramOnboarding';
 
 const BloggerTelegramOnboarding: React.FC = () => {
   return (
-    <TelegramOnboarding
-      role="blogger"
-      dashboardPath="/blogger/dashboard"
-      skipPath="/blogger/dashboard"
-      title="📝 Liez votre compte Telegram"
-      subtitle="Notifications en temps réel et retraits sécurisés pour vos articles"
-    />
+    <BloggerDashboardLayout>
+      <TelegramOnboarding
+        role="blogger"
+        dashboardPath="/blogger/dashboard"
+        skipPath="/blogger/dashboard"
+        title="📝 Liez votre compte Telegram"
+        subtitle="Notifications en temps réel et retraits sécurisés pour vos articles"
+      />
+    </BloggerDashboardLayout>
   );
 };
 

@@ -3,7 +3,7 @@
  * 100% GRATUIT et ILLIMITÉ
  */
 
-import fetch from 'node-fetch';
+// fetch is available natively in Node.js 22 - no import needed
 
 const SITEMAP_URL = 'https://sos-expat.com/sitemap.xml';
 

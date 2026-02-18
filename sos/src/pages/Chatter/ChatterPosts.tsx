@@ -6,7 +6,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useAuth } from '@/contexts/AuthContext';
-import Layout from '@/components/layout/Layout';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 import { httpsCallable } from 'firebase/functions';
 import { functionsWest2 } from '@/config/firebase';
@@ -194,8 +193,7 @@ const ChatterPosts: React.FC = () => {
   };
 
   return (
-    <Layout showFooter={false}>
-      <ChatterDashboardLayout>
+    <ChatterDashboardLayout>
         <div className="space-y-6">
           {/* Header */}
           <div className="flex sm:flex-row sm:items-center justify-between gap-4">
@@ -433,8 +431,7 @@ const ChatterPosts: React.FC = () => {
             </div>
           </div>
         )}
-      </ChatterDashboardLayout>
-    </Layout>
+    </ChatterDashboardLayout>
   );
 };
 

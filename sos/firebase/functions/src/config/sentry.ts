@@ -9,7 +9,18 @@
  * 3. Utiliser captureError() pour les erreurs importantes
  */
 
-import * as Sentry from "@sentry/node";
+// LAZY IMPORT: @sentry/node takes ~2.3s to load — import lazily to avoid deployment timeout
+// import * as Sentry from "@sentry/node";
+import type { SeverityLevel, Event, EventHint } from "@sentry/node";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Sentry: any = null;
+function getSentry() {
+  if (!Sentry) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    Sentry = require("@sentry/node");
+  }
+  return Sentry;
+}
 
 // Environment detection
 const isProduction = process.env.NODE_ENV === "production" ||
@@ -45,9 +56,11 @@ export function initSentry(): void {
     return;
   }
 
+  // Load Sentry lazily (heavy module: ~2.3s)
+  const S = getSentry();
   const environment = isProduction ? "production" : "development";
 
-  Sentry.init({
+  S.init({
     dsn,
     environment,
 
@@ -61,7 +74,7 @@ export function initSentry(): void {
     serverName: process.env.K_SERVICE || "firebase-functions",
 
     // Filter unwanted errors
-    beforeSend(event, hint) {
+    beforeSend(event: Event, hint: EventHint) {
       const error = hint.originalException;
 
       if (error instanceof Error) {
@@ -157,7 +170,7 @@ export function captureError(
  */
 export function captureMessage(
   message: string,
-  level: Sentry.SeverityLevel = "info",
+  level: SeverityLevel = "info",
   context?: Record<string, unknown>
 ): string | undefined {
   if (!isInitialized) {
@@ -203,7 +216,7 @@ export function addBreadcrumb(
   category: string,
   message: string,
   data?: Record<string, unknown>,
-  level: Sentry.SeverityLevel = "info"
+  level: SeverityLevel = "info"
 ): void {
   if (!isInitialized) return;
 

@@ -6,6 +6,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
+import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 import {
   InfluencerResource,
   InfluencerResourceText,
@@ -32,7 +33,7 @@ export const adminGetInfluencerResources = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ files: unknown[]; texts: unknown[] }> => {
     if (!request.auth) {
@@ -86,7 +87,7 @@ export const adminCreateInfluencerResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; resourceId: string }> => {
     if (!request.auth) {
@@ -147,7 +148,7 @@ export const adminUpdateInfluencerResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -187,7 +188,7 @@ export const adminDeleteInfluencerResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -222,7 +223,7 @@ export const adminCreateInfluencerResourceText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; textId: string }> => {
     if (!request.auth) {
@@ -273,7 +274,7 @@ export const adminUpdateInfluencerResourceText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -313,7 +314,7 @@ export const adminDeleteInfluencerResourceText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {

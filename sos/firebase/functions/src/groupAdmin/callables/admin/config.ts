@@ -6,6 +6,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
 import { GroupAdminConfig } from "../../types";
 import { updateGroupAdminConfig, refreshConfigCache } from "../../groupAdminConfig";
@@ -49,7 +50,7 @@ export const adminGetGroupAdminConfig = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ config: GroupAdminConfig }> => {
     ensureInitialized();
@@ -96,7 +97,7 @@ export const adminUpdateGroupAdminConfig = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; config: GroupAdminConfig }> => {
     ensureInitialized();

@@ -6,6 +6,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
 import {
   GroupAdmin,
@@ -98,7 +99,7 @@ export const adminGetGroupAdminsList = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetGroupAdminsListResponse> => {
     ensureInitialized();
@@ -238,7 +239,7 @@ export const adminGetGroupAdminDetail = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ groupAdmin: GroupAdmin; recentWithdrawals: GroupAdminWithdrawal[]; recentCommissions: GroupAdminCommission[] }> => {
     ensureInitialized();
@@ -317,7 +318,7 @@ export const adminUpdateGroupAdminStatus = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -399,7 +400,7 @@ export const adminVerifyGroup = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -474,7 +475,7 @@ export const adminProcessWithdrawal = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -645,7 +646,7 @@ export const adminGetWithdrawalsList = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ withdrawals: GroupAdminWithdrawal[]; hasMore: boolean; stats: WithdrawalStats }> => {
     ensureInitialized();
@@ -780,7 +781,7 @@ export const adminExportGroupAdmins = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; data: ExportGroupAdminItem[]; csv: string }> => {
     ensureInitialized();

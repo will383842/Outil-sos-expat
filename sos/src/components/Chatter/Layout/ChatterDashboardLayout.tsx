@@ -118,7 +118,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
   // Loading state
   if (!user || !authInitialized) {
     return (
-      <Layout showHeader={false} showFooter={false}>
+      <Layout showFooter={false}>
         <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-gray-950 via-red-50/20 dark:via-gray-950 to-white dark:to-black flex items-center justify-center">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 border-4 rounded-full animate-spin" />
@@ -241,74 +241,8 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
   };
 
   return (
-    <Layout showHeader={false} showFooter={false}>
+    <Layout showFooter={false}>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-gray-950 via-red-50/20 dark:via-gray-950 to-white dark:to-black">
-        {/* Mobile Header */}
-        <div className="lg:hidden sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b dark:border-white/10">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 ${CHATTER_THEME.accentBg} rounded-full flex items-center justify-center`}>
-                <Star className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-semibold text-gray-900 dark:text-white">
-                {intl.formatMessage({ id: 'chatter.dashboard.title', defaultMessage: 'Chatter' })}
-              </span>
-            </div>
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
-            >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-
-          {/* Mobile Menu Dropdown */}
-          {isMobileMenuOpen && (
-            <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 border-b dark:border-white/10 shadow-lg">
-              <nav className="p-4">
-                <ul className="space-y-2">
-                  {menuItems.map((item) => (
-                    <li key={item.key}>
-                      <button
-                        onClick={() => {
-                          navigate(item.route);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`w-full flex items-center px-4 py-3 text-sm font-medium ${UI.radiusSm} transition-all
-                          ${currentKey === item.key
-                            ? "bg-gradient-to-r from-red-50 to-orange-50 text-red-700 dark:from-white/5 dark:to-white/10 dark:text-red-400"
-                            : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
-                          }
-                        `}
-                      >
-                        {item.icon}
-                        {item.labels[language] ?? item.labels.en}
-                      </button>
-                    </li>
-                  ))}
-                  <li>
-                    <button
-                      onClick={handleLogout}
-                      disabled={loggingOut}
-                      className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all ${
-                        loggingOut
-                          ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
-                      }`}
-                    >
-                      <LogOut className="mr-3 h-5 w-5" />
-                      {loggingOut
-                        ? intl.formatMessage({ id: "dashboard.loggingOut", defaultMessage: "Déconnexion..." })
-                        : intl.formatMessage({ id: "dashboard.logout", defaultMessage: "Déconnexion" })
-                      }
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-          )}
-        </div>
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
           <div className="grid lg:grid-cols-4 gap-6 lg:gap-8">
             {/* SIDEBAR - Hidden on mobile */}

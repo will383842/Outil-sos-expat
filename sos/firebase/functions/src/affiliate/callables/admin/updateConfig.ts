@@ -10,6 +10,7 @@ import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https
 import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
 import { AdminUpdateConfigInput, AffiliateConfig } from "../../types";
 import { updateAffiliateConfig, clearConfigCache } from "../../utils/configService";
@@ -52,7 +53,7 @@ export const adminUpdateAffiliateConfig = onCall(
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; config: AffiliateConfig }> => {
     ensureInitialized();

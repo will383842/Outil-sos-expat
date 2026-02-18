@@ -11,7 +11,7 @@
       "source": "firebase/functions",
       "codebase": "default",
       "runtime": "nodejs22",
-      "discoveryTimeout": 600,
+      "discoveryTimeout": 60000,
       "ignore": [
         "node_modules",
         ".git",

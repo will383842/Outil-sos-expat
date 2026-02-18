@@ -8,6 +8,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
 import {
   Influencer,
@@ -73,7 +74,7 @@ export const adminGetInfluencersList = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetInfluencersListResponse> => {
     ensureInitialized();
@@ -178,7 +179,7 @@ export const adminGetInfluencerDetail = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetInfluencerDetailResponse> => {
     ensureInitialized();
@@ -274,7 +275,7 @@ export const adminProcessInfluencerWithdrawal = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     ensureInitialized();
@@ -350,7 +351,7 @@ export const adminUpdateInfluencerStatus = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     ensureInitialized();
@@ -431,7 +432,7 @@ export const adminGetPendingInfluencerWithdrawals = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ withdrawals: InfluencerWithdrawal[] }> => {
     ensureInitialized();
@@ -456,7 +457,7 @@ export const adminGetInfluencerConfig = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ config: InfluencerConfig }> => {
     ensureInitialized();
@@ -477,7 +478,7 @@ export const adminUpdateInfluencerConfig = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; config: InfluencerConfig }> => {
     ensureInitialized();
@@ -517,7 +518,7 @@ export const adminUpdateCommissionRules = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; config: InfluencerConfig }> => {
     ensureInitialized();
@@ -577,7 +578,7 @@ export const adminGetRateHistory = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ history: InfluencerRateHistoryEntry[] }> => {
     ensureInitialized();
@@ -611,7 +612,7 @@ export const adminUpdateAntiFraudConfig = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; config: InfluencerConfig }> => {
     ensureInitialized();
@@ -651,7 +652,7 @@ export const adminGetInfluencerLeaderboard = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{
     rankings: Array<{
@@ -716,7 +717,7 @@ export const adminExportInfluencers = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 120,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ csv: string; count: number }> => {
     ensureInitialized();
@@ -831,7 +832,7 @@ export const adminBulkInfluencerAction = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 120,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; processed: number; failed: number; message: string }> => {
     ensureInitialized();

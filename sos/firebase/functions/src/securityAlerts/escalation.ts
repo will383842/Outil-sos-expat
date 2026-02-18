@@ -4,7 +4,8 @@
  */
 
 import { Timestamp, FieldValue } from 'firebase-admin/firestore';
-import { CloudTasksClient } from '@google-cloud/tasks';
+// LAZY IMPORT: @google-cloud/tasks takes ~400ms to load — import lazily to avoid deployment timeout
+// import { CloudTasksClient } from '@google-cloud/tasks';
 import { db } from '../firebaseAdmin';
 import { SecurityAlert, AlertSeverity } from './types';
 import { sendSecurityAlertNotifications } from './notifier';
@@ -56,7 +57,16 @@ export const ESCALATION_CONFIGS: Record<AlertSeverity, EscalationConfig> = {
 // CLOUD TASKS CLIENT
 // ==========================================
 
-const tasksClient = new CloudTasksClient();
+// Lazy client initialization to avoid startup overhead
+let _tasksClient: any = null;
+function getTasksClient() {
+  if (!_tasksClient) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { CloudTasksClient } = require('@google-cloud/tasks');
+    _tasksClient = new CloudTasksClient();
+  }
+  return _tasksClient;
+}
 const PROJECT_ID = process.env.GCLOUD_PROJECT || 'sos-expat-28430';
 const LOCATION = 'europe-west1';
 const QUEUE_NAME = 'security-escalation-queue';
@@ -85,7 +95,7 @@ export async function scheduleEscalation(
   const scheduleTime = Date.now() + delayMinutes * 60 * 1000;
 
   try {
-    const parent = tasksClient.queuePath(PROJECT_ID, LOCATION, QUEUE_NAME);
+    const parent = getTasksClient().queuePath(PROJECT_ID, LOCATION, QUEUE_NAME);
 
     const task = {
       httpRequest: {
@@ -107,7 +117,7 @@ export async function scheduleEscalation(
       },
     };
 
-    const [response] = await tasksClient.createTask({ parent, task });
+    const [response] = await getTasksClient().createTask({ parent, task });
     const taskName = response.name || '';
 
     // Mettre à jour l'alerte avec la prochaine escalade
@@ -418,7 +428,7 @@ export async function cancelEscalation(alertId: string): Promise<void> {
 
       if (alert.escalation?.scheduledTaskId) {
         try {
-          await tasksClient.deleteTask({ name: alert.escalation.scheduledTaskId });
+          await getTasksClient().deleteTask({ name: alert.escalation.scheduledTaskId });
           console.log(`[Escalation] Cancelled scheduled task for ${alertId}`);
         } catch {
           // Task may have already been executed or doesn't exist
