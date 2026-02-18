@@ -918,7 +918,7 @@ const GroupAdminLanding: React.FC = () => {
               <FormattedMessage id="groupAdmin.landing.finalCta.cta" defaultMessage="Register Now - It's Free" />
             </CTAButton>
 
-            <p className="text-gray-400 mt-5 sm:mt-6 sm:text-base lg:text-lg">
+            <p className="text-gray-300 mt-5 sm:mt-6 sm:text-base lg:text-lg">
               <FormattedMessage id="groupAdmin.landing.finalCta.footer" defaultMessage="Free registration • Start in 5 minutes" />
             </p>
           </div>

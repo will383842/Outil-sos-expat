@@ -544,7 +544,7 @@ const BloggerRegister: React.FC = () => {
             <div className="w-16 h-16 bg-purple-500/20 border rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-purple-400" />
             </div>
-            <h1 className="text-2xl font-bold mb-4">
+            <h1 className="text-2xl font-bold mb-4 text-white">
               <FormattedMessage id="blogger.register.roleConflict.title" defaultMessage="Registration Not Allowed" />
             </h1>
             <p className="text-gray-400 mb-6">
@@ -603,10 +603,10 @@ const BloggerRegister: React.FC = () => {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-lg">
               <FileText className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               <FormattedMessage id="blogger.register.title" defaultMessage="Become a Partner Blogger" />
             </h1>
-            <p className="text-lg max-w-2xl mx-auto">
+            <p className="text-lg max-w-2xl mx-auto text-gray-300">
               <FormattedMessage id="blogger.register.subtitle" defaultMessage="Earn $10 per referred client and $5 per recruited provider" />
             </p>
           </div>
@@ -618,7 +618,7 @@ const BloggerRegister: React.FC = () => {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border flex items-center justify-center">
                   <Mail className="w-8 h-8 text-blue-400" />
                 </div>
-                <h2 className="text-xl font-bold mb-2">
+                <h2 className="text-xl font-bold mb-2 text-white">
                   <FormattedMessage id="blogger.register.emailExists.title" defaultMessage="You already have an account!" />
                 </h2>
                 <p className="text-gray-400 mb-2">
@@ -640,7 +640,7 @@ const BloggerRegister: React.FC = () => {
                 </button>
                 <button
                   onClick={() => { setEmailAlreadyExists(false); setExistingEmail(''); }}
-                  className="text-sm hover:text-white underline"
+                  className="text-gray-400 text-sm hover:text-white underline"
                 >
                   <FormattedMessage id="blogger.register.emailExists.tryDifferent" defaultMessage="Use a different email" />
                 </button>
@@ -667,12 +667,12 @@ const BloggerRegister: React.FC = () => {
                     {benefits.map((benefit, idx) => (
                       <div key={idx} className="flex items-center gap-3">
                         {benefit.icon}
-                        <span className="text-sm">{benefit.text}</span>
+                        <span className="text-sm text-gray-300">{benefit.text}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-6 pt-6 border-t">
-                    <div className="text-sm">
+                  <div className="mt-6 pt-6 border-t border-white/10">
+                    <div className="text-sm text-gray-400">
                       <FormattedMessage id="blogger.register.info" defaultMessage="Registration is free. Your account will be activated immediately." />
                     </div>
                   </div>
@@ -684,7 +684,7 @@ const BloggerRegister: React.FC = () => {
                 <div className={`${s.card} p-6`}>
                   {/* Already registered link */}
                   <div className="mb-6 p-3 bg-blue-500/10 rounded-xl border text-center">
-                    <p className="text-sm">
+                    <p className="text-sm text-gray-300">
                       <FormattedMessage id="blogger.register.alreadyRegistered" defaultMessage="Already registered?" />{' '}
                       <button onClick={() => navigate(loginRoute)} className="text-blue-400 hover:text-blue-300 font-medium underline">
                         <FormattedMessage id="blogger.register.loginLink" defaultMessage="Log in here" />
@@ -703,7 +703,7 @@ const BloggerRegister: React.FC = () => {
                           <p className="font-semibold text-green-300">
                             <FormattedMessage id="blogger.register.referralDetected" defaultMessage="You've been referred!" />
                           </p>
-                          <p className="text-sm">
+                          <p className="text-sm text-gray-300">
                             <FormattedMessage
                               id="blogger.register.referralCode.applied"
                               defaultMessage="Referral code {code} will be applied automatically"
@@ -783,7 +783,7 @@ const BloggerRegister: React.FC = () => {
                               </div>
                               <div className="flex items-center justify-between">
                                 <p className={`text-xs font-medium ${passwordStrength.color}`}>{passwordStrength.label}</p>
-                                {passwordStrength.feedback.length > 0 && <p className="text-xs">{passwordStrength.feedback[0]}</p>}
+                                {passwordStrength.feedback.length > 0 && <p className="text-xs text-gray-400">{passwordStrength.feedback[0]}</p>}
                               </div>
                             </div>
                           )}
@@ -963,7 +963,7 @@ const BloggerRegister: React.FC = () => {
                         <div className="space-y-1">
                           <label htmlFor="blogDescription" className={s.label}><FormattedMessage id="form.blogDescription" defaultMessage="Blog description" /></label>
                           <textarea id="blogDescription" name="blogDescription" value={formData.blogDescription} onChange={handleChange} placeholder={intl.formatMessage({ id: 'form.blogDescription.placeholder', defaultMessage: 'Describe your blog and its audience...' })} rows={3} maxLength={500} className={`${s.input} resize-none ${formData.blogDescription ? s.inputFilled : ''}`} />
-                          <div className="flex justify-end"><span className="text-xs">{formData.blogDescription.length}/500</span></div>
+                          <div className="flex justify-end"><span className="text-xs text-gray-500">{formData.blogDescription.length}/500</span></div>
                         </div>
                       </div>
                     </div>
@@ -974,12 +974,12 @@ const BloggerRegister: React.FC = () => {
                         <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="font-semibold text-amber-300"><FormattedMessage id="blogger.register.warning.title" defaultMessage="Important: Permanent Role" /></p>
-                          <p className="text-sm mt-1"><FormattedMessage id="blogger.register.warning.message" defaultMessage="By becoming a partner blogger, you will not be able to become a Chatter or Influencer. This choice is final and irreversible." /></p>
+                          <p className="text-sm mt-1 text-gray-300"><FormattedMessage id="blogger.register.warning.message" defaultMessage="By becoming a partner blogger, you will not be able to become a Chatter or Influencer. This choice is final and irreversible." /></p>
                         </div>
                       </div>
                       <label className="flex items-start gap-3 cursor-pointer select-none">
                         <input type="checkbox" checked={formData.definitiveRoleAcknowledged} onChange={(e) => { setFormData(prev => ({ ...prev, definitiveRoleAcknowledged: e.target.checked })); clearValidationError('definitiveRoleAcknowledged'); }} className={`h-5 w-5 rounded border-2 mt-0.5 ${validationErrors.definitiveRoleAcknowledged ? 'border-red-500 bg-red-500/10' : formData.definitiveRoleAcknowledged ? 'border-amber-400 bg-amber-400 text-black' : 'border-white/20 bg-white/10'} focus:ring-2 transition-all duration-200 cursor-pointer`} aria-required="true" />
-                        <span className="text-sm"><FormattedMessage id="blogger.register.acknowledgment" defaultMessage="I understand and accept that this role is permanent" /></span>
+                        <span className="text-sm text-gray-300"><FormattedMessage id="blogger.register.acknowledgment" defaultMessage="I understand and accept that this role is permanent" /></span>
                       </label>
                       {validationErrors.definitiveRoleAcknowledged && <p className={`${s.errorText} mt-2`} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.definitiveRoleAcknowledged}</p>}
                     </div>
@@ -988,7 +988,7 @@ const BloggerRegister: React.FC = () => {
                     <div className="space-y-2">
                       <label className="flex items-start gap-3 cursor-pointer select-none">
                         <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => { setFormData(prev => ({ ...prev, acceptTerms: e.target.checked })); clearValidationError('acceptTerms'); }} className={`h-5 w-5 rounded border-2 mt-0.5 ${validationErrors.acceptTerms ? 'border-red-500 bg-red-500/10' : formData.acceptTerms ? 'border-purple-400 bg-purple-400 text-white' : 'border-white/20 bg-white/10'} focus:ring-2 transition-all duration-200 cursor-pointer`} aria-required="true" aria-invalid={!!validationErrors.acceptTerms} />
-                        <span className="text-sm leading-relaxed">
+                        <span className="text-sm leading-relaxed text-gray-300">
                           <FormattedMessage
                             id="blogger.register.acceptTerms"
                             defaultMessage="I accept the {termsLink} and the {privacyLink}"

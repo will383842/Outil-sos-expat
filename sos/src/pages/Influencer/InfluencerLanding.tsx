@@ -874,7 +874,7 @@ const InfluencerLanding: React.FC = () => {
               <FormattedMessage id="influencer.final.cta" defaultMessage="Become an Influencer Now" />
             </CTAButton>
 
-            <p className="text-gray-400 mt-5 sm:mt-6 sm:text-base">
+            <p className="text-gray-300 mt-5 sm:mt-6 sm:text-base">
               <FormattedMessage id="influencer.final.footer" defaultMessage="Free registration • Start in 5 minutes" />
             </p>
           </div>

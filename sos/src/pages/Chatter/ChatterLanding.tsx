@@ -380,7 +380,7 @@ const ChatterLanding: React.FC = () => {
               <FormattedMessage id="chatter.landing.cta.start" defaultMessage="Commencer gratuitement" />
             </CTAButton>
 
-            <p className="text-gray-400 mt-4 sm:mt-6 sm:text-base">
+            <p className="text-gray-300 mt-4 sm:mt-6 sm:text-base">
               <FormattedMessage id="chatter.landing.reassurance" defaultMessage="100% gratuit • Aucun investissement • 197 pays" />
             </p>
           </div>
@@ -1018,7 +1018,7 @@ const ChatterLanding: React.FC = () => {
                   <div className={`font-bold text-sm sm:text-base lg:text-xl ${item.color} mb-0.5 sm:mb-1`}>
                     <FormattedMessage id={item.titleKey} />
                   </div>
-                  <div className="text-gray-400 sm:text-sm lg:text-base">
+                  <div className="text-gray-300 sm:text-sm lg:text-base">
                     <FormattedMessage id={item.descKey} />
                   </div>
                 </div>
@@ -1103,7 +1103,7 @@ const ChatterLanding: React.FC = () => {
               <FormattedMessage id="chatter.landing.cta.final" defaultMessage="Devenir Chatter maintenant" />
             </CTAButton>
 
-            <p className="text-gray-500 mt-5 sm:mt-6 sm:text-base lg:text-lg">
+            <p className="text-gray-300 mt-5 sm:mt-6 sm:text-base lg:text-lg">
               <FormattedMessage id="chatter.landing.cta.footer" defaultMessage="Inscription gratuite • Démarrez en 5 minutes" />
             </p>
           </div>
