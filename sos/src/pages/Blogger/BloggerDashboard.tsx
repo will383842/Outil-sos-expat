@@ -3,6 +3,7 @@
  */
 
 import React, { useEffect } from 'react';
+import { trackMetaViewContent, trackMetaLead } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { BloggerDashboardLayout } from '@/components/Blogger';
@@ -43,6 +44,11 @@ const BloggerDashboard: React.FC = () => {
       navigate('/blogger/inscription');
     }
   }, [isLoading, isBlogger, navigate]);
+
+  // Meta Pixel - ViewContent on dashboard mount
+  useEffect(() => {
+    trackMetaViewContent({ content_name: 'blogger_dashboard', content_category: 'affiliate' });
+  }, []);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -114,7 +120,10 @@ const BloggerDashboard: React.FC = () => {
             </p>
             {canWithdraw && (
               <button
-                onClick={() => navigate('/blogger/paiements')}
+                onClick={() => {
+                  trackMetaLead({ content_name: 'withdrawal_intent', content_category: 'affiliate_withdrawal' });
+                  navigate('/blogger/paiements');
+                }}
                 className="text-sm hover:text-purple-700 mt-2 flex items-center gap-1 min-h-[44px] active:opacity-70"
               >
                 <FormattedMessage id="blogger.dashboard.withdraw" defaultMessage="Retirer" />

@@ -14,6 +14,7 @@
  */
 
 import React, { useMemo, useState, useEffect, useCallback, useRef, lazy, Suspense, memo } from 'react';
+import { trackMetaViewContent, trackMetaLead } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
@@ -322,6 +323,11 @@ const InfluencerDashboard: React.FC = () => {
     refreshDashboard();
   }, []);
 
+  // Meta Pixel - ViewContent on dashboard mount
+  useEffect(() => {
+    trackMetaViewContent({ content_name: 'influencer_dashboard', content_category: 'affiliate' });
+  }, []);
+
   // Auto-refresh
   useEffect(() => {
     const interval = setInterval(() => {
@@ -567,7 +573,12 @@ const InfluencerDashboard: React.FC = () => {
             ].map((action, i) => (
               <button
                 key={i}
-                onClick={() => navigate(action.route)}
+                onClick={() => {
+                  if (action.route === routes.payments) {
+                    trackMetaLead({ content_name: 'withdrawal_intent', content_category: 'affiliate_withdrawal' });
+                  }
+                  navigate(action.route);
+                }}
                 className={`flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br${action.color}text-white transition-all hover:scale-105 active:scale-95 shadow-lg min-h-[100px]`}
               >
                 {action.icon}

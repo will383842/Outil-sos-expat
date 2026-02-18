@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { trackMetaViewContent, trackMetaLead } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,6 +63,11 @@ const GroupAdminDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboard();
+  }, []);
+
+  // Meta Pixel - ViewContent on dashboard mount
+  useEffect(() => {
+    trackMetaViewContent({ content_name: 'groupadmin_dashboard', content_category: 'affiliate' });
   }, []);
 
   const fetchDashboard = async () => {
@@ -164,7 +170,10 @@ const GroupAdminDashboard: React.FC = () => {
               </div>
               <div className="text-3xl font-bold mb-2">{formatGroupAdminAmount(profile.availableBalance)}</div>
               <button
-                onClick={() => navigate('/group-admin/paiements')}
+                onClick={() => {
+                  trackMetaLead({ content_name: 'withdrawal_intent', content_category: 'affiliate_withdrawal' });
+                  navigate('/group-admin/paiements');
+                }}
                 className="text-sm hover:text-white flex items-center gap-1"
               >
                 <FormattedMessage id="groupAdmin.dashboard.withdraw" defaultMessage="Withdraw" />

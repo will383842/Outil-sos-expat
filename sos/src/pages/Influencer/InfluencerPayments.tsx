@@ -13,6 +13,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
+import { trackMetaInitiateCheckout } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInfluencer } from '@/hooks/useInfluencer';
@@ -152,6 +153,13 @@ const InfluencerPayments: React.FC = () => {
       setWithdrawalLoading(true);
       setWithdrawalError(null);
       setWithdrawalSuccess(false);
+
+      trackMetaInitiateCheckout({
+        value: (amount || availableBalance) / 100,
+        currency: 'USD',
+        content_name: 'influencer_withdrawal',
+        content_category: 'affiliate_withdrawal',
+      });
 
       try {
         const withdrawalId = await requestWithdrawal(paymentMethodId, amount);

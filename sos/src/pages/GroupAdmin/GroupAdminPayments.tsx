@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { trackMetaInitiateCheckout } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
@@ -100,6 +101,13 @@ const GroupAdminPayments: React.FC = () => {
       setError('Amount exceeds available balance');
       return;
     }
+
+    trackMetaInitiateCheckout({
+      value: withdrawForm.amount / 100,
+      currency: 'USD',
+      content_name: 'groupadmin_withdrawal',
+      content_category: 'affiliate_withdrawal',
+    });
 
     setSubmitting(true);
     setError(null);

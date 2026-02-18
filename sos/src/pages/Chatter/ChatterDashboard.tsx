@@ -19,6 +19,7 @@
  */
 
 import React, { useMemo, useState, useEffect, useCallback, useRef, lazy, Suspense, memo } from 'react';
+import { trackMetaViewContent, trackMetaLead } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
@@ -400,6 +401,11 @@ const ChatterDashboard: React.FC = () => {
     }
   }, [user, navigate, routes.telegram]);
 
+  // Meta Pixel - ViewContent on dashboard mount
+  useEffect(() => {
+    trackMetaViewContent({ content_name: 'chatter_dashboard', content_category: 'affiliate' });
+  }, []);
+
   // ============================================================================
   // MEMOIZED FORMATTERS
   // Currency formatter is expensive to create, so we memoize it
@@ -621,7 +627,10 @@ const ChatterDashboard: React.FC = () => {
   }, [pullDistance, isRefreshing, handleRefresh]);
 
   // Navigation callbacks - memoized to prevent child re-renders
-  const navigateToPayments = useCallback(() => navigate(routes.payments), [navigate, routes.payments]);
+  const navigateToPayments = useCallback(() => {
+    trackMetaLead({ content_name: 'withdrawal_intent', content_category: 'affiliate_withdrawal' });
+    navigate(routes.payments);
+  }, [navigate, routes.payments]);
   const navigateToRefer = useCallback(() => navigate(routes.refer), [navigate, routes.refer]);
   const navigateToReferrals = useCallback(() => navigate(routes.referrals), [navigate, routes.referrals]);
   const navigateToLeaderboard = useCallback(() => navigate(routes.leaderboard), [navigate, routes.leaderboard]);
