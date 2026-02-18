@@ -35,7 +35,7 @@ const InfluencerDashboardLayout: React.FC<InfluencerDashboardLayoutProps> = ({ c
   const navigate = useLocaleNavigate();
   const location = useLocation();
   const { language } = useApp();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -120,13 +120,34 @@ const InfluencerDashboardLayout: React.FC<InfluencerDashboardLayoutProps> = ({ c
           <div className="flex lg:flex-row gap-6">
             {/* Sidebar - Desktop only */}
             <aside className="hidden lg:block lg:w-64 flex-shrink-0">
-              <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg p-4 sticky top-8">
-                <div className="mb-6 pb-4 border-b dark:border-gray-700">
-                  <h2 className="text-lg dark:text-white font-bold">
-                    <FormattedMessage id="influencer.sidebar.title" defaultMessage="Espace Influenceur" />
-                  </h2>
+              <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg overflow-hidden sticky top-8">
+                {/* Header avec photo utilisateur */}
+                <div className="bg-gradient-to-r from-red-500 to-rose-600 p-4">
+                  <div className="flex items-center gap-3">
+                    {user?.profilePhoto?.startsWith('http') ? (
+                      <img
+                        src={user.profilePhoto}
+                        alt={user.firstName || user.displayName || ''}
+                        className="w-12 h-12 rounded-full object-cover ring-2 ring-white/50"
+                        loading="eager"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <User className="w-6 h-6 text-white" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white truncate">
+                        {user?.firstName || user?.displayName?.split(' ')[0] || user?.email || ''}
+                      </p>
+                      <p className="text-xs text-white/70">
+                        <FormattedMessage id="influencer.sidebar.title" defaultMessage="Espace Influenceur" />
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
+                <div className="p-4">
                 <nav className="space-y-1">
                   {menuItems.map((item) => {
                     const translatedPath = `/${getTranslatedRouteSlug(item.routeKey, langCode)}`;
@@ -160,6 +181,7 @@ const InfluencerDashboardLayout: React.FC<InfluencerDashboardLayoutProps> = ({ c
                     </span>
                   </button>
                 </div>
+                </div>{/* end p-4 */}
               </div>
             </aside>
 

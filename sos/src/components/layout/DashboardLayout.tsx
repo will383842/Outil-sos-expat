@@ -303,7 +303,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
                   <div className="flex items-center space-x-4">
                     {user.profilePhoto ? (
                       <img
-                        src={`${user.profilePhoto}?v=${(user.updatedAt as Date | undefined)?.valueOf?.() || Date.now()}`}
+                        src={user.profilePhoto}
                         alt={getUserFirstName()}
                         className="w-16 h-16 rounded-full object-cover ring-2 ring-white/80"
                         loading="eager"

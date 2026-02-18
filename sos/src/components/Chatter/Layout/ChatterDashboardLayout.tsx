@@ -253,7 +253,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
                   <div className="flex items-center space-x-4">
                     {user.profilePhoto ? (
                       <img
-                        src={`${user.profilePhoto}?v=${Date.now()}`}
+                        src={user.profilePhoto}
                         alt={getUserFirstName()}
                         className="w-16 h-16 rounded-full object-cover ring-2"
                         loading="eager"
