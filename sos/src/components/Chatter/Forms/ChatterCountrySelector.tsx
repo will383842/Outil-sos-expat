@@ -16,7 +16,8 @@ import {
   MapPin,
   RefreshCw
 } from 'lucide-react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { functionsWest2 } from '@/config/firebase';
 
 // Design tokens
 const UI = {
@@ -68,9 +69,8 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
     setFetchError(null);
 
     try {
-      const functions = getFunctions(undefined, 'europe-west1');
       const getAvailableCountriesForChatter = httpsCallable(
-        functions,
+        functionsWest2,
         'getAvailableCountriesForChatter'
       );
 

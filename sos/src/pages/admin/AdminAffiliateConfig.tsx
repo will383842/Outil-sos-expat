@@ -38,7 +38,8 @@ import {
   getDoc,
   Timestamp,
 } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
+import { functionsWest2 } from "@/config/firebase";
 import AdminLayout from "../../components/admin/AdminLayout";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
@@ -586,7 +587,7 @@ const SaveModal: React.FC<{
 const AdminAffiliateConfig: React.FC = () => {
   const { user } = useAuth();
   const db = getFirestore();
-  const functions = getFunctions(undefined, "europe-west1");
+  const functions = functionsWest2;
 
   // State
   const [config, setConfig] = useState<AffiliateConfig>(DEFAULT_CONFIG);

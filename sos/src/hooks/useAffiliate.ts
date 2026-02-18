@@ -10,9 +10,10 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
 import { getFirestore, collection, doc, query, where, orderBy, limit, onSnapshot, Timestamp, DocumentSnapshot } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
+import { functionsWest2 } from "../config/firebase";
 import {
   AffiliateData,
   AffiliateCommission,
@@ -79,7 +80,7 @@ export function useAffiliate(): UseAffiliateReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const functions = getFunctions(undefined, "europe-west1");
+  const functions = functionsWest2;
   const db = getFirestore();
 
   // Fetch affiliate data
@@ -317,7 +318,7 @@ export function useAffiliateAdmin(): UseAffiliateAdminReturn {
   const [error, setError] = useState<string | null>(null);
   const [wiseConfigured, setWiseConfigured] = useState(false);
 
-  const functions = getFunctions(undefined, "europe-west1");
+  const functions = functionsWest2;
   const db = getFirestore();
 
   // Fetch global stats

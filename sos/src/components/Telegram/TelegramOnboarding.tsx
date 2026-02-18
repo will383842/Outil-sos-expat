@@ -7,8 +7,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { QRCodeSVG } from 'qrcode.react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../../contexts/AuthContext';
+import { functionsWest3 } from '../../config/firebase';
 import {
   CheckCircle,
   XCircle,
@@ -58,7 +59,7 @@ const TelegramOnboarding: React.FC<TelegramOnboardingProps> = ({
   const intl = useIntl();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const functions = getFunctions();
+  const functions = functionsWest3;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
