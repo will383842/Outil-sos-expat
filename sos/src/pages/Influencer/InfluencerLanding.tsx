@@ -78,6 +78,42 @@ const globalStyles = `
   @media (prefers-reduced-motion: reduce) {
     .animate-bounce, .transition-all { animation: none !important; transition: none !important; }
   }
+
+  /* Slider custom styling */
+  .influencer-landing input[type="range"] {
+    height: 8px;
+    background: transparent;
+  }
+  .influencer-landing input[type="range"]::-webkit-slider-runnable-track {
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 9999px;
+  }
+  .influencer-landing input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ef4444;
+    cursor: pointer;
+    margin-top: -7px;
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 0 0 4px rgba(239,68,68,0.25);
+  }
+  .influencer-landing input[type="range"]::-moz-range-track {
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 9999px;
+  }
+  .influencer-landing input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ef4444;
+    cursor: pointer;
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 0 0 4px rgba(239,68,68,0.25);
+  }
 `;
 
 // ============================================================================
@@ -699,7 +735,7 @@ const InfluencerLanding: React.FC = () => {
                         step={s.step || (s.isInt ? 1 : 0.5)}
                         value={s.value}
                         onChange={(e) => s.set(s.isInt ? parseInt(e.target.value) : parseFloat(e.target.value))}
-                        className="w-full h-2 sm:h-3 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none sm:[&::-webkit-slider-thumb]:w-7"
+                        className="w-full appearance-none cursor-pointer"
                       />
                     </div>
                   ))}
@@ -805,7 +841,7 @@ const InfluencerLanding: React.FC = () => {
             <div className="grid gap-3 sm:gap-6 mb-8 sm:mb-12">
               {[
                 { value: <AnimatedCounter end={847} />, label: intl.formatMessage({ id: 'influencer.stats.influencers', defaultMessage: 'Active Influencers' }), icon: '🎬' },
-                { value: <><AnimatedCounter end={89} prefix="$" />K</>, label: intl.formatMessage({ id: 'influencer.stats.paid', defaultMessage: 'Paid This Month' }), icon: '💰' },
+                { value: <AnimatedCounter end={9} />, label: intl.formatMessage({ id: 'influencer.stats.languages', defaultMessage: 'Languages Supported' }), icon: '🌐' },
                 { value: <AnimatedCounter end={52} />, label: intl.formatMessage({ id: 'influencer.stats.countries', defaultMessage: 'Countries' }), icon: '🌍' },
               ].map((stat, i) => (
                 <div key={i} className="bg-white/10 border rounded-xl sm:rounded-2xl p-3 sm:p-6 text-center">

@@ -86,6 +86,42 @@ const globalStyles = `
   @media (prefers-reduced-motion: reduce) {
     .animate-bounce, .transition-all { animation: none !important; transition: none !important; }
   }
+
+  /* Slider custom styling */
+  .groupadmin-landing input[type="range"] {
+    height: 8px;
+    background: transparent;
+  }
+  .groupadmin-landing input[type="range"]::-webkit-slider-runnable-track {
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 9999px;
+  }
+  .groupadmin-landing input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #22c55e;
+    cursor: pointer;
+    margin-top: -7px;
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 0 0 4px rgba(34,197,94,0.25);
+  }
+  .groupadmin-landing input[type="range"]::-moz-range-track {
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 9999px;
+  }
+  .groupadmin-landing input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #22c55e;
+    cursor: pointer;
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 0 0 4px rgba(34,197,94,0.25);
+  }
 `;
 
 // ============================================================================
@@ -674,7 +710,7 @@ const GroupAdminLanding: React.FC = () => {
                       step="1000"
                       value={groupMembers}
                       onChange={(e) => setGroupMembers(Number(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
+                      className="w-full appearance-none cursor-pointer"
                     />
                   </div>
 
@@ -695,7 +731,7 @@ const GroupAdminLanding: React.FC = () => {
                       step="0.5"
                       value={conversionRate}
                       onChange={(e) => setConversionRate(Number(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
+                      className="w-full appearance-none cursor-pointer"
                     />
                     <p className="text-xs mt-1">
                       <FormattedMessage id="groupAdmin.landing.calc.conversionHelp" defaultMessage="% de membres qui utilisent le service par mois" />

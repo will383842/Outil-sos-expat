@@ -1670,7 +1670,7 @@ const ChatterLanding: React.FC = () => {
             <div className="grid gap-4 mb-10">
               {[
                 { value: <AnimatedCounter end={1247} />, label: intl.formatMessage({ id: 'chatter.stats.chatters', defaultMessage: 'Active Chatters' }), icon: '👥' },
-                { value: <><AnimatedCounter end={156} prefix="$" />K</>, label: intl.formatMessage({ id: 'chatter.stats.paid', defaultMessage: 'Paid This Month' }), icon: '💰' },
+                { value: <AnimatedCounter end={9} />, label: intl.formatMessage({ id: 'chatter.stats.languages', defaultMessage: 'Languages Supported' }), icon: '🌐' },
                 { value: <AnimatedCounter end={47} />, label: intl.formatMessage({ id: 'chatter.stats.countries', defaultMessage: 'Countries' }), icon: '🌍' },
               ].map((stat, i) => (
                 <div key={i} className="bg-gradient-to-br from-gray-50 dark:from-gray-800 to-gray-100 dark:to-gray-900 rounded-2xl p-4 md:p-6 text-center">

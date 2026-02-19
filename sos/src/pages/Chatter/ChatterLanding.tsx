@@ -85,6 +85,42 @@ const globalStyles = `
   @media (prefers-reduced-motion: reduce) {
     .animate-bounce, .transition-all { animation: none !important; transition: none !important; }
   }
+
+  /* Slider custom styling */
+  .chatter-landing input[type="range"] {
+    height: 8px;
+    background: transparent;
+  }
+  .chatter-landing input[type="range"]::-webkit-slider-runnable-track {
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 9999px;
+  }
+  .chatter-landing input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fbbf24;
+    cursor: pointer;
+    margin-top: -7px;
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 0 0 4px rgba(251,191,36,0.25);
+  }
+  .chatter-landing input[type="range"]::-moz-range-track {
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 9999px;
+  }
+  .chatter-landing input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fbbf24;
+    cursor: pointer;
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 0 0 4px rgba(251,191,36,0.25);
+  }
 `;
 
 // ============================================================================
@@ -927,7 +963,7 @@ const ChatterLanding: React.FC = () => {
                       max="100"
                       value={teamSizeN1}
                       onChange={(e) => setTeamSizeN1(Number(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
+                      className="w-full appearance-none cursor-pointer"
                     />
                   </div>
 
@@ -947,7 +983,7 @@ const ChatterLanding: React.FC = () => {
                       max="200"
                       value={teamSizeN2}
                       onChange={(e) => setTeamSizeN2(Number(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
+                      className="w-full appearance-none cursor-pointer"
                     />
                   </div>
 
@@ -967,7 +1003,7 @@ const ChatterLanding: React.FC = () => {
                       max="30"
                       value={callsPerChatter}
                       onChange={(e) => setCallsPerChatter(Number(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
+                      className="w-full appearance-none cursor-pointer"
                     />
                   </div>
                 </div>

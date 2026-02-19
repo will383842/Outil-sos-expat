@@ -86,6 +86,42 @@ const globalStyles = `
   @media (prefers-reduced-motion: reduce) {
     .animate-bounce, .transition-all { animation: none !important; transition: none !important; }
   }
+
+  /* Slider custom styling */
+  .blogger-landing input[type="range"] {
+    height: 12px;
+    background: transparent;
+  }
+  .blogger-landing input[type="range"]::-webkit-slider-runnable-track {
+    height: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 9999px;
+  }
+  .blogger-landing input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #a855f7;
+    cursor: pointer;
+    margin-top: -5px;
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 0 0 4px rgba(168,85,247,0.25);
+  }
+  .blogger-landing input[type="range"]::-moz-range-track {
+    height: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 9999px;
+  }
+  .blogger-landing input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #a855f7;
+    cursor: pointer;
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 0 0 4px rgba(168,85,247,0.25);
+  }
 `;
 
 // ============================================================================
@@ -777,7 +813,7 @@ const BloggerLanding: React.FC = () => {
                     </span>
                     <span className="text-purple-400 font-bold">{calcArticles}</span>
                   </label>
-                  <input type="range" min="5" max="100" value={calcArticles} onChange={(e) => setCalcArticles(parseInt(e.target.value))} className="w-full h-3 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                  <input type="range" min="5" max="100" value={calcArticles} onChange={(e) => setCalcArticles(parseInt(e.target.value))} className="w-full appearance-none cursor-pointer" />
                   <div className="flex justify-between text-xs mt-1"><span>5</span><span>50</span><span>100</span></div>
                 </div>
 
@@ -789,7 +825,7 @@ const BloggerLanding: React.FC = () => {
                     </span>
                     <span className="text-purple-400 font-bold">{calcVisitsPerArticle}</span>
                   </label>
-                  <input type="range" min="1" max="50" value={calcVisitsPerArticle} onChange={(e) => setCalcVisitsPerArticle(parseInt(e.target.value))} className="w-full h-3 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                  <input type="range" min="1" max="50" value={calcVisitsPerArticle} onChange={(e) => setCalcVisitsPerArticle(parseInt(e.target.value))} className="w-full appearance-none cursor-pointer" />
                   <div className="flex justify-between text-xs mt-1"><span>1</span><span>25</span><span>50</span></div>
                 </div>
 
@@ -801,7 +837,7 @@ const BloggerLanding: React.FC = () => {
                     </span>
                     <span className="text-purple-400 font-bold">{calcConversionRate}%</span>
                   </label>
-                  <input type="range" min="0.5" max="3" step="0.5" value={calcConversionRate} onChange={(e) => setCalcConversionRate(parseFloat(e.target.value))} className="w-full h-3 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                  <input type="range" min="0.5" max="3" step="0.5" value={calcConversionRate} onChange={(e) => setCalcConversionRate(parseFloat(e.target.value))} className="w-full appearance-none cursor-pointer" />
                   <div className="flex justify-between text-xs mt-1"><span>0.5%</span><span>1.5%</span><span>3%</span></div>
                 </div>
 
