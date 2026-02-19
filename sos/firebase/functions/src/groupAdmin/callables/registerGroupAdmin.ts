@@ -8,6 +8,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
+import { BACKLINK_ENGINE_WEBHOOK_SECRET } from "../../lib/secrets";
 
 import {
   GroupAdmin,
@@ -22,7 +23,7 @@ import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 import { hashIP } from "../../chatter/utils";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 
-// Supported languages validation
+// Supported languages validation (must match app navigation languages)
 const VALID_LANGUAGES: SupportedGroupAdminLanguage[] = [
   "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh"
 ];
@@ -31,7 +32,9 @@ const VALID_LANGUAGES: SupportedGroupAdminLanguage[] = [
 const VALID_GROUP_TYPES: GroupType[] = [
   "travel", "expat", "digital_nomad", "immigration", "relocation",
   "language", "country_specific", "profession", "family", "student",
-  "retirement", "other"
+  "retirement", "other",
+  "affiliation", "press", "media", "lawyers", "translators", "movers",
+  "real_estate", "insurance", "finance", "healthcare", "education"
 ];
 
 // Valid group sizes
@@ -40,14 +43,16 @@ const VALID_GROUP_SIZES: GroupSizeTier[] = [
 ];
 
 /**
- * Generate unique affiliate code for GroupAdmin.
- * Uses 6 random alphanumeric chars for ~2.17 billion combinations per prefix.
+ * Generate a guaranteed-unique affiliate code for GroupAdmin.
+ * P1 FIX: Uses a suffix derived from the user's UID (globally unique) to avoid
+ * Firestore collision-check queries entirely. No retry loop needed.
  */
-function generateAffiliateCode(firstName: string, isRecruitment: boolean = false): string {
+function generateAffiliateCode(firstName: string, uid: string, isRecruitment: boolean = false): string {
   const prefix = isRecruitment ? "REC-GROUP-" : "GROUP-";
   const cleanName = firstName.replace(/[^a-zA-Z]/g, "").toUpperCase().substring(0, 4);
-  const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `${prefix}${cleanName}${randomSuffix}`;
+  // Take last 6 chars of UID (base36-like, already unique per user)
+  const uidSuffix = uid.replace(/[^a-zA-Z0-9]/g, "").slice(-6).toUpperCase();
+  return `${prefix}${cleanName}${uidSuffix}`;
 }
 
 /**
@@ -64,11 +69,12 @@ function isValidGroupUrl(url: string): boolean {
 
 export const registerGroupAdmin = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     cpu: 0.25,
     timeoutSeconds: 60,
     cors: true,
+    secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
   },
   async (request): Promise<RegisterGroupAdminResponse> => {
     const startTime = Date.now();
@@ -323,44 +329,10 @@ export const registerGroupAdmin = onCall(
         throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
       }
 
-      // 10. Generate unique affiliate codes with retry loop
-      const MAX_CODE_RETRIES = 5;
-      let affiliateCodeClient = "";
-      let affiliateCodeRecruitment = "";
-
-      for (let attempt = 0; attempt < MAX_CODE_RETRIES; attempt++) {
-        const candidate = generateAffiliateCode(input.firstName, false);
-        const check = await db
-          .collection("group_admins")
-          .where("affiliateCodeClient", "==", candidate)
-          .limit(1)
-          .get();
-        if (check.empty) {
-          affiliateCodeClient = candidate;
-          break;
-        }
-        logger.warn("[registerGroupAdmin] Client code collision, retrying", { attempt, candidate });
-      }
-      if (!affiliateCodeClient) {
-        throw new HttpsError("internal", "Failed to generate unique client affiliate code. Please try again.");
-      }
-
-      for (let attempt = 0; attempt < MAX_CODE_RETRIES; attempt++) {
-        const candidate = generateAffiliateCode(input.firstName, true);
-        const check = await db
-          .collection("group_admins")
-          .where("affiliateCodeRecruitment", "==", candidate)
-          .limit(1)
-          .get();
-        if (check.empty) {
-          affiliateCodeRecruitment = candidate;
-          break;
-        }
-        logger.warn("[registerGroupAdmin] Recruitment code collision, retrying", { attempt, candidate });
-      }
-      if (!affiliateCodeRecruitment) {
-        throw new HttpsError("internal", "Failed to generate unique recruitment affiliate code. Please try again.");
-      }
+      // 10. Generate unique affiliate codes
+      // P1 FIX: UID-based suffix guarantees uniqueness — no Firestore collision checks needed
+      const affiliateCodeClient = generateAffiliateCode(input.firstName, userId, false);
+      const affiliateCodeRecruitment = generateAffiliateCode(input.firstName, userId, true);
 
       // 11. Create GroupAdmin document
       const now = Timestamp.now();

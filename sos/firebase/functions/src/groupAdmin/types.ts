@@ -4,10 +4,10 @@
  * Complete type definitions for the SOS-Expat GroupAdmin (Group/Community Administrators) program.
  * Supports:
  * - Client referral commissions ($10 per client)
- * - Admin recruitment commissions ($5 per recruited admin, paid when recruit reaches $50)
+ * - Admin recruitment commissions ($50 per recruited admin, paid when recruit reaches $200)
  * - Resources & ready-to-use posts
  * - Gamification (badges, leaderboard)
- * - 9 languages: fr, en, es, pt, ar, de, it, nl, zh
+ * - 9 languages: fr, en, es, pt, ar, de, it, nl, zh (app navigation languages)
  */
 
 import { Timestamp } from "firebase-admin/firestore";
@@ -53,6 +53,17 @@ export type GroupType =
   | "family"           // Expatriate families
   | "student"          // Students abroad
   | "retirement"       // Retirement abroad
+  | "affiliation"      // Affiliation / association groups
+  | "press"            // Press / journalism
+  | "media"            // Media / content creators
+  | "lawyers"          // Legal professionals abroad
+  | "translators"      // Translators / interpreters
+  | "movers"           // International movers
+  | "real_estate"      // Real estate abroad
+  | "insurance"        // Insurance professionals
+  | "finance"          // Finance / banking abroad
+  | "healthcare"       // Healthcare professionals
+  | "education"        // Education / teachers abroad
   | "other";
 
 /**
@@ -590,6 +601,59 @@ export interface GroupAdminRecruit {
   commissionPaidAt?: Timestamp;
 }
 
+/**
+ * Recruited provider tracking document
+ * Collection: group_admin_recruited_providers/{id}
+ *
+ * Created when a lawyer/expat registers using a GroupAdmin recruitment link.
+ * Commission is awarded per call for the duration of the window.
+ */
+export interface GroupAdminRecruitedProvider {
+  id: string;
+
+  /** GroupAdmin who recruited this provider */
+  groupAdminId: string;
+
+  /** Recruitment code used */
+  groupAdminCode: string;
+
+  /** GroupAdmin email */
+  groupAdminEmail: string;
+
+  /** Recruited provider ID */
+  providerId: string;
+
+  /** Provider email */
+  providerEmail: string;
+
+  /** Provider type */
+  providerType: "lawyer" | "expat";
+
+  /** Provider display name */
+  providerName: string;
+
+  /** When recruited */
+  recruitedAt: Timestamp;
+
+  /** Commission window end date (recruitmentWindowMonths after recruitment) */
+  commissionWindowEndsAt: Timestamp;
+
+  /** Whether this recruitment is still within the commission window */
+  isActive: boolean;
+
+  /** Number of calls that generated a commission */
+  callsWithCommission: number;
+
+  /** Total commissions earned from this provider */
+  totalCommissions: number;
+
+  /** Last commission timestamp */
+  lastCommissionAt: Timestamp | null;
+
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 // ============================================================================
 // CLICKS TRACKING
 // ============================================================================
@@ -1014,6 +1078,19 @@ export interface GroupAdminConfig {
 
   /** Who updated */
   updatedBy: string;
+
+  /** Configuration change history (max 50 entries) */
+  configHistory?: GroupAdminConfigHistoryEntry[];
+}
+
+/**
+ * Configuration history entry for admin config changes
+ */
+export interface GroupAdminConfigHistoryEntry {
+  changedAt: Timestamp;
+  changedBy: string;
+  previousConfig: Partial<GroupAdminConfig>;
+  reason?: string;
 }
 
 /**

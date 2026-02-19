@@ -1,7 +1,7 @@
 // App.tsx
 import React, { useEffect, Suspense, lazy, useState, useRef } from 'react';
 import { IntlProvider } from 'react-intl';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { useAuth } from './contexts/AuthContext';
@@ -22,7 +22,8 @@ import ProviderOnlineManager from './components/providers/ProviderOnlineManager'
 import { PayPalProvider } from './contexts/PayPalContext';
 // AFFILIATE: Capture referral codes from URL
 import { useReferralCapture } from './hooks/useAffiliate';
-import { migrateFromLegacyStorage } from './utils/referralStorage';
+import { migrateFromLegacyStorage, storeReferralCode } from './utils/referralStorage';
+import type { ActorType, ReferralCodeType } from './utils/referralStorage';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
 import enMessages from "./helper/en.json";
 import esMessages from "./helper/es.json";
@@ -154,6 +155,7 @@ const ChatterTraining = lazy(() => import('./pages/Chatter/ChatterTraining'));
 const ChatterReferrals = lazy(() => import('./pages/Chatter/ChatterReferrals'));
 const ChatterReferralEarnings = lazy(() => import('./pages/Chatter/ChatterReferralEarnings'));
 const ChatterRefer = lazy(() => import('./pages/Chatter/ChatterRefer'));
+const ChatterProfile = lazy(() => import('./pages/Chatter/ChatterProfile'));
 // Influencer System
 const InfluencerLanding = lazy(() => import('./pages/Influencer/InfluencerLanding'));
 const InfluencerRegister = lazy(() => import('./pages/Influencer/InfluencerRegister'));
@@ -166,6 +168,7 @@ const InfluencerPayments = lazy(() => import('./pages/Influencer/InfluencerPayme
 const InfluencerProfile = lazy(() => import('./pages/Influencer/InfluencerProfile'));
 const InfluencerPromoTools = lazy(() => import('./pages/Influencer/InfluencerPromoTools'));
 const InfluencerResources = lazy(() => import('./pages/Influencer/InfluencerResources'));
+const InfluencerTraining = lazy(() => import('./pages/Influencer/InfluencerTraining'));
 const InfluencerSuspended = lazy(() => import('./pages/Influencer/InfluencerSuspended'));
 
 // Blogger System
@@ -369,6 +372,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/chatter/filleuls", component: ChatterReferrals, protected: true, role: 'chatter', translated: "chatter-referrals" },
   { path: "/chatter/gains-parrainage", component: ChatterReferralEarnings, protected: true, role: 'chatter', translated: "chatter-referral-earnings" },
   { path: "/chatter/parrainer", component: ChatterRefer, protected: true, role: 'chatter', translated: "chatter-refer" },
+  { path: "/chatter/profil", component: ChatterProfile, protected: true, role: 'chatter' },
 
   // Influencer System Routes - Protected routes for registered influencers
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un influenceur ne peut pas être client/lawyer/expat/chatter.
@@ -383,6 +387,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/influencer/classement", component: InfluencerLeaderboard, protected: true, role: 'influencer', translated: "influencer-leaderboard" },
   { path: "/influencer/paiements", component: InfluencerPayments, protected: true, role: 'influencer', translated: "influencer-payments" },
   { path: "/influencer/ressources", component: InfluencerResources, protected: true, role: 'influencer', translated: "influencer-resources" },
+  { path: "/influencer/formation", component: InfluencerTraining, protected: true, role: 'influencer', translated: "influencer-training" },
   { path: "/influencer/outils", component: InfluencerPromoTools, protected: true, role: 'influencer', translated: "influencer-promo-tools" },
   { path: "/influencer/profil", component: InfluencerProfile, protected: true, role: 'influencer', translated: "influencer-profile" },
   { path: "/influencer/suspendu", component: InfluencerSuspended, protected: true, role: 'influencer', translated: "influencer-suspended" },
@@ -646,6 +651,37 @@ const ReferralCodeCapture: React.FC = () => {
   }, [referralCode, referralTracking]);
 
   return null;
+};
+
+// --------------------------------------------
+// AffiliatePathCapture - Capture affiliate codes from path-based URLs
+// Handles /ref/b/:code (blogger client) and /rec/b/:code (blogger recruitment)
+// Stores code in localStorage then redirects to the appropriate page.
+// Static segments (/ref, /b) give higher React Router v6 specificity than
+// the generic catch-all /:langLocale/:roleCountry/:nameSlug so no explicit
+// ordering is required, but we still add these routes before catchAllProviderRoutes.
+// --------------------------------------------
+const AffiliatePathCapture: React.FC<{
+  actorType: ActorType;
+  codeType: ReferralCodeType;
+  redirectPath?: string; // without locale prefix, defaults to '/'
+}> = ({ actorType, codeType, redirectPath = '/' }) => {
+  const { code } = useParams<{ code: string }>();
+  const { language } = useApp();
+
+  // Store synchronously before navigate — localStorage writes are synchronous
+  if (code) {
+    storeReferralCode(code.toUpperCase(), actorType, codeType, {
+      landingPage: window.location.pathname,
+    });
+  }
+
+  const locale = getLocaleString(language);
+  const destination = redirectPath === '/'
+    ? `/${locale}`
+    : `/${locale}${redirectPath}`;
+
+  return <Navigate to={destination} replace />;
 };
 
 // --------------------------------------------
@@ -921,6 +957,50 @@ const App: React.FC = () => {
                   })
                   .map((cfg, i) => renderRoute(cfg, i))}
                 {protectedUserRoutes.map((cfg, i) => renderRoute(cfg, i + 1000))}
+
+                {/* AFFILIATE PATH CAPTURE: path-based referral links
+                    /ref/b/:code  → blogger client referral   (stores as actorType=client)
+                    /rec/b/:code  → blogger recruitment link  (stores as actorType=blogger)
+                    /ref/c/:code  → chatter client referral   (stores as actorType=client)
+                    /rec/c/:code  → chatter recruitment link  (stores as actorType=chatter)
+                    /ref/i/:code  → influencer client referral (stores as actorType=client)
+                    /rec/i/:code  → influencer recruitment link (stores as actorType=influencer)
+                    /ref/ga/:code → group-admin client referral (stores as actorType=client)
+                    /rec/ga/:code → group-admin recruitment link (stores as actorType=groupAdmin)
+                    Static segments rank higher than /:x/:y/:z in React Router v6,
+                    so these routes win over the catch-all provider routes below automatically. */}
+                <Route
+                  path="/ref/b/:code"
+                  element={<AffiliatePathCapture actorType="client" codeType="client" />}
+                />
+                <Route
+                  path="/rec/b/:code"
+                  element={<AffiliatePathCapture actorType="blogger" codeType="recruitment" redirectPath="/blogger/inscription" />}
+                />
+                <Route
+                  path="/ref/c/:code"
+                  element={<AffiliatePathCapture actorType="client" codeType="client" />}
+                />
+                <Route
+                  path="/rec/c/:code"
+                  element={<AffiliatePathCapture actorType="chatter" codeType="recruitment" redirectPath="/chatter/inscription" />}
+                />
+                <Route
+                  path="/ref/i/:code"
+                  element={<AffiliatePathCapture actorType="client" codeType="client" />}
+                />
+                <Route
+                  path="/rec/i/:code"
+                  element={<AffiliatePathCapture actorType="influencer" codeType="recruitment" redirectPath="/influencer/inscription" />}
+                />
+                <Route
+                  path="/ref/ga/:code"
+                  element={<AffiliatePathCapture actorType="client" codeType="client" />}
+                />
+                <Route
+                  path="/rec/ga/:code"
+                  element={<AffiliatePathCapture actorType="groupAdmin" codeType="recruitment" redirectPath="/group-admin/inscription" />}
+                />
 
                 {/* IMPORTANT: Catch-all provider routes MUST be rendered LAST (before 404)
                     These match generic patterns like /:langLocale/:roleCountry/:nameSlug

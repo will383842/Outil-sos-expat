@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { httpsCallable, getFunctions } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { functionsWest2 } from '@/config/firebase';
 import {
   Image,
@@ -114,7 +114,7 @@ const AdminGroupAdminsResources: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functionsWest2, categoryFilter]);
+  }, [categoryFilter]);
 
   useEffect(() => {
     fetchResources();

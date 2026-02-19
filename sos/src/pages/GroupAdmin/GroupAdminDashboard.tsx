@@ -262,7 +262,7 @@ const GroupAdminDashboard: React.FC = () => {
               <div className="bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-100 dark:to-indigo-800/20 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm dark:text-white font-semibold">
-                    <FormattedMessage id="groupAdmin.dashboard.recruitLink" defaultMessage="Recruitment link ($5 when recruit reaches $50)" />
+                    <FormattedMessage id="groupAdmin.dashboard.recruitLink" defaultMessage="Lien de recrutement (50$ quand la recrue atteint 200$)" />
                   </span>
                   <span className="text-sm dark:text-blue-300 font-bold bg-blue-200 dark:bg-blue-800/50 px-3 py-1.5 rounded-full">
                     {profile.affiliateCodeRecruitment}
@@ -332,7 +332,7 @@ const GroupAdminDashboard: React.FC = () => {
               </span>
             </button>
             <button
-              onClick={() => navigate('/group-admin/guide')}
+              onClick={() => navigate('/group-admin/ressources')}
               className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-2"
             >
               <BookOpen className="w-8 h-8 text-amber-500" />

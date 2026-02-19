@@ -121,7 +121,10 @@ const SUPPORTED_LANGUAGES: { value: SupportedGroupAdminLanguage; label: string }
 const GROUP_TYPES: GroupType[] = [
   'travel', 'expat', 'digital_nomad', 'immigration', 'relocation',
   'language', 'country_specific', 'profession', 'family', 'student',
-  'retirement', 'other',
+  'retirement',
+  'affiliation', 'press', 'media', 'lawyers', 'translators', 'movers',
+  'real_estate', 'insurance', 'finance', 'healthcare', 'education',
+  'other',
 ];
 
 const GROUP_SIZES: GroupSizeTier[] = [

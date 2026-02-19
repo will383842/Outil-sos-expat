@@ -102,7 +102,7 @@ const AdminChatterPayments: React.FC = () => {
     setProcessingId(withdrawalId);
 
     try {
-      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessWithdrawal');
+      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessChatterWithdrawal');
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'approve',
@@ -125,7 +125,7 @@ const AdminChatterPayments: React.FC = () => {
     setProcessingId(withdrawalId);
 
     try {
-      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessWithdrawal');
+      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessChatterWithdrawal');
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'reject',
@@ -148,7 +148,7 @@ const AdminChatterPayments: React.FC = () => {
     setProcessingId(withdrawalId);
 
     try {
-      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessWithdrawal');
+      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessChatterWithdrawal');
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'complete',

@@ -461,7 +461,7 @@
   "blogger.dashboard.guideCta": "قراءة الدليل",
   "blogger.dashboard.guideDesc": "تعلم كيفية تعظيم أرباحك",
   "blogger.dashboard.monthlyEarnings": "أرباح هذا الشهر",
-  "blogger.dashboard.monthlyTotal": "إجمالي الشهر",
+  "blogger.dashboard.monthlyTotal": "الإجمالي: ${total}",
   "blogger.dashboard.noCommissions": "لا توجد عمولات حالياً",
   "blogger.dashboard.rank": "الترتيب الشهري",
   "blogger.dashboard.recentCommissions": "العمولات الأخيرة",
@@ -553,8 +553,8 @@
   "blogger.final.subtitle": "مجاني، الموارد مضمنة، ابدأ الكسب اليوم.",
   "blogger.final.title": "هل أنت مستعد لتحويل مدونتك لربح؟",
   "blogger.final.trust.1": "مجاني 100%",
-  "blogger.final.trust.2": "الموارد مضمنة",
-  "blogger.final.trust.3": "دليل SEO",
+  "blogger.final.trust.2": "الويدجت مدرج",
+  "blogger.final.trust.3": "دخل سلبي مدى الحياة",
   "blogger.guide.bestPractices": "أفضل الممارسات",
   "blogger.guide.copied": "تم النسخ!",
   "blogger.guide.copy": "نسخ",
@@ -566,7 +566,7 @@
   "blogger.hero.badge": "برنامج شريك المدونين • الموارد مضمنة",
   "blogger.hero.cta": "كن شريك مدون - مجاناً",
   "blogger.hero.hot": "🔥 رائج",
-  "blogger.hero.new.amount": "60€",
+  "blogger.hero.new.amount": "+5000$/شهر",
   "blogger.hero.new.line1": "حول مدونتك",
   "blogger.hero.new.line2": "إلى مصدر دخل",
   "blogger.hero.new.per_qualified_referral": "لكل إحالة مؤهلة",
@@ -574,11 +574,11 @@
   "blogger.hero.new.secondary_cta": "شاهد كيف يعمل",
   "blogger.hero.new.stat_1_label": "المدونون النشطون",
   "blogger.hero.new.stat_1_value": "500+",
-  "blogger.hero.new.subtitle": "اكسب ما يصل إلى 60 يورو لكل إحالة مؤهلة من خلال كتابة محتوى عالي الجودة حول المساعدة القانونية للمغتربين",
+  "blogger.hero.new.subtitle": "أدرج ويدجتنا في مقالاتك. يحصل قراؤك على المساعدة لأي حاجة. تربح $10 لكل مكالمة. دخل سلبي مدى الحياة!",
   "blogger.hero.new.trust_badge_1": "مدفوعات أسبوعية",
   "blogger.hero.new.trust_badge_2": "دعم SEO مخصص",
   "blogger.hero.new.trust_badge_3": "موارد إبداعية",
-  "blogger.hero.partnerExample": "💡 شريك واحد يتلقى 10 مكالمات/شهر = 50 يورو/شهر سلبي!",
+  "blogger.hero.partnerExample": "💡 شريك واحد مُستقطَب = 30 مكالمة/شهر × $5 = {total}/شهر دخل سلبي للأبد!",
   "blogger.hero.scroll": "اكتشف",
   "blogger.hero.simple": "مهمتك: اكتب مقالات ← أضف رابطك ← القراء يتصلون ← تكسب 10$",
   "blogger.hero.source1": "لكل مكالمة قارئ",
@@ -587,10 +587,10 @@
   "blogger.hero.sources": "3 مصادر دخل غير محدودة:",
   "blogger.hero.subtitle": "اكتب مقالات عن حياة المغتربين. أضف رابطك. القراء يتصلون بمحامٍ أو مساعد. تكسب 10$.",
   "blogger.hero.title": "حول مدونتك لربح: 10$ لكل عميل",
-  "blogger.hero.trust.1": "قوالب المقالات",
-  "blogger.hero.trust.2": "دليل SEO",
-  "blogger.hero.trust.3": "شعارات HD ولافتات",
-  "blogger.landing.seo.description": "انضم لبرنامج مدوني SOS-Expat واكسب 10 دولارات لكل عميل + 5 دولارات لكل محامٍ. موارد وأدلة مشمولة. السحب من 50 دولار.",
+  "blogger.hero.trust.1": "الويدجت مدرج",
+  "blogger.hero.trust.2": "شعارات HD ولافتات",
+  "blogger.hero.trust.3": "تفعيل فوري",
+  "blogger.landing.seo.description": "أدرج ويدجتنا في مقالاتك. اكسب $10 لكل مكالمة، $5 لكل مزود مجنّد. ويدجت، شعارات ولافتات مشمولة. سحب عبر Wise أو PayPal.",
   "blogger.landing.seo.title": "كن مدونًا شريكًا لـ SOS-Expat | اكسب 10 دولارات لكل عميل محال",
   "blogger.landing.value.badge": "🤝 الفوز للجميع",
   "blogger.landing.value.problem1.desc": "مسافر/سائح ضائع: تأشيرة سياحية، سكن، نقل، طارئ طبي...",
@@ -626,8 +626,8 @@
   "blogger.menu.profile": "ملفي الشخصي",
   "blogger.menu.referrals": "إحالاتي",
   "blogger.menu.resources": "الموارد",
-  "blogger.note.desc": "SOS-Expat يربط الناس بمحامين محترفين ومساعدين مغتربين ذوي خبرة. المحامون للمسائل القانونية، والمساعدون للنصائح العملية. كلاهما متاح فوراً عبر الهاتف في جميع أنحاء العالم.",
-  "blogger.note.title": "محامون ومساعدون مغتربون",
+  "blogger.note.desc": "يربط SOS-Expat قراءك بخبراء لأي نوع من الاحتياجات في الخارج: تأشيرة، إجراءات إدارية، سكن، صحة، طوارئ، نصائح عملية... مهم أو بسيط، كل احتياج يستحق المساعدة. متاح عبر الهاتف، في جميع أنحاء العالم.",
+  "blogger.note.title": "كل المساعدات، 24/7",
   "blogger.passive.example": "مثال: 3 شركاء محامين، 20 مكالمة/شهر لكل منهم",
   "blogger.passive.helper": "مساعد",
   "blogger.passive.lawyer": "محامي",
@@ -636,6 +636,9 @@
   "blogger.passive.title": "ابحث عن شركاء محامين ومساعدين",
   "blogger.passive.you": "أنت",
   "blogger.passive.you.earn": "10$/عميل + 5$/مكالمة من الشركاء",
+  "blogger.passive.partner1": "محامٍ",
+  "blogger.passive.partner2": "مساعد المغتربين",
+  "blogger.passive.partner3": "خبير",
   "blogger.payment.note": "الحد الأدنى 50$ • معالجة خلال 48 ساعة",
   "blogger.payment.title": "احصل على أموالك بطريقتك",
   "blogger.payments.addMethod": "إضافة طريقة دفع",
@@ -718,6 +721,8 @@
   "blogger.resource.seo": "دليل SEO",
   "blogger.resource.templates": "قوالب المقالات",
   "blogger.resource.texts": "نصوص جاهزة",
+  "blogger.resource.guide": "دليل التكامل",
+  "blogger.resource.qr": "QR Codes",
   "blogger.resource.widgets": "أدوات ذكية",
   "blogger.resources.copied": "تم النسخ!",
   "blogger.resources.copy": "نسخ",
@@ -749,10 +754,10 @@
   "blogger.step1.tag.legal": "نصائح قانونية",
   "blogger.step1.tag.tips": "العيش في الخارج",
   "blogger.step1.tag.visa": "أدلة التأشيرة",
-  "blogger.step1.title": "اكتب مقالات",
+  "blogger.step1.title": "أدرج الويدجت",
   "blogger.step2.desc": "أضف رابط الإحالة الخاص بك في المقالات. استخدم لافتاتنا أو الأدوات أو روابط النص. نحن نتتبع كل شيء تلقائياً.",
   "blogger.step2.example": "تحتاج مساعدة في تأشيرتك؟ تحدث مع محامٍ أو مساعد في دقائق ←",
-  "blogger.step2.title": "أضف رابطك",
+  "blogger.step2.title": "رابطك مدمج بالفعل",
   "blogger.step2.widgets": "أدوات جاهزة مع رابطك مدمج بالفعل!",
   "blogger.step3.desc": "عندما يتصل القراء عبر رابطك، تكسب 10$. اسحب في أي وقت عبر Wise أو PayPal أو Mobile Money.",
   "blogger.step3.note": "لا حد للأرباح!",
@@ -2663,13 +2668,13 @@
   "groupAdmin.admin.title": "إدارة مسؤولي المجموعات",
   "groupAdmin.dashboard.affiliateLinks": "روابط الإحالة",
   "groupAdmin.dashboard.availableBalance": "الرصيد المتاح",
-  "groupAdmin.dashboard.clientLink": "رابط العميل ($15 لكل عميل)",
+  "groupAdmin.dashboard.clientLink": "رابط العميل ($10 لكل مكالمة)",
   "groupAdmin.dashboard.clients": "العملاء",
   "groupAdmin.dashboard.groupInfo": "مجموعتك",
   "groupAdmin.dashboard.noCommissions": "لا توجد عمولات بعد",
   "groupAdmin.dashboard.pendingBalance": "قيد الانتظار",
   "groupAdmin.dashboard.recentCommissions": "العمولات الأخيرة",
-  "groupAdmin.dashboard.recruitLink": "رابط التوظيف ($5 لكل موظف)",
+  "groupAdmin.dashboard.recruitLink": "رابط التوظيف ($50 / موظف عند $200)",
   "groupAdmin.dashboard.title": "لوحة تحكم مسؤول المجموعة",
   "groupAdmin.dashboard.viewAll": "عرض الكل",
   "groupAdmin.dashboard.welcome": "مرحباً، {name}!",
@@ -2871,20 +2876,20 @@
   "groupAdmin.posts.subtitle": "منشورات فيسبوك جاهزة لمجموعتك",
   "groupAdmin.posts.title": "منشورات فيسبوك",
   "groupAdmin.referrals.commission": "العمولة",
-  "groupAdmin.referrals.commissionWindowInfo.description": "لديك 6 أشهر من تاريخ التوظيف لكسب عمولة 5 دولارات. يتم دفع العمولة عندما يقوم المجند بإحالة عميله الأول خلال هذه الفترة.",
+  "groupAdmin.referrals.commissionWindowInfo.description": "لديك 6 أشهر من تاريخ التوظيف لكسب عمولة $50. يتم دفع العمولة عندما يصل المجند إلى $200 من إجمالي الأرباح خلال هذه الفترة.",
   "groupAdmin.referrals.commissionWindowInfo.title": "فترة العمولة 6 أشهر",
   "groupAdmin.referrals.daysRemaining": "{days} أيام متبقية",
   "groupAdmin.referrals.earned": "مكتسب",
   "groupAdmin.referrals.monthsRemaining": "{months} أشهر متبقية",
   "groupAdmin.referrals.noRecruits": "لا يوجد مجندون بعد",
-  "groupAdmin.referrals.paid": "$5 مدفوعة",
+  "groupAdmin.referrals.paid": "$50 مدفوعة",
   "groupAdmin.referrals.pending": "قيد الانتظار",
   "groupAdmin.referrals.pendingCommission": "قيد الانتظار",
   "groupAdmin.referrals.recruitedAdmins": "المسؤولون المجندون",
   "groupAdmin.referrals.recruitedOn": "تم التجنيد في {date}",
-  "groupAdmin.referrals.shareLinkDesc": "شارك هذا الرابط مع مسؤولي مجموعات Facebook الآخرين لكسب 5 دولارات لكل تسجيل",
+  "groupAdmin.referrals.shareLinkDesc": "شارك هذا الرابط مع مسؤولي مجموعات Facebook الآخرين لكسب $50 عندما يصل المجند إلى $200 من الأرباح",
   "groupAdmin.referrals.shareToEarn": "شارك رابطك لبدء الكسب!",
-  "groupAdmin.referrals.subtitle": "تتبع عملائك المحالين والمسؤولين الموظفين",
+  "groupAdmin.referrals.subtitle": "اكسب $50 عندما يصل المجند إلى $200 من الأرباح",
   "groupAdmin.referrals.title": "إحالاتي",
   "groupAdmin.referrals.totalRecruited": "إجمالي المجندين",
   "groupAdmin.referrals.windowEnds": "تنتهي الفترة: {date}",
@@ -3854,7 +3859,7 @@
   "pricing.subtitle": "اختر مع من تريد التحدث… <strong>محامٍ</strong>؟ <strong>مغترب</strong>؟",
   "pricing.syncNote": "💰 الأسعار محدثة من لوحة التحكم",
   "pricing.title.highlight": "الأسعار",
-  "pricing.title.prefix": "أسعار",
+  "pricing.title.prefix": "",
   "pricing.title.suffix": "تناسب احتياجاتك",
   "pricing.unavailable": "الأسعار غير متاحة مؤقتاً.",
   "profession.expat": "مغترب",
@@ -3941,8 +3946,8 @@
   "provider.paypal.changeEmail": "تغيير عنوان البريد الإلكتروني لـ PayPal",
   "provider.paypal.changeEmailLink": "بريد إلكتروني خاطئ؟ تغيير",
   "provider.paypal.checking": "جاري التحقق من حالة PayPal...",
-  "provider.paypal.codeResent": "تم إعادة إرسال الرمز إلى {email}",
-  "provider.paypal.codeSent": "تم إرسال رمز التحقق إلى {email}",
+  "provider.paypal.codeResent": "تم إرسال رمز جديد",
+  "provider.paypal.codeSent": "تم إرسال رمز التحقق إلى عنوان بريدك الإلكتروني",
   "provider.paypal.connect.description": "أدخل عنوان البريد الإلكتروني المرتبط بحسابك على PayPal لاستلام مدفوعاتك.",
   "provider.paypal.connect.title": "إعداد PayPal",
   "provider.paypal.connected": "تم ربط حساب PayPal",
@@ -5520,5 +5525,53 @@
   "wizard.step3.lawyer": "محامٍ",
   "wizard.step3.lawyer.desc": "استشارة قانونية مهنية",
   "wizard.step3.subtitle": "اختر نوع الخبير",
-  "wizard.step3.title": "من تريد الاتصال به؟"
+  "wizard.step3.title": "من تريد الاتصال به؟",
+  "groupAdmin.landing.calc.calls": "مكالمات/شهر المقدرة",
+  "groupAdmin.profile.title": "ملفي الشخصي",
+  "groupAdmin.profile.subtitle": "معلوماتك الشخصية وإعداداتك",
+  "groupAdmin.profile.personal": "المعلومات الشخصية",
+  "groupAdmin.profile.name": "الاسم الكامل",
+  "groupAdmin.profile.email": "البريد الإلكتروني",
+  "groupAdmin.profile.country": "البلد",
+  "groupAdmin.profile.language": "اللغة",
+  "groupAdmin.profile.phone": "الهاتف",
+  "groupAdmin.profile.groupInfo": "معلومات المجموعة",
+  "groupAdmin.profile.verified": "موثق",
+  "groupAdmin.profile.groupName": "اسم المجموعة",
+  "groupAdmin.profile.groupUrl": "رابط المجموعة",
+  "groupAdmin.profile.groupType": "نوع المجموعة",
+  "groupAdmin.profile.groupSize": "حجم المجموعة",
+  "groupAdmin.profile.groupCountry": "بلد المجموعة",
+  "groupAdmin.profile.groupLanguage": "لغة المجموعة",
+  "groupAdmin.profile.groupDescription": "الوصف",
+  "groupAdmin.profile.codes": "رموز الشراكة",
+  "groupAdmin.profile.clientCode": "رمز العميل (خصم $5)",
+  "groupAdmin.profile.recruitCode": "رمز التجنيد",
+  "groupAdmin.profile.payment": "إعدادات الدفع",
+  "groupAdmin.profile.paymentInfo": "قم بإعداد طريقة الدفع الخاصة بك عند تقديم أول طلب سحب.",
+  "influencer.training.bestScore": "أفضل نتيجة: {score}%",
+  "influencer.training.certificate.desc": "لقد أكملت برنامج تدريب المؤثرين.",
+  "influencer.training.certificate.earned": "تم الحصول على الشهادة!",
+  "influencer.training.content": "المحتوى",
+  "influencer.training.continue": "متابعة",
+  "influencer.training.loadError": "تعذر تحميل هذه الوحدة.",
+  "influencer.training.locked": "أكمل الوحدات السابقة للفتح",
+  "influencer.training.noModules": "لا توجد وحدات متاحة حاليًا.",
+  "influencer.training.progress.subtitle": "{completed} من أصل {total} وحدة مكتملة",
+  "influencer.training.questions": "أسئلة",
+  "influencer.training.required": "مطلوب",
+  "influencer.training.review": "مراجعة",
+  "influencer.training.slides": "شرائح",
+  "influencer.training.start": "ابدأ",
+  "blogger.earnings.passive": "دخل سلبي مدى الحياة",
+  "blogger.earnings.passive.desc": "أدرج الأداة مرة واحدة فقط في مقالاتك واكسب في كل مرة يستخدمها قارئ، إلى الأبد، دون أي جهد إضافي!",
+  "blogger.resources.guide": "دليل التكامل",
+  "blogger.resources.guide.desc": "إجراء خطوة بخطوة لإدراج الأداة في جميع مقالاتك الموجودة في دقائق.",
+  "blogger.resources.guide.title": "دليل التكامل",
+  "blogger.resources.qr": "رموز QR",
+  "blogger.resources.widgets.desc": "أزرار وبنرات مع رابطك المدمج بالفعل. انسخ كود HTML والصقه في مقالاتك.",
+  "blogger.resources.widgets.title": "Smart Widgets",
+  "blogger.step1.tag.new": "مقالات جديدة",
+  "blogger.step1.tag.old": "مقالات قديمة",
+  "blogger.step1.tag.sidebar": "الشريط الجانبي"
 }

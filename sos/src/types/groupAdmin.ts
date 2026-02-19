@@ -12,8 +12,7 @@
 export type GroupAdminStatus = "active" | "suspended" | "blocked";
 
 export type SupportedGroupAdminLanguage =
-  | "fr" | "en" | "es" | "pt" | "ar" | "de" | "it" | "nl" | "zh"
-  | "ru" | "hi" | "ja" | "ko" | "tr" | "pl" | "sv" | "no" | "da" | "fi";
+  | "fr" | "en" | "es" | "pt" | "ar" | "de" | "it" | "nl" | "zh";
 
 export type GroupType =
   | "travel"

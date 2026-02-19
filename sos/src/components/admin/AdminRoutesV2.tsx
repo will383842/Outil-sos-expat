@@ -1354,9 +1354,9 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
-      {/* 👥 GROUPADMINS (Facebook Group Administrators) */}
+      {/* 👥 GROUP-ADMINS (Facebook Group Administrators) */}
       <Route
-        path="groupadmins"
+        path="group-admins"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGroupAdminsList />
@@ -1364,7 +1364,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="groupadmins/:groupAdminId"
+        path="group-admins/:groupAdminId"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGroupAdminDetail />
@@ -1372,7 +1372,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="groupadmins/payments"
+        path="group-admins/payments"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGroupAdminsPayments />
@@ -1380,7 +1380,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="groupadmins/recruitments"
+        path="group-admins/recruitments"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGroupAdminsRecruitments />
@@ -1388,7 +1388,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="groupadmins/resources"
+        path="group-admins/resources"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGroupAdminsResources />
@@ -1396,7 +1396,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="groupadmins/posts"
+        path="group-admins/posts"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGroupAdminsPosts />
@@ -1404,7 +1404,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="groupadmins/config"
+        path="group-admins/config"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGroupAdminsConfig />
@@ -1911,13 +1911,13 @@ export const useAdminRouteValidation = () => {
       "/admin/bloggers/guide",
       "/admin/bloggers/articles",
       "/admin/bloggers/config",
-      "/admin/groupadmins",
-      "/admin/groupadmins/:groupAdminId",
-      "/admin/groupadmins/payments",
-      "/admin/groupadmins/recruitments",
-      "/admin/groupadmins/resources",
-      "/admin/groupadmins/posts",
-      "/admin/groupadmins/config",
+      "/admin/group-admins",
+      "/admin/group-admins/:groupAdminId",
+      "/admin/group-admins/payments",
+      "/admin/group-admins/recruitments",
+      "/admin/group-admins/resources",
+      "/admin/group-admins/posts",
+      "/admin/group-admins/config",
       "/admin/payments",
       "/admin/payments/withdrawals",
       "/admin/payments/:userType/:withdrawalId",
