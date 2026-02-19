@@ -247,7 +247,7 @@ export function generatePaymentEntry(data: PaymentData): JournalEntry {
     amountEur,
     processorFeeEur,
     commissionEur,
-    providerAmountEur,
+    // providerAmountEur not used here (calculated from amountEur - commissionEur - fees)
     processor,
     serviceType,
     customer,

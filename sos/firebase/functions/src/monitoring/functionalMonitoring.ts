@@ -17,6 +17,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { logger as functionsLogger } from 'firebase-functions';
+import { ADMIN_ALERT_EMAILS } from '../lib/constants';
 // fetch is available natively in Node.js 22 - no import needed
 
 // ============================================================================
@@ -50,7 +51,7 @@ const CONFIG = {
 
   ALERTS_COLLECTION: 'functional_alerts',
   METRICS_COLLECTION: 'functional_metrics',
-  ALERT_EMAILS: ['contact@sos-expat.com']
+  ALERT_EMAILS: ADMIN_ALERT_EMAILS
 };
 
 // ============================================================================

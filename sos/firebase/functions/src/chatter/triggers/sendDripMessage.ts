@@ -25,7 +25,7 @@ interface Chatter {
   firstName: string;
   lastName: string;
   email: string;
-  telegram_id?: string;
+  telegramId?: number;
   language?: string;
   registeredAt: Timestamp;
   lastDripMessageDay?: number;
@@ -52,7 +52,7 @@ export const sendChatterDripMessages = onSchedule(
       const chattersSnapshot = await db
         .collection("chatters")
         .where("status", "==", "active")
-        .where("telegram_id", "!=", null)
+        .where("telegramId", "!=", null)
         .get();
 
       if (chattersSnapshot.empty) {
@@ -128,7 +128,7 @@ export const sendChatterDripMessages = onSchedule(
           // TODO: Call telegram sendMessage function
           // For now, we'll queue it in telegram_queue collection
           await db.collection("telegram_queue").add({
-            telegram_id: chatter.telegram_id,
+            telegram_id: chatter.telegramId,
             message: personalizedMessage,
             parse_mode: "HTML",
             status: "pending",
@@ -189,7 +189,7 @@ export const sendDripMessageManual = async (
 
     const chatter = { id: chatterDoc.id, ...chatterDoc.data() } as Chatter;
 
-    if (!chatter.telegram_id) {
+    if (!chatter.telegramId) {
       return { success: false, error: "Chatter has no Telegram connected" };
     }
 
@@ -211,7 +211,7 @@ export const sendDripMessageManual = async (
 
     // Queue message
     await db.collection("telegram_queue").add({
-      telegram_id: chatter.telegram_id,
+      telegram_id: chatter.telegramId,
       message: personalizedMessage,
       parse_mode: "HTML",
       status: "pending",

@@ -4,7 +4,7 @@
  */
 
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
-import { onRequest, HttpsError } from 'firebase-functions/v2/https';
+import { onRequest } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { Timestamp } from 'firebase-admin/firestore';
 import { db } from '../firebaseAdmin';
@@ -17,7 +17,6 @@ import {
 import {
   createSecurityAlert,
   updateAlertStatus,
-  getSecurityAlerts,
   createBruteForceAlert,
   createUnusualLocationAlert,
   createSuspiciousPaymentAlert,

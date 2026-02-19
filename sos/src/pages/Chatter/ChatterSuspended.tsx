@@ -9,7 +9,7 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
-import { AlertTriangle, Mail, MessageCircle, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, MessageCircle, ArrowLeft } from 'lucide-react';
 
 // Design tokens
 const UI = {
@@ -87,25 +87,6 @@ const ChatterSuspended: React.FC<ChatterSuspendedProps> = ({
                 />
               </p>
             )}
-
-            {/* Contact Info */}
-            <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl">
-              <p className="text-sm dark:text-gray-300 mb-3">
-                <FormattedMessage
-                  id="chatter.suspended.contact"
-                  defaultMessage="Si vous pensez qu'il s'agit d'une erreur, contactez-nous :"
-                />
-              </p>
-              <div className="flex gap-2">
-                <a
-                  href="mailto:support@sosexpat.com"
-                  className="flex items-center justify-center gap-2 text-red-600 dark:text-red-400 hover:underline"
-                >
-                  <Mail className="w-4 h-4" />
-                  support@sosexpat.com
-                </a>
-              </div>
-            </div>
 
             {/* Actions */}
             <div className="flex gap-3">

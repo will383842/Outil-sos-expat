@@ -282,6 +282,8 @@ async function getOrCreateStripeCustomer(
       source: 'sos-expat-subscription',
       createdAt: new Date().toISOString(),
     },
+  }, {
+    idempotencyKey: `cust_create_${providerId}_subscription`.substring(0, 255),
   });
 
   // Save the customer ID to subscriptions collection

@@ -389,6 +389,35 @@ export async function createReferralFraudAlert(
 
     await alertRef.set(alert);
 
+    // Also write to centralized fraud_alerts collection for cross-system visibility
+    try {
+      const centralAlertRef = db.collection("fraud_alerts").doc();
+      await centralAlertRef.set({
+        id: centralAlertRef.id,
+        userId: input.chatterId,
+        email: chatter.email,
+        source: "chatter_referral",
+        flags: [input.alertType],
+        severity: input.severity,
+        details: {
+          alertType: input.alertType,
+          description: input.details,
+          evidence: input.evidence,
+          recommendedAction: input.recommendedAction,
+          chatterName: `${chatter.firstName} ${chatter.lastName}`,
+        },
+        status: "pending",
+        resolvedBy: null,
+        resolvedAt: null,
+        resolution: null,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+    } catch (centralError) {
+      // Don't fail the main alert if centralized write fails
+      logger.error("[createReferralFraudAlert] Failed to write centralized alert", { error: centralError });
+    }
+
     logger.warn("[createReferralFraudAlert] Alert created", {
       alertId: alertRef.id,
       chatterId: input.chatterId,

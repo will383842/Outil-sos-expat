@@ -5,8 +5,9 @@
  * Supports: VAT_EE, OSS, DES, UK_VAT, CH_VAT
  */
 
-import * as functions from 'firebase-functions';
-import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import {
   TaxFilingType,
   TaxFilingFrequency,
@@ -319,33 +320,33 @@ interface GenerateTaxFilingResponse {
  *
  * Callable function that generates a draft tax filing for a given type and period
  */
-export const generateTaxFiling = functions
-  .region('europe-west1')
-  .runWith({
+export const generateTaxFiling = onCall(
+  {
+    region: 'europe-west1',
     timeoutSeconds: 300,
-    memory: '512MB',
-  })
-  .https.onCall(async (data: GenerateTaxFilingRequest, context): Promise<GenerateTaxFilingResponse> => {
+    memory: '512MiB',
+  },
+  async (request): Promise<GenerateTaxFilingResponse> => {
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
     // Check admin claim
-    const customClaims = context.auth.token;
+    const customClaims = request.auth.token;
     if (!customClaims.admin && !customClaims.superAdmin) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
-    const { type, period, force } = data;
+    const { type, period, force } = request.data as GenerateTaxFilingRequest;
 
     // Validate inputs
     if (!type || !['VAT_EE', 'OSS', 'DES', 'UK_VAT', 'CH_VAT'].includes(type)) {
-      throw new functions.https.HttpsError('invalid-argument', 'Invalid filing type');
+      throw new HttpsError('invalid-argument', 'Invalid filing type');
     }
 
     if (!period) {
-      throw new functions.https.HttpsError('invalid-argument', 'Period is required');
+      throw new HttpsError('invalid-argument', 'Period is required');
     }
 
     try {
@@ -369,7 +370,7 @@ export const generateTaxFiling = functions
       const dueDate = calculateDueDate(periodEnd, type);
 
       // Aggregate transactions
-      functions.logger.info(`Aggregating transactions for ${type} ${period}`, {
+      logger.info(`Aggregating transactions for ${type} ${period}`, {
         periodStart,
         periodEnd,
       });
@@ -397,7 +398,7 @@ export const generateTaxFiling = functions
         statusHistory: [{
           status: 'DRAFT',
           changedAt: now,
-          changedBy: context.auth.uid,
+          changedBy: request.auth.uid,
           reason: force ? 'Regenerated' : 'Initial generation',
         }],
         summary,
@@ -411,14 +412,14 @@ export const generateTaxFiling = functions
         transactionIds: aggregatedData.transactionIds,
         createdAt: existingDoc.exists ? existingDoc.data()?.createdAt ?? now : now,
         updatedAt: now,
-        createdBy: existingDoc.exists ? existingDoc.data()?.createdBy : context.auth.uid,
-        updatedBy: context.auth.uid,
+        createdBy: existingDoc.exists ? existingDoc.data()?.createdBy : request.auth.uid,
+        updatedBy: request.auth.uid,
       };
 
       // Save to Firestore
       await db.collection('tax_filings').doc(filingId).set(filing, { merge: true });
 
-      functions.logger.info(`Tax filing generated successfully: ${filingId}`, {
+      logger.info(`Tax filing generated successfully: ${filingId}`, {
         transactionCount: aggregatedData.transactionIds.length,
         totalTaxDue: summary.totalTaxDue,
       });
@@ -433,8 +434,8 @@ export const generateTaxFiling = functions
       };
 
     } catch (error) {
-      functions.logger.error('Error generating tax filing:', error);
-      throw new functions.https.HttpsError('internal', `Failed to generate tax filing: ${error}`);
+      logger.error('Error generating tax filing:', error);
+      throw new HttpsError('internal', `Failed to generate tax filing: ${error}`);
     }
   });
 
@@ -442,25 +443,25 @@ export const generateTaxFiling = functions
  * Generate all filings for a period
  * Useful for batch generation at end of month/quarter
  */
-export const generateAllTaxFilings = functions
-  .region('europe-west1')
-  .runWith({
+export const generateAllTaxFilings = onCall(
+  {
+    region: 'europe-west1',
     timeoutSeconds: 540,
-    memory: '1GB',
-  })
-  .https.onCall(async (data: { period: string; types?: TaxFilingType[] }, context) => {
+    memory: '1GiB',
+  },
+  async (request) => {
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
     // Check admin claim
-    const customClaims = context.auth.token;
+    const customClaims = request.auth.token;
     if (!customClaims.admin && !customClaims.superAdmin) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
-    const { period, types = ['VAT_EE', 'OSS', 'DES'] } = data;
+    const { period, types = ['VAT_EE', 'OSS', 'DES'] } = request.data as { period: string; types?: TaxFilingType[] };
 
     const results: Array<{ type: TaxFilingType; success: boolean; filingId?: string; error?: string }> = [];
 
@@ -516,7 +517,7 @@ export const generateAllTaxFilings = functions
           statusHistory: [{
             status: 'DRAFT',
             changedAt: now,
-            changedBy: context.auth.uid,
+            changedBy: request.auth.uid,
             reason: 'Batch generation',
           }],
           summary,
@@ -530,8 +531,8 @@ export const generateAllTaxFilings = functions
           transactionIds: aggregatedData.transactionIds,
           createdAt: now,
           updatedAt: now,
-          createdBy: context.auth.uid,
-          updatedBy: context.auth.uid,
+          createdBy: request.auth.uid,
+          updatedBy: request.auth.uid,
         }, { merge: true });
 
         results.push({
@@ -541,7 +542,7 @@ export const generateAllTaxFilings = functions
         });
 
       } catch (error) {
-        functions.logger.error(`Error generating ${type} filing:`, error);
+        logger.error(`Error generating ${type} filing:`, error);
         results.push({
           type,
           success: false,

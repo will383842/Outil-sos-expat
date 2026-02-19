@@ -104,7 +104,7 @@ export interface RateLimitKeyParams {
 export function generateRateLimitKey(params: RateLimitKeyParams): string {
   const { alertType, sourceIp, userId, endpoint } = params;
 
-  const parts = [alertType];
+  const parts: string[] = [alertType];
 
   // Priorité: userId > IP > endpoint > global
   if (userId) {

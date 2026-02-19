@@ -325,6 +325,7 @@ export const paymentWebhookWise = onRequest(
             eventType: webhookData.eventType,
             resourceId: webhookData.resourceId,
             source: 'wise',
+            expiresAt: Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
           });
         });
       } catch (txError) {

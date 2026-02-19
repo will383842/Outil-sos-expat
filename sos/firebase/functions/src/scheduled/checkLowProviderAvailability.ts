@@ -6,6 +6,7 @@
 // Use v1 API for scheduled functions with runWith syntax
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
+import { ADMIN_ALERT_EMAILS } from '../lib/constants';
 
 // Lazy initialization to prevent deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -36,10 +37,7 @@ const CONFIG = {
   // Seuil critique (alerte urgente)
   CRITICAL_THRESHOLD: 0,
   // Emails des administrateurs à notifier
-  ADMIN_EMAILS: [
-    'contact@sos-expat.com',
-    // Ajouter d'autres emails si nécessaire
-  ],
+  ADMIN_EMAILS: ADMIN_ALERT_EMAILS,
   // Heures de service (UTC) - ne pas alerter en dehors
   SERVICE_HOURS: {
     start: 6, // 6h UTC = 7h Paris

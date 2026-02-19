@@ -25,6 +25,7 @@ import {
   isProduction as isProductionEnv,
 } from './lib/stripe';
 import { PAYMENT_FUNCTIONS_REGION } from './configs/callRegion';
+import { ALLOWED_ORIGINS } from './lib/functionConfigs';
 
 /* ────────────────────────────────────────────────────────────────────────────
    (A) LIMITS — placé tout en haut, avant toute utilisation
@@ -82,14 +83,7 @@ const FUNCTION_OPTIONS = {
   timeoutSeconds: 60,
   minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
   maxInstances: 3,
-  cors: [
-    'https://sos-expat.com',
-    'https://www.sos-expat.com',
-    'https://ia.sos-expat.com',
-    'https://outil-sos-expat.pages.dev',
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ],
+  cors: ALLOWED_ORIGINS,
 };
 
 // P0-4 FIX: Removed duplicate defineSecret/defineString - now using centralized imports from lib/stripe
@@ -814,6 +808,14 @@ export const createPaymentIntent = onCall(
       }
       if (!providerId || providerId.length < 5) throw new HttpsError('invalid-argument', 'ID prestataire invalide');
       if (!clientId || clientId.length < 5) throw new HttpsError('invalid-argument', 'ID client invalide');
+      // SECURITY: Verify clientId matches authenticated user to prevent impersonation
+      if (clientId !== userId) {
+        prodLogger.warn('PAYMENT_BLOCKED', `[${requestId}] clientId mismatch`, {
+          userId,
+          clientId: clientId?.substring(0, 10) + '...',
+        });
+        throw new HttpsError('permission-denied', 'Vous ne pouvez pas créer un paiement pour un autre utilisateur.');
+      }
       // P2-15 FIX: callSessionId is now required for payment traceability
       if (!callSessionId || callSessionId.length < 10) throw new HttpsError('invalid-argument', 'ID session invalide');
       if (!V.ALLOWED_CURRENCIES.includes(currency)) {

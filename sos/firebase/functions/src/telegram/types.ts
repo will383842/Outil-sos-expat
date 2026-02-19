@@ -37,7 +37,8 @@ export type UserRole =
   | 'client'
   | 'chatter'
   | 'influencer'
-  | 'blogger';
+  | 'blogger'
+  | 'groupAdmin';
 
 /**
  * Traductions francaises des roles utilisateur
@@ -50,6 +51,7 @@ export const ROLE_TRANSLATIONS_FR: Record<UserRole, string> = {
   chatter: 'Chatter',
   influencer: 'Influenceur',
   blogger: 'Blogueur',
+  groupAdmin: 'Admin de Groupe',
 };
 
 /**

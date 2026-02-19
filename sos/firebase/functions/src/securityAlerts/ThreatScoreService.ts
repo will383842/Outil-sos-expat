@@ -16,11 +16,9 @@ import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { db } from '../firebaseAdmin';
 import {
   ThreatScore,
-  ThreatFactor,
   ThreatAction,
   ThreatCategory,
   EntityType,
-  getSeverityFromScore,
 } from './types';
 
 // ==========================================

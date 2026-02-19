@@ -90,6 +90,21 @@ function validateInput(input: RegisterBloggerInput): void {
   if (!input.blogUrl?.trim()) {
     throw new HttpsError("invalid-argument", "Blog URL is required");
   }
+
+  // Blog URL format validation: must be a valid http(s) URL
+  const trimmedBlogUrl = input.blogUrl.trim();
+  if (!/^https?:\/\//i.test(trimmedBlogUrl)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Blog URL must start with http:// or https://"
+    );
+  }
+  try {
+    new URL(trimmedBlogUrl);
+  } catch {
+    throw new HttpsError("invalid-argument", "Blog URL format is invalid");
+  }
+
   if (!input.blogName?.trim()) {
     throw new HttpsError("invalid-argument", "Blog name is required");
   }
@@ -112,13 +127,6 @@ function validateInput(input: RegisterBloggerInput): void {
       "invalid-argument",
       "You must acknowledge that the blogger role is definitive and cannot be changed"
     );
-  }
-
-  // Validate blog URL format
-  try {
-    new URL(input.blogUrl);
-  } catch {
-    throw new HttpsError("invalid-argument", "Invalid blog URL format");
   }
 
 }
@@ -259,6 +267,16 @@ export const registerBlogger = onCall(
             recruitedByCode = input.recruiterCode.toUpperCase();
           }
         }
+      }
+
+      // 7a. Self-referral guard
+      if (recruitedBy && recruitedBy === uid) {
+        logger.warn("[registerBlogger] Self-referral detected, ignoring recruitment code", {
+          uid,
+          code: input.recruiterCode,
+        });
+        recruitedBy = null;
+        recruitedByCode = null;
       }
 
       // 7b. Anti-fraud check (disposable emails, same IP, suspicious patterns)

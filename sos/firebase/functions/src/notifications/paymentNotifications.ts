@@ -13,7 +13,7 @@ import * as admin from "firebase-admin";
 import { logger } from "firebase-functions/v2";
 // import { ultraLogger, traceFunction } from "../utils/ultraDebugLogger";
 import { decryptPhoneNumber } from "../utils/encryption";
-import { OUTIL_SYNC_API_KEY, ENCRYPTION_KEY } from "../lib/secrets";
+import { OUTIL_SYNC_API_KEY, ENCRYPTION_KEY, getOutilIngestEndpoint } from "../lib/secrets";
 import { getCountryName } from "../utils/countryUtils";
 
 // Language code to name mapping for SMS notifications
@@ -38,8 +38,7 @@ function formatLanguages(languages: string[] | undefined): string {
     .join(', ');
 }
 
-// Outil ingest endpoint
-const OUTIL_INGEST_ENDPOINT = "https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking";
+// Outil ingest endpoint - loaded from environment/config via centralized secrets.ts
 
 /**
  * Sync call_session to Outil-sos-expat AFTER payment is validated
@@ -181,7 +180,8 @@ export async function syncCallSessionToOutil(
     const timeoutId = setTimeout(() => controller.abort(), OUTIL_TIMEOUT_MS);
 
     try {
-      const response = await fetch(OUTIL_INGEST_ENDPOINT, {
+      const outilEndpoint = getOutilIngestEndpoint();
+      const response = await fetch(outilEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

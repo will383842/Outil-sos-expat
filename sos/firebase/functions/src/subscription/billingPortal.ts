@@ -171,6 +171,8 @@ export const getBillingPortalUrl = onCall<BillingPortalRequest>(
               source: "sos-expat",
               createdFrom: "billing-portal",
             },
+          }, {
+            idempotencyKey: `cust_create_${providerId}_billing_user`.substring(0, 255),
           });
 
           stripeCustomerId = customer.id;
@@ -204,6 +206,8 @@ export const getBillingPortalUrl = onCall<BillingPortalRequest>(
               source: "sos-expat",
               createdFrom: "billing-portal",
             },
+          }, {
+            idempotencyKey: `cust_create_${providerId}_billing_provider`.substring(0, 255),
           });
 
           stripeCustomerId = customer.id;

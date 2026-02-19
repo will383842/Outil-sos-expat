@@ -1,17 +1,10 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
-// Configuration CORS pour autoriser les appels depuis les domaines de production
 const FUNCTION_OPTIONS = {
   region: 'europe-west1' as const,
-  cors: [
-    'https://sos-expat.com',
-    'https://www.sos-expat.com',
-    'https://ia.sos-expat.com',
-    'https://outil-sos-expat.pages.dev',
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ],
+  cors: ALLOWED_ORIGINS,
 };
 
 // Lazy initialization to avoid issues during deployment analysis

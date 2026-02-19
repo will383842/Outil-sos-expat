@@ -426,8 +426,8 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     const submissionData: GroupAdminRegistrationData = {
       ...formData,
       termsAcceptedAt: now.toISOString(),
-      termsVersion: '2026-02-01',
-      termsType: 'cgu_group_admin',
+      termsVersion: '3.0',
+      termsType: 'terms_group_admins',
       termsAcceptanceMeta: {
         userAgent: navigator.userAgent,
         language: navigator.language,

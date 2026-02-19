@@ -152,6 +152,10 @@ export const FLUTTERWAVE_SECRETS = [
 
 export const OUTIL_API_KEY = defineSecret("OUTIL_API_KEY");
 export const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
+export const OUTIL_INGEST_ENDPOINT = defineString("OUTIL_INGEST_ENDPOINT", {
+  default: "https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking",
+  description: "URL of the Outil-sos-expat ingestBooking endpoint",
+});
 
 // ============================================================================
 // BACKLINK ENGINE
@@ -788,6 +792,28 @@ export function getTelegramWebhookSecret(): string {
 
   console.error(`[Secrets] TELEGRAM_WEBHOOK_SECRET NOT FOUND`);
   return "";
+}
+
+// --- OUTIL GETTERS ---
+
+export function getOutilIngestEndpoint(): string {
+  try {
+    const paramValue = OUTIL_INGEST_ENDPOINT.value()?.trim();
+    if (paramValue && paramValue.length > 0) {
+      return paramValue;
+    }
+  } catch {
+    // Param not available, try process.env
+  }
+
+  const envValue = process.env.OUTIL_INGEST_ENDPOINT?.trim();
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] OUTIL_INGEST_ENDPOINT loaded from process.env`);
+    return envValue;
+  }
+
+  // Fallback to default production URL
+  return "https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking";
 }
 
 // ============================================================================

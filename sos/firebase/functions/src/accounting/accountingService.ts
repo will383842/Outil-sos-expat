@@ -29,7 +29,7 @@ import {
   generatePayoutEntry,
   generateSubscriptionEntry,
   validateJournalEntry,
-  calculateVatInfo,
+  // calculateVatInfo - available for future use
 } from './generateJournalEntry';
 
 // =============================================================================
@@ -408,7 +408,7 @@ export class AccountingService {
   /**
    * Creer et sauvegarder une ecriture pour un abonnement
    */
-  async createSubscriptionEntry(subscriptionId: string, paymentId?: string): Promise<JournalEntry | null> {
+  async createSubscriptionEntry(subscriptionId: string, _paymentId?: string): Promise<JournalEntry | null> {
     try {
       logger.info('AccountingService: Creating subscription entry', { subscriptionId });
 

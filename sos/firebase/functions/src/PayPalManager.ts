@@ -40,6 +40,7 @@ import { cancelCommissionsForCallSession as cancelAffiliateCommissions } from ".
 // P0 FIX: Import setProviderBusy to reserve provider immediately after payment authorization
 import { setProviderBusy } from "./callables/providerStatusManager";
 import { PAYMENT_FUNCTIONS_REGION } from "./configs/callRegion";
+import { ALLOWED_ORIGINS } from "./lib/functionConfigs";
 
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import {
@@ -1915,13 +1916,9 @@ export class PayPalManager {
       if (callSessionId) {
         try {
           const cancelReason = `PayPal payment refunded${reason ? `: ${reason}` : ""}`;
-          const [
-            chatterResult,
-            influencerResult,
-            bloggerResult,
-            groupAdminResult,
-            affiliateResult
-          ] = await Promise.all([
+          // Using Promise.allSettled to ensure ALL cancellations run independently
+          // (Promise.all would abort remaining on first failure = money leak)
+          const results = await Promise.allSettled([
             cancelChatterCommissions(callSessionId, cancelReason, "system_refund"),
             cancelInfluencerCommissions(callSessionId, cancelReason, "system_refund"),
             cancelBloggerCommissions(callSessionId, cancelReason, "system_refund"),
@@ -1929,22 +1926,23 @@ export class PayPalManager {
             cancelAffiliateCommissions(callSessionId, cancelReason, "system_refund"),
           ]);
 
-          const totalCancelled =
-            chatterResult.cancelledCount +
-            influencerResult.cancelledCount +
-            bloggerResult.cancelledCount +
-            groupAdminResult.cancelledCount +
-            affiliateResult.cancelledCount;
+          const labels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate'] as const;
+          let totalCancelled = 0;
+          const summary: Record<string, number | string> = { callSessionId };
 
-          console.log("✅ [PAYPAL] All commissions cancelled:", {
-            callSessionId,
-            chatters: chatterResult.cancelledCount,
-            influencers: influencerResult.cancelledCount,
-            bloggers: bloggerResult.cancelledCount,
-            groupAdmins: groupAdminResult.cancelledCount,
-            affiliates: affiliateResult.cancelledCount,
-            total: totalCancelled,
-          });
+          for (let i = 0; i < results.length; i++) {
+            const r = results[i];
+            if (r.status === 'fulfilled') {
+              totalCancelled += r.value.cancelledCount;
+              summary[labels[i]] = r.value.cancelledCount;
+            } else {
+              summary[labels[i]] = `ERROR: ${r.reason?.message || r.reason}`;
+              console.error(`[PAYPAL refundPayment] Failed to cancel ${labels[i]} commissions:`, r.reason);
+            }
+          }
+
+          summary.total = totalCancelled;
+          console.log("✅ [PAYPAL] Commission cancellation results:", summary);
         } catch (commissionError) {
           // Log but don't fail the refund - commission cancellation is best-effort
           console.error("❌ [PAYPAL] Failed to cancel commissions:", commissionError);
@@ -2392,7 +2390,7 @@ export class PayPalManager {
  */
 export const createPayPalOnboardingLink = onCall(
   {
-    region: "europe-west1",
+    region: PAYMENT_FUNCTIONS_REGION,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
   },
   async (request) => {
@@ -2437,7 +2435,7 @@ export const createPayPalOnboardingLink = onCall(
  */
 export const checkPayPalMerchantStatus = onCall(
   {
-    region: "europe-west1",
+    region: PAYMENT_FUNCTIONS_REGION,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
   },
   async (request) => {
@@ -2489,7 +2487,7 @@ async function verifyAuthToken(req: { headers: { authorization?: string } }): Pr
  */
 export const createPayPalOrderHttp = onRequest(
   {
-    region: "europe-west1",
+    region: PAYMENT_FUNCTIONS_REGION,
     // P0 FIX: Keep instance warm to avoid CORS errors on cold start
     minInstances: 1,
     // P0 FIX: Increased maxInstances and memory to prevent rate limiting
@@ -2497,10 +2495,10 @@ export const createPayPalOrderHttp = onRequest(
     memory: "512MiB",
     // P0 FIX: Added ENCRYPTION_KEY for phone number encryption (Twilio compatibility)
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID, ENCRYPTION_KEY],
-    cors: true, // Gère automatiquement les preflight OPTIONS
+    cors: ALLOWED_ORIGINS,
   },
   async (req, res) => {
-    // CORS preflight: OPTIONS requests are handled automatically by cors: true
+    // CORS preflight: OPTIONS requests are handled automatically by cors: ALLOWED_ORIGINS
     // but we need to allow them through before checking for POST
     if (req.method === "OPTIONS") {
       res.status(204).send("");
@@ -2562,6 +2560,68 @@ export const createPayPalOrderHttp = onRequest(
       return;
     }
 
+    // ========== RATE LIMITING (Firestore-based, same as Stripe: 6 req/10min) ==========
+    const db = admin.firestore();
+    try {
+      const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+      const RATE_LIMIT_MAX_REQUESTS = 6;
+      const rateLimitRef = db.collection("payment_rate_limits").doc(auth.uid);
+      const rlResult = await db.runTransaction(async (tx) => {
+        const doc = await tx.get(rateLimitRef);
+        const now = Date.now();
+        const data = doc.data();
+        if (data && data.windowStart && (now - data.windowStart) < RATE_LIMIT_WINDOW_MS) {
+          if (data.count >= RATE_LIMIT_MAX_REQUESTS) {
+            return { allowed: false, resetTime: data.windowStart + RATE_LIMIT_WINDOW_MS };
+          }
+          tx.update(rateLimitRef, { count: admin.firestore.FieldValue.increment(1) });
+          return { allowed: true };
+        }
+        tx.set(rateLimitRef, { windowStart: now, count: 1 });
+        return { allowed: true };
+      });
+
+      if (!rlResult.allowed) {
+        const waitMin = Math.ceil(((rlResult.resetTime ?? Date.now()) - Date.now()) / 60000);
+        console.warn(`[PAYPAL] Rate limit exceeded for ${auth.uid}`);
+        res.status(429).json({ error: `Trop de tentatives. Réessayez dans ${waitMin} min.` });
+        return;
+      }
+    } catch (rlError) {
+      // On failure, allow the request (better than blocking)
+      console.warn("[PAYPAL] Rate limit check failed, allowing request:", rlError);
+    }
+
+    // ========== DUPLICATE DETECTION (payment_locks, 3-min window) ==========
+    const lockKey = `paypal_${auth.uid}_${providerId}_${amount}_${callSessionId}`;
+    const lockRef = db.collection("payment_locks").doc(lockKey);
+    try {
+      const LOCK_WINDOW_MS = 3 * 60 * 1000; // 3 minutes
+      const lockResult = await db.runTransaction(async (tx) => {
+        const lockDoc = await tx.get(lockRef);
+        const now = Date.now();
+        if (lockDoc.exists) {
+          const lockData = lockDoc.data();
+          if (lockData && (now - lockData.createdAt) < LOCK_WINDOW_MS) {
+            return { isDuplicate: true, existingOrderId: lockData.orderId };
+          }
+        }
+        tx.set(lockRef, { createdAt: now, userId: auth.uid, providerId, amount, callSessionId });
+        return { isDuplicate: false };
+      });
+
+      if (lockResult.isDuplicate) {
+        console.warn(`[PAYPAL] Duplicate payment detected for ${auth.uid}, session ${callSessionId}`);
+        res.status(409).json({ error: "Un paiement similaire est déjà en cours de traitement." });
+        return;
+      }
+    } catch (lockError) {
+      // On failure, block for safety (duplicate payments are worse than a retry)
+      console.error("[PAYPAL] Duplicate check failed, blocking:", lockError);
+      res.status(500).json({ error: "Vérification de doublon impossible. Réessayez dans quelques secondes." });
+      return;
+    }
+
     try {
       // ========== STEP 1: Import pricing service ==========
       console.log(`🔷 [PAYPAL_DEBUG] STEP 1: Importing pricing service...`);
@@ -2570,7 +2630,6 @@ export const createPayPalOrderHttp = onRequest(
 
       // ========== STEP 2: Fetch provider data ==========
       console.log(`🔷 [PAYPAL_DEBUG] STEP 2: Fetching provider ${providerId}...`);
-      const db = admin.firestore();
 
       // Try sos_profiles first (where all provider profiles are), then users as fallback
       let providerDoc = await db.collection("sos_profiles").doc(providerId).get();
@@ -2711,17 +2770,17 @@ export const createPayPalOrderHttp = onRequest(
  */
 export const capturePayPalOrderHttp = onRequest(
   {
-    region: "europe-west1",
+    region: PAYMENT_FUNCTIONS_REGION,
     // P0 FIX: Keep instance warm to avoid CORS errors on cold start
     minInstances: 1,
     // P0 FIX: Increased maxInstances and memory to prevent rate limiting
     maxInstances: 15,
     memory: "512MiB",
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (req, res) => {
-    // CORS preflight: OPTIONS requests are handled automatically by cors: true
+    // CORS preflight: OPTIONS requests are handled automatically by cors: ALLOWED_ORIGINS
     // but we need to allow them through before checking for POST
     if (req.method === "OPTIONS") {
       res.status(204).send("");
@@ -2829,7 +2888,7 @@ export const capturePayPalOrderHttp = onRequest(
  */
 export const authorizePayPalOrderHttp = onRequest(
   {
-    region: "europe-west1",
+    region: PAYMENT_FUNCTIONS_REGION,
     // P0 FIX: Keep instance warm to avoid CORS errors on cold start
     minInstances: 1,
     // P0 FIX: Increased maxInstances and memory to prevent rate limiting
@@ -2837,10 +2896,10 @@ export const authorizePayPalOrderHttp = onRequest(
     memory: "512MiB",
     // P0 FIX: Added ENCRYPTION_KEY and OUTIL_SYNC_API_KEY for sendPaymentNotifications
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, TASKS_AUTH_SECRET, ENCRYPTION_KEY, OUTIL_SYNC_API_KEY],
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (req, res) => {
-    // CORS preflight: OPTIONS requests are handled automatically by cors: true
+    // CORS preflight: OPTIONS requests are handled automatically by cors: ALLOWED_ORIGINS
     // but we need to allow them through before checking for POST
     if (req.method === "OPTIONS") {
       res.status(204).send("");
@@ -2995,10 +3054,9 @@ export const authorizePayPalOrderHttp = onRequest(
  */
 export const createPayPalOrder = onCall(
   {
-    region: "europe-west1",
+    region: PAYMENT_FUNCTIONS_REGION,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID],
-    // CORS: true accepte tous les origins - nécessaire car le paramètre avec liste d'origines ne fonctionne pas correctement
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     const requestId = `pp_order_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -3150,10 +3208,9 @@ export const createPayPalOrder = onCall(
  */
 export const capturePayPalOrder = onCall(
   {
-    region: "europe-west1",
+    region: PAYMENT_FUNCTIONS_REGION,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
-    // CORS: true accepte tous les origins - nécessaire car le paramètre avec liste d'origines ne fonctionne pas correctement
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     const captureRequestId = `pp_cap_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -3411,7 +3468,7 @@ async function handlePayoutFailure(
  */
 export const paypalWebhook = onRequest(
   {
-    region: "europe-west1",
+    region: PAYMENT_FUNCTIONS_REGION,
     // P0 CRITICAL FIX: Allow unauthenticated access for PayPal webhooks (Cloud Run requires explicit public access)
     invoker: "public",
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID, META_CAPI_TOKEN],
@@ -3495,6 +3552,7 @@ export const paypalWebhook = onRequest(
         processedAt: admin.firestore.FieldValue.serverTimestamp(),
         status: "processing",
         source: "paypal_webhook",
+        expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
       });
       // ========== END P0 FIX ==========
 
@@ -3744,6 +3802,35 @@ export const paypalWebhook = onRequest(
                     refundAmount: refundAmount,
                     providerRefundAmount: providerRefundAmount,
                   });
+
+                  // Cancel ALL affiliate commissions (5 systems)
+                  // Without this, refunds via PayPal Dashboard leave commissions intact
+                  if (callSessionId) {
+                    try {
+                      const cancelReason = `PayPal Dashboard refund: capture ${refundCaptureId}`;
+                      const commissionResults = await Promise.allSettled([
+                        cancelChatterCommissions(callSessionId, cancelReason, "system_refund"),
+                        cancelInfluencerCommissions(callSessionId, cancelReason, "system_refund"),
+                        cancelBloggerCommissions(callSessionId, cancelReason, "system_refund"),
+                        cancelGroupAdminCommissions(callSessionId, cancelReason),
+                        cancelAffiliateCommissions(callSessionId, cancelReason, "system_refund"),
+                      ]);
+
+                      const commLabels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate'] as const;
+                      let commTotalCancelled = 0;
+                      for (let i = 0; i < commissionResults.length; i++) {
+                        const r = commissionResults[i];
+                        if (r.status === 'fulfilled') {
+                          commTotalCancelled += r.value.cancelledCount;
+                        } else {
+                          console.error(`[PAYPAL webhook] Failed to cancel ${commLabels[i]} commissions:`, r.reason);
+                        }
+                      }
+                      console.log(`✅ [PAYPAL webhook] Cancelled ${commTotalCancelled} commissions for session ${callSessionId}`);
+                    } catch (commError) {
+                      console.error("❌ [PAYPAL webhook] Failed to cancel commissions:", commError);
+                    }
+                  }
                 } else {
                   console.warn("⚠️ [PAYPAL] Refund: No providerId found in payment document");
                 }
@@ -4237,7 +4324,7 @@ export const paypalWebhook = onRequest(
  */
 export const createPayPalPayout = onCall(
   {
-    region: "europe-west1",
+    region: PAYMENT_FUNCTIONS_REGION,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (request) => {
@@ -4296,7 +4383,7 @@ export const createPayPalPayout = onCall(
  */
 export const checkPayPalPayoutStatus = onCall(
   {
-    region: "europe-west1",
+    region: PAYMENT_FUNCTIONS_REGION,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (request) => {
@@ -4328,7 +4415,7 @@ export const checkPayPalPayoutStatus = onCall(
 export const getRecommendedPaymentGateway = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     const { countryCode } = request.data || {};

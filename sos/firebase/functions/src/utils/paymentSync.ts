@@ -61,7 +61,8 @@ export async function syncPaymentStatus(
   db: Firestore,
   paymentId: string,
   callSessionId: string | null,
-  updates: PaymentStatusUpdate
+  updates: PaymentStatusUpdate,
+  extraSessionUpdates?: Record<string, unknown>
 ): Promise<void> {
   // Préfixer les clés pour call_sessions.payment.*
   const callSessionUpdates: Record<string, unknown> = {};
@@ -71,6 +72,11 @@ export async function syncPaymentStatus(
 
   // Ajouter le FK si pas déjà présent
   callSessionUpdates["paymentId"] = paymentId;
+
+  // Merge extra root-level updates (e.g. isPaid, metadata.updatedAt)
+  if (extraSessionUpdates) {
+    Object.assign(callSessionUpdates, extraSessionUpdates);
+  }
 
   await db.runTransaction(async (transaction) => {
     // P0 FIX: ALL reads MUST happen BEFORE any writes in Firestore transactions

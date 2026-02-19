@@ -418,6 +418,7 @@ export const paymentWebhookFlutterwave = onRequest(
             transferId: webhookData.data?.id,
             reference: webhookData.data?.reference,
             source: 'flutterwave',
+            expiresAt: Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
           });
         });
       } catch (txError) {

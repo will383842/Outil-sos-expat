@@ -87,6 +87,7 @@ import {
   TASKS_AUTH_SECRET,
   OUTIL_API_KEY,
   OUTIL_SYNC_API_KEY,
+  getOutilIngestEndpoint,
 } from "./lib/secrets";
 
 // P0 FIX 2026-02-04: Import call region from centralized config - dedicated region for call functions
@@ -137,8 +138,7 @@ export { createStripeAccount } from "./createStripeAccount";
 export { getStripeAccountSession } from "./getAccountSession";
 export { checkStripeAccountStatus } from "./checkStripeAccountStatus";
 
-// backup - Manual backup (admin-triggered)
-export { createManualBackup } from "./manualBackup";
+// REMOVED: createManualBackup - file manualBackup.ts deleted
 // REMOVED: scheduledBackup - replaced by morningBackup (multi-frequency system)
 
 // backup - Multi-frequency (daily for better RPO)
@@ -461,8 +461,6 @@ export {
 // ACCOUNTING ENGINE - Automatic Journal Entry Generation
 // SOS-Expat OU (Estonia) - EUR accounting
 // ============================================================================
-// TODO: Fix TypeScript v2 migration errors in accounting module
-/*
 export {
   // Triggers - Automatic journal entry generation
   onPaymentCompleted,
@@ -478,20 +476,7 @@ export {
   getAccountingStats,
   generateOssVatDeclaration,
   getAccountBalances,
-
-  // Types (re-exported for client use)
-  type JournalEntry,
-  type JournalLine,
-  type JournalEntryStatus,
-  type SourceDocumentType,
-  type PaymentData,
-  type RefundData,
-  type PayoutData,
-  type SubscriptionData,
-  type AccountBalance,
-  type OssVatDeclaration,
 } from "./accounting";
-*/
 
 // Alias pour usage local dans GLOBAL_SECRETS
 const PAYPAL_CLIENT_ID = _PAYPAL_CLIENT_ID;
@@ -1031,8 +1016,6 @@ export {
 } from "./feedback";
 
 // Tax Filings Module - Declaration fiscales automatiques
-// TODO: Fix TypeScript v2 migration errors in taxFilings module
-/*
 export {
   generateTaxFiling,
   generateAllTaxFilings,
@@ -1044,16 +1027,13 @@ export {
   deleteFilingDraft,
   updateFilingAmounts,
 } from "./taxFilings";
-*/
 
 // ========================================
-// 🔒 SECURITY ALERTS MODULE - TEMPORARILY DISABLED
+// 🔒 SECURITY ALERTS MODULE
 // ========================================
-// TODO: Fix TypeScript errors in securityAlerts module
 // Détection de menaces, scoring, notifications multilingues
 // IMPORTANT: Détection basée sur les COMPORTEMENTS, pas la géographie
 // Aucun pays n'est blacklisté - tous les utilisateurs peuvent utiliser la plateforme
-/*
 export {
   // Cloud Functions Triggers
   onSecurityAlertCreated,
@@ -1083,7 +1063,6 @@ export {
 
 // Threat Score Service
 export { threatScoreService } from "./securityAlerts/ThreatScoreService";
-*/
 
 // AI Chat - DEPRECATED: Now handled directly by Outil-sos-expat
 // The AI chat functionality is in Outil-sos-expat, not SOS
@@ -1396,7 +1375,6 @@ export const getStripe = traceFunction(
 );
 
 // ====== HELPER: SYNC CALL SESSION TO OUTIL AFTER PAYMENT ======
-const OUTIL_INGEST_ENDPOINT = "https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking";
 
 /**
  * Sync call_session to Outil-sos-expat AFTER payment is validated
@@ -1537,7 +1515,8 @@ async function syncCallSessionToOutil(
     const timeoutId = setTimeout(() => controller.abort(), OUTIL_TIMEOUT_MS);
 
     try {
-      const response = await fetch(OUTIL_INGEST_ENDPOINT, {
+      const outilEndpoint = getOutilIngestEndpoint();
+      const response = await fetch(outilEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -2167,6 +2146,7 @@ export const stripeWebhook = onRequest(
           processedAt: admin.firestore.FieldValue.serverTimestamp(),
           status: "processing",
           objectId,
+          expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
         });
 
         // ✅ STEP 6: Event processing with comprehensive handling
@@ -2372,6 +2352,47 @@ export const stripeWebhook = onRequest(
                         read: false,
                         createdAt: admin.firestore.FieldValue.serverTimestamp(),
                       });
+                    }
+                  }
+                }
+
+                // Cancel ALL affiliate commissions for this refund (5 systems)
+                // Without this, refunds via Stripe Dashboard leave commissions intact
+                if (charge.payment_intent) {
+                  const refundPaymentDoc = await database.collection("payments")
+                    .doc(charge.payment_intent as string)
+                    .get();
+                  const sessionId = refundPaymentDoc.data()?.callSessionId;
+                  if (sessionId) {
+                    try {
+                      const { cancelCommissionsForCallSession: cancelChatter } = await import("./chatter/services/chatterCommissionService");
+                      const { cancelCommissionsForCallSession: cancelInfluencer } = await import("./influencer/services/influencerCommissionService");
+                      const { cancelBloggerCommissionsForCallSession: cancelBlogger } = await import("./blogger/services/bloggerCommissionService");
+                      const { cancelCommissionsForCallSession: cancelGroupAdmin } = await import("./groupAdmin/services/groupAdminCommissionService");
+                      const { cancelCommissionsForCallSession: cancelAffiliate } = await import("./affiliate/services/commissionService");
+
+                      const cancelReason = `Stripe Dashboard refund: ${charge.id}`;
+                      const results = await Promise.allSettled([
+                        cancelChatter(sessionId, cancelReason, "system_refund"),
+                        cancelInfluencer(sessionId, cancelReason, "system_refund"),
+                        cancelBlogger(sessionId, cancelReason, "system_refund"),
+                        cancelGroupAdmin(sessionId, cancelReason),
+                        cancelAffiliate(sessionId, cancelReason, "system_refund"),
+                      ]);
+
+                      const labels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate'] as const;
+                      let totalCancelled = 0;
+                      for (let i = 0; i < results.length; i++) {
+                        const r = results[i];
+                        if (r.status === 'fulfilled') {
+                          totalCancelled += r.value.cancelledCount;
+                        } else {
+                          console.error(`[charge.refunded] Failed to cancel ${labels[i]} commissions:`, r.reason);
+                        }
+                      }
+                      console.log(`✅ [charge.refunded] Cancelled ${totalCancelled} commissions for session ${sessionId}`);
+                    } catch (commissionError) {
+                      console.error("❌ [charge.refunded] Failed to cancel commissions:", commissionError);
                     }
                   }
                 }
@@ -2713,16 +2734,17 @@ export const stripeWebhook = onRequest(
               });
               break;
 
-            case "account.external_account.updated":
+            case "account.external_account.updated": {
               console.log(
                 "📝 [ACCOUNT.EXTERNAL_ACCOUNT.UPDATED] Bank account updated"
               );
-
+              const updatedExternalAccount = event.data.object as any;
               console.log("Updated external account:", {
-                accountId: externalAccount.account,
-                last4: externalAccount.last4,
+                accountId: updatedExternalAccount.account,
+                last4: updatedExternalAccount.last4,
               });
               break;
+            }
 
             // ====== SUBSCRIPTION EVENTS (IA Tool Subscriptions) ======
             // Option A: Single webhook - all subscription events handled here

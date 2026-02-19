@@ -63,6 +63,7 @@ async function verifyAdmin(request: CallableRequest): Promise<string> {
 interface ProcessWithdrawalInput {
   withdrawalId: string;
   note?: string;
+  approvalNote?: string;
 }
 
 /**
@@ -129,12 +130,13 @@ export const adminProcessWithdrawal = onCall(
       throw new HttpsError('invalid-argument', 'Withdrawal ID is required');
     }
 
-    const { withdrawalId, note } = input;
+    const { withdrawalId, note, approvalNote } = input;
 
     try {
       logger.info('[adminProcessWithdrawal] Processing withdrawal', {
         adminId,
         withdrawalId,
+        approvalNote,
       });
 
       // P0 FIX: TOCTOU - Atomic status check + update in transaction to prevent double payouts
@@ -172,6 +174,8 @@ export const adminProcessWithdrawal = onCall(
           status: 'processing',
           processedAt: now,
           processedBy: adminId,
+          approvedBy: adminId,
+          approvalNote: approvalNote || note || null,
           statusHistory: [...(data.statusHistory || []), processingHistory],
         });
       });
@@ -298,6 +302,8 @@ export const adminProcessWithdrawal = onCall(
           exchangeRate: result.exchangeRate,
           message: result.message,
           note,
+          approvedBy: adminId,
+          approvalNote: approvalNote || note || null,
         },
       });
 

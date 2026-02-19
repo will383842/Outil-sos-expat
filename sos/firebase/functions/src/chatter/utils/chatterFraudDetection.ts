@@ -267,6 +267,7 @@ export async function checkCommissionFraud(
 
 /**
  * Record a fraud alert for admin review
+ * Writes to both the chatter-specific and centralized fraud_alerts collections
  */
 async function recordFraudAlert(
   chatterId: string,
@@ -278,6 +279,7 @@ async function recordFraudAlert(
   const db = getFirestore();
 
   try {
+    // Write to chatter-specific collection
     await db.collection("chatter_fraud_alerts").add({
       chatterId,
       chatterEmail,
@@ -287,6 +289,31 @@ async function recordFraudAlert(
       status: "pending",
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+    });
+
+    // Also write to centralized fraud_alerts collection for cross-system visibility
+    const centralAlertRef = db.collection("fraud_alerts").doc();
+    await centralAlertRef.set({
+      id: centralAlertRef.id,
+      userId: chatterId,
+      email: chatterEmail,
+      source: "chatter_commission",
+      flags,
+      severity,
+      details,
+      status: "pending",
+      resolvedBy: null,
+      resolvedAt: null,
+      resolution: null,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
+
+    logger.warn("[recordFraudAlert] Fraud alert recorded", {
+      centralAlertId: centralAlertRef.id,
+      chatterId,
+      flags,
+      severity,
     });
   } catch (error) {
     logger.error("[recordFraudAlert] Failed to record alert", {

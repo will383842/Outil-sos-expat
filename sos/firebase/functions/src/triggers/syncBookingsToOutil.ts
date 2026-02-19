@@ -22,10 +22,9 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions";
 import * as admin from "firebase-admin";
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
-import { OUTIL_SYNC_API_KEY } from "../lib/secrets";
+import { OUTIL_SYNC_API_KEY, getOutilIngestEndpoint } from "../lib/secrets";
 
-// URL de l'endpoint ingestBooking dans Outil-sos-expat
-const OUTIL_INGEST_ENDPOINT = "https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking";
+// URL loaded from environment/config via centralized secrets.ts
 
 interface BookingRequestData {
   // Client info
@@ -165,7 +164,8 @@ async function syncToOutil(
       clientName: payload.clientName,
     });
 
-    const response = await fetch(OUTIL_INGEST_ENDPOINT, {
+    const outilEndpoint = getOutilIngestEndpoint();
+    const response = await fetch(outilEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

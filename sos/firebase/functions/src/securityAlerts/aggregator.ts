@@ -127,9 +127,10 @@ export function generateAggregationKey(params: AggregationKeyParams): string {
 
   for (const field of config.groupByFields) {
     let value: string | undefined;
+    const fieldStr = String(field);
 
-    if (field.startsWith('source.')) {
-      const sourceField = field.replace('source.', '') as keyof SecurityAlert['source'];
+    if (fieldStr.startsWith('source.')) {
+      const sourceField = fieldStr.replace('source.', '') as keyof SecurityAlert['source'];
       value = source?.[sourceField] as string | undefined;
     } else {
       value = context[field as keyof SecurityAlertContext] as string | undefined;

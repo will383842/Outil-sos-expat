@@ -4,12 +4,20 @@
 
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
+import { useLocaleNavigate } from '@/multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
+import { useApp } from '@/contexts/AppContext';
 import { useInfluencer } from '@/hooks/useInfluencer';
 import Layout from '@/components/layout/Layout';
-import { AlertTriangle, Mail } from 'lucide-react';
+import { AlertTriangle, MessageCircle, ArrowLeft } from 'lucide-react';
 
 const InfluencerSuspended: React.FC = () => {
+  const navigate = useLocaleNavigate();
+  const { language } = useApp();
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
   const { dashboardData: dashboard } = useInfluencer();
+
+  const contactRoute = `/${getTranslatedRouteSlug('contact' as RouteKey, langCode)}`;
 
   return (
     <Layout>
@@ -26,7 +34,7 @@ const InfluencerSuspended: React.FC = () => {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             <FormattedMessage
               id="influencer.suspended.message"
-              defaultMessage="Votre compte influenceur a été suspendu. Si vous pensez qu'il s'agit d'une erreur, veuillez contacter notre équipe support."
+              defaultMessage="Votre compte influenceur a été suspendu. Si vous pensez qu'il s'agit d'une erreur, veuillez nous contacter via le formulaire de contact."
             />
           </p>
 
@@ -41,13 +49,23 @@ const InfluencerSuspended: React.FC = () => {
             </div>
           )}
 
-          <a
-            href="mailto:support@sos-expat.com"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-colors"
-          >
-            <Mail className="w-5 h-5" />
-            <FormattedMessage id="influencer.suspended.contact" defaultMessage="Contacter le support" />
-          </a>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => navigate(contactRoute)}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <FormattedMessage id="influencer.suspended.contact" defaultMessage="Nous contacter" />
+            </button>
+
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <FormattedMessage id="influencer.suspended.backHome" defaultMessage="Retour à l'accueil" />
+            </button>
+          </div>
         </div>
       </div>
     </Layout>

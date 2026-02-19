@@ -23,7 +23,6 @@ import {
 } from './rateLimiter';
 import {
   createOrAggregateAlert,
-  generateAggregationKey,
   shouldNotifyForAggregatedAlert,
 } from './aggregator';
 

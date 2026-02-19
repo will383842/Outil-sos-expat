@@ -3,11 +3,13 @@
  */
 
 import React from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
+import { useApp } from '@/contexts/AppContext';
 import { useBlogger } from '@/hooks/useBlogger';
 import Layout from '@/components/layout/Layout';
-import { AlertTriangle, Mail, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, MessageCircle, ArrowLeft } from 'lucide-react';
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
@@ -18,9 +20,11 @@ const UI = {
 } as const;
 
 const BloggerSuspended: React.FC = () => {
-  const intl = useIntl();
   const navigate = useLocaleNavigate();
+  const { language } = useApp();
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
   const { blogger } = useBlogger();
+  const contactRoute = `/${getTranslatedRouteSlug('contact' as RouteKey, langCode)}`;
 
   const isSuspended = blogger?.status === 'suspended';
   const isBlocked = blogger?.status === 'blocked';
@@ -82,29 +86,22 @@ const BloggerSuspended: React.FC = () => {
           )}
 
           <div className="space-y-3">
-            <a
-              href="mailto:support@sos-expat.com?subject=Compte%20blogueur%20suspendu"
+            <button
+              onClick={() => navigate(contactRoute)}
               className={`${UI.button.primary} px-6 py-3 w-full inline-flex items-center justify-center gap-2`}
             >
-              <Mail className="w-5 h-5" />
-              <FormattedMessage id="blogger.suspended.contactSupport" defaultMessage="Contacter le support" />
-            </a>
+              <MessageCircle className="w-5 h-5" />
+              <FormattedMessage id="blogger.suspended.contactSupport" defaultMessage="Nous contacter" />
+            </button>
 
             <button
-              onClick={() => navigate('/blogger/tableau-de-bord')}
+              onClick={() => navigate('/')}
               className={`${UI.button.secondary} px-6 py-3 w-full inline-flex items-center justify-center gap-2`}
             >
               <ArrowLeft className="w-5 h-5" />
-              <FormattedMessage id="blogger.suspended.backToDashboard" defaultMessage="Retour au tableau de bord" />
+              <FormattedMessage id="blogger.suspended.backHome" defaultMessage="Retour à l'accueil" />
             </button>
           </div>
-
-          <p className="text-xs mt-6">
-            <FormattedMessage
-              id="blogger.suspended.supportEmail"
-              defaultMessage="Email: support@sos-expat.com"
-            />
-          </p>
         </div>
       </div>
     </Layout>

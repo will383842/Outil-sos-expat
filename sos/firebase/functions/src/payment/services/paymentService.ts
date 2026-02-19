@@ -701,7 +701,7 @@ export class PaymentService {
    * @param withdrawalId - The withdrawal ID
    * @param adminId - The admin's ID
    */
-  async approveWithdrawal(withdrawalId: string, adminId: string): Promise<void> {
+  async approveWithdrawal(withdrawalId: string, adminId: string, approvalNote?: string): Promise<void> {
     const withdrawal = await this.getWithdrawal(withdrawalId);
 
     if (!withdrawal) {
@@ -725,13 +725,14 @@ export class PaymentService {
       'approved',
       adminId,
       'admin',
-      'Approved by admin',
-      { approvedAt: now, processedBy: adminId }
+      approvalNote || 'Approved by admin',
+      { approvedAt: now, processedBy: adminId, approvedBy: adminId, approvalNote: approvalNote || null }
     );
 
     logger.info('[PaymentService.approveWithdrawal] Withdrawal approved', {
       withdrawalId,
       adminId,
+      approvalNote,
     });
   }
 
@@ -819,7 +820,8 @@ export class PaymentService {
    */
   async processWithdrawal(
     withdrawalId: string,
-    adminId?: string
+    adminId?: string,
+    approvalNote?: string
   ): Promise<ProviderTransactionResult> {
     // P0 FIX: TOCTOU - Atomic status check + update in transaction to prevent double payouts
     const db = this.db;
@@ -852,6 +854,8 @@ export class PaymentService {
         status: 'processing',
         statusHistory: FieldValue.arrayUnion(historyEntry),
         processedAt: now,
+        ...(adminId ? { approvedBy: adminId } : {}),
+        ...(approvalNote ? { approvalNote } : {}),
       });
     });
 

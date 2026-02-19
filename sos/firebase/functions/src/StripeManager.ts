@@ -1817,45 +1817,36 @@ export class StripeManager {
       console.log('[refundPayment] Refund record saved to refunds collection:', refund.id);
 
       // ===== P0 FIX 2026-02-12: Cancel ALL affiliate commissions on refund (5 systems) =====
-      // Prevent all affiliates from keeping commissions when payment is refunded
+      // Using Promise.allSettled to ensure ALL cancellations run independently
+      // (Promise.all would abort remaining on first failure = money leak)
       const callSessionId = sessionId || paymentData?.callSessionId;
       if (callSessionId) {
-        try {
-          const cancelReason = `Payment refunded: ${reason}`;
-          const [
-            chatterResult,
-            influencerResult,
-            bloggerResult,
-            groupAdminResult,
-            affiliateResult
-          ] = await Promise.all([
-            cancelChatterCommissions(callSessionId, cancelReason, 'system_refund'),
-            cancelInfluencerCommissions(callSessionId, cancelReason, 'system_refund'),
-            cancelBloggerCommissions(callSessionId, cancelReason, 'system_refund'),
-            cancelGroupAdminCommissions(callSessionId, cancelReason),
-            cancelAffiliateCommissions(callSessionId, cancelReason, 'system_refund'),
-          ]);
+        const cancelReason = `Payment refunded: ${reason}`;
+        const results = await Promise.allSettled([
+          cancelChatterCommissions(callSessionId, cancelReason, 'system_refund'),
+          cancelInfluencerCommissions(callSessionId, cancelReason, 'system_refund'),
+          cancelBloggerCommissions(callSessionId, cancelReason, 'system_refund'),
+          cancelGroupAdminCommissions(callSessionId, cancelReason),
+          cancelAffiliateCommissions(callSessionId, cancelReason, 'system_refund'),
+        ]);
 
-          const totalCancelled =
-            chatterResult.cancelledCount +
-            influencerResult.cancelledCount +
-            bloggerResult.cancelledCount +
-            groupAdminResult.cancelledCount +
-            affiliateResult.cancelledCount;
+        const labels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate'] as const;
+        let totalCancelled = 0;
+        const summary: Record<string, number | string> = { callSessionId };
 
-          console.log('[refundPayment] All commissions cancelled:', {
-            callSessionId,
-            chatters: chatterResult.cancelledCount,
-            influencers: influencerResult.cancelledCount,
-            bloggers: bloggerResult.cancelledCount,
-            groupAdmins: groupAdminResult.cancelledCount,
-            affiliates: affiliateResult.cancelledCount,
-            total: totalCancelled,
-          });
-        } catch (commissionError) {
-          // Log but don't fail the refund - commission cancellation is best-effort
-          console.error('[refundPayment] Failed to cancel commissions:', commissionError);
+        for (let i = 0; i < results.length; i++) {
+          const r = results[i];
+          if (r.status === 'fulfilled') {
+            totalCancelled += r.value.cancelledCount;
+            summary[labels[i]] = r.value.cancelledCount;
+          } else {
+            summary[labels[i]] = `ERROR: ${r.reason?.message || r.reason}`;
+            console.error(`[refundPayment] Failed to cancel ${labels[i]} commissions:`, r.reason);
+          }
         }
+
+        summary.total = totalCancelled;
+        console.log('[refundPayment] Commission cancellation results:', summary);
       }
 
       // ===== P0 FIX: Notification de remboursement au client =====

@@ -313,6 +313,12 @@ export interface WithdrawalRequest {
   /** Admin ID if manually processed/approved */
   processedBy?: string;
 
+  /** Admin UID who approved the withdrawal */
+  approvedBy?: string;
+
+  /** Optional note from the admin who approved the withdrawal */
+  approvalNote?: string;
+
   // -------------------------
   // Error Handling
   // -------------------------

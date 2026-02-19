@@ -420,8 +420,36 @@ async function updateAffiliateRiskScore(
 
   await db.collection("affiliate_fraud_alerts").add(alert);
 
+  // Also write to centralized fraud_alerts collection for cross-system visibility
+  const centralAlertRef = db.collection("fraud_alerts").doc();
+  await centralAlertRef.set({
+    id: centralAlertRef.id,
+    userId: affiliateId,
+    email: userData.email,
+    source: "affiliate_referral",
+    flags: issues.map((i) => i.type),
+    severity: alert.severity,
+    details: {
+      riskScore,
+      affiliateCode: userData.affiliateCode,
+      issues: issues.map((i) => ({
+        type: i.type,
+        severity: i.severity,
+        description: i.description,
+      })),
+      alertCount: newAlertCount,
+    },
+    status: "pending",
+    resolvedBy: null,
+    resolvedAt: null,
+    resolution: null,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  });
+
   logger.warn("[FraudDetection] Created fraud alert", {
     affiliateId,
+    centralAlertId: centralAlertRef.id,
     riskScore,
     alertCount: newAlertCount,
   });

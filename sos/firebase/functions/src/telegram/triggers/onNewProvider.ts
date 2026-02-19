@@ -33,6 +33,7 @@ const PROVIDER_ROLES: string[] = [
   "chatter",
   "influencer",
   "blogger",
+  "groupadmin",
 ];
 
 /**

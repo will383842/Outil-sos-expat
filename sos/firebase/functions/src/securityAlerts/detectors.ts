@@ -6,13 +6,11 @@
  * Seuls les comportements suspects déclenchent des alertes.
  */
 
-import { Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { Timestamp } from 'firebase-admin/firestore';
 import { db } from '../firebaseAdmin';
 import {
-  SecurityAlertType,
   UserGeoProfile,
   PaymentAnomaly,
-  PaymentAnomalyType,
   InjectionAttempt,
   GeoLocation,
 } from './types';
@@ -102,14 +100,10 @@ export async function detectBruteForce(attempt: LoginAttemptInfo): Promise<boole
   const lastHourAttempts = recentAttempts.length;
 
   let shouldAlert = false;
-  let severity: 'warning' | 'critical' = 'warning';
-
   if (lastMinuteAttempts >= DETECTION_THRESHOLDS.MAX_LOGIN_ATTEMPTS_PER_MINUTE) {
     shouldAlert = true;
-    severity = 'critical';
   } else if (lastHourAttempts >= DETECTION_THRESHOLDS.MAX_LOGIN_ATTEMPTS_PER_HOUR) {
     shouldAlert = true;
-    severity = 'warning';
   }
 
   if (shouldAlert) {

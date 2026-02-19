@@ -7,10 +7,11 @@
  * - XML: Official declaration format (where required)
  */
 
-import * as functions from 'firebase-functions';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import { TaxFiling, FILING_TYPE_CONFIGS, EU_MEMBER_STATES } from './types';
+import { TaxFiling, FILING_TYPE_CONFIGS } from './types';
 
 const db = getFirestore();
 const storage = getStorage();
@@ -381,33 +382,33 @@ async function uploadFile(
 /**
  * Export Tax Filing to Format
  */
-export const exportFilingToFormat = functions
-  .region('europe-west1')
-  .runWith({
+export const exportFilingToFormat = onCall(
+  {
+    region: 'europe-west1',
     timeoutSeconds: 120,
-    memory: '512MB',
-  })
-  .https.onCall(async (data: ExportRequest, context): Promise<ExportResponse> => {
+    memory: '512MiB',
+  },
+  async (request): Promise<ExportResponse> => {
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
     // Check admin claim
-    const customClaims = context.auth.token;
+    const customClaims = request.auth.token;
     if (!customClaims.admin && !customClaims.superAdmin) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
-    const { filingId, format } = data;
+    const { filingId, format } = request.data as ExportRequest;
 
     // Validate inputs
     if (!filingId) {
-      throw new functions.https.HttpsError('invalid-argument', 'Filing ID is required');
+      throw new HttpsError('invalid-argument', 'Filing ID is required');
     }
 
     if (!format || !['pdf', 'csv', 'xml'].includes(format)) {
-      throw new functions.https.HttpsError('invalid-argument', 'Invalid format. Must be pdf, csv, or xml');
+      throw new HttpsError('invalid-argument', 'Invalid format. Must be pdf, csv, or xml');
     }
 
     try {
@@ -415,7 +416,7 @@ export const exportFilingToFormat = functions
       const filingDoc = await db.collection('tax_filings').doc(filingId).get();
 
       if (!filingDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Filing not found');
+        throw new HttpsError('not-found', 'Filing not found');
       }
 
       const filing = { id: filingDoc.id, ...filingDoc.data() } as TaxFiling & { id: string };
@@ -434,7 +435,7 @@ export const exportFilingToFormat = functions
           content = generatePDFHTML(filing);
           break;
         default:
-          throw new functions.https.HttpsError('invalid-argument', 'Unsupported format');
+          throw new HttpsError('invalid-argument', 'Unsupported format');
       }
 
       // Upload to storage
@@ -446,7 +447,7 @@ export const exportFilingToFormat = functions
         updatedAt: Timestamp.now(),
       });
 
-      functions.logger.info(`Tax filing exported successfully`, {
+      logger.info(`Tax filing exported successfully`, {
         filingId,
         format,
         url,
@@ -458,41 +459,41 @@ export const exportFilingToFormat = functions
       };
 
     } catch (error) {
-      functions.logger.error('Error exporting tax filing:', error);
+      logger.error('Error exporting tax filing:', error);
 
-      if (error instanceof functions.https.HttpsError) {
+      if (error instanceof HttpsError) {
         throw error;
       }
 
-      throw new functions.https.HttpsError('internal', `Failed to export filing: ${error}`);
+      throw new HttpsError('internal', `Failed to export filing: ${error}`);
     }
   });
 
 /**
  * Export all formats for a filing
  */
-export const exportFilingAllFormats = functions
-  .region('europe-west1')
-  .runWith({
+export const exportFilingAllFormats = onCall(
+  {
+    region: 'europe-west1',
     timeoutSeconds: 180,
-    memory: '512MB',
-  })
-  .https.onCall(async (data: { filingId: string }, context) => {
+    memory: '512MiB',
+  },
+  async (request) => {
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
     // Check admin claim
-    const customClaims = context.auth.token;
+    const customClaims = request.auth.token;
     if (!customClaims.admin && !customClaims.superAdmin) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
-    const { filingId } = data;
+    const { filingId } = request.data as { filingId: string };
 
     if (!filingId) {
-      throw new functions.https.HttpsError('invalid-argument', 'Filing ID is required');
+      throw new HttpsError('invalid-argument', 'Filing ID is required');
     }
 
     try {
@@ -500,7 +501,7 @@ export const exportFilingAllFormats = functions
       const filingDoc = await db.collection('tax_filings').doc(filingId).get();
 
       if (!filingDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Filing not found');
+        throw new HttpsError('not-found', 'Filing not found');
       }
 
       const filing = { id: filingDoc.id, ...filingDoc.data() } as TaxFiling & { id: string };
@@ -515,7 +516,7 @@ export const exportFilingAllFormats = functions
         const csvContent = generateCSV(filing);
         results.csv = await uploadFile(csvContent, filingId, 'csv');
       } catch (e) {
-        functions.logger.warn('Failed to generate CSV:', e);
+        logger.warn('Failed to generate CSV:', e);
       }
 
       // Generate PDF (HTML)
@@ -523,7 +524,7 @@ export const exportFilingAllFormats = functions
         const pdfContent = generatePDFHTML(filing);
         results.pdf = await uploadFile(pdfContent, filingId, 'pdf');
       } catch (e) {
-        functions.logger.warn('Failed to generate PDF:', e);
+        logger.warn('Failed to generate PDF:', e);
       }
 
       // Generate XML (only for supported types)
@@ -532,7 +533,7 @@ export const exportFilingAllFormats = functions
           const xmlContent = generateXML(filing);
           results.xml = await uploadFile(xmlContent, filingId, 'xml');
         } catch (e) {
-          functions.logger.warn('Failed to generate XML:', e);
+          logger.warn('Failed to generate XML:', e);
         }
       }
 
@@ -552,12 +553,12 @@ export const exportFilingAllFormats = functions
       };
 
     } catch (error) {
-      functions.logger.error('Error exporting all formats:', error);
+      logger.error('Error exporting all formats:', error);
 
-      if (error instanceof functions.https.HttpsError) {
+      if (error instanceof HttpsError) {
         throw error;
       }
 
-      throw new functions.https.HttpsError('internal', `Failed to export filing: ${error}`);
+      throw new HttpsError('internal', `Failed to export filing: ${error}`);
     }
   });

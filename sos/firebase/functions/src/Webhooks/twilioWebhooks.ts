@@ -156,6 +156,7 @@ export const twilioCallWebhook = onRequest(
             callStatus: body.CallStatus,
             processedAt: admin.firestore.FieldValue.serverTimestamp(),
             source: "twilio_call_webhook",
+            expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
           });
         });
       } catch (txError) {

@@ -21,6 +21,7 @@ import {
   STRIPE_SECRET_KEY_LIVE,
   TASKS_AUTH_SECRET,
   OUTIL_SYNC_API_KEY,
+  getOutilIngestEndpoint,
 } from './lib/secrets';
 // P3 FIX: Import country utils for converting ISO codes to full names
 import { getCountryName } from './utils/countryUtils';
@@ -737,7 +738,7 @@ export const createAndScheduleCallHTTPS = onCall(
         // P0 FIX: Trim secret value to remove trailing CRLF
         const outilApiKey = OUTIL_SYNC_API_KEY.value().trim();
         if (outilApiKey) {
-          const OUTIL_INGEST_ENDPOINT = 'https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking';
+          const OUTIL_INGEST_ENDPOINT = getOutilIngestEndpoint();
 
           // Fetch provider AI access info from users/{providerId}
           let providerForcedAIAccess = false;

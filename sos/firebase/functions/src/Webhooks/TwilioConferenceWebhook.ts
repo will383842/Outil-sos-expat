@@ -112,6 +112,7 @@ export const twilioConferenceWebhook = onRequest(
             ...(body.CallSid && { callSid: body.CallSid }), // Only include if defined
             processedAt: admin.firestore.FieldValue.serverTimestamp(),
             source: "twilio_conference_webhook",
+            expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
           });
         });
       } catch (txError) {
@@ -513,6 +514,24 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
         effectiveBillingDuration = twilioDuration;
         console.log(`🏁 [${endId}]   ✅ FALLBACK: Using twilioDuration=${twilioDuration}s as effectiveBillingDuration`);
         console.log(`🏁 [${endId}]   Reason: Both participants were connected but connectedAt timestamps missing`);
+
+        // P0 ALERT: Log billing fallback for admin investigation
+        try {
+          await admin.firestore().collection("billing_fallback_alerts").add({
+            sessionId,
+            conferenceSid: body.ConferenceSid,
+            billingDuration: 0,
+            twilioDuration,
+            effectiveBillingDuration: twilioDuration,
+            clientStatus,
+            providerStatus,
+            reason: "connectedAt timestamps missing - used twilioDuration fallback",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            reviewed: false,
+          });
+        } catch (alertErr) {
+          console.error(`🏁 [${endId}] Failed to create billing fallback alert:`, alertErr);
+        }
       } else {
         console.log(`🏁 [${endId}]   ❌ NOT using fallback: Not all participants were connected`);
         console.log(`🏁 [${endId}]   Keeping billingDuration=0 to trigger refund`);

@@ -98,6 +98,20 @@ const normalizeText = (text: string): string => {
 };
 
 /**
+ * Hash SHA256 pour Advanced Matching
+ * Meta accepte les donnees hashees en SHA256 (lowercase hex)
+ * Coherent avec le hashing de googleAds.ts pour Enhanced Conversions
+ */
+const sha256Hash = async (text: string): Promise<string> => {
+  const normalized = normalizeText(text);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(normalized);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+/**
  * Recupere les identifiants Facebook (fbp, fbc) depuis les cookies
  */
 export const getMetaIdentifiers = (): { fbp?: string; fbc?: string } => {
@@ -642,8 +656,12 @@ let storedUserData: Record<string, string> = {};
  * pour envoyer les donnees a Meta via fbq('setUserData', ...).
  *
  * TRACKING SANS CONSENTEMENT - Les donnees sont toujours collectees
+ *
+ * Les donnees PII (email, telephone, prenom, nom) sont hashees en SHA256
+ * avant d'etre stockees, pour coherence avec Google Ads Enhanced Conversions
+ * et conformite avec les bonnes pratiques Meta Advanced Matching.
  */
-export const setMetaPixelUserData = (userData: {
+export const setMetaPixelUserData = async (userData: {
   email?: string;
   phone?: string;
   firstName?: string;
@@ -653,17 +671,17 @@ export const setMetaPixelUserData = (userData: {
   country?: string;
   zipCode?: string;
   userId?: string; // external_id pour Meta - votre ID utilisateur unique
-}): void => {
+}): Promise<void> => {
   try {
-    // Preparer les donnees en format Meta (tous en minuscules, sans espaces)
+    // Preparer les donnees en format Meta (hashees en SHA256 pour les PII)
     const advancedMatchingData: Record<string, string> = {};
 
-    // Email avec validation
+    // Email avec validation (hash SHA256)
     if (userData.email && isValidEmail(userData.email)) {
-      advancedMatchingData.em = userData.email.toLowerCase().trim();
+      advancedMatchingData.em = await sha256Hash(userData.email);
     }
 
-    // Telephone avec validation et normalisation E.164
+    // Telephone avec validation et normalisation E.164 (hash SHA256)
     if (userData.phone && isValidPhone(userData.phone)) {
       // Utiliser le code pays de l'utilisateur si disponible, sinon France par defaut
       const countryCode = userData.country?.toUpperCase() === 'US' ? '1' :
@@ -680,46 +698,46 @@ export const setMetaPixelUserData = (userData: {
 
       const normalizedPhone = normalizePhoneForMeta(userData.phone, countryCode);
       if (normalizedPhone) {
-        advancedMatchingData.ph = normalizedPhone;
+        advancedMatchingData.ph = await sha256Hash(normalizedPhone);
       }
     }
 
-    // Prenom normalise (sans accents)
+    // Prenom (hash SHA256)
     if (userData.firstName) {
-      advancedMatchingData.fn = normalizeText(userData.firstName);
+      advancedMatchingData.fn = await sha256Hash(userData.firstName);
     }
 
-    // Nom normalise (sans accents)
+    // Nom (hash SHA256)
     if (userData.lastName) {
-      advancedMatchingData.ln = normalizeText(userData.lastName);
+      advancedMatchingData.ln = await sha256Hash(userData.lastName);
     }
 
-    // Ville normalisee (sans accents)
+    // Ville (hash SHA256)
     if (userData.city) {
-      advancedMatchingData.ct = normalizeText(userData.city);
+      advancedMatchingData.ct = await sha256Hash(userData.city);
     }
 
-    // Etat/Province normalise (sans accents)
+    // Etat/Province (hash SHA256)
     if (userData.state) {
-      advancedMatchingData.st = normalizeText(userData.state);
+      advancedMatchingData.st = await sha256Hash(userData.state);
     }
 
-    // Code pays ISO 2 lettres en minuscules
+    // Code pays ISO 2 lettres en minuscules (pas de hash - pas PII)
     if (userData.country) {
       advancedMatchingData.country = userData.country.toLowerCase().substring(0, 2);
     }
 
-    // Code postal sans espaces
+    // Code postal sans espaces (hash SHA256)
     if (userData.zipCode) {
-      advancedMatchingData.zp = userData.zipCode.replace(/\s/g, '');
+      advancedMatchingData.zp = await sha256Hash(userData.zipCode.replace(/\s/g, ''));
     }
 
-    // external_id - votre ID utilisateur unique (Firebase UID)
+    // external_id - votre ID utilisateur unique (hash SHA256 pour consistance)
     if (userData.userId) {
-      advancedMatchingData.external_id = userData.userId;
+      advancedMatchingData.external_id = await sha256Hash(userData.userId);
     }
 
-    // Ajouter fbp et fbc pour ameliorer l'attribution
+    // Ajouter fbp et fbc pour ameliorer l'attribution (pas de hash - identifiants Meta)
     const metaIds = getMetaIdentifiers();
     if (metaIds.fbp) {
       advancedMatchingData.fbp = metaIds.fbp;
@@ -733,11 +751,11 @@ export const setMetaPixelUserData = (userData: {
       return;
     }
 
-    // Stocker les donnees pour utilisation ulterieure (pas de re-init du pixel)
+    // Stocker les donnees hashees pour utilisation ulterieure (pas de re-init du pixel)
     storedUserData = advancedMatchingData;
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('%c[MetaPixel] Advanced Matching - User data stored:', 'color: #1877F2; font-weight: bold', {
+      console.log('%c[MetaPixel] Advanced Matching - User data stored (SHA256 hashed):', 'color: #1877F2; font-weight: bold', {
         hasEmail: !!advancedMatchingData.em,
         hasPhone: !!advancedMatchingData.ph,
         hasFirstName: !!advancedMatchingData.fn,

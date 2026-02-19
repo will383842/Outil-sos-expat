@@ -3,7 +3,7 @@
  * Gère l'envoi de notifications par Email, SMS, Push, In-app et Slack
  */
 
-import { Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { Timestamp } from 'firebase-admin/firestore';
 import { db, messaging } from '../firebaseAdmin';
 import {
   SecurityAlert,
@@ -19,9 +19,6 @@ import { defineString } from 'firebase-functions/params';
 // ==========================================
 
 const SLACK_SECURITY_WEBHOOK = defineString('SLACK_SECURITY_WEBHOOK_URL', { default: '' });
-const TWILIO_ACCOUNT_SID = defineString('TWILIO_ACCOUNT_SID', { default: '' });
-const TWILIO_AUTH_TOKEN = defineString('TWILIO_AUTH_TOKEN', { default: '' });
-const TWILIO_PHONE_NUMBER = defineString('TWILIO_PHONE_NUMBER', { default: '' });
 
 // ==========================================
 // CONFIGURATION DES CANAUX PAR SÉVÉRITÉ

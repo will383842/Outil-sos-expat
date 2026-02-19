@@ -654,6 +654,26 @@ export async function performFraudCheck(data: {
       shouldBlock,
     });
 
+    // Write fraud alert to Firestore if any flags were raised
+    if (!passed) {
+      await writeFraudAlert(data.userId, data.email, flags, severity, {
+        ip: hashIP(data.ip),
+        referrerId: data.referrerId || null,
+        shouldBlock,
+        requiresManualReview,
+      });
+    }
+
+    // Flag for manual review if needed
+    if (requiresManualReview || (severity === "high" || severity === "critical")) {
+      await flagForManualReview(data.userId, flags, severity, {
+        email: data.email,
+        ipHash: hashIP(data.ip),
+        referrerId: data.referrerId || null,
+        shouldBlock,
+      });
+    }
+
     return {
       passed,
       flags,
@@ -829,6 +849,87 @@ export async function flagForManualReview(
   } catch (error) {
     logger.error("[flagForManualReview] Error flagging account", {
       chatterId,
+      error,
+    });
+  }
+}
+
+// ============================================================================
+// WRITE FRAUD ALERT TO FIRESTORE
+// ============================================================================
+
+/**
+ * Write a fraud alert to the fraud_alerts collection for centralized tracking.
+ * This ensures all fraud detections (chatter, affiliate, commission) are visible
+ * in a single collection for admin review and monitoring.
+ */
+async function writeFraudAlert(
+  userId: string,
+  email: string,
+  flags: string[],
+  severity: "low" | "medium" | "high" | "critical",
+  details: Record<string, unknown>
+): Promise<void> {
+  const db = getFirestore();
+
+  try {
+    // Check for existing similar alert in the last 24 hours (avoid duplicates)
+    const oneDayAgo = Timestamp.fromMillis(Date.now() - 24 * 60 * 60 * 1000);
+    const existingQuery = await db
+      .collection("fraud_alerts")
+      .where("userId", "==", userId)
+      .where("source", "==", "chatter_registration")
+      .where("status", "==", "pending")
+      .where("createdAt", ">=", oneDayAgo)
+      .limit(1)
+      .get();
+
+    if (!existingQuery.empty) {
+      // Update existing alert with new flags
+      const existingDoc = existingQuery.docs[0];
+      await existingDoc.ref.update({
+        flags,
+        severity,
+        details,
+        updatedAt: Timestamp.now(),
+      });
+      logger.info("[writeFraudAlert] Updated existing fraud alert", {
+        alertId: existingDoc.id,
+        userId,
+        flags,
+      });
+      return;
+    }
+
+    // Create new fraud alert
+    const alertRef = db.collection("fraud_alerts").doc();
+    await alertRef.set({
+      id: alertRef.id,
+      userId,
+      email,
+      source: "chatter_registration",
+      flags,
+      severity,
+      details,
+      status: "pending",
+      resolvedBy: null,
+      resolvedAt: null,
+      resolution: null,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
+
+    logger.warn("[writeFraudAlert] Fraud alert created", {
+      alertId: alertRef.id,
+      userId,
+      email,
+      flags,
+      severity,
+    });
+  } catch (error) {
+    // Don't throw - alerting failure should not block registration
+    logger.error("[writeFraudAlert] Error writing fraud alert", {
+      userId,
       error,
     });
   }

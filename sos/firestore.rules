@@ -222,15 +222,21 @@ service cloud.firestore {
                     (request.resource.data.metadata.clientId == request.auth.uid ||
                      request.resource.data.clientId == request.auth.uid);
       // Seuls les participants (client ou provider) peuvent mettre à jour
+      // SAUF les champs financiers/statut gérés exclusivement par Cloud Functions
       allow update: if isAuthenticated() &&
-                    (resource.data.metadata.clientId == request.auth.uid ||
+                    ((resource.data.metadata.clientId == request.auth.uid ||
                      resource.data.metadata.providerId == request.auth.uid ||
                      resource.data.clientId == request.auth.uid ||
                      resource.data.providerId == request.auth.uid ||
                      // P0 FIX: Support linkedProviderIds pour mise à jour
                      (resource.data.providerId != null &&
-                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds.hasAny([resource.data.providerId])) ||
-                     isAdmin() || isDev());
+                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds.hasAny([resource.data.providerId])))
+                     && !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['isPaid', 'payment', 'paymentStatus', 'paymentId',
+                                   'pricing', 'amount', 'totalAmount', 'connectionFee',
+                                   'providerAmount', 'platformFee', 'refunded',
+                                   'stripePaymentIntentId', 'paypalOrderId'])
+                     || isAdmin() || isDev());
       allow delete: if isAdmin() || isDev();
     }
 
@@ -1494,6 +1500,8 @@ service cloud.firestore {
     }
 
     // ================= COUNTRY SUBDIVISIONS =================
+    // NOTE: Collection not currently used in code - kept for future use
+    // (seeds/initCountryConfigs commented out in index.ts, CountryConfigService not imported anywhere)
     // USA states (51) + Canada provinces (13)
     // Taxes specifiques par etat/province (Sales Tax, GST/HST/PST/QST)
     match /country_subdivisions/{subdivisionId} {

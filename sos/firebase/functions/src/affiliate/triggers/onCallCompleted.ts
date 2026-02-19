@@ -15,7 +15,7 @@ import { getApps, initializeApp } from "firebase-admin/app";
 
 import { isAffiliateSystemActive } from "../utils/configService";
 import { createCommission } from "../services/commissionService";
-import { isPaymentCompleted } from "../../utils/paymentStatusUtils";
+
 
 // Lazy initialization
 function ensureInitialized() {
@@ -46,19 +46,13 @@ export async function handleCallCompleted(
     return;
   }
 
-  // Only process if status changed to completed
-  if (before.status === after.status || after.status !== "completed") {
-    return;
-  }
-
-  // IMPORTANT: Only create commission if the call was PAID
-  // Check payment status (payment.status or paymentStatus field)
-  const paymentStatus = after.payment?.status || after.paymentStatus;
-  if (!isPaymentCompleted(paymentStatus)) {
-    logger.info("[affiliateOnCallCompleted] Skipping - call not paid", {
-      sessionId: event.params.sessionId,
-      paymentStatus,
-    });
+  // Only process when call transitions to completed AND paid
+  // Must match the pattern used by chatter/influencer/blogger/groupAdmin triggers:
+  // isPaid is set in a separate Firestore update AFTER status="completed",
+  // so we detect the transition to (completed + isPaid=true)
+  const wasNotPaid = before.status !== "completed" || !before.isPaid;
+  const isNowPaid = after.status === "completed" && after.isPaid === true;
+  if (!wasNotPaid || !isNowPaid) {
     return;
   }
 
@@ -70,7 +64,6 @@ export async function handleCallCompleted(
       sessionId,
       clientId,
       providerId,
-      paymentStatus,
     });
 
     const db = getFirestore();

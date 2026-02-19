@@ -5,9 +5,12 @@
  * and sends reminder notifications at J-30, J-7, J-1
  */
 
-import * as functions from 'firebase-functions';
+import { onSchedule, ScheduledEvent } from 'firebase-functions/v2/scheduler';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { TaxFiling, TaxFilingStatus, FILING_TYPE_CONFIGS } from './types';
+import { ADMIN_ALERT_EMAILS } from '../lib/constants';
 
 const db = getFirestore();
 
@@ -16,9 +19,7 @@ const db = getFirestore();
 // ============================================================================
 
 const REMINDER_CONFIG = {
-  notifyEmails: [
-    'contact@sos-expat.com',
-  ],
+  notifyEmails: ADMIN_ALERT_EMAILS,
   reminderDays: [30, 7, 1, 0, -1], // Days before/after due date
 };
 
@@ -82,7 +83,7 @@ async function sendReminderNotification(
   await db.collection('tax_filing_notifications').add(notificationData);
 
   // Log the reminder
-  functions.logger.info(`Tax filing reminder sent`, {
+  logger.info(`Tax filing reminder sent`, {
     filingId: filing.id,
     type: filing.type,
     period: filing.period,
@@ -99,16 +100,16 @@ async function sendReminderNotification(
  * Daily scheduled function to check and send filing reminders
  * Runs every day at 9:00 AM Europe/Tallinn
  */
-export const sendFilingReminders = functions
-  .region('europe-west1')
-  .runWith({
+export const sendFilingReminders = onSchedule(
+  {
+    schedule: '0 9 * * *',
+    timeZone: 'Europe/Tallinn',
+    region: 'europe-west1',
     timeoutSeconds: 120,
-    memory: '256MB',
-  })
-  .pubsub.schedule('0 9 * * *')
-  .timeZone('Europe/Tallinn')
-  .onRun(async (context) => {
-    functions.logger.info('Starting tax filing reminders check');
+    memory: '256MiB',
+  },
+  async (_event: ScheduledEvent) => {
+    logger.info('Starting tax filing reminders check');
 
     try {
       // Query all non-completed filings
@@ -119,9 +120,8 @@ export const sendFilingReminders = functions
         .where('status', 'in', activeStatuses)
         .get();
 
-      functions.logger.info(`Found ${snapshot.size} active tax filings to check`);
+      logger.info(`Found ${snapshot.size} active tax filings to check`);
 
-      const now = new Date();
       let remindersCount = 0;
 
       for (const doc of snapshot.docs) {
@@ -167,14 +167,12 @@ export const sendFilingReminders = functions
         }
       }
 
-      functions.logger.info(`Tax filing reminders completed`, {
+      logger.info(`Tax filing reminders completed`, {
         filingsChecked: snapshot.size,
         remindersSent: remindersCount,
       });
-
-      return null;
     } catch (error) {
-      functions.logger.error('Error sending tax filing reminders:', error);
+      logger.error('Error sending tax filing reminders:', error);
       throw error;
     }
   });
@@ -183,25 +181,25 @@ export const sendFilingReminders = functions
  * HTTP endpoint to manually trigger reminder check
  * Useful for testing or manual runs
  */
-export const triggerFilingReminders = functions
-  .region('europe-west1')
-  .runWith({
+export const triggerFilingReminders = onCall(
+  {
+    region: 'europe-west1',
     timeoutSeconds: 120,
-    memory: '256MB',
-  })
-  .https.onCall(async (data, context) => {
+    memory: '256MiB',
+  },
+  async (request) => {
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
     // Check admin claim
-    const customClaims = context.auth.token;
+    const customClaims = request.auth.token;
     if (!customClaims.admin && !customClaims.superAdmin) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
-    functions.logger.info('Manual tax filing reminders trigger by:', context.auth.uid);
+    logger.info('Manual tax filing reminders trigger by:', request.auth.uid);
 
     try {
       const filingsRef = db.collection('tax_filings');
@@ -281,7 +279,7 @@ export const triggerFilingReminders = functions
       };
 
     } catch (error) {
-      functions.logger.error('Error in manual reminder trigger:', error);
-      throw new functions.https.HttpsError('internal', `Failed to check reminders: ${error}`);
+      logger.error('Error in manual reminder trigger:', error);
+      throw new HttpsError('internal', `Failed to check reminders: ${error}`);
     }
   });

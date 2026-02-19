@@ -28,9 +28,6 @@
     "lib",
     "lib/**",
     "src/backup_js_files/**",
-    "src/securityAlerts/**",
-    "src/taxFilings/**",
-    "src/accounting/**",
     "**/*.test.ts"
   ]
 }

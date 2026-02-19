@@ -228,7 +228,9 @@ async function captureCompletedCallPayments(
 
           if (paymentIntent.status === "requires_capture") {
             // Capture the payment
-            await stripe.paymentIntents.capture(paymentIntentId);
+            await stripe.paymentIntents.capture(paymentIntentId, {}, {
+              idempotencyKey: `recovery_capture_${paymentIntentId}`.substring(0, 255),
+            });
 
             // Update Firestore
             await syncPaymentStatus(db, paymentDoc.id, sessionId, {

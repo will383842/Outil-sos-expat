@@ -934,6 +934,14 @@ export const telegramChatterBotWebhook = onRequest(
             }
           );
 
+          // Mark Day 0 as sent to prevent the daily cron from resending it
+          if (link.role === "chatter") {
+            await db.collection("chatters").doc(link.userId).update({
+              lastDripMessageDay: 0,
+              updatedAt: Timestamp.now(),
+            });
+          }
+
           logger.info("[telegramChatterBotWebhook] Day 0 drip message enqueued", {
             userId: link.userId,
             telegramId,

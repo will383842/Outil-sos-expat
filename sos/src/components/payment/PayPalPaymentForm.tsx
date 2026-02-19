@@ -320,7 +320,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
       // Appeler la fonction HTTP au lieu de la fonction callable
       const response = await fetch(
-        "https://createpaypalorderhttp-5tfnuxa2hq-ew.a.run.app",
+        "https://createpaypalorderhttp-5tfnuxa2hq-ey.a.run.app",
         {
           method: "POST",
           headers: {
@@ -399,7 +399,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
       // Appeler la fonction HTTP d'autorisation (pas de capture immédiate)
       const response = await fetch(
-        "https://authorizepaypalorderhttp-5tfnuxa2hq-ew.a.run.app",
+        "https://authorizepaypalorderhttp-5tfnuxa2hq-ey.a.run.app",
         {
           method: "POST",
           headers: {

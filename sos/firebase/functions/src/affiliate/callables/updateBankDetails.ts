@@ -8,6 +8,7 @@
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
@@ -28,17 +29,10 @@ function ensureInitialized() {
 
 export const updateBankDetails = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      /\.sos-expat\.pages\.dev$/,
-      "http://localhost:5173",
-      "http://localhost:4173",
-      "http://127.0.0.1:5173",
-    ],
+    cors: ALLOWED_ORIGINS,
     secrets: [ENCRYPTION_KEY],
   },
   async (request): Promise<{ success: boolean; message: string }> => {

@@ -311,6 +311,16 @@ export const registerGroupAdmin = onCall(
         }
       }
 
+      // 9a. Self-referral guard
+      if (recruitedBy && recruitedBy === userId) {
+        logger.warn("[registerGroupAdmin] Self-referral detected, ignoring recruitment code", {
+          userId,
+          code: input.recruitmentCode,
+        });
+        recruitedBy = null;
+        recruitedByCode = null;
+      }
+
       // 9b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
       const fraudResult = await checkReferralFraud(
         recruitedBy || userId,

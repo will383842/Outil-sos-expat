@@ -331,13 +331,48 @@ export const registerChatter = onCall(
         );
       }
 
-      // Log if there are warnings (medium risk) but don't block
-      if (fraudResult.riskScore > 30 && fraudResult.riskScore < 70) {
-        logger.warn("[registerChatter] Medium fraud risk detected", {
+      // Write fraud alert for medium-risk registrations (not blocked, but flagged)
+      if (fraudResult.riskScore > 30 && fraudResult.issues.length > 0) {
+        logger.warn("[registerChatter] Fraud risk detected, writing alert", {
           email: input.email,
+          riskScore: fraudResult.riskScore,
+          issues: fraudResult.issues.map((i) => i.type),
           country: input.country,
           recruitedBy,
         });
+
+        // Write to centralized fraud_alerts collection for admin visibility
+        try {
+          const alertRef = db.collection("fraud_alerts").doc();
+          await alertRef.set({
+            id: alertRef.id,
+            userId,
+            email: input.email,
+            source: "chatter_registration_referral",
+            flags: fraudResult.issues.map((i) => i.type),
+            severity: fraudResult.riskScore >= 50 ? "high" : "medium",
+            details: {
+              riskScore: fraudResult.riskScore,
+              issues: fraudResult.issues.map((i) => ({
+                type: i.type,
+                severity: i.severity,
+                description: i.description,
+              })),
+              country: input.country,
+              recruitedBy,
+              recruitmentCode: input.recruitmentCode || null,
+            },
+            status: "pending",
+            resolvedBy: null,
+            resolvedAt: null,
+            resolution: null,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          });
+        } catch (alertError) {
+          // Don't block registration if alert writing fails
+          logger.error("[registerChatter] Failed to write fraud alert", { error: alertError });
+        }
       }
 
       // 10. Generate affiliate codes IMMEDIATELY (no quiz required)

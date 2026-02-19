@@ -3,6 +3,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { Request, Response } from 'express';
 import { stripeManager } from './StripeManager';
 import * as admin from 'firebase-admin';
+import { ALLOWED_ORIGINS } from './lib/functionConfigs';
 
 const asDate = (d: Date | admin.firestore.Timestamp) =>
   (d && typeof (d as admin.firestore.Timestamp).toDate === 'function')
@@ -76,12 +77,8 @@ export const api = onRequest(
     timeoutSeconds: 60,
     minInstances: 0,
     maxInstances: 3,
-    cors: [
-      'http://localhost:5173',       // Front local Vite
-      'http://127.0.0.1:5000',       // Hosting emulator
-      'https://sos-urgently-ac307.web.app', // Firebase Hosting prod
-      'https://sos-expat.com'     // Domaine custom prod
-    ]},
+    cors: ALLOWED_ORIGINS,
+  },
   async (req: Request, res: Response): Promise<void> => {
     try {
       const path = req.path.replace(/\/+$/, ''); // trim trailing /

@@ -15,6 +15,7 @@
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { getFirestore, Timestamp, Transaction } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 
@@ -30,17 +31,10 @@ import { getAffiliateConfigCached } from "../utils/configService";
 
 export const getMyAffiliateData = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 30,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      /\.sos-expat\.pages\.dev$/,
-      "http://localhost:5173",
-      "http://localhost:4173",
-      "http://127.0.0.1:5173",
-    ],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetAffiliateDataResponse> => {
     // Firebase Admin is initialized globally in index.ts

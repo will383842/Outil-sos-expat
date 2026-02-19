@@ -2404,24 +2404,47 @@ export class TwilioCallManager {
       console.log(`✅ [${completionId}]   client.status: ${callSession.participants.client.status}`);
       console.log(`✅ [${completionId}]   provider.status: ${callSession.participants.provider.status}`);
 
-      // P0 FIX 2026-01-20: IDEMPOTENCY CHECK - Prevent race condition where multiple webhooks
+      // P0 FIX 2026-01-20: ATOMIC IDEMPOTENCY CHECK - Prevent race condition where multiple webhooks
       // all try to process the payment simultaneously (causing 3x cancel attempts like we saw in logs)
       // P0 FIX 2026-02-02: Added "voided" as final state for PayPal
+      // P0 FIX 2026-02-19: Made atomic via transaction to prevent concurrent handleCallCompletion calls
       const finalPaymentStatuses = ['captured', 'cancelled', 'refunded', 'voided'];
-      if (finalPaymentStatuses.includes(callSession.payment?.status)) {
-        console.log(`✅ [${completionId}] ⚠️ IDEMPOTENCY: Payment already in final state: ${callSession.payment?.status}`);
+      const finalSessionStatuses = ['completed', 'failed', 'cancelled'];
+
+      const sessionRef = this.db.collection("call_sessions").doc(sessionId);
+      let shouldProcess = true;
+      try {
+        await this.db.runTransaction(async (transaction) => {
+          const sessionDoc = await transaction.get(sessionRef);
+          if (!sessionDoc.exists) {
+            shouldProcess = false;
+            return;
+          }
+          const data = sessionDoc.data()!;
+          if (finalPaymentStatuses.includes(data.payment?.status)) {
+            console.log(`✅ [${completionId}] ⚠️ IDEMPOTENCY (atomic): Payment already in final state: ${data.payment?.status}`);
+            shouldProcess = false;
+            return;
+          }
+          // Claim processing by setting payment.status to "processing" atomically
+          transaction.update(sessionRef, {
+            "payment.status": "processing",
+            "payment.processingStartedAt": admin.firestore.Timestamp.now(),
+          });
+        });
+      } catch (txError) {
+        console.error(`✅ [${completionId}] Transaction error during idempotency check:`, txError);
+        return;
+      }
+
+      if (!shouldProcess) {
         console.log(`✅ [${completionId}]   Skipping handleCallCompletion to prevent duplicate processing`);
         return;
       }
 
-      // P0 FIX 2026-01-20: Also check if session is already completed
-      // P0 FIX 2026-02-12: Prevent state regression (e.g. "failed" → "completed")
-      const finalSessionStatuses = ['completed', 'failed', 'cancelled'];
       if (finalSessionStatuses.includes(callSession.status)) {
         console.log(`✅ [${completionId}] ⚠️ IDEMPOTENCY: Session already in final state: ${callSession.status}`);
         console.log(`✅ [${completionId}]   Skipping status update to prevent state regression`);
-        // Don't return early here - we still might need to capture/refund the payment
-        // But DO NOT overwrite the session status to prevent regression (e.g. failed → completed)
       } else {
         console.log(`✅ [${completionId}] Setting session.status = "completed"...`);
         await this.updateCallSessionStatus(sessionId, "completed");
@@ -3002,16 +3025,13 @@ export class TwilioCallManager {
       }
 
       // P1-13 FIX: Sync atomique payments <-> call_sessions
+      // Merge isPaid into the same update to reduce from 3 to 2 Firestore triggers
       if (paymentId) {
-        await syncPaymentStatus(this.db, paymentId, sessionId, captureData);
+        await syncPaymentStatus(this.db, paymentId, sessionId, captureData, {
+          isPaid: true,
+          "metadata.updatedAt": admin.firestore.Timestamp.now(),
+        });
       }
-      // CHATTER FIX: Set isPaid: true at root level to trigger chatterOnCallCompleted
-      // The trigger checks: afterData.status === "completed" && afterData.isPaid
-      // This was missing - commissions were never triggered after payment capture!
-      await this.db.collection("call_sessions").doc(sessionId).update({
-        "isPaid": true,
-        "metadata.updatedAt": admin.firestore.Timestamp.now(),
-      });
       console.log(`📄 Updated call session with capture info and isPaid=true: ${sessionId}`);
 
       // Create review request

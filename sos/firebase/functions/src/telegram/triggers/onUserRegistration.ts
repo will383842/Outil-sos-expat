@@ -32,6 +32,7 @@ const ALLOWED_ROLES: UserRole[] = [
   "chatter",
   "influencer",
   "blogger",
+  "groupAdmin",
 ];
 
 /**

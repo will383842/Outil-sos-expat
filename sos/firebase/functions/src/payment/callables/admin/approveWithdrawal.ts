@@ -116,8 +116,10 @@ export const adminApproveWithdrawal = onCall(
           status: 'approved',
           approvedAt: now,
           processedBy: adminId,
+          approvedBy: adminId,
+          approvalNote: note || null,
           statusHistory: [...withdrawal.statusHistory, historyEntry],
-        };
+        } as Partial<WithdrawalRequest>;
 
         transaction.update(withdrawalRef, updates);
 
@@ -138,6 +140,8 @@ export const adminApproveWithdrawal = onCall(
             userId: withdrawal.userId,
             userType: withdrawal.userType,
             note,
+            approvedBy: adminId,
+            approvalNote: note || null,
           },
         });
 

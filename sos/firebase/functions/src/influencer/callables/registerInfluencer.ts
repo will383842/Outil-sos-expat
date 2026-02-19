@@ -285,6 +285,16 @@ export const registerInfluencer = onCall(
         }
       }
 
+      // 7a. Self-referral guard
+      if (recruitedBy && recruitedBy === userId) {
+        logger.warn("[registerInfluencer] Self-referral detected, ignoring recruitment code", {
+          userId,
+          code: input.recruiterCode,
+        });
+        recruitedBy = null;
+        recruitedByCode = null;
+      }
+
       // 7b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
       const fraudResult = await checkReferralFraud(
         recruitedBy || userId,

@@ -4,10 +4,18 @@
 
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
+import { useLocaleNavigate } from '@/multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
+import { useApp } from '@/contexts/AppContext';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
-import { AlertTriangle, Mail, Phone } from 'lucide-react';
+import { AlertTriangle, MessageCircle, ArrowLeft } from 'lucide-react';
 
 const GroupAdminSuspended: React.FC = () => {
+  const navigate = useLocaleNavigate();
+  const { language } = useApp();
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+  const contactRoute = `/${getTranslatedRouteSlug('contact' as RouteKey, langCode)}`;
+
   return (
     <GroupAdminDashboardLayout>
       <div className="flex items-center justify-center p-4 py-20">
@@ -17,40 +25,33 @@ const GroupAdminSuspended: React.FC = () => {
           </div>
 
           <h1 className="text-2xl dark:text-white font-bold mb-4">
-            <FormattedMessage id="groupadmin.suspended.title" defaultMessage="Account Suspended" />
+            <FormattedMessage id="groupadmin.suspended.title" defaultMessage="Compte suspendu" />
           </h1>
 
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             <FormattedMessage
               id="groupadmin.suspended.message"
-              defaultMessage="Your Group Admin account has been temporarily suspended. This may be due to a violation of our terms of service or suspicious activity."
+              defaultMessage="Votre compte Admin de Groupe a été temporairement suspendu. Si vous pensez qu'il s'agit d'une erreur, veuillez nous contacter via le formulaire de contact."
             />
           </p>
 
-          <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-4 mb-6">
-            <p className="text-sm dark:text-gray-300 mb-3">
-              <FormattedMessage
-                id="groupadmin.suspended.appealInfo"
-                defaultMessage="If you believe this is an error, please contact our support team:"
-              />
-            </p>
-            <div className="space-y-2">
-              <a
-                href="mailto:support@sos-expat.com"
-                className="flex items-center justify-center gap-2 text-indigo-600 hover:text-indigo-700"
-              >
-                <Mail className="w-4 h-4" />
-                support@sos-expat.com
-              </a>
-            </div>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => navigate(contactRoute)}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-xl transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <FormattedMessage id="groupadmin.suspended.contactUs" defaultMessage="Nous contacter" />
+            </button>
+
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <FormattedMessage id="groupadmin.suspended.backHome" defaultMessage="Retour à l'accueil" />
+            </button>
           </div>
-
-          <p className="text-xs dark:text-gray-300">
-            <FormattedMessage
-              id="groupadmin.suspended.note"
-              defaultMessage="Please include your account email and group name in your appeal."
-            />
-          </p>
         </div>
       </div>
     </GroupAdminDashboardLayout>

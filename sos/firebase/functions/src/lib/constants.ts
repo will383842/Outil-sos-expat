@@ -20,3 +20,11 @@ export const FIRESTORE_BATCH_SAFE_LIMIT = 490;
 
 /** Default page size for Firestore cursor-pagination queries. */
 export const FIRESTORE_PAGE_SIZE = 500;
+
+// ─── Admin Contact Emails ────────────────────────────────────────────────────
+
+/** Primary support email — used across alerts, notifications, FAQ content. */
+export const ADMIN_SUPPORT_EMAIL = 'contact@sos-expat.com';
+
+/** Alert recipient list — for monitoring, security alerts, and filing reminders. */
+export const ADMIN_ALERT_EMAILS = [ADMIN_SUPPORT_EMAIL];

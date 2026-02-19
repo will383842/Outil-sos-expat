@@ -18,6 +18,7 @@ import { logger } from 'firebase-functions';
 // fetch is available natively in Node.js 22 - no import needed
 import nodemailer from 'nodemailer';
 import { EMAIL_USER, EMAIL_PASS } from '../lib/secrets';
+import { ADMIN_ALERT_EMAILS } from '../lib/constants';
 
 // ============================================================================
 // LAZY INITIALIZATION
@@ -41,7 +42,7 @@ const CONFIG = {
     DISPUTE_AMOUNT_EUR: 100        // Alerter si dispute > 100€
   },
   // Destinataires des alertes
-  ALERT_EMAILS: ['contact@sos-expat.com'],
+  ALERT_EMAILS: ADMIN_ALERT_EMAILS,
   // Collection pour stocker les alertes
   ALERTS_COLLECTION: 'system_alerts'
 };

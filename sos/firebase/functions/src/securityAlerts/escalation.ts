@@ -3,12 +3,13 @@
  * Escalade automatique des alertes non traitées
  */
 
-import { Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { Timestamp } from 'firebase-admin/firestore';
 // LAZY IMPORT: @google-cloud/tasks takes ~400ms to load — import lazily to avoid deployment timeout
 // import { CloudTasksClient } from '@google-cloud/tasks';
 import { db } from '../firebaseAdmin';
 import { SecurityAlert, AlertSeverity } from './types';
 import { sendSecurityAlertNotifications } from './notifier';
+import { ADMIN_SUPPORT_EMAIL } from '../lib/constants';
 
 // ==========================================
 // CONFIGURATION D'ESCALADE
@@ -235,7 +236,7 @@ export async function processEscalation(
     await db.collection('admin_security_actions').add({
       adminId: 'system',
       adminName: 'System',
-      adminEmail: 'contact@sos-expat.com',
+      adminEmail: ADMIN_SUPPORT_EMAIL,
       action: 'escalate',
       alertId,
       details: `Escalated to level ${targetLevel}`,
