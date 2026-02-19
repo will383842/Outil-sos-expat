@@ -115,9 +115,9 @@ export function calculateCommissionAmount(
   // Legacy fallback: Use fixed amounts from config
   switch (type) {
     case "client_referral":
-      return config.commissionClientAmount;
+      return config.commissionClientAmount ?? 1000; // fallback $10
     case "recruitment":
-      return config.commissionRecruitmentAmount;
+      return config.commissionRecruitmentAmount ?? 500; // fallback $5
     default:
       return 0;
   }

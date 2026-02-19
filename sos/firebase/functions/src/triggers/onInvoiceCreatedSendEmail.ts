@@ -35,6 +35,12 @@ export const onInvoiceCreatedSendEmail = onDocumentCreated(
 
     console.log(`📧 [onInvoiceCreatedSendEmail] Processing invoice: ${invoiceId}`);
 
+    // Idempotency check: skip if email already sent (trigger retry protection)
+    if (invoiceData.emailSent === true) {
+      console.log(`⏭️ [onInvoiceCreatedSendEmail] Email already sent for invoice ${invoiceId}, skipping`);
+      return;
+    }
+
     const db = admin.firestore();
 
     try {

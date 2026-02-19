@@ -81,6 +81,7 @@ export {
   adminGetPendingWithdrawals as adminGetPendingChatterWithdrawals,
   adminGetChatterConfig,
   adminUpdateChatterConfig,
+  adminGetChatterConfigHistory,
   adminGetChatterLeaderboard,
   adminExportChatters,
   adminBulkChatterAction,

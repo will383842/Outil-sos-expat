@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useIntl } from 'react-intl';
-import { httpsCallable, getFunctions } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { functionsWest2 } from '@/config/firebase';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -264,7 +264,7 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
                     <tr key={r.id} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5">
                       <td className="px-4 py-3">
                         <button
-                          onClick={() => navigate(`/admin/groupadmins/${r.recruiterId}`)}
+                          onClick={() => navigate(`/admin/group-admins/${r.recruiterId}`)}
                           className="text-blue-500 hover:underline font-medium text-sm"
                         >
                           {r.recruiterName}
@@ -273,7 +273,7 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
                       <td className="px-4 py-3">
                         <div>
                           <button
-                            onClick={() => navigate(`/admin/groupadmins/${r.recruitedId}`)}
+                            onClick={() => navigate(`/admin/group-admins/${r.recruitedId}`)}
                             className="text-blue-500 hover:underline font-medium text-sm"
                           >
                             {r.recruitedName}

@@ -10,6 +10,7 @@ export {
   adminProcessWithdrawal,
   adminGetWithdrawalsList,
   adminExportGroupAdmins,
+  adminBulkGroupAdminAction,
 } from "./groupAdmins";
 
 export {
@@ -29,6 +30,7 @@ export {
 export {
   adminUpdateGroupAdminConfig,
   adminGetGroupAdminConfig,
+  adminGetGroupAdminConfigHistory,
 } from "./config";
 
 export {

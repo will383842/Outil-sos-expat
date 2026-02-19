@@ -2128,6 +2128,18 @@ service cloud.firestore {
       allow write: if isAdmin() || isDev();
     }
 
+    // Likes sociaux (anti-fraude, admin uniquement)
+    match /chatter_social_likes/{likeId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false;
+    }
+
+    // Défis hebdomadaires
+    match /chatter_weekly_challenges/{challengeId} {
+      allow read: if isChatter() || isAdmin() || isDev();
+      allow write: if isAdmin() || isDev();
+    }
+
     // ================= INFLUENCER SYSTEM =================
     // Règles pour le programme influenceurs (parrainage clients + recrutement prestataires)
     // NOTE: Différent des Chatters - pas de quiz, pas de niveaux, commissions fixes
@@ -2254,6 +2266,12 @@ service cloud.firestore {
       // Lecture: influenceurs actifs et admin
       allow read: if isInfluencer() || isAdmin() || isDev();
       // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Ressources influenceurs (guides, templates, matériel promotionnel)
+    match /influencer_resources/{resourceId} {
+      allow read: if isInfluencer() || isAdmin() || isDev();
       allow write: if isAdmin() || isDev();
     }
 
@@ -2497,6 +2515,16 @@ service cloud.firestore {
       // Lecture: propriétaire (recruteur) ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.recruiterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Prestataires (avocats/expats) recrutés par GroupAdmins
+    match /group_admin_recruited_providers/{recruitId} {
+      // Lecture: propriétaire (groupAdminId) ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.groupAdminId == request.auth.uid ||
                    isAdmin() || isDev());
       // Écriture: Cloud Functions uniquement
       allow write: if false;

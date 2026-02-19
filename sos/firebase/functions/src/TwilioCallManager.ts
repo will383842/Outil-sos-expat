@@ -3454,11 +3454,19 @@ export class TwilioCallManager {
   private async saveWithRetry<T>(
     operation: () => Promise<T>,
     maxRetries: number = 3,
-    baseDelay: number = 1000
+    baseDelay: number = 1000,
+    operationTimeoutMs: number = 10000
   ): Promise<T> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await operation();
+        // P0 FIX: Wrap each operation with a timeout to prevent indefinite blocking
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error(`saveWithRetry: operation timed out after ${operationTimeoutMs}ms`)),
+            operationTimeoutMs
+          )
+        );
+        return await Promise.race([operation(), timeoutPromise]);
       } catch (error) {
         if (attempt === maxRetries) throw error;
         await this.delay(baseDelay * attempt);

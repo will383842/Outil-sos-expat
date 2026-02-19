@@ -113,7 +113,8 @@ export const sendContactReply = onCall<ContactReplyRequest>(
     // Vérifier le rôle admin
     const userDoc = await db.collection('users').doc(request.auth.uid).get();
     const userData = userDoc.data();
-    const isAdmin = request.auth.token.role === 'admin' || userData?.role === 'admin';
+    // P1 FIX: Check both claim formats for backward compatibility
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin' || userData?.role === 'admin';
 
     if (!isAdmin) {
       throw new HttpsError('permission-denied', 'Accès réservé aux administrateurs');

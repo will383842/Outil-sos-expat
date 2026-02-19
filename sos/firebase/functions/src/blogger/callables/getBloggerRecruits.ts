@@ -80,8 +80,8 @@ export const getBloggerRecruits = onCall(
 
       // 3. Get config for threshold and bonus amount
       const config = await getBloggerConfigCached();
-      const threshold = config.recruitmentCommissionThreshold; // 20000 cents ($200)
-      const bonusAmount = 5000; // $50 fixed
+      const threshold = config.recruitmentCommissionThreshold;
+      const bonusAmount = config.bloggerRecruitmentCommissionAmount;
 
       // 4. Get all blogger recruits
       const recruitsQuery = await db

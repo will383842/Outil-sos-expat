@@ -63,6 +63,7 @@ export {
   adminUpdateBloggerStatus,
   adminGetBloggerConfig,
   adminUpdateBloggerConfig,
+  adminGetBloggerConfigHistory,
   adminCreateBloggerResource,
   adminUpdateBloggerResource,
   adminDeleteBloggerResource,
@@ -74,6 +75,7 @@ export {
   adminCreateBloggerGuideBestPractice,
   adminUpdateBloggerGuideBestPractice,
   adminExportBloggers,
+  adminBulkBloggerAction,
   adminGetBloggerLeaderboard,
   // NEW: Admin GET/SAVE/DELETE functions
   adminGetBloggerResources,
@@ -104,6 +106,7 @@ export {
 
 export {
   onBloggerCreated,
+  handleBloggerProviderRegistered,
   checkBloggerClientReferral,
   bloggerOnCallSessionCompleted,
   checkBloggerProviderRecruitment,

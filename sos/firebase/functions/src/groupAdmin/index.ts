@@ -41,6 +41,7 @@ export {
   adminProcessWithdrawal,
   adminGetWithdrawalsList,
   adminExportGroupAdmins,
+  adminBulkGroupAdminAction,
   adminCreateResource,
   adminUpdateResource,
   adminDeleteResource,
@@ -51,6 +52,7 @@ export {
   adminGetPostsList,
   adminUpdateGroupAdminConfig,
   adminGetGroupAdminConfig,
+  adminGetGroupAdminConfigHistory,
   adminGetRecruitmentsList,
   adminGetGroupAdminRecruits,
 } from "./callables";
@@ -79,6 +81,10 @@ export {
 export {
   onCallCompletedGroupAdmin,
   onGroupAdminCreated,
+  handleGroupAdminProviderRegistered,
+  checkGroupAdminProviderRecruitment,
+  awardGroupAdminProviderRecruitmentCommission,
+  handleProviderRecruitmentCommission,
 } from "./triggers";
 
 // Scheduled Functions

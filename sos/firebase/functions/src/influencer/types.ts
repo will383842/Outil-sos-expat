@@ -881,8 +881,11 @@ export interface InfluencerConfig {
 
   // ---- Recruitment Commission ----
 
-  /** Minimum totalEarned (cents) a recruited influencer must reach before recruiter gets $5 */
+  /** Minimum totalEarned (cents) a recruited influencer must reach before recruiter gets bonus */
   recruitmentCommissionThreshold: number;
+
+  /** One-time bonus (cents) paid to recruiter when recruited influencer reaches threshold */
+  recruitmentCommissionAmount: number;
 
   // ---- V2: Commission Rules ----
 
@@ -1093,7 +1096,8 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
     days100: 1.50,  // +50% bonus at 100+ consecutive days
   },
 
-  recruitmentCommissionThreshold: 5000, // $50 — recruited influencer must earn this before recruiter gets $5
+  recruitmentCommissionThreshold: 5000, // $50 — recruited influencer must earn this before recruiter gets bonus
+  recruitmentCommissionAmount: 500, // $5 — one-time bonus paid to recruiter
 
   // V2: Commission rules
   commissionRules: DEFAULT_COMMISSION_RULES,

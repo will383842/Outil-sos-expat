@@ -96,11 +96,21 @@ export async function updateBloggerConfig(
 
     const currentData = (await configRef.get()).data() as BloggerConfig;
 
+    // Save config history before update (max 50 entries)
+    const historyEntry = {
+      changedAt: Timestamp.now(),
+      changedBy: adminId,
+      previousConfig: currentData,
+    };
+    const existingHistory = Array.isArray(currentData.configHistory) ? currentData.configHistory : [];
+    const configHistory = [historyEntry, ...existingHistory].slice(0, 50);
+
     await configRef.update({
       ...updates,
       version: currentData.version + 1,
       updatedAt: Timestamp.now(),
       updatedBy: adminId,
+      configHistory,
     });
 
     // Clear cache

@@ -395,14 +395,21 @@ async function propagateBusyToSiblings(
   const batch = getDb().batch();
   let propagatedCount = 0;
 
-  for (const siblingId of linkedProviderIds) {
-    // Ne pas propager à soi-même
-    if (siblingId === originProviderId) continue;
+  // P1 FIX: Fetch all sibling docs in parallel instead of sequential N+1 reads
+  const siblingIds = linkedProviderIds.filter(id => id !== originProviderId);
+  if (siblingIds.length === 0) return;
+
+  const [siblingUserDocs, siblingProfileDocs] = await Promise.all([
+    Promise.all(siblingIds.map(id => getDb().collection('users').doc(id).get())),
+    Promise.all(siblingIds.map(id => getDb().collection('sos_profiles').doc(id).get())),
+  ]);
+
+  for (let i = 0; i < siblingIds.length; i++) {
+    const siblingId = siblingIds[i];
+    const siblingUserDoc = siblingUserDocs[i];
+    const siblingProfileDoc = siblingProfileDocs[i];
 
     try {
-      const siblingUserRef = getDb().collection('users').doc(siblingId);
-      const siblingUserDoc = await siblingUserRef.get();
-
       if (!siblingUserDoc.exists) {
         console.warn(`[ProviderStatusManager] Sibling provider not found: ${siblingId}`);
         continue;
@@ -447,11 +454,11 @@ async function propagateBusyToSiblings(
       };
 
       // Mettre à jour users
+      const siblingUserRef = getDb().collection('users').doc(siblingId);
       batch.update(siblingUserRef, siblingUpdateData);
 
       // Mettre à jour sos_profiles
       const siblingProfileRef = getDb().collection('sos_profiles').doc(siblingId);
-      const siblingProfileDoc = await siblingProfileRef.get();
       if (siblingProfileDoc.exists) {
         batch.update(siblingProfileRef, siblingUpdateData);
       }
@@ -745,14 +752,21 @@ async function releaseSiblingsFromBusy(
   const batch = getDb().batch();
   let releasedCount = 0;
 
-  for (const siblingId of linkedProviderIds) {
-    // Ne pas traiter soi-même
-    if (siblingId === originProviderId) continue;
+  // P1 FIX: Fetch all sibling docs in parallel instead of sequential N+1 reads
+  const siblingIds = linkedProviderIds.filter(id => id !== originProviderId);
+  if (siblingIds.length === 0) return;
+
+  const [siblingUserDocs, siblingProfileDocs] = await Promise.all([
+    Promise.all(siblingIds.map(id => getDb().collection('users').doc(id).get())),
+    Promise.all(siblingIds.map(id => getDb().collection('sos_profiles').doc(id).get())),
+  ]);
+
+  for (let i = 0; i < siblingIds.length; i++) {
+    const siblingId = siblingIds[i];
+    const siblingUserDoc = siblingUserDocs[i];
+    const siblingProfileDoc = siblingProfileDocs[i];
 
     try {
-      const siblingUserRef = getDb().collection('users').doc(siblingId);
-      const siblingUserDoc = await siblingUserRef.get();
-
       if (!siblingUserDoc.exists) continue;
 
       const siblingData = siblingUserDoc.data();
@@ -786,11 +800,11 @@ async function releaseSiblingsFromBusy(
       };
 
       // Mettre à jour users
+      const siblingUserRef = getDb().collection('users').doc(siblingId);
       batch.update(siblingUserRef, releaseData);
 
       // Mettre à jour sos_profiles
       const siblingProfileRef = getDb().collection('sos_profiles').doc(siblingId);
-      const siblingProfileDoc = await siblingProfileRef.get();
       if (siblingProfileDoc.exists) {
         batch.update(siblingProfileRef, releaseData);
       }

@@ -42,6 +42,7 @@ export {
   adminUpdateBloggerStatus,
   adminGetBloggerConfig,
   adminUpdateBloggerConfig,
+  adminGetBloggerConfigHistory,
   adminCreateBloggerResource,
   adminUpdateBloggerResource,
   adminDeleteBloggerResource,
@@ -53,6 +54,7 @@ export {
   adminCreateBloggerGuideBestPractice,
   adminUpdateBloggerGuideBestPractice,
   adminExportBloggers,
+  adminBulkBloggerAction,
   adminGetBloggerLeaderboard,
   // NEW: Admin GET/SAVE/DELETE functions for console
   adminGetBloggerResources,

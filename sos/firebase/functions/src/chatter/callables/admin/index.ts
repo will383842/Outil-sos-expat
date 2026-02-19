@@ -18,6 +18,7 @@ import {
   ChatterBadgeAward,
   ChatterQuizAttempt,
   ChatterConfig,
+  ChatterConfigHistoryEntry,
   ChatterMonthlyRanking,
   AdminGetChattersListInput,
   AdminGetChattersListResponse,
@@ -557,7 +558,7 @@ export const adminExportChatters = onCall(
         c.createdAt?.toDate?.()?.toISOString() || ""
       ]);
 
-      const csv = [headers.join(","), ...rows.map(r => r.map(v => `"${v}"`).join(","))].join("\n");
+      const csv = "\uFEFF" + [headers.join(","), ...rows.map(r => r.map(v => `"${v}"`).join(","))].join("\n");
 
       logger.info("[adminExportChatters] CSV exported", {
         total: chatters.length,
@@ -742,6 +743,18 @@ export const adminUpdateChatterConfig = onCall(
         if (updates[field as keyof ChatterConfig] !== undefined) {
           sanitizedUpdates[field] = updates[field as keyof ChatterConfig];
         }
+      }
+
+      // Save config history before update (max 50 entries)
+      if (configDoc.exists) {
+        const currentData = configDoc.data() || {};
+        const historyEntry: ChatterConfigHistoryEntry = {
+          changedAt: Timestamp.now(),
+          changedBy: adminId,
+          previousConfig: currentData,
+        };
+        const existingHistory = Array.isArray(currentData.configHistory) ? currentData.configHistory : [];
+        sanitizedUpdates.configHistory = [historyEntry, ...existingHistory].slice(0, 50);
       }
 
       // Add metadata
@@ -937,6 +950,32 @@ export const adminGetChatterLeaderboard = onCall(
     } catch (error) {
       logger.error("[adminGetChatterLeaderboard] Error", { error });
       throw new HttpsError("internal", "Failed to fetch leaderboard");
+    }
+  }
+);
+
+// ============================================================================
+// GET CHATTER CONFIG HISTORY
+// ============================================================================
+
+export const adminGetChatterConfigHistory = onCall(
+  { ...adminConfig, timeoutSeconds: 30 },
+  async (request): Promise<{ history: ChatterConfigHistoryEntry[] }> => {
+    ensureInitialized();
+    await assertAdmin(request);
+
+    const db = getFirestore();
+    try {
+      const configDoc = await db.collection("chatter_config").doc("current").get();
+      if (!configDoc.exists) {
+        return { history: [] };
+      }
+      const data = configDoc.data() || {};
+      const history = Array.isArray(data.configHistory) ? data.configHistory : [];
+      return { history };
+    } catch (error) {
+      logger.error("[adminGetChatterConfigHistory] Error", { error });
+      throw new HttpsError("internal", "Failed to fetch config history");
     }
   }
 );

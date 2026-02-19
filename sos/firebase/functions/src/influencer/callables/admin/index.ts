@@ -805,7 +805,7 @@ export const adminExportInfluencers = onCall(
         return value;
       };
 
-      const csvContent = [
+      const csvContent = "\uFEFF" + [
         headers.map(escapeCSV).join(","),
         ...rows.map((row) => row.map(escapeCSV).join(",")),
       ].join("\n");

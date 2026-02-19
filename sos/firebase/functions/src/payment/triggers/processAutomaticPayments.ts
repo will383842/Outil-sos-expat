@@ -61,12 +61,15 @@ function getUserCollectionName(userType: string): string {
     case 'influencer': return COLLECTIONS.INFLUENCERS;
     case 'blogger': return COLLECTIONS.BLOGGERS;
     case 'group_admin': return COLLECTIONS.GROUP_ADMINS;
+    case 'affiliate': return 'users'; // Affiliate balance is on users/{userId}
     default: return `${userType}s`;
   }
 }
 
 /**
- * Refund user balance when a withdrawal permanently fails (max retries reached)
+ * Refund user balance when a withdrawal permanently fails (max retries reached).
+ * P2-11 FIX: Use FieldValue.increment() for atomic balance restoration,
+ * preventing race conditions with concurrent webhook refunds.
  */
 async function refundUserBalance(withdrawal: WithdrawalRequest): Promise<void> {
   const db = getFirestore();
@@ -74,21 +77,10 @@ async function refundUserBalance(withdrawal: WithdrawalRequest): Promise<void> {
   const userRef = db.collection(collectionName).doc(withdrawal.userId);
 
   try {
-    await db.runTransaction(async (transaction) => {
-      const userDoc = await transaction.get(userRef);
-      if (!userDoc.exists) {
-        logger.error("[processAutomaticPayments] User not found for refund", {
-          userId: withdrawal.userId,
-          userType: withdrawal.userType,
-        });
-        return;
-      }
-
-      const currentBalance = userDoc.data()!.availableBalance || 0;
-      transaction.update(userRef, {
-        availableBalance: currentBalance + withdrawal.amount,
-        updatedAt: Timestamp.now(),
-      });
+    // P2-11 FIX: Use FieldValue.increment() — atomic, no read required, safe under concurrency
+    await userRef.update({
+      availableBalance: FieldValue.increment(withdrawal.amount),
+      updatedAt: Timestamp.now(),
     });
 
     logger.info("[processAutomaticPayments] Balance refunded after max retries", {

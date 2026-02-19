@@ -36,10 +36,17 @@ export const onInvoiceRecordCreated = onDocumentCreated(
     const db = admin.firestore();
 
     try {
+      // Idempotency check: skip if admin_invoice already exists (trigger retry protection)
+      const adminInvoiceRef = db.collection("admin_invoices").doc(invoiceId);
+      const existing = await adminInvoiceRef.get();
+      if (existing.exists) {
+        console.log(`⏭️ [onInvoiceCreated] Already processed invoice ${invoiceId}, skipping`);
+        return;
+      }
+
       const batch = db.batch();
 
       // 1. Create admin_invoices document
-      const adminInvoiceRef = db.collection("admin_invoices").doc(invoiceId);
       batch.set(adminInvoiceRef, {
         invoiceNumber: invoiceData.invoiceNumber || invoiceId,
         type: invoiceData.type, // 'platform' or 'provider'

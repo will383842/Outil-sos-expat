@@ -8,7 +8,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
-import { GroupAdminConfig } from "../../types";
+import { GroupAdminConfig, GroupAdminConfigHistoryEntry } from "../../types";
 import { updateGroupAdminConfig, refreshConfigCache } from "../../groupAdminConfig";
 
 // Lazy initialization
@@ -177,6 +177,41 @@ export const adminUpdateGroupAdminConfig = onCall(
       if (error instanceof HttpsError) throw error;
       logger.error("[adminUpdateGroupAdminConfig] Error", { error });
       throw new HttpsError("internal", "Failed to update configuration");
+    }
+  }
+);
+
+/**
+ * Get GroupAdmin configuration history
+ */
+export const adminGetGroupAdminConfigHistory = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: ALLOWED_ORIGINS,
+  },
+  async (request): Promise<{ history: GroupAdminConfigHistoryEntry[] }> => {
+    ensureInitialized();
+
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await verifyAdmin(request.auth.uid, request.auth.token);
+
+    try {
+      const db = getFirestore();
+      const configDoc = await db.collection("group_admin_config").doc("current").get();
+      if (!configDoc.exists) {
+        return { history: [] };
+      }
+      const data = configDoc.data() || {};
+      const history = Array.isArray(data.configHistory) ? data.configHistory : [];
+      return { history };
+    } catch (error) {
+      logger.error("[adminGetGroupAdminConfigHistory] Error", { error });
+      throw new HttpsError("internal", "Failed to fetch config history");
     }
   }
 );

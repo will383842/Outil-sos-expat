@@ -37,6 +37,7 @@ export {
   adminProcessWithdrawal,
   adminGetWithdrawalsList,
   adminExportGroupAdmins,
+  adminBulkGroupAdminAction,
   adminCreateResource,
   adminUpdateResource,
   adminDeleteResource,
@@ -47,6 +48,7 @@ export {
   adminGetPostsList,
   adminUpdateGroupAdminConfig,
   adminGetGroupAdminConfig,
+  adminGetGroupAdminConfigHistory,
   adminGetRecruitmentsList,
   adminGetGroupAdminRecruits,
 } from "./admin";

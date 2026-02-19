@@ -112,6 +112,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       referrals: `/${referralsSlug}`,
       referralEarnings: `/${referralEarningsSlug}`,
       refer: `/${referSlug}`,
+      profile: '/chatter/profil',
     };
   }, [langCode]);
 
@@ -157,6 +158,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     if (path.includes('/referral-earnings') || path.includes('/gains-parrainage')) return 'referral-earnings';
     if (path.includes('/referrals') || path.includes('/filleuls')) return 'referrals';
     if (path.includes('/refer') || path.includes('/parrainer')) return 'refer';
+    if (path.includes('/profil') || path.includes('/profile')) return 'profile';
     return 'dashboard';
   };
 
@@ -225,6 +227,12 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       icon: <Share2 className="mr-3 h-5 w-5" />,
       route: translatedRoutes.refer,
       labels: { fr: "Parrainer", en: "Refer", es: "Referir", de: "Empfehlen", ru: "Пригласить", pt: "Indicar", ch: "推荐", hi: "रेफर करें", ar: "إحالة" },
+    },
+    {
+      key: "profile",
+      icon: <User className="mr-3 h-5 w-5" />,
+      route: translatedRoutes.profile,
+      labels: { fr: "Mon profil", en: "My Profile", es: "Mi Perfil", de: "Mein Profil", ru: "Мой профиль", pt: "Meu Perfil", ch: "我的个人资料", hi: "मेरी प्रोफ़ाइल", ar: "ملفي الشخصي" },
     },
   ];
 

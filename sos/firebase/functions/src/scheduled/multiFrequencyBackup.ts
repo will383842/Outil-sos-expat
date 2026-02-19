@@ -13,6 +13,8 @@ import * as admin from "firebase-admin";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as crypto from "crypto";
 import { logger } from "firebase-functions";
+// P2-6 FIX: Use shared constants instead of magic numbers
+import { FIRESTORE_BATCH_LIMIT } from "../lib/constants";
 
 // CRITICAL: Lazy initialization to avoid deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -301,7 +303,7 @@ export const cleanupOldBackups = onSchedule(
 
       let deleted = 0;
       let skippedFinancial = 0;
-      const batch = db.batch();
+      let batch = db.batch(); // P1 FIX: let (not const) to allow reset after each commit
 
       for (const doc of oldBackups.docs) {
         const data = doc.data();
@@ -315,13 +317,16 @@ export const cleanupOldBackups = onSchedule(
         batch.delete(doc.ref);
         deleted++;
 
-        // Commit par lots de 500
-        if (deleted % 500 === 0) {
+        // Commit par lots de 500 et réinitialiser le batch
+        // P1 FIX: Without batch = db.batch() after commit, Firestore throws
+        // "Cannot modify a WriteBatch that has already been committed"
+        if (deleted % FIRESTORE_BATCH_LIMIT === 0) {
           await batch.commit();
+          batch = db.batch();
         }
       }
 
-      if (deleted % 500 !== 0) {
+      if (deleted % FIRESTORE_BATCH_LIMIT !== 0) {
         await batch.commit();
       }
 

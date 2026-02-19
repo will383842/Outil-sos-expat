@@ -94,6 +94,7 @@ export async function migrateToV2(): Promise<{
           days100: 1.50,
         },
         recruitmentCommissionThreshold: 5000,
+        recruitmentCommissionAmount: 500,
         // V2 fields
         commissionRules: DEFAULT_COMMISSION_RULES,
         antiFraud: DEFAULT_ANTI_FRAUD_CONFIG,

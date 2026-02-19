@@ -17,6 +17,8 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { logError } from '../utils/logs/logError';
+// P2-6 FIX: Use shared constants instead of magic numbers
+import { FIRESTORE_PAGE_SIZE } from '../lib/constants';
 
 interface CleanupResult {
   success: boolean;
@@ -31,6 +33,35 @@ interface CleanupResult {
     action: string;
     orphanedIds?: string[];
   }>;
+}
+
+// P1 FIX: Paginated helper to avoid loading the entire sos_profiles collection into memory
+async function loadAllProviderIds(db: admin.firestore.Firestore): Promise<Set<string>> {
+  const existingProviderIds = new Set<string>();
+  let lastDoc: admin.firestore.DocumentSnapshot | null = null;
+  let totalPages = 0;
+
+  while (true) {
+    let query = db.collection('sos_profiles').orderBy(admin.firestore.FieldPath.documentId()).limit(FIRESTORE_PAGE_SIZE);
+    if (lastDoc) query = query.startAfter(lastDoc);
+
+    const page = await query.get();
+    if (page.empty) break;
+
+    totalPages++;
+    for (const doc of page.docs) {
+      const data = doc.data();
+      if (data.type === 'lawyer' || data.type === 'expat') {
+        existingProviderIds.add(doc.id);
+      }
+    }
+
+    if (page.size < FIRESTORE_PAGE_SIZE) break;
+    lastDoc = page.docs[page.docs.length - 1];
+  }
+
+  console.log(`📊 Loaded ${existingProviderIds.size} existing providers from sos_profiles (${totalPages} pages)`);
+  return existingProviderIds;
 }
 
 /**
@@ -82,18 +113,8 @@ export const adminCleanupOrphanedProviders = onCall<{ dryRun?: boolean }, Promis
 
       result.usersScanned = usersSnapshot.size;
 
-      // Step 2: Get all existing provider IDs from sos_profiles (the actual provider collection)
-      // Note: We check sos_profiles because that's where provider data is stored and displayed
-      const sosProfilesSnapshot = await db.collection('sos_profiles').get();
-      const existingProviderIds = new Set(
-        sosProfilesSnapshot.docs
-          .filter(doc => {
-            const data = doc.data();
-            // Only count documents that are actual providers (lawyer or expat type)
-            return data.type === 'lawyer' || data.type === 'expat';
-          })
-          .map(doc => doc.id)
-      );
+      // Step 2: Get all existing provider IDs from sos_profiles (paginated)
+      const existingProviderIds = await loadAllProviderIds(db);
 
       console.log(`📊 Found ${existingProviderIds.size} existing providers in sos_profiles`);
 
@@ -174,9 +195,15 @@ export const adminCleanupOrphanedProviders = onCall<{ dryRun?: boolean }, Promis
       }
 
       // Step 4: Also clean up sos_profiles for stale sibling references
+      // P1 FIX: Use a targeted query instead of reloading the full collection
       console.log('🔍 Checking sos_profiles for stale sibling references...');
 
-      for (const providerDoc of sosProfilesSnapshot.docs) {
+      const staleSiblingProfilesSnapshot = await db
+        .collection('sos_profiles')
+        .where('busySiblingProviderId', '!=', null)
+        .get();
+
+      for (const providerDoc of staleSiblingProfilesSnapshot.docs) {
         const data = providerDoc.data();
         const busySiblingProviderId = data.busySiblingProviderId;
 
@@ -263,17 +290,8 @@ export const adminGetOrphanedProvidersStats = onCall<void, Promise<{
       throw new HttpsError('permission-denied', 'Admin access required');
     }
 
-    // Get all existing provider IDs from sos_profiles (the actual provider collection)
-    const sosProfilesSnapshot = await db.collection('sos_profiles').get();
-    const existingProviderIds = new Set(
-      sosProfilesSnapshot.docs
-        .filter(doc => {
-          const data = doc.data();
-          // Only count documents that are actual providers (lawyer or expat type)
-          return data.type === 'lawyer' || data.type === 'expat';
-        })
-        .map(doc => doc.id)
-    );
+    // Get all existing provider IDs from sos_profiles (paginated — P1 FIX: no full-collection scan)
+    const existingProviderIds = await loadAllProviderIds(db);
 
     console.log(`📊 Found ${existingProviderIds.size} existing providers in sos_profiles`);
 

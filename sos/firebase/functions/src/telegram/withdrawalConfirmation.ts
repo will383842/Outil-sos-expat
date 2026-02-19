@@ -382,19 +382,12 @@ export async function handleWithdrawalCallback(
       const withdrawalRef = db.collection(confirmation.collection).doc(confirmation.withdrawalId);
       const withdrawalSnap = await transaction.get(withdrawalRef);
 
-      // For affiliate role, also read the payout doc to get commissionIds
-      let payoutSnap: FirebaseFirestore.DocumentSnapshot | null = null;
-      if (confirmation.role === "affiliate") {
-        payoutSnap = await transaction.get(
-          db.collection("affiliate_payouts").doc(confirmation.withdrawalId)
-        );
-      }
-
       // === VALIDATE STATE ===
       if (!withdrawalSnap.exists) {
         throw new Error("Withdrawal not found");
       }
-      const withdrawalStatus = withdrawalSnap.data()!.status;
+      const withdrawalData = withdrawalSnap.data()!;
+      const withdrawalStatus = withdrawalData.status;
       if (withdrawalStatus !== "pending" && withdrawalStatus !== "approved") {
         throw new Error(`Cannot cancel withdrawal with status: ${withdrawalStatus}`);
       }
@@ -428,23 +421,22 @@ export async function handleWithdrawalCallback(
           updatedAt: now,
         });
       } else if (confirmation.role === "affiliate") {
-        // Affiliate: balance is on users/{userId} doc + restore commissions
+        // Affiliate: balance is on users/{userId} doc
+        // commissionIds are stored directly on the withdrawal doc (payment_withdrawals)
         const userRef = db.collection("users").doc(confirmation.userId);
         transaction.update(userRef, {
           availableBalance: FieldValue.increment(confirmation.amount),
           pendingPayoutId: null,
           updatedAt: now,
         });
-        // Restore affiliate commissions to "available"
-        if (payoutSnap && payoutSnap.exists) {
-          const payoutData = payoutSnap.data()!;
-          if (payoutData.commissionIds && Array.isArray(payoutData.commissionIds)) {
-            for (const commissionId of payoutData.commissionIds) {
-              transaction.update(
-                db.collection("affiliate_commissions").doc(commissionId),
-                { status: "available", payoutId: null, paidAt: null, updatedAt: now }
-              );
-            }
+        // Restore affiliate commissions to "available" (read from withdrawal doc itself)
+        const commissionIds = withdrawalData.commissionIds;
+        if (commissionIds && Array.isArray(commissionIds)) {
+          for (const commissionId of commissionIds) {
+            transaction.update(
+              db.collection("affiliate_commissions").doc(commissionId),
+              { status: "available", payoutId: null, paidAt: null, updatedAt: now }
+            );
           }
         }
       } else {

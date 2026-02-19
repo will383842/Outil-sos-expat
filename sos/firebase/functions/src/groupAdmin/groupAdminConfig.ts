@@ -96,12 +96,21 @@ export async function updateGroupAdminConfig(
 ): Promise<GroupAdminConfig> {
   const currentConfig = await getGroupAdminConfig();
 
+  // Save config history before update (max 50 entries)
+  const historyEntry = {
+    changedAt: Timestamp.now(),
+    changedBy: updatedBy,
+    previousConfig: currentConfig,
+  };
+  const existingHistory = currentConfig.configHistory || [];
+
   const updatedConfig: GroupAdminConfig = {
     ...currentConfig,
     ...updates,
     version: currentConfig.version + 1,
     updatedAt: Timestamp.now(),
     updatedBy,
+    configHistory: [historyEntry, ...existingHistory].slice(0, 50),
   };
 
   await getDb().collection(CONFIG_COLLECTION).doc(CONFIG_DOC_ID).set(updatedConfig);

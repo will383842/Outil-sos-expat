@@ -990,6 +990,19 @@ export interface ChatterConfig {
 
   /** Who updated */
   updatedBy: string;
+
+  /** Configuration change history (max 50 entries) */
+  configHistory?: ChatterConfigHistoryEntry[];
+}
+
+/**
+ * Configuration history entry for admin config changes
+ */
+export interface ChatterConfigHistoryEntry {
+  changedAt: Timestamp;
+  changedBy: string;
+  previousConfig: Partial<ChatterConfig>;
+  reason?: string;
 }
 
 /**

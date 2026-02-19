@@ -236,6 +236,38 @@ export async function handleCallCompleted(
     }
 }
 
+/**
+ * Handler for provider recruitment commissions.
+ * Called from consolidatedOnCallCompleted alongside handleCallCompleted.
+ */
+export async function handleProviderRecruitmentCommission(
+  event: Parameters<Parameters<typeof onDocumentUpdated>[1]>[0]
+): Promise<void> {
+  ensureInitialized();
+
+  const beforeData = event.data?.before.data() as CallSession | undefined;
+  const afterData = event.data?.after.data() as CallSession | undefined;
+
+  if (!beforeData || !afterData) return;
+
+  const wasNotPaid = beforeData.status !== "completed" || !beforeData.isPaid;
+  const isNowPaid = afterData.status === "completed" && afterData.isPaid === true;
+
+  if (!wasNotPaid || !isNowPaid) return;
+  if (!afterData.duration || afterData.duration < MIN_CALL_DURATION_SECONDS) return;
+
+  const sessionId = event.params.sessionId;
+
+  try {
+    const { awardGroupAdminProviderRecruitmentCommission } = await import(
+      "./onProviderRegistered"
+    );
+    await awardGroupAdminProviderRecruitmentCommission(afterData.providerId, sessionId);
+  } catch (error) {
+    logger.error("[handleProviderRecruitmentCommission] Error", { sessionId, error });
+  }
+}
+
 export const onCallCompletedGroupAdmin = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",

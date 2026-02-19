@@ -12,6 +12,7 @@
  * - chatter      (handleChatterProviderRegistered)    - 256MiB / 60s
  * - chatter      (handleChatterClientRegistered)      - 256MiB / 60s
  * - influencer   (handleInfluencerProviderRegistered) - 256MiB / 60s
+ * - blogger      (handleBloggerProviderRegistered)    - 256MiB / 60s
  * - emailMktg    (handleEmailMarketingRegistration)   - default
  * - syncClaims   (handleSyncClaimsCreated)            - default
  * - googleAds    (handleGoogleAdsSignUp)              - default (uses secrets)
@@ -142,6 +143,36 @@ export const consolidatedOnUserCreated = onDocumentCreated(
     } catch (error) {
       results.influencer = `error: ${error instanceof Error ? error.message : String(error)}`;
       logger.error("[consolidatedOnUserCreated] Influencer handler failed", {
+        userId,
+        error,
+      });
+    }
+
+    // 5b. Blogger - provider recruited (creates recruitment tracking in blogger_recruited_providers)
+    try {
+      const { handleBloggerProviderRegistered } = await import(
+        "../blogger/triggers/onProviderRegistered"
+      );
+      await handleBloggerProviderRegistered(event);
+      results.bloggerProvider = "ok";
+    } catch (error) {
+      results.bloggerProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] Blogger provider handler failed", {
+        userId,
+        error,
+      });
+    }
+
+    // 5c. GroupAdmin - provider recruited (creates recruitment tracking in group_admin_recruited_providers)
+    try {
+      const { handleGroupAdminProviderRegistered } = await import(
+        "../groupAdmin/triggers/onProviderRegistered"
+      );
+      await handleGroupAdminProviderRegistered(event);
+      results.groupAdminProvider = "ok";
+    } catch (error) {
+      results.groupAdminProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] GroupAdmin provider handler failed", {
         userId,
         error,
       });

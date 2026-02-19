@@ -85,7 +85,7 @@ const GroupAdminReferrals: React.FC = () => {
             <FormattedMessage id="groupAdmin.referrals.heading" defaultMessage="Recruited Admins" />
           </h1>
           <p className="text-gray-600 dark:text-gray-600 mb-8">
-            <FormattedMessage id="groupAdmin.referrals.subtitle" defaultMessage="Earn $5 when your recruit reaches $50 in earnings" />
+            <FormattedMessage id="groupAdmin.referrals.subtitle" defaultMessage="Earn $50 when your recruit reaches $200 in earnings" />
           </p>
 
           {/* Recruitment Link Card */}
@@ -142,7 +142,7 @@ const GroupAdminReferrals: React.FC = () => {
             </div>
 
             <p className="text-purple-100 text-sm">
-              <FormattedMessage id="groupAdmin.referrals.shareLinkDesc" defaultMessage="Share this link with other community/group admins. Earn $5 when your recruit reaches $50 in earnings." />
+              <FormattedMessage id="groupAdmin.referrals.shareLinkDesc" defaultMessage="Share this link with other community/group admins. Earn $50 when your recruit reaches $200 in earnings." />
             </p>
           </div>
 
@@ -157,7 +157,7 @@ const GroupAdminReferrals: React.FC = () => {
                 <p className="text-blue-600 dark:text-blue-400 mt-1">
                   <FormattedMessage
                     id="groupAdmin.referrals.commissionWindowInfo.description"
-                    defaultMessage="You have 6 months from the recruitment date to earn the $5 commission. The commission is paid when your recruit reaches $50 in total earnings within this window."
+                    defaultMessage="You have 6 months from the recruitment date to earn the $50 commission. The commission is paid when your recruit reaches $200 in total earnings within this window."
                   />
                 </p>
               </div>
@@ -174,7 +174,7 @@ const GroupAdminReferrals: React.FC = () => {
             </div>
             <div className="bg-white dark:bg-white/5 rounded-xl p-4 shadow-sm dark:shadow-none text-center">
               <p className="text-2xl font-bold">
-                {formatGroupAdminAmount(recruits.filter((r) => r.commissionPaid).length * 500)}
+                {formatGroupAdminAmount(recruits.filter((r) => r.commissionPaid).length * 5000)}
               </p>
               <p className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.referrals.earned" defaultMessage="Earned" />
@@ -222,7 +222,7 @@ const GroupAdminReferrals: React.FC = () => {
                         {recruit.commissionPaid ? (
                           <span className="inline-flex items-center gap-1 text-green-600 font-medium">
                             <CheckCircle className="w-4 h-4" />
-                            <FormattedMessage id="groupAdmin.referrals.paid" defaultMessage="$5 Paid" />
+                            <FormattedMessage id="groupAdmin.referrals.paid" defaultMessage="$50 Paid" />
                           </span>
                         ) : timeRemaining.isExpired ? (
                           <span className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400 font-medium">

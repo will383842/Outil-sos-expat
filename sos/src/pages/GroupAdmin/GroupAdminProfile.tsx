@@ -6,42 +6,20 @@
  */
 
 import React from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useGroupAdmin } from '@/hooks/useGroupAdmin';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import { User, Users, Settings, CreditCard, Shield, Loader2 } from 'lucide-react';
+import { GROUP_TYPE_LABELS, GROUP_SIZE_LABELS, GroupType, GroupSizeTier } from '@/types/groupAdmin';
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
 } as const;
 
-const GROUP_TYPE_LABELS: Record<string, string> = {
-  travel: 'Voyage',
-  expat: 'Expatriation',
-  digital_nomad: 'Digital Nomad',
-  immigration: 'Immigration',
-  relocation: 'Relocation',
-  language: 'Langue',
-  country_specific: 'Pays specifique',
-  profession: 'Profession',
-  family: 'Famille',
-  student: 'Etudiant',
-  retirement: 'Retraite',
-  other: 'Autre',
-};
-
-const GROUP_SIZE_LABELS: Record<string, string> = {
-  lt1k: '< 1 000',
-  '1k-5k': '1 000 - 5 000',
-  '5k-10k': '5 000 - 10 000',
-  '10k-25k': '10 000 - 25 000',
-  '25k-50k': '25 000 - 50 000',
-  '50k-100k': '50 000 - 100 000',
-  gt100k: '100 000+',
-};
-
 const GroupAdminProfile: React.FC = () => {
   const { profile, isLoading } = useGroupAdmin();
+  const intl = useIntl();
+  const locale = (intl.locale?.split('-')[0] || 'fr') as 'en' | 'fr' | 'es';
 
   if (isLoading) {
     return (
@@ -147,7 +125,9 @@ const GroupAdminProfile: React.FC = () => {
                 <FormattedMessage id="groupAdmin.profile.groupType" defaultMessage="Type de groupe" />
               </label>
               <p className="text-gray-900 dark:text-white">
-                {profile?.groupType ? GROUP_TYPE_LABELS[profile.groupType] || profile.groupType : '-'}
+                {profile?.groupType
+                  ? (GROUP_TYPE_LABELS[profile.groupType as GroupType]?.[locale] ?? GROUP_TYPE_LABELS[profile.groupType as GroupType]?.fr ?? profile.groupType)
+                  : '-'}
               </p>
             </div>
             <div>
@@ -155,7 +135,7 @@ const GroupAdminProfile: React.FC = () => {
                 <FormattedMessage id="groupAdmin.profile.groupSize" defaultMessage="Taille du groupe" />
               </label>
               <p className="text-gray-900 dark:text-white">
-                {profile?.groupSize ? GROUP_SIZE_LABELS[profile.groupSize] || profile.groupSize : '-'}
+                {profile?.groupSize ? GROUP_SIZE_LABELS[profile.groupSize as GroupSizeTier] || profile.groupSize : '-'}
               </p>
             </div>
             <div>

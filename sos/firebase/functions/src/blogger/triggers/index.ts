@@ -11,6 +11,7 @@ export {
 } from "./onCallCompleted";
 
 export {
+  handleBloggerProviderRegistered,
   checkBloggerProviderRecruitment,
   awardBloggerRecruitmentCommission,
   deactivateExpiredRecruitments,

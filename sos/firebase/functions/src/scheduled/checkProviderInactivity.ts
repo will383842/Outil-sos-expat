@@ -1,6 +1,8 @@
 import * as scheduler from 'firebase-functions/v2/scheduler';
 import * as admin from 'firebase-admin';
 import { setProviderAvailable } from '../callables/providerStatusManager';
+// P2-6 FIX: Use shared constants instead of magic numbers
+import { FIRESTORE_BATCH_SAFE_LIMIT } from '../lib/constants';
 
 // Maximum time a provider should remain "busy" before the cron fallback releases them (15 minutes)
 // This is slightly longer than the Cloud Tasks-based safety timeout (10 min)
@@ -50,7 +52,10 @@ export const checkProviderInactivity = scheduler.onSchedule(
 
       console.log(`📊 ${providerDocs.length} prestataires en ligne à vérifier (sur ${onlineProvidersSnapshot.size} profils)`);
 
-      const batch = db.batch();
+      // P1 FIX: use let + track op count to avoid Firestore 500-ops-per-batch limit
+      // Each inactive provider adds up to 2 batch ops (sos_profiles + users)
+      let batch = db.batch();
+      let batchOpCount = 0;
       let count = 0;
 
       for (const doc of providerDocs) {
@@ -91,28 +96,33 @@ export const checkProviderInactivity = scheduler.onSchedule(
           const inactiveMinutes = Math.round((Date.now() - lastActivity) / 60000);
           console.log(`⏰ Mise hors ligne : ${doc.id} (inactif depuis ${inactiveMinutes} minutes)`);
 
-          // ✅ FIX: Restaurer lastActivityCheck + lastStatusChange pour compatibilité
-          batch.update(doc.ref, {
+          const offlineUpdate = {
             isOnline: false,
             availability: 'offline',
             lastStatusChange: now,
             lastActivityCheck: now,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
+          };
+
+          // ✅ FIX: Restaurer lastActivityCheck + lastStatusChange pour compatibilité
+          batch.update(doc.ref, offlineUpdate);
+          batchOpCount++;
 
           // ✅ FIX: Vérifier si le document users existe avant de le mettre à jour
           const userRef = db.collection('users').doc(doc.id);
           const userDoc = await userRef.get();
           if (userDoc.exists) {
-            batch.update(userRef, {
-              isOnline: false,
-              availability: 'offline',
-              lastStatusChange: now,
-              lastActivityCheck: now,
-              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
+            batch.update(userRef, offlineUpdate);
+            batchOpCount++;
           } else {
             console.warn(`⚠️ Document users/${doc.id} not found, skipping user update`);
+          }
+
+          // P1 FIX: Commit and reset batch before reaching 500-ops Firestore limit
+          if (batchOpCount >= FIRESTORE_BATCH_SAFE_LIMIT) {
+            await batch.commit();
+            batch = db.batch();
+            batchOpCount = 0;
           }
 
           count++;

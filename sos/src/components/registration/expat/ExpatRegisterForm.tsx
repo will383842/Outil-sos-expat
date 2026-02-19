@@ -32,6 +32,7 @@ import { LocaleLink } from '../../../multilingual-system';
 
 import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { generateEventIdForType } from '@/utils/sharedEventId';
+import { getStoredReferralCode } from '@/utils/referralStorage';
 
 import '@/styles/registration-dark.css';
 import '@/styles/multi-language-select.css';
@@ -430,6 +431,22 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
           pendingReferralCode: referralCode.toUpperCase().trim(),
           providerRecruitedByChatter: referralCode.toUpperCase().trim(),
         }),
+        ...(() => {
+          const bloggerCode = getStoredReferralCode('blogger');
+          return bloggerCode ? { providerRecruitedByBlogger: bloggerCode } : {};
+        })(),
+        ...(() => {
+          const influencerCode = getStoredReferralCode('influencer');
+          return influencerCode ? { recruitedByInfluencer: true, influencerCode } : {};
+        })(),
+        ...(() => {
+          const chatterCode = getStoredReferralCode('chatter');
+          return chatterCode ? { providerRecruitedByChatter: chatterCode } : {};
+        })(),
+        ...(() => {
+          const groupAdminCode = getStoredReferralCode('groupAdmin');
+          return groupAdminCode ? { providerRecruitedByGroupAdmin: groupAdminCode } : {};
+        })(),
         ...(() => {
           const tracking = getStoredReferralTracking();
           return tracking ? { referralTracking: tracking } : {};

@@ -12,13 +12,11 @@ import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
-import * as crypto from "crypto";
 
 import { WithdrawalRequest, WithdrawalStatus } from "../types";
-import {
-  WISE_WEBHOOK_SECRET,
-  getWiseWebhookSecret,
-} from "../../lib/secrets";
+import { WISE_WEBHOOK_SECRET } from "../../lib/secrets";
+// P2 FIX: Use shared Wise signature verifier (avoid duplication with wiseWebhook)
+import { verifyWiseWebhookSignature } from "../../lib/wiseWebhookUtils";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -87,45 +85,6 @@ interface WiseWebhookPayload {
     previous_state?: WiseTransferState;
     occurred_at?: string;
   };
-}
-
-/**
- * Verify Wise webhook signature
- */
-function verifyWiseSignature(
-  payload: string,
-  signature: string,
-  secret: string
-): boolean {
-  if (!secret) {
-    logger.error("[webhookWise] Webhook secret not configured");
-    return false;
-  }
-
-  try {
-    // Wise uses SHA256 HMAC signature
-    const expectedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex");
-
-    const isValid = crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature)
-    );
-
-    logger.info("[webhookWise] Signature verification", {
-      isValid,
-      signatureLength: signature?.length || 0,
-    });
-
-    return isValid;
-  } catch (error) {
-    logger.error("[webhookWise] Signature verification error", {
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-    return false;
-  }
 }
 
 /**
@@ -333,10 +292,8 @@ export const paymentWebhookWise = onRequest(
     });
 
     try {
-      // Verify signature
-      const webhookSecret = getWiseWebhookSecret();
-
-      if (!verifyWiseSignature(rawBody, signature, webhookSecret)) {
+      // Verify signature — P2 FIX: use shared verifier
+      if (!verifyWiseWebhookSignature(rawBody, signature, WISE_WEBHOOK_SECRET.value())) {
         logger.error("[webhookWise] Invalid signature");
         res.status(401).send("Invalid signature");
         return;

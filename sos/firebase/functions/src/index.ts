@@ -5796,6 +5796,7 @@ export {
   adminGetPendingChatterWithdrawals,
   adminGetChatterConfig,
   adminUpdateChatterConfig,
+  adminGetChatterConfigHistory,
   adminGetChatterLeaderboard,
   adminExportChatters,
   adminBulkChatterAction,
@@ -5930,6 +5931,7 @@ export {
 export {
   // Triggers
   onBloggerCreated,
+  // bloggerOnProviderCreated → replaced by handleBloggerProviderRegistered in consolidatedOnUserCreated
   // bloggerOnCallSessionCompleted,  // → consolidatedOnCallCompleted
   checkBloggerClientReferral,
   checkBloggerProviderRecruitment,
@@ -5956,6 +5958,7 @@ export {
   adminUpdateBloggerStatus,
   adminGetBloggerConfig,
   adminUpdateBloggerConfig,
+  adminGetBloggerConfigHistory,
   adminCreateBloggerResource,
   adminUpdateBloggerResource,
   adminDeleteBloggerResource,
@@ -5967,6 +5970,7 @@ export {
   adminCreateBloggerGuideBestPractice,
   adminUpdateBloggerGuideBestPractice,
   adminExportBloggers,
+  adminBulkBloggerAction,
   adminGetBloggerLeaderboard,
   // Articles
   getBloggerArticles,
@@ -6017,11 +6021,12 @@ export {
 
 // ========== GROUPADMIN SYSTEM ==========
 // Group/Community Administrator affiliate program with client referrals and admin recruitment
-// Supports: $10 per client, $5 per recruited admin (after $50 threshold), ready-to-use posts/resources
+// Supports: $10 per client, $50 per recruited admin (after $200 threshold), ready-to-use posts/resources
 export {
   // User callables
   registerGroupAdmin,
   getGroupAdminDashboard,
+  getGroupAdminRecruits,
   getGroupAdminCommissions,
   getGroupAdminNotifications,
   getGroupAdminLeaderboard,
@@ -6045,6 +6050,7 @@ export {
   adminProcessWithdrawal as adminProcessGroupAdminWithdrawal,
   adminGetWithdrawalsList as adminGetGroupAdminWithdrawalsList,
   adminExportGroupAdmins,
+  adminBulkGroupAdminAction,
   adminCreateResource as adminCreateGroupAdminResource,
   adminUpdateResource as adminUpdateGroupAdminResource,
   adminDeleteResource as adminDeleteGroupAdminResource,
@@ -6055,6 +6061,7 @@ export {
   adminGetPostsList as adminGetGroupAdminPostsList,
   adminUpdateGroupAdminConfig,
   adminGetGroupAdminConfig,
+  adminGetGroupAdminConfigHistory,
   adminGetRecruitmentsList,
   adminGetGroupAdminRecruits,
   // Triggers

@@ -16,7 +16,6 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import {
   RequestWithdrawalInput,
   RequestWithdrawalResponse,
-  AffiliatePayout,
   AffiliateCommission,
 } from "../types";
 import {
@@ -139,16 +138,17 @@ export const requestWithdrawal = onCall(
         );
       }
 
-      // 11. Check monthly limits
+      // 11. Check monthly limits (query payment_withdrawals - unified collection)
       if (settings.maxWithdrawalsPerMonth > 0) {
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
 
         const monthlyPayoutsQuery = await db
-          .collection("affiliate_payouts")
+          .collection("payment_withdrawals")
           .where("userId", "==", userId)
-          .where("requestedAt", ">=", Timestamp.fromDate(startOfMonth))
+          .where("userType", "==", "affiliate")
+          .where("requestedAt", ">=", startOfMonth.toISOString())
           .get();
 
         if (monthlyPayoutsQuery.size >= settings.maxWithdrawalsPerMonth) {
@@ -165,9 +165,10 @@ export const requestWithdrawal = onCall(
         startOfMonth.setHours(0, 0, 0, 0);
 
         const monthlyPayoutsQuery = await db
-          .collection("affiliate_payouts")
+          .collection("payment_withdrawals")
           .where("userId", "==", userId)
-          .where("requestedAt", ">=", Timestamp.fromDate(startOfMonth))
+          .where("userType", "==", "affiliate")
+          .where("requestedAt", ">=", startOfMonth.toISOString())
           .where("status", "in", ["pending", "approved", "processing", "completed"])
           .get();
 
@@ -216,11 +217,12 @@ export const requestWithdrawal = onCall(
         );
       }
 
-      // 13. Create payout document and update in ATOMIC transaction
+      // 13. Create withdrawal document in unified payment_withdrawals collection (W1 migration)
       // P0-2 FIX: Re-validate balance + commission status INSIDE transaction
       // to prevent race conditions from concurrent withdrawal requests
-      const payoutRef = db.collection("affiliate_payouts").doc();
+      const withdrawalRef = db.collection("payment_withdrawals").doc();
       const now = Timestamp.now();
+      const nowIso = now.toDate().toISOString();
 
       let actualAmount = 0;
       const commissionIds: string[] = [];
@@ -265,34 +267,67 @@ export const requestWithdrawal = onCall(
           throw new HttpsError("failed-precondition", "Insufficient balance, please retry");
         }
 
-        // Build payout (P0-3 FIX: no accountHolderName in snapshot - PII risk)
-        const payout: Omit<AffiliatePayout, "id"> = {
+        const userName = `${freshUserData.firstName || ""} ${freshUserData.lastName || ""}`.trim();
+        const bankDetails = freshUserData.bankDetails || {};
+
+        // Build unified WithdrawalRequest document + affiliate-specific fields
+        const withdrawal = {
+          id: withdrawalRef.id,
+          // User info
           userId,
+          userType: "affiliate",
           userEmail: freshUserData.email,
-          userName: `${freshUserData.firstName || ""} ${freshUserData.lastName || ""}`.trim(),
+          userName,
+          // Amount
           amount: actualAmount,
           sourceCurrency: "USD",
-          targetCurrency: freshUserData.bankDetails?.currency || "USD",
-          status: "pending",
-          bankDetailsSnapshot: {
-            accountType: freshUserData.bankDetails?.accountType,
-            country: freshUserData.bankDetails?.country,
-            currency: freshUserData.bankDetails?.currency,
-            maskedAccount: maskBankAccount(freshUserData.bankDetails),
+          targetCurrency: bankDetails.currency || "USD",
+          // Payment method (synthetic ID — affiliates don't use paymentMethods collection)
+          paymentMethodId: `affiliate_${userId}`,
+          provider: "wise",
+          methodType: "bank_transfer",
+          paymentDetails: {
+            type: "bank_transfer",
+            accountHolderName: userName,
+            country: bankDetails.country || "",
+            currency: bankDetails.currency || "USD",
+            iban: bankDetails.iban,
+            accountNumber: bankDetails.accountNumber,
+            routingNumber: bankDetails.routingNumber,
+            sortCode: bankDetails.sortCode,
+            bsb: bankDetails.bsb,
+            ifsc: bankDetails.ifsc,
+            swiftBic: bankDetails.swiftBic,
+            bankName: bankDetails.bankName,
+            maskedAccount: maskBankAccount(bankDetails),
           },
+          // Status
+          status: "pending",
+          statusHistory: [{
+            status: "pending",
+            timestamp: nowIso,
+            actorType: "user",
+            note: "Withdrawal requested by affiliate",
+          }],
+          // Processing (manual — admin reviews affiliate withdrawals)
+          isAutomatic: false,
+          retryCount: 0,
+          maxRetries: 3,
+          // Timestamps
+          requestedAt: nowIso,
+          // Affiliate-specific: track which commissions are included
           commissionIds,
           commissionCount: commissionIds.length,
-          requestedAt: now,
         };
 
-        // Create payout
-        transaction.set(payoutRef, { ...payout, id: payoutRef.id });
+        // Create withdrawal in unified collection
+        transaction.set(withdrawalRef, withdrawal);
 
         // Update commissions status
         for (const commissionId of commissionIds) {
           transaction.update(db.collection("affiliate_commissions").doc(commissionId), {
             status: "paid",
-            payoutId: payoutRef.id,
+            payoutId: withdrawalRef.id,
             paidAt: now,
             updatedAt: now,
           });
@@ -301,7 +336,7 @@ export const requestWithdrawal = onCall(
         // Update user balance
         transaction.update(db.collection("users").doc(userId), {
           availableBalance: FieldValue.increment(-actualAmount),
-          pendingPayoutId: payoutRef.id,
+          pendingPayoutId: withdrawalRef.id,
           updatedAt: now,
         });
       });
@@ -309,23 +344,23 @@ export const requestWithdrawal = onCall(
       // 14. Send Telegram confirmation (REQUIRED - 2FA + captures telegram_id for marketing)
       const telegramId = userData.telegramId as number;
       const confirmResult = await sendWithdrawalConfirmation({
-        withdrawalId: payoutRef.id,
+        withdrawalId: withdrawalRef.id,
         userId,
         role: "affiliate" as WithdrawalConfirmationRole,
-        collection: "affiliate_payouts",
+        collection: "payment_withdrawals",
         amount: actualAmount,
         paymentMethod: "Wise / Bank Transfer",
         telegramId,
       });
 
       if (!confirmResult.success) {
-        logger.warn("[requestWithdrawal] Telegram confirmation failed, reverting payout", {
-          payoutId: payoutRef.id, userId,
+        logger.warn("[requestWithdrawal] Telegram confirmation failed, reverting withdrawal", {
+          withdrawalId: withdrawalRef.id, userId,
         });
         // Revert: restore commissions and balance
         try {
           await db.runTransaction(async (revertTx: Transaction) => {
-            revertTx.delete(payoutRef);
+            revertTx.delete(withdrawalRef);
             for (const commissionId of commissionIds) {
               revertTx.update(db.collection("affiliate_commissions").doc(commissionId), {
                 status: "available",
@@ -341,22 +376,22 @@ export const requestWithdrawal = onCall(
             });
           });
         } catch (revertErr) {
-          logger.error("[requestWithdrawal] Failed to revert payout after Telegram failure", {
-            payoutId: payoutRef.id, error: revertErr,
+          logger.error("[requestWithdrawal] Failed to revert withdrawal after Telegram failure", {
+            withdrawalId: withdrawalRef.id, error: revertErr,
           });
         }
         throw new HttpsError("unavailable", "TELEGRAM_SEND_FAILED");
       }
 
-      logger.info("[requestWithdrawal] Payout created with Telegram confirmation", {
-        payoutId: payoutRef.id,
+      logger.info("[requestWithdrawal] Withdrawal created with Telegram confirmation", {
+        withdrawalId: withdrawalRef.id,
         userId,
         amount: actualAmount,
         commissionCount: commissionIds.length,
       });
 
       return {
-        payoutId: payoutRef.id,
+        payoutId: withdrawalRef.id,
         amount: actualAmount,
         status: "pending",
         telegramConfirmationRequired: true,

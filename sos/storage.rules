@@ -126,8 +126,12 @@ service firebase.storage {
 
     // Dispute evidence uploads - P0 FIX
     match /disputes/{disputeId}/evidence/{fileName} {
-      // Read: Admin or parties involved in the dispute
-      allow read: if isAuthenticated() && isAdmin();
+      // Read: Admin OR parties involved in the dispute (client or provider)
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        firestore.get(/databases/(default)/documents/disputes/$(disputeId)).data.clientId == request.auth.uid ||
+        firestore.get(/databases/(default)/documents/disputes/$(disputeId)).data.providerId == request.auth.uid
+      );
       // Write: Authenticated users can upload evidence (admin validates disputeId)
       allow write: if isAuthenticated() &&
                    isImage() &&

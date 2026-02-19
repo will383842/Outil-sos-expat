@@ -85,7 +85,7 @@ export async function checkAndPayRecruitmentCommission(bloggerId: string): Promi
     // 5. Atomic transaction: mark recruit as paid + create commission
     const recruitRef = recruitDoc.ref;
     const recruiterRef = db.collection("bloggers").doc(blogger.recruitedBy);
-    const amount = 5000; // $50 fixed
+    const amount = config.bloggerRecruitmentCommissionAmount; // $50 from config
 
     await db.runTransaction(async (tx) => {
       // Re-read inside transaction to guard against concurrent writes
@@ -111,7 +111,6 @@ export async function checkAndPayRecruitmentCommission(bloggerId: string): Promi
         type: "recruitment",
         status: "pending",
         amount,
-        baseAmount: amount,
         currency: "USD",
         description: `Commission recrutement — ${blogger.firstName} ${blogger.lastName} a atteint $${(threshold / 100).toFixed(0)}`,
         source: {

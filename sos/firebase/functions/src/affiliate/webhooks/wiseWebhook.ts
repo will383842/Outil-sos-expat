@@ -13,9 +13,10 @@ import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
-import * as crypto from "crypto";
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import { WISE_WEBHOOK_SECRET } from "../../lib/secrets";
+// P2 FIX: Use shared Wise signature verifier (avoid duplication with paymentWebhookWise)
+import { verifyWiseWebhookSignature } from "../../lib/wiseWebhookUtils";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -82,34 +83,13 @@ export const wiseWebhook = onRequest(
     const db = getFirestore();
 
     try {
-      // 1. Verify webhook signature (if secret is configured)
-      const signature = req.headers["x-signature-sha256"] as string;
-      const webhookSecret = WISE_WEBHOOK_SECRET.value();
-
-      if (webhookSecret && webhookSecret !== "not_configured") {
-        if (!signature) {
-          logger.warn("[WiseWebhook] Missing signature header");
-          res.status(401).send("Missing signature");
-          return;
-        }
-
-        const rawBody = JSON.stringify(req.body);
-        const expectedSignature = crypto
-          .createHmac("sha256", webhookSecret)
-          .update(rawBody)
-          .digest("hex");
-
-        const sigBuffer = Buffer.from(signature, "utf8");
-        const expectedBuffer = Buffer.from(expectedSignature, "utf8");
-        if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
-          logger.warn("[WiseWebhook] Invalid signature", {
-            received: signature.substring(0, 10) + "...",
-          });
-          res.status(401).send("Invalid signature");
-          return;
-        }
-      } else {
-        logger.info("[WiseWebhook] Signature verification skipped (secret not configured)");
+      // 1. Verify webhook signature — P2 FIX: use shared verifier
+      const rawBody = JSON.stringify(req.body);
+      const signature = req.headers["x-signature-sha256"] as string | undefined;
+      const isValid = verifyWiseWebhookSignature(rawBody, signature, WISE_WEBHOOK_SECRET.value());
+      if (!isValid) {
+        res.status(401).send("Invalid signature");
+        return;
       }
 
       // 2. Parse webhook event
@@ -135,29 +115,51 @@ export const wiseWebhook = onRequest(
       const currentState = event.data.current_state as WiseTransferState;
 
       // 4. Find the payout with this Wise transfer ID
-      const payoutQuery = await db
+      // Check legacy affiliate_payouts first, then unified payment_withdrawals
+      let payoutDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+
+      const legacyQuery = await db
         .collection("affiliate_payouts")
         .where("wiseTransferId", "==", transferId.toString())
         .limit(1)
         .get();
 
-      if (payoutQuery.empty) {
+      if (!legacyQuery.empty) {
+        payoutDoc = legacyQuery.docs[0];
+      } else {
+        // Try unified payment_withdrawals (new affiliate withdrawals - W1 migration)
+        const unifiedQuery = await db
+          .collection("payment_withdrawals")
+          .where("providerTransactionId", "==", transferId.toString())
+          .where("userType", "==", "affiliate")
+          .limit(1)
+          .get();
+
+        if (!unifiedQuery.empty) {
+          payoutDoc = unifiedQuery.docs[0];
+        }
+      }
+
+      if (!payoutDoc) {
         logger.warn("[WiseWebhook] No payout found for transfer", { transferId });
         res.status(200).send("OK - Payout not found");
         return;
       }
 
-      const payoutDoc = payoutQuery.docs[0];
       const payoutData = payoutDoc.data();
       const payoutId = payoutDoc.id;
+      // Detect if this is a unified payment_withdrawals doc (W1 migration) or legacy affiliate_payouts
+      const isUnifiedWithdrawal = payoutDoc.ref.parent.id === "payment_withdrawals";
 
       logger.info("[WiseWebhook] Found payout", {
         payoutId,
+        collection: payoutDoc.ref.parent.id,
         currentPayoutStatus: payoutData.status,
         wiseState: currentState,
       });
 
       // 5. Map Wise state to payout status
+      // Note: payment_withdrawals uses "completed", affiliate_payouts uses "paid"
       const now = Timestamp.now();
       let newStatus: string | null = null;
       let shouldRestoreBalance = false;
@@ -174,7 +176,7 @@ export const wiseWebhook = onRequest(
           break;
 
         case "outgoing_payment_sent":
-          newStatus = "paid";
+          newStatus = isUnifiedWithdrawal ? "completed" : "paid";
           updateData.paidAt = now;
           updateData.completedAt = now;
           break;
@@ -198,6 +200,15 @@ export const wiseWebhook = onRequest(
       if (newStatus && newStatus !== payoutData.status) {
         updateData.status = newStatus;
         updateData.previousStatus = payoutData.status;
+        // For unified withdrawals, also append to statusHistory array
+        if (isUnifiedWithdrawal) {
+          updateData.statusHistory = FieldValue.arrayUnion({
+            status: newStatus,
+            timestamp: now.toDate().toISOString(),
+            actorType: "system",
+            note: `Wise webhook: ${currentState}`,
+          });
+        }
 
         await payoutDoc.ref.update(updateData);
 

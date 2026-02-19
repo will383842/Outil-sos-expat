@@ -1025,16 +1025,24 @@ export async function updateBloggerMonthlyRankings(): Promise<{
       isFinalized: false,
     });
 
+    // Pre-build a map of bloggerId → current bestRank to avoid O(n²) lookups
+    const bestRankMap = new Map<string, number | null>();
+    for (const b of bloggersWithStats) {
+      bestRankMap.set(b.id, b.data.bestRank ?? null);
+    }
+
     // Update individual blogger ranks and award badges
     const batch = db.batch();
 
     for (const ranking of rankings) {
       const bloggerRef = db.collection("bloggers").doc(ranking.bloggerId);
+      const previousBestRank = bestRankMap.get(ranking.bloggerId) ?? null;
+      const newBestRank = previousBestRank === null || ranking.rank < previousBestRank
+        ? ranking.rank
+        : previousBestRank;
       batch.update(bloggerRef, {
         currentMonthRank: ranking.rank,
-        bestRank: ranking.rank < (bloggersWithStats.find(b => b.id === ranking.bloggerId)?.data.bestRank || Infinity)
-          ? ranking.rank
-          : bloggersWithStats.find(b => b.id === ranking.bloggerId)?.data.bestRank || ranking.rank,
+        bestRank: newBestRank,
         updatedAt: Timestamp.now(),
       });
 

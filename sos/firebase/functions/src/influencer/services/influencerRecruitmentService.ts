@@ -85,7 +85,7 @@ export async function checkAndPayRecruitmentCommission(influencerId: string): Pr
     // 5. Atomic transaction: mark recruit as paid + create commission
     const recruitRef = recruitDoc.ref;
     const recruiterRef = db.collection("influencers").doc(influencer.recruitedBy);
-    const amount = 500; // $5 fixed
+    const amount = config.recruitmentCommissionAmount ?? 500; // from config, fallback $5
 
     await db.runTransaction(async (tx) => {
       // Re-read inside transaction to guard against concurrent writes

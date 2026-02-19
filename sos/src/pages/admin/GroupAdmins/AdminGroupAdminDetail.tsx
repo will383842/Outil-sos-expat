@@ -147,9 +147,9 @@ const AdminGroupAdminDetail: React.FC = () => {
     try {
       const getDetail = httpsCallable(functionsWest2, 'adminGetGroupAdminDetail');
       const result = await getDetail({ groupAdminId: id });
-      const data = result.data as { groupAdmin: GroupAdminDetail; commissions: Commission[] };
+      const data = result.data as { groupAdmin: GroupAdminDetail; recentCommissions: Commission[] };
       setAdmin(data.groupAdmin);
-      setCommissions(data.commissions || []);
+      setCommissions(data.recentCommissions || []);
     } catch (err) {
       console.error('Error fetching group admin:', err);
       setError(intl.formatMessage({ id: 'groupAdmin.admin.detail.error' }));

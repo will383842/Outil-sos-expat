@@ -154,6 +154,15 @@ export const OUTIL_API_KEY = defineSecret("OUTIL_API_KEY");
 export const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
 
 // ============================================================================
+// BACKLINK ENGINE
+// ============================================================================
+
+export const BACKLINK_ENGINE_WEBHOOK_SECRET = defineSecret("BACKLINK_ENGINE_WEBHOOK_SECRET");
+
+/** Backlink Engine secrets for function config */
+export const BACKLINK_ENGINE_SECRETS = [BACKLINK_ENGINE_WEBHOOK_SECRET];
+
+// ============================================================================
 // TELEGRAM SECRETS
 // ============================================================================
 

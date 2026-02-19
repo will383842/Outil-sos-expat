@@ -42,6 +42,7 @@ import {
   BloggerGuideTemplate,
   BloggerGuideCopyText,
   BloggerGuideBestPractice,
+  BloggerConfigHistoryEntry,
 } from "../../types";
 import { processBloggerWithdrawal } from "../../services/bloggerWithdrawalService";
 import {
@@ -973,7 +974,7 @@ export const adminExportBloggers = onCall(
       if (format === "csv") {
         const headers = Object.keys(bloggers[0] || {}).join(",");
         const rows = bloggers.map(b => Object.values(b).join(",")).join("\n");
-        data = `${headers}\n${rows}`;
+        data = `\uFEFF${headers}\n${rows}`; // BOM UTF-8 pour compatibilité Excel
       } else {
         data = JSON.stringify(bloggers, null, 2);
       }
@@ -1705,6 +1706,98 @@ export const adminDeleteBloggerGuideCopyText = onCall(
 );
 
 // ============================================================================
+// BULK ACTIONS
+// ============================================================================
+
+export const adminBulkBloggerAction = onCall(
+  {
+    region: "europe-west2",
+    memory: "512MiB",
+    timeoutSeconds: 120,
+    cors: ALLOWED_ORIGINS,
+  },
+  async (request): Promise<{ success: boolean; processed: number; errors: number }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const { bloggerIds, action, reason } = request.data as {
+      bloggerIds: string[];
+      action: "activate" | "suspend" | "email";
+      reason?: string;
+    };
+
+    if (!bloggerIds || !Array.isArray(bloggerIds) || bloggerIds.length === 0) {
+      throw new HttpsError("invalid-argument", "Blogger IDs array is required");
+    }
+    if (!action || !["activate", "suspend", "email"].includes(action)) {
+      throw new HttpsError("invalid-argument", "Action must be activate, suspend, or email");
+    }
+    if (bloggerIds.length > 100) {
+      throw new HttpsError("invalid-argument", "Maximum 100 bloggers per bulk action");
+    }
+
+    const db = getFirestore();
+    let processed = 0;
+    let errors = 0;
+
+    for (const bloggerId of bloggerIds) {
+      try {
+        if (action === "activate" || action === "suspend") {
+          const newStatus = action === "activate" ? "active" : "suspended";
+          await db.collection("bloggers").doc(bloggerId).update({
+            status: newStatus,
+            suspensionReason: action === "suspend" ? (reason || "Suspended by admin") : null,
+            adminNotes: `Bulk ${action} by ${request.auth.uid} on ${new Date().toISOString()}`,
+            updatedAt: Timestamp.now(),
+          });
+
+          await db.collection("blogger_notifications").add({
+            bloggerId,
+            type: "system",
+            title: action === "activate" ? "Votre compte a été réactivé" : "Mise à jour de votre compte",
+            message: action === "activate"
+              ? "Votre compte blogueur est à nouveau actif."
+              : `Votre compte a été suspendu. Raison: ${reason || "Non précisée"}`,
+            isRead: false,
+            emailSent: false,
+            createdAt: Timestamp.now(),
+          });
+        }
+        // "email" action: notification only (actual email sending handled separately)
+        else if (action === "email") {
+          await db.collection("blogger_notifications").add({
+            bloggerId,
+            type: "system",
+            title: "Message de l'administrateur",
+            message: reason || "Vous avez un message de l'administrateur.",
+            isRead: false,
+            emailSent: false,
+            createdAt: Timestamp.now(),
+          });
+        }
+        processed++;
+      } catch (err) {
+        logger.error("[adminBulkBloggerAction] Error on blogger", { bloggerId, action, err });
+        errors++;
+      }
+    }
+
+    logger.info("[adminBulkBloggerAction] Bulk action completed", {
+      action,
+      total: bloggerIds.length,
+      processed,
+      errors,
+      adminId: request.auth.uid,
+    });
+
+    return { success: errors === 0, processed, errors };
+  }
+);
+
+// ============================================================================
 // DELETE GUIDE BEST PRACTICE
 // ============================================================================
 
@@ -1735,6 +1828,40 @@ export const adminDeleteBloggerGuideBestPractice = onCall(
     } catch (error) {
       logger.error("[adminDeleteBloggerGuideBestPractice] Error", { error });
       throw new HttpsError("internal", "Failed to delete guide best practice");
+    }
+  }
+);
+
+// ============================================================================
+// GET BLOGGER CONFIG HISTORY
+// ============================================================================
+
+export const adminGetBloggerConfigHistory = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: ALLOWED_ORIGINS,
+  },
+  async (request): Promise<{ history: BloggerConfigHistoryEntry[] }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const db = getFirestore();
+    try {
+      const configDoc = await db.collection("blogger_config").doc("current").get();
+      if (!configDoc.exists) {
+        return { history: [] };
+      }
+      const data = configDoc.data() || {};
+      const history = Array.isArray(data.configHistory) ? data.configHistory : [];
+      return { history };
+    } catch (error) {
+      logger.error("[adminGetBloggerConfigHistory] Error", { error });
+      throw new HttpsError("internal", "Failed to fetch config history");
     }
   }
 );

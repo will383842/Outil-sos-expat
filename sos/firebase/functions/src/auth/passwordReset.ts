@@ -1020,6 +1020,10 @@ export const sendCustomPasswordResetEmail = onCall(
             user: EMAIL_USER.value(),
             pass: EMAIL_PASS.value(),
           },
+          // P1 FIX: Explicit SMTP timeouts to prevent function from hanging indefinitely
+          connectionTimeout: 10000,  // 10s to establish TCP connection
+          greetingTimeout: 10000,    // 10s for SMTP greeting
+          socketTimeout: 30000,      // 30s per socket operation (send)
         });
 
         // Send email

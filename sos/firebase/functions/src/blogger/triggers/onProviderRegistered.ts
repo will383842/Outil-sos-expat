@@ -7,7 +7,7 @@
  * - Award commissions on each provider call for 6 months
  */
 
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { Blogger, BloggerRecruitedProvider } from "../types";
 import { createBloggerCommission } from "../services/bloggerCommissionService";
@@ -94,12 +94,14 @@ export async function checkBloggerProviderRecruitment(
 
     await recruitmentRef.set(recruitment);
 
-    // 6. Update blogger's recruit count
+    // 6. Update blogger's recruit count (atomic increments to prevent race conditions)
+    const currentMonth = new Date().toISOString().substring(0, 7);
     await db.collection("bloggers").doc(bloggerId).update({
-      totalRecruits: blogger.totalRecruits + 1,
-      "currentMonthStats.recruits": blogger.currentMonthStats?.recruits
-        ? blogger.currentMonthStats.recruits + 1
+      totalRecruits: FieldValue.increment(1),
+      "currentMonthStats.recruits": blogger.currentMonthStats?.month === currentMonth
+        ? FieldValue.increment(1)
         : 1,
+      "currentMonthStats.month": currentMonth,
       updatedAt: now,
     });
 
@@ -218,10 +220,10 @@ export async function awardBloggerRecruitmentCommission(
           commissionId: result.commissionId!,
         });
 
-        // Update recruitment record
+        // Update recruitment record (atomic increments to prevent race conditions)
         await recruitmentDoc.ref.update({
-          callsWithCommission: recruitment.callsWithCommission + 1,
-          totalCommissions: recruitment.totalCommissions + result.amount!,
+          callsWithCommission: FieldValue.increment(1),
+          totalCommissions: FieldValue.increment(result.amount!),
           lastCommissionAt: now,
           updatedAt: now,
         });
@@ -265,6 +267,54 @@ export async function awardBloggerRecruitmentCommission(
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
+}
+
+/**
+ * Handler: called from consolidatedOnUserCreated when a provider (lawyer/expat) registers.
+ * Checks if they were recruited via a blogger's recruitment link and records
+ * the recruitment for future $5/call commissions (6-month window).
+ *
+ * NOTE: The field `providerRecruitedByBlogger` is written to `users/{userId}`
+ * by LawyerRegisterForm / ExpatRegisterForm. This handler reads from that document
+ * via the consolidatedOnUserCreated dispatcher (which listens to users/{userId}).
+ */
+export async function handleBloggerProviderRegistered(event: any): Promise<void> {
+  const snapshot = event.data;
+  if (!snapshot) return;
+
+  const userId = event.params.userId;
+  const userData = snapshot.data() as {
+    role?: string;
+    providerRecruitedByBlogger?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
+
+  // Only process providers (lawyers and expats)
+  if (userData.role !== "lawyer" && userData.role !== "expat") return;
+
+  // Check for blogger recruitment code written by registration form
+  if (!userData.providerRecruitedByBlogger) return;
+
+  const providerName =
+    `${userData.firstName || ""} ${userData.lastName || ""}`.trim() ||
+    userData.email ||
+    userId;
+
+  logger.info("[handleBloggerProviderRegistered] Blogger recruitment code detected", {
+    userId,
+    bloggerCode: userData.providerRecruitedByBlogger,
+    role: userData.role,
+  });
+
+  await checkBloggerProviderRecruitment(
+    userId,
+    userData.email || "",
+    providerName,
+    userData.role as "lawyer" | "expat",
+    userData.providerRecruitedByBlogger
+  );
 }
 
 /**

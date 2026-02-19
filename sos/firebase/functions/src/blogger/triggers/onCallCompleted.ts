@@ -17,6 +17,7 @@ import { logger } from "firebase-functions/v2";
 import { Blogger } from "../types";
 import { createBloggerCommission } from "../services/bloggerCommissionService";
 import { checkAndPayRecruitmentCommission } from "../services/bloggerRecruitmentService";
+import { awardBloggerRecruitmentCommission } from "./onProviderRegistered";
 import { getBloggerConfigCached } from "../utils/bloggerConfigService";
 
 /** Minimum call duration in seconds to earn commission (anti-fraud) */
@@ -240,13 +241,14 @@ export async function handleCallCompleted(
     const clientEmail = after.clientEmail || after.userEmail || "";
     const duration = after.duration || after.callDuration || 0;
     const connectionFee = after.connectionFee || after.amount || 0;
+    const providerId = after.providerId || after.expertId || after.lawyerId || null;
 
     if (!clientId) {
       logger.warn("[bloggerOnCallSessionCompleted] No clientId found", { sessionId });
       return;
     }
 
-    // Check for blogger referral and award commission
+    // Check for blogger referral and award $10 client commission
     const result = await checkBloggerClientReferral(
       sessionId,
       clientId,
@@ -260,6 +262,22 @@ export async function handleCallCompleted(
         sessionId,
         commissionId: result.commissionId,
       });
+    }
+
+    // Award $5 recruitment commission to bloggers who recruited this provider
+    if (providerId) {
+      const recruitResult = await awardBloggerRecruitmentCommission(
+        providerId,
+        sessionId,
+        duration
+      );
+      if (recruitResult.awarded) {
+        logger.info("[bloggerOnCallSessionCompleted] Provider recruitment commissions awarded", {
+          sessionId,
+          providerId,
+          commissionsCount: recruitResult.commissions.length,
+        });
+      }
     }
   }
 }

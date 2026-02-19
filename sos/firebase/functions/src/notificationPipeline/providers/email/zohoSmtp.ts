@@ -6,7 +6,11 @@ export async function sendZoho(to: string, subject: string, html: string, text?:
     host: 'smtp.zoho.eu',
     port: 465,
     secure: true,
-    auth: { user: EMAIL_USER.value(), pass: EMAIL_PASS.value() }
+    auth: { user: EMAIL_USER.value(), pass: EMAIL_PASS.value() },
+    // P1 FIX: Explicit SMTP timeouts to prevent function from hanging indefinitely
+    connectionTimeout: 10000,  // 10s to establish TCP connection
+    greetingTimeout: 10000,    // 10s for SMTP greeting
+    socketTimeout: 30000,      // 30s per socket operation (send)
   });
   const info = await transporter.sendMail({
     from: `"SOS Expat" <${EMAIL_USER.value()}>`,

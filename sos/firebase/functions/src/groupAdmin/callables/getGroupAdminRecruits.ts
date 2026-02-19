@@ -82,7 +82,7 @@ export const getGroupAdminRecruits = onCall(
       // 3. Get config for threshold and bonus amount
       const config = await getGroupAdminConfig();
       const threshold = config.recruitmentCommissionThreshold; // 20000 cents ($200)
-      const bonusAmount = 5000; // $50 fixed
+      const bonusAmount = config.commissionRecruitmentAmount; // $50 = 5000 cents (from config)
 
       // 4. Get all groupAdmin recruits
       const recruitsQuery = await db

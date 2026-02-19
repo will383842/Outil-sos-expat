@@ -95,6 +95,7 @@ interface PaymentStatsResponse {
     influencer: { count: number; amount: number };
     blogger: { count: number; amount: number };
     group_admin: { count: number; amount: number };
+    affiliate: { count: number; amount: number };
   };
   trends: {
     completedToday: number;
@@ -214,6 +215,7 @@ export const adminGetPaymentStats = onCall(
         influencer: { count: 0, amount: 0 },
         blogger: { count: 0, amount: 0 },
         group_admin: { count: 0, amount: 0 },
+        affiliate: { count: 0, amount: 0 },
       };
 
       let totalAmount = 0;

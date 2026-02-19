@@ -8,14 +8,11 @@
  */
 
 import * as functions from "firebase-functions";
+import { BACKLINK_ENGINE_WEBHOOK_SECRET as BACKLINK_SECRET } from "../lib/secrets";
 
 const BACKLINK_ENGINE_WEBHOOK_URL =
   process.env.BACKLINK_ENGINE_WEBHOOK_URL ||
   "https://backlinks.life-expat.com/api/webhooks/sos-expat/user-registered";
-
-const BACKLINK_ENGINE_WEBHOOK_SECRET =
-  process.env.BACKLINK_ENGINE_WEBHOOK_SECRET ||
-  "I4NMfTj2Ct8IVR9YDEcaM4NkuktzQ0b";
 
 interface NotifyBacklinkEngineParams {
   email: string;
@@ -41,7 +38,9 @@ export async function notifyBacklinkEngineUserRegistered(
 ): Promise<void> {
   const { email, userId, userType, firstName, lastName, phone, metadata } = params;
 
-  if (!BACKLINK_ENGINE_WEBHOOK_SECRET) {
+  // Access secret value at call time (not at module level)
+  const webhookSecret = BACKLINK_SECRET.value();
+  if (!webhookSecret) {
     functions.logger.warn("BACKLINK_ENGINE_WEBHOOK_SECRET not configured, skipping webhook");
     return;
   }
@@ -51,7 +50,7 @@ export async function notifyBacklinkEngineUserRegistered(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-webhook-secret": BACKLINK_ENGINE_WEBHOOK_SECRET,
+        "x-webhook-secret": webhookSecret,
       },
       body: JSON.stringify({
         email,

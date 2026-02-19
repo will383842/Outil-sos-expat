@@ -34,7 +34,6 @@ import {
   Phone,
   Crown,
   UserPlus,
-  Search,
   Zap,
   Clock,
   FileText,
@@ -213,13 +212,15 @@ const BloggerLanding: React.FC = () => {
     return str ? ` (${str})` : '';
   };
 
-  // Calculator
-  const [calcArticles, setCalcArticles] = useState(20);
-  const [calcVisitsPerArticle, setCalcVisitsPerArticle] = useState(5);
-  const [calcConversionRate, setCalcConversionRate] = useState(1);
+  // Calculator — logarithmique pour les articles (5 → 10 000)
+  const [sliderArticlesPos, setSliderArticlesPos] = useState(30); // position 0-100
+  const calcArticles = Math.max(5, Math.round(5 * Math.pow(2000, sliderArticlesPos / 100)));
+  const [calcVisitsPerArticle, setCalcVisitsPerArticle] = useState(10);
+  const [calcConversionRate, setCalcConversionRate] = useState(1.0);
   const monthlyVisits = calcArticles * calcVisitsPerArticle * 30;
   const monthlyClients = Math.floor((monthlyVisits * calcConversionRate) / 100);
   const monthlyEarnings = monthlyClients * 10;
+  const formatArticles = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : `${n}`;
 
   const registerRoute = `/${getTranslatedRouteSlug('blogger-register' as RouteKey, langCode)}`;
   const goToRegister = () => navigate(registerRoute);
@@ -235,18 +236,18 @@ const BloggerLanding: React.FC = () => {
   }, []);
 
   // SEO
-  const seoTitle = intl.formatMessage({ id: 'blogger.landing.seo.title', defaultMessage: 'Become a SOS-Expat Blogger Partner | Earn $10/client with your blog' });
-  const seoDescription = intl.formatMessage({ id: 'blogger.landing.seo.description', defaultMessage: 'Write articles about expat life. Earn $10 per call, $5 per call to lawyer or expat helper partners. Templates, logos, and resources included. Withdraw via Wise or PayPal.' });
+  const seoTitle = intl.formatMessage({ id: 'blogger.landing.seo.title', defaultMessage: 'Become a SOS-Expat Blogger Partner | Earn $10/call with your blog' });
+  const seoDescription = intl.formatMessage({ id: 'blogger.landing.seo.description', defaultMessage: 'Insert our widget in your articles. Earn $10 per call, $5 per call from recruited providers. Widgets, logos, banners included. Withdraw via Wise or PayPal.' });
   const ctaAriaLabel = intl.formatMessage({ id: 'blogger.aria.cta.main', defaultMessage: 'Start earning money with your blog - Register as a Blogger Partner for free' });
 
   // FAQ
   const faqs = [
-    { question: intl.formatMessage({ id: 'blogger.faq.q1', defaultMessage: "What exactly do I have to do as a Blogger Partner?" }), answer: intl.formatMessage({ id: 'blogger.faq.a1', defaultMessage: "Write blog articles about expat life, travel, immigration, visas, or living abroad. Include your unique affiliate link in articles. When readers call a lawyer or expat helper, you earn $10. That's it!" }) },
-    { question: intl.formatMessage({ id: 'blogger.faq.q2', defaultMessage: "How much can I realistically earn?" }), answer: intl.formatMessage({ id: 'blogger.faq.a2', defaultMessage: "It depends on your blog traffic. 10 clients = $100. 50 clients = $500. Some bloggers earn $1000-3000/month by writing SEO-optimized articles that rank well on Google." }) },
+    { question: intl.formatMessage({ id: 'blogger.faq.q1', defaultMessage: "What exactly do I have to do as a Blogger Partner?" }), answer: intl.formatMessage({ id: 'blogger.faq.a1', defaultMessage: "Insert our widget into your existing or new articles. Your readers click it when they need any kind of help abroad (visa, admin, emergencies, practical questions...). Each call made via your link earns you $10. That's it!" }) },
+    { question: intl.formatMessage({ id: 'blogger.faq.q2', defaultMessage: "How much can I realistically earn?" }), answer: intl.formatMessage({ id: 'blogger.faq.a2', defaultMessage: "It depends on your blog traffic. 10 clients = $100. 50 clients = $500. Some bloggers earn $1000-3000/month simply by having the widget in hundreds of articles." }) },
     { question: intl.formatMessage({ id: 'blogger.faq.q3', defaultMessage: "What is an 'expat helper'?" }), answer: intl.formatMessage({ id: 'blogger.faq.a3', defaultMessage: "Expat helpers are experienced expats who provide practical advice and guidance. They're not lawyers, but they know the local system well and can help with everyday questions about visas, administration, housing, etc." }) },
-    { question: intl.formatMessage({ id: 'blogger.faq.q4', defaultMessage: "What resources do I get?" }), answer: intl.formatMessage({ id: 'blogger.faq.a4', defaultMessage: "You get article templates, ready-to-copy texts in 9 languages, HD logos, banners, and a complete integration guide with SEO best practices." }) },
+    { question: intl.formatMessage({ id: 'blogger.faq.q4', defaultMessage: "What resources do I get?" }), answer: intl.formatMessage({ id: 'blogger.faq.a4', defaultMessage: "You get ready-to-use widgets (copy-paste HTML), ready-to-copy texts in 9 languages, HD logos, banners in multiple sizes, and a complete integration guide to add the widget to all your articles in minutes." }) },
     { question: intl.formatMessage({ id: 'blogger.faq.q5', defaultMessage: "How and when do I get paid?" }), answer: intl.formatMessage({ id: 'blogger.faq.a5', defaultMessage: "Withdraw anytime once you reach $50. We support Wise, PayPal, Mobile Money, and bank transfers. Payments processed within 48 hours." }) },
-    { question: intl.formatMessage({ id: 'blogger.faq.q6', defaultMessage: "Do I need a specific blog topic?" }), answer: intl.formatMessage({ id: 'blogger.faq.a6', defaultMessage: "Your blog should relate to expat life, travel, immigration, or similar topics. We provide article templates if you need inspiration!" }) },
+    { question: intl.formatMessage({ id: 'blogger.faq.q6', defaultMessage: "Do I need a specific blog topic?" }), answer: intl.formatMessage({ id: 'blogger.faq.a6', defaultMessage: "Your blog should relate to expat life, travel, vacations, or immigration topics. If your readers travel or live abroad, the widget is perfect for them!" }) },
   ];
 
   // Article topics
@@ -267,12 +268,12 @@ const BloggerLanding: React.FC = () => {
 
   // Resources
   const resources = [
-    { name: intl.formatMessage({ id: 'blogger.resource.templates', defaultMessage: 'Article Templates' }), icon: '📝' },
-    { name: intl.formatMessage({ id: 'blogger.resource.texts', defaultMessage: 'Ready Texts' }), icon: '📋' },
     { name: intl.formatMessage({ id: 'blogger.resource.widgets', defaultMessage: 'Smart Widgets' }), icon: '🧩', highlight: true },
     { name: intl.formatMessage({ id: 'blogger.resource.logos', defaultMessage: 'HD Logos' }), icon: '✨' },
     { name: intl.formatMessage({ id: 'blogger.resource.banners', defaultMessage: 'Banners' }), icon: '🖼️' },
-    { name: intl.formatMessage({ id: 'blogger.resource.seo', defaultMessage: 'SEO Guide' }), icon: '🔍' },
+    { name: intl.formatMessage({ id: 'blogger.resource.texts', defaultMessage: 'Ready Texts' }), icon: '📋' },
+    { name: intl.formatMessage({ id: 'blogger.resource.guide', defaultMessage: 'Integration Guide' }), icon: '📖' },
+    { name: intl.formatMessage({ id: 'blogger.resource.qr', defaultMessage: 'QR Codes' }), icon: '📱' },
   ];
 
   // Payment methods (from country config)
@@ -324,7 +325,7 @@ const BloggerLanding: React.FC = () => {
 
             {/* Subtitle */}
             <p className="text-lg sm:text-xl max-w-3xl mx-auto mb-4 sm:mb-6">
-              <FormattedMessage id="blogger.hero.new.subtitle" defaultMessage="Écrivez sur la vie d'expatrié. Intégrez votre lien. Vos lecteurs appellent. Vous gagnez 10$/appel. SEO = revenus passifs !" />
+              <FormattedMessage id="blogger.hero.new.subtitle" defaultMessage="Insérez notre widget dans vos articles. Vos lecteurs obtiennent de l'aide pour tous leurs besoins. Vous gagnez $10 par appel. Revenus passifs à vie !" />
             </p>
 
             {/* 3 SOURCES DE REVENUS - ULTRA VENDEUR */}
@@ -335,14 +336,14 @@ const BloggerLanding: React.FC = () => {
               <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
                 {/* Source 1 : Appels lecteurs */}
                 <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black mb-1">10$</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">$10</div>
                   <div className="text-xs sm:text-sm"><FormattedMessage id="blogger.hero.source1" defaultMessage="par appel lecteur" /></div>
                 </div>
 
-                {/* Source 2 : SEO passif */}
+                {/* Source 2 : Revenus passifs */}
                 <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border rounded-xl p-3 sm:p-4 text-center">
                   <div className="text-2xl sm:text-3xl font-black mb-1">♾️</div>
-                  <div className="text-xs sm:text-sm"><FormattedMessage id="blogger.hero.source2" defaultMessage="trafic SEO passif" /></div>
+                  <div className="text-xs sm:text-sm"><FormattedMessage id="blogger.hero.source2" defaultMessage="revenus passifs à vie" /></div>
                 </div>
 
                 {/* Source 3 : Partenaires */}
@@ -350,7 +351,7 @@ const BloggerLanding: React.FC = () => {
                   <span className="absolute -top-2 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full">
                     <FormattedMessage id="blogger.hero.hot" defaultMessage="🔥 HOT" />
                   </span>
-                  <div className="text-2xl sm:text-3xl font-black mb-1">1500$</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">$1500</div>
                   <div className="text-xs sm:text-sm"><FormattedMessage id="blogger.hero.source3" defaultMessage="avec 10 partenaires" /></div>
                 </div>
               </div>
@@ -360,8 +361,8 @@ const BloggerLanding: React.FC = () => {
                 <p className="text-xs sm:text-sm">
                   <FormattedMessage
                     id="blogger.hero.partnerExample"
-                    defaultMessage="💡 1 partenaire (avocat/expatrié aidant) = 30 appels/mois × 5$ × 6 mois = {total} passifs !"
-                    values={{ total: <span className="text-purple-400 font-bold">900$</span> }}
+                    defaultMessage="💡 1 prestataire recruté = 30 appels/mois × $5 = {total}/mois passifs à vie !"
+                    values={{ total: <span className="text-purple-400 font-bold">$150</span> }}
                   />
                 </p>
               </div>
@@ -375,16 +376,16 @@ const BloggerLanding: React.FC = () => {
             {/* Trust pills */}
             <div className="flex justify-center gap-3 mt-6 sm:mt-8 text-xs sm:text-sm">
               <div className="flex items-center gap-1.5 bg-white/10 border rounded-full px-3 py-1.5">
-                <FileText className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
-                <FormattedMessage id="blogger.hero.trust.1" defaultMessage="Article Templates" />
-              </div>
-              <div className="flex items-center gap-1.5 bg-white/10 border rounded-full px-3 py-1.5">
-                <Search className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
-                <FormattedMessage id="blogger.hero.trust.2" defaultMessage="SEO Guide" />
-              </div>
-              <div className="flex items-center gap-1.5 bg-white/10 border rounded-full px-3 py-1.5">
                 <Code className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
-                <FormattedMessage id="blogger.hero.trust.3" defaultMessage="HD Logos & Banners" />
+                <FormattedMessage id="blogger.hero.trust.1" defaultMessage="Widget inclus" />
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/10 border rounded-full px-3 py-1.5">
+                <Link className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
+                <FormattedMessage id="blogger.hero.trust.2" defaultMessage="Logos & Bannières HD" />
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/10 border rounded-full px-3 py-1.5">
+                <Check className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
+                <FormattedMessage id="blogger.hero.trust.3" defaultMessage="Activation immédiate" />
               </div>
             </div>
           </div>
@@ -406,7 +407,7 @@ const BloggerLanding: React.FC = () => {
                 <FormattedMessage id="blogger.landing.value.title" defaultMessage="Vous apportez de la VRAIE valeur" />
               </h2>
               <p className="text-base sm:text-lg lg:text-xl max-w-3xl mx-auto text-white/90">
-                <FormattedMessage id="blogger.landing.value.subtitle" defaultMessage="Vous ne vendez pas, vous AIDEZ. Vos articles guident les expats dans leurs galères quotidiennes." />
+                <FormattedMessage id="blogger.landing.value.subtitle" defaultMessage="Vous ne vendez pas, vous AIDEZ. Vos lecteurs voyageurs, vacanciers et expatriés ont besoin d'aide. Votre widget leur donne accès à sos-expat.com en un clic." />
               </p>
             </div>
 
@@ -511,7 +512,7 @@ const BloggerLanding: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-sm sm:text-base text-white/90">
-                    <FormattedMessage id="blogger.landing.value.problem4.solution" defaultMessage="Articles gratuits + réduction 5$ via VOTRE lien. Aide pro accessible. Lecteur reconnaissant." />
+                    <FormattedMessage id="blogger.landing.value.problem4.solution" defaultMessage="Articles gratuits + aide pro accessible via VOTRE lien. Toute assistance disponible à prix abordable. Lecteur reconnaissant." />
                   </p>
                 </div>
               </article>
@@ -523,7 +524,7 @@ const BloggerLanding: React.FC = () => {
                 <FormattedMessage id="blogger.landing.value.winwin.title" defaultMessage="🎯 Vous créez du contenu utile. Vous aidez ET gagnez." />
               </h3>
               <p className="text-base sm:text-lg text-white/90 mb-4">
-                <FormattedMessage id="blogger.landing.value.winwin.desc" defaultMessage="Chaque lecteur aidé = problème résolu + infos gratuites + 5$ économisés pour lui + 10$ gagnés pour vous. Tout le monde gagne." />
+                <FormattedMessage id="blogger.landing.value.winwin.desc" defaultMessage="Chaque lecteur aidé = problème résolu + infos gratuites + accès à une aide adaptée + $10 gagnés pour vous. Tout le monde gagne." />
               </p>
               <div className="inline-flex items-center gap-2 bg-purple-500/30 border border-purple-400/50 rounded-full px-4 py-2 text-sm sm:text-base font-bold">
                 <Check className="w-4 h-4 text-green-400" aria-hidden="true" />
@@ -548,34 +549,34 @@ const BloggerLanding: React.FC = () => {
             </div>
 
             <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
-              {/* Step 1 - Write */}
+              {/* Step 1 - Insert Widget */}
               <article className="relative bg-white/10 border rounded-2xl p-5 sm:p-6">
                 <div className="absolute -top-3 w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg">1</div>
                 <div className="pt-4">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 bg-purple-500/20 rounded-xl flex items-center justify-center mb-3">
-                    <PenTool className="w-6 h-6 sm:w-7 sm:h-7 text-purple-400" aria-hidden="true" />
+                    <Code className="w-6 h-6 sm:w-7 sm:h-7 text-purple-400" aria-hidden="true" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold mb-2">
-                    <FormattedMessage id="blogger.step1.title" defaultMessage="Write Articles" />
+                    <FormattedMessage id="blogger.step1.title" defaultMessage="Insérez le Widget" />
                   </h3>
                   <p className="text-sm sm:text-base mb-3">
-                    <FormattedMessage id="blogger.step1.desc" defaultMessage="Write about expat life, visas, moving abroad, legal tips. Use our templates if you need inspiration. Focus on SEO for long-term traffic." />
+                    <FormattedMessage id="blogger.step1.desc" defaultMessage="Copiez-collez notre widget dans vos articles existants ou nouveaux. Que vous ayez 10 ou 1000 articles, le widget s'intègre en quelques secondes." />
                   </p>
                   <div className="flex gap-2">
                     <span className="px-3 py-1 bg-purple-500/30 text-purple-300 rounded-full font-bold">
-                      <FormattedMessage id="blogger.step1.tag.visa" defaultMessage="Visa Guides" />
+                      <FormattedMessage id="blogger.step1.tag.old" defaultMessage="Anciens articles" />
                     </span>
                     <span className="px-3 py-1 bg-white/10 text-white/90 rounded-full font-medium">
-                      <FormattedMessage id="blogger.step1.tag.tips" defaultMessage="Living Abroad" />
+                      <FormattedMessage id="blogger.step1.tag.sidebar" defaultMessage="Sidebar" />
                     </span>
                     <span className="px-3 py-1 bg-white/10 text-white/90 rounded-full font-medium">
-                      <FormattedMessage id="blogger.step1.tag.legal" defaultMessage="Legal Tips" />
+                      <FormattedMessage id="blogger.step1.tag.new" defaultMessage="Nouveaux articles" />
                     </span>
                   </div>
                 </div>
               </article>
 
-              {/* Step 2 - Link */}
+              {/* Step 2 - Link Already Integrated */}
               <article className="relative bg-white/10 border rounded-2xl p-5 sm:p-6">
                 <div className="absolute -top-3 w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg">2</div>
                 <div className="pt-4">
@@ -583,20 +584,20 @@ const BloggerLanding: React.FC = () => {
                     <Link className="w-6 h-6 sm:w-7 sm:h-7 text-blue-400" aria-hidden="true" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold mb-2">
-                    <FormattedMessage id="blogger.step2.title" defaultMessage="Add Your Link" />
+                    <FormattedMessage id="blogger.step2.title" defaultMessage="Votre Lien Est Intégré" />
                   </h3>
                   <p className="text-sm sm:text-base mb-3">
-                    <FormattedMessage id="blogger.step2.desc" defaultMessage="Include your unique affiliate link in articles. Use our banners, widgets, or simple text links. We track everything automatically." />
+                    <FormattedMessage id="blogger.step2.desc" defaultMessage="Votre lien affilié est déjà intégré dans le widget. Logos, bannières, boutons CTA — tout est prêt. Aucune configuration requise." />
                   </p>
                   <div className="bg-purple-500/10 border rounded-xl p-3 mb-3">
                     <div className="flex items-center gap-2 text-sm font-semibold">
                       <Code className="w-4 h-4" aria-hidden="true" />
-                      <FormattedMessage id="blogger.step2.widgets" defaultMessage="Ready-to-use widgets with your link already embedded!" />
+                      <FormattedMessage id="blogger.step2.widgets" defaultMessage="Widget prêt à copier-coller avec votre lien déjà dedans !" />
                     </div>
                   </div>
                   <div className="bg-white/10 rounded-xl p-3 border">
                     <p className="text-sm italic">
-                      "<FormattedMessage id="blogger.step2.example" defaultMessage="Need help with your visa? Talk to a lawyer or expat helper in minutes →" />"
+                      "<FormattedMessage id="blogger.step2.example" defaultMessage="Besoin d'aide à l'étranger ? Parlez à un expert en quelques minutes →" />"
                     </p>
                   </div>
                 </div>
@@ -613,7 +614,7 @@ const BloggerLanding: React.FC = () => {
                     <FormattedMessage id="blogger.step3.title" defaultMessage="Get Paid $10" />
                   </h3>
                   <p className="text-sm sm:text-base mb-3">
-                    <FormattedMessage id="blogger.step3.desc" defaultMessage="When readers make a call through your link, you earn $10. Withdraw anytime via Wise, PayPal, or Mobile Money." />
+                    <FormattedMessage id="blogger.step3.desc" defaultMessage="Quand un lecteur utilise votre widget pour obtenir de l'aide, vous gagnez $10. Retirez quand vous voulez via Wise, PayPal ou Mobile Money." />
                   </p>
                   <div className="flex items-center gap-2 text-green-400 font-bold">
                     <Check className="w-5 h-5" aria-hidden="true" />
@@ -623,18 +624,18 @@ const BloggerLanding: React.FC = () => {
               </article>
             </div>
 
-            {/* Note: Lawyers AND Expat Helpers */}
+            {/* Note: All types of assistance */}
             <div className="mt-8 sm:mt-10 bg-amber-500/10 border rounded-2xl p-5 sm:p-6">
               <div className="flex sm:flex-row sm:items-center gap-4">
                 <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl" aria-hidden="true">⚖️</span>
+                  <span className="text-2xl" aria-hidden="true">🌐</span>
                 </div>
                 <div>
                   <h3 className="text-lg font-bold mb-1">
-                    <FormattedMessage id="blogger.note.title" defaultMessage="Lawyers AND Expat Helpers" />
+                    <FormattedMessage id="blogger.note.title" defaultMessage="Toute assistance, 24h/24" />
                   </h3>
                   <p className="text-sm sm:text-base">
-                    <FormattedMessage id="blogger.note.desc" defaultMessage="SOS-Expat connects people with professional lawyers AND experienced expat helpers. Lawyers for legal matters, expat helpers for practical advice. Both available instantly by phone, worldwide." />
+                    <FormattedMessage id="blogger.note.desc" defaultMessage="SOS-Expat met en relation vos lecteurs avec des experts pour TOUT type de besoin à l'étranger : visa, démarches administratives, logement, santé, urgences, conseils pratiques... Qu'il soit important ou mineur, chaque besoin mérite une aide. Disponible par téléphone, partout dans le monde." />
                   </p>
                 </div>
               </div>
@@ -658,14 +659,14 @@ const BloggerLanding: React.FC = () => {
 
             <div className="grid lg:grid-cols-4 gap-3 sm:gap-4">
               {[
-                { emoji: '✈️', titleId: 'blogger.profiles.travel.title', titleDefault: 'Travel Bloggers', descId: 'blogger.profiles.travel.desc', descDefault: 'Your readers plan trips. They need visa info, legal help abroad. $10 per referral!', gradient: 'from-blue-500 to-cyan-400' },
-                { emoji: '🏖️', titleId: 'blogger.profiles.vacation.title', titleDefault: 'Vacation Bloggers', descId: 'blogger.profiles.vacation.desc', descDefault: 'Beach lovers, resort experts. Tourists abroad sometimes need urgent legal help.', gradient: 'from-orange-500 to-yellow-400' },
-                { emoji: '📸', titleId: 'blogger.profiles.photo.title', titleDefault: 'Travel Photographers', descId: 'blogger.profiles.photo.desc', descDefault: 'Photo essays, destination guides. Your visual content + our link = passive income.', gradient: 'from-purple-500 to-pink-400' },
-                { emoji: '💻', titleId: 'blogger.profiles.nomad.title', titleDefault: 'Digital Nomads', descId: 'blogger.profiles.nomad.desc', descDefault: 'Your audience NEEDS visa info! Digital nomad visa guides = high conversion.', gradient: 'from-indigo-500 to-purple-400', badge: 'TOP' },
-                { emoji: '🎬', titleId: 'blogger.profiles.influencer.title', titleDefault: 'Travel Influencers', descId: 'blogger.profiles.influencer.desc', descDefault: 'YouTube, Instagram, TikTok. Link in bio + affiliate links in descriptions.', gradient: 'from-pink-500 to-rose-400' },
+                { emoji: '✈️', titleId: 'blogger.profiles.travel.title', titleDefault: 'Travel Bloggers', descId: 'blogger.profiles.travel.desc', descDefault: 'Your readers plan trips. They need help with visas, accommodation, emergencies. $10 per referral!', gradient: 'from-blue-500 to-cyan-400' },
+                { emoji: '🏖️', titleId: 'blogger.profiles.vacation.title', titleDefault: 'Vacation Bloggers', descId: 'blogger.profiles.vacation.desc', descDefault: 'Beach lovers, resort experts. Tourists abroad sometimes need urgent help of any kind.', gradient: 'from-orange-500 to-yellow-400' },
+                { emoji: '📸', titleId: 'blogger.profiles.photo.title', titleDefault: 'Travel Photographers', descId: 'blogger.profiles.photo.desc', descDefault: 'Photo essays, destination guides. Your visual content + our widget = passive income.', gradient: 'from-purple-500 to-pink-400' },
+                { emoji: '💻', titleId: 'blogger.profiles.nomad.title', titleDefault: 'Digital Nomads', descId: 'blogger.profiles.nomad.desc', descDefault: 'Your audience NEEDS help! Visa guides, admin tips, practical advice = high conversion.', gradient: 'from-indigo-500 to-purple-400', badge: 'TOP' },
+                { emoji: '🎬', titleId: 'blogger.profiles.influencer.title', titleDefault: 'Travel Influencers', descId: 'blogger.profiles.influencer.desc', descDefault: 'YouTube, Instagram, TikTok. Widget in description + banners in posts.', gradient: 'from-pink-500 to-rose-400' },
                 { emoji: '🌍', titleId: 'blogger.profiles.expat.title', titleDefault: 'Expat Bloggers', descId: 'blogger.profiles.expat.desc', descDefault: 'You live abroad. Perfect fit! Your readers face the same challenges you did.', gradient: 'from-green-500 to-emerald-400', badge: 'BEST' },
-                { emoji: '🚚', titleId: 'blogger.profiles.relocation.title', titleDefault: 'Relocation Experts', descId: 'blogger.profiles.relocation.desc', descDefault: 'Moving abroad guides, country comparisons. High intent audience!', gradient: 'from-amber-500 to-orange-400' },
-                { emoji: '🏔️', titleId: 'blogger.profiles.adventure.title', titleDefault: 'Adventure Bloggers', descId: 'blogger.profiles.adventure.desc', descDefault: 'Hiking, diving, extreme sports abroad. Adventurers need legal protection too!', gradient: 'from-teal-500 to-cyan-400' },
+                { emoji: '🚚', titleId: 'blogger.profiles.relocation.title', titleDefault: 'Relocation Experts', descId: 'blogger.profiles.relocation.desc', descDefault: 'Moving abroad guides, country comparisons. High-intent audience needing all kinds of help!', gradient: 'from-amber-500 to-orange-400' },
+                { emoji: '🏔️', titleId: 'blogger.profiles.adventure.title', titleDefault: 'Adventure Bloggers', descId: 'blogger.profiles.adventure.desc', descDefault: 'Hiking, diving, extreme sports abroad. Adventurers sometimes need help too!', gradient: 'from-teal-500 to-cyan-400' },
               ].map((profile, i) => (
                 <article key={i} className={`relative bg-white/10 rounded-2xl p-4 sm:p-5 border ${profile.badge ? 'border-purple-500/50 ring-1 ring-purple-400/30' : 'border-white/10'} transition-colors hover:border-white/20`}>
                   {profile.badge && (
@@ -691,9 +692,9 @@ const BloggerLanding: React.FC = () => {
               </h3>
               <div className="grid sm:grid-cols-3 gap-5">
                 {[
-                  { emoji: '📋', titleId: 'blogger.profiles.why1.title', titleDefault: 'Visa Problems', descId: 'blogger.profiles.why1.desc', descDefault: 'Expired visa, wrong documents, need extension. Travelers need help FAST.' },
-                  { emoji: '⚖️', titleId: 'blogger.profiles.why2.title', titleDefault: 'Legal Issues Abroad', descId: 'blogger.profiles.why2.desc', descDefault: 'Traffic accidents, contracts, scams. Legal help in a foreign country = urgent.' },
-                  { emoji: '🆘', titleId: 'blogger.profiles.why3.title', titleDefault: 'Practical Questions', descId: 'blogger.profiles.why3.desc', descDefault: 'Bank account, housing, local admin. Expat helpers share real experience.' },
+                  { emoji: '📋', titleId: 'blogger.profiles.why1.title', titleDefault: 'Visa & Démarches', descId: 'blogger.profiles.why1.desc', descDefault: 'Visa expiré, mauvais documents, extension. Les voyageurs ont besoin d\'aide FAST.' },
+                  { emoji: '🆘', titleId: 'blogger.profiles.why2.title', titleDefault: 'Urgences à l\'étranger', descId: 'blogger.profiles.why2.desc', descDefault: 'Accident, perte de documents, arnaque, problème médical. Toute urgence mérite une aide rapide.' },
+                  { emoji: '💬', titleId: 'blogger.profiles.why3.title', titleDefault: 'Questions pratiques', descId: 'blogger.profiles.why3.desc', descDefault: 'Banque, logement, admin locale, transport. Les aidants expatriés partagent leur expérience réelle.' },
                 ].map((item, i) => (
                   <div key={i} className="text-center">
                     <div className="text-3xl mb-2">{item.emoji}</div>
@@ -805,16 +806,18 @@ const BloggerLanding: React.FC = () => {
               </h3>
 
               <div className="space-y-6">
-                {/* Articles slider */}
+                {/* Articles slider — échelle logarithmique 5→10 000 */}
                 <div>
                   <label className="flex items-center justify-between text-sm font-medium mb-2">
                     <span className="text-gray-300">
                       <FormattedMessage id="blogger.existing.calculator.articles" defaultMessage="How many articles do you have?" />
                     </span>
-                    <span className="text-purple-400 font-bold">{calcArticles}</span>
+                    <span className="text-purple-400 font-bold text-base">{formatArticles(calcArticles)}</span>
                   </label>
-                  <input type="range" min="5" max="100" value={calcArticles} onChange={(e) => setCalcArticles(parseInt(e.target.value))} className="w-full appearance-none cursor-pointer" />
-                  <div className="flex justify-between text-xs mt-1"><span>5</span><span>50</span><span>100</span></div>
+                  <input type="range" min="0" max="100" value={sliderArticlesPos} onChange={(e) => setSliderArticlesPos(parseInt(e.target.value))} className="w-full appearance-none cursor-pointer" />
+                  <div className="flex justify-between text-xs mt-1 text-gray-400">
+                    <span>5</span><span>100</span><span>1 000</span><span>10K</span>
+                  </div>
                 </div>
 
                 {/* Visits per article per day */}
@@ -823,22 +826,22 @@ const BloggerLanding: React.FC = () => {
                     <span className="text-gray-300">
                       <FormattedMessage id="blogger.existing.calculator.visits" defaultMessage="Average visits per article/day" />
                     </span>
-                    <span className="text-purple-400 font-bold">{calcVisitsPerArticle}</span>
+                    <span className="text-purple-400 font-bold text-base">{calcVisitsPerArticle}</span>
                   </label>
-                  <input type="range" min="1" max="50" value={calcVisitsPerArticle} onChange={(e) => setCalcVisitsPerArticle(parseInt(e.target.value))} className="w-full appearance-none cursor-pointer" />
-                  <div className="flex justify-between text-xs mt-1"><span>1</span><span>25</span><span>50</span></div>
+                  <input type="range" min="1" max="500" value={calcVisitsPerArticle} onChange={(e) => setCalcVisitsPerArticle(parseInt(e.target.value))} className="w-full appearance-none cursor-pointer" />
+                  <div className="flex justify-between text-xs mt-1 text-gray-400"><span>1</span><span>100</span><span>250</span><span>500</span></div>
                 </div>
 
-                {/* Conversion rate */}
+                {/* Conversion rate — précision 0.1% */}
                 <div>
                   <label className="flex items-center justify-between text-sm font-medium mb-2">
                     <span className="text-gray-300">
                       <FormattedMessage id="blogger.existing.calculator.conversion" defaultMessage="Conversion rate" />
                     </span>
-                    <span className="text-purple-400 font-bold">{calcConversionRate}%</span>
+                    <span className="text-purple-400 font-bold text-base">{calcConversionRate.toFixed(1)}%</span>
                   </label>
-                  <input type="range" min="0.5" max="3" step="0.5" value={calcConversionRate} onChange={(e) => setCalcConversionRate(parseFloat(e.target.value))} className="w-full appearance-none cursor-pointer" />
-                  <div className="flex justify-between text-xs mt-1"><span>0.5%</span><span>1.5%</span><span>3%</span></div>
+                  <input type="range" min="0.1" max="5" step="0.1" value={calcConversionRate} onChange={(e) => setCalcConversionRate(parseFloat(e.target.value))} className="w-full appearance-none cursor-pointer" />
+                  <div className="flex justify-between text-xs mt-1 text-gray-400"><span>0.1%</span><span>1%</span><span>2.5%</span><span>5%</span></div>
                 </div>
 
                 {/* Results */}
@@ -846,9 +849,9 @@ const BloggerLanding: React.FC = () => {
                   <p className="text-sm opacity-90 mb-1">
                     <FormattedMessage id="blogger.existing.calculator.result" defaultMessage="Estimated monthly earnings" />
                   </p>
-                  <p className="text-4xl sm:text-5xl font-black">${monthlyEarnings}</p>
+                  <p className="text-4xl sm:text-5xl font-black">${monthlyEarnings.toLocaleString()}</p>
                   <p className="text-sm opacity-80 mt-2">
-                    {monthlyVisits.toLocaleString()} <FormattedMessage id="blogger.existing.calculator.visits.label" defaultMessage="visits" /> × {calcConversionRate}% = {monthlyClients} <FormattedMessage id="blogger.existing.calculator.clients" defaultMessage="clients" /> × $10
+                    {monthlyVisits.toLocaleString()} <FormattedMessage id="blogger.existing.calculator.visits.label" defaultMessage="visits" /> × {calcConversionRate.toFixed(1)}% = {monthlyClients.toLocaleString()} <FormattedMessage id="blogger.existing.calculator.clients" defaultMessage="clients" /> × $10
                   </p>
                 </div>
 
@@ -874,10 +877,10 @@ const BloggerLanding: React.FC = () => {
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10 sm:mb-14">
               <h2 id="blogger-topics-title" className="text-2xl sm:text-4xl font-black mb-3">
-                <FormattedMessage id="blogger.topics.title" defaultMessage="What to Write About?" />
+                <FormattedMessage id="blogger.topics.title" defaultMessage="Dans Quels Articles Insérer le Widget ?" />
               </h2>
               <p className="text-base sm:text-lg">
-                <FormattedMessage id="blogger.topics.subtitle" defaultMessage="Topics that work well for SOS-Expat referrals" />
+                <FormattedMessage id="blogger.topics.subtitle" defaultMessage="Tous vos articles peuvent générer des revenus — insérez simplement le widget" />
               </p>
             </div>
 
@@ -889,22 +892,22 @@ const BloggerLanding: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg sm:text-2xl font-bold mb-1">
-                    <FormattedMessage id="blogger.topics.visa.title" defaultMessage="Visa Guides = Best Performers" />
+                    <FormattedMessage id="blogger.topics.visa.title" defaultMessage="Articles Voyage & Expatriation = Meilleures Conversions" />
                   </h3>
                   <p className="text-sm sm:text-base">
-                    <FormattedMessage id="blogger.topics.visa.desc" defaultMessage="Articles about visa requirements rank well on Google and convert best." />
+                    <FormattedMessage id="blogger.topics.visa.desc" defaultMessage="Ces articles attirent des lecteurs qui ont vraiment besoin d'aide à l'étranger — idéal pour votre widget !" />
                   </p>
                 </div>
               </div>
               <div className="grid sm:grid-cols-4 gap-2 sm:gap-3">
                 {['blogger.topics.ex1', 'blogger.topics.ex2', 'blogger.topics.ex3', 'blogger.topics.ex4'].map((id, i) => (
                   <div key={i} className="bg-white/10 border rounded-xl px-3 py-2 text-center sm:text-sm">
-                    <FormattedMessage id={id} defaultMessage={["'Spain Digital Nomad Visa'", "'UK Work Permit Guide'", "'How to Get a French Visa'", "'Dubai Residence Permit'"][i]} />
+                    <FormattedMessage id={id} defaultMessage={["'Guide Visa Digital Nomad'", "'Voyage en solo à l\'étranger'", "'S\'installer en France expatrié'", "'Que faire si problème à l\'étranger'"][i]} />
                   </div>
                 ))}
               </div>
               <p className="mt-4 text-xs sm:text-sm">
-                <FormattedMessage id="blogger.topics.tip" defaultMessage="Focus on long-tail keywords for better SEO rankings" />
+                <FormattedMessage id="blogger.topics.tip" defaultMessage="Ces sujets attirent des lecteurs en difficulté, prêts à utiliser votre widget pour obtenir de l'aide !" />
               </p>
             </div>
 
@@ -934,10 +937,10 @@ const BloggerLanding: React.FC = () => {
             {/* Example articles */}
             <div className="mt-8 grid lg:grid-cols-4 gap-3 sm:gap-4">
               {[
-                { emoji: '💻', typeId: 'blogger.example.nomad.type', typeDefault: 'Digital Nomad:', textId: 'blogger.example.nomad.text', textDefault: 'Spain Digital Nomad Visa 2026 Guide', earning: '$10/visa help call', colorClass: 'text-purple-400' },
-                { emoji: '✈️', typeId: 'blogger.example.travel.type', typeDefault: 'Travel Blog:', textId: 'blogger.example.travel.text', textDefault: 'What to Do if You Lose Your Passport in Thailand', earning: '$10/emergency help', colorClass: 'text-blue-400' },
-                { emoji: '📸', typeId: 'blogger.example.photo.type', typeDefault: 'Photo Blog:', textId: 'blogger.example.photo.text', textDefault: 'Photography Permits in Morocco: What You Need', earning: '$10/legal help', colorClass: 'text-pink-400' },
-                { emoji: '🏖️', typeId: 'blogger.example.vacation.type', typeDefault: 'Vacation Blog:', textId: 'blogger.example.vacation.text', textDefault: 'Bali Tourist Visa: How to Extend Your Stay', earning: '$10/visa help', colorClass: 'text-orange-400' },
+                { emoji: '💻', typeId: 'blogger.example.nomad.type', typeDefault: 'Digital Nomad:', textId: 'blogger.example.nomad.text', textDefault: 'Guide visa digital nomad Espagne 2026', earning: '$10/appel', colorClass: 'text-purple-400' },
+                { emoji: '✈️', typeId: 'blogger.example.travel.type', typeDefault: 'Blog voyage:', textId: 'blogger.example.travel.text', textDefault: 'Que faire si vous perdez votre passeport en Thaïlande', earning: '$10/appel urgence', colorClass: 'text-blue-400' },
+                { emoji: '🏖️', typeId: 'blogger.example.vacation.type', typeDefault: 'Blog vacances:', textId: 'blogger.example.vacation.text', textDefault: 'Visa touriste Bali : comment prolonger son séjour', earning: '$10/appel', colorClass: 'text-orange-400' },
+                { emoji: '🌍', typeId: 'blogger.example.expat.type', typeDefault: 'Blog expat:', textId: 'blogger.example.expat.text', textDefault: 'S\'installer en France : les démarches admin à connaître', earning: '$10/appel conseil', colorClass: 'text-green-400' },
               ].map((ex, i) => (
                 <div key={i} className="bg-white/10 border rounded-2xl p-3 sm:p-4">
                   <div className="text-xl sm:text-2xl mb-2">{ex.emoji}</div>
@@ -1006,9 +1009,9 @@ const BloggerLanding: React.FC = () => {
             {/* 3 resource detail cards */}
             <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 mb-10">
               {[
-                { icon: <FileText className="w-6 h-6 text-purple-400" />, titleId: 'blogger.resources.templates.title', titleDefault: 'Article Templates', descId: 'blogger.resources.templates.desc', descDefault: 'Pre-written article structures you can customize. Just add your personal touch and publish.', borderClass: 'border-purple-500/20', bgClass: 'bg-purple-500/20' },
-                { icon: <Copy className="w-6 h-6 text-blue-400" />, titleId: 'blogger.resources.texts.title', titleDefault: 'Ready-to-Copy Texts', descId: 'blogger.resources.texts.desc', descDefault: 'Promotional texts in 9 languages. Copy, paste, and you\'re done.', borderClass: 'border-blue-500/20', bgClass: 'bg-blue-500/20' },
-                { icon: <Search className="w-6 h-6 text-green-400" />, titleId: 'blogger.resources.seo.title', titleDefault: 'SEO Guide', descId: 'blogger.resources.seo.desc', descDefault: 'Best practices to rank your articles on Google and drive organic traffic.', borderClass: 'border-green-500/20', bgClass: 'bg-green-500/20' },
+                { icon: <Code className="w-6 h-6 text-purple-400" />, titleId: 'blogger.resources.widgets.title', titleDefault: 'Smart Widgets', descId: 'blogger.resources.widgets.desc', descDefault: 'Boutons et bannières avec votre lien déjà intégré. Copy-paste le code HTML dans vos articles.', borderClass: 'border-purple-500/20', bgClass: 'bg-purple-500/20' },
+                { icon: <Copy className="w-6 h-6 text-blue-400" />, titleId: 'blogger.resources.texts.title', titleDefault: 'Textes prêts à copier', descId: 'blogger.resources.texts.desc', descDefault: 'Textes promotionnels en 9 langues. Copiez, collez, c\'est fait. Votre lien est déjà inclus.', borderClass: 'border-blue-500/20', bgClass: 'bg-blue-500/20' },
+                { icon: <FileText className="w-6 h-6 text-amber-400" />, titleId: 'blogger.resources.guide.title', titleDefault: 'Guide d\'intégration', descId: 'blogger.resources.guide.desc', descDefault: 'Procédure pas à pas pour insérer le widget dans tous vos articles existants en quelques minutes.', borderClass: 'border-amber-500/20', bgClass: 'bg-amber-500/20' },
               ].map((card, i) => (
                 <div key={i} className={`bg-white/10 border ${card.borderClass} rounded-2xl p-5 sm:p-6`}>
                   <div className={`w-11 h-11 ${card.bgClass} rounded-xl flex items-center justify-center mb-3`} aria-hidden="true">
@@ -1036,7 +1039,7 @@ const BloggerLanding: React.FC = () => {
               <Phone className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 opacity-80" aria-hidden="true" />
               <div className="text-5xl sm:text-7xl font-black mb-2">$10</div>
               <p className="text-lg sm:text-xl opacity-90">
-                <FormattedMessage id="blogger.earnings.perCall" defaultMessage="Per client call to a lawyer or expat helper" />
+                <FormattedMessage id="blogger.earnings.perCall" defaultMessage="Par appel client pour tout type d'assistance" />
               </p>
               <div className="mt-5 flex justify-center gap-3 text-sm">
                 {['10 = $100', '50 = $500', '100 = $1000'].map((text, i) => (
@@ -1060,23 +1063,23 @@ const BloggerLanding: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-sm">
-                  <FormattedMessage id="blogger.earnings.partner.desc" defaultMessage="Find a lawyer or expat helper to join SOS-Expat. Every time they receive a call, you earn $5 passively!" />
+                  <FormattedMessage id="blogger.earnings.partner.desc" defaultMessage="Recrutez un prestataire (avocat, aidant, expert...) sur SOS-Expat. Chaque fois qu'il reçoit un appel, vous gagnez $5 passivement, sans rien faire !" />
                 </p>
               </div>
               <div className="bg-white/10 border rounded-2xl p-5 sm:p-6">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-11 h-11 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <Search className="w-5 h-5 text-green-400" aria-hidden="true" />
+                    <Zap className="w-5 h-5 text-green-400" aria-hidden="true" />
                   </div>
                   <div>
-                    <div className="text-2xl sm:text-3xl font-black">SEO</div>
+                    <div className="text-2xl sm:text-3xl font-black">♾️</div>
                     <div className="text-xs sm:text-sm">
-                      <FormattedMessage id="blogger.earnings.seo" defaultMessage="Long-term passive traffic" />
+                      <FormattedMessage id="blogger.earnings.passive" defaultMessage="Revenus passifs à vie" />
                     </div>
                   </div>
                 </div>
                 <p className="text-sm">
-                  <FormattedMessage id="blogger.earnings.seo.desc" defaultMessage="Your articles rank on Google and generate traffic for months or years. Write once, earn forever!" />
+                  <FormattedMessage id="blogger.earnings.passive.desc" defaultMessage="Insérez le widget une seule fois dans vos articles et percevez des revenus à chaque fois qu'un lecteur l'utilise — pour toujours, sans rien faire de plus !" />
                 </p>
               </div>
             </div>
@@ -1093,39 +1096,41 @@ const BloggerLanding: React.FC = () => {
                 <FormattedMessage id="blogger.passive.title" defaultMessage="Find Lawyer & Helper Partners" />
               </h2>
               <p className="text-base sm:text-lg max-w-2xl mx-auto">
-                <FormattedMessage id="blogger.passive.subtitle" defaultMessage="Know a lawyer or experienced expat? Help them join SOS-Expat and earn $5 every time they receive a call!" />
+                <FormattedMessage id="blogger.passive.subtitle" defaultMessage="Connaissez un avocat, un aidant ou tout autre expert ? Aidez-les à rejoindre SOS-Expat et gagnez $5 à chaque fois qu'ils reçoivent un appel — des revenus passifs illimités !" />
               </p>
             </div>
 
             {/* Network diagram */}
             <div className="bg-white/10 border rounded-2xl p-6 sm:p-10 max-w-3xl mx-auto">
-              <div className="flex items-center">
+              <div className="flex flex-col items-center gap-4">
                 {/* You */}
-                <div className="flex items-center mb-5">
+                <div className="flex flex-col items-center gap-1">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
                     <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-white" aria-hidden="true" />
                   </div>
-                  <span className="mt-2 font-bold text-base sm:text-lg">
-                    <FormattedMessage id="blogger.passive.you" defaultMessage="YOU" />
+                  <span className="font-bold text-base sm:text-lg">
+                    <FormattedMessage id="blogger.passive.you" defaultMessage="VOUS" />
                   </span>
-                  <span className="text-gray-300 sm:text-sm">
-                    <FormattedMessage id="blogger.passive.you.earn" defaultMessage="$10/client + $5/call from partners" />
+                  <span className="text-gray-300 text-xs sm:text-sm text-center">
+                    <FormattedMessage id="blogger.passive.you.earn" defaultMessage="$10/client + $5/appel des prestataires" />
                   </span>
                 </div>
 
-                <div className="text-2xl sm:text-3xl mb-4" aria-hidden="true">↓</div>
+                <div className="text-2xl sm:text-3xl text-purple-400" aria-hidden="true">↓</div>
 
                 {/* Partners */}
-                <div className="flex justify-center gap-4 sm:gap-8 mb-6">
+                <div className="flex justify-center gap-4 sm:gap-8 w-full">
                   {[
-                    { emoji: '⚖️', label: intl.formatMessage({ id: 'blogger.passive.lawyer', defaultMessage: 'Lawyer' }) },
-                    { emoji: '🌍', label: intl.formatMessage({ id: 'blogger.passive.helper', defaultMessage: 'Helper' }) },
-                    { emoji: '⚖️', label: intl.formatMessage({ id: 'blogger.passive.lawyer', defaultMessage: 'Lawyer' }) },
+                    { emoji: '⚖️', labelId: 'blogger.passive.partner1', labelDefault: 'Avocat' },
+                    { emoji: '🌍', labelId: 'blogger.passive.partner2', labelDefault: 'Aidant expat' },
+                    { emoji: '💼', labelId: 'blogger.passive.partner3', labelDefault: 'Expert' },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-full flex items-center justify-center text-xl sm:text-2xl">{item.emoji}</div>
-                      <span className="mt-1 text-xs sm:text-sm font-medium">{item.label}</span>
-                      <span className="text-xs">+$5/call</span>
+                    <div key={i} className="flex flex-col items-center gap-1">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 border border-white/20 rounded-full flex items-center justify-center text-xl sm:text-2xl">{item.emoji}</div>
+                      <span className="text-xs sm:text-sm font-medium text-center">
+                        <FormattedMessage id={item.labelId} defaultMessage={item.labelDefault} />
+                      </span>
+                      <span className="text-xs text-green-400 font-bold">+$5/appel</span>
                     </div>
                   ))}
                 </div>
@@ -1134,10 +1139,10 @@ const BloggerLanding: React.FC = () => {
               {/* Example */}
               <div className="mt-6 bg-white/10 border rounded-2xl p-4 text-center">
                 <p className="font-semibold mb-1 text-sm sm:text-base">
-                  <FormattedMessage id="blogger.passive.example" defaultMessage="Example: 3 lawyer partners, 20 calls/month each" />
+                  <FormattedMessage id="blogger.passive.example" defaultMessage="Exemple : 3 prestataires recrutés, 20 appels/mois chacun" />
                 </p>
-                <p className="text-xl sm:text-2xl font-black">
-                  = $300/month <FormattedMessage id="blogger.passive.passive" defaultMessage="passive income!" />
+                <p className="text-xl sm:text-2xl font-black text-green-400">
+                  = $300/mois <FormattedMessage id="blogger.passive.passive" defaultMessage="de revenus passifs par mois !" />
                 </p>
               </div>
             </div>
@@ -1200,9 +1205,9 @@ const BloggerLanding: React.FC = () => {
             {/* Recap pills */}
             <div className="flex justify-center gap-3 mb-6 sm:mb-8">
               {[
-                { id: 'blogger.final.trust.1', defaultMessage: '100% Free' },
-                { id: 'blogger.final.trust.2', defaultMessage: 'Resources Included' },
-                { id: 'blogger.final.trust.3', defaultMessage: 'SEO Guide' },
+                { id: 'blogger.final.trust.1', defaultMessage: '100% Gratuit' },
+                { id: 'blogger.final.trust.2', defaultMessage: 'Widget Inclus' },
+                { id: 'blogger.final.trust.3', defaultMessage: 'Revenus Passifs à Vie' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 bg-white/10 border rounded-full px-4 py-2 text-sm">
                   <Check className="w-4 h-4 text-green-400" aria-hidden="true" />

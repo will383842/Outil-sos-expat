@@ -11,6 +11,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
+import { BACKLINK_ENGINE_WEBHOOK_SECRET } from "../../lib/secrets";
 
 import {
   Influencer,
@@ -44,10 +45,11 @@ const VALID_PLATFORMS: InfluencerPlatform[] = [
 
 export const registerInfluencer = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: true,
+    secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
   },
   async (request): Promise<RegisterInfluencerResponse> => {
     const startTime = Date.now();

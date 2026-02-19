@@ -1268,7 +1268,10 @@ export interface BloggerConfig {
 
   // ---- Recruitment Commission ----
 
-  /** Minimum totalEarned (cents) a recruited blogger must reach before recruiter gets $5 */
+  /** One-time bonus (cents) paid to recruiter when recruited blogger reaches threshold */
+  bloggerRecruitmentCommissionAmount: number;
+
+  /** Minimum totalEarned (cents) a recruited blogger must reach before recruiter gets $50 */
   recruitmentCommissionThreshold: number;
 
   // ---- Version & History ----
@@ -1281,6 +1284,19 @@ export interface BloggerConfig {
 
   /** Who updated */
   updatedBy: string;
+
+  /** Configuration change history (max 50 entries) */
+  configHistory?: BloggerConfigHistoryEntry[];
+}
+
+/**
+ * Configuration history entry for admin config changes
+ */
+export interface BloggerConfigHistoryEntry {
+  changedAt: Timestamp;
+  changedBy: string;
+  previousConfig: Partial<BloggerConfig>;
+  reason?: string;
 }
 
 /**
@@ -1310,7 +1326,8 @@ export const DEFAULT_BLOGGER_CONFIG: Omit<
 
   leaderboardSize: 10,               // Top 10 only (informational)
 
-  recruitmentCommissionThreshold: 20000, // $200 — recruited blogger must earn this before recruiter gets $50
+  bloggerRecruitmentCommissionAmount: 5000, // $50 one-time bonus
+  recruitmentCommissionThreshold: 20000,    // $200 — recruited blogger must earn this before recruiter gets $50
 
   version: 1,
 };
@@ -1620,6 +1637,8 @@ export interface AdminUpdateBloggerConfigInput {
   isSystemActive?: boolean;
   newRegistrationsEnabled?: boolean;
   withdrawalsEnabled?: boolean;
+  bloggerRecruitmentCommissionAmount?: number;
+  recruitmentCommissionThreshold?: number;
 }
 
 // ============================================================================

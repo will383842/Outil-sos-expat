@@ -3560,6 +3560,14 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     services: string[];
   } | null>(null);
 
+  // Réduction affiliée : GroupAdmin ($5 fixe) ou Influencer (5%)
+  const [affiliateDiscount, setAffiliateDiscount] = useState<{
+    type: 'groupAdmin' | 'influencer';
+    discountType: 'fixed' | 'percentage';
+    discountValue: number; // 5 pour GroupAdmin ($5), 5 pour Influencer (5%)
+    affiliateCode: string;
+  } | null>(null);
+
   // Load promo code from sessionStorage
   useEffect(() => {
     try {
@@ -3572,6 +3580,37 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       console.error("Error loading active promo:", error);
     }
   }, []);
+
+  // Charger le discount affilié depuis le profil Firestore du client
+  useEffect(() => {
+    if (!user?.uid) return;
+    const fetchAffiliateDiscount = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid!));
+        const userData = userDoc.data();
+        if (userData?.groupAdminReferredBy) {
+          // GroupAdmin : $5 fixe (clientDiscountAmount: 500 cents côté backend)
+          setAffiliateDiscount({
+            type: 'groupAdmin',
+            discountType: 'fixed',
+            discountValue: 5,
+            affiliateCode: String(userData.groupAdminReferredBy),
+          });
+        } else if (userData?.influencerReferredBy) {
+          // Influencer : 5% (clientDiscountPercent: 5 côté backend)
+          setAffiliateDiscount({
+            type: 'influencer',
+            discountType: 'percentage',
+            discountValue: 5,
+            affiliateCode: String(userData.influencerReferredBy),
+          });
+        }
+      } catch (err) {
+        console.error('[CallCheckout] Affiliate discount lookup failed (non-blocking):', err);
+      }
+    };
+    fetchAffiliateDiscount();
+  }, [user?.uid]);
 
   useEffect(() => {
     const initializeCurrency = () => {
@@ -3691,54 +3730,58 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     const basePricing = pricing[providerRole]?.[selectedCurrency];
     if (!basePricing) return null;
 
-    console.log("💰 [Pricing] Base pricing from config:", {
-      providerRole,
-      currency: selectedCurrency,
-      basePricing,
-    });
-
-    // Check if promo applies to this service
     const serviceKey = providerRole === "lawyer" ? "lawyer_call" : "expat_call";
-    const promoApplies =
-      activePromo && activePromo.services.includes(serviceKey);
+    const promoApplies = activePromo && activePromo.services.includes(serviceKey);
 
-    if (!promoApplies) {
-      console.log("💰 [Pricing] No promo applied, using base pricing");
-      return basePricing;
+    let currentTotal = basePricing.totalAmount;
+    let totalDiscountApplied = 0;
+
+    // 1. Appliquer le coupon promo (existant)
+    if (promoApplies) {
+      let promoDiscount = 0;
+      if (activePromo.discountType === "percentage") {
+        promoDiscount = basePricing.totalAmount * (activePromo.discountValue / 100);
+      } else {
+        promoDiscount = Math.min(activePromo.discountValue, basePricing.totalAmount);
+      }
+      promoDiscount = Math.max(0, promoDiscount);
+      currentTotal = Math.max(0, Math.round((currentTotal - promoDiscount) * 100) / 100);
+      totalDiscountApplied += promoDiscount;
     }
 
-    // Apply discount
-    let discount = 0;
-    if (activePromo.discountType === "percentage") {
-      discount = basePricing.totalAmount * (activePromo.discountValue / 100);
-    } else {
-      // Fixed discount
-      discount = Math.min(activePromo.discountValue, basePricing.totalAmount);
+    // 2. Appliquer le discount affilié (GroupAdmin $5 fixe, Influencer 5%)
+    // DOIT correspondre exactement au calcul backend dans createPaymentIntent.ts
+    if (affiliateDiscount) {
+      let afDiscount = 0;
+      if (affiliateDiscount.discountType === 'fixed') {
+        afDiscount = Math.min(affiliateDiscount.discountValue, currentTotal);
+      } else {
+        afDiscount = Math.min(
+          Math.round((currentTotal * affiliateDiscount.discountValue / 100) * 100) / 100,
+          currentTotal
+        );
+      }
+      afDiscount = Math.max(0, afDiscount);
+      currentTotal = Math.max(0, Math.round((currentTotal - afDiscount) * 100) / 100);
+      totalDiscountApplied += afDiscount;
     }
 
-    const discountedTotal = Math.max(
-      0,
-      Math.round(basePricing.totalAmount - discount)
-    );
-    const discountAmount = basePricing.totalAmount - discountedTotal;
+    if (totalDiscountApplied === 0) return basePricing;
 
-    const finalPricing = {
-      ...basePricing,
-      totalAmount: discountedTotal,
-      // Adjust provider amount proportionally
-      providerAmount: Math.max(0, basePricing.providerAmount - discountAmount),
-    };
-
-    console.log("🎉 [Pricing] Promo applied:", {
-      activePromo,
+    console.log("🎉 [Pricing] Discounts applied:", {
+      activePromo: activePromo?.code,
+      affiliateDiscount: affiliateDiscount?.type,
       baseAmount: basePricing.totalAmount,
-      discount,
-      discountedTotal,
-      finalPricing,
+      totalDiscountApplied,
+      finalTotal: currentTotal,
     });
 
-    return finalPricing;
-  }, [pricing, providerRole, selectedCurrency, activePromo]);
+    return {
+      ...basePricing,
+      totalAmount: currentTotal,
+      providerAmount: Math.max(0, basePricing.providerAmount - totalDiscountApplied),
+    };
+  }, [pricing, providerRole, selectedCurrency, activePromo, affiliateDiscount]);
 
   const service: ServiceData | null = useMemo(() => {
     if (!provider || !adminPricing || !providerRole) return null;
@@ -4394,33 +4437,42 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
               </div>
 
               <div className="text-right flex-shrink-0" {...cardTraceAttrs}>
-                {/* Show original price and discount if promo is active */}
-                {activePromo && pricing && providerRole && (
+                {/* Prix original barré + lignes de réduction (coupon et/ou affilié) */}
+                {(activePromo || affiliateDiscount) && pricing && providerRole && (
                   <div className="mb-2 text-sm">
+                    {/* Prix original */}
                     <div className="text-gray-500 line-through">
                       {formatCurrency(
-                        pricing[providerRole]?.[selectedCurrency]
-                          ?.totalAmount || 0,
+                        pricing[providerRole]?.[selectedCurrency]?.totalAmount || 0,
                         selectedCurrency.toUpperCase(),
-                        {
-                          language,
-                          minimumFractionDigits: 2,
-                        }
+                        { language, minimumFractionDigits: 2 }
                       )}
                     </div>
-                    <div className="text-green-600 font-medium">
-                      -
-                      {formatCurrency(
-                        (pricing[providerRole]?.[selectedCurrency]
-                          ?.totalAmount || 0) - adminPricing.totalAmount,
-                        selectedCurrency.toUpperCase(),
-                        {
-                          language,
-                          minimumFractionDigits: 2,
-                        }
-                      )}{" "}
-                      ({activePromo.code})
-                    </div>
+                    {/* Réduction coupon */}
+                    {activePromo && (
+                      <div className="text-green-600 font-medium">
+                        -{formatCurrency(
+                          (() => {
+                            const base = pricing[providerRole]?.[selectedCurrency]?.totalAmount || 0;
+                            if (activePromo.discountType === "percentage")
+                              return base * (activePromo.discountValue / 100);
+                            return Math.min(activePromo.discountValue, base);
+                          })(),
+                          selectedCurrency.toUpperCase(),
+                          { language, minimumFractionDigits: 2 }
+                        )}{" "}({activePromo.code})
+                      </div>
+                    )}
+                    {/* Réduction affiliée GroupAdmin / Influencer */}
+                    {affiliateDiscount && (
+                      <div className="text-green-600 font-medium">
+                        -{affiliateDiscount.discountType === 'fixed'
+                          ? formatCurrency(affiliateDiscount.discountValue, selectedCurrency.toUpperCase(), { language, minimumFractionDigits: 2 })
+                          : `${affiliateDiscount.discountValue}%`
+                        }{" "}
+                        ({affiliateDiscount.type === 'groupAdmin' ? '👥 Admin' : '📣 Influencer'})
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="text-2xl font-black bg-gradient-to-r from-red-500 to-pink-600 bg-clip-text text-transparent">

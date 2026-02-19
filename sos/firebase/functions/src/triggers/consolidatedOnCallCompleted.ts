@@ -101,7 +101,7 @@ export const consolidatedOnCallCompleted = onDocumentUpdated(
       });
     }
 
-    // 4. GroupAdmin handler
+    // 4. GroupAdmin handler (client referral commissions)
     try {
       const { handleCallCompleted: groupAdminHandler } = await import(
         "../groupAdmin/triggers/onCallCompleted"
@@ -111,6 +111,21 @@ export const consolidatedOnCallCompleted = onDocumentUpdated(
     } catch (error) {
       results.groupAdmin = `error: ${error instanceof Error ? error.message : String(error)}`;
       logger.error("[consolidatedOnCallCompleted] GroupAdmin handler failed", {
+        sessionId,
+        error,
+      });
+    }
+
+    // 4b. GroupAdmin provider recruitment commissions
+    try {
+      const { handleProviderRecruitmentCommission } = await import(
+        "../groupAdmin/triggers/onCallCompleted"
+      );
+      await handleProviderRecruitmentCommission(event);
+      results.groupAdminProviderRecruit = "ok";
+    } catch (error) {
+      results.groupAdminProviderRecruit = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnCallCompleted] GroupAdmin provider recruitment handler failed", {
         sessionId,
         error,
       });

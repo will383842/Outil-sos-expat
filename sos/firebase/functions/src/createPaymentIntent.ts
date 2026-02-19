@@ -936,6 +936,59 @@ export const createPaymentIntent = onCall(
         }
       }
 
+      // ===== RÉDUCTIONS AFFILIÉES (GroupAdmin $5 fixe, Influencer 5%) =====
+      // Appliquées après les coupons, avant la validation stricte du montant.
+      // Le frontend doit calculer le même discount pour envoyer le bon montant.
+      let affiliateDiscountApplied = 0;
+      let affiliateDiscountTypeApplied = '';
+      try {
+        const clientUserDoc = await db.collection('users').doc(clientId).get();
+        const clientUserData = clientUserDoc.data();
+        if (clientUserData) {
+          if (clientUserData.groupAdminReferredBy) {
+            // GroupAdmin : réduction fixe (defaut $5 = 500 cents)
+            const gaConfigDoc = await db.collection('group_admin_config').doc('current').get();
+            const discountCents: number = (gaConfigDoc.exists && gaConfigDoc.data()?.clientDiscountAmount)
+              ? (gaConfigDoc.data()!.clientDiscountAmount as number)
+              : 500;
+            const discountAmt = Math.min(discountCents / 100, expected);
+            affiliateDiscountApplied = discountAmt;
+            affiliateDiscountTypeApplied = 'groupAdmin';
+            expected = Math.max(0, Math.round((expected - discountAmt) * 100) / 100);
+            logger.info('[createPaymentIntent] GroupAdmin affiliate discount applied', {
+              clientId: clientId?.substring(0, 10),
+              discountAmt,
+              newExpected: expected,
+            });
+          } else if (clientUserData.influencerReferredBy) {
+            // Influencer : réduction en pourcentage (défaut 5%)
+            const inflConfigDoc = await db.collection('influencer_config').doc('current').get();
+            const discountPct: number = (inflConfigDoc.exists && inflConfigDoc.data()?.clientDiscountPercent)
+              ? (inflConfigDoc.data()!.clientDiscountPercent as number)
+              : 5;
+            const discountAmt = Math.min(
+              Math.round((expected * discountPct / 100) * 100) / 100,
+              expected
+            );
+            affiliateDiscountApplied = discountAmt;
+            affiliateDiscountTypeApplied = 'influencer';
+            expected = Math.max(0, Math.round((expected - discountAmt) * 100) / 100);
+            logger.info('[createPaymentIntent] Influencer affiliate discount applied', {
+              clientId: clientId?.substring(0, 10),
+              discountPct,
+              discountAmt,
+              newExpected: expected,
+            });
+          }
+        }
+      } catch (affiliateErr) {
+        // Non-blocking : on ne rejette pas le paiement si la lecture échoue
+        logger.warn('[createPaymentIntent] Affiliate discount lookup failed (non-blocking)', {
+          clientId: clientId?.substring(0, 10),
+          error: String(affiliateErr),
+        });
+      }
+
       // ===== VALIDATION MONTANT (P1-14 SECURITY FIX - STRICT TOUS ENVIRONNEMENTS) =====
       // Cette validation empêche la manipulation des prix côté client
       // P1-14 FIX: Validation stricte en TOUS environnements (pas seulement production)
@@ -1015,6 +1068,8 @@ export const createPaymentIntent = onCall(
           originalCurrency: currency,
           stripeMode: STRIPE_MODE.value() || 'test',
           coupon_code: coupon?.code || '',
+          affiliate_discount_type: affiliateDiscountTypeApplied,
+          affiliate_discount_amount: affiliateDiscountApplied > 0 ? String(affiliateDiscountApplied) : '',
           override: String(expected !== cfg.totalAmount),
           promo_active: String(overrideActive),
           promo_stackable: String(stackable),

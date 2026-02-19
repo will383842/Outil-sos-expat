@@ -892,7 +892,7 @@ export const adminExportGroupAdmins = onCall(
         ga.createdAt,
       ]);
 
-      const csv = [
+      const csv = "\uFEFF" + [
         headers.join(","),
         ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")),
       ].join("\n");
@@ -910,6 +910,78 @@ export const adminExportGroupAdmins = onCall(
     } catch (error) {
       logger.error("[adminExportGroupAdmins] Error", { error });
       throw new HttpsError("internal", "Failed to export GroupAdmins");
+    }
+  }
+);
+
+// ============================================================================
+// BULK GROUP ADMIN ACTION
+// ============================================================================
+
+/**
+ * Bulk actions on multiple group admins
+ */
+export const adminBulkGroupAdminAction = onCall(
+  {
+    region: "europe-west2",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    cors: ALLOWED_ORIGINS,
+  },
+  async (request) => {
+    ensureInitialized();
+
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    const { groupAdminIds, action } = request.data || {};
+
+    if (!groupAdminIds || !Array.isArray(groupAdminIds) || groupAdminIds.length === 0) {
+      throw new HttpsError("invalid-argument", "groupAdminIds is required");
+    }
+    if (!action || !["activate", "suspend"].includes(action)) {
+      throw new HttpsError("invalid-argument", "action must be 'activate' or 'suspend'");
+    }
+
+    const db = getFirestore();
+    const batch = db.batch();
+    const now = Timestamp.now();
+    let processed = 0;
+
+    try {
+      for (const groupAdminId of groupAdminIds) {
+        const groupAdminRef = db.collection("group_admins").doc(groupAdminId);
+        const groupAdminDoc = await groupAdminRef.get();
+
+        if (!groupAdminDoc.exists) continue;
+
+        if (action === "activate") {
+          batch.update(groupAdminRef, {
+            status: "active" as GroupAdminStatus,
+            updatedAt: now,
+          });
+        } else if (action === "suspend") {
+          batch.update(groupAdminRef, {
+            status: "suspended" as GroupAdminStatus,
+            updatedAt: now,
+          });
+        }
+        processed++;
+      }
+
+      await batch.commit();
+
+      logger.info("[adminBulkGroupAdminAction] Bulk action applied", {
+        action,
+        processed,
+        total: groupAdminIds.length,
+      });
+
+      return { success: true, message: `${action} applied to ${processed} group admins` };
+    } catch (error) {
+      logger.error("[adminBulkGroupAdminAction] Error", { action, error });
+      throw new HttpsError("internal", "Failed to apply bulk action");
     }
   }
 );

@@ -55,7 +55,7 @@ export const twilioConferenceWebhook = onRequest(
     invoker: "public",
     memory: '512MiB',  // P0 FIX: Increased for payment capture operations
     cpu: 0.25,         // P0 FIX: Reduced to save quota (function mostly waits for API responses)
-    timeoutSeconds: 300, // P0 FIX: 5 minutes timeout for payment capture
+    timeoutSeconds: 540, // P1 FIX: 9 minutes — payment capture + Stripe API calls can be slow
     maxInstances: 10,  // P0 FIX: Increased for better scalability during peak
     minInstances: 0,   // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
     concurrency: 1,
