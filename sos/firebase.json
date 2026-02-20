@@ -20,7 +20,23 @@
         "src",
         "*.log",
         "tmpclaude-*",
-        "backups"
+        "backups",
+        "**/*.js.map",
+        "scripts",
+        "*.sh",
+        "*.ps1",
+        "*.md",
+        "jest.config.js",
+        "esbuild.config.js",
+        "testProduction.js",
+        "createCallSession.js",
+        "check-invalid-slugs.js",
+        "quick-fix.js",
+        "deploy-by-batch.js",
+        "deploy-multipass.js",
+        "deploy-missing.js",
+        "migrate-affiliate-to-west2.js",
+        "__tests__"
       ]
     }
   ],

@@ -1,8 +1,8 @@
 {
   "name": "functions",
   "scripts": {
-    "build": "tsc -p .",
-    "build:esbuild": "node esbuild.config.js",
+    "build": "node esbuild.config.js",
+    "build:tsc": "tsc -p .",
     "build:watch": "tsc -p . --watch",
     "build:analyze": "NODE_ENV=production node esbuild.config.js",
     "deploy": "firebase deploy --only functions",

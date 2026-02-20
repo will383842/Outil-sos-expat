@@ -1049,19 +1049,23 @@ export {
 } from "./securityAlerts/triggers";
 
 // Detectors (pour utilisation dans d'autres fonctions)
-export {
-  detectBruteForce,
-  detectUnusualLocation,
-  detectPaymentFraud,
-  detectCardTesting,
-  detectMassAccountCreation,
-  detectApiAbuse,
-  detectInjectionAttempt,
-  detectMultipleSessions,
-} from "./securityAlerts/detectors";
+// AUDIT 2026-02-20: Disabled — these detectors are never called from any other module.
+// They are utility functions, not Cloud Functions, but their export forces loading the entire securityAlerts/detectors module.
+// Re-enable individual detectors when actually integrated into call flows.
+// export {
+//   detectBruteForce,
+//   detectUnusualLocation,
+//   detectPaymentFraud,
+//   detectCardTesting,
+//   detectMassAccountCreation,
+//   detectApiAbuse,
+//   detectInjectionAttempt,
+//   detectMultipleSessions,
+// } from "./securityAlerts/detectors";
 
 // Threat Score Service
-export { threatScoreService } from "./securityAlerts/ThreatScoreService";
+// AUDIT 2026-02-20: Disabled — never imported externally
+// export { threatScoreService } from "./securityAlerts/ThreatScoreService";
 
 // AI Chat - DEPRECATED: Now handled directly by Outil-sos-expat
 // The AI chat functionality is in Outil-sos-expat, not SOS
@@ -4840,11 +4844,12 @@ export {
 //                       triggerTwilioBackup, getTwilioBackupStats
 
 // ========== PHONE NUMBER ENCRYPTION MIGRATION ==========
-export {
-  migratePhoneEncryption,
-  getEncryptionStatus,
-  generateEncryptionKey
-} from './scheduled/migrateEncryption';
+// AUDIT 2026-02-20: Disabled — one-shot migration already completed + generateEncryptionKey is a security risk as public endpoint
+// export {
+//   migratePhoneEncryption,
+//   getEncryptionStatus,
+//   generateEncryptionKey
+// } from './scheduled/migrateEncryption';
 
 // ========== FIREBASE AUTH BACKUP ==========
 export {
@@ -5029,12 +5034,14 @@ export {
   // V2 functions with proper CORS support (for admin IA tab)
   updateTrialConfigV2 as subscriptionUpdateTrialConfigV2,
   updatePlanPricingV2 as subscriptionUpdatePlanPricingV2,
-  initializeSubscriptionPlans as subscriptionInitializePlans,
+  // AUDIT 2026-02-20: Disabled — one-shot seed/migration functions already executed
+  // initializeSubscriptionPlans as subscriptionInitializePlans,
   // P1 FIX: resetMonthlyAiQuotas REMOVED - duplicate of resetMonthlyQuotas in scheduledTasks.ts
   setFreeAiAccess as subscriptionSetFreeAccess,
-  createAnnualStripePrices,
-  createMonthlyStripePrices,
-  migrateSubscriptionPlansTo9Languages as subscriptionMigrateTo9Languages
+  // AUDIT 2026-02-20: Disabled — one-shot seed functions already executed
+  // createAnnualStripePrices,
+  // createMonthlyStripePrices,
+  // migrateSubscriptionPlansTo9Languages as subscriptionMigrateTo9Languages
 } from './subscription';
 
 // Dunning System - Automatic Payment Retry
@@ -5055,12 +5062,13 @@ export {
 } from './helpCenter/generateFAQ';
 
 // ========== HELP CENTER ARTICLES INITIALIZATION ==========
-export {
-  initSingleHelpArticle,
-  initHelpArticlesBatch,
-  checkHelpCategories,
-  clearHelpArticles,
-} from './helpCenter/initHelpArticles';
+// AUDIT 2026-02-20: Disabled — one-shot init already done. clearHelpArticles is a security risk (HTTP without auth, can wipe FAQs collection)
+// export {
+//   initSingleHelpArticle,
+//   initHelpArticlesBatch,
+//   checkHelpCategories,
+//   clearHelpArticles,
+// } from './helpCenter/initHelpArticles';
 
 // ========== INVOICE DOWNLOAD URL GENERATION ==========
 export const generateInvoiceDownloadUrl = onCall(
@@ -5334,11 +5342,12 @@ export { restoreUserRoles, syncAllCustomClaims, checkUserRole } from './admin/re
 export { sendCustomPasswordResetEmail } from './auth/passwordReset';
 
 // ========== STORAGE CONFIGURATION (ADMIN) ==========
-export {
-  enableStorageVersioning,
-  configureStorageLifecycle,
-  getStorageConfig
-} from './admin/enableStorageVersioning';
+// AUDIT 2026-02-20: Disabled — one-shot storage config already applied (v1 functions)
+// export {
+//   enableStorageVersioning,
+//   configureStorageLifecycle,
+//   getStorageConfig
+// } from './admin/enableStorageVersioning';
 
 // ========== PAYMENT MONITORING (PHASE 4) ==========
 // Surveillance spécifique des flux de paiement Stripe/PayPal/Twilio

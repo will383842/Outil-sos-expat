@@ -3,6 +3,7 @@
 
 const esbuild = require('esbuild');
 const path = require('path');
+const fs = require('fs');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -59,11 +60,17 @@ const externalModules = [
 
 async function build() {
   try {
+    // Clean lib/ to remove stale tsc output files
+    if (fs.existsSync('lib')) {
+      fs.rmSync('lib', { recursive: true, force: true });
+      console.log('🧹 Cleaned lib/ directory');
+    }
+
     const result = await esbuild.build({
       entryPoints: ['src/index.ts'],
       bundle: true,
       platform: 'node',
-      target: 'node20',
+      target: 'node22',
       outfile: 'lib/index.js',
       format: 'cjs',
 
@@ -118,7 +125,6 @@ async function build() {
     console.log(text);
 
     // Calculer la taille totale
-    const fs = require('fs');
     const stats = fs.statSync('lib/index.js');
     const fileSizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
     console.log(`\n✅ Bundle size: ${fileSizeInMB} MB`);
