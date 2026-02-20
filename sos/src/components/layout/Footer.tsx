@@ -611,6 +611,26 @@ const Footer: React.FC = () => {
         href: `/${getTranslatedRouteSlug("consumers", resolvedLang)}`,
         order: 60,
       },
+      {
+        label: intl.formatMessage({ id: "footer.legal.termsChatters" }),
+        href: `/${getTranslatedRouteSlug("terms-chatters", resolvedLang)}`,
+        order: 70,
+      },
+      {
+        label: intl.formatMessage({ id: "footer.legal.termsInfluencers" }),
+        href: `/${getTranslatedRouteSlug("terms-influencers", resolvedLang)}`,
+        order: 71,
+      },
+      {
+        label: intl.formatMessage({ id: "footer.legal.termsBloggers" }),
+        href: `/${getTranslatedRouteSlug("terms-bloggers", resolvedLang)}`,
+        order: 72,
+      },
+      {
+        label: intl.formatMessage({ id: "footer.legal.termsGroupAdmins" }),
+        href: `/${getTranslatedRouteSlug("terms-group-admins", resolvedLang)}`,
+        order: 73,
+      },
     ],
     [intl, resolvedLang]
   );

@@ -251,7 +251,10 @@ export type RouteKey =
   | "terms-lawyers"    // /terms-lawyers -> /cgu-avocats, etc.
   | "terms-expats"     // /terms-expats -> /cgu-expatries, etc.
   | "terms-clients"    // /terms-clients -> /cgu-clients, etc.
-  | "terms-chatters"   // /terms-chatters -> /cgu-chatters, etc.
+  | "terms-chatters"      // /terms-chatters -> /cgu-chatters, etc.
+  | "terms-influencers"   // /terms-influencers -> /cgu-influenceurs, etc.
+  | "terms-bloggers"      // /terms-bloggers -> /cgu-bloggeurs, etc.
+  | "terms-group-admins"  // /terms-group-admins -> /cgu-admins-groupe, etc.
   | "sos-call"         // /sos-appel -> /emergency-call, /notruf, etc.
   | "expat-call"       // /appel-expatrie -> /expat-call, etc.
   | "pricing"          // /tarifs -> /pricing, /preise, etc.
@@ -462,6 +465,39 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "tiaokuan-chatters",
     hi: "shartein-chatters",
     ar: "شروط-المروجين",
+  },
+  "terms-influencers": {
+    fr: "cgu-influenceurs",
+    en: "terms-influencers",
+    es: "terminos-influencers",
+    de: "agb-influencer",
+    ru: "usloviya-influensery",
+    pt: "termos-influenciadores",
+    ch: "tiaokuan-wanghong",
+    hi: "shartein-influencers",
+    ar: "شروط-المؤثرين",
+  },
+  "terms-bloggers": {
+    fr: "cgu-bloggeurs",
+    en: "terms-bloggers",
+    es: "terminos-bloggers",
+    de: "agb-blogger",
+    ru: "usloviya-blogery",
+    pt: "termos-bloggers",
+    ch: "tiaokuan-boke",
+    hi: "shartein-bloggers",
+    ar: "شروط-المدونين",
+  },
+  "terms-group-admins": {
+    fr: "cgu-admins-groupe",
+    en: "terms-group-admins",
+    es: "terminos-admins-grupo",
+    de: "agb-gruppenadmins",
+    ru: "usloviya-adminy-grupp",
+    pt: "termos-admins-grupo",
+    ch: "tiaokuan-qunguanli",
+    hi: "shartein-group-admins",
+    ar: "شروط-مشرفي-المجموعات",
   },
   "sos-call": {
     fr: "sos-appel",

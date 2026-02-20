@@ -100,6 +100,9 @@ const TermsExpats = lazy(() => import('./pages/TermsExpats'));
 const TermsLawyers = lazy(() => import('./pages/TermsLawyers'));
 const TermsClients = lazy(() => import('./pages/TermsClients'));
 const TermsChatters = lazy(() => import('./pages/TermsChatters'));
+const TermsInfluencers = lazy(() => import('./pages/TermsInfluencers'));
+const TermsBloggers = lazy(() => import('./pages/TermsBloggers'));
+const TermsGroupAdmins = lazy(() => import('./pages/TermsGroupAdmins'));
 const TestimonialDetail = lazy(() => import('./pages/TestimonialDetail'));
 const Testimonials = lazy(() => import('./pages/Testimonials'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
@@ -262,6 +265,9 @@ const routeConfigs: RouteConfig[] = [
   { path: "/terms-lawyers", component: TermsLawyers, alias: "/cgu-avocats", translated: "terms-lawyers" },
   { path: "/terms-expats", component: TermsExpats, alias: "/cgu-expatries", translated: "terms-expats" },
   { path: "/terms-chatters", component: TermsChatters, alias: "/cgu-chatters", translated: "terms-chatters" },
+  { path: "/terms-influencers", component: TermsInfluencers, alias: "/cgu-influenceurs", translated: "terms-influencers" },
+  { path: "/terms-bloggers", component: TermsBloggers, alias: "/cgu-bloggeurs", translated: "terms-bloggers" },
+  { path: "/terms-group-admins", component: TermsGroupAdmins, alias: "/cgu-admins-groupe", translated: "terms-group-admins" },
   {
     path: "/privacy-policy",
     component: PrivacyPolicy,

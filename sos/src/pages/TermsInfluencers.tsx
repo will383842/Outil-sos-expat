@@ -3,19 +3,12 @@ import DOMPurify from "dompurify";
 import { Link } from "react-router-dom";
 import {
   Users,
-  FileText,
-  Shield,
-  Globe,
-  Clock,
   ArrowRight,
-  Heart,
-  UserCheck,
   DollarSign,
   Languages,
   Sparkles,
   Gift,
   TrendingUp,
-  AlertTriangle,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import { useApp } from "../contexts/AppContext";
@@ -31,15 +24,15 @@ import {
 import { db } from "../config/firebase";
 
 /**
- * TermsChatters - CGU pour les Chatters/Ambassadeurs
+ * TermsInfluencers - CGU pour les Influenceurs SOS Expat
  * - Support multilingue (9 langues)
- * - Contenu éditable depuis l'admin (collection `legal_documents` type "terms_chatters")
- * - Design harmonisé avec les autres pages CGU
+ * - Contenu éditable depuis l'admin (collection `legal_documents` type "terms_influencers")
+ * - Design harmonisé avec les autres pages CGU (thème orange/amber)
  */
 
 type SupportedLanguage = "fr" | "en" | "es" | "de" | "ru" | "hi" | "ch" | "pt" | "ar";
 
-const TermsChatters: React.FC = () => {
+const TermsInfluencers: React.FC = () => {
   const { language } = useApp();
   const getLocalePath = useLocalePath();
 
@@ -61,7 +54,7 @@ const TermsChatters: React.FC = () => {
         setIsLoading(true);
         const q = query(
           collection(db, "legal_documents"),
-          where("type", "==", "terms_chatters"),
+          where("type", "==", "terms_influencers"),
           where("language", "==", selectedLanguage),
           where("isActive", "==", true),
           orderBy("updatedAt", "desc"),
@@ -87,18 +80,18 @@ const TermsChatters: React.FC = () => {
 
   const translations = {
     fr: {
-      title: "CGU Chatters & Ambassadeurs",
-      subtitle: "Conditions générales d'utilisation pour les chatters et ambassadeurs SOS Expat",
-      lastUpdated: "Version 3.0 – Dernière mise à jour : 1er février 2026",
+      title: "CGU Influenceurs SOS Expat",
+      subtitle: "Conditions générales d'utilisation pour les influenceurs partenaires SOS Expat",
+      lastUpdated: "Version 1.0 – Dernière mise à jour : 1er février 2026",
       loading: "Chargement...",
-      joinNetwork: "Devenir Ambassadeur",
-      trustedByHelpers: "Rejoignez 5K+ ambassadeurs actifs",
+      joinNetwork: "Devenir Influenceur",
+      trustedByHelpers: "Rejoignez notre réseau d'influenceurs partenaires",
       keyFeatures: "Points clés",
       features: [
-        "Commissions attractives jusqu'à 50%",
-        "Paiements rapides sous 7 jours",
+        "$10 par appel client généré",
+        "Commissions à vie sur vos filleuls",
+        "Ressources créatives exclusives",
         "Programme de parrainage multi-niveaux",
-        "Bonus early adopter +50%",
       ],
       languageToggle: "Changer de langue",
       sections: {
@@ -107,7 +100,7 @@ const TermsChatters: React.FC = () => {
         program: "Programme d'affiliation",
         commissions: "Commissions et rémunération",
         antifraud: "Règles anti-fraude",
-        obligations: "Obligations du Chatter",
+        obligations: "Obligations de l'Influenceur",
         payment: "Paiement des commissions",
         suspension: "Suspension et résiliation",
         data: "Données personnelles",
@@ -117,29 +110,29 @@ const TermsChatters: React.FC = () => {
         misc: "Dispositions diverses",
         contact: "Contact",
       },
-      readyToJoin: "Prêt à devenir ambassadeur SOS Expat ?",
-      readySubtitle: "Gagnez des commissions en recommandant nos services.",
+      readyToJoin: "Prêt à devenir influenceur SOS Expat ?",
+      readySubtitle: "Monétisez votre audience en recommandant nos services d'assistance aux expatriés.",
       startNow: "S'inscrire maintenant",
       contactUs: "Nous contacter",
       anchorTitle: "Sommaire",
       editHint: "Document éditable depuis la console admin",
       ctaHero: "Commencer",
-      heroBadge: "Nouveau — Programme mis à jour 2026",
+      heroBadge: "Programme Influenceurs — Lancé en 2026",
       contactForm: "Formulaire de contact",
     },
     en: {
-      title: "Chatters & Ambassadors Terms",
-      subtitle: "Terms of Use for SOS Expat chatters and ambassadors",
-      lastUpdated: "Version 3.0 – Last updated: February 1, 2026",
+      title: "SOS Expat Influencer Terms",
+      subtitle: "Terms of Use for SOS Expat partner influencers",
+      lastUpdated: "Version 1.0 – Last updated: February 1, 2026",
       loading: "Loading...",
-      joinNetwork: "Become an Ambassador",
-      trustedByHelpers: "Join 5K+ active ambassadors",
+      joinNetwork: "Become an Influencer",
+      trustedByHelpers: "Join our partner influencer network",
       keyFeatures: "Key features",
       features: [
-        "Attractive commissions up to 50%",
-        "Fast payments within 7 days",
+        "$10 per client call generated",
+        "Lifetime commissions on your referrals",
+        "Exclusive creative resources",
         "Multi-level referral program",
-        "Early adopter +50% bonus",
       ],
       languageToggle: "Switch language",
       sections: {
@@ -148,7 +141,7 @@ const TermsChatters: React.FC = () => {
         program: "Affiliate Program",
         commissions: "Commissions and Compensation",
         antifraud: "Anti-fraud Rules",
-        obligations: "Chatter Obligations",
+        obligations: "Influencer Obligations",
         payment: "Commission Payments",
         suspension: "Suspension and Termination",
         data: "Personal Data",
@@ -158,29 +151,29 @@ const TermsChatters: React.FC = () => {
         misc: "Miscellaneous",
         contact: "Contact",
       },
-      readyToJoin: "Ready to become an SOS Expat ambassador?",
-      readySubtitle: "Earn commissions by recommending our services.",
+      readyToJoin: "Ready to become an SOS Expat influencer?",
+      readySubtitle: "Monetize your audience by recommending our expat assistance services.",
       startNow: "Sign up now",
       contactUs: "Contact us",
       anchorTitle: "Overview",
       editHint: "Document editable from admin console",
       ctaHero: "Get started",
-      heroBadge: "New — 2026 Program Update",
+      heroBadge: "Influencer Program — Launched 2026",
       contactForm: "Contact Form",
     },
     es: {
-      title: "Términos para Chatters y Embajadores",
-      subtitle: "Términos de uso para chatters y embajadores de SOS Expat",
-      lastUpdated: "Versión 3.0 – Última actualización: 1 de febrero de 2026",
+      title: "Términos para Influencers SOS Expat",
+      subtitle: "Términos de uso para influencers socios de SOS Expat",
+      lastUpdated: "Versión 1.0 – Última actualización: 1 de febrero de 2026",
       loading: "Cargando...",
-      joinNetwork: "Convertirse en Embajador",
-      trustedByHelpers: "Únete a más de 5K embajadores activos",
+      joinNetwork: "Convertirse en Influencer",
+      trustedByHelpers: "Únete a nuestra red de influencers socios",
       keyFeatures: "Características clave",
       features: [
-        "Comisiones atractivas hasta el 50%",
-        "Pagos rápidos en 7 días",
+        "$10 por llamada de cliente generada",
+        "Comisiones de por vida en tus referidos",
+        "Recursos creativos exclusivos",
         "Programa de referidos multinivel",
-        "Bono early adopter +50%",
       ],
       languageToggle: "Cambiar idioma",
       sections: {
@@ -189,7 +182,7 @@ const TermsChatters: React.FC = () => {
         program: "Programa de afiliados",
         commissions: "Comisiones y compensación",
         antifraud: "Reglas antifraude",
-        obligations: "Obligaciones del Chatter",
+        obligations: "Obligaciones del Influencer",
         payment: "Pago de comisiones",
         suspension: "Suspensión y terminación",
         data: "Datos personales",
@@ -199,29 +192,29 @@ const TermsChatters: React.FC = () => {
         misc: "Disposiciones varias",
         contact: "Contacto",
       },
-      readyToJoin: "¿Listo para convertirte en embajador de SOS Expat?",
-      readySubtitle: "Gana comisiones recomendando nuestros servicios.",
+      readyToJoin: "¿Listo para convertirte en influencer de SOS Expat?",
+      readySubtitle: "Monetiza tu audiencia recomendando nuestros servicios de asistencia a expatriados.",
       startNow: "Inscribirse ahora",
       contactUs: "Contáctanos",
       anchorTitle: "Resumen",
       editHint: "Documento editable desde la consola de administración",
       ctaHero: "Empezar",
-      heroBadge: "Nuevo — Actualización del programa 2026",
+      heroBadge: "Programa de Influencers — Lanzado en 2026",
       contactForm: "Formulario de contacto",
     },
     de: {
-      title: "AGB für Chatters & Botschafter",
-      subtitle: "Nutzungsbedingungen für SOS Expat Chatters und Botschafter",
-      lastUpdated: "Version 3.0 – Letzte Aktualisierung: 1. Februar 2026",
+      title: "AGB für SOS Expat Influencer",
+      subtitle: "Nutzungsbedingungen für SOS Expat Partner-Influencer",
+      lastUpdated: "Version 1.0 – Letzte Aktualisierung: 1. Februar 2026",
       loading: "Lädt...",
-      joinNetwork: "Botschafter werden",
-      trustedByHelpers: "Schließen Sie sich über 5K aktiven Botschaftern an",
+      joinNetwork: "Influencer werden",
+      trustedByHelpers: "Schließen Sie sich unserem Partner-Influencer-Netzwerk an",
       keyFeatures: "Hauptmerkmale",
       features: [
-        "Attraktive Provisionen bis zu 50%",
-        "Schnelle Zahlungen innerhalb von 7 Tagen",
+        "$10 pro generiertem Kundengespräch",
+        "Lebenslange Provisionen auf Ihre Empfehlungen",
+        "Exklusive Kreativressourcen",
         "Mehrstufiges Empfehlungsprogramm",
-        "Early Adopter +50% Bonus",
       ],
       languageToggle: "Sprache wechseln",
       sections: {
@@ -230,7 +223,7 @@ const TermsChatters: React.FC = () => {
         program: "Partnerprogramm",
         commissions: "Provisionen und Vergütung",
         antifraud: "Anti-Betrugsregeln",
-        obligations: "Pflichten des Chatters",
+        obligations: "Pflichten des Influencers",
         payment: "Provisionszahlungen",
         suspension: "Aussetzung und Kündigung",
         data: "Personenbezogene Daten",
@@ -240,29 +233,29 @@ const TermsChatters: React.FC = () => {
         misc: "Sonstiges",
         contact: "Kontakt",
       },
-      readyToJoin: "Bereit, SOS Expat Botschafter zu werden?",
-      readySubtitle: "Verdienen Sie Provisionen, indem Sie unsere Dienste empfehlen.",
+      readyToJoin: "Bereit, SOS Expat Influencer zu werden?",
+      readySubtitle: "Monetarisieren Sie Ihr Publikum durch Empfehlung unserer Expatriate-Dienste.",
       startNow: "Jetzt anmelden",
       contactUs: "Kontaktieren Sie uns",
       anchorTitle: "Übersicht",
       editHint: "Dokument über Admin-Konsole bearbeitbar",
       ctaHero: "Loslegen",
-      heroBadge: "Neu — 2026 Programm-Update",
+      heroBadge: "Influencer-Programm — Gestartet 2026",
       contactForm: "Kontaktformular",
     },
     ru: {
-      title: "Условия для Чаттеров и Амбассадоров",
-      subtitle: "Условия использования для чаттеров и амбассадоров SOS Expat",
-      lastUpdated: "Версия 3.0 – Последнее обновление: 1 февраля 2026 г.",
+      title: "Условия для Инфлюенсеров SOS Expat",
+      subtitle: "Условия использования для партнёров-инфлюенсеров SOS Expat",
+      lastUpdated: "Версия 1.0 – Последнее обновление: 1 февраля 2026 г.",
       loading: "Загрузка...",
-      joinNetwork: "Стать амбассадором",
-      trustedByHelpers: "Присоединяйтесь к 5000+ активных амбассадоров",
+      joinNetwork: "Стать инфлюенсером",
+      trustedByHelpers: "Присоединяйтесь к нашей сети партнёров-инфлюенсеров",
       keyFeatures: "Ключевые особенности",
       features: [
-        "Привлекательные комиссии до 50%",
-        "Быстрые выплаты в течение 7 дней",
+        "$10 за каждый клиентский звонок",
+        "Пожизненные комиссии с рефералов",
+        "Эксклюзивные креативные ресурсы",
         "Многоуровневая реферальная программа",
-        "Бонус для первых +50%",
       ],
       languageToggle: "Сменить язык",
       sections: {
@@ -271,7 +264,7 @@ const TermsChatters: React.FC = () => {
         program: "Партнёрская программа",
         commissions: "Комиссии и вознаграждение",
         antifraud: "Правила против мошенничества",
-        obligations: "Обязанности Чаттера",
+        obligations: "Обязанности инфлюенсера",
         payment: "Выплата комиссий",
         suspension: "Приостановка и прекращение",
         data: "Персональные данные",
@@ -281,29 +274,29 @@ const TermsChatters: React.FC = () => {
         misc: "Разное",
         contact: "Контакт",
       },
-      readyToJoin: "Готовы стать амбассадором SOS Expat?",
-      readySubtitle: "Зарабатывайте комиссии, рекомендуя наши услуги.",
+      readyToJoin: "Готовы стать инфлюенсером SOS Expat?",
+      readySubtitle: "Монетизируйте свою аудиторию, рекомендуя наши услуги для эмигрантов.",
       startNow: "Зарегистрироваться сейчас",
       contactUs: "Свяжитесь с нами",
       anchorTitle: "Обзор",
       editHint: "Документ редактируется из консоли администратора",
       ctaHero: "Начать",
-      heroBadge: "Новое — Обновление программы 2026",
+      heroBadge: "Программа для инфлюенсеров — Запущена в 2026 году",
       contactForm: "Контактная форма",
     },
     hi: {
-      title: "चैटर्स और एंबेसडर शर्तें",
-      subtitle: "SOS Expat चैटर्स और एंबेसडर के लिए उपयोग की शर्तें",
-      lastUpdated: "संस्करण 3.0 – अंतिम अपडेट: 1 फरवरी 2026",
+      title: "SOS Expat इन्फ्लुएंसर शर्तें",
+      subtitle: "SOS Expat भागीदार इन्फ्लुएंसर के लिए उपयोग की शर्तें",
+      lastUpdated: "संस्करण 1.0 – अंतिम अपडेट: 1 फरवरी 2026",
       loading: "लोड हो रहा है...",
-      joinNetwork: "एंबेसडर बनें",
-      trustedByHelpers: "5K+ सक्रिय एंबेसडर से जुड़ें",
+      joinNetwork: "इन्फ्लुएंसर बनें",
+      trustedByHelpers: "हमारे भागीदार इन्फ्लुएंसर नेटवर्क से जुड़ें",
       keyFeatures: "मुख्य विशेषताएं",
       features: [
-        "50% तक आकर्षक कमीशन",
-        "7 दिनों में तेज़ भुगतान",
+        "प्रति क्लाइंट कॉल $10",
+        "रेफरल पर आजीवन कमीशन",
+        "विशेष रचनात्मक संसाधन",
         "बहु-स्तरीय रेफरल कार्यक्रम",
-        "अर्ली एडॉप्टर +50% बोनस",
       ],
       languageToggle: "भाषा बदलें",
       sections: {
@@ -312,7 +305,7 @@ const TermsChatters: React.FC = () => {
         program: "संबद्ध कार्यक्रम",
         commissions: "कमीशन और मुआवज़ा",
         antifraud: "धोखाधड़ी-रोधी नियम",
-        obligations: "चैटर के दायित्व",
+        obligations: "इन्फ्लुएंसर के दायित्व",
         payment: "कमीशन भुगतान",
         suspension: "निलंबन और समाप्ति",
         data: "व्यक्तिगत डेटा",
@@ -322,29 +315,29 @@ const TermsChatters: React.FC = () => {
         misc: "विविध",
         contact: "संपर्क",
       },
-      readyToJoin: "SOS Expat एंबेसडर बनने के लिए तैयार हैं?",
-      readySubtitle: "हमारी सेवाओं की सिफारिश करके कमीशन कमाएं।",
+      readyToJoin: "SOS Expat इन्फ्लुएंसर बनने के लिए तैयार हैं?",
+      readySubtitle: "प्रवासी सहायता सेवाओं की सिफारिश करके अपनी ऑडियंस को मोनेटाइज़ करें।",
       startNow: "अभी साइन अप करें",
       contactUs: "हमसे संपर्क करें",
       anchorTitle: "अवलोकन",
       editHint: "व्यवस्थापक कंसोल से संपादन योग्य दस्तावेज़",
       ctaHero: "शुरू करें",
-      heroBadge: "नया — 2026 कार्यक्रम अपडेट",
+      heroBadge: "इन्फ्लुएंसर कार्यक्रम — 2026 में लॉन्च",
       contactForm: "संपर्क फ़ॉर्म",
     },
     ch: {
-      title: "聊天员和大使条款",
-      subtitle: "SOS Expat 聊天员和大使使用条款",
-      lastUpdated: "版本 3.0 – 最后更新：2026年2月1日",
+      title: "SOS Expat 网红条款",
+      subtitle: "SOS Expat 合作网红使用条款",
+      lastUpdated: "版本 1.0 – 最后更新：2026年2月1日",
       loading: "加载中...",
-      joinNetwork: "成为大使",
-      trustedByHelpers: "加入 5,000+ 活跃大使",
+      joinNetwork: "成为网红",
+      trustedByHelpers: "加入我们的合作网红网络",
       keyFeatures: "主要功能",
       features: [
-        "高达 50% 的诱人佣金",
-        "7 天内快速付款",
+        "每次客户通话 $10",
+        "终身佣金推荐",
+        "专属创意资源",
         "多级推荐计划",
-        "早期采用者 +50% 奖金",
       ],
       languageToggle: "切换语言",
       sections: {
@@ -353,7 +346,7 @@ const TermsChatters: React.FC = () => {
         program: "联盟计划",
         commissions: "佣金和报酬",
         antifraud: "反欺诈规则",
-        obligations: "聊天员义务",
+        obligations: "网红义务",
         payment: "佣金支付",
         suspension: "暂停和终止",
         data: "个人数据",
@@ -363,29 +356,29 @@ const TermsChatters: React.FC = () => {
         misc: "杂项",
         contact: "联系方式",
       },
-      readyToJoin: "准备成为 SOS Expat 大使吗？",
-      readySubtitle: "通过推荐我们的服务赚取佣金。",
+      readyToJoin: "准备成为 SOS Expat 网红吗？",
+      readySubtitle: "通过推荐我们的海外华人服务为您的受众创造价值。",
       startNow: "立即注册",
       contactUs: "联系我们",
       anchorTitle: "概览",
       editHint: "可从管理控制台编辑文档",
       ctaHero: "开始",
-      heroBadge: "新内容 — 2026 计划更新",
+      heroBadge: "网红计划 — 2026年启动",
       contactForm: "联系表单",
     },
     ar: {
-      title: "شروط الدردشة والسفراء",
-      subtitle: "شروط الاستخدام لمحادثي وسفراء SOS Expat",
-      lastUpdated: "الإصدار 3.0 – آخر تحديث: 1 فبراير 2026",
+      title: "شروط المؤثرين SOS Expat",
+      subtitle: "شروط الاستخدام للمؤثرين الشركاء في SOS Expat",
+      lastUpdated: "الإصدار 1.0 – آخر تحديث: 1 فبراير 2026",
       loading: "جارٍ التحميل...",
-      joinNetwork: "كن سفيراً",
-      trustedByHelpers: "انضم إلى أكثر من 5000 سفير نشط",
+      joinNetwork: "كن مؤثراً",
+      trustedByHelpers: "انضم إلى شبكة المؤثرين الشركاء لدينا",
       keyFeatures: "الميزات الرئيسية",
       features: [
-        "عمولات جذابة تصل إلى 50%",
-        "دفعات سريعة خلال 7 أيام",
+        "$10 لكل مكالمة عميل",
+        "عمولات مدى الحياة على إحالاتك",
+        "موارد إبداعية حصرية",
         "برنامج إحالة متعدد المستويات",
-        "مكافأة المتبنين الأوائل +50%",
       ],
       languageToggle: "تغيير اللغة",
       sections: {
@@ -394,7 +387,7 @@ const TermsChatters: React.FC = () => {
         program: "برنامج الشراكة",
         commissions: "العمولات والتعويضات",
         antifraud: "قواعد مكافحة الاحتيال",
-        obligations: "التزامات المحادث",
+        obligations: "التزامات المؤثر",
         payment: "دفع العمولات",
         suspension: "التعليق والإنهاء",
         data: "البيانات الشخصية",
@@ -404,29 +397,29 @@ const TermsChatters: React.FC = () => {
         misc: "متفرقات",
         contact: "اتصل",
       },
-      readyToJoin: "هل أنت مستعد لتصبح سفير SOS Expat؟",
-      readySubtitle: "اكسب عمولات من خلال التوصية بخدماتنا.",
+      readyToJoin: "هل أنت مستعد لتصبح مؤثراً في SOS Expat؟",
+      readySubtitle: "حقق أرباحاً من جمهورك بالتوصية بخدماتنا للمغتربين.",
       startNow: "سجل الآن",
       contactUs: "اتصل بنا",
       anchorTitle: "نظرة عامة",
       editHint: "مستند قابل للتحرير من وحدة التحكم الإدارية",
       ctaHero: "ابدأ",
-      heroBadge: "جديد — تحديث برنامج 2026",
+      heroBadge: "برنامج المؤثرين — تم الإطلاق 2026",
       contactForm: "نموذج الاتصال",
     },
     pt: {
-      title: "Termos para Chatters e Embaixadores",
-      subtitle: "Termos de uso para chatters e embaixadores SOS Expat",
-      lastUpdated: "Versão 3.0 – Última atualização: 1 de fevereiro de 2026",
+      title: "Termos para Influenciadores SOS Expat",
+      subtitle: "Termos de uso para influenciadores parceiros da SOS Expat",
+      lastUpdated: "Versão 1.0 – Última atualização: 1 de fevereiro de 2026",
       loading: "Carregando...",
-      joinNetwork: "Torne-se Embaixador",
-      trustedByHelpers: "Junte-se a mais de 5K embaixadores ativos",
+      joinNetwork: "Torne-se Influenciador",
+      trustedByHelpers: "Junte-se à nossa rede de influenciadores parceiros",
       keyFeatures: "Características principais",
       features: [
-        "Comissões atrativas até 50%",
-        "Pagamentos rápidos em 7 dias",
+        "$10 por chamada de cliente gerada",
+        "Comissões vitalícias em seus indicados",
+        "Recursos criativos exclusivos",
         "Programa de indicação multinível",
-        "Bônus early adopter +50%",
       ],
       languageToggle: "Mudar idioma",
       sections: {
@@ -435,7 +428,7 @@ const TermsChatters: React.FC = () => {
         program: "Programa de afiliados",
         commissions: "Comissões e compensação",
         antifraud: "Regras antifraude",
-        obligations: "Obrigações do Chatter",
+        obligations: "Obrigações do Influenciador",
         payment: "Pagamento de comissões",
         suspension: "Suspensão e rescisão",
         data: "Dados pessoais",
@@ -445,14 +438,14 @@ const TermsChatters: React.FC = () => {
         misc: "Diversos",
         contact: "Contato",
       },
-      readyToJoin: "Pronto para se tornar embaixador SOS Expat?",
-      readySubtitle: "Ganhe comissões recomendando nossos serviços.",
+      readyToJoin: "Pronto para se tornar influenciador SOS Expat?",
+      readySubtitle: "Monetize seu público recomendando nossos serviços de assistência a expatriados.",
       startNow: "Inscreva-se agora",
       contactUs: "Entre em contato",
       anchorTitle: "Resumo",
       editHint: "Documento editável a partir do console de administração",
       ctaHero: "Começar",
-      heroBadge: "Novo — Atualização do programa 2026",
+      heroBadge: "Programa de Influenciadores — Lançado em 2026",
       contactForm: "Formulário de contato",
     },
   };
@@ -487,7 +480,7 @@ const TermsChatters: React.FC = () => {
         elements.push(
           <h1
             key={currentIndex++}
-            className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 mt-8 border-b-2 border-red-500 pb-4"
+            className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 mt-8 border-b-2 border-orange-500 pb-4"
           >
             {title}
           </h1>
@@ -508,7 +501,7 @@ const TermsChatters: React.FC = () => {
               key={currentIndex++}
               className="scroll-mt-28 text-xl sm:text-2xl font-bold text-gray-900 mt-10 mb-6 flex items-center gap-3"
             >
-              <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 text-white text-sm font-bold shadow-lg">
+              <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-bold shadow-lg">
                 {sectionNumber}
               </span>
               <span>{sectionTitle}</span>
@@ -533,7 +526,7 @@ const TermsChatters: React.FC = () => {
         elements.push(
           <h3
             key={currentIndex++}
-            className="text-lg font-bold text-gray-800 mt-6 mb-4 border-l-4 border-red-500 pl-4"
+            className="text-lg font-bold text-gray-800 mt-6 mb-4 border-l-4 border-orange-500 pl-4"
           >
             {title}
           </h3>
@@ -554,10 +547,10 @@ const TermsChatters: React.FC = () => {
         elements.push(
           <div
             key={currentIndex++}
-            className="bg-gray-50 border-l-4 border-red-500 rounded-r-xl p-5 my-4 hover:bg-gray-100 transition-colors duration-200"
+            className="bg-gray-50 border-l-4 border-orange-500 rounded-r-xl p-5 my-4 hover:bg-gray-100 transition-colors duration-200"
           >
             <p className="text-gray-800 leading-relaxed">
-              <span className="font-bold text-red-600 mr-2">{number}</span>
+              <span className="font-bold text-orange-600 mr-2">{number}</span>
               <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formattedContent) }} />
             </p>
           </div>
@@ -570,7 +563,7 @@ const TermsChatters: React.FC = () => {
         const boldText = line.slice(2, -2);
         elements.push(
           <div
-            className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-2xl p-6 my-6"
+            className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-6 my-6"
             key={currentIndex++}
           >
             <p className="font-bold text-gray-900 text-lg">{boldText}</p>
@@ -584,10 +577,10 @@ const TermsChatters: React.FC = () => {
         elements.push(
           <div
             key={currentIndex++}
-            className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-2xl p-8 my-8 shadow-lg"
+            className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-2xl p-8 my-8 shadow-lg"
           >
             <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold shadow-lg">
+              <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-lg">
                 14
               </span>
               Contact
@@ -595,7 +588,7 @@ const TermsChatters: React.FC = () => {
             <p className="text-gray-800 leading-relaxed mb-6 text-lg">{line}</p>
             <a
               href="https://sos-expat.com/contact"
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
             >
               <svg
                 className="w-5 h-5"
@@ -636,103 +629,85 @@ const TermsChatters: React.FC = () => {
 
   // Contenu par défaut FR
   const defaultFr = `
-# Conditions Générales d'Utilisation – Chatters & Ambassadeurs SOS Expat
+# Conditions Générales d'Utilisation – Influenceurs SOS Expat
 
 **SOS Expat by WorldExpat OÜ** (la « **Plateforme** », « **SOS** », « **nous** »)
 
-**Version 3.0 – Dernière mise à jour : 1er février 2026**
+**Version 1.0 – Dernière mise à jour : 1er février 2026**
 
 ---
 
 ## 1. Définitions
 
-**Chatter** (ou « **Ambassadeur** ») : toute personne physique inscrite au programme d'affiliation SOS Expat pour promouvoir les services de la Plateforme et percevoir des commissions sur les transactions générées.
+**Influenceur** : toute personne physique inscrite au programme d'affiliation SOS Expat pour promouvoir les services de la Plateforme auprès de sa communauté (abonnés, followers) et percevoir des commissions sur les transactions générées.
 
-**Code Affilié** : identifiant unique attribué au Chatter (ex : « JEAN123 ») permettant le tracking des recommandations.
+**Code Affilié** : identifiant unique attribué à l'Influenceur permettant le tracking des recommandations et des appels clients générés.
 
-**Code de Recrutement** : identifiant spécial (ex : « REC-JEAN123 ») permettant de parrainer de nouveaux Chatters.
+**Commission** : rémunération versée à l'Influenceur pour chaque appel payant éligible généré via son Code Affilié.
 
-**Commission** : rémunération versée au Chatter pour chaque transaction éligible générée via son Code Affilié.
+**Filleul Influenceur** : tout nouvel Influenceur inscrit via le code de parrainage de l'Influenceur.
 
-**Filleul** : tout nouvel utilisateur (client, prestataire ou chatter) inscrit via le Code du Chatter.
+**Audience** : l'ensemble des abonnés, followers et communauté de l'Influenceur sur ses plateformes (Instagram, TikTok, YouTube, blog, etc.).
 
-**Early Adopter** : Chatter parmi les 100 premiers inscrits dans un pays, bénéficiant d'un bonus de +50% à vie.
-
-**Niveau 1 (N1)** : Filleuls directs du Chatter.
-
-**Niveau 2 (N2)** : Filleuls des Filleuls N1 (parrainage indirect).
+**Contenu Sponsorisé** : tout contenu créé par l'Influenceur pour promouvoir SOS Expat, devant être clairement identifié comme partenariat commercial.
 
 ---
 
 ## 2. Objet et acceptation
 
-2.1. Les présentes CGU régissent la participation au programme d'affiliation Chatters de SOS Expat.
+2.1. Les présentes CGU régissent la participation au programme d'affiliation Influenceurs de SOS Expat.
 
-2.2. En cochant la case d'acceptation lors de l'inscription, le Chatter accepte l'intégralité des présentes CGU. Cette acceptation constitue une **signature électronique valide** au sens du règlement **eIDAS (UE) n° 910/2014**.
+2.2. En cochant la case d'acceptation lors de l'inscription, l'Influenceur accepte l'intégralité des présentes CGU. Cette acceptation constitue une **signature électronique valide** au sens du règlement **eIDAS (UE) n° 910/2014**.
 
-2.3. **Traçabilité de l'acceptation.** SOS Expat conserve un journal d'audit horodaté incluant : adresse IP, identifiant de session, user-agent, version des CGU, empreinte numérique du document accepté et identifiant du Chatter. Ces données sont conservées **10 ans**.
+2.3. **Traçabilité de l'acceptation.** SOS Expat conserve un journal d'audit horodaté incluant : adresse IP, identifiant de session, user-agent, version des CGU, empreinte numérique du document accepté et identifiant de l'Influenceur. Ces données sont conservées **10 ans**.
 
 2.4. **Modifications.** SOS Expat peut modifier les CGU et/ou les barèmes de commissions avec effet prospectif. L'usage continu après notification vaut acceptation.
 
-2.5. **Capacité.** Le Chatter déclare être majeur et capable juridiquement. L'inscription est **interdite aux mineurs**.
+2.5. **Capacité.** L'Influenceur déclare être majeur et capable juridiquement. L'inscription est **interdite aux mineurs**.
 
 ---
 
 ## 3. Programme d'affiliation
 
-3.1. **Inscription.** L'accès au programme nécessite : (i) une inscription valide, (ii) la réussite du quiz de formation, (iii) l'acceptation des présentes CGU.
+3.1. **Inscription.** L'accès au programme nécessite : (i) une inscription valide avec présentation de ses plateformes de diffusion, (ii) l'acceptation des présentes CGU.
 
-3.2. **Codes Affiliés.** Après validation, le Chatter reçoit :
-- Un **Code Client** pour recommander des utilisateurs
-- Un **Code Recrutement** pour parrainer de nouveaux Chatters
+3.2. **Code Affilié.** Après validation, l'Influenceur reçoit un Code Affilié unique permettant de tracker les appels clients générés via ses publications.
 
-3.3. **Activation.** Le compte Chatter est « activé » après **2 appels clients** générés. L'activation déclenche le bonus de parrainage au recruteur.
+3.3. **Parrainage.** L'Influenceur peut recruter d'autres Influenceurs via son code de parrainage et percevoir des commissions sur leurs performances.
 
-3.4. **Niveaux.** Le Chatter peut progresser du niveau 1 à 5 selon ses performances, débloquant des avantages supplémentaires.
+3.4. **Plateformes éligibles.** Le programme est ouvert aux créateurs actifs sur : Instagram, TikTok, YouTube, Facebook, Twitter/X, LinkedIn, blogs, podcasts, newsletters et autres canaux numériques.
 
-3.5. **Early Adopter.** Les 100 premiers Chatters inscrits par pays bénéficient d'un bonus permanent de **+50%** sur toutes leurs commissions.
+3.5. **Critères d'éligibilité.** L'Influenceur doit disposer d'une audience active et pertinente pour les services d'assistance aux expatriés.
 
 ---
 
 ## 4. Commissions et rémunération
 
-4.1. **Commissions Clients.** Le Chatter perçoit une commission sur chaque appel payant généré via son Code Affilié :
-- Niveau 1-2 : **15%** du montant de la transaction
-- Niveau 3 : **20%**
-- Niveau 4 : **25%**
-- Niveau 5 : **30%**
-- Early Adopter : **+50%** bonus permanent
+4.1. **Commissions directes par appel.** L'Influenceur perçoit **$10** pour chaque appel payant généré via son Code Affilié, sans limite de volume ni de durée. Ces commissions directes sont acquises indépendamment de toute condition d'activité.
 
-4.2. **Commissions de Recrutement (Filleul N1).** Le Chatter perçoit des commissions sur les performances de ses Filleuls N1, pendant **12 mois** à compter de la date d'inscription de chaque Filleul N1. **Conditions cumulatives pour percevoir cette commission :**
-- Le Chatter doit réaliser un minimum de **$50 de commissions directes** (article 4.1) au cours du mois civil concerné
-- Le Chatter doit assurer la formation et le suivi de ses Filleuls N1 : partage des ressources du programme, réponse aux questions dans un délai de 48h, accompagnement dans la prise en main du dashboard
+4.2. **Commissions de parrainage (Filleul N1).** L'Influenceur perçoit une commission sur chaque appel client généré par ses Filleuls Influenceurs N1, pendant **12 mois** à compter de la date d'inscription du Filleul N1. **Conditions cumulatives pour percevoir cette commission :**
+- L'Influenceur doit réaliser un minimum de **$50 de commissions directes** (article 4.1) au cours du mois civil concerné
+- L'Influenceur doit assurer la formation et le suivi de ses Filleuls N1 : partage des ressources et guidelines de marque, réponse aux questions dans un délai de 48h, accompagnement dans la prise en main du programme
 - En l'absence de ces conditions sur un mois donné, les commissions N1 de ce mois sont suspendues (non rétroactives)
-- **5€** par Chatter N1 activé (2+ appels, versé à l'activation, sans condition de seuil)
-- **1$** par appel client de vos filleuls N1 (pendant 12 mois, soumis aux conditions ci-dessus)
 
-4.3. **Commissions de Recrutement (Filleul N2).** Le Chatter perçoit des commissions sur les performances de ses Filleuls N2, pendant **12 mois** à compter de la date d'inscription de chaque Filleul N2. Les **mêmes conditions cumulatives** qu'en 4.2 s'appliquent.
-- **0.50$** par appel client de vos filleuls N2 (pendant 12 mois, soumis aux conditions ci-dessus)
+4.3. **Commissions de parrainage (Filleul N2).** L'Influenceur perçoit une commission sur chaque appel client généré par ses Filleuls N2, pendant **12 mois** à compter de la date d'inscription du Filleul N2. Les **mêmes conditions cumulatives** qu'en 4.2 s'appliquent.
 
-4.4. **Durée maximale des commissions d'affiliation.** Les commissions sur les Filleuls (N1 et N2) sont versées pendant **12 mois maximum** à compter de la date d'inscription de chaque filleul. Passé ce délai, le Chatter conserve uniquement ses commissions directes (article 4.1). Il peut recruter de nouveaux filleuls pour démarrer de nouvelles périodes de 12 mois.
+4.4. **Durée maximale des commissions d'affiliation.** Les commissions sur les Filleuls (N1 et N2) sont versées pendant **12 mois maximum** à compter de la date d'inscription de chaque filleul. Passé ce délai, l'Influenceur conserve uniquement ses commissions directes (article 4.1). Il peut recruter de nouveaux filleuls pour démarrer de nouvelles périodes de 12 mois.
 
 4.5. **Barèmes de commissions (récapitulatif).**
 
 | Type de commission | Montant | Durée | Conditions |
 |---|---|---|---|
-| Appel client direct (via code affilié) | 15-30% | Illimitée | Aucune |
-| Activation Filleul Chatter N1 | 5€ | Unique | À l'activation |
-| Appel client via Filleul N1 | 1$/appel | 12 mois | $50/mois + formation |
-| Appel client via Filleul N2 | 0.50$/appel | 12 mois | $50/mois + formation |
+| Appel client direct (via code affilié) | $10/appel | Illimitée | Aucune |
+| Appel via Filleul Influenceur N1 | Variable | 12 mois | $50/mois + formation |
+| Appel via Filleul Influenceur N2 | Variable | 12 mois | $50/mois + formation |
 
 4.6. **Seuils de paiement.** Les commissions sont validées après :
 - Période de rétractation client (14 jours)
 - Validation anti-fraude automatique
-- Atteinte du seuil minimum de retrait (**20€**)
+- Atteinte du seuil minimum de retrait (**$20**)
 
-4.7. **Bonus et défis.** Des bonus supplémentaires peuvent être accordés via :
-- Défis hebdomadaires
-- Paliers de recrutement (5, 10, 20, 50, 100, 500 filleuls)
-- Événements spéciaux
+4.7. **Bonus de performance.** Des bonus supplémentaires peuvent être accordés en fonction du volume de recommandations et de la qualité de l'audience générée.
 
 ---
 
@@ -740,17 +715,16 @@ const TermsChatters: React.FC = () => {
 
 5.1. **Interdictions strictes.** Sont formellement interdits :
 - L'auto-parrainage ou parrainage croisé fictif
-- La création de comptes multiples
+- L'achat de faux followers ou faux engagement
 - L'utilisation de bots ou scripts automatisés
-- Le spam ou démarchage agressif
-- La falsification de données
-- Le contournement des systèmes de tracking
+- La génération artificielle d'appels (self-calls, faux clients)
+- La création de comptes multiples
+- Toute manipulation des systèmes de tracking
 
 5.2. **Détection automatique.** SOS Expat utilise des systèmes de détection incluant :
-- Analyse des patterns IP
-- Vérification des emails jetables
-- Détection des inscriptions rapides suspectes
-- Analyse du ratio filleuls/clients
+- Analyse des patterns d'appels suspects
+- Vérification de l'authenticité des audiences
+- Analyse des taux de conversion anormaux
 
 5.3. **Sanctions.** En cas de fraude avérée ou suspectée :
 - **Suspension immédiate** du compte
@@ -758,33 +732,37 @@ const TermsChatters: React.FC = () => {
 - **Bannissement définitif** de la Plateforme
 - **Poursuites judiciaires** le cas échéant
 
-5.4. **Recours.** Le Chatter peut contester une sanction via le formulaire de contact dans un délai de **30 jours**.
+5.4. **Recours.** L'Influenceur peut contester une sanction via le formulaire de contact dans un délai de **30 jours**.
 
 ---
 
-## 6. Obligations du Chatter
+## 6. Obligations de l'Influenceur
 
-6.1. **Qualité du contenu.** Le Chatter s'engage à :
-- Promouvoir SOS Expat de manière honnête et éthique
-- Ne pas faire de promesses trompeuses
-- Respecter les règles des plateformes tierces (réseaux sociaux)
+6.1. **Transparence publicitaire.** L'Influenceur s'engage à :
+- Identifier clairement tout contenu sponsorisé (#partenariat, #publicité, #sponsored, #ad)
+- Respecter les règles de la plateforme ARPP et les directives de chaque réseau social
+- Ne pas présenter SOS Expat de façon trompeuse
+- Mentionner honnêtement les tarifs et conditions des services
+
+6.2. **Qualité du contenu.** L'Influenceur s'engage à :
+- Créer des contenus authentiques et pertinents pour son audience
 - Ne pas dénigrer la concurrence
+- Respecter les chartes graphiques et guidelines de marque SOS Expat
+- Ne pas modifier les messages clés sans validation préalable
 
-6.2. **Conformité légale.** Le Chatter respecte toutes les lois applicables :
-- Règles de publicité et démarchage
+6.3. **Conformité légale.** L'Influenceur respecte toutes les lois applicables :
+- Droit de la publicité et du marketing d'influence
 - Protection des données (RGPD)
-- Déclaration fiscale de ses revenus
-- Interdiction du spam (directive ePrivacy)
+- Déclaration fiscale de ses revenus d'influence
+- Réglementations spécifiques à chaque plateforme
 
-6.3. **Indépendance.** Le Chatter agit en **indépendant** ; aucun lien d'emploi, mandat ou agence n'est créé avec SOS Expat.
-
-6.4. **Exclusivité.** Le Chatter peut promouvoir d'autres services, sauf concurrents directs de SOS Expat.
+6.4. **Indépendance.** L'Influenceur agit en **indépendant** ; aucun lien d'emploi, mandat ou agence n'est créé avec SOS Expat.
 
 ---
 
 ## 7. Paiement des commissions
 
-7.1. **KYC obligatoire.** Le Chatter doit compléter la vérification d'identité (KYC) **avant** tout retrait.
+7.1. **KYC obligatoire.** L'Influenceur doit compléter la vérification d'identité (KYC) **avant** tout retrait.
 
 7.2. **Méthodes de paiement.** Les retraits sont disponibles via :
 - Virement bancaire (SEPA/International)
@@ -793,27 +771,28 @@ const TermsChatters: React.FC = () => {
 
 7.3. **Délais.** Les paiements sont traités sous **7 jours ouvrés** après validation.
 
-7.4. **Seuil minimum.** Le retrait est possible à partir de **20€** de solde disponible.
+7.4. **Seuil minimum.** Le retrait est possible à partir de **$20** de solde disponible.
 
 7.5. **Fonds non réclamés.** En cas de non-complétion du KYC sous **180 jours**, les fonds sont considérés abandonnés conformément à l'article 8.7 des CGU générales.
 
-7.6. **Taxes.** Le Chatter est seul responsable de la déclaration et du paiement de ses impôts.
+7.6. **Taxes.** L'Influenceur est seul responsable de la déclaration et du paiement de ses impôts et charges sociales liés à ses revenus d'influence.
 
 ---
 
 ## 8. Suspension et résiliation
 
 8.1. **Suspension temporaire.** SOS Expat peut suspendre un compte en cas de :
-- Suspicion de fraude (enquête en cours)
-- Violation des CGU
+- Suspicion de fraude ou de manipulation d'audience
+- Violation des CGU ou des règles de transparence publicitaire
+- Contenu préjudiciable à l'image de SOS Expat
 - Inactivité prolongée (365+ jours)
 
-8.2. **Résiliation par le Chatter.** Le Chatter peut clôturer son compte à tout moment. Les commissions validées restent payables.
+8.2. **Résiliation par l'Influenceur.** L'Influenceur peut clôturer son compte à tout moment. Les commissions validées restent payables.
 
 8.3. **Résiliation par SOS Expat.** En cas de violation grave, SOS Expat peut résilier le compte avec effet immédiat. Les commissions non validées sont annulées.
 
 8.4. **Effets de la résiliation.** À la résiliation :
-- Les Codes Affiliés sont désactivés
+- Le Code Affilié est désactivé
 - Les Filleuls sont réattribués à SOS Expat
 - L'accès au dashboard est supprimé
 
@@ -821,9 +800,9 @@ const TermsChatters: React.FC = () => {
 
 ## 9. Données personnelles
 
-9.1. **Responsable de traitement.** SOS Expat (WorldExpat OÜ) pour les données du programme Chatters.
+9.1. **Responsable de traitement.** SOS Expat (WorldExpat OÜ) pour les données du programme Influenceurs.
 
-9.2. **Données collectées.** Identité, contact, performances, données de paiement, logs de connexion.
+9.2. **Données collectées.** Identité, coordonnées, plateformes de diffusion, performances, données de paiement, logs de connexion.
 
 9.3. **Finalités.** Gestion du programme, paiement des commissions, prévention de la fraude, amélioration des services.
 
@@ -837,14 +816,14 @@ const TermsChatters: React.FC = () => {
 
 ## 10. Propriété intellectuelle
 
-10.1. La marque SOS Expat, logos, et contenus sont protégés. Le Chatter reçoit une **licence limitée** d'utilisation des éléments marketing fournis.
+10.1. La marque SOS Expat, logos, et contenus sont protégés. L'Influenceur reçoit une **licence limitée** d'utilisation des éléments marketing fournis (visuels, textes, bannières).
 
-10.2. **Restrictions.** Le Chatter ne peut pas :
-- Modifier les logos ou marques
-- Créer des sites web imitant SOS Expat
-- Enregistrer des noms de domaine contenant « SOS Expat »
+10.2. **Restrictions.** L'Influenceur ne peut pas :
+- Modifier les logos ou marques SOS Expat
+- Créer des comptes ou sites web imitant SOS Expat
+- Enregistrer des noms de domaine ou handles contenant « SOS Expat »
 
-10.3. **Contenu généré.** Les contenus créés par le Chatter restent sa propriété, avec licence d'utilisation au profit de SOS Expat.
+10.3. **Contenu généré.** Les contenus créés par l'Influenceur pour promouvoir SOS Expat restent sa propriété, avec licence d'utilisation non exclusive accordée à SOS Expat à des fins de communication.
 
 ---
 
@@ -853,11 +832,11 @@ const TermsChatters: React.FC = () => {
 11.1. **Limitation.** La responsabilité de SOS Expat est limitée aux **commissions dues** au titre des 12 derniers mois.
 
 11.2. **Exclusions.** SOS Expat n'est pas responsable des :
-- Dommages indirects (perte de revenus, d'opportunités)
+- Dommages indirects (perte de revenus, d'opportunités, atteinte à la réputation)
 - Actions des Filleuls ou utilisateurs
-- Problèmes techniques des prestataires tiers
+- Problèmes techniques des plateformes tierces (réseaux sociaux)
 
-11.3. **Indemnisation.** Le Chatter indemnise SOS Expat contre toute réclamation liée à ses activités promotionnelles.
+11.3. **Indemnisation.** L'Influenceur indemnise SOS Expat contre toute réclamation liée à ses contenus, notamment en cas de non-respect des règles de transparence publicitaire.
 
 ---
 
@@ -885,108 +864,90 @@ const TermsChatters: React.FC = () => {
 
 ## 14. Contact
 
-Pour toute question concernant le programme Chatters, contactez-nous via le formulaire de contact ou à l'adresse : chatters@sos-expat.com
+Pour toute question concernant le programme Influenceurs, contactez-nous via le formulaire de contact ou à l'adresse : influenceurs@sos-expat.com
 `;
 
   // Contenu par défaut EN
   const defaultEn = `
-# Terms of Use – SOS Expat Chatters & Ambassadors
+# Terms of Use – SOS Expat Influencer Program
 
 **SOS Expat by WorldExpat OÜ** (the "**Platform**", "**SOS**", "**we**")
 
-**Version 3.0 – Last updated: February 1, 2026**
+**Version 1.0 – Last updated: February 1, 2026**
 
 ---
 
 ## 1. Definitions
 
-**Chatter** (or "**Ambassador**"): any individual enrolled in the SOS Expat affiliate program to promote Platform services and earn commissions on generated transactions.
+**Influencer**: any individual enrolled in the SOS Expat affiliate program to promote Platform services to their community (subscribers, followers) and earn commissions on generated transactions.
 
-**Affiliate Code**: unique identifier assigned to the Chatter (e.g., "JEAN123") enabling referral tracking.
+**Affiliate Code**: unique identifier assigned to the Influencer enabling tracking of recommendations and client calls generated through their publications.
 
-**Recruitment Code**: special identifier (e.g., "REC-JEAN123") for sponsoring new Chatters.
+**Commission**: compensation paid to the Influencer for each eligible paid call generated via their Affiliate Code.
 
-**Commission**: compensation paid to the Chatter for each eligible transaction generated via their Affiliate Code.
+**Referral Influencer**: any new Influencer registered via the Influencer's referral code.
 
-**Referral**: any new user (client, provider, or chatter) registered via the Chatter's Code.
+**Audience**: all subscribers, followers and community of the Influencer across their platforms (Instagram, TikTok, YouTube, blog, etc.).
 
-**Early Adopter**: Chatter among the first 100 registered in a country, benefiting from a permanent +50% bonus.
-
-**Level 1 (N1)**: Direct referrals of the Chatter.
-
-**Level 2 (N2)**: Referrals of N1 referrals (indirect sponsorship).
+**Sponsored Content**: any content created by the Influencer to promote SOS Expat, which must be clearly identified as a commercial partnership.
 
 ---
 
 ## 2. Purpose and Acceptance
 
-2.1. These Terms govern participation in the SOS Expat Chatters affiliate program.
+2.1. These Terms govern participation in the SOS Expat Influencer affiliate program.
 
-2.2. By checking the acceptance box during registration, the Chatter accepts these Terms in full. This acceptance constitutes a **valid electronic signature** under **eIDAS Regulation (EU) No 910/2014**.
+2.2. By checking the acceptance box during registration, the Influencer accepts these Terms in full. This acceptance constitutes a **valid electronic signature** under **eIDAS Regulation (EU) No 910/2014**.
 
-2.3. **Acceptance Traceability.** SOS Expat maintains a timestamped audit log including: IP address, session ID, user-agent, Terms version, document hash, and Chatter ID. This data is retained for **10 years**.
+2.3. **Acceptance Traceability.** SOS Expat maintains a timestamped audit log including: IP address, session ID, user-agent, Terms version, document hash, and Influencer ID. This data is retained for **10 years**.
 
 2.4. **Modifications.** SOS Expat may modify the Terms and/or commission rates with prospective effect. Continued use after notification constitutes acceptance.
 
-2.5. **Capacity.** The Chatter declares to be of legal age and legally capable. Registration is **prohibited for minors**.
+2.5. **Capacity.** The Influencer declares to be of legal age and legally capable. Registration is **prohibited for minors**.
 
 ---
 
 ## 3. Affiliate Program
 
-3.1. **Registration.** Program access requires: (i) valid registration, (ii) passing the training quiz, (iii) acceptance of these Terms.
+3.1. **Registration.** Program access requires: (i) valid registration with presentation of distribution platforms, (ii) acceptance of these Terms.
 
-3.2. **Affiliate Codes.** Upon validation, the Chatter receives:
-- A **Client Code** to recommend users
-- A **Recruitment Code** to sponsor new Chatters
+3.2. **Affiliate Code.** Upon validation, the Influencer receives a unique Affiliate Code to track client calls generated through their publications.
 
-3.3. **Activation.** The Chatter account is "activated" after **2 client calls** generated. Activation triggers the referral bonus to the recruiter.
+3.3. **Referrals.** The Influencer may recruit other Influencers via their referral code and earn commissions on their performance.
 
-3.4. **Levels.** The Chatter can progress from level 1 to 5 based on performance, unlocking additional benefits.
+3.4. **Eligible Platforms.** The program is open to active creators on: Instagram, TikTok, YouTube, Facebook, Twitter/X, LinkedIn, blogs, podcasts, newsletters and other digital channels.
 
-3.5. **Early Adopter.** The first 100 Chatters registered per country receive a permanent **+50%** bonus on all commissions.
+3.5. **Eligibility Criteria.** The Influencer must have an active and relevant audience for expat assistance services.
 
 ---
 
 ## 4. Commissions and Compensation
 
-4.1. **Client Commissions.** The Chatter earns a commission on each paid call generated via their Affiliate Code:
-- Level 1-2: **15%** of transaction amount
-- Level 3: **20%**
-- Level 4: **25%**
-- Level 5: **30%**
-- Early Adopter: **+50%** permanent bonus
+4.1. **Direct Call Commissions.** The Influencer earns **$10** for each paid call generated via their Affiliate Code, with no volume or time limits. These direct commissions are earned independently of any activity conditions.
 
-4.2. **Recruitment Commissions (N1 Referral).** The Chatter earns commissions on N1 Referral performance, for **12 months** from each N1 Referral's registration date. **Cumulative conditions to earn this commission:**
-- The Chatter must achieve a minimum of **$50 in direct commissions** (Article 4.1) during the calendar month concerned
-- The Chatter must ensure training and follow-up of their N1 Referrals: sharing program resources, responding to questions within 48 hours, assisting with dashboard onboarding
+4.2. **Referral Commissions (N1 Referral).** The Influencer earns a commission on each client call generated by their N1 Influencer Referrals, for **12 months** from the N1 Referral's registration date. **Cumulative conditions to earn this commission:**
+- The Influencer must achieve a minimum of **$50 in direct commissions** (Article 4.1) during the calendar month concerned
+- The Influencer must ensure training and follow-up of their N1 Referrals: sharing resources and brand guidelines, responding to questions within 48 hours, assisting with program onboarding
 - In the absence of these conditions in a given month, N1 commissions for that month are suspended (non-retroactive)
-- **€5** per activated N1 Chatter (2+ calls, paid at activation, no threshold condition)
-- **$1** per client call from your N1 referrals (for 12 months, subject to conditions above)
 
-4.3. **Recruitment Commissions (N2 Referral).** The Chatter earns commissions on N2 Referral performance, for **12 months** from each N2 Referral's registration date. The **same cumulative conditions** as in 4.2 apply.
-- **$0.50** per client call from your N2 referrals (for 12 months, subject to conditions above)
+4.3. **Referral Commissions (N2 Referral).** The Influencer earns a commission on each client call generated by their N2 Referrals, for **12 months** from the N2 Referral's registration date. The **same cumulative conditions** as in 4.2 apply.
 
-4.4. **Maximum Affiliate Commission Duration.** Commissions on Referrals (N1 and N2) are paid for a **maximum of 12 months** from each referral's registration date. After this period, the Chatter retains only their direct commissions (Article 4.1). They may recruit new referrals to start new 12-month periods.
+4.4. **Maximum Affiliate Commission Duration.** Commissions on Referrals (N1 and N2) are paid for a **maximum of 12 months** from each referral's registration date. After this period, the Influencer retains only their direct commissions (Article 4.1). They may recruit new referrals to start new 12-month periods.
 
 4.5. **Commission Schedule (summary).**
 
 | Commission Type | Amount | Duration | Conditions |
 |---|---|---|---|
-| Direct client call (via affiliate code) | 15-30% | Unlimited | None |
-| N1 Chatter Referral activation | €5 | One-time | At activation |
-| Client call via N1 Referral | $1/call | 12 months | $50/month + training |
-| Client call via N2 Referral | $0.50/call | 12 months | $50/month + training |
+| Direct client call (via affiliate code) | $10/call | Unlimited | None |
+| Call via N1 Influencer Referral | Variable | 12 months | $50/month + training |
+| Call via N2 Influencer Referral | Variable | 12 months | $50/month + training |
 
 4.6. **Payment Thresholds.** Commissions are validated after:
 - Client withdrawal period (14 days)
 - Automatic anti-fraud validation
-- Reaching minimum withdrawal threshold (**€20**)
+- Reaching minimum withdrawal threshold (**$20**)
 
-4.7. **Bonuses and Challenges.** Additional bonuses may be granted through:
-- Weekly challenges
-- Recruitment milestones (5, 10, 20, 50, 100, 500 referrals)
-- Special events
+4.7. **Performance Bonuses.** Additional bonuses may be granted based on recommendation volume and quality of generated audience.
 
 ---
 
@@ -994,17 +955,16 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 5.1. **Strict Prohibitions.** The following are strictly prohibited:
 - Self-referral or fictitious cross-referral
-- Creating multiple accounts
+- Purchasing fake followers or fake engagement
 - Using bots or automated scripts
-- Spam or aggressive marketing
-- Data falsification
-- Circumventing tracking systems
+- Artificially generating calls (self-calls, fake clients)
+- Creating multiple accounts
+- Any manipulation of tracking systems
 
 5.2. **Automatic Detection.** SOS Expat uses detection systems including:
-- IP pattern analysis
-- Disposable email verification
-- Suspicious rapid registration detection
-- Referral/client ratio analysis
+- Suspicious call pattern analysis
+- Audience authenticity verification
+- Abnormal conversion rate analysis
 
 5.3. **Sanctions.** In case of proven or suspected fraud:
 - **Immediate suspension** of account
@@ -1012,33 +972,37 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 - **Permanent ban** from the Platform
 - **Legal action** if applicable
 
-5.4. **Appeals.** The Chatter may contest a sanction via the contact form within **30 days**.
+5.4. **Appeals.** The Influencer may contest a sanction via the contact form within **30 days**.
 
 ---
 
-## 6. Chatter Obligations
+## 6. Influencer Obligations
 
-6.1. **Content Quality.** The Chatter agrees to:
-- Promote SOS Expat honestly and ethically
-- Not make misleading promises
-- Respect third-party platform rules (social networks)
+6.1. **Advertising Transparency.** The Influencer agrees to:
+- Clearly identify all sponsored content (#partnership, #ad, #sponsored)
+- Comply with platform rules and each social network's guidelines
+- Not misrepresent SOS Expat
+- Honestly mention service pricing and conditions
+
+6.2. **Content Quality.** The Influencer agrees to:
+- Create authentic and relevant content for their audience
 - Not disparage competitors
+- Respect SOS Expat brand guidelines and graphic charters
+- Not modify key messages without prior validation
 
-6.2. **Legal Compliance.** The Chatter complies with all applicable laws:
-- Advertising and marketing rules
+6.3. **Legal Compliance.** The Influencer complies with all applicable laws:
+- Advertising and influencer marketing law
 - Data protection (GDPR)
-- Tax declaration of earnings
-- Anti-spam regulations (ePrivacy Directive)
+- Tax declaration of influencer income
+- Platform-specific regulations
 
-6.3. **Independence.** The Chatter acts as an **independent contractor**; no employment, agency, or mandate relationship is created with SOS Expat.
-
-6.4. **Exclusivity.** The Chatter may promote other services, except direct SOS Expat competitors.
+6.4. **Independence.** The Influencer acts as an **independent contractor**; no employment, agency, or mandate relationship is created with SOS Expat.
 
 ---
 
 ## 7. Commission Payments
 
-7.1. **Mandatory KYC.** The Chatter must complete identity verification (KYC) **before** any withdrawal.
+7.1. **Mandatory KYC.** The Influencer must complete identity verification (KYC) **before** any withdrawal.
 
 7.2. **Payment Methods.** Withdrawals are available via:
 - Bank transfer (SEPA/International)
@@ -1047,27 +1011,28 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 7.3. **Timing.** Payments are processed within **7 business days** after validation.
 
-7.4. **Minimum Threshold.** Withdrawal is possible from **€20** available balance.
+7.4. **Minimum Threshold.** Withdrawal is possible from **$20** available balance.
 
 7.5. **Unclaimed Funds.** If KYC is not completed within **180 days**, funds are considered abandoned per Article 8.7 of the general Terms.
 
-7.6. **Taxes.** The Chatter is solely responsible for declaring and paying their taxes.
+7.6. **Taxes.** The Influencer is solely responsible for declaring and paying their taxes and social charges related to influencer income.
 
 ---
 
 ## 8. Suspension and Termination
 
 8.1. **Temporary Suspension.** SOS Expat may suspend an account in case of:
-- Fraud suspicion (investigation ongoing)
-- Terms violation
+- Fraud suspicion or audience manipulation
+- Terms violation or advertising transparency rules
+- Content harmful to SOS Expat's image
 - Extended inactivity (365+ days)
 
-8.2. **Termination by Chatter.** The Chatter may close their account at any time. Validated commissions remain payable.
+8.2. **Termination by Influencer.** The Influencer may close their account at any time. Validated commissions remain payable.
 
 8.3. **Termination by SOS Expat.** In case of serious violation, SOS Expat may terminate the account with immediate effect. Unvalidated commissions are cancelled.
 
 8.4. **Effects of Termination.** Upon termination:
-- Affiliate Codes are deactivated
+- Affiliate Code is deactivated
 - Referrals are reassigned to SOS Expat
 - Dashboard access is removed
 
@@ -1075,9 +1040,9 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 ## 9. Personal Data
 
-9.1. **Data Controller.** SOS Expat (WorldExpat OÜ) for Chatters program data.
+9.1. **Data Controller.** SOS Expat (WorldExpat OÜ) for Influencer program data.
 
-9.2. **Data Collected.** Identity, contact, performance, payment data, connection logs.
+9.2. **Data Collected.** Identity, contact details, distribution platforms, performance, payment data, connection logs.
 
 9.3. **Purposes.** Program management, commission payments, fraud prevention, service improvement.
 
@@ -1091,14 +1056,14 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 ## 10. Intellectual Property
 
-10.1. The SOS Expat brand, logos, and content are protected. The Chatter receives a **limited license** to use provided marketing materials.
+10.1. The SOS Expat brand, logos, and content are protected. The Influencer receives a **limited license** to use provided marketing materials (visuals, texts, banners).
 
-10.2. **Restrictions.** The Chatter may not:
-- Modify logos or trademarks
-- Create websites imitating SOS Expat
-- Register domain names containing "SOS Expat"
+10.2. **Restrictions.** The Influencer may not:
+- Modify SOS Expat logos or trademarks
+- Create accounts or websites imitating SOS Expat
+- Register domain names or handles containing "SOS Expat"
 
-10.3. **Generated Content.** Content created by the Chatter remains their property, with usage license granted to SOS Expat.
+10.3. **Generated Content.** Content created by the Influencer to promote SOS Expat remains their property, with a non-exclusive usage license granted to SOS Expat for communication purposes.
 
 ---
 
@@ -1107,11 +1072,11 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 11.1. **Limitation.** SOS Expat's liability is limited to **commissions due** for the last 12 months.
 
 11.2. **Exclusions.** SOS Expat is not liable for:
-- Indirect damages (loss of revenue, opportunities)
+- Indirect damages (loss of revenue, opportunities, reputational harm)
 - Actions of Referrals or users
-- Technical issues with third-party providers
+- Technical issues with third-party platforms (social networks)
 
-11.3. **Indemnification.** The Chatter indemnifies SOS Expat against any claims related to their promotional activities.
+11.3. **Indemnification.** The Influencer indemnifies SOS Expat against any claims related to their content, particularly in case of non-compliance with advertising transparency rules.
 
 ---
 
@@ -1139,7 +1104,7 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 ## 14. Contact
 
-For any questions about the Chatters program, contact us via the contact form or at: chatters@sos-expat.com
+For any questions about the Influencer program, contact us via the contact form or at: influencers@sos-expat.com
 `;
 
   const defaultContent = selectedLanguage === "en" ? defaultEn : defaultFr;
@@ -1163,21 +1128,21 @@ For any questions about the Chatters program, contact us via the contact form or
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-red-900 to-orange-900 text-white py-16 sm:py-24">
+      <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-orange-900 to-amber-900 text-white py-16 sm:py-24">
         <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-sm font-medium text-red-200 mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-sm font-medium text-orange-200 mb-6">
               <Sparkles className="w-4 h-4" />
               {t.heroBadge}
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-6">
               {t.title}
             </h1>
-            <p className="text-lg sm:text-xl text-red-100 max-w-3xl mx-auto mb-4">
+            <p className="text-lg sm:text-xl text-orange-100 max-w-3xl mx-auto mb-4">
               {t.subtitle}
             </p>
-            <p className="text-sm text-red-200/80">{t.lastUpdated}</p>
+            <p className="text-sm text-orange-200/80">{t.lastUpdated}</p>
           </div>
         </div>
       </section>
@@ -1192,12 +1157,12 @@ For any questions about the Chatters program, contact us via the contact form or
             {t.features.map((feature, index) => (
               <div
                 key={index}
-                className="flex items-center gap-3 p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-100"
+                className="flex items-center gap-3 p-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-100"
               >
-                {index === 0 && <DollarSign className="w-6 h-6 text-red-600 flex-shrink-0" />}
-                {index === 1 && <Clock className="w-6 h-6 text-red-600 flex-shrink-0" />}
-                {index === 2 && <Users className="w-6 h-6 text-red-600 flex-shrink-0" />}
-                {index === 3 && <TrendingUp className="w-6 h-6 text-red-600 flex-shrink-0" />}
+                {index === 0 && <DollarSign className="w-6 h-6 text-orange-500 flex-shrink-0" />}
+                {index === 1 && <TrendingUp className="w-6 h-6 text-orange-500 flex-shrink-0" />}
+                {index === 2 && <Gift className="w-6 h-6 text-orange-500 flex-shrink-0" />}
+                {index === 3 && <Users className="w-6 h-6 text-orange-500 flex-shrink-0" />}
                 <span className="text-sm font-medium text-gray-800">{feature}</span>
               </div>
             ))}
@@ -1220,7 +1185,7 @@ For any questions about the Chatters program, contact us via the contact form or
                   onClick={() => handleLanguageChange(lang.code)}
                   className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
                     selectedLanguage === lang.code
-                      ? "bg-red-600 text-white shadow-md"
+                      ? "bg-orange-500 text-white shadow-md"
                       : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
                   }`}
                 >
@@ -1238,7 +1203,7 @@ For any questions about the Chatters program, contact us via the contact form or
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-red-600 border-t-transparent" />
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent" />
               <span className="ml-4 text-gray-600">{t.loading}</span>
             </div>
           ) : (
@@ -1248,15 +1213,15 @@ For any questions about the Chatters program, contact us via the contact form or
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-gradient-to-br from-gray-900 via-red-900 to-orange-900 text-white">
+      <section className="py-16 bg-gradient-to-br from-gray-900 via-orange-900 to-amber-900 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Gift className="w-16 h-16 mx-auto mb-6 text-red-300" />
+          <TrendingUp className="w-16 h-16 mx-auto mb-6 text-orange-300" />
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t.readyToJoin}</h2>
-          <p className="text-lg text-red-100 mb-8">{t.readySubtitle}</p>
+          <p className="text-lg text-orange-100 mb-8">{t.readySubtitle}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to={getLocalePath("/chatter/register")}
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-red-600 font-bold rounded-xl hover:bg-red-50 transition-all hover:scale-105 shadow-lg"
+              to={getLocalePath("/influencer/inscription")}
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-orange-600 font-bold rounded-xl hover:bg-orange-50 transition-all hover:scale-105 shadow-lg"
             >
               {t.startNow}
               <ArrowRight className="w-5 h-5" />
@@ -1268,11 +1233,11 @@ For any questions about the Chatters program, contact us via the contact form or
               {t.contactUs}
             </Link>
           </div>
-          <p className="mt-8 text-sm text-red-200">{t.trustedByHelpers}</p>
+          <p className="mt-8 text-sm text-orange-200">{t.trustedByHelpers}</p>
         </div>
       </section>
     </Layout>
   );
 };
 
-export default TermsChatters;
+export default TermsInfluencers;
