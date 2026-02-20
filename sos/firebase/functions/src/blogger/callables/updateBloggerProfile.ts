@@ -15,6 +15,7 @@ import {
   BlogTrafficTier,
   BloggerPaymentMethod,
 } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // ============================================================================
 // VALIDATION
@@ -110,7 +111,7 @@ export const updateBloggerProfile = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     // 1. Check authentication
@@ -138,8 +139,8 @@ export const updateBloggerProfile = onCall(
       const blogger = bloggerDoc.data() as Blogger;
 
       // 4. Check status
-      if (blogger.status === "blocked") {
-        throw new HttpsError("permission-denied", "Your account has been blocked");
+      if (blogger.status === "banned") {
+        throw new HttpsError("permission-denied", "Your account has been banned");
       }
 
       // 5. Build update object

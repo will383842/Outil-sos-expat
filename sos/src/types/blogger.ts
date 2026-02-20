@@ -18,7 +18,7 @@
 // ENUMS & CONSTANTS
 // ============================================================================
 
-export type BloggerStatus = 'active' | 'suspended' | 'blocked';
+export type BloggerStatus = 'active' | 'suspended' | 'banned';
 
 export type BloggerCommissionType = 'client_referral' | 'recruitment' | 'manual_adjustment';
 

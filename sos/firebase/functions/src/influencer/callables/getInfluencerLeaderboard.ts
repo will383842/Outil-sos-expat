@@ -15,6 +15,7 @@ import {
   GetInfluencerLeaderboardResponse,
 } from "../types";
 import { getInfluencerConfigCached } from "../utils";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -28,7 +29,7 @@ export const getInfluencerLeaderboard = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetInfluencerLeaderboardResponse> => {
     ensureInitialized();

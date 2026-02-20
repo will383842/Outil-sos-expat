@@ -25,6 +25,7 @@ import {
 } from './lib/secrets';
 // P3 FIX: Import country utils for converting ISO codes to full names
 import { getCountryName } from './utils/countryUtils';
+import { ALLOWED_ORIGINS } from "./lib/functionConfigs";
 
 // ✅ Interface corrigée pour correspondre exactement aux données frontend
 interface CreateCallRequest {
@@ -139,7 +140,7 @@ export const createAndScheduleCallHTTPS = onCall(
     minInstances: 1,
     concurrency: 1,
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     // Secrets: encryption + Stripe + Cloud Tasks + Outil sync
     secrets: [ENCRYPTION_KEY, STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, TASKS_AUTH_SECRET, OUTIL_SYNC_API_KEY],
   },

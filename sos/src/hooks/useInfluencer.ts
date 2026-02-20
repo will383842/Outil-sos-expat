@@ -400,7 +400,7 @@ export function useInfluencer(): UseInfluencerReturn {
     return influencer.availableBalance + influencer.pendingBalance + influencer.validatedBalance;
   }, [dashboardData]);
 
-  const clientDiscount = dashboardData?.config?.clientDiscountPercent || 5;
+  const clientDiscount = dashboardData?.config?.clientDiscountPercent ?? 0;
 
   return {
     dashboardData,

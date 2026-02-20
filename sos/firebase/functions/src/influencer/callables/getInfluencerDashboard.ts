@@ -20,6 +20,7 @@ import {
   GetInfluencerDashboardResponse,
 } from "../types";
 import { getInfluencerConfigCached, calculateLevelFromEarnings } from "../utils";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -33,7 +34,7 @@ export const getInfluencerDashboard = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetInfluencerDashboardResponse> => {
     ensureInitialized();

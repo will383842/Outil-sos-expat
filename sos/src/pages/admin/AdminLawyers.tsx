@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
 import {
   collection,
   query as fsQuery,
@@ -576,10 +577,10 @@ const AdminLawyers: React.FC = () => {
       if (status === "rejected") payload.validationReason = reason || null;
       if (status === "validated") payload["validationReason"] = null;
       await updateDoc(doc(db, "users", id), payload);
-      alert(t("successUpdate"));
+      toast.success(t("successUpdate"));
     } catch (e) {
       console.error("setValidation error", e);
-      alert(t("errorUpdate"));
+      toast.error(t("errorUpdate"));
     }
   };
 
@@ -590,10 +591,10 @@ const AdminLawyers: React.FC = () => {
       const payload: Record<string, unknown> = { kycStatus: next, updatedAt: new Date() };
       if (message) payload["kycMessage"] = message;
       await updateDoc(doc(db, "users", id), payload);
-      alert(t("successUpdate"));
+      toast.success(t("successUpdate"));
     } catch (e) {
       console.error("setKyc error", e);
-      alert(t("errorUpdate"));
+      toast.error(t("errorUpdate"));
     }
   };
 
@@ -605,17 +606,17 @@ const AdminLawyers: React.FC = () => {
         payload["suspendedAt"] = new Date();
       }
       await updateDoc(doc(db, "users", id), payload);
-      alert(t("successUpdate"));
+      toast.success(t("successUpdate"));
     } catch (e) {
       console.error("setStatus error", e);
-      alert(t("errorUpdate"));
+      toast.error(t("errorUpdate"));
     }
   };
 
   // Bulk
   const onBulk = (action: "approve" | "reject" | "suspend" | "delete") => {
     if (selected.length === 0) {
-      alert("Sélection vide.");
+      toast.error("Sélection vide.");
       return;
     }
     if (action === "reject" || action === "suspend" || action === "delete") {
@@ -637,15 +638,15 @@ const AdminLawyers: React.FC = () => {
     )
       .then(async () => {
         setSelected([]);
-        alert(t("successUpdate"));
+        toast.success(t("successUpdate"));
       })
-      .catch(() => alert(t("errorUpdate")));
+      .catch(() => toast.error(t("errorUpdate")));
   };
 
   // Export page
   const exportPage = () => {
     if (rows.length === 0) {
-      alert(t("noneBody"));
+      toast.error(t("noneBody"));
       return;
     }
     const csv = rows.map((l) => ({
@@ -687,7 +688,7 @@ const AdminLawyers: React.FC = () => {
   // Export all (filters) — cap 5000
   const exportAll = async () => {
     try {
-      alert(t("exportAllRunning"));
+      toast(t("exportAllRunning"));
       const base = collection(db, "users") as CollectionReference<DocumentData>;
       const constraintsBase: QueryConstraint[] = [
         where("role", "==", "lawyer"),
@@ -814,9 +815,9 @@ const AdminLawyers: React.FC = () => {
         if (snap.docs.length < 500) break;
       }
 
-      if (all.length >= cap) alert(t("exportAllCap"));
+      if (all.length >= cap) toast(t("exportAllCap"));
       if (all.length === 0) {
-        alert(t("noneBody"));
+        toast.error(t("noneBody"));
         return;
       }
 
@@ -854,10 +855,10 @@ const AdminLawyers: React.FC = () => {
       a.download = `lawyers_all_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      alert(t("exportAllDone"));
+      toast.success(t("exportAllDone"));
     } catch (e) {
       console.error("Export all error", e);
-      alert(t("errorUpdate"));
+      toast.error(t("errorUpdate"));
     }
   };
 
@@ -1687,7 +1688,7 @@ const AdminLawyers: React.FC = () => {
                                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                                 onClick={async () => {
                                   await navigator.clipboard.writeText(l.email);
-                                  alert(t("copied"));
+                                  toast.success(t("copied"));
                                   setOpenMenuId(null);
                                 }}
                               >
@@ -1697,7 +1698,7 @@ const AdminLawyers: React.FC = () => {
                                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                                 onClick={async () => {
                                   await navigator.clipboard.writeText(l.id);
-                                  alert(t("copied"));
+                                  toast.success(t("copied"));
                                   setOpenMenuId(null);
                                 }}
                               >
@@ -1855,10 +1856,10 @@ const AdminLawyers: React.FC = () => {
                   setReasonOpen(null);
                   setReasonText("");
                   setSelected([]);
-                  alert(t("successUpdate"));
+                  toast.success(t("successUpdate"));
                 } catch (e) {
                   console.error("Reason action error", e);
-                  alert(t("errorUpdate"));
+                  toast.error(t("errorUpdate"));
                 }
               }}
             >

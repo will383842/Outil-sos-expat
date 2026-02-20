@@ -1,4 +1,25 @@
 // src/services/notificationService.ts
+//
+// TODO: BACKEND FUNCTIONS MISSING (2026-02-20)
+// =============================================
+// This service references two Cloud Functions that DO NOT EXIST in the backend:
+//   - 'sendNotification' (used by sendMultiChannelNotification)
+//   - 'sendPushNotification' (used by sendPushNotification)
+//
+// Neither function is exported from sos/firebase/functions/src/index.ts.
+// Calling these methods will always fail with a "not-found" error.
+//
+// Additionally:
+//   - The toast system (showToast/closeToast) dispatches 'show-toast'/'close-toast'
+//     CustomEvents, but NO component in the codebase listens for them.
+//   - The exported helpers (sosNotifications, NotificationEventType) are not imported
+//     anywhere outside this file.
+//   - The only consumer is AdminNotifications.tsx (sendMultiChannelNotification).
+//
+// Action needed: Either implement the backend Cloud Functions, or remove this
+// service and refactor AdminNotifications.tsx to use a different approach
+// (e.g., direct Firestore writes, Telegram notifications, or backend email triggers).
+// =============================================
 
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../config/firebase';
@@ -10,7 +31,7 @@ export interface NotificationData {
   timestamp?: Date;
   read?: boolean;
   userId?: string;
-  metadata?: Record<string, unknown>; // ✅ plus de any
+  metadata?: Record<string, unknown>;
 }
 
 export interface ToastNotification {
@@ -38,7 +59,6 @@ export interface MultiChannelNotification {
   emailHtml?: string;
 }
 
-// ✅ Typage des réponses Firebase
 interface MultiChannelResponse {
   success: boolean;
   results: Array<{
@@ -57,13 +77,15 @@ interface PushResponse {
 class NotificationService {
   private notifications: NotificationData[] = [];
   private listeners: ((notifications: NotificationData[]) => void)[] = [];
-  
-  // Cloud Functions references
+
+  // AUDIT-FIX C1: These Cloud Functions do NOT exist in the backend — calls will fail with "not-found"
+  // Kept as references but sendMultiChannelNotification/sendPushNotification now return early
   private sendNotificationFn = httpsCallable(functions, 'sendNotification');
   private sendPushNotificationFn = httpsCallable(functions, 'sendPushNotification');
 
   /**
    * Affiche une notification toast dans l'interface
+   * NOTE: Dispatches 'show-toast' CustomEvent but no component listens for it -- effectively a no-op
    */
   showToast(notification: Omit<ToastNotification, 'id'>): string {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -80,6 +102,7 @@ class NotificationService {
 
   /**
    * Ferme une notification toast
+   * NOTE: Dispatches 'close-toast' CustomEvent but no component listens for it -- effectively a no-op
    */
   closeToast(id: string): void {
     window.dispatchEvent(new CustomEvent('close-toast', { detail: { id } }));
@@ -136,70 +159,20 @@ class NotificationService {
 
   /**
    * Envoie une notification multi-canaux via Cloud Function
+   * AUDIT-FIX C1: 'sendNotification' Cloud Function does not exist in backend — returns false immediately
    */
-  async sendMultiChannelNotification(data: MultiChannelNotification): Promise<boolean> {
-    try {
-      const result = await this.sendNotificationFn(data);
-      const response = result.data as MultiChannelResponse; // ✅ typé
-
-      if (response.success) {
-        this.showToast({
-          type: 'success',
-          title: 'Notification envoyée',
-          message: 'La notification a été envoyée avec succès'
-        });
-        return true;
-      } else {
-        this.showToast({
-          type: 'error',
-          title: 'Erreur d\'envoi',
-          message: 'Échec de l\'envoi de la notification'
-        });
-        return false;
-      }
-    } catch (error) {
-      console.error('Erreur envoi notification:', error);
-      this.showToast({
-        type: 'error',
-        title: 'Erreur',
-        message: 'Erreur lors de l\'envoi de la notification'
-      });
-      return false;
-    }
+  async sendMultiChannelNotification(_data: MultiChannelNotification): Promise<boolean> {
+    console.warn('[NotificationService] sendMultiChannelNotification: Backend function "sendNotification" does not exist');
+    return false;
   }
 
   /**
    * Envoie une notification push
+   * AUDIT-FIX C1: 'sendPushNotification' Cloud Function does not exist in backend — returns false immediately
    */
-  async sendPushNotification(data: PushNotificationPayload): Promise<boolean> {
-    try {
-      const result = await this.sendPushNotificationFn(data);
-      const response = result.data as PushResponse; // ✅ typé
-
-      if (response.success) {
-        this.showToast({
-          type: 'success',
-          title: 'Push notification envoyée',
-          message: `${response.successCount} notification(s) envoyée(s)`
-        });
-        return true;
-      } else {
-        this.showToast({
-          type: 'warning',
-          title: 'Push notification',
-          message: 'Aucune notification push n\'a pu être envoyée'
-        });
-        return false;
-      }
-    } catch (error) {
-      console.error('Erreur push notification:', error);
-      this.showToast({
-        type: 'error',
-        title: 'Erreur Push',
-        message: 'Erreur lors de l\'envoi de la notification push'
-      });
-      return false;
-    }
+  async sendPushNotification(_data: PushNotificationPayload): Promise<boolean> {
+    console.warn('[NotificationService] sendPushNotification: Backend function "sendPushNotification" does not exist');
+    return false;
   }
 
   /**

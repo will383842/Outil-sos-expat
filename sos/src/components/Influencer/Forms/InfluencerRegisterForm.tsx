@@ -39,6 +39,7 @@ import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phon
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
 import { generateEventIdForType } from '@/utils/sharedEventId';
+import { useAntiBot } from '@/hooks/useAntiBot';
 
 // ============================================================================
 // PASSWORD STRENGTH UTILITY
@@ -193,6 +194,8 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
   const locale = (language || 'en') as string;
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
+  const { honeypotValue, setHoneypotValue, validateHuman } = useAntiBot();
+  const [botError, setBotError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -484,6 +487,19 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
 
     setLoading(true);
     setError(null);
+    setBotError(null);
+
+    // Anti-bot validation
+    const botCheck = await validateHuman('register_influencer');
+    if (!botCheck.isValid) {
+      const msgs: Record<string, string> = {
+        'Suspicious activity detected': 'A validation error occurred. Please try again.',
+        'Please take your time to fill the form': 'Please take your time to fill out the form correctly.',
+      };
+      setBotError(msgs[botCheck.reason || ''] || 'Validation error.');
+      setLoading(false);
+      return;
+    }
 
     // Meta Pixel: Generate event ID for deduplication + get fbp/fbc
     const metaEventId = generateEventIdForType('registration');
@@ -593,6 +609,17 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>
+      {/* Honeypot fields - hidden from humans, filled by bots */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>
+        <label htmlFor="website_url_inf">Website</label>
+        <input type="text" id="website_url_inf" name="website_url" tabIndex={-1} autoComplete="off" value={honeypotValue} onChange={(e) => setHoneypotValue(e.target.value)} />
+      </div>
+
+      {botError && (
+        <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-xl text-sm text-red-300 text-center">
+          {botError}
+        </div>
+      )}
       {/* ARIA Live Region */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {Object.keys(validationErrors).length > 0 && (

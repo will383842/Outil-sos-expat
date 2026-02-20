@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
@@ -113,11 +114,11 @@ const AdminDocuments: React.FC = () => {
       setSelectedDocument(null);
 
       // Show success message
-      alert('Document approuvé avec succès');
+      toast.success('Document approuvé avec succès');
 
     } catch (error) {
       console.error('Error approving document:', error);
-      alert('Erreur lors de l\'approbation du document');
+      toast.error('Erreur lors de l\'approbation du document');
     } finally {
       setIsActionLoading(false);
     }
@@ -145,11 +146,11 @@ const AdminDocuments: React.FC = () => {
       setSelectedDocument(null);
 
       // Show success message
-      alert('Document rejeté avec succès');
+      toast.success('Document rejeté avec succès');
 
     } catch (error) {
       console.error('Error rejecting document:', error);
-      alert('Erreur lors du rejet du document');
+      toast.error('Erreur lors du rejet du document');
     } finally {
       setIsActionLoading(false);
     }

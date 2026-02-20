@@ -1,5 +1,6 @@
 // src/pages/admin/AdminReviews.tsx
 import React, { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import {
   Star,
@@ -715,11 +716,11 @@ rows[m][bucketKey] += 1;
       if (providerId) {
         await recalculateProviderStats(providerId);
       }
-      alert(lang === 'fr' ? 'Avis masqué avec succès' : 'Review hidden');
+      toast.success(lang === 'fr' ? 'Avis masqué avec succès' : 'Review hidden');
       await loadStats();
     } catch (err) {
       console.error('Error hiding review:', err);
-      alert(lang === 'fr' ? "Erreur lors du masquage de l'avis" : 'Failed to hide review');
+      toast.error(lang === 'fr' ? "Erreur lors du masquage de l'avis" : 'Failed to hide review');
     } finally {
       setIsActionLoading(false);
     }
@@ -742,11 +743,11 @@ rows[m][bucketKey] += 1;
       if (providerId) {
         await recalculateProviderStats(providerId);
       }
-      alert(lang === 'fr' ? 'Avis republié avec succès' : 'Review republished');
+      toast.success(lang === 'fr' ? 'Avis republié avec succès' : 'Review republished');
       await loadStats();
     } catch (err) {
       console.error('Error republishing review:', err);
-      alert(lang === 'fr' ? "Erreur lors de la republication de l'avis" : 'Failed to republish review');
+      toast.error(lang === 'fr' ? "Erreur lors de la republication de l'avis" : 'Failed to republish review');
     } finally {
       setIsActionLoading(false);
     }
@@ -769,11 +770,11 @@ rows[m][bucketKey] += 1;
       if (providerId) {
         await recalculateProviderStats(providerId);
       }
-      alert(t('reviewApproved'));
+      toast.success(t('reviewApproved'));
       await loadStats();
     } catch (err) {
       console.error('Error approving review:', err);
-      alert(lang === 'fr' ? "Erreur lors de l'approbation de l'avis" : 'Failed to approve review');
+      toast.error(lang === 'fr' ? "Erreur lors de l'approbation de l'avis" : 'Failed to approve review');
     } finally {
       setIsActionLoading(false);
     }
@@ -795,11 +796,11 @@ rows[m][bucketKey] += 1;
       if (providerId) {
         await recalculateProviderStats(providerId);
       }
-      alert(t('reviewRejected'));
+      toast.success(t('reviewRejected'));
       await loadStats();
     } catch (err) {
       console.error('Error rejecting review:', err);
-      alert(lang === 'fr' ? "Erreur lors du rejet de l'avis" : 'Failed to reject review');
+      toast.error(lang === 'fr' ? "Erreur lors du rejet de l'avis" : 'Failed to reject review');
     } finally {
       setIsActionLoading(false);
     }
@@ -809,7 +810,7 @@ rows[m][bucketKey] += 1;
     if (selectedIds.size === 0) return;
     const pendingIds = reviews.filter((r) => selectedIds.has(r.id) && (r.status === 'pending' || !r.status));
     if (pendingIds.length === 0) {
-      alert(lang === 'fr' ? 'Aucun avis en attente sélectionné' : 'No pending reviews selected');
+      toast.error(lang === 'fr' ? 'Aucun avis en attente sélectionné' : 'No pending reviews selected');
       return;
     }
     const ok = confirm(
@@ -843,11 +844,11 @@ rows[m][bucketKey] += 1;
       setSelectedIds(new Set());
       // Recalculate stats for all affected providers
       await Promise.all(Array.from(providerIds).map((pid) => recalculateProviderStats(pid)));
-      alert(lang === 'fr' ? 'Avis approuvés avec succès' : 'Reviews approved');
+      toast.success(lang === 'fr' ? 'Avis approuvés avec succès' : 'Reviews approved');
       await loadStats();
     } catch (err) {
       console.error('Bulk approve error:', err);
-      alert(lang === 'fr' ? "Erreur lors de l'approbation en masse" : 'Bulk approve failed');
+      toast.error(lang === 'fr' ? "Erreur lors de l'approbation en masse" : 'Bulk approve failed');
     } finally {
       setIsActionLoading(false);
     }
@@ -857,7 +858,7 @@ rows[m][bucketKey] += 1;
     if (selectedIds.size === 0) return;
     const pendingIds = reviews.filter((r) => selectedIds.has(r.id) && (r.status === 'pending' || !r.status));
     if (pendingIds.length === 0) {
-      alert(lang === 'fr' ? 'Aucun avis en attente sélectionné' : 'No pending reviews selected');
+      toast.error(lang === 'fr' ? 'Aucun avis en attente sélectionné' : 'No pending reviews selected');
       return;
     }
     const ok = confirm(
@@ -890,11 +891,11 @@ rows[m][bucketKey] += 1;
       setSelectedIds(new Set());
       // Recalculate stats for all affected providers
       await Promise.all(Array.from(providerIds).map((pid) => recalculateProviderStats(pid)));
-      alert(lang === 'fr' ? 'Avis rejetés avec succès' : 'Reviews rejected');
+      toast.success(lang === 'fr' ? 'Avis rejetés avec succès' : 'Reviews rejected');
       await loadStats();
     } catch (err) {
       console.error('Bulk reject error:', err);
-      alert(lang === 'fr' ? 'Erreur lors du rejet en masse' : 'Bulk reject failed');
+      toast.error(lang === 'fr' ? 'Erreur lors du rejet en masse' : 'Bulk reject failed');
     } finally {
       setIsActionLoading(false);
     }
@@ -914,11 +915,11 @@ rows[m][bucketKey] += 1;
       if (providerId) {
         await recalculateProviderStats(providerId);
       }
-      alert(lang === 'fr' ? 'Avis supprimé avec succès' : 'Review deleted');
+      toast.success(lang === 'fr' ? 'Avis supprimé avec succès' : 'Review deleted');
       await loadStats();
     } catch (err) {
       console.error('Error deleting review:', err);
-      alert(lang === 'fr' ? "Erreur lors de la suppression de l'avis" : 'Failed to delete review');
+      toast.error(lang === 'fr' ? "Erreur lors de la suppression de l'avis" : 'Failed to delete review');
     } finally {
       setIsActionLoading(false);
     }
@@ -953,11 +954,11 @@ rows[m][bucketKey] += 1;
       setSelectedIds(new Set());
       // Recalculate stats for all affected providers
       await Promise.all(Array.from(providerIds).map((pid) => recalculateProviderStats(pid)));
-      alert(lang === 'fr' ? 'Avis supprimés avec succès' : 'Reviews deleted');
+      toast.success(lang === 'fr' ? 'Avis supprimés avec succès' : 'Reviews deleted');
       await loadStats();
     } catch (err) {
       console.error('Bulk delete error:', err);
-      alert(lang === 'fr' ? 'Erreur lors de la suppression en masse' : 'Bulk delete failed');
+      toast.error(lang === 'fr' ? 'Erreur lors de la suppression en masse' : 'Bulk delete failed');
     } finally {
       setIsActionLoading(false);
     }
@@ -981,11 +982,11 @@ rows[m][bucketKey] += 1;
       if (selectedReview.providerId) {
         await recalculateProviderStats(selectedReview.providerId);
       }
-      alert(lang === 'fr' ? 'Note mise à jour' : 'Rating saved');
+      toast.success(lang === 'fr' ? 'Note mise à jour' : 'Rating saved');
       await loadStats();
     } catch (err) {
       console.error('Error updating rating:', err);
-      alert(lang === 'fr' ? 'Erreur lors de la mise à jour de la note' : 'Failed to save rating');
+      toast.error(lang === 'fr' ? 'Erreur lors de la mise à jour de la note' : 'Failed to save rating');
     } finally {
       setIsActionLoading(false);
     }

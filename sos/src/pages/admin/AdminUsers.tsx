@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useAdminTranslations } from '../../utils/adminTranslations';
 import {
   User,
@@ -296,24 +297,24 @@ const AdminUsers: React.FC = () => {
 
   const handleViewDashboard = (user: AdminUser) => {
     // Navigate to the appropriate dashboard based on role
+    // Routes must match App.tsx path definitions (FR default paths)
     switch (user.role) {
       case 'lawyer':
-        navigate(`/lawyer/dashboard?userId=${user.id}`);
-        break;
       case 'expat':
-        navigate(`/expat/dashboard?userId=${user.id}`);
+      case 'client':
+        navigate(`/dashboard?userId=${user.id}`);
         break;
       case 'chatter':
-        navigate(`/chatter/dashboard?userId=${user.id}`);
+        navigate(`/chatter/tableau-de-bord?userId=${user.id}`);
         break;
       case 'influencer':
-        navigate(`/influencer/dashboard?userId=${user.id}`);
+        navigate(`/influencer/tableau-de-bord?userId=${user.id}`);
         break;
       case 'blogger':
-        navigate(`/blogger/dashboard?userId=${user.id}`);
+        navigate(`/blogger/tableau-de-bord?userId=${user.id}`);
         break;
-      case 'client':
-        navigate(`/client/dashboard?userId=${user.id}`);
+      case 'groupAdmin':
+        navigate(`/group-admin/tableau-de-bord?userId=${user.id}`);
         break;
       default:
         navigate(`/admin/users/${user.id}/edit`);
@@ -385,7 +386,7 @@ const AdminUsers: React.FC = () => {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
        
-      alert("Erreur lors de la suppression de l'utilisateur");
+      toast.error("Erreur lors de la suppression de l'utilisateur");
       logError({
         origin: 'frontend',
         error: `Error deleting user: ${message}`,
@@ -437,7 +438,7 @@ const AdminUsers: React.FC = () => {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
        
-      alert("Erreur lors du bannissement de l'utilisateur");
+      toast.error("Erreur lors du bannissement de l'utilisateur");
       logError({
         origin: 'frontend',
         error: `Error banning user: ${message}`,
@@ -484,7 +485,7 @@ const AdminUsers: React.FC = () => {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
        
-      alert("Erreur lors de la réactivation de l'utilisateur");
+      toast.error("Erreur lors de la réactivation de l'utilisateur");
       logError({
         origin: 'frontend',
         error: `Error unbanning user: ${message}`,
@@ -534,7 +535,7 @@ const AdminUsers: React.FC = () => {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
        
-      alert('Erreur lors de la modification du statut en ligne');
+      toast.error('Erreur lors de la modification du statut en ligne');
       logError({
         origin: 'frontend',
         error: `Error toggling online status: ${message}`,
@@ -572,7 +573,7 @@ const AdminUsers: React.FC = () => {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
        
-      alert('Erreur lors de la modification de la visibilité');
+      toast.error('Erreur lors de la modification de la visibilité');
       logError({
         origin: 'frontend',
         error: `Error toggling visibility: ${message}`,
@@ -605,7 +606,7 @@ const AdminUsers: React.FC = () => {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
        
-      alert('Erreur lors de la modification du statut mis en avant');
+      toast.error('Erreur lors de la modification du statut mis en avant');
       logError({
         origin: 'frontend',
         error: `Error toggling featured status: ${message}`,

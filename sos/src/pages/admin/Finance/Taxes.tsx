@@ -1,5 +1,6 @@
 // src/pages/admin/Finance/Taxes.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { useIntl } from 'react-intl';
 import {
   collection,
@@ -423,7 +424,7 @@ export default function Taxes() {
       loadData();
     } catch (err) {
       console.error('Error saving tax config:', err);
-      alert(intl.formatMessage({ id: 'admin.finance.taxes.saveError' }));
+      toast.error(intl.formatMessage({ id: 'admin.finance.taxes.saveError' }));
     }
   };
 
@@ -444,7 +445,7 @@ export default function Taxes() {
       setMarkingDeclaration(null);
     } catch (err) {
       console.error('Error marking declaration:', err);
-      alert(intl.formatMessage({ id: 'admin.finance.taxes.markError' }));
+      toast.error(intl.formatMessage({ id: 'admin.finance.taxes.markError' }));
     }
   };
 

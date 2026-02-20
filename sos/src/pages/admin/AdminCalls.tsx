@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import toast from "react-hot-toast";
 import { useIntl } from "react-intl";
 import { useCallAdminTranslations } from "../../utils/adminTranslations";
 import { useApp } from "../../contexts/AppContext";
@@ -941,63 +942,23 @@ const AdminCallsMonitoring: React.FC = () => {
     }
   }, [soundEnabled]);
 
-  // Actions sur les appels via Firebase Functions
-  const handleForceDisconnect = useCallback(async (sessionId: string) => {
-    if (!confirm(callT.forceDisconnectConfirm)) return;
-    
-    try {
-      const forceDisconnectFunction = httpsCallable(functions, 'adminForceDisconnectCall');
-      await forceDisconnectFunction({ sessionId, reason: 'Admin force disconnect' });
-
-      playNotificationSound('call_ended');
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion forcée:', error);
-      alert(callT.disconnectError);
-    }
-  }, [playNotificationSound]);
-
-  const handleJoinCall = useCallback(async (sessionId: string) => {
-    const call = liveCalls.find(c => c.id === sessionId);
-    if (!call || call.status !== 'active') {
-      alert(callT.joinCallError);
-      return;
-    }
-
-    try {
-      const joinCallFunction = httpsCallable(functions, 'adminJoinCall');
-      const result = await joinCallFunction({ sessionId });
-      
-      if (result.data) {
-        const { conferenceUrl, accessToken } = result.data as any;
-        window.open(conferenceUrl, '_blank');
-      }
-    } catch (error) {
-      console.error('Erreur lors de la tentative de rejoindre l\'appel:', error);
-      alert(callT.joinCallError);
-    }
-  }, [liveCalls]);
-
-  const handleTransferCall = useCallback(async (sessionId: string) => {
-    const newProviderId = prompt('ID du nouveau prestataire:');
-    if (!newProviderId) return;
-
-    try {
-      const transferCallFunction = httpsCallable(functions, 'adminTransferCall');
-      await transferCallFunction({ sessionId, newProviderId });
-    } catch (error) {
-      console.error('Erreur lors du transfert:', error);
-      alert(callT.transferError);
-    }
+  // AUDIT-FIX C1: These 4 Cloud Functions do NOT exist in the backend.
+  // adminForceDisconnectCall, adminJoinCall, adminTransferCall, adminMuteParticipant
+  // are not exported from index.ts. Handlers show error toast instead of calling non-existent functions.
+  const handleForceDisconnect = useCallback(async (_sessionId: string) => {
+    toast.error('Fonction non disponible : adminForceDisconnectCall n\'est pas implémentée côté backend');
   }, []);
 
-  const handleMuteCall = useCallback(async (sessionId: string, participantType: 'provider' | 'client') => {
-    try {
-      const muteCallFunction = httpsCallable(functions, 'adminMuteParticipant');
-      await muteCallFunction({ sessionId, participantType });
-    } catch (error) {
-      console.error('Erreur lors du mute:', error);
-      alert('Erreur lors de la mise en sourdine');
-    }
+  const handleJoinCall = useCallback(async (_sessionId: string) => {
+    toast.error('Fonction non disponible : adminJoinCall n\'est pas implémentée côté backend');
+  }, []);
+
+  const handleTransferCall = useCallback(async (_sessionId: string) => {
+    toast.error('Fonction non disponible : adminTransferCall n\'est pas implémentée côté backend');
+  }, []);
+
+  const handleMuteCall = useCallback(async (_sessionId: string, _participantType: 'provider' | 'client') => {
+    toast.error('Fonction non disponible : adminMuteParticipant n\'est pas implémentée côté backend');
   }, []);
 
   const handleResolveAlert = useCallback((alertId: string) => {

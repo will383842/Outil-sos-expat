@@ -26,6 +26,7 @@ import { EMAIL_USER, EMAIL_PASS, EMAIL_SECRETS } from "../lib/secrets";
 
 // P0-8 FIX: Import pour masquer les données sensibles dans les logs
 import { maskEmail } from "../utils/logs/maskSensitiveData";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // Configuration
 const VERIFICATION_CONFIG = {
@@ -428,7 +429,7 @@ async function sendVerificationEmail(
 export const sendPayPalVerificationCode = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     secrets: EMAIL_SECRETS, // P0-10 FIX: Utiliser l'array centralisé
   },
@@ -561,7 +562,7 @@ export const sendPayPalVerificationCode = onCall(
 export const verifyPayPalCode = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
   },
   async (request) => {
@@ -742,7 +743,7 @@ export const verifyPayPalCode = onCall(
 export const resendPayPalVerificationCode = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     secrets: EMAIL_SECRETS, // P0-10 FIX: Utiliser l'array centralisé
   },

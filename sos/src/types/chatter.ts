@@ -9,7 +9,8 @@
 // ENUMS
 // ============================================================================
 
-export type ChatterStatus = "pending_quiz" | "active" | "suspended" | "banned";
+// AUDIT-FIX m1: Removed "pending_quiz" — quiz was removed, registration now activates directly
+export type ChatterStatus = "active" | "suspended" | "banned";
 
 export type ChatterLevel = 1 | 2 | 3 | 4 | 5;
 
@@ -247,6 +248,17 @@ export interface ChatterData {
   tierBonusesPaid: number[];
 
   // Telegram Integration
+  // AUDIT-FIX M3: Aligned field names and types with backend (chatter/types.ts)
+  // Backend writes camelCase + number type to Firestore
+  telegramId?: number | null;
+  telegramUsername?: string | null;
+  telegramFirstName?: string | null;
+  telegramLastName?: string | null;
+  telegramLinkedAt?: string | null;
+  telegramOnboardingCompleted?: boolean;
+  telegramOnboardingSkipped?: boolean;
+  hasTelegram?: boolean;
+  // Legacy snake_case fields (kept for backward compatibility with existing documents)
   telegram_id?: string | null;
   telegram_username?: string | null;
   telegram_linked_at?: string | null;
@@ -278,9 +290,17 @@ export interface ChatterCommission {
   sourceId: string | null;
   sourceType: "call_session" | "user" | "provider" | "bonus" | null;
   baseAmount: number;
+  /** Level bonus multiplier (1.0 = no bonus) */
   levelBonus: number;
+  /** Top 3 bonus multiplier (1.0 = no bonus) */
   top3Bonus: number;
+  /** Zoom bonus multiplier (1.0 = no bonus) */
   zoomBonus: number;
+  // AUDIT-FIX M4: Added missing bonus fields that exist in backend
+  /** Streak bonus multiplier (1.0 = no bonus) */
+  streakBonus?: number;
+  /** Monthly top multiplier */
+  monthlyTopMultiplier?: number;
   amount: number;
   currency: "USD";
   calculationDetails: string;

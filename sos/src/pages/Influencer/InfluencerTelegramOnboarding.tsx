@@ -12,8 +12,8 @@ const InfluencerTelegramOnboarding: React.FC = () => {
     <InfluencerDashboardLayout>
       <TelegramOnboarding
         role="influencer"
-        dashboardPath="/influencer/dashboard"
-        skipPath="/influencer/dashboard"
+        dashboardPath="/influencer/tableau-de-bord"
+        skipPath="/influencer/tableau-de-bord"
         title="🚀 Connectez votre compte Telegram"
         subtitle="Recevez vos alertes de gains et gérez vos retraits facilement"
       />

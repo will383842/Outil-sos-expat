@@ -378,8 +378,7 @@ import {
 } from "./PayPalManager";
 
 export {
-  createPayPalOnboardingLink,
-  checkPayPalMerchantStatus,
+  // REMOVED: createPayPalOnboardingLink, checkPayPalMerchantStatus (dead Partner Referrals code)
   // REMOVED: createPayPalOrder, capturePayPalOrder (onCall versions)
   // Use HTTP versions below instead - they have CORS support
   createPayPalOrderHttp,
@@ -5793,10 +5792,6 @@ export {
   skipTelegramOnboarding,
   telegramChatterBotWebhook,
   getReferralDashboard,
-  // Country Rotation callables
-  // DISABLED 2026-01-30: Country rotation system removed to free quota
-  // getAvailableCountriesForChatter,
-  // assignCountriesToCurrentChatter,
   // Posts callables
   submitPost,
   getMyPosts,
@@ -5823,9 +5818,6 @@ export {
   adminExportChatters,
   adminBulkChatterAction,
   // Admin Country Rotation
-  // DISABLED 2026-01-30: Country rotation system removed to free quota
-  // adminInitializeCountryRotation,
-  // adminGetCountryRotationStatus,
   adminAdvanceCycle,
   adminUpdateCycleThreshold,
   // Admin Posts

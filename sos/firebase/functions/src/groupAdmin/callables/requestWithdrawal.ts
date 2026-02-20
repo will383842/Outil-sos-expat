@@ -33,6 +33,7 @@ import {
 import { COLLECTIONS } from "../../payment/services/paymentService";
 import { sendWithdrawalConfirmation } from "../../telegram/withdrawalConfirmation";
 import { TELEGRAM_SECRETS } from "../../lib/secrets";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -99,7 +100,7 @@ export const requestGroupAdminWithdrawal = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     secrets: [...TELEGRAM_SECRETS],
   },
   async (request): Promise<RequestWithdrawalResponse> => {

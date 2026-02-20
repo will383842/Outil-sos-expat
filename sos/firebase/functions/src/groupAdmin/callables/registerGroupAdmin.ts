@@ -22,6 +22,7 @@ import { areNewRegistrationsEnabled, getGroupAdminConfig } from "../groupAdminCo
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 import { hashIP } from "../../chatter/utils";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Supported languages validation (must match app navigation languages)
 const VALID_LANGUAGES: SupportedGroupAdminLanguage[] = [
@@ -73,7 +74,7 @@ export const registerGroupAdmin = onCall(
     memory: "512MiB",
     cpu: 0.25,
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
   },
   async (request): Promise<RegisterGroupAdminResponse> => {
@@ -239,7 +240,7 @@ export const registerGroupAdmin = onCall(
       if (existingGroupAdmin.exists) {
         const existingData = existingGroupAdmin.data() as GroupAdmin;
 
-        if (existingData.status !== "blocked") {
+        if (existingData.status !== "banned") {
           return {
             success: true,
             groupAdminId: userId,

@@ -7,6 +7,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 const db = getFirestore();
 
@@ -49,7 +50,7 @@ async function getAdminEmails(): Promise<string[]> {
 export const setAdminClaims = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     if (!request.auth) {
@@ -106,7 +107,7 @@ export const setAdminClaims = onCall(
 export const bootstrapFirstAdmin = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     if (!request.auth) {
@@ -184,7 +185,7 @@ export const bootstrapFirstAdmin = onCall(
 export const initializeAdminClaims = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     // P0 SECURITY FIX: Require authentication

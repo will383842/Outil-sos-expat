@@ -246,13 +246,13 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
       // Default navigation based on challenge type
       switch (challenge.type) {
         case "recruiter":
-          navigate("/chatter/referrals");
+          navigate("/chatter/filleuls");
           break;
         case "caller":
-          navigate("/chatter/share");
+          navigate("/chatter/posts");
           break;
         case "team":
-          navigate("/chatter/team");
+          navigate("/chatter/parrainer");
           break;
       }
     }

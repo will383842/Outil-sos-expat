@@ -17,7 +17,7 @@ const PROJECT = 'sos-urgently-ac307';
 const BATCH_SIZE_BY_REGION = {
   'europe-west1': 10,
   'europe-west2': 10,
-  'europe-west3': 4,   // testé OK: 3✅ 4✅ 5❌ (quota error)
+  'europe-west3': 3,   // testé OK: 3✅ 4❌ (quota error récurrent 2026-02-19)
 };
 const DEFAULT_BATCH_SIZE = 5;
 

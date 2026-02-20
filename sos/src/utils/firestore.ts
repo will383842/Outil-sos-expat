@@ -954,13 +954,18 @@ export const reportReview = async (
 ) => {
   const reviewRef = doc(db, "reviews", reviewId);
   await updateDoc(reviewRef, { reportedCount: increment(1) });
-  await addDoc(collection(db, "review_reports"), {
-    reviewId,
-    reason: (reason || "").trim(),
-    reporterId: reporterId || null,
-    status: "pending",
-    createdAt: serverTimestamp(),
-  });
+  // AUDIT-FIX C4: Wrapped in try/catch as safety net (rules require isAuthenticated())
+  try {
+    await addDoc(collection(db, "review_reports"), {
+      reviewId,
+      reason: (reason || "").trim(),
+      reporterId: reporterId || null,
+      status: "pending",
+      createdAt: serverTimestamp(),
+    });
+  } catch {
+    // review_reports write failed — non-critical, safety net only
+  }
   return true;
 };
 
@@ -1197,17 +1202,22 @@ export const createCallSession = async (sessionData: Partial<CallSession>) => {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
-  await addDoc(collection(db, "call_logs"), {
-    callSessionId: sessionId,
-    type: "session_created",
-    status: "initiating",
-    timestamp: serverTimestamp(),
-    details: {
-      clientId: (sessionData as Dict).clientId,
-      providerId: (sessionData as Dict).providerId,
-      providerType: (sessionData as Dict).providerType,
-    },
-  });
+  // AUDIT-FIX C4: Wrapped in try/catch as safety net (rules require isAuthenticated())
+  try {
+    await addDoc(collection(db, "call_logs"), {
+      callSessionId: sessionId,
+      type: "session_created",
+      status: "initiating",
+      timestamp: serverTimestamp(),
+      details: {
+        clientId: (sessionData as Dict).clientId,
+        providerId: (sessionData as Dict).providerId,
+        providerType: (sessionData as Dict).providerType,
+      },
+    });
+  } catch {
+    // call_logs write failed — non-critical, safety net only
+  }
   return sessionId;
 };
 
@@ -1220,27 +1230,37 @@ export const updateCallSession = async (
   await updateDoc(sessionRef, updateWithTimestamp);
 
   // simple log if status changes
+  // AUDIT-FIX C4: Wrapped in try/catch as safety net (rules require isAuthenticated())
   if ((sessionData as Dict).status) {
-    await addDoc(collection(db, "call_logs"), {
-      callSessionId: sessionId,
-      type: "status_change",
-      newStatus: (sessionData as Dict).status,
-      timestamp: serverTimestamp(),
-      details: sessionData,
-    });
+    try {
+      await addDoc(collection(db, "call_logs"), {
+        callSessionId: sessionId,
+        type: "status_change",
+        newStatus: (sessionData as Dict).status,
+        timestamp: serverTimestamp(),
+        details: sessionData,
+      });
+    } catch {
+      // call_logs write failed — non-critical, safety net only
+    }
   }
   return true;
 };
 
+// AUDIT-FIX C4: Wrapped in try/catch as safety net (rules require isAuthenticated())
 export const createCallLog = async (
   callSessionId: string,
   logData: { type: string; status: string; details?: unknown }
 ) => {
-  await addDoc(collection(db, "call_logs"), {
-    callSessionId,
-    ...logData,
-    timestamp: serverTimestamp(),
-  });
+  try {
+    await addDoc(collection(db, "call_logs"), {
+      callSessionId,
+      ...logData,
+      timestamp: serverTimestamp(),
+    });
+  } catch {
+    // call_logs write failed — non-critical, safety net only
+  }
   return true;
 };
 

@@ -14,6 +14,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { GroupAdmin, GroupAdminRecruit, GroupAdminCommission } from "../types";
 import { getGroupAdminConfig } from "../groupAdminConfig";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 export interface GroupAdminRecruitInfo {
   recruitId: string;
@@ -56,7 +57,7 @@ export const getGroupAdminRecruits = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetGroupAdminRecruitsResponse> => {
     // 1. Check authentication

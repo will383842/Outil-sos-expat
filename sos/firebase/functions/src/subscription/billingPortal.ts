@@ -104,7 +104,7 @@ export function detectStripeLocale(
  */
 export const getBillingPortalUrl = onCall<BillingPortalRequest>(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     // Pas besoin de secrets supplémentaires, getStripe() gère déjà ça
   },
   async (request): Promise<BillingPortalResponse> => {

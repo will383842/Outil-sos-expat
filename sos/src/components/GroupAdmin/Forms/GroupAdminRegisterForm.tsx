@@ -26,6 +26,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
+import { useAntiBot } from '@/hooks/useAntiBot';
 import { phoneCodesData } from '@/data/phone-codes';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 import {
@@ -187,6 +188,8 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
   const intl = useIntl();
   const { language } = useApp();
   const locale = (language || 'en') as string;
+  const { honeypotValue, setHoneypotValue, validateHuman } = useAntiBot();
+  const [botError, setBotError] = useState<string | null>(null);
 
   // Load saved group URLs from localStorage
   const getSavedGroupUrls = useCallback((): string[] => {
@@ -417,6 +420,19 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     e.preventDefault();
     if (!validateStep2()) return;
 
+    setBotError(null);
+
+    // Anti-bot validation
+    const botCheck = await validateHuman('register_group_admin');
+    if (!botCheck.isValid) {
+      const msgs: Record<string, string> = {
+        'Suspicious activity detected': 'A validation error occurred. Please try again.',
+        'Please take your time to fill the form': 'Please take your time to fill out the form correctly.',
+      };
+      setBotError(msgs[botCheck.reason || ''] || 'Validation error.');
+      return;
+    }
+
     // Save group URL to localStorage for future use
     if (formData.groupUrl) {
       saveGroupUrl(formData.groupUrl);
@@ -488,6 +504,17 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
   // ============================================================================
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Honeypot fields - hidden from humans, filled by bots */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>
+        <label htmlFor="website_url_ga">Website</label>
+        <input type="text" id="website_url_ga" name="website_url" tabIndex={-1} autoComplete="off" value={honeypotValue} onChange={(e) => setHoneypotValue(e.target.value)} />
+      </div>
+
+      {botError && (
+        <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-xl text-sm text-red-300 text-center">
+          {botError}
+        </div>
+      )}
       {/* Error alert */}
       {error && (
         <div className="flex items-start gap-3 p-4 bg-red-500/10 border rounded-2xl text-red-400">

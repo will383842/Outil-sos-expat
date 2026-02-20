@@ -1,6 +1,7 @@
 // src/pages/admin/AdminBackups.tsx
 // Interface complète de sauvegarde et restauration
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import toast from "react-hot-toast";
 import { useIntl } from "react-intl";
 import AdminLayout from "@/components/admin/AdminLayout";
 import Button from "@/components/common/Button";
@@ -369,17 +370,17 @@ const AdminBackups: React.FC = () => {
   // ---- Actions ----
   const handleBackupNow = useCallback(async () => {
     if (!isAdmin) {
-      alert(intl.formatMessage({ id: "admin.backups.alerts.adminRequired" }));
+      toast.error(intl.formatMessage({ id: "admin.backups.alerts.adminRequired" }));
       return;
     }
     setLoading(true);
     try {
       const backupFn = httpsCallable(functions, "adminCreateManualBackup");
       const result = await backupFn({ includeAuth: true, description: "Backup manuel admin" });
-      alert(intl.formatMessage({ id: "admin.backups.alerts.backupStarted" }));
+      toast.success(intl.formatMessage({ id: "admin.backups.alerts.backupStarted" }));
     } catch (error) {
       console.error("Error creating backup:", error);
-      alert(intl.formatMessage({ id: "admin.backups.alerts.backupError" }, { error: error instanceof Error ? error.message : intl.formatMessage({ id: "admin.backups.alerts.unknownError" }) }));
+      toast.error(intl.formatMessage({ id: "admin.backups.alerts.backupError" }, { error: error instanceof Error ? error.message : intl.formatMessage({ id: "admin.backups.alerts.unknownError" }) }));
     } finally {
       setLoading(false);
     }
@@ -414,7 +415,7 @@ const AdminBackups: React.FC = () => {
       setRestorePreview((result.data as { preview: RestorePreview }).preview);
     } catch (error) {
       console.error("Preview error:", error);
-      alert(intl.formatMessage({ id: "admin.backups.alerts.previewError" }));
+      toast.error(intl.formatMessage({ id: "admin.backups.alerts.previewError" }));
     } finally {
       setPreviewLoading(false);
     }
@@ -439,7 +440,7 @@ const AdminBackups: React.FC = () => {
       }
     } catch (error) {
       console.error("Error getting confirmation code:", error);
-      alert(intl.formatMessage({ id: "admin.backups.alerts.codeGenerationError" }));
+      toast.error(intl.formatMessage({ id: "admin.backups.alerts.codeGenerationError" }));
     }
   }, [selectedBackup, restorePreview, functions, intl]);
 
@@ -476,16 +477,11 @@ const AdminBackups: React.FC = () => {
       };
 
       if (data.success) {
-        alert(
-          `${intl.formatMessage({ id: "admin.backups.alerts.restoreSuccess" })}\n\n` +
-          `${intl.formatMessage({ id: "admin.backups.alerts.trackingId" }, { id: data.trackingId })}\n\n` +
-          (data.rollbackInfo ? `${intl.formatMessage({ id: "admin.backups.alerts.rollbackInfo" }, { info: data.rollbackInfo })}\n\n` : "") +
-          intl.formatMessage({ id: "admin.backups.alerts.restoreProgress" })
-        );
+        toast.success(intl.formatMessage({ id: "admin.backups.alerts.restoreSuccess" }));
       }
     } catch (error) {
       console.error("Restore error:", error);
-      alert(intl.formatMessage({ id: "admin.backups.alerts.restoreError" }, { error: error instanceof Error ? error.message : intl.formatMessage({ id: "admin.backups.alerts.unknownError" }) }));
+      toast.error(intl.formatMessage({ id: "admin.backups.alerts.restoreError" }, { error: error instanceof Error ? error.message : intl.formatMessage({ id: "admin.backups.alerts.unknownError" }) }));
     } finally {
       setRestoring(false);
       setCodeInputValue("");
@@ -495,17 +491,17 @@ const AdminBackups: React.FC = () => {
 
   const handleDelete = useCallback(async (id: string) => {
     if (!isAdmin) {
-      alert(intl.formatMessage({ id: "admin.backups.alerts.adminRequired" }));
+      toast.error(intl.formatMessage({ id: "admin.backups.alerts.adminRequired" }));
       return;
     }
     if (!confirm(intl.formatMessage({ id: "admin.backups.alerts.deleteConfirm" }))) return;
 
     try {
       await deleteDoc(doc(db, "backups", id));
-      alert(intl.formatMessage({ id: "admin.backups.alerts.deleteSuccess" }));
+      toast.success(intl.formatMessage({ id: "admin.backups.alerts.deleteSuccess" }));
     } catch (error) {
       console.error("Delete error:", error);
-      alert(intl.formatMessage({ id: "admin.backups.alerts.deleteError" }));
+      toast.error(intl.formatMessage({ id: "admin.backups.alerts.deleteError" }));
     }
   }, [isAdmin, intl]);
 

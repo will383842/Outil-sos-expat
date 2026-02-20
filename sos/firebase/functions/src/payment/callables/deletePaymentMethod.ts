@@ -11,6 +11,7 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { getPaymentService } from '../services/paymentService';
 import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -56,7 +57,7 @@ export const deletePaymentMethod = onCall(
     region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request: CallableRequest<DeletePaymentMethodInput>): Promise<DeletePaymentMethodOutput> => {
     ensureInitialized();

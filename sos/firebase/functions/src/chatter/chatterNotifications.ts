@@ -21,6 +21,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { triggerConfig, scheduledConfig, adminConfig } from "../lib/functionConfigs";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 import { Chatter, ChatterCommission } from "./types";
 import { getChatterConfig } from "./chatterConfig";
 
@@ -899,7 +900,7 @@ export const chatterNotifyFlashBonusStart = onCall(
  */
 export const chatterRegisterFcmToken = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
     cpu: 0.1,
@@ -988,7 +989,7 @@ export const chatterRegisterFcmToken = onCall(
  */
 export const chatterUnregisterFcmToken = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
     cpu: 0.1,

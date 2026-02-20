@@ -192,15 +192,20 @@ export async function cancelPayment(paymentIntentId: string): Promise<boolean> {
 
 /**
  * Initie un appel via Twilio
+ *
+ * AUDIT-FIX C1: "initiateCall" does NOT exist in the backend.
+ * The actual call flow uses createAndScheduleCallFunction (callable from frontend).
+ * This function is dead code — kept for backward compatibility but logs a warning.
  */
 export async function initiateCall(callData: CallData) {
+  console.warn('[api] initiateCall: Backend function "initiateCall" does not exist. Use createAndScheduleCallFunction instead.');
   try {
     checkUserAuth();
     validateCallData(callData);
 
     const initiateCallFn = httpsCallable(functions, 'initiateCall');
     const result = await initiateCallFn(callData);
-    
+
     return result.data;
   } catch (error) {
     handleCloudFunctionError(error, 'initiating call');
@@ -209,15 +214,19 @@ export async function initiateCall(callData: CallData) {
 
 /**
  * Envoie un SMS via Twilio
+ *
+ * AUDIT-FIX C1: "sendSms" does NOT exist in the backend.
+ * No Cloud Function for sending SMS is exported from index.ts.
  */
 export async function sendSms(data: SmsData) {
+  console.warn('[api] sendSms: Backend function "sendSms" does not exist.');
   try {
     checkUserAuth();
     validateSmsData(data);
 
     const sendSmsFn = httpsCallable(functions, 'sendSms');
     const result = await sendSmsFn(data);
-    
+
     return result.data;
   } catch (error) {
     handleCloudFunctionError(error, 'sending SMS');
@@ -226,12 +235,15 @@ export async function sendSms(data: SmsData) {
 
 /**
  * Met à jour le statut d'un appel
+ *
+ * AUDIT-FIX C1: "updateCallStatus" does NOT exist in the backend.
  */
 export async function updateCallStatus(
   callSessionId: string,
   status: string,
   details?: Record<string, unknown>
 ) {
+  console.warn('[api] updateCallStatus: Backend function "updateCallStatus" does not exist.');
   try {
     checkUserAuth();
     validateCallStatusData(callSessionId, status);
@@ -242,7 +254,7 @@ export async function updateCallStatus(
       status,
       details
     });
-    
+
     return result.data;
   } catch (error) {
     handleCloudFunctionError(error, 'updating call status');

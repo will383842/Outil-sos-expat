@@ -20,6 +20,7 @@
 import * as admin from "firebase-admin";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { ALLOWED_ORIGINS } from "./lib/functionConfigs";
 
 // Configuration des rappels PayPal
 export const PAYPAL_REMINDER_CONFIG = {
@@ -459,7 +460,7 @@ export const scheduledPayPalReminders = onSchedule(
 export const triggerPayPalReminders = onCall(
   {
     region: "europe-west3",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "512MiB",
     timeoutSeconds: 300,
   },
@@ -498,7 +499,7 @@ export const triggerPayPalReminders = onCall(
 export const getPayPalReminderStatus = onCall(
   {
     region: "europe-west3",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
   },
   async (request) => {

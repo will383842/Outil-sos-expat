@@ -9,6 +9,7 @@
 // =============================================================================
 
 import React, { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useIntl } from "react-intl";
 import {
@@ -111,15 +112,11 @@ const AdminDashboard: React.FC = () => {
         skipped: restoreResult.data.skipped,
       });
 
-      alert(`✅ Restauration terminée!\n\n` +
-        `• Rôles restaurés: ${restoreResult.data.restored}\n` +
-        `• Claims synchronisés: ${syncResult.data.synced}\n` +
-        `• Ignorés (vrais clients): ${restoreResult.data.skipped}\n` +
-        `• Échecs: ${restoreResult.data.failed + syncResult.data.failed}`);
+      toast.success(`Restauration terminée! Rôles restaurés: ${restoreResult.data.restored}, Claims synchronisés: ${syncResult.data.synced}, Ignorés: ${restoreResult.data.skipped}, Échecs: ${restoreResult.data.failed + syncResult.data.failed}`);
 
     } catch (error) {
-      console.error('❌ Erreur restauration:', error);
-      alert('❌ Erreur lors de la restauration des rôles. Voir la console pour les détails.');
+      console.error('Erreur restauration:', error);
+      toast.error('Erreur lors de la restauration des rôles. Voir la console pour les détails.');
     } finally {
       if (mountedRef.current) {
         setIsRestoringRoles(false);
@@ -164,7 +161,7 @@ const AdminDashboard: React.FC = () => {
     } catch (error) {
       if (!mountedRef.current) return;
       console.error("Error checking integrity:", error);
-      alert(intl.formatMessage({ id: 'admin.dashboard.integrity.checkError' }));
+      toast.error(intl.formatMessage({ id: 'admin.dashboard.integrity.checkError' }));
     } finally {
       if (mountedRef.current) {
         setIsCheckingIntegrity(false);
@@ -187,14 +184,14 @@ const AdminDashboard: React.FC = () => {
       if (!mountedRef.current) return;
 
       if (success) {
-        alert(intl.formatMessage({ id: 'admin.dashboard.cleanup.success' }));
+        toast.success(intl.formatMessage({ id: 'admin.dashboard.cleanup.success' }));
       } else {
-        alert(intl.formatMessage({ id: 'admin.dashboard.cleanup.error' }));
+        toast.error(intl.formatMessage({ id: 'admin.dashboard.cleanup.error' }));
       }
     } catch (error) {
       if (!mountedRef.current) return;
       console.error("Error cleaning data:", error);
-      alert(intl.formatMessage({ id: 'admin.dashboard.cleanup.error' }));
+      toast.error(intl.formatMessage({ id: 'admin.dashboard.cleanup.error' }));
     } finally {
       if (mountedRef.current) {
         setIsCleaningData(false);

@@ -10,6 +10,7 @@ import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
 import { enqueueTelegramMessage } from "../queue/enqueue";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // ============================================================================
 // CONSTANTS
@@ -69,7 +70,7 @@ function assertAdmin(ctx: { auth?: { uid?: string; token?: Record<string, unknow
 export const telegram_reprocessDeadLetters = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -166,7 +167,7 @@ interface SendOneOffRequest {
 export const telegram_sendOneOff = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "512MiB",
     timeoutSeconds: 120,
     secrets: [TELEGRAM_BOT_TOKEN],

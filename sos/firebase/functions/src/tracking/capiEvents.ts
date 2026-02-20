@@ -22,6 +22,7 @@ import {
   trackCAPILead,
   UserData,
 } from '../metaConversionsApi';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
 const REGION = 'europe-west1';
 
@@ -105,7 +106,7 @@ function checkRateLimit(ip: string): boolean {
 export const trackCAPIEvent = onRequest(
   {
     region: REGION,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     maxInstances: 10,
     secrets: [META_CAPI_TOKEN],
   },

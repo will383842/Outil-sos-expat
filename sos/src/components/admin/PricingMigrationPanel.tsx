@@ -2,6 +2,7 @@
 // Interface admin pour gérer la migration du système de pricing
 
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { 
   RefreshCw, 
   AlertTriangle, 
@@ -71,9 +72,9 @@ export const PricingMigrationPanel: React.FC = () => {
       }, 1000);
 
       if (result.success) {
-        alert('✅ Migration terminée avec succès !');
+        toast.success('Migration terminée avec succès !');
       } else {
-        alert('❌ Échec de la migration. Consultez les détails ci-dessous.');
+        toast.error('Échec de la migration. Consultez les détails ci-dessous.');
       }
     } catch (error) {
       console.error('Erreur migration:', error);
@@ -97,14 +98,14 @@ export const PricingMigrationPanel: React.FC = () => {
     try {
       const success = await quickCleanupPricing();
       if (success) {
-        alert('✅ Nettoyage rapide terminé !');
+        toast.success('Nettoyage rapide terminé !');
         handleDiagnostic(); // Reexécuter le diagnostic
       } else {
-        alert('❌ Erreur lors du nettoyage rapide');
+        toast.error('Erreur lors du nettoyage rapide');
       }
     } catch (error) {
       console.error('Erreur nettoyage:', error);
-      alert('❌ Erreur lors du nettoyage rapide');
+      toast.error('Erreur lors du nettoyage rapide');
     } finally {
       setIsRunningCleanup(false);
     }

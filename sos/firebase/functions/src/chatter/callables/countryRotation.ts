@@ -17,6 +17,7 @@ import {
   advanceCycleManually,
   updateCycleThreshold,
 } from "../services/countryRotationService";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -71,7 +72,7 @@ export const getAvailableCountriesForChatter = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -108,7 +109,7 @@ export const assignCountriesToCurrentChatter = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -164,7 +165,7 @@ export const adminInitializeCountryRotation = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -188,7 +189,7 @@ export const adminGetCountryRotationStatus = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -222,7 +223,7 @@ export const adminAdvanceCycle = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -256,7 +257,7 @@ export const adminUpdateCycleThreshold = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();

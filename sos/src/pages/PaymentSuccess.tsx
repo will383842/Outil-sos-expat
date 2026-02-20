@@ -951,6 +951,15 @@ const SuccessPayment: React.FC = () => {
 
         console.log("📄 Génération des factures avec:", { callRecord, payment });
 
+        // AUDIT-FIX M1: Guard against generating invoices for non-completed PayPal payments
+        // PayPal webhook CHECKOUT.ORDER.APPROVED writes "APPROVED" before capture completes
+        const paymentStatus = (paymentData?.status || '').toLowerCase();
+        const completedStatuses = ['succeeded', 'captured', 'completed'];
+        if (paymentStatus && !completedStatuses.includes(paymentStatus) && paymentStatus !== '') {
+          console.warn(`⚠️ Payment not yet completed (status: "${paymentData?.status}"), skipping invoice generation`);
+          return;
+        }
+
         // 5. Générer les factures
         const result = await generateBothInvoices(
           callRecord,
@@ -969,6 +978,9 @@ const SuccessPayment: React.FC = () => {
 
         // 6. Mettre à jour le flag invoicesCreated dans call_sessions pour éviter
         // que le serveur (TwilioCallManager) ne régénère des factures en doublon
+        // AUDIT-FIX M5: SECURITY NOTE — This writes financial metadata from the browser.
+        // A malicious user could pre-set invoicesCreated=true to prevent server-side invoice generation.
+        // TODO: Consider moving this flag update to a Cloud Function for better security.
         try {
           await updateDoc(callSessionRef, {
             'metadata.invoicesCreated': true,
@@ -1403,7 +1415,7 @@ const SuccessPayment: React.FC = () => {
                           : intl.formatMessage({ id: "success.technicalError" })}
                   </p>
                   <button
-                    onClick={() => navigate("/prestataires")}
+                    onClick={() => navigate("/sos-appel")}
                     className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 inline-flex items-center gap-2"
                   >
                     <RefreshCw className="w-5 h-5" />

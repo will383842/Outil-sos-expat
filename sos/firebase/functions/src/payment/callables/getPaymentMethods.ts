@@ -14,6 +14,7 @@ import { logger } from 'firebase-functions/v2';
 import { getPaymentService } from '../services/paymentService';
 import { UserPaymentMethod, PaymentUserType } from '../types';
 import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -86,7 +87,7 @@ export const getPaymentMethods = onCall(
     region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request: CallableRequest): Promise<GetPaymentMethodsOutput> => {
     ensureInitialized();

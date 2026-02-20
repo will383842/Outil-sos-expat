@@ -12,8 +12,8 @@ const BloggerTelegramOnboarding: React.FC = () => {
     <BloggerDashboardLayout>
       <TelegramOnboarding
         role="blogger"
-        dashboardPath="/blogger/dashboard"
-        skipPath="/blogger/dashboard"
+        dashboardPath="/blogger/tableau-de-bord"
+        skipPath="/blogger/tableau-de-bord"
         title="📝 Liez votre compte Telegram"
         subtitle="Notifications en temps réel et retraits sécurisés pour vos articles"
       />

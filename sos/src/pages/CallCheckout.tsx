@@ -126,9 +126,9 @@ interface PaymentIntentData {
   metadata?: Record<string, string>;
   coupon?: {
     code: string;
-    type: "fixed" | "percentage";
-    amount: number;
-    maxDiscount?: number;
+    discountType: "fixed" | "percentage";
+    discountAmount: number;
+    discountValue: number;
   };
 }
 
@@ -1921,31 +1921,11 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           appliedDiscounts: [], // Array of applied discounts
         };
 
-        try {
-          await setDoc(doc(db, "payments", paymentIntentId), baseDoc, {
-            merge: true,
-          });
-        } catch {
-          /* no-op */
-        }
-        try {
-          await setDoc(
-            doc(db, "users", user.uid!, "payments", paymentIntentId),
-            baseDoc,
-            { merge: true }
-          );
-        } catch {
-          /* no-op */
-        }
-        try {
-          await setDoc(
-            doc(db, "providers", provider.id, "payments", paymentIntentId),
-            baseDoc,
-            { merge: true }
-          );
-        } catch {
-          /* no-op */
-        }
+        // AUDIT-FIX C4: Removed 3 dead Firestore writes that always fail silently:
+        // - setDoc("payments/{id}") → rules: allow create: if false
+        // - setDoc("users/{uid}/payments/{id}") → subcollection not in rules
+        // - setDoc("providers/{id}/payments/{id}") → "providers" collection not in rules
+        // The backend createPaymentIntent already creates canonical payment records.
         try {
           await setDoc(doc(db, "orders", orderId), orderDoc, { merge: true });
         } catch (error) {
@@ -2540,11 +2520,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         > = httpsCallable(functionsPayment, "createPaymentIntent");
 
         // Prepare coupon data
+        // AUDIT-FIX C2: Match backend createPaymentIntent coupon structure
         const couponData = activePromo
           ? {
               code: activePromo.code,
-              type: activePromo.discountType,
-              amount: activePromo.discountValue,
+              discountType: activePromo.discountType,
+              discountAmount: activePromo.discountValue,
+              discountValue: activePromo.discountValue,
             }
           : undefined;
 
@@ -4278,7 +4260,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
             </p>
             <div className="space-y-2">
               <button
-                onClick={() => navigate("/experts")}
+                onClick={() => navigate("/sos-appel")}
                 className="w-full px-4 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-red-500 to-red-600 text-white"
               >
                 {intl.formatMessage({ id: "checkout.selectExpert" })}

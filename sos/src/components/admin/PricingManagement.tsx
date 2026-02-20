@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -134,7 +135,7 @@ export const PricingManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('❌ Erreur chargement config:', error);
-      alert(
+      toast.error(
         `Erreur lors du chargement de la configuration : ${
           error instanceof Error ? error.message : String(error)
         }`
@@ -203,11 +204,11 @@ export const PricingManagement: React.FC = () => {
       );
 
       setOriginalConfig(JSON.parse(JSON.stringify(config)));
-      alert('✅ Configuration sauvegardée avec succès ! Les nouveaux prix sont actifs immédiatement.');
+      toast.success('Configuration sauvegardée avec succès ! Les nouveaux prix sont actifs immédiatement.');
     } catch (error) {
-      console.error('❌ Erreur sauvegarde:', error);
-      alert(
-        `❌ Erreur lors de la sauvegarde : ${
+      console.error('Erreur sauvegarde:', error);
+      toast.error(
+        `Erreur lors de la sauvegarde : ${
           error instanceof Error ? error.message : String(error)
         }`
       );

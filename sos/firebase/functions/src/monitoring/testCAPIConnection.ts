@@ -13,6 +13,7 @@ import {
   hashUserData,
   generateEventId,
 } from '../metaConversionsApi';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
 const REGION = 'europe-west1';
 
@@ -42,7 +43,7 @@ interface TestResult {
 export const testCAPIConnection = onRequest(
   {
     region: REGION,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     maxInstances: 5,
     secrets: [META_CAPI_TOKEN],
   },

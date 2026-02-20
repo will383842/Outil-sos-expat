@@ -9,7 +9,7 @@
 // ENUMS
 // ============================================================================
 
-export type GroupAdminStatus = "active" | "suspended" | "blocked";
+export type GroupAdminStatus = "active" | "suspended" | "banned";
 
 export type SupportedGroupAdminLanguage =
   | "fr" | "en" | "es" | "pt" | "ar" | "de" | "it" | "nl" | "zh";

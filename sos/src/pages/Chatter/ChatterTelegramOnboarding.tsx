@@ -13,8 +13,8 @@ const ChatterTelegramOnboarding: React.FC = () => {
     <ChatterDashboardLayout>
       <TelegramOnboarding
         role="chatter"
-        dashboardPath="/chatter/dashboard"
-        skipPath="/chatter/dashboard"
+        dashboardPath="/chatter/tableau-de-bord"
+        skipPath="/chatter/tableau-de-bord"
         title="🎉 Dernière étape : Liez votre Telegram"
         subtitle="Recevez $50 de bonus + notifications de commissions + messages de motivation quotidiens"
       />

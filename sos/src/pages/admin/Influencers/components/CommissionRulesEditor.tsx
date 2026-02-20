@@ -3,6 +3,7 @@
  */
 
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import type { InfluencerCommissionRule, InfluencerCommissionType } from '@/types/influencer';
 import CommissionRuleCard from './CommissionRuleCard';
@@ -74,7 +75,7 @@ const CommissionRulesEditor: React.FC<CommissionRulesEditorProps> = ({
     // Don't allow deleting core types
     const rule = rules.find((r) => r.id === ruleId);
     if (rule && CORE_COMMISSION_TYPES.includes(rule.type)) {
-      alert("Les règles 'Client référé' et 'Recrutement' ne peuvent pas être supprimées.");
+      toast.error("Les règles 'Client référé' et 'Recrutement' ne peuvent pas être supprimées.");
       return;
     }
     const newRules = rules.filter((r) => r.id !== ruleId);
@@ -88,7 +89,7 @@ const CommissionRulesEditor: React.FC<CommissionRulesEditorProps> = ({
 
   const handleSave = async () => {
     if (!saveReason.trim()) {
-      alert('Veuillez indiquer une raison pour cette modification.');
+      toast.error('Veuillez indiquer une raison pour cette modification.');
       return;
     }
     await onSave(rules, saveReason.trim());

@@ -16,6 +16,7 @@ import { PaymentUserType, WithdrawalStatus } from '../types';
 import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
 import { sendWithdrawalConfirmation, WithdrawalConfirmationRole } from '../../telegram/withdrawalConfirmation';
 import { TELEGRAM_SECRETS } from '../../lib/secrets';
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -140,7 +141,7 @@ export const requestWithdrawal = onCall(
     region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     secrets: [...TELEGRAM_SECRETS],
   },
   async (request: CallableRequest<RequestWithdrawalInput>): Promise<RequestWithdrawalOutput> => {

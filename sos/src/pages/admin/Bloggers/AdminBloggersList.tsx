@@ -111,7 +111,7 @@ interface BloggerListResponse {
   };
 }
 
-type StatusFilter = 'all' | 'active' | 'suspended' | 'blocked';
+type StatusFilter = 'all' | 'active' | 'suspended' | 'banned';
 
 const AdminBloggersList: React.FC = () => {
   const intl = useIntl();
@@ -199,7 +199,7 @@ const AdminBloggersList: React.FC = () => {
         return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case 'suspended':
         return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-      case 'blocked':
+      case 'banned':
         return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       default:
         return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
@@ -213,7 +213,7 @@ const AdminBloggersList: React.FC = () => {
         return <CheckCircle className="w-4 h-4" />;
       case 'suspended':
         return <Clock className="w-4 h-4" />;
-      case 'blocked':
+      case 'banned':
         return <AlertTriangle className="w-4 h-4" />;
       default:
         return null;
@@ -463,7 +463,7 @@ const AdminBloggersList: React.FC = () => {
                   <option value="all">{intl.formatMessage({ id: 'admin.bloggers.filter.all', defaultMessage: 'Tous statuts' })}</option>
                   <option value="active">{intl.formatMessage({ id: 'admin.bloggers.filter.active', defaultMessage: 'Actifs' })}</option>
                   <option value="suspended">{intl.formatMessage({ id: 'admin.bloggers.filter.suspended', defaultMessage: 'Suspendus' })}</option>
-                  <option value="blocked">{intl.formatMessage({ id: 'admin.bloggers.filter.blocked', defaultMessage: 'Bloqués' })}</option>
+                  <option value="banned">{intl.formatMessage({ id: 'admin.bloggers.filter.banned', defaultMessage: 'Bannis' })}</option>
                 </select>
               </div>
 

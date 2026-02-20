@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { useLocaleNavigate } from "../multilingual-system";
 import {
@@ -1913,7 +1914,7 @@ const TestimonialDetail: React.FC = () => {
       navigator.clipboard
         ?.writeText(currentUrl)
         .then(() => {
-          alert(intl.formatMessage({ id: "testimonial.linkCopied" }));
+          toast.success(intl.formatMessage({ id: "testimonial.linkCopied" }));
         })
         .catch(() => {
           // Fallback for unsupported browsers / Fallback pour les navigateurs non supportés
@@ -1923,7 +1924,7 @@ const TestimonialDetail: React.FC = () => {
           textArea.select();
           document.execCommand("copy");
           document.body.removeChild(textArea);
-          alert(intl.formatMessage({ id: "testimonial.linkCopied" }));
+          toast.success(intl.formatMessage({ id: "testimonial.linkCopied" }));
         });
     } else if (shareUrls[platform as keyof typeof shareUrls]) {
       if (platform === "email") {

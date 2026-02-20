@@ -12,6 +12,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // ============================================================================
 // CONSTANTS
@@ -89,7 +90,7 @@ interface CreateCampaignRequest {
 export const telegram_createCampaign = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -192,7 +193,7 @@ interface GetCampaignsRequest {
 export const telegram_getCampaigns = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -261,7 +262,7 @@ export const telegram_getCampaigns = onCall(
 export const telegram_cancelCampaign = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -312,7 +313,7 @@ export const telegram_cancelCampaign = onCall(
 export const telegram_getCampaignDetail = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

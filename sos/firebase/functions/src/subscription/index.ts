@@ -40,6 +40,7 @@ import {
 } from './webhooks';
 import { addToDeadLetterQueue } from './deadLetterQueue';
 import { APP_URLS } from './constants';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
 // Lazy initialization pattern to prevent deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -1884,7 +1885,7 @@ async function isAdminV2(request: { auth?: { uid: string; token: { admin?: boole
 export const updateTrialConfig = onCall(
   {
     region: 'europe-west1',
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     // Verify admin (via custom claims or Firestore)
@@ -1934,7 +1935,7 @@ export const updateTrialConfig = onCall(
 export const updatePlanPricing = onCall(
   {
     region: 'europe-west1',
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     // Verify admin (via custom claims or Firestore)
@@ -2020,7 +2021,7 @@ export const updatePlanPricing = onCall(
 export const updateTrialConfigV2 = onCall(
   {
     region: 'europe-west1',
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     // Verify admin (via custom claims or Firestore)
@@ -2071,7 +2072,7 @@ export const updateTrialConfigV2 = onCall(
 export const updatePlanPricingV2 = onCall(
   {
     region: 'europe-west1',
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     // Verify admin (via custom claims or Firestore)

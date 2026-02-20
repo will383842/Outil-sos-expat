@@ -102,7 +102,7 @@ interface GroupAdminListResponse {
   };
 }
 
-type StatusFilter = 'all' | 'active' | 'suspended' | 'blocked';
+type StatusFilter = 'all' | 'active' | 'suspended' | 'banned';
 
 const AdminGroupAdminsList: React.FC = () => {
   const intl = useIntl();
@@ -193,7 +193,7 @@ const AdminGroupAdminsList: React.FC = () => {
       const ids = Array.from(selectedIds);
       for (const id of ids) {
         const updateStatus = httpsCallable(functionsWest2, 'adminUpdateGroupAdminStatus');
-        await updateStatus({ groupAdminId: id, status: action === 'activate' ? 'active' : action === 'suspend' ? 'suspended' : 'blocked' });
+        await updateStatus({ groupAdminId: id, status: action === 'activate' ? 'active' : action === 'suspend' ? 'suspended' : 'banned' });
       }
       setSelectedIds(new Set());
       fetchGroupAdmins();
@@ -250,11 +250,11 @@ const AdminGroupAdminsList: React.FC = () => {
             <FormattedMessage id="groupAdmin.status.suspended" defaultMessage="Suspended" />
           </span>
         );
-      case 'blocked':
+      case 'banned':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
             <AlertTriangle className="w-3 h-3" />
-            <FormattedMessage id="groupAdmin.status.blocked" defaultMessage="Blocked" />
+            <FormattedMessage id="groupAdmin.status.banned" defaultMessage="Banned" />
           </span>
         );
       default:
@@ -389,8 +389,8 @@ const AdminGroupAdminsList: React.FC = () => {
               <option value="suspended">
                 {intl.formatMessage({ id: 'groupAdmin.admin.filter.suspended', defaultMessage: 'Suspended' })}
               </option>
-              <option value="blocked">
-                {intl.formatMessage({ id: 'groupAdmin.admin.filter.blocked', defaultMessage: 'Blocked' })}
+              <option value="banned">
+                {intl.formatMessage({ id: 'groupAdmin.admin.filter.banned', defaultMessage: 'Banned' })}
               </option>
             </select>
 

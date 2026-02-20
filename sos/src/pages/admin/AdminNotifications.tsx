@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -157,7 +158,7 @@ const AdminNotifications: React.FC = () => {
   const handleTestNotifications = async () => {
     const providerId = testProviderId.trim();
     if (!providerId) {
-      alert(intl.formatMessage({ id: 'admin.notifications.test.enterValidId' }));
+      toast.error(intl.formatMessage({ id: 'admin.notifications.test.enterValidId' }));
       return;
     }
 
@@ -198,17 +199,17 @@ const AdminNotifications: React.FC = () => {
       const ok = await notificationService.sendMultiChannelNotification(payload);
 
       if (ok) {
-        alert(intl.formatMessage({ id: 'admin.notifications.test.success' }));
+        toast.success(intl.formatMessage({ id: 'admin.notifications.test.success' }));
         setShowTestModal(false);
         setTestProviderId('');
         void loadNotificationLogs();
       } else {
-        alert(intl.formatMessage({ id: 'admin.notifications.test.failed' }));
+        toast.error(intl.formatMessage({ id: 'admin.notifications.test.failed' }));
       }
     } catch (error) {
       console.error('Error during notification test:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      alert(intl.formatMessage({ id: 'admin.notifications.test.error' }, { error: errorMessage }));
+      toast.error(intl.formatMessage({ id: 'admin.notifications.test.error' }, { error: errorMessage }));
     } finally {
       setIsTestingNotifications(false);
     }

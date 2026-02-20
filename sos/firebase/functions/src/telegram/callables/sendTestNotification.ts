@@ -20,6 +20,7 @@ import {
   SecurityAlertVars,
   WithdrawalRequestVars,
 } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // ============================================================================
 // CONSTANTS
@@ -200,7 +201,7 @@ function buildTestVariables(eventType: TelegramEventType): NewRegistrationVars |
 export const telegram_sendTestNotification = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

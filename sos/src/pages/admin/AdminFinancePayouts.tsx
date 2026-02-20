@@ -241,23 +241,9 @@ const AdminFinancePayouts: React.FC = () => {
     return "text-gray-600";
   };
 
-  const handleRetryPayout = async (item: FailedPayoutAlert) => {
-    setIsProcessing(true);
-    setError(null);
-
-    try {
-      // Appeler la fonction de retry
-      const retryPayout = httpsCallable(functions, "retryPayPalPayout");
-      await retryPayout({ alertId: item.id });
-
-      setSuccess("Retry lancé avec succès");
-      await loadData();
-    } catch (err) {
-      console.error("Erreur retry:", err);
-      setError((err as Error).message || "Erreur lors du retry");
-    } finally {
-      setIsProcessing(false);
-    }
+  // AUDIT-FIX C1: "retryPayPalPayout" does NOT exist in the backend
+  const handleRetryPayout = async (_item: FailedPayoutAlert) => {
+    setError('Fonction non disponible : retryPayPalPayout n\'est pas implémentée côté backend');
   };
 
   const handleSendReminder = async (item: FailedPayoutAlert | PendingTransfer) => {

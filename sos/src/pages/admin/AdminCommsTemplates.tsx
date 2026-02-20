@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { call } from "@/config/firebase";
 
 // Typages légers alignés sur tes callables
@@ -61,7 +62,7 @@ export default function AdminCommsTemplates(){
   const save = async () => {
     if (!sel || !doc) return;
     await fnUpsert()({ locale, eventId: sel, payload: doc });
-    alert("Template enregistré");
+    toast.success("Template enregistré");
   };
 
   const test = async () => {
@@ -70,7 +71,7 @@ export default function AdminCommsTemplates(){
     if (!to) return;
     const context = { user:{ displayName:"Admin", email:to, phoneNumber:to, uid:"admin-test", preferredLanguage:locale } };
     await fnTestSend()({ locale, eventId: sel, channel: tab, to, context });
-    alert("Test envoyé (vérifie logs si rien reçu)");
+    toast.success("Test envoyé (vérifie logs si rien reçu)");
   };
 
   return (

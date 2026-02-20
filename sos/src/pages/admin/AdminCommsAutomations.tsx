@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { call } from "@/config/firebase";
 
 type Channel = "email"|"sms"|"push"|"whatsapp"|"inapp";
@@ -60,7 +61,7 @@ export default function AdminCommsAutomations(){
       });
     }
     setSaving(false);
-    alert("Routing enregistré");
+    toast.success("Routing enregistré");
   };
 
   const eids = Object.keys(map).sort();

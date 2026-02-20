@@ -22,6 +22,7 @@ const TRANSLATIONS_MAP: Record<string, any> = {
 };
 
 import React, { useEffect, useMemo, useState, Suspense } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useIntl } from 'react-intl';
 import type { DocumentData as FirestoreData } from 'firebase/firestore';
@@ -2617,10 +2618,10 @@ const AdminAaaProfiles: React.FC = () => {
       setShowEditModal(false);
       setSelectedProfile(null);
       await loadExistingProfiles();
-      alert('✅ Profil mis à jour avec succès');
+      toast.success('Profil mis à jour avec succès');
     } catch (e) {
-      console.error('❌ Erreur mise à jour:', e);
-      alert(`❌ Erreur: ${(e as Error).message || e}`);
+      console.error('Erreur mise à jour:', e);
+      toast.error(`Erreur: ${(e as Error).message || e}`);
     } finally {
       setIsLoading(false);
     }
@@ -2635,10 +2636,10 @@ const AdminAaaProfiles: React.FC = () => {
       setShowDeleteModal(false);
       setSelectedProfile(null);
       await loadExistingProfiles();
-      alert('Profil supprimé');
+      toast.success('Profil supprimé');
     } catch (e) {
       console.error(e);
-      alert('Erreur lors de la suppression');
+      toast.error('Erreur lors de la suppression');
     } finally {
       setIsLoading(false);
     }
@@ -2678,14 +2679,14 @@ const AdminAaaProfiles: React.FC = () => {
       await loadExistingProfiles();
     } catch (e) {
       console.error('Erreur toggle visibility:', e);
-      alert('Erreur lors de la mise à jour de la visibilité');
+      toast.error('Erreur lors de la mise à jour de la visibilité');
     }
   };
 
   const handleToggleOnline = async (profileId: string, currentOnline: boolean) => {
     const profile = existingProfiles.find((p) => p.id === profileId);
     if (!currentOnline && (!profile?.phone || profile.phone === '')) {
-      alert('Numéro de téléphone requis pour mettre en ligne');
+      toast.error('Numéro de téléphone requis pour mettre en ligne');
       return;
     }
     try {
@@ -2721,13 +2722,13 @@ const AdminAaaProfiles: React.FC = () => {
       await loadExistingProfiles();
     } catch (e) {
       console.error('Erreur toggle online:', e);
-      alert('Erreur lors de la mise à jour du statut');
+      toast.error('Erreur lors de la mise à jour du statut');
     }
   };
 
   const handleBulkToggleOnline = async (online: boolean) => {
     if (selectedProfiles.length === 0) {
-      alert('Sélectionnez au moins un profil');
+      toast.error('Sélectionnez au moins un profil');
       return;
     }
     if (online) {
@@ -2736,7 +2737,7 @@ const AdminAaaProfiles: React.FC = () => {
         return !p?.phone;
       });
       if (missing.length > 0) {
-        alert(`${missing.length} profils sans téléphone`);
+        toast.error(`${missing.length} profils sans téléphone`);
         return;
       }
     }
@@ -2771,17 +2772,17 @@ const AdminAaaProfiles: React.FC = () => {
       }
       await loadExistingProfiles();
       setSelectedProfiles([]);
-      alert(`${selectedProfiles.length} profils mis à jour`);
+      toast.success(`${selectedProfiles.length} profils mis à jour`);
     } catch (e) {
       console.error(e);
-      alert('Erreur lors de la mise à jour');
+      toast.error('Erreur lors de la mise à jour');
     }
   };
 
-  // ✅ Gérer la visibilité en masse
+  // Gérer la visibilité en masse
   const handleBulkToggleVisibility = async (visible: boolean) => {
     if (selectedProfiles.length === 0) {
-      alert('Sélectionnez au moins un profil');
+      toast.error('Sélectionnez au moins un profil');
       return;
     }
     try {
@@ -2804,10 +2805,10 @@ const AdminAaaProfiles: React.FC = () => {
       }
       await loadExistingProfiles();
       setSelectedProfiles([]);
-      alert(`${selectedProfiles.length} profils ${visible ? 'rendus visibles' : 'masqués'}`);
+      toast.success(`${selectedProfiles.length} profils ${visible ? 'rendus visibles' : 'masqués'}`);
     } catch (e) {
       console.error(e);
-      alert('Erreur lors de la mise à jour');
+      toast.error('Erreur lors de la mise à jour');
     }
   };
 

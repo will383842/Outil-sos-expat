@@ -38,8 +38,9 @@ export const chatterOnQuizPassed = onDocumentUpdated(
       return;
     }
 
-    // Only trigger when status changes from pending_quiz to active
-    if (beforeData.status !== "pending_quiz" || afterData.status !== "active") {
+    // AUDIT-FIX m1: Quiz was removed — this trigger is now dead code.
+    // Kept for safety but will never fire since pending_quiz is no longer assigned.
+    if (beforeData.status === afterData.status || afterData.status !== "active") {
       return;
     }
 

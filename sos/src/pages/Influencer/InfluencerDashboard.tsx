@@ -515,7 +515,7 @@ const InfluencerDashboard: React.FC = () => {
             <InfluencerAffiliateLinks
               clientCode={influencer?.affiliateCodeClient || ''}
               recruitmentCode={influencer?.affiliateCodeRecruitment || ''}
-              clientDiscount={config?.clientDiscountPercent || 5}
+              clientDiscount={config?.clientDiscountPercent ?? 0}
             />
           </div>
         </Suspense>

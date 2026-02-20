@@ -184,7 +184,7 @@ const AdminGroupAdminDetail: React.FC = () => {
   }, [activeTab]);
 
   // Update status
-  const handleStatusChange = async (newStatus: 'active' | 'suspended' | 'blocked', reason?: string) => {
+  const handleStatusChange = async (newStatus: 'active' | 'suspended' | 'banned', reason?: string) => {
     if (!admin) return;
 
     setActionLoading(true);
@@ -245,11 +245,11 @@ const AdminGroupAdminDetail: React.FC = () => {
             {intl.formatMessage({ id: 'groupAdmin.status.suspended' })}
           </span>
         );
-      case 'blocked':
+      case 'banned':
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
             <AlertTriangle className="w-4 h-4" />
-            {intl.formatMessage({ id: 'groupAdmin.status.blocked' })}
+            {intl.formatMessage({ id: 'groupAdmin.status.banned', defaultMessage: 'Banned' })}
           </span>
         );
       default:
@@ -709,11 +709,11 @@ const AdminGroupAdminDetail: React.FC = () => {
                     {intl.formatMessage({ id: 'groupAdmin.admin.detail.suspend' })}
                   </button>
                 )}
-                {admin.status !== 'blocked' && (
+                {admin.status !== 'banned' && (
                   <button
                     onClick={() => {
-                      if (window.confirm(intl.formatMessage({ id: 'groupAdmin.admin.detail.blockConfirm' }))) {
-                        handleStatusChange('blocked');
+                      if (window.confirm(intl.formatMessage({ id: 'groupAdmin.admin.detail.banConfirm', defaultMessage: 'Are you sure you want to permanently ban this admin?' }))) {
+                        handleStatusChange('banned');
                       }
                     }}
                     disabled={actionLoading}

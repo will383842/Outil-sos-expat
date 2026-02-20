@@ -136,6 +136,8 @@ export interface Influencer {
   country: string;
   language: string;
   additionalLanguages?: string[];
+  // AUDIT-FIX m3: Added missing field that exists in backend (influencer/types.ts)
+  interventionCountries?: string[];
 
   // Profile info
   platforms: InfluencerPlatform[];

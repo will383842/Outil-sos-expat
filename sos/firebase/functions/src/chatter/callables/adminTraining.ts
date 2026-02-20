@@ -22,6 +22,7 @@ import {
   ChatterTrainingCategory,
 } from "../types";
 import { seedChatterTrainingModules } from "../seeds/trainingModulesSeed";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 function ensureInitialized() {
   if (!getApps().length) {
@@ -47,7 +48,7 @@ export const adminGetTrainingModules = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{
     modules: Array<ChatterTrainingModule & { studentsCount: number }>;
@@ -126,7 +127,7 @@ export const adminCreateTrainingModule = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; moduleId: string }> => {
     ensureInitialized();
@@ -228,7 +229,7 @@ export const adminUpdateTrainingModule = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -304,7 +305,7 @@ export const adminDeleteTrainingModule = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -378,7 +379,7 @@ export const adminSeedTrainingModules = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 120,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; modulesCreated: number; errors: string[] }> => {
     ensureInitialized();
@@ -418,7 +419,7 @@ export const adminReorderTrainingModules = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();

@@ -30,6 +30,7 @@ import {
 } from "../utils";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedInfluencerLanguage[] = [
@@ -48,7 +49,7 @@ export const registerInfluencer = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
   },
   async (request): Promise<RegisterInfluencerResponse> => {

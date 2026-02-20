@@ -27,20 +27,20 @@ const BloggerSuspended: React.FC = () => {
   const contactRoute = `/${getTranslatedRouteSlug('contact' as RouteKey, langCode)}`;
 
   const isSuspended = blogger?.status === 'suspended';
-  const isBlocked = blogger?.status === 'blocked';
+  const isBanned = blogger?.status === 'banned';
 
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-gray-950 to-white dark:to-black flex items-center justify-center p-4">
         <div className={`${UI.card} p-8 max-w-lg w-full text-center`}>
           <div className={`w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center ${
-            isBlocked ? 'bg-red-100 dark:bg-red-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'
+            isBanned ? 'bg-red-100 dark:bg-red-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'
           }`}>
-            <AlertTriangle className={`w-8 h-8 ${isBlocked ? 'text-red-600' : 'text-yellow-600'}`} />
+            <AlertTriangle className={`w-8 h-8 ${isBanned ? 'text-red-600' : 'text-yellow-600'}`} />
           </div>
 
           <h1 className="text-2xl dark:text-white font-bold mb-4">
-            {isBlocked ? (
+            {isBanned ? (
               <FormattedMessage id="blogger.suspended.blockedTitle" defaultMessage="Compte bloqué" />
             ) : (
               <FormattedMessage id="blogger.suspended.suspendedTitle" defaultMessage="Compte suspendu" />
@@ -48,7 +48,7 @@ const BloggerSuspended: React.FC = () => {
           </h1>
 
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            {isBlocked ? (
+            {isBanned ? (
               <FormattedMessage
                 id="blogger.suspended.blockedMessage"
                 defaultMessage="Votre compte blogueur partenaire a été bloqué définitivement. Cette décision est généralement prise suite à des violations répétées de nos conditions d'utilisation."
@@ -63,18 +63,18 @@ const BloggerSuspended: React.FC = () => {
 
           {blogger?.suspensionReason && (
             <div className={`p-4 rounded-xl mb-6 text-left ${
-              isBlocked ? 'bg-red-50 dark:bg-red-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'
+              isBanned ? 'bg-red-50 dark:bg-red-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'
             }`}>
               <p className="text-sm dark:text-gray-300 font-medium mb-1">
                 <FormattedMessage id="blogger.suspended.reason" defaultMessage="Raison :" />
               </p>
-              <p className={`text-sm ${isBlocked ? 'text-red-700 dark:text-red-300' : 'text-yellow-700 dark:text-yellow-300'}`}>
+              <p className={`text-sm ${isBanned ? 'text-red-700 dark:text-red-300' : 'text-yellow-700 dark:text-yellow-300'}`}>
                 {blogger.suspensionReason}
               </p>
             </div>
           )}
 
-          {!isBlocked && (
+          {!isBanned && (
             <div className="bg-blue-50 dark:bg-blue-900/20 border dark:border-blue-800 rounded-xl p-4 mb-6 text-left">
               <p className="text-sm dark:text-blue-300">
                 <FormattedMessage

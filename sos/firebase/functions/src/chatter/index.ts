@@ -63,9 +63,8 @@ export {
   adminReorderTrainingModules as adminReorderChatterTrainingModules,
 } from "./callables/adminTraining";
 
-// Country Rotation
+// Country Rotation (admin only - user callables removed)
 export {
-  getAvailableCountriesForChatter,
   assignCountriesToCurrentChatter,
 } from "./callables/countryRotation";
 

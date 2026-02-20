@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
 import { functionsWest2 } from "@/config/firebase";
@@ -111,7 +112,7 @@ const AdminChatterPayments: React.FC = () => {
       await fetchWithdrawals();
     } catch (err: any) {
       console.error('Error approving withdrawal:', err);
-      alert(err.message || 'Failed to approve');
+      toast.error(err.message || 'Failed to approve');
     } finally {
       setProcessingId(null);
     }
@@ -135,7 +136,7 @@ const AdminChatterPayments: React.FC = () => {
       await fetchWithdrawals();
     } catch (err: any) {
       console.error('Error rejecting withdrawal:', err);
-      alert(err.message || 'Failed to reject');
+      toast.error(err.message || 'Failed to reject');
     } finally {
       setProcessingId(null);
     }
@@ -158,7 +159,7 @@ const AdminChatterPayments: React.FC = () => {
       await fetchWithdrawals();
     } catch (err: any) {
       console.error('Error completing withdrawal:', err);
-      alert(err.message || 'Failed to complete');
+      toast.error(err.message || 'Failed to complete');
     } finally {
       setProcessingId(null);
     }

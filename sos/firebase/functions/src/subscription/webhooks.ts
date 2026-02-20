@@ -562,7 +562,13 @@ export async function handleSubscriptionCreated(
 
     // P1 FIX: Use set with merge to ensure sync even if profile doesn't exist
     await sosProfileRef.set(profileUpdate, { merge: true });
-    logger.info(`[handleSubscriptionCreated] Synced sos_profile subscriptionStatus=${mappedStatus} for ${providerId}`)
+    // AUDIT-FIX m4: Also sync subscriptionStatus to users/{uid} for frontend reads
+    await db.doc(`users/${providerId}`).set({
+      subscriptionStatus: mappedStatus,
+      hasActiveSubscription: true,
+      updatedAt: now
+    }, { merge: true });
+    logger.info(`[handleSubscriptionCreated] Synced sos_profile+users subscriptionStatus=${mappedStatus} for ${providerId}`)
 
     // ========== META CAPI TRACKING ==========
     // Track Purchase event for subscription creation (provider subscribing to a plan)
@@ -845,7 +851,13 @@ export async function handleSubscriptionUpdated(
       hasActiveSubscription: isActiveSubscription,
       updatedAt: now
     }, { merge: true });
-    logger.info(`[handleSubscriptionUpdated] Synced sos_profile subscriptionStatus=${newStatus} for ${providerId}`)
+    // AUDIT-FIX m4: Also sync subscriptionStatus to users/{uid} for frontend reads
+    await db.doc(`users/${providerId}`).set({
+      subscriptionStatus: newStatus,
+      hasActiveSubscription: isActiveSubscription,
+      updatedAt: now
+    }, { merge: true });
+    logger.info(`[handleSubscriptionUpdated] Synced sos_profile+users subscriptionStatus=${newStatus} for ${providerId}`)
 
     // Logger l'action
     await logSubscriptionAction({
@@ -1007,7 +1019,13 @@ export async function handleSubscriptionDeleted(
       hasActiveSubscription: false,
       updatedAt: now
     }, { merge: true });
-    logger.info(`[handleSubscriptionDeleted] Synced sos_profile subscriptionStatus=canceled for ${providerId}`)
+    // AUDIT-FIX m4: Also sync subscriptionStatus to users/{uid} for frontend reads
+    await db.doc(`users/${providerId}`).set({
+      subscriptionStatus: 'canceled',
+      hasActiveSubscription: false,
+      updatedAt: now
+    }, { merge: true });
+    logger.info(`[handleSubscriptionDeleted] Synced sos_profile+users subscriptionStatus=canceled for ${providerId}`)
 
     // Logger l'action
     await logSubscriptionAction({

@@ -12,8 +12,8 @@ const GroupAdminTelegramOnboarding: React.FC = () => {
     <GroupAdminDashboardLayout>
       <TelegramOnboarding
         role="groupAdmin"
-        dashboardPath="/group-admin/dashboard"
-        skipPath="/group-admin/dashboard"
+        dashboardPath="/group-admin/tableau-de-bord"
+        skipPath="/group-admin/tableau-de-bord"
         title="👥 Connectez votre Telegram"
         subtitle="Gérez votre communauté et vos gains depuis Telegram"
       />

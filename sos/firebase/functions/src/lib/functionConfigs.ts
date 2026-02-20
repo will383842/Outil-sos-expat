@@ -22,6 +22,8 @@ export const ALLOWED_ORIGINS = [
   "https://www.sos-expat.com",
   "https://ia.sos-expat.com",
   "https://multi.sos-expat.com",
+  "https://sosexpats.com",
+  "https://www.sosexpats.com",
   "https://outil-sos-expat.pages.dev",
   "http://localhost:5173",
   "http://localhost:3000",

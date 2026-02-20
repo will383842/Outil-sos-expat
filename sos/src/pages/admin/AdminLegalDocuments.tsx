@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -268,11 +269,11 @@ const AdminLegalDocuments: React.FC = () => {
       setShowCopyModal(false);
       setCopySourceDoc(null);
       setCopyTargetLangs([]);
-      alert(`Document copié vers ${copyTargetLangs.length} langue(s) avec succès. N'oubliez pas de traduire le contenu !`);
+      toast.success(`Document copié vers ${copyTargetLangs.length} langue(s) avec succès. N'oubliez pas de traduire le contenu !`);
 
     } catch (error) {
       console.error('Error copying document:', error);
-      alert('Erreur lors de la copie du document');
+      toast.error('Erreur lors de la copie du document');
     } finally {
       setIsCopying(false);
     }
@@ -301,7 +302,7 @@ const AdminLegalDocuments: React.FC = () => {
       setIsActionLoading(true);
 
       if (!formData.title || !formData.content || !formData.type || !formData.language) {
-        alert('Veuillez remplir tous les champs obligatoires');
+        toast.error('Veuillez remplir tous les champs obligatoires');
         return;
       }
 
@@ -336,11 +337,11 @@ const AdminLegalDocuments: React.FC = () => {
       await loadDocuments();
       setShowEditModal(false);
       setSelectedDocument(null);
-      alert(isCreating ? 'Document créé avec succès' : 'Document mis à jour avec succès');
+      toast.success(isCreating ? 'Document créé avec succès' : 'Document mis à jour avec succès');
 
     } catch (error) {
       console.error('Error saving document:', error);
-      alert('Erreur lors de l\'enregistrement du document');
+      toast.error('Erreur lors de l\'enregistrement du document');
     } finally {
       setIsActionLoading(false);
     }
@@ -355,11 +356,11 @@ const AdminLegalDocuments: React.FC = () => {
       await loadDocuments();
       setShowDeleteModal(false);
       setSelectedDocument(null);
-      alert('Document supprimé avec succès');
+      toast.success('Document supprimé avec succès');
 
     } catch (error) {
       console.error('Error deleting document:', error);
-      alert('Erreur lors de la suppression du document');
+      toast.error('Erreur lors de la suppression du document');
     } finally {
       setIsActionLoading(false);
     }
@@ -386,16 +387,16 @@ const AdminLegalDocuments: React.FC = () => {
       const result = await migrateLegalDocumentsToFirestore();
 
       if (result.success) {
-        alert(`Migration réussie !\n${result.created} documents créés\n${result.skipped} documents existants ignorés`);
+        toast.success(`Migration réussie ! ${result.created} documents créés, ${result.skipped} existants ignorés`);
         await loadDocuments();
       } else {
-        alert(`Migration terminée avec des erreurs:\n${result.errors.join('\n')}`);
+        toast.error(`Migration terminée avec des erreurs:\n${result.errors.join('\n')}`);
       }
 
       setShowMigrationModal(false);
     } catch (error) {
       console.error('Migration error:', error);
-      alert('Erreur lors de la migration');
+      toast.error('Erreur lors de la migration');
     } finally {
       setIsMigrating(false);
     }

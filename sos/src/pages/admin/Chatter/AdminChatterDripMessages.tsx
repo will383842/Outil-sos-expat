@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
 import { functionsWest2 } from "@/config/firebase";
@@ -160,11 +161,11 @@ const AdminChatterDripMessages: React.FC = () => {
       setSending(messageDay);
       const sendFunction = httpsCallable(functionsWest2, 'chatter_sendDripMessage');
       await sendFunction({ chatterId, day: messageDay, language: selectedLanguage });
-      alert(`Message jour ${messageDay} envoyé avec succès !`);
+      toast.success(`Message jour ${messageDay} envoyé avec succès !`);
       await loadStats();
     } catch (error: any) {
       console.error('Error sending message:', error);
-      alert(`Erreur: ${error.message}`);
+      toast.error(`Erreur: ${error.message}`);
     } finally {
       setSending(null);
     }

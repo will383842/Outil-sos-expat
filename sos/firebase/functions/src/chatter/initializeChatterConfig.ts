@@ -11,6 +11,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { ChatterConfig, DEFAULT_CHATTER_CONFIG } from "./types";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -65,7 +66,7 @@ export async function initializeChatterConfigInternal(): Promise<{
  */
 export const initializeChatterConfig = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
@@ -108,7 +109,7 @@ export const initializeChatterConfig = onCall(
  */
 export const resetChatterConfigToDefaults = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
@@ -913,7 +914,7 @@ export async function initializePlatformDefinitionsInternal(): Promise<number> {
  */
 export const initializeChatterSystem = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,

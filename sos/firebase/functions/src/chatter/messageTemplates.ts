@@ -10,6 +10,7 @@
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import * as functionsV1 from "firebase-functions/v1";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // ============================================================================
 // TYPES
@@ -451,7 +452,7 @@ export async function resetMessageTemplatesToDefaults(
  */
 export const getChatterMessageTemplates = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
   },
@@ -480,7 +481,7 @@ export const getChatterMessageTemplates = onCall(
  */
 export const adminSeedMessageTemplates = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
   },
@@ -514,7 +515,7 @@ export const adminSeedMessageTemplates = onCall(
  */
 export const adminCreateMessageTemplate = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
   },
@@ -565,7 +566,7 @@ export const adminCreateMessageTemplate = onCall(
  */
 export const adminUpdateMessageTemplate = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
   },
@@ -618,7 +619,7 @@ export const adminUpdateMessageTemplate = onCall(
  */
 export const adminDeleteMessageTemplate = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
   },
@@ -668,7 +669,7 @@ export const adminDeleteMessageTemplate = onCall(
  */
 export const adminResetMessageTemplatesToDefaults = onCall(
   {
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
   },

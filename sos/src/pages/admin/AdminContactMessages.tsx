@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import {
   collection,
   getDocs,
@@ -83,7 +84,7 @@ const AdminContactMessages: React.FC = () => {
       await loadMessages();
     } catch (error) {
       console.error(t('admin.contactMessages.sendError'), error);
-      alert(t('admin.contactMessages.sendError'));
+      toast.error(t('admin.contactMessages.sendError'));
     } finally {
       setLoading(false);
     }

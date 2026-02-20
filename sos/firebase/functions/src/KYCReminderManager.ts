@@ -440,6 +440,7 @@ export const scheduledKYCReminders = onSchedule(
 // ====== FONCTION CALLABLE POUR TEST/ADMIN ======
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { ALLOWED_ORIGINS } from "./lib/functionConfigs";
 
 /**
  * Fonction callable pour déclencher manuellement les rappels KYC
@@ -448,7 +449,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 export const triggerKYCReminders = onCall(
   {
     region: "europe-west3",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "512MiB",
     timeoutSeconds: 300,
   },
@@ -485,7 +486,7 @@ export const triggerKYCReminders = onCall(
 export const getKYCReminderStatus = onCall(
   {
     region: "europe-west3",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();

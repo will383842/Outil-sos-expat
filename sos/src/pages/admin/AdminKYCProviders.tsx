@@ -1,5 +1,6 @@
 // src/pages/admin/AdminKYCProviders.tsx
 import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { useIntl } from 'react-intl';
 import { useApp } from '../../contexts/AppContext';
 import { getDateLocale } from '../../utils/formatters';
@@ -407,16 +408,16 @@ const AdminKYCProviders: React.FC = () => {
         ),
       );
 
-      alert(intl.formatMessage({ id: 'admin.kyc.statusUpdated' }, { status: newStatus }));
+      toast.success(intl.formatMessage({ id: 'admin.kyc.statusUpdated' }, { status: newStatus }));
     } catch (error) {
       console.error('Erreur mise à jour KYC:', error);
-      alert(intl.formatMessage({ id: 'admin.kyc.statusUpdateError' }));
+      toast.error(intl.formatMessage({ id: 'admin.kyc.statusUpdateError' }));
     }
   };
 
   const handleBulkAction = async (action: 'approuver' | 'rejeter' | 'incomplete') => {
     if (selectedProviders.length === 0) {
-      alert(intl.formatMessage({ id: 'admin.kyc.selectAtLeastOne' }));
+      toast.error(intl.formatMessage({ id: 'admin.kyc.selectAtLeastOne' }));
       return;
     }
 
@@ -445,17 +446,17 @@ const AdminKYCProviders: React.FC = () => {
 
       await Promise.all(promises);
       setSelectedProviders([]);
-      alert(intl.formatMessage({ id: 'admin.kyc.bulkActionApplied' }, { action, count: selectedProviders.length }));
+      toast.success(intl.formatMessage({ id: 'admin.kyc.bulkActionApplied' }, { action, count: selectedProviders.length }));
     } catch (error) {
       console.error('Erreur action en lot:', error);
-      alert(intl.formatMessage({ id: 'admin.kyc.bulkActionError' }));
+      toast.error(intl.formatMessage({ id: 'admin.kyc.bulkActionError' }));
     }
   };
 
   // Fonction pour confirmer le rejet via modal
   const confirmReject = async () => {
     if (!rejectReason.trim()) {
-      alert('Veuillez saisir une raison de rejet');
+      toast.error('Veuillez saisir une raison de rejet');
       return;
     }
 
@@ -467,7 +468,7 @@ const AdminKYCProviders: React.FC = () => {
         );
         await Promise.all(promises);
         setSelectedProviders([]);
-        alert(intl.formatMessage({ id: 'admin.kyc.bulkActionApplied' }, { action: 'rejeter', count: selectedProviders.length }));
+        toast.success(intl.formatMessage({ id: 'admin.kyc.bulkActionApplied' }, { action: 'rejeter', count: selectedProviders.length }));
       } else if (rejectTargetId) {
         // Rejet individuel
         if (rejectDocumentIndex !== null && selectedProvider) {
@@ -497,7 +498,7 @@ const AdminKYCProviders: React.FC = () => {
       setRejectDocumentIndex(null);
     } catch (error) {
       console.error('Erreur lors du rejet:', error);
-      alert('Erreur lors du rejet');
+      toast.error('Erreur lors du rejet');
     }
   };
 
@@ -1138,10 +1139,10 @@ const AdminKYCProviders: React.FC = () => {
                                     setSelectedProvider((prev) =>
                                       prev ? { ...prev, documents: updatedDocs } : prev
                                     );
-                                    alert(intl.formatMessage({ id: 'admin.kyc.documentValidated' }));
+                                    toast.success(intl.formatMessage({ id: 'admin.kyc.documentValidated' }));
                                   } catch (error) {
                                     console.error('Erreur validation document:', error);
-                                    alert(intl.formatMessage({ id: 'admin.kyc.documentValidationError' }));
+                                    toast.error(intl.formatMessage({ id: 'admin.kyc.documentValidationError' }));
                                   }
                                 }}
                                 disabled={doc.verified}
@@ -1273,10 +1274,10 @@ const AdminKYCProviders: React.FC = () => {
                                 p.id === selectedProvider.id ? { ...p, notes: selectedProvider.notes } : p
                               )
                             );
-                            alert(intl.formatMessage({ id: 'admin.kyc.notesSaved' }, { defaultMessage: 'Notes sauvegardées avec succès' }));
+                            toast.success(intl.formatMessage({ id: 'admin.kyc.notesSaved' }, { defaultMessage: 'Notes sauvegardées avec succès' }));
                           } catch (error) {
                             console.error('Erreur sauvegarde notes:', error);
-                            alert(intl.formatMessage({ id: 'admin.kyc.notesSaveError' }, { defaultMessage: 'Erreur lors de la sauvegarde des notes' }));
+                            toast.error(intl.formatMessage({ id: 'admin.kyc.notesSaveError' }, { defaultMessage: 'Erreur lors de la sauvegarde des notes' }));
                           }
                         }}
                         className="bg-blue-600 hover:bg-blue-700 text-white text-sm"

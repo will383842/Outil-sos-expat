@@ -13,6 +13,7 @@ import * as admin from "firebase-admin";
 import nodemailer from "nodemailer";
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import { EMAIL_USER, EMAIL_PASS } from "../lib/secrets";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 type SupportedLanguage = 'fr' | 'en' | 'es' | 'pt' | 'de' | 'ru' | 'ar' | 'hi' | 'ch';
 
@@ -950,7 +951,7 @@ function resolveLanguage(lang?: string): SupportedLanguage {
 export const sendCustomPasswordResetEmail = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     secrets: [EMAIL_USER, EMAIL_PASS],
   },
   async (request) => {

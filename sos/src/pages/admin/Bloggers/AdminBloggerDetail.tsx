@@ -54,7 +54,7 @@ interface Blogger {
   phone?: string;
   country: string;
   language: string;
-  status: 'active' | 'suspended' | 'blocked';
+  status: 'active' | 'suspended' | 'banned';
   suspensionReason?: string;
   blogUrl: string;
   blogName: string;
@@ -162,7 +162,7 @@ const AdminBloggerDetail: React.FC = () => {
   }, [fetchBlogger]);
 
   // Handle status change
-  const handleStatusChange = async (newStatus: 'active' | 'suspended' | 'blocked', reason?: string) => {
+  const handleStatusChange = async (newStatus: 'active' | 'suspended' | 'banned', reason?: string) => {
     if (!id) return;
 
     setActionLoading(true);
@@ -213,7 +213,7 @@ const AdminBloggerDetail: React.FC = () => {
         return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case 'suspended':
         return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-      case 'blocked':
+      case 'banned':
         return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       default:
         return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
@@ -436,9 +436,9 @@ const AdminBloggerDetail: React.FC = () => {
                     <FormattedMessage id="admin.blogger.action.suspend" defaultMessage="Suspendre" />
                   </button>
                 )}
-                {blogger.status !== 'blocked' && (
+                {blogger.status !== 'banned' && (
                   <button
-                    onClick={() => handleStatusChange('blocked', 'Violation of terms')}
+                    onClick={() => handleStatusChange('banned', 'Violation of terms')}
                     disabled={actionLoading}
                     className={`${UI.button.danger} w-full px-4 py-2 flex items-center justify-center gap-2`}
                   >

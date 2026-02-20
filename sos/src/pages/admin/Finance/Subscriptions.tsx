@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { useIntl, FormattedMessage } from 'react-intl';
 import {
   collection,
@@ -893,45 +894,21 @@ const Subscriptions: React.FC = () => {
     setIsDetailOpen(true);
   };
 
-  const handleAction = async (action: string, subscriptionId: string) => {
-    try {
-      const { httpsCallable } = await import('firebase/functions');
-      const { functions } = await import('@/config/firebase');
-
-      switch (action) {
-        case 'cancel': {
-          const adminCancelSubscription = httpsCallable(functions, 'adminCancelSubscription');
-          await adminCancelSubscription({ subscriptionId, immediate: false });
-          break;
-        }
-        case 'pause': {
-          const pauseSubscription = httpsCallable(functions, 'pauseSubscription');
-          await pauseSubscription({ subscriptionId });
-          break;
-        }
-        case 'resume': {
-          const resumeSubscription = httpsCallable(functions, 'resumeSubscription');
-          await resumeSubscription({ subscriptionId });
-          break;
-        }
-        case 'upgrade':
-        case 'downgrade': {
-          // For upgrade/downgrade, we would open a modal to select new plan
-          // For now, just show a message
-          alert(`Pour ${action === 'upgrade' ? 'upgrader' : 'downgrader'}, veuillez utiliser le portail Stripe.`);
-          return;
-        }
-        default:
-          console.warn(`Unknown action: ${action}`);
-          return;
-      }
-
-      // Refresh data after action
-      await loadSubscriptions();
-      setIsDetailOpen(false);
-    } catch (err) {
-      console.error('Action failed:', err);
-      alert(`Erreur: ${(err as Error).message}`);
+  // AUDIT-FIX C1: adminCancelSubscription, pauseSubscription, resumeSubscription do NOT exist in backend
+  const handleAction = async (action: string, _subscriptionId: string) => {
+    switch (action) {
+      case 'cancel':
+      case 'pause':
+      case 'resume':
+        toast.error(`Fonction non disponible : action "${action}" n'est pas implémentée côté backend. Utilisez le portail Stripe.`);
+        return;
+      case 'upgrade':
+      case 'downgrade':
+        toast.error(`Pour ${action === 'upgrade' ? 'upgrader' : 'downgrader'}, veuillez utiliser le portail Stripe.`);
+        return;
+      default:
+        console.warn(`Unknown action: ${action}`);
+        return;
     }
   };
 
@@ -955,15 +932,9 @@ const Subscriptions: React.FC = () => {
       let errorCount = 0;
 
       if (action === 'cancel') {
-        const adminCancelSubscription = httpsCallable(functions, 'adminCancelSubscription');
-        for (const subscriptionId of idsArray) {
-          try {
-            await adminCancelSubscription({ subscriptionId, immediate: false });
-            successCount++;
-          } catch {
-            errorCount++;
-          }
-        }
+        // AUDIT-FIX C1: "adminCancelSubscription" does NOT exist in backend
+        toast.error('Fonction non disponible : adminCancelSubscription n\'est pas implémentée côté backend. Utilisez le portail Stripe.');
+        return;
       } else if (action === 'sendReminder') {
         // Send reminder via notification pipeline
         const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
@@ -988,12 +959,12 @@ const Subscriptions: React.FC = () => {
         }
       }
 
-      alert(`${successCount} action(s) réussie(s), ${errorCount} erreur(s)`);
+      toast.success(`${successCount} action(s) réussie(s), ${errorCount} erreur(s)`);
       setSelectedIds(new Set());
       await loadSubscriptions();
     } catch (err) {
       console.error('Bulk action failed:', err);
-      alert(`Erreur: ${(err as Error).message}`);
+      toast.error(`Erreur: ${(err as Error).message}`);
     }
   };
 

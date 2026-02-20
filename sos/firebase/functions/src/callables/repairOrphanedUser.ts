@@ -100,7 +100,8 @@ export const repairOrphanedUser = onCall(
           displayName: `${chatterData?.firstName || firstName} ${chatterData?.lastName || lastName}`.trim(),
           role: "chatter",
           isChatter: true,
-          chatterStatus: chatterData?.status || "pending_quiz",
+          // AUDIT-FIX m1: Default to "active" (pending_quiz removed — quiz no longer exists)
+          chatterStatus: chatterData?.status || "active",
           profilePhoto: chatterData?.photoUrl || authUser.photoURL || "/default-avatar.png",
           photoURL: chatterData?.photoUrl || authUser.photoURL || "/default-avatar.png",
           avatar: chatterData?.photoUrl || authUser.photoURL || "/default-avatar.png",

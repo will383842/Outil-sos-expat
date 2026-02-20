@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import {
   collection,
   getDocs,
@@ -659,7 +660,7 @@ const AdminInvoices: React.FC = () => {
       }
     } catch (error) {
       console.error('Error downloading invoice:', error);
-      alert(intl.formatMessage({ id: 'admin.invoices.downloadError', defaultMessage: 'Error downloading invoice' }));
+      toast.error(intl.formatMessage({ id: 'admin.invoices.downloadError', defaultMessage: 'Error downloading invoice' }));
     } finally {
       setActionLoading(null);
     }
@@ -692,10 +693,10 @@ const AdminInvoices: React.FC = () => {
         );
       }
 
-      alert(intl.formatMessage({ id: 'admin.invoices.emailSent', defaultMessage: 'Email sent successfully' }));
+      toast.success(intl.formatMessage({ id: 'admin.invoices.emailSent', defaultMessage: 'Email sent successfully' }));
     } catch (error) {
       console.error('Error sending invoice email:', error);
-      alert(intl.formatMessage({ id: 'admin.invoices.emailError', defaultMessage: 'Error sending email' }));
+      toast.error(intl.formatMessage({ id: 'admin.invoices.emailError', defaultMessage: 'Error sending email' }));
     } finally {
       setActionLoading(null);
     }
@@ -713,10 +714,10 @@ const AdminInvoices: React.FC = () => {
 
       // Refresh the list
       fetchInvoices(true);
-      alert(intl.formatMessage({ id: 'admin.invoices.regenerated', defaultMessage: 'Invoice regenerated successfully' }));
+      toast.success(intl.formatMessage({ id: 'admin.invoices.regenerated', defaultMessage: 'Invoice regenerated successfully' }));
     } catch (error) {
       console.error('Error regenerating invoice:', error);
-      alert(intl.formatMessage({ id: 'admin.invoices.regenerateError', defaultMessage: 'Error regenerating invoice' }));
+      toast.error(intl.formatMessage({ id: 'admin.invoices.regenerateError', defaultMessage: 'Error regenerating invoice' }));
     } finally {
       setActionLoading(null);
     }
@@ -730,19 +731,10 @@ const AdminInvoices: React.FC = () => {
     try {
       const selected = filteredInvoices.filter((inv) => selectedInvoices.has(inv.id));
 
-      // Call cloud function to create ZIP
-      const createInvoiceZip = httpsCallable(functions, 'createInvoiceZip');
-      const result = await createInvoiceZip({ invoiceIds: Array.from(selectedInvoices) });
-      const { zipUrl } = result.data as { zipUrl: string };
-
-      if (zipUrl) {
-        window.open(zipUrl, '_blank', 'noopener,noreferrer');
-      }
-
-      setSelectedInvoices(new Set());
-      setSelectAll(false);
+      // AUDIT-FIX C1: "createInvoiceZip" does NOT exist in backend — skip directly to fallback
+      console.warn('[AdminInvoices] createInvoiceZip: Backend function does not exist, using fallback');
+      throw new Error('Backend function not available');
     } catch (error) {
-      console.error('Error creating ZIP:', error);
       // Fallback: open each invoice individually
       const selected = filteredInvoices.filter((inv) => selectedInvoices.has(inv.id));
       selected.forEach((inv) => {
@@ -772,13 +764,13 @@ const AdminInvoices: React.FC = () => {
         })),
       });
 
-      alert(intl.formatMessage({ id: 'admin.invoices.bulkEmailSent', defaultMessage: 'Emails sent successfully' }, { count: selected.length }));
+      toast.success(intl.formatMessage({ id: 'admin.invoices.bulkEmailSent', defaultMessage: 'Emails sent successfully' }, { count: selected.length }));
       setSelectedInvoices(new Set());
       setSelectAll(false);
       fetchInvoices(true);
     } catch (error) {
       console.error('Error sending bulk emails:', error);
-      alert(intl.formatMessage({ id: 'admin.invoices.bulkEmailError', defaultMessage: 'Error sending emails' }));
+      toast.error(intl.formatMessage({ id: 'admin.invoices.bulkEmailError', defaultMessage: 'Error sending emails' }));
     } finally {
       setActionLoading(null);
     }
@@ -820,7 +812,7 @@ const AdminInvoices: React.FC = () => {
   // Create manual invoice
   const handleCreateManualInvoice = useCallback(async () => {
     if (!manualFormData.recipientId || manualFormData.items.length === 0) {
-      alert(intl.formatMessage({ id: 'admin.invoices.form.requiredFields', defaultMessage: 'Please fill in all required fields' }));
+      toast.error(intl.formatMessage({ id: 'admin.invoices.form.requiredFields', defaultMessage: 'Please fill in all required fields' }));
       return;
     }
 
@@ -829,21 +821,12 @@ const AdminInvoices: React.FC = () => {
       const recipient = recipients.find((r) => r.id === manualFormData.recipientId);
       const totalAmount = manualFormData.items.reduce((sum, item) => sum + item.total, 0);
 
-      const createManualInvoice = httpsCallable(functions, 'createManualInvoice');
-      await createManualInvoice({
-        recipientId: manualFormData.recipientId,
-        recipientType: manualFormData.recipientType,
-        recipientName: recipient?.name,
-        recipientEmail: recipient?.email,
-        items: manualFormData.items,
-        dueDate: manualFormData.dueDate,
-        notes: manualFormData.notes,
-        paymentTerms: manualFormData.paymentTerms,
-        totalAmount,
-        currency: 'EUR',
-      });
+      // AUDIT-FIX C1: "createManualInvoice" does NOT exist in backend
+      console.warn('[AdminInvoices] createManualInvoice: Backend function does not exist');
+      toast.error('Fonction non disponible : createManualInvoice n\'est pas implémentée côté backend');
+      return;
 
-      alert(intl.formatMessage({ id: 'admin.invoices.form.created', defaultMessage: 'Invoice created successfully' }));
+      toast.success(intl.formatMessage({ id: 'admin.invoices.form.created', defaultMessage: 'Invoice created successfully' }));
       setShowManualForm(false);
       setManualFormData({
         recipientId: '',
@@ -856,7 +839,7 @@ const AdminInvoices: React.FC = () => {
       fetchInvoices(true);
     } catch (error) {
       console.error('Error creating manual invoice:', error);
-      alert(intl.formatMessage({ id: 'admin.invoices.form.createError', defaultMessage: 'Error creating invoice' }));
+      toast.error(intl.formatMessage({ id: 'admin.invoices.form.createError', defaultMessage: 'Error creating invoice' }));
     } finally {
       setActionLoading(null);
     }

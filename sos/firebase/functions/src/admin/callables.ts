@@ -2,6 +2,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase-admin/app";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // CRITICAL: Lazy initialization to avoid deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -34,7 +35,7 @@ function assertAdmin(ctx: any) {
 /** 1) LISTE les IDs d'événements pour un locale donné */
 export const admin_templates_list = onCall({
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     cpu: 0.1,
     minInstances: 0,
@@ -54,7 +55,7 @@ export const admin_templates_list = onCall({
 /** 2) GET: récupère un template pour (locale, eventId) */
 export const admin_templates_get = onCall({
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     cpu: 0.1,
     minInstances: 0,
@@ -81,7 +82,7 @@ type TemplatePayload = { email?: EmailTpl; sms?: SmsTpl; push?: PushTpl };
 /** 3) UPSERT: crée/merge un template (locale, eventId) */
 export const admin_templates_upsert = onCall({
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     cpu: 0.1,
     minInstances: 0,
@@ -107,7 +108,7 @@ export const admin_templates_upsert = onCall({
 /** 4) ROUTING GET: lit le doc unique message_routing/config */
 export const admin_routing_get = onCall({
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     cpu: 0.1,
     minInstances: 0,

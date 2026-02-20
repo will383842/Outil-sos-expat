@@ -27,6 +27,7 @@ import {
 } from "../../payment/types";
 import { sendWithdrawalConfirmation, WithdrawalConfirmationRole } from "../../telegram/withdrawalConfirmation";
 import { TELEGRAM_SECRETS } from "../../lib/secrets";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -93,7 +94,7 @@ export const requestWithdrawal = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     secrets: [...TELEGRAM_SECRETS],
   },
   async (request): Promise<RequestInfluencerWithdrawalResponse> => {

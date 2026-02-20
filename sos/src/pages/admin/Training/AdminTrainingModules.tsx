@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable, getFunctions } from 'firebase/functions';
 import { functionsWest2 } from '@/config/firebase';
@@ -205,11 +206,11 @@ const AdminTrainingModules: React.FC = () => {
       );
 
       const result = await seedModules({});
-      alert(`${result.data.modulesCreated} modules créés avec succès!`);
+      toast.success(`${result.data.modulesCreated} modules créés avec succès!`);
       fetchModules();
     } catch (err: unknown) {
       console.error('Error seeding modules:', err);
-      alert('Erreur: ' + ((err as Error).message || 'Failed to seed modules'));
+      toast.error('Erreur: ' + ((err as Error).message || 'Failed to seed modules'));
     } finally {
       setSeeding(false);
     }
@@ -230,7 +231,7 @@ const AdminTrainingModules: React.FC = () => {
       fetchModules();
     } catch (err: unknown) {
       console.error('Error deleting module:', err);
-      alert('Erreur: ' + ((err as Error).message || 'Failed to delete module'));
+      toast.error('Erreur: ' + ((err as Error).message || 'Failed to delete module'));
     }
   };
 
@@ -249,7 +250,7 @@ const AdminTrainingModules: React.FC = () => {
       fetchModules();
     } catch (err: unknown) {
       console.error('Error updating module:', err);
-      alert('Erreur: ' + ((err as Error).message || 'Failed to update module'));
+      toast.error('Erreur: ' + ((err as Error).message || 'Failed to update module'));
     }
   };
 
@@ -757,7 +758,7 @@ const ModuleEditModal: React.FC<ModuleEditModalProps> = ({
   // Handle save
   const handleSave = async () => {
     if (!title.trim() || !description.trim()) {
-      alert('Titre et description sont requis');
+      toast.error('Titre et description sont requis');
       return;
     }
 
@@ -789,7 +790,7 @@ const ModuleEditModal: React.FC<ModuleEditModalProps> = ({
       onSave();
     } catch (err: unknown) {
       console.error('Error saving module:', err);
-      alert('Erreur: ' + ((err as Error).message || 'Failed to save module'));
+      toast.error('Erreur: ' + ((err as Error).message || 'Failed to save module'));
     } finally {
       setSaving(false);
     }

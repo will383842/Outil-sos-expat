@@ -406,7 +406,8 @@ export const adminUpdateChatterStatus = onCall(
       throw new HttpsError("invalid-argument", "Reason is required");
     }
 
-    const validStatuses = ["pending_quiz", "active", "suspended", "banned"];
+    // AUDIT-FIX m1: Removed "pending_quiz" (quiz no longer exists)
+    const validStatuses = ["active", "suspended", "banned"];
     if (!validStatuses.includes(input.status)) {
       throw new HttpsError("invalid-argument", `Invalid status: ${input.status}`);
     }

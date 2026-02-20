@@ -1,5 +1,6 @@
 // src/pages/admin/Finance/Transactions.tsx
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import toast from 'react-hot-toast';
 import {
   collection,
   getDocs,
@@ -855,7 +856,7 @@ const Transactions: React.FC = () => {
       window.open(downloadUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Error downloading invoice:', error);
-      alert(intl.formatMessage({ id: 'admin.transactions.downloadError' }));
+      toast.error(intl.formatMessage({ id: 'admin.transactions.downloadError' }));
     }
   }, [intl]);
 
@@ -904,7 +905,7 @@ const Transactions: React.FC = () => {
       .map((t) => t.id);
 
     if (refundableIds.length === 0) {
-      alert(intl.formatMessage({ id: 'admin.transactions.noRefundableTransactions' }));
+      toast.error(intl.formatMessage({ id: 'admin.transactions.noRefundableTransactions' }));
       return;
     }
 
@@ -931,14 +932,14 @@ const Transactions: React.FC = () => {
       });
 
       if (result.data.success) {
-        alert(
+        toast.success(
           intl.formatMessage(
             { id: 'admin.transactions.bulkRefundSuccess' },
             { count: result.data.successful }
           )
         );
       } else {
-        alert(
+        toast.success(
           intl.formatMessage(
             { id: 'admin.transactions.bulkRefundPartial' },
             { successful: result.data.successful, failed: result.data.failed }
@@ -953,7 +954,7 @@ const Transactions: React.FC = () => {
       void buildQuery(true);
     } catch (err) {
       console.error('Bulk refund failed:', err);
-      alert(
+      toast.error(
         intl.formatMessage({ id: 'admin.transactions.bulkRefundError' }) +
           ': ' +
           (err instanceof Error ? err.message : 'Unknown error')
@@ -967,7 +968,7 @@ const Transactions: React.FC = () => {
 
     const transaction = transactions.find((t) => t.id === transactionId);
     if (!transaction || transaction.status !== 'paid') {
-      alert(intl.formatMessage({ id: 'admin.transactions.cannotRefund' }));
+      toast.error(intl.formatMessage({ id: 'admin.transactions.cannotRefund' }));
       return;
     }
 
@@ -997,7 +998,7 @@ const Transactions: React.FC = () => {
       });
 
       if (result.data.success) {
-        alert(intl.formatMessage({ id: 'admin.transactions.refundSuccess' }));
+        toast.success(intl.formatMessage({ id: 'admin.transactions.refundSuccess' }));
         // Refresh data
         setLastDoc(null);
         setHasMore(true);
@@ -1005,7 +1006,7 @@ const Transactions: React.FC = () => {
       }
     } catch (err) {
       console.error('Refund failed:', err);
-      alert(
+      toast.error(
         intl.formatMessage({ id: 'admin.transactions.refundError' }) +
           ': ' +
           (err instanceof Error ? err.message : 'Unknown error')

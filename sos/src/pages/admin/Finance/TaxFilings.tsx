@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { useIntl } from 'react-intl';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import Modal from '../../../components/common/Modal';
@@ -276,11 +277,11 @@ export default function TaxFilings() {
         setShowGenerateModal(false);
         loadData();
       } else {
-        alert(result.error || 'Generation failed');
+        toast.error(result.error || 'Generation failed');
       }
     } catch (err) {
       console.error('Error generating filing:', err);
-      alert('Error generating filing');
+      toast.error('Error generating filing');
     } finally {
       setIsGenerating(false);
     }
@@ -301,11 +302,11 @@ export default function TaxFilings() {
         setSelectedFiling(null);
         loadData();
       } else {
-        alert(result.error || 'Update failed');
+        toast.error(result.error || 'Update failed');
       }
     } catch (err) {
       console.error('Error updating status:', err);
-      alert('Error updating status');
+      toast.error('Error updating status');
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -322,11 +323,11 @@ export default function TaxFilings() {
         setSelectedFiling(null);
         loadData();
       } else {
-        alert(result.error || 'Delete failed');
+        toast.error(result.error || 'Delete failed');
       }
     } catch (err) {
       console.error('Error deleting filing:', err);
-      alert('Error deleting filing');
+      toast.error('Error deleting filing');
     }
   };
 
@@ -338,11 +339,11 @@ export default function TaxFilings() {
       if (result.success && result.url) {
         window.open(result.url, '_blank');
       } else {
-        alert(result.error || 'Export failed');
+        toast.error(result.error || 'Export failed');
       }
     } catch (err) {
       console.error('Error exporting:', err);
-      alert('Error exporting filing');
+      toast.error('Error exporting filing');
     } finally {
       setIsExporting(false);
     }
@@ -359,11 +360,11 @@ export default function TaxFilings() {
         if (result.files.csv) window.open(result.files.csv, '_blank');
         if (result.files.xml) window.open(result.files.xml, '_blank');
       } else {
-        alert(result.error || 'Export failed');
+        toast.error(result.error || 'Export failed');
       }
     } catch (err) {
       console.error('Error exporting all:', err);
-      alert('Error exporting filing');
+      toast.error('Error exporting filing');
     } finally {
       setIsExporting(false);
     }

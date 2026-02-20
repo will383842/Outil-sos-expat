@@ -9,14 +9,7 @@ import {
   clearAllHelpArticles,
   HelpArticleData
 } from '../services/helpArticles/helpArticlesInit';
-
-// Configuration CORS
-const CORS_ORIGINS = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5000',
-  'https://sos-urgently-ac307.web.app',
-  'https://sos-expat.com'
-];
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
 /**
  * Cloud Function: Initialise un seul article
@@ -28,7 +21,7 @@ export const initSingleHelpArticle = onRequest(
     region: 'europe-west1',
     memory: '512MiB',
     timeoutSeconds: 300,
-    cors: CORS_ORIGINS,
+    cors: ALLOWED_ORIGINS,
   },
   async (req, res) => {
     if (req.method !== 'POST') {
@@ -72,7 +65,7 @@ export const initHelpArticlesBatch = onRequest(
     memory: '1GiB',
     cpu: 1,
     timeoutSeconds: 540,
-    cors: CORS_ORIGINS,
+    cors: ALLOWED_ORIGINS,
   },
   async (req, res) => {
     if (req.method !== 'POST') {
@@ -115,7 +108,7 @@ export const checkHelpCategories = onRequest(
     region: 'europe-west1',
     memory: '256MiB',
     timeoutSeconds: 60,
-    cors: CORS_ORIGINS,
+    cors: ALLOWED_ORIGINS,
   },
   async (_req, res) => {
     try {
@@ -141,7 +134,7 @@ export const clearHelpArticles = onRequest(
     region: 'europe-west1',
     memory: '256MiB',
     timeoutSeconds: 120,
-    cors: CORS_ORIGINS,
+    cors: ALLOWED_ORIGINS,
   },
   async (req, res) => {
     if (req.method !== 'POST') {

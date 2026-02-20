@@ -18,6 +18,7 @@ import {
   GroupAdminPaymentMethod,
   GroupAdminPaymentDetails,
 } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -76,7 +77,7 @@ export const updateGroupAdminProfile = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     ensureInitialized();
@@ -101,8 +102,8 @@ export const updateGroupAdminProfile = onCall(
       const currentProfile = groupAdminDoc.data() as GroupAdmin;
 
       // Check status
-      if (currentProfile.status === "blocked") {
-        throw new HttpsError("permission-denied", "Your account has been blocked");
+      if (currentProfile.status === "banned") {
+        throw new HttpsError("permission-denied", "Your account has been banned");
       }
 
       // 3. Build update object with validation

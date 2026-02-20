@@ -50,7 +50,7 @@ async function isAdmin(uid: string): Promise<boolean> {
 
 export const adminProcessPayoutWise = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
@@ -234,7 +234,7 @@ export const adminProcessPayoutWise = onCall(
 
 export const adminProcessPayoutManual = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -356,7 +356,7 @@ export const adminProcessPayoutManual = onCall(
 
 export const adminRejectPayout = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -480,7 +480,7 @@ export const adminRejectPayout = onCall(
 
 export const adminApprovePayout = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -574,7 +574,7 @@ export const adminApprovePayout = onCall(
 
 export const adminGetPendingPayouts = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

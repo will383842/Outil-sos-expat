@@ -18,6 +18,7 @@ import {
   WithdrawalStatus,
 } from '../types';
 import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -227,7 +228,7 @@ export const getWithdrawalStatus = onCall(
     region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request: CallableRequest<GetWithdrawalStatusInput>): Promise<PaymentTrackingSummary> => {
     ensureInitialized();

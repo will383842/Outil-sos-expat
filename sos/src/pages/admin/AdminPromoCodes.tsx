@@ -1,5 +1,6 @@
 // src/pages/admin/AdminPromoCodes.tsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import toast from "react-hot-toast";
 import { useAdminTranslations } from "../../utils/adminTranslations";
 import { useNavigate } from "react-router-dom";
 import {
@@ -394,23 +395,23 @@ const AdminPromoCodes: React.FC = () => {
       const maxDiscount = formData.maxDiscount;
 
       if (!code || !validFrom || !validUntil) {
-        alert("Veuillez remplir tous les champs obligatoires.");
+        toast.error("Veuillez remplir tous les champs obligatoires.");
         return;
       }
       if (new Date(validFrom) >= new Date(validUntil)) {
-        alert("La date de début doit précéder la date de fin.");
+        toast.error("La date de début doit précéder la date de fin.");
         return;
       }
       if (amount < 0 || minOrder < 0 || maxTotal < 1 || maxPerUser < 1) {
-        alert("Vérifiez les bornes numériques (montants ≥ 0, nombres > 0).");
+        toast.error("Vérifiez les bornes numériques (montants ≥ 0, nombres > 0).");
         return;
       }
       if (type === "percentage" && (amount < 1 || amount > 100)) {
-        alert("Pourcentage: entre 1 et 100.");
+        toast.error("Pourcentage: entre 1 et 100.");
         return;
       }
       if (typeof maxDiscount === "number" && maxDiscount < 0) {
-        alert("maxDiscount ne peut pas être négatif.");
+        toast.error("maxDiscount ne peut pas être négatif.");
         return;
       }
 
@@ -419,7 +420,7 @@ const AdminPromoCodes: React.FC = () => {
         const qy = query(collection(db, "coupons"), where("code", "==", code), limit(1));
         const snap = await getDocs(qy);
         if (!snap.empty) {
-          alert("Ce code promo existe déjà");
+          toast.error("Ce code promo existe déjà");
           return;
         }
       }
@@ -502,11 +503,11 @@ const AdminPromoCodes: React.FC = () => {
       setSelectedCoupon(null);
       void loadStats();
 
-      alert(selectedCoupon ? "Code promo mis à jour avec succès" : "Code promo créé avec succès");
+      toast.success(selectedCoupon ? "Code promo mis à jour avec succès" : "Code promo créé avec succès");
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unknown error";
       console.error("Error saving coupon:", error);
-      alert("Erreur lors de l'enregistrement du code promo");
+      toast.error("Erreur lors de l'enregistrement du code promo");
       logError({
         origin: "frontend",
         error: `Error saving coupon: ${msg}`,
@@ -526,11 +527,11 @@ const AdminPromoCodes: React.FC = () => {
       setShowDeleteModal(false);
       setSelectedCoupon(null);
       void loadStats();
-      alert("Code promo supprimé avec succès");
+      toast.success("Code promo supprimé avec succès");
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unknown error";
       console.error("Error deleting coupon:", error);
-      alert("Erreur lors de la suppression du code promo");
+      toast.error("Erreur lors de la suppression du code promo");
       logError({
         origin: "frontend",
         error: `Error deleting coupon: ${msg}`,
@@ -555,11 +556,11 @@ const AdminPromoCodes: React.FC = () => {
           )
         );
         void loadStats();
-        alert(`Code promo ${!isActive ? "activé" : "désactivé"} avec succès`);
+        toast.success(`Code promo ${!isActive ? "activé" : "désactivé"} avec succès`);
       } catch (error) {
         const msg = error instanceof Error ? error.message : "Unknown error";
         console.error("Error toggling coupon status:", error);
-        alert("Erreur lors de la modification du statut du code promo");
+        toast.error("Erreur lors de la modification du statut du code promo");
         logError({
           origin: "frontend",
           error: `Error toggling coupon status: ${msg}`,

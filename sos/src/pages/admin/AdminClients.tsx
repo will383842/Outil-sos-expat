@@ -1,5 +1,6 @@
 // src/pages/admin/AdminClients.tsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
 import {
   collection,
   query as fsQuery,
@@ -451,16 +452,16 @@ const AdminClients: React.FC = () => {
       setClients((prev) =>
         prev.map((c: Client) => (c.id === clientId ? { ...c, status: newStatus } : c))
       );
-      alert(t("successUpdate"));
+      toast.success(t("successUpdate"));
     } catch (error: unknown) {
       console.error("Erreur de mise à jour du statut:", error);
-      alert(t("errorUpdate"));
+      toast.error(t("errorUpdate"));
     }
   };
 
   const handleBulkAction = async (action: "activer" | "suspendre" | "supprimer") => {
     if (selectedClients.length === 0) {
-      alert("Veuillez sélectionner au moins un client.");
+      toast.error("Veuillez sélectionner au moins un client.");
       return;
     }
     if (action === "suspendre" || action === "supprimer") {
@@ -480,16 +481,16 @@ const AdminClients: React.FC = () => {
       await Promise.all(jobs);
       setSelectedClients([]);
       await loadPage();
-      alert(t("successUpdate"));
+      toast.success(t("successUpdate"));
     } catch (error: unknown) {
       console.error("Erreur action en lot:", error);
-      alert(t("errorUpdate"));
+      toast.error(t("errorUpdate"));
     }
   };
 
   const exportPageCsv = () => {
     if (clients.length === 0) {
-      alert("Aucun client à exporter.");
+      toast.error("Aucun client à exporter.");
       return;
     }
     const csvData = clients.map((c: Client) => ({
@@ -521,7 +522,7 @@ const AdminClients: React.FC = () => {
   // Export ALL (selon filtres) — parcours toutes les pages (max 5000)
   const exportAllCsv = async () => {
     try {
-      alert(t("exportAllRunning"));
+      toast(t("exportAllRunning"));
       const base = collection(db, "users") as CollectionReference<DocumentData>;
       const constraintsBase: QueryConstraint[] = [where("role", "==", "client"), orderBy("createdAt", "desc")];
 
@@ -591,9 +592,9 @@ const AdminClients: React.FC = () => {
         if (snap.docs.length < 500) break;
       }
 
-      if (all.length >= cap) alert(t("exportAllCap"));
+      if (all.length >= cap) toast(t("exportAllCap"));
       if (all.length === 0) {
-        alert(t("noneBody"));
+        toast.error(t("noneBody"));
         return;
       }
 
@@ -621,10 +622,10 @@ const AdminClients: React.FC = () => {
       a.download = `clients_all_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      alert(t("exportAllDone"));
+      toast.success(t("exportAllDone"));
     } catch (e: unknown) {
       console.error("Export all error", e);
-      alert(t("errorUpdate"));
+      toast.error(t("errorUpdate"));
     }
   };
 
@@ -1017,7 +1018,7 @@ const AdminClients: React.FC = () => {
                                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                                 onClick={async () => {
                                   await navigator.clipboard.writeText(client.email);
-                                  alert(t("copied"));
+                                  toast.success(t("copied"));
                                   setOpenMenuId(null);
                                 }}
                               >
@@ -1027,7 +1028,7 @@ const AdminClients: React.FC = () => {
                                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                                 onClick={async () => {
                                   await navigator.clipboard.writeText(client.id);
-                                  alert(t("copied"));
+                                  toast.success(t("copied"));
                                   setOpenMenuId(null);
                                 }}
                               >
@@ -1154,10 +1155,10 @@ const AdminClients: React.FC = () => {
                   setReasonText("");
                   setSelectedClients([]);
                   await loadPage();
-                  alert(t("successUpdate"));
+                  toast.success(t("successUpdate"));
                 } catch (e: unknown) {
                   console.error("Reason action error", e);
-                  alert(t("errorUpdate"));
+                  toast.error(t("errorUpdate"));
                 }
               }}
             >

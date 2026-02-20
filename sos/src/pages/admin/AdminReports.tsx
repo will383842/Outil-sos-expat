@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useIntl } from 'react-intl';
 import {
@@ -275,14 +276,10 @@ const AdminReports: React.FC = () => {
 
       setShowReportModal(false);
       setSelectedReport(null);
-      // Optionnel: remplace par ton système de toast
-
-      alert(t('admin.reports.alert.successResolved'));
+      toast.success(t('admin.reports.alert.successResolved'));
     } catch (error) {
-
       console.error('Error resolving report:', error);
-
-      alert(t('admin.reports.alert.errorResolving'));
+      toast.error(t('admin.reports.alert.errorResolving'));
     } finally {
       setIsActionLoading(false);
     }

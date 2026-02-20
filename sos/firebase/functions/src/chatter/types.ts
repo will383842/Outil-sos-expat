@@ -19,9 +19,9 @@ import { Timestamp } from "firebase-admin/firestore";
 /**
  * Chatter account status
  */
+// AUDIT-FIX m1: Removed "pending_quiz" — quiz was removed, registration now activates directly
 export type ChatterStatus =
-  | "pending_quiz"      // Registered but hasn't passed quiz
-  | "active"            // Passed quiz, can earn commissions
+  | "active"            // Registered & active, can earn commissions
   | "suspended"         // Temporarily suspended by admin
   | "banned";           // Permanently banned
 

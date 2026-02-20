@@ -176,7 +176,9 @@ export const wiseWebhook = onRequest(
           break;
 
         case "outgoing_payment_sent":
-          newStatus = isUnifiedWithdrawal ? "completed" : "paid";
+          // AUDIT-FIX C5: Always use "completed" for consistency with frontend WithdrawalStatus enum
+          // Both paidAt and completedAt are set for backward compatibility with legacy affiliate_payouts
+          newStatus = "completed";
           updateData.paidAt = now;
           updateData.completedAt = now;
           break;
@@ -346,7 +348,8 @@ async function createPayoutNotification(
     // Map status to event type
     let eventType: string;
     switch (status) {
-      case "paid":
+      case "completed":
+      case "paid": // Legacy status kept for backward compatibility
         eventType = "affiliate_payout_completed";
         break;
       case "failed":

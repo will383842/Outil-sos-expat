@@ -16,6 +16,7 @@ import {
   GroupAdminPostCategory,
   SupportedGroupAdminLanguage,
 } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -32,7 +33,7 @@ export const getGroupAdminPosts = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GroupAdminPostsResponse> => {
     ensureInitialized();
@@ -55,8 +56,8 @@ export const getGroupAdminPosts = onCall(
 
       const groupAdmin = groupAdminDoc.data() as GroupAdmin;
 
-      if (groupAdmin.status === "blocked") {
-        throw new HttpsError("permission-denied", "Your account has been blocked");
+      if (groupAdmin.status === "banned") {
+        throw new HttpsError("permission-denied", "Your account has been banned");
       }
 
       // 3. Fetch all active posts
@@ -123,7 +124,7 @@ export const getGroupAdminPostContent = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<PostContentResponse> => {
     ensureInitialized();
@@ -151,8 +152,8 @@ export const getGroupAdminPostContent = onCall(
 
       const groupAdmin = groupAdminDoc.data() as GroupAdmin;
 
-      if (groupAdmin.status === "blocked") {
-        throw new HttpsError("permission-denied", "Your account has been blocked");
+      if (groupAdmin.status === "banned") {
+        throw new HttpsError("permission-denied", "Your account has been banned");
       }
 
       // 3. Get post
@@ -225,7 +226,7 @@ export const getGroupAdminProcessedPost = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<ProcessedPostResponse> => {
     ensureInitialized();
@@ -253,8 +254,8 @@ export const getGroupAdminProcessedPost = onCall(
 
       const groupAdmin = groupAdminDoc.data() as GroupAdmin;
 
-      if (groupAdmin.status === "blocked") {
-        throw new HttpsError("permission-denied", "Your account has been blocked");
+      if (groupAdmin.status === "banned") {
+        throw new HttpsError("permission-denied", "Your account has been banned");
       }
 
       // 3. Get post
@@ -383,7 +384,7 @@ export const trackGroupAdminPostUsage = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();

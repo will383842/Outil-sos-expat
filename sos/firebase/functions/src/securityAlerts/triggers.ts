@@ -34,6 +34,7 @@ import {
 } from './escalation';
 import { cleanupExpiredRateLimits, getRateLimitStats } from './rateLimiter';
 import { archiveOldResolvedAlerts, getAggregationStats } from './aggregator';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
 // ==========================================
 // RÉGION EUROPE
@@ -118,7 +119,7 @@ export const onSecurityAlertUpdated = onDocumentUpdated(
 export const createSecurityAlertHttp = onRequest(
   {
     region: REGION,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     maxInstances: 50,
   },
   async (req, res) => {
@@ -208,7 +209,7 @@ export const processEscalationHttp = onRequest(
 export const securityAlertAdminAction = onRequest(
   {
     region: REGION,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     maxInstances: 20,
   },
   async (req, res) => {
@@ -379,7 +380,7 @@ async function unsuspendUser(userId: string, adminId: string): Promise<void> {
 export const getSecurityStats = onRequest(
   {
     region: REGION,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     maxInstances: 10,
   },
   async (req, res) => {
@@ -614,7 +615,7 @@ export const securityDailyReport = onSchedule(
 export const checkBlockedEntity = onRequest(
   {
     region: REGION,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     maxInstances: 50, // Réduit de 100 à 50
   },
   async (req, res) => {

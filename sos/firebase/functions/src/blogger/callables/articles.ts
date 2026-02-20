@@ -11,6 +11,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { Blogger, SupportedBloggerLanguage } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // ============================================================================
 // TYPES
@@ -43,7 +44,7 @@ export const getBloggerArticles = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ articles: Array<{
     id: string;
@@ -118,7 +119,7 @@ export const copyBloggerArticle = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; content: string }> => {
     if (!request.auth) {
@@ -212,7 +213,7 @@ export const adminGetBloggerArticles = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ articles: unknown[] }> => {
     if (!request.auth) {
@@ -242,7 +243,7 @@ export const adminCreateBloggerArticle = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; articleId: string }> => {
     if (!request.auth) {
@@ -290,7 +291,7 @@ export const adminUpdateBloggerArticle = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {
@@ -325,7 +326,7 @@ export const adminDeleteBloggerArticle = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     if (!request.auth) {

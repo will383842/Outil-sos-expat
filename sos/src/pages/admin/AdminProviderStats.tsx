@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import toast from "react-hot-toast";
 import {
   BarChart3,
   Search,
@@ -200,11 +201,11 @@ const AdminProviderStats: React.FC = () => {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        alert(result.data.error || "Export failed");
+        toast.error(result.data.error || "Export failed");
       }
     } catch (error) {
       console.error("Error exporting CSV:", error);
-      alert("Export failed");
+      toast.error("Export failed");
     }
   };
 

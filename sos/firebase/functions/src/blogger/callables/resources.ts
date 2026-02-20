@@ -22,6 +22,7 @@ import {
   BloggerResourceText,
   SupportedBloggerLanguage,
 } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // ============================================================================
 // GET RESOURCES
@@ -32,7 +33,7 @@ export const getBloggerResources = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetBloggerResourcesResponse> => {
     // 1. Check authentication
@@ -146,7 +147,7 @@ export const downloadBloggerResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<DownloadBloggerResourceResponse> => {
     // 1. Check authentication
@@ -241,7 +242,7 @@ export const copyBloggerResourceText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<CopyBloggerResourceTextResponse> => {
     // 1. Check authentication

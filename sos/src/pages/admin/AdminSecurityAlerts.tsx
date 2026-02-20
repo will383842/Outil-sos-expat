@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { useIntl } from 'react-intl';
 import {
   collection,
@@ -564,10 +565,10 @@ const AdminSecurityAlerts: React.FC = () => {
         adminId: firebaseUser.uid,
         notes: 'Blocked from admin dashboard',
       });
-      alert(intl.formatMessage({ id: 'admin.security.ipBlocked', defaultMessage: 'IP bloquée avec succès' }));
+      toast.success(intl.formatMessage({ id: 'admin.security.ipBlocked', defaultMessage: 'IP bloquée avec succès' }));
     } catch (error) {
       console.error('Error blocking IP:', error);
-      alert(intl.formatMessage({ id: 'admin.security.error', defaultMessage: 'Erreur lors du blocage' }));
+      toast.error(intl.formatMessage({ id: 'admin.security.error', defaultMessage: 'Erreur lors du blocage' }));
     }
   }, [firebaseUser, intl]);
 

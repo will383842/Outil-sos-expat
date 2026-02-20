@@ -1,5 +1,6 @@
 // src/pages/ProviderProfile.tsx - VERSION FUSIONNÉE COMPLÈTE
 import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
+import toast from "react-hot-toast";
 import { useParams, useLocation } from "react-router-dom";
 import { useLocaleNavigate } from "../multilingual-system";
 import { parseLocaleFromPath, getLocaleString } from "../utils/localeRoutes";
@@ -1888,7 +1889,7 @@ const ProviderProfile: React.FC = () => {
       if (reason) {
         try {
           await reportReview(reviewId, reason);
-          alert(intl.formatMessage({ id: "providerProfile.reportThanks" }));
+          toast.success(intl.formatMessage({ id: "providerProfile.reportThanks" }));
         } catch (e) {
           console.error("Error reporting review:", e);
         }

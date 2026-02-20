@@ -21,6 +21,7 @@ import {
   BloggerGuideBestPractice,
   SupportedBloggerLanguage,
 } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // ============================================================================
 // GET GUIDE
@@ -31,7 +32,7 @@ export const getBloggerGuide = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetBloggerGuideResponse> => {
     // 1. Check authentication
@@ -151,7 +152,7 @@ export const copyBloggerGuideText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<CopyBloggerGuideTextResponse> => {
     // 1. Check authentication
@@ -273,7 +274,7 @@ export const trackBloggerGuideUsage = onCall(
     region: "europe-west2",
     memory: "128MiB",
     timeoutSeconds: 15,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     // 1. Check authentication

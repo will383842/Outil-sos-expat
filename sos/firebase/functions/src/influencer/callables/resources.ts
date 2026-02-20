@@ -22,6 +22,7 @@ import {
   InfluencerResourceText,
   SupportedInfluencerLanguage,
 } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // ============================================================================
 // GET RESOURCES
@@ -32,7 +33,7 @@ export const getInfluencerResources = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetInfluencerResourcesResponse> => {
     if (!request.auth) {
@@ -132,7 +133,7 @@ export const downloadInfluencerResource = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<DownloadInfluencerResourceResponse> => {
     if (!request.auth) {
@@ -217,7 +218,7 @@ export const copyInfluencerResourceText = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<CopyInfluencerResourceTextResponse> => {
     if (!request.auth) {

@@ -196,10 +196,11 @@ async function updateWithdrawalFromWebhook(
     },
   };
 
+  // AUDIT-FIX M6: Use FieldValue.arrayUnion instead of array spread to prevent race conditions
   const updateData: Record<string, unknown> = {
     status: newStatus,
     providerStatus: wiseState,
-    statusHistory: [...withdrawal.statusHistory, statusEntry],
+    statusHistory: FieldValue.arrayUnion(statusEntry),
     lastWebhookAt: new Date().toISOString(),
   };
 
@@ -264,7 +265,7 @@ async function logWebhookEvent(
  */
 export const paymentWebhookWise = onRequest(
   {
-    region: "europe-west1",
+    region: "europe-west3",
     // P0 CRITICAL FIX: Allow unauthenticated access for Wise webhooks (Cloud Run requires explicit public access)
     invoker: "public",
     memory: "256MiB",

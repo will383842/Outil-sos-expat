@@ -27,6 +27,7 @@ import {
 import { getChatterConfigCached } from "../utils";
 import { getNextTierBonus, getClientEarnings } from "../services/chatterReferralService";
 import { getActivePromotions } from "../services/chatterPromotionService";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Helper function to get week start date (Monday)
 function getWeekStart(date: Date): Date {
@@ -96,7 +97,7 @@ export const getChatterDashboard = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetChatterDashboardResponse> => {
     // ULTRA DEBUG - Log immediately

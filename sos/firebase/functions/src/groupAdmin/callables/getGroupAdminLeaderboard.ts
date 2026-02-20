@@ -16,6 +16,7 @@ import {
   GroupAdminMonthlyRanking,
 } from "../types";
 import { getLeaderboardSize } from "../groupAdminConfig";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -33,7 +34,7 @@ export const getGroupAdminLeaderboard = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GroupAdminLeaderboardResponse> => {
     ensureInitialized();

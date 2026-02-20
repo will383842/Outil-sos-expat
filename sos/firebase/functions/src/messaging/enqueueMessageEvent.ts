@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // Lazy initialization to prevent deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -23,7 +24,7 @@ function getDb() {
   return admin.firestore();
 }
 
-export const enqueueMessageEvent = onCall({ region: "europe-west1", cors: true }, async (req) => {
+export const enqueueMessageEvent = onCall({ region: "europe-west1", cors: ALLOWED_ORIGINS }, async (req) => {
 
   try {
     console.log("enqueueMessageEvent called", req);

@@ -1,5 +1,6 @@
 // src/pages/admin/AdminPayments.tsx
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 import {
   collection,
   getDocs,
@@ -550,7 +551,7 @@ const AdminPayments: React.FC = () => {
       window.open(downloadUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Error downloading invoice:', error);
-      alert(intl.formatMessage({ id: 'admin.payments.downloadError' }));
+      toast.error(intl.formatMessage({ id: 'admin.payments.downloadError' }));
     }
   }, [intl]);
 

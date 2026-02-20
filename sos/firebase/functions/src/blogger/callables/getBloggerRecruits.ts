@@ -14,6 +14,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { Blogger, BloggerRecruitedBlogger, BloggerCommission } from "../types";
 import { getBloggerConfigCached } from "../utils/bloggerConfigService";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 export interface BloggerRecruitInfo {
   recruitId: string;
@@ -55,7 +56,7 @@ export const getBloggerRecruits = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetBloggerRecruitsResponse> => {
     // 1. Check authentication

@@ -9,6 +9,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { logger } from "firebase-functions/v2";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 import { AffiliateConfig } from "./types";
 
 // Lazy initialization
@@ -183,10 +184,10 @@ const DEFAULT_AFFILIATE_CONFIG: Omit<AffiliateConfig, "updatedAt" | "updatedBy" 
  */
 export const initializeAffiliateConfig = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -253,10 +254,10 @@ export const initializeAffiliateConfig = onCall(
  */
 export const resetAffiliateConfigToDefaults = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();

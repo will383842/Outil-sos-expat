@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import {
   collection,
   query,
@@ -70,7 +71,7 @@ export default function UserInvoices() {
 
   const exportSinglePDF = (invoice: any) => {
     // P2 FIX: Remove debug log in production
-    alert(intl.formatMessage({ id: 'userInvoices.exportPdfNotImplemented' }));
+    toast(intl.formatMessage({ id: 'userInvoices.exportPdfNotImplemented' }));
   };
 
   useEffect(() => {

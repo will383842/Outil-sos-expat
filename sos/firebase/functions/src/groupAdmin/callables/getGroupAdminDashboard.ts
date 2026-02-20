@@ -23,6 +23,7 @@ import {
   GroupAdminDashboardResponse,
 } from "../types";
 import { getLeaderboardSize } from "../groupAdminConfig";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -36,7 +37,7 @@ export const getGroupAdminDashboard = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GroupAdminDashboardResponse> => {
     ensureInitialized();
@@ -60,8 +61,8 @@ export const getGroupAdminDashboard = onCall(
       const profile = groupAdminDoc.data() as GroupAdmin;
 
       // Check status
-      if (profile.status === "blocked") {
-        throw new HttpsError("permission-denied", "Your account has been blocked");
+      if (profile.status === "banned") {
+        throw new HttpsError("permission-denied", "Your account has been banned");
       }
 
       // 3. Update current month stats if needed (transaction to avoid race with concurrent commissions)

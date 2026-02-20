@@ -22,6 +22,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // Lazy initialization to avoid issues during deployment analysis
 const IS_DEPLOYMENT_ANALYSIS =
@@ -214,7 +215,7 @@ async function syncLinkedProvidersToOutil(
 export const generateOutilToken = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     // Use the App Engine default service account which has Firestore access
     serviceAccount: "sos-urgently-ac307@appspot.gserviceaccount.com",
     // CRITICAL: Include the Outil service account secret

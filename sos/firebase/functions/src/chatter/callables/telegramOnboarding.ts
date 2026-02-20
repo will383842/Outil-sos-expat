@@ -594,7 +594,11 @@ export const telegramChatterBotWebhook = onRequest(
         return;
       }
       const headerSecret = req.headers["x-telegram-bot-api-secret-token"] as string;
-      if (!headerSecret || headerSecret !== webhookSecret) {
+      // AUDIT-FIX a1: Use timing-safe comparison to prevent timing attacks on webhook secret
+      if (!headerSecret || !crypto.timingSafeEqual(
+        Buffer.from(headerSecret, "utf8"),
+        Buffer.from(webhookSecret, "utf8")
+      )) {
         logger.warn("[telegramChatterBotWebhook] Invalid or missing webhook secret token");
         res.status(403).send("Forbidden");
         return;

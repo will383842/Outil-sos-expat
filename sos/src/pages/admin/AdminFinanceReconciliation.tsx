@@ -579,12 +579,12 @@ export default function AdminFinanceReconciliation() {
   // ACTIONS
   // ==========================================================================
 
+  // AUDIT-FIX C1: "syncReconciliation" does NOT exist in the backend
   const handleSync = useCallback(async () => {
     setSyncing(true);
     try {
-      // Call Cloud Function to sync with Stripe/PayPal
-      const syncReconciliation = httpsCallable(functions, 'syncReconciliation');
-      await syncReconciliation({ dateRange: filters.dateRange });
+      // Fallback: just refresh data from Firestore (no backend sync available)
+      console.warn('[Reconciliation] syncReconciliation: Backend function does not exist, refreshing data only');
       await fetchReconciliationData();
     } catch (err) {
       console.error('[Reconciliation] Sync error:', err);
@@ -592,7 +592,7 @@ export default function AdminFinanceReconciliation() {
     } finally {
       setSyncing(false);
     }
-  }, [filters.dateRange, fetchReconciliationData]);
+  }, [fetchReconciliationData]);
 
   const handleManualReconcile = useCallback(async (recordId: string) => {
     try {

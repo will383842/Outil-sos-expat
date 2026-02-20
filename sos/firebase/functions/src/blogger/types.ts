@@ -33,7 +33,7 @@ import { Timestamp } from "firebase-admin/firestore";
 export type BloggerStatus =
   | "active"      // Active, can earn commissions (immediate after registration)
   | "suspended"   // Temporarily suspended by admin
-  | "blocked";    // Permanently blocked
+  | "banned";     // Permanently banned (aligned with Chatter/Influencer terminology)
 
 /**
  * Supported languages for bloggers

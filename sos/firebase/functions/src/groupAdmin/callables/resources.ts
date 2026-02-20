@@ -16,6 +16,7 @@ import {
   GroupAdminResourceCategory,
   SupportedGroupAdminLanguage,
 } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -32,7 +33,7 @@ export const getGroupAdminResources = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GroupAdminResourcesResponse> => {
     ensureInitialized();
@@ -55,8 +56,8 @@ export const getGroupAdminResources = onCall(
 
       const groupAdmin = groupAdminDoc.data() as GroupAdmin;
 
-      if (groupAdmin.status === "blocked") {
-        throw new HttpsError("permission-denied", "Your account has been blocked");
+      if (groupAdmin.status === "banned") {
+        throw new HttpsError("permission-denied", "Your account has been banned");
       }
 
       // 3. Fetch all active resources
@@ -123,7 +124,7 @@ export const getGroupAdminResourceContent = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<ResourceContentResponse> => {
     ensureInitialized();
@@ -151,8 +152,8 @@ export const getGroupAdminResourceContent = onCall(
 
       const groupAdmin = groupAdminDoc.data() as GroupAdmin;
 
-      if (groupAdmin.status === "blocked") {
-        throw new HttpsError("permission-denied", "Your account has been blocked");
+      if (groupAdmin.status === "banned") {
+        throw new HttpsError("permission-denied", "Your account has been banned");
       }
 
       // 3. Get resource
@@ -210,7 +211,7 @@ export const trackGroupAdminResourceUsage = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -297,7 +298,7 @@ export const getGroupAdminProcessedResourceContent = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<ProcessedContentResponse> => {
     ensureInitialized();
@@ -325,8 +326,8 @@ export const getGroupAdminProcessedResourceContent = onCall(
 
       const groupAdmin = groupAdminDoc.data() as GroupAdmin;
 
-      if (groupAdmin.status === "blocked") {
-        throw new HttpsError("permission-denied", "Your account has been blocked");
+      if (groupAdmin.status === "banned") {
+        throw new HttpsError("permission-denied", "Your account has been banned");
       }
 
       // 3. Get resource

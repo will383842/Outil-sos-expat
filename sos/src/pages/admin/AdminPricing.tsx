@@ -1,5 +1,6 @@
 // src/pages/admin/AdminPricing.tsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { useIntl } from "react-intl";
 import {
   Settings,
@@ -301,7 +302,7 @@ const AdminPricing: React.FC = () => {
         selBase.totalAmount
       )
     ) {
-      alert(intl.formatMessage({ id: "admin.pricing.alertSumError" }));
+      toast.error(intl.formatMessage({ id: "admin.pricing.alertSumError" }));
       return;
     }
 
@@ -329,7 +330,7 @@ const AdminPricing: React.FC = () => {
       await performSave();
       // Invalidate frontend cache so changes reflect immediately
       clearPricingCache();
-      alert(intl.formatMessage({ id: "admin.pricing.alertBasePriceSaved" }));
+      toast.success(intl.formatMessage({ id: "admin.pricing.alertBasePriceSaved" }));
     } catch (error: unknown) {
       // If permission denied, try refreshing admin claims and retry
       const err = error as { code?: string; message?: string };
@@ -339,16 +340,16 @@ const AdminPricing: React.FC = () => {
           try {
             await performSave();
             clearPricingCache();
-            alert(intl.formatMessage({ id: "admin.pricing.alertBasePriceSaved" }));
+            toast.success(intl.formatMessage({ id: "admin.pricing.alertBasePriceSaved" }));
             return;
           } catch (retryError) {
             console.error("[AdminPricing] Save failed after claims refresh:", retryError);
           }
         }
-        alert(intl.formatMessage({ id: "admin.pricing.alertPermissionError" }));
+        toast.error(intl.formatMessage({ id: "admin.pricing.alertPermissionError" }));
       } else {
         console.error("[AdminPricing] Save error:", error);
-        alert(intl.formatMessage({ id: "admin.pricing.alertSaveError" }) + " " + (err?.message || intl.formatMessage({ id: "admin.pricing.alertUnknownError" })));
+        toast.error(intl.formatMessage({ id: "admin.pricing.alertSaveError" }) + " " + (err?.message || intl.formatMessage({ id: "admin.pricing.alertUnknownError" })));
       }
     }
   };
@@ -359,7 +360,7 @@ const AdminPricing: React.FC = () => {
         const s = toDate(selPromo.startsAt)!;
         const e = toDate(selPromo.endsAt)!;
         if (s >= e) {
-          alert(intl.formatMessage({ id: "admin.pricing.alertDateError" }));
+          toast.error(intl.formatMessage({ id: "admin.pricing.alertDateError" }));
           return;
         }
       }
@@ -370,7 +371,7 @@ const AdminPricing: React.FC = () => {
           selPromo.totalAmount
         )
       ) {
-        alert(intl.formatMessage({ id: "admin.pricing.alertSumErrorPromo" }));
+        toast.error(intl.formatMessage({ id: "admin.pricing.alertSumErrorPromo" }));
         return;
       }
     }
@@ -405,7 +406,7 @@ const AdminPricing: React.FC = () => {
       await performSave();
       // Invalidate frontend cache so changes reflect immediately
       clearPricingCache();
-      alert(intl.formatMessage({ id: "admin.pricing.alertPromoPriceSaved" }));
+      toast.success(intl.formatMessage({ id: "admin.pricing.alertPromoPriceSaved" }));
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };
       if (err?.code === "permission-denied" || err?.message?.includes("permission")) {
@@ -414,16 +415,16 @@ const AdminPricing: React.FC = () => {
           try {
             await performSave();
             clearPricingCache();
-            alert(intl.formatMessage({ id: "admin.pricing.alertPromoPriceSaved" }));
+            toast.success(intl.formatMessage({ id: "admin.pricing.alertPromoPriceSaved" }));
             return;
           } catch (retryError) {
             console.error("[AdminPricing] Promo save failed after claims refresh:", retryError);
           }
         }
-        alert(intl.formatMessage({ id: "admin.pricing.alertPermissionError" }));
+        toast.error(intl.formatMessage({ id: "admin.pricing.alertPermissionError" }));
       } else {
         console.error("[AdminPricing] Promo save error:", error);
-        alert(intl.formatMessage({ id: "admin.pricing.alertSaveError" }) + " " + (err?.message || intl.formatMessage({ id: "admin.pricing.alertUnknownError" })));
+        toast.error(intl.formatMessage({ id: "admin.pricing.alertSaveError" }) + " " + (err?.message || intl.formatMessage({ id: "admin.pricing.alertUnknownError" })));
       }
     }
   };
@@ -461,10 +462,10 @@ const AdminPricing: React.FC = () => {
             console.error("[AdminPricing] Stackable save failed after claims refresh:", retryError);
           }
         }
-        alert(intl.formatMessage({ id: "admin.pricing.alertPermissionError" }));
+        toast.error(intl.formatMessage({ id: "admin.pricing.alertPermissionError" }));
       } else {
         console.error("[AdminPricing] Stackable save error:", error);
-        alert(intl.formatMessage({ id: "admin.pricing.alertSaveError" }));
+        toast.error(intl.formatMessage({ id: "admin.pricing.alertSaveError" }));
       }
     }
   };

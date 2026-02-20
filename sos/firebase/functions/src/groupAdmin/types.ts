@@ -22,7 +22,7 @@ import { Timestamp } from "firebase-admin/firestore";
 export type GroupAdminStatus =
   | "active"      // Active, can earn commissions
   | "suspended"   // Temporarily suspended by admin
-  | "blocked";    // Permanently blocked
+  | "banned";     // Permanently banned (aligned with Chatter/Influencer terminology)
 
 /**
  * Supported languages for GroupAdmins

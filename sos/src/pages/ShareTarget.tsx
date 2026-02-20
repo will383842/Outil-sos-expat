@@ -75,7 +75,7 @@ const ShareTarget: React.FC = () => {
         break;
       case 'document':
         // Navigate to document upload
-        navigate('/upload-document', {
+        navigate('/dashboard', {
           state: { sharedContent: sharedData },
         });
         break;

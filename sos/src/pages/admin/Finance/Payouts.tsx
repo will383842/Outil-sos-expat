@@ -4,6 +4,7 @@
 // =============================================================================
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import toast from 'react-hot-toast';
 import {
   collection,
   query,
@@ -571,72 +572,20 @@ const Payouts: React.FC = () => {
     }
   }, [pendingCalls]);
 
-  // Trigger manual payout
-  const triggerManualPayout = useCallback(async (payoutId: string) => {
-    if (!confirm(intl.formatMessage({ id: 'admin.finance.payouts.confirmManualPayout' }))) return;
+  // AUDIT-FIX C1: "processProviderPayout" does NOT exist in the backend
+  const triggerManualPayout = useCallback(async (_payoutId: string) => {
+    toast.error('Fonction non disponible : processProviderPayout n\'est pas implémentée côté backend');
+  }, []);
 
-    setIsProcessing(true);
-    try {
-      const processPayoutFn = httpsCallable(functions, 'processProviderPayout');
-      await processPayoutFn({ payoutId });
+  // AUDIT-FIX C1: "retryProviderPayout" does NOT exist in the backend
+  const retryFailedPayout = useCallback(async (_payoutId: string) => {
+    toast.error('Fonction non disponible : retryProviderPayout n\'est pas implémentée côté backend');
+  }, []);
 
-      // Refresh payouts
-      await loadPayouts(true);
-      await calculateStats();
-
-      alert(intl.formatMessage({ id: 'admin.finance.payouts.payoutTriggered' }));
-    } catch (error) {
-      console.error('Error triggering payout:', error);
-      alert(intl.formatMessage({ id: 'admin.finance.payouts.payoutError' }));
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [intl, loadPayouts, calculateStats]);
-
-  // Retry failed payout
-  const retryFailedPayout = useCallback(async (payoutId: string) => {
-    if (!confirm(intl.formatMessage({ id: 'admin.finance.payouts.confirmRetry' }))) return;
-
-    setIsProcessing(true);
-    try {
-      const retryPayoutFn = httpsCallable(functions, 'retryProviderPayout');
-      await retryPayoutFn({ payoutId });
-
-      await loadPayouts(true);
-      await calculateStats();
-
-      alert(intl.formatMessage({ id: 'admin.finance.payouts.retrySuccess' }));
-    } catch (error) {
-      console.error('Error retrying payout:', error);
-      alert(intl.formatMessage({ id: 'admin.finance.payouts.retryError' }));
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [intl, loadPayouts, calculateStats]);
-
-  // Process batch payout
+  // AUDIT-FIX C1: "processBatchPayout" does NOT exist in the backend
   const processBatchPayout = useCallback(async () => {
-    if (selectedForBatch.size === 0) return;
-    if (!confirm(intl.formatMessage({ id: 'admin.finance.payouts.confirmBatch' }, { count: selectedForBatch.size }))) return;
-
-    setIsProcessing(true);
-    try {
-      const batchPayoutFn = httpsCallable(functions, 'processBatchPayout');
-      await batchPayoutFn({ payoutIds: Array.from(selectedForBatch) });
-
-      setSelectedForBatch(new Set());
-      setShowBatchModal(false);
-      await loadPayouts(true);
-      await calculateStats();
-
-      alert(intl.formatMessage({ id: 'admin.finance.payouts.batchSuccess' }));
-    } catch (error) {
-      console.error('Error processing batch payout:', error);
-      alert(intl.formatMessage({ id: 'admin.finance.payouts.batchError' }));
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [selectedForBatch, intl, loadPayouts, calculateStats]);
+    toast.error('Fonction non disponible : processBatchPayout n\'est pas implémentée côté backend');
+  }, []);
 
   // Export for accounting
   const handleExportCSV = useCallback(() => {
@@ -692,10 +641,10 @@ const Payouts: React.FC = () => {
         updatedAt: Timestamp.now(),
       });
       setShowScheduleModal(false);
-      alert(intl.formatMessage({ id: 'admin.finance.payouts.scheduleUpdated' }));
+      toast.success(intl.formatMessage({ id: 'admin.finance.payouts.scheduleUpdated' }));
     } catch (error) {
       console.error('Error saving schedule config:', error);
-      alert(intl.formatMessage({ id: 'admin.finance.payouts.scheduleError' }));
+      toast.error(intl.formatMessage({ id: 'admin.finance.payouts.scheduleError' }));
     }
   }, [scheduleConfig, intl]);
 

@@ -3,11 +3,12 @@ import { scheduleCallTaskWithIdempotence } from '../lib/tasks';
 import { getFirestore } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
 // 🔧 FIX CRITIQUE: Configuration d'optimisation CPU
 const CPU_OPTIMIZED_CONFIG = {
   region: 'europe-west1' as const,
-  cors: true,
+  cors: ALLOWED_ORIGINS,
   memory: '256MiB' as const,
   cpu: 0.25 as const,
   timeoutSeconds: 30,

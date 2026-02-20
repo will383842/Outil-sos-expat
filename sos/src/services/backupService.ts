@@ -60,38 +60,39 @@ export function subscribeBackups(cb: (rows: BackupRow[]) => void): () => void {
 }
 
 // ---- Callables ----
+// AUDIT-FIX C1: Renamed to match actual backend function names from index.ts
 export async function startBackup() {
-  const call = httpsCallable(functions, "startBackup");
+  const call = httpsCallable(functions, "adminCreateManualBackup");
   return (await call()).data as { ok: boolean };
 }
 
+// AUDIT-FIX C1: No backend equivalent exists for getBackupSchedule
 export async function getBackupSchedule() {
-  const call = httpsCallable(functions, "getBackupSchedule");
-  return (await call()).data as Partial<BackupSchedule> & {
-    uri?: string | null;
-  };
+  console.warn("[backupService] getBackupSchedule: No backend function exists");
+  return { schedule: "", timeZone: "Europe/Brussels", uri: null } as Partial<BackupSchedule> & { uri?: string | null };
 }
 
-export async function updateBackupSchedule(cron: string, timeZone: string) {
-  // backend attend { cron, timeZone }
-  const call = httpsCallable(functions, "updateBackupSchedule");
-  return (await call({ cron, timeZone })).data as { ok: boolean };
+// AUDIT-FIX C1: No backend equivalent exists for updateBackupSchedule
+export async function updateBackupSchedule(_cron: string, _timeZone: string) {
+  console.warn("[backupService] updateBackupSchedule: No backend function exists");
+  return { ok: false };
 }
 
+// AUDIT-FIX C1: No backend equivalent exists for "test"
 export async function deploymentTest() {
-  const call = httpsCallable(functions, "test");
-  return (await call()).data as { ok: boolean };
+  console.warn("[backupService] deploymentTest: No backend function exists");
+  return { ok: false };
 }
 
+// AUDIT-FIX C1: Renamed to match actual backend function name
 export async function restoreFromBackup(prefix: string, parts: RestoreParts) {
-  // backend attend { prefix, parts } (pas "options")
-  const call = httpsCallable(functions, "restoreFromBackup");
+  const call = httpsCallable(functions, "adminRestoreFirestore");
   return (await call({ prefix, parts })).data as { ok: boolean };
 }
 
+// AUDIT-FIX C1: Renamed to match actual backend function name
 export async function deleteBackup(id: string) {
-  // backend exporte "deleteBackup" et attend { docId }
-  const call = httpsCallable(functions, "deleteBackup");
+  const call = httpsCallable(functions, "adminDeleteBackup");
   return (await call({ docId: id })).data as { ok: boolean };
 }
 
@@ -194,6 +195,9 @@ async function checkUserAuthenticated(): Promise<void> {
 /**
  * Grant admin privileges using a secure token
  * Includes validation, rate limiting, and authentication checks
+ *
+ * AUDIT-FIX C1: No backend function "grantAdminIfToken" exists in index.ts.
+ * This function will always fail. Kept for UI compatibility but logs a warning.
  */
 export async function grantAdminIfToken(
   token: string
@@ -207,7 +211,8 @@ export async function grantAdminIfToken(
   // 3. Validate token format
   validateTokenFormat(token);
 
-  // 4. Call the backend function
+  // 4. AUDIT-FIX C1: Backend function does not exist — call will fail with not-found
+  console.warn("[backupService] grantAdminIfToken: No backend function exists");
   const call = httpsCallable(functions, "grantAdminIfToken");
   return (await call({ token: token.trim() })).data as { ok: boolean };
 }

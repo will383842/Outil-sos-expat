@@ -28,6 +28,7 @@ import {
   NotificationSettings,
 } from "../types";
 import { DEFAULT_TEMPLATES, TEMPLATE_VARIABLES } from "../templates";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // ============================================================================
 // CONSTANTS
@@ -143,7 +144,7 @@ interface UpdateTemplateRequest {
 export const telegram_updateConfig = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -247,7 +248,7 @@ export const telegram_updateConfig = onCall(
 export const telegram_getConfig = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -323,7 +324,7 @@ export const telegram_getConfig = onCall(
 export const telegram_getChatId = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -399,7 +400,7 @@ export const telegram_getChatId = onCall(
 export const telegram_validateBot = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -444,7 +445,7 @@ export const telegram_validateBot = onCall(
 export const telegram_updateTemplate = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -549,7 +550,7 @@ export const telegram_updateTemplate = onCall(
 export const telegram_getTemplates = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

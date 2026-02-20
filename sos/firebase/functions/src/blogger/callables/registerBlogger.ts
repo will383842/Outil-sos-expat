@@ -26,6 +26,7 @@ import { generateBloggerAffiliateCodes } from "../utils/bloggerCodeGenerator";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 import { hashIP } from "../../chatter/utils";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // ============================================================================
 // VALIDATION
@@ -140,7 +141,7 @@ export const registerBlogger = onCall(
     region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
   },
   async (request): Promise<RegisterBloggerResponse> => {

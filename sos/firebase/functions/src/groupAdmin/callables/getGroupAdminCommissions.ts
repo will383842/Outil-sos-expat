@@ -10,6 +10,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { GroupAdminCommission } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 function ensureInitialized() {
   if (!getApps().length) {
@@ -35,7 +36,7 @@ export const getGroupAdminCommissions = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetGroupAdminCommissionsResponse> => {
     ensureInitialized();

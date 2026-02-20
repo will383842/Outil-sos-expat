@@ -599,7 +599,7 @@ const CallCheckoutWrapper: React.FC = () => {
 
           <div className="space-y-2">
             <button
-              onClick={() => navigate('/experts')}
+              onClick={() => navigate('/sos-appel')}
               className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-colors"
             >
               {t('cta.select_expert')}

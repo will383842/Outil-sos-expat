@@ -23,6 +23,7 @@ import {
 import {
   getActivePromotions,
 } from "../services/chatterPromotionService";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -36,7 +37,7 @@ export const getReferralDashboard = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetReferralDashboardResponse> => {
     ensureInitialized();

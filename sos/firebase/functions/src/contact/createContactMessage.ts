@@ -14,6 +14,7 @@ import { onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { Timestamp } from "firebase-admin/firestore";
 import { META_CAPI_TOKEN, trackCAPILead, UserData } from "../metaConversionsApi";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 const REGION = "europe-west1";
 
@@ -141,7 +142,7 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining
 export const createContactMessage = onRequest(
   {
     region: REGION,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     maxInstances: 10,
     secrets: [META_CAPI_TOKEN],
   },

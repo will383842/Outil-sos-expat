@@ -13,13 +13,14 @@ import {
   Blogger,
   BloggerMonthlyRanking,
 } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 export const getBloggerLeaderboard = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetBloggerLeaderboardResponse> => {
     // 1. Check authentication

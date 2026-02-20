@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import toast from "react-hot-toast";
 import {
   Send,
   CheckCircle,
@@ -731,7 +732,7 @@ const Contact: React.FC = () => {
             lang === "fr"
               ? "Trop de messages envoyés. Veuillez réessayer dans quelques minutes."
               : "Too many messages sent. Please try again in a few minutes.";
-          alert(errorMsg);
+          toast.error(errorMsg);
           return;
         } else if (response.status === 400) {
           // Erreur de validation
@@ -741,7 +742,7 @@ const Contact: React.FC = () => {
             (lang === "fr"
               ? "Données invalides. Veuillez vérifier le formulaire."
               : "Invalid data. Please check the form.");
-          alert(errorMsg);
+          toast.error(errorMsg);
           return;
         } else {
           // Erreur serveur (500 ou autre)
@@ -749,7 +750,7 @@ const Contact: React.FC = () => {
             lang === "fr"
               ? "Une erreur serveur est survenue. Veuillez réessayer plus tard."
               : "A server error occurred. Please try again later.";
-          alert(errorMsg);
+          toast.error(errorMsg);
           return;
         }
       }
@@ -821,7 +822,7 @@ const Contact: React.FC = () => {
       setShowErrors(false);
     } catch (error) {
       console.error("Error sending message:", error);
-      alert(t.errorSending);
+      toast.error(t.errorSending);
     } finally {
       setIsLoading(false);
     }

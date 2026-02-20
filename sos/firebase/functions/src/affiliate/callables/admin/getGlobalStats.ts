@@ -48,7 +48,7 @@ async function assertAdmin(request: CallableRequest): Promise<string> {
 
 export const getAffiliateGlobalStats = onCall(
   {
-    region: "europe-west1",
+    region: "europe-west2",
     memory: "512MiB",
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,

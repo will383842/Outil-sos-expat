@@ -336,7 +336,7 @@ export const adminUpdateGroupAdminStatus = onCall(
       throw new HttpsError("invalid-argument", "GroupAdmin ID and status are required");
     }
 
-    const validStatuses: GroupAdminStatus[] = ["active", "suspended", "blocked"];
+    const validStatuses: GroupAdminStatus[] = ["active", "suspended", "banned"];
     if (!validStatuses.includes(input.status)) {
       throw new HttpsError("invalid-argument", "Invalid status");
     }

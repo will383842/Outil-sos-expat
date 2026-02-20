@@ -17,6 +17,7 @@ import {
   updateGroupStatus,
 } from "../services/chatterGroupService";
 import type { ChatterPlatform, SupportedChatterLanguage, ChatterGroup, Chatter } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -71,7 +72,7 @@ export const submitGroup = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -149,7 +150,7 @@ export const getAvailableGroups = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -196,7 +197,7 @@ export const getMyGroups = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -229,7 +230,7 @@ export const joinGroupAsChatter = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -293,7 +294,7 @@ export const adminGetGroups = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();
@@ -341,7 +342,7 @@ export const adminUpdateGroupStatus = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     ensureInitialized();

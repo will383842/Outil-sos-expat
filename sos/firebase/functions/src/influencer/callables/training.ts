@@ -25,6 +25,7 @@ import {
   SubmitInfluencerTrainingQuizResponse,
   GetInfluencerTrainingCertificateResponse,
 } from "../types";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -45,7 +46,7 @@ export const getInfluencerTrainingModules = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetInfluencerTrainingModulesResponse> => {
     ensureInitialized();
@@ -168,7 +169,7 @@ export const getInfluencerTrainingModuleContent = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetInfluencerTrainingModuleContentResponse> => {
     ensureInitialized();
@@ -328,7 +329,7 @@ export const updateInfluencerTrainingProgress = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 30,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -388,7 +389,7 @@ export const submitInfluencerTrainingQuiz = onCall(
     region: "europe-west2",
     memory: "256MiB",
     timeoutSeconds: 60,
-    cors: true,
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<SubmitInfluencerTrainingQuizResponse> => {
     ensureInitialized();

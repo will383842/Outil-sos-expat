@@ -1,5 +1,6 @@
 // src/pages/admin/AdminHelpCenter.tsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useIntl } from "react-intl";
 import {
@@ -642,7 +643,7 @@ const AdminHelpCenter: React.FC = () => {
   const handleSaveCategory = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!categoryNameInput.trim()) {
-      alert(t('admin.helpCenter.alertCategoryName'));
+      toast.error(t('admin.helpCenter.alertCategoryName'));
       return;
     }
     setIsSaving(true);
@@ -675,7 +676,7 @@ const AdminHelpCenter: React.FC = () => {
       }, 100);
     } catch (error) {
       console.error("Error saving category", error);
-      alert(t('admin.helpCenter.alertSaveCategoryError'));
+      toast.error(t('admin.helpCenter.alertSaveCategoryError'));
     } finally {
       setIsSaving(false);
       setTranslating(false);
@@ -704,11 +705,11 @@ const AdminHelpCenter: React.FC = () => {
   const handleSaveArticle = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!articleForm.categoryId) {
-      alert(t('admin.helpCenter.alertSelectCategory'));
+      toast.error(t('admin.helpCenter.alertSelectCategory'));
       return;
     }
     if (!articleTitleInput.trim() || !articleExcerptInput.trim() || !articleContentInput.trim()) {
-      alert(t('admin.helpCenter.alertFillFields'));
+      toast.error(t('admin.helpCenter.alertFillFields'));
       return;
     }
     setIsSaving(true);
@@ -762,7 +763,7 @@ const AdminHelpCenter: React.FC = () => {
       }, 100);
     } catch (error) {
       console.error("Error saving article", error);
-      alert(t('admin.helpCenter.alertSaveArticleError'));
+      toast.error(t('admin.helpCenter.alertSaveArticleError'));
     } finally {
       setIsSaving(false);
       setTranslating(false);
@@ -897,7 +898,7 @@ const AdminHelpCenter: React.FC = () => {
       await refreshAll();
     } catch (error) {
       console.error("Error resetting Help Center:", error);
-      alert(t('admin.helpCenter.alertResetError') + " " + (error instanceof Error ? error.message : String(error)));
+      toast.error(t('admin.helpCenter.alertResetError') + " " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsResetting(false);
     }
