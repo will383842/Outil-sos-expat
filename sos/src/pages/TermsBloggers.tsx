@@ -694,103 +694,146 @@ const TermsBloggers: React.FC = () => {
 
 4.2. **Commission de Recrutement Prestataire.** Le Bloggeur perçoit **$5** pour chaque appel payant réalisé par un prestataire qu'il a recruté, pendant **12 mois** à compter de la date d'inscription du prestataire. Passé ce délai, les commissions de recrutement prestataire cessent automatiquement.
 
-4.3. **Commission de Recrutement Bloggeur (Filleul N1).** Le Bloggeur perçoit une commission sur chaque appel client généré par ses Filleuls Bloggeurs N1, pendant **12 mois** à compter de la date d'inscription du Filleul N1. **Conditions cumulatives pour percevoir cette commission :**
-- Le Bloggeur doit réaliser un minimum de **$50 de commissions directes** (article 4.1) au cours du mois civil concerné
-- Le Bloggeur doit s'assurer de la formation et du suivi de ses Filleuls N1 (au minimum : partage du guide d'intégration, réponse aux questions dans un délai de 48h)
-- En l'absence de ces conditions sur un mois donné, les commissions N1 de ce mois sont suspendues (non rétroactives)
+4.3. **Prime de recrutement d'un Bloggeur.** Pour chaque Bloggeur recruté via le code de parrainage, le Bloggeur-parrain perçoit une **prime unique de $50** lorsque le Bloggeur recruté cumule **$200 de commissions totales**. Cette prime est versée **une seule fois** par Bloggeur recruté, sans commission récurrente sur les appels futurs de ce Bloggeur.
 
-4.4. **Commission de Recrutement Bloggeur (Filleul N2).** Le Bloggeur perçoit une commission sur chaque appel généré par ses Filleuls N2, pendant **12 mois** à compter de la date d'inscription du Filleul N2. Les **mêmes conditions cumulatives** qu'en 4.3 s'appliquent.
+4.4. **Modèle d'attribution (tracking).** Le suivi des recommandations est basé sur un **cookie Last-Click valable 30 jours** : tout clic sur le widget ou le lien affilié crée un cookie de 30 jours dans le navigateur du visiteur. Si ce visiteur effectue un appel payant dans ce délai, la commission est attribuée au Bloggeur. Un nouveau clic sur un autre lien affilié écrase le cookie précédent. Le Bloggeur reconnaît que la désactivation des cookies par l'utilisateur peut empêcher l'attribution.
 
-4.5. **Durée maximale des commissions d'affiliation.** Les commissions sur les Filleuls (N1 et N2) et sur les prestataires recrutés sont versées pendant **12 mois maximum** à compter de la date d'inscription de chaque filleul/prestataire. Passé ce délai, le Bloggeur conserve uniquement ses commissions directes (article 4.1).
+4.5. **Période de validation (Hold Period).** Les commissions sont soumises à une période de rétention avant d'être payables :
+- Statut **« en attente »** : pendant la **période de rétractation client (14 jours)** suivant l'appel
+- Statut **« validée »** : après vérification anti-fraude automatique passée
+- Statut **« payable »** : au prochain cycle de paiement mensuel suivant la validation
 
-4.6. **Seuils de paiement.** Les commissions sont validées après :
-- Période de rétractation client (14 jours)
-- Validation anti-fraude automatique
-- Atteinte du seuil minimum de retrait (**$20**)
+4.6. **Politique de remboursement et claw-back.** En cas de remboursement d'un appel client ou de chargeback bancaire :
+- La commission correspondante est **annulée** si elle est encore en statut « en attente » ou « validée »
+- Si la commission a déjà été versée, elle est **déduite du prochain paiement** (claw-back)
+- SOS Expat peut récupérer des commissions versées en cas de fraude détectée a posteriori, dans un délai de **12 mois** après versement
 
-4.7. **Barèmes de commissions (récapitulatif).**
+4.7. **Absence de garantie de revenus.** SOS Expat ne garantit aucun niveau minimum de trafic, d'appels ou de revenus. Les performances passées ne constituent pas une garantie des revenus futurs.
 
-| Type de commission | Montant | Durée |
-|---|---|---|
-| Appel client direct (widget/lien) | $10/appel | Illimitée |
-| Appel d'un prestataire recruté | $5/appel | 12 mois |
-| Appel généré par Filleul Bloggeur N1 | Variable | 12 mois |
-| Appel généré par Filleul Bloggeur N2 | Variable | 12 mois |
+4.8. **Barèmes de commissions (récapitulatif).**
 
-4.8. **Bonus de performance.** Des bonus supplémentaires peuvent être accordés pour les Bloggeurs générant un volume élevé d'appels ou de recrutements.
+| Type de commission | Montant | Durée | Conditions |
+|---|---|---|---|
+| Appel client direct (widget/lien) | $10/appel | Illimitée | Aucune |
+| Appel via prestataire recruté | $5/appel | 12 mois max | Aucune |
+| Prime recrutement d'un bloggeur | $50 (unique) | Une seule fois | Bloggeur recruté atteint $200 cumulé |
+
+4.9. **Seuil de retrait.** Retrait disponible à partir de **$20** de solde validé.
 
 ---
 
 ## 5. Règles anti-fraude
 
-5.1. **Interdictions strictes.** Sont formellement interdits :
-- L'auto-parrainage ou parrainage croisé fictif
-- La génération artificielle d'appels (faux clients, self-calls)
-- L'utilisation de bots ou scripts automatisés
-- La création de comptes multiples
-- L'intégration du widget sur des sites non déclarés
-- Toute manipulation des systèmes de tracking
+5.1. **Fraude au tracking — Interdictions absolues.** Sont formellement interdits, sous peine de résiliation immédiate et de poursuites judiciaires :
+- **Cookie stuffing** : injection de cookies affiliés dans le navigateur d'un tiers sans clic réel
+- **Clic forcé** : redirection automatique d'un utilisateur vers une page affiliée sans action de sa part
+- **Auto-parrainage** : utilisation de son propre code pour générer des appels ou recruter des comptes fictifs
+- **Parrainage croisé fictif** : organisation entre plusieurs comptes pour se parrainer mutuellement
+- **Trafic artificiel / bots** : utilisation de scripts, robots, fermes de clics ou services d'achat de trafic
+- **Intégration du widget sur des sites non déclarés** ou non validés par SOS Expat
+- **Création de comptes multiples** sous une même identité ou des identités liées
+- **Manipulation de tracking** : toute tentative de modifier, contourner ou exploiter les systèmes d'attribution
 
-5.2. **Détection automatique.** SOS Expat utilise des systèmes de détection incluant :
-- Analyse des patterns d'appels suspects
-- Vérification de l'authenticité du trafic web
+5.2. **Contenus interdits.** Le Bloggeur ne peut pas promouvoir SOS Expat via des contenus liés à :
+- Contenus pornographiques, violents ou à caractère haineux
+- Jeux d'argent illégaux, cryptomonnaies non réglementées
+- Drogues, armes, activités illicites
+- Contrefaçon ou violation de droits d'auteur
+- Contenus visant des mineurs pour des services adultes
+- Désinformation, spam SEO, contenu dupliqué
+
+5.3. **Enchères sur la marque.** Il est formellement interdit d'utiliser les termes « SOS Expat », « sos-expat.com » ou variantes orthographiques comme mots-clés dans des campagnes publicitaires payantes sans autorisation écrite préalable.
+
+5.4. **Pratiques SEO interdites.** Sont interdits : l'achat de liens vers les pages affiliées, le cloaking, le contenu dupliqué (scraping) pour multiplier les pages de promotion.
+
+5.5. **Détection automatique.** SOS Expat utilise des systèmes de détection incluant :
+- Analyse des patterns d'appels et de clics suspects
+- Vérification de l'authenticité et de l'origine du trafic web
 - Analyse des taux de conversion anormaux
+- Vérification des sites déclarés vs sites réels d'intégration du widget
 
-5.3. **Sanctions.** En cas de fraude avérée ou suspectée :
-- **Suspension immédiate** du compte
-- **Annulation** de toutes les commissions concernées
+5.6. **Sanctions graduées.** En cas de violation :
+- **Avertissement** pour première violation mineure
+- **Suspension temporaire** du compte et gel des commissions
+- **Annulation** de toutes les commissions liées à la fraude (claw-back si déjà versées)
 - **Bannissement définitif** de la Plateforme
-- **Poursuites judiciaires** le cas échéant
+- **Poursuites judiciaires** et demande de dommages et intérêts le cas échéant
 
-5.4. **Recours.** Le Bloggeur peut contester une sanction via le formulaire de contact dans un délai de **30 jours**.
+5.7. **Recours multi-niveaux.** Le Bloggeur peut contester une sanction selon le processus suivant :
+- **Niveau 1** : contestation via le formulaire de contact dans un délai de **30 jours** (réponse sous 15 jours ouvrés)
+- **Niveau 2** : escalade à l'équipe Compliance si insatisfaction, dans un délai supplémentaire de **15 jours**
+- **Niveau 3** : arbitrage CCI (article 12) si aucune résolution amiable n'est trouvée
 
 ---
 
 ## 6. Obligations du Bloggeur
 
 6.1. **Intégration du Widget.** Le Bloggeur s'engage à :
-- Intégrer le widget SOS Expat de manière visible sur son site
-- Ne pas modifier le code du widget sans autorisation
-- Maintenir le widget fonctionnel et à jour
-- Signaler tout problème technique à SOS Expat
+- Intégrer le widget SOS Expat de manière visible et fonctionnelle sur son site déclaré
+- Ne pas modifier le code du widget sans autorisation écrite préalable
+- Maintenir le widget fonctionnel et à jour (dernière version fournie par SOS Expat)
+- Signaler tout problème technique à SOS Expat dans un délai raisonnable
+- Retirer le widget dans les **30 jours** suivant la résiliation du compte
 
-6.2. **Qualité du contenu.** Le Bloggeur s'engage à :
+6.2. **Transparence publicitaire — Obligations légales.**
+
+*Union Européenne / France :* Tout contenu promotionnel pour SOS Expat doit mentionner **« Publicité »** ou **« Collaboration commerciale »** (loi française n° 2023-451 du 9 juin 2023). Mention obligatoire en début d'article ou de contenu.
+
+*États-Unis — FTC :* Divulgation claire et visible avant tout lien affilié : "#ad", "#sponsored", ou "Ce post contient des liens affiliés".
+
+*Australie — ACCC :* Labels acceptés : "#Ad", "Advertising", "Branded Content", "Paid Partnership".
+
+**Le Bloggeur est responsable du respect des réglementations publicitaires applicables dans chaque pays ciblé par son site.**
+
+6.3. **Qualité du contenu.** Le Bloggeur s'engage à :
 - Promouvoir SOS Expat de manière honnête et éthique
-- Ne pas faire de promesses ou affirmations trompeuses sur les services
-- Identifier clairement les contenus sponsorisés ou partenariaux
+- Ne formuler que des affirmations véridiques et vérifiables sur les services
+- Ne pas promettre de résultats garantis à ses visiteurs
 - Respecter les chartes graphiques et guidelines de marque SOS Expat
 
-6.3. **Suivi des filleuls.** Le Bloggeur qui recrute d'autres Bloggeurs s'engage à :
+6.4. **Suivi des Bloggeurs recrutés.** Le Bloggeur qui recrute d'autres Bloggeurs s'engage à :
 - Partager le guide d'intégration et les ressources fournies par SOS Expat
 - Répondre aux questions de ses Filleuls dans un délai de **48 heures**
 - Assurer un suivi minimum pour garantir une intégration correcte du widget
 
-6.4. **Conformité légale.** Le Bloggeur respecte toutes les lois applicables :
-- Règles de publicité et de mention des partenariats commerciaux
-- Protection des données de ses visiteurs (RGPD, mentions légales)
+6.5. **Sous-affiliation interdite.** Le Bloggeur ne peut pas déléguer, sous-licencier ou céder ses droits affiliés à des tiers sans accord écrit préalable de SOS Expat.
+
+6.6. **Exclusivité partielle.** Le Bloggeur peut intégrer d'autres widgets ou liens affiliés, à l'exclusion des **concurrents directs de SOS Expat** (plateformes de mise en relation expatriés/avocats ou experts juridiques en ligne proposant des services similaires).
+
+6.7. **Conformité légale générale.** Le Bloggeur respecte toutes les lois applicables :
+- Règles de publicité et de mention des partenariats commerciaux (selon pays ciblés)
+- Protection des données de ses visiteurs (RGPD, mentions légales, politique cookies)
 - Déclaration fiscale de ses revenus d'affiliation
 - Respect des droits d'auteur et de propriété intellectuelle
 
-6.5. **Indépendance.** Le Bloggeur agit en **indépendant** ; aucun lien d'emploi, mandat ou agence n'est créé avec SOS Expat.
+6.8. **Indépendance.** Le Bloggeur agit en **prestataire indépendant** ; aucun lien d'emploi, contrat de travail, mandat ou relation d'agence n'est créé avec SOS Expat. Le Bloggeur est seul responsable de ses cotisations sociales et obligations fiscales.
 
 ---
 
 ## 7. Paiement des commissions
 
-7.1. **KYC obligatoire.** Le Bloggeur doit compléter la vérification d'identité (KYC) **avant** tout retrait.
+7.1. **KYC obligatoire.** Le Bloggeur doit compléter la vérification d'identité (KYC) **avant** tout retrait. Le KYC doit être initié dans les **90 jours** suivant la première commission validée.
 
 7.2. **Méthodes de paiement.** Les retraits sont disponibles via :
 - Virement bancaire (SEPA/International)
 - PayPal
 - Wise
 
-7.3. **Délais.** Les paiements sont traités sous **7 jours ouvrés** après validation.
+7.3. **Délais.** Les paiements sont traités sous **7 jours ouvrés** après validation. Les délais d'encaissement dépendent également de la banque du Bloggeur.
 
 7.4. **Seuil minimum.** Le retrait est possible à partir de **$20** de solde disponible.
 
-7.5. **Fonds non réclamés.** En cas de non-complétion du KYC sous **180 jours**, les fonds sont considérés abandonnés conformément à l'article 8.7 des CGU générales.
+7.5. **Devise et conversion.** Tous les paiements sont libellés en **USD**. Si le Bloggeur souhaite être payé dans une autre devise, la conversion s'effectue au taux du jour Wise au moment du virement. Les **frais de conversion sont à la charge du Bloggeur**.
 
-7.6. **Taxes.** Le Bloggeur est seul responsable de la déclaration et du paiement de ses impôts et charges liés à ses revenus d'affiliation.
+7.6. **Fonds non réclamés.** En cas de non-complétion du KYC sous **180 jours** après la première commission validée, les fonds sont considérés abandonnés et peuvent être restitués à SOS Expat conformément aux lois applicables.
+
+7.7. **Obligations fiscales — Général.** Le Bloggeur est seul responsable de la déclaration et du paiement de ses impôts, taxes et cotisations sociales liés à ses revenus d'affiliation dans son pays de résidence.
+
+7.8. **Obligations fiscales — USA (non-résidents).** Les Bloggeurs non-résidents aux États-Unis percevant des paiements d'un opérateur américain doivent fournir le formulaire **W-8BEN** (personnes physiques) ou **W-8BEN-E** (entités) avant tout paiement. Sans ce formulaire, une retenue à la source de **30%** peut être appliquée.
+
+7.9. **TVA / GST.** Les commissions versées sont exprimées hors taxes. Le Bloggeur assujetti à la TVA est responsable de son application et de sa déclaration.
+
+7.10. **Justificatifs.** SOS Expat fournit au Bloggeur un relevé mensuel détaillé des commissions générées, validées et versées, accessible depuis le dashboard.
 
 ---
 
@@ -798,35 +841,47 @@ const TermsBloggers: React.FC = () => {
 
 8.1. **Suspension temporaire.** SOS Expat peut suspendre un compte en cas de :
 - Suspicion de fraude ou de manipulation de trafic
-- Violation des CGU
-- Retrait du widget du site sans information préalable
+- Violation des CGU ou des règles de transparence publicitaire
+- Retrait du widget du site sans information préalable à SOS Expat
 - Inactivité prolongée (365+ jours sans aucune activité)
 
-8.2. **Résiliation par le Bloggeur.** Le Bloggeur peut clôturer son compte à tout moment. Les commissions validées restent payables.
+8.2. **Résiliation pour cause (for cause).** En cas de violation grave des CGU, fraude avérée, manipulation de trafic, violation de la marque ou violation légale, SOS Expat peut résilier le compte **avec effet immédiat**, sans préavis. Les commissions non encore validées sont annulées. Les commissions versées obtenues frauduleusement font l'objet d'un claw-back.
 
-8.3. **Résiliation par SOS Expat.** En cas de violation grave, SOS Expat peut résilier le compte avec effet immédiat. Les commissions non validées sont annulées.
+8.3. **Résiliation sans cause (without cause).** En dehors de toute violation, SOS Expat peut résilier le programme avec un préavis de **30 jours** notifié par email. Les commissions validées avant la date d'effet restent dues et seront payées normalement.
 
-8.4. **Effets de la résiliation.** À la résiliation :
-- Les Codes Affiliés sont désactivés
+8.4. **Résiliation par le Bloggeur.** Le Bloggeur peut clôturer son compte à tout moment, avec un préavis recommandé de **14 jours**. Les commissions validées restent payables.
+
+8.5. **Effets de la résiliation.** À la résiliation :
+- Les Codes Affiliés sont désactivés immédiatement
 - Les Filleuls et prestataires recrutés sont réattribués à SOS Expat
 - L'accès au dashboard est supprimé
-- Le Bloggeur doit retirer le widget de son site dans un délai de **30 jours**
+- Le Bloggeur doit **retirer le widget de son site dans un délai de 30 jours** et cesser tout usage de la marque SOS Expat
+
+8.6. **Clauses survivant à la résiliation.** Les articles suivants restent en vigueur après résiliation : confidentialité (art. 13.5), propriété intellectuelle (art. 10), limitation de responsabilité (art. 11), loi applicable (art. 12), et protection des données (art. 9).
 
 ---
 
 ## 9. Données personnelles
 
-9.1. **Responsable de traitement.** SOS Expat (WorldExpat OÜ) pour les données du programme Bloggeurs.
+9.1. **Responsable de traitement.** SOS Expat (WorldExpat OÜ, Tallinn, Estonie) est responsable du traitement des données personnelles dans le cadre du programme Bloggeurs.
 
-9.2. **Données collectées.** Identité, URL du site, coordonnées, performances, données de paiement, logs de connexion.
+9.2. **Données collectées.** Identité, URL du site/blog, coordonnées, statistiques de trafic déclarées, performances affiliées, données de paiement, informations fiscales, logs de connexion, adresse IP.
 
-9.3. **Finalités.** Gestion du programme, paiement des commissions, prévention de la fraude, amélioration des services.
+9.3. **Finalités et base légale (RGPD Art. 6).** Gestion du programme (exécution du contrat), paiement des commissions (exécution du contrat), prévention de la fraude (intérêt légitime), conformité légale et fiscale (obligation légale), amélioration des services (intérêt légitime).
 
-9.4. **Durée de conservation.** Données actives pendant la relation ; archives 10 ans après résiliation (obligations légales).
+9.4. **Durée de conservation.** Données actives pendant la relation contractuelle ; archives **10 ans** après résiliation pour les données comptables et fiscales. Droit à l'effacement disponible pour les données non soumises à obligation légale.
 
-9.5. **Droits.** Accès, rectification, effacement, portabilité, opposition via contact@sos-expat.com.
+9.5. **Droits RGPD.** Accès, rectification, effacement, portabilité, opposition, limitation du traitement via contact@sos-expat.com. Droit de saisir la **CNIL** (France) ou toute autorité de contrôle compétente.
 
-9.6. **Transferts.** Avec garanties appropriées (clauses contractuelles types) si hors UE.
+9.6. **Transferts hors UE.** En cas de transfert vers des pays tiers, SOS Expat met en œuvre des **clauses contractuelles types** (SCT) approuvées par la Commission européenne.
+
+9.7. **Conformité CCPA (Californie, USA).** Les Bloggeurs résidents de Californie bénéficient des droits prévus par le CCPA : droit de savoir, supprimer, refuser la vente/partage des données. Contactez contact@sos-expat.com.
+
+9.8. **Conformité PIPEDA / Loi 25 (Canada).** Les Bloggeurs canadiens bénéficient des protections PIPEDA et, pour les résidents québécois, de la Loi 25.
+
+9.9. **Conformité LGPD (Brésil).** Les Bloggeurs résidents au Brésil bénéficient des droits prévus par la Lei Geral de Proteção de Dados (loi 13.709/2018).
+
+9.10. **Obligations du Bloggeur.** Le Bloggeur doit disposer sur son site d'une **politique de confidentialité** conforme aux lois applicables (RGPD, CCPA…) informant ses visiteurs de l'utilisation des cookies de tracking affilié SOS Expat et obtenir leur consentement si requis.
 
 ---
 
@@ -846,36 +901,56 @@ const TermsBloggers: React.FC = () => {
 
 ## 11. Responsabilité
 
-11.1. **Limitation.** La responsabilité de SOS Expat est limitée aux **commissions dues** au titre des 12 derniers mois.
+11.1. **Limitation de responsabilité.** La responsabilité totale de SOS Expat envers le Bloggeur est limitée au montant total des **commissions versées au cours des 12 derniers mois** précédant la réclamation.
 
-11.2. **Exclusions.** SOS Expat n'est pas responsable des :
-- Dommages indirects (perte de revenus, d'opportunités)
-- Actions des Filleuls, prestataires recrutés ou utilisateurs
-- Problèmes techniques liés à l'intégration du widget sur le site du Bloggeur
+11.2. **Exclusion des dommages indirects.** SOS Expat exclut toute responsabilité pour les dommages indirects, spéciaux, consécutifs ou punitifs, y compris : perte de profits, d'opportunités, atteinte à la réputation, interruption d'activité.
 
-11.3. **Indemnisation.** Le Bloggeur indemnise SOS Expat contre toute réclamation liée à ses activités de promotion ou à l'usage du widget.
+11.3. **Absence de garanties.** La Plateforme est fournie « en l'état ». SOS Expat ne garantit pas :
+- La disponibilité continue de la plateforme et du widget
+- Un niveau minimum de trafic, d'appels ou de revenus
+- La pérennité du programme
+- Le fonctionnement du widget sur tous les environnements d'hébergement
+
+11.4. **Force majeure.** SOS Expat n'est pas responsable des retards ou inexécutions causés par des événements hors de son contrôle.
+
+11.5. **Restrictions géographiques.** Le programme est disponible dans la plupart des pays, à l'exception des pays sous embargo international (ONU, UE, OFAC USA). SOS Expat se réserve le droit de refuser ou suspendre des comptes provenant de ces territoires.
+
+11.6. **Indemnisation par le Bloggeur.** Le Bloggeur s'engage à défendre et indemniser SOS Expat contre toute réclamation, amende ou frais découlant de : (i) la violation des présentes CGU, (ii) ses activités de promotion, (iii) l'usage du widget, (iv) la violation de droits de tiers, (v) la violation de toute loi applicable.
 
 ---
 
 ## 12. Droit applicable
 
-12.1. **Droit estonien.** Les présentes CGU sont régies par le droit estonien.
+12.1. **Droit applicable.** Les présentes CGU sont régies par le **droit estonien**, sans préjudice des dispositions impératives applicables dans le pays de résidence du Bloggeur.
 
-12.2. **Arbitrage CCI.** Tout litige est résolu par arbitrage CCI, siège à Tallinn, en français.
+12.2. **Processus de résolution des litiges (multi-niveaux).**
+- **Étape 1 — Contact amiable** : toute réclamation doit d'abord être adressée à contact@sos-expat.com (réponse sous **15 jours ouvrés**).
+- **Étape 2 — Médiation interne** : en cas d'insatisfaction, demande de revue par l'équipe Compliance dans un délai supplémentaire de **15 jours**.
+- **Étape 3 — Arbitrage CCI** : tout litige non résolu est soumis à la **Chambre de Commerce Internationale (CCI)**, siège à Tallinn (Estonie), en langue française.
 
-12.3. **Renonciation aux actions collectives.** Toute action collective est exclue ; réclamations individuelles uniquement.
+12.3. **Droits des autorités de contrôle.** La clause d'arbitrage ne prive pas le Bloggeur de son droit de saisir toute autorité de protection des données compétente.
+
+12.4. **Renonciation aux actions collectives.** Les parties renoncent à participer à toute action collective. Chaque litige est traité individuellement.
+
+12.5. **Langue.** La version française des présentes CGU prévaut en cas de divergence.
 
 ---
 
 ## 13. Dispositions diverses
 
-13.1. **Intégralité.** Les CGU constituent l'accord complet entre les parties.
+13.1. **Intégralité de l'accord.** Les présentes CGU constituent l'accord complet entre les parties et remplacent tout accord antérieur oral ou écrit.
 
-13.2. **Nullité partielle.** Si une clause est nulle, les autres restent en vigueur.
+13.2. **Nullité partielle.** Si une clause est déclarée nulle ou inapplicable, elle sera reformée au minimum nécessaire. Les autres clauses restent en vigueur.
 
-13.3. **Non-renonciation.** L'absence d'exercice d'un droit n'emporte pas renonciation.
+13.3. **Non-renonciation.** L'absence d'exercice d'un droit dans un cas particulier ne constitue pas une renonciation définitive.
 
-13.4. **Langue.** Le français prévaut en cas de divergence entre traductions.
+13.4. **Cession.** Le Bloggeur ne peut céder ses droits ou obligations sans accord écrit préalable de SOS Expat.
+
+13.5. **Confidentialité.** Le Bloggeur s'engage à ne pas divulguer les informations confidentielles reçues dans le cadre du programme. Cette obligation survit à la résiliation pendant **2 ans**.
+
+13.6. **Modifications des CGU.** SOS Expat notifie toute modification significative par email au moins **30 jours** avant son entrée en vigueur. La poursuite du programme vaut acceptation. En cas de refus, résiliation possible sans pénalité avant la date d'effet.
+
+13.7. **Langue.** Le français prévaut en cas de divergence entre les traductions disponibles.
 
 ---
 
@@ -959,139 +1034,140 @@ Pour toute question concernant le programme Bloggeurs, contactez-nous via le for
 
 4.2. **Provider Recruitment Commission.** The Blogger earns **$5** for each paid call made by a provider they recruited, for **12 months** from the provider's registration date. After this period, provider recruitment commissions cease automatically.
 
-4.3. **Blogger Recruitment Commission (N1 Referral).** The Blogger earns a commission on each client call generated by their N1 Blogger Referrals, for **12 months** from the N1 Referral's registration date. **Cumulative conditions to earn this commission:**
-- The Blogger must achieve a minimum of **$50 in direct commissions** (Article 4.1) during the calendar month concerned
-- The Blogger must ensure training and follow-up of their N1 Referrals (minimum: sharing the integration guide, responding to questions within 48 hours)
-- In the absence of these conditions in a given month, N1 commissions for that month are suspended (non-retroactive)
+4.3. **Blogger Recruitment Bonus.** For each Blogger recruited via the referral code, the referring Blogger earns a **one-time bonus of $50** when the recruited Blogger accumulates **$200 in total commissions**. This bonus is paid **once per recruited Blogger**, with no recurring commission on that Blogger's future calls.
 
-4.4. **Blogger Recruitment Commission (N2 Referral).** The Blogger earns a commission on each call generated by their N2 Referrals, for **12 months** from the N2 Referral's registration date. The **same cumulative conditions** as in 4.3 apply.
+4.4. **Attribution Model (Tracking).** Recommendations are tracked using a **Last-Click cookie valid for 30 days**: any click on the widget or affiliate link creates a 30-day cookie in the visitor's browser. If that visitor makes a paid call within this period, the commission is attributed to the Blogger. A new click on another affiliate link overwrites the previous cookie. The Blogger acknowledges that cookie disabling may prevent attribution.
 
-4.5. **Maximum Affiliate Commission Duration.** Commissions on Referrals (N1 and N2) and recruited providers are paid for a **maximum of 12 months** from each referral/provider's registration date. After this period, the Blogger retains only their direct commissions (Article 4.1).
+4.5. **Validation Period (Hold Period).** Commissions go through a retention period before becoming payable:
+- Status **"pending"**: during the **client withdrawal period (14 days)** following the call
+- Status **"validated"**: after automatic anti-fraud verification
+- Status **"payable"**: at the next monthly payment cycle following validation
 
-4.6. **Payment Thresholds.** Commissions are validated after:
-- Client withdrawal period (14 days)
-- Automatic anti-fraud validation
-- Reaching minimum withdrawal threshold (**$20**)
+4.6. **Refund and Clawback Policy.** In case of client call refund or bank chargeback:
+- The corresponding commission is **cancelled** if still in "pending" or "validated" status
+- If already paid, it is **deducted from the next payment** (clawback)
+- SOS Expat may recover paid commissions in case of fraud detected retroactively, within **12 months** of payment
 
-4.7. **Commission Schedule (summary).**
+4.7. **No Earnings Guarantee.** SOS Expat does not guarantee any minimum level of traffic, calls, or income.
 
-| Commission Type | Amount | Duration |
-|---|---|---|
-| Direct client call (widget/link) | $10/call | Unlimited |
-| Recruited provider call | $5/call | 12 months |
-| Call generated by N1 Blogger Referral | Variable | 12 months |
-| Call generated by N2 Blogger Referral | Variable | 12 months |
+4.8. **Commission Schedule (summary).**
 
-4.8. **Performance Bonuses.** Additional bonuses may be granted to Bloggers generating high volumes of calls or recruitments.
+| Commission Type | Amount | Duration | Conditions |
+|---|---|---|---|
+| Direct client call (widget/link) | $10/call | Unlimited | None |
+| Recruited provider call | $5/call | 12 months max | None |
+| Blogger recruitment bonus | $50 (once) | One-time | Recruited reaches $200 cumulative |
+
+4.9. **Withdrawal Threshold.** Withdrawal is available from **$20** validated balance.
 
 ---
 
 ## 5. Anti-fraud Rules
 
-5.1. **Strict Prohibitions.** The following are strictly prohibited:
-- Self-referral or fictitious cross-referral
-- Artificially generating calls (fake clients, self-calls)
-- Using bots or automated scripts
-- Creating multiple accounts
-- Integrating the widget on undeclared sites
-- Any manipulation of tracking systems
+5.1. **Tracking Fraud — Absolute Prohibitions.** The following are strictly prohibited, subject to immediate termination:
+- **Cookie stuffing**: injecting affiliate cookies without a real click
+- **Forced click**: automatically redirecting users to an affiliate page
+- **Self-referral** and fictitious cross-referral
+- **Artificial traffic / bots**: click farms, traffic purchase services
+- **Widget integration on undeclared sites** not validated by SOS Expat
+- **Creating multiple accounts** under the same identity
+- Any **tracking manipulation**
 
-5.2. **Automatic Detection.** SOS Expat uses detection systems including:
-- Suspicious call pattern analysis
-- Web traffic authenticity verification
-- Abnormal conversion rate analysis
+5.2. **Prohibited Content.** The Blogger may not promote SOS Expat through content related to pornography, illegal gambling, drugs, weapons, counterfeiting, disinformation, or content targeting minors for adult services.
 
-5.3. **Sanctions.** In case of proven or suspected fraud:
-- **Immediate suspension** of account
-- **Cancellation** of all affected commissions
-- **Permanent ban** from the Platform
-- **Legal action** if applicable
+5.3. **Trademark Bidding.** Prohibited: using "SOS Expat" or variants as keywords in paid advertising without prior written authorization.
 
-5.4. **Appeals.** The Blogger may contest a sanction via the contact form within **30 days**.
+5.4. **Prohibited SEO Practices.** Prohibited: buying backlinks to affiliate pages, cloaking, duplicate/scraped content to multiply affiliate pages.
+
+5.5. **Automatic Detection.** SOS Expat uses detection systems including suspicious pattern analysis, web traffic verification, and conversion rate analysis.
+
+5.6. **Graduated Sanctions.** Warning → Temporary suspension → Commission cancellation (clawback if already paid) → Permanent ban → Legal action.
+
+5.7. **Multi-Level Appeals Process.** Level 1: contact form within 30 days (15 business days response). Level 2: Compliance team review (+15 days). Level 3: ICC arbitration (Article 12).
 
 ---
 
 ## 6. Blogger Obligations
 
-6.1. **Widget Integration.** The Blogger agrees to:
-- Integrate the SOS Expat widget visibly on their website
-- Not modify the widget code without authorization
-- Keep the widget functional and updated
-- Report any technical issues to SOS Expat
+6.1. **Widget Integration.** The Blogger agrees to integrate the SOS Expat widget visibly on their declared site, not modify its code without authorization, keep it functional and updated, report technical issues, and remove it within **30 days** of account termination.
 
-6.2. **Content Quality.** The Blogger agrees to:
-- Promote SOS Expat honestly and ethically
-- Not make misleading promises about services
-- Clearly identify sponsored or partnership content
-- Respect SOS Expat brand guidelines and graphic charters
+6.2. **Advertising Transparency.** *EU/France:* Mention "Publicité" or "Collaboration commerciale" before any commercial content. *USA — FTC:* "#ad" or "Sponsored" before any affiliate link. *Australia — ACCC:* "#Ad", "Advertising", "Paid Partnership". **The Blogger is responsible for complying with advertising regulations in each country where their site operates.**
 
-6.3. **Referral Follow-up.** Bloggers who recruit other Bloggers agree to:
-- Share the integration guide and resources provided by SOS Expat
-- Respond to Referral questions within **48 hours**
-- Ensure minimum follow-up to guarantee correct widget integration
+6.3. **Content Quality.** Honest promotion only; no misleading claims; no guaranteed results promises; respect SOS Expat brand guidelines.
 
-6.4. **Legal Compliance.** The Blogger complies with all applicable laws:
-- Advertising and commercial partnership disclosure rules
-- Visitor data protection (GDPR, legal notices on their site)
-- Tax declaration of affiliate income
-- Copyright and intellectual property compliance
+6.4. **Referral Follow-up.** Share integration guide; respond to questions within **48 hours**; ensure correct widget integration.
 
-6.5. **Independence.** The Blogger acts as an **independent contractor**; no employment, agency, or mandate relationship is created with SOS Expat.
+6.5. **Sub-affiliation Prohibited.** Affiliate rights may not be delegated or sub-licensed without prior written approval.
+
+6.6. **Partial Exclusivity.** Bloggers may use other affiliate widgets, excluding SOS Expat direct competitors.
+
+6.7. **Legal Compliance.** Comply with advertising and partnership disclosure rules, visitor data protection (GDPR/CCPA), tax declarations, and intellectual property.
+
+6.8. **Independence.** The Blogger is an **independent contractor**; no employment relationship exists with SOS Expat. The Blogger is solely responsible for their social contributions and tax obligations.
 
 ---
 
 ## 7. Commission Payments
 
-7.1. **Mandatory KYC.** The Blogger must complete identity verification (KYC) **before** any withdrawal.
+7.1. **Mandatory KYC.** Complete identity verification before any withdrawal. Must be initiated within **90 days** of first validated commission.
 
-7.2. **Payment Methods.** Withdrawals are available via:
-- Bank transfer (SEPA/International)
-- PayPal
-- Wise
+7.2. **Payment Methods.** Bank transfer (SEPA/International), PayPal, Wise.
 
-7.3. **Timing.** Payments are processed within **7 business days** after validation.
+7.3. **Timing.** Payments processed within **7 business days** after validation (plus bank processing time).
 
-7.4. **Minimum Threshold.** Withdrawal is possible from **$20** available balance.
+7.4. **Minimum Threshold.** Withdrawal from **$20** validated balance.
 
-7.5. **Unclaimed Funds.** If KYC is not completed within **180 days**, funds are considered abandoned per Article 8.7 of the general Terms.
+7.5. **Currency.** All payments in **USD**. Conversion to other currencies at Wise daily rate; **conversion fees at Blogger's expense**.
 
-7.6. **Taxes.** The Blogger is solely responsible for declaring and paying their taxes and charges related to affiliate income.
+7.6. **Unclaimed Funds.** If KYC not completed within **180 days** of first validated commission, funds considered abandoned.
+
+7.7. **Tax Obligations — General.** Blogger solely responsible for tax declarations and payments in their country of residence.
+
+7.8. **Tax — USA Non-Residents.** Form **W-8BEN** (individuals) or **W-8BEN-E** (entities) required before payment. Without it, **30% withholding** applies. Valid for 3 years.
+
+7.9. **VAT/GST.** Commissions expressed exclusive of tax. Blogger responsible for their VAT obligations.
+
+7.10. **Statements.** Monthly commission statement available on dashboard.
 
 ---
 
 ## 8. Suspension and Termination
 
-8.1. **Temporary Suspension.** SOS Expat may suspend an account in case of:
-- Fraud suspicion or traffic manipulation
-- Terms violation
-- Widget removal from site without prior notice
-- Extended inactivity (365+ days without any activity)
+8.1. **Temporary Suspension.** SOS Expat may suspend for: fraud suspicion, Terms violation, widget removal without notice, extended inactivity (365+ days).
 
-8.2. **Termination by Blogger.** The Blogger may close their account at any time. Validated commissions remain payable.
+8.2. **Termination for Cause.** Immediate termination without notice for serious violations, proven fraud, traffic manipulation, or legal breaches. Unvalidated commissions cancelled; fraudulently obtained commissions subject to clawback.
 
-8.3. **Termination by SOS Expat.** In case of serious violation, SOS Expat may terminate the account with immediate effect. Unvalidated commissions are cancelled.
+8.3. **Termination without Cause.** **30 days' notice** by email outside any violation. Validated commissions remain due.
 
-8.4. **Effects of Termination.** Upon termination:
-- Affiliate Codes are deactivated
-- Recruited referrals and providers are reassigned to SOS Expat
-- Dashboard access is removed
-- The Blogger must remove the widget from their site within **30 days**
+8.4. **Termination by Blogger.** At any time with recommended **14 days' notice**. Validated commissions remain payable.
+
+8.5. **Effects of Termination.** Affiliate Codes deactivated; referrals and providers reassigned to SOS Expat; dashboard access removed; **widget must be removed within 30 days**; all SOS Expat brand use must cease.
+
+8.6. **Surviving Clauses.** Confidentiality (Art. 13.5), intellectual property (Art. 10), liability (Art. 11), governing law (Art. 12), and data protection (Art. 9) survive termination.
 
 ---
 
 ## 9. Personal Data
 
-9.1. **Data Controller.** SOS Expat (WorldExpat OÜ) for Blogger program data.
+9.1. **Data Controller.** SOS Expat (WorldExpat OÜ, Tallinn, Estonia).
 
-9.2. **Data Collected.** Identity, website URL, contact details, performance, payment data, connection logs.
+9.2. **Data Collected.** Identity, website URL, declared traffic statistics, affiliate performance, payment data, tax information, connection logs, IP address.
 
-9.3. **Purposes.** Program management, commission payments, fraud prevention, service improvement.
+9.3. **Purposes and Legal Basis.** Program management (contract), commission payments (contract), fraud prevention (legitimate interest), legal/tax compliance (legal obligation).
 
-9.4. **Retention.** Active data during relationship; archives 10 years after termination (legal obligations).
+9.4. **Retention.** Active data during contract; **10-year** archives for accounting/tax data. Erasure right available for other data.
 
-9.5. **Rights.** Access, rectification, erasure, portability, objection via contact@sos-expat.com.
+9.5. **GDPR Rights.** Access, rectification, erasure, portability, objection via contact@sos-expat.com. Right to lodge complaint with competent supervisory authority.
 
-9.6. **Transfers.** With appropriate safeguards (standard contractual clauses) if outside EU.
+9.6. **International Transfers.** Standard Contractual Clauses (SCCs) for transfers outside EU.
+
+9.7. **CCPA (California).** California residents: right to know, delete, opt-out of sale/sharing. Contact contact@sos-expat.com.
+
+9.8. **PIPEDA / Law 25 (Canada).** Canadian Bloggers benefit from PIPEDA protections; Quebec residents from Law 25.
+
+9.9. **LGPD (Brazil).** Brazil-resident Bloggers benefit from rights under Lei Geral de Proteção de Dados.
+
+9.10. **Blogger Obligations.** The Blogger must have a **privacy policy** on their site compliant with applicable laws, informing visitors of the SOS Expat affiliate tracking cookie and obtaining their consent where required.
 
 ---
 
@@ -1111,36 +1187,49 @@ Pour toute question concernant le programme Bloggeurs, contactez-nous via le for
 
 ## 11. Liability
 
-11.1. **Limitation.** SOS Expat's liability is limited to **commissions due** for the last 12 months.
+11.1. **Liability Cap.** SOS Expat's total liability is limited to **commissions paid in the last 12 months** preceding the claim.
 
-11.2. **Exclusions.** SOS Expat is not liable for:
-- Indirect damages (loss of revenue, opportunities)
-- Actions of Referrals, recruited providers, or users
-- Technical issues related to widget integration on the Blogger's site
+11.2. **Exclusion of Indirect Damages.** SOS Expat excludes all liability for indirect, special, consequential, or punitive damages.
 
-11.3. **Indemnification.** The Blogger indemnifies SOS Expat against any claims related to their promotion activities or widget usage.
+11.3. **No Warranties.** Platform provided "as is". No guarantee of: continuous availability, minimum traffic/calls/income, widget compatibility with all hosting environments, or program continuity.
+
+11.4. **Force Majeure.** SOS Expat not liable for delays due to events beyond its control.
+
+11.5. **Geographic Restrictions.** Program unavailable in countries under international embargo (UN, EU, US OFAC).
+
+11.6. **Indemnification by Blogger.** The Blogger agrees to indemnify SOS Expat against any claim arising from: Terms breach, promotional activities, widget usage, third-party rights infringement, or violation of applicable law.
 
 ---
 
 ## 12. Governing Law
 
-12.1. **Estonian Law.** These Terms are governed by Estonian law.
+12.1. **Governing Law.** These Terms are governed by **Estonian law**, without prejudice to mandatory provisions in the Blogger's country of residence.
 
-12.2. **ICC Arbitration.** Any dispute is resolved by ICC arbitration, seated in Tallinn, in French.
+12.2. **Multi-Level Dispute Resolution.** Step 1: amicable contact at contact@sos-expat.com (15 business days response). Step 2: Compliance team review (additional 15 days). Step 3: **ICC arbitration** seated in Tallinn, in French (final and binding).
 
-12.3. **Class Action Waiver.** Class actions are excluded; individual claims only.
+12.3. **Supervisory Authority Rights.** Arbitration clause does not prevent lodging a complaint with data protection authorities.
+
+12.4. **Class Action Waiver.** Individual claims only; class actions excluded.
+
+12.5. **Language.** French version prevails in case of discrepancy.
 
 ---
 
 ## 13. Miscellaneous
 
-13.1. **Entire Agreement.** These Terms constitute the complete agreement between parties.
+13.1. **Entire Agreement.** These Terms supersede all prior agreements between the parties.
 
-13.2. **Severability.** If a clause is void, others remain in effect.
+13.2. **Severability.** Invalid clauses shall be reformed; remaining clauses unaffected.
 
-13.3. **No Waiver.** Failure to exercise a right does not constitute waiver.
+13.3. **No Waiver.** Failure to exercise a right in one instance does not waive it permanently.
 
-13.4. **Language.** French prevails in case of translation discrepancies.
+13.4. **Assignment.** Blogger rights may not be assigned without prior written approval from SOS Expat.
+
+13.5. **Confidentiality.** Blogger agrees not to disclose confidential program information. This survives termination for **2 years**.
+
+13.6. **Terms Modifications.** Significant changes notified by email **30 days** before effective date. Continued participation = acceptance. Exit without penalty available before effective date.
+
+13.7. **Language.** French prevails in case of translation discrepancies.
 
 ---
 
@@ -1149,7 +1238,7 @@ Pour toute question concernant le programme Bloggeurs, contactez-nous via le for
 For any questions about the Blogger program, contact us via the contact form or at: bloggers@sos-expat.com
 `;
 
-  const defaultContent = selectedLanguage === "en" ? defaultEn : defaultFr;
+  const defaultContent = selectedLanguage === "fr" ? defaultFr : defaultEn;
   const parsedContent = useMemo(() => {
     const textToRender = content || defaultContent;
     return parseMarkdownContent(textToRender);

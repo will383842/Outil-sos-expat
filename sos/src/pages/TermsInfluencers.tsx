@@ -683,99 +683,152 @@ const TermsInfluencers: React.FC = () => {
 
 ## 4. Commissions et rémunération
 
-4.1. **Commissions directes par appel.** L'Influenceur perçoit **$10** pour chaque appel payant généré via son Code Affilié, sans limite de volume ni de durée. Ces commissions directes sont acquises indépendamment de toute condition d'activité.
+4.1. **Commissions directes par appel.** L'Influenceur perçoit **$10** pour chaque appel payant généré via son Code Affilié, sans limite de volume ni de durée.
 
-4.2. **Commissions de parrainage (Filleul N1).** L'Influenceur perçoit une commission sur chaque appel client généré par ses Filleuls Influenceurs N1, pendant **12 mois** à compter de la date d'inscription du Filleul N1. **Conditions cumulatives pour percevoir cette commission :**
-- L'Influenceur doit réaliser un minimum de **$50 de commissions directes** (article 4.1) au cours du mois civil concerné
-- L'Influenceur doit assurer la formation et le suivi de ses Filleuls N1 : partage des ressources et guidelines de marque, réponse aux questions dans un délai de 48h, accompagnement dans la prise en main du programme
-- En l'absence de ces conditions sur un mois donné, les commissions N1 de ce mois sont suspendues (non rétroactives)
+4.2. **Niveaux de progression et bonus.** Le barème des commissions directes est bonifié selon le niveau atteint (déterminé par le volume mensuel d'activité) :
+- Niveau 1 : ×1,00 (base $10/appel)
+- Niveau 2 : ×1,10 (+10% → $11/appel)
+- Niveau 3 : ×1,20 (+20% → $12/appel)
+- Niveau 4 : ×1,35 (+35% → $13,50/appel)
+- Niveau 5 : ×1,50 (+50% → $15/appel)
 
-4.3. **Commissions de parrainage (Filleul N2).** L'Influenceur perçoit une commission sur chaque appel client généré par ses Filleuls N2, pendant **12 mois** à compter de la date d'inscription du Filleul N2. Les **mêmes conditions cumulatives** qu'en 4.2 s'appliquent.
+**Bonus Top 3 mensuel :** Les 3 meilleurs Influenceurs du mois perçoivent un multiplicateur supplémentaire sur toutes leurs commissions du mois : 1er rang ×2,00 / 2e rang ×1,50 / 3e rang ×1,15.
 
-4.4. **Durée maximale des commissions d'affiliation.** Les commissions sur les Filleuls (N1 et N2) sont versées pendant **12 mois maximum** à compter de la date d'inscription de chaque filleul. Passé ce délai, l'Influenceur conserve uniquement ses commissions directes (article 4.1). Il peut recruter de nouveaux filleuls pour démarrer de nouvelles périodes de 12 mois.
+4.3. **Commission de recrutement prestataire.** L'Influenceur perçoit **$5** pour chaque appel payant réalisé par un prestataire (avocat, expert expatrié) qu'il a recommandé via son code de recrutement, pendant **12 mois** à compter de la date d'inscription du prestataire. Cette commission cesse automatiquement à l'expiration du délai de 12 mois.
 
-4.5. **Barèmes de commissions (récapitulatif).**
+4.4. **Prime de recrutement d'Influenceur.** Pour chaque Influenceur recruté via le code de parrainage, l'Influenceur-parrain perçoit une **prime unique de $5** lorsque l'Influenceur recruté cumule **$50 de commissions totales**. Cette prime est versée **une seule fois** par Influenceur recruté, sans commission récurrente sur les appels futurs de cet Influenceur.
+
+4.5. **Modèle d'attribution (tracking).** Le suivi des recommandations est basé sur un **cookie Last-Click valable 30 jours** : tout clic sur le lien affilié de l'Influenceur crée un cookie de 30 jours dans le navigateur du visiteur. Si ce visiteur effectue un appel payant dans ce délai, la commission est attribuée à l'Influenceur. Un nouveau clic sur un autre lien affilié écrase le cookie précédent (modèle Last-Click). L'Influenceur reconnaît que la désactivation des cookies par l'utilisateur peut empêcher l'attribution.
+
+4.6. **Période de validation (Hold Period).** Les commissions sont soumises à une période de rétention avant d'être payables :
+- Statut **« en attente »** : pendant la **période de rétractation client (14 jours)** suivant l'appel
+- Statut **« validée »** : après vérification anti-fraude automatique passée (délai variable)
+- Statut **« payable »** : au prochain cycle de paiement mensuel suivant la validation
+
+4.7. **Politique de remboursement et claw-back.** En cas de remboursement d'un appel client ou de chargeback bancaire :
+- La commission correspondante est **annulée** si elle est encore en statut « en attente » ou « validée »
+- Si la commission a déjà été versée, elle est **déduite du prochain paiement** (claw-back)
+- En cas de chargeback frauduleux avéré imputable à l'Influenceur, des **frais de traitement supplémentaires** peuvent être appliqués
+- SOS Expat peut récupérer des commissions versées en cas de fraude détectée a posteriori, dans un délai de **12 mois** après versement
+
+4.8. **Absence de garantie de revenus.** SOS Expat ne garantit aucun niveau minimum de trafic, d'appels ou de revenus. Les performances passées ne constituent pas une garantie des revenus futurs.
+
+4.9. **Barèmes de commissions (récapitulatif).**
 
 | Type de commission | Montant | Durée | Conditions |
 |---|---|---|---|
-| Appel client direct (via code affilié) | $10/appel | Illimitée | Aucune |
-| Appel via Filleul Influenceur N1 | Variable | 12 mois | $50/mois + formation |
-| Appel via Filleul Influenceur N2 | Variable | 12 mois | $50/mois + formation |
+| Appel client direct (via code affilié) | $10/appel (×bonus niveau) | Illimitée | Aucune |
+| Appel via prestataire recruté | $5/appel | 12 mois max | Aucune |
+| Prime recrutement d'un influenceur | $5 (unique) | Une seule fois | Recruté atteint $50 cumulé |
+| Bonus Top 3 mensuel | ×2,00 / ×1,50 / ×1,15 | Mensuel | Top 3 du mois |
 
-4.6. **Seuils de paiement.** Les commissions sont validées après :
-- Période de rétractation client (14 jours)
-- Validation anti-fraude automatique
-- Atteinte du seuil minimum de retrait (**$20**)
-
-4.7. **Bonus de performance.** Des bonus supplémentaires peuvent être accordés en fonction du volume de recommandations et de la qualité de l'audience générée.
+4.10. **Seuil de retrait.** Retrait disponible à partir de **$20** de solde validé.
 
 ---
 
 ## 5. Règles anti-fraude
 
-5.1. **Interdictions strictes.** Sont formellement interdits :
-- L'auto-parrainage ou parrainage croisé fictif
-- L'achat de faux followers ou faux engagement
-- L'utilisation de bots ou scripts automatisés
-- La génération artificielle d'appels (self-calls, faux clients)
-- La création de comptes multiples
-- Toute manipulation des systèmes de tracking
+5.1. **Fraude au tracking — Interdictions absolues.** Sont formellement interdits, sous peine de résiliation immédiate et de poursuites judiciaires :
+- **Cookie stuffing** : injection de cookies affiliés dans le navigateur d'un tiers sans clic réel (via pixel caché, iframe, adware)
+- **Clic forcé (forced click)** : redirection automatique d'un utilisateur vers une page affiliée sans action de sa part
+- **Auto-parrainage** : utilisation de son propre code pour générer des appels ou recruter des comptes fictifs
+- **Parrainage croisé fictif** : organisation entre plusieurs comptes pour se parrainer mutuellement
+- **Trafic artificiel / bots** : utilisation de scripts, robots, fermes de clics ou services d'achat de trafic
+- **Faux followers / faux engagement** : achat ou utilisation d'audiences artificielles
+- **Création de comptes multiples** sous une même identité ou des identités liées
+- **Manipulation de tracking** : toute tentative de modifier, contourner ou exploiter les systèmes d'attribution
 
-5.2. **Détection automatique.** SOS Expat utilise des systèmes de détection incluant :
-- Analyse des patterns d'appels suspects
-- Vérification de l'authenticité des audiences
+5.2. **Contenus interdits.** L'Influenceur ne peut pas promouvoir SOS Expat via des contenus liés à :
+- Contenus pornographiques, violents ou à caractère haineux
+- Jeux d'argent illégaux, cryptomonnaies non réglementées
+- Drogues, armes, activités illicites
+- Contrefaçon ou violation de droits d'auteur
+- Contenus visant des mineurs pour des services adultes
+- Désinformation ou deepfakes
+
+5.3. **Enchères sur la marque.** Il est formellement interdit d'utiliser les termes « SOS Expat », « sos-expat.com » ou variantes orthographiques comme mots-clés dans des campagnes publicitaires payantes (Google Ads, Meta Ads, TikTok Ads, etc.) sans autorisation écrite préalable.
+
+5.4. **Détection automatique.** SOS Expat utilise des systèmes de détection incluant :
+- Analyse des patterns d'appels et de clics suspects
+- Vérification de l'authenticité et de l'engagement des audiences
 - Analyse des taux de conversion anormaux
+- Vérification des adresses IP, empreintes de navigateur et comportements
 
-5.3. **Sanctions.** En cas de fraude avérée ou suspectée :
-- **Suspension immédiate** du compte
-- **Annulation** de toutes les commissions concernées
+5.5. **Sanctions graduées.** En cas de violation :
+- **Avertissement** pour première violation mineure
+- **Suspension temporaire** du compte et gel des commissions
+- **Annulation** de toutes les commissions liées à la fraude (claw-back si déjà versées)
 - **Bannissement définitif** de la Plateforme
-- **Poursuites judiciaires** le cas échéant
+- **Poursuites judiciaires** et demande de dommages et intérêts le cas échéant
 
-5.4. **Recours.** L'Influenceur peut contester une sanction via le formulaire de contact dans un délai de **30 jours**.
+5.6. **Recours multi-niveaux.** L'Influenceur peut contester une sanction selon le processus suivant :
+- **Niveau 1** : contestation via le formulaire de contact dans un délai de **30 jours** (réponse sous 15 jours ouvrés)
+- **Niveau 2** : escalade à l'équipe Compliance si insatisfaction, dans un délai supplémentaire de **15 jours**
+- **Niveau 3** : arbitrage CCI (article 12) si aucune résolution amiable n'est trouvée
 
 ---
 
 ## 6. Obligations de l'Influenceur
 
-6.1. **Transparence publicitaire.** L'Influenceur s'engage à :
-- Identifier clairement tout contenu sponsorisé (#partenariat, #publicité, #sponsored, #ad)
-- Respecter les règles de la plateforme ARPP et les directives de chaque réseau social
-- Ne pas présenter SOS Expat de façon trompeuse
-- Mentionner honnêtement les tarifs et conditions des services
+6.1. **Transparence publicitaire — Obligations légales par pays.**
+
+*Union Européenne / France :* Conformément à la directive 2005/29/CE et à la **loi française n° 2023-451 du 9 juin 2023**, toute publication commerciale doit mentionner explicitement **« Publicité »** ou **« Collaboration commerciale »** de façon visible, dès le début du contenu, avant tout appel à l'action.
+
+*États-Unis — FTC (16 CFR Part 255) :* La divulgation doit être **claire, visible et compréhensible** par le consommateur moyen. Elle doit apparaître **avant** tout lien ou appel à l'action. Les termes acceptés : « #ad », « #sponsored », « Paid partnership ». Les termes insuffisants seuls : « #sp », « #gifted », simple tag de la marque.
+
+*Australie — ACCC :* Les labels acceptés sont : « #Ad », « Advertising », « Branded Content », « Paid Partnership ». Les labels insuffisants : « #sp », « #spon », « #gifted ».
+
+*Canada — Loi sur la concurrence :* Toute allégation publicitaire doit être véridique, non trompeuse et clairement identifiée comme commerciale.
+
+**L'Influenceur s'engage à respecter la réglementation publicitaire applicable dans chaque pays où il diffuse du contenu.**
 
 6.2. **Qualité du contenu.** L'Influenceur s'engage à :
 - Créer des contenus authentiques et pertinents pour son audience
-- Ne pas dénigrer la concurrence
+- Ne formuler que des affirmations véridiques et vérifiables sur les services SOS Expat
+- Ne pas promettre des résultats garantis
 - Respecter les chartes graphiques et guidelines de marque SOS Expat
 - Ne pas modifier les messages clés sans validation préalable
 
-6.3. **Conformité légale.** L'Influenceur respecte toutes les lois applicables :
-- Droit de la publicité et du marketing d'influence
-- Protection des données (RGPD)
-- Déclaration fiscale de ses revenus d'influence
+6.3. **Conformité aux plateformes tierces.** L'Influenceur s'engage à respecter les CGU de chaque plateforme sur laquelle il opère (Instagram, TikTok, YouTube, etc.). SOS Expat n'est pas responsable des suspensions, restrictions ou pénalités infligées à l'Influenceur par des plateformes tierces.
+
+6.4. **Sous-affiliation interdite.** L'Influenceur ne peut pas déléguer, sous-licencier ou céder ses droits affiliés à des tiers sans accord écrit préalable de SOS Expat. Toute délégation non autorisée entraîne la résiliation immédiate du compte.
+
+6.5. **Exclusivité partielle.** L'Influenceur peut promouvoir d'autres services, à l'exclusion des **concurrents directs de SOS Expat** (plateformes de mise en relation expatriés/avocats ou experts juridiques en ligne proposant des services similaires). En cas de doute, l'Influenceur consulte SOS Expat avant toute promotion.
+
+6.6. **Conformité légale générale.** L'Influenceur respecte toutes les lois applicables :
+- Droit de la publicité et du marketing d'influence dans son pays de résidence et dans les pays ciblés
+- Protection des données de ses abonnés (RGPD, CCPA le cas échéant)
+- Déclaration fiscale de ses revenus d'affiliation
 - Réglementations spécifiques à chaque plateforme
 
-6.4. **Indépendance.** L'Influenceur agit en **indépendant** ; aucun lien d'emploi, mandat ou agence n'est créé avec SOS Expat.
+6.7. **Indépendance.** L'Influenceur agit en **prestataire indépendant** ; aucun lien d'emploi, contrat de travail, mandat ou relation d'agence n'est créé avec SOS Expat. L'Influenceur est seul responsable de ses cotisations sociales et obligations fiscales.
 
 ---
 
 ## 7. Paiement des commissions
 
-7.1. **KYC obligatoire.** L'Influenceur doit compléter la vérification d'identité (KYC) **avant** tout retrait.
+7.1. **KYC obligatoire.** L'Influenceur doit compléter la vérification d'identité (KYC) **avant** tout retrait. Le KYC doit être initié dans les **90 jours** suivant la première commission validée.
 
 7.2. **Méthodes de paiement.** Les retraits sont disponibles via :
 - Virement bancaire (SEPA/International)
 - PayPal
 - Wise
 
-7.3. **Délais.** Les paiements sont traités sous **7 jours ouvrés** après validation.
+7.3. **Délais.** Les paiements sont traités sous **7 jours ouvrés** après validation. Les délais d'encaissement dépendent également de la banque de l'Influenceur.
 
 7.4. **Seuil minimum.** Le retrait est possible à partir de **$20** de solde disponible.
 
-7.5. **Fonds non réclamés.** En cas de non-complétion du KYC sous **180 jours**, les fonds sont considérés abandonnés conformément à l'article 8.7 des CGU générales.
+7.5. **Devise et conversion.** Tous les paiements sont libellés en **USD**. Si l'Influenceur souhaite être payé dans une autre devise, la conversion s'effectue au taux du jour Wise au moment du virement. Les **frais de conversion sont à la charge de l'Influenceur**.
 
-7.6. **Taxes.** L'Influenceur est seul responsable de la déclaration et du paiement de ses impôts et charges sociales liés à ses revenus d'influence.
+7.6. **Fonds non réclamés.** En cas de non-complétion du KYC sous **180 jours** après la première commission validée, les fonds sont considérés abandonnés et peuvent être restitués à SOS Expat conformément aux lois applicables sur les propriétés abandonnées.
+
+7.7. **Obligations fiscales — Général.** L'Influenceur est seul responsable de la déclaration et du paiement de ses impôts, taxes et cotisations sociales liés à ses revenus d'affiliation dans son pays de résidence.
+
+7.8. **Obligations fiscales — USA (non-résidents).** Les Influenceurs non-résidents aux États-Unis qui perçoivent des paiements d'un opérateur américain devront fournir le formulaire **W-8BEN** (personnes physiques) ou **W-8BEN-E** (entités) avant tout paiement. Sans ce formulaire, une retenue à la source de **30%** peut être appliquée. Ce formulaire a une durée de validité de **3 ans** et doit être renouvelé.
+
+7.9. **TVA / GST.** Si l'Influenceur est assujetti à la TVA ou à toute taxe sur la valeur ajoutée dans son pays, il est responsable de son application et de sa déclaration. Les commissions versées sont exprimées hors taxes.
+
+7.10. **Justificatifs.** SOS Expat fournit à l'Influenceur un relevé mensuel détaillé des commissions générées, validées et versées, accessible depuis le dashboard.
 
 ---
 
@@ -785,32 +838,45 @@ const TermsInfluencers: React.FC = () => {
 - Suspicion de fraude ou de manipulation d'audience
 - Violation des CGU ou des règles de transparence publicitaire
 - Contenu préjudiciable à l'image de SOS Expat
-- Inactivité prolongée (365+ jours)
+- Inactivité prolongée (365+ jours sans aucune activité)
 
-8.2. **Résiliation par l'Influenceur.** L'Influenceur peut clôturer son compte à tout moment. Les commissions validées restent payables.
+8.2. **Résiliation pour cause (for cause).** En cas de violation grave des CGU, fraude avérée, spam, violation de la marque ou violation légale, SOS Expat peut résilier le compte **avec effet immédiat**, sans préavis. Les commissions non encore validées sont annulées. Les commissions versées obtenues frauduleusement font l'objet d'un claw-back.
 
-8.3. **Résiliation par SOS Expat.** En cas de violation grave, SOS Expat peut résilier le compte avec effet immédiat. Les commissions non validées sont annulées.
+8.3. **Résiliation sans cause (without cause).** En dehors de toute violation, SOS Expat peut résilier le programme avec un préavis de **30 jours** notifié par email. Les commissions validées avant la date d'effet de la résiliation restent dues et seront payées normalement.
 
-8.4. **Effets de la résiliation.** À la résiliation :
-- Le Code Affilié est désactivé
-- Les Filleuls sont réattribués à SOS Expat
+8.4. **Résiliation par l'Influenceur.** L'Influenceur peut clôturer son compte à tout moment, avec un préavis recommandé de **14 jours**. Les commissions validées restent payables.
+
+8.5. **Effets de la résiliation.** À la résiliation :
+- Le Code Affilié est désactivé immédiatement
+- Les Filleuls et prestataires recrutés sont réattribués à SOS Expat
 - L'accès au dashboard est supprimé
+- L'Influenceur doit cesser immédiatement tout usage de la marque et des éléments SOS Expat
+
+8.6. **Clauses survivant à la résiliation.** Les articles suivants restent en vigueur après résiliation : confidentialité (art. 13.5), propriété intellectuelle (art. 10), limitation de responsabilité (art. 11), loi applicable (art. 12), et protection des données (art. 9).
 
 ---
 
 ## 9. Données personnelles
 
-9.1. **Responsable de traitement.** SOS Expat (WorldExpat OÜ) pour les données du programme Influenceurs.
+9.1. **Responsable de traitement.** SOS Expat (WorldExpat OÜ, Tallinn, Estonie) est responsable du traitement des données personnelles dans le cadre du programme Influenceurs.
 
-9.2. **Données collectées.** Identité, coordonnées, plateformes de diffusion, performances, données de paiement, logs de connexion.
+9.2. **Données collectées.** Identité, coordonnées, plateformes de diffusion et audiences, performances affiliées, données de paiement, informations fiscales, logs de connexion, adresse IP.
 
-9.3. **Finalités.** Gestion du programme, paiement des commissions, prévention de la fraude, amélioration des services.
+9.3. **Finalités et base légale (RGPD Art. 6).** Gestion du programme (exécution du contrat), paiement des commissions (exécution du contrat), prévention de la fraude (intérêt légitime), conformité légale et fiscale (obligation légale), amélioration des services (intérêt légitime).
 
-9.4. **Durée de conservation.** Données actives pendant la relation ; archives 10 ans après résiliation (obligations légales).
+9.4. **Durée de conservation.** Données actives pendant la relation contractuelle ; archives **10 ans** après résiliation pour les données comptables et fiscales (obligation légale estonienne et UE). Droit à l'effacement possible pour les données non soumises à obligation légale de conservation.
 
-9.5. **Droits.** Accès, rectification, effacement, portabilité, opposition via contact@sos-expat.com.
+9.5. **Droits RGPD.** Accès, rectification, effacement, portabilité, opposition, limitation du traitement via contact@sos-expat.com. Droit de saisir la **CNIL** (France) ou toute autorité de contrôle compétente dans votre pays.
 
-9.6. **Transferts.** Avec garanties appropriées (clauses contractuelles types) si hors UE.
+9.6. **Transferts hors UE.** En cas de transfert vers des pays tiers, SOS Expat met en œuvre des **clauses contractuelles types** (SCT) approuvées par la Commission européenne ou s'appuie sur des mécanismes équivalents.
+
+9.7. **Conformité CCPA (Californie, USA).** Les Influenceurs résidents de Californie bénéficient des droits prévus par le California Consumer Privacy Act : droit de savoir, droit de supprimer, droit de refuser la vente/partage des données personnelles. Contactez contact@sos-expat.com pour exercer ces droits.
+
+9.8. **Conformité PIPEDA / Loi 25 (Canada).** Les Influenceurs canadiens bénéficient des protections prévues par PIPEDA et, pour les résidents québécois, par la Loi 25. SOS Expat s'engage à notifier toute violation de données dans un délai de **72 heures** aux autorités compétentes.
+
+9.9. **Conformité LGPD (Brésil).** Les Influenceurs résidents au Brésil bénéficient des droits prévus par la Lei Geral de Proteção de Dados (loi 13.709/2018).
+
+9.10. **Obligations de l'Influenceur.** L'Influenceur qui collecte des données personnelles de ses abonnés dans le cadre de la promotion de SOS Expat est responsable du traitement de ces données et doit disposer d'une politique de confidentialité conforme aux lois applicables.
 
 ---
 
@@ -829,36 +895,55 @@ const TermsInfluencers: React.FC = () => {
 
 ## 11. Responsabilité
 
-11.1. **Limitation.** La responsabilité de SOS Expat est limitée aux **commissions dues** au titre des 12 derniers mois.
+11.1. **Limitation de responsabilité.** La responsabilité totale de SOS Expat envers l'Influenceur, quelle qu'en soit la cause, est limitée au montant total des **commissions versées au cours des 12 derniers mois** précédant la réclamation.
 
-11.2. **Exclusions.** SOS Expat n'est pas responsable des :
-- Dommages indirects (perte de revenus, d'opportunités, atteinte à la réputation)
-- Actions des Filleuls ou utilisateurs
-- Problèmes techniques des plateformes tierces (réseaux sociaux)
+11.2. **Exclusion des dommages indirects.** SOS Expat exclut toute responsabilité pour les dommages indirects, spéciaux, consécutifs ou punitifs, y compris : perte de profits, perte d'opportunités commerciales, atteinte à la réputation, interruption d'activité — même si SOS Expat a été informé de la possibilité de tels dommages.
 
-11.3. **Indemnisation.** L'Influenceur indemnise SOS Expat contre toute réclamation liée à ses contenus, notamment en cas de non-respect des règles de transparence publicitaire.
+11.3. **Absence de garanties.** La Plateforme est fournie « en l'état » et « selon disponibilité ». SOS Expat ne garantit pas :
+- La disponibilité continue de la plateforme (maintenance, pannes)
+- Un niveau minimum de trafic, d'appels ou de revenus pour l'Influenceur
+- La pérennité du programme (SOS Expat peut modifier ou fermer le programme avec préavis)
+
+11.4. **Force majeure.** SOS Expat n'est pas responsable des retards ou inexécutions causés par des événements hors de son contrôle : catastrophes naturelles, guerres, cyberattaques, défaillances d'infrastructures Internet, décisions gouvernementales, pandémies.
+
+11.5. **Restrictions géographiques.** Le programme est disponible dans la plupart des pays, à l'exception des pays sous embargo international (Nations Unies, Union Européenne, États-Unis OFAC) ou des pays dont la réglementation locale interdirait la participation à ce type de programme. SOS Expat se réserve le droit de refuser ou de suspendre des comptes provenant de ces territoires.
+
+11.6. **Indemnisation par l'Influenceur.** L'Influenceur s'engage à défendre, indemniser et tenir SOS Expat indemne contre toute réclamation, amende ou frais (y compris honoraires d'avocats) découlant de : (i) la violation des présentes CGU, (ii) ses contenus promotionnels, (iii) la violation de droits de tiers, (iv) la violation de toute loi applicable, notamment en matière de transparence publicitaire.
 
 ---
 
 ## 12. Droit applicable
 
-12.1. **Droit estonien.** Les présentes CGU sont régies par le droit estonien.
+12.1. **Droit applicable.** Les présentes CGU sont régies par le **droit estonien**, sans préjudice des dispositions impératives applicables dans le pays de résidence de l'Influenceur (notamment pour les consommateurs européens bénéficiant des protections du Règlement Rome I).
 
-12.2. **Arbitrage CCI.** Tout litige est résolu par arbitrage CCI, siège à Tallinn, en français.
+12.2. **Processus de résolution des litiges (multi-niveaux).**
+- **Étape 1 — Contact amiable** : toute réclamation doit d'abord être adressée à contact@sos-expat.com. SOS Expat s'engage à répondre sous **15 jours ouvrés**.
+- **Étape 2 — Médiation interne** : en cas d'insatisfaction, l'Influenceur peut demander une revue par l'équipe Compliance dans un délai supplémentaire de **15 jours**.
+- **Étape 3 — Arbitrage CCI** : tout litige non résolu à l'amiable est soumis à l'arbitrage de la **Chambre de Commerce Internationale (CCI)**, siège à Tallinn (Estonie), en langue française. La sentence arbitrale est définitive et exécutoire.
 
-12.3. **Renonciation aux actions collectives.** Toute action collective est exclue ; réclamations individuelles uniquement.
+12.3. **Droits des autorités de contrôle.** La clause d'arbitrage ne prive pas l'Influenceur de son droit de saisir toute **autorité de protection des données** compétente (CNIL, etc.) ou toute autorité de régulation nationale compétente.
+
+12.4. **Renonciation aux actions collectives.** Les parties renoncent à participer à toute action collective ou représentative. Chaque litige est traité individuellement.
+
+12.5. **Langue.** La version française des présentes CGU prévaut en cas de divergence entre les différentes traductions disponibles.
 
 ---
 
 ## 13. Dispositions diverses
 
-13.1. **Intégralité.** Les CGU constituent l'accord complet entre les parties.
+13.1. **Intégralité de l'accord.** Les présentes CGU, avec leurs annexes et tout document incorporé par référence, constituent l'accord complet entre les parties et remplacent tout accord antérieur oral ou écrit.
 
-13.2. **Nullité partielle.** Si une clause est nulle, les autres restent en vigueur.
+13.2. **Nullité partielle (Severability).** Si une clause est déclarée nulle ou inapplicable par une juridiction compétente, elle sera reformée au minimum nécessaire pour la rendre applicable. Les autres clauses restent pleinement en vigueur.
 
-13.3. **Non-renonciation.** L'absence d'exercice d'un droit n'emporte pas renonciation.
+13.3. **Non-renonciation.** L'absence d'exercice d'un droit ou l'acceptation d'une situation non conforme dans un cas particulier ne constitue pas une renonciation définitive à ce droit.
 
-13.4. **Langue.** Le français prévaut en cas de divergence entre traductions.
+13.4. **Cession.** L'Influenceur ne peut céder ses droits ou obligations sans accord écrit préalable de SOS Expat. SOS Expat peut céder ses droits dans le cadre d'une fusion, acquisition ou cession d'activité, avec notification à l'Influenceur.
+
+13.5. **Confidentialité.** L'Influenceur s'engage à ne pas divulguer les informations confidentielles reçues dans le cadre du programme (taux de commissions spéciaux, données techniques de la plateforme, informations stratégiques). Cette obligation de confidentialité survit à la résiliation du contrat pendant **2 ans**.
+
+13.6. **Modifications des CGU.** SOS Expat notifie toute modification significative par email au moins **30 jours** avant son entrée en vigueur. Pour les modifications urgentes imposées par une obligation légale, la notification peut être simultanée à l'entrée en vigueur. La poursuite du programme après la date d'effet vaut acceptation. En cas de refus, l'Influenceur peut résilier sans pénalité avant la date d'effet.
+
+13.7. **Langue.** Le français prévaut en cas de divergence entre les différentes traductions disponibles.
 
 ---
 
@@ -923,99 +1008,152 @@ Pour toute question concernant le programme Influenceurs, contactez-nous via le 
 
 ## 4. Commissions and Compensation
 
-4.1. **Direct Call Commissions.** The Influencer earns **$10** for each paid call generated via their Affiliate Code, with no volume or time limits. These direct commissions are earned independently of any activity conditions.
+4.1. **Direct Call Commissions.** The Influencer earns **$10** for each paid call generated via their Affiliate Code, with no volume or time limits.
 
-4.2. **Referral Commissions (N1 Referral).** The Influencer earns a commission on each client call generated by their N1 Influencer Referrals, for **12 months** from the N1 Referral's registration date. **Cumulative conditions to earn this commission:**
-- The Influencer must achieve a minimum of **$50 in direct commissions** (Article 4.1) during the calendar month concerned
-- The Influencer must ensure training and follow-up of their N1 Referrals: sharing resources and brand guidelines, responding to questions within 48 hours, assisting with program onboarding
-- In the absence of these conditions in a given month, N1 commissions for that month are suspended (non-retroactive)
+4.2. **Progression Levels and Bonuses.** The direct commission rate is enhanced based on the level achieved (determined by monthly activity volume):
+- Level 1: ×1.00 (base $10/call)
+- Level 2: ×1.10 (+10% → $11/call)
+- Level 3: ×1.20 (+20% → $12/call)
+- Level 4: ×1.35 (+35% → $13.50/call)
+- Level 5: ×1.50 (+50% → $15/call)
 
-4.3. **Referral Commissions (N2 Referral).** The Influencer earns a commission on each client call generated by their N2 Referrals, for **12 months** from the N2 Referral's registration date. The **same cumulative conditions** as in 4.2 apply.
+**Monthly Top 3 Bonus:** The top 3 Influencers of the month receive an additional multiplier on all their commissions: 1st rank ×2.00 / 2nd rank ×1.50 / 3rd rank ×1.15.
 
-4.4. **Maximum Affiliate Commission Duration.** Commissions on Referrals (N1 and N2) are paid for a **maximum of 12 months** from each referral's registration date. After this period, the Influencer retains only their direct commissions (Article 4.1). They may recruit new referrals to start new 12-month periods.
+4.3. **Provider Recruitment Commission.** The Influencer earns **$5** for each paid call made by a provider (lawyer, expat expert) they recommended via their recruitment code, for **12 months** from the provider's registration date. This commission ceases automatically upon expiry of the 12-month period.
 
-4.5. **Commission Schedule (summary).**
+4.4. **Influencer Recruitment Bonus.** For each Influencer recruited via the referral code, the referring Influencer earns a **one-time bonus of $5** when the recruited Influencer accumulates **$50 in total commissions**. This bonus is paid **once per recruited Influencer**, with no recurring commission on that Influencer's future calls.
+
+4.5. **Attribution Model (Tracking).** Recommendations are tracked using a **Last-Click cookie valid for 30 days**: any click on the Influencer's affiliate link creates a 30-day cookie in the visitor's browser. If that visitor makes a paid call within this period, the commission is attributed to the Influencer. A new click on another affiliate link overwrites the previous cookie (Last-Click model). The Influencer acknowledges that cookie disabling by the user may prevent attribution.
+
+4.6. **Validation Period (Hold Period).** Commissions go through a retention period before becoming payable:
+- Status **"pending"**: during the **client withdrawal period (14 days)** following the call
+- Status **"validated"**: after automatic anti-fraud verification is passed (variable delay)
+- Status **"payable"**: at the next monthly payment cycle following validation
+
+4.7. **Refund and Clawback Policy.** In case of client call refund or bank chargeback:
+- The corresponding commission is **cancelled** if still in "pending" or "validated" status
+- If the commission has already been paid, it is **deducted from the next payment** (clawback)
+- In case of fraudulent chargeback attributable to the Influencer, additional **processing fees** may apply
+- SOS Expat may recover paid commissions in case of fraud detected retroactively, within **12 months** of payment
+
+4.8. **No Earnings Guarantee.** SOS Expat does not guarantee any minimum level of traffic, calls, or income. Past performance does not constitute a guarantee of future earnings.
+
+4.9. **Commission Schedule (summary).**
 
 | Commission Type | Amount | Duration | Conditions |
 |---|---|---|---|
-| Direct client call (via affiliate code) | $10/call | Unlimited | None |
-| Call via N1 Influencer Referral | Variable | 12 months | $50/month + training |
-| Call via N2 Influencer Referral | Variable | 12 months | $50/month + training |
+| Direct client call (via affiliate code) | $10/call (×level bonus) | Unlimited | None |
+| Call via recruited provider | $5/call | 12 months max | None |
+| Influencer recruitment bonus | $5 (once) | One-time | Recruited reaches $50 cumulative |
+| Monthly Top 3 Bonus | ×2.00 / ×1.50 / ×1.15 | Monthly | Top 3 of month |
 
-4.6. **Payment Thresholds.** Commissions are validated after:
-- Client withdrawal period (14 days)
-- Automatic anti-fraud validation
-- Reaching minimum withdrawal threshold (**$20**)
-
-4.7. **Performance Bonuses.** Additional bonuses may be granted based on recommendation volume and quality of generated audience.
+4.10. **Withdrawal Threshold.** Withdrawal is available from **$20** validated balance.
 
 ---
 
 ## 5. Anti-fraud Rules
 
-5.1. **Strict Prohibitions.** The following are strictly prohibited:
-- Self-referral or fictitious cross-referral
-- Purchasing fake followers or fake engagement
-- Using bots or automated scripts
-- Artificially generating calls (self-calls, fake clients)
-- Creating multiple accounts
-- Any manipulation of tracking systems
+5.1. **Tracking Fraud — Absolute Prohibitions.** The following are strictly prohibited, subject to immediate termination and legal action:
+- **Cookie stuffing**: injecting affiliate cookies into a third party's browser without a real click (via hidden pixels, iframes, adware)
+- **Forced click**: automatically redirecting a user to an affiliate page without their action
+- **Self-referral**: using one's own code to generate calls or recruit fictitious accounts
+- **Fictitious cross-referral**: organizing between multiple accounts to mutually refer each other
+- **Artificial traffic / bots**: using scripts, robots, click farms, or traffic purchase services
+- **Fake followers / fake engagement**: purchasing or using artificial audiences
+- **Creating multiple accounts** under the same identity or linked identities
+- **Tracking manipulation**: any attempt to modify, circumvent, or exploit attribution systems
 
-5.2. **Automatic Detection.** SOS Expat uses detection systems including:
-- Suspicious call pattern analysis
-- Audience authenticity verification
+5.2. **Prohibited Content.** The Influencer may not promote SOS Expat through content related to:
+- Pornographic, violent, or hate content
+- Illegal gambling, unregulated cryptocurrencies
+- Drugs, weapons, illegal activities
+- Counterfeiting or copyright infringement
+- Content targeting minors for adult services
+- Disinformation or deepfakes
+
+5.3. **Trademark Bidding.** It is strictly prohibited to use the terms "SOS Expat", "sos-expat.com" or spelling variations as keywords in paid advertising campaigns (Google Ads, Meta Ads, TikTok Ads, etc.) without prior written authorization.
+
+5.4. **Automatic Detection.** SOS Expat uses detection systems including:
+- Suspicious call and click pattern analysis
+- Audience authenticity and engagement verification
 - Abnormal conversion rate analysis
+- IP address, browser fingerprint, and behavior verification
 
-5.3. **Sanctions.** In case of proven or suspected fraud:
-- **Immediate suspension** of account
-- **Cancellation** of all affected commissions
+5.5. **Graduated Sanctions.** In case of violation:
+- **Warning** for first minor violation
+- **Temporary suspension** and commission freeze
+- **Cancellation** of all fraud-related commissions (clawback if already paid)
 - **Permanent ban** from the Platform
-- **Legal action** if applicable
+- **Legal action** and damages claim if applicable
 
-5.4. **Appeals.** The Influencer may contest a sanction via the contact form within **30 days**.
+5.6. **Multi-Level Appeals Process.** The Influencer may contest a sanction through the following process:
+- **Level 1**: dispute via contact form within **30 days** (response within 15 business days)
+- **Level 2**: escalation to the Compliance team if unsatisfied, within an additional **15 days**
+- **Level 3**: ICC arbitration (Article 12) if no amicable resolution is reached
 
 ---
 
 ## 6. Influencer Obligations
 
-6.1. **Advertising Transparency.** The Influencer agrees to:
-- Clearly identify all sponsored content (#partnership, #ad, #sponsored)
-- Comply with platform rules and each social network's guidelines
-- Not misrepresent SOS Expat
-- Honestly mention service pricing and conditions
+6.1. **Advertising Transparency — Legal Obligations by Country.**
+
+*European Union / France:* Pursuant to Directive 2005/29/EC and the **French Act No. 2023-451 of June 9, 2023**, any commercial publication must explicitly mention **"Publicité"** (Advertising) or **"Collaboration commerciale"** (Commercial Collaboration) in a visible manner, at the beginning of the content, before any call to action.
+
+*United States — FTC (16 CFR Part 255):* Disclosure must be **clear, prominent, and understandable** to the average consumer. It must appear **before** any link or call to action. Accepted terms: "#ad", "#sponsored", "Paid partnership". Terms insufficient alone: "#sp", "#gifted", simply tagging the brand.
+
+*Australia — ACCC:* Accepted labels: "#Ad", "Advertising", "Branded Content", "Paid Partnership". Insufficient labels: "#sp", "#spon", "#gifted".
+
+*Canada — Competition Act:* All advertising claims must be truthful, non-deceptive, and clearly identified as commercial.
+
+**The Influencer agrees to comply with the advertising regulations applicable in each country where they distribute content.**
 
 6.2. **Content Quality.** The Influencer agrees to:
 - Create authentic and relevant content for their audience
-- Not disparage competitors
+- Only make truthful and verifiable statements about SOS Expat services
+- Not promise guaranteed results
 - Respect SOS Expat brand guidelines and graphic charters
 - Not modify key messages without prior validation
 
-6.3. **Legal Compliance.** The Influencer complies with all applicable laws:
-- Advertising and influencer marketing law
-- Data protection (GDPR)
-- Tax declaration of influencer income
+6.3. **Third-Party Platform Compliance.** The Influencer agrees to comply with the terms of service of each platform on which they operate (Instagram, TikTok, YouTube, etc.). SOS Expat is not liable for suspensions, restrictions, or penalties imposed on the Influencer by third-party platforms.
+
+6.4. **Sub-affiliation Prohibited.** The Influencer may not delegate, sub-license, or transfer their affiliate rights to third parties without prior written approval from SOS Expat. Any unauthorized delegation results in immediate account termination.
+
+6.5. **Partial Exclusivity.** The Influencer may promote other services, excluding **direct competitors of SOS Expat** (online platforms connecting expats with lawyers or legal/expat experts offering similar services). In case of doubt, the Influencer consults SOS Expat before any promotion.
+
+6.6. **General Legal Compliance.** The Influencer complies with all applicable laws:
+- Advertising and influencer marketing law in their country of residence and in targeted countries
+- Protection of subscribers' personal data (GDPR, CCPA as applicable)
+- Tax declaration of affiliate income
 - Platform-specific regulations
 
-6.4. **Independence.** The Influencer acts as an **independent contractor**; no employment, agency, or mandate relationship is created with SOS Expat.
+6.7. **Independence.** The Influencer acts as an **independent contractor**; no employment contract, agency, or mandate relationship is created with SOS Expat. The Influencer is solely responsible for their social contributions and tax obligations.
 
 ---
 
 ## 7. Commission Payments
 
-7.1. **Mandatory KYC.** The Influencer must complete identity verification (KYC) **before** any withdrawal.
+7.1. **Mandatory KYC.** The Influencer must complete identity verification (KYC) **before** any withdrawal. KYC must be initiated within **90 days** of the first validated commission.
 
 7.2. **Payment Methods.** Withdrawals are available via:
 - Bank transfer (SEPA/International)
 - PayPal
 - Wise
 
-7.3. **Timing.** Payments are processed within **7 business days** after validation.
+7.3. **Timing.** Payments are processed within **7 business days** after validation. Processing times also depend on the Influencer's bank.
 
 7.4. **Minimum Threshold.** Withdrawal is possible from **$20** available balance.
 
-7.5. **Unclaimed Funds.** If KYC is not completed within **180 days**, funds are considered abandoned per Article 8.7 of the general Terms.
+7.5. **Currency and Conversion.** All payments are denominated in **USD**. If the Influencer wishes to be paid in another currency, conversion is made at the Wise rate on the day of transfer. **Conversion fees are at the Influencer's expense.**
 
-7.6. **Taxes.** The Influencer is solely responsible for declaring and paying their taxes and social charges related to influencer income.
+7.6. **Unclaimed Funds.** If KYC is not completed within **180 days** of the first validated commission, funds are considered abandoned and may be returned to SOS Expat pursuant to applicable unclaimed property laws.
+
+7.7. **Tax Obligations — General.** The Influencer is solely responsible for declaring and paying their taxes, levies, and social contributions related to affiliate income in their country of residence.
+
+7.8. **Tax Obligations — USA (non-residents).** Influencers not residing in the United States who receive payments from a US-based operator must provide form **W-8BEN** (individuals) or **W-8BEN-E** (entities) before any payment. Without this form, a **30% withholding tax** may be applied. This form has a **3-year** validity and must be renewed.
+
+7.9. **VAT / GST.** If the Influencer is subject to VAT or any value-added tax in their country, they are responsible for its application and declaration. Commissions paid are expressed exclusive of tax.
+
+7.10. **Statements.** SOS Expat provides the Influencer with a detailed monthly statement of generated, validated, and paid commissions, accessible from the dashboard.
 
 ---
 
@@ -1025,32 +1163,45 @@ Pour toute question concernant le programme Influenceurs, contactez-nous via le 
 - Fraud suspicion or audience manipulation
 - Terms violation or advertising transparency rules
 - Content harmful to SOS Expat's image
-- Extended inactivity (365+ days)
+- Extended inactivity (365+ days without any activity)
 
-8.2. **Termination by Influencer.** The Influencer may close their account at any time. Validated commissions remain payable.
+8.2. **Termination for Cause.** In case of serious Terms violation, proven fraud, spam, trademark infringement, or legal violation, SOS Expat may terminate the account **with immediate effect**, without notice. Unvalidated commissions are cancelled. Paid commissions obtained fraudulently are subject to clawback.
 
-8.3. **Termination by SOS Expat.** In case of serious violation, SOS Expat may terminate the account with immediate effect. Unvalidated commissions are cancelled.
+8.3. **Termination without Cause.** Outside of any violation, SOS Expat may terminate the program with **30 days' notice** by email. Commissions validated before the termination effective date remain due and will be paid normally.
 
-8.4. **Effects of Termination.** Upon termination:
-- Affiliate Code is deactivated
-- Referrals are reassigned to SOS Expat
+8.4. **Termination by Influencer.** The Influencer may close their account at any time, with a recommended notice of **14 days**. Validated commissions remain payable.
+
+8.5. **Effects of Termination.** Upon termination:
+- Affiliate Code is immediately deactivated
+- Recruited referrals and providers are reassigned to SOS Expat
 - Dashboard access is removed
+- The Influencer must immediately cease all use of the SOS Expat brand and materials
+
+8.6. **Surviving Clauses.** The following articles remain in force after termination: confidentiality (Art. 13.5), intellectual property (Art. 10), limitation of liability (Art. 11), governing law (Art. 12), and data protection (Art. 9).
 
 ---
 
 ## 9. Personal Data
 
-9.1. **Data Controller.** SOS Expat (WorldExpat OÜ) for Influencer program data.
+9.1. **Data Controller.** SOS Expat (WorldExpat OÜ, Tallinn, Estonia) is the data controller for personal data processed under the Influencer program.
 
-9.2. **Data Collected.** Identity, contact details, distribution platforms, performance, payment data, connection logs.
+9.2. **Data Collected.** Identity, contact details, distribution platforms and audiences, affiliate performance, payment data, tax information, connection logs, IP address.
 
-9.3. **Purposes.** Program management, commission payments, fraud prevention, service improvement.
+9.3. **Purposes and Legal Basis (GDPR Art. 6).** Program management (contract performance), commission payments (contract performance), fraud prevention (legitimate interest), legal and tax compliance (legal obligation), service improvement (legitimate interest).
 
-9.4. **Retention.** Active data during relationship; archives 10 years after termination (legal obligations).
+9.4. **Retention.** Active data during the contractual relationship; **10-year** archives after termination for accounting and tax data (Estonian and EU legal obligation). Right to erasure available for data not subject to mandatory retention.
 
-9.5. **Rights.** Access, rectification, erasure, portability, objection via contact@sos-expat.com.
+9.5. **GDPR Rights.** Access, rectification, erasure, portability, objection, restriction of processing via contact@sos-expat.com. Right to lodge a complaint with the competent supervisory authority in your country.
 
-9.6. **Transfers.** With appropriate safeguards (standard contractual clauses) if outside EU.
+9.6. **International Transfers.** For transfers to third countries, SOS Expat implements **Standard Contractual Clauses** (SCCs) approved by the European Commission or equivalent mechanisms.
+
+9.7. **CCPA Compliance (California, USA).** California-resident Influencers benefit from California Consumer Privacy Act rights: right to know, right to delete, right to opt-out of sale/sharing of personal data. Contact contact@sos-expat.com to exercise these rights.
+
+9.8. **PIPEDA / Law 25 Compliance (Canada).** Canadian Influencers benefit from PIPEDA protections and, for Quebec residents, Law 25. SOS Expat commits to notifying any data breach to the competent authorities within **72 hours**.
+
+9.9. **LGPD Compliance (Brazil).** Brazil-resident Influencers benefit from rights under the Lei Geral de Proteção de Dados (Law 13.709/2018).
+
+9.10. **Influencer Obligations.** The Influencer who collects personal data from their followers in connection with promoting SOS Expat is responsible for that processing and must have a privacy policy compliant with applicable laws.
 
 ---
 
@@ -1069,36 +1220,55 @@ Pour toute question concernant le programme Influenceurs, contactez-nous via le 
 
 ## 11. Liability
 
-11.1. **Limitation.** SOS Expat's liability is limited to **commissions due** for the last 12 months.
+11.1. **Liability Cap.** SOS Expat's total liability toward the Influencer, regardless of cause, is limited to the total amount of **commissions paid in the last 12 months** preceding the claim.
 
-11.2. **Exclusions.** SOS Expat is not liable for:
-- Indirect damages (loss of revenue, opportunities, reputational harm)
-- Actions of Referrals or users
-- Technical issues with third-party platforms (social networks)
+11.2. **Exclusion of Indirect Damages.** SOS Expat excludes all liability for indirect, special, consequential, or punitive damages, including: loss of profits, loss of business opportunities, reputational harm, business interruption — even if SOS Expat was informed of the possibility of such damages.
 
-11.3. **Indemnification.** The Influencer indemnifies SOS Expat against any claims related to their content, particularly in case of non-compliance with advertising transparency rules.
+11.3. **No Warranties.** The Platform is provided "as is" and "as available". SOS Expat does not guarantee:
+- Continuous platform availability (maintenance, outages)
+- Any minimum level of traffic, calls, or income for the Influencer
+- Program continuity (SOS Expat may modify or close the program with notice)
+
+11.4. **Force Majeure.** SOS Expat is not liable for delays or non-performance caused by events beyond its control: natural disasters, wars, cyberattacks, Internet infrastructure failures, governmental decisions, pandemics.
+
+11.5. **Geographic Restrictions.** The program is available in most countries, except those under international embargo (United Nations, European Union, US OFAC) or countries whose local regulations would prohibit participation in this type of program. SOS Expat reserves the right to reject or suspend accounts from these territories.
+
+11.6. **Indemnification by Influencer.** The Influencer agrees to defend, indemnify, and hold SOS Expat harmless against any claim, fine, or expense (including reasonable attorney's fees) arising from: (i) breach of these Terms, (ii) their promotional content, (iii) infringement of third-party rights, (iv) violation of any applicable law, particularly regarding advertising transparency.
 
 ---
 
 ## 12. Governing Law
 
-12.1. **Estonian Law.** These Terms are governed by Estonian law.
+12.1. **Governing Law.** These Terms are governed by **Estonian law**, without prejudice to mandatory provisions applicable in the Influencer's country of residence (particularly for EU consumers benefiting from the protections of Regulation Rome I).
 
-12.2. **ICC Arbitration.** Any dispute is resolved by ICC arbitration, seated in Tallinn, in French.
+12.2. **Multi-Level Dispute Resolution.**
+- **Step 1 — Amicable contact**: all claims must first be submitted to contact@sos-expat.com. SOS Expat commits to responding within **15 business days**.
+- **Step 2 — Internal mediation**: if unsatisfied, the Influencer may request a review by the Compliance team within an additional **15 days**.
+- **Step 3 — ICC Arbitration**: any unresolved dispute shall be submitted to **International Chamber of Commerce (ICC)** arbitration, seated in Tallinn (Estonia), in French. The arbitral award is final and binding.
 
-12.3. **Class Action Waiver.** Class actions are excluded; individual claims only.
+12.3. **Supervisory Authority Rights.** The arbitration clause does not deprive the Influencer of their right to lodge a complaint with any competent **data protection authority** (CNIL, etc.) or any competent national regulatory authority.
+
+12.4. **Class Action Waiver.** The parties waive the right to participate in any class or representative action. Each dispute is handled individually.
+
+12.5. **Language.** The French version of these Terms prevails in case of discrepancy between the available translations.
 
 ---
 
 ## 13. Miscellaneous
 
-13.1. **Entire Agreement.** These Terms constitute the complete agreement between parties.
+13.1. **Entire Agreement.** These Terms, together with any annexes and documents incorporated by reference, constitute the complete agreement between the parties and supersede all prior oral or written agreements.
 
-13.2. **Severability.** If a clause is void, others remain in effect.
+13.2. **Severability.** If a clause is declared void or unenforceable by a competent court, it shall be reformed to the minimum extent necessary to make it enforceable. Other clauses remain fully in force.
 
-13.3. **No Waiver.** Failure to exercise a right does not constitute waiver.
+13.3. **No Waiver.** Failure to exercise a right or acceptance of a non-compliant situation in a particular case does not constitute a permanent waiver of that right.
 
-13.4. **Language.** French prevails in case of translation discrepancies.
+13.4. **Assignment.** The Influencer may not assign their rights or obligations without prior written approval from SOS Expat. SOS Expat may assign its rights in the context of a merger, acquisition, or business transfer, with notification to the Influencer.
+
+13.5. **Confidentiality.** The Influencer agrees not to disclose confidential information received under the program (special commission rates, platform technical data, strategic information). This confidentiality obligation survives termination of the contract for **2 years**.
+
+13.6. **Terms Modifications.** SOS Expat will notify any significant modification by email at least **30 days** before its effective date. For urgent modifications required by a legal obligation, notification may be simultaneous with the effective date. Continued participation after the effective date constitutes acceptance. In case of refusal, the Influencer may terminate without penalty before the effective date.
+
+13.7. **Language.** French prevails in case of discrepancy between the available translations.
 
 ---
 
@@ -1107,7 +1277,7 @@ Pour toute question concernant le programme Influenceurs, contactez-nous via le 
 For any questions about the Influencer program, contact us via the contact form or at: influencers@sos-expat.com
 `;
 
-  const defaultContent = selectedLanguage === "en" ? defaultEn : defaultFr;
+  const defaultContent = selectedLanguage === "fr" ? defaultFr : defaultEn;
   const parsedContent = useMemo(() => {
     const textToRender = content || defaultContent;
     return parseMarkdownContent(textToRender);

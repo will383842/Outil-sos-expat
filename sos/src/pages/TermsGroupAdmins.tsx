@@ -685,56 +685,59 @@ const TermsGroupAdmins: React.FC = () => {
 
 ## 4. Commissions et rémunération
 
-4.1. **Commission de Recrutement Prestataire.** L'Admin Groupe perçoit une commission sur chaque appel payant réalisé par un Prestataire Recruté, pendant **12 mois** à compter de la date d'inscription dudit prestataire. Passé ce délai, les commissions sur ce prestataire cessent automatiquement.
+4.1. **Commissions directes par appel client.** L'Admin Groupe perçoit **$10** pour chaque appel payant généré via son lien affilié, sans limite de volume ni de durée.
 
-4.2. **Commission de Recrutement Admin (Filleul N1).** L'Admin Groupe perçoit une commission sur chaque appel généré grâce à ses Admins Filleuls N1, pendant **12 mois** à compter de la date d'inscription du Filleul N1. **Conditions cumulatives pour percevoir cette commission :**
-- L'Admin Groupe doit réaliser un minimum de **$50 de commissions directes** (article 4.1) au cours du mois civil concerné
-- L'Admin Groupe doit assurer la formation et le suivi de ses Filleuls N1 : partage des guides et ressources, réponse aux questions dans un délai de 48h, accompagnement dans le recrutement de prestataires
-- En l'absence de ces conditions sur un mois donné, les commissions N1 de ce mois sont suspendues (non rétroactives)
+4.2. **Commission de Recrutement Prestataire.** L'Admin Groupe perçoit **$5** pour chaque appel payant réalisé par un Prestataire Recruté via son code de recrutement, pendant **12 mois** à compter de la date d'inscription dudit prestataire. Ces commissions cessent automatiquement à l'expiration du délai de 12 mois. L'Admin Groupe peut **re-recruter** de nouveaux prestataires pour démarrer de nouvelles périodes de 12 mois.
 
-4.3. **Commission de Recrutement Admin (Filleul N2).** L'Admin Groupe perçoit une commission sur chaque appel généré par les Filleuls N2, pendant **12 mois** à compter de la date d'inscription du Filleul N2. Les **mêmes conditions cumulatives** qu'en 4.2 s'appliquent.
+4.3. **Prime de recrutement d'un Admin Groupe.** Pour chaque Admin Groupe recruté via le code de parrainage, l'Admin-parrain perçoit une **prime unique de $50** lorsque l'Admin Groupe recruté cumule **$200 de commissions totales**. Cette prime est versée **une seule fois** par Admin recruté, sans commission récurrente sur les appels futurs de cet Admin.
 
-4.4. **Durée maximale des commissions d'affiliation.** Les commissions sur les Prestataires Recrutés et les Admins Filleuls (N1 et N2) sont versées pendant **12 mois maximum** à compter de la date d'inscription de chaque prestataire/filleul. Passé ce délai, l'Admin Groupe peut re-recruter et enregistrer de nouveaux prestataires pour bénéficier de nouvelles périodes de 12 mois.
+4.4. **Modèle d'attribution (tracking).** Le suivi des recommandations utilise un **cookie Last-Click valable 30 jours** : tout clic sur le lien affilié de l'Admin Groupe crée un cookie de 30 jours dans le navigateur du visiteur. Si ce visiteur effectue un appel payant dans ce délai, la commission est attribuée à l'Admin Groupe.
 
-4.5. **Barèmes de commissions (récapitulatif).**
+4.5. **Période de validation (Hold Period).** Les commissions sont soumises à une période de rétention :
+- Statut **« en attente »** : pendant la **période de rétractation client (14 jours)**
+- Statut **« validée »** : après vérification anti-fraude automatique
+- Statut **« payable »** : au prochain cycle mensuel de paiement
 
-| Type de commission | Montant | Durée |
-|---|---|---|
-| Appel d'un prestataire recruté | Variable | 12 mois |
-| Appel via Admin Filleul N1 | Variable | 12 mois |
-| Appel via Admin Filleul N2 | Variable | 12 mois |
+4.6. **Politique de remboursement et claw-back.** En cas de remboursement client ou chargeback bancaire, la commission est annulée ou récupérée sur le prochain paiement. SOS Expat peut récupérer des commissions versées en cas de fraude détectée a posteriori dans un délai de **12 mois**.
 
-4.6. **Seuils de paiement.** Les commissions sont validées après :
-- Période de rétractation client (14 jours)
-- Validation anti-fraude automatique
-- Atteinte du seuil minimum de retrait (**$20**)
+4.7. **Absence de garantie de revenus.** SOS Expat ne garantit aucun niveau minimum de trafic, d'appels ou de revenus.
 
-4.7. **Bonus de performance.** Des bonus supplémentaires peuvent être accordés pour les Admins Groupe atteignant des seuils de recrutement élevés (10, 25, 50, 100 prestataires recrutés actifs).
+4.8. **Barèmes de commissions (récapitulatif).**
+
+| Type de commission | Montant | Durée | Conditions |
+|---|---|---|---|
+| Appel client direct (via lien affilié) | $10/appel | Illimitée | Aucune |
+| Appel via prestataire recruté | $5/appel | 12 mois max | Aucune |
+| Prime recrutement d'un admin | $50 (unique) | Une seule fois | Admin recruté atteint $200 cumulé |
+| Bonus recrutement (10/25/50/100 prestataires) | Variable | Ponctuel | Seuils de recrutement atteints |
+
+4.9. **Seuil de retrait.** Retrait disponible à partir de **$20** de solde validé.
 
 ---
 
 ## 5. Règles anti-fraude
 
-5.1. **Interdictions strictes.** Sont formellement interdits :
-- L'auto-parrainage ou parrainage croisé fictif de prestataires ou d'admins
-- La création de faux groupes ou communautés fictives
-- L'inscription de faux prestataires ou prestataires inactifs sciemment
-- La génération artificielle d'appels
-- La création de comptes multiples
-- Toute manipulation des systèmes de tracking
+5.1. **Fraude — Interdictions absolues.** Sont formellement interdits :
+- **Cookie stuffing** : injection de cookies affiliés sans clic réel
+- **Auto-parrainage** ou parrainage croisé fictif de prestataires ou d'admins
+- **Création de faux groupes** ou communautés fictives (non existantes, inactives)
+- **Inscription de faux prestataires** ou prestataires inactifs sciemment recrutés pour générer des commissions
+- **Génération artificielle d'appels** (faux clients, self-calls, services tiers)
+- **Création de comptes multiples** sous une même identité
+- **Toute manipulation** des systèmes de tracking ou d'attribution
 
-5.2. **Détection automatique.** SOS Expat utilise des systèmes de détection incluant :
-- Analyse des patterns d'activité suspects
-- Vérification de l'existence et de l'activité réelle des groupes déclarés
-- Contrôle de la qualité des prestataires recrutés
+5.2. **Contenus interdits.** L'Admin Groupe ne peut pas promouvoir SOS Expat via des contenus liés à : contenu haineux, pornographique, jeux illégaux, drogues, armes, désinformation, ou ciblant des mineurs.
 
-5.3. **Sanctions.** En cas de fraude avérée ou suspectée :
-- **Suspension immédiate** du compte
-- **Annulation** de toutes les commissions concernées
-- **Bannissement définitif** de la Plateforme
-- **Poursuites judiciaires** le cas échéant
+5.3. **Enchères sur la marque.** Interdit d'utiliser « SOS Expat » ou variantes comme mots-clés publicitaires payants sans autorisation écrite préalable.
 
-5.4. **Recours.** L'Admin Groupe peut contester une sanction via le formulaire de contact dans un délai de **30 jours**.
+5.4. **Détection automatique.** Analyse des patterns d'activité suspects, vérification de l'existence des groupes déclarés, contrôle qualité des prestataires, analyse des taux de conversion anormaux.
+
+5.5. **Sanctions graduées.** Avertissement → Suspension + gel des commissions → Annulation (claw-back) → Bannissement définitif → Poursuites judiciaires.
+
+5.6. **Recours multi-niveaux.**
+- **Niveau 1** : formulaire de contact dans **30 jours** (réponse 15 jours ouvrés)
+- **Niveau 2** : escalade équipe Compliance (+15 jours)
+- **Niveau 3** : arbitrage CCI (article 12)
 
 ---
 
@@ -745,85 +748,96 @@ const TermsGroupAdmins: React.FC = () => {
 - Partager régulièrement des contenus relatifs aux services SOS Expat
 - Modérer son groupe conformément aux règles de la plateforme hébergeant le groupe
 - Signaler tout changement de statut de ses groupes (fermeture, changement de thématique)
+- Mettre à jour son profil en cas de fermeture ou de changement d'un groupe déclaré
 
 6.2. **Recrutement de prestataires.** L'Admin Groupe s'engage à :
-- Ne recruter que des professionnels légitimes (avocats, conseillers, experts réels)
-- Informer honnêtement les prestataires des conditions du programme
+- Ne recruter que des professionnels légitimes et vérifiables (avocats réels, conseillers, experts)
+- Informer honnêtement les prestataires des conditions du programme sans promesses trompeuses
 - Partager les ressources de formation fournies par SOS Expat
 - Accompagner les prestataires dans leur intégration sur la Plateforme
 
-6.3. **Suivi des filleuls admins.** L'Admin Groupe qui recrute d'autres Admins s'engage à :
+6.3. **Suivi des Admins recrutés.** L'Admin Groupe qui recrute d'autres Admins s'engage à :
 - Partager les guides et ressources fournis par SOS Expat
-- Répondre aux questions de ses Filleuls dans un délai de **48 heures**
+- Répondre aux questions de ses filleuls dans un délai de **48 heures**
 - Assurer un suivi minimum pour garantir leur succès dans le programme
 
-6.4. **Qualité du contenu.** L'Admin Groupe s'engage à :
-- Promouvoir SOS Expat de manière honnête et éthique
-- Ne pas faire de promesses trompeuses sur les services ou commissions
-- Identifier les contenus partenariaux le cas échéant
-- Respecter les chartes graphiques et guidelines de marque SOS Expat
+6.4. **Transparence publicitaire.** Tout contenu promotionnel doit respecter les obligations locales de divulgation : **#Publicité** / **#CollaborationCommerciale** (France), **#ad** / **Paid Partnership** (USA, ARPP, FTC), **#Ad** / **Advertising** (Australie, ACCC). **L'Admin Groupe est responsable de la conformité dans chaque pays ciblé.**
 
-6.5. **Conformité légale.** L'Admin Groupe respecte toutes les lois applicables :
-- Règles des plateformes où ses groupes sont hébergés (Facebook, WhatsApp, etc.)
-- Protection des données des membres de ses groupes (RGPD)
-- Déclaration fiscale de ses revenus d'affiliation
-- Réglementations locales sur le démarchage commercial
+6.5. **Conformité aux plateformes tierces.** L'Admin Groupe s'engage à respecter les CGU de chaque plateforme hébergeant ses groupes (Facebook, WhatsApp, Telegram, etc.). SOS Expat n'est pas responsable des suspensions de groupes par des plateformes tierces.
 
-6.6. **Indépendance.** L'Admin Groupe agit en **indépendant** ; aucun lien d'emploi, mandat ou agence n'est créé avec SOS Expat.
+6.6. **Sous-affiliation interdite.** L'Admin Groupe ne peut pas déléguer ses droits affiliés à des tiers sans accord écrit préalable de SOS Expat.
+
+6.7. **Conformité légale générale.** L'Admin Groupe respecte :
+- Les règles des plateformes hébergeant ses groupes
+- La protection des données des membres de ses groupes (RGPD, et lois locales applicables)
+- La déclaration fiscale de ses revenus d'affiliation
+- Les réglementations locales sur le démarchage commercial
+
+6.8. **Indépendance.** L'Admin Groupe agit en **prestataire indépendant** ; aucun lien d'emploi, contrat de travail, mandat ou relation d'agence n'est créé avec SOS Expat. Il est seul responsable de ses cotisations sociales et obligations fiscales.
 
 ---
 
 ## 7. Paiement des commissions
 
-7.1. **KYC obligatoire.** L'Admin Groupe doit compléter la vérification d'identité (KYC) **avant** tout retrait.
+7.1. **KYC obligatoire.** L'Admin Groupe doit compléter la vérification d'identité (KYC) **avant** tout retrait. Le KYC doit être initié dans les **90 jours** suivant la première commission validée.
 
-7.2. **Méthodes de paiement.** Les retraits sont disponibles via :
-- Virement bancaire (SEPA/International)
-- PayPal
-- Wise
+7.2. **Méthodes de paiement.** Virement bancaire (SEPA/International), PayPal, Wise.
 
-7.3. **Délais.** Les paiements sont traités sous **7 jours ouvrés** après validation.
+7.3. **Délais.** Paiements traités sous **7 jours ouvrés** après validation (délais bancaires supplémentaires possibles).
 
-7.4. **Seuil minimum.** Le retrait est possible à partir de **$20** de solde disponible.
+7.4. **Seuil minimum.** Retrait possible à partir de **$20** de solde disponible.
 
-7.5. **Fonds non réclamés.** En cas de non-complétion du KYC sous **180 jours**, les fonds sont considérés abandonnés conformément à l'article 8.7 des CGU générales.
+7.5. **Devise et conversion.** Tous les paiements sont libellés en **USD**. Conversion au taux Wise du jour si demandée ; **frais de conversion à la charge de l'Admin Groupe**.
 
-7.6. **Taxes.** L'Admin Groupe est seul responsable de la déclaration et du paiement de ses impôts et charges liés à ses revenus d'affiliation.
+7.6. **Fonds non réclamés.** Si KYC non complété sous **180 jours**, fonds considérés abandonnés.
+
+7.7. **Obligations fiscales — Général.** L'Admin Groupe est seul responsable de la déclaration et du paiement de ses impôts et charges dans son pays de résidence.
+
+7.8. **Obligations fiscales — USA (non-résidents).** Formulaire **W-8BEN** (personnes physiques) ou **W-8BEN-E** (entités) requis avant tout paiement. Sans ce formulaire : retenue à la source de **30%** applicable. Validité : 3 ans.
+
+7.9. **TVA / GST.** Commissions exprimées hors taxes. L'Admin Groupe assujetti à la TVA gère lui-même ses obligations fiscales.
+
+7.10. **Justificatifs.** Relevé mensuel détaillé accessible depuis le dashboard.
 
 ---
 
 ## 8. Suspension et résiliation
 
-8.1. **Suspension temporaire.** SOS Expat peut suspendre un compte en cas de :
-- Suspicion de fraude (faux prestataires, faux groupes)
-- Violation des CGU
-- Comportement préjudiciable envers les prestataires recrutés
-- Inactivité prolongée (365+ jours sans aucune activité)
+8.1. **Suspension temporaire.** SOS Expat peut suspendre un compte en cas de : suspicion de fraude (faux prestataires, faux groupes), violation des CGU, comportement préjudiciable envers les prestataires recrutés, inactivité prolongée (365+ jours).
 
-8.2. **Résiliation par l'Admin Groupe.** L'Admin Groupe peut clôturer son compte à tout moment. Les commissions validées restent payables.
+8.2. **Résiliation pour cause (for cause).** En cas de violation grave, fraude avérée, recrutement de faux prestataires, violation légale ou de la marque : résiliation **avec effet immédiat** sans préavis. Commissions non validées annulées ; commissions obtenues frauduleusement font l'objet d'un claw-back.
 
-8.3. **Résiliation par SOS Expat.** En cas de violation grave, SOS Expat peut résilier le compte avec effet immédiat. Les commissions non validées sont annulées.
+8.3. **Résiliation sans cause (without cause).** Hors toute violation, SOS Expat peut résilier avec un préavis de **30 jours** par email. Les commissions validées avant la date d'effet restent dues.
 
-8.4. **Effets de la résiliation.** À la résiliation :
-- Les Codes de Recrutement sont désactivés
-- Les Filleuls et prestataires recrutés sont réattribués à SOS Expat
-- L'accès au dashboard est supprimé
+8.4. **Résiliation par l'Admin Groupe.** À tout moment, avec préavis recommandé de **14 jours**. Les commissions validées restent payables.
+
+8.5. **Effets de la résiliation.** Codes de recrutement désactivés ; filleuls et prestataires réattribués à SOS Expat ; accès dashboard supprimé ; usage de la marque SOS Expat doit cesser immédiatement.
+
+8.6. **Clauses survivant à la résiliation.** Confidentialité (art. 13.5), propriété intellectuelle (art. 10), responsabilité (art. 11), droit applicable (art. 12), protection des données (art. 9).
 
 ---
 
 ## 9. Données personnelles
 
-9.1. **Responsable de traitement.** SOS Expat (WorldExpat OÜ) pour les données du programme Administrateurs de Groupe.
+9.1. **Responsable de traitement.** SOS Expat (WorldExpat OÜ, Tallinn, Estonie).
 
-9.2. **Données collectées.** Identité, coordonnées, groupes déclarés, performances, données de paiement, logs de connexion.
+9.2. **Données collectées.** Identité, coordonnées, groupes déclarés et leurs statistiques, performances affiliées, données de paiement, informations fiscales, logs de connexion, adresse IP.
 
-9.3. **Finalités.** Gestion du programme, paiement des commissions, prévention de la fraude, amélioration des services.
+9.3. **Finalités et base légale (RGPD Art. 6).** Exécution du contrat, obligations légales, intérêt légitime (prévention fraude, amélioration services).
 
-9.4. **Durée de conservation.** Données actives pendant la relation ; archives 10 ans après résiliation (obligations légales).
+9.4. **Durée de conservation.** Données actives pendant la relation ; **10 ans** pour données comptables/fiscales. Droit à l'effacement disponible pour les autres données.
 
-9.5. **Droits.** Accès, rectification, effacement, portabilité, opposition via contact@sos-expat.com.
+9.5. **Droits RGPD.** Accès, rectification, effacement, portabilité, opposition via contact@sos-expat.com. Droit de saisir l'autorité de contrôle compétente (CNIL, etc.).
 
-9.6. **Transferts.** Avec garanties appropriées (clauses contractuelles types) si hors UE.
+9.6. **Transferts hors UE.** Clauses contractuelles types (SCT) UE applicables.
+
+9.7. **Conformité CCPA (Californie).** Droits CCPA disponibles pour résidents californiens. Contact : contact@sos-expat.com.
+
+9.8. **Conformité PIPEDA / Loi 25 (Canada).** Résidents canadiens protégés par PIPEDA ; Québécois par la Loi 25.
+
+9.9. **Conformité LGPD (Brésil).** Droits LGPD pour résidents brésiliens.
+
+9.10. **Obligations de l'Admin Groupe.** L'Admin Groupe est responsable du traitement des données des membres de ses groupes et doit respecter les lois applicables (RGPD, etc.).
 
 ---
 
@@ -842,36 +856,54 @@ const TermsGroupAdmins: React.FC = () => {
 
 ## 11. Responsabilité
 
-11.1. **Limitation.** La responsabilité de SOS Expat est limitée aux **commissions dues** au titre des 12 derniers mois.
+11.1. **Limitation de responsabilité.** La responsabilité totale de SOS Expat est limitée aux **commissions versées au cours des 12 derniers mois** précédant la réclamation.
 
-11.2. **Exclusions.** SOS Expat n'est pas responsable des :
-- Dommages indirects (perte de revenus, d'opportunités)
-- Actions des prestataires recrutés ou des membres des groupes
-- Fermeture ou restriction de groupes par les plateformes tierces
+11.2. **Exclusion des dommages indirects.** SOS Expat exclut toute responsabilité pour dommages indirects, spéciaux, consécutifs ou punitifs.
 
-11.3. **Indemnisation.** L'Admin Groupe indemnise SOS Expat contre toute réclamation liée à ses activités de recrutement ou de promotion.
+11.3. **Absence de garanties.** SOS Expat ne garantit pas : disponibilité continue de la Plateforme, niveau minimum de revenus, pérennité du programme, maintien des groupes sur les plateformes tierces.
+
+11.4. **Force majeure.** SOS Expat non responsable des événements hors de son contrôle.
+
+11.5. **Fermeture de groupes par plateformes tierces.** SOS Expat n'est pas responsable de la fermeture ou restriction de groupes décidée par Facebook, WhatsApp, Telegram ou toute autre plateforme tierce.
+
+11.6. **Restrictions géographiques.** Programme indisponible dans les pays sous embargo international (ONU, UE, OFAC USA).
+
+11.7. **Indemnisation par l'Admin Groupe.** L'Admin Groupe indemnise SOS Expat contre toute réclamation découlant de : violation des CGU, activités de recrutement, contenu promotionnel, violation de droits de tiers, ou violation de toute loi applicable.
 
 ---
 
 ## 12. Droit applicable
 
-12.1. **Droit estonien.** Les présentes CGU sont régies par le droit estonien.
+12.1. **Droit applicable.** Droit estonien, sans préjudice des dispositions impératives du pays de résidence de l'Admin Groupe.
 
-12.2. **Arbitrage CCI.** Tout litige est résolu par arbitrage CCI, siège à Tallinn, en français.
+12.2. **Processus de résolution des litiges (multi-niveaux).**
+- **Étape 1** : contact amiable à contact@sos-expat.com (réponse sous **15 jours ouvrés**)
+- **Étape 2** : revue Compliance (+15 jours si insatisfaction)
+- **Étape 3** : **arbitrage CCI** (Chambre de Commerce Internationale), siège Tallinn, en français, sentence définitive et exécutoire
 
-12.3. **Renonciation aux actions collectives.** Toute action collective est exclue ; réclamations individuelles uniquement.
+12.3. **Droits des autorités.** La clause d'arbitrage ne prive pas l'Admin Groupe de ses droits auprès des autorités de protection des données.
+
+12.4. **Renonciation aux actions collectives.** Réclamations individuelles uniquement.
+
+12.5. **Langue.** Le français prévaut en cas de divergence entre traductions.
 
 ---
 
 ## 13. Dispositions diverses
 
-13.1. **Intégralité.** Les CGU constituent l'accord complet entre les parties.
+13.1. **Intégralité de l'accord.** Les présentes CGU constituent l'accord complet entre les parties et remplacent tout accord antérieur.
 
-13.2. **Nullité partielle.** Si une clause est nulle, les autres restent en vigueur.
+13.2. **Nullité partielle.** Clause nulle reformée au minimum nécessaire ; autres clauses inchangées.
 
-13.3. **Non-renonciation.** L'absence d'exercice d'un droit n'emporte pas renonciation.
+13.3. **Non-renonciation.** Absence d'exercice d'un droit dans un cas particulier ≠ renonciation définitive.
 
-13.4. **Langue.** Le français prévaut en cas de divergence entre traductions.
+13.4. **Cession.** Droits non cessibles sans accord écrit préalable de SOS Expat.
+
+13.5. **Confidentialité.** L'Admin Groupe ne divulgue pas les informations confidentielles du programme. Cette obligation survit **2 ans** après résiliation.
+
+13.6. **Modifications des CGU.** Notification par email **30 jours** avant toute modification significative. Poursuite du programme = acceptation. Résiliation sans pénalité disponible avant la date d'effet.
+
+13.7. **Langue.** Le français prévaut en cas de divergence entre les traductions disponibles.
 
 ---
 
@@ -946,56 +978,56 @@ Pour toute question concernant le programme Administrateurs de Groupe, contactez
 
 ## 4. Commissions and Compensation
 
-4.1. **Provider Recruitment Commission.** The Group Admin earns a commission on each paid call made by a Recruited Provider, for **12 months** from said provider's registration date. After this period, commissions on that provider cease automatically.
+4.1. **Direct Client Call Commissions.** The Group Admin earns **$10** for each paid call generated via their affiliate link, with no volume or time limits.
 
-4.2. **Admin Recruitment Commission (N1 Referral).** The Group Admin earns a commission on each call generated by their N1 Admin Referrals, for **12 months** from the N1 Referral's registration date. **Cumulative conditions to earn this commission:**
-- The Group Admin must achieve a minimum of **$50 in direct commissions** (Article 4.1) during the calendar month concerned
-- The Group Admin must ensure training and follow-up of their N1 Referrals: sharing guides and resources, responding to questions within 48 hours, accompanying them in provider recruitment
-- In the absence of these conditions in a given month, N1 commissions for that month are suspended (non-retroactive)
+4.2. **Provider Recruitment Commission.** The Group Admin earns **$5** for each paid call made by a Recruited Provider via their recruitment code, for **12 months** from the provider's registration date. Commissions cease automatically after 12 months. The Group Admin may **re-recruit** new providers to start new 12-month periods.
 
-4.3. **Admin Recruitment Commission (N2 Referral).** The Group Admin earns a commission on each call generated by N2 Referrals, for **12 months** from the N2 Referral's registration date. The **same cumulative conditions** as in 4.2 apply.
+4.3. **Admin Recruitment Bonus.** For each Group Admin recruited via the referral code, the referring Admin earns a **one-time bonus of $50** when the recruited Admin accumulates **$200 in total commissions**. This bonus is paid **once per recruited Admin**, with no recurring commission on that Admin's future calls.
 
-4.4. **Maximum Affiliate Commission Duration.** Commissions on Recruited Providers and Admin Referrals (N1 and N2) are paid for a **maximum of 12 months** from each provider/referral's registration date. After this period, the Group Admin can re-recruit and register new providers to benefit from new 12-month periods.
+4.4. **Attribution Model (Tracking).** A **Last-Click cookie valid for 30 days** tracks recommendations. Any click on the affiliate link creates a 30-day cookie; a paid call within this period credits the commission.
 
-4.5. **Commission Schedule (summary).**
+4.5. **Validation Period (Hold Period).** Commissions: "pending" (14-day client withdrawal period) → "validated" (after anti-fraud check) → "payable" (next monthly cycle).
 
-| Commission Type | Amount | Duration |
-|---|---|---|
-| Recruited provider call | Variable | 12 months |
-| Call via N1 Admin Referral | Variable | 12 months |
-| Call via N2 Admin Referral | Variable | 12 months |
+4.6. **Refund and Clawback Policy.** Client refund or bank chargeback: commission cancelled or deducted from next payment. Fraudulently obtained commissions recoverable within **12 months**.
 
-4.6. **Payment Thresholds.** Commissions are validated after:
-- Client withdrawal period (14 days)
-- Automatic anti-fraud validation
-- Reaching minimum withdrawal threshold (**$20**)
+4.7. **No Earnings Guarantee.** No minimum traffic, calls, or income guaranteed.
 
-4.7. **Performance Bonuses.** Additional bonuses may be granted to Group Admins reaching high recruitment thresholds (10, 25, 50, 100 active recruited providers).
+4.8. **Commission Schedule (summary).**
+
+| Commission Type | Amount | Duration | Conditions |
+|---|---|---|---|
+| Direct client call (via affiliate link) | $10/call | Unlimited | None |
+| Recruited provider call | $5/call | 12 months max | None |
+| Admin recruitment bonus | $50 (once) | One-time | Recruited reaches $200 cumulative |
+| Recruitment bonus (10/25/50/100 providers) | Variable | One-time | Recruitment thresholds |
+
+4.9. **Withdrawal Threshold.** Withdrawal from **$20** validated balance.
 
 ---
 
 ## 5. Anti-fraud Rules
 
-5.1. **Strict Prohibitions.** The following are strictly prohibited:
-- Self-referral or fictitious cross-referral of providers or admins
-- Creating fake groups or fictitious communities
-- Knowingly registering fake or inactive providers
-- Artificially generating calls
-- Creating multiple accounts
-- Any manipulation of tracking systems
+5.1. **Strict Prohibitions.** The following are absolutely prohibited:
+- **Cookie stuffing**: injecting affiliate cookies without a real click
+- **Self-referral** or fictitious cross-referral of providers or admins
+- **Creating fake groups** or fictitious/inactive communities
+- **Registering fake or inactive providers** knowingly to generate commissions
+- **Artificially generating calls** (fake clients, self-calls, third-party services)
+- **Creating multiple accounts** under the same identity
+- **Any manipulation** of tracking or attribution systems
 
-5.2. **Automatic Detection.** SOS Expat uses detection systems including:
-- Suspicious activity pattern analysis
-- Verification of declared groups' existence and actual activity
-- Quality control of recruited providers
+5.2. **Prohibited Content.** The Group Admin may not promote SOS Expat via content related to: hate speech, pornography, illegal gambling, drugs, weapons, disinformation, or content targeting minors.
 
-5.3. **Sanctions.** In case of proven or suspected fraud:
-- **Immediate suspension** of account
-- **Cancellation** of all affected commissions
-- **Permanent ban** from the Platform
-- **Legal action** if applicable
+5.3. **Trademark Bidding.** Using "SOS Expat" or variants as paid advertising keywords is prohibited without prior written authorization.
 
-5.4. **Appeals.** The Group Admin may contest a sanction via the contact form within **30 days**.
+5.4. **Automatic Detection.** SOS Expat uses automated systems including: suspicious activity pattern analysis, verification of declared groups' actual existence and activity, provider quality controls, and abnormal conversion rate analysis.
+
+5.5. **Graduated Sanctions.** Warning → Suspension + commission freeze → Cancellation (clawback) → Permanent ban → Legal proceedings.
+
+5.6. **Multi-level Appeals.**
+- **Level 1**: contact form within **30 days** (response within 15 business days)
+- **Level 2**: escalation to Compliance team (+15 days)
+- **Level 3**: ICC arbitration (Article 12)
 
 ---
 
@@ -1006,85 +1038,96 @@ Pour toute question concernant le programme Administrateurs de Groupe, contactez
 - Regularly share content related to SOS Expat services
 - Moderate their group in accordance with the hosting platform's rules
 - Report any changes in group status (closure, change of theme)
+- Update their profile upon closure or change of a declared group
 
 6.2. **Provider Recruitment.** The Group Admin agrees to:
-- Only recruit legitimate professionals (real lawyers, advisors, experts)
-- Honestly inform providers about program conditions
+- Only recruit legitimate, verifiable professionals (real lawyers, advisors, experts)
+- Honestly inform providers about program conditions without misleading promises
 - Share training resources provided by SOS Expat
 - Support providers in their integration on the Platform
 
 6.3. **Admin Referral Follow-up.** Group Admins who recruit other Admins agree to:
 - Share guides and resources provided by SOS Expat
-- Respond to Referral questions within **48 hours**
-- Ensure minimum follow-up to guarantee their success in the program
+- Respond to referral questions within **48 hours**
+- Provide minimum follow-up to ensure their success in the program
 
-6.4. **Content Quality.** The Group Admin agrees to:
-- Promote SOS Expat honestly and ethically
-- Not make misleading promises about services or commissions
-- Identify partnership content as appropriate
-- Respect SOS Expat brand guidelines and graphic charters
+6.4. **Advertising Transparency.** All promotional content must comply with local disclosure requirements: **#ad** / **Paid Partnership** (USA — FTC 16 CFR Part 255, ARPP), **#Publicité** / **#CollaborationCommerciale** (France — Law No. 2023-451 of June 9, 2023), **#Ad** / **Advertising** (Australia — ACCC). **The Group Admin is responsible for compliance in each country targeted.**
 
-6.5. **Legal Compliance.** The Group Admin complies with all applicable laws:
-- Rules of platforms where groups are hosted (Facebook, WhatsApp, etc.)
-- Data protection of group members (GDPR)
+6.5. **Third-party Platform Compliance.** The Group Admin agrees to comply with the terms of service of each platform hosting their groups (Facebook, WhatsApp, Telegram, etc.). SOS Expat is not responsible for group suspensions by third-party platforms.
+
+6.6. **Sub-affiliation Prohibited.** The Group Admin may not delegate their affiliate rights to third parties without prior written consent from SOS Expat.
+
+6.7. **General Legal Compliance.** The Group Admin complies with:
+- Rules of platforms hosting their groups
+- Protection of group members' personal data (GDPR and applicable local laws)
 - Tax declaration of affiliate income
 - Local commercial solicitation regulations
 
-6.6. **Independence.** The Group Admin acts as an **independent contractor**; no employment, agency, or mandate relationship is created with SOS Expat.
+6.8. **Independence.** The Group Admin acts as an **independent contractor**; no employment, work contract, mandate, or agency relationship is created with SOS Expat. They are solely responsible for their social contributions and tax obligations.
 
 ---
 
 ## 7. Commission Payments
 
-7.1. **Mandatory KYC.** The Group Admin must complete identity verification (KYC) **before** any withdrawal.
+7.1. **Mandatory KYC.** The Group Admin must complete identity verification (KYC) **before** any withdrawal. KYC must be initiated within **90 days** of the first validated commission.
 
-7.2. **Payment Methods.** Withdrawals are available via:
-- Bank transfer (SEPA/International)
-- PayPal
-- Wise
+7.2. **Payment Methods.** Bank transfer (SEPA/International), PayPal, Wise.
 
-7.3. **Timing.** Payments are processed within **7 business days** after validation.
+7.3. **Timing.** Payments processed within **7 business days** after validation (additional bank delays possible).
 
-7.4. **Minimum Threshold.** Withdrawal is possible from **$20** available balance.
+7.4. **Minimum Threshold.** Withdrawal from **$20** available balance.
 
-7.5. **Unclaimed Funds.** If KYC is not completed within **180 days**, funds are considered abandoned per Article 8.7 of the general Terms.
+7.5. **Currency and Conversion.** All payments are denominated in **USD**. Conversion at the daily Wise rate if requested; **conversion fees are at the Group Admin's expense**.
 
-7.6. **Taxes.** The Group Admin is solely responsible for declaring and paying their taxes and charges related to affiliate income.
+7.6. **Unclaimed Funds.** If KYC is not completed within **180 days**, funds are considered abandoned.
+
+7.7. **Tax Obligations — General.** The Group Admin is solely responsible for declaring and paying taxes and charges in their country of residence.
+
+7.8. **Tax Obligations — USA (non-residents).** Form **W-8BEN** (individuals) or **W-8BEN-E** (entities) required before any payment. Without this form: **30% withholding** applies. Validity: 3 years.
+
+7.9. **VAT / GST.** Commissions expressed exclusive of tax. VAT-registered Group Admins manage their own tax obligations.
+
+7.10. **Statements.** Detailed monthly statement accessible from the dashboard.
 
 ---
 
 ## 8. Suspension and Termination
 
-8.1. **Temporary Suspension.** SOS Expat may suspend an account in case of:
-- Fraud suspicion (fake providers, fake groups)
-- Terms violation
-- Harmful behavior toward recruited providers
-- Extended inactivity (365+ days without any activity)
+8.1. **Temporary Suspension.** SOS Expat may suspend an account in case of: fraud suspicion (fake providers, fake groups), Terms violation, harmful behavior toward recruited providers, or extended inactivity (365+ days).
 
-8.2. **Termination by Group Admin.** The Group Admin may close their account at any time. Validated commissions remain payable.
+8.2. **Termination for Cause.** In case of serious violation, proven fraud, fake provider recruitment, legal or brand violation: termination **with immediate effect** and no notice. Unvalidated commissions are cancelled; fraudulently obtained commissions are subject to clawback.
 
-8.3. **Termination by SOS Expat.** In case of serious violation, SOS Expat may terminate the account with immediate effect. Unvalidated commissions are cancelled.
+8.3. **Termination without Cause.** Without any violation, SOS Expat may terminate with **30 days' notice** by email. Commissions validated before the effective date remain due.
 
-8.4. **Effects of Termination.** Upon termination:
-- Recruitment Codes are deactivated
-- Recruited referrals and providers are reassigned to SOS Expat
-- Dashboard access is removed
+8.4. **Termination by the Group Admin.** At any time, with a recommended **14-day notice**. Validated commissions remain payable.
+
+8.5. **Effects of Termination.** Recruitment Codes deactivated; referrals and providers reassigned to SOS Expat; dashboard access removed; use of the SOS Expat brand must cease immediately.
+
+8.6. **Surviving Clauses.** Confidentiality (Art. 13.5), intellectual property (Art. 10), liability (Art. 11), governing law (Art. 12), data protection (Art. 9).
 
 ---
 
 ## 9. Personal Data
 
-9.1. **Data Controller.** SOS Expat (WorldExpat OÜ) for Group Administrator program data.
+9.1. **Data Controller.** SOS Expat (WorldExpat OÜ, Tallinn, Estonia).
 
-9.2. **Data Collected.** Identity, contact details, declared groups, performance, payment data, connection logs.
+9.2. **Data Collected.** Identity, contact details, declared groups and their statistics, affiliate performance, payment data, tax information, connection logs, IP address.
 
-9.3. **Purposes.** Program management, commission payments, fraud prevention, service improvement.
+9.3. **Purposes and Legal Basis (GDPR Art. 6).** Contract performance, legal obligations, legitimate interest (fraud prevention, service improvement).
 
-9.4. **Retention.** Active data during relationship; archives 10 years after termination (legal obligations).
+9.4. **Retention.** Active data during the relationship; **10 years** for accounting/tax data. Right to erasure available for other data.
 
-9.5. **Rights.** Access, rectification, erasure, portability, objection via contact@sos-expat.com.
+9.5. **GDPR Rights.** Access, rectification, erasure, portability, objection via contact@sos-expat.com. Right to lodge a complaint with the competent supervisory authority.
 
-9.6. **Transfers.** With appropriate safeguards (standard contractual clauses) if outside EU.
+9.6. **Non-EU Transfers.** EU standard contractual clauses (SCC) apply.
+
+9.7. **CCPA Compliance (California).** CCPA rights available for California residents. Contact: contact@sos-expat.com.
+
+9.8. **PIPEDA / Law 25 Compliance (Canada).** Canadian residents are protected by PIPEDA; Quebec residents by Law 25.
+
+9.9. **LGPD Compliance (Brazil).** LGPD rights available for Brazilian residents.
+
+9.10. **Group Admin Obligations.** The Group Admin is responsible for processing group members' personal data and must comply with applicable laws (GDPR, etc.).
 
 ---
 
@@ -1103,36 +1146,54 @@ Pour toute question concernant le programme Administrateurs de Groupe, contactez
 
 ## 11. Liability
 
-11.1. **Limitation.** SOS Expat's liability is limited to **commissions due** for the last 12 months.
+11.1. **Liability Cap.** SOS Expat's total liability is limited to **commissions paid over the last 12 months** preceding the claim.
 
-11.2. **Exclusions.** SOS Expat is not liable for:
-- Indirect damages (loss of revenue, opportunities)
-- Actions of recruited providers or group members
-- Group closure or restriction by third-party platforms
+11.2. **Exclusion of Indirect Damages.** SOS Expat excludes all liability for indirect, special, consequential, or punitive damages.
 
-11.3. **Indemnification.** The Group Admin indemnifies SOS Expat against any claims related to their recruitment or promotion activities.
+11.3. **No Warranties.** SOS Expat does not guarantee: continuous Platform availability, minimum revenue levels, program continuity, or maintenance of groups on third-party platforms.
+
+11.4. **Force Majeure.** SOS Expat is not liable for events beyond its control (technical failures, platform changes by Facebook/WhatsApp/Telegram, regulatory changes, etc.).
+
+11.5. **Third-party Platform Closures.** SOS Expat is not responsible for group closures or restrictions decided by Facebook, WhatsApp, Telegram, or any other third-party platform.
+
+11.6. **Geographic Restrictions.** Program unavailable in countries under international embargo (UN, EU, US OFAC).
+
+11.7. **Indemnification by Group Admin.** The Group Admin indemnifies SOS Expat against any claim arising from: Terms violation, recruitment activities, promotional content, violation of third-party rights, or violation of applicable law.
 
 ---
 
 ## 12. Governing Law
 
-12.1. **Estonian Law.** These Terms are governed by Estonian law.
+12.1. **Governing Law.** Estonian law, without prejudice to mandatory provisions of the Group Admin's country of residence.
 
-12.2. **ICC Arbitration.** Any dispute is resolved by ICC arbitration, seated in Tallinn, in French.
+12.2. **Multi-level Dispute Resolution.**
+- **Step 1**: amicable contact at contact@sos-expat.com (response within **15 business days**)
+- **Step 2**: Compliance review (+15 days if unsatisfied)
+- **Step 3**: **ICC Arbitration** (International Chamber of Commerce), seat Tallinn, in French, final and binding award
 
-12.3. **Class Action Waiver.** Class actions are excluded; individual claims only.
+12.3. **Regulatory Rights.** The arbitration clause does not deprive the Group Admin of rights before data protection authorities.
+
+12.4. **Class Action Waiver.** Individual claims only.
+
+12.5. **Language.** French prevails in case of discrepancy between translations.
 
 ---
 
 ## 13. Miscellaneous
 
-13.1. **Entire Agreement.** These Terms constitute the complete agreement between parties.
+13.1. **Entire Agreement.** These Terms constitute the complete agreement between parties and supersede any prior agreement.
 
-13.2. **Severability.** If a clause is void, others remain in effect.
+13.2. **Severability.** A void clause is reformulated to the minimum necessary; other clauses remain unchanged.
 
-13.3. **No Waiver.** Failure to exercise a right does not constitute waiver.
+13.3. **No Waiver.** Failure to exercise a right in a specific case does not constitute permanent waiver.
 
-13.4. **Language.** French prevails in case of translation discrepancies.
+13.4. **Assignment.** Rights are non-transferable without prior written consent from SOS Expat.
+
+13.5. **Confidentiality.** The Group Admin does not disclose confidential program information. This obligation survives **2 years** after termination.
+
+13.6. **Modifications to Terms.** Email notification **30 days** before any significant modification. Continued use of the program = acceptance. Termination without penalty available before the effective date.
+
+13.7. **Language.** French prevails in case of discrepancy between available translations.
 
 ---
 
@@ -1141,7 +1202,7 @@ Pour toute question concernant le programme Administrateurs de Groupe, contactez
 For any questions about the Group Administrator program, contact us via the contact form or at: groupadmins@sos-expat.com
 `;
 
-  const defaultContent = selectedLanguage === "en" ? defaultEn : defaultFr;
+  const defaultContent = selectedLanguage === "fr" ? defaultFr : defaultEn;
   const parsedContent = useMemo(() => {
     const textToRender = content || defaultContent;
     return parseMarkdownContent(textToRender);

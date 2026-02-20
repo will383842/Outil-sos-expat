@@ -739,26 +739,26 @@ const TermsChatters: React.FC = () => {
 ## 5. Règles anti-fraude
 
 5.1. **Interdictions strictes.** Sont formellement interdits :
-- L'auto-parrainage ou parrainage croisé fictif
-- La création de comptes multiples
-- L'utilisation de bots ou scripts automatisés
-- Le spam ou démarchage agressif
-- La falsification de données
-- Le contournement des systèmes de tracking
+- **Cookie stuffing** : injection de cookies affiliés sans clic réel de l'utilisateur
+- L'**auto-parrainage** ou parrainage croisé fictif
+- La création de **comptes multiples** sous une même identité
+- L'utilisation de **bots, scripts ou intelligences artificielles** pour générer des clics ou inscriptions
+- Le **spam** ou démarchage agressif (emails non sollicités, messages répétitifs)
+- La **falsification** de données d'inscription ou de performance
+- Le contournement des systèmes de tracking ou d'attribution
 
-5.2. **Détection automatique.** SOS Expat utilise des systèmes de détection incluant :
-- Analyse des patterns IP
-- Vérification des emails jetables
-- Détection des inscriptions rapides suspectes
-- Analyse du ratio filleuls/clients
+5.2. **Contenus interdits.** Le Chatter ne peut pas promouvoir SOS Expat via des contenus liés à : contenu haineux, pornographique, jeux illégaux, drogues, armes, désinformation, ou ciblant des mineurs.
 
-5.3. **Sanctions.** En cas de fraude avérée ou suspectée :
-- **Suspension immédiate** du compte
-- **Annulation** de toutes les commissions concernées
-- **Bannissement définitif** de la Plateforme
-- **Poursuites judiciaires** le cas échéant
+5.3. **Enchères sur la marque.** Interdit d'utiliser « SOS Expat » ou variantes comme mots-clés publicitaires payants sans autorisation écrite préalable.
 
-5.4. **Recours.** Le Chatter peut contester une sanction via le formulaire de contact dans un délai de **30 jours**.
+5.4. **Détection automatique.** SOS Expat utilise des systèmes incluant : analyse des patterns IP, vérification des emails jetables, détection des inscriptions rapides suspectes, analyse du ratio filleuls/clients, contrôle des taux de conversion anormaux.
+
+5.5. **Sanctions graduées.** Avertissement → Suspension temporaire + gel des commissions → Annulation des commissions (claw-back) → Bannissement définitif → Poursuites judiciaires.
+
+5.6. **Recours multi-niveaux.**
+- **Niveau 1** : formulaire de contact dans **30 jours** (réponse 15 jours ouvrés)
+- **Niveau 2** : escalade équipe Compliance (+15 jours)
+- **Niveau 3** : arbitrage CCI (article 12)
 
 ---
 
@@ -766,120 +766,149 @@ const TermsChatters: React.FC = () => {
 
 6.1. **Qualité du contenu.** Le Chatter s'engage à :
 - Promouvoir SOS Expat de manière honnête et éthique
-- Ne pas faire de promesses trompeuses
-- Respecter les règles des plateformes tierces (réseaux sociaux)
+- Ne pas faire de promesses trompeuses sur les revenus ou les services
+- Respecter les règles des plateformes tierces (réseaux sociaux, messageries)
 - Ne pas dénigrer la concurrence
 
-6.2. **Conformité légale.** Le Chatter respecte toutes les lois applicables :
+6.2. **Transparence publicitaire.** Tout contenu promotionnel doit mentionner clairement le lien d'affiliation ou la nature commerciale de la recommandation : **#Publicité** / **#CollaborationCommerciale** (France — Loi n°2023-451), **#ad** / **Paid Partnership** (USA — FTC 16 CFR Part 255, ARPP), **#Ad** / **Advertising** (Australie — ACCC). **Le Chatter est responsable de la conformité dans chaque pays ciblé.**
+
+6.3. **Conformité légale.** Le Chatter respecte toutes les lois applicables :
 - Règles de publicité et démarchage
-- Protection des données (RGPD)
-- Déclaration fiscale de ses revenus
+- Protection des données (RGPD et lois locales)
+- Déclaration fiscale de ses revenus d'affiliation
 - Interdiction du spam (directive ePrivacy)
 
-6.3. **Indépendance.** Le Chatter agit en **indépendant** ; aucun lien d'emploi, mandat ou agence n'est créé avec SOS Expat.
+6.4. **Sous-affiliation interdite.** Le Chatter ne peut pas déléguer ses droits affiliés à des tiers sans accord écrit préalable de SOS Expat.
 
-6.4. **Exclusivité.** Le Chatter peut promouvoir d'autres services, sauf concurrents directs de SOS Expat.
+6.5. **Indépendance.** Le Chatter agit en **prestataire indépendant** ; aucun lien d'emploi, mandat ou agence n'est créé avec SOS Expat. Il est seul responsable de ses cotisations sociales et obligations fiscales.
+
+6.6. **Exclusivité partielle.** Le Chatter peut promouvoir d'autres services, sauf concurrents directs de SOS Expat (plateformes de mise en relation avec des avocats ou experts expatriés).
 
 ---
 
 ## 7. Paiement des commissions
 
-7.1. **KYC obligatoire.** Le Chatter doit compléter la vérification d'identité (KYC) **avant** tout retrait.
+7.1. **KYC obligatoire.** Le Chatter doit compléter la vérification d'identité (KYC) **avant** tout retrait. Le KYC doit être initié dans les **90 jours** suivant la première commission validée.
 
-7.2. **Méthodes de paiement.** Les retraits sont disponibles via :
-- Virement bancaire (SEPA/International)
-- PayPal
-- Wise
+7.2. **Méthodes de paiement.** Virement bancaire (SEPA/International), PayPal, Wise.
 
-7.3. **Délais.** Les paiements sont traités sous **7 jours ouvrés** après validation.
+7.3. **Délais.** Paiements traités sous **7 jours ouvrés** après validation (délais bancaires supplémentaires possibles).
 
-7.4. **Seuil minimum.** Le retrait est possible à partir de **20€** de solde disponible.
+7.4. **Seuil minimum.** Retrait possible à partir de **20€** de solde disponible.
 
-7.5. **Fonds non réclamés.** En cas de non-complétion du KYC sous **180 jours**, les fonds sont considérés abandonnés conformément à l'article 8.7 des CGU générales.
+7.5. **Devise et conversion.** Les commissions directes (4.1) sont exprimées en pourcentage de la transaction. Les commissions N1/N2 sont exprimées en USD. Conversion au taux Wise du jour si demandée ; **frais de conversion à la charge du Chatter**.
 
-7.6. **Taxes.** Le Chatter est seul responsable de la déclaration et du paiement de ses impôts.
+7.6. **Fonds non réclamés.** Si KYC non complété sous **180 jours**, fonds considérés abandonnés.
+
+7.7. **Obligations fiscales — Général.** Le Chatter est seul responsable de la déclaration et du paiement de ses impôts dans son pays de résidence.
+
+7.8. **Obligations fiscales — USA (non-résidents).** Formulaire **W-8BEN** (personnes physiques) ou **W-8BEN-E** (entités) requis avant tout paiement. Sans ce formulaire : retenue à la source de **30%** applicable. Validité : 3 ans.
+
+7.9. **TVA / GST.** Commissions exprimées hors taxes. Le Chatter assujetti à la TVA gère lui-même ses obligations fiscales.
+
+7.10. **Justificatifs.** Relevé mensuel détaillé accessible depuis le dashboard.
 
 ---
 
 ## 8. Suspension et résiliation
 
-8.1. **Suspension temporaire.** SOS Expat peut suspendre un compte en cas de :
-- Suspicion de fraude (enquête en cours)
-- Violation des CGU
-- Inactivité prolongée (365+ jours)
+8.1. **Suspension temporaire.** SOS Expat peut suspendre un compte en cas de : suspicion de fraude (enquête en cours), violation des CGU, inactivité prolongée (365+ jours sans activité).
 
-8.2. **Résiliation par le Chatter.** Le Chatter peut clôturer son compte à tout moment. Les commissions validées restent payables.
+8.2. **Résiliation pour cause (for cause).** En cas de violation grave, fraude avérée, violation légale ou de la marque : résiliation **avec effet immédiat** sans préavis. Commissions non validées annulées ; commissions obtenues frauduleusement font l'objet d'un claw-back dans un délai de **12 mois**.
 
-8.3. **Résiliation par SOS Expat.** En cas de violation grave, SOS Expat peut résilier le compte avec effet immédiat. Les commissions non validées sont annulées.
+8.3. **Résiliation sans cause (without cause).** Hors toute violation, SOS Expat peut résilier avec un préavis de **30 jours** par email. Les commissions validées avant la date d'effet restent dues.
 
-8.4. **Effets de la résiliation.** À la résiliation :
-- Les Codes Affiliés sont désactivés
-- Les Filleuls sont réattribués à SOS Expat
-- L'accès au dashboard est supprimé
+8.4. **Résiliation par le Chatter.** À tout moment, avec préavis recommandé de **14 jours**. Les commissions validées restent payables.
+
+8.5. **Effets de la résiliation.** Codes Affiliés désactivés ; Filleuls réattribués à SOS Expat ; accès dashboard supprimé ; usage de la marque SOS Expat doit cesser immédiatement.
+
+8.6. **Clauses survivant à la résiliation.** Confidentialité (art. 13.5), propriété intellectuelle (art. 10), responsabilité (art. 11), droit applicable (art. 12), protection des données (art. 9).
 
 ---
 
 ## 9. Données personnelles
 
-9.1. **Responsable de traitement.** SOS Expat (WorldExpat OÜ) pour les données du programme Chatters.
+9.1. **Responsable de traitement.** SOS Expat (WorldExpat OÜ, Tallinn, Estonie).
 
-9.2. **Données collectées.** Identité, contact, performances, données de paiement, logs de connexion.
+9.2. **Données collectées.** Identité, coordonnées, performances affiliées, données de paiement, informations fiscales, logs de connexion, adresse IP.
 
-9.3. **Finalités.** Gestion du programme, paiement des commissions, prévention de la fraude, amélioration des services.
+9.3. **Finalités et base légale (RGPD Art. 6).** Exécution du contrat, obligations légales, intérêt légitime (prévention fraude, amélioration services).
 
-9.4. **Durée de conservation.** Données actives pendant la relation ; archives 10 ans après résiliation (obligations légales).
+9.4. **Durée de conservation.** Données actives pendant la relation ; **10 ans** pour données comptables/fiscales. Droit à l'effacement disponible pour les autres données.
 
-9.5. **Droits.** Accès, rectification, effacement, portabilité, opposition via contact@sos-expat.com.
+9.5. **Droits RGPD.** Accès, rectification, effacement, portabilité, opposition via contact@sos-expat.com. Droit de saisir l'autorité de contrôle compétente (CNIL, etc.).
 
-9.6. **Transferts.** Avec garanties appropriées (clauses contractuelles types) si hors UE.
+9.6. **Transferts hors UE.** Clauses contractuelles types (SCT) UE applicables.
+
+9.7. **Conformité CCPA (Californie).** Droits CCPA disponibles pour résidents californiens. Contact : contact@sos-expat.com.
+
+9.8. **Conformité PIPEDA / Loi 25 (Canada).** Résidents canadiens protégés par PIPEDA ; Québécois par la Loi 25.
+
+9.9. **Conformité LGPD (Brésil).** Droits LGPD pour résidents brésiliens.
 
 ---
 
 ## 10. Propriété intellectuelle
 
-10.1. La marque SOS Expat, logos, et contenus sont protégés. Le Chatter reçoit une **licence limitée** d'utilisation des éléments marketing fournis.
+10.1. La marque SOS Expat, logos et contenus sont protégés. Le Chatter reçoit une **licence limitée, non exclusive et révocable** d'utilisation des éléments marketing fournis.
 
 10.2. **Restrictions.** Le Chatter ne peut pas :
-- Modifier les logos ou marques
+- Modifier les logos ou marques SOS Expat
 - Créer des sites web imitant SOS Expat
 - Enregistrer des noms de domaine contenant « SOS Expat »
 
-10.3. **Contenu généré.** Les contenus créés par le Chatter restent sa propriété, avec licence d'utilisation au profit de SOS Expat.
+10.3. **Contenu généré.** Les contenus créés par le Chatter restent sa propriété, avec licence d'utilisation accordée à SOS Expat.
 
 ---
 
 ## 11. Responsabilité
 
-11.1. **Limitation.** La responsabilité de SOS Expat est limitée aux **commissions dues** au titre des 12 derniers mois.
+11.1. **Limitation de responsabilité.** La responsabilité totale de SOS Expat est limitée aux **commissions versées au cours des 12 derniers mois** précédant la réclamation.
 
-11.2. **Exclusions.** SOS Expat n'est pas responsable des :
-- Dommages indirects (perte de revenus, d'opportunités)
-- Actions des Filleuls ou utilisateurs
-- Problèmes techniques des prestataires tiers
+11.2. **Exclusion des dommages indirects.** SOS Expat exclut toute responsabilité pour dommages indirects, spéciaux, consécutifs ou punitifs.
 
-11.3. **Indemnisation.** Le Chatter indemnise SOS Expat contre toute réclamation liée à ses activités promotionnelles.
+11.3. **Absence de garanties.** SOS Expat ne garantit pas : disponibilité continue de la Plateforme, niveau minimum de revenus ou de filleuls, pérennité du programme, maintien des niveaux de commission.
+
+11.4. **Force majeure.** SOS Expat non responsable des événements hors de son contrôle.
+
+11.5. **Restrictions géographiques.** Programme indisponible dans les pays sous embargo international (ONU, UE, OFAC USA).
+
+11.6. **Indemnisation par le Chatter.** Le Chatter indemnise SOS Expat contre toute réclamation découlant de : violation des CGU, activités promotionnelles, contenu publié, ou violation de toute loi applicable.
 
 ---
 
 ## 12. Droit applicable
 
-12.1. **Droit estonien.** Les présentes CGU sont régies par le droit estonien.
+12.1. **Droit applicable.** Droit estonien, sans préjudice des dispositions impératives du pays de résidence du Chatter.
 
-12.2. **Arbitrage CCI.** Tout litige est résolu par arbitrage CCI, siège à Tallinn, en français.
+12.2. **Processus de résolution des litiges (multi-niveaux).**
+- **Étape 1** : contact amiable à contact@sos-expat.com (réponse sous **15 jours ouvrés**)
+- **Étape 2** : revue Compliance (+15 jours si insatisfaction)
+- **Étape 3** : **arbitrage CCI** (Chambre de Commerce Internationale), siège Tallinn, en français, sentence définitive et exécutoire
 
-12.3. **Renonciation aux actions collectives.** Toute action collective est exclue ; réclamations individuelles uniquement.
+12.3. **Droits des autorités.** La clause d'arbitrage ne prive pas le Chatter de ses droits auprès des autorités de protection des données.
+
+12.4. **Renonciation aux actions collectives.** Réclamations individuelles uniquement.
+
+12.5. **Langue.** Le français prévaut en cas de divergence entre traductions.
 
 ---
 
 ## 13. Dispositions diverses
 
-13.1. **Intégralité.** Les CGU constituent l'accord complet entre les parties.
+13.1. **Intégralité de l'accord.** Les présentes CGU constituent l'accord complet entre les parties.
 
-13.2. **Nullité partielle.** Si une clause est nulle, les autres restent en vigueur.
+13.2. **Nullité partielle.** Clause nulle reformée au minimum nécessaire ; autres clauses inchangées.
 
-13.3. **Non-renonciation.** L'absence d'exercice d'un droit n'emporte pas renonciation.
+13.3. **Non-renonciation.** Absence d'exercice d'un droit dans un cas particulier ≠ renonciation définitive.
 
-13.4. **Langue.** Le français prévaut en cas de divergence entre traductions.
+13.4. **Cession.** Droits non cessibles sans accord écrit préalable de SOS Expat.
+
+13.5. **Confidentialité.** Le Chatter ne divulgue pas les informations confidentielles du programme. Cette obligation survit **2 ans** après résiliation.
+
+13.6. **Modifications des CGU.** Notification par email **30 jours** avant toute modification significative. Poursuite du programme = acceptation. Résiliation sans pénalité disponible avant la date d'effet.
+
+13.7. **Langue.** Le français prévaut en cas de divergence entre les traductions disponibles.
 
 ---
 
@@ -992,27 +1021,27 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 ## 5. Anti-fraud Rules
 
-5.1. **Strict Prohibitions.** The following are strictly prohibited:
-- Self-referral or fictitious cross-referral
-- Creating multiple accounts
-- Using bots or automated scripts
-- Spam or aggressive marketing
-- Data falsification
-- Circumventing tracking systems
+5.1. **Strict Prohibitions.** The following are absolutely prohibited:
+- **Cookie stuffing**: injecting affiliate cookies without a real user click
+- **Self-referral** or fictitious cross-referral
+- **Creating multiple accounts** under the same identity
+- Using **bots, scripts, or AI tools** to generate clicks or registrations
+- **Spam** or aggressive marketing (unsolicited emails, repetitive messages)
+- **Data falsification** (registration data, performance metrics)
+- Circumventing tracking or attribution systems
 
-5.2. **Automatic Detection.** SOS Expat uses detection systems including:
-- IP pattern analysis
-- Disposable email verification
-- Suspicious rapid registration detection
-- Referral/client ratio analysis
+5.2. **Prohibited Content.** The Chatter may not promote SOS Expat via content related to: hate speech, pornography, illegal gambling, drugs, weapons, disinformation, or content targeting minors.
 
-5.3. **Sanctions.** In case of proven or suspected fraud:
-- **Immediate suspension** of account
-- **Cancellation** of all affected commissions
-- **Permanent ban** from the Platform
-- **Legal action** if applicable
+5.3. **Trademark Bidding.** Using "SOS Expat" or variants as paid advertising keywords is prohibited without prior written authorization.
 
-5.4. **Appeals.** The Chatter may contest a sanction via the contact form within **30 days**.
+5.4. **Automatic Detection.** SOS Expat uses detection systems including: IP pattern analysis, disposable email verification, suspicious rapid registration detection, referral/client ratio analysis, abnormal conversion rate monitoring.
+
+5.5. **Graduated Sanctions.** Warning → Temporary suspension + commission freeze → Commission cancellation (clawback) → Permanent ban → Legal proceedings.
+
+5.6. **Multi-level Appeals.**
+- **Level 1**: contact form within **30 days** (response within 15 business days)
+- **Level 2**: escalation to Compliance team (+15 days)
+- **Level 3**: ICC arbitration (Article 12)
 
 ---
 
@@ -1020,120 +1049,149 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 6.1. **Content Quality.** The Chatter agrees to:
 - Promote SOS Expat honestly and ethically
-- Not make misleading promises
-- Respect third-party platform rules (social networks)
+- Not make misleading promises about earnings or services
+- Respect third-party platform rules (social networks, messaging apps)
 - Not disparage competitors
 
-6.2. **Legal Compliance.** The Chatter complies with all applicable laws:
-- Advertising and marketing rules
-- Data protection (GDPR)
-- Tax declaration of earnings
+6.2. **Advertising Transparency.** All promotional content must clearly disclose the affiliate link or commercial nature of the recommendation: **#ad** / **Paid Partnership** (USA — FTC 16 CFR Part 255, ARPP), **#Publicité** / **#CollaborationCommerciale** (France — Law No. 2023-451 of June 9, 2023), **#Ad** / **Advertising** (Australia — ACCC). **The Chatter is responsible for compliance in each country targeted.**
+
+6.3. **Legal Compliance.** The Chatter complies with all applicable laws:
+- Advertising and marketing regulations
+- Data protection (GDPR and local laws)
+- Tax declaration of affiliate income
 - Anti-spam regulations (ePrivacy Directive)
 
-6.3. **Independence.** The Chatter acts as an **independent contractor**; no employment, agency, or mandate relationship is created with SOS Expat.
+6.4. **Sub-affiliation Prohibited.** The Chatter may not delegate their affiliate rights to third parties without prior written consent from SOS Expat.
 
-6.4. **Exclusivity.** The Chatter may promote other services, except direct SOS Expat competitors.
+6.5. **Independence.** The Chatter acts as an **independent contractor**; no employment, agency, or mandate relationship is created with SOS Expat. They are solely responsible for their social contributions and tax obligations.
+
+6.6. **Partial Exclusivity.** The Chatter may promote other services, except direct SOS Expat competitors (platforms connecting clients to lawyers or expat experts).
 
 ---
 
 ## 7. Commission Payments
 
-7.1. **Mandatory KYC.** The Chatter must complete identity verification (KYC) **before** any withdrawal.
+7.1. **Mandatory KYC.** The Chatter must complete identity verification (KYC) **before** any withdrawal. KYC must be initiated within **90 days** of the first validated commission.
 
-7.2. **Payment Methods.** Withdrawals are available via:
-- Bank transfer (SEPA/International)
-- PayPal
-- Wise
+7.2. **Payment Methods.** Bank transfer (SEPA/International), PayPal, Wise.
 
-7.3. **Timing.** Payments are processed within **7 business days** after validation.
+7.3. **Timing.** Payments processed within **7 business days** after validation (additional bank delays possible).
 
-7.4. **Minimum Threshold.** Withdrawal is possible from **€20** available balance.
+7.4. **Minimum Threshold.** Withdrawal from **€20** available balance.
 
-7.5. **Unclaimed Funds.** If KYC is not completed within **180 days**, funds are considered abandoned per Article 8.7 of the general Terms.
+7.5. **Currency and Conversion.** Direct commissions (4.1) are expressed as a percentage of the transaction. N1/N2 commissions are expressed in USD. Conversion at the daily Wise rate if requested; **conversion fees are at the Chatter's expense**.
 
-7.6. **Taxes.** The Chatter is solely responsible for declaring and paying their taxes.
+7.6. **Unclaimed Funds.** If KYC is not completed within **180 days**, funds are considered abandoned.
+
+7.7. **Tax Obligations — General.** The Chatter is solely responsible for declaring and paying taxes in their country of residence.
+
+7.8. **Tax Obligations — USA (non-residents).** Form **W-8BEN** (individuals) or **W-8BEN-E** (entities) required before any payment. Without this form: **30% withholding** applies. Validity: 3 years.
+
+7.9. **VAT / GST.** Commissions expressed exclusive of tax. VAT-registered Chatters manage their own tax obligations.
+
+7.10. **Statements.** Detailed monthly statement accessible from the dashboard.
 
 ---
 
 ## 8. Suspension and Termination
 
-8.1. **Temporary Suspension.** SOS Expat may suspend an account in case of:
-- Fraud suspicion (investigation ongoing)
-- Terms violation
-- Extended inactivity (365+ days)
+8.1. **Temporary Suspension.** SOS Expat may suspend an account in case of: fraud suspicion (investigation ongoing), Terms violation, or extended inactivity (365+ days without activity).
 
-8.2. **Termination by Chatter.** The Chatter may close their account at any time. Validated commissions remain payable.
+8.2. **Termination for Cause.** In case of serious violation, proven fraud, legal or brand violation: termination **with immediate effect** and no notice. Unvalidated commissions are cancelled; fraudulently obtained commissions are subject to clawback within **12 months**.
 
-8.3. **Termination by SOS Expat.** In case of serious violation, SOS Expat may terminate the account with immediate effect. Unvalidated commissions are cancelled.
+8.3. **Termination without Cause.** Without any violation, SOS Expat may terminate with **30 days' notice** by email. Commissions validated before the effective date remain due.
 
-8.4. **Effects of Termination.** Upon termination:
-- Affiliate Codes are deactivated
-- Referrals are reassigned to SOS Expat
-- Dashboard access is removed
+8.4. **Termination by Chatter.** At any time, with a recommended **14-day notice**. Validated commissions remain payable.
+
+8.5. **Effects of Termination.** Affiliate Codes deactivated; Referrals reassigned to SOS Expat; dashboard access removed; use of the SOS Expat brand must cease immediately.
+
+8.6. **Surviving Clauses.** Confidentiality (Art. 13.5), intellectual property (Art. 10), liability (Art. 11), governing law (Art. 12), data protection (Art. 9).
 
 ---
 
 ## 9. Personal Data
 
-9.1. **Data Controller.** SOS Expat (WorldExpat OÜ) for Chatters program data.
+9.1. **Data Controller.** SOS Expat (WorldExpat OÜ, Tallinn, Estonia).
 
-9.2. **Data Collected.** Identity, contact, performance, payment data, connection logs.
+9.2. **Data Collected.** Identity, contact details, affiliate performance, payment data, tax information, connection logs, IP address.
 
-9.3. **Purposes.** Program management, commission payments, fraud prevention, service improvement.
+9.3. **Purposes and Legal Basis (GDPR Art. 6).** Contract performance, legal obligations, legitimate interest (fraud prevention, service improvement).
 
-9.4. **Retention.** Active data during relationship; archives 10 years after termination (legal obligations).
+9.4. **Retention.** Active data during the relationship; **10 years** for accounting/tax data. Right to erasure available for other data.
 
-9.5. **Rights.** Access, rectification, erasure, portability, objection via contact@sos-expat.com.
+9.5. **GDPR Rights.** Access, rectification, erasure, portability, objection via contact@sos-expat.com. Right to lodge a complaint with the competent supervisory authority.
 
-9.6. **Transfers.** With appropriate safeguards (standard contractual clauses) if outside EU.
+9.6. **Non-EU Transfers.** EU standard contractual clauses (SCC) apply.
+
+9.7. **CCPA Compliance (California).** CCPA rights available for California residents. Contact: contact@sos-expat.com.
+
+9.8. **PIPEDA / Law 25 Compliance (Canada).** Canadian residents are protected by PIPEDA; Quebec residents by Law 25.
+
+9.9. **LGPD Compliance (Brazil).** LGPD rights available for Brazilian residents.
 
 ---
 
 ## 10. Intellectual Property
 
-10.1. The SOS Expat brand, logos, and content are protected. The Chatter receives a **limited license** to use provided marketing materials.
+10.1. The SOS Expat brand, logos, and content are protected. The Chatter receives a **limited, non-exclusive, revocable license** to use provided marketing materials.
 
 10.2. **Restrictions.** The Chatter may not:
-- Modify logos or trademarks
+- Modify SOS Expat logos or trademarks
 - Create websites imitating SOS Expat
 - Register domain names containing "SOS Expat"
 
-10.3. **Generated Content.** Content created by the Chatter remains their property, with usage license granted to SOS Expat.
+10.3. **Generated Content.** Content created by the Chatter remains their property, with a usage license granted to SOS Expat.
 
 ---
 
 ## 11. Liability
 
-11.1. **Limitation.** SOS Expat's liability is limited to **commissions due** for the last 12 months.
+11.1. **Liability Cap.** SOS Expat's total liability is limited to **commissions paid over the last 12 months** preceding the claim.
 
-11.2. **Exclusions.** SOS Expat is not liable for:
-- Indirect damages (loss of revenue, opportunities)
-- Actions of Referrals or users
-- Technical issues with third-party providers
+11.2. **Exclusion of Indirect Damages.** SOS Expat excludes all liability for indirect, special, consequential, or punitive damages.
 
-11.3. **Indemnification.** The Chatter indemnifies SOS Expat against any claims related to their promotional activities.
+11.3. **No Warranties.** SOS Expat does not guarantee: continuous Platform availability, minimum revenue or referral levels, program continuity, or maintenance of commission levels.
+
+11.4. **Force Majeure.** SOS Expat is not liable for events beyond its control.
+
+11.5. **Geographic Restrictions.** Program unavailable in countries under international embargo (UN, EU, US OFAC).
+
+11.6. **Indemnification by Chatter.** The Chatter indemnifies SOS Expat against any claim arising from: Terms violation, promotional activities, published content, or violation of applicable law.
 
 ---
 
 ## 12. Governing Law
 
-12.1. **Estonian Law.** These Terms are governed by Estonian law.
+12.1. **Governing Law.** Estonian law, without prejudice to mandatory provisions of the Chatter's country of residence.
 
-12.2. **ICC Arbitration.** Any dispute is resolved by ICC arbitration, seated in Tallinn, in French.
+12.2. **Multi-level Dispute Resolution.**
+- **Step 1**: amicable contact at contact@sos-expat.com (response within **15 business days**)
+- **Step 2**: Compliance review (+15 days if unsatisfied)
+- **Step 3**: **ICC Arbitration** (International Chamber of Commerce), seat Tallinn, in French, final and binding award
 
-12.3. **Class Action Waiver.** Class actions are excluded; individual claims only.
+12.3. **Regulatory Rights.** The arbitration clause does not deprive the Chatter of rights before data protection authorities.
+
+12.4. **Class Action Waiver.** Individual claims only.
+
+12.5. **Language.** French prevails in case of discrepancy between translations.
 
 ---
 
 ## 13. Miscellaneous
 
-13.1. **Entire Agreement.** These Terms constitute the complete agreement between parties.
+13.1. **Entire Agreement.** These Terms constitute the complete agreement between parties and supersede any prior agreement.
 
-13.2. **Severability.** If a clause is void, others remain in effect.
+13.2. **Severability.** A void clause is reformulated to the minimum necessary; other clauses remain unchanged.
 
-13.3. **No Waiver.** Failure to exercise a right does not constitute waiver.
+13.3. **No Waiver.** Failure to exercise a right in a specific case does not constitute permanent waiver.
 
-13.4. **Language.** French prevails in case of translation discrepancies.
+13.4. **Assignment.** Rights are non-transferable without prior written consent from SOS Expat.
+
+13.5. **Confidentiality.** The Chatter does not disclose confidential program information. This obligation survives **2 years** after termination.
+
+13.6. **Modifications to Terms.** Email notification **30 days** before any significant modification. Continued use of the program = acceptance. Termination without penalty available before the effective date.
+
+13.7. **Language.** French prevails in case of discrepancy between available translations.
 
 ---
 
@@ -1142,7 +1200,7 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 For any questions about the Chatters program, contact us via the contact form or at: chatters@sos-expat.com
 `;
 
-  const defaultContent = selectedLanguage === "en" ? defaultEn : defaultFr;
+  const defaultContent = selectedLanguage === "fr" ? defaultFr : defaultEn;
   const parsedContent = useMemo(() => {
     const textToRender = content || defaultContent;
     return parseMarkdownContent(textToRender);
