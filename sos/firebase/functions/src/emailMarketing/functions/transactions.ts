@@ -6,6 +6,7 @@ import { getLanguageCode } from "../config";
 // P2-2 FIX: Unified payment status checks
 import { isPaymentCompleted } from "../../utils/paymentStatusUtils";
 
+
 /**
  * FUNCTION 3: Handle Call Completed
  * Trigger: onUpdate on calls/{callId}
@@ -420,7 +421,7 @@ export const handlePaymentReceived = onDocumentCreated(
 
         await mailwizz.sendTransactional({
           to: user?.email || payment.userId || payment.clientId,
-          template: `TR_CLI_payment-receipt_${lang}`,
+          template: `TR_CLI_payment-success_${lang}`,
           customFields: {
             FNAME: user?.firstName || "",
             AMOUNT: (payment.amount || 0).toString(),
@@ -555,6 +556,7 @@ export const handlePayoutRequested = onDocumentCreated(
           FNAME: user?.firstName || "",
           AMOUNT: (payout.amount || 0).toString(),
           CURRENCY: payout.currency || "EUR",
+          THRESHOLD: (user?.payoutThreshold || 50).toString(),
         },
       });
 
@@ -619,6 +621,7 @@ export const handlePayoutSent = onDocumentUpdated(
             FNAME: user?.firstName || "",
             AMOUNT: (after.amount || 0).toString(),
             CURRENCY: after.currency || "EUR",
+            THRESHOLD: (user?.payoutThreshold || 50).toString(),
           },
         });
 
@@ -633,6 +636,401 @@ export const handlePayoutSent = onDocumentUpdated(
       } catch (error: any) {
         console.error(`❌ Error in handlePayoutSent for ${payoutId}:`, error);
       }
+    }
+  }
+);
+
+/**
+ * FUNCTION: Handle Call Missed
+ * Trigger: onUpdate on calls/{callId} — status changes to "missed" or "no_answer"
+ * Sends a missed call notification to the provider
+ * 4 template variants selected based on consecutive missed calls count
+ */
+export const handleCallMissed = onDocumentUpdated(
+  {
+    document: "calls/{callId}",
+    region: "europe-west3",
+  },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    const callId = event.params.callId;
+
+    if (!before || !after) return;
+
+    const missedStatuses = ["missed", "no_answer", "unanswered"];
+    const wasMissed = missedStatuses.includes(before.status);
+    const isMissed = missedStatuses.includes(after.status);
+
+    if (!wasMissed && isMissed) {
+      try {
+        const mailwizz = new MailwizzAPI();
+
+        const providerDoc = await admin
+          .firestore()
+          .collection("users")
+          .doc(after.providerId)
+          .get();
+
+        if (!providerDoc.exists) return;
+
+        const provider = providerDoc.data();
+        const lang = getLanguageCode(
+          provider?.language || provider?.preferredLanguage || "en"
+        );
+
+        // Select variant based on consecutive missed calls (1-4)
+        const consecutiveMissed = Math.min(
+          provider?.consecutiveMissedCalls || after.attemptNumber || 1,
+          4
+        );
+        const variant = consecutiveMissed.toString().padStart(2, "0");
+
+        const clientName = after.clientName || after.clientFirstName || "";
+
+        await mailwizz.sendTransactional({
+          to: provider?.email || after.providerId,
+          template: `TR_PRO_call-missed-${variant}_${lang}`,
+          customFields: {
+            FNAME: provider?.firstName || "",
+            CLIENT_NAME: clientName,
+          },
+        });
+
+        await logGA4Event("call_missed_email_sent", {
+          call_id: callId,
+          provider_id: after.providerId,
+          variant,
+        });
+
+        console.log(`✅ Call missed email sent (variant ${variant}): ${callId}`);
+      } catch (error: any) {
+        console.error(`❌ Error in handleCallMissed for ${callId}:`, error);
+      }
+    }
+  }
+);
+
+/**
+ * FUNCTION: Handle Payout Failed
+ * Trigger: onUpdate on payouts/{payoutId} — status changes to "failed"
+ */
+export const handlePayoutFailed = onDocumentUpdated(
+  {
+    document: "payouts/{payoutId}",
+    region: "europe-west3",
+  },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    const payoutId = event.params.payoutId;
+
+    if (!before || !after) return;
+
+    if (before.status !== "failed" && after.status === "failed") {
+      try {
+        const mailwizz = new MailwizzAPI();
+
+        const userDoc = await admin
+          .firestore()
+          .collection("users")
+          .doc(after.providerId)
+          .get();
+
+        if (!userDoc.exists) return;
+
+        const user = userDoc.data();
+        const lang = getLanguageCode(
+          user?.language || user?.preferredLanguage || "en"
+        );
+
+        await mailwizz.sendTransactional({
+          to: user?.email || after.providerId,
+          template: `TR_PRO_payout-failed_${lang}`,
+          customFields: {
+            FNAME: user?.firstName || "",
+            AMOUNT: (after.amount || 0).toString(),
+            CURRENCY: after.currency || "EUR",
+            REASON: after.failureReason || after.reason || "Unknown error",
+            DASHBOARD_URL: "https://sos-expat.com/dashboard",
+          },
+        });
+
+        await logGA4Event("payout_failed_email_sent", {
+          user_id: after.providerId,
+          payout_id: payoutId,
+          amount: after.amount || 0,
+          reason: after.failureReason || after.reason || "Unknown",
+        });
+
+        console.log(`✅ Payout failed notification sent: ${payoutId}`);
+      } catch (error: any) {
+        console.error(`❌ Error in handlePayoutFailed for ${payoutId}:`, error);
+      }
+    }
+  }
+);
+
+/**
+ * FUNCTION: Handle Payout Threshold Reached
+ * Trigger: onUpdate on users/{userId} — totalEarnings crosses the payout threshold
+ */
+export const handlePayoutThresholdReached = onDocumentUpdated(
+  {
+    document: "users/{userId}",
+    region: "europe-west3",
+  },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    const userId = event.params.userId;
+
+    if (!before || !after) return;
+
+    // Only for providers
+    if (after.role !== "provider" && after.role !== "lawyer") return;
+
+    const threshold = after.payoutThreshold || 50;
+    const oldTotal = before.totalEarnings || 0;
+    const newTotal = after.totalEarnings || 0;
+
+    // Only fire when threshold is crossed (not on every update)
+    if (oldTotal < threshold && newTotal >= threshold) {
+      try {
+        const mailwizz = new MailwizzAPI();
+        const lang = getLanguageCode(
+          after.language || after.preferredLanguage || "en"
+        );
+
+        await mailwizz.sendTransactional({
+          to: after.email || userId,
+          template: `TR_PRO_payout-threshold-reached_${lang}`,
+          customFields: {
+            FNAME: after.firstName || "",
+            THRESHOLD: threshold.toString(),
+            AMOUNT: newTotal.toString(),
+            DASHBOARD_URL: "https://sos-expat.com/dashboard",
+          },
+        });
+
+        await logGA4Event("payout_threshold_reached", {
+          user_id: userId,
+          threshold,
+          total_earnings: newTotal,
+        });
+
+        console.log(`✅ Payout threshold reached email sent: ${userId}`);
+      } catch (error: any) {
+        console.error(`❌ Error in handlePayoutThresholdReached for ${userId}:`, error);
+      }
+    }
+  }
+);
+
+/**
+ * FUNCTION: Handle First Earning
+ * Trigger: onUpdate on users/{userId} — totalEarnings goes from 0 to > 0
+ */
+export const handleFirstEarning = onDocumentUpdated(
+  {
+    document: "users/{userId}",
+    region: "europe-west3",
+  },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    const userId = event.params.userId;
+
+    if (!before || !after) return;
+
+    // Only for providers
+    if (after.role !== "provider" && after.role !== "lawyer") return;
+
+    const oldTotal = before.totalEarnings || 0;
+    const newTotal = after.totalEarnings || 0;
+
+    // Only fire for first ever earning (0 → >0)
+    if (oldTotal === 0 && newTotal > 0) {
+      try {
+        const mailwizz = new MailwizzAPI();
+        const lang = getLanguageCode(
+          after.language || after.preferredLanguage || "en"
+        );
+
+        await mailwizz.sendTransactional({
+          to: after.email || userId,
+          template: `TR_PRO_first-earning_${lang}`,
+          customFields: {
+            FNAME: after.firstName || "",
+            AMOUNT: newTotal.toString(),
+            CURRENCY: "EUR",
+            DASHBOARD_URL: "https://sos-expat.com/dashboard",
+          },
+        });
+
+        await logGA4Event("first_earning", {
+          user_id: userId,
+          amount: newTotal,
+        });
+
+        console.log(`✅ First earning email sent: ${userId}`);
+      } catch (error: any) {
+        console.error(`❌ Error in handleFirstEarning for ${userId}:`, error);
+      }
+    }
+  }
+);
+
+/**
+ * FUNCTION: Handle Earning Credited
+ * Trigger: onUpdate on users/{userId} — totalEarnings increases (not first earning)
+ * Notifies the provider when a new earning is credited after a call
+ */
+export const handleEarningCredited = onDocumentUpdated(
+  {
+    document: "users/{userId}",
+    region: "europe-west3",
+  },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    const userId = event.params.userId;
+
+    if (!before || !after) return;
+
+    // Only for providers
+    if (after.role !== "provider" && after.role !== "lawyer") return;
+
+    const oldTotal = before.totalEarnings || 0;
+    const newTotal = after.totalEarnings || 0;
+
+    // Only fire when earnings increase (but NOT for first earning — handleFirstEarning handles that)
+    if (oldTotal > 0 && newTotal > oldTotal) {
+      const earnedAmount = newTotal - oldTotal;
+
+      try {
+        const mailwizz = new MailwizzAPI();
+        const lang = getLanguageCode(
+          after.language || after.preferredLanguage || "en"
+        );
+
+        // Try to find the most recent completed call to get the client name
+        // Uses single-field index only (providerId) to avoid requiring composite index
+        let clientName = "";
+        try {
+          const recentCallsSnap = await admin
+            .firestore()
+            .collection("calls")
+            .where("providerId", "==", userId)
+            .orderBy("createdAt", "desc")
+            .limit(5)
+            .get();
+
+          const lastCompletedCall = recentCallsSnap.docs
+            .map((d) => d.data())
+            .find((c) => c.status === "completed");
+
+          if (lastCompletedCall) {
+            clientName = lastCompletedCall.clientName || lastCompletedCall.clientFirstName || "";
+            if (!clientName && lastCompletedCall.clientId) {
+              const clientDoc = await admin
+                .firestore()
+                .collection("users")
+                .doc(lastCompletedCall.clientId)
+                .get();
+              clientName = clientDoc.data()?.firstName || "";
+            }
+          }
+        } catch {
+          // Client name is optional — continue without it
+        }
+
+        await mailwizz.sendTransactional({
+          to: after.email || userId,
+          template: `TR_PRO_earning-credited_${lang}`,
+          customFields: {
+            FNAME: after.firstName || "",
+            AMOUNT: earnedAmount.toString(),
+            CURRENCY: "EUR",
+            CLIENT_NAME: clientName,
+            TOTAL_EARNINGS: newTotal.toString(),
+          },
+        });
+
+        await logGA4Event("earning_credited", {
+          user_id: userId,
+          amount: earnedAmount,
+          total_earnings: newTotal,
+        });
+
+        console.log(`✅ Earning credited email sent: ${userId} (+${earnedAmount})`);
+      } catch (error: any) {
+        console.error(`❌ Error in handleEarningCredited for ${userId}:`, error);
+      }
+    }
+  }
+);
+
+/**
+ * FUNCTION: Handle Referral Bonus
+ * Trigger: onCreate on referral_bonuses/{bonusId}
+ * Notifies the referrer when they earn a bonus from a referral
+ */
+export const handleReferralBonus = onDocumentCreated(
+  {
+    document: "referral_bonuses/{bonusId}",
+    region: "europe-west3",
+  },
+  async (event) => {
+    const bonus = event.data?.data();
+    const bonusId = event.params.bonusId;
+
+    if (!bonus || !event.data) return;
+
+    const { referrerId, referralName, bonusAmount, currency } = bonus;
+
+    if (!referrerId) {
+      console.warn(`⚠️ No referrerId for bonus ${bonusId}`);
+      return;
+    }
+
+    try {
+      const mailwizz = new MailwizzAPI();
+
+      const referrerDoc = await admin
+        .firestore()
+        .collection("users")
+        .doc(referrerId)
+        .get();
+
+      if (!referrerDoc.exists) return;
+
+      const referrer = referrerDoc.data();
+      const lang = getLanguageCode(
+        referrer?.language || referrer?.preferredLanguage || "en"
+      );
+
+      await mailwizz.sendTransactional({
+        to: referrer?.email || referrerId,
+        template: `TR_PRO_referral-bonus_${lang}`,
+        customFields: {
+          FNAME: referrer?.firstName || "",
+          REFERRAL_NAME: referralName || "",
+          BONUS_AMOUNT: (bonusAmount || 0).toString(),
+          CURRENCY: currency || "EUR",
+          DASHBOARD_URL: "https://sos-expat.com/dashboard",
+        },
+      });
+
+      await logGA4Event("referral_bonus_email_sent", {
+        referrer_id: referrerId,
+        bonus_id: bonusId,
+        bonus_amount: bonusAmount || 0,
+      });
+
+      console.log(`✅ Referral bonus email sent: ${bonusId}`);
+    } catch (error: any) {
+      console.error(`❌ Error in handleReferralBonus for ${bonusId}:`, error);
     }
   }
 );

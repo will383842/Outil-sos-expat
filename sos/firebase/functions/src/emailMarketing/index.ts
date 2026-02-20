@@ -11,6 +11,8 @@ export * from './functions/transactions';
 export * from './functions/profileLifecycle';
 export * from './functions/stopAutoresponders';
 export * from './functions/inactiveUsers';
+export * from './functions/gamification';
+export * from './functions/statsEmails';
 
 // Export utilities for internal use
 export * from './utils/mailwizz';

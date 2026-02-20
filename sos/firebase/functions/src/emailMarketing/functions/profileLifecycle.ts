@@ -185,6 +185,49 @@ export async function providerOnlineStatusHandler(event: any) {
           online_status: afterOnline ? "online" : "offline",
         });
 
+        const lang = getLanguageCode(
+          after.language || after.preferredLanguage || after.lang || "en"
+        );
+
+        // First time ever going online (no prior record of being online)
+        const isFirstOnline = afterOnline && !before.hasBeenOnline && !before.firstOnlineAt;
+        if (isFirstOnline) {
+          try {
+            await mailwizz.sendTransactional({
+              to: after.email || userId,
+              template: `TR_PRO_first-online_${lang}`,
+              customFields: {
+                FNAME: after.firstName || "",
+                DASHBOARD_URL: "https://sos-expat.com/dashboard",
+              },
+            });
+            // Mark as having been online to prevent re-sending on future reconnects
+            // Write doesn't trigger this block again: beforeOnline===afterOnline===true on next event
+            await admin.firestore().collection("users").doc(userId).update({
+              hasBeenOnline: true,
+              firstOnlineAt: admin.firestore.FieldValue.serverTimestamp(),
+            }).catch((e) => console.error(`❌ Error setting hasBeenOnline:`, e));
+            console.log(`✅ First online email sent: ${userId}`);
+          } catch (emailError) {
+            console.error(`❌ Error sending first-online email:`, emailError);
+          }
+        } else if (afterOnline && !beforeOnline) {
+          // Coming back online (not first time)
+          try {
+            await mailwizz.sendTransactional({
+              to: after.email || userId,
+              template: `TR_PRO_back-online_${lang}`,
+              customFields: {
+                FNAME: after.firstName || "",
+                DASHBOARD_URL: "https://sos-expat.com/dashboard",
+              },
+            });
+            console.log(`✅ Back online email sent: ${userId}`);
+          } catch (emailError) {
+            console.error(`❌ Error sending back-online email:`, emailError);
+          }
+        }
+
         console.log(`✅ Provider online status updated: ${userId} (${afterOnline ? "online" : "offline"})`);
       } catch (error: any) {
         console.error(`❌ Error in handleProviderOnlineStatus for ${userId}:`, error);
@@ -210,48 +253,108 @@ export async function kycVerificationHandler(event: any) {
       return;
     }
 
-    // Only process when KYC status changes to 'verified'
+    const lang = getLanguageCode(
+      after.language || after.preferredLanguage || after.lang || "en"
+    );
+    const rolePrefix = after.role === "provider" || after.role === "lawyer" ? "PRO" : "CLI";
+    const kycUrl = `https://sos-expat.com/kyc/${userId}`;
+
+    // KYC verified
     if (before.kycStatus !== "verified" && after.kycStatus === "verified") {
       try {
         const mailwizz = new MailwizzAPI();
 
-        // Update MailWizz KYC_STATUS field
-        await mailwizz.updateSubscriber(userId, {
-          KYC_STATUS: "verified",
-        });
-
-        // Stop KYC reminder autoresponder
+        await mailwizz.updateSubscriber(userId, { KYC_STATUS: "verified" });
         await mailwizz.stopAutoresponders(userId, "kyc_verified");
 
-        // Send verification confirmation email
-        const lang = getLanguageCode(
-          after.language || after.preferredLanguage || after.lang || "en"
-        );
-        try {
-          await mailwizz.sendTransactional({
-            to: after.email || userId,
-            template: `TR_${after.role === "provider" ? "PRO" : "CLI"}_kyc-verified_${lang}`,
-            customFields: {
-              FNAME: after.firstName || "",
-            },
-          });
-        } catch (emailError) {
-          console.error(`❌ Error sending KYC verification email:`, emailError);
-        }
-
-        // Log GA4 event
-        await logGA4Event("kyc_verified", {
-          user_id: userId,
-          role: after.role || "client",
+        await mailwizz.sendTransactional({
+          to: after.email || userId,
+          template: `TR_${rolePrefix}_kyc-verified_${lang}`,
+          customFields: { FNAME: after.firstName || "" },
         });
 
+        await logGA4Event("kyc_verified", { user_id: userId, role: after.role || "client" });
         console.log(`✅ KYC verified for user: ${userId}`);
       } catch (error: any) {
-        console.error(`❌ Error in handleKYCVerification for ${userId}:`, error);
-        await logGA4Event("kyc_verification_error", {
-          user_id: userId,
-          error: error.message || "Unknown error",
+        console.error(`❌ Error in kycVerificationHandler (verified) for ${userId}:`, error);
+      }
+    }
+
+    // KYC submitted (documents received — awaiting review)
+    if (before.kycStatus !== "kyc_submitted" && after.kycStatus === "kyc_submitted") {
+      try {
+        const mailwizz = new MailwizzAPI();
+
+        await mailwizz.updateSubscriber(userId, { KYC_STATUS: "kyc_submitted" });
+
+        // Email to provider: documents received
+        await mailwizz.sendTransactional({
+          to: after.email || userId,
+          template: `TR_${rolePrefix}_kyc-documents-received_${lang}`,
+          customFields: { FNAME: after.firstName || "" },
+        }).catch((e) => console.error(`❌ kyc-documents-received email error:`, e));
+
+        // Email to provider: KYC request / next steps
+        await mailwizz.sendTransactional({
+          to: after.email || userId,
+          template: `TR_${rolePrefix}_kyc-request_${lang}`,
+          customFields: {
+            FNAME: after.firstName || "",
+            KYC_URL: kycUrl,
+          },
+        }).catch((e) => console.error(`❌ kyc-request email error:`, e));
+
+        await logGA4Event("kyc_submitted", { user_id: userId });
+        console.log(`✅ KYC submitted emails sent: ${userId}`);
+      } catch (error: any) {
+        console.error(`❌ Error in kycVerificationHandler (submitted) for ${userId}:`, error);
+      }
+    }
+
+    // KYC info missing
+    if (before.kycStatus !== "kyc_info_missing" && after.kycStatus === "kyc_info_missing") {
+      try {
+        const mailwizz = new MailwizzAPI();
+
+        await mailwizz.updateSubscriber(userId, { KYC_STATUS: "kyc_info_missing" });
+
+        await mailwizz.sendTransactional({
+          to: after.email || userId,
+          template: `TR_${rolePrefix}_kyc-info-missing_${lang}`,
+          customFields: {
+            FNAME: after.firstName || "",
+            KYC_URL: kycUrl,
+          },
         });
+
+        await logGA4Event("kyc_info_missing", { user_id: userId });
+        console.log(`✅ KYC info missing email sent: ${userId}`);
+      } catch (error: any) {
+        console.error(`❌ Error in kycVerificationHandler (info_missing) for ${userId}:`, error);
+      }
+    }
+
+    // KYC rejected
+    if (before.kycStatus !== "kyc_rejected" && after.kycStatus === "kyc_rejected") {
+      try {
+        const mailwizz = new MailwizzAPI();
+
+        await mailwizz.updateSubscriber(userId, { KYC_STATUS: "kyc_rejected" });
+
+        await mailwizz.sendTransactional({
+          to: after.email || userId,
+          template: `TR_${rolePrefix}_kyc-rejected_${lang}`,
+          customFields: {
+            FNAME: after.firstName || "",
+            KYC_URL: kycUrl,
+            REASON: after.kycRejectionReason || after.rejectionReason || "",
+          },
+        });
+
+        await logGA4Event("kyc_rejected", { user_id: userId });
+        console.log(`✅ KYC rejected email sent: ${userId}`);
+      } catch (error: any) {
+        console.error(`❌ Error in kycVerificationHandler (rejected) for ${userId}:`, error);
       }
     }
 }
@@ -324,5 +427,76 @@ export async function paypalConfigurationHandler(event: any) {
 export const handlePayPalConfiguration = onDocumentUpdated(
   { document: "users/{userId}", region: "europe-west3" },
   paypalConfigurationHandler
+);
+
+/**
+ * FUNCTION: Handle Account Status Changes (blocked / reactivated)
+ * Trigger: onUpdate on users/{userId} when accountStatus changes
+ */
+export async function accountStatusHandler(event: any) {
+  const before = event.data?.before.data();
+  const after = event.data?.after.data();
+  const userId = event.params.userId;
+
+  if (!before || !after) return;
+
+  const lang = getLanguageCode(
+    after.language || after.preferredLanguage || after.lang || "en"
+  );
+
+  const wasBlocked = before.accountStatus === "blocked" || before.isBanned || before.isBlocked;
+  const isBlocked = after.accountStatus === "blocked" || after.isBanned || after.isBlocked;
+
+  // Account blocked
+  if (!wasBlocked && isBlocked) {
+    try {
+      const mailwizz = new MailwizzAPI();
+
+      await mailwizz.updateSubscriber(userId, { ACCOUNT_STATUS: "blocked", IS_BLOCKED: "yes" });
+
+      await mailwizz.sendTransactional({
+        to: after.email || userId,
+        template: `TR_PRO_account-blocked_${lang}`,
+        customFields: {
+          FNAME: after.firstName || "",
+          SUPPORT_URL: "https://sos-expat.com/support",
+          REASON: after.blockReason || after.banReason || "",
+        },
+      });
+
+      await logGA4Event("account_blocked_email_sent", { user_id: userId });
+      console.log(`✅ Account blocked email sent: ${userId}`);
+    } catch (error: any) {
+      console.error(`❌ Error in accountStatusHandler (blocked) for ${userId}:`, error);
+    }
+  }
+
+  // Account reactivated (was blocked → now normal)
+  if (wasBlocked && !isBlocked && after.accountStatus === "normal") {
+    try {
+      const mailwizz = new MailwizzAPI();
+
+      await mailwizz.updateSubscriber(userId, { ACCOUNT_STATUS: "reactivated", IS_BLOCKED: "no" });
+
+      await mailwizz.sendTransactional({
+        to: after.email || userId,
+        template: `TR_PRO_account-reactivated_${lang}`,
+        customFields: {
+          FNAME: after.firstName || "",
+          DASHBOARD_URL: "https://sos-expat.com/dashboard",
+        },
+      });
+
+      await logGA4Event("account_reactivated_email_sent", { user_id: userId });
+      console.log(`✅ Account reactivated email sent: ${userId}`);
+    } catch (error: any) {
+      console.error(`❌ Error in accountStatusHandler (reactivated) for ${userId}:`, error);
+    }
+  }
+}
+
+export const handleAccountStatus = onDocumentUpdated(
+  { document: "users/{userId}", region: "europe-west3" },
+  accountStatusHandler
 );
 

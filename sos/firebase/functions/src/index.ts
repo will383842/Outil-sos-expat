@@ -4939,15 +4939,26 @@ export {
   handlePaymentFailed,
   handlePayoutRequested,
   handlePayoutSent,
+  // New transactional triggers
+  handleCallMissed,
+  handlePayoutFailed,
+  handlePayoutThresholdReached,
+  handleFirstEarning,
+  handleEarningCredited,
+  handleReferralBonus,
 } from './emailMarketing/functions/transactions';
-// profileLifecycle exports → consolidatedOnUserUpdated
+// profileLifecycle handlers → consolidated into consolidatedOnUserUpdated (handlers 1-9)
 // handleProfileCompleted, handleUserLogin, handleProviderOnlineStatus,
-// handleKYCVerification, handlePayPalConfiguration
+// handleKYCVerification, handlePayPalConfiguration, handleAccountStatus
 export {
   stopAutoresponders,
   stopAutorespondersForUser,
 } from './emailMarketing/functions/stopAutoresponders';
 export { detectInactiveUsers } from './emailMarketing/functions/inactiveUsers';
+// Gamification triggers
+export { handleMilestoneReached, handleBadgeUnlocked } from './emailMarketing/functions/gamification';
+// Scheduled stats emails
+export { sendWeeklyStats, sendMonthlyStats, sendAnniversaryEmails } from './emailMarketing/functions/statsEmails';
 
 // ============================================
 // SUBSCRIPTION FUNCTIONS

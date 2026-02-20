@@ -96,14 +96,31 @@ export function mapUserToMailWizzFields(
   fields.STRIPE_ACCOUNT_ID = userData.stripeAccountId || "";
   fields.PAYPAL_EMAIL = userData.paypalEmail || "";
 
-  // Gamification (3)
+  // Stats supplémentaires (6)
+  fields.TOTAL_CLIENTS = (userData.totalClients || 0).toString();
+  fields.ONLINE_HOURS = (userData.onlineHours || userData.monthlyOnlineHours || 0).toString();
+  fields.CALLS_TREND = userData.callsTrend || userData.callsTrendPercent || "0%";
+  fields.EARNINGS_TREND = userData.earningsTrend || userData.earningsTrendPercent || "0%";
+  fields.AVG_DURATION = (userData.avgCallDuration || userData.averageCallDuration || 0).toString();
+  fields.NB_CALLS = (userData.totalCalls || 0).toString(); // alias TOTAL_CALLS
+  fields.MONTH = new Date().toLocaleString("en", { month: "long" });
+
+  // URLs supplémentaires (1)
+  fields.SUPPORT_URL = "https://sos-expat.com/support";
+
+  // Gamification (5)
   fields.MILESTONE_TYPE = "";
   fields.MILESTONE_VALUE = "";
   fields.BADGE_NAME = "";
+  fields.BADGE_ICON = userData.lastBadgeIcon || "";
+  fields.BADGE_DESCRIPTION = userData.lastBadgeDescription || "";
 
   // Referral (2)
   fields.REFERRAL_NAME = "";
   fields.BONUS_AMOUNT = "";
+
+  // Potentiel
+  fields.POTENTIAL_EARNINGS = (userData.potentialEarnings || 0).toString();
 
   // Remove empty fields that shouldn't be sent
   const cleanedFields: Record<string, string> = {};

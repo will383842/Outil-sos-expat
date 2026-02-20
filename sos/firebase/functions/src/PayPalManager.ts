@@ -2771,9 +2771,9 @@ export const createPayPalOrderHttp = onRequest(
 export const capturePayPalOrderHttp = onRequest(
   {
     region: PAYMENT_FUNCTIONS_REGION,
-    // P0 FIX: Keep instance warm to avoid CORS errors on cold start
-    minInstances: 1,
-    // P0 FIX: Increased maxInstances and memory to prevent rate limiting
+    // minInstances set to 0 to stay within west3 CPU quota
+    // CORS works fine on cold start (cors: ALLOWED_ORIGINS handles it)
+    minInstances: 0,
     maxInstances: 15,
     memory: "512MiB",
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],

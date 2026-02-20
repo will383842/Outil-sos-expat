@@ -178,6 +178,21 @@ export const consolidatedOnUserUpdated = onDocumentUpdated(
       });
     }
 
+    // 9. Account Status (emails blocked/reactivated)
+    try {
+      const { accountStatusHandler } = await import(
+        "../emailMarketing/functions/profileLifecycle"
+      );
+      await accountStatusHandler(event);
+      results.accountStatus = "ok";
+    } catch (error) {
+      results.accountStatus = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserUpdated] Account status handler failed", {
+        userId,
+        error,
+      });
+    }
+
     logger.info("[consolidatedOnUserUpdated] All handlers completed", {
       userId,
       results,

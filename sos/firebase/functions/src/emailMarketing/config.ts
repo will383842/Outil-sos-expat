@@ -40,7 +40,7 @@ export const MAILWIZZ_LIST_UID = defineString("MAILWIZZ_LIST_UID", {
 });
 
 export const MAILWIZZ_CUSTOMER_ID = defineString("MAILWIZZ_CUSTOMER_ID", {
-  default: process.env.MAILWIZZ_CUSTOMER_ID || "2",
+  default: process.env.MAILWIZZ_CUSTOMER_ID || "1",
 });
 
 // // GA4 Configuration
@@ -92,7 +92,7 @@ export function validateMailWizzConfig(): {
   // SECURITY: Never use empty strings as fallback - always have sensible defaults
   const apiUrl = process.env.MAILWIZZ_API_URL || MAILWIZZ_API_URL.value() || "https://mail.sos-expat.com/api/index.php";
   const listUid = process.env.MAILWIZZ_LIST_UID || MAILWIZZ_LIST_UID.value() || "yl089ehqpgb96";
-  const customerId = process.env.MAILWIZZ_CUSTOMER_ID || MAILWIZZ_CUSTOMER_ID.value() || "2";
+  const customerId = process.env.MAILWIZZ_CUSTOMER_ID || MAILWIZZ_CUSTOMER_ID.value() || "1";
 
   // Validate that we have actual values
   if (!apiUrl || !listUid || !customerId) {

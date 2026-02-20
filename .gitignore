@@ -1,8 +1,8 @@
 # ================================
 # Separate repos (not part of this deployment)
 # ================================
-Outils d'emailing/
 backlink-engine/
+Outils d'emailing/
 
 # ================================
 # Dependencies
@@ -107,6 +107,7 @@ firebase/functions/.env.*
 firebase/functions/backups/
 firebase/functions/npm
 firebase/functions/*.log
+firebase/functions/fns.json
 **/functions/lib/
 **/functions/node_modules/
 
