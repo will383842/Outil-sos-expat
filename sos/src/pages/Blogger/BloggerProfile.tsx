@@ -30,6 +30,40 @@ const BloggerProfile: React.FC = () => {
 
   const formatCurrency = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Veuillez selectionner une image (JPG, PNG, WebP)");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image trop grande (max 5 MB)");
+      return;
+    }
+    setUploading(true);
+    setUploadError(null);
+    setUploadSuccess(false);
+    const previousPhoto = localPhotoUrl ?? blogger?.photoUrl ?? null;
+    try {
+      const storageRef = ref(storage, "blogger_photos/" + user.uid + "/profile.jpg");
+      await uploadBytes(storageRef, file, { contentType: file.type });
+      const downloadURL = await getDownloadURL(storageRef);
+      setLocalPhotoUrl(downloadURL);
+      const updateBloggerProfile = httpsCallable(functionsWest2, "updateBloggerProfile");
+      await updateBloggerProfile({ photoUrl: downloadURL });
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
+    } catch (err) {
+      console.error("[BloggerProfile] Photo upload failed:", err);
+      setLocalPhotoUrl(previousPhoto);
+      setUploadError("Echec du telechargement. Veuillez reessayer.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
   if (isLoading) {
     return (
       <BloggerDashboardLayout>
@@ -53,6 +87,66 @@ const BloggerProfile: React.FC = () => {
           <p className="text-gray-700 dark:text-gray-700">
             <FormattedMessage id="blogger.profile.subtitle" defaultMessage="Gérez vos informations personnelles et paramètres" />
           </p>
+        </div>
+
+        {/* Photo Upload */}
+        <div className={`${UI.card} p-6`}>
+          <div className="flex items-center gap-3 mb-4">
+            <Camera className="w-5 h-5 text-purple-500" />
+            <h2 className="text-lg dark:text-white font-semibold">
+              <FormattedMessage id="blogger.profile.photo" defaultMessage="Photo de profil" />
+            </h2>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center">
+                {displayedPhoto ? (
+                  <img src={displayedPhoto} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white text-2xl font-bold">
+                    {blogger.firstName?.[0]?.toUpperCase() ?? "B"}
+                  </span>
+                )}
+              </div>
+              {uploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                  <Loader2 className="w-6 h-6 animate-spin text-white" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handlePhotoChange}
+                disabled={uploading}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                <Camera className="w-4 h-4" />
+                <FormattedMessage id="blogger.profile.uploadPhoto" defaultMessage="Changer la photo" />
+              </button>
+              <p className="text-xs text-gray-500 mt-2">
+                <FormattedMessage id="blogger.profile.photoHint" defaultMessage="JPG, PNG ou WebP. Max 5 MB." />
+              </p>
+              {uploadSuccess && (
+                <div className="flex items-center gap-2 mt-2 text-green-600">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm">
+                    <FormattedMessage id="blogger.profile.photoSuccess" defaultMessage="Photo mise a jour avec succes" />
+                  </span>
+                </div>
+              )}
+              {uploadError && (
+                <p className="text-sm text-red-600 mt-2">{uploadError}</p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Personal Info */}
