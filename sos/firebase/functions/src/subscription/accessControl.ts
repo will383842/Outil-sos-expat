@@ -327,7 +327,23 @@ export const checkAiAccess = functions
               updatedAt: trialNow
             });
 
-            console.log(`[checkAiAccess] Auto-initialized trial for ${providerId} (${trialConfig.maxAiCalls} free calls, ${hasTimeLimit ? trialConfig.durationDays + ' days' : 'no time limit'})`);
+            // AUDIT-FIX SYNC: Sync sos_profiles + users pour que le trigger
+            // onSosProfileUpdated propage subscriptionStatus vers Outil-sos-expat
+            // Sans ça, le provider a un trial dans SOS mais Outil refuse l'accès IA
+            await getDb().doc(`sos_profiles/${providerId}`).set({
+              subscriptionStatus: 'trialing',
+              hasActiveSubscription: true,
+              aiCallsLimit: trialConfig.maxAiCalls,
+              aiCallsUsed: 0,
+              updatedAt: trialNow
+            }, { merge: true });
+            await getDb().doc(`users/${providerId}`).set({
+              subscriptionStatus: 'trialing',
+              hasActiveSubscription: true,
+              updatedAt: trialNow
+            }, { merge: true });
+
+            console.log(`[checkAiAccess] Auto-initialized trial for ${providerId} (${trialConfig.maxAiCalls} free calls, ${hasTimeLimit ? trialConfig.durationDays + ' days' : 'no time limit'}) + synced sos_profiles+users`);
 
             return {
               allowed: true,

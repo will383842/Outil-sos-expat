@@ -333,7 +333,8 @@ export async function checkProviderAIStatus(providerId: string): Promise<Provide
     // =====================================================
     let hasQuota = true;
     const quotaUsed = provider.aiCallsUsed || 0;
-    let quotaLimit = provider.aiCallsLimit || AI_CONFIG.DEFAULT_QUOTA_LIMIT || 100;
+    // AUDIT-FIX: ?? au lieu de || pour que aiCallsLimit:0 = 0 appels (pas 100)
+    let quotaLimit = provider.aiCallsLimit ?? AI_CONFIG.DEFAULT_QUOTA_LIMIT ?? 100;
 
     // Quota illimité pour forcedAIAccess
     if (provider.forcedAIAccess === true) {
@@ -563,7 +564,8 @@ export async function checkAiQuota(providerId: string): Promise<QuotaCheckResult
 
     // Récupérer les valeurs de quota
     const used = provider.aiCallsUsed || 0;
-    const limit = provider.aiCallsLimit || AI_CONFIG.DEFAULT_QUOTA_LIMIT || 100;
+    // AUDIT-FIX: ?? au lieu de || pour que aiCallsLimit:0 = 0 appels (pas 100)
+    const limit = provider.aiCallsLimit ?? AI_CONFIG.DEFAULT_QUOTA_LIMIT ?? 100;
     const remaining = Math.max(0, limit - used);
 
     // Vérifier si quota épuisé
@@ -719,7 +721,8 @@ export async function reserveAiQuota(providerId: string): Promise<QuotaReservati
 
       // Vérifier le quota
       const currentUsage = provider.aiCallsUsed || 0;
-      const quotaLimit = provider.aiCallsLimit || AI_CONFIG.DEFAULT_QUOTA_LIMIT || 100;
+      // AUDIT-FIX: ?? au lieu de || pour que aiCallsLimit:0 = 0 appels (pas 100)
+      const quotaLimit = provider.aiCallsLimit ?? AI_CONFIG.DEFAULT_QUOTA_LIMIT ?? 100;
 
       if (currentUsage >= quotaLimit) {
         return {

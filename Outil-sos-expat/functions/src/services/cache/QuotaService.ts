@@ -301,7 +301,8 @@ class QuotaService {
       const data = providerDoc.data();
 
       const meta: CachedProviderQuota = {
-        limit: data?.aiCallsLimit || DEFAULT_QUOTA_LIMIT,
+        // AUDIT-FIX: ?? au lieu de || pour que aiCallsLimit:0 = 0 appels (pas 100)
+        limit: data?.aiCallsLimit ?? DEFAULT_QUOTA_LIMIT,
         unlimited: data?.forcedAIAccess === true,
         lastSyncAt: Date.now(),
       };
