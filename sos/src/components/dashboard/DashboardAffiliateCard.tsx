@@ -16,9 +16,6 @@ const DashboardAffiliateCard: React.FC = () => {
   const { affiliateData, referrals, isLoading, error, shareUrl } = useAffiliate();
   const [copied, setCopied] = useState(false);
 
-  // Don't render on error or if no data after loading
-  if (error) return null;
-
   // Skeleton loading state
   if (isLoading) {
     return (
@@ -36,7 +33,7 @@ const DashboardAffiliateCard: React.FC = () => {
     );
   }
 
-  if (!affiliateData) return null;
+  const hasData = !!affiliateData && !error;
 
   const copyLink = async () => {
     try {
@@ -67,8 +64,8 @@ const DashboardAffiliateCard: React.FC = () => {
     navigate(`/${slug}`);
   };
 
-  const totalEarned = affiliateData.totalEarned || 0;
-  const totalReferrals = referrals.length || affiliateData.totalReferrals || 0;
+  const totalEarned = affiliateData?.totalEarned || 0;
+  const totalReferrals = referrals.length || affiliateData?.totalReferrals || 0;
 
   return (
     <div className={`${UI.card} p-4 sm:p-6 overflow-hidden relative`}>
@@ -96,8 +93,8 @@ const DashboardAffiliateCard: React.FC = () => {
         </div>
       </div>
 
-      {/* Mini stats */}
-      {(totalReferrals > 0 || totalEarned > 0) && (
+      {/* Mini stats — uniquement si données disponibles */}
+      {hasData && (totalReferrals > 0 || totalEarned > 0) && (
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3 text-center">
             <div className="flex items-center justify-center gap-1.5 mb-1">
@@ -120,48 +117,51 @@ const DashboardAffiliateCard: React.FC = () => {
         </div>
       )}
 
-      {/* Link label */}
-      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-        <FormattedMessage
-          id="dashboard.affiliate.yourLink"
-          defaultMessage="Votre lien de parrainage"
-        />
-      </p>
+      {/* Lien de parrainage — uniquement si données disponibles */}
+      {hasData && shareUrl && (
+        <>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+            <FormattedMessage
+              id="dashboard.affiliate.yourLink"
+              defaultMessage="Votre lien de parrainage"
+            />
+          </p>
 
-      {/* Link + Copy/Share */}
-      <div className="flex items-center px-4 py-3 min-h-[48px] bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 mb-2">
-        <span className="text-sm text-gray-600 dark:text-gray-300 truncate flex-1 select-all">
-          {shareUrl}
-        </span>
-      </div>
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={copyLink}
-          className={`flex-1 min-h-[48px] rounded-xl font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${
-            copied
-              ? "bg-green-500 text-white"
-              : "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200"
-          }`}
-        >
-          {copied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-          <span>
-            {copied ? (
-              <FormattedMessage id="common.copied" defaultMessage="Copi\u00e9 !" />
-            ) : (
-              <FormattedMessage id="common.copy" defaultMessage="Copier" />
+          <div className="flex items-center px-4 py-3 min-h-[48px] bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 mb-2">
+            <span className="text-sm text-gray-600 dark:text-gray-300 truncate flex-1 select-all">
+              {shareUrl}
+            </span>
+          </div>
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={copyLink}
+              className={`flex-1 min-h-[48px] rounded-xl font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${
+                copied
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200"
+              }`}
+            >
+              {copied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              <span>
+                {copied ? (
+                  <FormattedMessage id="common.copied" defaultMessage="Copi\u00e9 !" />
+                ) : (
+                  <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                )}
+              </span>
+            </button>
+            {typeof navigator.share === "function" && (
+              <button
+                onClick={handleShare}
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium rounded-xl min-h-[48px] min-w-[48px] flex items-center justify-center active:scale-[0.98] transition-all"
+                title={intl.formatMessage({ id: "common.share", defaultMessage: "Partager" })}
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
             )}
-          </span>
-        </button>
-        {typeof navigator.share === "function" && (
-          <button
-            onClick={handleShare}
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium rounded-xl min-h-[48px] min-w-[48px] flex items-center justify-center active:scale-[0.98] transition-all"
-            title={intl.formatMessage({ id: "common.share", defaultMessage: "Partager" })}
-          >
-            <Share2 className="w-5 h-5" />
-          </button>
-        )}
-      </div>
+          </div>
+        </>
+      )}
 
       {/* How it works - 3 steps */}
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/15 dark:to-teal-900/15 rounded-xl p-4 mb-4">

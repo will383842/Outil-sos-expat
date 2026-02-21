@@ -46,7 +46,6 @@ import { useAiQuota } from "../hooks/useAiQuota";
 import MobileBottomNav from "../components/dashboard/MobileBottomNav";
 import MobileSideDrawer from "../components/dashboard/MobileSideDrawer";
 import KYCBannerCompact from "../components/dashboard/KYCBannerCompact";
-import DashboardStats from "../components/dashboard/DashboardStats";
 import DashboardAffiliateCard from "../components/dashboard/DashboardAffiliateCard";
 import QuickActions from "../components/dashboard/QuickActions";
 // RecentActivity removed - was causing layout issues
@@ -2317,22 +2316,6 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
             {/* CONTENU PRINCIPAL - ID for auto-scroll */}
             <div id="dashboard-content" className="lg:col-span-3 space-y-6 lg:space-y-8 dashboard-content-wrapper">
-              {/* STATS CARDS - Visible on all tabs */}
-              <DashboardStats
-                user={user}
-                calls={calls.map(c => ({
-                  status: c.status,
-                  duration: c.duration,
-                  price: c.price,
-                  createdAt: c.createdAt,
-                }))}
-                reviews={reviews.map((r: ProviderReview) => ({
-                  rating: r.rating,
-                  status: r.status,
-                }))}
-                loading={!userDataReady}
-              />
-
               {/* AFFILIATE LINK - Always visible */}
               <DashboardAffiliateCard />
 
