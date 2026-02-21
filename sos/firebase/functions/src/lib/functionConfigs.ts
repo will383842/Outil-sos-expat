@@ -165,7 +165,9 @@ export const scheduledConfig = {
 export const triggerConfig = {
   region: "europe-west3" as const,
   memory: "256MiB" as const,
-  cpu: 0.25,
+  // P0 AUDIT FIX 2026-02-21: Reduced from 0.25 to 0.083 (1/12 vCPU)
+  // 248 services × 0.25 = 62 vCPU → exceeds quota. 248 × 0.083 = 20.6 vCPU
+  cpu: 0.083,
   maxInstances: 10,
   minInstances: 0,
   concurrency: 1,
