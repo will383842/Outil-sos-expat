@@ -485,6 +485,14 @@ export interface InfluencerCommission {
   /** Admin notes */
   adminNotes?: string;
 
+  // ---- Promotion ----
+
+  /** Promotion ID if commission was boosted */
+  promotionId?: string;
+
+  /** Promotion multiplier applied (1.0 = no promo) */
+  promoMultiplier?: number;
+
   /** Created timestamp */
   createdAt: Timestamp;
 

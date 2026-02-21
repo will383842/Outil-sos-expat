@@ -54,6 +54,7 @@ interface PricingOverrideNode {
   totalAmount: number;
   stackableWithCoupons: boolean;
   label: string;
+  labels: Record<string, string>;
   strikeTargets: string; // pour l’affichage "prix barré" si tu l’utilises au front
 }
 
@@ -93,6 +94,10 @@ const SERVICE_LABEL_KEY: Record<ServiceKind, ServiceLabelKey> = {
   expat: "admin.pricing.serviceExpat",
   lawyer: "admin.pricing.serviceLawyer",
 };
+
+const SUPPORTED_LANGS = ["fr", "en", "es", "de", "pt", "ru", "hi", "ar", "ch"] as const;
+const EMPTY_LABELS: Record<string, string> = Object.fromEntries(SUPPORTED_LANGS.map(l => [l, ""]));
+type LangCode = typeof SUPPORTED_LANGS[number];
 
 // Formater un prix avec 2 décimales et virgule (format français)
 const formatPrice = (value: number): string => {
@@ -185,6 +190,7 @@ const AdminPricing: React.FC = () => {
         totalAmount: 49,
         stackableWithCoupons: true,
         label: "Promo Expat EUR",
+        labels: { ...EMPTY_LABELS },
         strikeTargets: "default",
       },
       usd: {
@@ -196,6 +202,7 @@ const AdminPricing: React.FC = () => {
         totalAmount: 49,
         stackableWithCoupons: true,
         label: "Promo Expat USD",
+        labels: { ...EMPTY_LABELS },
         strikeTargets: "default",
       },
     },
@@ -209,6 +216,7 @@ const AdminPricing: React.FC = () => {
         totalAmount: 39,
         stackableWithCoupons: true,
         label: "Promo Avocat EUR",
+        labels: { ...EMPTY_LABELS },
         strikeTargets: "default",
       },
       usd: {
@@ -220,10 +228,14 @@ const AdminPricing: React.FC = () => {
         totalAmount: 39,
         stackableWithCoupons: true,
         label: "Promo Avocat USD",
+        labels: { ...EMPTY_LABELS },
         strikeTargets: "default",
       },
     },
   });
+
+  // Tab langue active pour les labels promo
+  const [labelTab, setLabelTab] = useState<LangCode>("fr");
 
   // preview
   const [previewCoupon, setPreviewCoupon] = useState<string>("");
@@ -265,6 +277,7 @@ const AdminPricing: React.FC = () => {
       (["eur", "usd"] as Currency[]).forEach((c) => {
         const o = data?.overrides?.[s]?.[c];
         if (o) {
+          const rawLabels = (o as any).labels as Record<string, string> | undefined;
           p[s][c] = {
             enabled: Boolean(o.enabled),
             startsAt: o.startsAt ?? null,
@@ -274,6 +287,7 @@ const AdminPricing: React.FC = () => {
             totalAmount: Number(o.totalAmount ?? 0),
             stackableWithCoupons: Boolean(o.stackableWithCoupons ?? true),
             label: String(o.label ?? ""),
+            labels: { ...EMPTY_LABELS, ...(rawLabels || {}) },
             strikeTargets: String(o.strikeTargets ?? "default"),
           };
         }
@@ -377,6 +391,14 @@ const AdminPricing: React.FC = () => {
     }
 
     const performSave = async () => {
+      // Filtrer les labels vides pour ne pas stocker des clés inutiles
+      const cleanLabels: Record<string, string> = {};
+      for (const [lang, val] of Object.entries(selPromo.labels)) {
+        if (val.trim()) cleanLabels[lang] = val.trim();
+      }
+      // Backward compat: label = labels.fr (ou premier label non-vide)
+      const backwardLabel = cleanLabels.fr || Object.values(cleanLabels)[0] || selPromo.label || "";
+
       await setDoc(
         doc(db, "admin_config", "pricing"),
         {
@@ -390,7 +412,8 @@ const AdminPricing: React.FC = () => {
                 providerAmount: Number(selPromo.providerAmount),
                 totalAmount: Number(selPromo.totalAmount),
                 stackableWithCoupons: Boolean(selPromo.stackableWithCoupons),
-                label: selPromo.label,
+                label: backwardLabel,
+                labels: cleanLabels,
                 strikeTargets: selPromo.strikeTargets || "default",
               },
             },
@@ -1057,26 +1080,56 @@ const AdminPricing: React.FC = () => {
               </div>
             </div>
 
-            {/* Options */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  {intl.formatMessage({ id: "admin.pricing.promoLabel" })}
-                </label>
-                <input
-                  type="text"
-                  value={selPromo.label}
-                  onChange={(e) =>
-                    setPromo((prev) => {
-                      const next = { ...prev };
-                      next[service][currency].label = e.target.value;
-                      return next;
-                    })
-                  }
-                  placeholder={intl.formatMessage({ id: "admin.pricing.promoLabelPlaceholder" })}
-                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                />
+            {/* Labels multilingues (9 langues) */}
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 mb-6">
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                {intl.formatMessage({ id: "admin.pricing.promoLabel" })} — {intl.formatMessage({ id: "admin.pricing.promoLabelMultilang" }, { defaultMessage: "Multilingue" })}
+              </label>
+              {/* Tabs langues */}
+              <div className="flex flex-wrap gap-1 mb-3">
+                {SUPPORTED_LANGS.map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => setLabelTab(lang)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase transition-all ${
+                      labelTab === lang
+                        ? "bg-orange-500 text-white shadow-sm"
+                        : selPromo.labels[lang]?.trim()
+                          ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                          : "bg-gray-200 text-gray-500 hover:bg-gray-300"
+                    }`}
+                  >
+                    {lang}
+                  </button>
+                ))}
               </div>
+              {/* Input pour la langue sélectionnée */}
+              <input
+                type="text"
+                value={selPromo.labels[labelTab] ?? ""}
+                onChange={(e) =>
+                  setPromo((prev) => {
+                    const next = { ...prev };
+                    next[service][currency] = {
+                      ...next[service][currency],
+                      labels: { ...next[service][currency].labels, [labelTab]: e.target.value },
+                    };
+                    return next;
+                  })
+                }
+                placeholder={`Label ${labelTab.toUpperCase()} — ex: ${labelTab === "fr" ? "Offre de lancement" : labelTab === "en" ? "Launch offer" : labelTab === "es" ? "Oferta de lanzamiento" : "..."}`}
+                className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+              />
+              {labelTab === "fr" && (
+                <p className="text-xs text-gray-400 mt-1">
+                  FR = label par défaut (fallback pour les langues non renseignées)
+                </p>
+              )}
+            </div>
+
+            {/* Strike target */}
+            <div className="mb-6">
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                   {intl.formatMessage({ id: "admin.pricing.strikeTarget" })}

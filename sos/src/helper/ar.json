@@ -3941,6 +3941,7 @@
   "profileValidation.sortRecent": "الأحدث",
   "profileValidation.title": "التحقق من الملفات",
   "profileValidation.yearsExp": "سنوات خبرة",
+  "provider.featured": "موصى به",
   "provider.payout.received": "تم استلام الدفع",
   "provider.paypal.attemptsRemaining": "{count} محاولات متبقية",
   "provider.paypal.changeEmail": "تغيير عنوان البريد الإلكتروني لـ PayPal",

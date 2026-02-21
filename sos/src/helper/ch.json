@@ -3947,6 +3947,7 @@
   "profileValidation.sortRecent": "最新",
   "profileValidation.title": "资料审核",
   "profileValidation.yearsExp": "年经验",
+  "provider.featured": "推荐",
   "provider.payout.received": "收到付款",
   "provider.paypal.attemptsRemaining": "剩余 {count} 次尝试",
   "provider.paypal.changeEmail": "更改PayPal电子邮箱地址",

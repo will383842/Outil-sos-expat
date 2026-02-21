@@ -1,5 +1,6 @@
 // src/pages/admin/AdminExpats.tsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
 import {
   collection,
   query as fsQuery,
@@ -16,7 +17,8 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
-import { db } from "../../config/firebase";
+import { db, functions } from "../../config/firebase";
+import { httpsCallable } from "firebase/functions";
 import {
   Globe,
   Users,
@@ -79,6 +81,7 @@ interface Expat {
   yearsInCountry: number;
   isVisibleOnMap: boolean;
   isOnline: boolean;
+  isFeatured: boolean;
   profileComplete: number;
   helpDomains: string[];
   description?: string;
@@ -552,6 +555,7 @@ const AdminExpats: React.FC = () => {
       yearsInCountry,
       isVisibleOnMap: data.isVisibleOnMap ?? true,
       isOnline: data.isOnline ?? false,
+      isFeatured: data.isFeatured ?? false,
       profileComplete: calculateProfileCompleteness(data),
       helpDomains: data.helpDomains || data.expertiseDomains || data.servicesOffered || [],
       description: (typeof data.bio === 'string' ? data.bio : data.description) || "",
@@ -671,6 +675,22 @@ const AdminExpats: React.FC = () => {
     setExpats((list) =>
       list.map((e) => (e.id === id ? { ...e, validationStatus, status: validationStatus === "approved" ? "active" : e.status } : e))
     );
+  };
+
+  const [featuredLoading, setFeaturedLoading] = React.useState<string | null>(null);
+  const toggleFeatured = async (id: string, current: boolean) => {
+    setFeaturedLoading(id);
+    try {
+      const fn = httpsCallable(functions, "setProviderBadge");
+      await fn({ providerId: id, isFeatured: !current });
+      setExpats((list) => list.map((e) => e.id === id ? { ...e, isFeatured: !current } : e));
+      toast.success(!current ? "Badge attribué ✓" : "Badge retiré");
+    } catch (e) {
+      console.error("toggleFeatured error", e);
+      toast.error("Erreur lors de la mise à jour du badge");
+    } finally {
+      setFeaturedLoading(null);
+    }
   };
 
   const exportPage = () => {
@@ -873,6 +893,22 @@ const AdminExpats: React.FC = () => {
               }}
             >
               {t("translation")}
+            </Button>
+            {/* Badge Recommandé */}
+            <Button
+              size="small"
+              variant="secondary"
+              onClick={() => toggleFeatured(e.id, e.isFeatured)}
+              disabled={featuredLoading === e.id}
+              title={e.isFeatured ? "Retirer le badge Recommandé" : "Attribuer le badge Recommandé"}
+            >
+              {featuredLoading === e.id ? (
+                <span className="animate-spin inline-block w-3 h-3 border border-current rounded-full border-t-transparent" />
+              ) : (
+                <span className={e.isFeatured ? "text-yellow-500 font-bold" : "text-gray-400"}>
+                  {e.isFeatured ? "★ Badge ON" : "☆ Badge"}
+                </span>
+              )}
             </Button>
             <button className="text-green-600 hover:text-green-900" title={t("view")} onClick={() => setDrawerExpat(e)}>
               <Eye size={16} />

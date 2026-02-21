@@ -4013,6 +4013,7 @@
   "profileValidation.sortRecent": "Новые",
   "profileValidation.title": "Валидация профилей",
   "profileValidation.yearsExp": "лет опыта",
+  "provider.featured": "Рекомендован",
   "provider.payout.received": "Платеж получен",
   "provider.paypal.attemptsRemaining": "Осталось попыток: {count}",
   "provider.paypal.changeEmail": "Изменить адрес электронной почты PayPal",

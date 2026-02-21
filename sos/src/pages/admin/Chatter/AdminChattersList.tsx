@@ -8,7 +8,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from "@/config/firebase";
+import { functionsWest2, functions } from "@/config/firebase";
+import toast from 'react-hot-toast';
 import {
   Users,
   Search,
@@ -145,6 +146,7 @@ interface Chatter {
   country?: string;
   language?: string;
   createdAt: string;
+  isFeatured?: boolean;
 }
 
 interface ChatterListResponse {
@@ -178,6 +180,21 @@ const AdminChattersList: React.FC = () => {
   const [languageFilter, setLanguageFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [featuredLoading, setFeaturedLoading] = useState<string | null>(null);
+
+  const toggleFeatured = async (id: string, current: boolean) => {
+    setFeaturedLoading(id);
+    try {
+      const fn = httpsCallable(functions, 'setProviderBadge');
+      await fn({ providerId: id, isFeatured: !current });
+      setChatters((prev) => prev.map((c) => c.id === id ? { ...c, isFeatured: !current } : c));
+      toast.success(!current ? 'Badge attribué ✓' : 'Badge retiré');
+    } catch {
+      toast.error('Erreur lors de la mise à jour du badge');
+    } finally {
+      setFeaturedLoading(null);
+    }
+  };
   const [stats, setStats] = useState<ChatterListResponse['stats']>();
 
   // Bulk selection
@@ -751,12 +768,25 @@ const AdminChattersList: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
-                          <button
-                            onClick={() => navigate(`/admin/chatters/${chatter.id}`)}
-                            className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
-                          >
-                            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); void toggleFeatured(chatter.id, !!chatter.isFeatured); }}
+                              disabled={featuredLoading === chatter.id}
+                              title={chatter.isFeatured ? 'Retirer le badge Recommandé' : 'Attribuer le badge Recommandé'}
+                              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                            >
+                              {featuredLoading === chatter.id
+                                ? <span className="animate-spin inline-block w-3 h-3 border border-current rounded-full border-t-transparent" />
+                                : <Star className={`w-4 h-4 ${chatter.isFeatured ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                              }
+                            </button>
+                            <button
+                              onClick={() => navigate(`/admin/chatters/${chatter.id}`)}
+                              className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                            >
+                              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

@@ -5,15 +5,16 @@
  */
 
 import React from "react";
-import { usePricingConfig } from "@/services/pricingService";
+import { usePricingConfig, getLocalizedLabel } from "@/services/pricingService";
 import { Tag, Clock } from "lucide-react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 
 interface ActivePromoBannerProps {
   providerRole: "lawyer" | "expat";
 }
 
 const ActivePromoBanner: React.FC<ActivePromoBannerProps> = ({ providerRole }) => {
+  const intl = useIntl();
   const { pricing, loading } = usePricingConfig() as {
     pricing?: {
       lawyer: Record<string, { totalAmount: number }>;
@@ -22,6 +23,7 @@ const ActivePromoBanner: React.FC<ActivePromoBannerProps> = ({ providerRole }) =
         enabled: boolean;
         totalAmount: number;
         label?: string;
+        labels?: Record<string, string>;
         endsAt?: number | { seconds: number };
       }>>;
     };
@@ -52,7 +54,7 @@ const ActivePromoBanner: React.FC<ActivePromoBannerProps> = ({ providerRole }) =
 
   const normalPrice = pricing[providerRole]?.eur?.totalAmount;
   const promoPrice = eurOverride.totalAmount;
-  const label = eurOverride.label;
+  const label = getLocalizedLabel(eurOverride as any, intl.locale);
 
   // Format end date if available
   let endsAtText = "";

@@ -137,7 +137,8 @@ service cloud.firestore {
                           .hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId',
                                    'totalEarnings', 'totalPayPalEarnings', 'pendingBalance', 'reservedBalance',
                                    'paypalEmailVerified', 'paypalEmailVerifiedAt',
-                                   'payoutMode', 'aaaPayoutMode', 'isAAA']))
+                                   'payoutMode', 'aaaPayoutMode', 'isAAA',
+                                   'isFeatured', 'featuredAt', 'featuredBy']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
 

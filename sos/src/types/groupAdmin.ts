@@ -136,6 +136,7 @@ export interface GroupAdmin {
   groupDescription?: string;
   isGroupVerified: boolean;
   groupVerifiedAt?: FirebaseDate;
+  isVisible: boolean;
 
   status: GroupAdminStatus;
   adminNotes?: string;

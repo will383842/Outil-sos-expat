@@ -203,6 +203,7 @@ const GroupAdminGroupAdminRecruitment = lazy(() => import('./pages/GroupAdmin/Gr
 const GroupAdminLeaderboard = lazy(() => import('./pages/GroupAdmin/GroupAdminLeaderboard'));
 const GroupAdminProfile = lazy(() => import('./pages/GroupAdmin/GroupAdminProfile'));
 const GroupAdminSuspended = lazy(() => import('./pages/GroupAdmin/GroupAdminSuspended'));
+const GroupAdminDirectory = lazy(() => import('./pages/GroupAdmin/GroupAdminDirectory'));
 
 // -------------------------------------------
 // Laguage config
@@ -319,6 +320,7 @@ const routeConfigs: RouteConfig[] = [
 
   // GroupAdmin Landing Page (public) - for Facebook group administrators
   { path: "/devenir-admin-groupe", component: GroupAdminLanding, translated: "groupadmin-landing" },
+  { path: "/groupes-communaute", component: GroupAdminDirectory, translated: "group-community" },
 ];
 
 // Protégées (utilisateur)

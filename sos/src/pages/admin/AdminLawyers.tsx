@@ -20,7 +20,8 @@ import {
   CollectionReference,
   writeBatch,
 } from "firebase/firestore";
-import { db } from "../../config/firebase";
+import { db, functions } from "../../config/firebase";
+import { httpsCallable } from "firebase/functions";
 import {
   Scale,
   Users,
@@ -67,6 +68,7 @@ type Lawyer = {
   emailVerified: boolean;
   isOnline: boolean;
   isVisibleOnMap: boolean;
+  isFeatured: boolean;
 
   barId?: string;
   barCountry?: string;
@@ -114,6 +116,7 @@ type FirestoreLawyerDoc = {
   isOnline?: boolean;
   isVisibleOnMap?: boolean;
   isVisible?: boolean;
+  isFeatured?: boolean;
 
   barId?: string;
   barCountry?: string;
@@ -458,6 +461,7 @@ const AdminLawyers: React.FC = () => {
           emailVerified: !!v.emailVerified,
           isOnline: v.isOnline ?? false,
           isVisibleOnMap: v.isVisibleOnMap ?? v.isVisible ?? false,
+          isFeatured: v.isFeatured ?? false,
           barId: v.barId,
           barCountry: v.barCountry,
           isValidated: !!v.isValidated,
@@ -610,6 +614,22 @@ const AdminLawyers: React.FC = () => {
     } catch (e) {
       console.error("setStatus error", e);
       toast.error(t("errorUpdate"));
+    }
+  };
+
+  const [featuredLoading, setFeaturedLoading] = React.useState<string | null>(null);
+  const toggleFeatured = async (id: string, current: boolean) => {
+    setFeaturedLoading(id);
+    try {
+      const fn = httpsCallable(functions, "setProviderBadge");
+      await fn({ providerId: id, isFeatured: !current });
+      setRows((prev) => prev.map((r) => r.id === id ? { ...r, isFeatured: !current } : r));
+      toast.success(!current ? "Badge attribué ✓" : "Badge retiré");
+    } catch (e) {
+      console.error("toggleFeatured error", e);
+      toast.error("Erreur lors de la mise à jour du badge");
+    } finally {
+      setFeaturedLoading(null);
     }
   };
 
@@ -1649,6 +1669,23 @@ const AdminLawyers: React.FC = () => {
                             }}
                           >
                             {t("translation")}
+                          </Button>
+
+                          {/* Badge Recommandé */}
+                          <Button
+                            size="small"
+                            variant={l.isFeatured ? "secondary" : "secondary"}
+                            onClick={() => toggleFeatured(l.id, l.isFeatured)}
+                            disabled={featuredLoading === l.id}
+                            title={l.isFeatured ? "Retirer le badge Recommandé" : "Attribuer le badge Recommandé"}
+                          >
+                            {featuredLoading === l.id ? (
+                              <span className="animate-spin inline-block w-3 h-3 border border-current rounded-full border-t-transparent" />
+                            ) : (
+                              <span className={l.isFeatured ? "text-yellow-500 font-bold" : "text-gray-400"}>
+                                {l.isFeatured ? "★ Badge ON" : "☆ Badge"}
+                              </span>
+                            )}
                           </Button>
 
                           {/* Delete */}

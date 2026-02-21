@@ -27,6 +27,7 @@ import {
   usePricingConfig,
   detectUserCurrency,
   getEffectivePrice,
+  getLocalizedLabel,
 } from "../services/pricingService";
 import { FormattedMessage } from "react-intl";
 import { trackMetaViewContent, trackMetaInitiateCheckout, trackMetaAddToCart } from "../utils/metaPixel";
@@ -614,9 +615,9 @@ const Pricing: React.FC = () => {
                                       )}
                                     </span>
                                   </div>
-                                  {service.effectivePrice.override.label && (
+                                  {getLocalizedLabel(service.effectivePrice.override, intl.locale) && (
                                     <span className="mt-2 text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 self-start">
-                                      {service.effectivePrice.override.label}
+                                      {getLocalizedLabel(service.effectivePrice.override, intl.locale)}
                                     </span>
                                   )}
                                   {hasPromoDiscount && (

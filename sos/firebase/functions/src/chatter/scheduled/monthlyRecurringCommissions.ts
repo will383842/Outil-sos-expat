@@ -14,6 +14,14 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { deactivateExpiredPromotions, checkPromotionBudgets } from "../services/chatterPromotionService";
+import {
+  deactivateExpiredPromotions as deactivateExpiredInfluencerPromotions,
+  checkPromotionBudgets as checkInfluencerPromotionBudgets,
+} from "../../influencer/services/influencerPromotionService";
+import {
+  deactivateExpiredPromotions as deactivateExpiredGroupAdminPromotions,
+  checkPromotionBudgets as checkGroupAdminPromotionBudgets,
+} from "../../groupAdmin/services/groupAdminPromotionService";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -40,12 +48,22 @@ export const chatterMonthlyRecurringCommissions = onSchedule(
     logger.info("[monthlyPromotionMaintenance] Running monthly promotion maintenance");
 
     try {
+      // Chatter promotions
       const promoExpired = await deactivateExpiredPromotions();
       const promoExhausted = await checkPromotionBudgets();
 
+      // Influencer promotions
+      const influencerExpired = await deactivateExpiredInfluencerPromotions();
+      const influencerExhausted = await checkInfluencerPromotionBudgets();
+
+      // GroupAdmin promotions
+      const groupAdminExpired = await deactivateExpiredGroupAdminPromotions();
+      const groupAdminExhausted = await checkGroupAdminPromotionBudgets();
+
       logger.info("[monthlyPromotionMaintenance] Monthly maintenance completed", {
-        promotionsDeactivated: promoExpired.deactivated,
-        promotionsBudgetExhausted: promoExhausted.exhausted,
+        chatter: { deactivated: promoExpired.deactivated, exhausted: promoExhausted.exhausted },
+        influencer: { deactivated: influencerExpired.deactivated, exhausted: influencerExhausted.exhausted },
+        groupAdmin: { deactivated: groupAdminExpired.deactivated, exhausted: groupAdminExhausted.exhausted },
       });
     } catch (error) {
       logger.error("[monthlyPromotionMaintenance] Error during maintenance", { error });

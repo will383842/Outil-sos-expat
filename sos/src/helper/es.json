@@ -3964,6 +3964,7 @@
   "profileValidation.sortRecent": "Más recientes",
   "profileValidation.title": "Validación de Perfiles",
   "profileValidation.yearsExp": "años de experiencia",
+  "provider.featured": "Recomendado",
   "provider.payout.received": "Pago recibido",
   "provider.paypal.attemptsRemaining": "{count} intentos restantes",
   "provider.paypal.changeEmail": "Cambiar la dirección de correo de PayPal",

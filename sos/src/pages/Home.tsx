@@ -38,6 +38,7 @@ import {
   usePricingConfig,
   detectUserCurrency,
   getEffectivePrice,
+  getLocalizedLabel,
 } from "@/services/pricingService";
 import { useAggregateRatingWithDefault } from "../hooks/useAggregateRating";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -90,7 +91,7 @@ interface Stat {
 type EffectivePrice = {
   price: { totalAmount: number };
   standard: { totalAmount: number };
-  override?: { label?: string } | null;
+  override?: { label?: string; labels?: Record<string, string> } | null;
 };
 
 declare global {
@@ -1539,9 +1540,9 @@ const OptimizedHomePage: React.FC = () => {
                             <span className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900">
                               {currSymbol}{formatPriceNumber(effActive.price.totalAmount)}
                             </span>
-                            {effStd.override?.label && (
+                            {getLocalizedLabel(effStd.override, intl.locale) && (
                               <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">
-                                {effStd.override.label}
+                                {getLocalizedLabel(effStd.override, intl.locale)}
                               </span>
                             )}
                           </div>

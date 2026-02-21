@@ -44,8 +44,10 @@ export interface PricingOverrideNode {
   totalAmount?: number;
   /** Cumuler avec les coupons ? */
   stackableWithCoupons?: boolean;
-  /** Label marketing (ex: “Promo rentrée”) */
+  /** Label marketing (ex: “Promo rentrée”) — fallback legacy */
   label?: string;
+  /** Labels marketing multilingues (9 langues: fr, en, es, de, pt, ru, hi, ar, ch) */
+  labels?: Record<string, string>;
   /** Cible(s) prix barré dans l’UI */
   strikeTargets?: StrikeTarget;
 }

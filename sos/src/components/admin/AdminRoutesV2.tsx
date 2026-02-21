@@ -383,6 +383,9 @@ const AdminInfluencersLeaderboard = lazy(
 const AdminInfluencersResources = lazy(
   () => import("../../pages/admin/Influencers/AdminInfluencersResources")
 );
+const AdminInfluencersPromotions = lazy(
+  () => import("../../pages/admin/Influencers/AdminInfluencersPromotions")
+);
 
 // ===== LAZY IMPORTS - BLOGGER =====
 const AdminBloggersList = lazy(
@@ -431,6 +434,9 @@ const AdminGroupAdminsPosts = lazy(
 );
 const AdminGroupAdminsRecruitments = lazy(
   () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsRecruitments")
+);
+const AdminGroupAdminsPromotions = lazy(
+  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsPromotions")
 );
 
 // ===== LAZY IMPORTS - CENTRALIZED PAYMENTS =====
@@ -1287,6 +1293,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="influencers/promotions"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminInfluencersPromotions />
+          </Suspense>
+        }
+      />
 
       {/* 📝 BLOGGERS */}
       <Route
@@ -1408,6 +1422,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGroupAdminsConfig />
+          </Suspense>
+        }
+      />
+      <Route
+        path="group-admins/promotions"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminsPromotions />
           </Suspense>
         }
       />
@@ -1904,6 +1926,7 @@ export const useAdminRouteValidation = () => {
       "/admin/influencers/leaderboard",
       "/admin/influencers/config",
       "/admin/influencers/resources",
+      "/admin/influencers/promotions",
       "/admin/bloggers",
       "/admin/bloggers/:bloggerId",
       "/admin/bloggers/payments",
@@ -1918,6 +1941,7 @@ export const useAdminRouteValidation = () => {
       "/admin/group-admins/resources",
       "/admin/group-admins/posts",
       "/admin/group-admins/config",
+      "/admin/group-admins/promotions",
       "/admin/payments",
       "/admin/payments/withdrawals",
       "/admin/payments/:userType/:withdrawalId",

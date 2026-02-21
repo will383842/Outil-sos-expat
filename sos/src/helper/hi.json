@@ -3935,6 +3935,7 @@
   "profileValidation.sortRecent": "नवीनतम",
   "profileValidation.title": "प्रोफाइल सत्यापन",
   "profileValidation.yearsExp": "वर्षों का अनुभव",
+  "provider.featured": "अनुशंसित",
   "provider.payout.received": "भुगतान प्राप्त",
   "provider.paypal.attemptsRemaining": "{count} प्रयास शेष",
   "provider.paypal.changeEmail": "PayPal ईमेल पता बदलें",

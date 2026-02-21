@@ -66,8 +66,10 @@ interface GroupAdminListItem {
   groupUrl: string;
   groupType: string;
   groupSize: string;
+  groupCountry?: string;
   status: GroupAdminStatus;
   isGroupVerified: boolean;
+  isVisible: boolean;
   totalEarned: number;
   availableBalance: number;
   totalClients: number;
@@ -144,8 +146,10 @@ export const adminGetGroupAdminsList = onCall(
           groupUrl: data.groupUrl,
           groupType: data.groupType,
           groupSize: data.groupSize,
+          groupCountry: data.groupCountry,
           status: data.status,
           isGroupVerified: data.isGroupVerified,
+          isVisible: data.isVisible ?? false,
           totalEarned: data.totalEarned,
           availableBalance: data.availableBalance,
           totalClients: data.totalClients,

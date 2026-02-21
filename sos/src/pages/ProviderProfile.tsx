@@ -93,6 +93,7 @@ import { useProviderTranslation } from "../hooks/useProviderTranslation";
 import { TranslationBanner } from "../components/provider/TranslationBanner";
 import { type SupportedLanguage } from "../services/providerTranslationService";
 import { getTranslatedRouteSlug } from "../multilingual-system";
+import FeaturedBadge from "../components/common/FeaturedBadge";
 
 const aaaTranslationsMap: Record<string, any> = {
   fr: aaaTranslationsFr,
@@ -2518,6 +2519,12 @@ const ProviderProfile: React.FC = () => {
                         loading="eager"
                       />
                     </div>
+                    {/* Badge Recommandé */}
+                    {provider.isFeatured && (
+                      <div className="absolute -top-3 -right-3">
+                        <FeaturedBadge isFeatured size="md" />
+                      </div>
+                    )}
                     {/* Online status indicator - cohérent avec ProfileCards */}
                     <div
                       className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-4 border-gray-900 transition-all duration-500 ${

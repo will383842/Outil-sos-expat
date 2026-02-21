@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GroupAdmin System Types
  *
  * Complete type definitions for the SOS-Expat GroupAdmin (Group/Community Administrators) program.
@@ -222,6 +222,9 @@ export interface GroupAdmin {
 
   /** Whether group is verified by SOS admin */
   isGroupVerified: boolean;
+
+  /** Whether this GroupAdmin profile is publicly visible in the directory */
+  isVisible: boolean;
 
   /** When group was verified */
   groupVerifiedAt?: Timestamp;
@@ -472,6 +475,14 @@ export interface GroupAdminCommission {
 
   /** Notes for adjustment */
   adjustmentNotes?: string;
+
+  // ---- Promotion ----
+
+  /** Promotion ID if commission was boosted */
+  promotionId?: string;
+
+  /** Promotion multiplier applied (1.0 = no promo) */
+  promoMultiplier?: number;
 }
 
 // ============================================================================
@@ -1021,6 +1032,9 @@ export interface GroupAdminConfig {
   /** Whether the system is active */
   isSystemActive: boolean;
 
+  /** Whether the public GroupAdmin listing/directory page is visible */
+  isGroupAdminListingPageVisible: boolean;
+
   /** Whether new registrations are enabled */
   newRegistrationsEnabled: boolean;
 
@@ -1099,6 +1113,7 @@ export interface GroupAdminConfigHistoryEntry {
 export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "updatedBy"> = {
   id: "current",
   isSystemActive: true,
+  isGroupAdminListingPageVisible: true,
   newRegistrationsEnabled: true,
   withdrawalsEnabled: true,
 

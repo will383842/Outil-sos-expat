@@ -44,6 +44,7 @@ export interface Provider {
   isVisible?: boolean;
   isApproved?: boolean;
   isBanned?: boolean;
+  isFeatured?: boolean;
 
   // Champs de paiement (Stripe ou PayPal selon le pays)
   paymentGateway?: 'stripe' | 'paypal';
@@ -281,6 +282,7 @@ export function normalizeProvider(providerData: unknown): Provider {
   const isVisible = o.isVisible === false ? false : true;
   const isApproved = o.isApproved === false ? false : true;
   const isBanned = o.isBanned === true;
+  const isFeatured = toBool(o.isFeatured, false);
 
   // autres
   const preferredLanguage = toStr(o.preferredLanguage, 'fr');
@@ -321,6 +323,7 @@ export function normalizeProvider(providerData: unknown): Provider {
     isVisible,
     isApproved,
     isBanned,
+    isFeatured,
 
     // Champs étendus pour compatibilité avec autres composants
     fullName,
@@ -428,6 +431,7 @@ export function createDefaultProvider(providerId: string): Provider {
     isVisible: true,
     isApproved: true,
     isBanned: false,
+    isFeatured: false,
 
     // Champs étendus
     fullName: 'Expert Consultant',

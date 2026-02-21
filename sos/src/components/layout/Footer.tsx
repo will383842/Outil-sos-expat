@@ -654,6 +654,10 @@ const Footer: React.FC = () => {
             href: `/${getTranslatedRouteSlug("providers", resolvedLang)}`,
           },
           {
+            label: intl.formatMessage({ id: "footer.services.groupCommunity", defaultMessage: "Groupes Communauté" }),
+            href: `/${getTranslatedRouteSlug("group-community", resolvedLang)}`,
+          },
+          {
             label: intl.formatMessage({ id: "footer.services.testimonials" }),
             href: `/${getTranslatedRouteSlug("testimonials", resolvedLang)}`,
           },

@@ -76,6 +76,7 @@ interface UpdateConfigInput {
   isSystemActive?: boolean;
   newRegistrationsEnabled?: boolean;
   withdrawalsEnabled?: boolean;
+  isGroupAdminListingPageVisible?: boolean;
   commissionClientAmount?: number;
   commissionRecruitmentAmount?: number;
   clientDiscountAmount?: number;
@@ -149,6 +150,7 @@ export const adminUpdateGroupAdminConfig = onCall(
       if (input.isSystemActive !== undefined) updates.isSystemActive = input.isSystemActive;
       if (input.newRegistrationsEnabled !== undefined) updates.newRegistrationsEnabled = input.newRegistrationsEnabled;
       if (input.withdrawalsEnabled !== undefined) updates.withdrawalsEnabled = input.withdrawalsEnabled;
+      if (input.isGroupAdminListingPageVisible !== undefined) updates.isGroupAdminListingPageVisible = input.isGroupAdminListingPageVisible;
       if (input.commissionClientAmount !== undefined) updates.commissionClientAmount = input.commissionClientAmount;
       if (input.commissionRecruitmentAmount !== undefined) updates.commissionRecruitmentAmount = input.commissionRecruitmentAmount;
       if (input.clientDiscountAmount !== undefined) updates.clientDiscountAmount = input.clientDiscountAmount;

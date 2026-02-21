@@ -220,7 +220,26 @@ export async function createCommission(
       baseCommissionAmount = calculateCommissionAmount(influencer, type, base, config);
     }
 
-    // 5b. Apply level/streak/top3 bonuses (only for client_referral)
+    // 5b. Check for active promotions
+    let promoMultiplier = 1.0;
+    let promoId: string | null = null;
+    let promoName: string | null = null;
+
+    try {
+      const { getBestPromoMultiplier: getPromo } = await import("./influencerPromotionService");
+      const promoResult = await getPromo(
+        influencerId,
+        influencer.country || "",
+        type
+      );
+      promoMultiplier = promoResult.multiplier;
+      promoId = promoResult.promoId;
+      promoName = promoResult.promoName;
+    } catch {
+      // Promotion service unavailable — proceed without promo
+    }
+
+    // 5c. Apply level/streak/top3 bonuses (only for client_referral)
     let commissionAmount = baseCommissionAmount;
     let levelBonusMultiplier = 1.0;
     let top3BonusMultiplier = 1.0;
@@ -249,7 +268,22 @@ export async function createCommission(
       calculationDetails = bonusResult.details;
     }
 
-    // 5c. Create timestamp
+    // 5d. Apply promotion multiplier
+    if (promoMultiplier > 1.0) {
+      const beforePromo = commissionAmount;
+      commissionAmount = Math.round(commissionAmount * promoMultiplier);
+      const bonusFromPromo = commissionAmount - beforePromo;
+      calculationDetails += ` | Promo "${promoName}" x${promoMultiplier} (+${bonusFromPromo})`;
+
+      // Track budget spend asynchronously
+      if (promoId) {
+        import("./influencerPromotionService").then(({ trackBudgetSpend }) => {
+          trackBudgetSpend(promoId!, bonusFromPromo).catch(() => {});
+        }).catch(() => {});
+      }
+    }
+
+    // 5e. Create timestamp
     const now = Timestamp.now();
 
     // 6. Create commission document
@@ -278,6 +312,7 @@ export async function createCommission(
       availableAt: null,
       withdrawalId: null,
       paidAt: null,
+      ...(promoId ? { promotionId: promoId, promoMultiplier } : {}),
       createdAt: now,
       updatedAt: now,
     };

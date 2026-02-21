@@ -353,7 +353,8 @@ export type RouteKey =
   | "groupadmin-profile"      // /groupadmin/profil -> /groupadmin/profile, etc.
   | "influencer-telegram"     // /influencer/telegram -> /influencer/telegram, etc.
   | "blogger-telegram"        // /blogger/telegram -> /blogger/telegram, etc.
-  | "groupadmin-telegram";    // /group-admin/telegram -> /group-admin/telegram, etc.
+  | "groupadmin-telegram"     // /group-admin/telegram -> /group-admin/telegram, etc.
+  | "group-community";        // /groupes-communaute -> /community-groups, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -1404,6 +1405,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "chengwei-qunzhu",
     hi: "group-admin-bane",
     ar: "كن-مسؤول-مجموعة",
+  },
+  "group-community": {
+    fr: "groupes-communaute",
+    en: "community-groups",
+    es: "grupos-comunidad",
+    de: "gemeinschaftsgruppen",
+    ru: "soobshchestvo-gruppy",
+    pt: "grupos-comunidade",
+    ch: "shequ-qunzu",
+    hi: "samudayik-samuh",
+    ar: "مجموعات-المجتمع",
   },
   "groupadmin-register": {
     fr: "groupadmin/inscription",

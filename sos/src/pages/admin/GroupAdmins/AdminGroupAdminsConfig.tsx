@@ -13,6 +13,9 @@ import {
   Save,
   Loader2,
   AlertTriangle,
+  Globe,
+  EyeOff,
+  ExternalLink,
   CheckCircle,
   RefreshCw,
   Users,
@@ -31,6 +34,7 @@ const UI = {
 
 interface GroupAdminConfig {
   isSystemActive: boolean;
+  isGroupAdminListingPageVisible: boolean;
   newRegistrationsEnabled: boolean;
   withdrawalsEnabled: boolean;
   commissionClientAmount: number;
@@ -47,11 +51,15 @@ interface GroupAdminConfig {
   version: number;
 }
 
+const PAGE_URL = 'https://sos-expat.com/groupes-communaute';
+
 const AdminGroupAdminsConfig: React.FC = () => {
   const intl = useIntl();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [togglingVisibility, setTogglingVisibility] = useState(false);
+  const [visibilitySuccess, setVisibilitySuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [config, setConfig] = useState<GroupAdminConfig | null>(null);
@@ -63,7 +71,8 @@ const AdminGroupAdminsConfig: React.FC = () => {
     try {
       const getConfig = httpsCallable(functionsWest2, 'adminGetGroupAdminConfig');
       const result = await getConfig({});
-      setConfig(result.data as GroupAdminConfig);
+      const data = result.data as { config: GroupAdminConfig };
+      setConfig(data.config ?? result.data as GroupAdminConfig);
     } catch (err) {
       console.error('Error fetching config:', err);
       setError(intl.formatMessage({ id: 'groupAdmin.admin.config.error' }));
@@ -76,7 +85,26 @@ const AdminGroupAdminsConfig: React.FC = () => {
     fetchConfig();
   }, []);
 
-  // Save config
+  // Toggle listing page visibility (immediate, standalone call)
+  const handleToggleListingPage = async () => {
+    if (!config) return;
+    const newValue = !config.isGroupAdminListingPageVisible;
+    setTogglingVisibility(true);
+    setError(null);
+    try {
+      const updateConfig = httpsCallable(functionsWest2, 'adminUpdateGroupAdminConfig');
+      await updateConfig({ isGroupAdminListingPageVisible: newValue });
+      setConfig({ ...config, isGroupAdminListingPageVisible: newValue });
+      setVisibilitySuccess(true);
+      setTimeout(() => setVisibilitySuccess(false), 3000);
+    } catch (err) {
+      console.error('Error toggling listing page visibility:', err);
+      setError('Erreur lors de la mise a jour de la visibilite de la page');
+    } finally {
+      setTogglingVisibility(false);
+    }
+  };
+  // Save full config
   const handleSave = async () => {
     if (!config) return;
 
@@ -127,6 +155,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
       </AdminLayout>
     );
   }
+  const isVisible = config.isGroupAdminListingPageVisible;
 
   return (
     <AdminLayout>
@@ -158,6 +187,61 @@ const AdminGroupAdminsConfig: React.FC = () => {
         </div>
 
         {/* Alerts */}
+        {/* PUBLIC LISTING PAGE VISIBILITY TOGGLE */}
+        <div className={`${UI.card} p-6 border-2 ${isVisible ? 'border-green-400/40 dark:border-green-500/30' : 'border-gray-300/40 dark:border-gray-600/30'}`}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4 flex-1 min-w-0">
+              <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${isVisible ? 'bg-green-100 dark:bg-green-900/30' : 'bg-gray-100 dark:bg-gray-800/50'}`}>
+                {isVisible
+                  ? <Globe className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  : <EyeOff className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+                }
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Repertoire public des Groupes Communaute
+                  </h2>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${isVisible ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}>
+                    {isVisible ? 'Visible' : 'Masquee'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Controle si la page <span className="font-mono text-xs">/groupes-communaute</span> est visible par les visiteurs du site.
+                </p>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 font-mono truncate">{PAGE_URL}</span>
+                  <a
+                    href={PAGE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Voir la page
+                  </a>
+                </div>
+                {visibilitySuccess && (
+                  <div className="flex items-center gap-1.5 mt-2 text-sm text-green-600 dark:text-green-400">
+                    <CheckCircle className="w-4 h-4" />
+                    Visibilite mise a jour avec succes
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex-shrink-0 flex items-center gap-3">
+              {togglingVisibility && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+              <button
+                onClick={handleToggleListingPage}
+                disabled={togglingVisibility}
+                aria-label={isVisible ? 'Masquer la page publique' : 'Rendre la page publique visible'}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed ${isVisible ? 'bg-green-500 focus:ring-green-400' : 'bg-gray-300 dark:bg-gray-600 focus:ring-gray-400'}`}
+              >
+                <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ${isVisible ? 'translate-x-7' : 'translate-x-1'}`} />
+              </button>
+            </div>
+          </div>
+        </div>
         {error && (
           <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-2 text-red-700 dark:text-red-400">
             <AlertTriangle className="w-5 h-5" />

@@ -1,17 +1,17 @@
 /**
  * AdminGroupAdminsList - Admin page for managing Facebook group administrators
- * Features: Group type filter, group size filter, search, export, bulk actions
+ * Features: Group type filter, group size filter, search, export, bulk actions, visibility toggle
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsWest2, functions } from '@/config/firebase';
+import toast from 'react-hot-toast';
 import {
   Users,
   Search,
-  Filter,
   ChevronRight,
   CheckCircle,
   Clock,
@@ -28,10 +28,11 @@ import {
   ExternalLink,
   Facebook,
   Shield,
+  Star,
+  Eye,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
-// Design tokens - Blue theme for GroupAdmins
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
@@ -43,7 +44,6 @@ const UI = {
   select: "px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500",
 } as const;
 
-// Group types
 const GROUP_TYPES = [
   { code: 'travel', name: 'Travel' },
   { code: 'expat', name: 'Expatriates' },
@@ -59,7 +59,6 @@ const GROUP_TYPES = [
   { code: 'other', name: 'Other' },
 ];
 
-// Group sizes
 const GROUP_SIZES = [
   { code: 'lt1k', name: '< 1,000' },
   { code: '1k-5k', name: '1k - 5k' },
@@ -86,6 +85,8 @@ interface GroupAdmin {
   groupCountry?: string;
   isGroupVerified: boolean;
   createdAt: string;
+  isFeatured?: boolean;
+  isVisible?: boolean;
 }
 
 interface GroupAdminListResponse {
@@ -108,7 +109,6 @@ const AdminGroupAdminsList: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
 
-  // State
   const [groupAdmins, setGroupAdmins] = useState<GroupAdmin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,27 +119,57 @@ const AdminGroupAdminsList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<GroupAdminListResponse['stats']>();
-
-  // Bulk selection
+  const [featuredLoading, setFeaturedLoading] = useState<string | null>(null);
+  const [visibilityLoading, setVisibilityLoading] = useState<Map<string, boolean>>(new Map());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
-
-  // Export
   const [exporting, setExporting] = useState(false);
 
   const limit = 20;
 
-  // Fetch group admins
+  const toggleFeatured = async (id: string, current: boolean) => {
+    setFeaturedLoading(id);
+    try {
+      const fn = httpsCallable(functions, 'setProviderBadge');
+      await fn({ providerId: id, isFeatured: !current });
+      setGroupAdmins((prev) => prev.map((x) => x.id === id ? { ...x, isFeatured: !current } : x));
+      toast.success(!current ? 'Badge attribué ✓' : 'Badge retiré');
+    } catch {
+      toast.error('Erreur lors de la mise à jour du badge');
+    } finally {
+      setFeaturedLoading(null);
+    }
+  };
+
+  const handleToggleVisibility = async (id: string, currentVisibility: boolean | undefined) => {
+    const current = !!currentVisibility;
+    setVisibilityLoading((prev) => new Map(prev).set(id, true));
+    try {
+      const fn = httpsCallable(functionsWest2, 'adminToggleGroupAdminVisibility');
+      await fn({ groupAdminId: id, isVisible: !current });
+      setGroupAdmins((prev) =>
+        prev.map((x) => x.id === id ? { ...x, isVisible: !current } : x)
+      );
+      toast.success(!current ? 'Visible dans le répertoire ✓' : 'Masqué du répertoire');
+    } catch {
+      toast.error('Erreur lors de la mise à jour de la visibilité');
+    } finally {
+      setVisibilityLoading((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
   const fetchGroupAdmins = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
       const adminGetGroupAdminsList = httpsCallable<unknown, GroupAdminListResponse>(
         functionsWest2,
         'adminGetGroupAdminsList'
       );
-
       const result = await adminGetGroupAdminsList({
         page,
         limit,
@@ -148,7 +178,6 @@ const AdminGroupAdminsList: React.FC = () => {
         groupType: groupTypeFilter !== 'all' ? groupTypeFilter : undefined,
         groupSize: groupSizeFilter !== 'all' ? groupSizeFilter : undefined,
       });
-
       setGroupAdmins(result.data.groupAdmins);
       setTotal(result.data.total);
       setStats(result.data.stats);
@@ -158,40 +187,29 @@ const AdminGroupAdminsList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, searchQuery, statusFilter, groupTypeFilter, groupSizeFilter]);
+  }, [page, searchQuery, statusFilter, groupTypeFilter, groupSizeFilter, intl]);
 
   useEffect(() => {
     fetchGroupAdmins();
   }, [fetchGroupAdmins]);
 
-  // Toggle selection
   const toggleSelection = (id: string) => {
     const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
     setSelectedIds(newSelected);
   };
 
-  // Select all
   const selectAll = () => {
-    if (selectedIds.size === groupAdmins.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(groupAdmins.map(g => g.id)));
-    }
+    if (selectedIds.size === groupAdmins.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(groupAdmins.map(g => g.id)));
   };
 
-  // Bulk action
   const handleBulkAction = async (action: 'activate' | 'suspend' | 'block') => {
     if (selectedIds.size === 0) return;
-
     setBulkActionLoading(true);
     try {
-      const ids = Array.from(selectedIds);
-      for (const id of ids) {
+      for (const id of Array.from(selectedIds)) {
         const updateStatus = httpsCallable(functionsWest2, 'adminUpdateGroupAdminStatus');
         await updateStatus({ groupAdminId: id, status: action === 'activate' ? 'active' : action === 'suspend' ? 'suspended' : 'banned' });
       }
@@ -204,7 +222,6 @@ const AdminGroupAdminsList: React.FC = () => {
     }
   };
 
-  // Export
   const handleExport = async () => {
     setExporting(true);
     try {
@@ -213,8 +230,6 @@ const AdminGroupAdminsList: React.FC = () => {
         status: statusFilter !== 'all' ? statusFilter : undefined,
         groupType: groupTypeFilter !== 'all' ? groupTypeFilter : undefined,
       });
-
-      // Create CSV download
       const csvData = result.data as string;
       const blob = new Blob([csvData], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
@@ -230,33 +245,16 @@ const AdminGroupAdminsList: React.FC = () => {
     }
   };
 
-  // Format amount
   const formatAmount = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
-  // Get status badge
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-            <CheckCircle className="w-3 h-3" />
-            <FormattedMessage id="groupAdmin.status.active" defaultMessage="Active" />
-          </span>
-        );
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><CheckCircle className="w-3 h-3" /><FormattedMessage id="groupAdmin.status.active" defaultMessage="Active" /></span>;
       case 'suspended':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-            <Clock className="w-3 h-3" />
-            <FormattedMessage id="groupAdmin.status.suspended" defaultMessage="Suspended" />
-          </span>
-        );
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"><Clock className="w-3 h-3" /><FormattedMessage id="groupAdmin.status.suspended" defaultMessage="Suspended" /></span>;
       case 'banned':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-            <AlertTriangle className="w-3 h-3" />
-            <FormattedMessage id="groupAdmin.status.banned" defaultMessage="Banned" />
-          </span>
-        );
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"><AlertTriangle className="w-3 h-3" /><FormattedMessage id="groupAdmin.status.banned" defaultMessage="Banned" /></span>;
       default:
         return null;
     }
@@ -267,6 +265,7 @@ const AdminGroupAdminsList: React.FC = () => {
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto p-6 space-y-6">
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -278,91 +277,74 @@ const AdminGroupAdminsList: React.FC = () => {
               {intl.formatMessage({ id: 'groupAdmin.admin.list.description' })}
             </p>
           </div>
-
           <div className="flex items-center gap-2">
-            <button
-              onClick={fetchGroupAdmins}
-              disabled={loading}
-              className={`${UI.button.secondary} px-4 py-2`}
-            >
+            <button onClick={fetchGroupAdmins} disabled={loading} className={`${UI.button.secondary} px-4 py-2`}>
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            <button
-              onClick={handleExport}
-              disabled={exporting}
-              className={`${UI.button.secondary} px-4 py-2 flex items-center gap-2`}
-            >
+            <button onClick={handleExport} disabled={exporting} className={`${UI.button.secondary} px-4 py-2 flex items-center gap-2`}>
               {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
               {intl.formatMessage({ id: 'groupAdmin.admin.list.export' })}
             </button>
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className={UI.card + " p-4"}>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.active' })}</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalActive}</p>
-                </div>
+                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg"><Users className="w-5 h-5 text-green-600 dark:text-green-400" /></div>
+                <div><p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.active' })}</p><p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalActive}</p></div>
               </div>
             </div>
             <div className={UI.card + " p-4"}>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                  <Pause className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.suspended' })}</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalSuspended}</p>
-                </div>
+                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg"><Pause className="w-5 h-5 text-yellow-600 dark:text-yellow-400" /></div>
+                <div><p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.suspended' })}</p><p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalSuspended}</p></div>
               </div>
             </div>
             <div className={UI.card + " p-4"}>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.totalEarnings' })}</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{formatAmount(stats.totalEarnings)}</p>
-                </div>
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg"><DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" /></div>
+                <div><p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.totalEarnings' })}</p><p className="text-xl font-bold text-gray-900 dark:text-white">{formatAmount(stats.totalEarnings)}</p></div>
               </div>
             </div>
             <div className={UI.card + " p-4"}>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                  <UserPlus className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.newThisMonth' })}</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.newThisMonth}</p>
-                </div>
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg"><UserPlus className="w-5 h-5 text-purple-600 dark:text-purple-400" /></div>
+                <div><p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.newThisMonth' })}</p><p className="text-xl font-bold text-gray-900 dark:text-white">{stats.newThisMonth}</p></div>
               </div>
             </div>
             <div className={UI.card + " p-4"}>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-                  <Shield className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.verifiedGroups' })}</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.verifiedGroups}</p>
-                </div>
+                <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg"><Shield className="w-5 h-5 text-cyan-600 dark:text-cyan-400" /></div>
+                <div><p className="text-sm text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'groupAdmin.admin.list.stats.verifiedGroups' })}</p><p className="text-xl font-bold text-gray-900 dark:text-white">{stats.verifiedGroups}</p></div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Filters */}
+        {/* Bannière page publique */}
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 rounded-xl text-sm text-blue-700 dark:text-blue-300">
+          <Globe className="w-4 h-4 flex-shrink-0" />
+          <span>Répertoire public :</span>
+          <a
+            href="/groupes-communaute"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-medium underline hover:text-blue-900 dark:hover:text-blue-100 transition-colors"
+          >
+            /groupes-communaute
+            <ExternalLink className="w-3 h-3" />
+          </a>
+          <span className="text-blue-500 dark:text-blue-400 text-xs ml-auto">
+            Seuls les groupes avec le toggle «&nbsp;Visible&nbsp;» activé apparaissent sur la page publique.
+          </span>
+        </div>
+
+        {/* Filtres */}
         <div className={UI.card + " p-4"}>
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -373,45 +355,19 @@ const AdminGroupAdminsList: React.FC = () => {
                 className={UI.input + " pl-10"}
               />
             </div>
-
-            {/* Status filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className={UI.select}
-            >
-              <option value="all">
-                {intl.formatMessage({ id: 'groupAdmin.admin.filter.all', defaultMessage: 'All Statuses' })}
-              </option>
-              <option value="active">
-                {intl.formatMessage({ id: 'groupAdmin.admin.filter.active', defaultMessage: 'Active' })}
-              </option>
-              <option value="suspended">
-                {intl.formatMessage({ id: 'groupAdmin.admin.filter.suspended', defaultMessage: 'Suspended' })}
-              </option>
-              <option value="banned">
-                {intl.formatMessage({ id: 'groupAdmin.admin.filter.banned', defaultMessage: 'Banned' })}
-              </option>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)} className={UI.select}>
+              <option value="all">{intl.formatMessage({ id: 'groupAdmin.admin.filter.all', defaultMessage: 'All Statuses' })}</option>
+              <option value="active">{intl.formatMessage({ id: 'groupAdmin.admin.filter.active', defaultMessage: 'Active' })}</option>
+              <option value="suspended">{intl.formatMessage({ id: 'groupAdmin.admin.filter.suspended', defaultMessage: 'Suspended' })}</option>
+              <option value="banned">{intl.formatMessage({ id: 'groupAdmin.admin.filter.banned', defaultMessage: 'Banned' })}</option>
             </select>
-
-            {/* Group type filter */}
-            <select
-              value={groupTypeFilter}
-              onChange={(e) => setGroupTypeFilter(e.target.value)}
-              className={UI.select}
-            >
+            <select value={groupTypeFilter} onChange={(e) => setGroupTypeFilter(e.target.value)} className={UI.select}>
               <option value="all">{intl.formatMessage({ id: 'groupAdmin.admin.list.filter.allGroupTypes' })}</option>
               {GROUP_TYPES.map(type => (
                 <option key={type.code} value={type.code}>{intl.formatMessage({ id: `groupAdmin.groupType.${type.code}` })}</option>
               ))}
             </select>
-
-            {/* Group size filter */}
-            <select
-              value={groupSizeFilter}
-              onChange={(e) => setGroupSizeFilter(e.target.value)}
-              className={UI.select}
-            >
+            <select value={groupSizeFilter} onChange={(e) => setGroupSizeFilter(e.target.value)} className={UI.select}>
               <option value="all">{intl.formatMessage({ id: 'groupAdmin.admin.list.filter.allSizes' })}</option>
               {GROUP_SIZES.map(size => (
                 <option key={size.code} value={size.code}>{size.name}</option>
@@ -420,49 +376,32 @@ const AdminGroupAdminsList: React.FC = () => {
           </div>
         </div>
 
-        {/* Bulk Actions */}
+        {/* Actions groupées */}
         {selectedIds.size > 0 && (
           <div className={UI.card + " p-4 flex items-center justify-between"}>
             <span className="text-sm text-gray-600 dark:text-gray-300">
               {intl.formatMessage({ id: 'groupAdmin.admin.list.selected' }, { count: selectedIds.size })}
             </span>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleBulkAction('activate')}
-                disabled={bulkActionLoading}
-                className={`${UI.button.secondary} px-3 py-1 text-sm flex items-center gap-1`}
-              >
+              <button onClick={() => handleBulkAction('activate')} disabled={bulkActionLoading} className={`${UI.button.secondary} px-3 py-1 text-sm flex items-center gap-1`}>
                 <Play className="w-4 h-4" /> {intl.formatMessage({ id: 'groupAdmin.admin.list.activate' })}
               </button>
-              <button
-                onClick={() => handleBulkAction('suspend')}
-                disabled={bulkActionLoading}
-                className={`${UI.button.secondary} px-3 py-1 text-sm flex items-center gap-1`}
-              >
+              <button onClick={() => handleBulkAction('suspend')} disabled={bulkActionLoading} className={`${UI.button.secondary} px-3 py-1 text-sm flex items-center gap-1`}>
                 <Pause className="w-4 h-4" /> {intl.formatMessage({ id: 'groupAdmin.admin.list.suspend' })}
               </button>
-              <button
-                onClick={() => handleBulkAction('block')}
-                disabled={bulkActionLoading}
-                className={`${UI.button.danger} px-3 py-1 text-sm flex items-center gap-1`}
-              >
+              <button onClick={() => handleBulkAction('block')} disabled={bulkActionLoading} className={`${UI.button.danger} px-3 py-1 text-sm flex items-center gap-1`}>
                 <X className="w-4 h-4" /> {intl.formatMessage({ id: 'groupAdmin.admin.list.block' })}
               </button>
             </div>
           </div>
         )}
 
-        {/* Table */}
+        {/* Tableau */}
         <div className={UI.card + " overflow-hidden"}>
           {loading ? (
-            <div className="flex items-center justify-center p-12">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-            </div>
+            <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>
           ) : error ? (
-            <div className="flex items-center justify-center p-12 text-red-500">
-              <AlertTriangle className="w-6 h-6 mr-2" />
-              {error}
-            </div>
+            <div className="flex items-center justify-center p-12 text-red-500"><AlertTriangle className="w-6 h-6 mr-2" />{error}</div>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -470,76 +409,40 @@ const AdminGroupAdminsList: React.FC = () => {
                   <thead className="bg-gray-50 dark:bg-white/5">
                     <tr>
                       <th className="px-4 py-3 text-left">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.size === groupAdmins.length && groupAdmins.length > 0}
-                          onChange={selectAll}
-                          className="rounded"
-                        />
+                        <input type="checkbox" checked={selectedIds.size === groupAdmins.length && groupAdmins.length > 0} onChange={selectAll} className="rounded" />
                       </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.admin' })}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.group' })}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.typeSize' })}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.status' })}</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.admin' })}
+                        <span className="inline-flex items-center gap-1"><Eye className="w-3.5 h-3.5" />Visible</span>
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.group' })}
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.typeSize' })}
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.status' })}
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.clients' })}
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {intl.formatMessage({ id: 'groupAdmin.admin.list.col.earnings' })}
-                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.clients' })}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.earnings' })}</th>
                       <th className="px-4 py-3"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                     {groupAdmins.map(admin => (
-                      <tr
-                        key={admin.id}
-                        className="hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer"
-                        onClick={() => navigate(`/admin/group-admins/${admin.id}`)}
-                      >
+                      <tr key={admin.id} className="hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer" onClick={() => navigate(`/admin/group-admins/${admin.id}`)}>
                         <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(admin.id)}
-                            onChange={() => toggleSelection(admin.id)}
-                            className="rounded"
-                          />
+                          <input type="checkbox" checked={selectedIds.has(admin.id)} onChange={() => toggleSelection(admin.id)} className="rounded" />
                         </td>
                         <td className="px-4 py-4">
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {admin.firstName} {admin.lastName}
-                            </p>
+                            <p className="font-medium text-gray-900 dark:text-white">{admin.firstName} {admin.lastName}</p>
                             <p className="text-sm text-gray-500">{admin.email}</p>
                           </div>
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-2">
-                            {admin.isGroupVerified && (
-                              <span title="Verified"><Shield className="w-4 h-4 text-cyan-500" /></span>
-                            )}
+                            {admin.isGroupVerified && <span title="Verified"><Shield className="w-4 h-4 text-cyan-500" /></span>}
                             <div>
-                              <p className="font-medium text-gray-900 dark:text-white truncate max-w-[200px]">
-                                {admin.groupName || intl.formatMessage({ id: 'groupAdmin.admin.list.na' })}
-                              </p>
+                              <p className="font-medium text-gray-900 dark:text-white truncate max-w-[200px]">{admin.groupName || intl.formatMessage({ id: 'groupAdmin.admin.list.na' })}</p>
                               {admin.groupUrl && (
-                                <a
-                                  href={admin.groupUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-sm text-blue-500 hover:underline flex items-center gap-1"
-                                >
-                                  <ExternalLink className="w-3 h-3" />
-                                  {intl.formatMessage({ id: 'groupAdmin.admin.list.viewGroup' })}
+                                <a href={admin.groupUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-sm text-blue-500 hover:underline flex items-center gap-1">
+                                  <ExternalLink className="w-3 h-3" />{intl.formatMessage({ id: 'groupAdmin.admin.list.viewGroup' })}
                                 </a>
                               )}
                             </div>
@@ -547,25 +450,42 @@ const AdminGroupAdminsList: React.FC = () => {
                         </td>
                         <td className="px-4 py-4">
                           <div>
-                            <p className="text-sm text-gray-900 dark:text-white">
-                              {admin.groupType ? intl.formatMessage({ id: `groupAdmin.groupType.${admin.groupType}`, defaultMessage: admin.groupType }) : intl.formatMessage({ id: 'groupAdmin.admin.list.na' })}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {GROUP_SIZES.find(s => s.code === admin.groupSize)?.name || admin.groupSize || intl.formatMessage({ id: 'groupAdmin.admin.list.na' })}
-                            </p>
+                            <p className="text-sm text-gray-900 dark:text-white">{admin.groupType ? intl.formatMessage({ id: `groupAdmin.groupType.${admin.groupType}`, defaultMessage: admin.groupType }) : intl.formatMessage({ id: 'groupAdmin.admin.list.na' })}</p>
+                            <p className="text-xs text-gray-500">{GROUP_SIZES.find(s => s.code === admin.groupSize)?.name || admin.groupSize || intl.formatMessage({ id: 'groupAdmin.admin.list.na' })}</p>
                           </div>
                         </td>
-                        <td className="px-4 py-4">
-                          {getStatusBadge(admin.status)}
+                        <td className="px-4 py-4">{getStatusBadge(admin.status)}</td>
+                        {/* Toggle visibilité */}
+                        <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                          {visibilityLoading.get(admin.id) ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                          ) : (
+                            <button
+                              onClick={() => handleToggleVisibility(admin.id, admin.isVisible)}
+                              title={admin.isVisible ? 'Masquer du répertoire public' : 'Afficher dans le répertoire public'}
+                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${admin.isVisible ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                            >
+                              <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${admin.isVisible ? 'translate-x-5' : 'translate-x-1'}`} />
+                            </button>
+                          )}
                         </td>
-                        <td className="px-4 py-4">
-                          <p className="font-medium text-gray-900 dark:text-white">{admin.totalClients}</p>
-                        </td>
-                        <td className="px-4 py-4">
-                          <p className="font-medium text-green-600">{formatAmount(admin.totalEarned)}</p>
-                        </td>
+                        <td className="px-4 py-4"><p className="font-medium text-gray-900 dark:text-white">{admin.totalClients}</p></td>
+                        <td className="px-4 py-4"><p className="font-medium text-green-600">{formatAmount(admin.totalEarned)}</p></td>
                         <td className="px-4 py-4 text-right">
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); void toggleFeatured(admin.id, !!admin.isFeatured); }}
+                              disabled={featuredLoading === admin.id}
+                              title={admin.isFeatured ? 'Retirer le badge Recommandé' : 'Attribuer le badge Recommandé'}
+                              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                            >
+                              {featuredLoading === admin.id
+                                ? <span className="animate-spin inline-block w-3 h-3 border border-current rounded-full border-t-transparent" />
+                                : <Star className={`w-4 h-4 ${admin.isFeatured ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                              }
+                            </button>
+                            <ChevronRight className="w-5 h-5 text-gray-400" />
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -573,30 +493,13 @@ const AdminGroupAdminsList: React.FC = () => {
                 </table>
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-white/10">
-                  <p className="text-sm text-gray-500">
-                    {intl.formatMessage({ id: 'groupAdmin.admin.list.showing' }, { from: (page - 1) * limit + 1, to: Math.min(page * limit, total), total })}
-                  </p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.list.showing' }, { from: (page - 1) * limit + 1, to: Math.min(page * limit, total), total })}</p>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className={`${UI.button.secondary} px-3 py-1 disabled:opacity-50`}
-                    >
-                      {intl.formatMessage({ id: 'groupAdmin.admin.list.previous' })}
-                    </button>
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
-                      {intl.formatMessage({ id: 'groupAdmin.admin.list.page' }, { page, totalPages })}
-                    </span>
-                    <button
-                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages}
-                      className={`${UI.button.secondary} px-3 py-1 disabled:opacity-50`}
-                    >
-                      {intl.formatMessage({ id: 'groupAdmin.admin.list.next' })}
-                    </button>
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className={`${UI.button.secondary} px-3 py-1 disabled:opacity-50`}>{intl.formatMessage({ id: 'groupAdmin.admin.list.previous' })}</button>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">{intl.formatMessage({ id: 'groupAdmin.admin.list.page' }, { page, totalPages })}</span>
+                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className={`${UI.button.secondary} px-3 py-1 disabled:opacity-50`}>{intl.formatMessage({ id: 'groupAdmin.admin.list.next' })}</button>
                   </div>
                 </div>
               )}

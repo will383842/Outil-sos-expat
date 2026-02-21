@@ -9,7 +9,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsWest2, functions } from '@/config/firebase';
+import toast from 'react-hot-toast';
 import {
   Users,
   Search,
@@ -31,6 +32,7 @@ import {
   Mail,
   FileText,
   ExternalLink,
+  Star,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -96,6 +98,7 @@ interface Blogger {
   blogCountry?: string;
   blogTraffic?: string;
   createdAt: string;
+  isFeatured?: boolean;
 }
 
 interface BloggerListResponse {
@@ -128,6 +131,21 @@ const AdminBloggersList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<BloggerListResponse['stats']>();
+  const [featuredLoading, setFeaturedLoading] = useState<string | null>(null);
+
+  const toggleFeatured = async (id: string, current: boolean) => {
+    setFeaturedLoading(id);
+    try {
+      const fn = httpsCallable(functions, 'setProviderBadge');
+      await fn({ providerId: id, isFeatured: !current });
+      setBloggers((prev) => prev.map((x) => x.id === id ? { ...x, isFeatured: !current } : x));
+      toast.success(!current ? 'Badge attribué ✓' : 'Badge retiré');
+    } catch {
+      toast.error('Erreur lors de la mise à jour du badge');
+    } finally {
+      setFeaturedLoading(null);
+    }
+  };
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -676,12 +694,25 @@ const AdminBloggersList: React.FC = () => {
                             </div>
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
-                            <button
-                              onClick={() => navigate(`/admin/bloggers/${blogger.id}`)}
-                              className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
-                            >
-                              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); void toggleFeatured(blogger.id, !!blogger.isFeatured); }}
+                                disabled={featuredLoading === blogger.id}
+                                title={blogger.isFeatured ? 'Retirer le badge Recommandé' : 'Attribuer le badge Recommandé'}
+                                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                              >
+                                {featuredLoading === blogger.id
+                                  ? <span className="animate-spin inline-block w-3 h-3 border border-current rounded-full border-t-transparent" />
+                                  : <Star className={`w-4 h-4 ${blogger.isFeatured ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                                }
+                              </button>
+                              <button
+                                onClick={() => navigate(`/admin/bloggers/${blogger.id}`)}
+                                className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                              >
+                                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}

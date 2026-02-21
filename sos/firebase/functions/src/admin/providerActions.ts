@@ -1533,3 +1533,83 @@ export const getAllProviderActionLogs = onCall(FUNCTION_CONFIG, async (req) => {
     );
   }
 });
+
+// ============================================================================
+// SET PROVIDER BADGE (Featured)
+// ============================================================================
+
+/**
+ * Attribue ou retire le badge "Recommandé" à un prestataire.
+ * Seuls les admins peuvent appeler cette fonction.
+ * Met à jour sos_profiles ET users (dénormalisation pour la liste admin).
+ */
+export const setProviderBadge = onCall(
+  { ...FUNCTION_CONFIG, timeoutSeconds: 30 },
+  async (req) => {
+    const adminUid = assertAdmin(req);
+
+    const { providerId, isFeatured } = req.data as {
+      providerId: string;
+      isFeatured: boolean;
+    };
+
+    if (!providerId || typeof isFeatured !== "boolean") {
+      throw new HttpsError(
+        "invalid-argument",
+        "providerId (string) et isFeatured (boolean) sont requis"
+      );
+    }
+
+    const db = getDb();
+    const profileRef = db.collection("sos_profiles").doc(providerId);
+    const userRef = db.collection("users").doc(providerId);
+
+    // Vérifier que l'utilisateur existe (users est obligatoire)
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) {
+      throw new HttpsError("not-found", `Utilisateur introuvable : ${providerId}`);
+    }
+
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const batch = db.batch();
+
+    // Toujours mettre à jour users
+    batch.update(userRef, {
+      isFeatured,
+      updatedAt: now,
+    });
+
+    // Mettre à jour sos_profiles seulement si le document existe (prestataires uniquement)
+    const profileSnap = await profileRef.get();
+    if (profileSnap.exists) {
+      batch.update(profileRef, {
+        isFeatured,
+        featuredAt: isFeatured ? now : null,
+        featuredBy: isFeatured ? adminUid : null,
+        updatedAt: now,
+      });
+    }
+
+    await batch.commit();
+
+    // Log de l'action
+    await logProviderAction(
+      adminUid,
+      providerId,
+      isFeatured ? "badge_granted" : "badge_removed",
+      undefined,
+      { isFeatured }
+    );
+
+    logger.info(
+      `[PROVIDER_BADGE] ${isFeatured ? "Attribué" : "Retiré"} pour ${providerId} par ${adminUid}`
+    );
+
+    return {
+      success: true,
+      providerId,
+      isFeatured,
+      timestamp: new Date().toISOString(),
+    };
+  }
+);

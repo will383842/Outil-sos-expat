@@ -120,6 +120,13 @@ service firebase.storage {
       allow delete: if isAdmin() && isValidInvoiceType();
     }
 
+    // GroupAdmin profile photos — lisibles publiquement (répertoire public)
+    match /group_admin_photos/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId && isImage() && isValidFileSize();
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
     match /backups/{fileName} {
       allow read, write: if isAdmin();
     }

@@ -15,6 +15,7 @@ export interface PriceOverride {
   totalAmount: number;
   connectionFeeAmount: number;
   label?: string;
+  labels?: Record<string, string>;
   startsAt?: number | { seconds: number };
   endsAt?: number | { seconds: number };
   strikeTargets?: StrikeTarget;
@@ -346,40 +347,33 @@ export function subscribeToPricing(
   return unsubscribe;
 }
 
-/** Hook React avec pattern "stale-while-revalidate" (économique + rapide) */
+/** Hook React temps réel — utilise onSnapshot pour MAJ instantanées */
 export function usePricingConfig() {
   // ✅ PERF: Initialiser avec le cache ou fallback pour affichage instantané
   const [pricing, setPricing] = useState<PricingConfig | null>(() => {
-    // Utiliser le cache même expiré pour un affichage immédiat
     if (_cache.data) return _cache.data;
     return DEFAULT_FALLBACK;
   });
-  // ✅ PERF: Si on a déjà des données (cache ou fallback), pas de loading initial
   const [loading, setLoading] = useState(!_cache.data);
   const [error, setError] = useState<string | null>(null);
 
-  const reload = async () => {
-    // Ne pas montrer le loading si on a déjà des données (stale-while-revalidate)
-    if (!pricing) setLoading(true);
-    setError(null);
-    try {
-      const cfg = await getPricingConfig();
-      setPricing(cfg);
-    } catch (e) {
-      console.error("[usePricingConfig] load error:", e);
-      setError(e instanceof Error ? e.message : "Erreur chargement pricing");
-      // ✅ PERF: Garder les anciennes données en cas d'erreur
-      if (!pricing) setPricing(DEFAULT_FALLBACK);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    reload();
+    const unsubscribe = subscribeToPricing(
+      (cfg) => {
+        setPricing(cfg);
+        setLoading(false);
+        setError(null);
+      },
+      (err) => {
+        console.error("[usePricingConfig] onSnapshot error:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    );
+    return unsubscribe;
   }, []);
 
-  return { pricing, loading, error, reload };
+  return { pricing, loading, error };
 }
 
 /** Simple util */
@@ -414,6 +408,24 @@ export function detectUserCurrency(): Currency {
   } catch {
     return "eur";
   }
+}
+
+// === Localized label helper ===
+
+/**
+ * Retourne le label promo localisé pour la langue donnée.
+ * Fallback: labels[locale] → labels.fr → label (legacy string)
+ */
+export function getLocalizedLabel(
+  override: { label?: string; labels?: Record<string, string> } | null | undefined,
+  locale: string
+): string | undefined {
+  if (!override) return undefined;
+  const lang = locale.split("-")[0]; // "fr-FR" → "fr"
+  if (override.labels) {
+    return override.labels[lang] || override.labels.fr || override.label;
+  }
+  return override.label;
 }
 
 // === Overrides Helpers ===

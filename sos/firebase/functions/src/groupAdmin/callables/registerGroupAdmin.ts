@@ -367,6 +367,7 @@ export const registerGroupAdmin = onCall(
         groupLanguage: input.groupLanguage,
         ...(input.groupDescription?.trim() ? { groupDescription: input.groupDescription.trim() } : {}),
         isGroupVerified: false,
+        isVisible: false,
 
         status: "active",
 

@@ -55,6 +55,17 @@ export {
   adminGetGroupAdminConfigHistory,
   adminGetRecruitmentsList,
   adminGetGroupAdminRecruits,
+  // Promotions Admin Callables
+  adminGetGroupAdminPromotions,
+  adminCreateGroupAdminPromotion,
+  adminUpdateGroupAdminPromotion,
+  adminDeleteGroupAdminPromotion,
+  adminGetGroupAdminPromotionStats,
+  adminDuplicateGroupAdminPromotion,
+  // Visibility Admin Callable
+  adminToggleGroupAdminVisibility,
+  // Public callables
+  getGroupAdminDirectory,
 } from "./callables";
 
 // Services

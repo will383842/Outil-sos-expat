@@ -9,6 +9,7 @@ import { db } from '../config/firebase';
 import type { Provider } from '../types/provider';
 import { normalizeProvider, validateProvider } from '../types/provider';
 import { usePricingConfig } from '../services/pricingService';
+import FeaturedBadge from '../components/common/FeaturedBadge';
 
 type ProviderType = 'all' | 'lawyer' | 'expat';
 type SortOption = 'rating' | 'price' | 'experience';
@@ -786,15 +787,22 @@ const Providers: React.FC = () => {
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <img
-                        src={provider.avatar}
-                        alt={provider.name}
-                        className="w-12 h-12 rounded-full object-cover"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          target.src = CONFIG.DEFAULT_AVATAR;
-                        }}
-                      />
+                      <div className="relative flex-shrink-0">
+                        <img
+                          src={provider.avatar}
+                          alt={provider.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            target.src = CONFIG.DEFAULT_AVATAR;
+                          }}
+                        />
+                        {provider.isFeatured && (
+                          <div className="absolute -top-2 -right-2">
+                            <FeaturedBadge isFeatured size="sm" />
+                          </div>
+                        )}
+                      </div>
                       <div>
                         <h3 className="font-semibold text-gray-900">{provider.name}</h3>
                         <div className="flex items-center space-x-2">

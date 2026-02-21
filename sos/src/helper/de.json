@@ -3910,6 +3910,7 @@
   "profileValidation.sortRecent": "Neueste",
   "profileValidation.title": "Profilvalidierung",
   "profileValidation.yearsExp": "Jahre Erfahrung",
+  "provider.featured": "Empfohlen",
   "provider.payout.received": "Zahlung erhalten",
   "provider.paypal.attemptsRemaining": "{count} Versuche übrig",
   "provider.paypal.changeEmail": "PayPal E-Mail-Adresse ändern",

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // ====== FORCE REDEPLOY 2026-01-15 - AMD pending fix ======
 
@@ -5961,6 +5961,13 @@ export {
   adminCreateInfluencerResourceText,
   adminUpdateInfluencerResourceText,
   adminDeleteInfluencerResourceText,
+  // Admin Promotions callables
+  adminGetInfluencerPromotions,
+  adminCreateInfluencerPromotion,
+  adminUpdateInfluencerPromotion,
+  adminDeleteInfluencerPromotion,
+  adminGetInfluencerPromotionStats,
+  adminDuplicateInfluencerPromotion,
 } from './influencer';
 
 // ========== BLOGGER SYSTEM ==========
@@ -6103,6 +6110,17 @@ export {
   adminGetGroupAdminConfigHistory,
   adminGetRecruitmentsList,
   adminGetGroupAdminRecruits,
+  // Admin Promotions callables
+  adminGetGroupAdminPromotions,
+  adminCreateGroupAdminPromotion,
+  adminUpdateGroupAdminPromotion,
+  adminDeleteGroupAdminPromotion,
+  adminGetGroupAdminPromotionStats,
+  adminDuplicateGroupAdminPromotion,
+  // Visibility
+  adminToggleGroupAdminVisibility,
+  // Public directory
+  getGroupAdminDirectory,
   // Triggers
   // onCallCompletedGroupAdmin,  // → consolidatedOnCallCompleted
   onGroupAdminCreated,

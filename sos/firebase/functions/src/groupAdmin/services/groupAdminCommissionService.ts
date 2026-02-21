@@ -79,7 +79,36 @@ export async function createClientReferralCommission(
     }
 
     // Get commission amount
-    const amount = await getClientCommissionAmount();
+    let amount = await getClientCommissionAmount();
+
+    // Check for active promotions
+    let promoId: string | undefined;
+    let promoMultiplier: number | undefined;
+
+    try {
+      const { getBestPromoMultiplier } = await import("./groupAdminPromotionService");
+      const promoResult = await getBestPromoMultiplier(
+        groupAdminId,
+        groupAdmin.country || "",
+        "client_referral"
+      );
+      if (promoResult.multiplier > 1.0) {
+        const beforePromo = amount;
+        amount = Math.round(amount * promoResult.multiplier);
+        promoId = promoResult.promoId || undefined;
+        promoMultiplier = promoResult.multiplier;
+
+        // Track budget spend asynchronously
+        const bonusFromPromo = amount - beforePromo;
+        if (promoResult.promoId) {
+          import("./groupAdminPromotionService").then(({ trackBudgetSpend }) => {
+            trackBudgetSpend(promoResult.promoId!, bonusFromPromo).catch(() => {});
+          }).catch(() => {});
+        }
+      }
+    } catch {
+      // Promotion service unavailable — proceed without promo
+    }
 
     // Create commission
     const commission = await createCommission(
@@ -90,6 +119,7 @@ export async function createClientReferralCommission(
       {
         sourceClientId: clientId,
         sourceCallId: callId,
+        ...(promoId ? { promotionId: promoId, promoMultiplier } : {}),
       }
     );
 

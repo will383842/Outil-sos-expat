@@ -86,6 +86,13 @@ export {
   adminUpdateAntiFraudConfig,
   adminExportInfluencers,
   adminBulkInfluencerAction,
+  // Promotions Admin Callables
+  adminGetInfluencerPromotions,
+  adminCreateInfluencerPromotion,
+  adminUpdateInfluencerPromotion,
+  adminDeleteInfluencerPromotion,
+  adminGetInfluencerPromotionStats,
+  adminDuplicateInfluencerPromotion,
 } from "./callables/admin";
 
 // ============================================================================
