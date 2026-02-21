@@ -518,31 +518,47 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         metaEventId,
       }, formData.password);
 
-      const { functionsWest2 } = await import('@/config/firebase');
+      const { functionsWest2, auth } = await import('@/config/firebase');
       const registerInfluencer = httpsCallable(functionsWest2, 'registerInfluencer');
 
-      const result = await registerInfluencer({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        country: formData.country,
-        language: formData.language,
-        platforms: formData.platforms,
-        bio: formData.bio || undefined,
-        communitySize: formData.communitySize ? parseInt(formData.communitySize) : undefined,
-        communityNiche: formData.communityNiche || undefined,
-        interventionCountries: formData.interventionCountries.length > 0 ? formData.interventionCountries : undefined,
-        recruiterCode: formData.referralCode || undefined,
-        termsAcceptedAt: new Date().toISOString(),
-        termsVersion: "3.0",
-        termsType: "terms_influencers",
-        termsAcceptanceMeta: {
-          userAgent: navigator.userAgent,
-          language: navigator.language,
-          timestamp: Date.now(),
-          acceptanceMethod: "checkbox_click",
-        },
-      });
+      let result;
+      try {
+        result = await registerInfluencer({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          country: formData.country,
+          language: formData.language,
+          platforms: formData.platforms,
+          bio: formData.bio || undefined,
+          communitySize: formData.communitySize ? parseInt(formData.communitySize) : undefined,
+          communityNiche: formData.communityNiche || undefined,
+          interventionCountries: formData.interventionCountries.length > 0 ? formData.interventionCountries : undefined,
+          recruiterCode: formData.referralCode || undefined,
+          termsAcceptedAt: new Date().toISOString(),
+          termsVersion: "3.0",
+          termsType: "terms_influencers",
+          termsAcceptanceMeta: {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            timestamp: Date.now(),
+            acceptanceMethod: "checkbox_click",
+          },
+        });
+      } catch (cfError) {
+        // CRITICAL: If Cloud Function fails, delete the orphaned Firebase Auth user
+        // to prevent accounts without influencer profiles
+        try {
+          const { deleteUser } = await import('firebase/auth');
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            await deleteUser(currentUser);
+          }
+        } catch (deleteErr) {
+          console.error('[InfluencerRegister] Failed to cleanup orphaned auth user:', deleteErr);
+        }
+        throw cfError;
+      }
 
       const data = result.data as { success: boolean; affiliateCodeClient: string };
 

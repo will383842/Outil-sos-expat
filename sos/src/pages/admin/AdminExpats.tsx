@@ -136,6 +136,7 @@ type FirestoreExpatDoc = {
   isVisibleOnMap?: boolean;
   isOnline?: boolean;
   isVisible?: boolean;
+  isFeatured?: boolean;
   helpDomains?: string[];
   expertiseDomains?: string[];
   servicesOffered?: string[];

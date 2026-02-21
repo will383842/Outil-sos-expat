@@ -48,6 +48,7 @@ export const registerInfluencer = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
@@ -342,6 +343,7 @@ export const registerInfluencer = onCall(
         socialLinks: input.socialLinks,
 
         status: "active", // Directly active - no quiz required
+        isVisible: false,
         affiliateCodeClient,
         affiliateCodeRecruitment,
 

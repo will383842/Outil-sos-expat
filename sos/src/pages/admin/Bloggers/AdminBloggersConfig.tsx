@@ -20,6 +20,7 @@ import {
   Check,
   Shield,
   Info,
+  Globe,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -53,6 +54,9 @@ interface BloggerConfig {
   // Metadata
   updatedAt?: string;
   updatedBy?: string;
+
+  // Directory page visibility
+  isBloggerListingPageVisible?: boolean;
 }
 
 // Default config
@@ -67,6 +71,7 @@ const DEFAULT_CONFIG: BloggerConfig = {
   isSystemActive: true,
   newRegistrationsEnabled: true,
   withdrawalsEnabled: true,
+  isBloggerListingPageVisible: false,
 };
 
 const AdminBloggersConfig: React.FC = () => {
@@ -77,6 +82,8 @@ const AdminBloggersConfig: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [togglingVisibility, setTogglingVisibility] = useState(false);
+  const [visibilitySuccess, setVisibilitySuccess] = useState(false);
 
   // Fetch current config
   const fetchConfig = useCallback(async () => {
@@ -156,6 +163,24 @@ const AdminBloggersConfig: React.FC = () => {
     });
   };
 
+
+  const handleToggleListingPage = useCallback(async () => {
+    setTogglingVisibility(true);
+    setVisibilitySuccess(false);
+    try {
+      const fn = httpsCallable(functionsWest2, 'adminUpdateBloggerConfig');
+      const newValue = !config.isBloggerListingPageVisible;
+      await fn({ isBloggerListingPageVisible: newValue });
+      setConfig(prev => ({ ...prev, isBloggerListingPageVisible: newValue }));
+      setVisibilitySuccess(true);
+      setTimeout(() => setVisibilitySuccess(false), 2000);
+    } catch (err) {
+      console.error('[AdminBloggersConfig] Toggle listing page failed:', err);
+    } finally {
+      setTogglingVisibility(false);
+    }
+  }, [config.isBloggerListingPageVisible]);
+
   if (loading) {
     return (
       <AdminLayout>
@@ -210,6 +235,43 @@ const AdminBloggersConfig: React.FC = () => {
             </p>
           </div>
         )}
+
+        {/* Directory Page Visibility */}
+        <div className={`${UI.card} p-6`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold dark:text-white flex items-center gap-2">
+                <Globe className="w-5 h-5 text-purple-500" />
+                Page Répertoire Public
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Activer pour rendre visible la page{' '}
+                <a href="/nos-blogueurs" target="_blank" className="text-purple-600 hover:underline">/nos-blogueurs</a>
+                {' '}avec les blogueurs dont la visibilité est activée.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {visibilitySuccess && <Check className="w-5 h-5 text-green-500" />}
+              {togglingVisibility ? (
+                <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
+              ) : (
+                <button
+                  onClick={handleToggleListingPage}
+                  className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${
+                    config.isBloggerListingPageVisible ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                >
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                    config.isBloggerListingPageVisible ? 'translate-x-8' : 'translate-x-1'
+                  }`} />
+                </button>
+              )}
+              <span className={`text-sm font-medium ${config.isBloggerListingPageVisible ? 'text-green-600' : 'text-gray-400'}`}>
+                {config.isBloggerListingPageVisible ? 'Visible' : 'Masqué'}
+              </span>
+            </div>
+          </div>
+        </div>
 
         {/* System Settings */}
         <div className={`${UI.card} p-6`}>

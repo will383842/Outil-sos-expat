@@ -204,6 +204,9 @@ const GroupAdminLeaderboard = lazy(() => import('./pages/GroupAdmin/GroupAdminLe
 const GroupAdminProfile = lazy(() => import('./pages/GroupAdmin/GroupAdminProfile'));
 const GroupAdminSuspended = lazy(() => import('./pages/GroupAdmin/GroupAdminSuspended'));
 const GroupAdminDirectory = lazy(() => import('./pages/GroupAdmin/GroupAdminDirectory'));
+const InfluencerDirectory = lazy(() => import('./pages/Influencer/InfluencerDirectory'));
+const BloggerDirectory = lazy(() => import('./pages/Blogger/BloggerDirectory'));
+const ChatterDirectory = lazy(() => import('./pages/Chatter/ChatterDirectory'));
 
 // -------------------------------------------
 // Laguage config
@@ -321,6 +324,9 @@ const routeConfigs: RouteConfig[] = [
   // GroupAdmin Landing Page (public) - for Facebook group administrators
   { path: "/devenir-admin-groupe", component: GroupAdminLanding, translated: "groupadmin-landing" },
   { path: "/groupes-communaute", component: GroupAdminDirectory, translated: "group-community" },
+  { path: "/nos-influenceurs", component: InfluencerDirectory, translated: "influencer-directory" },
+  { path: "/nos-blogueurs", component: BloggerDirectory, translated: "blogger-directory" },
+  { path: "/nos-chatters", component: ChatterDirectory, translated: "chatter-directory" },
 ];
 
 // Protégées (utilisateur)

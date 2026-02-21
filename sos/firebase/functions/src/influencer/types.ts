@@ -180,6 +180,9 @@ export interface Influencer {
   /** Account status */
   status: InfluencerStatus;
 
+  /** Whether this influencer is visible in the public directory */
+  isVisible: boolean;
+
   /** Admin notes (internal) */
   adminNotes?: string;
 
@@ -814,6 +817,9 @@ export interface InfluencerConfig {
 
   /** Is the training module visible to influencers */
   trainingEnabled: boolean;
+
+  /** Is the public influencer listing page visible */
+  isInfluencerListingPageVisible: boolean;
 
   // ---- Commission Amounts (cents) ----
 
@@ -1653,6 +1659,8 @@ export interface AdminGetInfluencersListResponse {
     totalRecruits: number;
     currentMonthRank: number | null;
     createdAt: string;
+    isVisible: boolean;
+    photoUrl?: string;
   }>;
   total: number;
   hasMore: boolean;

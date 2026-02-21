@@ -53,10 +53,9 @@ interface PublicGroupAdmin {
 }
 
 interface DirectoryResponse {
-  success: boolean;
-  groups: PublicGroupAdmin[];
+  groupAdmins: PublicGroupAdmin[];
   total: number;
-  hasMore: boolean;
+  isPageVisible: boolean;
 }
 
 // ============================================================================
@@ -420,6 +419,7 @@ const GroupAdminDirectory: React.FC = () => {
   const [currentPage,   setCurrentPage]   = useState(1);
   const [hasMore,       setHasMore]       = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(true);
 
   // Debounced search (350 ms)
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -462,14 +462,20 @@ const GroupAdminDirectory: React.FC = () => {
 
         const data = result.data;
 
+        // Gérer la visibilité globale de la page (contrôlée par l'admin)
+        setIsPageVisible(data.isPageVisible !== false);
+
+        const incoming = data.groupAdmins ?? [];
+
         if (reset) {
-          setGroups(data.groups ?? []);
+          setGroups(incoming);
           setCurrentPage(2);
         } else {
-          setGroups((prev) => [...prev, ...(data.groups ?? [])]);
+          setGroups((prev) => [...prev, ...incoming]);
           setCurrentPage((p) => p + 1);
         }
-        setHasMore(data.hasMore ?? false);
+        // hasMore = il reste des résultats à charger
+        setHasMore(incoming.length === 20 && data.total > (reset ? incoming.length : groups.length + incoming.length));
       } catch (err) {
         console.error("[GroupAdminDirectory] fetch error:", err);
         setError("Impossible de charger les groupes. Veuillez reessayer.");
@@ -489,7 +495,7 @@ const GroupAdminDirectory: React.FC = () => {
   }, [selectedCountry, selectedLanguage, debouncedSearch]);
 
   const hasActiveFilters =
-    selectedCountry \!== "" || selectedLanguage \!== "" || searchTerm \!== "";
+    selectedCountry !== "" || selectedLanguage !== "" || searchTerm !== "";
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -502,8 +508,8 @@ const GroupAdminDirectory: React.FC = () => {
     const map = new Map<string, PublicGroupAdmin[]>();
     for (const g of groups) {
       const key = g.groupCountry || "OTHER";
-      if (\!map.has(key)) map.set(key, []);
-      map.get(key)\!.push(g);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(g);
     }
     return Array.from(map.entries()).sort(([a], [b]) =>
       getCountryInfo(a).name.localeCompare(getCountryInfo(b).name, "fr"),
@@ -663,6 +669,19 @@ const GroupAdminDirectory: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Page masquée par l'admin */}
+          {!isLoading && !error && !isPageVisible && (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="w-16 h-16 rounded-full bg-slate-700/60 flex items-center justify-center mb-4">
+                <Globe className="w-8 h-8 text-slate-400" />
+              </div>
+              <h3 className="text-white text-lg font-semibold mb-2">Répertoire temporairement indisponible</h3>
+              <p className="text-slate-400 text-sm max-w-sm">
+                Cette page est momentanément hors ligne. Revenez bientôt.
+              </p>
+            </div>
+          )}
 
           {/* Loading skeletons */}
           {isLoading && (

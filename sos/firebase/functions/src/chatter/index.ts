@@ -86,6 +86,12 @@ export {
   adminBulkChatterAction,
 } from "./callables/admin";
 
+// Public directory
+export { getChatterDirectory } from "./callables/public";
+
+// Admin visibility toggle
+export { adminToggleChatterVisibility } from "./callables/admin/toggleVisibility";
+
 // Admin Country Rotation
 export {
   adminInitializeCountryRotation,

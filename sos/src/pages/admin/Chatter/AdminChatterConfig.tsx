@@ -25,6 +25,8 @@ import {
   Video,
   Users,
   GraduationCap,
+  Globe,
+  Check,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -75,6 +77,7 @@ interface ChatterConfig {
   version: number;
   updatedAt?: string;
   updatedBy?: string;
+  isChatterListingPageVisible?: boolean;
 }
 
 const AdminChatterConfig: React.FC = () => {
@@ -87,6 +90,9 @@ const AdminChatterConfig: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+
+  const [togglingVisibility, setTogglingVisibility] = useState(false);
+  const [visibilitySuccess, setVisibilitySuccess] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<Partial<ChatterConfig>>({});
@@ -166,6 +172,23 @@ const AdminChatterConfig: React.FC = () => {
     }
   };
 
+  const handleToggleListingPage = useCallback(async () => {
+    setTogglingVisibility(true);
+    setVisibilitySuccess(false);
+    try {
+      const fn = httpsCallable(functionsWest2, 'adminUpdateChatterConfig');
+      const newValue = !config?.isChatterListingPageVisible;
+      await fn({ isChatterListingPageVisible: newValue });
+      setConfig(prev => prev ? { ...prev, isChatterListingPageVisible: newValue } : prev);
+      setVisibilitySuccess(true);
+      setTimeout(() => setVisibilitySuccess(false), 2000);
+    } catch (err) {
+      console.error('[AdminChatterConfig] Toggle listing page failed:', err);
+    } finally {
+      setTogglingVisibility(false);
+    }
+  }, [config?.isChatterListingPageVisible]);
+
   // Format amount for display (cents to dollars)
   const formatCents = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -234,6 +257,43 @@ const AdminChatterConfig: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Directory Page Visibility */}
+      <div className={`${UI.card} p-6`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold dark:text-white flex items-center gap-2">
+              <Globe className="w-5 h-5 text-red-500" />
+              Page Répertoire Public
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Activer pour rendre visible la page{' '}
+              <a href="/nos-chatters" target="_blank" className="text-red-600 hover:underline">/nos-chatters</a>
+              {' '}avec les chatters dont la visibilité est activée.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {visibilitySuccess && <Check className="w-5 h-5 text-green-500" />}
+            {togglingVisibility ? (
+              <Loader2 className="w-6 h-6 animate-spin text-red-500" />
+            ) : (
+              <button
+                onClick={handleToggleListingPage}
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${
+                  config?.isChatterListingPageVisible ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                  config?.isChatterListingPageVisible ? 'translate-x-8' : 'translate-x-1'
+                }`} />
+              </button>
+            )}
+            <span className={`text-sm font-medium ${config?.isChatterListingPageVisible ? 'text-green-600' : 'text-gray-400'}`}>
+              {config?.isChatterListingPageVisible ? 'Visible' : 'Masqué'}
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* System Status */}
       <div className={`${UI.card} p-6`}>

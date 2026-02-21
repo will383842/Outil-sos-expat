@@ -16,7 +16,7 @@ import Layout from '@/components/layout/Layout';
 import GroupAdminRegisterForm from '@/components/GroupAdmin/Forms/GroupAdminRegisterForm';
 import type { GroupAdminRegistrationData } from '@/components/GroupAdmin/Forms/GroupAdminRegisterForm';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsWest2, auth } from '@/config/firebase';
 import { Users, ArrowLeft, ArrowRight, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
@@ -155,28 +155,44 @@ const GroupAdminRegister: React.FC = () => {
 
       // Step 2: Call Cloud Function
       const registerGroupAdmin = httpsCallable(functionsWest2, 'registerGroupAdmin');
-      const result = await registerGroupAdmin({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone || undefined,
-        country: data.country.toUpperCase(),
-        language: data.language,
-        groupUrl: data.groupUrl,
-        groupName: data.groupName,
-        groupType: data.groupType,
-        groupSize: data.groupSize,
-        groupCountry: data.groupCountry.toUpperCase(),
-        groupLanguage: data.groupLanguage,
-        groupDescription: data.groupDescription || undefined,
-        recruitmentCode: data.referralCode || referralCodeFromUrl || undefined,
-        referralCapturedAt: getStoredReferral('groupAdmin')?.capturedAt || new Date().toISOString(),
-        acceptTerms: data.acceptTerms,
-        termsAcceptedAt: data.termsAcceptedAt,
-        termsVersion: data.termsVersion,
-        termsType: data.termsType,
-        termsAcceptanceMeta: data.termsAcceptanceMeta,
-      });
+      let result;
+      try {
+        result = await registerGroupAdmin({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone || undefined,
+          country: data.country.toUpperCase(),
+          language: data.language,
+          groupUrl: data.groupUrl,
+          groupName: data.groupName,
+          groupType: data.groupType,
+          groupSize: data.groupSize,
+          groupCountry: data.groupCountry.toUpperCase(),
+          groupLanguage: data.groupLanguage,
+          groupDescription: data.groupDescription || undefined,
+          recruitmentCode: data.referralCode || referralCodeFromUrl || undefined,
+          referralCapturedAt: getStoredReferral('groupAdmin')?.capturedAt || new Date().toISOString(),
+          acceptTerms: data.acceptTerms,
+          termsAcceptedAt: data.termsAcceptedAt,
+          termsVersion: data.termsVersion,
+          termsType: data.termsType,
+          termsAcceptanceMeta: data.termsAcceptanceMeta,
+        });
+      } catch (cfError) {
+        // CRITICAL: If Cloud Function fails, delete the orphaned Firebase Auth user
+        // to prevent accounts without groupAdmin profiles
+        try {
+          const { deleteUser } = await import('firebase/auth');
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            await deleteUser(currentUser);
+          }
+        } catch (deleteErr) {
+          console.error('[GroupAdminRegister] Failed to cleanup orphaned auth user:', deleteErr);
+        }
+        throw cfError;
+      }
 
       const responseData = result.data as { success: boolean; affiliateCodeClient: string; affiliateCodeRecruitment: string };
 

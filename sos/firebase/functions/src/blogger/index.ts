@@ -91,6 +91,12 @@ export {
   adminDeleteBloggerGuideCopyText,
   adminDeleteBloggerGuideBestPractice,
 
+  // Public directory
+  getBloggerDirectory,
+
+  // Admin visibility toggle
+  adminToggleBloggerVisibility,
+
   // Articles
   getBloggerArticles,
   copyBloggerArticle,

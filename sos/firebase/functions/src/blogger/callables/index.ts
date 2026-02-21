@@ -70,3 +70,9 @@ export {
   adminDeleteBloggerGuideCopyText,
   adminDeleteBloggerGuideBestPractice,
 } from "./admin/index";
+
+// Public directory
+export { getBloggerDirectory } from "./public";
+
+// Admin visibility toggle
+export { adminToggleBloggerVisibility } from "./admin/toggleVisibility";

@@ -218,6 +218,9 @@ export interface Chatter {
   /** Account status */
   status: ChatterStatus;
 
+  /** Whether this chatter is visible in the public directory */
+  isVisible: boolean;
+
   /** Current level (1-5) */
   level: ChatterLevel;
 
@@ -979,6 +982,11 @@ export interface ChatterConfig {
 
   /** Countries where chatters can operate */
   supportedCountries: string[];
+
+  // ---- Directory ----
+
+  /** Whether the public chatter directory page is visible */
+  isChatterListingPageVisible: boolean;
 
   // ---- Version & History ----
 
@@ -2493,6 +2501,9 @@ export interface AdminGetChattersListResponse {
     totalRecruits: number;
     currentStreak: number;
     createdAt: string;
+    isFeatured?: boolean;
+    isVisible: boolean;
+    photoUrl?: string;
   }>;
   total: number;
   hasMore: boolean;

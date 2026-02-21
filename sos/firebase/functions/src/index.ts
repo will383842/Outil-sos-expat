@@ -5522,6 +5522,7 @@ export {
   bulkDeleteProviders,
   getProviderActionLogs,
   getAllProviderActionLogs,
+  setProviderBadge,
 } from './admin/providerActions';
 
 // ========== USER DOCUMENT CREATION (GOOGLE AUTH FIX) ==========
@@ -5875,6 +5876,10 @@ export {
   adminDeletePromotion,
   adminGetPromotionStats,
   adminDuplicatePromotion,
+  // Public directory
+  getChatterDirectory,
+  // Admin visibility toggle
+  adminToggleChatterVisibility,
   // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
   // chatterValidatePendingCommissions,  // → consolidatedValidateCommissions
   // chatterReleaseValidatedCommissions,  // → consolidatedReleaseCommissions
@@ -5921,6 +5926,8 @@ export {
   updateInfluencerProfile,
   influencerRequestWithdrawal,
   getInfluencerLeaderboard,
+  // Public callables
+  getInfluencerDirectory,
   // Admin callables
   adminGetInfluencersList,
   adminGetInfluencerDetail,
@@ -5968,6 +5975,8 @@ export {
   adminDeleteInfluencerPromotion,
   adminGetInfluencerPromotionStats,
   adminDuplicateInfluencerPromotion,
+  // Admin - Visibility Toggle
+  adminToggleInfluencerVisibility,
 } from './influencer';
 
 // ========== BLOGGER SYSTEM ==========
@@ -6025,6 +6034,12 @@ export {
   adminCreateBloggerArticle,
   adminUpdateBloggerArticle,
   adminDeleteBloggerArticle,
+
+  // Public directory
+  getBloggerDirectory,
+
+  // Admin visibility toggle
+  adminToggleBloggerVisibility,
   // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
   // bloggerValidatePendingCommissions,  // → consolidatedValidateCommissions
   // bloggerReleaseValidatedCommissions,  // → consolidatedReleaseCommissions

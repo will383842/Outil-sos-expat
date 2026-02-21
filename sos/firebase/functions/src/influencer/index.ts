@@ -95,6 +95,14 @@ export {
   adminDuplicateInfluencerPromotion,
 } from "./callables/admin";
 
+export { adminToggleInfluencerVisibility } from "./callables/admin/toggleVisibility";
+
+// ============================================================================
+// PUBLIC CALLABLES
+// ============================================================================
+
+export { getInfluencerDirectory } from "./callables/public";
+
 // ============================================================================
 // SCHEDULED FUNCTIONS
 // ============================================================================

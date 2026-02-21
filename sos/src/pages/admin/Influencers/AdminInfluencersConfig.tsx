@@ -21,6 +21,11 @@ import {
   History,
   ChevronRight,
   GraduationCap,
+  Globe,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  CheckCircle,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import {
@@ -111,6 +116,8 @@ const AdminInfluencersConfig: React.FC = () => {
   const [savingRules, setSavingRules] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [togglingVisibility, setTogglingVisibility] = useState(false);
+  const [visibilitySuccess, setVisibilitySuccess] = useState(false);
 
   // Fetch current config
   const fetchConfig = useCallback(async () => {
@@ -213,6 +220,23 @@ const AdminInfluencersConfig: React.FC = () => {
     }
   };
 
+  const handleToggleListingPage = async () => {
+    if (!config) return;
+    const newValue = !config.isInfluencerListingPageVisible;
+    setTogglingVisibility(true);
+    try {
+      const updateConfig = httpsCallable(functionsWest2, 'adminUpdateInfluencerConfig');
+      await updateConfig({ updates: { isInfluencerListingPageVisible: newValue } });
+      setConfig({ ...config, isInfluencerListingPageVisible: newValue });
+      setVisibilitySuccess(true);
+      setTimeout(() => setVisibilitySuccess(false), 3000);
+    } catch (err) {
+      console.error('Error toggling listing page:', err);
+    } finally {
+      setTogglingVisibility(false);
+    }
+  };
+
   // Handle input change
   const handleChange = (field: keyof InfluencerConfig, value: number) => {
     setConfig(prev => ({ ...prev, [field]: value }));
@@ -265,6 +289,59 @@ const AdminInfluencersConfig: React.FC = () => {
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             <FormattedMessage id="common.refresh" defaultMessage="Actualiser" />
           </button>
+        </div>
+
+        {/* Page Visibility Toggle */}
+        <div className={`${UI.card} p-6 border-2 ${config.isInfluencerListingPageVisible ? 'border-green-400/40 dark:border-green-500/30' : 'border-gray-300/40 dark:border-gray-600/30'}`}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${config.isInfluencerListingPageVisible ? 'bg-green-100 dark:bg-green-900/30' : 'bg-gray-100 dark:bg-gray-800/50'}`}>
+                {config.isInfluencerListingPageVisible
+                  ? <Eye className={`w-6 h-6 text-green-600 dark:text-green-400`} />
+                  : <EyeOff className="w-6 h-6 text-gray-500" />
+                }
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                    Page publique des influenceurs
+                  </h3>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${config.isInfluencerListingPageVisible ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}>
+                    {config.isInfluencerListingPageVisible ? 'Visible' : 'Masquée'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  Contrôle la visibilité de la page <strong>/nos-influenceurs</strong> pour le public.
+                </p>
+                <a
+                  href="/nos-influenceurs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-red-500 hover:text-red-400 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Voir la page publique
+                </a>
+                {visibilitySuccess && (
+                  <div className="flex items-center gap-1.5 mt-2 text-green-500 text-sm">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Mise à jour enregistrée</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={handleToggleListingPage}
+              disabled={togglingVisibility}
+              aria-label={config.isInfluencerListingPageVisible ? 'Masquer la page publique' : 'Rendre la page publique visible'}
+              className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed flex-shrink-0 ${config.isInfluencerListingPageVisible ? 'bg-green-500 focus:ring-green-400' : 'bg-gray-300 dark:bg-gray-600 focus:ring-gray-400'}`}
+            >
+              {togglingVisibility
+                ? <Loader2 className="w-4 h-4 animate-spin text-white mx-auto" />
+                : <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ${config.isInfluencerListingPageVisible ? 'translate-x-7' : 'translate-x-1'}`} />
+              }
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}

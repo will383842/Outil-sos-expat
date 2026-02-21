@@ -152,6 +152,7 @@ export interface Influencer {
 
   // Status
   status: InfluencerStatus;
+  isVisible?: boolean;
   suspensionReason?: string;
   suspendedAt?: string;
 
@@ -432,6 +433,8 @@ export interface InfluencerConfig {
   newRegistrationsEnabled?: boolean;
   withdrawalsEnabled?: boolean;
   trainingEnabled?: boolean;
+  /** Is the public influencer listing page visible */
+  isInfluencerListingPageVisible?: boolean;
 
   // Commission rates (fixed amounts in cents) - Legacy
   clientReferralCommission: number;
@@ -535,6 +538,7 @@ export interface UpdateInfluencerProfileInput {
   communitySize?: number;
   communityNiche?: string;
   socialLinks?: Record<string, string>;
+  photoUrl?: string;
 }
 
 /**

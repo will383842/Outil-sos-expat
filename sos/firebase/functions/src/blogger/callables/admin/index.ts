@@ -114,6 +114,14 @@ export const adminGetBloggersList = onCall(
       const hasMore = snapshot.docs.length > limit;
       const docs = hasMore ? snapshot.docs.slice(0, limit) : snapshot.docs;
 
+      // Fetch isFeatured from users collection (badge set by admin)
+      const userRefs = docs.map((doc) => db.collection("users").doc(doc.id));
+      const userDocs = docs.length > 0 ? await db.getAll(...userRefs) : [];
+      const featuredMap: Record<string, boolean> = {};
+      userDocs.forEach((doc) => {
+        if (doc.exists) featuredMap[doc.id] = doc.data()?.isFeatured === true;
+      });
+
       // Format response
       const bloggers = docs.map(doc => {
         const data = doc.data() as Blogger;
@@ -133,6 +141,9 @@ export const adminGetBloggersList = onCall(
           totalRecruits: data.totalRecruits,
           currentMonthRank: data.currentMonthRank,
           createdAt: data.createdAt.toDate().toISOString(),
+          isFeatured: featuredMap[doc.id] ?? false,
+          isVisible: data.isVisible ?? false,
+          photoUrl: data.photoUrl,
         };
       });
 

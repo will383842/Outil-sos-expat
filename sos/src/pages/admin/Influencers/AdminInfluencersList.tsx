@@ -30,6 +30,8 @@ import {
   Mail,
   Megaphone,
   Star,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -95,6 +97,7 @@ interface Influencer {
   communitySize?: number;
   createdAt: string;
   isFeatured?: boolean;
+  isVisible?: boolean;
 }
 
 interface InfluencerListResponse {
@@ -140,6 +143,29 @@ const AdminInfluencersList: React.FC = () => {
       toast.error('Erreur lors de la mise à jour du badge');
     } finally {
       setFeaturedLoading(null);
+    }
+  };
+
+  const [visibilityLoading, setVisibilityLoading] = useState<Map<string, boolean>>(new Map());
+
+  const handleToggleVisibility = async (id: string, currentVisibility: boolean | undefined) => {
+    const current = !!currentVisibility;
+    setVisibilityLoading((prev) => new Map(prev).set(id, true));
+    try {
+      const fn = httpsCallable(functionsWest2, 'adminToggleInfluencerVisibility');
+      await fn({ influencerId: id, isVisible: !current });
+      setInfluencers((prev) =>
+        prev.map((x) => x.id === id ? { ...x, isVisible: !current } : x)
+      );
+      toast.success(!current ? 'Visible dans le répertoire ✓' : 'Masqué du répertoire');
+    } catch {
+      toast.error('Erreur lors de la mise à jour de la visibilité');
+    } finally {
+      setVisibilityLoading((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -429,6 +455,18 @@ const AdminInfluencersList: React.FC = () => {
           </div>
         )}
 
+        {/* Public directory info */}
+        <div className="flex items-center gap-3 px-4 py-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-xl text-sm text-red-700 dark:text-red-400">
+          <Eye className="w-4 h-4 flex-shrink-0" />
+          <span>
+            Les influenceurs marqués "Visible" apparaissent sur{' '}
+            <a href="/nos-influenceurs" target="_blank" className="underline font-medium hover:opacity-80">
+              la page publique des influenceurs
+            </a>.
+            {' '}Par défaut, les nouveaux inscrits sont masqués.
+          </span>
+        </div>
+
         {/* Filters */}
         <div className={`${UI.card} p-3 sm:p-4`}>
           <div className="flex flex-col gap-3 sm:gap-4">
@@ -671,6 +709,23 @@ const AdminInfluencersList: React.FC = () => {
                                   : <Star className={`w-4 h-4 ${influencer.isFeatured ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                                 }
                               </button>
+                              {/* Visibility toggle */}
+                              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                {visibilityLoading.get(influencer.id) ? (
+                                  <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                                ) : (
+                                  <button
+                                    onClick={() => handleToggleVisibility(influencer.id, influencer.isVisible)}
+                                    title={influencer.isVisible ? 'Masquer du répertoire public' : 'Afficher dans le répertoire public'}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 ${influencer.isVisible ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                  >
+                                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${influencer.isVisible ? 'translate-x-5' : 'translate-x-1'}`} />
+                                  </button>
+                                )}
+                                <span className="text-xs text-gray-500 dark:text-gray-400 w-14">
+                                  {influencer.isVisible ? 'Visible' : 'Masqué'}
+                                </span>
+                              </div>
                               <button
                                 onClick={() => navigate(`/admin/influencers/${influencer.id}`)}
                                 className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"

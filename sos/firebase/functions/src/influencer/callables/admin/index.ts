@@ -12,6 +12,7 @@ import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
 import {
   Influencer,
+  InfluencerStatus,
   InfluencerCommission,
   InfluencerWithdrawal,
   InfluencerReferral,
@@ -130,9 +131,23 @@ export const adminGetInfluencersList = onCall(
 
       const snapshot = await query.get();
 
-      let influencers = snapshot.docs.slice(0, limit).map((doc) => {
+      // Fetch isFeatured from users collection (badge set by admin)
+      const pageDocs = snapshot.docs.slice(0, limit);
+      const userRefs = pageDocs.map((doc) => db.collection("users").doc(doc.id));
+      const userDocs = pageDocs.length > 0 ? await db.getAll(...userRefs) : [];
+      const featuredMap: Record<string, boolean> = {};
+      userDocs.forEach((doc) => {
+        if (doc.exists) featuredMap[doc.id] = doc.data()?.isFeatured === true;
+      });
+
+      let influencers = pageDocs.map((doc) => {
         const data = doc.data() as Influencer;
-        return {
+        const item: {
+          id: string; email: string; firstName: string; lastName: string;
+          country: string; status: InfluencerStatus; totalEarned: number;
+          totalClients: number; totalRecruits: number; currentMonthRank: number | null;
+          createdAt: string; isVisible: boolean; photoUrl?: string; isFeatured: boolean;
+        } = {
           id: data.id,
           email: data.email,
           firstName: data.firstName,
@@ -144,7 +159,11 @@ export const adminGetInfluencersList = onCall(
           totalRecruits: data.totalRecruits,
           currentMonthRank: data.currentMonthRank,
           createdAt: data.createdAt.toDate().toISOString(),
+          isVisible: data.isVisible ?? false,
+          isFeatured: featuredMap[doc.id] ?? false,
         };
+        if (data.photoUrl) item.photoUrl = data.photoUrl;
+        return item;
       });
 
       // Apply search filter (client-side for text search)
@@ -982,3 +1001,5 @@ export const adminBulkInfluencerAction = onCall(
     }
   }
 );
+
+export { adminToggleInfluencerVisibility } from "./toggleVisibility";

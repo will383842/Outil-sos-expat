@@ -147,6 +147,7 @@ interface Chatter {
   language?: string;
   createdAt: string;
   isFeatured?: boolean;
+  isVisible?: boolean;
 }
 
 interface ChatterListResponse {
@@ -181,6 +182,7 @@ const AdminChattersList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [featuredLoading, setFeaturedLoading] = useState<string | null>(null);
+  const [visibilityLoading, setVisibilityLoading] = useState<Map<string, boolean>>(new Map());
 
   const toggleFeatured = async (id: string, current: boolean) => {
     setFeaturedLoading(id);
@@ -318,6 +320,21 @@ const AdminChattersList: React.FC = () => {
     const country = COUNTRIES.find(c => c.code === code);
     return country?.name || code;
   };
+
+  const handleToggleVisibility = useCallback(async (chatterId: string, currentVisible: boolean) => {
+    setVisibilityLoading(prev => new Map(prev).set(chatterId, true));
+    try {
+      const fn = httpsCallable(functionsWest2, 'adminToggleChatterVisibility');
+      await fn({ chatterId, isVisible: !currentVisible });
+      setChatters(prev => prev.map(c => c.id === chatterId ? { ...c, isVisible: !currentVisible } : c));
+      toast.success(!currentVisible ? 'Chatter visible dans le répertoire' : 'Chatter masqué du répertoire');
+    } catch (err) {
+      console.error('Failed to toggle visibility:', err);
+      toast.error('Erreur lors de la mise à jour de la visibilité');
+    } finally {
+      setVisibilityLoading(prev => { const m = new Map(prev); m.delete(chatterId); return m; });
+    }
+  }, []);
 
   // Export to CSV
   const handleExport = async () => {
@@ -646,6 +663,13 @@ const AdminChattersList: React.FC = () => {
         </div>
       )}
 
+      {/* Directory info banner */}
+      <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-700 dark:text-red-300">
+        Activez la visibilité de chaque chatter pour qu'il apparaisse sur{' '}
+        <a href="/nos-chatters" target="_blank" className="underline font-medium">la page répertoire publique</a>.
+        {' '}La page doit aussi être activée dans <strong>Configuration</strong>.
+      </div>
+
       {/* Loading */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -693,6 +717,7 @@ const AdminChattersList: React.FC = () => {
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                         <FormattedMessage id="admin.chatters.col.conversions" defaultMessage="Conv." />
                       </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Répertoire</th>
                       <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Actions
                       </th>
@@ -766,6 +791,23 @@ const AdminChattersList: React.FC = () => {
                             <span className="text-gray-400 mx-1">/</span>
                             <span className="text-gray-600 dark:text-gray-400">{chatter.totalRecruits}</span>
                           </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          {visibilityLoading.get(chatter.id) ? (
+                            <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                          ) : (
+                            <button
+                              onClick={() => handleToggleVisibility(chatter.id, chatter.isVisible ?? false)}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                                chatter.isVisible ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                              }`}
+                              title={chatter.isVisible ? 'Masquer du répertoire' : 'Afficher dans le répertoire'}
+                            >
+                              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                                chatter.isVisible ? 'translate-x-6' : 'translate-x-1'
+                              }`} />
+                            </button>
+                          )}
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-2">

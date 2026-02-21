@@ -5,7 +5,7 @@
 import React, { useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useBlogger } from '@/hooks/useBlogger';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/useAuth';
 import { BloggerDashboardLayout } from '@/components/Blogger';
 import { User, Globe, CreditCard, Settings, Badge, Camera, Loader2, CheckCircle } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -24,9 +24,9 @@ const BloggerProfile: React.FC = () => {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const displayedPhoto = localPhotoUrl ?? blogger?.photoUrl ?? null;
   const intl = useIntl();
   const { blogger, dashboardData, isLoading } = useBlogger();
+  const displayedPhoto = localPhotoUrl ?? blogger?.photoUrl ?? null;
 
   const formatCurrency = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 

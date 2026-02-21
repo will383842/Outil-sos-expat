@@ -782,6 +782,7 @@ const AdminLawyers: React.FC = () => {
             emailVerified: !!v.emailVerified,
             isOnline: v.isOnline ?? false,
             isVisibleOnMap: v.isVisibleOnMap ?? v.isVisible ?? false,
+            isFeatured: v.isFeatured ?? false,
             barId: v.barId,
             barCountry: v.barCountry,
             isValidated: !!v.isValidated,

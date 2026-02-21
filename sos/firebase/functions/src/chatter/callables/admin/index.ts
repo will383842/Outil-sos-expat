@@ -121,6 +121,14 @@ export const adminGetChattersList = onCall(
 
       const snapshot = await query.get();
 
+      // Fetch isFeatured from users collection (badge set by admin)
+      const userRefs = snapshot.docs.map((doc) => db.collection("users").doc(doc.id));
+      const userDocs = snapshot.docs.length > 0 ? await db.getAll(...userRefs) : [];
+      const featuredMap: Record<string, boolean> = {};
+      userDocs.forEach((doc) => {
+        if (doc.exists) featuredMap[doc.id] = doc.data()?.isFeatured === true;
+      });
+
       let chatters = snapshot.docs.map((doc) => {
         const data = doc.data() as Chatter;
         return {
@@ -136,6 +144,9 @@ export const adminGetChattersList = onCall(
           totalRecruits: data.totalRecruits,
           currentStreak: data.currentStreak,
           createdAt: data.createdAt.toDate().toISOString(),
+          isFeatured: featuredMap[doc.id] ?? false,
+          isVisible: data.isVisible ?? false,
+          photoUrl: data.photoUrl,
         };
       });
 

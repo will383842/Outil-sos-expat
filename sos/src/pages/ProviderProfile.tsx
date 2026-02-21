@@ -218,6 +218,7 @@ interface SosProfile {
   isApproved: boolean;
   isVerified: boolean;
   isVisibleOnMap?: boolean;
+  isFeatured?: boolean;
   education?: Education | Education[] | LocalizedText;
   certifications?: Certification | Certification[] | LocalizedText;
   lawSchool?: string | LocalizedText;

@@ -140,6 +140,7 @@ export const registerBlogger = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
@@ -329,6 +330,7 @@ export const registerBlogger = onCall(
 
         // Status - ACTIVE immediately (no quiz required)
         status: "active" as BloggerStatus,
+        isVisible: false,
         adminNotes: undefined,
         suspensionReason: undefined,
 

@@ -61,4 +61,17 @@ export {
   adminUpdateAntiFraudConfig,
   adminExportInfluencers,
   adminBulkInfluencerAction,
+  // Admin - Promotions Callables
+  adminGetInfluencerPromotions,
+  adminCreateInfluencerPromotion,
+  adminUpdateInfluencerPromotion,
+  adminDeleteInfluencerPromotion,
+  adminGetInfluencerPromotionStats,
+  adminDuplicateInfluencerPromotion,
 } from "./admin";
+
+// Admin - Visibility Toggle
+export { adminToggleInfluencerVisibility } from "./admin/toggleVisibility";
+
+// Public Callables
+export { getInfluencerDirectory } from "./public";

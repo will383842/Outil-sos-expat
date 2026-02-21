@@ -75,6 +75,7 @@ interface GroupAdminListItem {
   totalClients: number;
   totalRecruits: number;
   createdAt: Timestamp;
+  isFeatured?: boolean;
 }
 
 interface GroupAdminStats {
@@ -135,6 +136,14 @@ export const adminGetGroupAdminsList = onCall(
 
       const snapshot = await query.get();
 
+      // Fetch isFeatured from users collection (badge set by admin)
+      const userRefs = snapshot.docs.map((doc) => db.collection("users").doc(doc.id));
+      const userDocs = snapshot.docs.length > 0 ? await db.getAll(...userRefs) : [];
+      const featuredMap: Record<string, boolean> = {};
+      userDocs.forEach((doc) => {
+        if (doc.exists) featuredMap[doc.id] = doc.data()?.isFeatured === true;
+      });
+
       let allGroupAdmins = snapshot.docs.map((doc) => {
         const data = doc.data() as GroupAdmin;
         return {
@@ -155,6 +164,7 @@ export const adminGetGroupAdminsList = onCall(
           totalClients: data.totalClients,
           totalRecruits: data.totalRecruits,
           createdAt: data.createdAt,
+          isFeatured: featuredMap[doc.id] ?? false,
         };
       });
 

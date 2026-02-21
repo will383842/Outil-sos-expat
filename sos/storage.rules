@@ -120,6 +120,27 @@ service firebase.storage {
       allow delete: if isAdmin() && isValidInvoiceType();
     }
 
+    // Influencer profile photos — lisibles publiquement (répertoire public)
+    match /influencer_photos/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId && isImage() && isValidFileSize();
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Blogger profile photos — lisibles publiquement (répertoire public)
+    match /blogger_photos/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId && isImage() && isValidFileSize();
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Chatter profile photos — lisibles publiquement (répertoire public)
+    match /chatter_photos/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId && isImage() && isValidFileSize();
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
     // GroupAdmin profile photos — lisibles publiquement (répertoire public)
     match /group_admin_photos/{userId}/{fileName} {
       allow read: if true;

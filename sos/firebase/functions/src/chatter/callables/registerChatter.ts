@@ -44,6 +44,7 @@ export const registerChatter = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
@@ -405,6 +406,7 @@ export const registerChatter = onCall(
         ...(input.bio?.trim() ? { bio: input.bio.trim() } : {}), // Only include bio if provided
 
         status: "active", // Direct activation - no quiz required
+        isVisible: false,
         level: 1,
         levelProgress: 0,
 

@@ -99,6 +99,7 @@ interface Blogger {
   blogTraffic?: string;
   createdAt: string;
   isFeatured?: boolean;
+  isVisible?: boolean;
 }
 
 interface BloggerListResponse {
@@ -132,6 +133,22 @@ const AdminBloggersList: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<BloggerListResponse['stats']>();
   const [featuredLoading, setFeaturedLoading] = useState<string | null>(null);
+  const [visibilityLoading, setVisibilityLoading] = useState<Map<string, boolean>>(new Map());
+
+  const handleToggleVisibility = useCallback(async (bloggerId: string, currentVisible: boolean) => {
+    setVisibilityLoading(prev => new Map(prev).set(bloggerId, true));
+    try {
+      const fn = httpsCallable(functionsWest2, 'adminToggleBloggerVisibility');
+      await fn({ bloggerId, isVisible: !currentVisible });
+      setBloggers(prev => prev.map(b => b.id === bloggerId ? { ...b, isVisible: !currentVisible } : b));
+      toast.success(!currentVisible ? 'Blogueur visible dans le répertoire ✓' : 'Blogueur masqué du répertoire');
+    } catch (err) {
+      console.error('Failed to toggle visibility:', err);
+      toast.error('Erreur lors de la mise à jour de la visibilité');
+    } finally {
+      setVisibilityLoading(prev => { const m = new Map(prev); m.delete(bloggerId); return m; });
+    }
+  }, []);
 
   const toggleFeatured = async (id: string, current: boolean) => {
     setFeaturedLoading(id);
@@ -565,6 +582,18 @@ const AdminBloggersList: React.FC = () => {
           </div>
         )}
 
+        {/* Info répertoire */}
+        <div className="flex items-center gap-3 px-4 py-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg text-sm text-purple-700 dark:text-purple-300">
+          <Globe className="w-4 h-4 shrink-0" />
+          <span>
+            Le répertoire public des blogueurs est disponible sur{' '}
+            <a href="/nos-blogueurs" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-purple-900 dark:hover:text-purple-100">
+              /nos-blogueurs
+            </a>
+            . Activez la visibilité par blogueur via le toggle "Répertoire" ci-dessous.
+          </span>
+        </div>
+
         {/* Error */}
         {error && (
           <div className={`${UI.card} p-4 bg-red-50 dark:bg-red-900/20`}>
@@ -615,6 +644,9 @@ const AdminBloggersList: React.FC = () => {
                         </th>
                         <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                           <FormattedMessage id="admin.bloggers.col.referrals" defaultMessage="Réf." />
+                        </th>
+                        <th className="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Répertoire
                         </th>
                         <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Actions
@@ -692,6 +724,20 @@ const AdminBloggersList: React.FC = () => {
                               <span className="text-gray-400 mx-1">/</span>
                               <span className="text-gray-600 dark:text-gray-400">{blogger.totalProvidersRecruited}</span>
                             </div>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); void handleToggleVisibility(blogger.id, !!blogger.isVisible); }}
+                              disabled={visibilityLoading.has(blogger.id)}
+                              title={blogger.isVisible ? 'Masquer du répertoire' : 'Afficher dans le répertoire'}
+                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                                blogger.isVisible ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600'
+                              } ${visibilityLoading.has(blogger.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            >
+                              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                                blogger.isVisible ? 'translate-x-4' : 'translate-x-0.5'
+                              }`} />
+                            </button>
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                             <div className="flex items-center justify-end gap-2">

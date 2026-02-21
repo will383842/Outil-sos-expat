@@ -20,7 +20,7 @@ import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/fire
 import * as admin from "firebase-admin";
 
 interface UserData {
-  role?: "client" | "lawyer" | "expat" | "admin";
+  role?: "client" | "lawyer" | "expat" | "admin" | "chatter" | "influencer" | "blogger" | "groupAdmin";
   email?: string;
 }
 
@@ -44,7 +44,7 @@ export async function handleSyncClaimsCreated(event: any) {
     }
 
     // Vérifier que le rôle est valide
-    const validRoles = ["client", "lawyer", "expat", "admin"];
+    const validRoles = ["client", "lawyer", "expat", "admin", "chatter", "influencer", "blogger", "groupAdmin"];
     if (!validRoles.includes(role)) {
       console.warn(`[syncRoleClaims] Rôle invalide: ${role} pour: ${uid}`);
       return;
@@ -116,7 +116,7 @@ export async function handleSyncClaimsUpdated(event: any) {
     }
 
     // Vérifier que le nouveau rôle est valide
-    const validRoles = ["client", "lawyer", "expat", "admin"];
+    const validRoles = ["client", "lawyer", "expat", "admin", "chatter", "influencer", "blogger", "groupAdmin"];
     if (!validRoles.includes(newRole)) {
       console.warn(`[syncRoleClaims] Rôle invalide: ${newRole} pour: ${uid}`);
       return;

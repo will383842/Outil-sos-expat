@@ -214,6 +214,9 @@ export interface Blogger {
   /** Account status */
   status: BloggerStatus;
 
+  /** Whether this blogger is visible in the public directory */
+  isVisible: boolean;
+
   /** Admin notes (internal) */
   adminNotes?: string;
 
@@ -1266,6 +1269,11 @@ export interface BloggerConfig {
   /** Number of bloggers shown in leaderboard */
   leaderboardSize: number;
 
+  // ---- Directory ----
+
+  /** Whether the public blogger directory page is visible */
+  isBloggerListingPageVisible: boolean;
+
   // ---- Recruitment Commission ----
 
   /** One-time bonus (cents) paid to recruiter when recruited blogger reaches threshold */
@@ -1594,6 +1602,9 @@ export interface AdminGetBloggersListResponse {
     totalRecruits: number;
     currentMonthRank: number | null;
     createdAt: string;
+    isFeatured?: boolean;
+    isVisible: boolean;
+    photoUrl?: string;
   }>;
   total: number;
   hasMore: boolean;
@@ -1639,6 +1650,7 @@ export interface AdminUpdateBloggerConfigInput {
   withdrawalsEnabled?: boolean;
   bloggerRecruitmentCommissionAmount?: number;
   recruitmentCommissionThreshold?: number;
+  isBloggerListingPageVisible?: boolean;
 }
 
 // ============================================================================

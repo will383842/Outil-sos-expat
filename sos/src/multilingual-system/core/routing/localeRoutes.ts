@@ -354,7 +354,10 @@ export type RouteKey =
   | "influencer-telegram"     // /influencer/telegram -> /influencer/telegram, etc.
   | "blogger-telegram"        // /blogger/telegram -> /blogger/telegram, etc.
   | "groupadmin-telegram"     // /group-admin/telegram -> /group-admin/telegram, etc.
-  | "group-community";        // /groupes-communaute -> /community-groups, etc.
+  | "group-community"         // /groupes-communaute -> /community-groups, etc.
+  | "influencer-directory"   // /nos-influenceurs -> /our-influencers, etc.
+  | "blogger-directory"   // /nos-blogueurs -> /our-bloggers, etc.
+  | "chatter-directory";  // /nos-chatters -> /our-chatters, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -1416,6 +1419,39 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "shequ-qunzu",
     hi: "samudayik-samuh",
     ar: "مجموعات-المجتمع",
+  },
+  "influencer-directory": {
+    fr: "nos-influenceurs",
+    en: "our-influencers",
+    es: "nuestros-influencers",
+    de: "unsere-influencer",
+    ru: "nashi-influensery",
+    pt: "nossos-influencers",
+    ch: "women-influencers",
+    hi: "hamare-influencer",
+    ar: "مؤثرونا",
+  },
+  "blogger-directory": {
+    fr: "nos-blogueurs",
+    en: "our-bloggers",
+    es: "nuestros-bloggers",
+    de: "unsere-blogger",
+    ru: "nashi-blogery",
+    pt: "nossos-bloggers",
+    ch: "women-de-boke",
+    hi: "hamare-blogger",
+    ar: "مدوناتنا",
+  },
+  "chatter-directory": {
+    fr: "nos-chatters",
+    en: "our-chatters",
+    es: "nuestros-chatters",
+    de: "unsere-chatters",
+    pt: "nossos-chatters",
+    ar: "محادثونا",
+    ru: "nashi-chattery",
+    hi: "hamare-chatters",
+    ch: "women-de-chatters",
   },
   "groupadmin-register": {
     fr: "groupadmin/inscription",

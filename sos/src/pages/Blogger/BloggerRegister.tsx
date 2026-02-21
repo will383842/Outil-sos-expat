@@ -19,7 +19,7 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsWest2, auth } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
@@ -465,33 +465,49 @@ const BloggerRegister: React.FC = () => {
 
       const registerBlogger = httpsCallable<RegisterBloggerInput, RegisterBloggerResponse>(functionsWest2, 'registerBlogger');
 
-      const result = await registerBlogger({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: '',
-        country: formData.country,
-        language: formData.language,
-        bio: '',
-        blogUrl: formData.blogUrl,
-        blogName: formData.blogName,
-        blogLanguage: formData.blogLanguage,
-        blogCountry: formData.blogCountry,
-        blogTheme: formData.blogTheme as RegisterBloggerInput['blogTheme'],
-        blogTraffic: formData.blogTraffic as RegisterBloggerInput['blogTraffic'],
-        blogDescription: formData.blogDescription,
-        definitiveRoleAcknowledged: formData.definitiveRoleAcknowledged,
-        recruiterCode: formData.referralCode || undefined,
-        termsAcceptedAt: new Date().toISOString(),
-        termsVersion: "3.0",
-        termsType: "terms_bloggers",
-        termsAcceptanceMeta: {
-          userAgent: navigator.userAgent,
-          language: navigator.language,
-          timestamp: Date.now(),
-          acceptanceMethod: "checkbox_click",
-        },
-      });
+      let result;
+      try {
+        result = await registerBlogger({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: '',
+          country: formData.country,
+          language: formData.language,
+          bio: '',
+          blogUrl: formData.blogUrl,
+          blogName: formData.blogName,
+          blogLanguage: formData.blogLanguage,
+          blogCountry: formData.blogCountry,
+          blogTheme: formData.blogTheme as RegisterBloggerInput['blogTheme'],
+          blogTraffic: formData.blogTraffic as RegisterBloggerInput['blogTraffic'],
+          blogDescription: formData.blogDescription,
+          definitiveRoleAcknowledged: formData.definitiveRoleAcknowledged,
+          recruiterCode: formData.referralCode || undefined,
+          termsAcceptedAt: new Date().toISOString(),
+          termsVersion: "3.0",
+          termsType: "terms_bloggers",
+          termsAcceptanceMeta: {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            timestamp: Date.now(),
+            acceptanceMethod: "checkbox_click",
+          },
+        });
+      } catch (cfError) {
+        // CRITICAL: If Cloud Function fails, delete the orphaned Firebase Auth user
+        // to prevent accounts without blogger profiles
+        try {
+          const { deleteUser } = await import('firebase/auth');
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            await deleteUser(currentUser);
+          }
+        } catch (deleteErr) {
+          console.error('[BloggerRegister] Failed to cleanup orphaned auth user:', deleteErr);
+        }
+        throw cfError;
+      }
 
       if (result.data.success) {
         setSuccess(true);

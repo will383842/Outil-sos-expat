@@ -658,6 +658,18 @@ const Footer: React.FC = () => {
             href: `/${getTranslatedRouteSlug("group-community", resolvedLang)}`,
           },
           {
+            label: intl.formatMessage({ id: "footer.services.influencers", defaultMessage: "Nos Influenceurs" }),
+            href: `/${getTranslatedRouteSlug("influencer-directory", resolvedLang)}`,
+          },
+          {
+            label: intl.formatMessage({ id: "footer.services.bloggers", defaultMessage: "Nos Blogueurs" }),
+            href: `/${getTranslatedRouteSlug("blogger-directory", resolvedLang)}`,
+          },
+          {
+            label: intl.formatMessage({ id: "footer.services.chatters", defaultMessage: "Nos Chatters" }),
+            href: `/${getTranslatedRouteSlug("chatter-directory", resolvedLang)}`,
+          },
+          {
             label: intl.formatMessage({ id: "footer.services.testimonials" }),
             href: `/${getTranslatedRouteSlug("testimonials", resolvedLang)}`,
           },

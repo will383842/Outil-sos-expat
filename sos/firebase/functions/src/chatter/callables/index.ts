@@ -36,3 +36,9 @@ export {
   adminProcessWithdrawal,
   adminUpdateChatterStatus,
 } from "./admin";
+
+// Public directory
+export { getChatterDirectory } from "./public";
+
+// Admin visibility toggle
+export { adminToggleChatterVisibility } from "./admin/toggleVisibility";
