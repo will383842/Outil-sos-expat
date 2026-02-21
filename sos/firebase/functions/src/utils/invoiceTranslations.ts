@@ -46,6 +46,16 @@ export interface InvoiceTranslations {
   // Email body
   emailBody: string;
   emailCallToAction: string;
+
+  // M1 AUDIT FIX: Credit note (facture d'avoir) translations
+  creditNoteTitle: string;
+  creditNoteNumber: string;
+  creditNoteDescription: string;
+  originalInvoiceRef: string;
+  refundReasonLabel: string;
+  creditNoteFooter: string;
+  creditNoteEmailSubject: string;
+  creditNoteEmailBody: string;
 }
 
 export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> = {
@@ -73,6 +83,14 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Votre facture SOS Expat',
     emailBody: 'Bonjour,<br><br>Veuillez trouver ci-joint votre facture pour votre consultation avec SOS Expat.<br><br>Cordialement,<br>L\'équipe SOS Expat',
     emailCallToAction: 'Télécharger la facture',
+    creditNoteTitle: 'Avoir',
+    creditNoteNumber: 'Avoir N°',
+    creditNoteDescription: 'Annulation de frais de mise en relation',
+    originalInvoiceRef: 'Ref. facture originale',
+    refundReasonLabel: 'Motif',
+    creditNoteFooter: 'Ce document annule et remplace partiellement ou totalement la facture originale.',
+    creditNoteEmailSubject: 'Votre avoir SOS Expat',
+    creditNoteEmailBody: 'Bonjour,<br><br>Suite a votre remboursement, veuillez trouver ci-joint votre avoir.<br><br>Cordialement,<br>L\'equipe SOS Expat',
   },
 
   // ============================================================================
@@ -99,6 +117,14 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Your SOS Expat Invoice',
     emailBody: 'Hello,<br><br>Please find attached your invoice for your consultation with SOS Expat.<br><br>Best regards,<br>The SOS Expat team',
     emailCallToAction: 'Download invoice',
+    creditNoteTitle: 'Credit Note',
+    creditNoteNumber: 'Credit Note No.',
+    creditNoteDescription: 'Cancellation of connection service fee',
+    originalInvoiceRef: 'Original invoice ref.',
+    refundReasonLabel: 'Reason',
+    creditNoteFooter: 'This document partially or fully cancels and replaces the original invoice.',
+    creditNoteEmailSubject: 'Your SOS Expat Credit Note',
+    creditNoteEmailBody: 'Hello,<br><br>Following your refund, please find attached your credit note.<br><br>Best regards,<br>The SOS Expat team',
   },
 
   // ============================================================================
@@ -125,6 +151,14 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Su factura de SOS Expat',
     emailBody: 'Hola,<br><br>Adjunto encontrará su factura para su consulta con SOS Expat.<br><br>Atentamente,<br>El equipo SOS Expat',
     emailCallToAction: 'Descargar factura',
+    creditNoteTitle: 'Nota de credito',
+    creditNoteNumber: 'Nota de credito N°',
+    creditNoteDescription: 'Anulacion de tarifa de servicio de conexion',
+    originalInvoiceRef: 'Ref. factura original',
+    refundReasonLabel: 'Motivo',
+    creditNoteFooter: 'Este documento anula parcial o totalmente la factura original.',
+    creditNoteEmailSubject: 'Su nota de credito SOS Expat',
+    creditNoteEmailBody: 'Hola,<br><br>Tras su reembolso, adjunto encontrara su nota de credito.<br><br>Atentamente,<br>El equipo SOS Expat',
   },
 
   // ============================================================================
@@ -151,6 +185,14 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Ihre SOS Expat Rechnung',
     emailBody: 'Hallo,<br><br>Im Anhang finden Sie Ihre Rechnung für Ihre Beratung mit SOS Expat.<br><br>Mit freundlichen Grüßen,<br>Das SOS Expat Team',
     emailCallToAction: 'Rechnung herunterladen',
+    creditNoteTitle: 'Gutschrift',
+    creditNoteNumber: 'Gutschrift Nr.',
+    creditNoteDescription: 'Stornierung der Vermittlungsgebuhr',
+    originalInvoiceRef: 'Ref. Originalrechnung',
+    refundReasonLabel: 'Grund',
+    creditNoteFooter: 'Dieses Dokument storniert die Originalrechnung teilweise oder vollstandig.',
+    creditNoteEmailSubject: 'Ihre SOS Expat Gutschrift',
+    creditNoteEmailBody: 'Hallo,<br><br>Nach Ihrer Erstattung finden Sie im Anhang Ihre Gutschrift.<br><br>Mit freundlichen Grussen,<br>Das SOS Expat Team',
   },
 
   // ============================================================================
@@ -177,6 +219,14 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Sua fatura SOS Expat',
     emailBody: 'Olá,<br><br>Segue em anexo sua fatura para sua consulta com SOS Expat.<br><br>Atenciosamente,<br>A equipe SOS Expat',
     emailCallToAction: 'Baixar fatura',
+    creditNoteTitle: 'Nota de credito',
+    creditNoteNumber: 'Nota de credito N°',
+    creditNoteDescription: 'Cancelamento da taxa de servico de conexao',
+    originalInvoiceRef: 'Ref. fatura original',
+    refundReasonLabel: 'Motivo',
+    creditNoteFooter: 'Este documento cancela parcial ou totalmente a fatura original.',
+    creditNoteEmailSubject: 'Sua nota de credito SOS Expat',
+    creditNoteEmailBody: 'Ola,<br><br>Apos seu reembolso, segue em anexo sua nota de credito.<br><br>Atenciosamente,<br>A equipe SOS Expat',
   },
 
   // ============================================================================
@@ -203,6 +253,14 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Ваш счет SOS Expat',
     emailBody: 'Здравствуйте,<br><br>Пожалуйста, найдите в приложении ваш счет за консультацию с SOS Expat.<br><br>С уважением,<br>Команда SOS Expat',
     emailCallToAction: 'Скачать счет',
+    creditNoteTitle: 'Кредитная нота',
+    creditNoteNumber: 'Кредитная нота №',
+    creditNoteDescription: 'Отмена платы за услуги подключения',
+    originalInvoiceRef: 'Реф. оригинального счета',
+    refundReasonLabel: 'Причина',
+    creditNoteFooter: 'Этот документ частично или полностью отменяет и заменяет оригинальный счет.',
+    creditNoteEmailSubject: 'Ваша кредитная нота SOS Expat',
+    creditNoteEmailBody: 'Здравствуйте,<br><br>После вашего возврата, пожалуйста, найдите прилагаемую кредитную ноту.<br><br>С уважением,<br>Команда SOS Expat',
   },
 
   // ============================================================================
@@ -229,6 +287,14 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: '您的 SOS Expat 发票',
     emailBody: '您好，<br><br>请查收附件中您与 SOS Expat 咨询的发票。<br><br>此致敬礼，<br>SOS Expat 团队',
     emailCallToAction: '下载发票',
+    creditNoteTitle: '贷项通知单',
+    creditNoteNumber: '贷项通知单号',
+    creditNoteDescription: '取消连接服务费',
+    originalInvoiceRef: '原始发票参考',
+    refundReasonLabel: '原因',
+    creditNoteFooter: '本文件部分或全部取消并替换原始发票。',
+    creditNoteEmailSubject: '您的 SOS Expat 贷项通知单',
+    creditNoteEmailBody: '您好，<br><br>退款完成后，请查收附件中的贷项通知单。<br><br>此致敬礼，<br>SOS Expat 团队',
   },
 
   // ============================================================================
@@ -255,6 +321,14 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'आपका SOS Expat चालान',
     emailBody: 'नमस्ते,<br><br>कृपया SOS Expat के साथ आपके परामर्श के लिए संलग्न चालान देखें।<br><br>सादर,<br>SOS Expat टीम',
     emailCallToAction: 'चालान डाउनलोड करें',
+    creditNoteTitle: 'क्रेडिट नोट',
+    creditNoteNumber: 'क्रेडिट नोट नंबर',
+    creditNoteDescription: 'कनेक्शन सेवा शुल्क रद्द',
+    originalInvoiceRef: 'मूल चालान संदर्भ',
+    refundReasonLabel: 'कारण',
+    creditNoteFooter: 'यह दस्तावेज़ आंशिक या पूर्ण रूप से मूल चालान को रद्द करता है।',
+    creditNoteEmailSubject: 'आपका SOS Expat क्रेडिट नोट',
+    creditNoteEmailBody: 'नमस्ते,<br><br>आपके रिफंड के बाद, कृपया संलग्न क्रेडिट नोट देखें।<br><br>सादर,<br>SOS Expat टीम',
   },
 
   // ============================================================================
@@ -281,6 +355,14 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'فاتورتك من SOS Expat',
     emailBody: 'مرحباً،<br><br>يرجى العثور على فاتورتك المرفقة لاستشارتك مع SOS Expat.<br><br>مع أطيب التحيات،<br>فريق SOS Expat',
     emailCallToAction: 'تحميل الفاتورة',
+    creditNoteTitle: 'إشعار دائن',
+    creditNoteNumber: 'رقم إشعار الدائن',
+    creditNoteDescription: 'إلغاء رسوم خدمة الاتصال',
+    originalInvoiceRef: 'مرجع الفاتورة الأصلية',
+    refundReasonLabel: 'السبب',
+    creditNoteFooter: 'هذا المستند يلغي جزئياً أو كلياً الفاتورة الأصلية.',
+    creditNoteEmailSubject: 'إشعار الدائن الخاص بك من SOS Expat',
+    creditNoteEmailBody: 'مرحباً،<br><br>بعد استرداد أموالك، يرجى العثور على إشعار الدائن المرفق.<br><br>مع أطيب التحيات،<br>فريق SOS Expat',
   },
 };
 

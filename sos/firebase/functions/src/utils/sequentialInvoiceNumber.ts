@@ -226,6 +226,81 @@ export async function getInvoiceStats(year?: number): Promise<{
 }
 
 /**
+ * M1 AUDIT FIX: Generate next sequential credit note number
+ *
+ * Format: AVOIR-YYYY-NNNNNN (e.g., AVOIR-2026-000001)
+ * Uses separate counter collection to keep credit notes independent from invoices.
+ */
+export async function generateSequentialCreditNoteNumber(): Promise<InvoiceNumberResult> {
+  const db = admin.firestore();
+  const currentYear = new Date().getFullYear();
+  const counterRef = db.collection("credit_note_counters").doc(currentYear.toString());
+
+  const maxRetries = 5;
+  let attempt = 0;
+
+  while (attempt < maxRetries) {
+    try {
+      const result = await db.runTransaction(async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
+
+        let counter: number;
+        let isNewYear = false;
+
+        if (!counterDoc.exists) {
+          counter = 1;
+          isNewYear = true;
+        } else {
+          const data = counterDoc.data()!;
+          counter = (data.counter || 0) + 1;
+          if (data.year !== currentYear) {
+            counter = 1;
+            isNewYear = true;
+          }
+        }
+
+        const sequenceStr = counter.toString().padStart(6, "0");
+        const invoiceNumber = `AVOIR-${currentYear}-${sequenceStr}`;
+
+        const counterData: any = {
+          year: currentYear,
+          counter,
+          lastInvoiceNumber: invoiceNumber,
+          lastGeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
+          totalInvoices: admin.firestore.FieldValue.increment(1),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        if (isNewYear) {
+          counterData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+        }
+
+        transaction.set(counterRef, counterData, { merge: true });
+
+        return {
+          invoiceNumber,
+          year: currentYear,
+          sequenceNumber: counter,
+          counter,
+        };
+      });
+
+      console.log(`✅ [SequentialCreditNote] Generated: ${result.invoiceNumber} (attempt ${attempt + 1})`);
+      return result;
+    } catch (error) {
+      attempt++;
+      if (attempt >= maxRetries) {
+        throw new Error(`Failed to generate credit note number after ${maxRetries} attempts: ${error}`);
+      }
+      const backoffMs = 100 * Math.pow(2, attempt - 1);
+      await new Promise((resolve) => setTimeout(resolve, backoffMs));
+    }
+  }
+
+  throw new Error("Unexpected: loop exited without result or error");
+}
+
+/**
  * Manual counter reset (ADMIN ONLY - use with extreme caution)
  *
  * This should NEVER be called in production unless there's a critical error.

@@ -1493,6 +1493,35 @@ export class PayPalManager {
           payoutId = payoutResult.payoutBatchId;
 
           console.log(`💰 [PAYPAL] Payout ${payoutTriggered ? "SUCCESS" : "FAILED"}: ${payoutId}`);
+
+          // M4 AUDIT FIX: Notify provider about PayPal payout (async, unlike Stripe instant)
+          if (payoutTriggered && orderData.providerId) {
+            try {
+              let providerLocale = "fr";
+              try {
+                const provDoc = await this.db.collection("users").doc(orderData.providerId).get();
+                providerLocale = provDoc.data()?.preferredLanguage || provDoc.data()?.language || "fr";
+              } catch { /* fallback */ }
+
+              await this.db.collection("message_events").add({
+                eventId: "provider.payout.received",
+                locale: providerLocale,
+                to: { uid: orderData.providerId },
+                context: { user: { uid: orderData.providerId } },
+                vars: {
+                  payoutAmount: providerAmount.toFixed(2),
+                  currency: captureCurrency === "EUR" ? "€" : "$",
+                  gateway: "PayPal",
+                  sessionDate: new Date().toLocaleDateString("fr-FR"),
+                  estimatedArrival: "quelques minutes",
+                },
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+              console.log(`✅ [PAYPAL] Provider payout notification sent to ${orderData.providerId}`);
+            } catch (notifErr) {
+              console.error("⚠️ [PAYPAL] Failed to send provider payout notification:", notifErr);
+            }
+          }
         } catch (payoutError) {
           console.error("❌ [PAYPAL] Payout failed, will retry later:", payoutError);
         // Le payout a échoué, mais le paiement est capturé
@@ -1581,6 +1610,49 @@ export class PayPalManager {
         } // Fin du try/catch payout
         } // Fin du else (email vérifié)
       } // Fin du else if (orderData.providerPayPalEmail)
+      // C3 AUDIT FIX: Handle missing providerPayPalEmail — alert admin instead of silent skip
+      else if (!aaaDecision?.skipPayout && !aaaDecision?.isAAA) {
+        console.error(`❌ [PAYPAL] CRITICAL: Provider ${orderData.providerId} has NO PayPal email — cannot create payout!`);
+
+        // 1. Create critical admin alert
+        await this.db.collection("admin_alerts").add({
+          type: "paypal_payout_missing_email",
+          priority: "critical",
+          title: "Payout impossible — Email PayPal manquant",
+          message: `Le payout de ${providerAmount} ${captureCurrency} pour le provider ${orderData.providerId} ` +
+            `est impossible car aucun email PayPal n'est configure. ` +
+            `Session: ${orderData.callSessionId}. Action admin requise.`,
+          orderId,
+          callSessionId: orderData.callSessionId,
+          providerId: orderData.providerId,
+          amount: providerAmount,
+          currency: captureCurrency,
+          read: false,
+          requiresManualIntervention: true,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // 2. Create pending payout record for tracking and retry
+        await this.db.collection("pending_paypal_payouts").add({
+          orderId,
+          callSessionId: orderData.callSessionId,
+          providerId: orderData.providerId,
+          amount: providerAmount,
+          currency: captureCurrency,
+          reason: "missing_provider_paypal_email",
+          status: "pending_email_configuration",
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // 3. Mark in paypal_orders that payout is blocked
+        await this.db.collection("paypal_orders").doc(orderId).update({
+          payoutPendingVerification: true,
+          payoutPendingReason: "Email PayPal manquant — provider n'a pas configure son email",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        console.warn(`⚠️ [PAYPAL] Payout deferred — admin alert created for missing email`);
+      }
     } // Fin du bloc if (isSimpleFlow && providerAmount > 0)
 
     // Mettre à jour l'ordre avec les détails de capture
@@ -1946,6 +2018,91 @@ export class PayPalManager {
         } catch (commissionError) {
           // Log but don't fail the refund - commission cancellation is best-effort
           console.error("❌ [PAYPAL] Failed to cancel commissions:", commissionError);
+        }
+
+        // M1 AUDIT FIX: Generate credit note (facture d'avoir) for EU compliance
+        try {
+          const invoicesQuery = await this.db.collection("invoice_records")
+            .where("callId", "==", callSessionId)
+            .get();
+
+          if (!invoicesQuery.empty) {
+            // Step 1: Update invoice status to 'refunded' FIRST
+            const batch = this.db.batch();
+            invoicesQuery.docs.forEach((doc) => {
+              batch.update(doc.ref, {
+                status: "refunded",
+                refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+                refundReason: reason,
+                refundId: response.id,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            });
+            await batch.commit();
+
+            // Step 2: Generate credit note AFTER invoice update
+            const refundAmount = amount || orderData!.capturedGrossAmount || orderData!.amount || 0;
+            if (refundAmount > 0) {
+              const { generateCreditNote } = await import("./utils/generateInvoice");
+              const originalInvoice = invoicesQuery.docs[0].data();
+              await generateCreditNote({
+                originalInvoiceNumber: originalInvoice.invoiceNumber || invoicesQuery.docs[0].id,
+                refundId: response.id,
+                amount: refundAmount,
+                currency: currency || orderData!.currency || "EUR",
+                reason: reason || "PayPal refund",
+                callId: callSessionId,
+                clientId: orderData!.clientId || "unknown",
+                providerId: orderData!.providerId || "unknown",
+                clientName: originalInvoice.clientName,
+                clientEmail: originalInvoice.clientEmail,
+                providerName: originalInvoice.providerName,
+                locale: originalInvoice.locale || "en",
+                gateway: "paypal",
+              });
+              console.log(`✅ [PAYPAL] Credit note generated for session ${callSessionId}`);
+            }
+          }
+        } catch (creditNoteError) {
+          console.error("⚠️ [PAYPAL] Error generating credit note:", creditNoteError);
+        }
+
+        // M2 AUDIT FIX: Send refund notification to client (was missing for PayPal)
+        try {
+          const refundAmountFormatted = (amount || orderData!.capturedGrossAmount || orderData!.amount || 0).toFixed(2);
+          const currencySymbol = (currency || orderData!.currency || "EUR").toUpperCase() === "EUR" ? "€" : "$";
+
+          // Detect user locale
+          const userDoc = await this.db.collection("users").doc(orderData!.clientId).get();
+          const userLocale = userDoc.data()?.preferredLanguage || userDoc.data()?.language || "fr";
+
+          await this.db.collection("inapp_notifications").add({
+            uid: orderData!.clientId,
+            type: "refund_completed",
+            title: "Remboursement effectue",
+            body: `Votre remboursement de ${refundAmountFormatted}${currencySymbol} a ete initie. Il sera credite sur votre compte PayPal dans 3-5 jours ouvres.`,
+            data: { refundId: response.id, amount: refundAmountFormatted, currency: currencySymbol, reason },
+            read: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          await this.db.collection("message_events").add({
+            eventId: "payment_refunded",
+            locale: userLocale,
+            to: { uid: orderData!.clientId },
+            context: { user: { uid: orderData!.clientId } },
+            vars: {
+              refundAmount: refundAmountFormatted,
+              currency: currencySymbol,
+              refundReason: reason || "Remboursement",
+              estimatedArrival: "3-5 jours ouvres",
+              gateway: "PayPal",
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          console.log("✅ [PAYPAL] Client refund notification sent");
+        } catch (notifError) {
+          console.error("⚠️ [PAYPAL] Failed to send refund notification:", notifError);
         }
       }
 

@@ -159,11 +159,30 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
         if (profileData && profileData.status !== 'available') {
           console.warn(`⚠️ [executeCallTask] Provider ${providerId} is no longer available (status: ${profileData.status}), aborting call`);
           await lockRef.update({ status: 'aborted_provider_unavailable', updatedAt: new Date() });
+
+          // C1 AUDIT FIX: Cancel payment immediately when provider is unavailable
+          // Without this, the payment authorization stays blocked on the client's card
+          let paymentCancelled = false;
+          try {
+            const { twilioCallManager } = await import("../TwilioCallManager");
+            await twilioCallManager.cancelCallSession(
+              callSessionId,
+              'provider_unavailable_at_execution',
+              'executeCallTask'
+            );
+            paymentCancelled = true;
+            console.log(`✅ [executeCallTask] Payment cancelled/refunded for unavailable provider`);
+          } catch (refundError) {
+            console.error(`❌ [executeCallTask] Failed to cancel payment:`, refundError);
+            await logError('executeCallTask:refundOnProviderUnavailable', refundError);
+          }
+
           res.status(200).json({
             success: false,
             error: 'Provider no longer available',
             callSessionId,
             providerStatus: profileData.status,
+            paymentCancelled,
           });
           return;
         }

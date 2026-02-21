@@ -152,6 +152,26 @@
           "deeplink": "/invoices/{{invoiceId}}"
         }
       }
+    },
+    {
+      "id": "provider.payout.received",
+      "roles": ["provider"],
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+    },
+    {
+      "id": "payment_refunded",
+      "roles": ["client"],
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+    },
+    {
+      "id": "payment.capture_failed.client",
+      "roles": ["client"],
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+    },
+    {
+      "id": "payment.capture_failed.provider",
+      "roles": ["provider"],
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
     }
   ]
 }

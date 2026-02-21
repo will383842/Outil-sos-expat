@@ -1872,10 +1872,17 @@ export class StripeManager {
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           });
 
+          // M2 AUDIT FIX: Detect user locale instead of hardcoding 'fr'
+          let userLocale = 'fr';
+          try {
+            const userDoc = await this.db.collection('users').doc(paymentData.clientId).get();
+            userLocale = userDoc.data()?.preferredLanguage || userDoc.data()?.language || 'fr';
+          } catch { /* fallback to fr */ }
+
           // Enqueue email notification via message_events pipeline
           await this.db.collection('message_events').add({
             eventId: 'payment_refunded',
-            locale: 'fr', // Default, should detect from user preferences
+            locale: userLocale,
             to: { uid: paymentData.clientId },
             context: {
               user: { uid: paymentData.clientId },
@@ -1885,6 +1892,7 @@ export class StripeManager {
               currency: currencySymbol,
               refundReason: reason || 'Remboursement demandé',
               estimatedArrival: '3-5 jours ouvrés',
+              gateway: 'Stripe',
             },
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           });
@@ -1896,7 +1904,7 @@ export class StripeManager {
         }
       }
 
-      // Update related invoices to refunded status
+      // Update related invoices to refunded status + M1 AUDIT FIX: Generate credit note
       if (sessionId) {
         try {
           // Find invoices linked to this call session
@@ -1917,6 +1925,30 @@ export class StripeManager {
             });
             await invoiceUpdateBatch.commit();
             console.log(`✅ Updated ${invoicesQuery.docs.length} invoice(s) to refunded status for session ${sessionId}`);
+
+            // M1 AUDIT FIX: Generate credit note (facture d'avoir) for EU compliance
+            try {
+              const { generateCreditNote } = await import('./utils/generateInvoice');
+              const originalInvoice = invoicesQuery.docs[0].data();
+              await generateCreditNote({
+                originalInvoiceNumber: originalInvoice.invoiceNumber || invoicesQuery.docs[0].id,
+                refundId: refund.id,
+                amount: refund.amount / 100,
+                currency: refund.currency?.toUpperCase() || 'EUR',
+                reason: reason || 'Refund',
+                callId: sessionId,
+                clientId: paymentData?.clientId || '',
+                providerId: paymentData?.providerId || '',
+                clientName: originalInvoice.clientName,
+                clientEmail: originalInvoice.clientEmail,
+                providerName: originalInvoice.providerName,
+                locale: originalInvoice.locale || 'en',
+                gateway: 'stripe',
+              });
+              console.log(`✅ [refundPayment] Credit note generated for session ${sessionId}`);
+            } catch (creditNoteError) {
+              console.error('⚠️ Error generating credit note:', creditNoteError);
+            }
           }
         } catch (invoiceError) {
           console.error('⚠️ Error updating invoices to refunded status:', invoiceError);

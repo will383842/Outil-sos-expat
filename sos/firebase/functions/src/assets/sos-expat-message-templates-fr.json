@@ -397,22 +397,92 @@
       "id": "provider.payout.received",
       "roles": ["provider"],
       "channels": {
-        "email": false,
+        "email": true,
         "sms": false,
         "push": false,
-        "inapp": false,
+        "inapp": true,
         "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Paiement recu pour votre consultation",
+        "html": "<h2>Paiement recu</h2><p>Bonjour,</p><p>Votre paiement de <strong>{{vars.payoutAmount}}{{vars.currency}}</strong> pour la consultation du {{vars.sessionDate}} a ete traite avec succes.</p><p><strong>Mode de paiement:</strong> {{vars.gateway}}</p><p>Merci pour votre excellent service!</p><p>Cordialement,<br>L'equipe SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Paiement recu",
+        "body": "Votre paiement de {{vars.payoutAmount}}{{vars.currency}} a ete traite",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/provider/dashboard"
+        }
       }
     },
     {
       "id": "payment_refunded",
       "roles": ["client"],
       "channels": {
-        "email": false,
+        "email": true,
         "sms": false,
         "push": false,
-        "inapp": false,
+        "inapp": true,
         "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Votre remboursement a ete effectue",
+        "html": "<h2>Remboursement confirme</h2><p>Bonjour,</p><p>Votre remboursement de <strong>{{vars.refundAmount}}{{vars.currency}}</strong> a ete initie avec succes.</p><p><strong>Motif:</strong> {{vars.refundReason}}</p><p><strong>Delai estime:</strong> {{vars.estimatedArrival}}</p><p><strong>Mode de paiement:</strong> {{vars.gateway}}</p><p>Le montant sera credite sur votre compte dans les delais indiques. Si vous ne recevez pas le remboursement dans ce delai, n'hesitez pas a nous contacter.</p><p>Cordialement,<br>L'equipe SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Remboursement effectue",
+        "body": "Votre remboursement de {{vars.refundAmount}}{{vars.currency}} a ete initie",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/calls"
+        }
+      }
+    },
+    {
+      "id": "payment.capture_failed.client",
+      "roles": ["client"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Probleme avec votre paiement",
+        "html": "<h2>Probleme de paiement</h2><p>Bonjour,</p><p>Un probleme technique est survenu lors de la finalisation du paiement pour votre consultation.</p><p><strong>Ne vous inquietez pas</strong> — votre carte n'a pas ete debitee. Notre equipe a ete alertee et traite le probleme en priorite.</p><p>Nous vous contacterons dans les plus brefs delais.</p><p>Cordialement,<br>L'equipe SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Probleme de paiement",
+        "body": "Un probleme technique est survenu. Notre equipe a ete alertee.",
+        "action": {
+          "label": "Contacter",
+          "deeplink": "/support"
+        }
+      }
+    },
+    {
+      "id": "payment.capture_failed.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Probleme de paiement pour une consultation",
+        "html": "<h2>Probleme de paiement</h2><p>Bonjour,</p><p>Un probleme technique est survenu lors de la finalisation du paiement pour votre consultation recente.</p><p><strong>Votre service a bien ete enregistre</strong>. Notre equipe traite le probleme et vous serez paye des que le paiement sera regularise.</p><p>Cordialement,<br>L'equipe SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Probleme de paiement",
+        "body": "Un probleme technique est survenu. Votre paiement sera regularise.",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/provider/dashboard"
+        }
       }
     },
     {

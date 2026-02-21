@@ -2987,6 +2987,80 @@ export class TwilioCallManager {
             paymentIntentId: session.payment.intentId,
           },
         });
+
+        // M3 AUDIT FIX: Create admin alert + notify client/provider on capture failure
+        try {
+          const captureError = captureResult.error || "Unknown capture error";
+          const isPayPal = !!session.payment.paypalOrderId;
+          const gateway = isPayPal ? "PayPal" : "Stripe";
+
+          // 1. Critical admin alert
+          await this.db.collection("admin_alerts").add({
+            type: "payment_capture_failed",
+            priority: "critical",
+            title: `Echec capture ${gateway} — intervention requise`,
+            message: `La capture du paiement pour la session ${sessionId} a echoue. ` +
+              `Gateway: ${gateway}. Erreur: ${captureError}. ` +
+              `Client: ${session.clientId || "unknown"}, Provider: ${session.metadata?.providerId || "unknown"}. ` +
+              `L'appel a ete effectue mais le paiement n'a pas ete finalise.`,
+            sessionId,
+            paymentId: session.payment.intentId || session.payment.paypalOrderId,
+            clientId: session.clientId,
+            providerId: session.metadata?.providerId,
+            gateway,
+            error: captureError,
+            read: false,
+            requiresManualIntervention: true,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // 2. Detect user locale
+          let clientLocale = "fr";
+          let providerLocale = "fr";
+          try {
+            const providerId = session.metadata?.providerId || "";
+            const clientId = session.clientId || "";
+            const [clientDoc, providerDoc] = await Promise.all([
+              clientId ? this.db.collection("users").doc(clientId).get() : Promise.resolve(null),
+              providerId
+                ? this.db.collection("users").doc(providerId).get()
+                : Promise.resolve(null),
+            ]);
+            if (clientDoc) clientLocale = clientDoc.data()?.preferredLanguage || clientDoc.data()?.language || "fr";
+            if (providerDoc) {
+              providerLocale = providerDoc.data()?.preferredLanguage || providerDoc.data()?.language || "fr";
+            }
+          } catch { /* fallback to fr */ }
+
+          // 3. Notify client via email + inapp (only if clientId exists)
+          if (session.clientId) {
+            await this.db.collection("message_events").add({
+              eventId: "payment.capture_failed.client",
+              locale: clientLocale,
+              to: { uid: session.clientId },
+              context: { user: { uid: session.clientId } },
+              vars: { sessionId, gateway, error: captureError },
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+
+          // 4. Notify provider via email + inapp
+          if (session.metadata?.providerId) {
+            await this.db.collection("message_events").add({
+              eventId: "payment.capture_failed.provider",
+              locale: providerLocale,
+              to: { uid: session.metadata.providerId },
+              context: { user: { uid: session.metadata.providerId } },
+              vars: { sessionId, gateway, error: captureError },
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+
+          console.log(`✅ [capturePayment] Admin alert + client/provider notifications sent for capture failure`);
+        } catch (alertError) {
+          console.error(`⚠️ [capturePayment] Failed to send capture failure notifications:`, alertError);
+        }
+
         return false;
       }
 
@@ -3056,6 +3130,38 @@ export class TwilioCallManager {
           automaticTransfer: !!captureResult.transferId,
         },
       });
+
+      // M4 AUDIT FIX: Notify provider about successful payout (Stripe = instant, PayPal = async)
+      if (session.metadata?.providerId && !isPayPal && captureResult.transferId) {
+        try {
+          let providerLocale = "fr";
+          try {
+            const provDoc = await this.db.collection("users").doc(session.metadata.providerId).get();
+            providerLocale = provDoc.data()?.preferredLanguage || provDoc.data()?.language || "fr";
+          } catch { /* fallback */ }
+
+          const providerAmountFormatted = (providerAmountCents / 100).toFixed(2);
+          const currencySymbol = ((session.payment as any).currency || "EUR").toUpperCase() === "EUR" ? "€" : "$";
+
+          await this.db.collection("message_events").add({
+            eventId: "provider.payout.received",
+            locale: providerLocale,
+            to: { uid: session.metadata.providerId },
+            context: { user: { uid: session.metadata.providerId } },
+            vars: {
+              payoutAmount: providerAmountFormatted,
+              currency: currencySymbol,
+              gateway: "Stripe",
+              sessionDate: new Date().toLocaleDateString("fr-FR"),
+              estimatedArrival: "immediat",
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          console.log(`✅ [capturePayment] Provider Stripe payout notification sent`);
+        } catch (notifErr) {
+          console.error(`⚠️ [capturePayment] Failed to send provider payout notification:`, notifErr);
+        }
+      }
 
       // Log de succès
       prodLogger.info('TWILIO_CAPTURE_SUCCESS', `[${captureId}] Payment captured successfully`, {

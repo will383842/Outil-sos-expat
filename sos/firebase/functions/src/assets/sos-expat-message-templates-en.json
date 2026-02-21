@@ -397,23 +397,61 @@
       "id": "provider.payout.received",
       "roles": ["provider"],
       "channels": {
-        "email": false,
+        "email": true,
         "sms": false,
         "push": false,
-        "inapp": false,
+        "inapp": true,
         "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Payment received for your consultation",
+        "html": "<h2>Payment Received</h2><p>Hello,</p><p>Your payment of <strong>{{vars.payoutAmount}}{{vars.currency}}</strong> for the consultation on {{vars.sessionDate}} has been processed successfully.</p><p><strong>Payment method:</strong> {{vars.gateway}}</p><p>Thank you for your excellent service!</p><p>Best regards,<br>The SOS Expat team</p>"
+      },
+      "inapp": {
+        "title": "Payment received",
+        "body": "Your payment of {{vars.payoutAmount}}{{vars.currency}} has been processed",
+        "action": { "label": "View", "deeplink": "/provider/dashboard" }
       }
     },
     {
       "id": "payment_refunded",
       "roles": ["client"],
       "channels": {
-        "email": false,
+        "email": true,
         "sms": false,
         "push": false,
-        "inapp": false,
+        "inapp": true,
         "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Your refund has been processed",
+        "html": "<h2>Refund Confirmed</h2><p>Hello,</p><p>Your refund of <strong>{{vars.refundAmount}}{{vars.currency}}</strong> has been successfully initiated.</p><p><strong>Reason:</strong> {{vars.refundReason}}</p><p><strong>Estimated arrival:</strong> {{vars.estimatedArrival}}</p><p><strong>Payment method:</strong> {{vars.gateway}}</p><p>The amount will be credited to your account within the indicated timeframe. If you don't receive the refund by then, please contact us.</p><p>Best regards,<br>The SOS Expat team</p>"
+      },
+      "inapp": {
+        "title": "Refund processed",
+        "body": "Your refund of {{vars.refundAmount}}{{vars.currency}} has been initiated",
+        "action": { "label": "View", "deeplink": "/calls" }
       }
+    },
+    {
+      "id": "payment.capture_failed.client",
+      "roles": ["client"],
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Issue with your payment",
+        "html": "<h2>Payment Issue</h2><p>Hello,</p><p>A technical issue occurred while finalizing the payment for your consultation.</p><p><strong>Don't worry</strong> — your card has not been charged. Our team has been alerted and is handling the issue as a priority.</p><p>We will contact you shortly.</p><p>Best regards,<br>The SOS Expat team</p>"
+      },
+      "inapp": { "title": "Payment issue", "body": "A technical issue occurred. Our team has been alerted.", "action": { "label": "Contact", "deeplink": "/support" } }
+    },
+    {
+      "id": "payment.capture_failed.provider",
+      "roles": ["provider"],
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Payment issue for a consultation",
+        "html": "<h2>Payment Issue</h2><p>Hello,</p><p>A technical issue occurred while finalizing the payment for your recent consultation.</p><p><strong>Your service has been recorded</strong>. Our team is handling the issue and you will be paid as soon as the payment is resolved.</p><p>Best regards,<br>The SOS Expat team</p>"
+      },
+      "inapp": { "title": "Payment issue", "body": "A technical issue occurred. Your payment will be resolved.", "action": { "label": "View", "deeplink": "/provider/dashboard" } }
     },
     {
       "id": "subscription.reminder",

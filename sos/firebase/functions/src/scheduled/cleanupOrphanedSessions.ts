@@ -51,6 +51,7 @@ const THRESHOLDS = {
 // Statuts de session qui indiquent que l'appel n'a PAS démarré (safe to cancel)
 const SAFE_TO_CANCEL_STATUSES = [
   'pending',
+  'scheduled',       // C2 AUDIT FIX: Cloud Task scheduled but never executed
   'provider_connecting',
   'client_connecting',
   'both_connecting',
@@ -257,8 +258,10 @@ async function processOrphanedSession(
   }
 
   // ========== SÉCURITÉ 3: Vérifier que le paiement est bien autorisé (non capturé) ==========
-  if (paymentStatus !== 'authorized' && paymentStatus !== 'pending') {
-    console.log(`   ✓ SKIP: Paiement pas en statut authorized/pending (status: ${paymentStatus})`);
+  // C2 AUDIT FIX: Also accept 'requires_capture' (Stripe manual capture status)
+  const cancellablePaymentStatuses = ['authorized', 'pending', 'requires_capture'];
+  if (!cancellablePaymentStatuses.includes(paymentStatus)) {
+    console.log(`   ✓ SKIP: Paiement pas en statut cancellable (status: ${paymentStatus})`);
     // Quand même marquer la session comme failed si elle est orpheline
     if (SAFE_TO_CANCEL_STATUSES.includes(sessionStatus) && ageMinutes > 60) {
       await doc.ref.update({
@@ -459,6 +462,44 @@ export const cleanupOrphanedSessions = scheduler.onSchedule(
         } catch (sessionError) {
           results.errorCount++;
           await logError(`cleanupOrphanedSessions:stripeBackup:${doc.id}`, sessionError);
+        }
+      }
+
+      // C2 AUDIT FIX: Requête 2b - Stripe sessions with requires_capture (manual capture mode)
+      const stripeRequiresCaptureSessions = await db
+        .collection('call_sessions')
+        .where('payment.status', '==', 'requires_capture')
+        .where('metadata.createdAt', '<', paymentCutoff)
+        .limit(50)
+        .get();
+
+      console.log(`Found ${stripeRequiresCaptureSessions.size} Stripe sessions with requires_capture > 1h`);
+
+      for (const doc of stripeRequiresCaptureSessions.docs) {
+        try {
+          await processOrphanedSession(doc, db, now, results);
+        } catch (sessionError) {
+          results.errorCount++;
+          await logError(`cleanupOrphanedSessions:requiresCapture:${doc.id}`, sessionError);
+        }
+      }
+
+      // C2 AUDIT FIX: Requête 2c - Sessions stuck in "scheduled" status (Cloud Task failed)
+      const scheduledSessions = await db
+        .collection('call_sessions')
+        .where('status', '==', 'scheduled')
+        .where('metadata.createdAt', '<', paymentCutoff)
+        .limit(50)
+        .get();
+
+      console.log(`Found ${scheduledSessions.size} sessions stuck in scheduled status > 60min`);
+
+      for (const doc of scheduledSessions.docs) {
+        try {
+          await processOrphanedSession(doc, db, now, results);
+        } catch (sessionError) {
+          results.errorCount++;
+          await logError(`cleanupOrphanedSessions:scheduled:${doc.id}`, sessionError);
         }
       }
 
