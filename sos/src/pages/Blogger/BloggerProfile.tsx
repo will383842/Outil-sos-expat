@@ -1,12 +1,16 @@
 /**
- * BloggerProfile - Profile settings and blog info for bloggers
+ * BloggerProfile - Profile settings with photo upload
  */
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useBlogger } from '@/hooks/useBlogger';
+import { useAuth } from '@/hooks/useAuth';
 import { BloggerDashboardLayout } from '@/components/Blogger';
-import { User, Globe, CreditCard, Settings, Badge, Loader2 } from 'lucide-react';
+import { User, Globe, CreditCard, Settings, Badge, Camera, Loader2, CheckCircle } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { httpsCallable } from 'firebase/functions';
+import { storage, functionsWest2 } from '@/config/firebase';
 import { BLOGGER_BADGE_INFO } from '@/types/blogger';
 
 const UI = {
@@ -14,6 +18,13 @@ const UI = {
 } as const;
 
 const BloggerProfile: React.FC = () => {
+  const { user } = useAuth();
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const displayedPhoto = localPhotoUrl ?? blogger?.photoUrl ?? null;
   const intl = useIntl();
   const { blogger, dashboardData, isLoading } = useBlogger();
 

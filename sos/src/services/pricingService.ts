@@ -423,7 +423,7 @@ export function getLocalizedLabel(
   if (!override) return undefined;
   const lang = locale.split("-")[0]; // "fr-FR" → "fr"
   if (override.labels) {
-    return override.labels[lang] || override.labels.fr || override.label;
+    return override.labels[lang] || override.labels.en || override.label;
   }
   return override.label;
 }

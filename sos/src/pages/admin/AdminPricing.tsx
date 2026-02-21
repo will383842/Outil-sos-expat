@@ -396,8 +396,8 @@ const AdminPricing: React.FC = () => {
       for (const [lang, val] of Object.entries(selPromo.labels)) {
         if (val.trim()) cleanLabels[lang] = val.trim();
       }
-      // Backward compat: label = labels.fr (ou premier label non-vide)
-      const backwardLabel = cleanLabels.fr || Object.values(cleanLabels)[0] || selPromo.label || "";
+      // Backward compat: label = labels.en (ou premier label non-vide)
+      const backwardLabel = cleanLabels.en || Object.values(cleanLabels)[0] || selPromo.label || "";
 
       await setDoc(
         doc(db, "admin_config", "pricing"),
@@ -1121,9 +1121,9 @@ const AdminPricing: React.FC = () => {
                 placeholder={`Label ${labelTab.toUpperCase()} — ex: ${labelTab === "fr" ? "Offre de lancement" : labelTab === "en" ? "Launch offer" : labelTab === "es" ? "Oferta de lanzamiento" : "..."}`}
                 className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
               />
-              {labelTab === "fr" && (
+              {labelTab === "en" && (
                 <p className="text-xs text-gray-400 mt-1">
-                  FR = label par défaut (fallback pour les langues non renseignées)
+                  EN = label par défaut (fallback pour les langues non renseignées)
                 </p>
               )}
             </div>
