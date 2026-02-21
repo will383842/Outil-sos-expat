@@ -86,6 +86,7 @@ const Pricing: React.FC = () => {
   const [isValidating, setIsValidating] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
+  // FIX: Default to EUR, user can switch via toggle
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(() => {
     try {
       const saved = sessionStorage.getItem(
@@ -93,9 +94,9 @@ const Pricing: React.FC = () => {
       ) as CurrencyCode | null;
       return saved && (saved === "eur" || saved === "usd")
         ? saved
-        : detectUserCurrency();
+        : "eur";
     } catch {
-      return detectUserCurrency();
+      return "eur";
     }
   });
 
@@ -490,6 +491,30 @@ const Pricing: React.FC = () => {
               <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto">
                 <FormattedMessage id="pricing.chooseServiceDesc" />
               </p>
+
+              {/* Currency toggle EUR / USD */}
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <button
+                  onClick={() => setSelectedCurrency("eur")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                    selectedCurrency === "eur"
+                      ? "bg-gray-900 text-white shadow-lg"
+                      : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  EUR (€)
+                </button>
+                <button
+                  onClick={() => setSelectedCurrency("usd")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                    selectedCurrency === "usd"
+                      ? "bg-gray-900 text-white shadow-lg"
+                      : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  USD ($)
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
@@ -561,29 +586,29 @@ const Pricing: React.FC = () => {
                               {hasOverride ? (
                                 <div className="flex flex-col">
                                   <div className="flex items-end gap-3">
+                                    {/* Prix STANDARD barré (le plus élevé) */}
                                     <span className="text-gray-500 line-through text-2xl">
                                       {formatPrice(
                                         Math.round(
-                                          hasPromoDiscount
-                                            ? discountedPrice
-                                            : originalPrice
+                                          service.effectivePrice.standard.totalAmount
                                         )
                                       )}
                                     </span>
+                                    {/* Prix PROMO en rouge (le prix réduit) */}
                                     <span className="text-5xl font-black text-red-600 leading-none">
                                       {formatPrice(
                                         Math.round(
                                           hasPromoDiscount
-                                            ? service.effectivePrice.standard
+                                            ? service.effectivePrice.override
                                                 .totalAmount -
                                                 (activePromo.discountType ===
                                                 "percentage"
                                                   ? service.effectivePrice
-                                                      .standard.totalAmount *
+                                                      .override.totalAmount *
                                                     (activePromo.discountValue /
                                                       100)
                                                   : activePromo.discountValue)
-                                            : service.effectivePrice.standard
+                                            : service.effectivePrice.override
                                                 .totalAmount
                                         )
                                       )}
@@ -602,12 +627,12 @@ const Pricing: React.FC = () => {
                                 </div>
                               ) : (
                                 <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-3">
-                                  {/* ✅ FIX 2026: Display BOTH EUR and USD prices */}
+                                  {/* FIX: Display only selected currency */}
                                   <span className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-none">
-                                    {formatPriceEur(isLawyer ? effectivePrices.lawyer?.price.totalAmount || 0 : effectivePrices.expat?.price.totalAmount || 0)}
-                                  </span>
-                                  <span className="text-xl sm:text-2xl font-extrabold text-gray-600 leading-none">
-                                    / {formatPriceUsd(isLawyer ? effectivePrices.lawyerUsd?.price.totalAmount || 0 : effectivePrices.expatUsd?.price.totalAmount || 0)}
+                                    {selectedCurrency === "eur"
+                                      ? formatPriceEur(isLawyer ? effectivePrices.lawyer?.price.totalAmount || 0 : effectivePrices.expat?.price.totalAmount || 0)
+                                      : formatPriceUsd(isLawyer ? effectivePrices.lawyerUsd?.price.totalAmount || 0 : effectivePrices.expatUsd?.price.totalAmount || 0)
+                                    }
                                   </span>
                                 </div>
                               )}

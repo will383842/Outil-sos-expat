@@ -706,6 +706,7 @@ const OptimizedHomePage: React.FC = () => {
     error: pricingError,
   } = usePricingConfig();
 
+  // FIX: Default to EUR, user can switch via toggle
   const [selectedCurrency, setSelectedCurrency] = useState<"eur" | "usd">(
     () => {
       try {
@@ -715,9 +716,9 @@ const OptimizedHomePage: React.FC = () => {
           | null;
         return saved && ["eur", "usd"].includes(saved)
           ? saved
-          : detectUserCurrency();
+          : "eur";
       } catch {
-        return detectUserCurrency();
+        return "eur";
       }
     }
   );
@@ -1433,6 +1434,30 @@ const OptimizedHomePage: React.FC = () => {
               </p>
             </div>
 
+            {/* Toggle EUR / USD */}
+            <div className="flex items-center justify-center gap-2 mt-6 mb-8">
+              <button
+                onClick={() => setSelectedCurrency("eur")}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                  selectedCurrency === "eur"
+                    ? "bg-white text-gray-900 shadow-lg"
+                    : "bg-white/10 text-white/70 hover:bg-white/20"
+                }`}
+              >
+                EUR (€)
+              </button>
+              <button
+                onClick={() => setSelectedCurrency("usd")}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                  selectedCurrency === "usd"
+                    ? "bg-white text-gray-900 shadow-lg"
+                    : "bg-white/10 text-white/70 hover:bg-white/20"
+                }`}
+              >
+                USD ($)
+              </button>
+            </div>
+
             {pricingLoading ? (
               <div className="text-center py-16" role="status" aria-live="polite">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4" aria-hidden="true" />
@@ -1494,39 +1519,36 @@ const OptimizedHomePage: React.FC = () => {
                     });
                   };
 
-                  // Composant pour afficher les deux devises
-                  const renderEffPrice = (effEur: EffectivePrice, effUsd: EffectivePrice, minutes: number) => (
+                  // FIX: Display only selected currency
+                  const currSymbol = selectedCurrency === "eur" ? "€" : "$";
+
+                  const renderEffPrice = (effEur: EffectivePrice, effUsd: EffectivePrice, minutes: number) => {
+                    const effActive = selectedCurrency === "eur" ? effEur : effUsd;
+                    const effStd = selectedCurrency === "eur" ? effEur : effUsd;
+                    return (
                     <div
                       className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
                       aria-label={intl.formatMessage({ id: "aria.priceAndDuration" })}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-3">
-                        {effEur.override ? (
+                        {effStd.override ? (
                           <div className="flex flex-wrap items-end gap-2">
                             <span className="line-through text-gray-400 text-sm" aria-label={intl.formatMessage({ id: "aria.originalPrice" })}>
-                              €{formatPriceNumber(effEur.standard.totalAmount)}
+                              {currSymbol}{formatPriceNumber(effStd.standard.totalAmount)}
                             </span>
                             <span className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900">
-                              €{formatPriceNumber(effEur.price.totalAmount)}
+                              {currSymbol}{formatPriceNumber(effActive.price.totalAmount)}
                             </span>
-                            <span className="text-lg sm:text-xl md:text-2xl font-extrabold text-gray-600">
-                              / ${formatPriceNumber(effUsd.price.totalAmount)}
-                            </span>
-                            {effEur.override?.label && (
+                            {effStd.override?.label && (
                               <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">
-                                {effEur.override.label}
+                                {effStd.override.label}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <>
-                            <span className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 leading-none">
-                              €{formatPriceNumber(effEur.price.totalAmount)}
-                            </span>
-                            <span className="text-lg sm:text-xl md:text-2xl font-extrabold text-gray-600 leading-none">
-                              / ${formatPriceNumber(effUsd.price.totalAmount)}
-                            </span>
-                          </>
+                          <span className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 leading-none">
+                            {currSymbol}{formatPriceNumber(effActive.price.totalAmount)}
+                          </span>
                         )}
                       </div>
                       <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-900 text-white font-semibold">
@@ -1534,7 +1556,7 @@ const OptimizedHomePage: React.FC = () => {
                         <span>{minutes} <FormattedMessage id="unit.minutes" /></span>
                       </div>
                     </div>
-                  );
+                  );};
 
                   return (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
