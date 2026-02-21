@@ -31,6 +31,10 @@ import {
 const CLOUD_TASKS_LOCATION = defineString("CLOUD_TASKS_LOCATION", { default: "europe-west1" });
 const CLOUD_TASKS_PAYOUT_QUEUE = defineString("CLOUD_TASKS_PAYOUT_QUEUE", { default: "payout-retry-queue" });
 const FUNCTIONS_BASE_URL_PARAM = defineString("FUNCTIONS_BASE_URL");
+// P0 AUDIT FIX: Cloud Run v2 URL configurable (NOT v1 cloudfunctions.net)
+const EXECUTE_PAYOUT_RETRY_TASK_URL = defineString("EXECUTE_PAYOUT_RETRY_TASK_URL", {
+  default: "" // Will be set via Firebase params after deployment
+});
 
 // Configuration des retries
 // P0-5 FIX: Augmenté MAX_RETRIES de 3 à 8 pour plus de robustesse
@@ -152,8 +156,13 @@ export async function schedulePayoutRetryTask(
     // ID unique pour la tâche
     const taskId = `payout-retry-${payload.orderId}-${payload.retryCount + 1}-${Date.now()}`;
 
-    // URL de callback
-    const callbackUrl = `${cfg.callbackBaseUrl}/${cfg.functionName}`;
+    // P0 AUDIT FIX: Use Cloud Run v2 URL if configured, fallback to computed URL
+    const callbackUrl = EXECUTE_PAYOUT_RETRY_TASK_URL.value()
+      || `${cfg.callbackBaseUrl}/${cfg.functionName}`;
+
+    if (!EXECUTE_PAYOUT_RETRY_TASK_URL.value()) {
+      console.warn(`[PayoutRetry] EXECUTE_PAYOUT_RETRY_TASK_URL not configured, using computed URL: ${callbackUrl}`);
+    }
 
     // Calculer le délai avec backoff exponentiel
     const delaySeconds = PAYOUT_RETRY_CONFIG.INITIAL_DELAY_SECONDS *

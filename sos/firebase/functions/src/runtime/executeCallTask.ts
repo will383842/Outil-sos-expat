@@ -260,18 +260,45 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
       });
     }
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorType = error instanceof Error ? error.constructor.name : 'UnknownError';
+
+    // P0 AUDIT FIX: Distinguish transient vs permanent errors
+    // Transient errors (Twilio API timeout, network issues) → 500 so Cloud Tasks retries
+    // Permanent errors (validation, bad data) → 200 to prevent futile retries
+    const isTransientError =
+      errorMessage.includes('ETIMEDOUT') ||
+      errorMessage.includes('ECONNRESET') ||
+      errorMessage.includes('ECONNREFUSED') ||
+      errorMessage.includes('ENETUNREACH') ||
+      errorMessage.includes('socket hang up') ||
+      errorMessage.includes('network') ||
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('503') ||
+      errorMessage.includes('502') ||
+      errorMessage.includes('429') ||
+      errorType === 'FetchError' ||
+      errorType === 'AbortError';
+
     const errorResponse = {
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage,
       callSessionId: callSessionId || 'unknown',
       executionTimeMs: executionTime,
       timestamp: new Date().toISOString(),
-      handled: true  // Indique que l'erreur a été traitée
+      handled: !isTransientError,
+      transient: isTransientError,
     };
 
-    // P0 FIX: Retourner 200 pour éviter les retries Cloud Tasks
-    // L'erreur est loggée et traitée, pas besoin de retry automatique
-    res.status(200).json(errorResponse);
+    if (isTransientError) {
+      // P0 AUDIT FIX: Return 500 for transient errors so Cloud Tasks will retry
+      console.error(`❌ [executeCallTask] TRANSIENT error — returning 500 for Cloud Tasks retry`);
+      res.status(500).json(errorResponse);
+    } else {
+      // Permanent error — return 200 to prevent futile retries
+      console.error(`❌ [executeCallTask] PERMANENT error — returning 200 (no retry needed)`);
+      res.status(200).json(errorResponse);
+    }
     return;
   }
 }

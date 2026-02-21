@@ -28,8 +28,7 @@ let cacheLoadedAt = 0;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // Languages available in MailWizz templates
-// HI and RU are NOT available — fall back to EN
-const TEMPLATE_LANGUAGES_AVAILABLE = new Set(["AR", "DE", "EN", "ES", "FR", "PT", "ZH"]);
+const TEMPLATE_LANGUAGES_AVAILABLE = new Set(["AR", "DE", "EN", "ES", "FR", "HI", "PT", "RU", "ZH"]);
 
 /**
  * Convert our internal template code to MailWizz template name

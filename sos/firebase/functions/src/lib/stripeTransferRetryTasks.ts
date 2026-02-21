@@ -9,6 +9,7 @@
 
 // P1-2 FIX: Lazy imports to avoid deployment timeout
 import { onRequest } from "firebase-functions/v2/https";
+import { defineString } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 
@@ -16,7 +17,14 @@ import * as logger from "firebase-functions/logger";
 import {
   getStripeSecretKey,
   STRIPE_SECRET_KEY,
+  TASKS_AUTH_SECRET,
+  getTasksAuthSecret,
 } from "./secrets";
+
+// P0 AUDIT FIX: Cloud Run URL configurable (v2 format, NOT v1 cloudfunctions.net)
+const EXECUTE_STRIPE_TRANSFER_RETRY_URL = defineString("EXECUTE_STRIPE_TRANSFER_RETRY_URL", {
+  default: "" // Will be set via Firebase params after deployment
+});
 
 // Configuration des retries
 const TRANSFER_RETRY_CONFIG = {
@@ -37,14 +45,16 @@ interface TransferRetryPayload {
 }
 
 // Client Cloud Tasks (lazy loading to avoid init timeout)
-let tasksClient: any = null;
+import type { CloudTasksClient } from "@google-cloud/tasks";
+let tasksClient: CloudTasksClient | null = null;
 
-async function getTasksClient(): Promise<any> {
+function getTasksClient(): CloudTasksClient {
   if (!tasksClient) {
-    const { CloudTasksClient } = await import("@google-cloud/tasks");
-    tasksClient = new CloudTasksClient();
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { CloudTasksClient: CloudTasksClientClass } = require("@google-cloud/tasks");
+    tasksClient = new CloudTasksClientClass();
   }
-  return tasksClient;
+  return tasksClient!;
 }
 
 function getProjectId(): string {
@@ -63,7 +73,7 @@ export async function scheduleTransferRetryTask(payload: TransferRetryPayload): 
   const location = "europe-west1";
   const queueName = "stripe-transfer-retry-queue";
 
-  const client = await getTasksClient();
+  const client = getTasksClient();
   const queuePath = client.queuePath(projectId, location, queueName);
 
   // Calculer le délai avec backoff exponentiel
@@ -72,7 +82,13 @@ export async function scheduleTransferRetryTask(payload: TransferRetryPayload): 
 
   const scheduleTime = new Date(Date.now() + delaySeconds * 1000);
 
-  const callbackUrl = `https://${location}-${projectId}.cloudfunctions.net/executeStripeTransferRetry`;
+  // P0 AUDIT FIX: Use Cloud Run v2 URL (NOT v1 cloudfunctions.net which doesn't work with v2 functions)
+  const callbackUrl = EXECUTE_STRIPE_TRANSFER_RETRY_URL.value()
+    || `https://${location}-${projectId}.cloudfunctions.net/executeStripeTransferRetry`;
+
+  if (!EXECUTE_STRIPE_TRANSFER_RETRY_URL.value()) {
+    logger.warn(`[scheduleTransferRetryTask] EXECUTE_STRIPE_TRANSFER_RETRY_URL not configured, using v1 fallback URL`);
+  }
 
   const task = {
     scheduleTime: { seconds: Math.floor(scheduleTime.getTime() / 1000) },
@@ -81,14 +97,16 @@ export async function scheduleTransferRetryTask(payload: TransferRetryPayload): 
       url: callbackUrl,
       headers: {
         "Content-Type": "application/json",
+        // P0 AUDIT FIX: Add auth header to prevent unauthorized access
+        "X-Task-Auth": getTasksAuthSecret(),
       },
-      body: Buffer.from(JSON.stringify(payload)).toString("base64"),
+      body: Buffer.from(JSON.stringify(payload)),
     },
   };
 
   await client.createTask({ parent: queuePath, task });
 
-  logger.info(`[scheduleTransferRetryTask] Scheduled retry #${payload.retryCount + 1} for ${payload.pendingTransferId} in ${delaySeconds}s`);
+  logger.info(`[scheduleTransferRetryTask] Scheduled retry #${payload.retryCount + 1} for ${payload.pendingTransferId} in ${delaySeconds}s (url: ${callbackUrl})`);
 }
 
 /**
@@ -97,13 +115,31 @@ export async function scheduleTransferRetryTask(payload: TransferRetryPayload): 
 export const executeStripeTransferRetry = onRequest(
   {
     region: "europe-west1",
-    secrets: [STRIPE_SECRET_KEY],
+    // P0 AUDIT FIX: Add TASKS_AUTH_SECRET to verify Cloud Tasks auth header
+    secrets: [STRIPE_SECRET_KEY, TASKS_AUTH_SECRET],
     timeoutSeconds: 60,
+    // P0 AUDIT FIX: Allow unauthenticated access (Cloud Tasks sends X-Task-Auth header instead)
+    invoker: "public",
   },
   async (request, response) => {
     const db = admin.firestore();
 
     try {
+      // P0 AUDIT FIX: Verify X-Task-Auth header (was missing — endpoint was open)
+      if (request.method !== "POST") {
+        response.status(405).send("Method not allowed");
+        return;
+      }
+
+      const authHeader = request.headers["x-task-auth"];
+      const expectedAuth = getTasksAuthSecret();
+
+      if (!authHeader || authHeader !== expectedAuth) {
+        logger.error("[executeStripeTransferRetry] Invalid or missing X-Task-Auth header");
+        response.status(401).send("Unauthorized");
+        return;
+      }
+
       // Décoder le payload
       const payloadStr = request.body
         ? (typeof request.body === "string" ? request.body : JSON.stringify(request.body))
