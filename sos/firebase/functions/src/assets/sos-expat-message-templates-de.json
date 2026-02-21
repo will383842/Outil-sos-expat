@@ -156,22 +156,58 @@
     {
       "id": "provider.payout.received",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Zahlung fuer Ihre Beratung erhalten",
+        "html": "<h2>Zahlung erhalten</h2><p>Hallo,</p><p>Ihre Zahlung von <strong>{{vars.payoutAmount}}{{vars.currency}}</strong> fuer die Beratung am {{vars.sessionDate}} wurde erfolgreich verarbeitet.</p><p><strong>Zahlungsmethode:</strong> {{vars.gateway}}</p><p>Vielen Dank fuer Ihren hervorragenden Service!</p><p>Mit freundlichen Gruessen,<br>Das SOS Expat Team</p>"
+      },
+      "inapp": {
+        "title": "Zahlung erhalten",
+        "body": "Ihre Zahlung von {{vars.payoutAmount}}{{vars.currency}} wurde verarbeitet",
+        "action": { "label": "Ansehen", "deeplink": "/provider/dashboard" }
+      }
     },
     {
       "id": "payment_refunded",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Ihre Rueckerstattung wurde verarbeitet",
+        "html": "<h2>Rueckerstattung bestaetigt</h2><p>Hallo,</p><p>Ihre Rueckerstattung von <strong>{{vars.refundAmount}}{{vars.currency}}</strong> wurde erfolgreich eingeleitet.</p><p><strong>Grund:</strong> {{vars.refundReason}}</p><p><strong>Geschaetzte Ankunft:</strong> {{vars.estimatedArrival}}</p><p><strong>Zahlungsmethode:</strong> {{vars.gateway}}</p><p>Der Betrag wird innerhalb des angegebenen Zeitraums auf Ihr Konto gutgeschrieben. Sollten Sie die Rueckerstattung nicht erhalten, kontaktieren Sie uns bitte.</p><p>Mit freundlichen Gruessen,<br>Das SOS Expat Team</p>"
+      },
+      "inapp": {
+        "title": "Rueckerstattung verarbeitet",
+        "body": "Ihre Rueckerstattung von {{vars.refundAmount}}{{vars.currency}} wurde eingeleitet",
+        "action": { "label": "Ansehen", "deeplink": "/calls" }
+      }
     },
     {
       "id": "payment.capture_failed.client",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Problem mit Ihrer Zahlung",
+        "html": "<h2>Zahlungsproblem</h2><p>Hallo,</p><p>Bei der Abwicklung der Zahlung fuer Ihre Beratung ist ein technisches Problem aufgetreten.</p><p><strong>Keine Sorge</strong> — Ihre Karte wurde nicht belastet. Unser Team wurde benachrichtigt und bearbeitet das Problem mit hoechster Prioritaet.</p><p>Wir werden uns in Kuerze bei Ihnen melden.</p><p>Mit freundlichen Gruessen,<br>Das SOS Expat Team</p>"
+      },
+      "inapp": {
+        "title": "Zahlungsproblem",
+        "body": "Ein technisches Problem ist aufgetreten. Unser Team wurde benachrichtigt.",
+        "action": { "label": "Kontakt", "deeplink": "/support" }
+      }
     },
     {
       "id": "payment.capture_failed.provider",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Zahlungsproblem bei einer Beratung",
+        "html": "<h2>Zahlungsproblem</h2><p>Hallo,</p><p>Bei der Abwicklung der Zahlung fuer Ihre kuerzliche Beratung ist ein technisches Problem aufgetreten.</p><p><strong>Ihr Service wurde erfasst</strong>. Unser Team bearbeitet das Problem und Sie erhalten Ihre Zahlung, sobald es behoben ist.</p><p>Mit freundlichen Gruessen,<br>Das SOS Expat Team</p>"
+      },
+      "inapp": {
+        "title": "Zahlungsproblem",
+        "body": "Ein technisches Problem ist aufgetreten. Ihre Zahlung wird bearbeitet.",
+        "action": { "label": "Ansehen", "deeplink": "/provider/dashboard" }
+      }
     }
   ]
 }

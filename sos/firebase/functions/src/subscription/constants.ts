@@ -38,8 +38,8 @@ export type SubscriptionTier = typeof SUBSCRIPTION_TIERS[number];
  * Utilisé si settings/subscription.trial n'existe pas dans Firestore
  */
 export const DEFAULT_TRIAL_CONFIG = {
-  durationDays: 30,    // Durée de l'essai en jours
-  maxAiCalls: 3,       // Nombre max d'appels IA pendant l'essai
+  durationDays: 0,     // 0 = pas de limite de temps (3 appels gratuits à vie)
+  maxAiCalls: 3,       // Nombre max d'appels IA gratuits
   isEnabled: true      // Activer/désactiver l'essai gratuit
 } as const;
 

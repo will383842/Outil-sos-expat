@@ -275,8 +275,77 @@ export const checkAiAccess = functions
         ? usageDoc.data()!
         : { currentPeriodCalls: 0, trialCallsUsed: 0, totalCallsAllTime: 0 };
 
-      // 3. Pas d'abonnement
+      // 3. Pas d'abonnement → auto-initialiser le trial (3 appels gratuits)
       if (!subDoc.exists) {
+        // AUDIT-FIX TRIAL: Auto-initialiser le trial pour les nouveaux providers
+        if (trialConfig.isEnabled) {
+          try {
+            const trialNow = admin.firestore.Timestamp.now();
+            const hasTimeLimit = trialConfig.durationDays > 0;
+            const trialEndsAtDate = hasTimeLimit ? new Date() : null;
+            if (trialEndsAtDate) {
+              trialEndsAtDate.setDate(trialEndsAtDate.getDate() + trialConfig.durationDays);
+            }
+            const trialEndsAtTs = trialEndsAtDate
+              ? admin.firestore.Timestamp.fromDate(trialEndsAtDate)
+              : null;
+
+            // Créer subscription trial
+            await getDb().doc(`subscriptions/${providerId}`).set({
+              providerId,
+              planId: 'trial',
+              tier: 'trial',
+              status: 'trialing',
+              stripeCustomerId: null,
+              stripeSubscriptionId: null,
+              stripePriceId: null,
+              currency: 'EUR',
+              billingPeriod: null,
+              currentPeriodStart: trialNow,
+              currentPeriodEnd: trialEndsAtTs,
+              cancelAtPeriodEnd: false,
+              canceledAt: null,
+              trialStartedAt: trialNow,
+              trialEndsAt: trialEndsAtTs,
+              aiCallsLimit: trialConfig.maxAiCalls,
+              aiAccessEnabled: true,
+              createdAt: trialNow,
+              updatedAt: trialNow
+            });
+
+            // Créer ai_usage
+            await getDb().doc(`ai_usage/${providerId}`).set({
+              providerId,
+              subscriptionId: providerId,
+              currentPeriodCalls: 0,
+              trialCallsUsed: 0,
+              totalCallsAllTime: 0,
+              aiCallsLimit: trialConfig.maxAiCalls,
+              currentPeriodStart: trialNow,
+              currentPeriodEnd: trialEndsAtTs,
+              createdAt: trialNow,
+              updatedAt: trialNow
+            });
+
+            console.log(`[checkAiAccess] Auto-initialized trial for ${providerId} (${trialConfig.maxAiCalls} free calls, ${hasTimeLimit ? trialConfig.durationDays + ' days' : 'no time limit'})`);
+
+            return {
+              allowed: true,
+              currentUsage: 0,
+              limit: trialConfig.maxAiCalls,
+              remaining: trialConfig.maxAiCalls,
+              isInTrial: true,
+              trialDaysRemaining: hasTimeLimit ? trialConfig.durationDays : -1,
+              trialCallsRemaining: trialConfig.maxAiCalls,
+              subscriptionStatus: 'trialing',
+              canUpgrade: true,
+              suggestedPlan: 'basic'
+            } as AiAccessCheckResult;
+          } catch (trialError) {
+            console.error(`[checkAiAccess] Failed to auto-initialize trial for ${providerId}:`, trialError);
+          }
+        }
+
         return {
           allowed: false,
           reason: 'no_subscription',
@@ -315,9 +384,10 @@ export const checkAiAccess = functions
         const trialCallsUsed = usage.trialCallsUsed || 0;
         const trialCallsExhausted = trialCallsUsed >= trialConfig.maxAiCalls;
 
+        // AUDIT-FIX TRIAL: -1 = pas de limite de temps (trialEndsAt null)
         const trialDaysRemaining = trialEndsAt
           ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)))
-          : 0;
+          : -1;
         const trialCallsRemaining = Math.max(0, trialConfig.maxAiCalls - trialCallsUsed);
 
         if (trialExpired) {

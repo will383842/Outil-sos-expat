@@ -214,27 +214,32 @@ export const resetBillingCycleQuotas = onSchedule(
           }
 
           // Calculate new period based on subscription's billing cycle (30 days)
-          // Use the subscription's currentPeriodEnd as the new period start
-          // This ensures continuity with the billing cycle
           const newPeriodStart = subscription.currentPeriodEnd || now;
           const newPeriodStartDate = newPeriodStart.toDate();
-
-          // New period is 30 days from the start (billing cycle based)
           const newPeriodEndDate = new Date(newPeriodStartDate);
           newPeriodEndDate.setDate(newPeriodEndDate.getDate() + 30);
           const newPeriodEnd = admin.firestore.Timestamp.fromDate(newPeriodEndDate);
 
-          // Reset quota
-          batch.update(doc.ref, {
-            currentPeriodCalls: 0,
-            currentPeriodStart: newPeriodStart,
-            currentPeriodEnd: newPeriodEnd,
-            quotaAlert80Sent: false,
-            quotaAlert100Sent: false,
-            updatedAt: now,
+          // AUDIT-FIX m1: Transaction atomique pour le reset quota
+          // Empêche la perte d'appels IA entre la lecture et l'écriture
+          const previousCalls = await db.runTransaction(async (transaction) => {
+            const freshUsageDoc = await transaction.get(doc.ref);
+            const freshData = freshUsageDoc.data() as AiUsageDoc;
+            const prevCalls = freshData?.currentPeriodCalls || 0;
+
+            transaction.update(doc.ref, {
+              currentPeriodCalls: 0,
+              currentPeriodStart: newPeriodStart,
+              currentPeriodEnd: newPeriodEnd,
+              quotaAlert80Sent: false,
+              quotaAlert100Sent: false,
+              updatedAt: now,
+            });
+
+            return prevCalls;
           });
 
-          // Also update the subscription's period dates
+          // Update subscription period dates (non-critical, batch is fine)
           batch.update(db.doc(`subscriptions/${providerId}`), {
             currentPeriodStart: newPeriodStart,
             currentPeriodEnd: newPeriodEnd,
@@ -246,12 +251,12 @@ export const resetBillingCycleQuotas = onSchedule(
           batch.set(logRef, {
             providerId,
             subscriptionId: providerId,
-            previousPeriodCalls: usageData.currentPeriodCalls,
+            previousPeriodCalls: previousCalls,
             previousPeriodStart: usageData.currentPeriodStart,
             previousPeriodEnd: usageData.currentPeriodEnd,
             newPeriodStart: newPeriodStart,
             newPeriodEnd: newPeriodEnd,
-            resetType: 'billing_cycle', // Track reset type
+            resetType: 'billing_cycle',
             resetAt: now,
           });
 

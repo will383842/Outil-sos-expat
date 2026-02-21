@@ -156,22 +156,58 @@
     {
       "id": "provider.payout.received",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Оплата за вашу консультацию получена",
+        "html": "<h2>Оплата получена</h2><p>Здравствуйте,</p><p>Ваш платеж в размере <strong>{{vars.payoutAmount}}{{vars.currency}}</strong> за консультацию от {{vars.sessionDate}} успешно обработан.</p><p><strong>Способ оплаты:</strong> {{vars.gateway}}</p><p>Спасибо за ваш отличный сервис!</p><p>С уважением,<br>Команда SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Оплата получена",
+        "body": "Ваш платеж в размере {{vars.payoutAmount}}{{vars.currency}} обработан",
+        "action": { "label": "Смотреть", "deeplink": "/provider/dashboard" }
+      }
     },
     {
       "id": "payment_refunded",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Ваш возврат был обработан",
+        "html": "<h2>Возврат подтвержден</h2><p>Здравствуйте,</p><p>Ваш возврат в размере <strong>{{vars.refundAmount}}{{vars.currency}}</strong> был успешно инициирован.</p><p><strong>Причина:</strong> {{vars.refundReason}}</p><p><strong>Ожидаемый срок:</strong> {{vars.estimatedArrival}}</p><p><strong>Способ оплаты:</strong> {{vars.gateway}}</p><p>Сумма будет зачислена на ваш счет в указанные сроки. Если вы не получите возврат, пожалуйста, свяжитесь с нами.</p><p>С уважением,<br>Команда SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Возврат обработан",
+        "body": "Ваш возврат в размере {{vars.refundAmount}}{{vars.currency}} инициирован",
+        "action": { "label": "Смотреть", "deeplink": "/calls" }
+      }
     },
     {
       "id": "payment.capture_failed.client",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Проблема с вашим платежом",
+        "html": "<h2>Проблема с платежом</h2><p>Здравствуйте,</p><p>При завершении оплаты вашей консультации произошла техническая ошибка.</p><p><strong>Не беспокойтесь</strong> — средства с вашей карты не были списаны. Наша команда уведомлена и решает проблему в приоритетном порядке.</p><p>Мы свяжемся с вами в ближайшее время.</p><p>С уважением,<br>Команда SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Проблема с платежом",
+        "body": "Произошла техническая ошибка. Наша команда уведомлена.",
+        "action": { "label": "Связаться", "deeplink": "/support" }
+      }
     },
     {
       "id": "payment.capture_failed.provider",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Проблема с оплатой консультации",
+        "html": "<h2>Проблема с платежом</h2><p>Здравствуйте,</p><p>При завершении оплаты вашей недавней консультации произошла техническая ошибка.</p><p><strong>Ваша услуга зарегистрирована</strong>. Наша команда решает проблему, и вы получите оплату, как только она будет урегулирована.</p><p>С уважением,<br>Команда SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Проблема с платежом",
+        "body": "Произошла техническая ошибка. Ваш платеж будет урегулирован.",
+        "action": { "label": "Смотреть", "deeplink": "/provider/dashboard" }
+      }
     }
   ]
 }

@@ -482,7 +482,7 @@ export async function handleSubscriptionCreated(
     const plan = priceId ? await getSubscriptionPlanByPriceId(priceId) : null;
     const planId = subscription.metadata?.planId || plan?.id || 'unknown';
     const tier = plan?.tier || 'basic';
-    const aiCallsLimit = plan?.aiCallsLimit ?? 5;
+    const aiCallsLimit = plan?.aiCallsLimit ?? 0; // AUDIT-FIX M1: Harmonisé sur 0 (même logique que accessControl.ts)
 
     // Déterminer la période de facturation
     const priceInterval = subscription.items.data[0]?.price.recurring?.interval;
@@ -760,7 +760,7 @@ export async function handleSubscriptionUpdated(
     const plan = priceId ? await getSubscriptionPlanByPriceId(priceId) : null;
     const planId = subscription.metadata?.planId || plan?.id || previousState?.planId || 'unknown';
     const newTier = plan?.tier || (previousTier as SubscriptionTier);
-    const newAiCallsLimit = plan?.aiCallsLimit ?? previousState?.aiCallsLimit ?? 5;
+    const newAiCallsLimit = plan?.aiCallsLimit ?? previousState?.aiCallsLimit ?? 0; // AUDIT-FIX M1: Harmonisé sur 0 (même logique que accessControl.ts)
     const newStatus = mapStripeStatus(subscription.status);
 
     // Détecter le type de changement
@@ -998,13 +998,14 @@ export async function handleSubscriptionDeleted(
     await db.doc(`subscriptions/${providerId}`).update(updates);
     logger.info(`[handleSubscriptionDeleted] Set status to canceled for ${providerId}`);
 
-    // Mettre à jour ai_usage - couper l'accès
-    await db.doc(`ai_usage/${providerId}`).update({
+    // AUDIT-FIX M2: Utiliser set+merge au lieu de update pour éviter l'échec si le doc n'existe pas
+    await db.doc(`ai_usage/${providerId}`).set({
+      providerId,
       aiCallsLimit: 0,
       currentPeriodCalls: 0,
       trialCallsUsed: trialConfig.maxAiCalls, // Marquer trial comme épuisé
       updatedAt: now
-    });
+    }, { merge: true });
     logger.info(`[handleSubscriptionDeleted] Disabled AI access for ${providerId}`);
 
     // P1 FIX: Masquer le profil et sync subscriptionStatus pour Outil IA
@@ -1320,7 +1321,7 @@ export async function handleInvoicePaid(
     await db.doc(`subscriptions/${providerId}`).update(updates);
 
     // Reset quota mensuel dans ai_usage
-    const aiCallsLimit = updates.aiCallsLimit ?? subData.aiCallsLimit ?? 5;
+    const aiCallsLimit = updates.aiCallsLimit ?? subData.aiCallsLimit ?? 0; // AUDIT-FIX M1: Harmonisé sur 0 (même logique que accessControl.ts)
     await db.doc(`ai_usage/${providerId}`).update({
       currentPeriodCalls: 0,
       aiCallsLimit,
@@ -1351,6 +1352,48 @@ export async function handleInvoicePaid(
       createdAt: now
     });
     logger.info(`[handleInvoicePaid] Stored invoice ${invoice.id}`);
+
+    // AUDIT-FIX C1: Générer une facture HTML légale (EU compliance)
+    try {
+      const { generateInvoice } = await import('../utils/generateInvoice');
+      const { generateSequentialInvoiceNumber } = await import('../utils/sequentialInvoiceNumber');
+
+      const { invoiceNumber } = await generateSequentialInvoiceNumber();
+      const providerInfo = await getProviderInfo(providerId);
+
+      const billingPeriod = subData.billingPeriod === 'yearly' ? 'Annuel' : 'Mensuel';
+      const tier = subData.tier || 'basic';
+
+      await generateInvoice({
+        invoiceNumber,
+        type: 'platform',
+        callId: invoice.id, // Stripe invoice ID as reference
+        clientId: providerId, // Provider is the client paying for subscription
+        providerId,
+        amount: (invoice.amount_paid || 0) / 100,
+        currency: invoiceCurrency,
+        downloadUrl: '', // Will be set by generateInvoice
+        status: 'paid',
+        sentToAdmin: false,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: new Date(),
+        environment: process.env.NODE_ENV || 'production',
+        locale: providerInfo?.language || 'en',
+        clientName: providerInfo?.displayName || `${providerInfo?.firstName || ''} ${providerInfo?.lastName || ''}`.trim(),
+        clientEmail: providerInfo?.email || '',
+        description: `Abonnement IA - Plan ${tier} (${billingPeriod})`,
+      });
+
+      // Store invoice number reference in the invoices collection
+      await db.collection('invoices').doc(invoice.id).update({
+        sequentialInvoiceNumber: invoiceNumber,
+      });
+
+      logger.info(`[handleInvoicePaid] AUDIT-FIX C1: Generated legal invoice ${invoiceNumber} for ${providerId}`);
+    } catch (invoiceGenError) {
+      // Don't block webhook processing if invoice generation fails
+      logger.error(`[handleInvoicePaid] AUDIT-FIX C1: Failed to generate invoice for ${providerId}:`, invoiceGenError);
+    }
 
     // P1 FIX: Marquer dunning comme récupéré avec error handling spécifique
     try {
@@ -1584,6 +1627,12 @@ export async function handleInvoicePaymentFailed(
     // Marquer la première date d'échec si pas encore définie
     if (!subData.firstPaymentFailureAt) {
       updates.firstPaymentFailureAt = now;
+    }
+
+    // AUDIT-FIX C2: Écrire pastDueSince pour que accessControl.ts et scheduledTasks.ts
+    // puissent calculer correctement la grace period de 7 jours
+    if (!subData.pastDueSince) {
+      updates.pastDueSince = now;
     }
 
     // Couper l'accès après 7 jours
@@ -2759,6 +2808,71 @@ export async function handleChargeRefunded(
         createdAt: now
       });
     }
+
+    // ========== AUDIT-FIX M4: Générer credit note (facture d'avoir) pour EU compliance ==========
+    try {
+      // Chercher la facture originale liée à ce charge
+      const invoiceId = typeof charge.invoice === 'string' ? charge.invoice : (charge.invoice as any)?.id;
+      let originalInvoiceNumber = 'N/A';
+
+      if (invoiceId) {
+        const invoiceDoc = await db.collection('invoices').doc(invoiceId).get();
+        if (invoiceDoc.exists) {
+          originalInvoiceNumber = invoiceDoc.data()?.sequentialInvoiceNumber || invoiceId;
+        }
+      }
+
+      // Chercher aussi dans invoice_records par stripeInvoiceId
+      if (originalInvoiceNumber === 'N/A' && invoiceId) {
+        const invoiceRecordQuery = await db.collection('invoice_records')
+          .where('callId', '==', invoiceId)
+          .limit(1)
+          .get();
+        if (!invoiceRecordQuery.empty) {
+          originalInvoiceNumber = invoiceRecordQuery.docs[0].id;
+        }
+      }
+
+      const refundData = charge.refunds?.data?.[0];
+      const { generateCreditNote } = await import('../utils/generateInvoice');
+
+      // Déterminer le client (pour abonnements, le provider est le client)
+      const creditNoteClientId = clientId || providerId || '';
+      let clientName = '';
+      let clientEmail = '';
+      let locale = 'en';
+
+      if (creditNoteClientId) {
+        const clientDoc = await db.doc(`users/${creditNoteClientId}`).get();
+        if (clientDoc.exists) {
+          const cd = clientDoc.data()!;
+          clientName = cd.displayName || `${cd.firstName || ''} ${cd.lastName || ''}`.trim();
+          clientEmail = cd.email || '';
+          locale = cd.language || cd.preferredLanguage || 'en';
+        }
+      }
+
+      await generateCreditNote({
+        originalInvoiceNumber,
+        refundId: refundData?.id || charge.id,
+        amount: refundedAmount,
+        currency,
+        reason: refundData?.reason || 'Remboursement',
+        callId: paymentId || invoiceId || charge.id,
+        clientId: creditNoteClientId,
+        providerId: providerId || '',
+        clientName,
+        clientEmail,
+        locale,
+        gateway: 'stripe',
+      });
+
+      logger.info(`[handleChargeRefunded] AUDIT-FIX M4: Credit note generated for charge ${charge.id}`);
+    } catch (creditNoteError) {
+      // Don't block webhook processing if credit note generation fails
+      logger.error(`[handleChargeRefunded] AUDIT-FIX M4: Failed to generate credit note:`, creditNoteError);
+    }
+    // ========== FIN AUDIT-FIX M4 ==========
 
     // ========== P0-3 FIX: Débiter le solde du provider lors d'un remboursement ==========
     // Le provider ne doit pas garder l'argent d'une consultation remboursée

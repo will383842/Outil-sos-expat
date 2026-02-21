@@ -156,22 +156,58 @@
     {
       "id": "provider.payout.received",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: आपके परामर्श का भुगतान प्राप्त हुआ",
+        "html": "<h2>भुगतान प्राप्त</h2><p>नमस्ते,</p><p>{{vars.sessionDate}} को परामर्श के लिए आपका भुगतान <strong>{{vars.payoutAmount}}{{vars.currency}}</strong> सफलतापूर्वक संसाधित किया गया है।</p><p><strong>भुगतान विधि:</strong> {{vars.gateway}}</p><p>आपकी उत्कृष्ट सेवा के लिए धन्यवाद!</p><p>सादर,<br>SOS Expat टीम</p>"
+      },
+      "inapp": {
+        "title": "भुगतान प्राप्त",
+        "body": "आपका भुगतान {{vars.payoutAmount}}{{vars.currency}} संसाधित किया गया",
+        "action": { "label": "देखें", "deeplink": "/provider/dashboard" }
+      }
     },
     {
       "id": "payment_refunded",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: आपका रिफंड संसाधित किया गया",
+        "html": "<h2>रिफंड की पुष्टि</h2><p>नमस्ते,</p><p>आपका रिफंड <strong>{{vars.refundAmount}}{{vars.currency}}</strong> सफलतापूर्वक शुरू किया गया है।</p><p><strong>कारण:</strong> {{vars.refundReason}}</p><p><strong>अनुमानित समय:</strong> {{vars.estimatedArrival}}</p><p><strong>भुगतान विधि:</strong> {{vars.gateway}}</p><p>राशि निर्दिष्ट समय सीमा के भीतर आपके खाते में जमा की जाएगी। यदि आपको रिफंड नहीं मिलता है, तो कृपया हमसे संपर्क करें।</p><p>सादर,<br>SOS Expat टीम</p>"
+      },
+      "inapp": {
+        "title": "रिफंड संसाधित",
+        "body": "आपका रिफंड {{vars.refundAmount}}{{vars.currency}} शुरू किया गया",
+        "action": { "label": "देखें", "deeplink": "/calls" }
+      }
     },
     {
       "id": "payment.capture_failed.client",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: आपके भुगतान में समस्या",
+        "html": "<h2>भुगतान समस्या</h2><p>नमस्ते,</p><p>आपके परामर्श के भुगतान को अंतिम रूप देते समय एक तकनीकी समस्या आई।</p><p><strong>चिंता न करें</strong> — आपके कार्ड से कोई राशि नहीं काटी गई है। हमारी टीम को सूचित किया गया है और वह प्राथमिकता के आधार पर समस्या का समाधान कर रही है।</p><p>हम जल्द ही आपसे संपर्क करेंगे।</p><p>सादर,<br>SOS Expat टीम</p>"
+      },
+      "inapp": {
+        "title": "भुगतान समस्या",
+        "body": "एक तकनीकी समस्या आई। हमारी टीम को सूचित किया गया है।",
+        "action": { "label": "संपर्क", "deeplink": "/support" }
+      }
     },
     {
       "id": "payment.capture_failed.provider",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: परामर्श भुगतान समस्या",
+        "html": "<h2>भुगतान समस्या</h2><p>नमस्ते,</p><p>आपके हाल के परामर्श के भुगतान को अंतिम रूप देते समय एक तकनीकी समस्या आई।</p><p><strong>आपकी सेवा दर्ज की गई है</strong>। हमारी टीम समस्या का समाधान कर रही है और भुगतान नियमित होते ही आपको भुगतान किया जाएगा।</p><p>सादर,<br>SOS Expat टीम</p>"
+      },
+      "inapp": {
+        "title": "भुगतान समस्या",
+        "body": "एक तकनीकी समस्या आई। आपका भुगतान नियमित किया जाएगा।",
+        "action": { "label": "देखें", "deeplink": "/provider/dashboard" }
+      }
     }
   ]
 }

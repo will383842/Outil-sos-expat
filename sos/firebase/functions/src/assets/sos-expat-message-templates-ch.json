@@ -156,22 +156,58 @@
     {
       "id": "provider.payout.received",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: 您的咨询付款已收到",
+        "html": "<h2>付款已收到</h2><p>您好，</p><p>您在 {{vars.sessionDate}} 咨询的付款 <strong>{{vars.payoutAmount}}{{vars.currency}}</strong> 已成功处理。</p><p><strong>付款方式：</strong>{{vars.gateway}}</p><p>感谢您的优质服务！</p><p>此致，<br>SOS Expat 团队</p>"
+      },
+      "inapp": {
+        "title": "付款已收到",
+        "body": "您的付款 {{vars.payoutAmount}}{{vars.currency}} 已处理",
+        "action": { "label": "查看", "deeplink": "/provider/dashboard" }
+      }
     },
     {
       "id": "payment_refunded",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: 您的退款已处理",
+        "html": "<h2>退款已确认</h2><p>您好，</p><p>您的退款 <strong>{{vars.refundAmount}}{{vars.currency}}</strong> 已成功发起。</p><p><strong>原因：</strong>{{vars.refundReason}}</p><p><strong>预计到账：</strong>{{vars.estimatedArrival}}</p><p><strong>付款方式：</strong>{{vars.gateway}}</p><p>金额将在规定时间内退回您的账户。如果您未收到退款，请联系我们。</p><p>此致，<br>SOS Expat 团队</p>"
+      },
+      "inapp": {
+        "title": "退款已处理",
+        "body": "您的退款 {{vars.refundAmount}}{{vars.currency}} 已发起",
+        "action": { "label": "查看", "deeplink": "/calls" }
+      }
     },
     {
       "id": "payment.capture_failed.client",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: 您的付款出现问题",
+        "html": "<h2>付款问题</h2><p>您好，</p><p>在完成您的咨询付款时出现了技术问题。</p><p><strong>请放心</strong>——您的银行卡未被扣款。我们的团队已收到通知，正在优先处理此问题。</p><p>我们将尽快与您联系。</p><p>此致，<br>SOS Expat 团队</p>"
+      },
+      "inapp": {
+        "title": "付款问题",
+        "body": "出现技术问题。我们的团队已收到通知。",
+        "action": { "label": "联系", "deeplink": "/support" }
+      }
     },
     {
       "id": "payment.capture_failed.provider",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: 咨询付款问题",
+        "html": "<h2>付款问题</h2><p>您好，</p><p>在完成您最近咨询的付款时出现了技术问题。</p><p><strong>您的服务已记录</strong>。我们的团队正在处理此问题，付款将在问题解决后支付给您。</p><p>此致，<br>SOS Expat 团队</p>"
+      },
+      "inapp": {
+        "title": "付款问题",
+        "body": "出现技术问题。您的付款将会处理。",
+        "action": { "label": "查看", "deeplink": "/provider/dashboard" }
+      }
     }
   ]
 }

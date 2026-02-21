@@ -156,22 +156,58 @@
     {
       "id": "provider.payout.received",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: تم استلام الدفعة مقابل استشارتك",
+        "html": "<h2>تم استلام الدفعة</h2><p>مرحبا،</p><p>تمت معالجة دفعتك بمبلغ <strong>{{vars.payoutAmount}}{{vars.currency}}</strong> مقابل الاستشارة بتاريخ {{vars.sessionDate}} بنجاح.</p><p><strong>طريقة الدفع:</strong> {{vars.gateway}}</p><p>شكرا لك على خدمتك الممتازة!</p><p>مع تحيات،<br>فريق SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "تم استلام الدفعة",
+        "body": "تمت معالجة دفعتك بمبلغ {{vars.payoutAmount}}{{vars.currency}}",
+        "action": { "label": "عرض", "deeplink": "/provider/dashboard" }
+      }
     },
     {
       "id": "payment_refunded",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: تمت معالجة استرداد أموالك",
+        "html": "<h2>تم تأكيد الاسترداد</h2><p>مرحبا،</p><p>تم بدء استرداد أموالك بمبلغ <strong>{{vars.refundAmount}}{{vars.currency}}</strong> بنجاح.</p><p><strong>السبب:</strong> {{vars.refundReason}}</p><p><strong>الوقت المقدر:</strong> {{vars.estimatedArrival}}</p><p><strong>طريقة الدفع:</strong> {{vars.gateway}}</p><p>سيتم إيداع المبلغ في حسابك خلال المدة المحددة. إذا لم تستلم الاسترداد، يرجى الاتصال بنا.</p><p>مع تحيات،<br>فريق SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "تم معالجة الاسترداد",
+        "body": "تم بدء استرداد أموالك بمبلغ {{vars.refundAmount}}{{vars.currency}}",
+        "action": { "label": "عرض", "deeplink": "/calls" }
+      }
     },
     {
       "id": "payment.capture_failed.client",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: مشكلة في الدفع",
+        "html": "<h2>مشكلة في الدفع</h2><p>مرحبا،</p><p>حدثت مشكلة تقنية أثناء إتمام الدفع لاستشارتك.</p><p><strong>لا تقلق</strong> — لم يتم خصم أي مبلغ من بطاقتك. تم إبلاغ فريقنا وهو يعمل على حل المشكلة بأولوية قصوى.</p><p>سنتواصل معك في أقرب وقت.</p><p>مع تحيات،<br>فريق SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "مشكلة في الدفع",
+        "body": "حدثت مشكلة تقنية. تم إبلاغ فريقنا.",
+        "action": { "label": "اتصل", "deeplink": "/support" }
+      }
     },
     {
       "id": "payment.capture_failed.provider",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: مشكلة في دفع الاستشارة",
+        "html": "<h2>مشكلة في الدفع</h2><p>مرحبا،</p><p>حدثت مشكلة تقنية أثناء إتمام الدفع لاستشارتك الأخيرة.</p><p><strong>تم تسجيل خدمتك</strong>. فريقنا يعمل على حل المشكلة وستحصل على دفعتك فور تسوية الأمر.</p><p>مع تحيات،<br>فريق SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "مشكلة في الدفع",
+        "body": "حدثت مشكلة تقنية. سيتم تسوية دفعتك.",
+        "action": { "label": "عرض", "deeplink": "/provider/dashboard" }
+      }
     }
   ]
 }

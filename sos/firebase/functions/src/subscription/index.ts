@@ -623,9 +623,17 @@ export async function initializeTrial(providerId: string): Promise<{
       }
     }
 
-    // Calculate trial end date
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + trialConfig.durationDays);
+    // AUDIT-FIX TRIAL: durationDays=0 signifie pas de limite de temps
+    // Les 3 appels gratuits sont disponibles à vie
+    const hasTimeLimit = trialConfig.durationDays > 0;
+    const trialEndsAt = hasTimeLimit ? new Date() : null;
+    if (trialEndsAt) {
+      trialEndsAt.setDate(trialEndsAt.getDate() + trialConfig.durationDays);
+    }
+
+    const trialEndsAtTimestamp = trialEndsAt
+      ? admin.firestore.Timestamp.fromDate(trialEndsAt)
+      : null;
 
     // Create subscription document for trial
     const subscriptionData = {
@@ -639,11 +647,11 @@ export async function initializeTrial(providerId: string): Promise<{
       currency: 'EUR' as Currency,
       billingPeriod: null,
       currentPeriodStart: now,
-      currentPeriodEnd: admin.firestore.Timestamp.fromDate(trialEndsAt),
+      currentPeriodEnd: trialEndsAtTimestamp, // null = pas de fin
       cancelAtPeriodEnd: false,
       canceledAt: null,
       trialStartedAt: now,
-      trialEndsAt: admin.firestore.Timestamp.fromDate(trialEndsAt),
+      trialEndsAt: trialEndsAtTimestamp, // null = pas de limite de temps
       aiCallsLimit: trialConfig.maxAiCalls,
       aiAccessEnabled: true,
       createdAt: now,
@@ -661,18 +669,18 @@ export async function initializeTrial(providerId: string): Promise<{
       totalCallsAllTime: 0,
       aiCallsLimit: trialConfig.maxAiCalls,
       currentPeriodStart: now,
-      currentPeriodEnd: admin.firestore.Timestamp.fromDate(trialEndsAt),
+      currentPeriodEnd: trialEndsAtTimestamp, // null = pas de fin
       createdAt: now,
       updatedAt: now
     };
 
     await db.doc(`ai_usage/${providerId}`).set(aiUsageData);
 
-    console.log(`✅ Trial initialized for provider ${providerId} - ends on ${trialEndsAt.toISOString()}`);
+    console.log(`✅ Trial initialized for provider ${providerId}${trialEndsAt ? ` - ends on ${trialEndsAt.toISOString()}` : ' - no time limit (3 free calls)'}`);
 
     return {
       success: true,
-      trialEndsAt,
+      trialEndsAt: trialEndsAt || undefined,
       maxAiCalls: trialConfig.maxAiCalls
     };
   } catch (error: any) {

@@ -81,7 +81,7 @@ async function trackFailedAttempt(userId: string, code: string): Promise<void> {
 }
 
 export const validateCouponCallable = onCall(
-  { ...userConfig, memory: "256MiB", timeoutSeconds: 15 },
+  { ...userConfig, memory: "256MiB", timeoutSeconds: 15, concurrency: 1 },
   async (request): Promise<ValidateCouponResponse> => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");

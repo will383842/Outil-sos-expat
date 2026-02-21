@@ -156,22 +156,58 @@
     {
       "id": "provider.payout.received",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Pagamento recebido pela sua consulta",
+        "html": "<h2>Pagamento recebido</h2><p>Ola,</p><p>O seu pagamento de <strong>{{vars.payoutAmount}}{{vars.currency}}</strong> pela consulta de {{vars.sessionDate}} foi processado com sucesso.</p><p><strong>Metodo de pagamento:</strong> {{vars.gateway}}</p><p>Obrigado pelo seu excelente servico!</p><p>Atenciosamente,<br>A equipa SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Pagamento recebido",
+        "body": "O seu pagamento de {{vars.payoutAmount}}{{vars.currency}} foi processado",
+        "action": { "label": "Ver", "deeplink": "/provider/dashboard" }
+      }
     },
     {
       "id": "payment_refunded",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: O seu reembolso foi processado",
+        "html": "<h2>Reembolso confirmado</h2><p>Ola,</p><p>O seu reembolso de <strong>{{vars.refundAmount}}{{vars.currency}}</strong> foi iniciado com sucesso.</p><p><strong>Motivo:</strong> {{vars.refundReason}}</p><p><strong>Prazo estimado:</strong> {{vars.estimatedArrival}}</p><p><strong>Metodo de pagamento:</strong> {{vars.gateway}}</p><p>O valor sera creditado na sua conta dentro do prazo indicado. Se nao receber o reembolso, por favor contacte-nos.</p><p>Atenciosamente,<br>A equipa SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Reembolso processado",
+        "body": "O seu reembolso de {{vars.refundAmount}}{{vars.currency}} foi iniciado",
+        "action": { "label": "Ver", "deeplink": "/calls" }
+      }
     },
     {
       "id": "payment.capture_failed.client",
       "roles": ["client"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Problema com o seu pagamento",
+        "html": "<h2>Problema de pagamento</h2><p>Ola,</p><p>Ocorreu um problema tecnico ao finalizar o pagamento da sua consulta.</p><p><strong>Nao se preocupe</strong> — o seu cartao nao foi cobrado. A nossa equipa foi alertada e esta a tratar o problema com prioridade.</p><p>Entraremos em contacto consigo brevemente.</p><p>Atenciosamente,<br>A equipa SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Problema de pagamento",
+        "body": "Ocorreu um problema tecnico. A nossa equipa foi alertada.",
+        "action": { "label": "Contactar", "deeplink": "/support" }
+      }
     },
     {
       "id": "payment.capture_failed.provider",
       "roles": ["provider"],
-      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false }
+      "channels": { "email": true, "sms": false, "push": false, "inapp": true, "whatsapp": false },
+      "email": {
+        "subject": "SOS Expat: Problema de pagamento numa consulta",
+        "html": "<h2>Problema de pagamento</h2><p>Ola,</p><p>Ocorreu um problema tecnico ao finalizar o pagamento da sua consulta recente.</p><p><strong>O seu servico foi registado</strong>. A nossa equipa esta a tratar o problema e recebera o seu pagamento assim que for regularizado.</p><p>Atenciosamente,<br>A equipa SOS Expat</p>"
+      },
+      "inapp": {
+        "title": "Problema de pagamento",
+        "body": "Ocorreu um problema tecnico. O seu pagamento sera regularizado.",
+        "action": { "label": "Ver", "deeplink": "/provider/dashboard" }
+      }
     }
   ]
 }

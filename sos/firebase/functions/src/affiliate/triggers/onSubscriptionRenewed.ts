@@ -43,6 +43,8 @@ function toDate(value: unknown): Date | null {
 
 /**
  * Calculate the renewal month number based on subscription creation
+ * AUDIT-FIX M3: Use calendar month difference instead of dividing by 30 days
+ * This correctly handles months of different lengths (28, 29, 30, 31 days)
  */
 function calculateRenewalMonth(
   createdAt: Date | null,
@@ -50,9 +52,18 @@ function calculateRenewalMonth(
 ): number {
   if (!createdAt || !currentPeriodStart) return 1;
 
-  const diffMs = currentPeriodStart.getTime() - createdAt.getTime();
-  const diffMonths = Math.floor(diffMs / (30 * 24 * 60 * 60 * 1000));
-  return Math.max(1, diffMonths + 1);
+  // Calendar month difference: (year diff * 12) + month diff
+  const yearDiff = currentPeriodStart.getFullYear() - createdAt.getFullYear();
+  const monthDiff = currentPeriodStart.getMonth() - createdAt.getMonth();
+  const calendarMonths = yearDiff * 12 + monthDiff;
+
+  // If the day of the period start is before the creation day,
+  // we haven't completed the full calendar month yet
+  const adjustedMonths = currentPeriodStart.getDate() < createdAt.getDate()
+    ? calendarMonths - 1
+    : calendarMonths;
+
+  return Math.max(1, adjustedMonths + 1);
 }
 
 /**
