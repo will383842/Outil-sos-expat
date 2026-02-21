@@ -2753,9 +2753,9 @@ export class TwilioCallManager {
           if (captureLock) {
             const lockTime = captureLock.toDate();
             const lockAge = Date.now() - lockTime.getTime();
-            // P2-11 FIX: Lock expires after 30 minutes (was 10 min - too short for long calls)
-            // Calls can exceed 10 minutes, causing duplicate task execution
-            if (lockAge < 30 * 60 * 1000) {
+            // m3 AUDIT FIX: Lock expires after 2 hours (was 30 min — if call > 30 min + double webhook, double capture possible)
+            // Extended to 2h to cover longest possible calls; lock is now explicitly released after capture
+            if (lockAge < 2 * 60 * 60 * 1000) {
               console.log(`📄 Capture already in progress for session: ${sessionId} (lock age: ${lockAge}ms)`);
               return;
             }
@@ -3061,6 +3061,13 @@ export class TwilioCallManager {
           console.error(`⚠️ [capturePayment] Failed to send capture failure notifications:`, alertError);
         }
 
+        // m3 AUDIT FIX: Release capture lock on failure
+        try {
+          await this.db.collection("call_sessions").doc(sessionId).update({
+            captureLock: admin.firestore.FieldValue.delete(),
+          });
+        } catch {}
+
         return false;
       }
 
@@ -3163,6 +3170,13 @@ export class TwilioCallManager {
         }
       }
 
+      // m3 AUDIT FIX: Release capture lock after successful capture
+      try {
+        await this.db.collection("call_sessions").doc(sessionId).update({
+          captureLock: admin.firestore.FieldValue.delete(),
+        });
+      } catch {}
+
       // Log de succès
       prodLogger.info('TWILIO_CAPTURE_SUCCESS', `[${captureId}] Payment captured successfully`, {
         captureId,
@@ -3176,6 +3190,13 @@ export class TwilioCallManager {
       return true;
 
     } catch (error) {
+      // m3 AUDIT FIX: Release capture lock on unexpected error
+      try {
+        await this.db.collection("call_sessions").doc(sessionId).update({
+          captureLock: admin.firestore.FieldValue.delete(),
+        });
+      } catch {}
+
       prodLogger.error('TWILIO_CAPTURE_ERROR', `[${captureId}] Payment capture failed`, {
         captureId,
         sessionId,

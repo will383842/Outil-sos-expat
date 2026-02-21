@@ -968,6 +968,7 @@ ultraLogger.info("EXPORTS", "Début du chargement des exports directs");
 export { createAndScheduleCallHTTPS };
 export { createAndScheduleCallHTTPS as createAndScheduleCall };
 export { createPaymentIntent } from "./createPaymentIntent";
+export { validateCouponCallable } from "./callables/validateCoupon";
 export { api } from "./adminApi";
 // REMOVED: testTwilioCall.ts deleted (P0 security risk - unauthenticated Twilio cost endpoint)
 export { twilioCallWebhook, twilioAmdTwiml, twilioGatherResponse } from "./Webhooks/twilioWebhooks";
@@ -4810,6 +4811,10 @@ export { cleanupOrphanedAgentTasks } from './scheduled/cleanupOrphanedAgentTasks
 // ÉCONOMIE: ~300€/mois - Supprime les fichiers temp (registration_temp/, temp_profiles/)
 // qui ne sont jamais nettoyés automatiquement après 24h
 export { cleanupTempStorageFiles } from './scheduled/cleanupTempStorageFiles';
+
+// ========== NOTIFICATION EXPIRATION PROMOTIONS ==========
+// m2 FIX: Notifie les admins quand des coupons ou prix promos expirent dans 3 jours
+export { notifyExpiringPromotions } from './scheduled/notifyExpiringPromotions';
 
 // Fonctions admin pour nettoyage manuel
 export {

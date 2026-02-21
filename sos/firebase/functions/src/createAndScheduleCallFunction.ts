@@ -296,6 +296,21 @@ export const createAndScheduleCallHTTPS = onCall(
           'Le prestataire sélectionné n\'est pas disponible actuellement.'
         );
       }
+      // m2 AUDIT FIX: Check provider online/availability status before scheduling call
+      if (providerData?.isOnline === false) {
+        console.error(`❌ [${requestId}] Provider is offline: ${providerId.substring(0, 8)}...`);
+        throw new HttpsError(
+          'failed-precondition',
+          'Le prestataire n\'est pas disponible actuellement. Veuillez réessayer plus tard.'
+        );
+      }
+      if (providerData?.availability === 'offline' || providerData?.availability === 'busy') {
+        console.error(`❌ [${requestId}] Provider unavailable (${providerData.availability}): ${providerId.substring(0, 8)}...`);
+        throw new HttpsError(
+          'failed-precondition',
+          'Le prestataire est actuellement occupé ou hors ligne.'
+        );
+      }
       console.log(`✅ [${requestId}] Provider exists and is active`);
 
       // Valider client

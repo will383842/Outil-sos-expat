@@ -34,7 +34,7 @@ import {
 import type { PaymentRequest } from "@stripe/stripe-js";
 import { functions, functionsPayment, db } from "../config/firebase";
 import { httpsCallable, HttpsCallable } from "firebase/functions";
-import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc, onSnapshot } from "firebase/firestore";
 import { Provider, normalizeProvider } from "../types/provider";
 import Layout from "../components/layout/Layout";
 import {
@@ -1660,6 +1660,7 @@ interface PaymentFormProps {
   isProcessing: boolean;
   setIsProcessing: (processing: boolean) => void;
   isMobile: boolean;
+  providerOffline?: boolean;
   activePromo?: {
     code: string;
     discountType: "percentage" | "fixed";
@@ -1721,6 +1722,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     isProcessing,
     setIsProcessing,
     isMobile,
+    providerOffline,
     activePromo,
   }) => {
     const stripe = useStripe();
@@ -3385,9 +3387,21 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             </div>
           </div>
 
+          {/* m2 AUDIT FIX: Show warning when provider went offline during checkout */}
+          {providerOffline && (
+            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>
+                {language === "fr"
+                  ? "Ce prestataire n'est plus disponible actuellement. Veuillez réessayer plus tard."
+                  : "This provider is currently unavailable. Please try again later."}
+              </span>
+            </div>
+          )}
+
           <button
             type="button"
-            disabled={!stripe || !elements || isProcessing}
+            disabled={!stripe || !elements || isProcessing || providerOffline}
             onClick={(e) => {
               // VERSION 7 - Alerte à CHAQUE clic
               console.log("[DEBUG] " + "🟡 BOUTON CLIQUÉ!\n\nStripe: " + (stripe ? "✅" : "❌") + "\nElements: " + (elements ? "✅" : "❌") + "\nisProcessing: " + isProcessing);
@@ -3412,7 +3426,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               "w-full py-4 rounded-2xl font-bold text-lg text-white transition-all " +
               "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 " +
               "active:scale-[0.98] touch-manipulation relative overflow-hidden min-h-[60px] " +
-              (!stripe || !elements || isProcessing
+              (!stripe || !elements || isProcessing || providerOffline
                 ? "bg-gray-400 cursor-not-allowed opacity-60"
                 : "bg-gradient-to-r from-red-500 to-orange-500 shadow-lg shadow-red-500/30")
             }
@@ -3550,18 +3564,44 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     affiliateCode: string;
   } | null>(null);
 
-  // Load promo code from sessionStorage
+  // m4 FIX: Load promo code from sessionStorage and revalidate server-side
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem("activePromoCode");
-      if (saved) {
+    const revalidatePromo = async () => {
+      try {
+        const saved = sessionStorage.getItem("activePromoCode");
+        if (!saved) return;
+
         const promoData = JSON.parse(saved);
+        if (!promoData?.code) return;
+
+        // Show optimistically while revalidating
         setActivePromo(promoData);
+
+        // Revalidate via Cloud Function callable
+        const svcType = serviceData?.serviceType || "expat_call";
+        const validateCoupon = httpsCallable<
+          { code: string; serviceType: string; totalAmount: number },
+          { isValid: boolean; discountType: string; discountValue: number }
+        >(functions, "validateCouponCallable");
+
+        const result = await validateCoupon({
+          code: promoData.code,
+          serviceType: svcType,
+          totalAmount: 0, // totalAmount not needed for validity check
+        });
+
+        if (!result.data.isValid) {
+          console.warn("[CallCheckout] Promo revalidation failed, clearing:", promoData.code);
+          setActivePromo(null);
+          sessionStorage.removeItem("activePromoCode");
+        }
+      } catch (error) {
+        console.error("Error revalidating promo:", error);
+        // On error, keep the promo — backend will revalidate in createPaymentIntent
       }
-    } catch (error) {
-      console.error("Error loading active promo:", error);
-    }
-  }, []);
+    };
+    revalidatePromo();
+  }, [serviceData?.serviceType]);
 
   // Charger le discount affilié depuis le profil Firestore du client
   useEffect(() => {
@@ -3661,6 +3701,23 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     // Priorité à 'type' (champ canonique) sur 'role' (alias optionnel)
     return (provider.type || provider.role || "expat") as ServiceKind;
   }, [provider]);
+
+  // m2 AUDIT FIX: Real-time provider online status listener
+  const [providerOffline, setProviderOffline] = useState(false);
+  useEffect(() => {
+    if (!provider?.id) return;
+    const unsub = onSnapshot(
+      doc(db, "sos_profiles", provider.id),
+      (snap) => {
+        const d = snap.data();
+        if (!d) return;
+        const isOff = d.isOnline === false || d.availability === "offline" || d.availability === "busy";
+        setProviderOffline(isOff);
+      },
+      (err) => console.warn("[CallCheckout] Provider status listener error:", err)
+    );
+    return unsub;
+  }, [provider?.id]);
 
   // Déterminer le gateway de paiement (Stripe ou PayPal) selon le pays du provider
   const providerCountryCode = useMemo(() => {
@@ -4589,6 +4646,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                       setIsProcessing(p);
                     }}
                     isMobile={isMobile}
+                    providerOffline={providerOffline}
                     activePromo={activePromo}
                   />
                 </Elements>

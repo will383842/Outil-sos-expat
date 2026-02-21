@@ -1768,6 +1768,13 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // ================= COUPON FAILED ATTEMPTS =================
+    // m3 FIX: Tracking des tentatives de codes promo échouées (détection abus)
+    // Écriture/Lecture: Cloud Functions uniquement via Admin SDK
+    match /coupon_failed_attempts/{attemptId} {
+      allow read, write: if false;
+    }
+
     // ================= SCHEDULED REPORTS =================
     // Rapports planifiés pour Meta Analytics
     match /scheduled_reports/{reportId} {

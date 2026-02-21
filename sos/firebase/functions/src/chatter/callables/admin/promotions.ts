@@ -6,12 +6,11 @@
  * - Stats and analytics
  */
 
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { chatterAdminConfig as adminConfig } from "../../../lib/functionConfigs";
-
 import {
   ChatterPromotion,
   ChatterCommissionType,
@@ -32,6 +31,33 @@ function ensureInitialized() {
   if (!getApps().length) {
     initializeApp();
   }
+}
+
+/**
+ * Assert that the request is from an admin.
+ * Checks custom claims first (fast), falls back to Firestore user doc.
+ */
+async function assertAdmin(request: CallableRequest): Promise<string> {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required");
+  }
+
+  const uid = request.auth.uid;
+
+  // Check custom claims first (faster)
+  const role = request.auth.token?.role as string | undefined;
+  if (role === "admin" || role === "dev") {
+    return uid;
+  }
+
+  // Fall back to Firestore check
+  const db = getFirestore();
+  const userDoc = await db.collection("users").doc(uid).get();
+  if (!userDoc.exists || !["admin", "dev"].includes(userDoc.data()?.role)) {
+    throw new HttpsError("permission-denied", "Admin access required");
+  }
+
+  return uid;
 }
 
 // ============================================================================
@@ -58,10 +84,7 @@ export const adminGetPromotions = onCall(
   { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<GetPromotionsResponse> => {
     ensureInitialized();
-
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    await assertAdmin(request);
 
     const input = request.data as GetPromotionsInput;
 
@@ -112,10 +135,7 @@ export const adminCreatePromotion = onCall(
   { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; promotionId?: string; error?: string }> => {
     ensureInitialized();
-
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    const adminUid = await assertAdmin(request);
 
     const input = request.data as CreatePromotionApiInput;
 
@@ -137,7 +157,7 @@ export const adminCreatePromotion = onCall(
         startDate: new Date(input.startDate),
         endDate: new Date(input.endDate),
         maxBudget: input.maxBudget,
-        createdBy: request.auth.uid,
+        createdBy: adminUid,
       });
 
       return result;
@@ -171,10 +191,7 @@ export const adminUpdatePromotion = onCall(
   { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; error?: string }> => {
     ensureInitialized();
-
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    await assertAdmin(request);
 
     const input = request.data as UpdatePromotionApiInput;
 
@@ -222,10 +239,7 @@ export const adminDeletePromotion = onCall(
   { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; error?: string }> => {
     ensureInitialized();
-
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    await assertAdmin(request);
 
     const input = request.data as DeletePromotionInput;
 
@@ -272,10 +286,7 @@ export const adminGetPromotionStats = onCall(
   { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<GetPromotionStatsResponse> => {
     ensureInitialized();
-
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    await assertAdmin(request);
 
     const input = request.data as GetPromotionStatsInput;
     const db = getFirestore();
@@ -365,10 +376,7 @@ export const adminDuplicatePromotion = onCall(
     request
   ): Promise<{ success: boolean; promotionId?: string; error?: string }> => {
     ensureInitialized();
-
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
+    const adminUid = await assertAdmin(request);
 
     const input = request.data as DuplicatePromotionInput;
 
@@ -390,7 +398,7 @@ export const adminDuplicatePromotion = onCall(
         startDate: new Date(input.startDate),
         endDate: new Date(input.endDate),
         maxBudget: originalPromo.maxBudget,
-        createdBy: request.auth.uid,
+        createdBy: adminUid,
       });
 
       return result;

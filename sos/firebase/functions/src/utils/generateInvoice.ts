@@ -44,6 +44,15 @@ const generateInvoiceHTML = (invoice: ExtendedInvoiceData): string => {
     locale
   );
 
+  // m1 FIX: Discount info for invoice compliance
+  const hasDiscount = typeof invoice.discountAmount === 'number' && invoice.discountAmount > 0;
+  const formattedOriginalAmount = hasDiscount
+    ? formatInvoiceCurrency(invoice.originalAmount || invoice.amount || 0, invoice.currency || 'EUR', locale)
+    : '';
+  const formattedDiscount = hasDiscount
+    ? formatInvoiceCurrency(invoice.discountAmount!, invoice.currency || 'EUR', locale)
+    : '';
+
   // RTL support for Arabic
   const isRTL = locale.startsWith('ar');
   const direction = isRTL ? 'rtl' : 'ltr';
@@ -113,8 +122,12 @@ const generateInvoiceHTML = (invoice: ExtendedInvoiceData): string => {
       <tbody>
         <tr>
           <td>${invoice.description || (isPlatform ? t.platformFeeDescription : t.consultationDescription)}</td>
-          <td class="amount">${formattedAmount}</td>
-        </tr>
+          <td class="amount">${hasDiscount ? formattedOriginalAmount : formattedAmount}</td>
+        </tr>${hasDiscount ? `
+        <tr>
+          <td style="color:#16a34a">${t.discountLabel}${invoice.promoCode ? ` (${t.promoCodeLabel}: ${invoice.promoCode})` : ''}</td>
+          <td class="amount" style="color:#16a34a">-${formattedDiscount}</td>
+        </tr>` : ''}
         <tr class="total-row">
           <td>${t.total}</td>
           <td class="amount">${formattedAmount}</td>

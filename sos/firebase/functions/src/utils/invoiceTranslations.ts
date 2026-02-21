@@ -47,6 +47,12 @@ export interface InvoiceTranslations {
   emailBody: string;
   emailCallToAction: string;
 
+  // m1 FIX: Discount/promo translations for invoices
+  discountLabel: string;          // "Remise" / "Discount"
+  promoCodeLabel: string;         // "Code promo" / "Promo code"
+  originalPriceLabel: string;     // "Prix original" / "Original price"
+  subtotalBeforeDiscount: string; // "Sous-total avant remise"
+
   // M1 AUDIT FIX: Credit note (facture d'avoir) translations
   creditNoteTitle: string;
   creditNoteNumber: string;
@@ -83,6 +89,10 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Votre facture SOS Expat',
     emailBody: 'Bonjour,<br><br>Veuillez trouver ci-joint votre facture pour votre consultation avec SOS Expat.<br><br>Cordialement,<br>L\'équipe SOS Expat',
     emailCallToAction: 'Télécharger la facture',
+    discountLabel: 'Remise',
+    promoCodeLabel: 'Code promo',
+    originalPriceLabel: 'Prix original',
+    subtotalBeforeDiscount: 'Sous-total avant remise',
     creditNoteTitle: 'Avoir',
     creditNoteNumber: 'Avoir N°',
     creditNoteDescription: 'Annulation de frais de mise en relation',
@@ -117,6 +127,10 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Your SOS Expat Invoice',
     emailBody: 'Hello,<br><br>Please find attached your invoice for your consultation with SOS Expat.<br><br>Best regards,<br>The SOS Expat team',
     emailCallToAction: 'Download invoice',
+    discountLabel: 'Discount',
+    promoCodeLabel: 'Promo code',
+    originalPriceLabel: 'Original price',
+    subtotalBeforeDiscount: 'Subtotal before discount',
     creditNoteTitle: 'Credit Note',
     creditNoteNumber: 'Credit Note No.',
     creditNoteDescription: 'Cancellation of connection service fee',
@@ -151,6 +165,10 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Su factura de SOS Expat',
     emailBody: 'Hola,<br><br>Adjunto encontrará su factura para su consulta con SOS Expat.<br><br>Atentamente,<br>El equipo SOS Expat',
     emailCallToAction: 'Descargar factura',
+    discountLabel: 'Descuento',
+    promoCodeLabel: 'Código promo',
+    originalPriceLabel: 'Precio original',
+    subtotalBeforeDiscount: 'Subtotal antes del descuento',
     creditNoteTitle: 'Nota de credito',
     creditNoteNumber: 'Nota de credito N°',
     creditNoteDescription: 'Anulacion de tarifa de servicio de conexion',
@@ -185,6 +203,10 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Ihre SOS Expat Rechnung',
     emailBody: 'Hallo,<br><br>Im Anhang finden Sie Ihre Rechnung für Ihre Beratung mit SOS Expat.<br><br>Mit freundlichen Grüßen,<br>Das SOS Expat Team',
     emailCallToAction: 'Rechnung herunterladen',
+    discountLabel: 'Rabatt',
+    promoCodeLabel: 'Promo-Code',
+    originalPriceLabel: 'Originalpreis',
+    subtotalBeforeDiscount: 'Zwischensumme vor Rabatt',
     creditNoteTitle: 'Gutschrift',
     creditNoteNumber: 'Gutschrift Nr.',
     creditNoteDescription: 'Stornierung der Vermittlungsgebuhr',
@@ -219,6 +241,10 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Sua fatura SOS Expat',
     emailBody: 'Olá,<br><br>Segue em anexo sua fatura para sua consulta com SOS Expat.<br><br>Atenciosamente,<br>A equipe SOS Expat',
     emailCallToAction: 'Baixar fatura',
+    discountLabel: 'Desconto',
+    promoCodeLabel: 'Código promo',
+    originalPriceLabel: 'Preço original',
+    subtotalBeforeDiscount: 'Subtotal antes do desconto',
     creditNoteTitle: 'Nota de credito',
     creditNoteNumber: 'Nota de credito N°',
     creditNoteDescription: 'Cancelamento da taxa de servico de conexao',
@@ -253,6 +279,10 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'Ваш счет SOS Expat',
     emailBody: 'Здравствуйте,<br><br>Пожалуйста, найдите в приложении ваш счет за консультацию с SOS Expat.<br><br>С уважением,<br>Команда SOS Expat',
     emailCallToAction: 'Скачать счет',
+    discountLabel: 'Скидка',
+    promoCodeLabel: 'Промокод',
+    originalPriceLabel: 'Начальная цена',
+    subtotalBeforeDiscount: 'Итого до скидки',
     creditNoteTitle: 'Кредитная нота',
     creditNoteNumber: 'Кредитная нота №',
     creditNoteDescription: 'Отмена платы за услуги подключения',
@@ -287,6 +317,10 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: '您的 SOS Expat 发票',
     emailBody: '您好，<br><br>请查收附件中您与 SOS Expat 咨询的发票。<br><br>此致敬礼，<br>SOS Expat 团队',
     emailCallToAction: '下载发票',
+    discountLabel: '折扣',
+    promoCodeLabel: '促销代码',
+    originalPriceLabel: '原价',
+    subtotalBeforeDiscount: '折扣前小计',
     creditNoteTitle: '贷项通知单',
     creditNoteNumber: '贷项通知单号',
     creditNoteDescription: '取消连接服务费',
@@ -321,6 +355,10 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'आपका SOS Expat चालान',
     emailBody: 'नमस्ते,<br><br>कृपया SOS Expat के साथ आपके परामर्श के लिए संलग्न चालान देखें।<br><br>सादर,<br>SOS Expat टीम',
     emailCallToAction: 'चालान डाउनलोड करें',
+    discountLabel: 'छूट',
+    promoCodeLabel: 'प्रोमो कोड',
+    originalPriceLabel: 'मूल कीमत',
+    subtotalBeforeDiscount: 'छूट से पहले उपकुल',
     creditNoteTitle: 'क्रेडिट नोट',
     creditNoteNumber: 'क्रेडिट नोट नंबर',
     creditNoteDescription: 'कनेक्शन सेवा शुल्क रद्द',
@@ -355,6 +393,10 @@ export const INVOICE_TRANSLATIONS: Record<SupportedLocale, InvoiceTranslations> 
     emailSubject: 'فاتورتك من SOS Expat',
     emailBody: 'مرحباً،<br><br>يرجى العثور على فاتورتك المرفقة لاستشارتك مع SOS Expat.<br><br>مع أطيب التحيات،<br>فريق SOS Expat',
     emailCallToAction: 'تحميل الفاتورة',
+    discountLabel: 'خصم',
+    promoCodeLabel: 'رمز ترويجي',
+    originalPriceLabel: 'السعر الأصلي',
+    subtotalBeforeDiscount: 'المجموع الفرعي قبل الخصم',
     creditNoteTitle: 'إشعار دائن',
     creditNoteNumber: 'رقم إشعار الدائن',
     creditNoteDescription: 'إلغاء رسوم خدمة الاتصال',

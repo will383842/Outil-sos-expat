@@ -48,6 +48,7 @@ import MobileSideDrawer from "../components/dashboard/MobileSideDrawer";
 import KYCBannerCompact from "../components/dashboard/KYCBannerCompact";
 import DashboardAffiliateCard from "../components/dashboard/DashboardAffiliateCard";
 import QuickActions from "../components/dashboard/QuickActions";
+import ActivePromoBanner from "../components/dashboard/ActivePromoBanner";
 // RecentActivity removed - was causing layout issues
 
 import { useAuth } from "../contexts/AuthContext";
@@ -2318,6 +2319,11 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
             <div id="dashboard-content" className="lg:col-span-3 space-y-6 lg:space-y-8 dashboard-content-wrapper">
               {/* AFFILIATE LINK - Always visible */}
               <DashboardAffiliateCard />
+
+              {/* m5 FIX: Promo price banner for providers */}
+              {activeTab === "profile" && (user.role === "lawyer" || user.role === "expat") && (
+                <ActivePromoBanner providerRole={user.role as "lawyer" | "expat"} />
+              )}
 
               {/* QUICK ACTIONS - Visible on profile tab */}
               {activeTab === "profile" && (

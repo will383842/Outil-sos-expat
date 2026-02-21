@@ -1590,6 +1590,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           const loginRedirect = sessionStorage.getItem('loginRedirect');
           if (loginRedirect) {
             redirectTarget = loginRedirect;
+            sessionStorage.removeItem('loginRedirect'); // m1 FIX: clean after transfer
           }
         } catch {}
         safeStorage.setItem('googleAuthRedirect', redirectTarget);
@@ -1739,6 +1740,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             const loginRedirect = sessionStorage.getItem('loginRedirect');
             if (loginRedirect) {
               redirectTarget = loginRedirect;
+              sessionStorage.removeItem('loginRedirect'); // m1 FIX: clean after transfer
             }
           } catch {}
           safeStorage.setItem('googleAuthRedirect', redirectTarget);
@@ -1754,6 +1756,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           const loginRedirect = sessionStorage.getItem('loginRedirect');
           if (loginRedirect) {
             redirectTarget = loginRedirect;
+            sessionStorage.removeItem('loginRedirect'); // m1 FIX: clean after transfer
           }
         } catch {}
         safeStorage.setItem('googleAuthRedirect', redirectTarget);
@@ -1983,6 +1986,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         const savedRedirect = safeStorage.getItem('googleAuthRedirect');
         if (savedRedirect) {
           safeStorage.removeItem('googleAuthRedirect');
+          // m1 AUDIT FIX: Clean up loginRedirect to prevent stale redirects on next booking
+          try { sessionStorage.removeItem('loginRedirect'); } catch {}
           if (isAllowedRedirect(savedRedirect)) {
             console.log('[Auth] Google redirect: navigating to validated URL:', savedRedirect);
             // Use window.location for navigation to ensure full page reload with auth state

@@ -53,6 +53,14 @@ export interface InvoiceRecord extends BaseLogEntry {
   clientEmail?: string;
   providerName?: string;  // Format: "Prénom L." (première lettre du nom)
   providerEmail?: string;
+  // m1 FIX: Champs remise pour conformité (facture doit mentionner la remise appliquée)
+  originalAmount?: number;           // Prix avant remise
+  discountAmount?: number;           // Montant de la remise
+  discountType?: 'fixed' | 'percentage';
+  discountValue?: number;            // Valeur brute (ex: 20 pour 20% ou 5 pour 5€)
+  promoCode?: string;                // Code promo appliqué
+  affiliateDiscountType?: string;    // 'groupAdmin' | 'influencer' si applicable
+  affiliateDiscountAmount?: number;  // Montant remise affilié
 }
 
 /**

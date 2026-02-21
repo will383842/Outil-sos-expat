@@ -1,3 +1,6 @@
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../config/firebase";
+
 // Types for coupon validation
 interface CouponValidationParams {
   readonly code: string;
@@ -13,28 +16,44 @@ interface CouponValidationResult {
   readonly discountType: 'fixed' | 'percentage';
   readonly discountValue: number;
   readonly couponId?: string;
+  readonly maxDiscount?: number;
 }
 
 /**
- * Validates a coupon code.
- *
- * TODO: Replace with a Firebase callable function.
- * The previous implementation tried to read Firestore directly from the
- * frontend, which is blocked by security rules and always failed.
+ * Validates a coupon code via Cloud Function callable.
+ * The server validates: code exists, active, dates, service, usage limits.
  */
 export const validateCoupon = async (
-  _params: CouponValidationParams
+  params: CouponValidationParams
 ): Promise<CouponValidationResult> => {
-  console.warn(
-    'validateCoupon: coupon validation is not yet implemented via callable. ' +
-    'The previous direct-Firestore approach was blocked by security rules.'
-  );
+  try {
+    const callable = httpsCallable<
+      { code: string; serviceType: string; totalAmount: number },
+      CouponValidationResult
+    >(functions, "validateCouponCallable");
 
-  return {
-    isValid: false,
-    message: 'La validation des codes promo est temporairement indisponible',
-    discountAmount: 0,
-    discountType: 'fixed',
-    discountValue: 0,
-  };
+    const result = await callable({
+      code: params.code,
+      serviceType: params.serviceType,
+      totalAmount: params.totalAmount,
+    });
+
+    return result.data;
+  } catch (error: unknown) {
+    console.error("[validateCoupon] Callable failed:", error);
+
+    // Return a user-friendly error instead of throwing
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "Erreur lors de la validation du code promo";
+
+    return {
+      isValid: false,
+      message,
+      discountAmount: 0,
+      discountType: "fixed",
+      discountValue: 0,
+    };
+  }
 };
