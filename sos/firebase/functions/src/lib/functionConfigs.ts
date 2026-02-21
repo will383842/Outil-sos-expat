@@ -105,7 +105,7 @@ export const affiliateAdminConfig = {
 export const userConfig = {
   region: "europe-west1" as const,
   memory: "512MiB" as const,
-  cpu: 0.5,
+  cpu: 1,  // FIX: concurrency > 1 requires cpu >= 1
   maxInstances: 20,
   minInstances: 0,
   concurrency: 10,
