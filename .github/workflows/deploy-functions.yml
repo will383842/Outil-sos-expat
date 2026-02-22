@@ -70,6 +70,10 @@ jobs:
           MAILWIZZ_API_URL=https://mail.sos-expat.com/api/index.php
           MAILWIZZ_LIST_UID=yl089ehqpgb96
           MAILWIZZ_CUSTOMER_ID=2
+          OUTIL_INGEST_ENDPOINT=https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking
+          EXECUTE_PAYOUT_RETRY_TASK_URL=
+          EXECUTE_STRIPE_TRANSFER_RETRY_URL=
+          SLACK_SECURITY_WEBHOOK_URL=
           EOF
 
       - name: Deploy to Firebase
