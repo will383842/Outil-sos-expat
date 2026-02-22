@@ -192,6 +192,9 @@ export {
 // P2-1/3/13 FIX: Payment data cleanup (locks, expired orders, archiving)
 export { paymentDataCleanup } from "./scheduled/paymentDataCleanup";
 
+// Cloud Run Revisions Cleanup — chaque dimanche 3h, garde les 3 dernières révisions/service
+export { cleanupCloudRunRevisions } from "./scheduled/cleanupCloudRunRevisions";
+
 // P0-2 FIX: Stuck payments recovery (requires_capture > 10min)
 export {
   stuckPaymentsRecovery,
@@ -1109,6 +1112,7 @@ export const setProviderAvailableTask = onRequest(
     region: CALL_FUNCTIONS_REGION,
     timeoutSeconds: 30,
     memory: "256MiB" as const,
+    cpu: 0.25,
     maxInstances: 10,
     minInstances: 0,
     concurrency: 1,
@@ -1126,6 +1130,7 @@ export const busySafetyTimeoutTask = onRequest(
     region: CALL_FUNCTIONS_REGION,
     timeoutSeconds: 30,
     memory: "256MiB" as const,
+    cpu: 0.25,
     maxInstances: 10,
     minInstances: 0,
     concurrency: 1,
@@ -1956,6 +1961,7 @@ export const stripeWebhook = onRequest(
     // P0 CRITICAL FIX: Allow unauthenticated access for Stripe webhooks (Cloud Run requires explicit public access)
     invoker: "public",
     memory: "512MiB",
+    cpu: 0.5,
     // P0 FIX: Add Stripe API secrets + webhook secrets + ENCRYPTION_KEY + OUTIL_SYNC_API_KEY
     secrets: [
       STRIPE_SECRET_KEY_TEST,

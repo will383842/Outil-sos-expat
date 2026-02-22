@@ -51,6 +51,7 @@ export const adminGetRestoreConfirmationCode = onCall(
     region: "europe-west1",
     timeoutSeconds: 30,
     memory: "256MiB",
+    cpu: 1,
     minInstances: 0,
     maxInstances: 10,
     concurrency: 80,
