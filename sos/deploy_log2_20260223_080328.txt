@@ -1,0 +1,70 @@
+[08:03:28] ==========================================
+[08:03:29] DÉPLOIEMENT - LOTS DE 2 - Mon, Feb 23, 2026  8:03:29 AM
+[08:03:29] Total fonctions: 702
+[08:03:29] ==========================================
+[08:03:29] Lot 1/352 | acknowledgeAlert + acknowledgeServiceBalanceAlert
+[08:06:44] ✅ OK: acknowledgeAlert + acknowledgeServiceBalanceAlert
+[08:07:14] Lot 2/352 | acknowledgeThresholdAlert + acquireInvoiceLock
+[08:09:19] ❌ ÉCHEC: acknowledgeThresholdAlert + acquireInvoiceLock
+  >> Functions deploy had errors with the following functions:
+[1m[31mError:[39m[22m [4mThere was an error deploying functions[24m:
+[08:09:49] Lot 3/352 | addManualDomainAuthority + admin_forfeited_funds_list
+[08:12:17] ✅ OK: addManualDomainAuthority + admin_forfeited_funds_list
+[08:12:47] Lot 4/352 | admin_process_exceptional_claim + admin_routing_get
+[08:15:34] ⚠️  Quota — pause 3 min
+[08:21:23] ❌ ÉCHEC: admin_process_exceptional_claim + admin_routing_get
+[08:21:53] Lot 5/352 | admin_routing_upsert + admin_templates_get
+[08:24:36] ⚠️  Quota — pause 3 min
+[08:29:43] ✅ OK (retry): admin_routing_upsert + admin_templates_get
+[08:30:13] Lot 6/352 | admin_templates_list + admin_templates_seed
+[08:32:51] ✅ OK: admin_templates_list + admin_templates_seed
+[08:33:21] Lot 7/352 | admin_templates_upsert + admin_testSend
+[08:35:50] ✅ OK: admin_templates_upsert + admin_testSend
+[08:36:21] Lot 8/352 | admin_trigger_unclaimed_funds_processing + admin_unclaimed_funds_list
+[08:38:47] ✅ OK: admin_trigger_unclaimed_funds_processing + admin_unclaimed_funds_list
+[08:39:18] Lot 9/352 | admin_unclaimed_funds_stats + adminAcknowledgeDispute
+[08:42:13] ✅ OK: admin_unclaimed_funds_stats + adminAcknowledgeDispute
+[08:42:43] Lot 10/352 | adminAddDisputeNote + adminAdvanceCycle
+[09:43:21] ⚠️  Quota — pause 3 min
+[10:46:11] ❌ ÉCHEC: adminAddDisputeNote + adminAdvanceCycle
+[10:46:41] Lot 11/352 | adminAlertsDigestDaily + adminApprovePayout
+[12:07:27] ⚠️  Quota — pause 3 min
+[13:30:55] ❌ ÉCHEC: adminAlertsDigestDaily + adminApprovePayout
+[13:31:25] Lot 12/352 | adminAssignDispute + adminBulkBloggerAction
+[13:35:12] ❌ ÉCHEC: adminAssignDispute + adminBulkBloggerAction
+  >> [33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/adminBulkBloggerAction?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 409, unable to queue the operation
+[13:35:43] Lot 13/352 | adminBulkChatterAction + adminBulkGroupAdminAction
+[13:49:56] ❌ ÉCHEC: adminBulkChatterAction + adminBulkGroupAdminAction
+  >> 
+[13:50:27] Lot 14/352 | adminBulkRefund + adminBulkUpdateStatus
+[13:52:32] ✅ OK: adminBulkRefund + adminBulkUpdateStatus
+[13:53:02] Lot 15/352 | adminCancelSubscription + adminChangePlan
+[13:55:32] ✅ OK: adminCancelSubscription + adminChangePlan
+[13:56:02] Lot 16/352 | adminCheckRestoreStatus + adminCleanupOrphanedProviders
+[13:58:53] ✅ OK: adminCheckRestoreStatus + adminCleanupOrphanedProviders
+[13:59:23] Lot 17/352 | adminCleanupOrphanedSessions + adminCreateBackup
+[14:00:15] ❌ ÉCHEC: adminCleanupOrphanedSessions + adminCreateBackup
+  >> [1m[31mError:[39m[22m No function matches the filter: default:adminCreateBackup
+[14:00:45] Lot 18/352 | adminCreateBloggerArticle + adminCreateBloggerGuideBestPractice
+[15:20:23] ⚠️  Quota — pause 3 min
+[16:20:25] ❌ ÉCHEC: adminCreateBloggerArticle + adminCreateBloggerGuideBestPractice
+[16:20:55] Lot 19/352 | adminCreateBloggerGuideCopyText + adminCreateBloggerGuideTemplate
+[17:14:13] ⚠️  Quota — pause 3 min
+[17:27:50] ❌ ÉCHEC: adminCreateBloggerGuideCopyText + adminCreateBloggerGuideTemplate
+[17:28:20] Lot 20/352 | adminCreateBloggerResource + adminCreateBloggerResourceText
+[17:31:33] ❌ ÉCHEC: adminCreateBloggerResource + adminCreateBloggerResourceText
+  >> [33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/adminCreateBloggerResourceText?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 409, unable to queue the operation
+[33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/adminCreateBloggerResource?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 409, unable to queue the operation
+[17:32:03] Lot 21/352 | adminCreateChatterTrainingModule + adminCreateGroupAdminPost
+[17:33:31] ✅ OK: adminCreateChatterTrainingModule + adminCreateGroupAdminPost
+[17:34:01] Lot 22/352 | adminCreateGroupAdminPromotion + adminCreateGroupAdminResource
+[17:35:29] ✅ OK: adminCreateGroupAdminPromotion + adminCreateGroupAdminResource
+[17:35:59] Lot 23/352 | adminCreateInfluencerPromotion + adminCreateInfluencerResource
+[17:46:35] ❌ ÉCHEC: adminCreateInfluencerPromotion + adminCreateInfluencerResource
+  >> [33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/adminCreateInfluencerPromotion?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 409, unable to queue the operation
+[33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/adminCreateInfluencerPromotion?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 409, unable to queue the operation
+[17:47:05] Lot 24/352 | adminCreateInfluencerResourceText + adminCreateInfluencerTrainingModule
+[18:09:05] ❌ ÉCHEC: adminCreateInfluencerResourceText + adminCreateInfluencerTrainingModule
+  >> [33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/adminCreateInfluencerTrainingModule?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 409, unable to queue the operation
+[33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/adminCreateInfluencerTrainingModule?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 409, unable to queue the operation
+[18:09:36] Lot 25/352 | adminCreateManualBackup + adminCreatePromotion

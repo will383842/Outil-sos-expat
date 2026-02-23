@@ -40,6 +40,8 @@ import Layout from "../components/layout/Layout";
 import {
   detectUserCurrency,
   usePricingConfig,
+  getEffectivePrice,
+  type PricingConfig,
 } from "../services/pricingService";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useForm } from "react-hook-form";
@@ -3540,10 +3542,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     error: pricingError,
     loading: pricingLoading,
   } = usePricingConfig() as {
-    pricing?: {
-      lawyer: Record<Currency, PricingEntryTrace>;
-      expat: Record<Currency, PricingEntryTrace>;
-    };
+    pricing?: PricingConfig;
     error?: string | Error | null;
     loading: boolean;
   };
@@ -3766,22 +3765,37 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
   const adminPricing: PricingEntryTrace | null = useMemo(() => {
     if (!pricing || !providerRole) return null;
 
-    const basePricing = pricing[providerRole]?.[selectedCurrency];
-    if (!basePricing) return null;
+    // Utilise getEffectivePrice pour prendre en compte les overrides promo
+    const { price: effectivePricing, override: activeOverride } = getEffectivePrice(
+      pricing,
+      providerRole as 'lawyer' | 'expat',
+      selectedCurrency
+    );
+    if (!effectivePricing) return null;
 
     const serviceKey = providerRole === "lawyer" ? "lawyer_call" : "expat_call";
     const promoApplies = activePromo && activePromo.services.includes(serviceKey);
 
-    let currentTotal = basePricing.totalAmount;
+    // Vérifier si le coupon est cumulable avec l'override actif
+    const stackableDefault = pricing.overrides?.settings?.stackableDefault;
+    const couponStackable = activeOverride
+      ? (typeof activeOverride.stackableWithCoupons === 'boolean'
+          ? activeOverride.stackableWithCoupons
+          : (stackableDefault ?? false))
+      : true;
+
+    const couponApplies = promoApplies && couponStackable;
+
+    let currentTotal = effectivePricing.totalAmount;
     let totalDiscountApplied = 0;
 
-    // 1. Appliquer le coupon promo (existant)
-    if (promoApplies) {
+    // 1. Appliquer le coupon promo (seulement si pas d'override actif OU stackable)
+    if (couponApplies) {
       let promoDiscount = 0;
       if (activePromo.discountType === "percentage") {
-        promoDiscount = basePricing.totalAmount * (activePromo.discountValue / 100);
+        promoDiscount = effectivePricing.totalAmount * (activePromo.discountValue / 100);
       } else {
-        promoDiscount = Math.min(activePromo.discountValue, basePricing.totalAmount);
+        promoDiscount = Math.min(activePromo.discountValue, effectivePricing.totalAmount);
       }
       promoDiscount = Math.max(0, promoDiscount);
       currentTotal = Math.max(0, Math.round((currentTotal - promoDiscount) * 100) / 100);
@@ -3805,20 +3819,20 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       totalDiscountApplied += afDiscount;
     }
 
-    if (totalDiscountApplied === 0) return basePricing;
+    if (totalDiscountApplied === 0) return effectivePricing;
 
     console.log("🎉 [Pricing] Discounts applied:", {
       activePromo: activePromo?.code,
       affiliateDiscount: affiliateDiscount?.type,
-      baseAmount: basePricing.totalAmount,
+      baseAmount: effectivePricing.totalAmount,
       totalDiscountApplied,
       finalTotal: currentTotal,
     });
 
     return {
-      ...basePricing,
+      ...effectivePricing,
       totalAmount: currentTotal,
-      providerAmount: Math.max(0, basePricing.providerAmount - totalDiscountApplied),
+      providerAmount: Math.max(0, effectivePricing.providerAmount - totalDiscountApplied),
     };
   }, [pricing, providerRole, selectedCurrency, activePromo, affiliateDiscount]);
 

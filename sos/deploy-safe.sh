@@ -322,8 +322,11 @@ main() {
       # deploy_codebase "affiliate"
       # En attendant, deployer par nom de fonction:
       info "Deploiement des fonctions affiliate par batches..."
-      # La liste complete est generee dynamiquement
-      firebase deploy --only functions --force --project "$PROJECT_ID" 2>&1 | tee -a "$LOG_FILE"
+      if $DRY_RUN; then
+        warn "[DRY-RUN] firebase deploy --only functions --force --project $PROJECT_ID"
+      else
+        firebase deploy --only functions --force --project "$PROJECT_ID" 2>&1 | tee -a "$LOG_FILE"
+      fi
       ;;
 
     core)
@@ -335,18 +338,25 @@ main() {
 
       # Phase 1: Non-critique (affiliate, notifications, scheduled)
       info "Phase 1/3: Deploiement non-critique..."
-      firebase deploy --only functions --force --project "$PROJECT_ID" 2>&1 | tee -a "$LOG_FILE" || {
-        error "Phase 1 echouee"
-        exit 1
-      }
+      if $DRY_RUN; then
+        warn "[DRY-RUN] firebase deploy --only functions --force --project $PROJECT_ID"
+      else
+        firebase deploy --only functions --force --project "$PROJECT_ID" 2>&1 | tee -a "$LOG_FILE" || {
+          error "Phase 1 echouee"
+          exit 1
+        }
+      fi
 
       success "Phase 1 terminee"
-      info "Pause ${PAUSE_BETWEEN_CODEBASES}s (refroidissement quotas)..."
-      sleep $PAUSE_BETWEEN_CODEBASES
+
+      if ! $DRY_RUN; then
+        info "Pause ${PAUSE_BETWEEN_CODEBASES}s (refroidissement quotas)..."
+        sleep $PAUSE_BETWEEN_CODEBASES
+      fi
 
       # Phase 2: Health check intermediaire
       info "Phase 2/3: Verification intermediaire..."
-      if ! run_health_checks; then
+      if ! $DRY_RUN && ! run_health_checks; then
         error "Health check intermediaire echoue !"
         error "Le deploiement a potentiellement casse des services."
         error "Verifiez les logs: $LOG_FILE"
@@ -356,11 +366,13 @@ main() {
 
       # Phase 3: Verification finale
       info "Phase 3/3: Verification finale..."
-      sleep 30
-      if ! run_health_checks; then
-        error "HEALTH CHECK FINAL ECHOUE !"
-        error "Executez ./rollback.sh pour restaurer"
-        exit 1
+      if ! $DRY_RUN; then
+        sleep 30
+        if ! run_health_checks; then
+          error "HEALTH CHECK FINAL ECHOUE !"
+          error "Executez ./rollback.sh pour restaurer"
+          exit 1
+        fi
       fi
 
       success "======== DEPLOIEMENT COMPLET REUSSI ========"

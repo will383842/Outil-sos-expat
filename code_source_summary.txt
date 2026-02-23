@@ -1,0 +1,276 @@
+============================================================================
+FIREBASE CLOUD FUNCTIONS - SUMMARY REPORT
+Source: sos/firebase/functions/src/index.ts (and all referenced modules)
+Generated: 2026-02-22
+============================================================================
+
+============================================================================
+1. TOTAL COUNT
+============================================================================
+
+Total exported Cloud Functions: 702
+
+(This count includes all unique exported Cloud Function names. Aliases that
+export the same underlying function under a different name are counted once
+under each exported name, as Firebase deploys each export as a separate
+Cloud Run service.)
+
+============================================================================
+2. BREAKDOWN BY REGION
+============================================================================
+
+europe-west1 (Belgium - Core business & public APIs):     280 functions
+europe-west2 (London - Affiliate/Marketing):              209 functions
+europe-west3 (Belgium - Payments + Twilio + Triggers):    213 functions
+                                                          ---
+TOTAL:                                                    702 functions
+
+Distribution:
+  europe-west1: 39.9% (admin, auth, SEO, monitoring, subscriptions, tax)
+  europe-west2: 29.8% (chatter, influencer, blogger, groupAdmin)
+  europe-west3: 30.3% (payments, triggers, scheduled, Twilio, Stripe)
+
+============================================================================
+3. BREAKDOWN BY TYPE
+============================================================================
+
+onCall (v2):                    450 functions  (64.1%)
+onSchedule:                      82 functions  (11.7%)
+onCall (v1):                     44 functions   (6.3%)
+onDocumentCreated:               44 functions   (6.3%)
+onRequest:                       43 functions   (6.1%)
+onDocumentUpdated:               33 functions   (4.7%)
+onTaskDispatched:                 2 functions   (0.3%)
+onDocumentWritten:                1 function    (0.1%)
+onDocumentDeleted:                1 function    (0.1%)
+beforeUserSignedIn (v1):          1 function    (0.1%)
+onAuth.user().onDelete (v1):      1 function    (0.1%)
+                                ---
+TOTAL:                          702 functions
+
+Grouped by category:
+  Callable functions (onCall v1+v2):     494  (70.4%)
+  Scheduled functions (onSchedule):       82  (11.7%)
+  Firestore triggers (onDocument*):       79  (11.2%)
+  HTTP endpoints (onRequest):             43   (6.1%)
+  Cloud Tasks handlers (onTaskDispatched): 2   (0.3%)
+  Auth triggers (beforeUserSignedIn, onDelete): 2  (0.3%)
+
+============================================================================
+4. BREAKDOWN BY MODULE / FEATURE AREA
+============================================================================
+
+Admin (callables, providerActions, backups, restore):    ~60 functions
+Chatter program:                                         ~55 functions
+GroupAdmin program:                                      ~45 functions
+Influencer program:                                      ~45 functions
+Blogger program:                                         ~40 functions
+Telegram notifications:                                  ~30 functions
+Monitoring (critical, payment, functional, service):     ~30 functions
+Payment system (centralized, Wise, Flutterwave):         ~25 functions
+Subscription system:                                     ~25 functions
+Security alerts:                                         ~10 functions
+Email marketing:                                         ~20 functions
+Accounting engine:                                        ~6 functions
+Tax engine (VAT/GST):                                     ~8 functions
+Analytics:                                                ~4 functions
+Tax filings:                                              ~9 functions
+SEO (sitemaps, indexing, OG images):                     ~15 functions
+Twilio call system:                                       ~8 functions
+PayPal:                                                   ~8 functions
+Stripe:                                                   ~8 functions
+Backup & DR:                                             ~20 functions
+GDPR compliance:                                          ~7 functions
+Thresholds:                                               ~7 functions
+Feedback:                                                 ~5 functions
+Other (contact, auth, SSO, misc):                        ~20 functions
+
+============================================================================
+5. ALIASES (Same function exported under multiple names)
+============================================================================
+
+30 alias exports are included in the total count. Each alias deploys as
+its own Cloud Run service with its own name but calls the same handler.
+
+Key aliases:
+  - createAndScheduleCall = createAndScheduleCallHTTPS
+  - generateProviderFeed = providerCatalogFeed
+  - subscriptionCreate/Update/Cancel/etc. = original subscription functions
+  - adminCreateManualBackup = adminCreateBackup
+  - resetMonthlyQuotas = resetBillingCycleQuotas
+  - paymentCancelWithdrawal = cancelWithdrawal
+  - paymentDeleteMethod = deletePaymentMethod
+  - Many groupAdmin admin functions aliased from shorter names
+    (e.g., adminProcessGroupAdminWithdrawal = adminProcessWithdrawal)
+
+============================================================================
+6. COMMENTED-OUT / DISABLED EXPORTS
+============================================================================
+
+The following Cloud Functions are defined in source files but NOT exported
+from index.ts (commented out or removed). They are NOT deployed.
+
+--- DISABLED: One-time seed/migration functions (removed to free Cloud Run quota) ---
+  initKYCReminderTemplates              (from seeds/kycReminderTemplates)
+  initUnclaimedFundsTemplates           (from seeds/unclaimedFundsTemplates)
+  initPayPalWelcomeTemplates            (from seeds/paypalWelcomeTemplates)
+  initCountryConfigs                    (from seeds/initCountryConfigs)
+  seedCountryConfigsHttp                (from seeds/initCountryConfigs)
+  initializeMessageTemplates            (from initializeMessageTemplates)
+  initializeAffiliateConfig             (from affiliate)
+  initializeChatterConfig               (from chatter)
+  initializeChatterSystem               (from chatter)
+  initializeThresholdTracking           (from thresholds)
+  markCountryAsRegistered               (from thresholds)
+  migrateProvidersToUid                 (from migrations/migrateProvidersToUid)
+  migrateProviderSlugs                  (from migrations/migrateProviderSlugs)
+  adminSeedChatterTrainingModules       (from chatter)
+  adminSeedInfluencerTrainingModules    (from influencer)
+  initializeSubscriptionPlans           (from subscription)
+  createAnnualStripePrices              (from subscription)
+  createMonthlyStripePrices             (from subscription)
+  migrateSubscriptionPlansTo9Languages  (from subscription)
+
+--- DISABLED: Dev/test functions (not needed in production) ---
+  testCAPIConnection                    (from monitoring/testCAPIConnection)
+  generateSystemDebugReport             (from index.ts, line 4251)
+  getSystemHealthStatus                 (from index.ts, line 4370)
+  getUltraDebugLogs                     (from index.ts, line 4505)
+  testCloudTasksConnection              (from index.ts, line 4565)
+  getCloudTasksQueueStats               (from index.ts, line 4622)
+  manuallyTriggerCallExecution          (from index.ts, line 4676)
+  testWebhook                           (from index.ts, line 4769)
+
+--- DISABLED: Replaced by consolidated triggers (saves Cloud Run services) ---
+  affiliateOnCallCompleted              (-> consolidatedOnCallCompleted)
+  affiliateOnUserCreated                (-> consolidatedOnUserCreated)
+  chatterOnCallCompleted                (-> consolidatedOnCallCompleted)
+  chatterOnProviderRegistered           (-> consolidatedOnUserCreated)
+  chatterOnClientRegistered             (-> consolidatedOnUserCreated)
+  influencerOnCallCompleted             (-> consolidatedOnCallCompleted)
+  influencerOnProviderRegistered        (-> consolidatedOnUserCreated)
+  onCallCompletedGroupAdmin             (-> consolidatedOnCallCompleted)
+  chatterValidatePendingCommissions     (-> consolidatedValidateCommissions)
+  chatterReleaseValidatedCommissions    (-> consolidatedReleaseCommissions)
+  influencerValidatePendingCommissions  (-> consolidatedValidateCommissions)
+  influencerReleaseValidatedCommissions (-> consolidatedReleaseCommissions)
+  bloggerValidatePendingCommissions     (-> consolidatedValidateCommissions)
+  bloggerReleaseValidatedCommissions    (-> consolidatedReleaseCommissions)
+  validatePendingGroupAdminCommissions  (-> consolidatedValidateCommissions)
+  releaseValidatedGroupAdminCommissions (-> consolidatedReleaseCommissions)
+  handleUserRegistration                (-> consolidatedOnUserCreated)
+  onUserCreatedSyncClaims               (-> consolidatedOnUserCreated)
+  onUserUpdatedSyncClaims               (-> consolidatedOnUserUpdated)
+  onUserEmailUpdated                    (-> consolidatedOnUserUpdated)
+  onUserAccessUpdated                   (-> consolidatedOnUserUpdated)
+  onUserCreatedTrackRegistration        (-> consolidatedOnUserCreated)
+  onUserCreatedTrackGoogleAdsSignUp     (-> consolidatedOnUserCreated)
+  telegramOnUserRegistration            (-> consolidatedOnUserCreated)
+
+--- DISABLED: Audit 2026-02-20 (never called externally / security risk) ---
+  detectBruteForce                      (from securityAlerts/detectors)
+  detectUnusualLocation                 (from securityAlerts/detectors)
+  detectPaymentFraud                    (from securityAlerts/detectors)
+  detectCardTesting                     (from securityAlerts/detectors)
+  detectMassAccountCreation             (from securityAlerts/detectors)
+  detectApiAbuse                        (from securityAlerts/detectors)
+  detectInjectionAttempt                (from securityAlerts/detectors)
+  detectMultipleSessions                (from securityAlerts/detectors)
+  threatScoreService                    (from securityAlerts/ThreatScoreService)
+  enableStorageVersioning               (from admin/enableStorageVersioning)
+  configureStorageLifecycle             (from admin/enableStorageVersioning)
+  getStorageConfig                      (from admin/enableStorageVersioning)
+  migratePhoneEncryption                (from scheduled/migrateEncryption)
+  getEncryptionStatus                   (from scheduled/migrateEncryption)
+  generateEncryptionKey                 (from scheduled/migrateEncryption)
+  initSingleHelpArticle                 (from helpCenter/initHelpArticles)
+  initHelpArticlesBatch                 (from helpCenter/initHelpArticles)
+  checkHelpCategories                   (from helpCenter/initHelpArticles)
+  clearHelpArticles                     (from helpCenter/initHelpArticles)
+
+--- DISABLED: Translation system temporarily disabled ---
+  translateProvider                     (from translation/translateProvider)
+  initializeProviderTranslation         (from translation/initializeProviderTranslation)
+  updateProviderTranslation             (from translation/updateProviderTranslation)
+
+--- DISABLED: Zoom integration removed ---
+  getZoomMeetings                       (from chatter)
+  recordZoomAttendance                  (from chatter)
+  getMyZoomAttendances                  (from chatter)
+  adminCreateZoomMeeting                (from chatter)
+  adminUpdateZoomMeeting                (from chatter)
+  adminGetZoomMeetings                  (from chatter)
+  adminGetMeetingAttendees              (from chatter)
+
+--- DISABLED: Quiz feature removed from chatter flow ---
+  chatterOnQuizPassed                   (from chatter)
+  submitQuiz                            (from chatter)
+  getQuizQuestions                       (from chatter)
+
+--- REMOVED: Security risks / dead code ---
+  testTwilioCall                        (unauthenticated Twilio cost endpoint)
+  unifiedWebhook                        (no signature validation, dead code)
+  aiChatForProvider                     (DEPRECATED: moved to Outil-sos-expat)
+  getAiSuggestions                      (DEPRECATED: moved to Outil-sos-expat)
+  createPayPalOnboardingLink            (dead Partner Referrals code)
+  checkPayPalMerchantStatus             (dead Partner Referrals code)
+  createPayPalOrder                     (onCall version, replaced by HTTP)
+  capturePayPalOrder                    (onCall version, replaced by HTTP)
+  createCustomAccount                   (deprecated legacy Stripe Custom Account)
+  submitKycData                         (deprecated legacy Stripe Custom Account)
+  addBankAccount                        (deprecated legacy Stripe Custom Account)
+  subscriptionStripeWebhook             (REMOVED: conflict with main stripeWebhook)
+  resetMonthlyAiQuotas                  (REMOVED: duplicate of resetMonthlyQuotas)
+
+--- REMOVED: File deleted ---
+  createManualBackup                    (manualBackup.ts deleted)
+  scheduledBackup                       (replaced by morningBackup)
+  rgpdRecordingCleanup                  (recording disabled for GDPR)
+  triggerRgpdCleanup                    (recording disabled for GDPR)
+
+Total disabled/commented-out functions: ~95
+
+============================================================================
+7. CONFIGURATION
+============================================================================
+
+Global default region: europe-west1 (set via setGlobalOptions)
+Call functions region: europe-west3 (CALL_FUNCTIONS_REGION from configs/callRegion.ts)
+Payment functions region: europe-west3 (PAYMENT_FUNCTIONS_REGION from configs/callRegion.ts)
+
+Firebase Functions API versions:
+  - v2 (firebase-functions/v2): Majority of functions (onCall, onRequest, onSchedule, onDocument*)
+  - v1 (firebase-functions): 44 functions (GDPR audit, subscription, monitoring, connection logs)
+
+Runtime: Node.js (TypeScript compiled)
+Build flag: --skipLibCheck (to avoid node_modules type errors)
+
+============================================================================
+8. NOTES
+============================================================================
+
+- The following exports from index.ts are NOT Cloud Functions and are excluded
+  from the count: secrets (EMAIL_USER, EMAIL_PASS, etc.), constants (REFUND_CONFIG,
+  UNCLAIMED_FUNDS_CONFIG, etc.), types (TaxCalculationInput, SubscriptionStatus, etc.),
+  classes (RefundManager, PayPalReminderManager), utility functions
+  (calculateTaxForTransaction, processPendingTransfersForProvider,
+  getPendingTransfersStats, sendPaymentNotifications, etc.), and helper
+  functions (getStripeConnectWebhookSecret, validateVatNumber, etc.).
+
+- The `export * from "./admin/providerActions"` (line 1007) exports ALL
+  functions including bulkUnhideProviders, bulkUnblockProviders, and
+  bulkUnsuspendProviders, even though they are listed as "DISABLED" in a
+  separate named export block (line 5513-5532). Since `export *` takes
+  precedence, these 3 functions ARE deployed.
+
+- Two separate functions share similar names:
+  validateVAT (from calculateTax.ts, europe-west1) - validates via custom logic
+  validateVat (from vatCallables.ts, europe-west3) - validates via VIES/HMRC APIs
+
+- onHelpArticleCreated and onHelpArticleUpdated are exported TWICE:
+  once from seo/ (auto-indexing) and once from helpCenter/ (FAQ generation).
+  Firebase treats these as the same function name, so only the LAST export wins.
+
+============================================================================
+END OF SUMMARY
+============================================================================

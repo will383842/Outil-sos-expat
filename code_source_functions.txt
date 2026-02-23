@@ -1,0 +1,847 @@
+============================================================================
+COMPLETE LIST OF EXPORTED FIREBASE CLOUD FUNCTIONS
+Source: sos/firebase/functions/src/index.ts (and all referenced modules)
+Generated: 2026-02-22
+============================================================================
+
+Format: FUNCTION_NAME | TYPE | REGION
+(Sorted alphabetically by function name)
+
+--- NOTE: Only actual Cloud Functions are listed (onCall, onRequest, onSchedule,
+--- onDocumentCreated, onDocumentUpdated, onDocumentWritten, onDocumentDeleted,
+--- onTaskDispatched, beforeUserSignedIn, v1 functions.https.onCall, etc.)
+--- Utility functions, types, constants, and classes are excluded.
+--- Re-exports of secrets/constants are excluded.
+--- Aliased exports are listed under their EXPORTED name (the Firebase function name).
+
+============================================================================
+A
+============================================================================
+acquireInvoiceLock | onCall | europe-west3
+acknowledgeAlert | onCall (v1) | europe-west3
+acknowledgeServiceBalanceAlert | onCall | europe-west3
+acknowledgeThresholdAlert | onCall | europe-west1 (global default)
+addManualDomainAuthority | onCall | europe-west1
+admin_forfeited_funds_list | onCall | europe-west1
+admin_process_exceptional_claim | onCall | europe-west1
+admin_routing_get | onCall | europe-west1
+admin_routing_upsert | onCall | europe-west1
+admin_templates_get | onCall | europe-west1
+admin_templates_list | onCall | europe-west1
+admin_templates_seed | onCall | europe-west1
+admin_templates_upsert | onCall | europe-west1
+admin_testSend | onCall | europe-west1
+admin_trigger_unclaimed_funds_processing | onCall | europe-west1
+admin_unclaimed_funds_list | onCall | europe-west1
+admin_unclaimed_funds_stats | onCall | europe-west1
+adminAddDisputeNote | onCall | europe-west1
+adminAcknowledgeDispute | onCall | europe-west1
+adminAlertsDigestDaily | onSchedule | europe-west3
+adminAdvanceCycle | onCall | europe-west2
+adminAssignDispute | onCall | europe-west1
+adminBulkBloggerAction | onCall | europe-west2
+adminBulkChatterAction | onCall | europe-west2
+adminBulkGroupAdminAction | onCall | europe-west2
+adminBulkRefund | onCall | europe-west1
+adminBulkUpdateStatus | onCall | europe-west1
+adminCancelSubscription (subscription/adminFunctions) | onCall (v1) | europe-west1
+adminChangePlan | onCall (v1) | europe-west1
+adminCheckRestoreStatus | onCall | europe-west1
+adminCleanupOrphanedProviders | onCall | europe-west1
+adminCleanupOrphanedSessions | onCall | europe-west1
+adminCreateBackup | onCall | europe-west1
+adminCreateBloggerArticle | onCall | europe-west2
+adminCreateBloggerGuideBestPractice | onCall | europe-west2
+adminCreateBloggerGuideCopyText | onCall | europe-west2
+adminCreateBloggerGuideTemplate | onCall | europe-west2
+adminCreateBloggerResource | onCall | europe-west2
+adminCreateBloggerResourceText | onCall | europe-west2
+adminCreateChatterTrainingModule | onCall | europe-west2
+adminCreateGroupAdminPost | onCall | europe-west2
+adminCreateGroupAdminResource | onCall | europe-west2
+adminCreateGroupAdminPromotion | onCall | europe-west2
+adminCreateInfluencerPromotion | onCall | europe-west2
+adminCreateInfluencerResource | onCall | europe-west2
+adminCreateInfluencerResourceText | onCall | europe-west2
+adminCreateInfluencerTrainingModule | onCall | europe-west2
+adminCreateManualBackup | onCall | europe-west1
+adminCreatePromotion | onCall | europe-west2
+adminDeleteBackup | onCall | europe-west1
+adminDeleteBloggerArticle | onCall | europe-west2
+adminDeleteBloggerResource | onCall | europe-west2
+adminDeleteChatterTrainingModule | onCall | europe-west2
+adminDeleteGroupAdminPost | onCall | europe-west2
+adminDeleteGroupAdminPromotion | onCall | europe-west2
+adminDeleteGroupAdminResource | onCall | europe-west2
+adminDeleteInfluencerPromotion | onCall | europe-west2
+adminDeleteInfluencerResource | onCall | europe-west2
+adminDeleteInfluencerResourceText | onCall | europe-west2
+adminDeleteInfluencerTrainingModule | onCall | europe-west2
+adminDeletePromotion | onCall | europe-west2
+adminDuplicateGroupAdminPromotion | onCall | europe-west2
+adminDuplicateInfluencerPromotion | onCall | europe-west2
+adminDuplicatePromotion | onCall | europe-west2
+adminExportBloggers | onCall | europe-west2
+adminExportChatters | onCall | europe-west2
+adminExportGroupAdmins | onCall | europe-west2
+adminForceAiAccess | onCall (v1) | europe-west1
+adminForceRetryDLQEvent | onCall | europe-west3
+adminGetBloggerConfig | onCall | europe-west2
+adminGetBloggerConfigHistory | onCall | europe-west2
+adminGetBloggerDetail | onCall | europe-west2
+adminGetBloggerLeaderboard | onCall | europe-west2
+adminGetBloggersList | onCall | europe-west2
+adminGetChatterConfig | onCall | europe-west2
+adminGetChatterConfigHistory | onCall | europe-west2
+adminGetChatterDetail | onCall | europe-west2
+adminGetChatterLeaderboard | onCall | europe-west2
+adminGetChattersList | onCall | europe-west2
+adminGetChatterTrainingModules | onCall | europe-west2
+adminGetCommissionsDetailed | onCall | europe-west2
+adminGetCommissionStats | onCall | europe-west2
+adminGetDLQStats | onCall | europe-west3
+adminGetDisputeDetails | onCall | europe-west1
+adminGetGroupAdminConfig | onCall | europe-west2
+adminGetGroupAdminConfigHistory | onCall | europe-west2
+adminGetGroupAdminDetail | onCall | europe-west2
+adminGetGroupAdminPromotionStats | onCall | europe-west2
+adminGetGroupAdminPromotions | onCall | europe-west2
+adminGetGroupAdminRecruits | onCall | europe-west2
+adminGetGroupAdminResourcesList | onCall | europe-west2
+adminGetGroupAdminWithdrawalsList | onCall | europe-west2
+adminGetGroupAdminPostsList | onCall | europe-west2
+adminGetGroupAdminsList | onCall | europe-west2
+adminGetInfluencerConfig | onCall | europe-west2
+adminGetInfluencerDetail | onCall | europe-west2
+adminGetInfluencerLeaderboard | onCall | europe-west2
+adminGetInfluencerPromotionStats | onCall | europe-west2
+adminGetInfluencerPromotions | onCall | europe-west2
+adminGetInfluencerResources | onCall | europe-west2
+adminGetInfluencerTrainingModules | onCall | europe-west2
+adminGetInfluencersList | onCall | europe-west2
+adminGetOrphanedProvidersStats | onCall | europe-west1
+adminGetOrphanedSessionsStats | onCall | europe-west1
+adminGetPendingChatterWithdrawals | onCall | europe-west2
+adminGetPendingInfluencerWithdrawals | onCall | europe-west2
+adminGetPendingPosts | onCall | europe-west2
+adminGetBloggerArticles | onCall | europe-west2
+adminGetPromotionStats | onCall | europe-west2
+adminGetPromotions | onCall | europe-west2
+adminGetProviderEarnings | onCall | europe-west1
+adminGetProviderSubscriptionHistory | onCall (v1) | europe-west1
+adminGetReferralCommissions | onCall | europe-west2
+adminGetReferralFraudAlerts | onCall | europe-west2
+adminGetReferralStats | onCall | europe-west2
+adminGetReferralTree | onCall | europe-west2
+adminGetRecruitmentsList | onCall | europe-west2
+adminGetRestoreConfirmationCode | onCall | europe-west1
+adminGetSubscriptionStats | onCall (v1) | europe-west1
+adminGetGroups | onCall | europe-west2
+adminListBackups | onCall | europe-west1
+adminListGcpBackups | onCall | europe-west1
+adminModeratePost | onCall | europe-west2
+adminPreviewRestore | onCall | europe-west1
+adminProcessBloggerWithdrawal | onCall | europe-west2
+adminProcessChatterWithdrawal | onCall | europe-west2
+adminProcessGroupAdminWithdrawal | onCall | europe-west2
+adminProcessInfluencerWithdrawal | onCall | europe-west2
+adminProcessPayoutManual | onCall | europe-west1
+adminProcessPayoutWise | onCall | europe-west1
+adminRefundPayment | onCall | europe-west1
+adminRejectPayout | onCall | europe-west1
+adminApprovePayout | onCall | europe-west1
+adminGetPendingPayouts | onCall | europe-west1
+adminReorderChatterTrainingModules | onCall | europe-west2
+adminResetFAQs | onCall | europe-west1
+adminResetQuota | onCall (v1) | europe-west1
+adminRestoreAuth | onCall | europe-west1
+adminRestoreFirestore | onCall | europe-west1
+adminReviewFraudAlert | onCall | europe-west2
+adminSoftDeleteUser | onCall | europe-west1
+adminSyncStripePrices | onCall (v1) | europe-west1
+adminToggleBloggerVisibility | onCall | europe-west2
+adminToggleChatterVisibility | onCall | europe-west2
+adminToggleGroupAdminVisibility | onCall | europe-west2
+adminToggleInfluencerVisibility | onCall | europe-west2
+adminUpdateBloggerConfig | onCall | europe-west2
+adminUpdateBloggerGuideBestPractice | onCall | europe-west2
+adminUpdateBloggerGuideCopyText | onCall | europe-west2
+adminUpdateBloggerGuideTemplate | onCall | europe-west2
+adminUpdateBloggerResource | onCall | europe-west2
+adminUpdateBloggerArticle | onCall | europe-west2
+adminUpdateBloggerStatus | onCall | europe-west2
+adminUpdateChatterConfig | onCall | europe-west2
+adminUpdateChatterStatus | onCall | europe-west2
+adminUpdateChatterTrainingModule | onCall | europe-west2
+adminUpdateGroupAdminConfig | onCall | europe-west2
+adminUpdateGroupAdminPost | onCall | europe-west2
+adminUpdateGroupAdminPromotion | onCall | europe-west2
+adminUpdateGroupAdminResource | onCall | europe-west2
+adminUpdateGroupAdminStatus | onCall | europe-west2
+adminUpdateGroupStatus | onCall | europe-west2
+adminUpdateInfluencerConfig | onCall | europe-west2
+adminUpdateInfluencerPromotion | onCall | europe-west2
+adminUpdateInfluencerResource | onCall | europe-west2
+adminUpdateInfluencerResourceText | onCall | europe-west2
+adminUpdateInfluencerStatus | onCall | europe-west2
+adminUpdateInfluencerTrainingModule | onCall | europe-west2
+adminUpdateMeetingStatus | onCall | europe-west2
+adminUpdatePromotion | onCall | europe-west2
+adminUpdateStatus | onCall | europe-west1
+adminUpdateAffiliateConfig | onCall | europe-west1
+adminUpdateCycleThreshold | onCall | europe-west2
+adminUpdateGroupAdminVisibility | onCall | europe-west2
+adminVerifyGroup | onCall | europe-west2
+adminExportCommissionsCSV | onCall | europe-west2
+affiliateOnSubscriptionCreated | onDocumentCreated | europe-west3
+affiliateOnSubscriptionRenewed | onDocumentUpdated | europe-west3
+affiliateReleaseHeldCommissions | onSchedule | europe-west3
+aggregateDailyAnalytics | onSchedule | europe-west1
+aggregateProviderStats | onSchedule | europe-west3
+api | onRequest | europe-west1
+approveProfile | onCall | europe-west1
+assignValidation | onCall | europe-west1
+auditProfileSlugs | onRequest | europe-west1
+authorizePayPalOrderHttp | onRequest | europe-west3
+awardBloggerRecruitmentCommission | onCall | europe-west2
+
+============================================================================
+B
+============================================================================
+backfillProviderStats | onCall | europe-west1
+backupFirebaseAuth | onSchedule | europe-west3
+backupStorageToDR | onSchedule | europe-west3
+bloggerDeactivateExpiredRecruitments | onSchedule | europe-west2
+bloggerFinalizeMonthlyRankings | onSchedule | europe-west2
+bloggerRequestWithdrawal | onCall | europe-west2
+bloggerUpdateMonthlyRankings | onSchedule | europe-west2
+blockProvider | onCall | europe-west1
+bootstrapFirstAdmin | onCall | europe-west1
+bulkBlockProviders | onCall | europe-west1
+bulkDeleteProviders | onCall | europe-west1
+bulkHideProviders | onCall | europe-west1
+bulkSuspendProviders | onCall | europe-west1
+bulkUnblockProviders | onCall | europe-west1
+bulkUnhideProviders | onCall | europe-west1
+bulkUnsuspendProviders | onCall | europe-west1
+busySafetyTimeoutTask | onRequest | europe-west3
+
+============================================================================
+C
+============================================================================
+calculateTax | onCall | europe-west1
+calculateTaxCallable | onCall | europe-west1
+cancelSubscription (subscription/cancelSubscription) | onCall (v1) | europe-west1
+capturePayPalOrderHttp | onRequest | europe-west3
+capturePayPalPaymentManually | onCall | europe-west1
+checkAiAccess | onCall (v1) | europe-west1
+checkAndIncrementAiUsage | onCall (v1) | europe-west1
+checkBlockedEntity | onCall | europe-west3
+checkBloggerClientReferral | onCall | europe-west2
+checkBloggerProviderRecruitment | onCall | europe-west2
+checkBudgetAlertsScheduled | onSchedule | europe-west3
+checkInvoicesExist | onCall | europe-west3
+checkKycStatus | onCall | europe-west1
+checkLowProviderAvailability | onSchedule | europe-west3
+checkPayPalPayoutStatus | onCall | europe-west3
+checkPastDueSubscriptions | onSchedule | europe-west3
+checkProviderInactivity | onSchedule | europe-west3
+checkReverseCharge | onCall | europe-west3
+checkServiceBalances | onSchedule | europe-west3
+checkSingleServiceBudget | onCall | europe-west3
+checkStripeAccountStatus | onCall | europe-west1
+checkTelegramLinkStatus | onCall | europe-west2
+checkThresholdsDaily | onSchedule | europe-west1 (global default)
+checkUserRole | onCall | europe-west1
+chatter_getDripStats | onCall | europe-west2
+chatter_previewDripMessage | onCall | europe-west2
+chatter_sendDripMessage | onCall | europe-west2
+chatterMonthlyRecurringCommissions | onSchedule | europe-west2
+chatterOnChatterCreated | onDocumentCreated | europe-west2
+chatterOnChatterEarningsUpdated | onDocumentUpdated | europe-west2
+chatterOnCommissionCreated | onDocumentCreated | europe-west2
+chatterRequestWithdrawal | onCall | europe-west2
+chatterValidatePendingReferralCommissions | onSchedule | europe-west2
+cleanupCloudRunRevisions | onSchedule | europe-west3
+cleanupDRBackups | onSchedule | europe-west3
+cleanupExpiredTrials | onSchedule | europe-west3
+cleanupExpiredWithdrawalConfirmations | onSchedule | europe-west3
+cleanupFunctionalData | onSchedule | europe-west3
+cleanupOldAlerts | onSchedule | europe-west3
+cleanupOldAnalytics | onSchedule | europe-west1
+cleanupOldAuthBackups | onSchedule | europe-west3
+cleanupOldBackups | onSchedule | europe-west3
+cleanupOldPaymentAlerts | onSchedule | europe-west3
+cleanupOrphanedAgentTasks | onSchedule | europe-west3
+cleanupOrphanedProfiles | onSchedule | europe-west3
+cleanupOrphanedSessions | onSchedule | europe-west3
+cleanupTempStorageFiles | onSchedule | europe-west3
+cleanupUncapturedPayPalOrders | onSchedule | europe-west3
+cleanupVatCache | onSchedule | europe-west3
+cleanupWebhookDLQ | onSchedule | europe-west3
+collectDailyPaymentMetrics | onSchedule | europe-west3
+completeLawyerOnboarding | onCall | europe-west1
+consolidatedOnCallCompleted | onDocumentUpdated | europe-west3
+consolidatedOnUserCreated | onDocumentCreated | europe-west3
+consolidatedOnUserUpdated | onDocumentUpdated | europe-west3
+consolidatedReleaseCommissions | onSchedule | europe-west3
+consolidatedValidateCommissions | onSchedule | europe-west3
+copyBloggerArticle | onCall | europe-west2
+copyBloggerGuideText | onCall | europe-west2
+copyBloggerResourceText | onCall | europe-west2
+copyInfluencerResourceText | onCall | europe-west2
+createAndScheduleCall | onRequest | europe-west1
+createAndScheduleCallHTTPS | onRequest | europe-west1
+createContactMessage | onCall | europe-west1
+createExpressAccount | onCall | europe-west1
+createLawyerStripeAccount | onCall | europe-west1
+createPaymentIntent | onRequest | europe-west3
+createPayPalOrderHttp | onRequest | europe-west3
+createSecurityAlertHttp | onRequest | europe-west3
+createPayPalPayout | onCall | europe-west3
+createStripeAccount | onCall | europe-west1
+createSubscriptionCheckout | onCall | europe-west1
+createUserDocument | onCall | europe-west1
+
+============================================================================
+D
+============================================================================
+dailyCrossRegionBackup | onSchedule | europe-west3
+deactivateExpiredRecruitments | onSchedule | europe-west2
+deleteFilingDraft | onCall | europe-west1
+deleteFeedback | onCall | europe-west1
+deleteLocalBackupRecord | onCall | europe-west1
+detectInactiveUsers | onSchedule | europe-west3
+diagnoseProfiles | onRequest | europe-west1
+downloadBloggerResource | onCall | europe-west2
+downloadInfluencerResource | onCall | europe-west2
+
+============================================================================
+E
+============================================================================
+enqueueMessageEvent | onCall | europe-west1
+ensureUserDocument | onCall | europe-west1
+escrowMonitoringDaily | onSchedule | europe-west3
+executeCallTask | onRequest | europe-west3
+executePayoutRetryTask | onTaskDispatched | europe-west3
+executeStripeTransferRetry | onTaskDispatched | europe-west3
+exportCollectionToJson | onCall | europe-west1
+exportFilingAllFormats | onCall | europe-west1
+exportFilingToFormat | onCall | europe-west1
+exportProviderStatsCsv | onCall | europe-west1
+
+============================================================================
+F
+============================================================================
+forceEndCallTask | onRequest | europe-west3
+forceRetryPendingTransfer | onCall | europe-west1
+
+============================================================================
+G
+============================================================================
+generateAllTaxFilings | onCall | europe-west1
+generateInvoiceDownloadUrl | onCall | europe-west1
+generateOgImage | onRequest | europe-west1
+generateOutilToken | onCall | europe-west1
+generateOssVatDeclaration | onCall | europe-west3
+generateProviderFeed | onRequest | europe-west1
+generateSitemaps | onRequest | europe-west3
+generateTaxFiling | onCall | europe-west1
+generateTelegramLink | onCall | europe-west2
+getAccountBalances | onCall | europe-west3
+getAccountingStats | onCall | europe-west3
+getActiveAlerts | onCall (v1) | europe-west3
+getAdminAlertsDigestPreview | onCall | europe-west1
+getAgentMetrics | onCall | europe-west1
+getAffiliateGlobalStats | onCall | europe-west1
+getAnthropicUsage | onCall | europe-west1
+getAvailableGroups | onCall | europe-west2
+getBillingPortalUrl | onCall | europe-west1
+getBloggerArticles | onCall | europe-west2
+getBloggerDashboard | onCall | europe-west2
+getBloggerDirectory | onCall | europe-west2
+getBloggerGuide | onCall | europe-west2
+getBloggerLeaderboard | onCall | europe-west2
+getBloggerResources | onCall | europe-west2
+getChatterDashboard | onCall | europe-west2
+getChatterDirectory | onCall | europe-west2
+getChatterLeaderboard | onCall | europe-west2
+getChatterTrainingCertificate | onCall | europe-west2
+getChatterTrainingModuleContent | onCall | europe-west2
+getChatterTrainingModules | onCall | europe-west2
+getConnectionLogs | onCall | europe-west1
+getConnectionStats | onCall | europe-west1
+getCostMetrics | onCall (v1) | europe-west1
+getCountryThreshold | onCall | europe-west1 (global default)
+getDetailedPendingTransfersStats | onCall | europe-west1
+getDLQStats | onCall | europe-west1
+getDomainAuthority | onCall | europe-west1
+getFeedbackStats | onCall | europe-west1
+getFirebaseUsage | onCall | europe-west1
+getFunctionalAlerts | onCall (v1) | europe-west3
+getFunctionalHealthSummary | onCall (v1) | europe-west3
+getGcpBillingCosts | onCall | europe-west1
+getGroupAdminCommissions | onCall | europe-west2
+getGroupAdminDashboard | onCall | europe-west2
+getGroupAdminDirectory | onCall | europe-west2
+getGroupAdminLeaderboard | onCall | europe-west2
+getGroupAdminNotifications | onCall | europe-west2
+getGroupAdminPostContent | onCall | europe-west2
+getGroupAdminPosts | onCall | europe-west2
+getGroupAdminProcessedPost | onCall | europe-west2
+getGroupAdminProcessedResourceContent | onCall | europe-west2
+getGroupAdminRecruits | onCall | europe-west2
+getGroupAdminResourceContent | onCall | europe-west2
+getGroupAdminResources | onCall | europe-west2
+getHistoricalAnalytics | onCall | europe-west1
+getInfluencerDashboard | onCall | europe-west2
+getInfluencerDirectory | onCall | europe-west2
+getInfluencerLeaderboard | onCall | europe-west2
+getInfluencerResources | onCall | europe-west2
+getInfluencerTrainingCertificate | onCall | europe-west2
+getInfluencerTrainingModuleContent | onCall | europe-west2
+getInfluencerTrainingModules | onCall | europe-west2
+getKYCReminderStatus | onCall | europe-west1
+getMyAffiliateData | onCall | europe-west1
+getMyDataAccessHistory | onCall (v1) | europe-west1
+getMyGroups | onCall | europe-west2
+getMyPosts | onCall | europe-west2
+getOnboardingLink | onCall | europe-west1
+getOpenAIUsage | onCall | europe-west1
+getPaymentAlerts | onCall (v1) | europe-west3
+getPaymentMetrics | onCall (v1) | europe-west3
+getPayPalReminderStatus | onCall | europe-west1
+getPerplexityUsage | onCall | europe-west1
+getProviderAvailabilityStats | onCall | europe-west1
+getProviderDashboard | onCall | europe-west1
+getProviderEarningsSummary | onCall | europe-west1
+getProviderMonthlyStats | onCall | europe-west1
+getProviderPayoutHistory | onCall | europe-west1
+getProviderStats | onCall | europe-west1
+getProviderStatsSummary | onCall | europe-west1
+getProviderStatsMonths | onCall | europe-west1
+getProviderTransactions | onCall | europe-west1
+getRecommendedPaymentGateway | onCall | europe-west3
+getReferralDashboard | onCall | europe-west2
+getSecurityStats | onCall | europe-west3
+getSecretsRestoreGuide | onCall (v1) | europe-west1
+getServiceBalanceAlerts | onCall | europe-west3
+getServiceBalanceThresholds | onCall | europe-west3
+getStripeAccountSession | onCall | europe-west1
+getStripeBalance | onCall | europe-west1
+getSubscriptionDetails | onCall (v1) | europe-west1
+getSystemHealthSummary | onCall (v1) | europe-west3
+getTaxThresholdStatus | onCall | europe-west1
+getThresholdDashboard | onCall | europe-west1 (global default)
+getTwilioBalance | onCall | europe-west1
+getUnifiedAnalytics | onCall | europe-west1
+getUserAuditTrail | onCall (v1) | europe-west1
+getValidationHistory | onCall | europe-west1
+getValidationQueue | onCall | europe-west1
+getWithdrawalConfirmationStatus | onCall | europe-west3
+
+============================================================================
+H
+============================================================================
+handleBadgeUnlocked | onDocumentCreated | europe-west3
+handleCallCompleted | onDocumentUpdated | europe-west3
+handleCallMissed | onDocumentUpdated | europe-west3
+handleEarningCredited | onDocumentCreated | europe-west3
+handleEmailBounce | onRequest | europe-west1
+handleEmailClick | onRequest | europe-west1
+handleEmailComplaint | onRequest | europe-west1
+handleEmailOpen | onRequest | europe-west1
+handleFirstEarning | onDocumentCreated | europe-west3
+handleMilestoneReached | onDocumentUpdated | europe-west3
+handlePaymentFailed | onDocumentUpdated | europe-west3
+handlePaymentReceived | onDocumentCreated | europe-west3
+handlePayoutFailed | onDocumentUpdated | europe-west3
+handlePayoutRequested | onDocumentCreated | europe-west3
+handlePayoutSent | onDocumentUpdated | europe-west3
+handlePayoutThresholdReached | onDocumentUpdated | europe-west3
+handleReferralBonus | onDocumentCreated | europe-west3
+handleReviewSubmitted | onDocumentCreated | europe-west3
+handleUnsubscribe | onRequest | europe-west1
+hardDeleteProvider | onCall | europe-west1
+hideProvider | onCall | europe-west1
+
+============================================================================
+I
+============================================================================
+importCollectionFromBackup | onCall | europe-west1
+importCollectionFromJson | onCall | europe-west1
+incrementAiUsage | onCall (v1) | europe-west1
+influencerMonthlyTop3Rewards | onSchedule | europe-west2
+influencerOnInfluencerCreated | onDocumentCreated | europe-west2
+influencerOnProviderCallCompleted | onDocumentUpdated | europe-west2
+influencerRequestWithdrawal | onCall | europe-west2
+initializeAdminClaims | onCall | europe-west1
+initializeInfluencerConfig | onCall | europe-west2
+invalidateCacheEndpoint | onRequest | europe-west1
+
+============================================================================
+J
+============================================================================
+joinGroupAsChatter | onCall | europe-west2
+
+============================================================================
+K
+============================================================================
+
+============================================================================
+L
+============================================================================
+listAuthBackups | onCall | europe-west1
+listAvailableBackups | onCall | europe-west1
+listDRReports | onCall | europe-west1
+listGDPRRequests | onCall (v1) | europe-west1
+listLocalBackups | onCall | europe-west1
+listRestorableAuthBackups | onCall | europe-west1
+listRestoreTestReports | onCall | europe-west1
+listSecretsAudits | onCall | europe-west1
+logConnection | onCall | europe-west1
+logConnectionV1 | onCall (v1) | europe-west1
+
+============================================================================
+M
+============================================================================
+migrateProfileSlugs | onRequest | europe-west1
+monitorTelegramUsage | onSchedule | europe-west3
+monthlySecretsConfigBackup | onSchedule | europe-west3
+morningBackup | onSchedule | europe-west3
+
+============================================================================
+N
+============================================================================
+notifyAfterPayment | onCall | europe-west1
+notifyExpiringPromotions | onSchedule | europe-west3
+notificationRetry | onSchedule | europe-west3
+
+============================================================================
+O
+============================================================================
+onBloggerCreated | onDocumentCreated | europe-west2
+onBookingRequestCreated | onDocumentCreated | europe-west3
+onBookingRequestCreatedGenerateAi | onDocumentCreated | europe-west3
+onBookingRequestCreatedTrackGoogleAdsLead | onDocumentCreated | europe-west3
+onBookingRequestCreatedTrackLead | onDocumentCreated | europe-west3
+onBlogPostCreated | onDocumentCreated | europe-west3
+onBlogPostUpdated | onDocumentUpdated | europe-west3
+onCallSessionPaymentAuthorized | onDocumentUpdated | europe-west3
+onCallSessionPaymentAuthorizedTrackGoogleAdsCheckout | onDocumentUpdated | europe-west3
+onCallSessionPaymentCaptured | onDocumentUpdated | europe-west3
+onContactSubmittedTrackLead | onDocumentCreated | europe-west3
+onFaqCreated | onDocumentCreated | europe-west3
+onFaqUpdated | onDocumentUpdated | europe-west3
+onFeedbackCreated | onDocumentCreated | europe-west1
+onGroupAdminCreated | onDocumentCreated | europe-west2
+onHelpArticleCreated (seo) | onDocumentCreated | europe-west3
+onHelpArticleUpdated (seo) | onDocumentUpdated | europe-west3
+onHelpArticleCreated (helpCenter) | onDocumentCreated | europe-west3
+onHelpArticleUpdated (helpCenter) | onDocumentUpdated | europe-west3
+onInvoiceCreatedSendEmail | onDocumentCreated | europe-west3
+onInvoiceRecordCreated | onDocumentCreated | europe-west3
+onLandingPageCreated | onDocumentCreated | europe-west3
+onMessageEventCreate | onDocumentCreated | europe-west3
+onPaymentCompleted | onDocumentUpdated | europe-west3
+onPaymentRecordCreated | onDocumentCreated | europe-west3
+onPaymentRecordUpdated | onDocumentUpdated | europe-west3
+onProfileCreated (seo) | onDocumentCreated | europe-west3
+onProfileUpdated (seo) | onDocumentUpdated | europe-west3
+onProviderChange | onDocumentWritten | europe-west3
+onProviderCreated | onDocumentCreated | europe-west3
+onRefundCompleted | onDocumentUpdated | europe-west3
+onRefundCreated | onDocumentCreated | europe-west3
+onPayoutCompleted | onDocumentUpdated | europe-west3
+onSecurityAlertCreated | onDocumentCreated | europe-west3
+onSecurityAlertUpdated | onDocumentUpdated | europe-west3
+onSosProfileCreated | onDocumentCreated | europe-west3
+onSosProfileUpdated | onDocumentUpdated | europe-west3
+onSubscriptionPaymentReceived | onDocumentUpdated | europe-west3
+onSubscriptionPlanPricingUpdate | onDocumentUpdated (v1) | europe-west1
+onUserDeleted | onDocumentDeleted | europe-west3
+onUserDeletedConnectionLog | onAuth.user().onDelete (v1) | europe-west1
+onUserSignIn | beforeUserSignedIn (v1) | europe-west1
+onValidationCreated | onDocumentCreated | europe-west3
+onValidationDecision | onDocumentUpdated | europe-west3
+
+============================================================================
+P
+============================================================================
+paymentAdminApprove | onCall | europe-west3
+paymentAdminExport | onCall | europe-west3
+paymentAdminGetConfig | onCall | europe-west3
+paymentAdminGetLogActions | onCall | europe-west3
+paymentAdminGetLogs | onCall | europe-west3
+paymentAdminGetPending | onCall | europe-west3
+paymentAdminGetStats | onCall | europe-west3
+paymentAdminProcess | onCall | europe-west3
+paymentAdminReject | onCall | europe-west3
+paymentAdminUpdateConfig | onCall | europe-west3
+paymentCancelWithdrawal | onCall | europe-west3
+paymentDataCleanup | onSchedule | europe-west3
+paymentDeleteMethod | onCall | europe-west3
+paymentGetHistory | onCall | europe-west3
+paymentGetMethods | onCall | europe-west3
+paymentGetStatus | onCall | europe-west3
+paymentOnWithdrawalCreated | onDocumentCreated | europe-west3
+paymentOnWithdrawalStatusChanged | onDocumentUpdated | europe-west3
+paymentProcessAutomaticPayments | onSchedule | europe-west3
+paymentRequestWithdrawal | onCall | europe-west3
+paymentSaveMethod | onCall | europe-west3
+paymentSetDefault | onCall | europe-west3
+paymentWebhookFlutterwave | onRequest | europe-west3
+paymentWebhookWise | onRequest | europe-west3
+paypalWebhook | onRequest | europe-west3
+pendingTransfersMonitorScheduled | onSchedule | europe-west3
+postJournalEntry | onCall | europe-west3
+processGDPRRequest | onCall (v1) | europe-west1
+processEscalationHttp | onRequest | europe-west3
+processDunningQueue | onSchedule | europe-west3
+processScheduledTransfers | onSchedule | europe-west3
+processSecurityEscalations | onSchedule | europe-west3
+processTelegramCampaigns | onSchedule | europe-west1
+processTelegramQueue | onSchedule | europe-west3
+processWebhookDLQ | onSchedule | europe-west3
+providerCatalogFeed | onRequest | europe-west1
+providerNoAnswerTwiML | onRequest | europe-west3
+
+============================================================================
+Q
+============================================================================
+quarterlyRestoreTest | onSchedule | europe-west3
+
+============================================================================
+R
+============================================================================
+reactivateSubscription (subscription/cancelSubscription) | onCall (v1) | europe-west1
+recordAiCall (subscriptionRecordCall) | onCall (v1) | europe-west1
+regenerateJournalEntry | onCall | europe-west3
+registerBlogger | onCall | europe-west2
+registerChatter | onCall | europe-west2
+registerGroupAdmin | onCall | europe-west2
+registerInfluencer | onCall | europe-west2
+registerLocalBackup | onCall | europe-west1
+rejectProfile | onCall | europe-west1
+releaseInvoiceLock | onCall | europe-west3
+renderForBotsV2 | onRequest | europe-west1
+repairOrphanedUser | onCall | europe-west1
+requestAccountDeletion | onCall (v1) | europe-west1
+requestChanges | onCall | europe-west1
+requestDataExport | onCall (v1) | europe-west1
+requestGroupAdminWithdrawal | onCall | europe-west2
+requestWithdrawal (affiliate) | onCall | europe-west1
+resetAffiliateConfigToDefaults | onCall | europe-west1
+resetChatterConfigToDefaults | onCall | europe-west2
+resetMonthlyQuotas | onSchedule | europe-west3
+resolvePaymentAlert | onCall (v1) | europe-west3
+resolveFunctionalAlert | onCall (v1) | europe-west3
+resendPayPalVerificationCode | onCall | europe-west1
+restoreCollectionDocuments | onCall | europe-west1
+restoreFirebaseAuth | onCall | europe-west1
+restoreSingleUser | onCall | europe-west1
+restoreUserRoles | onCall | europe-west1
+resubmitForValidation | onCall | europe-west1
+retryFailedTransfersForProvider | onCall | europe-west1
+retrySpecificDelivery | onCall | europe-west1
+retryOutilSync | onCall | europe-west3
+retryFailedPayout | onCall | europe-west1
+reverseJournalEntry | onCall | europe-west3
+runDRTestManual | onCall | europe-west1
+runFunctionalHealthCheck | onSchedule | europe-west3
+runCriticalFunctionalCheck | onSchedule | europe-west3
+runMonthlyDRTest | onSchedule | europe-west3
+runPaymentHealthCheck | onSchedule | europe-west3
+runRestoreTestManual | onCall | europe-west1
+runSystemHealthCheck | onSchedule | europe-west3
+
+============================================================================
+S
+============================================================================
+saveAgentMetricsHistory | onSchedule | europe-west3
+scheduledCleanup | onSchedule | europe-west3
+scheduledKYCReminders | onSchedule | europe-west1
+scheduledPayPalReminders | onSchedule | europe-west1
+scheduledProcessUnclaimedFunds | onSchedule | europe-west3
+scheduledSitemapGeneration | onSchedule | europe-west3
+scheduledSitemapPing | onSchedule | europe-west3
+securityAlertAdminAction | onCall | europe-west3
+securityDailyCleanup | onSchedule | europe-west3
+securityDailyReport | onSchedule | europe-west3
+sendAnniversaryEmails | onSchedule | europe-west3
+sendChatterDripMessages | onSchedule | europe-west2
+sendContactReply | onCall | europe-west1
+sendCustomPasswordResetEmail | onCall | europe-west1
+sendFilingReminders | onSchedule | europe-west1
+sendMonthlyStats | onSchedule | europe-west3
+sendPayoutSuccessEmail | onDocumentUpdated | europe-west3
+sendPayPalVerificationCode | onCall | europe-west1
+sendQuotaAlerts | onSchedule | europe-west3
+sendWeeklyStats | onSchedule | europe-west3
+sendWeeklyThresholdReport | onSchedule | europe-west1 (global default)
+setAdminClaims | onCall | europe-west1
+setFreeAiAccess (subscriptionSetFreeAccess) | onCall (v1) | europe-west1
+setProviderAvailableTask | onRequest | europe-west3
+setProviderBadge | onCall | europe-west1
+setProviderOffline | onCall | europe-west1
+sitemapFaq | onRequest | europe-west1
+sitemapHelp | onRequest | europe-west1
+sitemapLanding | onRequest | europe-west1
+sitemapProfiles | onRequest | europe-west1
+skipTelegramOnboarding | onCall | europe-west2
+softDeleteProvider | onCall | europe-west1
+stopAutoresponders | onSchedule | europe-west3
+stopAutorespondersForUser | onCall | europe-west1
+stripeWebhook | onRequest | europe-west3
+stuckPaymentsRecovery | onSchedule | europe-west3
+submitFeedback | onCall | europe-west1
+submitForValidation | onCall | europe-west1
+submitGroup | onCall | europe-west2
+submitChatterTrainingQuiz | onCall | europe-west2
+submitInfluencerTrainingQuiz | onCall | europe-west2
+submitPost | onCall | europe-west2
+subscriptionCancel | onCall (v1) | europe-west1
+subscriptionCheckQuota | onCall (v1) | europe-west1
+subscriptionCreate | onCall (v1) | europe-west1
+subscriptionPortal | onCall (v1) | europe-west1
+subscriptionReactivate | onCall (v1) | europe-west1
+subscriptionRecordCall | onCall (v1) | europe-west1
+subscriptionSetFreeAccess | onCall (v1) | europe-west1
+subscriptionUpdate | onCall (v1) | europe-west1
+subscriptionUpdatePlanPricing | onCall | europe-west1
+subscriptionUpdatePlanPricingV2 | onCall | europe-west1
+subscriptionUpdateTrialConfig | onCall | europe-west1
+subscriptionUpdateTrialConfigV2 | onCall | europe-west1
+suspendProvider | onCall | europe-west1
+syncAllCustomClaims | onCall | europe-west1
+syncFromOutil | onRequest | europe-west3
+syncSubscriptionPlansToStripe | onCall (v1) | europe-west1
+
+============================================================================
+T
+============================================================================
+telegram_cancelCampaign | onCall | europe-west1
+telegram_createCampaign | onCall | europe-west1
+telegram_getCampaignDetail | onCall | europe-west1
+telegram_getCampaigns | onCall | europe-west1
+telegram_getConfig | onCall | europe-west1
+telegram_getChatId | onCall | europe-west1
+telegram_getNotificationLogs | onCall | europe-west1
+telegram_getQueueStats | onCall | europe-west1
+telegram_getSubscriberStats | onCall | europe-west1
+telegram_getTemplates | onCall | europe-west1
+telegram_reprocessDeadLetters | onCall | europe-west1
+telegram_sendOneOff | onCall | europe-west1
+telegram_sendTestNotification | onCall | europe-west1
+telegram_updateConfig | onCall | europe-west1
+telegram_updateTemplate | onCall | europe-west1
+telegram_validateBot | onCall | europe-west1
+telegramChatterBotWebhook | onRequest | europe-west2
+telegramDailyReport | onSchedule | europe-west3
+telegramOnCallCompleted | onDocumentUpdated | europe-west3
+telegramOnNegativeReview | onDocumentCreated | europe-west3
+telegramOnNewContactMessage | onDocumentCreated | europe-west3
+telegramOnNewProvider | onDocumentCreated | europe-west3
+telegramOnPaymentReceived | onDocumentCreated | europe-west3
+telegramOnPayPalPaymentReceived | onDocumentCreated | europe-west3
+telegramOnSecurityAlert | onDocumentCreated | europe-west3
+telegramOnWithdrawalRequest | onDocumentCreated | europe-west3
+thresholdOnPaymentCreate | onDocumentCreated | europe-west1 (global default)
+thresholdOnPaymentUpdate | onDocumentUpdated | europe-west1 (global default)
+trackBloggerGuideUsage | onCall | europe-west2
+trackCAPIEvent | onCall | europe-west1
+trackGroupAdminPostUsage | onCall | europe-west2
+trackGroupAdminResourceUsage | onCall | europe-west2
+triggerAdminAlertsDigest | onCall | europe-west1
+triggerAuthBackup | onCall | europe-west1
+triggerBudgetAlertCheck | onCall | europe-west3
+triggerFilingReminders | onCall | europe-west1
+triggerFunctionalCheck | onCall (v1) | europe-west3
+triggerKYCReminders | onCall | europe-west1
+triggerNotificationRetry | onCall | europe-west1
+triggerPayPalReminders | onCall | europe-west1
+triggerPendingTransfersMonitor | onCall | europe-west1
+triggerProviderStatsAggregation | onCall | europe-west1
+triggerSecretsAudit | onCall | europe-west1
+triggerServiceBalanceCheck | onCall | europe-west3
+triggerStuckPaymentsRecovery | onCall | europe-west1
+triggerThresholdRecalculation | onCall | europe-west1 (global default)
+twilioAmdTwiml | onRequest | europe-west3
+twilioCallWebhook | onRequest | europe-west3
+twilioConferenceWebhook | onRequest | europe-west3
+twilioGatherResponse | onRequest | europe-west3
+
+============================================================================
+U
+============================================================================
+unblockProvider | onCall | europe-west1
+unhideProvider | onCall | europe-west1
+unsuspendProvider | onCall | europe-west1
+updateBankDetails (affiliate) | onCall | europe-west1
+updateBloggerProfile | onCall | europe-west2
+updateChatterProfile | onCall | europe-west2
+updateChatterTrainingProgress | onCall | europe-west2
+updateConsentPreferences | onCall (v1) | europe-west1
+updateFeedbackStatus | onCall | europe-west1
+updateFilingAmounts | onCall | europe-west1
+updateFilingStatus | onCall | europe-west1
+updateGroupAdminProfile | onCall | europe-west2
+updateInfluencerProfile | onCall | europe-west2
+updateInfluencerTrainingProgress | onCall | europe-west2
+updateProviderActivity | onCall | europe-west1
+updateServiceBalanceThreshold | onCall | europe-west3
+updateTelegramOnboarding | onCall | europe-west2
+
+============================================================================
+V
+============================================================================
+validateAuthBackup | onCall | europe-west1
+validateCouponCallable | onCall | europe-west1
+validateDashboardPassword | onCall | europe-west1
+validateVAT | onCall | europe-west1
+validateVat | onCall | europe-west3
+verifyCollectionIntegrity | onCall | europe-west1
+verifyPayPalCode | onCall | europe-west1
+
+============================================================================
+W
+============================================================================
+wiseWebhook | onRequest | europe-west1
+
+============================================================================
+ALIASES (same function, exported under multiple names)
+============================================================================
+createAndScheduleCall = createAndScheduleCallHTTPS (same function, same region)
+generateProviderFeed = providerCatalogFeed (same function, same region)
+subscriptionCreate = createSubscription (from subscription/index.ts)
+subscriptionUpdate = updateSubscription (from subscription/index.ts)
+subscriptionCancel = cancelSubscription (from subscription/index.ts)
+subscriptionReactivate = reactivateSubscription (from subscription/index.ts)
+subscriptionPortal = createStripePortalSession (from subscription/index.ts)
+subscriptionCheckQuota = checkAiQuota (from subscription/index.ts)
+subscriptionRecordCall = recordAiCall (from subscription/index.ts)
+subscriptionSetFreeAccess = setFreeAiAccess (from subscription/index.ts)
+subscriptionUpdateTrialConfig = updateTrialConfig (from subscription/index.ts)
+subscriptionUpdatePlanPricing = updatePlanPricing (from subscription/index.ts)
+subscriptionUpdateTrialConfigV2 = updateTrialConfigV2 (from subscription/index.ts)
+subscriptionUpdatePlanPricingV2 = updatePlanPricingV2 (from subscription/index.ts)
+adminCreateManualBackup = adminCreateBackup (same, from admin/backupRestoreAdmin.ts)
+resetMonthlyQuotas = resetBillingCycleQuotas (same, from subscription/scheduledTasks.ts)
+paymentCancelWithdrawal = cancelWithdrawal (from payment/index.ts)
+paymentDeleteMethod = deletePaymentMethod (from payment/index.ts)
+adminProcessGroupAdminWithdrawal = adminProcessWithdrawal (from groupAdmin/index.ts)
+adminGetGroupAdminWithdrawalsList = adminGetWithdrawalsList (from groupAdmin/index.ts)
+adminCreateGroupAdminResource = adminCreateResource (from groupAdmin/index.ts)
+adminUpdateGroupAdminResource = adminUpdateResource (from groupAdmin/index.ts)
+adminDeleteGroupAdminResource = adminDeleteResource (from groupAdmin/index.ts)
+adminGetGroupAdminResourcesList = adminGetResourcesList (from groupAdmin/index.ts)
+adminCreateGroupAdminPost = adminCreatePost (from groupAdmin/index.ts)
+adminUpdateGroupAdminPost = adminUpdatePost (from groupAdmin/index.ts)
+adminDeleteGroupAdminPost = adminDeletePost (from groupAdmin/index.ts)
+adminGetGroupAdminPostsList = adminGetPostsList (from groupAdmin/index.ts)
+
+============================================================================
+NOTE: Non-function exports (types, constants, classes, utility functions)
+are NOT listed above. Only actual Firebase Cloud Functions that deploy
+as Cloud Run services are included.
+============================================================================

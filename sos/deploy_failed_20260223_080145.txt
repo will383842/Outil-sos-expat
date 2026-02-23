@@ -1,0 +1,1 @@
+Lot 1 ÉCHEC: acknowledgeAlert + acknowledgeServiceBalanceAlert

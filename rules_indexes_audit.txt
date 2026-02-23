@@ -1,0 +1,507 @@
+================================================================================
+    FIRESTORE RULES & INDEXES AUDIT REPORT
+    Project: sos-urgently-ac307 (SOS Expat)
+    Date: 2026-02-22
+================================================================================
+
+================================================================================
+PART 1 - FIRESTORE RULES AUDIT
+================================================================================
+
+FILE: sos/firestore.rules
+SIZE: 2935 lines, ~128 KB
+LAST GIT COMMIT: 2026-02-21 (5a165385) - feat(frontend): i18n promo labels
+
+FIREBASE.JSON CONFIG:
+  firestore.rules  = "firestore.rules"       (in sos/ directory)
+  firestore.indexes = "firebase/firestore.indexes.json"
+
+RULES VERSION: 2
+
+--------------------------------------------------------------------------------
+1.1 LOCAL vs PRODUCTION COMPARISON
+--------------------------------------------------------------------------------
+
+STATUS: CANNOT DIRECTLY COMPARE
+
+The Firebase CLI does not provide a `firestore:rules:get` command to download
+the currently deployed production rules. A `firebase deploy --only firestore:rules
+--dry-run` was executed successfully, confirming the local rules compile without
+errors.
+
+COMPILATION WARNINGS (non-blocking):
+  - W: Unused function: isProvider (line 38)
+  - W: Unused function: isClient (line 43)
+  - W: Unused function: isAgencyManager (line 53)
+  - W: Unused function: hasInfluencerProfile (line 2176)
+  - W: Unused function: hasBloggerProfile (line 2311)
+  - W: Unused function: hasGroupAdminProfile (line 2480)
+
+RECOMMENDATION: Deploy rules with `firebase deploy --only firestore:rules` to
+ensure production matches local. Check Firebase Console > Firestore > Rules to
+visually compare. Remove unused helper functions (isProvider, isClient,
+isAgencyManager, hasInfluencerProfile, hasBloggerProfile, hasGroupAdminProfile)
+to reduce file size and avoid confusion.
+
+--------------------------------------------------------------------------------
+1.2 RULES STRUCTURE OVERVIEW
+--------------------------------------------------------------------------------
+
+  Total match statements:           276 (including sub-collections)
+  Helper functions defined:          22
+  Total allow statements:           662
+  Catch-all deny rule:          PRESENT (match /{document=**} -> deny all)
+
+HELPER FUNCTIONS:
+  - isAuthenticated()                - Basic auth check
+  - isAdmin()                        - Admin via custom claims or Firestore doc
+  - isDev()                          - DISABLED in production (always false)
+  - isOwner(userId)                  - Document ownership check
+  - isProvider()                     - Lawyer or expat role (UNUSED)
+  - isClient()                       - Client role (UNUSED)
+  - isFinanceAdmin()                 - Alias for isAdmin()
+  - isAgencyManager()                - Agency manager role (UNUSED directly)
+  - hasAgencyAccessToProvider(id)    - Agency access via linkedProviderIds
+  - isSuperAdmin()                   - Alias for isAdmin()
+  - isChatter()                      - Active chatter check
+  - isChatterOwner(id)               - Chatter ownership
+  - hasChatterProfile()              - Chatter exists (active/pending) (UNUSED)
+  - isInfluencer()                   - Active influencer check
+  - isInfluencerOwner(id)            - Influencer ownership
+  - hasInfluencerProfile()           - Influencer exists (UNUSED)
+  - isBlogger()                      - Active blogger check
+  - isBloggerOwner(id)               - Blogger ownership
+  - hasBloggerProfile()              - Blogger exists (UNUSED)
+  - isGroupAdmin()                   - Active group admin check
+  - isGroupAdminOwner(id)            - Group admin ownership
+  - hasGroupAdminProfile()           - Group admin exists (UNUSED)
+
+--------------------------------------------------------------------------------
+1.3 COLLECTIONS WITH EXPLICIT RULES (274 unique collections)
+--------------------------------------------------------------------------------
+
+The following major collection groups have explicit rules defined:
+
+  CORE BUSINESS:
+    users, sos_profiles, calls, call_sessions, call_execution_locks,
+    payments, orders, invoices, invoice_records, invoice_locks,
+    notifications, inapp_notifications, fcm_tokens, favorites,
+    booking_requests, documents, conversations
+
+  FINANCIAL/PAYMENTS:
+    subscriptions, subscription_plans, subscription_logs, subscription_events,
+    transfers, pending_transfers, payouts, paypal_orders, paypal_payouts,
+    paypal_payouts_failed, paypal_referrals, paypal_webhook_events,
+    paypal_account_logs, paypal_reminder_queue, paypal_reminders_log,
+    failed_payouts_alerts, refunds, refund_requests, disputes,
+    payment_withdrawals, payment_methods, payment_webhook_logs,
+    payment_audit_logs, aaa_internal_payouts, aaa_external_payouts,
+    coupons, coupon_usages, coupon_failed_attempts
+
+  AFFILIATE/AMBASSADOR:
+    affiliate_config, affiliate_commissions, affiliate_payouts,
+    affiliate_codes, affiliate_fraud_alerts, affiliate_stats, referrals,
+    chatters, chatter_commissions, chatter_withdrawals, chatter_config,
+    chatter_quiz_questions, chatter_quiz_attempts, chatter_badges,
+    chatter_badge_awards, chatter_monthly_rankings, chatter_platforms,
+    chatter_affiliate_clicks, chatter_recruitment_links, chatter_notifications,
+    chatter_zoom_meetings, chatter_zoom_attendance, chatter_posts,
+    chatter_groups, chatter_fraud_alerts, chatter_referral_commissions,
+    chatter_tier_bonuses_history, chatter_early_adopter_counters,
+    chatter_promotions, chatter_social_likes, chatter_weekly_challenges,
+    chatter_activity_feed, chatter_recruited_chatters, chatter_ip_registry,
+    chatter_referral_fraud_alerts,
+    influencers, influencer_commissions, influencer_withdrawals,
+    influencer_referrals, influencer_config, influencer_monthly_rankings,
+    influencer_notifications, influencer_affiliate_clicks,
+    influencer_resources, widget_banners, widget_texts,
+    bloggers, blogger_commissions, blogger_withdrawals,
+    blogger_recruited_providers, blogger_config, blogger_monthly_rankings,
+    blogger_notifications, blogger_clicks, blogger_badges,
+    blogger_resources, blogger_resource_texts, blogger_guide_templates,
+    blogger_guide_copy_texts, blogger_guide_best_practices,
+    blogger_usage_logs, blogger_recruited_bloggers, blogger_promo_widgets,
+    group_admins, group_admin_commissions, group_admin_withdrawals,
+    group_admin_recruited_admins, group_admin_recruited_providers,
+    group_admin_clicks, group_admin_notifications, group_admin_resources,
+    group_admin_resource_texts, group_admin_posts, group_admin_badges,
+    group_admin_badge_awards, group_admin_monthly_rankings,
+    group_admin_config, group_admin_usage_log
+
+  TELEGRAM:
+    telegram_onboarding_links, telegram_message_queue,
+    telegram_rate_monitor, telegram_subscriber_stats,
+    telegram_admin_config, telegram_admin_templates,
+    telegram_admin_logs, telegram_campaigns
+
+  ACCOUNTING/TAX:
+    accounting_sequences, journal_entries, chart_of_accounts,
+    accounting_periods, tax_filings, tax_filing_configs,
+    tax_filing_notifications, tax_declarations, tax_configs,
+    tax_rates, vat_validations, country_tax_configs, country_pricing,
+    country_fiscal_configs, country_subdivisions, threshold_tracking,
+    threshold_alerts, reconciliation_records, finance_audit_logs,
+    finance_exports, reconciliation_logs, platform_costs, twilio_usage
+
+  SECURITY:
+    security_alerts, security_events, security_routing,
+    admin_security_actions, threat_scores, blocked_entities,
+    geo_profiles, fraud_patterns, api_abuse_logs, login_attempts,
+    alert_rate_limits, admin_alert_preferences
+
+  ADMIN/CONFIG:
+    config, admin_config, settings, admin_settings, system_config,
+    app_settings, country_settings, country_landing_configs
+
+  ANALYTICS/LOGGING:
+    analytics_events, analytics_counters, analytics_daily,
+    analytics_language_mismatches, analytics_user_actions,
+    analytics_conversions, analytics_errors, analytics_performance,
+    ad_conversions, capi_events, google_ads_events,
+    cost_metrics, cost_alerts, service_alerts,
+    connection_logs, provider_status_logs, ai_call_logs, ai_usage,
+    ai_usage_logs, openai_usage_metrics, call_errors, call_logs,
+    call_recordings, email_logs, error_logs, system_logs,
+    performance_metrics, scheduling_errors, audit_logs, auditLogs,
+    admin_audit_logs, auth_claims_logs, auth_logs, logs,
+    provider_action_logs, notification_logs
+
+  BACKUP:
+    backups, auth_backups, local_backups, dr_test_reports,
+    restore_operations
+
+  OTHER:
+    faqs, faq_translations_cache, helpCenter, help_categories,
+    help_articles, landing_pages, legal_documents,
+    reviews, review_reports, reports, user_feedback,
+    contact_messages, message_events, message_deliveries,
+    message_templates, notification_dlq, webhook_dlq,
+    aaa_profiles, aaa_used_content, ui_profile_cards,
+    ui_profile_carousel, providers_translations,
+    providerMessageOrderCustomers, lawyers, expats,
+    provider_stats, provider_notifications, provider_balance_adjustments,
+    dashboard_rate_limits, mail, scheduled_reports,
+    validation_queue, processed_stripe_events, processed_webhook_events,
+    rate_limits, quota_reset_logs, trial_expiration_logs,
+    stripe_sync_logs, dunning_records, kyc_reminders, kyc_reminders_log,
+    outil_sync_retry_queue, service_balance_alerts,
+    service_balance_thresholds, admin_alerts, admin_notifications,
+    admin_invoices, admin_actions_log, financial_events,
+    technical_alerts, escrow_reports, failed_transfers_log,
+    unclaimed_funds
+
+--------------------------------------------------------------------------------
+1.4 PUBLICLY READABLE COLLECTIONS (allow read: if true)
+--------------------------------------------------------------------------------
+
+15 collections are readable by anyone (including unauthenticated users):
+
+  1.  helpCenter                     - Help center articles
+  2.  help_categories                - Help categories
+  3.  help_articles                  - Help articles (for SEO sitemaps)
+  4.  landing_pages                  - Landing pages (for SEO sitemaps)
+  5.  ui_profile_cards               - Profile cards for UI carousel/grid
+  6.  ui_profile_carousel            - Profile carousel data
+  7.  providers_translations         - Provider translations
+  8.  subscription_plans             - Subscription plans (public pricing)
+  9.  legal_documents                - Legal docs (CGU, CGV, etc.)
+  10. country_settings               - Enabled/disabled countries
+  11. faq_translations_cache         - Translated FAQs
+  12. country_fiscal_configs         - Fiscal config for 197 countries
+  13. country_subdivisions           - USA states / Canada provinces
+  14. chatter_early_adopter_counters - Early adopter slots remaining
+  15. country_landing_configs        - Country-specific landing pages
+
+ASSESSMENT: All 15 are legitimately public (SEO, pricing, legal, country data).
+No security concern.
+
+--------------------------------------------------------------------------------
+1.5 SPECIFIC COLLECTIONS CHECK (per user request)
+--------------------------------------------------------------------------------
+
+  COLLECTION                    RULES?     INDEXES?     STATUS
+  ----------------------------- ---------- ------------ --------
+  subscriptions                 YES        2 indexes    OK
+  sos_profiles                  YES        19 indexes   OK
+  users                         YES        7 indexes    OK
+  payments                      YES        6 indexes    OK
+  call_sessions                 YES        11 indexes   OK
+  invoices                      YES        0 indexes    OK (no compound queries)
+  message_events                YES        0 indexes    OK (admin-only, CF-only write)
+  chatters                      YES        7 indexes    OK
+  influencers                   YES        1 index      OK
+  bloggers                      YES        1 index      OK
+  admingroups                   NO RULES   0 indexes    NOT A REAL COLLECTION (*)
+  telegram_onboarding_links     YES        3 indexes    OK
+  withdrawals                   NO RULES   0 indexes    NOT A REAL COLLECTION (**)
+  affiliate_commissions         YES        6 indexes    OK
+
+  (*) "admingroups" does not exist as a collection. The actual collection is
+      "group_admins" which HAS proper rules (line 2486-2503).
+
+  (**) "withdrawals" does not exist as a standalone collection. Withdrawals
+       are stored per program:
+       - chatter_withdrawals      (HAS rules, line 1944)
+       - influencer_withdrawals   (HAS rules, line 2211)
+       - blogger_withdrawals      (HAS rules, line 2346)
+       - group_admin_withdrawals  (HAS rules, line 2516)
+       - payment_withdrawals      (HAS rules, line 2794)
+
+--------------------------------------------------------------------------------
+1.6 SECURITY FINDINGS
+--------------------------------------------------------------------------------
+
+GOOD:
+  [+] Catch-all deny rule present (line 2930-2932)
+  [+] isDev() always returns false in production
+  [+] payments collection: create/update = false (CF-only)
+  [+] Financial fields protected from client modification on users, sos_profiles
+  [+] Privilege escalation blocked (role, isApproved, isBanned, etc.)
+  [+] 125 collections are write-protected (Cloud Functions only)
+  [+] Review creation validates rating 1-5, comment max 2000 chars
+  [+] Ad conversions require auth + field validation (anti-DoW)
+  [+] Contact messages creation disabled (use CF with reCAPTCHA)
+  [+] User feedback validates email format, type enum, description size
+
+WARNINGS:
+  [!] 6 unused helper functions increase rules file complexity
+      (isProvider, isClient, isAgencyManager, hasInfluencerProfile,
+       hasBloggerProfile, hasGroupAdminProfile)
+  [!] isFinanceAdmin() and isSuperAdmin() are aliases for isAdmin() with no
+      additional permission checks - no role-based finance separation
+  [!] sos_profiles read rule requires resource.data.isVisible == true, which
+      means queries without isVisible filter will fail (expected but may
+      cause confusion)
+
+
+================================================================================
+PART 2 - FIRESTORE INDEXES AUDIT
+================================================================================
+
+LOCAL FILE: sos/firebase/firestore.indexes.json (80 KB)
+LAST MODIFIED: 2026-02-21
+
+--------------------------------------------------------------------------------
+2.1 INDEX COUNTS
+--------------------------------------------------------------------------------
+
+  LOCAL INDEXES:      245
+  PRODUCTION INDEXES: 245
+  FIELD OVERRIDES:    0 (both local and production)
+
+--------------------------------------------------------------------------------
+2.2 LOCAL vs PRODUCTION COMPARISON
+--------------------------------------------------------------------------------
+
+  Common (identical):           245
+  Only in LOCAL (need deploy):    0
+  Only in PRODUCTION (manual):    0
+
+  STATUS: PERFECTLY IN SYNC
+
+  Note: Production indexes include a `density: "SPARSE_ALL"` field and an
+  automatic `__name__` field in each index, which are added by Firestore
+  automatically. After normalizing these, all 245 indexes match exactly.
+
+--------------------------------------------------------------------------------
+2.3 INDEXES BY COLLECTION (90 collections, 245 total indexes)
+--------------------------------------------------------------------------------
+
+  COLLECTION                          COUNT
+  ----------------------------------- -----
+  aaa_used_content                      1
+  accounting_entries                     1  (*)
+  admin_alerts                          4
+  affiliate_commissions                 6
+  affiliate_fraud_alerts                2
+  affiliate_payouts                     3
+  ai_call_logs                          1
+  analytics_events                      1
+  auth_backups                          1
+  blogger_clicks                        1
+  blogger_commissions                   6
+  blogger_notifications                 1
+  blogger_recruited_bloggers            1
+  blogger_recruited_providers           3
+  blogger_withdrawals                   2
+  bloggers                              1
+  booking_requests                      3
+  call_sessions                        11
+  calls                                 4
+  chatter_affiliate_clicks              2
+  chatter_commissions                   9
+  chatter_groups                        1
+  chatter_ip_registry                   1
+  chatter_notifications                 2
+  chatter_quiz_attempts                 1
+  chatter_recruited_chatters            1
+  chatter_recruitment_links             3
+  chatter_referral_fraud_alerts         1
+  chatter_social_likes                  1
+  chatter_weekly_challenges             1
+  chatter_withdrawals                   2
+  chatters                              7
+  cost_alerts                           1
+  coupon_failed_attempts                1
+  coupon_usages                         2
+  coupons                               2
+  disputes                              2
+  documents                             2
+  dunning_records                       1
+  failed_payouts_alerts                 1
+  group_admin_badge_awards              1
+  group_admin_clicks                    1
+  group_admin_commissions              10
+  group_admin_notifications             3
+  group_admin_recruited_admins          1
+  group_admin_recruited_providers       2
+  group_admin_usage_log                 1
+  group_admin_withdrawals               3
+  group_admins                          5
+  help_articles                         1
+  help_categories                       1
+  influencer_commissions                7
+  influencer_notifications              1
+  influencer_referrals                  2
+  influencer_resources                  2
+  influencer_withdrawals                2
+  influencers                           1
+  invoice_records                       2
+  journal_entries                       2
+  kyc_reminders                         1
+  legal_documents                       2
+  notifications                         3
+  payment_audit_logs                    2
+  payment_methods                       2
+  payment_webhook_logs                  1
+  payment_withdrawals                  10
+  payments                              6
+  paypal_orders                         2
+  paypal_payouts                        1
+  paypal_verification_codes             3  (*)
+  pending_transfer_reminders            2  (*)
+  pending_transfers                     3
+  providerMessageOrderCustomers         2
+  provider_balance_adjustments          1
+  provider_stats                        5
+  provider_status_logs                  1
+  referrals                             2
+  refund_audit                          1  (*)
+  refund_requests                       1
+  reviews                               8
+  security_alerts                       1
+  sos_profiles                         19
+  subscription_plans                    1
+  subscriptions                         2
+  telegram_message_queue                3
+  telegram_onboarding_links             3
+  transfers                             1
+  user_feedback                         1
+  users                                 7
+  validation_queue                      3
+
+  TOP 5 MOST INDEXED COLLECTIONS:
+    1. sos_profiles        - 19 indexes
+    2. call_sessions       - 11 indexes
+    3. group_admin_commissions - 10 indexes
+    4. payment_withdrawals - 10 indexes
+    5. chatter_commissions -  9 indexes
+
+--------------------------------------------------------------------------------
+2.4 INDEXES IN LOCAL BUT NOT IN PRODUCTION (need deploying)
+--------------------------------------------------------------------------------
+
+  NONE - All 245 local indexes exist in production.
+
+--------------------------------------------------------------------------------
+2.5 INDEXES IN PRODUCTION BUT NOT IN LOCAL (manually created)
+--------------------------------------------------------------------------------
+
+  NONE - All 245 production indexes exist in local file.
+
+--------------------------------------------------------------------------------
+2.6 INDEXES IN BUILDING OR ERROR STATE
+--------------------------------------------------------------------------------
+
+  BUILDING: 0
+  ERROR:    0
+
+  All production indexes are in READY state (or state not reported, which
+  means READY for the `firebase firestore:indexes` command output).
+
+--------------------------------------------------------------------------------
+2.7 COLLECTIONS WITH INDEXES BUT NO FIRESTORE RULES
+--------------------------------------------------------------------------------
+
+  4 collections have composite indexes defined but NO explicit Firestore
+  security rules. They fall under the catch-all deny rule (all access denied).
+
+  COLLECTION                  INDEXES  CODE USAGE
+  --------------------------- -------  ----------
+  accounting_entries            1       NOT FOUND in any code (orphan index)
+  paypal_verification_codes     3       Used in paypal/emailVerification.ts
+  pending_transfer_reminders    2       Used in scheduled/pendingTransfersMonitor.ts
+  refund_audit                  1       Used in subscription/webhooks.ts
+
+  ASSESSMENT:
+  - accounting_entries: ORPHAN INDEX - the collection is not referenced in any
+    Cloud Function code. This index can be safely removed.
+  - paypal_verification_codes, pending_transfer_reminders, refund_audit:
+    These collections are only written/read by Cloud Functions using Admin SDK,
+    which bypasses Firestore rules. The catch-all deny rule correctly blocks
+    any client-side access. However, adding explicit rules (even if just
+    "allow read/write: if false") would improve documentation and make the
+    security posture clearer.
+
+  RECOMMENDATION: Add explicit rules for these 3 active collections:
+    match /paypal_verification_codes/{codeId} {
+      allow read, write: if false; // Cloud Functions only
+    }
+    match /pending_transfer_reminders/{reminderId} {
+      allow read: if isAdmin();
+      allow write: if false; // Cloud Functions only
+    }
+    match /refund_audit/{auditId} {
+      allow read: if isAdmin();
+      allow write: if false; // Cloud Functions only
+    }
+
+  And remove the orphan index for accounting_entries.
+
+================================================================================
+SUMMARY & RECOMMENDATIONS
+================================================================================
+
+OVERALL STATUS: GOOD
+
+  [OK] Rules compile without errors (23 warnings, non-blocking)
+  [OK] Catch-all deny rule present
+  [OK] 245 indexes perfectly synced between local and production
+  [OK] No indexes in BUILDING or ERROR state
+  [OK] All 14 critical collections from user request have proper rules
+       (admingroups/withdrawals are not real collection names)
+  [OK] 125 collections are write-protected (Cloud Functions only)
+  [OK] Financial fields protected against privilege escalation
+  [OK] isDev() disabled in production
+
+ACTION ITEMS:
+
+  PRIORITY HIGH:
+  1. Deploy rules to production to ensure sync:
+     cd sos && firebase deploy --only firestore:rules --project sos-urgently-ac307
+
+  PRIORITY MEDIUM:
+  2. Add explicit rules for 3 collections missing them:
+     paypal_verification_codes, pending_transfer_reminders, refund_audit
+  3. Remove orphan index for accounting_entries from firestore.indexes.json
+
+  PRIORITY LOW:
+  4. Remove 6 unused helper functions from rules file:
+     isProvider, isClient, isAgencyManager, hasInfluencerProfile,
+     hasBloggerProfile, hasGroupAdminProfile
+  5. Consider implementing real role separation for isFinanceAdmin() and
+     isSuperAdmin() instead of aliasing to isAdmin()
+
+================================================================================
+END OF REPORT
+================================================================================

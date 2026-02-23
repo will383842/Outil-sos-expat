@@ -58,7 +58,7 @@ import { Review } from "../types";
 const Reviews = lazy(() => import("../components/review/Reviews"));
 
 // 👉 Pricing admin
-import { usePricingConfig } from "../services/pricingService";
+import { usePricingConfig, getEffectivePrice } from "../services/pricingService";
 import { trackMetaViewContent } from "../utils/metaPixel";
 import { useMetaTracking } from "../hooks/useMetaTracking";
 
@@ -826,46 +826,64 @@ const ProviderProfile: React.FC = () => {
   const bookingPrice = useMemo(() => {
     if (!pricing || !serviceTypeForPricing) return null;
 
-    const cfg = pricing[serviceTypeForPricing];
-    const baseEur = cfg.eur.totalAmount;
-    const baseUsd = cfg.usd.totalAmount;
+    // Utilise getEffectivePrice pour prendre en compte les overrides promo
+    const { price: cfgEur, standard: standardEur, override: activeOverrideEur } = getEffectivePrice(pricing, serviceTypeForPricing, 'eur');
+    const { price: cfgUsd, standard: standardUsd } = getEffectivePrice(pricing, serviceTypeForPricing, 'usd');
+
+    const baseEur = cfgEur.totalAmount;  // prix effectif (override si actif, sinon standard)
+    const baseUsd = cfgUsd.totalAmount;
 
     const serviceKey =
       serviceTypeForPricing === "lawyer" ? "lawyer_call" : "expat_call";
     const promoApplies =
       activePromo && activePromo.services.includes(serviceKey);
 
+    // Vérifier si le coupon est cumulable avec l'override actif
+    const stackableDefault = pricing.overrides?.settings?.stackableDefault;
+    const couponStackable = activeOverrideEur
+      ? (typeof activeOverrideEur.stackableWithCoupons === 'boolean'
+          ? activeOverrideEur.stackableWithCoupons
+          : (stackableDefault ?? false))
+      : true;
+
+    const couponApplies = promoApplies && couponStackable;
+
     let finalEur = baseEur;
     let finalUsd = baseUsd;
-    let discountEur = 0;
-    let discountUsd = 0;
+    let couponDiscountEur = 0;
+    let couponDiscountUsd = 0;
 
-    if (promoApplies) {
+    if (couponApplies) {
       if (activePromo.discountType === "percentage") {
-        discountEur = baseEur * (activePromo.discountValue / 100);
-        discountUsd = baseUsd * (activePromo.discountValue / 100);
+        couponDiscountEur = baseEur * (activePromo.discountValue / 100);
+        couponDiscountUsd = baseUsd * (activePromo.discountValue / 100);
       } else {
-        discountEur = Math.min(activePromo.discountValue, baseEur);
-        discountUsd = Math.min(
+        couponDiscountEur = Math.min(activePromo.discountValue, baseEur);
+        couponDiscountUsd = Math.min(
           activePromo.discountValue * (baseUsd / baseEur),
           baseUsd
         );
       }
 
-      finalEur = Math.max(0, baseEur - discountEur);
-      finalUsd = Math.max(0, baseUsd - discountUsd);
+      finalEur = Math.max(0, baseEur - couponDiscountEur);
+      finalUsd = Math.max(0, baseUsd - couponDiscountUsd);
     }
+
+    const hasOverride = activeOverrideEur !== null;
+    const overrideDiscountEur = hasOverride ? standardEur.totalAmount - baseEur : 0;
+    const totalDiscountEur = overrideDiscountEur + couponDiscountEur;
+    const hasDiscount = hasOverride || (couponApplies && couponDiscountEur > 0);
 
     return {
       eur: finalEur,
       usd: finalUsd,
-      originalEur: baseEur,
-      originalUsd: baseUsd,
-      discountEur: discountEur,
-      discountUsd: discountUsd,
-      hasDiscount: promoApplies,
-      duration: cfg.eur.duration,
-      promoCode: promoApplies ? activePromo.code : null,
+      originalEur: hasDiscount ? standardEur.totalAmount : baseEur,
+      originalUsd: hasDiscount ? standardUsd.totalAmount : baseUsd,
+      discountEur: totalDiscountEur,
+      discountUsd: couponDiscountUsd,
+      hasDiscount,
+      duration: cfgEur.duration,
+      promoCode: couponApplies ? activePromo.code : null,
     };
   }, [pricing, serviceTypeForPricing, activePromo]);
 
@@ -2720,9 +2738,11 @@ const ProviderProfile: React.FC = () => {
                             <div className="text-3xl sm:text-4xl font-black text-red-600">
                               {formatEUR(bookingPrice.eur)}
                             </div>
-                            <div className="text-xs text-green-600 font-semibold mt-1">
-                              Code {bookingPrice.promoCode} (-{formatEUR(bookingPrice.discountEur)})
-                            </div>
+                            {bookingPrice.promoCode && (
+                              <div className="text-xs text-green-600 font-semibold mt-1">
+                                Code {bookingPrice.promoCode} (-{formatEUR(bookingPrice.discountEur)})
+                              </div>
+                            )}
                           </>
                         ) : (
                           <div className="text-3xl sm:text-4xl font-black text-gray-900">
