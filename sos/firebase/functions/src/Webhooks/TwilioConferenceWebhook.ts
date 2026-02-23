@@ -1,4 +1,5 @@
 import { onRequest } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions/v2';
 import { twilioCallManager } from '../TwilioCallManager';
 import { logCallRecord } from '../utils/logs/logCallRecord';
 import { logError } from '../utils/logs/logError';
@@ -10,6 +11,7 @@ import { STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST } from '../lib/stripe';
 import { TASKS_AUTH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } from '../lib/secrets';
 // P0 FIX: Import call region from centralized config - dedicated region for call functions
 import { CALL_FUNCTIONS_REGION } from '../configs/callRegion';
+import { captureError } from '../config/sentry';
 
 // Ensure TypeScript recognizes the secrets are used in the secrets array
 void TWILIO_AUTH_TOKEN_SECRET;
@@ -57,7 +59,7 @@ export const twilioConferenceWebhook = onRequest(
     cpu: 0.25,         // P0 FIX: Reduced to save quota (function mostly waits for API responses)
     timeoutSeconds: 540, // P1 FIX: 9 minutes — payment capture + Stripe API calls can be slow
     maxInstances: 10,  // P0 FIX: Increased for better scalability during peak
-    minInstances: 0,   // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
+    minInstances: 1,   // P0 FIX 2026-02-23: Restored to 1 — cold start on real-time conference webhook is unacceptable
     concurrency: 1,
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + Stripe secrets for payment capture
     // P0 FIX 2026-01-18: Added TASKS_AUTH_SECRET for scheduleProviderAvailableTask (provider cooldown)
@@ -68,18 +70,18 @@ export const twilioConferenceWebhook = onRequest(
     const confWebhookId = `conf_${Date.now().toString(36)}`;
 
     try {
-      console.log(`\n${'▓'.repeat(70)}`);
-      console.log(`🎤 [${confWebhookId}] twilioConferenceWebhook START`);
+      logger.info(`\n${'▓'.repeat(70)}`);
+      logger.info(`🎤 [${confWebhookId}] twilioConferenceWebhook START`);
 
       // ===== P0 SECURITY FIX: Validate Twilio signature =====
       if (!validateTwilioWebhookSignature(req, res)) {
-        console.error(`🎤 [${confWebhookId}] Invalid Twilio signature - rejecting request`);
+        logger.error(`🎤 [${confWebhookId}] Invalid Twilio signature - rejecting request`);
         return; // Response already sent by validateTwilioWebhookSignature
       }
 
       const body: TwilioConferenceWebhookBody = req.body;
 
-      console.log(`🎤 [${confWebhookId}] Conference Webhook reçu:`, {
+      logger.info(`🎤 [${confWebhookId}] Conference Webhook reçu:`, {
         event: body.StatusCallbackEvent,
         conferenceSid: body.ConferenceSid,
         conferenceStatus: body.ConferenceStatus,
@@ -119,14 +121,14 @@ export const twilioConferenceWebhook = onRequest(
         // P1-3 FIX: Don't treat transaction errors as duplicates!
         // Transaction errors (contention, timeout, network) are NOT the same as legitimate duplicates.
         // Return 500 so Twilio retries the webhook instead of losing the event.
-        console.error(`🎤 [${confWebhookId}] ❌ Transaction error for webhook idempotency: ${txError}`);
-        console.error(`🎤 [${confWebhookId}] ⚠️ Returning 500 to trigger Twilio retry (was incorrectly returning 200 before)`);
+        logger.error(`🎤 [${confWebhookId}] ❌ Transaction error for webhook idempotency: ${txError}`);
+        logger.error(`🎤 [${confWebhookId}] ⚠️ Returning 500 to trigger Twilio retry (was incorrectly returning 200 before)`);
         res.status(500).send('Transaction error - please retry');
         return;
       }
 
       if (isDuplicate) {
-        console.log(`🎤 [${confWebhookId}] ⚠️ IDEMPOTENCY: Conference event ${webhookKey} already processed, skipping`);
+        logger.info(`🎤 [${confWebhookId}] ⚠️ IDEMPOTENCY: Conference event ${webhookKey} already processed, skipping`);
         res.status(200).send('OK - duplicate');
         return;
       }
@@ -145,17 +147,17 @@ export const twilioConferenceWebhook = onRequest(
       let session = await twilioCallManager.findSessionByConferenceSid(body.ConferenceSid);
 
       if (!session) {
-        console.log(`🎤 [${confWebhookId}] Session not found by ConferenceSid, trying FriendlyName...`);
-        console.log(`🎤 [${confWebhookId}]   FriendlyName: ${body.FriendlyName}`);
+        logger.info(`🎤 [${confWebhookId}] Session not found by ConferenceSid, trying FriendlyName...`);
+        logger.info(`🎤 [${confWebhookId}]   FriendlyName: ${body.FriendlyName}`);
 
         // FriendlyName is the conference name we set when creating the call
         session = await twilioCallManager.findSessionByConferenceName(body.FriendlyName);
       }
 
       if (!session) {
-        console.warn(`🎤 [${confWebhookId}] ❌ Session non trouvée pour conférence:`);
-        console.warn(`🎤 [${confWebhookId}]   ConferenceSid: ${body.ConferenceSid}`);
-        console.warn(`🎤 [${confWebhookId}]   FriendlyName: ${body.FriendlyName}`);
+        logger.warn(`🎤 [${confWebhookId}] ❌ Session non trouvée pour conférence:`);
+        logger.warn(`🎤 [${confWebhookId}]   ConferenceSid: ${body.ConferenceSid}`);
+        logger.warn(`🎤 [${confWebhookId}]   FriendlyName: ${body.FriendlyName}`);
         res.status(200).send('Session not found');
         return;
       }
@@ -169,33 +171,33 @@ export const twilioConferenceWebhook = onRequest(
       // For conference-end: if session doesn't have SID, it's a stale webhook - don't update!
       const eventsAllowedToSetSid = ['conference-start', 'participant-join'];
       if (!session.conference?.sid && body.ConferenceSid && eventsAllowedToSetSid.includes(body.StatusCallbackEvent)) {
-        console.log(`🎤 [${confWebhookId}] 🔧 Setting conference.sid for the first time: ${body.ConferenceSid}`);
-        console.log(`🎤 [${confWebhookId}]   Event type: ${body.StatusCallbackEvent} (allowed to set SID)`);
+        logger.info(`🎤 [${confWebhookId}] 🔧 Setting conference.sid for the first time: ${body.ConferenceSid}`);
+        logger.info(`🎤 [${confWebhookId}]   Event type: ${body.StatusCallbackEvent} (allowed to set SID)`);
         try {
           await twilioCallManager.updateConferenceSid(session.id, body.ConferenceSid);
-          console.log(`🎤 [${confWebhookId}]   ✅ conference.sid updated in Firestore`);
+          logger.info(`🎤 [${confWebhookId}]   ✅ conference.sid updated in Firestore`);
         } catch (updateError) {
-          console.error(`🎤 [${confWebhookId}]   ⚠️ Failed to update conference.sid:`, updateError);
+          logger.error(`🎤 [${confWebhookId}]   ⚠️ Failed to update conference.sid:`, updateError);
           // Continue processing - non-fatal error
         }
       } else if (!session.conference?.sid && body.ConferenceSid) {
-        console.log(`🎤 [${confWebhookId}] ⚠️ NOT setting conference.sid - event type "${body.StatusCallbackEvent}" not allowed to set SID`);
-        console.log(`🎤 [${confWebhookId}]   This might be a stale webhook from an old conference`);
+        logger.info(`🎤 [${confWebhookId}] ⚠️ NOT setting conference.sid - event type "${body.StatusCallbackEvent}" not allowed to set SID`);
+        logger.info(`🎤 [${confWebhookId}]   This might be a stale webhook from an old conference`);
       }
 
       const sessionId = session.id;
-      console.log(`🎤 [${confWebhookId}] Session found: ${sessionId}`);
+      logger.info(`🎤 [${confWebhookId}] Session found: ${sessionId}`);
 
       // P0 DEBUG: Log current session state for all webhooks
-      console.log(`🎤 [${confWebhookId}] 📊 CURRENT SESSION STATE:`);
-      console.log(`🎤 [${confWebhookId}]   session.status: ${session.status}`);
-      console.log(`🎤 [${confWebhookId}]   session.conference.sid: ${session.conference?.sid || 'NOT SET'}`);
-      console.log(`🎤 [${confWebhookId}]   session.conference.name: ${session.conference?.name || 'NOT SET'}`);
-      console.log(`🎤 [${confWebhookId}]   payment.status: ${session.payment?.status || 'NOT SET'}`);
-      console.log(`🎤 [${confWebhookId}]   client.status: ${session.participants?.client?.status || 'NOT SET'}`);
-      console.log(`🎤 [${confWebhookId}]   client.connectedAt: ${session.participants?.client?.connectedAt?.toDate?.() || 'NOT SET'}`);
-      console.log(`🎤 [${confWebhookId}]   provider.status: ${session.participants?.provider?.status || 'NOT SET'}`);
-      console.log(`🎤 [${confWebhookId}]   provider.connectedAt: ${session.participants?.provider?.connectedAt?.toDate?.() || 'NOT SET'}`);
+      logger.info(`🎤 [${confWebhookId}] 📊 CURRENT SESSION STATE:`);
+      logger.info(`🎤 [${confWebhookId}]   session.status: ${session.status}`);
+      logger.info(`🎤 [${confWebhookId}]   session.conference.sid: ${session.conference?.sid || 'NOT SET'}`);
+      logger.info(`🎤 [${confWebhookId}]   session.conference.name: ${session.conference?.name || 'NOT SET'}`);
+      logger.info(`🎤 [${confWebhookId}]   payment.status: ${session.payment?.status || 'NOT SET'}`);
+      logger.info(`🎤 [${confWebhookId}]   client.status: ${session.participants?.client?.status || 'NOT SET'}`);
+      logger.info(`🎤 [${confWebhookId}]   client.connectedAt: ${session.participants?.client?.connectedAt?.toDate?.() || 'NOT SET'}`);
+      logger.info(`🎤 [${confWebhookId}]   provider.status: ${session.participants?.provider?.status || 'NOT SET'}`);
+      logger.info(`🎤 [${confWebhookId}]   provider.connectedAt: ${session.participants?.provider?.connectedAt?.toDate?.() || 'NOT SET'}`);
 
       switch (body.StatusCallbackEvent) {
         case 'conference-start':
@@ -225,14 +227,15 @@ export const twilioConferenceWebhook = onRequest(
           break;
           
         default:
-          console.log(`Événement conférence non géré: ${body.StatusCallbackEvent}`);
+          logger.info(`Événement conférence non géré: ${body.StatusCallbackEvent}`);
       }
 
       res.status(200).send('OK');
 
     } catch (error) {
-      console.error('❌ Erreur webhook conférence:', error);
+      logger.error('❌ Erreur webhook conférence:', error);
       await logError('twilioConferenceWebhook:error', error);
+      captureError(error, { functionName: 'twilioConferenceWebhook' });
       res.status(500).send('Webhook error');
     }
   }
@@ -245,34 +248,34 @@ async function handleConferenceStart(sessionId: string, body: TwilioConferenceWe
   const startId = `conf_start_${Date.now().toString(36)}`;
 
   try {
-    console.log(`\n${'═'.repeat(70)}`);
-    console.log(`🎤 [${startId}] handleConferenceStart START`);
-    console.log(`🎤 [${startId}]   sessionId: ${sessionId}`);
-    console.log(`🎤 [${startId}]   conferenceSid: ${body.ConferenceSid}`);
-    console.log(`🎤 [${startId}]   friendlyName: ${body.FriendlyName}`);
-    console.log(`🎤 [${startId}]   timestamp: ${body.Timestamp}`);
-    console.log(`${'═'.repeat(70)}`);
+    logger.info(`\n${'═'.repeat(70)}`);
+    logger.info(`🎤 [${startId}] handleConferenceStart START`);
+    logger.info(`🎤 [${startId}]   sessionId: ${sessionId}`);
+    logger.info(`🎤 [${startId}]   conferenceSid: ${body.ConferenceSid}`);
+    logger.info(`🎤 [${startId}]   friendlyName: ${body.FriendlyName}`);
+    logger.info(`🎤 [${startId}]   timestamp: ${body.Timestamp}`);
+    logger.info(`${'═'.repeat(70)}`);
 
-    console.log(`🎤 [${startId}] STEP 1: Updating conference info (sid + startedAt)...`);
+    logger.info(`🎤 [${startId}] STEP 1: Updating conference info (sid + startedAt)...`);
     await twilioCallManager.updateConferenceInfo(sessionId, {
       sid: body.ConferenceSid,
       startedAt: admin.firestore.Timestamp.fromDate(new Date())
     });
-    console.log(`🎤 [${startId}]   ✅ Conference info updated`);
+    logger.info(`🎤 [${startId}]   ✅ Conference info updated`);
 
-    console.log(`🎤 [${startId}] STEP 2: Setting call session status to "active"...`);
+    logger.info(`🎤 [${startId}] STEP 2: Setting call session status to "active"...`);
     await twilioCallManager.updateCallSessionStatus(sessionId, 'active');
-    console.log(`🎤 [${startId}]   ✅ Session status set to "active"`);
+    logger.info(`🎤 [${startId}]   ✅ Session status set to "active"`);
 
-    console.log(`🎤 [${startId}] STEP 3: Verifying session state after update...`);
+    logger.info(`🎤 [${startId}] STEP 3: Verifying session state after update...`);
     const session = await twilioCallManager.getCallSession(sessionId);
     if (session) {
-      console.log(`🎤 [${startId}]   session.status: ${session.status}`);
-      console.log(`🎤 [${startId}]   conference.sid: ${session.conference.sid}`);
-      console.log(`🎤 [${startId}]   client.status: ${session.participants.client.status}`);
-      console.log(`🎤 [${startId}]   provider.status: ${session.participants.provider.status}`);
+      logger.info(`🎤 [${startId}]   session.status: ${session.status}`);
+      logger.info(`🎤 [${startId}]   conference.sid: ${session.conference.sid}`);
+      logger.info(`🎤 [${startId}]   client.status: ${session.participants.client.status}`);
+      logger.info(`🎤 [${startId}]   provider.status: ${session.participants.provider.status}`);
     } else {
-      console.log(`🎤 [${startId}]   ⚠️ Session not found after update!`);
+      logger.info(`🎤 [${startId}]   ⚠️ Session not found after update!`);
     }
 
     await logCallRecord({
@@ -285,11 +288,11 @@ async function handleConferenceStart(sessionId: string, body: TwilioConferenceWe
       }
     });
 
-    console.log(`🎤 [${startId}] END - Conference started successfully`);
-    console.log(`${'═'.repeat(70)}\n`);
+    logger.info(`🎤 [${startId}] END - Conference started successfully`);
+    logger.info(`${'═'.repeat(70)}\n`);
 
   } catch (error) {
-    console.error(`🎤 [${startId}] ❌ ERROR in handleConferenceStart:`, error);
+    logger.error(`🎤 [${startId}] ❌ ERROR in handleConferenceStart:`, error);
     await logError('handleConferenceStart', error);
   }
 }
@@ -308,12 +311,12 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
     const twilioDuration = parseInt(body.Duration || '0');
     const conferenceEndTime = new Date();
 
-    console.log(`\n${'█'.repeat(70)}`);
-    console.log(`🏁 [${endId}] handleConferenceEnd START`);
-    console.log(`🏁 [${endId}]   sessionId: ${sessionId}`);
-    console.log(`🏁 [${endId}]   conferenceSid: ${webhookConferenceSid}`);
-    console.log(`🏁 [${endId}]   twilioDuration (total conference): ${twilioDuration}s`);
-    console.log(`${'█'.repeat(70)}`);
+    logger.info(`\n${'█'.repeat(70)}`);
+    logger.info(`🏁 [${endId}] handleConferenceEnd START`);
+    logger.info(`🏁 [${endId}]   sessionId: ${sessionId}`);
+    logger.info(`🏁 [${endId}]   conferenceSid: ${webhookConferenceSid}`);
+    logger.info(`🏁 [${endId}]   twilioDuration (total conference): ${twilioDuration}s`);
+    logger.info(`${'█'.repeat(70)}`);
 
     // P0 CRITICAL FIX 2026-01-17 v2: Check if this webhook is from the CURRENT conference
     // When a participant is transferred to a new conference, the old conference ends
@@ -323,7 +326,7 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
     // it means the conference-end webhook arrived BEFORE the conference-start webhook.
     // This happens when an OLD conference ends while a NEW conference is starting.
     // We must IGNORE these webhooks to prevent premature payment cancellation.
-    console.log(`🏁 [${endId}] STEP 0: Checking if webhook is from CURRENT conference...`);
+    logger.info(`🏁 [${endId}] STEP 0: Checking if webhook is from CURRENT conference...`);
     const sessionForConferenceCheck = await twilioCallManager.getCallSession(sessionId);
     const currentConferenceSid = sessionForConferenceCheck?.conference?.sid;
 
@@ -332,35 +335,35 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
         // Webhook has a SID but session doesn't have one yet
         // This means conference-start hasn't been processed yet
         // This webhook is from an OLD conference - IGNORE IT
-        console.log(`🏁 [${endId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (session has no SID yet)`);
-        console.log(`🏁 [${endId}]   webhookConferenceSid: ${webhookConferenceSid}`);
-        console.log(`🏁 [${endId}]   currentConferenceSid: NOT SET YET`);
-        console.log(`🏁 [${endId}]   This webhook arrived BEFORE conference-start - it's from an OLD conference`);
-        console.log(`🏁 [${endId}]   ⛔ NOT processing this webhook to prevent premature payment cancellation`);
-        console.log(`${'█'.repeat(70)}\n`);
+        logger.info(`🏁 [${endId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (session has no SID yet)`);
+        logger.info(`🏁 [${endId}]   webhookConferenceSid: ${webhookConferenceSid}`);
+        logger.info(`🏁 [${endId}]   currentConferenceSid: NOT SET YET`);
+        logger.info(`🏁 [${endId}]   This webhook arrived BEFORE conference-start - it's from an OLD conference`);
+        logger.info(`🏁 [${endId}]   ⛔ NOT processing this webhook to prevent premature payment cancellation`);
+        logger.info(`${'█'.repeat(70)}\n`);
         return;
       }
 
       if (currentConferenceSid !== webhookConferenceSid) {
-        console.log(`🏁 [${endId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (SID mismatch)`);
-        console.log(`🏁 [${endId}]   webhookConferenceSid: ${webhookConferenceSid}`);
-        console.log(`🏁 [${endId}]   currentConferenceSid: ${currentConferenceSid}`);
-        console.log(`🏁 [${endId}]   This is an OLD conference ending - the call has moved to a new conference`);
-        console.log(`🏁 [${endId}]   ⛔ NOT processing this webhook to prevent premature payment cancellation`);
-        console.log(`${'█'.repeat(70)}\n`);
+        logger.info(`🏁 [${endId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (SID mismatch)`);
+        logger.info(`🏁 [${endId}]   webhookConferenceSid: ${webhookConferenceSid}`);
+        logger.info(`🏁 [${endId}]   currentConferenceSid: ${currentConferenceSid}`);
+        logger.info(`🏁 [${endId}]   This is an OLD conference ending - the call has moved to a new conference`);
+        logger.info(`🏁 [${endId}]   ⛔ NOT processing this webhook to prevent premature payment cancellation`);
+        logger.info(`${'█'.repeat(70)}\n`);
         return;
       }
 
-      console.log(`🏁 [${endId}]   ✅ ConferenceSID matches current session - processing webhook`);
-      console.log(`🏁 [${endId}]   ✅ P0 FIX v3 CHECK PASSED - This is the CURRENT conference, proceeding...`);
+      logger.info(`🏁 [${endId}]   ✅ ConferenceSID matches current session - processing webhook`);
+      logger.info(`🏁 [${endId}]   ✅ P0 FIX v3 CHECK PASSED - This is the CURRENT conference, proceeding...`);
     } else {
-      console.log(`🏁 [${endId}]   ⚠️ Webhook has no ConferenceSID - proceeding with caution`);
+      logger.info(`🏁 [${endId}]   ⚠️ Webhook has no ConferenceSID - proceeding with caution`);
     }
 
     // P0 DEBUG: Log provider.connectedAt status - this determines billing duration
     const sessionForBillingCheck = await twilioCallManager.getCallSession(sessionId);
     const providerConnectedForBilling = sessionForBillingCheck?.participants?.provider?.connectedAt;
-    console.log(`🏁 [${endId}] 📊 BILLING CHECK: provider.connectedAt = ${providerConnectedForBilling?.toDate?.() || 'NOT SET (billingDuration will be 0!)'}`);
+    logger.info(`🏁 [${endId}] 📊 BILLING CHECK: provider.connectedAt = ${providerConnectedForBilling?.toDate?.() || 'NOT SET (billingDuration will be 0!)'}`);
 
     // P0 CRITICAL FIX 2026-01-17 v4: Don't process payment if session is still connecting!
     // If provider never connected (connectedAt is null) AND session is still in connecting phase,
@@ -370,15 +373,15 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
     const isStillConnecting = ['scheduled', 'calling', 'client_connecting', 'provider_connecting', 'both_connecting'].includes(sessionStatus || '');
 
     if (!providerConnectedForBilling) {
-      console.log(`🏁 [${endId}] ⚠️ Provider never connected!`);
-      console.log(`🏁 [${endId}]   session.status: ${sessionStatus}`);
-      console.log(`🏁 [${endId}]   isStillConnecting: ${isStillConnecting}`);
+      logger.info(`🏁 [${endId}] ⚠️ Provider never connected!`);
+      logger.info(`🏁 [${endId}]   session.status: ${sessionStatus}`);
+      logger.info(`🏁 [${endId}]   isStillConnecting: ${isStillConnecting}`);
 
       if (isStillConnecting) {
-        console.log(`🏁 [${endId}] ⛔ P0 FIX v4: NOT processing this conference-end!`);
-        console.log(`🏁 [${endId}]   Reason: Session is still in connecting phase (${sessionStatus})`);
-        console.log(`🏁 [${endId}]   The retry loop will handle the provider connection`);
-        console.log(`🏁 [${endId}]   Only updating conference.endedAt for tracking, NOT triggering payment processing`);
+        logger.info(`🏁 [${endId}] ⛔ P0 FIX v4: NOT processing this conference-end!`);
+        logger.info(`🏁 [${endId}]   Reason: Session is still in connecting phase (${sessionStatus})`);
+        logger.info(`🏁 [${endId}]   The retry loop will handle the provider connection`);
+        logger.info(`🏁 [${endId}]   Only updating conference.endedAt for tracking, NOT triggering payment processing`);
 
         // Just update the conference ended timestamp for tracking, but don't process payment
         await twilioCallManager.updateConferenceInfo(sessionId, {
@@ -386,22 +389,22 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
           duration: parseInt(body.Duration || '0'),
         });
 
-        console.log(`${'█'.repeat(70)}\n`);
+        logger.info(`${'█'.repeat(70)}\n`);
         return; // EXIT - don't process payment, let retry loop continue
       }
 
-      console.log(`🏁 [${endId}] ⚠️ WARNING: Session is NOT in connecting phase, will process refund`);
+      logger.info(`🏁 [${endId}] ⚠️ WARNING: Session is NOT in connecting phase, will process refund`);
     }
 
-    console.log(`🏁 [${endId}] STEP 1: Fetching session state BEFORE update...`);
+    logger.info(`🏁 [${endId}] STEP 1: Fetching session state BEFORE update...`);
     const sessionBefore = await twilioCallManager.getCallSession(sessionId);
     if (sessionBefore) {
-      console.log(`🏁 [${endId}]   session.status: ${sessionBefore.status}`);
-      console.log(`🏁 [${endId}]   payment.status: ${sessionBefore.payment?.status}`);
-      console.log(`🏁 [${endId}]   payment.intentId: ${sessionBefore.payment?.intentId?.slice(0, 20) || 'N/A'}...`);
-      console.log(`🏁 [${endId}]   client.status: ${sessionBefore.participants.client.status}`);
-      console.log(`🏁 [${endId}]   provider.status: ${sessionBefore.participants.provider.status}`);
-      console.log(`🏁 [${endId}]   provider.connectedAt: ${sessionBefore.participants.provider.connectedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`🏁 [${endId}]   session.status: ${sessionBefore.status}`);
+      logger.info(`🏁 [${endId}]   payment.status: ${sessionBefore.payment?.status}`);
+      logger.info(`🏁 [${endId}]   payment.intentId: ${sessionBefore.payment?.intentId?.slice(0, 20) || 'N/A'}...`);
+      logger.info(`🏁 [${endId}]   client.status: ${sessionBefore.participants.client.status}`);
+      logger.info(`🏁 [${endId}]   provider.status: ${sessionBefore.participants.provider.status}`);
+      logger.info(`🏁 [${endId}]   provider.connectedAt: ${sessionBefore.participants.provider.connectedAt?.toDate?.() || 'N/A'}`);
 
       // Cancel forceEndCall safety net task (call ended normally)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -410,9 +413,9 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
         try {
           const { cancelForceEndCallTask } = await import('../lib/tasks');
           await cancelForceEndCallTask(forceEndCallTaskId);
-          console.log(`🏁 [${endId}]   ✅ ForceEndCall task cancelled: ${forceEndCallTaskId}`);
+          logger.info(`🏁 [${endId}]   ✅ ForceEndCall task cancelled: ${forceEndCallTaskId}`);
         } catch (cancelError) {
-          console.warn(`🏁 [${endId}]   ⚠️ Failed to cancel forceEndCall task:`, cancelError);
+          logger.warn(`🏁 [${endId}]   ⚠️ Failed to cancel forceEndCall task:`, cancelError);
           // P2-1: Log non-critical errors for monitoring
           await logError('TwilioConferenceWebhook:cancelForceEndCallTask', { sessionId, forceEndCallTaskId, error: cancelError });
           // Non-critical, continue
@@ -457,25 +460,25 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
       // where 119.9s rounds down to 119s and triggers refund instead of capture
       billingDuration = Math.max(0, Math.round((firstDisconnectedAt - bothConnectedAt) / 1000));
 
-      console.log(`🏁 [${endId}]   📊 BILLING DURATION CALCULATION (P0 FIX 2026-01-18):`);
-      console.log(`🏁 [${endId}]     clientConnectedAt: ${new Date(clientConnectedTime).toISOString()}`);
-      console.log(`🏁 [${endId}]     providerConnectedAt: ${new Date(providerConnectedTime).toISOString()}`);
-      console.log(`🏁 [${endId}]     bothConnectedAt (2nd joined): ${new Date(bothConnectedAt).toISOString()}`);
-      console.log(`🏁 [${endId}]     clientDisconnectedAt: ${clientDisconnectedAt ? new Date(clientDisconnectTime).toISOString() : 'still connected'}`);
-      console.log(`🏁 [${endId}]     providerDisconnectedAt: ${providerDisconnectedAt ? new Date(providerDisconnectTime).toISOString() : 'still connected'}`);
-      console.log(`🏁 [${endId}]     firstDisconnectedAt (1st left): ${new Date(firstDisconnectedAt).toISOString()}`);
-      console.log(`🏁 [${endId}]     billingDuration (BOTH connected): ${billingDuration}s (${(billingDuration / 60).toFixed(1)} min)`);
+      logger.info(`🏁 [${endId}]   📊 BILLING DURATION CALCULATION (P0 FIX 2026-01-18):`);
+      logger.info(`🏁 [${endId}]     clientConnectedAt: ${new Date(clientConnectedTime).toISOString()}`);
+      logger.info(`🏁 [${endId}]     providerConnectedAt: ${new Date(providerConnectedTime).toISOString()}`);
+      logger.info(`🏁 [${endId}]     bothConnectedAt (2nd joined): ${new Date(bothConnectedAt).toISOString()}`);
+      logger.info(`🏁 [${endId}]     clientDisconnectedAt: ${clientDisconnectedAt ? new Date(clientDisconnectTime).toISOString() : 'still connected'}`);
+      logger.info(`🏁 [${endId}]     providerDisconnectedAt: ${providerDisconnectedAt ? new Date(providerDisconnectTime).toISOString() : 'still connected'}`);
+      logger.info(`🏁 [${endId}]     firstDisconnectedAt (1st left): ${new Date(firstDisconnectedAt).toISOString()}`);
+      logger.info(`🏁 [${endId}]     billingDuration (BOTH connected): ${billingDuration}s (${(billingDuration / 60).toFixed(1)} min)`);
 
       // Log who disconnected first (for debugging)
       const whoLeftFirst = clientDisconnectTime <= providerDisconnectTime ? 'CLIENT' : 'PROVIDER';
-      console.log(`🏁 [${endId}]     whoLeftFirst: ${whoLeftFirst}`);
+      logger.info(`🏁 [${endId}]     whoLeftFirst: ${whoLeftFirst}`);
     } else if (providerConnectedAt) {
       // Provider connected but client never connected - no billing
-      console.log(`🏁 [${endId}]   ⚠️ Client never connected - billingDuration = 0`);
+      logger.info(`🏁 [${endId}]   ⚠️ Client never connected - billingDuration = 0`);
       billingDuration = 0;
     } else {
       // Provider never connected - no billing
-      console.log(`🏁 [${endId}]   ⚠️ Provider never connected - billingDuration = 0`);
+      logger.info(`🏁 [${endId}]   ⚠️ Provider never connected - billingDuration = 0`);
       billingDuration = 0;
     }
 
@@ -497,8 +500,8 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
     let effectiveBillingDuration = billingDuration;
 
     if (billingDuration === 0 && twilioDuration >= MIN_DURATION_FOR_CAPTURE) {
-      console.log(`🏁 [${endId}] ⚠️ P0 FIX 2026-02-02: billingDuration=0 but twilioDuration=${twilioDuration}s`);
-      console.log(`🏁 [${endId}]   This indicates connectedAt timestamps were not properly set`);
+      logger.info(`🏁 [${endId}] ⚠️ P0 FIX 2026-02-02: billingDuration=0 but twilioDuration=${twilioDuration}s`);
+      logger.info(`🏁 [${endId}]   This indicates connectedAt timestamps were not properly set`);
 
       // Check if both participants reached "connected" status at some point
       const clientStatus = sessionBefore?.participants?.client?.status;
@@ -506,14 +509,14 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
       const clientEverConnected = clientStatus === 'connected' || clientStatus === 'disconnected';
       const providerEverConnected = providerStatus === 'connected' || providerStatus === 'disconnected';
 
-      console.log(`🏁 [${endId}]   clientStatus: ${clientStatus}, everConnected: ${clientEverConnected}`);
-      console.log(`🏁 [${endId}]   providerStatus: ${providerStatus}, everConnected: ${providerEverConnected}`);
+      logger.info(`🏁 [${endId}]   clientStatus: ${clientStatus}, everConnected: ${clientEverConnected}`);
+      logger.info(`🏁 [${endId}]   providerStatus: ${providerStatus}, everConnected: ${providerEverConnected}`);
 
       if (clientEverConnected && providerEverConnected) {
         // Both participants connected at some point - use Twilio duration as fallback
         effectiveBillingDuration = twilioDuration;
-        console.log(`🏁 [${endId}]   ✅ FALLBACK: Using twilioDuration=${twilioDuration}s as effectiveBillingDuration`);
-        console.log(`🏁 [${endId}]   Reason: Both participants were connected but connectedAt timestamps missing`);
+        logger.info(`🏁 [${endId}]   ✅ FALLBACK: Using twilioDuration=${twilioDuration}s as effectiveBillingDuration`);
+        logger.info(`🏁 [${endId}]   Reason: Both participants were connected but connectedAt timestamps missing`);
 
         // P0 ALERT: Log billing fallback for admin investigation
         try {
@@ -530,33 +533,33 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
             reviewed: false,
           });
         } catch (alertErr) {
-          console.error(`🏁 [${endId}] Failed to create billing fallback alert:`, alertErr);
+          logger.error(`🏁 [${endId}] Failed to create billing fallback alert:`, alertErr);
         }
       } else {
-        console.log(`🏁 [${endId}]   ❌ NOT using fallback: Not all participants were connected`);
-        console.log(`🏁 [${endId}]   Keeping billingDuration=0 to trigger refund`);
+        logger.info(`🏁 [${endId}]   ❌ NOT using fallback: Not all participants were connected`);
+        logger.info(`🏁 [${endId}]   Keeping billingDuration=0 to trigger refund`);
       }
     }
 
-    console.log(`🏁 [${endId}]   twilioDuration (total): ${twilioDuration}s (${(twilioDuration / 60).toFixed(1)} min)`);
-    console.log(`🏁 [${endId}]   billingDuration (both connected): ${billingDuration}s (${(billingDuration / 60).toFixed(1)} min)`);
-    console.log(`🏁 [${endId}]   effectiveBillingDuration: ${effectiveBillingDuration}s (${(effectiveBillingDuration / 60).toFixed(1)} min)`);
-    console.log(`🏁 [${endId}]   minDurationForCapture: ${MIN_DURATION_FOR_CAPTURE}s (1 min)`);
-    console.log(`🏁 [${endId}]   willCapture: ${effectiveBillingDuration >= MIN_DURATION_FOR_CAPTURE ? 'YES' : 'NO - will refund/cancel'}`);
+    logger.info(`🏁 [${endId}]   twilioDuration (total): ${twilioDuration}s (${(twilioDuration / 60).toFixed(1)} min)`);
+    logger.info(`🏁 [${endId}]   billingDuration (both connected): ${billingDuration}s (${(billingDuration / 60).toFixed(1)} min)`);
+    logger.info(`🏁 [${endId}]   effectiveBillingDuration: ${effectiveBillingDuration}s (${(effectiveBillingDuration / 60).toFixed(1)} min)`);
+    logger.info(`🏁 [${endId}]   minDurationForCapture: ${MIN_DURATION_FOR_CAPTURE}s (1 min)`);
+    logger.info(`🏁 [${endId}]   willCapture: ${effectiveBillingDuration >= MIN_DURATION_FOR_CAPTURE ? 'YES' : 'NO - will refund/cancel'}`);
 
-    console.log(`🏁 [${endId}] STEP 2: Updating conference info (endedAt + duration)...`);
+    logger.info(`🏁 [${endId}] STEP 2: Updating conference info (endedAt + duration)...`);
     await twilioCallManager.updateConferenceInfo(sessionId, {
       endedAt: admin.firestore.Timestamp.fromDate(conferenceEndTime),
       duration: twilioDuration,
       billingDuration: billingDuration, // Store original for transparency
       effectiveBillingDuration: effectiveBillingDuration // P0 FIX 2026-02-02: Store effective duration used for capture decision
     });
-    console.log(`🏁 [${endId}]   ✅ Conference info updated`);
+    logger.info(`🏁 [${endId}]   ✅ Conference info updated`);
 
     // Log si appel trop court (pour monitoring) - use EFFECTIVE BILLING duration
     if (effectiveBillingDuration < MIN_DURATION_FOR_CAPTURE) {
-      console.log(`🏁 [${endId}] ⚠️ EFFECTIVE BILLING DURATION TOO SHORT: ${effectiveBillingDuration}s < ${MIN_DURATION_FOR_CAPTURE}s minimum`);
-      console.log(`🏁 [${endId}]   Action: Will trigger refund/cancel via handleCallCompletion`);
+      logger.info(`🏁 [${endId}] ⚠️ EFFECTIVE BILLING DURATION TOO SHORT: ${effectiveBillingDuration}s < ${MIN_DURATION_FOR_CAPTURE}s minimum`);
+      logger.info(`🏁 [${endId}]   Action: Will trigger refund/cancel via handleCallCompletion`);
       await logCallRecord({
         callId: sessionId,
         status: 'call_too_short',
@@ -569,23 +572,23 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
         }
       });
     } else {
-      console.log(`🏁 [${endId}] ✅ EFFECTIVE BILLING DURATION OK: ${effectiveBillingDuration}s >= ${MIN_DURATION_FOR_CAPTURE}s minimum`);
-      console.log(`🏁 [${endId}]   Action: Will capture payment via handleCallCompletion`);
+      logger.info(`🏁 [${endId}] ✅ EFFECTIVE BILLING DURATION OK: ${effectiveBillingDuration}s >= ${MIN_DURATION_FOR_CAPTURE}s minimum`);
+      logger.info(`🏁 [${endId}]   Action: Will capture payment via handleCallCompletion`);
     }
 
     // handleCallCompletion gère TOUS les cas:
     // - Si durée >= 60s → capture paiement + schedule transfer prestataire
     // - Si durée < 60s  → processRefund (cancel ou refund selon état paiement)
     // P0 FIX 2026-02-02: Pass EFFECTIVE BILLING duration (with fallback to Twilio duration)
-    console.log(`🏁 [${endId}] STEP 3: Calling handleCallCompletion(sessionId, ${effectiveBillingDuration})...`);
+    logger.info(`🏁 [${endId}] STEP 3: Calling handleCallCompletion(sessionId, ${effectiveBillingDuration})...`);
     await twilioCallManager.handleCallCompletion(sessionId, effectiveBillingDuration);
-    console.log(`🏁 [${endId}]   ✅ handleCallCompletion completed`);
+    logger.info(`🏁 [${endId}]   ✅ handleCallCompletion completed`);
 
-    console.log(`🏁 [${endId}] STEP 4: Fetching session state AFTER completion...`);
+    logger.info(`🏁 [${endId}] STEP 4: Fetching session state AFTER completion...`);
     const sessionAfter = await twilioCallManager.getCallSession(sessionId);
     if (sessionAfter) {
-      console.log(`🏁 [${endId}]   session.status: ${sessionAfter.status}`);
-      console.log(`🏁 [${endId}]   payment.status: ${sessionAfter.payment?.status}`);
+      logger.info(`🏁 [${endId}]   session.status: ${sessionAfter.status}`);
+      logger.info(`🏁 [${endId}]   payment.status: ${sessionAfter.payment?.status}`);
     }
 
     await logCallRecord({
@@ -601,33 +604,33 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
     });
 
     // === LOGS DÉTAILLÉS POUR DEBUG CONFERENCE-END ===
-    console.log(`\n${'🎤'.repeat(30)}`);
-    console.log(`🎤 [${endId}] === CONFERENCE END SUMMARY ===`);
-    console.log(`🎤 [${endId}]   sessionId: ${sessionId}`);
-    console.log(`🎤 [${endId}]   conferenceSid: ${body.ConferenceSid}`);
-    console.log(`🎤 [${endId}]   twilioDuration (total): ${twilioDuration}s`);
-    console.log(`🎤 [${endId}]   billingDuration (both connected): ${billingDuration}s`);
-    console.log(`🎤 [${endId}]   effectiveBillingDuration (used for capture): ${effectiveBillingDuration}s`);
-    console.log(`🎤 [${endId}]   capture threshold: ${MIN_DURATION_FOR_CAPTURE}s (1 min)`);
-    console.log(`🎤 [${endId}]   decision: ${effectiveBillingDuration >= MIN_DURATION_FOR_CAPTURE ? 'CAPTURE PAYMENT' : 'REFUND/CANCEL'}`);
+    logger.info(`\n${'🎤'.repeat(30)}`);
+    logger.info(`🎤 [${endId}] === CONFERENCE END SUMMARY ===`);
+    logger.info(`🎤 [${endId}]   sessionId: ${sessionId}`);
+    logger.info(`🎤 [${endId}]   conferenceSid: ${body.ConferenceSid}`);
+    logger.info(`🎤 [${endId}]   twilioDuration (total): ${twilioDuration}s`);
+    logger.info(`🎤 [${endId}]   billingDuration (both connected): ${billingDuration}s`);
+    logger.info(`🎤 [${endId}]   effectiveBillingDuration (used for capture): ${effectiveBillingDuration}s`);
+    logger.info(`🎤 [${endId}]   capture threshold: ${MIN_DURATION_FOR_CAPTURE}s (1 min)`);
+    logger.info(`🎤 [${endId}]   decision: ${effectiveBillingDuration >= MIN_DURATION_FOR_CAPTURE ? 'CAPTURE PAYMENT' : 'REFUND/CANCEL'}`);
 
     // Fetch and log final state
     const finalSessionState = await twilioCallManager.getCallSession(sessionId);
     if (finalSessionState) {
-      console.log(`🎤 [${endId}]   FINAL SESSION STATE:`);
-      console.log(`🎤 [${endId}]     session.status: ${finalSessionState.status}`);
-      console.log(`🎤 [${endId}]     payment.status: ${finalSessionState.payment?.status}`);
-      console.log(`🎤 [${endId}]     client.status: ${finalSessionState.participants.client.status}`);
-      console.log(`🎤 [${endId}]     provider.status: ${finalSessionState.participants.provider.status}`);
-      console.log(`🎤 [${endId}]     invoicesCreated: ${finalSessionState.metadata?.invoicesCreated || false}`);
+      logger.info(`🎤 [${endId}]   FINAL SESSION STATE:`);
+      logger.info(`🎤 [${endId}]     session.status: ${finalSessionState.status}`);
+      logger.info(`🎤 [${endId}]     payment.status: ${finalSessionState.payment?.status}`);
+      logger.info(`🎤 [${endId}]     client.status: ${finalSessionState.participants.client.status}`);
+      logger.info(`🎤 [${endId}]     provider.status: ${finalSessionState.participants.provider.status}`);
+      logger.info(`🎤 [${endId}]     invoicesCreated: ${finalSessionState.metadata?.invoicesCreated || false}`);
     }
-    console.log(`${'🎤'.repeat(30)}\n`);
+    logger.info(`${'🎤'.repeat(30)}\n`);
 
-    console.log(`🏁 [${endId}] END - Conference end handled successfully`);
-    console.log(`${'█'.repeat(70)}\n`);
+    logger.info(`🏁 [${endId}] END - Conference end handled successfully`);
+    logger.info(`${'█'.repeat(70)}\n`);
 
   } catch (error) {
-    console.error(`🏁 [${endId}] ❌ ERROR in handleConferenceEnd:`, error);
+    logger.error(`🏁 [${endId}] ❌ ERROR in handleConferenceEnd:`, error);
     await logError('handleConferenceEnd', error);
   }
 }
@@ -648,20 +651,20 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
 
     if (!participantType) {
       // Fallback: identify participant by matching CallSid in session
-      console.log(`👋 [${joinId}] ⚠️ ParticipantLabel is missing, using CallSid fallback`);
+      logger.info(`👋 [${joinId}] ⚠️ ParticipantLabel is missing, using CallSid fallback`);
       const session = await twilioCallManager.getCallSession(sessionId);
       if (session) {
         if (session.participants.client.callSid === callSid) {
           participantType = 'client';
-          console.log(`👋 [${joinId}]   ✅ Identified as CLIENT via CallSid match`);
+          logger.info(`👋 [${joinId}]   ✅ Identified as CLIENT via CallSid match`);
         } else if (session.participants.provider.callSid === callSid) {
           participantType = 'provider';
-          console.log(`👋 [${joinId}]   ✅ Identified as PROVIDER via CallSid match`);
+          logger.info(`👋 [${joinId}]   ✅ Identified as PROVIDER via CallSid match`);
         } else {
-          console.log(`👋 [${joinId}]   ❌ CallSid does not match any participant!`);
-          console.log(`👋 [${joinId}]   webhook callSid: ${callSid}`);
-          console.log(`👋 [${joinId}]   client.callSid: ${session.participants.client.callSid}`);
-          console.log(`👋 [${joinId}]   provider.callSid: ${session.participants.provider.callSid}`);
+          logger.info(`👋 [${joinId}]   ❌ CallSid does not match any participant!`);
+          logger.info(`👋 [${joinId}]   webhook callSid: ${callSid}`);
+          logger.info(`👋 [${joinId}]   client.callSid: ${session.participants.client.callSid}`);
+          logger.info(`👋 [${joinId}]   provider.callSid: ${session.participants.provider.callSid}`);
           // Cannot identify participant - log error and return
           await logError('handleParticipantJoin:unknown_participant', {
             sessionId,
@@ -672,29 +675,29 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
           return;
         }
       } else {
-        console.log(`👋 [${joinId}]   ❌ Session not found - cannot identify participant`);
+        logger.info(`👋 [${joinId}]   ❌ Session not found - cannot identify participant`);
         return;
       }
     }
 
-    console.log(`\n${'═'.repeat(70)}`);
-    console.log(`👋 [${joinId}] handleParticipantJoin START - CRITICAL FOR waitForConnection()`);
-    console.log(`👋 [${joinId}]   sessionId: ${sessionId}`);
-    console.log(`👋 [${joinId}]   participantType: ${participantType}`);
-    console.log(`👋 [${joinId}]   callSid: ${callSid}`);
-    console.log(`👋 [${joinId}]   conferenceSid: ${body.ConferenceSid}`);
-    console.log(`👋 [${joinId}]   source: ${body.ParticipantLabel ? 'ParticipantLabel' : 'CallSid fallback'}`);
-    console.log(`${'═'.repeat(70)}`);
+    logger.info(`\n${'═'.repeat(70)}`);
+    logger.info(`👋 [${joinId}] handleParticipantJoin START - CRITICAL FOR waitForConnection()`);
+    logger.info(`👋 [${joinId}]   sessionId: ${sessionId}`);
+    logger.info(`👋 [${joinId}]   participantType: ${participantType}`);
+    logger.info(`👋 [${joinId}]   callSid: ${callSid}`);
+    logger.info(`👋 [${joinId}]   conferenceSid: ${body.ConferenceSid}`);
+    logger.info(`👋 [${joinId}]   source: ${body.ParticipantLabel ? 'ParticipantLabel' : 'CallSid fallback'}`);
+    logger.info(`${'═'.repeat(70)}`);
 
     // Get status BEFORE update
-    console.log(`👋 [${joinId}] STEP 1: Fetching participant status BEFORE update...`);
+    logger.info(`👋 [${joinId}] STEP 1: Fetching participant status BEFORE update...`);
     const sessionBefore = await twilioCallManager.getCallSession(sessionId);
     const participantBefore = participantType === 'provider'
       ? sessionBefore?.participants.provider
       : sessionBefore?.participants.client;
     const currentStatus = participantBefore?.status;
-    console.log(`👋 [${joinId}]   ${participantType}.status BEFORE: "${currentStatus}"`);
-    console.log(`👋 [${joinId}]   ${participantType}.callSid BEFORE: ${participantBefore?.callSid}`);
+    logger.info(`👋 [${joinId}]   ${participantType}.status BEFORE: "${currentStatus}"`);
+    logger.info(`👋 [${joinId}]   ${participantType}.callSid BEFORE: ${participantBefore?.callSid}`);
 
     // P0 CRITICAL FIX v2 (2026-01-18): Race condition between webhooks!
     //
@@ -731,9 +734,9 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
     if (statusesThatShouldSkipUpdate.includes(currentStatus || '')) {
       // P0 FIX v3: Handle 'connected' status differently - already confirmed via DTMF!
       if (currentStatus === 'connected') {
-        console.log(`👋 [${joinId}] ✅ Status is already "connected" (set by twilioGatherResponse via DTMF)`);
-        console.log(`👋 [${joinId}]   ⛔ NOT calling updateParticipantStatus to preserve original connectedAt!`);
-        console.log(`👋 [${joinId}]   P0 FIX v3: This prevents billingDuration from being incorrectly shortened`);
+        logger.info(`👋 [${joinId}] ✅ Status is already "connected" (set by twilioGatherResponse via DTMF)`);
+        logger.info(`👋 [${joinId}]   ⛔ NOT calling updateParticipantStatus to preserve original connectedAt!`);
+        logger.info(`👋 [${joinId}]   P0 FIX v3: This prevents billingDuration from being incorrectly shortened`);
 
         await logCallRecord({
           callId: sessionId,
@@ -747,20 +750,20 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
           }
         });
 
-        console.log(`👋 [${joinId}] END - Participant already connected, connectedAt preserved`);
-        console.log(`${'═'.repeat(70)}\n`);
+        logger.info(`👋 [${joinId}] END - Participant already connected, connectedAt preserved`);
+        logger.info(`${'═'.repeat(70)}\n`);
         return;
       }
 
       // AMD pending states - wait for AMD callback
-      console.log(`👋 [${joinId}] ⚠️ Status "${currentStatus}" - participant joined but AMD not confirmed yet`);
-      console.log(`👋 [${joinId}]   ⛔ NOT setting status to "connected" yet - waiting for AMD result`);
-      console.log(`👋 [${joinId}]   asyncAmdStatusCallback will set: "connected" if human, "no_answer" if machine`);
+      logger.info(`👋 [${joinId}] ⚠️ Status "${currentStatus}" - participant joined but AMD not confirmed yet`);
+      logger.info(`👋 [${joinId}]   ⛔ NOT setting status to "connected" yet - waiting for AMD result`);
+      logger.info(`👋 [${joinId}]   asyncAmdStatusCallback will set: "connected" if human, "no_answer" if machine`);
 
       // P0 FIX v2: Log the race condition detection for debugging
       if (currentStatus === 'calling' || currentStatus === 'ringing') {
-        console.log(`👋 [${joinId}]   🔄 RACE CONDITION DETECTED: participant-join arrived before "answered" webhook`);
-        console.log(`👋 [${joinId}]   🔄 This is normal - "answered" webhook will set amd_pending soon`);
+        logger.info(`👋 [${joinId}]   🔄 RACE CONDITION DETECTED: participant-join arrived before "answered" webhook`);
+        logger.info(`👋 [${joinId}]   🔄 This is normal - "answered" webhook will set amd_pending soon`);
       }
 
       await logCallRecord({
@@ -778,49 +781,49 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
       });
       // IMPORTANT: Return early - do NOT set status to "connected"
       // Let asyncAmdStatusCallback handle it after AMD analysis completes
-      console.log(`👋 [${joinId}] END - Waiting for AMD callback to determine human/machine`);
-      console.log(`${'═'.repeat(70)}\n`);
+      logger.info(`👋 [${joinId}] END - Waiting for AMD callback to determine human/machine`);
+      logger.info(`${'═'.repeat(70)}\n`);
       return;
     }
 
     // AMD is not pending - safe to set status to "connected"
-    console.log(`👋 [${joinId}] STEP 2: Setting ${participantType}.status to "connected"...`);
-    console.log(`👋 [${joinId}]   AMD is not pending, so this is safe`);
-    console.log(`👋 [${joinId}]   This is CRITICAL - waitForConnection() polls for this status!`);
+    logger.info(`👋 [${joinId}] STEP 2: Setting ${participantType}.status to "connected"...`);
+    logger.info(`👋 [${joinId}]   AMD is not pending, so this is safe`);
+    logger.info(`👋 [${joinId}]   This is CRITICAL - waitForConnection() polls for this status!`);
     await twilioCallManager.updateParticipantStatus(
       sessionId,
       participantType,
       'connected',
       admin.firestore.Timestamp.fromDate(new Date())
     );
-    console.log(`👋 [${joinId}]   ✅ updateParticipantStatus() completed`);
+    logger.info(`👋 [${joinId}]   ✅ updateParticipantStatus() completed`);
 
     // Verify status was updated
-    console.log(`👋 [${joinId}] STEP 3: Verifying status was updated...`);
+    logger.info(`👋 [${joinId}] STEP 3: Verifying status was updated...`);
     const sessionAfter = await twilioCallManager.getCallSession(sessionId);
     const participantAfter = participantType === 'provider'
       ? sessionAfter?.participants.provider
       : sessionAfter?.participants.client;
-    console.log(`👋 [${joinId}]   ${participantType}.status AFTER: "${participantAfter?.status}"`);
+    logger.info(`👋 [${joinId}]   ${participantType}.status AFTER: "${participantAfter?.status}"`);
 
     if (participantAfter?.status === 'connected') {
-      console.log(`👋 [${joinId}]   ✅ Status correctly set to "connected" - waitForConnection() will succeed!`);
+      logger.info(`👋 [${joinId}]   ✅ Status correctly set to "connected" - waitForConnection() will succeed!`);
     } else {
-      console.log(`👋 [${joinId}]   ❌ STATUS NOT "connected"! waitForConnection() may fail!`);
+      logger.info(`👋 [${joinId}]   ❌ STATUS NOT "connected"! waitForConnection() may fail!`);
     }
 
     // Vérifier si les deux participants sont connectés
-    console.log(`👋 [${joinId}] STEP 4: Checking if BOTH participants are connected...`);
-    console.log(`👋 [${joinId}]   client.status: ${sessionAfter?.participants.client.status}`);
-    console.log(`👋 [${joinId}]   provider.status: ${sessionAfter?.participants.provider.status}`);
+    logger.info(`👋 [${joinId}] STEP 4: Checking if BOTH participants are connected...`);
+    logger.info(`👋 [${joinId}]   client.status: ${sessionAfter?.participants.client.status}`);
+    logger.info(`👋 [${joinId}]   provider.status: ${sessionAfter?.participants.provider.status}`);
 
     if (sessionAfter &&
         sessionAfter.participants.provider.status === 'connected' &&
         sessionAfter.participants.client.status === 'connected') {
 
-      console.log(`👋 [${joinId}]   ✅ BOTH CONNECTED! Setting session status to "active"...`);
+      logger.info(`👋 [${joinId}]   ✅ BOTH CONNECTED! Setting session status to "active"...`);
       await twilioCallManager.updateCallSessionStatus(sessionId, 'active');
-      console.log(`👋 [${joinId}]   ✅ Session status set to "active"`);
+      logger.info(`👋 [${joinId}]   ✅ Session status set to "active"`);
 
       // Schedule forceEndCall task as safety net (will terminate call if stuck)
       // Add 10 minutes buffer to the maxDuration for the safety timeout
@@ -829,7 +832,7 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
         const maxDuration = sessionAfter.metadata?.maxDuration || 1200; // 20 min default
         const safetyTimeout = maxDuration + 600; // Add 10 min safety buffer
         const taskId = await scheduleForceEndCallTask(sessionId, safetyTimeout);
-        console.log(`👋 [${joinId}]   ⏱️ ForceEndCall safety net scheduled: ${taskId} (${safetyTimeout}s)`);
+        logger.info(`👋 [${joinId}]   ⏱️ ForceEndCall safety net scheduled: ${taskId} (${safetyTimeout}s)`);
 
         // Store the taskId in session metadata for potential cancellation
         await admin.firestore().collection('call_sessions').doc(sessionId).update({
@@ -837,7 +840,7 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
           'metadata.forceEndCallScheduledAt': admin.firestore.FieldValue.serverTimestamp()
         });
       } catch (taskError) {
-        console.warn(`👋 [${joinId}]   ⚠️ Failed to schedule forceEndCall task:`, taskError);
+        logger.warn(`👋 [${joinId}]   ⚠️ Failed to schedule forceEndCall task:`, taskError);
         // P2-1: Log non-critical errors for monitoring
         await logError('TwilioConferenceWebhook:scheduleForceEndCallTask', { sessionId, error: taskError });
         // Non-critical, continue
@@ -849,7 +852,7 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
         retryCount: 0
       });
     } else {
-      console.log(`👋 [${joinId}]   ⏳ Waiting for other participant to join...`);
+      logger.info(`👋 [${joinId}]   ⏳ Waiting for other participant to join...`);
     }
 
     await logCallRecord({
@@ -862,11 +865,11 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
       }
     });
 
-    console.log(`👋 [${joinId}] END - Participant join handled successfully`);
-    console.log(`${'═'.repeat(70)}\n`);
+    logger.info(`👋 [${joinId}] END - Participant join handled successfully`);
+    logger.info(`${'═'.repeat(70)}\n`);
 
   } catch (error) {
-    console.error(`👋 [${joinId}] ❌ ERROR in handleParticipantJoin:`, error);
+    logger.error(`👋 [${joinId}] ❌ ERROR in handleParticipantJoin:`, error);
     await logError('handleParticipantJoin', error);
   }
 }
@@ -897,23 +900,23 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
         // Webhook has a SID but session doesn't have one yet
         // This means conference-start hasn't been processed yet
         // This webhook is from an OLD conference - IGNORE IT
-        console.log(`👋 [${leaveId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (session has no SID yet)`);
-        console.log(`👋 [${leaveId}]   webhookConferenceSid: ${webhookConferenceSid}`);
-        console.log(`👋 [${leaveId}]   currentConferenceSid: NOT SET YET`);
-        console.log(`👋 [${leaveId}]   This webhook arrived BEFORE conference-start - it's from an OLD conference`);
-        console.log(`👋 [${leaveId}]   ⛔ NOT processing this webhook to prevent incorrect state updates`);
+        logger.info(`👋 [${leaveId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (session has no SID yet)`);
+        logger.info(`👋 [${leaveId}]   webhookConferenceSid: ${webhookConferenceSid}`);
+        logger.info(`👋 [${leaveId}]   currentConferenceSid: NOT SET YET`);
+        logger.info(`👋 [${leaveId}]   This webhook arrived BEFORE conference-start - it's from an OLD conference`);
+        logger.info(`👋 [${leaveId}]   ⛔ NOT processing this webhook to prevent incorrect state updates`);
         return;
       }
 
       if (currentConferenceSid !== webhookConferenceSid) {
-        console.log(`👋 [${leaveId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (SID mismatch)`);
-        console.log(`👋 [${leaveId}]   webhookConferenceSid: ${webhookConferenceSid}`);
-        console.log(`👋 [${leaveId}]   currentConferenceSid: ${currentConferenceSid}`);
-        console.log(`👋 [${leaveId}]   Participant likely transferred to new conference - skipping leave handling`);
+        logger.info(`👋 [${leaveId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (SID mismatch)`);
+        logger.info(`👋 [${leaveId}]   webhookConferenceSid: ${webhookConferenceSid}`);
+        logger.info(`👋 [${leaveId}]   currentConferenceSid: ${currentConferenceSid}`);
+        logger.info(`👋 [${leaveId}]   Participant likely transferred to new conference - skipping leave handling`);
         return;
       }
 
-      console.log(`👋 [${leaveId}]   ✅ ConferenceSID matches current session - processing webhook`);
+      logger.info(`👋 [${leaveId}]   ✅ ConferenceSID matches current session - processing webhook`);
     }
 
     // P0 FIX: Determine participantType from ParticipantLabel OR fallback to CallSid lookup
@@ -921,7 +924,7 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
 
     if (!participantType) {
       // Fallback: identify participant by matching CallSid in session
-      console.log(`👋 [${leaveId}] ⚠️ ParticipantLabel is missing, using CallSid fallback`);
+      logger.info(`👋 [${leaveId}] ⚠️ ParticipantLabel is missing, using CallSid fallback`);
       const session = await twilioCallManager.getCallSession(sessionId);
       if (session) {
         if (session.participants.client.callSid === callSid) {
@@ -929,44 +932,44 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
         } else if (session.participants.provider.callSid === callSid) {
           participantType = 'provider';
         } else {
-          console.log(`👋 [${leaveId}]   ❌ CallSid does not match any participant, skipping leave handling`);
+          logger.info(`👋 [${leaveId}]   ❌ CallSid does not match any participant, skipping leave handling`);
           return;
         }
-        console.log(`👋 [${leaveId}]   ✅ Identified as ${participantType.toUpperCase()} via CallSid match`);
+        logger.info(`👋 [${leaveId}]   ✅ Identified as ${participantType.toUpperCase()} via CallSid match`);
       } else {
-        console.log(`👋 [${leaveId}]   ❌ Session not found - cannot identify participant`);
+        logger.info(`👋 [${leaveId}]   ❌ Session not found - cannot identify participant`);
         return;
       }
     }
 
-    console.log(`\n${'─'.repeat(70)}`);
-    console.log(`👋 [${leaveId}] handleParticipantLeave START`);
-    console.log(`👋 [${leaveId}]   sessionId: ${sessionId}`);
-    console.log(`👋 [${leaveId}]   participantType: ${participantType}`);
-    console.log(`👋 [${leaveId}]   callSid: ${callSid}`);
-    console.log(`👋 [${leaveId}]   conferenceSid: ${webhookConferenceSid}`);
-    console.log(`👋 [${leaveId}]   source: ${body.ParticipantLabel ? 'ParticipantLabel' : 'CallSid fallback'}`);
-    console.log(`${'─'.repeat(70)}`);
+    logger.info(`\n${'─'.repeat(70)}`);
+    logger.info(`👋 [${leaveId}] handleParticipantLeave START`);
+    logger.info(`👋 [${leaveId}]   sessionId: ${sessionId}`);
+    logger.info(`👋 [${leaveId}]   participantType: ${participantType}`);
+    logger.info(`👋 [${leaveId}]   callSid: ${callSid}`);
+    logger.info(`👋 [${leaveId}]   conferenceSid: ${webhookConferenceSid}`);
+    logger.info(`👋 [${leaveId}]   source: ${body.ParticipantLabel ? 'ParticipantLabel' : 'CallSid fallback'}`);
+    logger.info(`${'─'.repeat(70)}`);
 
     // Get status BEFORE update
-    console.log(`👋 [${leaveId}] STEP 1: Fetching session state BEFORE update...`);
+    logger.info(`👋 [${leaveId}] STEP 1: Fetching session state BEFORE update...`);
     const sessionBefore = await twilioCallManager.getCallSession(sessionId);
     if (sessionBefore) {
-      console.log(`👋 [${leaveId}]   session.status: ${sessionBefore.status}`);
-      console.log(`👋 [${leaveId}]   client.status: ${sessionBefore.participants.client.status}`);
-      console.log(`👋 [${leaveId}]   provider.status: ${sessionBefore.participants.provider.status}`);
-      console.log(`👋 [${leaveId}]   conference.duration: ${sessionBefore.conference.duration}s`);
+      logger.info(`👋 [${leaveId}]   session.status: ${sessionBefore.status}`);
+      logger.info(`👋 [${leaveId}]   client.status: ${sessionBefore.participants.client.status}`);
+      logger.info(`👋 [${leaveId}]   provider.status: ${sessionBefore.participants.provider.status}`);
+      logger.info(`👋 [${leaveId}]   conference.duration: ${sessionBefore.conference.duration}s`);
     }
 
     // Mettre à jour le statut du participant
-    console.log(`👋 [${leaveId}] STEP 2: Setting ${participantType}.status to "disconnected"...`);
+    logger.info(`👋 [${leaveId}] STEP 2: Setting ${participantType}.status to "disconnected"...`);
     await twilioCallManager.updateParticipantStatus(
       sessionId,
       participantType,
       'disconnected',
       admin.firestore.Timestamp.fromDate(new Date())
     );
-    console.log(`👋 [${leaveId}]   ✅ Status updated to "disconnected"`);
+    logger.info(`👋 [${leaveId}]   ✅ Status updated to "disconnected"`);
 
     // P0 FIX 2026-01-18: Calculate BILLING duration as time when BOTH participants are connected
     // This is fairer to the client - they shouldn't pay for time when they were alone
@@ -994,22 +997,22 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
       // P0 FIX: Use Math.round instead of Math.floor to prevent edge case
       billingDuration = Math.max(0, Math.round((endTime - bothConnectedAt) / 1000));
 
-      console.log(`👋 [${leaveId}]   📊 BILLING DURATION (P0 FIX 2026-01-18):`);
-      console.log(`👋 [${leaveId}]     clientConnectedAt: ${new Date(clientConnectedTime).toISOString()}`);
-      console.log(`👋 [${leaveId}]     providerConnectedAt: ${new Date(providerConnectedTime).toISOString()}`);
-      console.log(`👋 [${leaveId}]     bothConnectedAt: ${new Date(bothConnectedAt).toISOString()}`);
-      console.log(`👋 [${leaveId}]     leaveTime: ${leaveTime.toISOString()}`);
-      console.log(`👋 [${leaveId}]     billingDuration: ${billingDuration}s`);
+      logger.info(`👋 [${leaveId}]   📊 BILLING DURATION (P0 FIX 2026-01-18):`);
+      logger.info(`👋 [${leaveId}]     clientConnectedAt: ${new Date(clientConnectedTime).toISOString()}`);
+      logger.info(`👋 [${leaveId}]     providerConnectedAt: ${new Date(providerConnectedTime).toISOString()}`);
+      logger.info(`👋 [${leaveId}]     bothConnectedAt: ${new Date(bothConnectedAt).toISOString()}`);
+      logger.info(`👋 [${leaveId}]     leaveTime: ${leaveTime.toISOString()}`);
+      logger.info(`👋 [${leaveId}]     billingDuration: ${billingDuration}s`);
     } else if (providerConnectedAt) {
-      console.log(`👋 [${leaveId}]   ⚠️ Client never connected - billingDuration = 0`);
+      logger.info(`👋 [${leaveId}]   ⚠️ Client never connected - billingDuration = 0`);
     } else {
-      console.log(`👋 [${leaveId}]   ⚠️ Provider never connected - billingDuration = 0`);
+      logger.info(`👋 [${leaveId}]   ⚠️ Provider never connected - billingDuration = 0`);
     }
 
-    console.log(`👋 [${leaveId}] STEP 3: Checking if early disconnection...`);
-    console.log(`👋 [${leaveId}]   billingDuration (from both connected): ${billingDuration}s`);
-    console.log(`👋 [${leaveId}]   minDuration: 60s`);
-    console.log(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 60}`);
+    logger.info(`👋 [${leaveId}] STEP 3: Checking if early disconnection...`);
+    logger.info(`👋 [${leaveId}]   billingDuration (from both connected): ${billingDuration}s`);
+    logger.info(`👋 [${leaveId}]   minDuration: 60s`);
+    logger.info(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 60}`);
 
     // P0 CRITICAL FIX 2026-01-17 v4: Don't process if session is still connecting!
     // If session is in connecting phase, the retry loop should continue handling provider retries.
@@ -1019,11 +1022,11 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
     const isStillConnecting = connectingStatuses.includes(sessionStatus || '');
 
     if (!providerConnectedAt && isStillConnecting) {
-      console.log(`👋 [${leaveId}] ⛔ P0 FIX v4: NOT calling handleEarlyDisconnection!`);
-      console.log(`👋 [${leaveId}]   Reason: Provider never connected AND session is still in connecting phase`);
-      console.log(`👋 [${leaveId}]   session.status: ${sessionStatus}`);
-      console.log(`👋 [${leaveId}]   The retry loop will handle the provider connection`);
-      console.log(`👋 [${leaveId}]   Skipping handleEarlyDisconnection to allow retry loop to continue`);
+      logger.info(`👋 [${leaveId}] ⛔ P0 FIX v4: NOT calling handleEarlyDisconnection!`);
+      logger.info(`👋 [${leaveId}]   Reason: Provider never connected AND session is still in connecting phase`);
+      logger.info(`👋 [${leaveId}]   session.status: ${sessionStatus}`);
+      logger.info(`👋 [${leaveId}]   The retry loop will handle the provider connection`);
+      logger.info(`👋 [${leaveId}]   Skipping handleEarlyDisconnection to allow retry loop to continue`);
 
       // Just log the event and return - don't process payment or set session to failed
       await logCallRecord({
@@ -1038,24 +1041,24 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
         }
       });
 
-      console.log(`👋 [${leaveId}] END - Skipped handleEarlyDisconnection (P0 FIX v4)`);
-      console.log(`${'─'.repeat(70)}\n`);
+      logger.info(`👋 [${leaveId}] END - Skipped handleEarlyDisconnection (P0 FIX v4)`);
+      logger.info(`${'─'.repeat(70)}\n`);
       return; // EXIT - don't call handleEarlyDisconnection
     }
 
     // Gérer la déconnexion selon le participant et la durée
     // P0 FIX: Pass BILLING duration (from when both connected)
-    console.log(`👋 [${leaveId}] STEP 4: Calling handleEarlyDisconnection...`);
+    logger.info(`👋 [${leaveId}] STEP 4: Calling handleEarlyDisconnection...`);
     await twilioCallManager.handleEarlyDisconnection(sessionId, participantType, billingDuration);
-    console.log(`👋 [${leaveId}]   ✅ handleEarlyDisconnection completed`);
+    logger.info(`👋 [${leaveId}]   ✅ handleEarlyDisconnection completed`);
 
     // Verify final state
-    console.log(`👋 [${leaveId}] STEP 5: Fetching session state AFTER handling...`);
+    logger.info(`👋 [${leaveId}] STEP 5: Fetching session state AFTER handling...`);
     const sessionAfter = await twilioCallManager.getCallSession(sessionId);
     if (sessionAfter) {
-      console.log(`👋 [${leaveId}]   session.status: ${sessionAfter.status}`);
-      console.log(`👋 [${leaveId}]   client.status: ${sessionAfter.participants.client.status}`);
-      console.log(`👋 [${leaveId}]   provider.status: ${sessionAfter.participants.provider.status}`);
+      logger.info(`👋 [${leaveId}]   session.status: ${sessionAfter.status}`);
+      logger.info(`👋 [${leaveId}]   client.status: ${sessionAfter.participants.client.status}`);
+      logger.info(`👋 [${leaveId}]   provider.status: ${sessionAfter.participants.provider.status}`);
     }
 
     await logCallRecord({
@@ -1070,30 +1073,30 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
     });
 
     // === LOGS DÉTAILLÉS POUR DEBUG PARTICIPANT-LEAVE ===
-    console.log(`\n${'👋'.repeat(30)}`);
-    console.log(`👋 [${leaveId}] === PARTICIPANT LEAVE SUMMARY ===`);
-    console.log(`👋 [${leaveId}]   sessionId: ${sessionId}`);
-    console.log(`👋 [${leaveId}]   participantType: ${participantType}`);
-    console.log(`👋 [${leaveId}]   callSid: ${callSid}`);
-    console.log(`👋 [${leaveId}]   billingDuration: ${billingDuration}s`);
-    console.log(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 60 ? 'YES' : 'NO'}`);
+    logger.info(`\n${'👋'.repeat(30)}`);
+    logger.info(`👋 [${leaveId}] === PARTICIPANT LEAVE SUMMARY ===`);
+    logger.info(`👋 [${leaveId}]   sessionId: ${sessionId}`);
+    logger.info(`👋 [${leaveId}]   participantType: ${participantType}`);
+    logger.info(`👋 [${leaveId}]   callSid: ${callSid}`);
+    logger.info(`👋 [${leaveId}]   billingDuration: ${billingDuration}s`);
+    logger.info(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 60 ? 'YES' : 'NO'}`);
 
     // Fetch and log final state after leave
     const finalLeaveState = await twilioCallManager.getCallSession(sessionId);
     if (finalLeaveState) {
-      console.log(`👋 [${leaveId}]   FINAL STATE AFTER LEAVE:`);
-      console.log(`👋 [${leaveId}]     session.status: ${finalLeaveState.status}`);
-      console.log(`👋 [${leaveId}]     client.status: ${finalLeaveState.participants.client.status}`);
-      console.log(`👋 [${leaveId}]     provider.status: ${finalLeaveState.participants.provider.status}`);
-      console.log(`👋 [${leaveId}]     payment.status: ${finalLeaveState.payment?.status}`);
+      logger.info(`👋 [${leaveId}]   FINAL STATE AFTER LEAVE:`);
+      logger.info(`👋 [${leaveId}]     session.status: ${finalLeaveState.status}`);
+      logger.info(`👋 [${leaveId}]     client.status: ${finalLeaveState.participants.client.status}`);
+      logger.info(`👋 [${leaveId}]     provider.status: ${finalLeaveState.participants.provider.status}`);
+      logger.info(`👋 [${leaveId}]     payment.status: ${finalLeaveState.payment?.status}`);
     }
-    console.log(`${'👋'.repeat(30)}\n`);
+    logger.info(`${'👋'.repeat(30)}\n`);
 
-    console.log(`👋 [${leaveId}] END - Participant leave handled successfully`);
-    console.log(`${'─'.repeat(70)}\n`);
+    logger.info(`👋 [${leaveId}] END - Participant leave handled successfully`);
+    logger.info(`${'─'.repeat(70)}\n`);
 
   } catch (error) {
-    console.error(`👋 [${leaveId}] ❌ ERROR in handleParticipantLeave:`, error);
+    logger.error(`👋 [${leaveId}] ❌ ERROR in handleParticipantLeave:`, error);
     await logError('handleParticipantLeave', error);
   }
 }
@@ -1106,7 +1109,7 @@ async function handleParticipantMute(sessionId: string, body: TwilioConferenceWe
     const participantType = body.ParticipantLabel as 'provider' | 'client';
     const isMuted = body.StatusCallbackEvent === 'participant-mute';
     
-    console.log(`🔇 Participant ${isMuted ? 'muted' : 'unmuted'}: ${participantType}`);
+    logger.info(`🔇 Participant ${isMuted ? 'muted' : 'unmuted'}: ${participantType}`);
 
     await logCallRecord({
       callId: sessionId,
@@ -1131,7 +1134,7 @@ async function handleParticipantHold(sessionId: string, body: TwilioConferenceWe
     const participantType = body.ParticipantLabel as 'provider' | 'client';
     const isOnHold = body.StatusCallbackEvent === 'participant-hold';
     
-    console.log(`⏸️ Participant ${isOnHold ? 'on hold' : 'off hold'}: ${participantType}`);
+    logger.info(`⏸️ Participant ${isOnHold ? 'on hold' : 'off hold'}: ${participantType}`);
 
     await logCallRecord({
       callId: sessionId,

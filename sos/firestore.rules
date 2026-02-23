@@ -319,8 +319,8 @@ service cloud.firestore {
       allow delete: if isAdmin() || isDev();
     }
 
-    // ================= FCM TOKENS COLLECTION (P1 Security Fix) =================
-    match /fcm_tokens/{userId} {
+    // ================= FCM TOKENS COLLECTION (P0 Fix: fcm_tokens → fcmTokens) =================
+    match /fcmTokens/{userId} {
       // Only token owner can read their own token
       allow read: if isOwner(userId) || isAdmin() || isDev();
       // Only token owner can create/update their token
@@ -414,16 +414,18 @@ service cloud.firestore {
 
     // ================= UI_PROFILE_CARDS COLLECTION =================
     // Cards de profil pour l'affichage UI (carrousel, grille, etc.)
+    // P1-3 FIX 2026-02-23: Restrict to visible profiles only (prevent scraping hidden/inactive profiles)
     match /ui_profile_cards/{profileId} {
-      allow read: if true;
+      allow read: if resource.data.isVisible == true || isAdmin() || isDev();
       allow create, update: if isOwner(profileId) || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }
 
     // ================= UI_PROFILE_CAROUSEL COLLECTION =================
     // Données pour le carrousel de profils
+    // P1-3 FIX 2026-02-23: Restrict to visible profiles only
     match /ui_profile_carousel/{profileId} {
-      allow read: if true;
+      allow read: if resource.data.isVisible == true || isAdmin() || isDev();
       allow create, update: if isOwner(profileId) || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }
@@ -1928,6 +1930,13 @@ service cloud.firestore {
                                    'recruitedBy', 'recruitedByCode', 'recruitedAt']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
+
+      // P0 FIX: Subcollection FCM tokens pour push notifications chatters
+      match /fcmTokens/{tokenId} {
+        allow read: if isChatterOwner(chatterId) || isAdmin() || isDev();
+        allow create, update: if isChatterOwner(chatterId);
+        allow delete: if isChatterOwner(chatterId) || isAdmin() || isDev();
+      }
     }
 
     // Commissions des chatters
@@ -2154,6 +2163,24 @@ service cloud.firestore {
     match /chatter_weekly_challenges/{challengeId} {
       allow read: if isChatter() || isAdmin() || isDev();
       allow write: if isAdmin() || isDev();
+    }
+
+    // P0 FIX: Compteurs d'appels chatters (anti-fraude, bonus activation)
+    match /chatter_call_counts/{chatterId} {
+      // Lecture: le propriétaire (pour voir son compteur) ou admin
+      allow read: if isChatterOwner(chatterId) || isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement (triggers onCallCompleted)
+      allow write: if false;
+    }
+
+    // P0 FIX: Reviews de fraude chatters (modération manuelle)
+    match /chatter_fraud_reviews/{reviewId} {
+      // Lecture: admin uniquement (données sensibles de fraude)
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions pour créer, admin pour résoudre
+      allow create: if false;
+      allow update: if isAdmin() || isDev();
+      allow delete: if false;
     }
 
     // ================= INFLUENCER SYSTEM =================
@@ -2921,6 +2948,39 @@ service cloud.firestore {
     // Campagnes Telegram - admin lecture seule
     match /telegram_campaigns/{campaignId} {
       allow read: if isAdmin() || isDev();
+      allow write: if false;
+    }
+
+    // ================= P0 FIX: FRAUD ALERTS (centralisé, multi-source) =================
+    // Alertes de fraude centralisées (chatter, affiliate, referral)
+    match /fraud_alerts/{alertId} {
+      // Lecture: admin uniquement (données sensibles)
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement (fraud detection system)
+      // Admin peut résoudre (update status/resolution)
+      allow create, delete: if false;
+      allow update: if isAdmin() || isDev();
+    }
+
+    // ================= P0 FIX: AGENT ORCHESTRATION (système interne) =================
+    // État des agents IA (BaseAgent orchestration)
+    match /agent_states/{agentId} {
+      // Lecture/écriture: Cloud Functions uniquement (orchestration interne)
+      allow read, write: if false;
+    }
+
+    // Tâches des agents IA (BaseAgent task queue)
+    match /agent_tasks/{taskId} {
+      // Lecture/écriture: Cloud Functions uniquement (orchestration interne)
+      allow read, write: if false;
+    }
+
+    // ================= P0 FIX: ROLE RESTORATION LOGS (audit admin) =================
+    // Logs de restauration des rôles utilisateurs
+    match /role_restoration_logs/{logId} {
+      // Lecture: admin uniquement (audit trail)
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement (callable admin)
       allow write: if false;
     }
 

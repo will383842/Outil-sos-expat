@@ -81,7 +81,7 @@ const FUNCTION_OPTIONS = {
   memory: '256MiB' as const,
   cpu: 0.25,
   concurrency: 1,
-  timeoutSeconds: 60,
+  timeoutSeconds: 120, // P1-2 FIX 2026-02-23: 60→120s — 40+ Firestore ops + Stripe API calls need margin
   minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
   maxInstances: 3,
   cors: ALLOWED_ORIGINS,
@@ -528,7 +528,7 @@ async function checkAndLockDuplicatePayments(
 
     // Si lock créé directement → pas de doublon
     if (!result.hasValidLock) {
-      console.log('🔍 Pas de lock existant - nouveau lock créé');
+      logger.info('🔍 Pas de lock existant - nouveau lock créé');
       return { isDuplicate: false, lockId: lockKey };
     }
 
@@ -539,20 +539,20 @@ async function checkAndLockDuplicatePayments(
       // Si le paiement est actif (non échoué), bloquer
       const paymentCheck = checks.find(c => c.type === 'payment');
       if (paymentCheck && !paymentCheck.failed) {
-        console.log(`🔍 Lock existe avec paiement actif - BLOQUÉ`);
+        logger.info(`🔍 Lock existe avec paiement actif - BLOQUÉ`);
         return { isDuplicate: true, existingPaymentId: result.lockedPaymentIntentId };
       }
 
       // Si la call session est active, bloquer
       const callCheck = checks.find(c => c.type === 'call');
       if (callCheck && !callCheck.failed) {
-        console.log(`🔍 Lock existe avec call session active - BLOQUÉ`);
+        logger.info(`🔍 Lock existe avec call session active - BLOQUÉ`);
         return { isDuplicate: true, existingPaymentId: result.lockedPaymentIntentId };
       }
     }
 
     // Le lock existe mais le paiement/call a échoué → permettre retry, recréer le lock
-    console.log('🔍 Lock existe mais paiement/call échoué - autoriser retry');
+    logger.info('🔍 Lock existe mais paiement/call échoué - autoriser retry');
     await db.collection('payment_locks').doc(lockKey).set({
       clientId,
       providerId,

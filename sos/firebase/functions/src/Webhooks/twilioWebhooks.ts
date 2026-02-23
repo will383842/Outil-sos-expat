@@ -1,4 +1,5 @@
 import { onRequest } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions/v2';
 import { twilioCallManager } from '../TwilioCallManager';
 import { logCallRecord } from '../utils/logs/logCallRecord';
 import { logError } from '../utils/logs/logError';
@@ -14,6 +15,7 @@ import { TASKS_AUTH_SECRET, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST } fro
 import voicePromptsJson from '../content/voicePrompts.json';
 // P0 FIX: Import call region from centralized config - dedicated region for call functions
 import { CALL_FUNCTIONS_REGION } from '../configs/callRegion';
+import { captureError } from '../config/sentry';
 
 // Helper function to get intro text based on participant type and language
 function getIntroText(participant: "provider" | "client", langKey: string): string {
@@ -81,7 +83,8 @@ export const twilioCallWebhook = onRequest(
     memory: '256MiB',
     cpu: 0.25,
     maxInstances: 10,  // P1 FIX: Increased from 3 for better scalability
-    minInstances: 0,   // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
+    minInstances: 1,   // P0 FIX 2026-02-23: Restored to 1 — cold start on real-time Twilio webhook is unacceptable
+    timeoutSeconds: 90, // P1-2 FIX 2026-02-23: Explicit 90s — validation + Firestore + Cloud Tasks scheduling
     concurrency: 1,    // Keep at 1 to avoid race conditions with Firestore updates
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + hangup calls to voicemail
     // P0 FIX 2026-01-18: Added TASKS_AUTH_SECRET for scheduleProviderAvailableTask (provider cooldown)
@@ -92,11 +95,11 @@ export const twilioCallWebhook = onRequest(
     const requestId = `twilio-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     try {
-      console.log(`\n${'🔔'.repeat(40)}`);
-      console.log(`[twilioCallWebhook] === Twilio Webhook Execution Started ===`);
-      console.log(`[twilioCallWebhook] requestId: ${requestId}`);
-      console.log(`[twilioCallWebhook] timestamp: ${new Date().toISOString()}`);
-      console.log(`${'🔔'.repeat(40)}`);
+      logger.info(`\n${'🔔'.repeat(40)}`);
+      logger.info(`[twilioCallWebhook] === Twilio Webhook Execution Started ===`);
+      logger.info(`[twilioCallWebhook] requestId: ${requestId}`);
+      logger.info(`[twilioCallWebhook] timestamp: ${new Date().toISOString()}`);
+      logger.info(`${'🔔'.repeat(40)}`);
       prodLogger.info('TWILIO_WEBHOOK_START', `[${requestId}] Twilio call webhook received`, {
         requestId,
         method: req.method,
@@ -105,7 +108,7 @@ export const twilioCallWebhook = onRequest(
 
       // ===== P0 SECURITY FIX: Validate Twilio signature =====
       if (!validateTwilioWebhookSignature(req as any, res as any)) {
-        console.error("[twilioCallWebhook] Invalid Twilio signature - rejecting request");
+        logger.error("[twilioCallWebhook] Invalid Twilio signature - rejecting request");
         prodLogger.warn('TWILIO_WEBHOOK_INVALID_SIGNATURE', `[${requestId}] Invalid Twilio signature`, { requestId });
         return; // Response already sent by validateTwilioWebhookSignature
       }
@@ -125,7 +128,7 @@ export const twilioCallWebhook = onRequest(
         duration: body.CallDuration
       });
 
-      console.log('🔔 Call Webhook reçu:', {
+      logger.info('🔔 Call Webhook reçu:', {
         event: body.CallStatus,
         callSid: body.CallSid,
         from: sanitizePhone(body.From),
@@ -163,14 +166,14 @@ export const twilioCallWebhook = onRequest(
         // P1-3 FIX: Don't treat transaction errors as duplicates!
         // Transaction errors (contention, timeout, network) are NOT the same as legitimate duplicates.
         // Return 500 so Twilio retries the webhook instead of losing the event.
-        console.error(`❌ Transaction error for webhook idempotency: ${txError}`);
-        console.error(`⚠️ Returning 500 to trigger Twilio retry (was incorrectly returning 200 before)`);
+        logger.error(`❌ Transaction error for webhook idempotency: ${txError}`);
+        logger.error(`⚠️ Returning 500 to trigger Twilio retry (was incorrectly returning 200 before)`);
         res.status(500).send('Transaction error - please retry');
         return;
       }
 
       if (isDuplicate) {
-        console.log(`⚠️ IDEMPOTENCY: Twilio event ${webhookKey} already processed, skipping`);
+        logger.info(`⚠️ IDEMPOTENCY: Twilio event ${webhookKey} already processed, skipping`);
         res.status(200).send('OK - duplicate');
         return;
       }
@@ -179,7 +182,7 @@ export const twilioCallWebhook = onRequest(
       const sessionResult = await twilioCallManager.findSessionByCallSid(body.CallSid);
 
       if (!sessionResult) {
-        console.warn(`Session non trouvée pour CallSid: ${body.CallSid}`);
+        logger.warn(`Session non trouvée pour CallSid: ${body.CallSid}`);
         prodLogger.warn('TWILIO_WEBHOOK_SESSION_NOT_FOUND', `[${requestId}] Session not found for CallSid`, {
           requestId,
           callSid: body.CallSid?.slice(0, 20) + '...',
@@ -188,7 +191,7 @@ export const twilioCallWebhook = onRequest(
         res.status(200).send('Session not found');
         return;
       }
-      console.log('[twilioCallWebhook] Session Result : ', sessionResult);
+      logger.info('[twilioCallWebhook] Session Result : ', sessionResult);
       prodLogger.debug('TWILIO_WEBHOOK_SESSION_FOUND', `[${requestId}] Session found`, {
         requestId,
         sessionId: sessionResult.session.id,
@@ -220,7 +223,7 @@ export const twilioCallWebhook = onRequest(
           break;
           
         default:
-          console.log(`Statut d'appel non géré: ${body.CallStatus}`);
+          logger.info(`Statut d'appel non géré: ${body.CallStatus}`);
           prodLogger.debug('TWILIO_WEBHOOK_UNHANDLED_STATUS', `[${requestId}] Unhandled call status: ${body.CallStatus}`, {
             requestId,
             callStatus: body.CallStatus,
@@ -256,9 +259,9 @@ export const twilioCallWebhook = onRequest(
         timestamp: new Date().toISOString(),
       };
 
-      console.error(`\n${'❌'.repeat(40)}`);
-      console.error(`❌ [twilioCallWebhook] WEBHOOK ERROR:`, errorDetails);
-      console.error(`${'❌'.repeat(40)}\n`);
+      logger.error(`\n${'❌'.repeat(40)}`);
+      logger.error(`❌ [twilioCallWebhook] WEBHOOK ERROR:`, errorDetails);
+      logger.error(`${'❌'.repeat(40)}\n`);
 
       prodLogger.error('TWILIO_WEBHOOK_ERROR', `[${requestId}] Webhook processing failed`, errorDetails);
 
@@ -266,6 +269,7 @@ export const twilioCallWebhook = onRequest(
       logWebhookTest.twilio.error(req.body?.CallStatus || 'unknown', error as Error, errorDetails);
 
       await logError('twilioCallWebhook:error', error);
+      captureError(error, { functionName: 'twilioCallWebhook', extra: errorDetails });
       res.status(500).send('Webhook error');
     }
   }
@@ -280,7 +284,7 @@ async function handleCallRinging(
   body: TwilioCallWebhookBody
 ) {
   try {
-    console.log(`📞 ${participantType} en cours de sonnerie: ${sessionId}`);
+    logger.info(`📞 ${participantType} en cours de sonnerie: ${sessionId}`);
     prodLogger.info('TWILIO_CALL_RINGING', `Call ringing for ${participantType}`, {
       sessionId,
       participantType,
@@ -296,10 +300,10 @@ async function handleCallRinging(
     const currentCallSid = participantForValidation?.callSid;
 
     if (currentCallSid && body.CallSid && currentCallSid !== body.CallSid) {
-      console.log(`📞 [ringing] ⚠️ STALE WEBHOOK DETECTED!`);
-      console.log(`📞 [ringing]   Webhook callSid: ${body.CallSid}`);
-      console.log(`📞 [ringing]   Current callSid: ${currentCallSid}`);
-      console.log(`📞 [ringing]   This webhook is from an OLD call attempt - IGNORING`);
+      logger.info(`📞 [ringing] ⚠️ STALE WEBHOOK DETECTED!`);
+      logger.info(`📞 [ringing]   Webhook callSid: ${body.CallSid}`);
+      logger.info(`📞 [ringing]   Current callSid: ${currentCallSid}`);
+      logger.info(`📞 [ringing]   This webhook is from an OLD call attempt - IGNORING`);
       return; // Ignore stale webhook
     }
 
@@ -336,14 +340,14 @@ async function handleCallAnswered(
   const webhookId = `answered_${Date.now().toString(36)}`;
 
   try {
-    console.log(`\n${'═'.repeat(70)}`);
-    console.log(`📞 [${webhookId}] handleCallAnswered START`);
-    console.log(`📞 [${webhookId}]   sessionId: ${sessionId}`);
-    console.log(`📞 [${webhookId}]   participantType: ${participantType}`);
-    console.log(`📞 [${webhookId}]   callSid: ${body.CallSid}`);
-    console.log(`📞 [${webhookId}]   callStatus: ${body.CallStatus}`);
-    console.log(`📞 [${webhookId}]   answeredBy: ${body.AnsweredBy || 'not_provided'}`);
-    console.log(`${'═'.repeat(70)}`);
+    logger.info(`\n${'═'.repeat(70)}`);
+    logger.info(`📞 [${webhookId}] handleCallAnswered START`);
+    logger.info(`📞 [${webhookId}]   sessionId: ${sessionId}`);
+    logger.info(`📞 [${webhookId}]   participantType: ${participantType}`);
+    logger.info(`📞 [${webhookId}]   callSid: ${body.CallSid}`);
+    logger.info(`📞 [${webhookId}]   callStatus: ${body.CallStatus}`);
+    logger.info(`📞 [${webhookId}]   answeredBy: ${body.AnsweredBy || 'not_provided'}`);
+    logger.info(`${'═'.repeat(70)}`);
 
     // P0 CRITICAL FIX: Validate that this webhook is for the CURRENT call attempt
     // Race condition: Webhook from attempt 1 can arrive during attempt 2
@@ -355,14 +359,14 @@ async function handleCallAnswered(
     const currentCallSid = participantForValidation?.callSid;
 
     if (currentCallSid && body.CallSid && currentCallSid !== body.CallSid) {
-      console.log(`📞 [${webhookId}] ⚠️ STALE WEBHOOK DETECTED!`);
-      console.log(`📞 [${webhookId}]   Webhook callSid: ${body.CallSid}`);
-      console.log(`📞 [${webhookId}]   Current callSid: ${currentCallSid}`);
-      console.log(`📞 [${webhookId}]   This webhook is from an OLD call attempt - IGNORING`);
-      console.log(`${'═'.repeat(70)}\n`);
+      logger.info(`📞 [${webhookId}] ⚠️ STALE WEBHOOK DETECTED!`);
+      logger.info(`📞 [${webhookId}]   Webhook callSid: ${body.CallSid}`);
+      logger.info(`📞 [${webhookId}]   Current callSid: ${currentCallSid}`);
+      logger.info(`📞 [${webhookId}]   This webhook is from an OLD call attempt - IGNORING`);
+      logger.info(`${'═'.repeat(70)}\n`);
       return; // Ignore stale webhook
     }
-    console.log(`📞 [${webhookId}] ✅ CallSid validated - matches current call attempt`);
+    logger.info(`📞 [${webhookId}] ✅ CallSid validated - matches current call attempt`);
 
     // P0 FIX 2026-01-18: IGNORE AnsweredBy in status callback!
     // With asyncAmd="true", AMD detection is handled EXCLUSIVELY by twilioAmdTwiml callback.
@@ -376,19 +380,19 @@ async function handleCallAnswered(
     // - Only hangs up on confirmed machine_end_* (voicemail beep heard)
     const answeredBy = body.AnsweredBy;
 
-    console.log(`📞 [${webhookId}] STEP 1: AMD Detection`);
-    console.log(`📞 [${webhookId}]   answeredBy value: "${answeredBy || 'UNDEFINED'}"`);
-    console.log(`📞 [${webhookId}]   participantType: ${participantType}`);
-    console.log(`📞 [${webhookId}]   ⚠️ P0 FIX: IGNORING AnsweredBy in status callback - twilioAmdTwiml handles AMD!`);
+    logger.info(`📞 [${webhookId}] STEP 1: AMD Detection`);
+    logger.info(`📞 [${webhookId}]   answeredBy value: "${answeredBy || 'UNDEFINED'}"`);
+    logger.info(`📞 [${webhookId}]   participantType: ${participantType}`);
+    logger.info(`📞 [${webhookId}]   ⚠️ P0 FIX: IGNORING AnsweredBy in status callback - twilioAmdTwiml handles AMD!`);
 
     // P0 FIX 2026-01-18: ALWAYS set amd_pending, regardless of AnsweredBy value
     // The twilioAmdTwiml callback handles ALL AMD decisions with DTMF confirmation
     {
-      console.log(`📞 [${webhookId}] ⚠️ Setting status to "amd_pending" - twilioAmdTwiml will handle AMD`);
-      console.log(`📞 [${webhookId}]   AMD detection is handled by twilioAmdTwiml callback`);
-      console.log(`📞 [${webhookId}]   ⛔ NOT setting status to "connected" - waiting for AMD callback`);
-      console.log(`📞 [${webhookId}]   twilioAmdTwiml will set: "connected" if human, "no_answer" if machine`);
-      console.log(`${'═'.repeat(70)}\n`);
+      logger.info(`📞 [${webhookId}] ⚠️ Setting status to "amd_pending" - twilioAmdTwiml will handle AMD`);
+      logger.info(`📞 [${webhookId}]   AMD detection is handled by twilioAmdTwiml callback`);
+      logger.info(`📞 [${webhookId}]   ⛔ NOT setting status to "connected" - waiting for AMD callback`);
+      logger.info(`📞 [${webhookId}]   twilioAmdTwiml will set: "connected" if human, "no_answer" if machine`);
+      logger.info(`${'═'.repeat(70)}\n`);
 
       // Set status to "amd_pending" to indicate we're waiting for AMD callback
       // This prevents waitForConnection() from seeing "connected" prematurely
@@ -397,7 +401,7 @@ async function handleCallAnswered(
         participantType,
         'amd_pending'
       );
-      console.log(`📞 [${webhookId}] ✅ Status set to "amd_pending" - waiting for AMD callback`);
+      logger.info(`📞 [${webhookId}] ✅ Status set to "amd_pending" - waiting for AMD callback`);
 
       await logCallRecord({
         callId: sessionId,
@@ -439,15 +443,15 @@ async function handleCallCompleted(
     const twilioPrice = body.Price ? Math.abs(parseFloat(body.Price)) : null;
     const priceUnit = body.PriceUnit || 'USD';
 
-    console.log(`\n${'─'.repeat(60)}`);
-    console.log(`🏁 [${completedId}] handleCallCompleted START`);
-    console.log(`🏁 [${completedId}]   sessionId: ${sessionId}`);
-    console.log(`🏁 [${completedId}]   participantType: ${participantType}`);
-    console.log(`🏁 [${completedId}]   callSid: ${body.CallSid}`);
-    console.log(`🏁 [${completedId}]   twilioCallDuration: ${duration}s (individual participant duration)`);
-    console.log(`🏁 [${completedId}]   twilioPrice: ${twilioPrice} ${priceUnit}`);
-    console.log(`🏁 [${completedId}]   ⚠️ Note: billingDuration will be calculated below from timestamps`);
-    console.log(`${'─'.repeat(60)}`);
+    logger.info(`\n${'─'.repeat(60)}`);
+    logger.info(`🏁 [${completedId}] handleCallCompleted START`);
+    logger.info(`🏁 [${completedId}]   sessionId: ${sessionId}`);
+    logger.info(`🏁 [${completedId}]   participantType: ${participantType}`);
+    logger.info(`🏁 [${completedId}]   callSid: ${body.CallSid}`);
+    logger.info(`🏁 [${completedId}]   twilioCallDuration: ${duration}s (individual participant duration)`);
+    logger.info(`🏁 [${completedId}]   twilioPrice: ${twilioPrice} ${priceUnit}`);
+    logger.info(`🏁 [${completedId}]   ⚠️ Note: billingDuration will be calculated below from timestamps`);
+    logger.info(`${'─'.repeat(60)}`);
 
     prodLogger.info('TWILIO_CALL_COMPLETED', `Call completed for ${participantType}`, {
       sessionId,
@@ -473,14 +477,14 @@ async function handleCallCompleted(
     const currentCallSid = participantForValidation?.callSid;
 
     if (currentCallSid && body.CallSid && currentCallSid !== body.CallSid) {
-      console.log(`🏁 [${completedId}] ⚠️ STALE WEBHOOK DETECTED!`);
-      console.log(`🏁 [${completedId}]   Webhook callSid: ${body.CallSid}`);
-      console.log(`🏁 [${completedId}]   Current callSid: ${currentCallSid}`);
-      console.log(`🏁 [${completedId}]   This webhook is from an OLD call attempt - IGNORING`);
-      console.log(`${'─'.repeat(60)}\n`);
+      logger.info(`🏁 [${completedId}] ⚠️ STALE WEBHOOK DETECTED!`);
+      logger.info(`🏁 [${completedId}]   Webhook callSid: ${body.CallSid}`);
+      logger.info(`🏁 [${completedId}]   Current callSid: ${currentCallSid}`);
+      logger.info(`🏁 [${completedId}]   This webhook is from an OLD call attempt - IGNORING`);
+      logger.info(`${'─'.repeat(60)}\n`);
       return; // Ignore stale webhook - DO NOT process this!
     }
-    console.log(`🏁 [${completedId}] ✅ CallSid validated - matches current call attempt`);
+    logger.info(`🏁 [${completedId}] ✅ CallSid validated - matches current call attempt`);
 
     // Store Twilio cost in call_session if available
     if (twilioPrice !== null) {
@@ -508,37 +512,37 @@ async function handleCallCompleted(
             'costs.isReal': true,  // Flag: this is real cost from Twilio, not estimated
           });
 
-          console.log(`🏁 [${completedId}] 💰 Twilio cost stored: ${newTwilioCost} ${priceUnit} (accumulated from ${participantType})`);
+          logger.info(`🏁 [${completedId}] 💰 Twilio cost stored: ${newTwilioCost} ${priceUnit} (accumulated from ${participantType})`);
         }
       } catch (costError) {
-        console.error(`🏁 [${completedId}] ⚠️ Failed to store Twilio cost (non-blocking):`, costError);
+        logger.error(`🏁 [${completedId}] ⚠️ Failed to store Twilio cost (non-blocking):`, costError);
         // Don't throw - cost storage failure shouldn't break the call flow
       }
     } else {
-      console.log(`🏁 [${completedId}] ⚠️ No Twilio price in webhook (will need manual refresh)`);
+      logger.info(`🏁 [${completedId}] ⚠️ No Twilio price in webhook (will need manual refresh)`);
     }
 
-    console.log(`🏁 [${completedId}] STEP 1: Setting participant status to "disconnected"...`);
+    logger.info(`🏁 [${completedId}] STEP 1: Setting participant status to "disconnected"...`);
     await twilioCallManager.updateParticipantStatus(
       sessionId,
       participantType,
       'disconnected',
       admin.firestore.Timestamp.fromDate(new Date())
     );
-    console.log(`🏁 [${completedId}]   ✅ Status updated`);
+    logger.info(`🏁 [${completedId}]   ✅ Status updated`);
 
     // Récupérer la session pour déterminer le traitement approprié
-    console.log(`🏁 [${completedId}] STEP 2: Fetching session to determine next action...`);
+    logger.info(`🏁 [${completedId}] STEP 2: Fetching session to determine next action...`);
     const session = await twilioCallManager.getCallSession(sessionId);
     if (!session) {
-      console.warn(`🏁 [${completedId}] ⚠️ Session non trouvée lors de la completion: ${sessionId}`);
-      console.log(`${'─'.repeat(60)}\n`);
+      logger.warn(`🏁 [${completedId}] ⚠️ Session non trouvée lors de la completion: ${sessionId}`);
+      logger.info(`${'─'.repeat(60)}\n`);
       return;
     }
 
-    console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
-    console.log(`🏁 [${completedId}]   client.status: ${session.participants.client.status}`);
-    console.log(`🏁 [${completedId}]   provider.status: ${session.participants.provider.status}`);
+    logger.info(`🏁 [${completedId}]   session.status: ${session.status}`);
+    logger.info(`🏁 [${completedId}]   client.status: ${session.participants.client.status}`);
+    logger.info(`🏁 [${completedId}]   provider.status: ${session.participants.provider.status}`);
 
     // ===== P0 FIX: Calculer billingDuration (durée depuis que les DEUX sont connectés) =====
     // La durée de facturation commence quand le 2ème participant rejoint, pas quand le 1er décroche
@@ -557,12 +561,12 @@ async function handleCallCompleted(
       // where 119.9s rounds down to 119s and triggers refund instead of capture
       billingDuration = Math.round((endTime - bothConnectedAt) / 1000);
 
-      console.log(`🏁 [${completedId}] 📊 BILLING DURATION CALCULATION:`);
-      console.log(`🏁 [${completedId}]   clientConnectedAt: ${new Date(clientConnectedAt).toISOString()}`);
-      console.log(`🏁 [${completedId}]   providerConnectedAt: ${new Date(providerConnectedAt).toISOString()}`);
-      console.log(`🏁 [${completedId}]   bothConnectedAt (2nd joined): ${new Date(bothConnectedAt).toISOString()}`);
-      console.log(`🏁 [${completedId}]   billingDuration: ${billingDuration}s`);
-      console.log(`🏁 [${completedId}]   (vs Twilio CallDuration: ${duration}s - durée individuelle du participant)`);
+      logger.info(`🏁 [${completedId}] 📊 BILLING DURATION CALCULATION:`);
+      logger.info(`🏁 [${completedId}]   clientConnectedAt: ${new Date(clientConnectedAt).toISOString()}`);
+      logger.info(`🏁 [${completedId}]   providerConnectedAt: ${new Date(providerConnectedAt).toISOString()}`);
+      logger.info(`🏁 [${completedId}]   bothConnectedAt (2nd joined): ${new Date(bothConnectedAt).toISOString()}`);
+      logger.info(`🏁 [${completedId}]   billingDuration: ${billingDuration}s`);
+      logger.info(`🏁 [${completedId}]   (vs Twilio CallDuration: ${duration}s - durée individuelle du participant)`);
     } else {
       // P0 CRITICAL FIX 2026-01-20: RACE CONDITION BUG FIX
       // The original code forced billingDuration=0 if connectedAt was missing.
@@ -579,27 +583,27 @@ async function handleCallCompleted(
       if (existingBillingDuration && existingBillingDuration > 0) {
         // FALLBACK 1: Use billingDuration already calculated by handleConferenceEnd
         billingDuration = existingBillingDuration;
-        console.log(`🏁 [${completedId}] 📊 FALLBACK 1: Using existing conference.billingDuration: ${billingDuration}s`);
-        console.log(`🏁 [${completedId}]   (handleConferenceEnd already calculated this - more reliable)`);
+        logger.info(`🏁 [${completedId}] 📊 FALLBACK 1: Using existing conference.billingDuration: ${billingDuration}s`);
+        logger.info(`🏁 [${completedId}]   (handleConferenceEnd already calculated this - more reliable)`);
       } else if (sessionWasActive && session.conference?.startedAt) {
         // FALLBACK 2: Session was active, calculate from conference timestamps
         const conferenceStartTime = session.conference.startedAt.toDate().getTime();
         const conferenceEndTime = session.conference?.endedAt?.toDate().getTime() || Date.now();
         billingDuration = Math.round((conferenceEndTime - conferenceStartTime) / 1000);
-        console.log(`🏁 [${completedId}] 📊 FALLBACK 2: Session was ACTIVE - calculating from conference timestamps`);
-        console.log(`🏁 [${completedId}]   conferenceStartedAt: ${new Date(conferenceStartTime).toISOString()}`);
-        console.log(`🏁 [${completedId}]   conferenceEndTime: ${new Date(conferenceEndTime).toISOString()}`);
-        console.log(`🏁 [${completedId}]   billingDuration (from conference): ${billingDuration}s`);
-        console.log(`🏁 [${completedId}]   ⚠️ Note: connectedAt timestamps missing due to race condition, but session WAS active`);
+        logger.info(`🏁 [${completedId}] 📊 FALLBACK 2: Session was ACTIVE - calculating from conference timestamps`);
+        logger.info(`🏁 [${completedId}]   conferenceStartedAt: ${new Date(conferenceStartTime).toISOString()}`);
+        logger.info(`🏁 [${completedId}]   conferenceEndTime: ${new Date(conferenceEndTime).toISOString()}`);
+        logger.info(`🏁 [${completedId}]   billingDuration (from conference): ${billingDuration}s`);
+        logger.info(`🏁 [${completedId}]   ⚠️ Note: connectedAt timestamps missing due to race condition, but session WAS active`);
       } else {
         // FALLBACK 3: Session was never active - truly no billing duration
         // This is the correct case for: provider never answered, client hung up during connecting, etc.
         billingDuration = 0;
-        console.log(`🏁 [${completedId}] ⚠️ Missing connection timestamps AND session was not active`);
-        console.log(`🏁 [${completedId}]   clientConnectedAt: ${clientConnectedAt ? 'present' : 'MISSING'}`);
-        console.log(`🏁 [${completedId}]   providerConnectedAt: ${providerConnectedAt ? 'present' : 'MISSING'}`);
-        console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
-        console.log(`🏁 [${completedId}]   billingDuration FORCED to 0 (no active call occurred)`);
+        logger.info(`🏁 [${completedId}] ⚠️ Missing connection timestamps AND session was not active`);
+        logger.info(`🏁 [${completedId}]   clientConnectedAt: ${clientConnectedAt ? 'present' : 'MISSING'}`);
+        logger.info(`🏁 [${completedId}]   providerConnectedAt: ${providerConnectedAt ? 'present' : 'MISSING'}`);
+        logger.info(`🏁 [${completedId}]   session.status: ${session.status}`);
+        logger.info(`🏁 [${completedId}]   billingDuration FORCED to 0 (no active call occurred)`);
       }
     }
 
@@ -611,14 +615,14 @@ async function handleCallCompleted(
         'metadata.updatedAt': admin.firestore.FieldValue.serverTimestamp(),
       });
     } catch (updateError) {
-      console.error(`🏁 [${completedId}] ⚠️ Failed to store billingDuration (non-blocking):`, updateError);
+      logger.error(`🏁 [${completedId}] ⚠️ Failed to store billingDuration (non-blocking):`, updateError);
     }
 
     // ===== Utiliser billingDuration (pas CallDuration) pour la décision de capture/remboursement =====
     // P0 FIX 2026-02-05: Aligned with CALL_CONFIG.MIN_CALL_DURATION (60s) - was incorrectly 120s
     const MIN_DURATION_FOR_CAPTURE = 60;
     if (billingDuration >= MIN_DURATION_FOR_CAPTURE) {
-      console.log(`🏁 [${completedId}] STEP 3: billingDuration >= ${MIN_DURATION_FOR_CAPTURE}s → handleCallCompletion (capture payment)`);
+      logger.info(`🏁 [${completedId}] STEP 3: billingDuration >= ${MIN_DURATION_FOR_CAPTURE}s → handleCallCompletion (capture payment)`);
       await twilioCallManager.handleCallCompletion(sessionId, billingDuration);
     } else {
       // P0 CRITICAL FIX 2026-01-17: Check if this participant was EVER connected
@@ -630,25 +634,25 @@ async function handleCallCompleted(
       const participantConnectedAt = participant?.connectedAt;
 
       if (!participantConnectedAt) {
-        console.log(`🏁 [${completedId}] STEP 3: ${participantType} was NEVER connected (no_answer/rejected)`);
-        console.log(`🏁 [${completedId}]   ⚠️ SKIPPING handleEarlyDisconnection - retry loop handles this`);
-        console.log(`🏁 [${completedId}]   ${participantType}.attemptCount: ${participant?.attemptCount || 0}`);
-        console.log(`🏁 [${completedId}]   ${participantType}.status: ${participant?.status}`);
-        console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
-        console.log(`🏁 [${completedId}]   Retry loop will call handleCallFailure after all attempts exhausted`);
+        logger.info(`🏁 [${completedId}] STEP 3: ${participantType} was NEVER connected (no_answer/rejected)`);
+        logger.info(`🏁 [${completedId}]   ⚠️ SKIPPING handleEarlyDisconnection - retry loop handles this`);
+        logger.info(`🏁 [${completedId}]   ${participantType}.attemptCount: ${participant?.attemptCount || 0}`);
+        logger.info(`🏁 [${completedId}]   ${participantType}.status: ${participant?.status}`);
+        logger.info(`🏁 [${completedId}]   session.status: ${session.status}`);
+        logger.info(`🏁 [${completedId}]   Retry loop will call handleCallFailure after all attempts exhausted`);
       } else {
-        console.log(`🏁 [${completedId}] STEP 3: billingDuration < ${MIN_DURATION_FOR_CAPTURE}s → handleEarlyDisconnection (may refund)`);
+        logger.info(`🏁 [${completedId}] STEP 3: billingDuration < ${MIN_DURATION_FOR_CAPTURE}s → handleEarlyDisconnection (may refund)`);
         // P0 FIX LOG 2026-01-15: Log participant retry state BEFORE calling handleEarlyDisconnection
-        console.log(`🏁 [${completedId}] 📊 RETRY STATE before handleEarlyDisconnection:`);
-        console.log(`🏁 [${completedId}]   ${participantType}.attemptCount: ${participant?.attemptCount || 0}`);
-        console.log(`🏁 [${completedId}]   ${participantType}.status: ${participant?.status}`);
-        console.log(`🏁 [${completedId}]   ${participantType}.connectedAt: ${participantConnectedAt?.toDate?.() || 'N/A'}`);
-        console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
-        console.log(`🏁 [${completedId}]   MAX_RETRIES: 3 (if attemptCount < 3, retries should continue)`);
+        logger.info(`🏁 [${completedId}] 📊 RETRY STATE before handleEarlyDisconnection:`);
+        logger.info(`🏁 [${completedId}]   ${participantType}.attemptCount: ${participant?.attemptCount || 0}`);
+        logger.info(`🏁 [${completedId}]   ${participantType}.status: ${participant?.status}`);
+        logger.info(`🏁 [${completedId}]   ${participantType}.connectedAt: ${participantConnectedAt?.toDate?.() || 'N/A'}`);
+        logger.info(`🏁 [${completedId}]   session.status: ${session.status}`);
+        logger.info(`🏁 [${completedId}]   MAX_RETRIES: 3 (if attemptCount < 3, retries should continue)`);
         await twilioCallManager.handleEarlyDisconnection(sessionId, participantType, billingDuration);
       }
     }
-    console.log(`🏁 [${completedId}]   ✅ Post-completion handling done`);
+    logger.info(`🏁 [${completedId}]   ✅ Post-completion handling done`);
 
     await logCallRecord({
       callId: sessionId,
@@ -664,33 +668,33 @@ async function handleCallCompleted(
     });
 
     // === LOGS POUR DEBUG RACCROCHAGE ===
-    console.log(`\n${'🏁'.repeat(30)}`);
-    console.log(`🏁 [${completedId}] === HANGUP SUMMARY ===`);
-    console.log(`🏁 [${completedId}]   sessionId: ${sessionId}`);
-    console.log(`🏁 [${completedId}]   participant who hung up: ${participantType}`);
-    console.log(`🏁 [${completedId}]   billingDuration: ${billingDuration}s`);
-    console.log(`🏁 [${completedId}]   threshold (MIN_DURATION_FOR_CAPTURE): ${MIN_DURATION_FOR_CAPTURE}s`);
-    console.log(`🏁 [${completedId}]   action taken: ${billingDuration >= MIN_DURATION_FOR_CAPTURE ? 'handleCallCompletion (CAPTURE)' : 'handleEarlyDisconnection (MAY REFUND)'}`);
+    logger.info(`\n${'🏁'.repeat(30)}`);
+    logger.info(`🏁 [${completedId}] === HANGUP SUMMARY ===`);
+    logger.info(`🏁 [${completedId}]   sessionId: ${sessionId}`);
+    logger.info(`🏁 [${completedId}]   participant who hung up: ${participantType}`);
+    logger.info(`🏁 [${completedId}]   billingDuration: ${billingDuration}s`);
+    logger.info(`🏁 [${completedId}]   threshold (MIN_DURATION_FOR_CAPTURE): ${MIN_DURATION_FOR_CAPTURE}s`);
+    logger.info(`🏁 [${completedId}]   action taken: ${billingDuration >= MIN_DURATION_FOR_CAPTURE ? 'handleCallCompletion (CAPTURE)' : 'handleEarlyDisconnection (MAY REFUND)'}`);
 
     // Fetch final state for debug
     const finalSession = await twilioCallManager.getCallSession(sessionId);
     if (finalSession) {
-      console.log(`🏁 [${completedId}]   FINAL STATE:`);
-      console.log(`🏁 [${completedId}]     session.status: ${finalSession.status}`);
-      console.log(`🏁 [${completedId}]     payment.status: ${finalSession.payment?.status}`);
-      console.log(`🏁 [${completedId}]     client.status: ${finalSession.participants.client.status}`);
-      console.log(`🏁 [${completedId}]     provider.status: ${finalSession.participants.provider.status}`);
-      console.log(`🏁 [${completedId}]     client.callSid: ${finalSession.participants.client.callSid || 'none'}`);
-      console.log(`🏁 [${completedId}]     provider.callSid: ${finalSession.participants.provider.callSid || 'none'}`);
+      logger.info(`🏁 [${completedId}]   FINAL STATE:`);
+      logger.info(`🏁 [${completedId}]     session.status: ${finalSession.status}`);
+      logger.info(`🏁 [${completedId}]     payment.status: ${finalSession.payment?.status}`);
+      logger.info(`🏁 [${completedId}]     client.status: ${finalSession.participants.client.status}`);
+      logger.info(`🏁 [${completedId}]     provider.status: ${finalSession.participants.provider.status}`);
+      logger.info(`🏁 [${completedId}]     client.callSid: ${finalSession.participants.client.callSid || 'none'}`);
+      logger.info(`🏁 [${completedId}]     provider.callSid: ${finalSession.participants.provider.callSid || 'none'}`);
     }
-    console.log(`${'🏁'.repeat(30)}\n`);
+    logger.info(`${'🏁'.repeat(30)}\n`);
 
-    console.log(`🏁 [${completedId}] END`);
-    console.log(`${'─'.repeat(60)}\n`);
+    logger.info(`🏁 [${completedId}] END`);
+    logger.info(`${'─'.repeat(60)}\n`);
 
   } catch (error) {
-    console.error(`\n${'❌'.repeat(40)}`);
-    console.error(`🏁 [${completedId}] ❌ HANDLECALLCOMPLETED EXCEPTION:`, {
+    logger.error(`\n${'❌'.repeat(40)}`);
+    logger.error(`🏁 [${completedId}] ❌ HANDLECALLCOMPLETED EXCEPTION:`, {
       sessionId,
       participantType,
       callSid: body.CallSid,
@@ -702,8 +706,9 @@ async function handleCallCompleted(
       errorStack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : 'N/A',
       timestamp: new Date().toISOString(),
     });
-    console.error(`${'❌'.repeat(40)}\n`);
+    logger.error(`${'❌'.repeat(40)}\n`);
     await logError('handleCallCompleted', error);
+    captureError(error, { functionName: 'handleCallCompleted', extra: { sessionId, participantType } });
   }
 }
 
@@ -863,14 +868,14 @@ async function handleCallFailed(
   const failedId = `failed_${Date.now().toString(36)}`;
 
   try {
-    console.log(`\n${'▓'.repeat(60)}`);
-    console.log(`❌ [${failedId}] handleCallFailed START`);
-    console.log(`❌ [${failedId}]   sessionId: ${sessionId}`);
-    console.log(`❌ [${failedId}]   participantType: ${participantType}`);
-    console.log(`❌ [${failedId}]   callSid: ${body.CallSid}`);
-    console.log(`❌ [${failedId}]   CallStatus: ${body.CallStatus}`);
-    console.log(`❌ [${failedId}]   AnsweredBy: ${body.AnsweredBy || 'N/A'}`);
-    console.log(`${'▓'.repeat(60)}`);
+    logger.info(`\n${'▓'.repeat(60)}`);
+    logger.info(`❌ [${failedId}] handleCallFailed START`);
+    logger.info(`❌ [${failedId}]   sessionId: ${sessionId}`);
+    logger.info(`❌ [${failedId}]   participantType: ${participantType}`);
+    logger.info(`❌ [${failedId}]   callSid: ${body.CallSid}`);
+    logger.info(`❌ [${failedId}]   CallStatus: ${body.CallStatus}`);
+    logger.info(`❌ [${failedId}]   AnsweredBy: ${body.AnsweredBy || 'N/A'}`);
+    logger.info(`${'▓'.repeat(60)}`);
 
     // P0 CRITICAL FIX: Validate that this webhook is for the CURRENT call attempt
     // Race condition: Webhook from attempt 1 can arrive during attempt 2
@@ -882,14 +887,14 @@ async function handleCallFailed(
     const currentCallSidForValidation = participantForValidation?.callSid;
 
     if (currentCallSidForValidation && body.CallSid && currentCallSidForValidation !== body.CallSid) {
-      console.log(`❌ [${failedId}] ⚠️ STALE WEBHOOK DETECTED!`);
-      console.log(`❌ [${failedId}]   Webhook callSid: ${body.CallSid}`);
-      console.log(`❌ [${failedId}]   Current callSid: ${currentCallSidForValidation}`);
-      console.log(`❌ [${failedId}]   This webhook is from an OLD call attempt - IGNORING`);
-      console.log(`${'▓'.repeat(60)}\n`);
+      logger.info(`❌ [${failedId}] ⚠️ STALE WEBHOOK DETECTED!`);
+      logger.info(`❌ [${failedId}]   Webhook callSid: ${body.CallSid}`);
+      logger.info(`❌ [${failedId}]   Current callSid: ${currentCallSidForValidation}`);
+      logger.info(`❌ [${failedId}]   This webhook is from an OLD call attempt - IGNORING`);
+      logger.info(`${'▓'.repeat(60)}\n`);
       return; // Ignore stale webhook
     }
-    console.log(`❌ [${failedId}] ✅ CallSid validated - matches current call attempt`);
+    logger.info(`❌ [${failedId}] ✅ CallSid validated - matches current call attempt`);
 
     prodLogger.warn('TWILIO_CALL_FAILED', `Call failed for ${participantType}: ${body.CallStatus}`, {
       sessionId,
@@ -899,14 +904,14 @@ async function handleCallFailed(
     });
 
     const newStatus = body.CallStatus === 'no-answer' ? 'no_answer' : 'disconnected';
-    console.log(`❌ [${failedId}] STEP 1: Setting participant status to "${newStatus}"...`);
+    logger.info(`❌ [${failedId}] STEP 1: Setting participant status to "${newStatus}"...`);
 
     await twilioCallManager.updateParticipantStatus(
       sessionId,
       participantType,
       newStatus
     );
-    console.log(`❌ [${failedId}]   ✅ Status updated to "${newStatus}"`);
+    logger.info(`❌ [${failedId}]   ✅ Status updated to "${newStatus}"`);
 
     // 🔴 FONCTIONNALITÉ BONUS: Mise hors ligne automatique du prestataire sur no-answer
     // P2-2 FIX: Improved with idempotency, atomic batch updates, and better logging
@@ -914,35 +919,35 @@ async function handleCallFailed(
       // Fonction async auto-exécutée pour isolation totale
       (async () => {
         try {
-          console.log(`[BONUS] No-answer détecté pour prestataire, session: ${sessionId}`);
+          logger.info(`[BONUS] No-answer détecté pour prestataire, session: ${sessionId}`);
           prodLogger.info('PROVIDER_OFFLINE_START', `No-answer detected, checking if should set offline`, { sessionId });
 
           const db = admin.firestore();
           const session = await twilioCallManager.getCallSession(sessionId);
 
           if (!session) {
-            console.log(`[BONUS] Session non trouvée: ${sessionId}`);
+            logger.info(`[BONUS] Session non trouvée: ${sessionId}`);
             return;
           }
 
           // 🛡️ PROTECTION CRITIQUE: Vérifier que c'est la DERNIÈRE tentative
           // Ne pas mettre offline si Twilio va encore réessayer
           if (session.status !== 'failed' && session.status !== 'cancelled') {
-            console.log(`[BONUS] Session status: ${session.status} - Twilio va réessayer, on ne déconnecte pas encore`);
+            logger.info(`[BONUS] Session status: ${session.status} - Twilio va réessayer, on ne déconnecte pas encore`);
             return;
           }
 
-          console.log(`[BONUS] Session définitivement échouée (status: ${session.status}), checking if provider should be set offline`);
+          logger.info(`[BONUS] Session définitivement échouée (status: ${session.status}), checking if provider should be set offline`);
 
           // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
           const providerId = session.providerId || session.metadata?.providerId;
 
           if (!providerId) {
-            console.log(`[BONUS] ProviderId non trouvé dans session: ${sessionId}`);
+            logger.info(`[BONUS] ProviderId non trouvé dans session: ${sessionId}`);
             return;
           }
 
-          console.log(`[BONUS] Attempting to set provider ${providerId} offline`);
+          logger.info(`[BONUS] Attempting to set provider ${providerId} offline`);
           prodLogger.info('PROVIDER_OFFLINE_PROCESSING', `Setting provider offline after no-answer`, { sessionId, providerId });
 
           // P2-2 FIX: Use transaction for atomic read-then-write to prevent race condition
@@ -954,7 +959,7 @@ async function handleCallFailed(
 
             // Check if already processed (atomic read within transaction)
             if (sessionData?.metadata?.providerSetOffline) {
-              console.log(`[BONUS] Provider already set offline by another process, skipping`);
+              logger.info(`[BONUS] Provider already set offline by another process, skipping`);
               return { wasSetOffline: false, preferredLanguage: 'fr' };
             }
 
@@ -966,7 +971,7 @@ async function handleCallFailed(
             // ✅ EXEMPTION AAA: Les profils AAA ne doivent JAMAIS être mis hors ligne automatiquement
             const isAaaProfile = providerId.startsWith('aaa_') || providerData?.isAAA === true;
             if (isAaaProfile) {
-              console.log(`[BONUS] ⏭️ SKIP: Provider ${providerId} is AAA profile - will NOT be set offline`);
+              logger.info(`[BONUS] ⏭️ SKIP: Provider ${providerId} is AAA profile - will NOT be set offline`);
               transaction.update(sessionRef, {
                 'metadata.providerSetOffline': true,
                 'metadata.providerSetOfflineReason': 'aaa_profile_exempt',
@@ -976,7 +981,7 @@ async function handleCallFailed(
             }
 
             if (!providerData?.isOnline) {
-              console.log(`[BONUS] Prestataire ${providerId} déjà hors ligne, marking session only`);
+              logger.info(`[BONUS] Prestataire ${providerId} déjà hors ligne, marking session only`);
               // Still mark session as processed to prevent future attempts
               transaction.update(sessionRef, {
                 'metadata.providerSetOffline': true,
@@ -1021,11 +1026,11 @@ async function handleCallFailed(
           });
 
           if (!transactionResult.wasSetOffline) {
-            console.log(`[BONUS] Provider ${providerId} was not set offline (already processed or already offline)`);
+            logger.info(`[BONUS] Provider ${providerId} was not set offline (already processed or already offline)`);
             return;
           }
 
-          console.log(`[BONUS] Provider ${providerId} successfully set offline via transaction`);
+          logger.info(`[BONUS] Provider ${providerId} successfully set offline via transaction`);
 
           // Récupérer la langue préférée pour la notification (from transaction result)
           const preferredLanguage = transactionResult.preferredLanguage;
@@ -1082,12 +1087,12 @@ async function handleCallFailed(
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           });
           
-          console.log(`✅ [BONUS] Prestataire ${providerId} mis hors ligne avec succès après échec définitif`);
+          logger.info(`✅ [BONUS] Prestataire ${providerId} mis hors ligne avec succès après échec définitif`);
           prodLogger.info('PROVIDER_OFFLINE_SUCCESS', `Provider set offline successfully`, { sessionId, providerId });
 
         } catch (bonusError) {
           // Erreur isolée - n'affecte PAS le flux principal
-          console.error('⚠️ [BONUS] Erreur mise hors ligne prestataire (fonctionnalité bonus):', bonusError);
+          logger.error('⚠️ [BONUS] Erreur mise hors ligne prestataire (fonctionnalité bonus):', bonusError);
           prodLogger.error('PROVIDER_OFFLINE_ERROR', `Failed to set provider offline`, {
             sessionId,
             error: bonusError instanceof Error ? bonusError.message : String(bonusError)
@@ -1112,7 +1117,7 @@ async function handleCallFailed(
     // Appeler handleCallFailure depuis ce webhook interfère avec les retries internes
     // et peut déclencher un remboursement prématuré avant que les 3 tentatives soient épuisées.
     // handleCallFailure sera appelé par TwilioCallManager.executeCallSequence après tous les retries.
-    console.log(`📞 [twilioWebhooks] Call failed for ${participantType}, reason: ${failureReason} - NOT calling handleCallFailure (handled by TwilioCallManager retry logic)`);
+    logger.info(`📞 [twilioWebhooks] Call failed for ${participantType}, reason: ${failureReason} - NOT calling handleCallFailure (handled by TwilioCallManager retry logic)`);
     // REMOVED: await twilioCallManager.handleCallFailure(sessionId, failureReason);
 
     // ===== STOCKAGE DES DÉTAILS D'ERREUR TWILIO =====
@@ -1130,9 +1135,9 @@ async function handleCallFailed(
         ...twilioErrorDetails,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
-      console.log(`📊 [${failedId}] Call error details saved to Firestore`);
+      logger.info(`📊 [${failedId}] Call error details saved to Firestore`);
     } catch (saveError) {
-      console.error(`⚠️ [${failedId}] Failed to save call error details:`, saveError);
+      logger.error(`⚠️ [${failedId}] Failed to save call error details:`, saveError);
     }
 
     await logCallRecord({
@@ -1148,8 +1153,8 @@ async function handleCallFailed(
     });
 
   } catch (error) {
-    console.error(`\n${'❌'.repeat(40)}`);
-    console.error(`❌ [handleCallFailed] EXCEPTION:`, {
+    logger.error(`\n${'❌'.repeat(40)}`);
+    logger.error(`❌ [handleCallFailed] EXCEPTION:`, {
       sessionId,
       participantType,
       callSid: body.CallSid,
@@ -1159,8 +1164,9 @@ async function handleCallFailed(
       errorStack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : 'N/A',
       timestamp: new Date().toISOString(),
     });
-    console.error(`${'❌'.repeat(40)}\n`);
+    logger.error(`${'❌'.repeat(40)}\n`);
     await logError('handleCallFailed', error);
+    captureError(error, { functionName: 'handleCallFailed', extra: { sessionId, participantType } });
   }
 }
 
@@ -1190,11 +1196,11 @@ export const twilioRecordingWebhook = onRequest(
   async (req: Request, res: Response) => {
     // P0 SECURITY: Validate Twilio signature even for disabled endpoint
     if (!validateTwilioWebhookSignature(req as any, res as any)) {
-      console.error("[twilioRecordingWebhook] Invalid Twilio signature - rejecting request");
+      logger.error("[twilioRecordingWebhook] Invalid Twilio signature - rejecting request");
       return;
     }
     // Recording desactive - retourner 200 OK pour eviter les retries Twilio
-    console.log('[twilioRecordingWebhook] Recording desactive - ignoring callback');
+    logger.info('[twilioRecordingWebhook] Recording desactive - ignoring callback');
     res.status(200).send('Recording disabled for GDPR compliance');
   }
 );
@@ -1232,14 +1238,14 @@ export const twilioAmdTwiml = onRequest(
     try {
       // P0 SECURITY: Validate Twilio signature
       if (!validateTwilioWebhookSignature(req as any, res as any)) {
-        console.error("[twilioAmdTwiml] Invalid Twilio signature - rejecting request");
+        logger.error("[twilioAmdTwiml] Invalid Twilio signature - rejecting request");
         return;
       }
 
       // P1 SECURITY: CallSid guard - reject requests without a valid CallSid
       const guardCallSid = req.body?.CallSid || req.query.CallSid;
       if (!guardCallSid || typeof guardCallSid !== 'string' || !guardCallSid.startsWith('CA')) {
-        console.error(`[twilioAmdTwiml] Missing or invalid CallSid: ${guardCallSid}`);
+        logger.error(`[twilioAmdTwiml] Missing or invalid CallSid: ${guardCallSid}`);
         res.status(400).send('Missing or invalid CallSid');
         return;
       }
@@ -1256,25 +1262,25 @@ export const twilioAmdTwiml = onRequest(
       const answeredBy = req.body?.AnsweredBy || req.query.AnsweredBy;
       const callSid = req.body?.CallSid || req.query.CallSid;
 
-      console.log(`\n${'▓'.repeat(60)}`);
-      console.log(`🎯 [${amdId}] ████████ twilioAmdTwiml START (AMD DÉSACTIVÉ - DTMF uniquement) ████████`);
-      console.log(`🎯 [${amdId}]   sessionId: ${sessionId}`);
-      console.log(`🎯 [${amdId}]   participantType: ${participantType}`);
-      console.log(`🎯 [${amdId}]   conferenceName: ${conferenceName}`);
-      console.log(`🎯 [${amdId}]   timeLimit: ${timeLimit}`);
-      console.log(`🎯 [${amdId}]   ttsLocale: ${ttsLocale}`);
-      console.log(`🎯 [${amdId}]   langKey: ${langKey}`);
-      console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'undefined (AMD désactivé - normal)'}`);
-      console.log(`🎯 [${amdId}]   callSid: ${callSid || 'NOT_PROVIDED'}`);
-      console.log(`🎯 [${amdId}]   timestamp: ${new Date().toISOString()}`);
-      console.log(`${'▓'.repeat(60)}`);
+      logger.info(`\n${'▓'.repeat(60)}`);
+      logger.info(`🎯 [${amdId}] ████████ twilioAmdTwiml START (AMD DÉSACTIVÉ - DTMF uniquement) ████████`);
+      logger.info(`🎯 [${amdId}]   sessionId: ${sessionId}`);
+      logger.info(`🎯 [${amdId}]   participantType: ${participantType}`);
+      logger.info(`🎯 [${amdId}]   conferenceName: ${conferenceName}`);
+      logger.info(`🎯 [${amdId}]   timeLimit: ${timeLimit}`);
+      logger.info(`🎯 [${amdId}]   ttsLocale: ${ttsLocale}`);
+      logger.info(`🎯 [${amdId}]   langKey: ${langKey}`);
+      logger.info(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'undefined (AMD désactivé - normal)'}`);
+      logger.info(`🎯 [${amdId}]   callSid: ${callSid || 'NOT_PROVIDED'}`);
+      logger.info(`🎯 [${amdId}]   timestamp: ${new Date().toISOString()}`);
+      logger.info(`${'▓'.repeat(60)}`);
 
       // P0 DIAGNOSTIC LOG: Dump all request data for debugging
-      console.log(`🎯 [${amdId}] 📋 FULL REQUEST DATA:`);
-      console.log(`🎯 [${amdId}]   req.method: ${req.method}`);
-      console.log(`🎯 [${amdId}]   req.query: ${JSON.stringify(req.query)}`);
-      console.log(`🎯 [${amdId}]   req.body: ${JSON.stringify(req.body || {})}`);
-      console.log(`🎯 [${amdId}]   All AnsweredBy values: body=${req.body?.AnsweredBy}, query=${req.query.AnsweredBy}`);
+      logger.info(`🎯 [${amdId}] 📋 FULL REQUEST DATA:`);
+      logger.info(`🎯 [${amdId}]   req.method: ${req.method}`);
+      logger.info(`🎯 [${amdId}]   req.query: ${JSON.stringify(req.query)}`);
+      logger.info(`🎯 [${amdId}]   req.body: ${JSON.stringify(req.body || {})}`);
+      logger.info(`🎯 [${amdId}]   All AnsweredBy values: body=${req.body?.AnsweredBy}, query=${req.query.AnsweredBy}`);
 
       // ===== PRODUCTION TEST LOG =====
       logWebhookTest.twilio.amd({ sessionId, participantType, answeredBy, callSid });
@@ -1305,13 +1311,13 @@ export const twilioAmdTwiml = onRequest(
         const currentCallSid = currentParticipant?.callSid;
 
         if (currentCallSid && currentCallSid !== callSid) {
-          console.log(`🎯 [${amdId}] ⚠️ STALE AMD CALLBACK DETECTED! (asyncAmdStatusCallback)`);
-          console.log(`🎯 [${amdId}]   Callback callSid: ${callSid}`);
-          console.log(`🎯 [${amdId}]   Current callSid: ${currentCallSid}`);
-          console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
-          console.log(`🎯 [${amdId}]   This callback is from an OLD call attempt - IGNORING`);
-          console.log(`🎯 [${amdId}]   Returning HANGUP to prevent interference with new call`);
-          console.log(`${'▓'.repeat(60)}\n`);
+          logger.info(`🎯 [${amdId}] ⚠️ STALE AMD CALLBACK DETECTED! (asyncAmdStatusCallback)`);
+          logger.info(`🎯 [${amdId}]   Callback callSid: ${callSid}`);
+          logger.info(`🎯 [${amdId}]   Current callSid: ${currentCallSid}`);
+          logger.info(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
+          logger.info(`🎯 [${amdId}]   This callback is from an OLD call attempt - IGNORING`);
+          logger.info(`🎯 [${amdId}]   Returning HANGUP to prevent interference with new call`);
+          logger.info(`${'▓'.repeat(60)}\n`);
 
           // Return hangup TwiML for the old call - don't update any status
           const staleHangupTwiml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -1322,11 +1328,11 @@ export const twilioAmdTwiml = onRequest(
           res.send(staleHangupTwiml);
           return;
         }
-        console.log(`🎯 [${amdId}] ✅ CallSid validated - matches current call attempt`);
+        logger.info(`🎯 [${amdId}] ✅ CallSid validated - matches current call attempt`);
       } else if (sessionId && callSid && !answeredBy) {
         // Initial `url` callback - SKIP stale check (updateParticipantCallSid may not have run yet)
-        console.log(`🎯 [${amdId}] ⏭️ Skipping stale check for initial url callback (answeredBy undefined)`);
-        console.log(`🎯 [${amdId}]   This is the initial TwiML request - session may not be updated yet`);
+        logger.info(`🎯 [${amdId}] ⏭️ Skipping stale check for initial url callback (answeredBy undefined)`);
+        logger.info(`🎯 [${amdId}]   This is the initial TwiML request - session may not be updated yet`);
       }
 
       // Check if answered by machine - UNIFIED DETECTION (P0 FIX 2026-01-17 v3)
@@ -1355,15 +1361,15 @@ export const twilioAmdTwiml = onRequest(
       // ██████████████████████████████████████████████████████████████████████
       // P0 DIAGNOSTIC: AMD DECISION LOGIC - DETAILED TRACE
       // ██████████████████████████████████████████████████████████████████████
-      console.log(`\n🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
-      console.log(`🎯 [${amdId}] │ 🧠 AMD DECISION LOGIC TRACE (P0 FIX 2026-01-18 v4)         │`);
-      console.log(`🎯 [${amdId}] ├────────────────────────────────────────────────────────────┤`);
-      console.log(`🎯 [${amdId}] │ INPUT:                                                     │`);
-      console.log(`🎯 [${amdId}] │   answeredBy: "${answeredBy || 'undefined'}"`);
-      console.log(`🎯 [${amdId}] │   participantType: "${participantType}"`);
-      console.log(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart} (v4: IGNORED - DTMF confirms)`);
-      console.log(`🎯 [${amdId}] │   isMachineEnd: ${isMachineEnd} (v4: MACHINE - hang up)`);
-      console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
+      logger.info(`\n🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
+      logger.info(`🎯 [${amdId}] │ 🧠 AMD DECISION LOGIC TRACE (P0 FIX 2026-01-18 v4)         │`);
+      logger.info(`🎯 [${amdId}] ├────────────────────────────────────────────────────────────┤`);
+      logger.info(`🎯 [${amdId}] │ INPUT:                                                     │`);
+      logger.info(`🎯 [${amdId}] │   answeredBy: "${answeredBy || 'undefined'}"`);
+      logger.info(`🎯 [${amdId}] │   participantType: "${participantType}"`);
+      logger.info(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart} (v4: IGNORED - DTMF confirms)`);
+      logger.info(`🎯 [${amdId}] │   isMachineEnd: ${isMachineEnd} (v4: MACHINE - hang up)`);
+      logger.info(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
 
       // ══════════════════════════════════════════════════════════════════════
       // P0 CRITICAL FIX 2026-01-18 v4: DTMF-BASED MACHINE DETECTION
@@ -1403,46 +1409,46 @@ export const twilioAmdTwiml = onRequest(
       // ██████████████████████████████████████████████████████████████████████
       // P0 DIAGNOSTIC: HANGUP DECISION
       // ██████████████████████████████████████████████████████████████████████
-      console.log(`🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
-      console.log(`🎯 [${amdId}] │ 🚦 HANGUP DECISION (v4 - DTMF-based):                      │`);
-      console.log(`🎯 [${amdId}] │   shouldHangup = isMachineEnd (only confirmed voicemail)   │`);
-      console.log(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart} (v4: IGNORED - let DTMF confirm)`);
-      console.log(`🎯 [${amdId}] │   isMachineEnd: ${isMachineEnd}`);
-      console.log(`🎯 [${amdId}] │   shouldHangup: ${shouldHangup}`);
-      console.log(`🎯 [${amdId}] │   → ${shouldHangup ? '❌ WILL HANG UP (confirmed voicemail)' : '✅ WILL NOT HANG UP - DTMF will confirm'}`);
-      console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
+      logger.info(`🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
+      logger.info(`🎯 [${amdId}] │ 🚦 HANGUP DECISION (v4 - DTMF-based):                      │`);
+      logger.info(`🎯 [${amdId}] │   shouldHangup = isMachineEnd (only confirmed voicemail)   │`);
+      logger.info(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart} (v4: IGNORED - let DTMF confirm)`);
+      logger.info(`🎯 [${amdId}] │   isMachineEnd: ${isMachineEnd}`);
+      logger.info(`🎯 [${amdId}] │   shouldHangup: ${shouldHangup}`);
+      logger.info(`🎯 [${amdId}] │   → ${shouldHangup ? '❌ WILL HANG UP (confirmed voicemail)' : '✅ WILL NOT HANG UP - DTMF will confirm'}`);
+      logger.info(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
 
       if (isMachineStart) {
         // P0 FIX v4: machine_start detected - IGNORE and let DTMF confirm
-        console.log(`\n🎯 [${amdId}] ╔════════════════════════════════════════════════════════════╗`);
-        console.log(`🎯 [${amdId}] ║ ⚡ P0 FIX v4: machine_start → IGNORING (DTMF will confirm) ║`);
-        console.log(`🎯 [${amdId}] ╠════════════════════════════════════════════════════════════╣`);
-        console.log(`🎯 [${amdId}] ║ answeredBy: "${answeredBy}"`);
-        console.log(`🎯 [${amdId}] ║ participantType: "${participantType}"`);
-        console.log(`🎯 [${amdId}] ║ ACTION: NOT hanging up - letting DTMF flow confirm         ║`);
-        console.log(`🎯 [${amdId}] ║ REASON: machine_start has HIGH false positive rate         ║`);
-        console.log(`🎯 [${amdId}] ║         (humans saying "Allô?" detected as machine)        ║`);
-        console.log(`🎯 [${amdId}] ║ NEXT: User must press 1 to connect, timeout = retry        ║`);
-        console.log(`🎯 [${amdId}] ╚════════════════════════════════════════════════════════════╝\n`);
+        logger.info(`\n🎯 [${amdId}] ╔════════════════════════════════════════════════════════════╗`);
+        logger.info(`🎯 [${amdId}] ║ ⚡ P0 FIX v4: machine_start → IGNORING (DTMF will confirm) ║`);
+        logger.info(`🎯 [${amdId}] ╠════════════════════════════════════════════════════════════╣`);
+        logger.info(`🎯 [${amdId}] ║ answeredBy: "${answeredBy}"`);
+        logger.info(`🎯 [${amdId}] ║ participantType: "${participantType}"`);
+        logger.info(`🎯 [${amdId}] ║ ACTION: NOT hanging up - letting DTMF flow confirm         ║`);
+        logger.info(`🎯 [${amdId}] ║ REASON: machine_start has HIGH false positive rate         ║`);
+        logger.info(`🎯 [${amdId}] ║         (humans saying "Allô?" detected as machine)        ║`);
+        logger.info(`🎯 [${amdId}] ║ NEXT: User must press 1 to connect, timeout = retry        ║`);
+        logger.info(`🎯 [${amdId}] ╚════════════════════════════════════════════════════════════╝\n`);
         // v4: Do NOT hang up - let DTMF confirm
       }
 
       if (shouldHangup) {
         // MACHINE DETECTED (machine_start OR machine_end_*) → Hangup immediately and retry
-        console.log(`🎯 [${amdId}] ⚠️ MACHINE DETECTED - HANGING UP CALL`);
-        console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'UNDEFINED'}`);
-        console.log(`🎯 [${amdId}]   participantType: ${participantType}`);
-        console.log(`🎯 [${amdId}]   callSid: ${callSid}`);
-        console.log(`🎯 [${amdId}]   isMachineStart: ${isMachineStart}, isMachineEnd: ${isMachineEnd}`);
-        console.log(`🎯 [${amdId}]   Action: Hang up and retry (up to 3x)`);
+        logger.info(`🎯 [${amdId}] ⚠️ MACHINE DETECTED - HANGING UP CALL`);
+        logger.info(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'UNDEFINED'}`);
+        logger.info(`🎯 [${amdId}]   participantType: ${participantType}`);
+        logger.info(`🎯 [${amdId}]   callSid: ${callSid}`);
+        logger.info(`🎯 [${amdId}]   isMachineStart: ${isMachineStart}, isMachineEnd: ${isMachineEnd}`);
+        logger.info(`🎯 [${amdId}]   Action: Hang up and retry (up to 3x)`);
 
         // Update participant status to no_answer for retry logic
         if (sessionId) {
           try {
             await twilioCallManager.updateParticipantStatus(sessionId, participantType, 'no_answer');
-            console.log(`🎯 [${amdId}]   ✅ Status set to no_answer - retry will be triggered`);
+            logger.info(`🎯 [${amdId}]   ✅ Status set to no_answer - retry will be triggered`);
           } catch (statusError) {
-            console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
+            logger.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
           }
         }
 
@@ -1453,11 +1459,11 @@ export const twilioAmdTwiml = onRequest(
           try {
             const { getTwilioClient } = await import('../lib/twilio');
             const twilioClient = getTwilioClient();
-            console.log(`🎯 [${amdId}]   📞 Using REST API to hang up call ${callSid}...`);
+            logger.info(`🎯 [${amdId}]   📞 Using REST API to hang up call ${callSid}...`);
             await twilioClient.calls(callSid).update({ status: 'completed' });
-            console.log(`🎯 [${amdId}]   ✅ Call hung up via REST API`);
+            logger.info(`🎯 [${amdId}]   ✅ Call hung up via REST API`);
           } catch (hangupError) {
-            console.error(`🎯 [${amdId}]   ⚠️ Failed to hang up call via REST API:`, hangupError);
+            logger.error(`🎯 [${amdId}]   ⚠️ Failed to hang up call via REST API:`, hangupError);
             // Log but continue - the TwiML hangup might still work for initial url callback
           }
         }
@@ -1470,7 +1476,7 @@ export const twilioAmdTwiml = onRequest(
 
         res.type('text/xml');
         res.send(hangupTwiml);
-        console.log(`🎯 [${amdId}] END - Voicemail detected (${answeredBy}), call terminated - will retry\n`);
+        logger.info(`🎯 [${amdId}] END - Voicemail detected (${answeredBy}), call terminated - will retry\n`);
         return;
       }
 
@@ -1503,16 +1509,16 @@ export const twilioAmdTwiml = onRequest(
       // ██████████████████████████████████████████████████████████████████████
       // P0 DIAGNOSTIC: HUMAN CONFIRMED DECISION
       // ██████████████████████████████████████████████████████████████████████
-      console.log(`🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
-      console.log(`🎯 [${amdId}] │ 🧑 HUMAN CONFIRMED DECISION (v4 DTMF-based):               │`);
-      console.log(`🎯 [${amdId}] │   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
-      console.log(`🎯 [${amdId}] │   answeredBy === 'human': ${answeredBy === 'human'}`);
-      console.log(`🎯 [${amdId}] │   isAsyncAmd && unknown: ${isAsyncAmdCallback && answeredBy === 'unknown'}`);
-      console.log(`🎯 [${amdId}] │   isMachineStart (v4: treated as POTENTIAL HUMAN): ${isMachineStart}`);
-      console.log(`🎯 [${amdId}] │   isMachineEnd (MACHINE - will hang up): ${isMachineEnd}`);
-      console.log(`🎯 [${amdId}] │   → isHumanConfirmed: ${isHumanConfirmed}`);
-      console.log(`🎯 [${amdId}] │   → ${isHumanConfirmed ? '✅ WILL PLAY DTMF PROMPT' : '⏳ AMD PENDING - HOLD MUSIC'}`);
-      console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
+      logger.info(`🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
+      logger.info(`🎯 [${amdId}] │ 🧑 HUMAN CONFIRMED DECISION (v4 DTMF-based):               │`);
+      logger.info(`🎯 [${amdId}] │   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
+      logger.info(`🎯 [${amdId}] │   answeredBy === 'human': ${answeredBy === 'human'}`);
+      logger.info(`🎯 [${amdId}] │   isAsyncAmd && unknown: ${isAsyncAmdCallback && answeredBy === 'unknown'}`);
+      logger.info(`🎯 [${amdId}] │   isMachineStart (v4: treated as POTENTIAL HUMAN): ${isMachineStart}`);
+      logger.info(`🎯 [${amdId}] │   isMachineEnd (MACHINE - will hang up): ${isMachineEnd}`);
+      logger.info(`🎯 [${amdId}] │   → isHumanConfirmed: ${isHumanConfirmed}`);
+      logger.info(`🎯 [${amdId}] │   → ${isHumanConfirmed ? '✅ WILL PLAY DTMF PROMPT' : '⏳ AMD PENDING - HOLD MUSIC'}`);
+      logger.info(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
 
       // P0 CRITICAL FIX 2026-01-16: RACE CONDITION PROTECTION
       // If provider already confirmed via GATHER and is now "connected", ignore stale AMD callback!
@@ -1525,14 +1531,14 @@ export const twilioAmdTwiml = onRequest(
 
           // Check if provider is already connected (joined conference during AMD pending)
           if (providerStatus === 'connected') {
-            console.log(`\n${'⚠️'.repeat(35)}`);
-            console.log(`🎯 [${amdId}] 🛡️ AMD CALLBACK - Provider already CONNECTED (in conference)!`);
-            console.log(`🎯 [${amdId}]   Provider joined conference during AMD pending phase`);
-            console.log(`🎯 [${amdId}]   providerStatus: ${providerStatus}`);
-            console.log(`🎯 [${amdId}]   callSid from callback: ${callSid}`);
-            console.log(`🎯 [${amdId}]   callSid in DB: ${providerCallSid}`);
-            console.log(`🎯 [${amdId}]   ACTION: Ignoring stale AMD callback - provider is in conference`);
-            console.log(`${'⚠️'.repeat(35)}\n`);
+            logger.info(`\n${'⚠️'.repeat(35)}`);
+            logger.info(`🎯 [${amdId}] 🛡️ AMD CALLBACK - Provider already CONNECTED (in conference)!`);
+            logger.info(`🎯 [${amdId}]   Provider joined conference during AMD pending phase`);
+            logger.info(`🎯 [${amdId}]   providerStatus: ${providerStatus}`);
+            logger.info(`🎯 [${amdId}]   callSid from callback: ${callSid}`);
+            logger.info(`🎯 [${amdId}]   callSid in DB: ${providerCallSid}`);
+            logger.info(`🎯 [${amdId}]   ACTION: Ignoring stale AMD callback - provider is in conference`);
+            logger.info(`${'⚠️'.repeat(35)}\n`);
 
             // Return empty response - don't disrupt the active call!
             res.type('text/xml');
@@ -1546,13 +1552,13 @@ export const twilioAmdTwiml = onRequest(
           // but this callback is for the CURRENT call that's still valid.
           // Hanging up would kill the active call incorrectly.
           if (callSid && providerCallSid && callSid !== providerCallSid) {
-            console.log(`\n${'⚠️'.repeat(35)}`);
-            console.log(`🎯 [${amdId}] 🛡️ AMD CALLBACK - CallSid mismatch detected`);
-            console.log(`🎯 [${amdId}]   callSid from callback: ${callSid}`);
-            console.log(`🎯 [${amdId}]   callSid in DB: ${providerCallSid}`);
-            console.log(`🎯 [${amdId}]   ⚠️ NOT hanging up - could be race condition with retry loop`);
-            console.log(`🎯 [${amdId}]   ACTION: Return empty response, let call continue naturally`);
-            console.log(`${'⚠️'.repeat(35)}\n`);
+            logger.info(`\n${'⚠️'.repeat(35)}`);
+            logger.info(`🎯 [${amdId}] 🛡️ AMD CALLBACK - CallSid mismatch detected`);
+            logger.info(`🎯 [${amdId}]   callSid from callback: ${callSid}`);
+            logger.info(`🎯 [${amdId}]   callSid in DB: ${providerCallSid}`);
+            logger.info(`🎯 [${amdId}]   ⚠️ NOT hanging up - could be race condition with retry loop`);
+            logger.info(`🎯 [${amdId}]   ACTION: Return empty response, let call continue naturally`);
+            logger.info(`${'⚠️'.repeat(35)}\n`);
 
             // Just return empty response - don't hang up!
             // The call will continue with whatever TwiML is already executing
@@ -1561,7 +1567,7 @@ export const twilioAmdTwiml = onRequest(
             return;
           }
         } catch (sessionError) {
-          console.warn(`🎯 [${amdId}]   ⚠️ Could not check provider status:`, sessionError);
+          logger.warn(`🎯 [${amdId}]   ⚠️ Could not check provider status:`, sessionError);
           // P2-1: Log non-critical errors for monitoring
           await logError('twilioWebhooks:amdCallback:checkProviderStatus', { sessionId, callSid, error: sessionError });
           // Continue processing - let the normal flow handle it
@@ -1570,12 +1576,12 @@ export const twilioAmdTwiml = onRequest(
 
       if (isHumanConfirmed) {
         if (answeredBy === 'unknown') {
-          console.log(`\n${'🟢'.repeat(35)}`);
-          console.log(`🎯 [${amdId}] ⚠️ AMD returned "unknown" - treating as HUMAN!`);
-          console.log(`🎯 [${amdId}]   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
-          console.log(`🎯 [${amdId}]   Reason: AMD couldn't determine after analysis, but call IS answered`);
-          console.log(`🎯 [${amdId}]   Action: Will proceed to confirmation or conference`);
-          console.log(`${'🟢'.repeat(35)}\n`);
+          logger.info(`\n${'🟢'.repeat(35)}`);
+          logger.info(`🎯 [${amdId}] ⚠️ AMD returned "unknown" - treating as HUMAN!`);
+          logger.info(`🎯 [${amdId}]   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
+          logger.info(`🎯 [${amdId}]   Reason: AMD couldn't determine after analysis, but call IS answered`);
+          logger.info(`🎯 [${amdId}]   Action: Will proceed to confirmation or conference`);
+          logger.info(`${'🟢'.repeat(35)}\n`);
         }
 
         // HUMAN CONFIRMED - Both client and provider should use DTMF confirmation
@@ -1596,12 +1602,12 @@ export const twilioAmdTwiml = onRequest(
 
               // If client is waiting for DTMF (amd_pending), don't override!
               if (clientStatus === 'amd_pending') {
-                console.log(`\n${'⚠️'.repeat(35)}`);
-                console.log(`🎯 [${amdId}] 🛡️ AMD CALLBACK - Client waiting for DTMF confirmation!`);
-                console.log(`🎯 [${amdId}]   clientStatus: ${clientStatus}`);
-                console.log(`🎯 [${amdId}]   AMD said "human" but this could be voicemail greeting!`);
-                console.log(`🎯 [${amdId}]   ACTION: Ignoring AMD - let DTMF confirmation complete`);
-                console.log(`${'⚠️'.repeat(35)}\n`);
+                logger.info(`\n${'⚠️'.repeat(35)}`);
+                logger.info(`🎯 [${amdId}] 🛡️ AMD CALLBACK - Client waiting for DTMF confirmation!`);
+                logger.info(`🎯 [${amdId}]   clientStatus: ${clientStatus}`);
+                logger.info(`🎯 [${amdId}]   AMD said "human" but this could be voicemail greeting!`);
+                logger.info(`🎯 [${amdId}]   ACTION: Ignoring AMD - let DTMF confirmation complete`);
+                logger.info(`${'⚠️'.repeat(35)}\n`);
 
                 // Return empty response - don't disrupt the Gather flow!
                 res.type('text/xml');
@@ -1611,13 +1617,13 @@ export const twilioAmdTwiml = onRequest(
 
               // If client already connected via DTMF, nothing to do
               if (clientStatus === 'connected') {
-                console.log(`🎯 [${amdId}] 🛡️ AMD CALLBACK - Client already CONNECTED via DTMF`);
+                logger.info(`🎯 [${amdId}] 🛡️ AMD CALLBACK - Client already CONNECTED via DTMF`);
                 res.type('text/xml');
                 res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
                 return;
               }
             } catch (sessionError) {
-              console.warn(`🎯 [${amdId}]   ⚠️ Could not check client status:`, sessionError);
+              logger.warn(`🎯 [${amdId}]   ⚠️ Could not check client status:`, sessionError);
               // P2-1: Log non-critical errors for monitoring
               await logError('twilioWebhooks:amdCallback:checkClientStatus', { sessionId, callSid, error: sessionError });
             }
@@ -1625,9 +1631,9 @@ export const twilioAmdTwiml = onRequest(
 
           // FALLBACK: If we somehow get here, log it but don't set connected directly
           // This path should NOT be reached with proper DTMF flow
-          console.log(`🎯 [${amdId}] ⚠️ CLIENT HUMAN CONFIRMED (FALLBACK PATH)`);
-          console.log(`🎯 [${amdId}]   This is unexpected - client should use DTMF confirmation`);
-          console.log(`🎯 [${amdId}]   Returning empty response`);
+          logger.info(`🎯 [${amdId}] ⚠️ CLIENT HUMAN CONFIRMED (FALLBACK PATH)`);
+          logger.info(`🎯 [${amdId}]   This is unexpected - client should use DTMF confirmation`);
+          logger.info(`🎯 [${amdId}]   Returning empty response`);
 
           res.type('text/xml');
           res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
@@ -1641,63 +1647,63 @@ export const twilioAmdTwiml = onRequest(
           // If provider status is "amd_pending", it means Gather is waiting for DTMF input.
           // We should NOT set status to "connected" - let the Gather flow complete.
           //
-          console.log(`🎯 [${amdId}] 📞 PROVIDER AMD CALLBACK - Checking if DTMF confirmation in progress...`);
-          console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
-          console.log(`🎯 [${amdId}]   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
+          logger.info(`🎯 [${amdId}] 📞 PROVIDER AMD CALLBACK - Checking if DTMF confirmation in progress...`);
+          logger.info(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
+          logger.info(`🎯 [${amdId}]   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
 
           if (sessionId) {
             try {
               const session = await twilioCallManager.getCallSession(sessionId);
               const providerStatus = session?.participants.provider.status;
-              console.log(`🎯 [${amdId}]   Provider current status: ${providerStatus}`);
+              logger.info(`🎯 [${amdId}]   Provider current status: ${providerStatus}`);
 
               // P0 FIX 2026-01-18: If provider is waiting for DTMF (amd_pending), do NOT set connected!
               // Let the Gather flow complete - twilioGatherResponse will set the correct status
               if (providerStatus === 'amd_pending') {
-                console.log(`\n${'⚠️'.repeat(35)}`);
-                console.log(`🎯 [${amdId}] 🛡️ PROVIDER WAITING FOR DTMF CONFIRMATION!`);
-                console.log(`🎯 [${amdId}]   Status is "amd_pending" - Gather TwiML is executing`);
-                console.log(`🎯 [${amdId}]   AMD said "${answeredBy}" but we need DTMF confirmation (press 1)`);
-                console.log(`🎯 [${amdId}]   ACTION: NOT setting to "connected" - let Gather flow complete`);
-                console.log(`${'⚠️'.repeat(35)}\n`);
+                logger.info(`\n${'⚠️'.repeat(35)}`);
+                logger.info(`🎯 [${amdId}] 🛡️ PROVIDER WAITING FOR DTMF CONFIRMATION!`);
+                logger.info(`🎯 [${amdId}]   Status is "amd_pending" - Gather TwiML is executing`);
+                logger.info(`🎯 [${amdId}]   AMD said "${answeredBy}" but we need DTMF confirmation (press 1)`);
+                logger.info(`🎯 [${amdId}]   ACTION: NOT setting to "connected" - let Gather flow complete`);
+                logger.info(`${'⚠️'.repeat(35)}\n`);
 
                 // Return empty response - don't disrupt the Gather flow!
                 res.type('text/xml');
                 res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
-                console.log(`🎯 [${amdId}] END - AMD callback ignored (waiting for DTMF)\n`);
+                logger.info(`🎯 [${amdId}] END - AMD callback ignored (waiting for DTMF)\n`);
                 return;
               }
 
               // If already connected, nothing to do
               if (providerStatus === 'connected') {
-                console.log(`🎯 [${amdId}]   Provider already "connected" - no update needed`);
+                logger.info(`🎯 [${amdId}]   Provider already "connected" - no update needed`);
                 res.type('text/xml');
                 res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
-                console.log(`🎯 [${amdId}] END - Provider already connected\n`);
+                logger.info(`🎯 [${amdId}] END - Provider already connected\n`);
                 return;
               }
 
               // Provider is in some other status (not amd_pending, not connected)
               // This is unexpected - log and return empty response
-              console.log(`🎯 [${amdId}]   Provider in unexpected status: ${providerStatus}`);
-              console.log(`🎯 [${amdId}]   Returning empty response to avoid disruption`);
+              logger.info(`🎯 [${amdId}]   Provider in unexpected status: ${providerStatus}`);
+              logger.info(`🎯 [${amdId}]   Returning empty response to avoid disruption`);
             } catch (statusError) {
-              console.error(`🎯 [${amdId}]   ⚠️ Failed to check provider status:`, statusError);
+              logger.error(`🎯 [${amdId}]   ⚠️ Failed to check provider status:`, statusError);
             }
           }
 
           // Return empty response - don't disrupt the Gather flow
           res.type('text/xml');
           res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
-          console.log(`🎯 [${amdId}] END - Provider AMD callback handled\n`);
+          logger.info(`🎯 [${amdId}] END - Provider AMD callback handled\n`);
           return;
         }
       } else {
         // AMD DÉSACTIVÉ: answeredBy sera toujours undefined - c'est normal
         // On utilise le flux DTMF (appuyer sur 1) pour confirmer que c'est un humain
-        console.log(`🎯 [${amdId}] 📞 FLUX NORMAL (AMD désactivé) - Envoi du TwiML DTMF`);
-        console.log(`🎯 [${amdId}]   answeredBy: "${answeredBy || 'undefined'}" (normal sans AMD)`);
-        console.log(`🎯 [${amdId}]   → L'utilisateur devra appuyer sur 1 pour confirmer`);
+        logger.info(`🎯 [${amdId}] 📞 FLUX NORMAL (AMD désactivé) - Envoi du TwiML DTMF`);
+        logger.info(`🎯 [${amdId}]   answeredBy: "${answeredBy || 'undefined'}" (normal sans AMD)`);
+        logger.info(`🎯 [${amdId}]   → L'utilisateur devra appuyer sur 1 pour confirmer`);
 
         // Set status to "amd_pending" (= en attente de confirmation DTMF)
         // Note: Le nom "amd_pending" est historique, signifie maintenant "en attente de DTMF"
@@ -1717,12 +1723,12 @@ export const twilioAmdTwiml = onRequest(
                 participantType,
                 'amd_pending'
               );
-              console.log(`🎯 [${amdId}]   ✅ Status: amd_pending (en attente confirmation DTMF)`);
+              logger.info(`🎯 [${amdId}]   ✅ Status: amd_pending (en attente confirmation DTMF)`);
             } else {
-              console.log(`🎯 [${amdId}]   Status already ${currentParticipant?.status}, not updating`);
+              logger.info(`🎯 [${amdId}]   Status already ${currentParticipant?.status}, not updating`);
             }
           } catch (statusError) {
-            console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
+            logger.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
           }
         }
 
@@ -1750,10 +1756,10 @@ export const twilioAmdTwiml = onRequest(
           const confirmationPrompt = getConfirmationText('client', langKey);
           const noResponseMessage = getNoResponseText(langKey);
 
-          console.log(`🎯 [${amdId}] CLIENT: Using DTMF confirmation (Gather)`);
-          console.log(`🎯 [${amdId}]   introMessage: "${introMessage.substring(0, 40)}..."`);
-          console.log(`🎯 [${amdId}]   confirmationPrompt: "${confirmationPrompt}"`);
-          console.log(`🎯 [${amdId}]   gatherActionUrl: ${gatherActionUrl.substring(0, 80)}...`);
+          logger.info(`🎯 [${amdId}] CLIENT: Using DTMF confirmation (Gather)`);
+          logger.info(`🎯 [${amdId}]   introMessage: "${introMessage.substring(0, 40)}..."`);
+          logger.info(`🎯 [${amdId}]   confirmationPrompt: "${confirmationPrompt}"`);
+          logger.info(`🎯 [${amdId}]   gatherActionUrl: ${gatherActionUrl.substring(0, 80)}...`);
 
           // TwiML: Play intro, then Gather for DTMF confirmation
           // P0 FIX 2026-01-18: Use <Redirect> instead of <Hangup/> to trigger retry on timeout
@@ -1774,7 +1780,7 @@ export const twilioAmdTwiml = onRequest(
 
           res.type('text/xml');
           res.send(clientGatherTwiml);
-          console.log(`🎯 [${amdId}] END - Client sent GATHER TwiML (waiting for DTMF confirmation)\n`);
+          logger.info(`🎯 [${amdId}] END - Client sent GATHER TwiML (waiting for DTMF confirmation)\n`);
           return;
         } else {
           // P0 FIX 2026-01-18: PROVIDER must confirm with DTMF before joining conference
@@ -1801,10 +1807,10 @@ export const twilioAmdTwiml = onRequest(
           const confirmationPrompt = getConfirmationText('provider', langKey);
           const noResponseMessage = getNoResponseText(langKey);
 
-          console.log(`🎯 [${amdId}] PROVIDER: Using DTMF confirmation (Gather)`);
-          console.log(`🎯 [${amdId}]   introMessage: "${introMessage.substring(0, 40)}..."`);
-          console.log(`🎯 [${amdId}]   confirmationPrompt: "${confirmationPrompt}"`);
-          console.log(`🎯 [${amdId}]   gatherActionUrl: ${gatherActionUrl.substring(0, 80)}...`);
+          logger.info(`🎯 [${amdId}] PROVIDER: Using DTMF confirmation (Gather)`);
+          logger.info(`🎯 [${amdId}]   introMessage: "${introMessage.substring(0, 40)}..."`);
+          logger.info(`🎯 [${amdId}]   confirmationPrompt: "${confirmationPrompt}"`);
+          logger.info(`🎯 [${amdId}]   gatherActionUrl: ${gatherActionUrl.substring(0, 80)}...`);
 
           // TwiML: Play intro, then Gather for DTMF confirmation
           // P0 FIX 2026-01-18: Use <Redirect> instead of <Hangup/> to trigger retry on timeout
@@ -1829,14 +1835,14 @@ export const twilioAmdTwiml = onRequest(
 
           res.type('text/xml');
           res.send(providerGatherTwiml);
-          console.log(`🎯 [${amdId}] END - Provider sent GATHER TwiML (waiting for DTMF confirmation)\n`);
+          logger.info(`🎯 [${amdId}] END - Provider sent GATHER TwiML (waiting for DTMF confirmation)\n`);
           return;
         }
       }
 
       // HUMAN CONFIRMED - Get welcome message and play it
       const welcomeMessage = getIntroText(participantType, langKey);
-      console.log(`🎯 [${amdId}]   welcomeMessage: "${welcomeMessage.substring(0, 50)}..."`)
+      logger.info(`🎯 [${amdId}]   welcomeMessage: "${welcomeMessage.substring(0, 50)}..."`)
 
       // Generate conference TwiML with welcome message (only for confirmed human)
       // Client starts conference (startConferenceOnEnter=true)
@@ -1866,8 +1872,8 @@ export const twilioAmdTwiml = onRequest(
       // This code path is only reached for CLIENT human confirmed
       // For async AMD callback on client, use REST API to redirect (though client usually has sync AMD)
       if (isAsyncAmdCallback && callSid) {
-        console.log(`🎯 [${amdId}] 🔄 CLIENT ASYNC AMD CALLBACK - Using REST API to redirect to conference`);
-        console.log(`🎯 [${amdId}]   callSid: ${callSid}`);
+        logger.info(`🎯 [${amdId}] 🔄 CLIENT ASYNC AMD CALLBACK - Using REST API to redirect to conference`);
+        logger.info(`🎯 [${amdId}]   callSid: ${callSid}`);
 
         try {
           const { getTwilioClient } = await import('../lib/twilio');
@@ -1876,18 +1882,18 @@ export const twilioAmdTwiml = onRequest(
             await twilioClient.calls(callSid).update({
               twiml: conferenceTwiml
             });
-            console.log(`🎯 [${amdId}]   ✅ Call updated via REST API - client will now join conference`);
+            logger.info(`🎯 [${amdId}]   ✅ Call updated via REST API - client will now join conference`);
           } else {
-            console.error(`🎯 [${amdId}]   ❌ Twilio client not available - cannot redirect call!`);
+            logger.error(`🎯 [${amdId}]   ❌ Twilio client not available - cannot redirect call!`);
           }
         } catch (restError) {
-          console.error(`🎯 [${amdId}]   ❌ Failed to update call via REST API:`, restError);
+          logger.error(`🎯 [${amdId}]   ❌ Failed to update call via REST API:`, restError);
         }
       }
 
       res.type('text/xml');
       res.send(conferenceTwiml);
-      console.log(`🎯 [${amdId}] END - Sent CONFERENCE TwiML with welcome message (client human confirmed)\n`);
+      logger.info(`🎯 [${amdId}] END - Sent CONFERENCE TwiML with welcome message (client human confirmed)\n`);
 
     } catch (error) {
       const errorDetails = {
@@ -1903,10 +1909,11 @@ export const twilioAmdTwiml = onRequest(
         timestamp: new Date().toISOString(),
       };
 
-      console.error(`\n${'❌'.repeat(40)}`);
-      console.error(`🎯 [${amdId}] ❌ TWILIOAMDTWIML EXCEPTION:`, errorDetails);
-      console.error(`${'❌'.repeat(40)}\n`);
+      logger.error(`\n${'❌'.repeat(40)}`);
+      logger.error(`🎯 [${amdId}] ❌ TWILIOAMDTWIML EXCEPTION:`, errorDetails);
+      logger.error(`${'❌'.repeat(40)}\n`);
       await logError('twilioAmdTwiml', error);
+      captureError(error, { functionName: 'twilioAmdTwiml', extra: errorDetails });
 
       // On error, return hangup to prevent any audio playing
       const errorTwiml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -1949,14 +1956,14 @@ export const twilioGatherResponse = onRequest(
     try {
       // P0 SECURITY: Validate Twilio signature
       if (!validateTwilioWebhookSignature(req as any, res as any)) {
-        console.error("[twilioGatherResponse] Invalid Twilio signature - rejecting request");
+        logger.error("[twilioGatherResponse] Invalid Twilio signature - rejecting request");
         return;
       }
 
       // P1 SECURITY: CallSid guard - reject requests without a valid CallSid
       const callSidCheck = req.body?.CallSid;
       if (!callSidCheck || typeof callSidCheck !== 'string' || !callSidCheck.startsWith('CA')) {
-        console.error(`[twilioGatherResponse] Missing or invalid CallSid: ${callSidCheck}`);
+        logger.error(`[twilioGatherResponse] Missing or invalid CallSid: ${callSidCheck}`);
         res.status(400).send('Missing or invalid CallSid');
         return;
       }
@@ -1976,23 +1983,23 @@ export const twilioGatherResponse = onRequest(
       const speechResult = req.body?.SpeechResult; // Speech recognition result
       const callSid = req.body?.CallSid;
 
-      console.log(`\n${'🎤'.repeat(40)}`);
-      console.log(`🎤 [${gatherId}] twilioGatherResponse START`);
-      console.log(`🎤 [${gatherId}]   sessionId: ${sessionId}`);
-      console.log(`🎤 [${gatherId}]   participantType: ${participantType}`);
-      console.log(`🎤 [${gatherId}]   conferenceName: ${conferenceName}`);
-      console.log(`🎤 [${gatherId}]   callSid: ${callSid}`);
-      console.log(`🎤 [${gatherId}]   digits: ${digits || 'none'}`);
-      console.log(`🎤 [${gatherId}]   speechResult: ${speechResult || 'none'}`);
-      console.log(`🎤 [${gatherId}]   isGatherTimeout: ${isGatherTimeout}`);
-      console.log(`${'🎤'.repeat(40)}`);
+      logger.info(`\n${'🎤'.repeat(40)}`);
+      logger.info(`🎤 [${gatherId}] twilioGatherResponse START`);
+      logger.info(`🎤 [${gatherId}]   sessionId: ${sessionId}`);
+      logger.info(`🎤 [${gatherId}]   participantType: ${participantType}`);
+      logger.info(`🎤 [${gatherId}]   conferenceName: ${conferenceName}`);
+      logger.info(`🎤 [${gatherId}]   callSid: ${callSid}`);
+      logger.info(`🎤 [${gatherId}]   digits: ${digits || 'none'}`);
+      logger.info(`🎤 [${gatherId}]   speechResult: ${speechResult || 'none'}`);
+      logger.info(`🎤 [${gatherId}]   isGatherTimeout: ${isGatherTimeout}`);
+      logger.info(`${'🎤'.repeat(40)}`);
 
       // Determine if provider confirmed
       let isConfirmed = false;
 
       // Check DTMF input (pressed 1)
       if (digits === '1') {
-        console.log(`🎤 [${gatherId}] ✅ DTMF CONFIRMATION: Provider pressed 1`);
+        logger.info(`🎤 [${gatherId}] ✅ DTMF CONFIRMATION: Provider pressed 1`);
         isConfirmed = true;
       }
 
@@ -2007,20 +2014,20 @@ export const twilioGatherResponse = onRequest(
 
         for (const word of confirmWords) {
           if (normalizedSpeech.includes(word)) {
-            console.log(`🎤 [${gatherId}] ✅ SPEECH CONFIRMATION: Provider said "${speechResult}" (matched: ${word})`);
+            logger.info(`🎤 [${gatherId}] ✅ SPEECH CONFIRMATION: Provider said "${speechResult}" (matched: ${word})`);
             isConfirmed = true;
             break;
           }
         }
 
         if (!isConfirmed) {
-          console.log(`🎤 [${gatherId}] ❌ Speech not recognized as confirmation: "${speechResult}"`);
+          logger.info(`🎤 [${gatherId}] ❌ Speech not recognized as confirmation: "${speechResult}"`);
         }
       }
 
       if (isConfirmed) {
         // Participant confirmed! Set status to connected and join conference
-        console.log(`🎤 [${gatherId}] 🎉 ${participantType.toUpperCase()} CONFIRMED - Setting status to "connected" and joining conference`);
+        logger.info(`🎤 [${gatherId}] 🎉 ${participantType.toUpperCase()} CONFIRMED - Setting status to "connected" and joining conference`);
 
         if (sessionId) {
           try {
@@ -2030,7 +2037,7 @@ export const twilioGatherResponse = onRequest(
               'connected',
               admin.firestore.Timestamp.fromDate(new Date())
             );
-            console.log(`🎤 [${gatherId}]   ✅ ${participantType} status set to "connected"`);
+            logger.info(`🎤 [${gatherId}]   ✅ ${participantType} status set to "connected"`);
 
             // If provider confirmed, mark them as BUSY
             if (participantType === 'provider') {
@@ -2039,18 +2046,18 @@ export const twilioGatherResponse = onRequest(
                 // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
                 const providerId = session?.providerId || session?.metadata?.providerId;
                 if (providerId) {
-                  console.log(`🎤 [${gatherId}]   🔶 Setting provider ${providerId} to BUSY...`);
+                  logger.info(`🎤 [${gatherId}]   🔶 Setting provider ${providerId} to BUSY...`);
                   await setProviderBusy(providerId, sessionId, 'in_call');
-                  console.log(`🎤 [${gatherId}]   ✅ Provider ${providerId} marked as BUSY`);
+                  logger.info(`🎤 [${gatherId}]   ✅ Provider ${providerId} marked as BUSY`);
                 } else {
-                  console.warn(`🎤 [${gatherId}]   ⚠️ Cannot set provider busy - providerId not found in session`);
+                  logger.warn(`🎤 [${gatherId}]   ⚠️ Cannot set provider busy - providerId not found in session`);
                 }
               } catch (busyError) {
-                console.error(`🎤 [${gatherId}]   ⚠️ Failed to set provider busy (non-blocking):`, busyError);
+                logger.error(`🎤 [${gatherId}]   ⚠️ Failed to set provider busy (non-blocking):`, busyError);
               }
             }
           } catch (statusError) {
-            console.error(`🎤 [${gatherId}]   ⚠️ Failed to update status:`, statusError);
+            logger.error(`🎤 [${gatherId}]   ⚠️ Failed to update status:`, statusError);
           }
         }
 
@@ -2067,8 +2074,8 @@ export const twilioGatherResponse = onRequest(
         // Now BOTH participants end the conference when they exit.
         const endConferenceOnExit = 'true'; // Always true for both client and provider
 
-        console.log(`🎤 [${gatherId}]   startConferenceOnEnter: ${startConferenceOnEnter}`);
-        console.log(`🎤 [${gatherId}]   endConferenceOnExit: ${endConferenceOnExit}`);
+        logger.info(`🎤 [${gatherId}]   startConferenceOnEnter: ${startConferenceOnEnter}`);
+        logger.info(`🎤 [${gatherId}]   endConferenceOnExit: ${endConferenceOnExit}`);
 
         // P0 FIX 2026-01-18: Escape XML special characters to prevent Error 12100
         const conferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -2088,11 +2095,11 @@ export const twilioGatherResponse = onRequest(
 
         res.type('text/xml');
         res.send(conferenceTwiml);
-        console.log(`🎤 [${gatherId}] END - ${participantType} joining conference\n`);
+        logger.info(`🎤 [${gatherId}] END - ${participantType} joining conference\n`);
 
       } else {
         // No confirmation received - treat as no_answer for retry
-        console.log(`🎤 [${gatherId}] ❌ NO CONFIRMATION - Setting status to "no_answer" for retry`);
+        logger.info(`🎤 [${gatherId}] ❌ NO CONFIRMATION - Setting status to "no_answer" for retry`);
 
         if (sessionId) {
           try {
@@ -2101,9 +2108,9 @@ export const twilioGatherResponse = onRequest(
               participantType,
               'no_answer'
             );
-            console.log(`🎤 [${gatherId}]   ✅ Status set to "no_answer" - retry will be triggered`);
+            logger.info(`🎤 [${gatherId}]   ✅ Status set to "no_answer" - retry will be triggered`);
           } catch (statusError) {
-            console.error(`🎤 [${gatherId}]   ⚠️ Failed to update status:`, statusError);
+            logger.error(`🎤 [${gatherId}]   ⚠️ Failed to update status:`, statusError);
           }
         }
 
@@ -2119,17 +2126,18 @@ export const twilioGatherResponse = onRequest(
 
         res.type('text/xml');
         res.send(hangupTwiml);
-        console.log(`🎤 [${gatherId}] END - Hanging up, will retry\n`);
+        logger.info(`🎤 [${gatherId}] END - Hanging up, will retry\n`);
       }
 
     } catch (error) {
-      console.error(`\n${'❌'.repeat(40)}`);
-      console.error(`🎤 [${gatherId}] ❌ TWILIOGATHERRESPONSE EXCEPTION:`, {
+      logger.error(`\n${'❌'.repeat(40)}`);
+      logger.error(`🎤 [${gatherId}] ❌ TWILIOGATHERRESPONSE EXCEPTION:`, {
         errorMessage: error instanceof Error ? error.message : String(error),
         errorStack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : 'N/A',
       });
-      console.error(`${'❌'.repeat(40)}\n`);
+      logger.error(`${'❌'.repeat(40)}\n`);
       await logError('twilioGatherResponse', error);
+      captureError(error, { functionName: 'twilioGatherResponse' });
 
       // On error, hang up
       const errorTwiml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -2159,7 +2167,7 @@ export const findCallSessionByCallSid = async (callSid: string) => {
     }
     return null;
   } catch (error) {
-    console.error('Error finding call session:', error);
+    logger.error('Error finding call session:', error);
     return null;
   }
 };

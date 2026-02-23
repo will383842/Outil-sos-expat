@@ -139,7 +139,7 @@ export const createAndScheduleCallHTTPS = onCall(
     maxInstances: 3,
     minInstances: 1,
     concurrency: 1,
-    timeoutSeconds: 60,
+    timeoutSeconds: 90, // P1-2 FIX 2026-02-23: 60→90s — 10+ Firestore writes + Cloud Tasks scheduling
     cors: ALLOWED_ORIGINS,
     // Secrets: encryption + Stripe + Cloud Tasks + Outil sync
     secrets: [ENCRYPTION_KEY, STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, TASKS_AUTH_SECRET, OUTIL_SYNC_API_KEY],

@@ -1,11 +1,13 @@
 // firebase/functions/src/runtime/executeCallTask.ts - VERSION CORRIGÉE
 import { Request, Response } from "express";
 // import { onRequest } from "firebase-functions/v2/https";
+import { logger } from "firebase-functions/v2";
 import { getFirestore } from "firebase-admin/firestore";
 import { getTwilioClient, getTwilioPhoneNumber } from "../lib/twilio";
 import { beginOutboundCallForSession } from "../services/twilioCallManagerAdapter";
 import { logError } from "../utils/logs/logError";
 import { logCallRecord } from "../utils/logs/logCallRecord";
+import { captureError } from "../config/sentry";
 
 // P0 FIX: Import from centralized secrets - NEVER call defineSecret() here!
 import {
@@ -28,16 +30,16 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
   let callSessionId = '';
   
   try {
-    console.log('🔍 [executeCallTask] === DÉBUT EXÉCUTION ===');
-    console.log('🔍 [executeCallTask] Method:', req.method);
-    console.log('🔍 [executeCallTask] Headers:', JSON.stringify(req.headers, null, 2));
-    console.log('🔍 [executeCallTask] Raw Body:', req.body);
+    logger.info('🔍 [executeCallTask] === DÉBUT EXÉCUTION ===');
+    logger.info('🔍 [executeCallTask] Method:', req.method);
+    logger.info('🔍 [executeCallTask] Headers:', JSON.stringify(req.headers, null, 2));
+    logger.info('🔍 [executeCallTask] Raw Body:', req.body);
 
     // ✅ ÉTAPE 1: Authentification Cloud Tasks
     const authHeader = req.get("X-Task-Auth") || "";
     const expectedAuth = getTasksAuthSecret() || "";
     
-    console.log('🔐 [executeCallTask] Auth check:', {
+    logger.info('🔐 [executeCallTask] Auth check:', {
       hasAuthHeader: !!authHeader,
       authHeaderLength: authHeader.length,
       hasExpectedAuth: !!expectedAuth,
@@ -46,18 +48,18 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
     });
 
     if (!authHeader) {
-      console.error('❌ [executeCallTask] Missing X-Task-Auth header');
+      logger.error('❌ [executeCallTask] Missing X-Task-Auth header');
       res.status(401).send("Missing X-Task-Auth header");
       return;
     }
 
     if (authHeader !== expectedAuth) {
-      console.error('❌ [executeCallTask] Invalid X-Task-Auth header');
+      logger.error('❌ [executeCallTask] Invalid X-Task-Auth header');
       res.status(401).send("Invalid X-Task-Auth header");
       return;
     }
 
-    console.log('✅ [executeCallTask] Authentication successful');
+    logger.info('✅ [executeCallTask] Authentication successful');
 
     // ✅ ÉTAPE 2: Extraction du payload
     const requestBody = req.body || {};
@@ -65,7 +67,7 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
     // P0 FIX: Suppression du fallback hardcodé - DOIT échouer si pas de callSessionId
     callSessionId = requestBody.callSessionId;
 
-    console.log('📋 [executeCallTask] Payload extracted:', {
+    logger.info('📋 [executeCallTask] Payload extracted:', {
       hasBody: !!req.body,
       bodyKeys: Object.keys(requestBody),
       callSessionId: callSessionId || 'MISSING',
@@ -73,8 +75,8 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
     });
 
     if (!callSessionId) {
-      console.error('❌ [executeCallTask] Missing callSessionId in request body');
-      console.error('❌ [executeCallTask] Available keys:', Object.keys(requestBody));
+      logger.error('❌ [executeCallTask] Missing callSessionId in request body');
+      logger.error('❌ [executeCallTask] Available keys:', Object.keys(requestBody));
       await logError('executeCallTask:missingCallSessionId', {
         body: requestBody,
         keys: Object.keys(requestBody)
@@ -87,7 +89,7 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
       return;
     }
 
-    console.log(`📞 [executeCallTask] Processing call session: ${callSessionId}`);
+    logger.info(`📞 [executeCallTask] Processing call session: ${callSessionId}`);
 
     // ✅ ÉTAPE 3: IDEMPOTENCE CHECK - Empêcher les exécutions multiples
     const lockRef = db.collection('call_execution_locks').doc(callSessionId);
@@ -100,7 +102,7 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
 
       // Si déjà en cours d'exécution ou complété (et lock < 10 minutes)
       if ((lockStatus === 'executing' || lockStatus === 'completed') && lockAge < 10 * 60 * 1000) {
-        console.log(`⏭️ [executeCallTask] IDEMPOTENCE: Session ${callSessionId} already ${lockStatus}, skipping`);
+        logger.info(`⏭️ [executeCallTask] IDEMPOTENCE: Session ${callSessionId} already ${lockStatus}, skipping`);
         res.status(200).json({
           success: true,
           message: `Call already ${lockStatus}`,
@@ -118,7 +120,7 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
       updatedAt: new Date()
     }, { merge: true });
 
-    console.log(`🔒 [executeCallTask] Lock acquired for session: ${callSessionId}`);
+    logger.info(`🔒 [executeCallTask] Lock acquired for session: ${callSessionId}`);
 
     // ✅ ÉTAPE 4: Log initial
     await logCallRecord({
@@ -133,22 +135,22 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
     });
 
     // ✅ ÉTAPE 4: Vérification Twilio (pour les logs)
-    console.log('📞 [executeCallTask] Checking Twilio credentials...');
+    logger.info('📞 [executeCallTask] Checking Twilio credentials...');
     
     try {
       const twilio = getTwilioClient();
       const fromNumber = getTwilioPhoneNumber();
-      console.log('✅ [executeCallTask] Twilio credentials OK:', {
+      logger.info('✅ [executeCallTask] Twilio credentials OK:', {
         hasClient: !!twilio,
         fromNumber: fromNumber ? fromNumber.substring(0, 5) + '...' : 'MISSING'
       });
     } catch (twilioError) {
-      console.error('❌ [executeCallTask] Twilio credentials issue:', twilioError);
+      logger.error('❌ [executeCallTask] Twilio credentials issue:', twilioError);
       // Continue quand même car TwilioCallManager gère ses propres credentials
     }
 
     // ✅ ÉTAPE 5: Re-check provider availability before calling
-    console.log(`🔍 [executeCallTask] Re-checking provider availability for: ${callSessionId}`);
+    logger.info(`🔍 [executeCallTask] Re-checking provider availability for: ${callSessionId}`);
     const callSessionDoc = await db.collection('call_sessions').doc(callSessionId).get();
     if (callSessionDoc.exists) {
       const sessionData = callSessionDoc.data();
@@ -157,7 +159,7 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
         const profileDoc = await db.collection('sos_profiles').doc(providerId).get();
         const profileData = profileDoc.data();
         if (profileData && profileData.status !== 'available') {
-          console.warn(`⚠️ [executeCallTask] Provider ${providerId} is no longer available (status: ${profileData.status}), aborting call`);
+          logger.warn(`⚠️ [executeCallTask] Provider ${providerId} is no longer available (status: ${profileData.status}), aborting call`);
           await lockRef.update({ status: 'aborted_provider_unavailable', updatedAt: new Date() });
 
           // C1 AUDIT FIX: Cancel payment immediately when provider is unavailable
@@ -171,9 +173,9 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
               'executeCallTask'
             );
             paymentCancelled = true;
-            console.log(`✅ [executeCallTask] Payment cancelled/refunded for unavailable provider`);
+            logger.info(`✅ [executeCallTask] Payment cancelled/refunded for unavailable provider`);
           } catch (refundError) {
-            console.error(`❌ [executeCallTask] Failed to cancel payment:`, refundError);
+            logger.error(`❌ [executeCallTask] Failed to cancel payment:`, refundError);
             await logError('executeCallTask:refundOnProviderUnavailable', refundError);
           }
 
@@ -186,19 +188,19 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
           });
           return;
         }
-        console.log(`✅ [executeCallTask] Provider ${providerId} still available`);
+        logger.info(`✅ [executeCallTask] Provider ${providerId} still available`);
       }
     }
 
     // ✅ ÉTAPE 5b: Exécution via l'adapter
-    console.log(`🚀 [executeCallTask] Starting call execution for: ${callSessionId}`);
+    logger.info(`🚀 [executeCallTask] Starting call execution for: ${callSessionId}`);
 
     const callResult = await beginOutboundCallForSession(callSessionId);
-    console.log('✅ [executeCallTask] Call execution result:', callResult);
+    logger.info('✅ [executeCallTask] Call execution result:', callResult);
 
     const executionTime = Date.now() - startTime;
 
-    console.log('✅ [executeCallTask] Call execution completed:', {
+    logger.info('✅ [executeCallTask] Call execution completed:', {
       callSessionId,
       executionTimeMs: executionTime,
       resultStatus: callResult?.status || 'unknown',
@@ -232,8 +234,8 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
       timestamp: new Date().toISOString()
     };
 
-    console.log('🎉 [executeCallTask] === SUCCÈS ===');
-    console.log('🎉 [executeCallTask] Response:', JSON.stringify(response, null, 2));
+    logger.info('🎉 [executeCallTask] === SUCCÈS ===');
+    logger.info('🎉 [executeCallTask] Response:', JSON.stringify(response, null, 2));
 
     res.status(200).json(response);
     return;
@@ -241,8 +243,8 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
   } catch (error) {
     const executionTime = Date.now() - startTime;
     
-    console.error('❌ [executeCallTask] === ERREUR ===');
-    console.error('❌ [executeCallTask] Error details:', {
+    logger.error('❌ [executeCallTask] === ERREUR ===');
+    logger.error('❌ [executeCallTask] Error details:', {
       callSessionId: callSessionId || 'unknown',
       executionTimeMs: executionTime,
       error: error instanceof Error ? error.message : String(error),
@@ -252,6 +254,7 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
 
     // Logger l'erreur
     await logError('executeCallTask:runExecuteCallTask', error);
+    captureError(error, { functionName: 'executeCallTask', extra: { callSessionId } });
 
     if (callSessionId) {
       // Mettre à jour le lock avec l'échec
@@ -263,7 +266,7 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
           error: error instanceof Error ? error.message : String(error)
         });
       } catch (lockError) {
-        console.error('Failed to update lock:', lockError);
+        logger.error('Failed to update lock:', lockError);
       }
 
       await logCallRecord({
@@ -311,11 +314,11 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
 
     if (isTransientError) {
       // P0 AUDIT FIX: Return 500 for transient errors so Cloud Tasks will retry
-      console.error(`❌ [executeCallTask] TRANSIENT error — returning 500 for Cloud Tasks retry`);
+      logger.error(`❌ [executeCallTask] TRANSIENT error — returning 500 for Cloud Tasks retry`);
       res.status(500).json(errorResponse);
     } else {
       // Permanent error — return 200 to prevent futile retries
-      console.error(`❌ [executeCallTask] PERMANENT error — returning 200 (no retry needed)`);
+      logger.error(`❌ [executeCallTask] PERMANENT error — returning 200 (no retry needed)`);
       res.status(200).json(errorResponse);
     }
     return;

@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { logger } from "firebase-functions/v2";
 // 🔧 Twilio client & num + Circuit breaker
 import { getTwilioClient, getTwilioPhoneNumber, isCircuitOpen, recordTwilioSuccess, recordTwilioFailure } from "./lib/twilio";
 import { getTwilioCallWebhookUrl, getTwilioAmdTwimlUrl } from "./utils/urlBase";
@@ -18,6 +19,7 @@ import { resolveLang } from "./notificationPipeline/i18n";
 import { syncPaymentStatus } from "./utils/paymentSync";
 // Production logger
 import { logger as prodLogger } from "./utils/productionLogger";
+import { captureError } from "./config/sentry";
 
 // =============================
 // Typage fort du JSON de prompts
@@ -315,22 +317,22 @@ const LANG_CODE_ALIASES: Record<string, string> = {
 
 function normalizeLangList(langs?: string[]): string[] {
   if (!langs || !Array.isArray(langs)) {
-    console.log(`🌍 [normalizeLangList] Input is empty/invalid: ${JSON.stringify(langs)}`);
+    logger.info(`🌍 [normalizeLangList] Input is empty/invalid: ${JSON.stringify(langs)}`);
     return [];
   }
-  console.log(`🌍 [normalizeLangList] Input languages: ${JSON.stringify(langs)}`);
+  logger.info(`🌍 [normalizeLangList] Input languages: ${JSON.stringify(langs)}`);
   const out: string[] = [];
   for (const raw of langs) {
     if (!raw) continue;
     let short = String(raw).toLowerCase().split(/[-_]/)[0];
     const alias = LANG_CODE_ALIASES[short];
     if (alias) {
-      console.log(`🌍 [normalizeLangList] Alias found: "${raw}" -> "${short}" -> "${alias}"`);
+      logger.info(`🌍 [normalizeLangList] Alias found: "${raw}" -> "${short}" -> "${alias}"`);
       short = alias;
     }
     if (!out.includes(short)) out.push(short);
   }
-  console.log(`🌍 [normalizeLangList] Output languages: ${JSON.stringify(out)}`);
+  logger.info(`🌍 [normalizeLangList] Output languages: ${JSON.stringify(out)}`);
   return out;
 }
 
@@ -437,12 +439,13 @@ export class TwilioCallManager {
         providerLanguages: input.providerLanguages,
         callSessionId: input.sessionId,
       });
-      console.log("🛒 Call session created:", created);
+      logger.info("🛒 Call session created:", created);
 
       await mgr.initiateCallSequence(input.sessionId, delayMinutes);
       return created;
     } catch (error) {
       await logError("TwilioCallManager:startOutboundCall", error as unknown);
+      captureError(error, { functionName: 'TwilioCallManager:startOutboundCall' });
       throw error;
     }
   }
@@ -604,10 +607,11 @@ export class TwilioCallManager {
         },
       });
 
-      console.log(`✅ Session d'appel créée: ${params.sessionId}`);
+      logger.info(`✅ Session d'appel créée: ${params.sessionId}`);
       return callSession;
     } catch (error) {
       await logError("TwilioCallManager:createCallSession", error as unknown);
+      captureError(error, { functionName: 'TwilioCallManager:createCallSession' });
       throw error;
     }
   }
@@ -625,7 +629,7 @@ export class TwilioCallManager {
         delayMinutes,
       });
 
-      console.log(
+      logger.info(
         `🚀 Init séquence d'appel ${sessionId} dans ${delayMinutes} min`
       );
 
@@ -650,7 +654,7 @@ export class TwilioCallManager {
       // P2-7 FIX: Ensure metadata defaults are persisted to Firestore
       let metadataUpdated = false;
       if (!callSession.metadata) {
-        console.warn(
+        logger.warn(
           `No metadata found for session ${sessionId}, creating minimal metadata`
         );
         callSession.metadata = {
@@ -676,7 +680,7 @@ export class TwilioCallManager {
           "metadata.providerLanguages": callSession.metadata.providerLanguages,
           "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
         });
-        console.log(`📄 Persisted metadata fallback for session ${sessionId}`);
+        logger.info(`📄 Persisted metadata fallback for session ${sessionId}`);
       }
 
       if (delayMinutes > 0) {
@@ -696,6 +700,7 @@ export class TwilioCallManager {
         "TwilioCallManager:initiateCallSequence",
         error as unknown
       );
+      captureError(error, { functionName: 'TwilioCallManager:initiateCallSequence', extra: { sessionId } });
       await this.handleCallFailure(sessionId, "system_error");
     }
   }
@@ -703,37 +708,37 @@ export class TwilioCallManager {
   private async executeCallSequence(sessionId: string): Promise<void> {
     const execId = `exec_${Date.now().toString(36)}`;
 
-    console.log(`\n${'='.repeat(80)}`);
-    console.log(`📞 [${execId}] executeCallSequence START`);
-    console.log(`${'='.repeat(80)}`);
-    console.log(`📞 [${execId}]   sessionId: ${sessionId}`);
-    console.log(`📞 [${execId}]   timestamp: ${new Date().toISOString()}`);
+    logger.info(`\n${'='.repeat(80)}`);
+    logger.info(`📞 [${execId}] executeCallSequence START`);
+    logger.info(`${'='.repeat(80)}`);
+    logger.info(`📞 [${execId}]   sessionId: ${sessionId}`);
+    logger.info(`📞 [${execId}]   timestamp: ${new Date().toISOString()}`);
 
     prodLogger.info('TWILIO_EXEC_START', `[${execId}] Executing call sequence`, {
       execId,
       sessionId,
     });
 
-    console.log(`📞 [${execId}] STEP 1: Fetching call session from Firestore`);
+    logger.info(`📞 [${execId}] STEP 1: Fetching call session from Firestore`);
     const callSession = await this.getCallSession(sessionId);
     if (!callSession) {
-      console.log(`📞 [${execId}] ❌ FATAL: Session NOT FOUND in Firestore`);
+      logger.info(`📞 [${execId}] ❌ FATAL: Session NOT FOUND in Firestore`);
       prodLogger.error('TWILIO_EXEC_ERROR', `[${execId}] Session not found`, { execId, sessionId });
       throw new Error(`Session d'appel non trouvée: ${sessionId}`);
     }
 
-    console.log(`📞 [${execId}] STEP 2: Session found, analyzing state:`);
-    console.log(`📞 [${execId}]   session.status: "${callSession.status}"`);
-    console.log(`📞 [${execId}]   payment.intentId: ${callSession.payment?.intentId || 'MISSING'}`);
-    console.log(`📞 [${execId}]   payment.status: ${callSession.payment?.status || 'MISSING'}`);
-    console.log(`📞 [${execId}]   client.phone exists: ${!!callSession.participants?.client?.phone}`);
-    console.log(`📞 [${execId}]   provider.phone exists: ${!!callSession.participants?.provider?.phone}`);
-    console.log(`📞 [${execId}]   client.attemptCount: ${callSession.participants?.client?.attemptCount || 0}`);
-    console.log(`📞 [${execId}]   provider.attemptCount: ${callSession.participants?.provider?.attemptCount || 0}`);
+    logger.info(`📞 [${execId}] STEP 2: Session found, analyzing state:`);
+    logger.info(`📞 [${execId}]   session.status: "${callSession.status}"`);
+    logger.info(`📞 [${execId}]   payment.intentId: ${callSession.payment?.intentId || 'MISSING'}`);
+    logger.info(`📞 [${execId}]   payment.status: ${callSession.payment?.status || 'MISSING'}`);
+    logger.info(`📞 [${execId}]   client.phone exists: ${!!callSession.participants?.client?.phone}`);
+    logger.info(`📞 [${execId}]   provider.phone exists: ${!!callSession.participants?.provider?.phone}`);
+    logger.info(`📞 [${execId}]   client.attemptCount: ${callSession.participants?.client?.attemptCount || 0}`);
+    logger.info(`📞 [${execId}]   provider.attemptCount: ${callSession.participants?.provider?.attemptCount || 0}`);
 
     if (callSession.status === "cancelled" || callSession.status === "failed") {
-      console.log(`📞 [${execId}] ⚠️ Session already in terminal state: ${callSession.status}`);
-      console.log(`📞 [${execId}]   → SKIPPING call execution`);
+      logger.info(`📞 [${execId}] ⚠️ Session already in terminal state: ${callSession.status}`);
+      logger.info(`📞 [${execId}]   → SKIPPING call execution`);
       prodLogger.warn('TWILIO_EXEC_SKIP', `[${execId}] Session already ${callSession.status}`, {
         execId,
         sessionId,
@@ -742,10 +747,10 @@ export class TwilioCallManager {
       return;
     }
 
-    console.log(`📞 [${execId}] STEP 3: Session status OK, proceeding to payment validation`);
+    logger.info(`📞 [${execId}] STEP 3: Session status OK, proceeding to payment validation`);
     const BYPASS_VALIDATIONS = process.env.TEST_BYPASS_VALIDATIONS === "1";
-    console.log(`📞 [${execId}]   TEST_BYPASS_VALIDATIONS: ${BYPASS_VALIDATIONS}`);
-    console.log(`📞 [${execId}]   call_sessions.payment.status: "${callSession.payment?.status}"`);
+    logger.info(`📞 [${execId}]   TEST_BYPASS_VALIDATIONS: ${BYPASS_VALIDATIONS}`);
+    logger.info(`📞 [${execId}]   call_sessions.payment.status: "${callSession.payment?.status}"`);
 
     // P0 FIX: Pass call_sessions.payment.status as fallback for validatePaymentStatus
     const paymentValid = BYPASS_VALIDATIONS
@@ -755,7 +760,7 @@ export class TwilioCallManager {
           callSession.payment.status // Fallback status from call_sessions
         );
 
-    console.log(`📞 [${execId}] STEP 4: Payment validation result: ${paymentValid ? '✅ VALID' : '❌ INVALID'}`);
+    logger.info(`📞 [${execId}] STEP 4: Payment validation result: ${paymentValid ? '✅ VALID' : '❌ INVALID'}`);
 
     prodLogger.debug('TWILIO_PAYMENT_CHECK', `[${execId}] Payment validation`, {
       execId,
@@ -767,10 +772,10 @@ export class TwilioCallManager {
     });
 
     if (!paymentValid) {
-      console.log(`📞 [${execId}] ❌ PAYMENT INVALID - Aborting call sequence`);
-      console.log(`📞 [${execId}]   → Calling handleCallFailure("payment_invalid")`);
-      console.log(`📞 [${execId}]   → CLIENT PHONE WILL NOT RING`);
-      console.log(`📞 [${execId}]   → PROVIDER PHONE WILL NOT RING`);
+      logger.info(`📞 [${execId}] ❌ PAYMENT INVALID - Aborting call sequence`);
+      logger.info(`📞 [${execId}]   → Calling handleCallFailure("payment_invalid")`);
+      logger.info(`📞 [${execId}]   → CLIENT PHONE WILL NOT RING`);
+      logger.info(`📞 [${execId}]   → PROVIDER PHONE WILL NOT RING`);
       prodLogger.error('TWILIO_PAYMENT_INVALID', `[${execId}] Payment invalid - failing call`, {
         execId,
         sessionId,
@@ -780,12 +785,12 @@ export class TwilioCallManager {
       return;
     }
 
-    console.log(`📞 [${execId}] STEP 5: Payment valid, preparing Twilio calls`);
-    console.log(`📞 [${execId}]   → NEXT: Call CLIENT phone first`);
+    logger.info(`📞 [${execId}] STEP 5: Payment valid, preparing Twilio calls`);
+    logger.info(`📞 [${execId}]   → NEXT: Call CLIENT phone first`);
 
     // 🔧 Add null checks for language arrays
     if (!callSession.metadata.clientLanguages) {
-      console.log(
+      logger.info(
         `🔧 [TwilioCallManager] Adding missing clientLanguages for ${sessionId}`
       );
       await this.db
@@ -802,7 +807,7 @@ export class TwilioCallManager {
     }
 
     if (!callSession.metadata.providerLanguages) {
-      console.log(
+      logger.info(
         `🔧 [TwilioCallManager] Adding missing providerLanguages for ${sessionId}`
       );
       await this.db
@@ -824,8 +829,8 @@ export class TwilioCallManager {
     const supportedLangs = new Set(availablePromptLangs());
 
     // Get client's preferred language (first one that's supported, or "en")
-    console.log(`🌍 [LANG] Raw metadata.clientLanguages: ${JSON.stringify(callSession.metadata.clientLanguages)}`);
-    console.log(`🌍 [LANG] Raw metadata.providerLanguages: ${JSON.stringify(callSession.metadata.providerLanguages)}`);
+    logger.info(`🌍 [LANG] Raw metadata.clientLanguages: ${JSON.stringify(callSession.metadata.clientLanguages)}`);
+    logger.info(`🌍 [LANG] Raw metadata.providerLanguages: ${JSON.stringify(callSession.metadata.providerLanguages)}`);
 
     const clientLangs = normalizeLangList(callSession.metadata.clientLanguages || ["en"]);
     const clientLangKey = clientLangs.find(l => supportedLangs.has(l as LangCode)) || "en";
@@ -836,9 +841,9 @@ export class TwilioCallManager {
     const providerLangKey = providerLangs.find(l => supportedLangs.has(l as LangCode)) || "en";
     const providerTtsLocale = localeFor(providerLangKey);
 
-    console.log(`🌍 [LANG] Supported languages: ${JSON.stringify(Array.from(supportedLangs))}`);
-    console.log(`🌍 [LANG] Client language: ${getLanguageName(clientLangKey)} (${clientLangKey})`);
-    console.log(`🌍 [LANG] Provider language: ${getLanguageName(providerLangKey)} (${providerLangKey})`);
+    logger.info(`🌍 [LANG] Supported languages: ${JSON.stringify(Array.from(supportedLangs))}`);
+    logger.info(`🌍 [LANG] Client language: ${getLanguageName(clientLangKey)} (${clientLangKey})`);
+    logger.info(`🌍 [LANG] Provider language: ${getLanguageName(providerLangKey)} (${providerLangKey})`);
 
     await this.saveWithRetry(() =>
       this.db.collection("call_sessions").doc(sessionId).update({
@@ -859,25 +864,25 @@ export class TwilioCallManager {
     try {
       clientPhone = decryptPhoneNumber(callSession.participants.client.phone);
     } catch (decryptError) {
-      console.error(`🔐❌ [${sessionId}] Failed to decrypt client phone:`, decryptError);
+      logger.error(`🔐❌ [${sessionId}] Failed to decrypt client phone:`, decryptError);
       await logError('TwilioCallManager:startConference:decryptClientPhone', { sessionId, error: decryptError });
       throw new Error(`Cannot start call: client phone decryption failed`);
     }
     try {
       providerPhone = decryptPhoneNumber(callSession.participants.provider.phone);
     } catch (decryptError) {
-      console.error(`🔐❌ [${sessionId}] Failed to decrypt provider phone:`, decryptError);
+      logger.error(`🔐❌ [${sessionId}] Failed to decrypt provider phone:`, decryptError);
       await logError('TwilioCallManager:startConference:decryptProviderPhone', { sessionId, error: decryptError });
       throw new Error(`Cannot start call: provider phone decryption failed`);
     }
 
-    console.log(`\n${'🔵'.repeat(40)}`);
-    console.log(`📞 [WORKFLOW] ÉTAPE 1: APPEL CLIENT`);
-    console.log(`📞   sessionId: ${sessionId}`);
-    console.log(`📞   langue: ${getLanguageName(clientLangKey)}`);
-    console.log(`📞   conferenceName: ${callSession.conference.name}`);
-    console.log(`📞   maxDuration: ${callSession.metadata.maxDuration}s`);
-    console.log(`${'🔵'.repeat(40)}`);
+    logger.info(`\n${'🔵'.repeat(40)}`);
+    logger.info(`📞 [WORKFLOW] ÉTAPE 1: APPEL CLIENT`);
+    logger.info(`📞   sessionId: ${sessionId}`);
+    logger.info(`📞   langue: ${getLanguageName(clientLangKey)}`);
+    logger.info(`📞   conferenceName: ${callSession.conference.name}`);
+    logger.info(`📞   maxDuration: ${callSession.metadata.maxDuration}s`);
+    logger.info(`${'🔵'.repeat(40)}`);
 
     const clientConnected = await this.callParticipantWithRetries(
       sessionId,
@@ -889,35 +894,35 @@ export class TwilioCallManager {
       clientLangKey
     );
 
-    console.log(`\n${'📱'.repeat(40)}`);
-    console.log(`📞 [WORKFLOW] CLIENT RESULT: ${clientConnected ? '✅ CONNECTÉ' : '❌ NON CONNECTÉ'}`);
-    console.log(`${'📱'.repeat(40)}`);
+    logger.info(`\n${'📱'.repeat(40)}`);
+    logger.info(`📞 [WORKFLOW] CLIENT RESULT: ${clientConnected ? '✅ CONNECTÉ' : '❌ NON CONNECTÉ'}`);
+    logger.info(`${'📱'.repeat(40)}`);
 
     if (!clientConnected) {
-      console.log(`📞 [WORKFLOW] ❌ CLIENT NON CONNECTÉ - Appel handleCallFailure("client_no_answer")`);
-      console.log(`📞 [WORKFLOW] ⚠️ LE PROVIDER NE SERA PAS APPELÉ`);
+      logger.info(`📞 [WORKFLOW] ❌ CLIENT NON CONNECTÉ - Appel handleCallFailure("client_no_answer")`);
+      logger.info(`📞 [WORKFLOW] ⚠️ LE PROVIDER NE SERA PAS APPELÉ`);
       await this.handleCallFailure(sessionId, "client_no_answer");
       return;
     }
 
     // Vérifier l'état après la connexion du client
     const sessionAfterClient = await this.getCallSession(sessionId);
-    console.log(`\n${'🟢'.repeat(40)}`);
-    console.log(`📞 [WORKFLOW] CLIENT CONNECTÉ - ÉTAT ACTUEL:`);
-    console.log(`📞   session.status: ${sessionAfterClient?.status}`);
-    console.log(`📞   client.status: ${sessionAfterClient?.participants.client.status}`);
-    console.log(`📞   client.connectedAt: ${sessionAfterClient?.participants.client.connectedAt ? 'OUI' : 'NON'}`);
-    console.log(`📞   provider.status: ${sessionAfterClient?.participants.provider.status}`);
-    console.log(`${'🟢'.repeat(40)}`);
+    logger.info(`\n${'🟢'.repeat(40)}`);
+    logger.info(`📞 [WORKFLOW] CLIENT CONNECTÉ - ÉTAT ACTUEL:`);
+    logger.info(`📞   session.status: ${sessionAfterClient?.status}`);
+    logger.info(`📞   client.status: ${sessionAfterClient?.participants.client.status}`);
+    logger.info(`📞   client.connectedAt: ${sessionAfterClient?.participants.client.connectedAt ? 'OUI' : 'NON'}`);
+    logger.info(`📞   provider.status: ${sessionAfterClient?.participants.provider.status}`);
+    logger.info(`${'🟢'.repeat(40)}`);
 
     await this.updateCallSessionStatus(sessionId, "provider_connecting");
 
-    console.log(`\n${'🟠'.repeat(40)}`);
-    console.log(`📞 [WORKFLOW] ÉTAPE 2: APPEL PROVIDER`);
-    console.log(`📞   sessionId: ${sessionId}`);
-    console.log(`📞   langue: ${getLanguageName(providerLangKey)}`);
-    console.log(`📞   delayInitial: 15000ms (pour permettre au client d'entendre le message)`);
-    console.log(`${'🟠'.repeat(40)}`);
+    logger.info(`\n${'🟠'.repeat(40)}`);
+    logger.info(`📞 [WORKFLOW] ÉTAPE 2: APPEL PROVIDER`);
+    logger.info(`📞   sessionId: ${sessionId}`);
+    logger.info(`📞   langue: ${getLanguageName(providerLangKey)}`);
+    logger.info(`📞   delayInitial: 15000ms (pour permettre au client d'entendre le message)`);
+    logger.info(`${'🟠'.repeat(40)}`);
 
     const providerConnected = await this.callParticipantWithRetries(
       sessionId,
@@ -930,9 +935,9 @@ export class TwilioCallManager {
       15_000
     );
 
-    console.log(`\n${'📱'.repeat(40)}`);
-    console.log(`📞 [WORKFLOW] PROVIDER RESULT: ${providerConnected ? '✅ CONNECTÉ' : '❌ NON CONNECTÉ'}`);
-    console.log(`${'📱'.repeat(40)}`);
+    logger.info(`\n${'📱'.repeat(40)}`);
+    logger.info(`📞 [WORKFLOW] PROVIDER RESULT: ${providerConnected ? '✅ CONNECTÉ' : '❌ NON CONNECTÉ'}`);
+    logger.info(`${'📱'.repeat(40)}`);
 
     if (!providerConnected) {
       await this.handleCallFailure(sessionId, "provider_no_answer");
@@ -951,7 +956,7 @@ export class TwilioCallManager {
       retryCount: 0,
     });
 
-    console.log(`✅ Séquence d'appel complétée pour ${sessionId}`);
+    logger.info(`✅ Séquence d'appel complétée pour ${sessionId}`);
   }
 
   private async validatePaymentStatus(
@@ -959,9 +964,9 @@ export class TwilioCallManager {
     fallbackSessionStatus?: string
   ): Promise<boolean> {
     const debugId = `pay_${Date.now().toString(36)}`;
-    console.log(`💳 [${debugId}] validatePaymentStatus START`);
-    console.log(`💳 [${debugId}]   paymentIntentId: ${paymentIntentId}`);
-    console.log(`💳 [${debugId}]   fallbackSessionStatus: ${fallbackSessionStatus || 'none'}`);
+    logger.info(`💳 [${debugId}] validatePaymentStatus START`);
+    logger.info(`💳 [${debugId}]   paymentIntentId: ${paymentIntentId}`);
+    logger.info(`💳 [${debugId}]   fallbackSessionStatus: ${fallbackSessionStatus || 'none'}`);
 
     // P0 FIX: Valid statuses set - centralized definition
     const validStatuses = new Set<string>([
@@ -977,76 +982,76 @@ export class TwilioCallManager {
     ]);
 
     try {
-      console.log(`💳 [${debugId}] STEP 1: Calling stripeManager.getPayment()`);
+      logger.info(`💳 [${debugId}] STEP 1: Calling stripeManager.getPayment()`);
       const payment = await stripeManager.getPayment(paymentIntentId);
 
-      console.log(`💳 [${debugId}] STEP 2: Payment lookup result:`);
-      console.log(`💳 [${debugId}]   payment exists: ${!!payment}`);
-      console.log(`💳 [${debugId}]   payment type: ${typeof payment}`);
+      logger.info(`💳 [${debugId}] STEP 2: Payment lookup result:`);
+      logger.info(`💳 [${debugId}]   payment exists: ${!!payment}`);
+      logger.info(`💳 [${debugId}]   payment type: ${typeof payment}`);
 
       // P0 FIX: If payments document doesn't exist, use fallback from call_sessions.payment.status
       if (!payment || typeof payment !== "object") {
-        console.log(`💳 [${debugId}] ⚠️ Payment document not found, trying fallback...`);
-        console.log(`💳 [${debugId}]   fallbackSessionStatus: "${fallbackSessionStatus}"`);
+        logger.info(`💳 [${debugId}] ⚠️ Payment document not found, trying fallback...`);
+        logger.info(`💳 [${debugId}]   fallbackSessionStatus: "${fallbackSessionStatus}"`);
 
         if (fallbackSessionStatus && validStatuses.has(fallbackSessionStatus)) {
-          console.log(`💳 [${debugId}] ✅ FALLBACK SUCCESS: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
+          logger.info(`💳 [${debugId}] ✅ FALLBACK SUCCESS: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
           return true;
         }
 
-        console.log(`💳 [${debugId}] ❌ FAIL: Payment is null and no valid fallback`);
+        logger.info(`💳 [${debugId}] ❌ FAIL: Payment is null and no valid fallback`);
         return false;
       }
 
       const paymentObj = payment as Record<string, unknown>;
       const status = paymentObj.status;
 
-      console.log(`💳 [${debugId}] STEP 3: Payment status analysis:`);
-      console.log(`💳 [${debugId}]   status value: "${status}"`);
-      console.log(`💳 [${debugId}]   status type: ${typeof status}`);
-      console.log(`💳 [${debugId}]   Full payment object keys: ${Object.keys(paymentObj).join(', ')}`);
+      logger.info(`💳 [${debugId}] STEP 3: Payment status analysis:`);
+      logger.info(`💳 [${debugId}]   status value: "${status}"`);
+      logger.info(`💳 [${debugId}]   status type: ${typeof status}`);
+      logger.info(`💳 [${debugId}]   Full payment object keys: ${Object.keys(paymentObj).join(', ')}`);
 
       if (typeof status !== "string") {
-        console.log(`💳 [${debugId}] ⚠️ Status not a string, trying fallback...`);
+        logger.info(`💳 [${debugId}] ⚠️ Status not a string, trying fallback...`);
 
         if (fallbackSessionStatus && validStatuses.has(fallbackSessionStatus)) {
-          console.log(`💳 [${debugId}] ✅ FALLBACK SUCCESS: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
+          logger.info(`💳 [${debugId}] ✅ FALLBACK SUCCESS: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
           return true;
         }
 
-        console.log(`💳 [${debugId}] ❌ FAIL: Status is not a string and no valid fallback`);
+        logger.info(`💳 [${debugId}] ❌ FAIL: Status is not a string and no valid fallback`);
         return false;
       }
 
       const isValid = validStatuses.has(status);
 
-      console.log(`💳 [${debugId}] STEP 4: Validation result:`);
-      console.log(`💳 [${debugId}]   Status "${status}" is valid: ${isValid}`);
-      console.log(`💳 [${debugId}]   Valid statuses: ${Array.from(validStatuses).join(', ')}`);
+      logger.info(`💳 [${debugId}] STEP 4: Validation result:`);
+      logger.info(`💳 [${debugId}]   Status "${status}" is valid: ${isValid}`);
+      logger.info(`💳 [${debugId}]   Valid statuses: ${Array.from(validStatuses).join(', ')}`);
 
       if (!isValid) {
         // P0 FIX: Try fallback before failing
-        console.log(`💳 [${debugId}] ⚠️ Status invalid, trying fallback...`);
+        logger.info(`💳 [${debugId}] ⚠️ Status invalid, trying fallback...`);
 
         if (fallbackSessionStatus && validStatuses.has(fallbackSessionStatus)) {
-          console.log(`💳 [${debugId}] ✅ FALLBACK SUCCESS: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
+          logger.info(`💳 [${debugId}] ✅ FALLBACK SUCCESS: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
           return true;
         }
 
-        console.log(`💳 [${debugId}] ❌ FAIL: Status "${status}" not in valid set and no valid fallback`);
+        logger.info(`💳 [${debugId}] ❌ FAIL: Status "${status}" not in valid set and no valid fallback`);
       } else {
-        console.log(`💳 [${debugId}] ✅ SUCCESS: Payment status valid`);
+        logger.info(`💳 [${debugId}] ✅ SUCCESS: Payment status valid`);
       }
 
       return isValid;
     } catch (error) {
-      console.log(`💳 [${debugId}] ❌ EXCEPTION in validatePaymentStatus:`);
-      console.log(`💳 [${debugId}]   Error: ${error instanceof Error ? error.message : String(error)}`);
-      console.log(`💳 [${debugId}]   Stack: ${error instanceof Error ? error.stack : 'N/A'}`);
+      logger.info(`💳 [${debugId}] ❌ EXCEPTION in validatePaymentStatus:`);
+      logger.info(`💳 [${debugId}]   Error: ${error instanceof Error ? error.message : String(error)}`);
+      logger.info(`💳 [${debugId}]   Stack: ${error instanceof Error ? error.stack : 'N/A'}`);
 
       // P0 FIX: Try fallback even on exception
       if (fallbackSessionStatus && validStatuses.has(fallbackSessionStatus)) {
-        console.log(`💳 [${debugId}] ✅ FALLBACK SUCCESS after exception: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
+        logger.info(`💳 [${debugId}] ✅ FALLBACK SUCCESS after exception: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
         return true;
       }
 
@@ -1078,21 +1083,21 @@ export class TwilioCallManager {
 
       try {
         // 🛑 STOP if session is already failed/cancelled (prevents unnecessary retries)
-        console.log(`📞 [${retryId}] RETRY CHECK: Verifying session status before attempt ${attempt}...`);
+        logger.info(`📞 [${retryId}] RETRY CHECK: Verifying session status before attempt ${attempt}...`);
         const sessionCheck = await this.getCallSession(sessionId);
-        console.log(`📞 [${retryId}]   session.status: ${sessionCheck?.status || 'NOT_FOUND'}`);
-        console.log(`📞 [${retryId}]   client.status: ${sessionCheck?.participants.client.status || 'N/A'}`);
-        console.log(`📞 [${retryId}]   provider.status: ${sessionCheck?.participants.provider.status || 'N/A'}`);
+        logger.info(`📞 [${retryId}]   session.status: ${sessionCheck?.status || 'NOT_FOUND'}`);
+        logger.info(`📞 [${retryId}]   client.status: ${sessionCheck?.participants.client.status || 'N/A'}`);
+        logger.info(`📞 [${retryId}]   provider.status: ${sessionCheck?.participants.provider.status || 'N/A'}`);
 
         if (sessionCheck && (sessionCheck.status === "failed" || sessionCheck.status === "cancelled")) {
-          console.log(`\n${'❌'.repeat(35)}`);
-          console.log(`🛑 [${retryId}] RETRIES STOPPED!`);
-          console.log(`🛑 [${retryId}]   Reason: session.status is "${sessionCheck.status}"`);
-          console.log(`🛑 [${retryId}]   participantType: ${participantType}`);
-          console.log(`🛑 [${retryId}]   attemptNumber: ${attempt}`);
-          console.log(`🛑 [${retryId}]   ⚠️ This should NOT happen if the retry fix is working correctly!`);
-          console.log(`🛑 [${retryId}]   ⚠️ handleEarlyDisconnection should NOT call handleCallFailure during retries`);
-          console.log(`${'❌'.repeat(35)}\n`);
+          logger.info(`\n${'❌'.repeat(35)}`);
+          logger.info(`🛑 [${retryId}] RETRIES STOPPED!`);
+          logger.info(`🛑 [${retryId}]   Reason: session.status is "${sessionCheck.status}"`);
+          logger.info(`🛑 [${retryId}]   participantType: ${participantType}`);
+          logger.info(`🛑 [${retryId}]   attemptNumber: ${attempt}`);
+          logger.info(`🛑 [${retryId}]   ⚠️ This should NOT happen if the retry fix is working correctly!`);
+          logger.info(`🛑 [${retryId}]   ⚠️ handleEarlyDisconnection should NOT call handleCallFailure during retries`);
+          logger.info(`${'❌'.repeat(35)}\n`);
           await logCallRecord({
             callId: sessionId,
             status: `${participantType}_retries_stopped_session_${sessionCheck.status}`,
@@ -1105,7 +1110,7 @@ export class TwilioCallManager {
           });
           return false;
         }
-        console.log(`📞 [${retryId}]   ✅ Session OK, proceeding with attempt ${attempt}`);
+        logger.info(`📞 [${retryId}]   ✅ Session OK, proceeding with attempt ${attempt}`);
 
 
         // P0 FIX: 🛑 STOP if participant is already connected (prevents duplicate calls)
@@ -1114,7 +1119,7 @@ export class TwilioCallManager {
           : sessionCheck?.participants.client;
 
         if (participant?.status === "connected") {
-          console.log(`✅ [${retryId}] [IDEMPOTENT] ${participantType} already connected, no need to retry`);
+          logger.info(`✅ [${retryId}] [IDEMPOTENT] ${participantType} already connected, no need to retry`);
           await logCallRecord({
             callId: sessionId,
             status: `${participantType}_already_connected_skip_retry`,
@@ -1142,29 +1147,29 @@ export class TwilioCallManager {
               // NOTE: participant.status can't be "connected" here because we already
               // checked that at line 967 and returned early.
               if (participant.status === "amd_pending") {
-                console.log(`⏳ [${retryId}] [AMD WAIT] Call ${participant.callSid} is IN-PROGRESS but AMD is PENDING`);
-                console.log(`⏳ [${retryId}]   This could be a voicemail that answered - waiting for AMD callback`);
-                console.log(`⏳ [${retryId}]   NOT forcing "connected" - let AMD callback determine human/machine`);
+                logger.info(`⏳ [${retryId}] [AMD WAIT] Call ${participant.callSid} is IN-PROGRESS but AMD is PENDING`);
+                logger.info(`⏳ [${retryId}]   This could be a voicemail that answered - waiting for AMD callback`);
+                logger.info(`⏳ [${retryId}]   NOT forcing "connected" - let AMD callback determine human/machine`);
                 // P0 FIX 2026-01-16: DO NOT CREATE A NEW CALL! The call is already in-progress!
                 // Wait for the AMD callback by re-running waitForConnection
                 // The AMD callback will set status to "connected" (human) or "no_answer" (machine)
-                console.log(`⏳ [${retryId}]   🔄 Re-running waitForConnection to wait for AMD callback...`);
+                logger.info(`⏳ [${retryId}]   🔄 Re-running waitForConnection to wait for AMD callback...`);
                 const amdResult = await this.waitForConnection(sessionId, participantType, attempt);
                 if (amdResult) {
-                  console.log(`⏳ [${retryId}]   ✅ AMD callback confirmed HUMAN - returning success`);
+                  logger.info(`⏳ [${retryId}]   ✅ AMD callback confirmed HUMAN - returning success`);
                   return true;
                 } else {
-                  console.log(`⏳ [${retryId}]   ❌ AMD callback indicated MACHINE or timeout - will retry if attempts remain`);
+                  logger.info(`⏳ [${retryId}]   ❌ AMD callback indicated MACHINE or timeout - will retry if attempts remain`);
                   // Continue to next iteration which will check if call is completed and maybe retry
                   continue;
                 }
               } else {
                 // Status is not "amd_pending" (and not "connected" - we checked that earlier)
                 // but call is in-progress. This is a genuine recovery case where the webhook failed.
-                console.log(`✅ [${retryId}] [RECOVERY] Call ${participant.callSid} is IN-PROGRESS!`);
-                console.log(`✅ [${retryId}]   Current status: "${participant.status}" (not amd_pending)`);
-                console.log(`✅ [${retryId}]   Participant is likely in conference but status wasn't updated correctly`);
-                console.log(`✅ [${retryId}]   Forcing status to "connected" and returning success`);
+                logger.info(`✅ [${retryId}] [RECOVERY] Call ${participant.callSid} is IN-PROGRESS!`);
+                logger.info(`✅ [${retryId}]   Current status: "${participant.status}" (not amd_pending)`);
+                logger.info(`✅ [${retryId}]   Participant is likely in conference but status wasn't updated correctly`);
+                logger.info(`✅ [${retryId}]   Forcing status to "connected" and returning success`);
 
                 // Force update status to connected (recovery from missed webhook)
                 await this.updateParticipantStatus(
@@ -1191,24 +1196,24 @@ export class TwilioCallManager {
 
             // Only hangup if call is ringing or queued (not yet answered)
             if (existingCall.status === "ringing" || existingCall.status === "queued") {
-              console.log(`📴 [${retryId}] [CLEANUP] Hanging up previous call ${participant.callSid} (status: ${existingCall.status})`);
+              logger.info(`📴 [${retryId}] [CLEANUP] Hanging up previous call ${participant.callSid} (status: ${existingCall.status})`);
               await twilioClient.calls(participant.callSid).update({ status: "completed" });
               await this.delay(1000); // Wait for Twilio to process
             }
           } catch (hangupError) {
-            console.warn(`⚠️ [${retryId}] [CLEANUP] Could not check/hangup previous call:`, hangupError);
+            logger.warn(`⚠️ [${retryId}] [CLEANUP] Could not check/hangup previous call:`, hangupError);
           }
         }
-        console.log(`\n${'▓'.repeat(70)}`);
-        console.log(`📞 [${retryId}] TWILIO CALL ATTEMPT ${attempt}/${maxRetries}`);
-        console.log(`📞 [${retryId}]   sessionId: ${sessionId}`);
-        console.log(`📞 [${retryId}]   participantType: ${participantType}`);
-        console.log(`📞 [${retryId}]   phoneNumber: ${phoneNumber.substring(0, 6)}****`);
-        console.log(`📞 [${retryId}]   conferenceName: ${conferenceName}`);
-        console.log(`📞 [${retryId}]   timeLimit: ${timeLimit}s`);
-        console.log(`📞 [${retryId}]   langKey: ${langKey}`);
-        console.log(`📞 [${retryId}]   ttsLocale: ${ttsLocale}`);
-        console.log(`${'▓'.repeat(70)}`);
+        logger.info(`\n${'▓'.repeat(70)}`);
+        logger.info(`📞 [${retryId}] TWILIO CALL ATTEMPT ${attempt}/${maxRetries}`);
+        logger.info(`📞 [${retryId}]   sessionId: ${sessionId}`);
+        logger.info(`📞 [${retryId}]   participantType: ${participantType}`);
+        logger.info(`📞 [${retryId}]   phoneNumber: ${phoneNumber.substring(0, 6)}****`);
+        logger.info(`📞 [${retryId}]   conferenceName: ${conferenceName}`);
+        logger.info(`📞 [${retryId}]   timeLimit: ${timeLimit}s`);
+        logger.info(`📞 [${retryId}]   langKey: ${langKey}`);
+        logger.info(`📞 [${retryId}]   ttsLocale: ${ttsLocale}`);
+        logger.info(`${'▓'.repeat(70)}`);
 
         await this.incrementAttemptCount(sessionId, participantType);
 
@@ -1220,34 +1225,34 @@ export class TwilioCallManager {
 
         // P0 FIX: Instead of inline TwiML, use URL callback that checks AMD BEFORE playing audio
         // This prevents voicemail from recording our "vous allez être mis en relation" message
-        console.log(`📞 [${retryId}] STEP A: Building AMD TwiML URL...`);
+        logger.info(`📞 [${retryId}] STEP A: Building AMD TwiML URL...`);
         const amdTwimlBaseUrl = getTwilioAmdTwimlUrl();
         const amdTwimlUrl = `${amdTwimlBaseUrl}?sessionId=${encodeURIComponent(sessionId)}&participantType=${participantType}&conferenceName=${encodeURIComponent(conferenceName)}&timeLimit=${timeLimit}&ttsLocale=${encodeURIComponent(ttsLocale)}&langKey=${encodeURIComponent(langKey)}`;
-        console.log(`📞 [${retryId}]   amdTwimlUrl: ${amdTwimlUrl.substring(0, 100)}...`);
+        logger.info(`📞 [${retryId}]   amdTwimlUrl: ${amdTwimlUrl.substring(0, 100)}...`);
 
-        console.log(`📞 [${retryId}] STEP B: Getting Twilio credentials...`);
+        logger.info(`📞 [${retryId}] STEP B: Getting Twilio credentials...`);
         const twilioClient = getTwilioClient();
         const fromNumber = getTwilioPhoneNumber();
         // P0 CRITICAL FIX: Use dedicated Cloud Run URL instead of base + function name
         const twilioCallWebhookUrl = getTwilioCallWebhookUrl();
-        console.log(`📞 [${retryId}]   fromNumber: ${fromNumber}`);
-        console.log(`📞 [${retryId}]   statusCallback (Cloud Run): ${twilioCallWebhookUrl}`);
+        logger.info(`📞 [${retryId}]   fromNumber: ${fromNumber}`);
+        logger.info(`📞 [${retryId}]   statusCallback (Cloud Run): ${twilioCallWebhookUrl}`);
 
-        console.log(`📞 [${retryId}] STEP C: Creating Twilio call via API...`);
+        logger.info(`📞 [${retryId}] STEP C: Creating Twilio call via API...`);
 
         // P2-14 FIX: Circuit breaker check before calling Twilio
         if (isCircuitOpen()) {
-          console.error(`📞 [${retryId}] ❌ CIRCUIT BREAKER OPEN - Twilio calls blocked temporarily`);
+          logger.error(`📞 [${retryId}] ❌ CIRCUIT BREAKER OPEN - Twilio calls blocked temporarily`);
           throw new Error("Twilio service temporarily unavailable (circuit breaker open)");
         }
 
-        console.log(`📞 [${retryId}]   twilioClient.calls.create({`);
-        console.log(`📞 [${retryId}]     to: ${phoneNumber.substring(0, 6)}****,`);
-        console.log(`📞 [${retryId}]     from: ${fromNumber},`);
-        console.log(`📞 [${retryId}]     timeout: ${CALL_CONFIG.CALL_TIMEOUT},`);
-        console.log(`📞 [${retryId}]     machineDetection: "Enable",`);
-        console.log(`📞 [${retryId}]     url: ${amdTwimlUrl.substring(0, 50)}...`);
-        console.log(`📞 [${retryId}]   })`);
+        logger.info(`📞 [${retryId}]   twilioClient.calls.create({`);
+        logger.info(`📞 [${retryId}]     to: ${phoneNumber.substring(0, 6)}****,`);
+        logger.info(`📞 [${retryId}]     from: ${fromNumber},`);
+        logger.info(`📞 [${retryId}]     timeout: ${CALL_CONFIG.CALL_TIMEOUT},`);
+        logger.info(`📞 [${retryId}]     machineDetection: "Enable",`);
+        logger.info(`📞 [${retryId}]     url: ${amdTwimlUrl.substring(0, 50)}...`);
+        logger.info(`📞 [${retryId}]   })`);
 
         const twilioApiStartTime = Date.now();
         let call;
@@ -1296,7 +1301,7 @@ export class TwilioCallManager {
             details: (twilioError as any)?.details || 'N/A',
           };
 
-          console.error(`📞 [${retryId}] ❌ TWILIO API CALL FAILED:`, {
+          logger.error(`📞 [${retryId}] ❌ TWILIO API CALL FAILED:`, {
             errorMessage: err.message,
             errorName: err.name,
             twilioCode: twilioDetails.code,
@@ -1314,25 +1319,25 @@ export class TwilioCallManager {
         }
         const twilioApiDuration = Date.now() - twilioApiStartTime;
 
-        console.log(`📞 [${retryId}] STEP D: Twilio API response received in ${twilioApiDuration}ms`);
-        console.log(`📞 [${retryId}]   call.sid: ${call.sid}`);
-        console.log(`📞 [${retryId}]   call.status: ${call.status}`);
-        console.log(`📞 [${retryId}]   call.to: ${call.to}`);
-        console.log(`📞 [${retryId}]   call.from: ${call.from}`);
-        console.log(`📞 [${retryId}]   call.direction: ${call.direction}`);
-        console.log(`📞 [${retryId}]   call.dateCreated: ${call.dateCreated}`);
+        logger.info(`📞 [${retryId}] STEP D: Twilio API response received in ${twilioApiDuration}ms`);
+        logger.info(`📞 [${retryId}]   call.sid: ${call.sid}`);
+        logger.info(`📞 [${retryId}]   call.status: ${call.status}`);
+        logger.info(`📞 [${retryId}]   call.to: ${call.to}`);
+        logger.info(`📞 [${retryId}]   call.from: ${call.from}`);
+        logger.info(`📞 [${retryId}]   call.direction: ${call.direction}`);
+        logger.info(`📞 [${retryId}]   call.dateCreated: ${call.dateCreated}`);
 
-        console.log(`📞 [${retryId}] STEP E: Saving callSid to Firestore...`);
+        logger.info(`📞 [${retryId}] STEP E: Saving callSid to Firestore...`);
         await this.updateParticipantCallSid(
           sessionId,
           participantType,
           call.sid
         );
-        console.log(`📞 [${retryId}]   ✅ CallSid saved`);
+        logger.info(`📞 [${retryId}]   ✅ CallSid saved`);
 
-        console.log(`📞 [${retryId}] STEP F: Waiting for connection (waitForConnection)...`);
-        console.log(`📞 [${retryId}]   This will poll Firestore for status="connected"`);
-        console.log(`📞 [${retryId}]   Timeout: ${CALL_CONFIG.CONNECTION_WAIT_TIME}ms`);
+        logger.info(`📞 [${retryId}] STEP F: Waiting for connection (waitForConnection)...`);
+        logger.info(`📞 [${retryId}]   This will poll Firestore for status="connected"`);
+        logger.info(`📞 [${retryId}]   Timeout: ${CALL_CONFIG.CONNECTION_WAIT_TIME}ms`);
 
         const waitStartTime = Date.now();
         const connected = await this.waitForConnection(
@@ -1342,12 +1347,12 @@ export class TwilioCallManager {
         );
         const waitDuration = Date.now() - waitStartTime;
 
-        console.log(`📞 [${retryId}] STEP G: waitForConnection returned after ${waitDuration}ms`);
-        console.log(`📞 [${retryId}]   connected: ${connected}`);
+        logger.info(`📞 [${retryId}] STEP G: waitForConnection returned after ${waitDuration}ms`);
+        logger.info(`📞 [${retryId}]   connected: ${connected}`);
 
         if (connected) {
-          console.log(`📞 [${retryId}] ✅✅✅ ${participantType.toUpperCase()} CONNECTED! ✅✅✅`);
-          console.log(`${'▓'.repeat(70)}\n`);
+          logger.info(`📞 [${retryId}] ✅✅✅ ${participantType.toUpperCase()} CONNECTED! ✅✅✅`);
+          logger.info(`${'▓'.repeat(70)}\n`);
           await logCallRecord({
             callId: sessionId,
             status: `${participantType}_connected_attempt_${attempt}`,
@@ -1357,25 +1362,25 @@ export class TwilioCallManager {
         }
 
         // Connection failed - log why
-        console.log(`📞 [${retryId}] ❌ ${participantType} NOT CONNECTED after attempt ${attempt}`);
-        console.log(`📞 [${retryId}]   waitForConnection returned: ${connected}`);
-        console.log(`📞 [${retryId}]   This means either timeout, disconnected, or no_answer`);
+        logger.info(`📞 [${retryId}] ❌ ${participantType} NOT CONNECTED after attempt ${attempt}`);
+        logger.info(`📞 [${retryId}]   waitForConnection returned: ${connected}`);
+        logger.info(`📞 [${retryId}]   This means either timeout, disconnected, or no_answer`);
 
         if (attempt < maxRetries) {
           // 🛑 Check again before retrying - session might have been marked as failed
-          console.log(`📞 [${retryId}] STEP H: Checking session status before retry...`);
+          logger.info(`📞 [${retryId}] STEP H: Checking session status before retry...`);
           const sessionCheckBeforeRetry = await this.getCallSession(sessionId);
           const currentParticipant = participantType === "provider"
             ? sessionCheckBeforeRetry?.participants.provider
             : sessionCheckBeforeRetry?.participants.client;
 
-          console.log(`📞 [${retryId}]   session.status: ${sessionCheckBeforeRetry?.status}`);
-          console.log(`📞 [${retryId}]   participant.status: ${currentParticipant?.status}`);
-          console.log(`📞 [${retryId}]   participant.callSid: ${currentParticipant?.callSid}`);
+          logger.info(`📞 [${retryId}]   session.status: ${sessionCheckBeforeRetry?.status}`);
+          logger.info(`📞 [${retryId}]   participant.status: ${currentParticipant?.status}`);
+          logger.info(`📞 [${retryId}]   participant.callSid: ${currentParticipant?.callSid}`);
 
           if (sessionCheckBeforeRetry && (sessionCheckBeforeRetry.status === "failed" || sessionCheckBeforeRetry.status === "cancelled")) {
-            console.log(`📞 [${retryId}] 🛑 STOPPING RETRIES: session is ${sessionCheckBeforeRetry.status}`);
-            console.log(`${'▓'.repeat(70)}\n`);
+            logger.info(`📞 [${retryId}] 🛑 STOPPING RETRIES: session is ${sessionCheckBeforeRetry.status}`);
+            logger.info(`${'▓'.repeat(70)}\n`);
             await logCallRecord({
               callId: sessionId,
               status: `${participantType}_retries_stopped_before_attempt_${attempt + 1}`,
@@ -1388,24 +1393,25 @@ export class TwilioCallManager {
             ? backoffOverrideMs
             : 15_000 + attempt * 5_000;
 
-          console.log(`📞 [${retryId}] STEP I: Waiting ${backoffTime}ms before retry ${attempt + 1}...`);
+          logger.info(`📞 [${retryId}] STEP I: Waiting ${backoffTime}ms before retry ${attempt + 1}...`);
           await this.delay(backoffTime);
-          console.log(`📞 [${retryId}]   Backoff complete, starting next attempt`);
+          logger.info(`📞 [${retryId}]   Backoff complete, starting next attempt`);
         } else {
-          console.log(`📞 [${retryId}] ❌ MAX RETRIES REACHED - No more attempts`);
+          logger.info(`📞 [${retryId}] ❌ MAX RETRIES REACHED - No more attempts`);
         }
-        console.log(`${'▓'.repeat(70)}\n`);
+        logger.info(`${'▓'.repeat(70)}\n`);
       } catch (error) {
-        console.error(`📞 [${retryId}] ❌❌❌ EXCEPTION during Twilio call attempt ${attempt} ❌❌❌`);
-        console.error(`📞 [${retryId}]   Error type: ${error?.constructor?.name}`);
-        console.error(`📞 [${retryId}]   Error message: ${error instanceof Error ? error.message : String(error)}`);
-        console.error(`📞 [${retryId}]   Error stack: ${error instanceof Error ? error.stack : 'N/A'}`);
-        console.log(`${'▓'.repeat(70)}\n`);
+        logger.error(`📞 [${retryId}] ❌❌❌ EXCEPTION during Twilio call attempt ${attempt} ❌❌❌`);
+        logger.error(`📞 [${retryId}]   Error type: ${error?.constructor?.name}`);
+        logger.error(`📞 [${retryId}]   Error message: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(`📞 [${retryId}]   Error stack: ${error instanceof Error ? error.stack : 'N/A'}`);
+        logger.info(`${'▓'.repeat(70)}\n`);
 
         await logError(
           `TwilioCallManager:callParticipant:${participantType}:attempt_${attempt}`,
           error as unknown
         );
+        captureError(error, { functionName: 'TwilioCallManager:callParticipant', extra: { sessionId, participantType, attempt } });
 
         await logCallRecord({
           callId: sessionId,
@@ -1419,11 +1425,11 @@ export class TwilioCallManager {
       }
     }
 
-    console.log(`\n${'█'.repeat(70)}`);
-    console.log(`❌ [callParticipantWithRetries] FINAL RESULT: ${participantType} FAILED ALL ${maxRetries} ATTEMPTS`);
-    console.log(`❌ [callParticipantWithRetries]   sessionId: ${sessionId}`);
-    console.log(`❌ [callParticipantWithRetries]   phoneNumber: ${phoneNumber.substring(0, 6)}****`);
-    console.log(`${'█'.repeat(70)}\n`);
+    logger.info(`\n${'█'.repeat(70)}`);
+    logger.info(`❌ [callParticipantWithRetries] FINAL RESULT: ${participantType} FAILED ALL ${maxRetries} ATTEMPTS`);
+    logger.info(`❌ [callParticipantWithRetries]   sessionId: ${sessionId}`);
+    logger.info(`❌ [callParticipantWithRetries]   phoneNumber: ${phoneNumber.substring(0, 6)}****`);
+    logger.info(`${'█'.repeat(70)}\n`);
 
     await logCallRecord({
       callId: sessionId,
@@ -1471,12 +1477,12 @@ export class TwilioCallManager {
     const maxWaitTime = CALL_CONFIG.CONNECTION_WAIT_TIME;
     const AMD_MAX_WAIT_SECONDS = 40;
 
-    console.log(`\n${'─'.repeat(60)}`);
-    console.log(`⏳ [${waitId}] waitForConnection START (OPTIMIZED - real-time listener)`);
-    console.log(`⏳ [${waitId}]   sessionId: ${sessionId}`);
-    console.log(`⏳ [${waitId}]   participantType: ${participantType}`);
-    console.log(`⏳ [${waitId}]   attempt: ${attempt}`);
-    console.log(`⏳ [${waitId}]   maxWaitTime: ${maxWaitTime}ms (${maxWaitTime/1000}s)`);
+    logger.info(`\n${'─'.repeat(60)}`);
+    logger.info(`⏳ [${waitId}] waitForConnection START (OPTIMIZED - real-time listener)`);
+    logger.info(`⏳ [${waitId}]   sessionId: ${sessionId}`);
+    logger.info(`⏳ [${waitId}]   participantType: ${participantType}`);
+    logger.info(`⏳ [${waitId}]   attempt: ${attempt}`);
+    logger.info(`⏳ [${waitId}]   maxWaitTime: ${maxWaitTime}ms (${maxWaitTime/1000}s)`);
 
     return new Promise<boolean>((resolve) => {
       let resolved = false;
@@ -1506,8 +1512,8 @@ export class TwilioCallManager {
         if (resolved) return;
         resolved = true;
         const elapsed = Math.round((Date.now() - startTime) / 1000);
-        console.log(`⏳ [${waitId}] ${result ? '✅' : '❌'} ${reason} after ${elapsed}s`);
-        console.log(`${'─'.repeat(60)}\n`);
+        logger.info(`⏳ [${waitId}] ${result ? '✅' : '❌'} ${reason} after ${elapsed}s`);
+        logger.info(`${'─'.repeat(60)}\n`);
         cleanup();
         resolve(result);
       };
@@ -1544,7 +1550,7 @@ export class TwilioCallManager {
           const currentStatus = participant?.status || 'undefined';
           const elapsed = Math.round((Date.now() - startTime) / 1000);
 
-          console.log(`⏳ [${waitId}] Status update: "${currentStatus}" (${elapsed}s elapsed)`);
+          logger.info(`⏳ [${waitId}] Status update: "${currentStatus}" (${elapsed}s elapsed)`);
 
           // Check for terminal statuses
           if (currentStatus === "connected") {
@@ -1564,7 +1570,7 @@ export class TwilioCallManager {
 
           // Handle AMD pending with specific timeout
           if (currentStatus === "amd_pending" && !amdTimeoutId) {
-            console.log(`⏳ [${waitId}] 🔍 AMD PENDING: Starting ${AMD_MAX_WAIT_SECONDS}s AMD timeout`);
+            logger.info(`⏳ [${waitId}] 🔍 AMD PENDING: Starting ${AMD_MAX_WAIT_SECONDS}s AMD timeout`);
             amdTimeoutId = setTimeout(() => {
               if (!resolved) {
                 resolveOnce(false, `AMD pending for >${AMD_MAX_WAIT_SECONDS}s - callback likely failed`);
@@ -1579,7 +1585,7 @@ export class TwilioCallManager {
           }
         },
         (error) => {
-          console.error(`⏳ [${waitId}] ⚠️ Listener ERROR: ${String(error)}`);
+          logger.error(`⏳ [${waitId}] ⚠️ Listener ERROR: ${String(error)}`);
           // Don't resolve on transient errors - let timeout handle it
         }
       );
@@ -1599,13 +1605,13 @@ export class TwilioCallManager {
       // This can happen when both participants disconnect and both webhooks arrive
       const finalStatuses = ['completed', 'failed', 'cancelled', 'refunded'];
       if (finalStatuses.includes(session.status)) {
-        console.log(`📄 [IDEMPOTENCY] Session ${sessionId} already in final state: ${session.status}, skipping handleEarlyDisconnection`);
+        logger.info(`📄 [IDEMPOTENCY] Session ${sessionId} already in final state: ${session.status}, skipping handleEarlyDisconnection`);
         return;
       }
 
       // Check if early_disconnect was already processed for this session
       if (session.metadata?.earlyDisconnectProcessed) {
-        console.log(`📄 [IDEMPOTENCY] Early disconnect already processed for session: ${sessionId}`);
+        logger.info(`📄 [IDEMPOTENCY] Early disconnect already processed for session: ${sessionId}`);
         return;
       }
 
@@ -1618,12 +1624,12 @@ export class TwilioCallManager {
       });
 
       if (duration < CALL_CONFIG.MIN_CALL_DURATION) {
-        console.log(`\n${'═'.repeat(70)}`);
-        console.log(`📄 [handleEarlyDisconnection] EARLY DISCONNECT DETECTED`);
-        console.log(`📄   sessionId: ${sessionId}`);
-        console.log(`📄   participantType: ${participantType}`);
-        console.log(`📄   duration: ${duration}s (< MIN_CALL_DURATION: ${CALL_CONFIG.MIN_CALL_DURATION}s)`);
-        console.log(`${'═'.repeat(70)}`);
+        logger.info(`\n${'═'.repeat(70)}`);
+        logger.info(`📄 [handleEarlyDisconnection] EARLY DISCONNECT DETECTED`);
+        logger.info(`📄   sessionId: ${sessionId}`);
+        logger.info(`📄   participantType: ${participantType}`);
+        logger.info(`📄   duration: ${duration}s (< MIN_CALL_DURATION: ${CALL_CONFIG.MIN_CALL_DURATION}s)`);
+        logger.info(`${'═'.repeat(70)}`);
 
         // P0 FIX 2026-01-16: CRITICAL BUG FIX - Use connectedAt timestamps instead of current status!
         //
@@ -1671,43 +1677,43 @@ export class TwilioCallManager {
         const otherRetriesExhausted = otherAttempts >= maxRetries;
         const retriesExhausted = disconnectedAttempts >= maxRetries && (otherIsConnected || otherRetriesExhausted);
 
-        console.log(`📄 [handleEarlyDisconnection] 🔍 RETRY DECISION ANALYSIS (P0 FIX v2 2026-01-18):`);
-        console.log(`📄   ┌─────────────────────────────────────────────────────────────┐`);
-        console.log(`📄   │ participantType (disconnected): ${participantType.padEnd(26)}│`);
-        console.log(`📄   │ otherParticipantType (still trying): ${otherParticipantType.padEnd(21)}│`);
-        console.log(`📄   │ ${participantType}.attemptCount: ${String(disconnectedAttempts).padEnd(36)}│`);
-        console.log(`📄   │ ${otherParticipantType}.attemptCount: ${String(otherAttempts).padEnd(33)}│`);
-        console.log(`📄   │ maxRetries: ${String(maxRetries).padEnd(49)}│`);
-        console.log(`📄   │ client.status: ${(session.participants.client.status || 'undefined').padEnd(45)}│`);
-        console.log(`📄   │ provider.status: ${(session.participants.provider.status || 'undefined').padEnd(43)}│`);
-        console.log(`📄   │ client.connectedAt: ${(clientWasConnected ? 'YES' : 'NO').padEnd(40)}│`);
-        console.log(`📄   │ provider.connectedAt: ${(providerWasConnected ? 'YES' : 'NO').padEnd(38)}│`);
-        console.log(`📄   │ bothWereConnected (ACTUAL CALL): ${String(bothWereConnected).padEnd(26)}│`);
-        console.log(`📄   │ otherIsConnected: ${String(otherIsConnected).padEnd(42)}│`);
-        console.log(`📄   │ otherRetriesExhausted: ${String(otherRetriesExhausted).padEnd(37)}│`);
-        console.log(`📄   │ retriesExhausted (FINAL): ${String(retriesExhausted).padEnd(34)}│`);
-        console.log(`📄   └─────────────────────────────────────────────────────────────┘`);
+        logger.info(`📄 [handleEarlyDisconnection] 🔍 RETRY DECISION ANALYSIS (P0 FIX v2 2026-01-18):`);
+        logger.info(`📄   ┌─────────────────────────────────────────────────────────────┐`);
+        logger.info(`📄   │ participantType (disconnected): ${participantType.padEnd(26)}│`);
+        logger.info(`📄   │ otherParticipantType (still trying): ${otherParticipantType.padEnd(21)}│`);
+        logger.info(`📄   │ ${participantType}.attemptCount: ${String(disconnectedAttempts).padEnd(36)}│`);
+        logger.info(`📄   │ ${otherParticipantType}.attemptCount: ${String(otherAttempts).padEnd(33)}│`);
+        logger.info(`📄   │ maxRetries: ${String(maxRetries).padEnd(49)}│`);
+        logger.info(`📄   │ client.status: ${(session.participants.client.status || 'undefined').padEnd(45)}│`);
+        logger.info(`📄   │ provider.status: ${(session.participants.provider.status || 'undefined').padEnd(43)}│`);
+        logger.info(`📄   │ client.connectedAt: ${(clientWasConnected ? 'YES' : 'NO').padEnd(40)}│`);
+        logger.info(`📄   │ provider.connectedAt: ${(providerWasConnected ? 'YES' : 'NO').padEnd(38)}│`);
+        logger.info(`📄   │ bothWereConnected (ACTUAL CALL): ${String(bothWereConnected).padEnd(26)}│`);
+        logger.info(`📄   │ otherIsConnected: ${String(otherIsConnected).padEnd(42)}│`);
+        logger.info(`📄   │ otherRetriesExhausted: ${String(otherRetriesExhausted).padEnd(37)}│`);
+        logger.info(`📄   │ retriesExhausted (FINAL): ${String(retriesExhausted).padEnd(34)}│`);
+        logger.info(`📄   └─────────────────────────────────────────────────────────────┘`);
 
         // P0 FIX v2: Only mark as failed if:
         // 1. BOTH participants were connected at some point (actual call happened, not just waiting)
         // 2. OR all retry attempts have been exhausted for BOTH participants
         if (bothWereConnected || retriesExhausted) {
-          console.log(`📄   🔴 DECISION: CALL handleCallFailure`);
+          logger.info(`📄   🔴 DECISION: CALL handleCallFailure`);
           if (bothWereConnected) {
-            console.log(`📄      Reason: BOTH participants were connected (actual call happened)`);
+            logger.info(`📄      Reason: BOTH participants were connected (actual call happened)`);
           } else {
-            console.log(`📄      Reason: ${participantType} exhausted (${disconnectedAttempts}/${maxRetries}) AND ${otherParticipantType} ${otherIsConnected ? 'is connected' : `also exhausted (${otherAttempts}/${maxRetries})`}`);
+            logger.info(`📄      Reason: ${participantType} exhausted (${disconnectedAttempts}/${maxRetries}) AND ${otherParticipantType} ${otherIsConnected ? 'is connected' : `also exhausted (${otherAttempts}/${maxRetries})`}`);
           }
           await this.handleCallFailure(
             sessionId,
             `early_disconnect_${participantType}`
           );
         } else {
-          console.log(`📄   🟢 DECISION: SKIP handleCallFailure - LET OTHER PARTICIPANT RETRY`);
-          console.log(`📄      Reason: ${otherParticipantType} has retries remaining (${otherAttempts}/${maxRetries})`);
-          console.log(`📄      The ${otherParticipantType}'s call attempts will continue`);
+          logger.info(`📄   🟢 DECISION: SKIP handleCallFailure - LET OTHER PARTICIPANT RETRY`);
+          logger.info(`📄      Reason: ${otherParticipantType} has retries remaining (${otherAttempts}/${maxRetries})`);
+          logger.info(`📄      The ${otherParticipantType}'s call attempts will continue`);
         }
-        console.log(`${'═'.repeat(70)}\n`);
+        logger.info(`${'═'.repeat(70)}\n`);
 
         await logCallRecord({
           callId: sessionId,
@@ -1730,25 +1736,25 @@ export class TwilioCallManager {
           },
         });
       } else {
-        console.log(`📄 Handling call completion for session: ${sessionId}`);
+        logger.info(`📄 Handling call completion for session: ${sessionId}`);
         await this.handleCallCompletion(sessionId, duration);
       }
 
       // === EARLY DISCONNECTION FINAL SUMMARY ===
       const finalEarlySession = await this.getCallSession(sessionId);
-      console.log(`\n${'📄'.repeat(30)}`);
-      console.log(`📄 [handleEarlyDisconnection] === FINAL SUMMARY ===`);
-      console.log(`📄   sessionId: ${sessionId}`);
-      console.log(`📄   participantType: ${participantType}`);
-      console.log(`📄   duration: ${duration}s`);
+      logger.info(`\n${'📄'.repeat(30)}`);
+      logger.info(`📄 [handleEarlyDisconnection] === FINAL SUMMARY ===`);
+      logger.info(`📄   sessionId: ${sessionId}`);
+      logger.info(`📄   participantType: ${participantType}`);
+      logger.info(`📄   duration: ${duration}s`);
       if (finalEarlySession) {
-        console.log(`📄   FINAL STATE:`);
-        console.log(`📄     session.status: ${finalEarlySession.status}`);
-        console.log(`📄     payment.status: ${finalEarlySession.payment?.status}`);
-        console.log(`📄     client.status: ${finalEarlySession.participants.client.status}`);
-        console.log(`📄     provider.status: ${finalEarlySession.participants.provider.status}`);
+        logger.info(`📄   FINAL STATE:`);
+        logger.info(`📄     session.status: ${finalEarlySession.status}`);
+        logger.info(`📄     payment.status: ${finalEarlySession.payment?.status}`);
+        logger.info(`📄     client.status: ${finalEarlySession.participants.client.status}`);
+        logger.info(`📄     provider.status: ${finalEarlySession.participants.provider.status}`);
       }
-      console.log(`${'📄'.repeat(30)}\n`);
+      logger.info(`${'📄'.repeat(30)}\n`);
 
     } catch (error) {
       await logError(
@@ -1814,45 +1820,45 @@ export class TwilioCallManager {
     // 🔍 DEBUG P0: Stack trace pour identifier l'origine de l'appel
     const stackTrace = new Error().stack?.split('\n').slice(1, 10).join('\n') || 'No stack';
 
-    console.log(`\n${'🔥'.repeat(35)}`);
-    console.log(`🔥 [${failureId}] ========== handleCallFailure CALLED ==========`);
-    console.log(`🔥 [${failureId}]   sessionId: ${sessionId}`);
-    console.log(`🔥 [${failureId}]   reason: ${reason}`);
-    console.log(`🔥 [${failureId}]   timestamp: ${new Date().toISOString()}`);
-    console.log(`🔥 [${failureId}]   ⚠️ This will set session.status = "failed"`);
-    console.log(`🔥 [${failureId}]   ⚠️ This will TRIGGER processRefund() and CANCEL payment!`);
-    console.log(`🔥 [${failureId}] STACK TRACE (qui a appelé handleCallFailure?):`);
-    console.log(stackTrace);
-    console.log(`${'🔥'.repeat(35)}`);
+    logger.info(`\n${'🔥'.repeat(35)}`);
+    logger.info(`🔥 [${failureId}] ========== handleCallFailure CALLED ==========`);
+    logger.info(`🔥 [${failureId}]   sessionId: ${sessionId}`);
+    logger.info(`🔥 [${failureId}]   reason: ${reason}`);
+    logger.info(`🔥 [${failureId}]   timestamp: ${new Date().toISOString()}`);
+    logger.info(`🔥 [${failureId}]   ⚠️ This will set session.status = "failed"`);
+    logger.info(`🔥 [${failureId}]   ⚠️ This will TRIGGER processRefund() and CANCEL payment!`);
+    logger.info(`🔥 [${failureId}] STACK TRACE (qui a appelé handleCallFailure?):`);
+    logger.info(stackTrace);
+    logger.info(`${'🔥'.repeat(35)}`);
 
     try {
       const callSession = await this.getCallSession(sessionId);
       if (!callSession) {
-        console.log(`🔥 [${failureId}] Session not found, returning early`);
+        logger.info(`🔥 [${failureId}] Session not found, returning early`);
         return;
       }
 
       // 🔍 DEBUG P0: Log complet de l'état de la session
-      console.log(`🔥 [${failureId}] === COMPLETE SESSION STATE ===`);
-      console.log(`🔥 [${failureId}]   session.status: ${callSession.status}`);
-      console.log(`🔥 [${failureId}]   payment.status: ${callSession.payment?.status || 'N/A'}`);
-      console.log(`🔥 [${failureId}]   payment.intentId: ${callSession.payment?.intentId || 'N/A'}`);
-      console.log(`🔥 [${failureId}]   client.status: ${callSession.participants.client.status}`);
-      console.log(`🔥 [${failureId}]   client.attemptCount: ${callSession.participants.client.attemptCount || 0}`);
-      console.log(`🔥 [${failureId}]   client.connectedAt: ${callSession.participants.client.connectedAt?.toDate?.() || 'N/A'}`);
-      console.log(`🔥 [${failureId}]   client.disconnectedAt: ${callSession.participants.client.disconnectedAt?.toDate?.() || 'N/A'}`);
-      console.log(`🔥 [${failureId}]   provider.status: ${callSession.participants.provider.status}`);
-      console.log(`🔥 [${failureId}]   provider.attemptCount: ${callSession.participants.provider.attemptCount || 0}`);
-      console.log(`🔥 [${failureId}]   provider.connectedAt: ${callSession.participants.provider.connectedAt?.toDate?.() || 'N/A'}`);
-      console.log(`🔥 [${failureId}]   provider.disconnectedAt: ${callSession.participants.provider.disconnectedAt?.toDate?.() || 'N/A'}`);
-      console.log(`🔥 [${failureId}]   conference.duration: ${callSession.conference?.duration || 'N/A'}`);
-      console.log(`🔥 [${failureId}]   conference.startedAt: ${callSession.conference?.startedAt?.toDate?.() || 'N/A'}`);
-      console.log(`🔥 [${failureId}]   conference.endedAt: ${callSession.conference?.endedAt?.toDate?.() || 'N/A'}`);
-      console.log(`🔥 [${failureId}] === END SESSION STATE ===`);
+      logger.info(`🔥 [${failureId}] === COMPLETE SESSION STATE ===`);
+      logger.info(`🔥 [${failureId}]   session.status: ${callSession.status}`);
+      logger.info(`🔥 [${failureId}]   payment.status: ${callSession.payment?.status || 'N/A'}`);
+      logger.info(`🔥 [${failureId}]   payment.intentId: ${callSession.payment?.intentId || 'N/A'}`);
+      logger.info(`🔥 [${failureId}]   client.status: ${callSession.participants.client.status}`);
+      logger.info(`🔥 [${failureId}]   client.attemptCount: ${callSession.participants.client.attemptCount || 0}`);
+      logger.info(`🔥 [${failureId}]   client.connectedAt: ${callSession.participants.client.connectedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`🔥 [${failureId}]   client.disconnectedAt: ${callSession.participants.client.disconnectedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`🔥 [${failureId}]   provider.status: ${callSession.participants.provider.status}`);
+      logger.info(`🔥 [${failureId}]   provider.attemptCount: ${callSession.participants.provider.attemptCount || 0}`);
+      logger.info(`🔥 [${failureId}]   provider.connectedAt: ${callSession.participants.provider.connectedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`🔥 [${failureId}]   provider.disconnectedAt: ${callSession.participants.provider.disconnectedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`🔥 [${failureId}]   conference.duration: ${callSession.conference?.duration || 'N/A'}`);
+      logger.info(`🔥 [${failureId}]   conference.startedAt: ${callSession.conference?.startedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`🔥 [${failureId}]   conference.endedAt: ${callSession.conference?.endedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`🔥 [${failureId}] === END SESSION STATE ===`);
 
-      console.log(`🔥 [${failureId}] Setting session.status = "failed"...`);
+      logger.info(`🔥 [${failureId}] Setting session.status = "failed"...`);
       await this.updateCallSessionStatus(sessionId, "failed");
-      console.log(`🔥 [${failureId}] ✅ Session marked as failed`);
+      logger.info(`🔥 [${failureId}] ✅ Session marked as failed`);
 
       // 🛠️ FIX: Always fallback to 'en' if missing
       const clientLanguage = callSession.metadata?.clientLanguages?.[0] || "en";
@@ -1873,7 +1879,7 @@ export class TwilioCallManager {
             method: "GET"
           });
           
-          console.log(`📞 Redirected client call ${callSession.participants.client.callSid} to provider no-answer message`);
+          logger.info(`📞 Redirected client call ${callSession.participants.client.callSid} to provider no-answer message`);
           
           await logCallRecord({
             callId: sessionId,
@@ -1885,7 +1891,7 @@ export class TwilioCallManager {
             }
           });
         } catch (redirectError) {
-          console.error(`❌ Failed to redirect client call:`, redirectError);
+          logger.error(`❌ Failed to redirect client call:`, redirectError);
           await logError(
             "TwilioCallManager:handleCallFailure:redirect",
             redirectError as unknown
@@ -1907,9 +1913,9 @@ export class TwilioCallManager {
             const isAaaProfile = providerId.startsWith('aaa_') || providerData?.isAAA === true;
 
             if (isAaaProfile) {
-              console.log(`📴 [handleCallFailure] ⏭️ SKIP: Provider ${providerId} is AAA profile - will NOT be set offline for no_answer`);
+              logger.info(`📴 [handleCallFailure] ⏭️ SKIP: Provider ${providerId} is AAA profile - will NOT be set offline for no_answer`);
             } else {
-              console.log(`📴 [handleCallFailure] Attempting to set provider ${providerId} OFFLINE (provider_no_answer)`);
+              logger.info(`📴 [handleCallFailure] Attempting to set provider ${providerId} OFFLINE (provider_no_answer)`);
 
               // Use transaction for atomic read-then-write to prevent race condition
             const sessionRef = this.db.collection('call_sessions').doc(sessionId);
@@ -1919,7 +1925,7 @@ export class TwilioCallManager {
 
               // Check if already processed (atomic read within transaction)
               if (sessionData?.metadata?.providerSetOffline) {
-                console.log(`📴 [handleCallFailure] Provider already set offline by another process, skipping`);
+                logger.info(`📴 [handleCallFailure] Provider already set offline by another process, skipping`);
                 return false;
               }
 
@@ -1966,7 +1972,7 @@ export class TwilioCallManager {
             });
 
             if (wasSetOffline) {
-              console.log(`📴 [handleCallFailure] Provider ${providerId} is now OFFLINE`);
+              logger.info(`📴 [handleCallFailure] Provider ${providerId} is now OFFLINE`);
             }
 
             // Create notification for provider
@@ -1985,11 +1991,11 @@ export class TwilioCallManager {
               status: 'pending',
             };
             await this.db.collection('message_events').add(offlineNotification);
-            console.log(`📴 [handleCallFailure] Notification sent to provider about being set offline`);
+            logger.info(`📴 [handleCallFailure] Notification sent to provider about being set offline`);
             } // Fin du else (non-AAA)
           }
         } catch (offlineError) {
-          console.error(`⚠️ Failed to set provider offline (non-blocking):`, offlineError);
+          logger.error(`⚠️ Failed to set provider offline (non-blocking):`, offlineError);
           await logError('TwilioCallManager:handleCallFailure:setProviderOffline', offlineError as unknown);
         }
       }
@@ -2021,10 +2027,10 @@ export class TwilioCallManager {
           };
 
           const notifRef = await this.db.collection('message_events').add(providerNotificationData);
-          console.log(`📨 [handleCallFailure] Provider notification created for client_no_answer: ${notifRef.id}`);
-          console.log(`📨   → Provider will receive SMS: "Client ${clientName} did not answer"`);
+          logger.info(`📨 [handleCallFailure] Provider notification created for client_no_answer: ${notifRef.id}`);
+          logger.info(`📨   → Provider will receive SMS: "Client ${clientName} did not answer"`);
         } catch (notifError) {
-          console.error(`⚠️ Failed to send provider notification (non-blocking):`, notifError);
+          logger.error(`⚠️ Failed to send provider notification (non-blocking):`, notifError);
           await logError('TwilioCallManager:handleCallFailure:providerNotification', notifError as unknown);
         }
 
@@ -2033,16 +2039,16 @@ export class TwilioCallManager {
           // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
           const providerId = callSession.providerId || callSession.metadata?.providerId;
           if (providerId) {
-            console.log(`🟢 [handleCallFailure] Setting provider ${providerId} back to AVAILABLE (client_no_answer)`);
+            logger.info(`🟢 [handleCallFailure] Setting provider ${providerId} back to AVAILABLE (client_no_answer)`);
             const availableResult = await setProviderAvailable(providerId, 'client_no_answer');
             if (availableResult.success) {
-              console.log(`✅ [handleCallFailure] Provider ${providerId} is now AVAILABLE`);
+              logger.info(`✅ [handleCallFailure] Provider ${providerId} is now AVAILABLE`);
             } else {
-              console.warn(`⚠️ [handleCallFailure] Failed to set provider available: ${availableResult.error}`);
+              logger.warn(`⚠️ [handleCallFailure] Failed to set provider available: ${availableResult.error}`);
             }
           }
         } catch (availableError) {
-          console.error(`⚠️ [handleCallFailure] Error setting provider available:`, availableError);
+          logger.error(`⚠️ [handleCallFailure] Error setting provider available:`, availableError);
           await logError('TwilioCallManager:handleCallFailure:setProviderAvailable', availableError as unknown);
         }
       }
@@ -2052,7 +2058,7 @@ export class TwilioCallManager {
       // Create invoices even for failed/refunded calls (marked as refunded)
       const updatedSession = await this.getCallSession(sessionId);
       if (updatedSession && !updatedSession.metadata?.invoicesCreated) {
-        console.log(`📄 Creating refunded invoices for failed call session: ${sessionId}`);
+        logger.info(`📄 Creating refunded invoices for failed call session: ${sessionId}`);
         await this.createInvoices(sessionId, updatedSession);
         await this.db.collection("call_sessions").doc(sessionId).update({
           "metadata.invoicesCreated": true,
@@ -2067,20 +2073,20 @@ export class TwilioCallManager {
           // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
           const providerIdForCooldown = callSession.providerId || callSession.metadata?.providerId;
           if (!providerIdForCooldown) {
-            console.warn(`⚠️ [handleCallFailure] No providerId found, skipping cooldown task`);
+            logger.warn(`⚠️ [handleCallFailure] No providerId found, skipping cooldown task`);
           } else {
             const taskId = await scheduleProviderAvailableTask(
               providerIdForCooldown,
               `call_failed_${reason}`
             );
-            console.log(`🕐 Provider ${providerIdForCooldown} will be AVAILABLE in 5 min (task: ${taskId})`);
+            logger.info(`🕐 Provider ${providerIdForCooldown} will be AVAILABLE in 5 min (task: ${taskId})`);
           }
         } catch (availableError) {
-          console.error(`⚠️ Failed to schedule provider available task after failure (non-blocking):`, availableError);
+          logger.error(`⚠️ Failed to schedule provider available task after failure (non-blocking):`, availableError);
           await logError('TwilioCallManager:handleCallFailure:scheduleAvailable', availableError as unknown);
         }
       } else {
-        console.log(`🟢 [handleCallFailure] Skipping 5-min cooldown for client_no_answer (provider already available)`);
+        logger.info(`🟢 [handleCallFailure] Skipping 5-min cooldown for client_no_answer (provider already available)`);
       }
 
       await logCallRecord({
@@ -2095,23 +2101,24 @@ export class TwilioCallManager {
 
       // === FAILURE FINAL SUMMARY ===
       const finalFailureSession = await this.getCallSession(sessionId);
-      console.log(`\n${'🔥'.repeat(35)}`);
-      console.log(`🔥 [${failureId}] === CALL FAILURE SUMMARY ===`);
-      console.log(`🔥 [${failureId}]   sessionId: ${sessionId}`);
-      console.log(`🔥 [${failureId}]   reason: ${reason}`);
+      logger.info(`\n${'🔥'.repeat(35)}`);
+      logger.info(`🔥 [${failureId}] === CALL FAILURE SUMMARY ===`);
+      logger.info(`🔥 [${failureId}]   sessionId: ${sessionId}`);
+      logger.info(`🔥 [${failureId}]   reason: ${reason}`);
       if (finalFailureSession) {
-        console.log(`🔥 [${failureId}]   FINAL STATE:`);
-        console.log(`🔥 [${failureId}]     session.status: ${finalFailureSession.status}`);
-        console.log(`🔥 [${failureId}]     payment.status: ${finalFailureSession.payment?.status}`);
-        console.log(`🔥 [${failureId}]     client.status: ${finalFailureSession.participants.client.status}`);
-        console.log(`🔥 [${failureId}]     provider.status: ${finalFailureSession.participants.provider.status}`);
+        logger.info(`🔥 [${failureId}]   FINAL STATE:`);
+        logger.info(`🔥 [${failureId}]     session.status: ${finalFailureSession.status}`);
+        logger.info(`🔥 [${failureId}]     payment.status: ${finalFailureSession.payment?.status}`);
+        logger.info(`🔥 [${failureId}]     client.status: ${finalFailureSession.participants.client.status}`);
+        logger.info(`🔥 [${failureId}]     provider.status: ${finalFailureSession.participants.provider.status}`);
       }
-      console.log(`🔥 [${failureId}] === CALL FAILURE HANDLING COMPLETE ===`);
-      console.log(`${'🔥'.repeat(35)}\n`);
+      logger.info(`🔥 [${failureId}] === CALL FAILURE HANDLING COMPLETE ===`);
+      logger.info(`${'🔥'.repeat(35)}\n`);
 
     } catch (error) {
-      console.error(`🔥 [${failureId}] ❌ ERROR in handleCallFailure:`, error);
+      logger.error(`🔥 [${failureId}] ❌ ERROR in handleCallFailure:`, error);
       await logError("TwilioCallManager:handleCallFailure", error as unknown);
+      captureError(error, { functionName: 'TwilioCallManager:handleCallFailure', extra: { sessionId, reason } });
     }
   }
 
@@ -2124,45 +2131,45 @@ export class TwilioCallManager {
     const refundDebugId = `refund_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const stackTrace = new Error().stack?.split('\n').slice(1, 10).join('\n') || 'No stack';
 
-    console.log(`\n${'💸'.repeat(40)}`);
-    console.log(`💸 [${refundDebugId}] ========== PROCESS REFUND CALLED ==========`);
-    console.log(`💸 [${refundDebugId}] SessionId: ${sessionId}`);
-    console.log(`💸 [${refundDebugId}] Reason: ${reason}`);
-    console.log(`💸 [${refundDebugId}] ForceRefund: ${options?.forceRefund || false}`);
-    console.log(`💸 [${refundDebugId}] Timestamp: ${new Date().toISOString()}`);
-    console.log(`💸 [${refundDebugId}] STACK TRACE (qui a appelé processRefund?):`);
-    console.log(stackTrace);
-    console.log(`${'💸'.repeat(40)}\n`);
+    logger.info(`\n${'💸'.repeat(40)}`);
+    logger.info(`💸 [${refundDebugId}] ========== PROCESS REFUND CALLED ==========`);
+    logger.info(`💸 [${refundDebugId}] SessionId: ${sessionId}`);
+    logger.info(`💸 [${refundDebugId}] Reason: ${reason}`);
+    logger.info(`💸 [${refundDebugId}] ForceRefund: ${options?.forceRefund || false}`);
+    logger.info(`💸 [${refundDebugId}] Timestamp: ${new Date().toISOString()}`);
+    logger.info(`💸 [${refundDebugId}] STACK TRACE (qui a appelé processRefund?):`);
+    logger.info(stackTrace);
+    logger.info(`${'💸'.repeat(40)}\n`);
 
     try {
       const callSession = await this.getCallSession(sessionId);
 
       // 🔍 DEBUG: Log complet de l'état de la session
-      console.log(`💸 [${refundDebugId}] SESSION STATE:`);
-      console.log(`💸 [${refundDebugId}]   session.status: ${callSession?.status || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   payment.status: ${callSession?.payment?.status || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   payment.intentId: ${callSession?.payment?.intentId || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   payment.refundBlocked: ${callSession?.payment?.refundBlocked || false}`);
-      console.log(`💸 [${refundDebugId}]   client.status: ${callSession?.participants?.client?.status || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   client.connectedAt: ${callSession?.participants?.client?.connectedAt?.toDate?.() || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   client.disconnectedAt: ${callSession?.participants?.client?.disconnectedAt?.toDate?.() || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   provider.status: ${callSession?.participants?.provider?.status || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   provider.connectedAt: ${callSession?.participants?.provider?.connectedAt?.toDate?.() || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   provider.disconnectedAt: ${callSession?.participants?.provider?.disconnectedAt?.toDate?.() || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   conference.duration: ${callSession?.conference?.duration || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   conference.startedAt: ${callSession?.conference?.startedAt?.toDate?.() || 'N/A'}`);
-      console.log(`💸 [${refundDebugId}]   conference.endedAt: ${callSession?.conference?.endedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}] SESSION STATE:`);
+      logger.info(`💸 [${refundDebugId}]   session.status: ${callSession?.status || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   payment.status: ${callSession?.payment?.status || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   payment.intentId: ${callSession?.payment?.intentId || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   payment.refundBlocked: ${callSession?.payment?.refundBlocked || false}`);
+      logger.info(`💸 [${refundDebugId}]   client.status: ${callSession?.participants?.client?.status || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   client.connectedAt: ${callSession?.participants?.client?.connectedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   client.disconnectedAt: ${callSession?.participants?.client?.disconnectedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   provider.status: ${callSession?.participants?.provider?.status || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   provider.connectedAt: ${callSession?.participants?.provider?.connectedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   provider.disconnectedAt: ${callSession?.participants?.provider?.disconnectedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   conference.duration: ${callSession?.conference?.duration || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   conference.startedAt: ${callSession?.conference?.startedAt?.toDate?.() || 'N/A'}`);
+      logger.info(`💸 [${refundDebugId}]   conference.endedAt: ${callSession?.conference?.endedAt?.toDate?.() || 'N/A'}`);
 
       if (!callSession?.payment.intentId && !callSession?.payment.paypalOrderId) {
-        console.log(`💸 [${refundDebugId}] ⚠️ No payment intent/order found - skipping`);
+        logger.info(`💸 [${refundDebugId}] ⚠️ No payment intent/order found - skipping`);
         return;
       }
 
       // P1 FIX: Check refundBlocked flag (service already delivered)
       // Can be bypassed with forceRefund: true (admin override) or via Stripe Dashboard
       if (callSession.payment.refundBlocked && !options?.forceRefund) {
-        console.log(`💸 [${refundDebugId}] ❌ REFUND BLOCKED - Service already delivered`);
-        console.log(`💸 [${refundDebugId}]   To override: use forceRefund: true or refund via Stripe/PayPal Dashboard`);
+        logger.info(`💸 [${refundDebugId}] ❌ REFUND BLOCKED - Service already delivered`);
+        logger.info(`💸 [${refundDebugId}]   To override: use forceRefund: true or refund via Stripe/PayPal Dashboard`);
         // Log blocked attempt for audit
         await this.db.collection("refund_attempts_blocked").add({
           sessionId,
@@ -2179,8 +2186,8 @@ export class TwilioCallManager {
       // P0 FIX 2026-02-02: Added "voided" as final state for PayPal
       const finalPaymentStatuses = ['cancelled', 'refunded', 'voided'];
       if (finalPaymentStatuses.includes(callSession.payment.status)) {
-        console.log(`💸 [${refundDebugId}] ⚠️ IDEMPOTENCY: Payment already in final state: ${callSession.payment.status}`);
-        console.log(`💸 [${refundDebugId}]   Skipping processRefund to prevent duplicate Stripe API calls`);
+        logger.info(`💸 [${refundDebugId}] ⚠️ IDEMPOTENCY: Payment already in final state: ${callSession.payment.status}`);
+        logger.info(`💸 [${refundDebugId}]   Skipping processRefund to prevent duplicate Stripe API calls`);
         return;
       }
 
@@ -2190,24 +2197,24 @@ export class TwilioCallManager {
       const paymentStatus = callSession.payment.status;
       let result: { success: boolean; error?: string };
 
-      console.log(`💸 [${refundDebugId}] Payment status: ${paymentStatus}`);
-      console.log(`💸 [${refundDebugId}] Action: ${paymentStatus === 'authorized' ? 'CANCEL (non capturé)' : 'REFUND (capturé)'}`);
+      logger.info(`💸 [${refundDebugId}] Payment status: ${paymentStatus}`);
+      logger.info(`💸 [${refundDebugId}] Action: ${paymentStatus === 'authorized' ? 'CANCEL (non capturé)' : 'REFUND (capturé)'}`);
 
       // Détection gateway: PayPal ou Stripe
       const isPayPal = callSession.payment.gateway === "paypal" || !!callSession.payment.paypalOrderId;
 
       if (isPayPal) {
         // ===== PAYPAL REFUND/CANCEL =====
-        console.log(`💳 [PAYPAL] Traitement remboursement/annulation ${sessionId} - raison: ${reason}`);
+        logger.info(`💳 [PAYPAL] Traitement remboursement/annulation ${sessionId} - raison: ${reason}`);
 
         if (paymentStatus === "authorized" || paymentStatus === "pending") {
           // P0 FIX: PayPal ordre non capturé → VOID l'autorisation pour libérer les fonds client
           const paypalOrderId = callSession.payment.paypalOrderId;
           if (!paypalOrderId) {
-            console.warn(`⚠️ [PAYPAL] No paypalOrderId found for session ${sessionId} - cannot void`);
+            logger.warn(`⚠️ [PAYPAL] No paypalOrderId found for session ${sessionId} - cannot void`);
             result = { success: true };
           } else {
-            console.log(`💳 [PAYPAL] Ordre non capturé - void de l'autorisation`);
+            logger.info(`💳 [PAYPAL] Ordre non capturé - void de l'autorisation`);
             const { PayPalManager } = await import("./PayPalManager");
             const paypalManager = new PayPalManager();
 
@@ -2217,9 +2224,9 @@ export class TwilioCallManager {
                 `Appel échoué: ${reason}`
               );
               result = { success: voidResult.success, error: voidResult.success ? undefined : voidResult.message };
-              console.log(`✅ [PAYPAL] Void result:`, voidResult);
+              logger.info(`✅ [PAYPAL] Void result:`, voidResult);
             } catch (voidError) {
-              console.error(`❌ [PAYPAL] Void error:`, voidError);
+              logger.error(`❌ [PAYPAL] Void error:`, voidError);
               // P0 FIX 2026-02-12: Report void failure accurately instead of hiding it
               // The order will expire automatically (29 days), but Firestore status should
               // reflect that the void was NOT confirmed by PayPal
@@ -2239,20 +2246,20 @@ export class TwilioCallManager {
               `Appel échoué: ${reason}`
             );
             result = { success: refundResult.success, error: refundResult.success ? undefined : refundResult.status };
-            console.log(`✅ [PAYPAL] Refund result:`, refundResult);
+            logger.info(`✅ [PAYPAL] Refund result:`, refundResult);
           } catch (paypalError) {
-            console.error(`❌ [PAYPAL] Refund error:`, paypalError);
+            logger.error(`❌ [PAYPAL] Refund error:`, paypalError);
             result = { success: false, error: paypalError instanceof Error ? paypalError.message : "PayPal refund failed" };
           }
         } else {
-          console.log(`⚠️ [PAYPAL] Paiement ${sessionId} déjà traité ou statut inconnu: ${paymentStatus}`);
+          logger.info(`⚠️ [PAYPAL] Paiement ${sessionId} déjà traité ou statut inconnu: ${paymentStatus}`);
           return;
         }
       } else {
         // ===== STRIPE REFUND/CANCEL =====
         if (paymentStatus === "authorized") {
           // Paiement NON capturé → Annuler (pas rembourser)
-          console.log(`💳 [STRIPE] Annulation paiement non-capturé ${sessionId} - raison: ${reason}`);
+          logger.info(`💳 [STRIPE] Annulation paiement non-capturé ${sessionId} - raison: ${reason}`);
           result = await stripeManager.cancelPayment(
             callSession.payment.intentId,
             "requested_by_customer",
@@ -2260,7 +2267,7 @@ export class TwilioCallManager {
           );
         } else if (paymentStatus === "captured") {
           // Paiement CAPTURÉ → Rembourser
-          console.log(`💳 [STRIPE] Remboursement paiement capturé ${sessionId} - raison: ${reason}`);
+          logger.info(`💳 [STRIPE] Remboursement paiement capturé ${sessionId} - raison: ${reason}`);
           result = await stripeManager.refundPayment(
             callSession.payment.intentId,
             `Appel échoué: ${reason}`,
@@ -2268,7 +2275,7 @@ export class TwilioCallManager {
           );
         } else {
           // Statut inconnu ou déjà traité
-          console.log(`⚠️ [STRIPE] Paiement ${sessionId} déjà traité ou statut inconnu: ${paymentStatus}`);
+          logger.info(`⚠️ [STRIPE] Paiement ${sessionId} déjà traité ou statut inconnu: ${paymentStatus}`);
           return;
         }
       }
@@ -2297,7 +2304,7 @@ export class TwilioCallManager {
         await this.db.collection("call_sessions").doc(sessionId).update({
           "metadata.updatedAt": admin.firestore.Timestamp.now(),
         });
-        console.log(`✅ Paiement ${sessionId} traité avec succès: ${newStatus}`);
+        logger.info(`✅ Paiement ${sessionId} traité avec succès: ${newStatus}`);
 
         // =====================================================
         // P0 FIX 2026-02-03: Send notifications for early disconnect refunds
@@ -2334,8 +2341,8 @@ export class TwilioCallManager {
               status: "pending",
             };
             const clientNotifRef = await this.db.collection("message_events").add(clientNotification);
-            console.log(`📨 [processRefund] Client notification created: ${clientNotifRef.id}`);
-            console.log(`📨   → Client ${clientId} will be notified of refund: ${formattedAmount}`);
+            logger.info(`📨 [processRefund] Client notification created: ${clientNotifRef.id}`);
+            logger.info(`📨   → Client ${clientId} will be notified of refund: ${formattedAmount}`);
           }
 
           // 2. Notify PROVIDER about failed call
@@ -2360,19 +2367,20 @@ export class TwilioCallManager {
               status: "pending",
             };
             const providerNotifRef = await this.db.collection("message_events").add(providerNotification);
-            console.log(`📨 [processRefund] Provider notification created: ${providerNotifRef.id}`);
-            console.log(`📨   → Provider ${providerId} will be notified of early disconnect`);
+            logger.info(`📨 [processRefund] Provider notification created: ${providerNotifRef.id}`);
+            logger.info(`📨   → Provider ${providerId} will be notified of early disconnect`);
           }
         } catch (notifError) {
           // Non-blocking: don't fail the refund if notification fails
-          console.error(`⚠️ [processRefund] Failed to send refund notifications (non-blocking):`, notifError);
+          logger.error(`⚠️ [processRefund] Failed to send refund notifications (non-blocking):`, notifError);
           await logError("TwilioCallManager:processRefund:notifications", notifError as unknown);
         }
       } else {
-        console.error(`❌ Échec traitement paiement ${sessionId}:`, result.error);
+        logger.error(`❌ Échec traitement paiement ${sessionId}:`, result.error);
       }
     } catch (error) {
       await logError("TwilioCallManager:processRefund", error as unknown);
+      captureError(error, { functionName: 'TwilioCallManager:processRefund', extra: { sessionId, reason } });
     }
   }
 
@@ -2383,26 +2391,26 @@ export class TwilioCallManager {
     const completionId = `completion_${Date.now().toString(36)}`;
 
     try {
-      console.log(`\n${'✅'.repeat(35)}`);
-      console.log(`✅ [${completionId}] handleCallCompletion CALLED`);
-      console.log(`✅ [${completionId}]   sessionId: ${sessionId}`);
-      console.log(`✅ [${completionId}]   billingDuration: ${duration}s (${Math.floor(duration / 60)}m${duration % 60}s)`);
-      console.log(`✅ [${completionId}]   MIN_CALL_DURATION: ${CALL_CONFIG.MIN_CALL_DURATION}s`);
-      console.log(`✅ [${completionId}]   willCapture: ${duration >= CALL_CONFIG.MIN_CALL_DURATION ? 'YES' : 'NO - will refund'}`);
-      console.log(`${'✅'.repeat(35)}`);
+      logger.info(`\n${'✅'.repeat(35)}`);
+      logger.info(`✅ [${completionId}] handleCallCompletion CALLED`);
+      logger.info(`✅ [${completionId}]   sessionId: ${sessionId}`);
+      logger.info(`✅ [${completionId}]   billingDuration: ${duration}s (${Math.floor(duration / 60)}m${duration % 60}s)`);
+      logger.info(`✅ [${completionId}]   MIN_CALL_DURATION: ${CALL_CONFIG.MIN_CALL_DURATION}s`);
+      logger.info(`✅ [${completionId}]   willCapture: ${duration >= CALL_CONFIG.MIN_CALL_DURATION ? 'YES' : 'NO - will refund'}`);
+      logger.info(`${'✅'.repeat(35)}`);
 
       const callSession = await this.getCallSession(sessionId);
       if (!callSession) {
-        console.log(`✅ [${completionId}] ❌ Session not found - returning early`);
+        logger.info(`✅ [${completionId}] ❌ Session not found - returning early`);
         return;
       }
 
-      console.log(`✅ [${completionId}] Session state BEFORE completion:`);
-      console.log(`✅ [${completionId}]   session.status: ${callSession.status}`);
-      console.log(`✅ [${completionId}]   payment.status: ${callSession.payment?.status}`);
-      console.log(`✅ [${completionId}]   payment.intentId: ${callSession.payment?.intentId?.slice(0, 20) || 'N/A'}...`);
-      console.log(`✅ [${completionId}]   client.status: ${callSession.participants.client.status}`);
-      console.log(`✅ [${completionId}]   provider.status: ${callSession.participants.provider.status}`);
+      logger.info(`✅ [${completionId}] Session state BEFORE completion:`);
+      logger.info(`✅ [${completionId}]   session.status: ${callSession.status}`);
+      logger.info(`✅ [${completionId}]   payment.status: ${callSession.payment?.status}`);
+      logger.info(`✅ [${completionId}]   payment.intentId: ${callSession.payment?.intentId?.slice(0, 20) || 'N/A'}...`);
+      logger.info(`✅ [${completionId}]   client.status: ${callSession.participants.client.status}`);
+      logger.info(`✅ [${completionId}]   provider.status: ${callSession.participants.provider.status}`);
 
       // P0 FIX 2026-01-20: ATOMIC IDEMPOTENCY CHECK - Prevent race condition where multiple webhooks
       // all try to process the payment simultaneously (causing 3x cancel attempts like we saw in logs)
@@ -2422,7 +2430,7 @@ export class TwilioCallManager {
           }
           const data = sessionDoc.data()!;
           if (finalPaymentStatuses.includes(data.payment?.status)) {
-            console.log(`✅ [${completionId}] ⚠️ IDEMPOTENCY (atomic): Payment already in final state: ${data.payment?.status}`);
+            logger.info(`✅ [${completionId}] ⚠️ IDEMPOTENCY (atomic): Payment already in final state: ${data.payment?.status}`);
             shouldProcess = false;
             return;
           }
@@ -2433,54 +2441,54 @@ export class TwilioCallManager {
           });
         });
       } catch (txError) {
-        console.error(`✅ [${completionId}] Transaction error during idempotency check:`, txError);
+        logger.error(`✅ [${completionId}] Transaction error during idempotency check:`, txError);
         return;
       }
 
       if (!shouldProcess) {
-        console.log(`✅ [${completionId}]   Skipping handleCallCompletion to prevent duplicate processing`);
+        logger.info(`✅ [${completionId}]   Skipping handleCallCompletion to prevent duplicate processing`);
         return;
       }
 
       if (finalSessionStatuses.includes(callSession.status)) {
-        console.log(`✅ [${completionId}] ⚠️ IDEMPOTENCY: Session already in final state: ${callSession.status}`);
-        console.log(`✅ [${completionId}]   Skipping status update to prevent state regression`);
+        logger.info(`✅ [${completionId}] ⚠️ IDEMPOTENCY: Session already in final state: ${callSession.status}`);
+        logger.info(`✅ [${completionId}]   Skipping status update to prevent state regression`);
       } else {
-        console.log(`✅ [${completionId}] Setting session.status = "completed"...`);
+        logger.info(`✅ [${completionId}] Setting session.status = "completed"...`);
         await this.updateCallSessionStatus(sessionId, "completed");
-        console.log(`✅ [${completionId}] ✅ Session marked as completed`);
+        logger.info(`✅ [${completionId}] ✅ Session marked as completed`);
       }
 
       // SMS/WhatsApp notifications removed - call completion logged
       const minutes = Math.floor(duration / 60);
       const seconds = duration % 60;
-      console.log(`[TwilioCallManager] Call completed notification skipped (SMS/WhatsApp disabled), duration: ${minutes}m${seconds}s`);
+      logger.info(`[TwilioCallManager] Call completed notification skipped (SMS/WhatsApp disabled), duration: ${minutes}m${seconds}s`);
 
       // P0 DEBUG 2026-02-02: Enhanced PayPal logging
       const isPayPalPayment = !!callSession.payment?.paypalOrderId;
       if (isPayPalPayment) {
-        console.log(`💳 [PAYPAL DEBUG] Session ${sessionId}:`);
-        console.log(`💳 [PAYPAL DEBUG]   paypalOrderId: ${callSession.payment.paypalOrderId}`);
-        console.log(`💳 [PAYPAL DEBUG]   payment.status: ${callSession.payment.status}`);
-        console.log(`💳 [PAYPAL DEBUG]   payment.gateway: ${callSession.payment.gateway}`);
+        logger.info(`💳 [PAYPAL DEBUG] Session ${sessionId}:`);
+        logger.info(`💳 [PAYPAL DEBUG]   paypalOrderId: ${callSession.payment.paypalOrderId}`);
+        logger.info(`💳 [PAYPAL DEBUG]   payment.status: ${callSession.payment.status}`);
+        logger.info(`💳 [PAYPAL DEBUG]   payment.gateway: ${callSession.payment.gateway}`);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const paymentAny = callSession.payment as any;
-        console.log(`💳 [PAYPAL DEBUG]   authorizationId: ${paymentAny.authorizationId || 'NOT SET'}`);
-        console.log(`💳 [PAYPAL DEBUG]   duration: ${duration}s (min: ${CALL_CONFIG.MIN_CALL_DURATION}s)`);
+        logger.info(`💳 [PAYPAL DEBUG]   authorizationId: ${paymentAny.authorizationId || 'NOT SET'}`);
+        logger.info(`💳 [PAYPAL DEBUG]   duration: ${duration}s (min: ${CALL_CONFIG.MIN_CALL_DURATION}s)`);
       }
 
       const shouldCapture = this.shouldCapturePayment(callSession, duration);
-      console.log(`📄 Should capture payment: ${shouldCapture}`);
+      logger.info(`📄 Should capture payment: ${shouldCapture}`);
 
       if (shouldCapture) {
-        console.log(`📄 Capturing payment for session: ${sessionId}`);
+        logger.info(`📄 Capturing payment for session: ${sessionId}`);
         if (isPayPalPayment) {
-          console.log(`💳 [PAYPAL] Initiating PayPal capture for order: ${callSession.payment.paypalOrderId}`);
+          logger.info(`💳 [PAYPAL] Initiating PayPal capture for order: ${callSession.payment.paypalOrderId}`);
         }
         await this.capturePaymentForSession(sessionId);
       } else {
         // Call duration < MIN_CALL_DURATION (60s) or payment not authorized - refund the payment
-        console.log(`📄 Call duration too short or payment not authorized - processing refund for session: ${sessionId}`);
+        logger.info(`📄 Call duration too short or payment not authorized - processing refund for session: ${sessionId}`);
         // P0 FIX: Use "early_disconnect" in refundReason so frontend shows correct message
         const refundReason = duration < CALL_CONFIG.MIN_CALL_DURATION
           ? `early_disconnect_duration_too_short: ${duration}s < ${CALL_CONFIG.MIN_CALL_DURATION}s`
@@ -2490,7 +2498,7 @@ export class TwilioCallManager {
         // Create invoices even for refunded calls (marked as refunded)
         const updatedSession = await this.getCallSession(sessionId);
         if (updatedSession && !updatedSession.metadata?.invoicesCreated) {
-          console.log(`📄 Creating refunded invoices for session: ${sessionId}`);
+          logger.info(`📄 Creating refunded invoices for session: ${sessionId}`);
           await this.createInvoices(sessionId, updatedSession);
           await this.db.collection("call_sessions").doc(sessionId).update({
             "metadata.invoicesCreated": true,
@@ -2499,23 +2507,23 @@ export class TwilioCallManager {
         }
       }
       
-      console.log(`📄 Just logging the record : ${sessionId}`);
+      logger.info(`📄 Just logging the record : ${sessionId}`);
 
       // ===== COOLDOWN: Schedule provider to become available in 5 minutes =====
       try {
         // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
         const providerIdForCooldown = callSession.providerId || callSession.metadata?.providerId;
         if (!providerIdForCooldown) {
-          console.warn(`⚠️ [handleCallCompletion] No providerId found, skipping cooldown task`);
+          logger.warn(`⚠️ [handleCallCompletion] No providerId found, skipping cooldown task`);
         } else {
           const taskId = await scheduleProviderAvailableTask(
             providerIdForCooldown,
             'call_completed'
           );
-          console.log(`🕐 Provider ${providerIdForCooldown} will be AVAILABLE in 5 min (task: ${taskId})`);
+          logger.info(`🕐 Provider ${providerIdForCooldown} will be AVAILABLE in 5 min (task: ${taskId})`);
         }
       } catch (availableError) {
-        console.error(`⚠️ Failed to schedule provider available task (non-blocking):`, availableError);
+        logger.error(`⚠️ Failed to schedule provider available task (non-blocking):`, availableError);
         await logError('TwilioCallManager:handleCallCompletion:scheduleAvailable', availableError as unknown);
       }
 
@@ -2532,48 +2540,49 @@ export class TwilioCallManager {
         try {
           await this.fetchAndStoreRealCosts(sessionId);
         } catch (costError) {
-          console.error(`[handleCallCompletion] Failed to fetch costs (non-blocking):`, costError);
+          logger.error(`[handleCallCompletion] Failed to fetch costs (non-blocking):`, costError);
         }
       }, 5000); // 5 second delay to allow Twilio to calculate costs
 
       // === FINAL STATE SUMMARY ===
       const finalSession = await this.getCallSession(sessionId);
-      console.log(`\n${'✅'.repeat(35)}`);
-      console.log(`✅ [${completionId}] === CALL COMPLETION SUMMARY ===`);
-      console.log(`✅ [${completionId}]   sessionId: ${sessionId}`);
-      console.log(`✅ [${completionId}]   billingDuration: ${duration}s`);
+      logger.info(`\n${'✅'.repeat(35)}`);
+      logger.info(`✅ [${completionId}] === CALL COMPLETION SUMMARY ===`);
+      logger.info(`✅ [${completionId}]   sessionId: ${sessionId}`);
+      logger.info(`✅ [${completionId}]   billingDuration: ${duration}s`);
       if (finalSession) {
-        console.log(`✅ [${completionId}]   FINAL STATE:`);
-        console.log(`✅ [${completionId}]     session.status: ${finalSession.status}`);
-        console.log(`✅ [${completionId}]     payment.status: ${finalSession.payment?.status}`);
-        console.log(`✅ [${completionId}]     client.status: ${finalSession.participants.client.status}`);
-        console.log(`✅ [${completionId}]     provider.status: ${finalSession.participants.provider.status}`);
-        console.log(`✅ [${completionId}]     invoicesCreated: ${finalSession.metadata?.invoicesCreated || false}`);
+        logger.info(`✅ [${completionId}]   FINAL STATE:`);
+        logger.info(`✅ [${completionId}]     session.status: ${finalSession.status}`);
+        logger.info(`✅ [${completionId}]     payment.status: ${finalSession.payment?.status}`);
+        logger.info(`✅ [${completionId}]     client.status: ${finalSession.participants.client.status}`);
+        logger.info(`✅ [${completionId}]     provider.status: ${finalSession.participants.provider.status}`);
+        logger.info(`✅ [${completionId}]     invoicesCreated: ${finalSession.metadata?.invoicesCreated || false}`);
       }
-      console.log(`✅ [${completionId}] === CALL IS NOW FULLY TERMINATED ===`);
-      console.log(`${'✅'.repeat(35)}\n`);
+      logger.info(`✅ [${completionId}] === CALL IS NOW FULLY TERMINATED ===`);
+      logger.info(`${'✅'.repeat(35)}\n`);
 
     } catch (error) {
-      console.error(`✅ [${completionId}] ❌ ERROR in handleCallCompletion:`, error);
+      logger.error(`✅ [${completionId}] ❌ ERROR in handleCallCompletion:`, error);
       await logError(
         "TwilioCallManager:handleCallCompletion",
         error as unknown
       );
+      captureError(error, { functionName: 'TwilioCallManager:handleCallCompletion', extra: { sessionId } });
     }
   }
 
   // shouldCapturePayment(session: CallSessionState, duration?: number): boolean {
-  //   console.log("session in shouldCapturePayment :", session);
-  //   console.log("session in shouldCapturePayment :", JSON.stringify(session, null, 2));
+  //   logger.info("session in shouldCapturePayment :", session);
+  //   logger.info("session in shouldCapturePayment :", JSON.stringify(session, null, 2));
   //   const { provider, client } = session.participants;
-  //   console.log("Provider status in shouldCapturePayment :", provider);
-  //   console.log("Client status in shouldCapturePayment :", client);
+  //   logger.info("Provider status in shouldCapturePayment :", provider);
+  //   logger.info("Client status in shouldCapturePayment :", client);
   //   // const { startedAt, duration: sessionDuration } = session.conference;
   //   const {  duration: sessionDuration } = session.conference;
 
     
-  //   console.log(`📄 Session duration: ${sessionDuration}`);
-  //   console.log(`📄 Duration: ${duration}`);
+  //   logger.info(`📄 Session duration: ${sessionDuration}`);
+  //   logger.info(`📄 Duration: ${duration}`);
 
   //   const actualDuration = duration || sessionDuration || 0;
 
@@ -2585,23 +2594,23 @@ export class TwilioCallManager {
   //   // if (!startedAt) return false;
 
     
-  //   console.log(`📄 Minimum call duration: ${CALL_CONFIG.MIN_CALL_DURATION}`);
-  //   console.log(`📄 Actual duration: ${actualDuration}`);
-  //   console.log(`📄 Comparison: ${actualDuration} < ${CALL_CONFIG.MIN_CALL_DURATION} = ${actualDuration < CALL_CONFIG.MIN_CALL_DURATION}`);
+  //   logger.info(`📄 Minimum call duration: ${CALL_CONFIG.MIN_CALL_DURATION}`);
+  //   logger.info(`📄 Actual duration: ${actualDuration}`);
+  //   logger.info(`📄 Comparison: ${actualDuration} < ${CALL_CONFIG.MIN_CALL_DURATION} = ${actualDuration < CALL_CONFIG.MIN_CALL_DURATION}`);
     
   //   if (actualDuration < CALL_CONFIG.MIN_CALL_DURATION) {
-  //     console.log(`📄 ❌ Duration check failed: ${actualDuration}s < ${CALL_CONFIG.MIN_CALL_DURATION}s - returning false`);
+  //     logger.info(`📄 ❌ Duration check failed: ${actualDuration}s < ${CALL_CONFIG.MIN_CALL_DURATION}s - returning false`);
   //     return false;
   //   }
 
-  //   // console.log(`📄 ✅ Duration check passed: ${actualDuration}s >= ${CALL_CONFIG.MIN_CALL_DURATION}s`);
+  //   // logger.info(`📄 ✅ Duration check passed: ${actualDuration}s >= ${CALL_CONFIG.MIN_CALL_DURATION}s`);
     
   //   if (session.payment.status !== "authorized") {
-  //     console.log(`📄 ❌ Payment status check failed: ${session.payment.status} !== "authorized" - returning false`);
+  //     logger.info(`📄 ❌ Payment status check failed: ${session.payment.status} !== "authorized" - returning false`);
   //     return false;
   //   }
-  //   console.log(`📄 ✅ Payment status check passed: ${session.payment.status} === "authorized"`);
-  //   console.log(`📄 ✅ All checks passed - returning true`);
+  //   logger.info(`📄 ✅ Payment status check passed: ${session.payment.status} === "authorized"`);
+  //   logger.info(`📄 ✅ All checks passed - returning true`);
   //   return true;
   // }
 
@@ -2609,16 +2618,16 @@ export class TwilioCallManager {
 
 
   shouldCapturePayment(session: CallSessionState, duration?: number): boolean {
-    console.log("session in shouldCapturePayment :", session);
-    console.log("session in shouldCapturePayment :", JSON.stringify(session, null, 2));
+    logger.info("session in shouldCapturePayment :", session);
+    logger.info("session in shouldCapturePayment :", JSON.stringify(session, null, 2));
     const { provider, client } = session.participants;
-    console.log("Provider status in shouldCapturePayment :", provider);
-    console.log("Client status in shouldCapturePayment :", client);
+    logger.info("Provider status in shouldCapturePayment :", provider);
+    logger.info("Client status in shouldCapturePayment :", client);
     
     const { duration: sessionDuration } = session.conference;
   
-    console.log(`📄 Session duration: ${sessionDuration}`);
-    console.log(`📄 Duration parameter: ${duration}`);
+    logger.info(`📄 Session duration: ${sessionDuration}`);
+    logger.info(`📄 Duration parameter: ${duration}`);
   
     // Calculate actual duration with multiple fallbacks
     let actualDuration = duration || sessionDuration || 0;
@@ -2628,7 +2637,7 @@ export class TwilioCallManager {
       const startTime = session.conference.startedAt.toDate().getTime();
       const endTime = session.conference.endedAt.toDate().getTime();
       actualDuration = Math.floor((endTime - startTime) / 1000);
-      console.log(`📄 Duration calculated from conference timestamps: ${actualDuration}s`);
+      logger.info(`📄 Duration calculated from conference timestamps: ${actualDuration}s`);
     }
     
     // 🆕 FALLBACK 2: Calculate OVERLAP duration from participant timestamps
@@ -2657,24 +2666,24 @@ export class TwilioCallManager {
         // OVERLAP duration = time when BOTH were connected simultaneously
         actualDuration = Math.max(0, Math.floor((firstDisconnectedAt - bothConnectedAt) / 1000));
 
-        console.log(`📄 Duration calculated as OVERLAP (both connected):`);
-        console.log(`📄   Client: connected=${new Date(clientConnected).toISOString()}, disconnected=${clientDisconnected ? new Date(clientDisconnected).toISOString() : 'N/A'}`);
-        console.log(`📄   Provider: connected=${new Date(providerConnected).toISOString()}, disconnected=${providerDisconnected ? new Date(providerDisconnected).toISOString() : 'N/A'}`);
-        console.log(`📄   bothConnectedAt (2nd joined): ${new Date(bothConnectedAt).toISOString()}`);
-        console.log(`📄   firstDisconnectedAt (1st left): ${new Date(firstDisconnectedAt).toISOString()}`);
-        console.log(`📄   OVERLAP duration: ${actualDuration}s`);
+        logger.info(`📄 Duration calculated as OVERLAP (both connected):`);
+        logger.info(`📄   Client: connected=${new Date(clientConnected).toISOString()}, disconnected=${clientDisconnected ? new Date(clientDisconnected).toISOString() : 'N/A'}`);
+        logger.info(`📄   Provider: connected=${new Date(providerConnected).toISOString()}, disconnected=${providerDisconnected ? new Date(providerDisconnected).toISOString() : 'N/A'}`);
+        logger.info(`📄   bothConnectedAt (2nd joined): ${new Date(bothConnectedAt).toISOString()}`);
+        logger.info(`📄   firstDisconnectedAt (1st left): ${new Date(firstDisconnectedAt).toISOString()}`);
+        logger.info(`📄   OVERLAP duration: ${actualDuration}s`);
       } else {
-        console.log(`📄 Cannot calculate overlap - missing connectedAt timestamps`);
-        console.log(`📄   clientConnected: ${clientConnected || 'N/A'}, providerConnected: ${providerConnected || 'N/A'}`);
+        logger.info(`📄 Cannot calculate overlap - missing connectedAt timestamps`);
+        logger.info(`📄   clientConnected: ${clientConnected || 'N/A'}, providerConnected: ${providerConnected || 'N/A'}`);
       }
     }
   
-    console.log(`📄 Actual duration (final): ${actualDuration}`);
-    console.log(`📄 Minimum call duration: ${CALL_CONFIG.MIN_CALL_DURATION}`);
-    console.log(`📄 Comparison: ${actualDuration} < ${CALL_CONFIG.MIN_CALL_DURATION} = ${actualDuration < CALL_CONFIG.MIN_CALL_DURATION}`);
+    logger.info(`📄 Actual duration (final): ${actualDuration}`);
+    logger.info(`📄 Minimum call duration: ${CALL_CONFIG.MIN_CALL_DURATION}`);
+    logger.info(`📄 Comparison: ${actualDuration} < ${CALL_CONFIG.MIN_CALL_DURATION} = ${actualDuration < CALL_CONFIG.MIN_CALL_DURATION}`);
     
     if (actualDuration < CALL_CONFIG.MIN_CALL_DURATION) {
-      console.log(`📄 ❌ Duration check failed: ${actualDuration}s < ${CALL_CONFIG.MIN_CALL_DURATION}s - returning false`);
+      logger.info(`📄 ❌ Duration check failed: ${actualDuration}s < ${CALL_CONFIG.MIN_CALL_DURATION}s - returning false`);
       return false;
     }
     
@@ -2694,28 +2703,28 @@ export class TwilioCallManager {
 
     if (isPayPal && hasPayPalAuthorization) {
       // PayPal payment with authorization - allow capture regardless of local status
-      console.log(`📄 ✅ PayPal payment with authorizationId detected - allowing capture`);
-      console.log(`📄    paypalOrderId: ${session.payment.paypalOrderId}`);
-      console.log(`📄    authorizationId: ${paymentAny.authorizationId}`);
-      console.log(`📄    local status: ${session.payment.status} (may be stale)`);
+      logger.info(`📄 ✅ PayPal payment with authorizationId detected - allowing capture`);
+      logger.info(`📄    paypalOrderId: ${session.payment.paypalOrderId}`);
+      logger.info(`📄    authorizationId: ${paymentAny.authorizationId}`);
+      logger.info(`📄    local status: ${session.payment.status} (may be stale)`);
     } else if (isPayPal && !hasPayPalAuthorization && session.payment.status !== "authorized") {
       // PayPal payment without authorization - need to check if we can still capture
       // The captureOrder() function will call authorizeOrder() if needed
-      console.log(`📄 ⚠️ PayPal payment without local authorizationId`);
-      console.log(`📄    paypalOrderId: ${session.payment.paypalOrderId}`);
-      console.log(`📄    local status: ${session.payment.status}`);
-      console.log(`📄    Will attempt capture - captureOrder() will authorize if needed`);
+      logger.info(`📄 ⚠️ PayPal payment without local authorizationId`);
+      logger.info(`📄    paypalOrderId: ${session.payment.paypalOrderId}`);
+      logger.info(`📄    local status: ${session.payment.status}`);
+      logger.info(`📄    Will attempt capture - captureOrder() will authorize if needed`);
     } else if (!validPaymentStatuses.includes(session.payment.status)) {
-      console.log(`📄 ❌ Payment status check failed: ${session.payment.status} not in ${validPaymentStatuses.join(", ")} - returning false`);
+      logger.info(`📄 ❌ Payment status check failed: ${session.payment.status} not in ${validPaymentStatuses.join(", ")} - returning false`);
       return false;
     } else if (session.payment.status === "requires_action") {
-      console.log(`📄 ⚠️ Payment status is "requires_action" (3D Secure) - attempting capture anyway`);
-      console.log(`📄    If 3D Secure wasn't completed, Stripe will reject the capture`);
+      logger.info(`📄 ⚠️ Payment status is "requires_action" (3D Secure) - attempting capture anyway`);
+      logger.info(`📄    If 3D Secure wasn't completed, Stripe will reject the capture`);
     } else {
-      console.log(`📄 ✅ Payment status check passed: ${session.payment.status} === "authorized"`);
+      logger.info(`📄 ✅ Payment status check passed: ${session.payment.status} === "authorized"`);
     }
 
-    console.log(`📄 ✅ All checks passed - returning true`);
+    logger.info(`📄 ✅ All checks passed - returning true`);
     return true;
   }
 
@@ -2728,7 +2737,7 @@ export class TwilioCallManager {
         sessionId,
       });
 
-      console.log(`📄 Capturing payment for session: ${sessionId}`);
+      logger.info(`📄 Capturing payment for session: ${sessionId}`);
 
       // P2-4 FIX: Atomic lock to prevent race conditions on concurrent capture attempts
       const sessionRef = this.db.collection("call_sessions").doc(sessionId);
@@ -2744,7 +2753,7 @@ export class TwilioCallManager {
 
           // Already captured
           if (data?.payment?.status === "captured") {
-            console.log(`📄 Payment already captured for session: ${sessionId}`);
+            logger.info(`📄 Payment already captured for session: ${sessionId}`);
             return; // Exit transaction without changes
           }
 
@@ -2756,7 +2765,7 @@ export class TwilioCallManager {
             // m3 AUDIT FIX: Lock expires after 2 hours (was 30 min — if call > 30 min + double webhook, double capture possible)
             // Extended to 2h to cover longest possible calls; lock is now explicitly released after capture
             if (lockAge < 2 * 60 * 60 * 1000) {
-              console.log(`📄 Capture already in progress for session: ${sessionId} (lock age: ${lockAge}ms)`);
+              logger.info(`📄 Capture already in progress for session: ${sessionId} (lock age: ${lockAge}ms)`);
               return;
             }
           }
@@ -2768,12 +2777,12 @@ export class TwilioCallManager {
           lockAcquired = true;
         });
       } catch (lockError) {
-        console.error(`❌ Failed to acquire capture lock: ${lockError}`);
+        logger.error(`❌ Failed to acquire capture lock: ${lockError}`);
         return false;
       }
 
       if (!lockAcquired) {
-        console.log(`📄 Could not acquire lock or already captured for session: ${sessionId}`);
+        logger.info(`📄 Could not acquire lock or already captured for session: ${sessionId}`);
         return true; // Either already captured or in progress - not a failure
       }
 
@@ -2781,7 +2790,7 @@ export class TwilioCallManager {
       let session = await this.getCallSession(sessionId);
       if (!session) return false;
 
-      console.log(`📄 Session payment status: ${session.payment.status}`);
+      logger.info(`📄 Session payment status: ${session.payment.status}`);
 
       // ===== P0 FIX 2026-01-25: Sync payment status from Stripe before capture =====
       // If payment.status is "requires_action" (3D Secure was required), verify with Stripe
@@ -2789,7 +2798,7 @@ export class TwilioCallManager {
       // This handles cases where the webhook payment_intent.amount_capturable_updated was missed.
       if (session.payment.status === "requires_action" && session.payment.intentId) {
         try {
-          console.log(`📄 [${captureId}] Payment status is requires_action - checking Stripe for actual status...`);
+          logger.info(`📄 [${captureId}] Payment status is requires_action - checking Stripe for actual status...`);
 
           // Get payment doc to check if Direct Charges is used
           const paymentDoc = await this.db.collection('payments').doc(session.payment.intentId).get();
@@ -2803,11 +2812,11 @@ export class TwilioCallManager {
           );
 
           if (stripeStatus) {
-            console.log(`📄 [${captureId}] Stripe PaymentIntent status: ${stripeStatus.status}`);
+            logger.info(`📄 [${captureId}] Stripe PaymentIntent status: ${stripeStatus.status}`);
 
             if (stripeStatus.status === 'requires_capture') {
               // 3D Secure was completed - update our payment status to authorized
-              console.log(`📄 [${captureId}] ✅ 3D Secure completed (webhook likely missed) - updating payment.status to authorized`);
+              logger.info(`📄 [${captureId}] ✅ 3D Secure completed (webhook likely missed) - updating payment.status to authorized`);
               await this.db.collection("call_sessions").doc(sessionId).update({
                 "payment.status": "authorized",
                 "payment.threeDSecureCompleted": true,
@@ -2819,15 +2828,15 @@ export class TwilioCallManager {
               session = await this.getCallSession(sessionId);
               if (!session) return false;
 
-              console.log(`📄 [${captureId}] Payment status updated to: ${session.payment.status}`);
+              logger.info(`📄 [${captureId}] Payment status updated to: ${session.payment.status}`);
             } else if (stripeStatus.status === 'requires_action') {
               // 3D Secure still pending - cannot capture yet
-              console.log(`📄 [${captureId}] ⚠️ 3D Secure still pending on Stripe - cannot capture yet`);
+              logger.info(`📄 [${captureId}] ⚠️ 3D Secure still pending on Stripe - cannot capture yet`);
               return false;
             } else if (stripeStatus.status === 'succeeded') {
               // Already captured (shouldn't happen but handle it)
               // CHATTER FIX: Set isPaid: true at root level to trigger chatterOnCallCompleted
-              console.log(`📄 [${captureId}] ⚠️ PaymentIntent already succeeded - updating local status`);
+              logger.info(`📄 [${captureId}] ⚠️ PaymentIntent already succeeded - updating local status`);
               await this.db.collection("call_sessions").doc(sessionId).update({
                 "payment.status": "captured",
                 "isPaid": true,
@@ -2835,7 +2844,7 @@ export class TwilioCallManager {
               });
               return true;
             } else if (stripeStatus.status === 'canceled') {
-              console.log(`📄 [${captureId}] ⚠️ PaymentIntent was canceled - updating local status`);
+              logger.info(`📄 [${captureId}] ⚠️ PaymentIntent was canceled - updating local status`);
               await this.db.collection("call_sessions").doc(sessionId).update({
                 "payment.status": "cancelled",
                 "metadata.updatedAt": admin.firestore.Timestamp.now(),
@@ -2844,22 +2853,22 @@ export class TwilioCallManager {
             }
           }
         } catch (stripeCheckError) {
-          console.error(`📄 [${captureId}] Error checking Stripe status (continuing with capture attempt):`, stripeCheckError);
+          logger.error(`📄 [${captureId}] Error checking Stripe status (continuing with capture attempt):`, stripeCheckError);
           // Continue with capture attempt - will fail gracefully if status is wrong
         }
       }
 
       // Re-verify session is still valid after potential sync (TypeScript type guard)
       if (!session) {
-        console.error(`📄 [${captureId}] Session became null after sync - aborting capture`);
+        logger.error(`📄 [${captureId}] Session became null after sync - aborting capture`);
         return false;
       }
 
       // Already captured (double-check after lock) - ensure invoices exist once
       if (session.payment.status === "captured") {
-        console.log(`📄 Payment already captured for session: ${sessionId}`);
+        logger.info(`📄 Payment already captured for session: ${sessionId}`);
         if (!session.metadata?.invoicesCreated) {
-          console.log(`📄 Creating invoices for already-captured session: ${sessionId}`);
+          logger.info(`📄 Creating invoices for already-captured session: ${sessionId}`);
           await this.createInvoices(sessionId, session);
           await this.db.collection("call_sessions").doc(sessionId).update({
             "metadata.invoicesCreated": true,
@@ -2869,7 +2878,7 @@ export class TwilioCallManager {
         return true;
       }
 
-      console.log(`📄 Should capture payment: ${this.shouldCapturePayment(session)}`);
+      logger.info(`📄 Should capture payment: ${this.shouldCapturePayment(session)}`);
 
       // Get provider amount from admin pricing config
       const { getPricingConfig } = await import("./services/pricingService");
@@ -2879,13 +2888,13 @@ export class TwilioCallManager {
       const serviceType = session.metadata.providerType || 'expat'; // 'lawyer' or 'expat'
       const currency = 'eur'; // Default to EUR
 
-      console.log(`💸 [${captureId}] serviceType: ${serviceType} (from metadata: ${session.metadata.providerType || 'undefined'})`);
+      logger.info(`💸 [${captureId}] serviceType: ${serviceType} (from metadata: ${session.metadata.providerType || 'undefined'})`);
 
       const providerAmount = pricingConfig[serviceType][currency].providerAmount;
       const platformFee = pricingConfig[serviceType][currency].connectionFeeAmount;
       const providerAmountCents = Math.round(providerAmount * 100);
 
-      console.log(`💸 Pricing config - Platform: ${platformFee} EUR, Provider: ${providerAmount} EUR (${providerAmountCents} cents)`);
+      logger.info(`💸 Pricing config - Platform: ${platformFee} EUR, Provider: ${providerAmount} EUR (${providerAmountCents} cents)`);
 
       // ===== P0 FIX: VALIDATE GATEWAY MATCHES PROVIDER COUNTRY =====
       // If there's a mismatch between the session gateway and what the provider's country requires,
@@ -2899,7 +2908,7 @@ export class TwilioCallManager {
           const providerDoc = await this.db.collection("providers").doc(session.metadata.providerId).get();
           providerCountry = providerDoc.data()?.country || providerDoc.data()?.countryCode;
         } catch (providerError) {
-          console.warn(`[${captureId}] Could not fetch provider country:`, providerError);
+          logger.warn(`[${captureId}] Could not fetch provider country:`, providerError);
         }
       }
 
@@ -2907,10 +2916,10 @@ export class TwilioCallManager {
       const requiredGateway = providerCountry ? getRecommendedPaymentGateway(providerCountry) : sessionGateway;
 
       if (providerCountry && sessionGateway !== requiredGateway) {
-        console.warn(`⚠️ [${captureId}] GATEWAY MISMATCH DETECTED!`);
-        console.warn(`⚠️ [${captureId}]   Session gateway: ${sessionGateway}`);
-        console.warn(`⚠️ [${captureId}]   Required for country ${providerCountry}: ${requiredGateway}`);
-        console.warn(`⚠️ [${captureId}]   Using required gateway: ${requiredGateway}`);
+        logger.warn(`⚠️ [${captureId}] GATEWAY MISMATCH DETECTED!`);
+        logger.warn(`⚠️ [${captureId}]   Session gateway: ${sessionGateway}`);
+        logger.warn(`⚠️ [${captureId}]   Required for country ${providerCountry}: ${requiredGateway}`);
+        logger.warn(`⚠️ [${captureId}]   Using required gateway: ${requiredGateway}`);
 
         // Log this critical issue for monitoring
         await logError('GATEWAY_MISMATCH', {
@@ -2931,7 +2940,7 @@ export class TwilioCallManager {
 
       if (isPayPal && session.payment.paypalOrderId) {
         // ===== PAYPAL CAPTURE =====
-        console.log(`💳 [PAYPAL] Capturing PayPal order: ${session.payment.paypalOrderId}`);
+        logger.info(`💳 [PAYPAL] Capturing PayPal order: ${session.payment.paypalOrderId}`);
         const { PayPalManager } = await import("./PayPalManager");
         const paypalManager = new PayPalManager();
 
@@ -2942,9 +2951,9 @@ export class TwilioCallManager {
             captureId: paypalResult.captureId,
             error: paypalResult.success ? undefined : `PayPal capture failed: ${paypalResult.status}`,
           };
-          console.log(`✅ [PAYPAL] Capture result:`, JSON.stringify(paypalResult, null, 2));
+          logger.info(`✅ [PAYPAL] Capture result:`, JSON.stringify(paypalResult, null, 2));
         } catch (paypalError) {
-          console.error(`❌ [PAYPAL] Capture error:`, paypalError);
+          logger.error(`❌ [PAYPAL] Capture error:`, paypalError);
           captureResult = {
             success: false,
             error: paypalError instanceof Error ? paypalError.message : "PayPal capture failed",
@@ -2953,20 +2962,20 @@ export class TwilioCallManager {
       } else {
         // ===== STRIPE CAPTURE (DESTINATION CHARGES) =====
         // capturePayment retourne maintenant transferId si Destination Charges est configure
-        console.log(`💳 [STRIPE] Capturing Stripe payment: ${session.payment.intentId}`);
+        logger.info(`💳 [STRIPE] Capturing Stripe payment: ${session.payment.intentId}`);
         captureResult = await stripeManager.capturePayment(
           session.payment.intentId,
           sessionId
         );
       }
 
-      console.log("📄 Capture result:", JSON.stringify(captureResult, null, 2));
+      logger.info("📄 Capture result:", JSON.stringify(captureResult, null, 2));
 
       // P1-13 FIX: Obtenir le paymentId pour sync atomique
       const paymentId = session.paymentId || session.payment.intentId || session.payment.paypalOrderId;
 
       if (!captureResult.success) {
-        console.error(`❌ Payment capture failed: ${captureResult.error}`);
+        logger.error(`❌ Payment capture failed: ${captureResult.error}`);
         // P1-13 FIX: Sync atomique payments <-> call_sessions
         if (paymentId) {
           await syncPaymentStatus(this.db, paymentId, sessionId, {
@@ -3056,9 +3065,9 @@ export class TwilioCallManager {
             });
           }
 
-          console.log(`✅ [capturePayment] Admin alert + client/provider notifications sent for capture failure`);
+          logger.info(`✅ [capturePayment] Admin alert + client/provider notifications sent for capture failure`);
         } catch (alertError) {
-          console.error(`⚠️ [capturePayment] Failed to send capture failure notifications:`, alertError);
+          logger.error(`⚠️ [capturePayment] Failed to send capture failure notifications:`, alertError);
         }
 
         // m3 AUDIT FIX: Release capture lock on failure
@@ -3081,7 +3090,7 @@ export class TwilioCallManager {
 
       // Si Destination Charges est utilise, le transfert est automatique
       if (captureResult.transferId) {
-        console.log(`✅ Automatic transfer via Destination Charges: ${captureResult.transferId}`);
+        logger.info(`✅ Automatic transfer via Destination Charges: ${captureResult.transferId}`);
         captureData.transferId = captureResult.transferId;
         captureData.transferAmount = providerAmountCents;
         captureData.transferCreatedAt = admin.firestore.FieldValue.serverTimestamp();
@@ -3097,11 +3106,11 @@ export class TwilioCallManager {
             }
           }
         } catch (err) {
-          console.warn(`⚠️ Could not fetch destinationAccountId:`, err);
+          logger.warn(`⚠️ Could not fetch destinationAccountId:`, err);
         }
       } else {
         // Pas de Destination Charges configure - le transfert devra etre fait manuellement
-        console.log(`⚠️ No automatic transfer - Destination Charges not configured for this payment`);
+        logger.info(`⚠️ No automatic transfer - Destination Charges not configured for this payment`);
         captureData.transferStatus = "pending";
       }
 
@@ -3113,7 +3122,7 @@ export class TwilioCallManager {
           "metadata.updatedAt": admin.firestore.Timestamp.now(),
         });
       }
-      console.log(`📄 Updated call session with capture info and isPaid=true: ${sessionId}`);
+      logger.info(`📄 Updated call session with capture info and isPaid=true: ${sessionId}`);
 
       // Create review request
       await this.createReviewRequest(session);
@@ -3123,7 +3132,7 @@ export class TwilioCallManager {
       await this.db.collection("call_sessions").doc(sessionId).update({
         "metadata.invoicesCreated": true,
       });
-      console.log(`📄 Invoices created for session: ${sessionId}`);
+      logger.info(`📄 Invoices created for session: ${sessionId}`);
 
       await logCallRecord({
         callId: sessionId,
@@ -3164,9 +3173,9 @@ export class TwilioCallManager {
             },
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           });
-          console.log(`✅ [capturePayment] Provider Stripe payout notification sent`);
+          logger.info(`✅ [capturePayment] Provider Stripe payout notification sent`);
         } catch (notifErr) {
-          console.error(`⚠️ [capturePayment] Failed to send provider payout notification:`, notifErr);
+          logger.error(`⚠️ [capturePayment] Failed to send provider payout notification:`, notifErr);
         }
       }
 
@@ -3206,6 +3215,7 @@ export class TwilioCallManager {
         "TwilioCallManager:capturePaymentForSession",
         error as unknown
       );
+      captureError(error, { functionName: 'TwilioCallManager:capturePaymentForSession', extra: { sessionId } });
       return false;
     }
   }
@@ -3215,7 +3225,7 @@ export class TwilioCallManager {
     session: CallSessionState
   ): Promise<void> {
     try {
-      console.log(`📄 Creating invoices for session in createInvoices: ${sessionId}`);
+      logger.info(`📄 Creating invoices for session in createInvoices: ${sessionId}`);
 
       // Check if payment is refunded OR cancelled - if so, mark invoices as refunded
       // P0 FIX: "cancelled" status happens when authorization is cancelled (not captured)
@@ -3233,14 +3243,14 @@ export class TwilioCallManager {
           const paymentData = paymentDoc.data();
           if (paymentData?.currency) {
             paymentCurrency = paymentData.currency.toLowerCase() as 'eur' | 'usd';
-            console.log(`📄 Found payment currency: ${paymentCurrency.toUpperCase()}`);
+            logger.info(`📄 Found payment currency: ${paymentCurrency.toUpperCase()}`);
           }
           // Récupérer les emails depuis le paiement si disponibles
           clientEmail = paymentData?.clientEmail || '';
           providerEmail = paymentData?.providerEmail || '';
         }
       } catch (paymentError) {
-        console.warn(`⚠️ Could not fetch payment currency, defaulting to EUR:`, paymentError);
+        logger.warn(`⚠️ Could not fetch payment currency, defaulting to EUR:`, paymentError);
       }
 
       // P0 FIX: Récupérer les noms du client et du prestataire depuis la collection users
@@ -3261,9 +3271,9 @@ export class TwilioCallManager {
             clientEmail = clientData?.email || '';
           }
         }
-        console.log(`📄 Client name retrieved: ${clientName || '(not found)'}`);
+        logger.info(`📄 Client name retrieved: ${clientName || '(not found)'}`);
       } catch (clientError) {
-        console.warn(`⚠️ Could not fetch client data:`, clientError);
+        logger.warn(`⚠️ Could not fetch client data:`, clientError);
       }
 
       try {
@@ -3278,9 +3288,9 @@ export class TwilioCallManager {
             providerEmail = providerData?.email || '';
           }
         }
-        console.log(`📄 Provider display name: ${providerDisplayName || '(not found)'}`);
+        logger.info(`📄 Provider display name: ${providerDisplayName || '(not found)'}`);
       } catch (providerError) {
-        console.warn(`⚠️ Could not fetch provider data:`, providerError);
+        logger.warn(`⚠️ Could not fetch provider data:`, providerError);
       }
 
       // Import your invoice function - adjust path as needed
@@ -3298,14 +3308,14 @@ export class TwilioCallManager {
       const platformFee = pricingConfig[serviceType][currency].connectionFeeAmount;
       const providerAmount = pricingConfig[serviceType][currency].providerAmount;
 
-      console.log(`📄 Creating invoices with admin pricing - Platform: ${platformFee} ${currency.toUpperCase()}, Provider: ${providerAmount} ${currency.toUpperCase()}`);
-      console.log(`📄 Invoice status: ${invoiceStatus} (payment status: ${session.payment.status})`);
+      logger.info(`📄 Creating invoices with admin pricing - Platform: ${platformFee} ${currency.toUpperCase()}, Provider: ${providerAmount} ${currency.toUpperCase()}`);
+      logger.info(`📄 Invoice status: ${invoiceStatus} (payment status: ${session.payment.status})`);
 
       // P2 FIX 2026-02-12: Generate sequential invoice numbers (international compliance)
       const platformInvoiceNumberResult = await generateSequentialInvoiceNumber();
       const providerInvoiceNumberResult = await generateSequentialInvoiceNumber();
 
-      console.log(`📄 Generated sequential invoice numbers:`, {
+      logger.info(`📄 Generated sequential invoice numbers:`, {
         platform: platformInvoiceNumberResult.invoiceNumber,
         provider: providerInvoiceNumberResult.invoiceNumber,
       });
@@ -3374,9 +3384,9 @@ export class TwilioCallManager {
         generateInvoice(providerInvoice),
       ]);
 
-      console.log(`✅ Invoices created successfully for ${sessionId} with status: ${invoiceStatus}`);
+      logger.info(`✅ Invoices created successfully for ${sessionId} with status: ${invoiceStatus}`);
     } catch (error) {
-      console.error("❌ Error creating invoices:", error);
+      logger.error("❌ Error creating invoices:", error);
       await logError("TwilioCallManager:createInvoices", error as unknown);
     }
   }
@@ -3493,7 +3503,7 @@ export class TwilioCallManager {
     try {
       await twilioClient.calls(callSid).update({ status: "completed" });
     } catch (error) {
-      console.warn(`Impossible d'annuler l'appel Twilio ${callSid}:`, error);
+      logger.warn(`Impossible d'annuler l'appel Twilio ${callSid}:`, error);
     }
   }
 
@@ -3505,7 +3515,7 @@ export class TwilioCallManager {
     try {
       const callSession = await this.getCallSession(sessionId);
       if (!callSession) {
-        console.warn(`[fetchAndStoreRealCosts] Session ${sessionId} not found`);
+        logger.warn(`[fetchAndStoreRealCosts] Session ${sessionId} not found`);
         return;
       }
 
@@ -3526,9 +3536,9 @@ export class TwilioCallManager {
             priceUnit: clientCall.priceUnit || 'USD',
             status: clientCall.status,
           };
-          console.log(`[fetchAndStoreRealCosts] Client call cost: ${clientPrice} ${clientCall.priceUnit}`);
+          logger.info(`[fetchAndStoreRealCosts] Client call cost: ${clientPrice} ${clientCall.priceUnit}`);
         } catch (error) {
-          console.warn(`[fetchAndStoreRealCosts] Failed to fetch client call:`, error);
+          logger.warn(`[fetchAndStoreRealCosts] Failed to fetch client call:`, error);
         }
       }
 
@@ -3545,9 +3555,9 @@ export class TwilioCallManager {
             priceUnit: providerCall.priceUnit || 'USD',
             status: providerCall.status,
           };
-          console.log(`[fetchAndStoreRealCosts] Provider call cost: ${providerPrice} ${providerCall.priceUnit}`);
+          logger.info(`[fetchAndStoreRealCosts] Provider call cost: ${providerPrice} ${providerCall.priceUnit}`);
         } catch (error) {
-          console.warn(`[fetchAndStoreRealCosts] Failed to fetch provider call:`, error);
+          logger.warn(`[fetchAndStoreRealCosts] Failed to fetch provider call:`, error);
         }
       }
 
@@ -3565,9 +3575,9 @@ export class TwilioCallManager {
         "metadata.updatedAt": admin.firestore.Timestamp.now(),
       });
 
-      console.log(`[fetchAndStoreRealCosts] Stored costs for session ${sessionId}: Twilio=${totalTwilioCost}, GCP=${gcpCostEstimate}`);
+      logger.info(`[fetchAndStoreRealCosts] Stored costs for session ${sessionId}: Twilio=${totalTwilioCost}, GCP=${gcpCostEstimate}`);
     } catch (error) {
-      console.error(`[fetchAndStoreRealCosts] Error:`, error);
+      logger.error(`[fetchAndStoreRealCosts] Error:`, error);
       await logError("TwilioCallManager:fetchAndStoreRealCosts", error as unknown);
     }
   }
@@ -3656,7 +3666,7 @@ export class TwilioCallManager {
       // would cause waitForConnection() to return false immediately on retry attempts.
       // The status MUST be reset before the new call starts, so webhooks from the new call
       // can properly update it to ringing -> amd_pending -> connected
-      console.log(
+      logger.info(
         `[TwilioCallManager] updateParticipantCallSid(${sessionId}, ${participantType}, ${callSid.slice(0, 15)}...) - RESETTING status to "calling"`
       );
       await this.saveWithRetry(() =>
@@ -3685,7 +3695,7 @@ export class TwilioCallManager {
     timestamp?: admin.firestore.Timestamp
   ): Promise<void> {
     try {
-      console.log(
+      logger.info(
         `[TwilioCallManager] updateParticipantStatus(${sessionId}, ${participantType}, ${status})`
       );
       const updateData: Record<string, unknown> = {
@@ -3737,7 +3747,7 @@ export class TwilioCallManager {
 
   async getCallSession(sessionId: string): Promise<CallSessionState | null> {
     try {
-      console.log(
+      logger.info(
         "[getCallSession] this is the sessionId i am searching for : ",
         sessionId
       );
@@ -3787,7 +3797,7 @@ export class TwilioCallManager {
     conferenceName: string
   ): Promise<CallSessionState | null> {
     const debugId = `findByName_${Date.now().toString(36)}`;
-    console.log(`🔍 [${debugId}] findSessionByConferenceName: "${conferenceName}"`);
+    logger.info(`🔍 [${debugId}] findSessionByConferenceName: "${conferenceName}"`);
 
     try {
       const snapshot = await this.db
@@ -3797,12 +3807,12 @@ export class TwilioCallManager {
         .get();
 
       if (snapshot.empty) {
-        console.log(`🔍 [${debugId}]   ❌ No session found with conference.name: ${conferenceName}`);
+        logger.info(`🔍 [${debugId}]   ❌ No session found with conference.name: ${conferenceName}`);
         return null;
       }
 
       const session = snapshot.docs[0].data() as CallSessionState;
-      console.log(`🔍 [${debugId}]   ✅ Found session: ${session.id}`);
+      logger.info(`🔍 [${debugId}]   ✅ Found session: ${session.id}`);
       return session;
     } catch (error) {
       await logError(
@@ -3820,14 +3830,14 @@ export class TwilioCallManager {
    * This happens on the first conference event (conference-start or participant-join).
    */
   async updateConferenceSid(sessionId: string, conferenceSid: string): Promise<void> {
-    console.log(`📝 [updateConferenceSid] sessionId: ${sessionId}, conferenceSid: ${conferenceSid}`);
+    logger.info(`📝 [updateConferenceSid] sessionId: ${sessionId}, conferenceSid: ${conferenceSid}`);
 
     await this.db.collection("call_sessions").doc(sessionId).update({
       "conference.sid": conferenceSid,
       "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    console.log(`📝 [updateConferenceSid]   ✅ Updated conference.sid in session`);
+    logger.info(`📝 [updateConferenceSid]   ✅ Updated conference.sid in session`);
   }
 
   async findSessionByCallSid(callSid: string): Promise<{

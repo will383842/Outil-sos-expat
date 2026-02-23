@@ -9,9 +9,9 @@
   "functions": [
     {
       "source": "firebase/functions",
-      "codebase": "default",
+      "codebase": "critical",
       "runtime": "nodejs22",
-      "discoveryTimeout": 300000,
+      "discoveryTimeout": 120000,
       "ignore": [
         "node_modules",
         ".git",
@@ -34,6 +34,50 @@
         "deploy-multipass.js",
         "deploy-missing.js",
         "migrate-affiliate-to-west2.js",
+        "__tests__"
+      ]
+    },
+    {
+      "source": "firebase/functions",
+      "codebase": "affiliate",
+      "runtime": "nodejs22",
+      "discoveryTimeout": 300000,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "*.log",
+        "tmpclaude-*",
+        "backups",
+        "**/*.js.map",
+        "scripts",
+        "*.sh",
+        "*.ps1",
+        "*.md",
+        "jest.config.js",
+        "__tests__"
+      ]
+    },
+    {
+      "source": "firebase/functions",
+      "codebase": "core",
+      "runtime": "nodejs22",
+      "discoveryTimeout": 300000,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "*.log",
+        "tmpclaude-*",
+        "backups",
+        "**/*.js.map",
+        "scripts",
+        "*.sh",
+        "*.ps1",
+        "*.md",
+        "jest.config.js",
         "__tests__"
       ]
     }

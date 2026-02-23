@@ -222,6 +222,7 @@ export async function schedulePayoutRetryTask(
 export const executePayoutRetryTask = onRequest(
   {
     region: "europe-west1",
+    invoker: "public", // P0 FIX: Required for Cloud Tasks to invoke this function
     cpu: 0.25,
     secrets: [TASKS_AUTH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },

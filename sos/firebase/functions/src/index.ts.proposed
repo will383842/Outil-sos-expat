@@ -1,0 +1,483 @@
+/**
+ * ============================================================================
+ * INDEX.TS OPTIMISE — SOS-Expat Firebase Cloud Functions
+ * ============================================================================
+ *
+ * CHANGEMENTS PAR RAPPORT A L'ORIGINAL (6337 lignes → ~500 lignes) :
+ *
+ * 1. EXTRACTION : stripeWebhook extrait dans ./webhooks/stripeWebhook.ts (2200 lignes)
+ * 2. EXTRACTION : scheduledCleanup, debug functions extrait dans ./debug/index.ts
+ * 3. EXTRACTION : createUserDocument extrait dans ./auth/createUserDocument.ts
+ * 4. EXTRACTION : generateInvoiceDownloadUrl extrait dans ./invoices/generateDownloadUrl.ts
+ * 5. SUPPRESSION : Stubs desactives (ultraLogger, paymentSync, encryption)
+ * 6. REGROUPEMENT : Exports par categorie avec commentaires clairs
+ *
+ * ARCHITECTURE :
+ * - Ce fichier ne contient QUE des re-exports
+ * - Aucune logique metier inline
+ * - Chaque export pointe vers un fichier source dedie
+ *
+ * POUR IMPLEMENTER LE SPLITTING EN CODEBASES :
+ * - Dupliquer ce fichier en 3 versions (critical, affiliate, core)
+ * - Chaque version n'exporte que ses propres fonctions
+ * - Mettre a jour firebase.json avec les 3 codebases
+ * ============================================================================
+ */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+// ====== CONFIGURATION GLOBALE ======
+import { setGlobalOptions } from "firebase-functions/v2";
+
+setGlobalOptions({
+  region: "europe-west1",
+  maxInstances: 10,
+});
+
+// ====== SECRETS (centralises — JAMAIS de defineSecret() ici) ======
+import {
+  EMAIL_USER,
+  EMAIL_PASS,
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  ENCRYPTION_KEY,
+} from "./lib/secrets";
+
+export {
+  EMAIL_USER,
+  EMAIL_PASS,
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  ENCRYPTION_KEY,
+};
+
+// ============================================================================
+// SECTION 1 — WEBHOOKS CRITIQUES (europe-west3)
+// ============================================================================
+
+// Stripe webhook (EXTRAIT — etait 2200 lignes inline)
+export { stripeWebhook } from "./webhooks/stripeWebhook";
+
+// Twilio webhooks (appels telephoniques)
+export {
+  twilioCallWebhook,
+  twilioAmdTwiml,
+  twilioGatherResponse,
+  twilioRecordingWebhook,
+} from "./Webhooks/twilioWebhooks";
+export { twilioConferenceWebhook } from "./Webhooks/TwilioConferenceWebhook";
+export { providerNoAnswerTwiML } from "./Webhooks/providerNoAnswerTwiML";
+
+// PayPal webhook
+export { paypalWebhook } from "./PayPalManager";
+
+// Cloud Tasks endpoints (execution appels)
+// NOTE: Ces 4 exports restent ici car ils sont definis inline
+// TODO: Extraire dans ./cloudTasks/callTasks.ts
+export {
+  executeCallTask,
+  setProviderAvailableTask,
+  busySafetyTimeoutTask,
+} from "./cloudTasks/callTasks"; // A CREER lors de l'extraction
+
+// ============================================================================
+// SECTION 2 — PAIEMENTS (europe-west3)
+// ============================================================================
+
+export { createPaymentIntent } from "./createPaymentIntent";
+export {
+  getRecommendedPaymentGateway,
+  createPayPalOrderHttp,
+  authorizePayPalOrderHttp,
+  capturePayPalOrderHttp,
+} from "./PayPalManager";
+
+// Payment callables (Wise + Flutterwave)
+export {
+  paymentSaveMethod,
+  paymentGetMethods,
+  paymentDeleteMethod,
+  paymentSetDefault,
+  paymentRequestWithdrawal,
+  paymentCancelWithdrawal,
+  paymentGetStatus,
+  paymentGetHistory,
+  paymentAdminGetConfig,
+  paymentAdminUpdateConfig,
+  paymentAdminGetPending,
+  paymentAdminApprove,
+  paymentAdminReject,
+  paymentAdminProcess,
+  paymentAdminGetStats,
+  paymentAdminGetLogs,
+  paymentAdminGetLogActions,
+  paymentAdminExport,
+  paymentOnWithdrawalCreated,
+  paymentOnWithdrawalStatusChanged,
+  paymentProcessAutomaticPayments,
+  paymentWebhookWise,
+  paymentWebhookFlutterwave,
+} from "./payment";
+
+// Payment callables (noms originaux)
+export { savePaymentMethod } from "./payment/callables/savePaymentMethod";
+export { getPaymentMethods } from "./payment/callables/getPaymentMethods";
+export { deletePaymentMethod } from "./payment/callables/deletePaymentMethod";
+export { setDefaultPaymentMethod } from "./payment/callables/setDefaultPaymentMethod";
+export { cancelWithdrawal } from "./payment/callables/cancelWithdrawal";
+export { getWithdrawalStatus } from "./payment/callables/getWithdrawalStatus";
+export { getWithdrawalHistory } from "./payment/callables/getWithdrawalHistory";
+export { adminApproveWithdrawal } from "./payment/callables/admin/approveWithdrawal";
+export { adminRejectWithdrawal } from "./payment/callables/admin/rejectWithdrawal";
+export { adminGetPaymentConfig } from "./payment/callables/admin/getPaymentConfig";
+export { adminUpdatePaymentConfig } from "./payment/callables/admin/updatePaymentConfig";
+export { adminGetPendingWithdrawals } from "./payment/callables/admin/getPendingWithdrawals";
+export { adminGetPaymentStats } from "./payment/callables/admin/getPaymentStats";
+export { adminGetAuditLogs, adminGetAuditLogActions } from "./payment/callables/admin/getAuditLogs";
+
+// Payout retry tasks
+export { executePayoutRetryTask, retryFailedPayout } from "./lib/payoutRetryTasks";
+export { executeStripeTransferRetry } from "./lib/stripeTransferRetryTasks";
+
+// ============================================================================
+// SECTION 3 — KYC & ONBOARDING
+// ============================================================================
+
+export { createLawyerStripeAccount } from "./createLawyerAccount";
+export { createStripeAccount } from "./createStripeAccount";
+export { getStripeAccountSession } from "./getAccountSession";
+export { checkStripeAccountStatus } from "./checkStripeAccountStatus";
+export { completeLawyerOnboarding } from "./lawyerOnboarding";
+export { scheduledKYCReminders, triggerKYCReminders } from "./KYCReminderManager";
+export { onPayPalConnected, sendPayPalVerificationCode, verifyPayPalCode } from "./paypal/onPayPalConnected";
+export { stripeAutomaticKyc } from "./callables/stripeAutomaticKyc";
+
+// ============================================================================
+// SECTION 4 — TRIGGERS (Firestore / Auth)
+// ============================================================================
+
+// Consolidated triggers (economise 19 Cloud Run services)
+export { consolidatedOnCallCompleted } from "./triggers/consolidatedOnCallCompleted";
+export { consolidatedOnUserCreated } from "./triggers/consolidatedOnUserCreated";
+export { consolidatedOnUserUpdated } from "./triggers/consolidatedOnUserUpdated";
+
+// Individual triggers
+export { onUserDeleted, cleanupOrphanedProfiles } from "./triggers/userCleanupTrigger";
+export { onProviderCreated } from "./triggers/onProviderCreated";
+export { onInvoiceRecordCreated, onInvoiceCreatedSendEmail } from "./triggers/invoiceTriggers";
+export { onPaymentRecordCreated, onPaymentRecordUpdated } from "./triggers/onPaymentError";
+export { onSosProfileCreated, onSosProfileUpdated } from "./triggers/syncSosProfilesToOutil";
+export { onBookingRequestCreated, retryOutilSync } from "./triggers/syncBookingsToOutil";
+export { syncFromOutil } from "./triggers/syncFromOutil";
+
+// CAPI & Google Ads tracking triggers
+export { onBookingRequestCreatedTrackLead, onCallSessionPaymentAuthorized, onCallSessionPaymentCaptured } from "./triggers/capiTracking";
+export { onBookingRequestCreatedTrackGoogleAdsLead, onCallSessionPaymentAuthorizedTrackGoogleAdsCheckout } from "./triggers/googleAdsTracking";
+
+// ============================================================================
+// SECTION 5 — ADMIN
+// ============================================================================
+
+export * from "./admin/callables";
+export * from "./admin/providerActions";
+export { adminListBackups, adminPreviewRestore, adminRestoreFirestore, adminRestoreAuth, adminCheckRestoreStatus, adminCreateManualBackup, adminDeleteBackup, adminListGcpBackups } from "./admin/backupRestoreAdmin";
+export { adminGetRestoreConfirmationCode } from "./admin/restoreConfirmationCode";
+export { registerLocalBackup, listLocalBackups, deleteLocalBackupRecord } from "./admin/localBackupRegistry";
+export { assignValidation, approveProfile, rejectProfile, requestChanges, getValidationQueue, getValidationHistory, resubmitForValidation, onValidationCreated, onValidationDecision } from "./admin/profileValidation";
+export { restoreUserRoles, syncAllCustomClaims, checkUserRole } from "./admin/restoreUserRoles";
+
+// Admin inline functions (TODO: extraire)
+// adminUpdateStatus, adminSoftDeleteUser, adminBulkUpdateStatus
+// → gardes inline pour l'instant, a extraire dans admin/userManagement.ts
+
+// ============================================================================
+// SECTION 6 — SCHEDULED (Cron jobs)
+// ============================================================================
+
+export { morningBackup, cleanupOldBackups } from "./scheduled/multiFrequencyBackup";
+export { dailyCrossRegionBackup, cleanupDRBackups } from "./scheduled/crossRegionBackup";
+export { quarterlyRestoreTest, runRestoreTestManual, listRestoreTestReports } from "./scheduled/quarterlyRestoreTest";
+export { backupStorageToDR } from "./scheduled/backupStorageToDR";
+export { paymentDataCleanup } from "./scheduled/paymentDataCleanup";
+export { cleanupCloudRunRevisions } from "./scheduled/cleanupCloudRunRevisions";
+export { stuckPaymentsRecovery, triggerStuckPaymentsRecovery } from "./scheduled/stuckPaymentsRecovery";
+export { notificationRetry, retrySpecificDelivery } from "./scheduled/notificationRetry";
+export { escrowMonitoringDaily } from "./scheduled/escrowMonitoring";
+export { pendingTransfersMonitorScheduled } from "./scheduled/pendingTransfersMonitor";
+export { consolidatedValidateCommissions, consolidatedReleaseCommissions } from "./scheduled/consolidatedCommissions";
+export { aggregateProviderStats, triggerProviderStatsAggregation, backfillProviderStats } from "./scheduled/aggregateProviderStats";
+export { aggregateCostMetrics } from "./scheduled/aggregateCostMetrics";
+export { runMonthlyDRTest, runDRTestManual, listDRReports } from "./scheduled/disasterRecoveryTest";
+export { monthlySecretsConfigBackup, triggerSecretsAudit, listSecretsAudits, getSecretsRestoreGuide } from "./scheduled/backupSecretsAndConfig";
+
+// ============================================================================
+// SECTION 7 — AFFILIATE (Chatter, Influencer, Blogger, GroupAdmin)
+// ============================================================================
+
+// Chatter
+export {
+  registerChatter, getChatterDashboard, updateChatterProfile, chatterRequestWithdrawal,
+  getChatterLeaderboard, onChatterCreated,
+  getChatterTrainingModules, getChatterTrainingModuleContent, updateChatterTrainingProgress,
+  submitChatterTrainingQuiz, getChatterTrainingCertificate,
+  adminGetChatterTrainingModules, adminCreateChatterTrainingModule,
+  adminUpdateChatterTrainingModule, adminDeleteChatterTrainingModule,
+  adminReorderChatterTrainingModules,
+  sendChatterDripMessages, chatter_sendDripMessage, chatter_getDripStats, chatter_previewDripMessage,
+  assignCountriesToCurrentChatter, adminGetCountryRotationStatus, adminInitializeCountryRotation,
+  adminGetChatterConfigSettings, adminInitializeChatterConfigSettings,
+  adminToggleFlashBonus, adminUpdateChatterConfigSettings,
+  getChatterMessageTemplates, adminSeedMessageTemplates,
+  adminCreateMessageTemplate, adminUpdateMessageTemplate,
+  adminDeleteMessageTemplate, adminResetMessageTemplatesToDefaults,
+  initializeMessageTemplates,
+  chatterNotifyCommissionEarned, chatterNotifyTeamMemberActivated,
+  chatterNotifyInactiveMembers, chatterNotifyTierBonusUnlocked,
+  chatterNotifyNearTop3, chatterNotifyFlashBonusStart,
+  chatterRegisterFcmToken, chatterUnregisterFcmToken,
+  chatterCreateWeeklyChallenge, chatterUpdateChallengeLeaderboard,
+  chatterEndWeeklyChallenge, chatterTierBonusCheck,
+  chatterMonthlyTop3Rewards, chatterAggregateActivityFeed,
+  getCurrentChallenge, getChallengeHistory,
+} from "./chatter";
+export { getAvailableCountriesForChatter } from "./chatter/callables/countryRotation";
+
+// Influencer
+export {
+  influencerOnInfluencerCreated, influencerOnProviderCallCompleted,
+  registerInfluencer, getInfluencerDashboard, updateInfluencerProfile,
+  influencerRequestWithdrawal, getInfluencerLeaderboard, getInfluencerDirectory,
+  adminGetInfluencersList, adminGetInfluencerDetail, adminProcessInfluencerWithdrawal,
+  adminUpdateInfluencerStatus, adminGetPendingInfluencerWithdrawals,
+  adminGetInfluencerConfig, adminUpdateInfluencerConfig, adminGetInfluencerLeaderboard,
+  influencerMonthlyTop3Rewards, initializeInfluencerConfig,
+  getInfluencerTrainingModules, getInfluencerTrainingModuleContent,
+  updateInfluencerTrainingProgress, submitInfluencerTrainingQuiz,
+  getInfluencerTrainingCertificate,
+  adminGetInfluencerTrainingModules, adminCreateInfluencerTrainingModule,
+  adminUpdateInfluencerTrainingModule, adminDeleteInfluencerTrainingModule,
+  getInfluencerResources, downloadInfluencerResource, copyInfluencerResourceText,
+  adminGetInfluencerResources, adminCreateInfluencerResource,
+  adminUpdateInfluencerResource, adminDeleteInfluencerResource,
+  adminCreateInfluencerResourceText, adminUpdateInfluencerResourceText,
+  adminDeleteInfluencerResourceText,
+  adminGetInfluencerPromotions, adminCreateInfluencerPromotion,
+  adminUpdateInfluencerPromotion, adminDeleteInfluencerPromotion,
+  adminGetInfluencerPromotionStats, adminDuplicateInfluencerPromotion,
+  adminToggleInfluencerVisibility,
+} from "./influencer";
+
+// Blogger
+export {
+  onBloggerCreated, checkBloggerClientReferral, checkBloggerProviderRecruitment,
+  awardBloggerRecruitmentCommission, deactivateExpiredRecruitments,
+  registerBlogger, getBloggerDashboard, updateBloggerProfile,
+  bloggerRequestWithdrawal, getBloggerLeaderboard,
+  getBloggerResources, downloadBloggerResource, copyBloggerResourceText,
+  getBloggerGuide, copyBloggerGuideText, trackBloggerGuideUsage,
+  adminGetBloggersList, adminGetBloggerDetail, adminProcessBloggerWithdrawal,
+  adminUpdateBloggerStatus, adminGetBloggerConfig, adminUpdateBloggerConfig,
+  adminGetBloggerConfigHistory,
+  adminCreateBloggerResource, adminUpdateBloggerResource, adminDeleteBloggerResource,
+  adminCreateBloggerResourceText,
+  adminCreateBloggerGuideTemplate, adminUpdateBloggerGuideTemplate,
+  adminCreateBloggerGuideCopyText, adminUpdateBloggerGuideCopyText,
+  adminCreateBloggerGuideBestPractice, adminUpdateBloggerGuideBestPractice,
+  adminExportBloggers, adminBulkBloggerAction, adminGetBloggerLeaderboard,
+  getBloggerArticles, copyBloggerArticle,
+  adminGetBloggerArticles, adminCreateBloggerArticle,
+  adminUpdateBloggerArticle, adminDeleteBloggerArticle,
+  getBloggerDirectory, adminToggleBloggerVisibility,
+  bloggerUpdateMonthlyRankings, bloggerDeactivateExpiredRecruitments,
+  bloggerFinalizeMonthlyRankings, getBloggerRecruits,
+} from "./blogger";
+
+// GroupAdmin
+export {
+  registerGroupAdmin, getGroupAdminDashboard, getGroupAdminRecruits,
+  getGroupAdminCommissions, getGroupAdminNotifications,
+  getGroupAdminLeaderboard, updateGroupAdminProfile, requestGroupAdminWithdrawal,
+  getGroupAdminResources, getGroupAdminResourceContent,
+  getGroupAdminProcessedResourceContent, trackGroupAdminResourceUsage,
+  getGroupAdminPosts, getGroupAdminPostContent,
+  getGroupAdminProcessedPost, trackGroupAdminPostUsage,
+  adminGetGroupAdminsList, adminGetGroupAdminDetail,
+  adminUpdateGroupAdminStatus, adminVerifyGroup,
+  adminProcessWithdrawal as adminProcessGroupAdminWithdrawal,
+  adminGetWithdrawalsList as adminGetGroupAdminWithdrawalsList,
+  adminExportGroupAdmins, adminBulkGroupAdminAction,
+  adminCreateResource as adminCreateGroupAdminResource,
+  adminUpdateResource as adminUpdateGroupAdminResource,
+  adminDeleteResource as adminDeleteGroupAdminResource,
+  adminGetResourcesList as adminGetGroupAdminResourcesList,
+  adminCreatePost as adminCreateGroupAdminPost,
+  adminUpdatePost as adminUpdateGroupAdminPost,
+  adminDeletePost as adminDeleteGroupAdminPost,
+  adminGetPostsList as adminGetGroupAdminPostsList,
+  adminUpdateGroupAdminConfig, adminGetGroupAdminConfig,
+  adminGetGroupAdminConfigHistory, adminGetRecruitmentsList,
+  adminGetGroupAdminRecruits,
+  adminGetGroupAdminPromotions, adminCreateGroupAdminPromotion,
+  adminUpdateGroupAdminPromotion, adminDeleteGroupAdminPromotion,
+  adminGetGroupAdminPromotionStats, adminDuplicateGroupAdminPromotion,
+  adminToggleGroupAdminVisibility, getGroupAdminDirectory,
+  onGroupAdminCreated,
+} from "./groupAdmin";
+
+// ============================================================================
+// SECTION 8 — NOTIFICATIONS
+// ============================================================================
+
+export * from "./notificationPipeline/worker";
+
+// Telegram
+export { telegramOnCallCompleted } from "./telegram/triggers/onCallCompleted";
+export { telegramOnPaymentReceived } from "./telegram/triggers/onPaymentReceived";
+export { telegramOnPayPalPaymentReceived } from "./telegram/triggers/onPayPalPaymentReceived";
+export { telegramOnNewProvider } from "./telegram/triggers/onNewProvider";
+export { telegramOnNewContactMessage } from "./telegram/triggers/onNewContactMessage";
+export { telegramOnSecurityAlert } from "./telegram/triggers/onSecurityAlert";
+export { telegramOnNegativeReview } from "./telegram/triggers/onNegativeReview";
+export { telegramOnWithdrawalRequest } from "./telegram/triggers/onWithdrawalRequest";
+export { telegramDailyReport } from "./telegram/scheduled/dailyReport";
+export { telegram_sendTestNotification } from "./telegram/callables/sendTestNotification";
+export { telegram_updateConfig, telegram_getConfig, telegram_getChatId, telegram_validateBot, telegram_updateTemplate, telegram_getTemplates } from "./telegram/callables/updateTelegramConfig";
+export { telegram_getNotificationLogs, telegram_getQueueStats, telegram_getSubscriberStats } from "./telegram/callables/adminQueries";
+export { telegram_createCampaign, telegram_getCampaigns, telegram_cancelCampaign, telegram_getCampaignDetail } from "./telegram/callables/campaigns";
+export { telegram_reprocessDeadLetters, telegram_sendOneOff } from "./telegram/callables/adminActions";
+export { processTelegramQueue } from "./telegram/queue/processor";
+export { monitorTelegramUsage } from "./telegram/queue/monitor";
+export { processTelegramCampaigns } from "./telegram/queue/campaignProcessor";
+export { getWithdrawalConfirmationStatus } from "./telegram/withdrawalConfirmation";
+export { cleanupExpiredWithdrawalConfirmations } from "./telegram/cleanupExpiredConfirmations";
+
+// Email Marketing
+export { handleReviewSubmitted, handleCallCompleted, handlePaymentReceived, handlePaymentFailed, handlePayoutRequested, handlePayoutSent, handleCallMissed, handlePayoutFailed, handlePayoutThresholdReached, handleFirstEarning, handleEarningCredited, handleReferralBonus } from "./emailMarketing/functions/transactions";
+export { stopAutoresponders, stopAutorespondersForUser } from "./emailMarketing/functions/stopAutoresponders";
+export { detectInactiveUsers } from "./emailMarketing/functions/inactiveUsers";
+export { handleMilestoneReached, handleBadgeUnlocked } from "./emailMarketing/functions/gamification";
+export { sendWeeklyStats, sendMonthlyStats, sendAnniversaryEmails } from "./emailMarketing/functions/statsEmails";
+export { handleEmailOpen, handleEmailClick, handleEmailBounce, handleEmailComplaint, handleUnsubscribe } from "./emailMarketing/functions/webhooks";
+
+// ============================================================================
+// SECTION 9 — SUBSCRIPTION
+// ============================================================================
+
+export { createSubscriptionCheckout } from "./subscription/checkout";
+export { cancelSubscription, reactivateSubscription } from "./subscription/cancelSubscription";
+export { getBillingPortalUrl } from "./subscription/billingPortal";
+export { checkAiAccess, incrementAiUsage, checkAndIncrementAiUsage, getSubscriptionDetails } from "./subscription/accessControl";
+export { SUBSCRIPTION_STATUSES, SUBSCRIPTION_TIERS, DEFAULT_TRIAL_CONFIG, DEFAULT_GRACE_PERIOD_DAYS, FAIR_USE_LIMIT, isValidSubscriptionStatus, isValidSubscriptionTier } from "./subscription/constants";
+export type { SubscriptionStatus, SubscriptionTier } from "./subscription/constants";
+export { adminForceAiAccess, adminResetQuota, adminChangePlan, adminCancelSubscription, adminGetSubscriptionStats, adminSyncStripePrices, adminGetProviderSubscriptionHistory } from "./subscription/adminFunctions";
+export { resetMonthlyQuotas, checkPastDueSubscriptions, sendQuotaAlerts, cleanupExpiredTrials, resetBillingCycleQuotas, cleanupExpiredDocuments } from "./subscription/scheduledTasks";
+export { syncSubscriptionPlansToStripe, onSubscriptionPlanPricingUpdate } from "./subscription/stripeSync";
+export { handleSubscriptionCreated, handleSubscriptionUpdated, handleSubscriptionDeleted, handleTrialWillEnd, handleInvoicePaid, handleInvoicePaymentFailed, webhookHandlers } from "./subscription/webhooks";
+export { createSubscription as subscriptionCreate, updateSubscription as subscriptionUpdate, cancelSubscription as subscriptionCancel, reactivateSubscription as subscriptionReactivate, createStripePortalSession as subscriptionPortal, checkAiQuota as subscriptionCheckQuota, recordAiCall as subscriptionRecordCall, updateTrialConfig as subscriptionUpdateTrialConfig, updatePlanPricing as subscriptionUpdatePlanPricing, updateTrialConfigV2 as subscriptionUpdateTrialConfigV2, updatePlanPricingV2 as subscriptionUpdatePlanPricingV2, setFreeAiAccess as subscriptionSetFreeAccess } from "./subscription";
+export { processDunningQueue } from "./subscriptions/dunning";
+
+// ============================================================================
+// SECTION 10 — SEO
+// ============================================================================
+
+export * from "./seo";
+export { generateSitemaps, onProviderChange, scheduledSitemapGeneration } from "./sitemap";
+export { providerCatalogFeed, generateProviderFeed } from "./providerCatalogFeed";
+
+// ============================================================================
+// SECTION 11 — MONITORING & ANALYTICS
+// ============================================================================
+
+export { getCostMetrics, getFirebaseUsage, getGcpBillingCosts } from "./monitoring/getCostMetrics";
+export { getAgentMetrics, saveAgentMetricsHistory } from "./monitoring/getAgentMetrics";
+export { getOpenAIUsage, getPerplexityUsage, getAnthropicUsage, getTwilioBalance, getStripeBalance } from "./monitoring/getServiceUsage";
+export { runPaymentHealthCheck, collectDailyPaymentMetrics, cleanupOldPaymentAlerts } from "./monitoring/paymentMonitoring";
+export { runFunctionalHealthCheck, runCriticalFunctionalCheck, getFunctionalAlerts } from "./monitoring/functionalMonitoring";
+export { checkServiceBalances, getServiceBalanceAlerts, acknowledgeServiceBalanceAlert } from "./monitoring/serviceAlerts";
+export { getUnifiedAnalytics, getHistoricalAnalytics, aggregateDailyAnalytics } from "./analytics";
+export { logConnection, getConnectionLogs, getConnectionStats, onUserSignIn } from "./monitoring/connectionLogs";
+
+// ============================================================================
+// SECTION 12 — MISC
+// ============================================================================
+
+// Auth
+export { generateOutilToken } from "./auth/generateOutilToken";
+export { setAdminClaims, initializeAdminClaims, bootstrapFirstAdmin } from "./auth/setAdminClaims";
+export { sendCustomPasswordResetEmail } from "./auth/passwordReset";
+
+// Multi-Dashboard
+export { validateDashboardPassword } from "./multiDashboard/validateDashboardPassword";
+export { onBookingRequestCreatedGenerateAi } from "./multiDashboard/onBookingRequestCreatedGenerateAi";
+export { ensureUserDocument } from "./multiDashboard/ensureUserDocument";
+
+// Tax & Accounting
+export { calculateTax, calculateTaxCallable, getTaxThresholdStatus, validateVAT } from "./tax/calculateTax";
+export { validateVat, checkReverseCharge, cleanupVatCache } from "./tax/vatCallables";
+export { onPaymentCompleted, onRefundCreated, onPayoutCompleted } from "./accounting";
+export { postJournalEntry, reverseJournalEntry, regenerateJournalEntry, getAccountingStats } from "./accounting";
+export { thresholdOnPaymentCreate, checkThresholdsDaily, getThresholdDashboard, sendWeeklyThresholdReport } from "./thresholds";
+export { generateTaxFiling, generateAllTaxFilings, sendFilingReminders } from "./taxFilings";
+
+// Security
+export { onSecurityAlertCreated, onSecurityAlertUpdated, createSecurityAlertHttp, processEscalationHttp, securityAlertAdminAction, getSecurityStats, checkBlockedEntity, securityDailyCleanup, processSecurityEscalations, securityDailyReport } from "./securityAlerts/triggers";
+
+// GDPR
+export { requestDataExport, requestAccountDeletion, getMyDataAccessHistory, updateConsentPreferences, listGDPRRequests, processGDPRRequest, getUserAuditTrail } from "./gdpr/auditTrail";
+
+// Feedback
+export { submitFeedback, onFeedbackCreated, updateFeedbackStatus, getFeedbackStats } from "./feedback";
+
+// Provider
+export { getProviderEarningsSummary, getProviderTransactions, getProviderPayoutHistory } from "./ProviderEarningsService";
+export { getProviderStats, getProviderStatsSummary, getProviderStatsMonths, exportProviderStatsCsv } from "./callables/getProviderStats";
+export { repairOrphanedUser } from "./callables/repairOrphanedUser";
+
+// Help Center
+export { onHelpArticleCreated, onHelpArticleUpdated } from "./helpCenter/generateFAQ";
+
+// Misc
+export { createAndScheduleCallHTTPS } from "./createAndScheduleCall";
+export { api } from "./adminApi";
+export { createContactMessage } from "./createContactMessage";
+export { trackCAPIEvent } from "./metaConversionsApi";
+export { sendContactReply, adminResetFAQs } from "./contactReply";
+export { enqueueMessageEvent } from "./messaging/enqueueMessageEvent";
+export { forceEndCallTask } from "./runtime/forceEndCallTask";
+
+// Invoice (TODO: extraire la logique inline)
+// export { generateInvoiceDownloadUrl } from "./invoices/generateDownloadUrl";
+
+// User Document (TODO: extraire la logique inline)
+// export { createUserDocument } from "./auth/createUserDocument";
+
+// ============================================================================
+// NOTE: Les fonctions suivantes sont definies INLINE dans index.ts original.
+// Elles doivent etre extraites dans des fichiers dedies avant de pouvoir
+// utiliser ce fichier propose.
+//
+// Fonctions a extraire :
+// 1. stripeWebhook (lignes 1958-4149) → src/webhooks/stripeWebhook.ts
+// 2. executeCallTask (ligne 1083) → src/cloudTasks/callTasks.ts
+// 3. setProviderAvailableTask (ligne 1109) → src/cloudTasks/callTasks.ts
+// 4. busySafetyTimeoutTask (ligne 1128) → src/cloudTasks/callTasks.ts
+// 5. adminUpdateStatus (ligne 1145) → src/admin/userManagement.ts
+// 6. adminSoftDeleteUser (ligne 1217) → src/admin/userManagement.ts
+// 7. adminBulkUpdateStatus (ligne 1269) → src/admin/userManagement.ts
+// 8. scheduledCleanup (ligne 4157) → src/scheduled/scheduledCleanup.ts
+// 9. generateSystemDebugReport (ligne 4251) → src/debug/index.ts
+// 10. getSystemHealthStatus (ligne 4370) → src/debug/index.ts
+// 11. getUltraDebugLogs (ligne 4505) → src/debug/index.ts
+// 12. testCloudTasksConnection (ligne 4565) → src/debug/index.ts
+// 13. getCloudTasksQueueStats (ligne 4622) → src/debug/index.ts
+// 14. manuallyTriggerCallExecution (ligne 4676) → src/debug/index.ts
+// 15. testWebhook (ligne 4769) → src/debug/index.ts
+// 16. generateInvoiceDownloadUrl (ligne 5096) → src/invoices/generateDownloadUrl.ts
+// 17. createUserDocument (ligne 5566) → src/auth/createUserDocument.ts
+// ============================================================================
