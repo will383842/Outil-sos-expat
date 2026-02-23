@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Euro, Loader2 } from 'lucide-react';
 import { useIntl } from 'react-intl';
 import { useMobileBooking } from '../context/MobileBookingContext';
+import { detectUserCurrency } from '../../../services/pricingService';
 
 interface StickyCTAProps {
   onSubmit: () => void;
@@ -21,6 +22,7 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({ onSubmit }) => {
   } = useMobileBooking();
 
   const isLastStep = currentStep === totalSteps;
+  const currencySymbol = detectUserCurrency() === 'eur' ? '€' : '$';
 
   // Detect if keyboard is open to hide CTA
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
@@ -101,7 +103,7 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({ onSubmit }) => {
             <>
               <Euro size={18} />
               <span>{intl.formatMessage({ id: 'bookingRequest.continuePay' })}</span>
-              <span className="font-bold">{displayEUR.toFixed(2)}€</span>
+              <span className="font-bold">{displayEUR.toFixed(2)}{currencySymbol}</span>
             </>
           ) : (
             <>

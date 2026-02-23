@@ -1219,6 +1219,7 @@ const ProviderCardCompact = ({
   isLawyer,
   displayEUR,
   displayDuration,
+  currencySymbol,
   lang,
   intl,
 }: {
@@ -1228,6 +1229,7 @@ const ProviderCardCompact = ({
   isLawyer: boolean;
   displayEUR: number;
   displayDuration: number;
+  currencySymbol: string;
   lang: LangKey;
   intl: ReturnType<typeof useIntl>;
 }) => (
@@ -1276,7 +1278,10 @@ const ProviderCardCompact = ({
       </div>
       <div className="text-right flex-shrink-0">
         <div className="text-lg font-extrabold text-red-600">
-          {displayEUR.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+          {currencySymbol === '€'
+            ? displayEUR.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : displayEUR.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          }{currencySymbol}
         </div>
         <div className="text-xs text-gray-500">{displayDuration} min</div>
       </div>
@@ -2601,9 +2606,9 @@ const BookingRequest: React.FC = () => {
   const { price: effectiveEUR, standard: standardEUR, override: activeOverrideEUR } = pricing
     ? getEffectivePrice(pricing, role, 'eur')
     : { price: null, standard: null, override: null };
-  const { price: effectiveUSD } = pricing
+  const { price: effectiveUSD, standard: standardUSD } = pricing
     ? getEffectivePrice(pricing, role, 'usd')
-    : { price: null };
+    : { price: null, standard: null };
 
   const baseEUR = effectiveEUR?.totalAmount ?? FALLBACK_TOTALS[role].eur;
   const baseUSD = effectiveUSD?.totalAmount ?? FALLBACK_TOTALS[role].usd;
@@ -2648,6 +2653,14 @@ const BookingRequest: React.FC = () => {
     displayEUR = Math.max(0, Math.round(baseEUR - discountEUR));
     displayUSD = Math.max(0, Math.round(baseUSD - discountUSD));
   }
+
+  // Devise du client : EUR ou USD selon préférence/navigateur
+  const selectedCurrency: Currency = detectUserCurrency();
+  const displayPrice = selectedCurrency === 'eur' ? displayEUR : displayUSD;
+  const currencySymbol = selectedCurrency === 'eur' ? '€' : '$';
+  const standardPriceForDisplay = selectedCurrency === 'eur'
+    ? (standardEUR?.totalAmount ?? baseEUR)
+    : (standardUSD?.totalAmount ?? baseUSD);
 
   // Progression (RHF) - P0 FIX: validFlags now depends on watched from useWatch
   const validFlags: Record<string, boolean> = useMemo(() => {
@@ -3248,9 +3261,9 @@ const BookingRequest: React.FC = () => {
               </div>
               <div className="text-right">
                 {(hasOverride || discountEUR > 0) && (
-                  <p className="text-xs text-gray-400 line-through">{(standardEUR?.totalAmount ?? baseEUR).toFixed(2)}€</p>
+                  <p className="text-xs text-gray-400 line-through">{standardPriceForDisplay.toFixed(2)}{currencySymbol}</p>
                 )}
-                <p className="text-lg font-bold text-red-600">{displayEUR.toFixed(2)}€</p>
+                <p className="text-lg font-bold text-red-600">{displayPrice.toFixed(2)}{currencySymbol}</p>
               </div>
             </div>
           </header>
@@ -3536,7 +3549,7 @@ const BookingRequest: React.FC = () => {
           <MobileWizardInner
             provider={provider}
             isLawyer={isLawyer}
-            displayEUR={displayEUR}
+            displayEUR={displayPrice}
             displayDuration={displayDuration}
             onSubmit={handleMobileSubmit}
             onBack={() => navigate(`/provider/${provider.id}`)}
@@ -3624,8 +3637,9 @@ const BookingRequest: React.FC = () => {
               isExpanded={providerExpanded}
               onToggle={() => setProviderExpanded(!providerExpanded)}
               isLawyer={isLawyer}
-              displayEUR={displayEUR}
+              displayEUR={displayPrice}
               displayDuration={displayDuration}
+              currencySymbol={currencySymbol}
               lang={lang}
               intl={intl}
             />
@@ -3709,11 +3723,12 @@ const BookingRequest: React.FC = () => {
                 <div className="text-center">
                   {(hasOverride || discountEUR > 0) && (
                     <div className="text-xs text-gray-400 line-through">
-                      {(standardEUR?.totalAmount ?? baseEUR).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                      {standardPriceForDisplay.toLocaleString(selectedCurrency === 'eur' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{currencySymbol}
                     </div>
                   )}
-                  <div className="text-3xl font-extrabold text-red-600">{displayEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
-                  <div className="text-sm text-gray-500">/ ${displayUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div className="text-3xl font-extrabold text-red-600">
+                    {displayPrice.toLocaleString(selectedCurrency === 'eur' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{currencySymbol}
+                  </div>
                 </div>
                 <div className="flex flex-col gap-1 mt-1">
                   <div className="text-sm font-semibold text-gray-700">
