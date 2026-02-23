@@ -76,8 +76,34 @@ jobs:
           SLACK_SECURITY_WEBHOOK_URL=
           EOF
 
-      - name: Deploy to Firebase
+      - name: Deploy to Firebase (3 passes avec retry anti-quota 429)
         working-directory: sos/firebase
-        run: firebase deploy --only functions --project sos-urgently-ac307 --force
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
+        run: |
+          deploy_with_retry() {
+            local attempt=1
+            while [ $attempt -le 4 ]; do
+              echo "=== Tentative $attempt ==="
+              firebase deploy --only functions --project sos-urgently-ac307 --force 2>&1 | tee /tmp/deploy_output.txt
+              EXIT=${PIPESTATUS[0]}
+              if [ $EXIT -eq 0 ]; then
+                echo "✅ Déploiement réussi"
+                return 0
+              fi
+              QUOTA_ERRORS=$(grep -c "429\|RESOURCE_EXHAUSTED\|quota" /tmp/deploy_output.txt 2>/dev/null || echo 0)
+              if [ "$QUOTA_ERRORS" -gt 0 ]; then
+                WAIT=$((attempt * 120))
+                echo "⚠️  Quota 429 atteint ($QUOTA_ERRORS erreurs) — attente ${WAIT}s avant retry $((attempt+1))/4"
+                sleep $WAIT
+                attempt=$((attempt + 1))
+              else
+                echo "❌ Erreur non-quota (exit $EXIT) — abandon"
+                cat /tmp/deploy_output.txt | grep -E "Error|error|failed" | tail -20
+                exit $EXIT
+              fi
+            done
+            echo "❌ Toutes les tentatives échouées"
+            exit 1
+          }
+          deploy_with_retry
