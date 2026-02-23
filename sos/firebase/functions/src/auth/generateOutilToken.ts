@@ -491,6 +491,75 @@ export const generateOutilToken = onCall(
 
       console.log("[generateOutilToken] hasActiveSubscription:", hasActiveSubscription);
 
+      // Auto-initialiser l'essai gratuit pour les prestataires sans abonnement
+      // (cas des prestataires inscrits avant que le trigger onProviderCreated initialise l'essai)
+      if (!hasActiveSubscription && !subscription) {
+        console.log(`[generateOutilToken] Aucun abonnement trouvé pour ${uid}, auto-initialisation de l'essai gratuit...`);
+        try {
+          const firestoreNow = admin.firestore.Timestamp.now();
+          const MAX_AI_TRIAL_CALLS = 3;
+
+          const trialBatch = db.batch();
+
+          trialBatch.set(db.collection("subscriptions").doc(uid), {
+            providerId: uid,
+            planId: "trial",
+            tier: "trial",
+            status: "trialing",
+            stripeCustomerId: null,
+            stripeSubscriptionId: null,
+            stripePriceId: null,
+            currency: "EUR",
+            billingPeriod: null,
+            currentPeriodStart: firestoreNow,
+            currentPeriodEnd: null,
+            cancelAtPeriodEnd: false,
+            canceledAt: null,
+            trialStartedAt: firestoreNow,
+            trialEndsAt: null,
+            aiCallsLimit: MAX_AI_TRIAL_CALLS,
+            aiAccessEnabled: true,
+            createdAt: firestoreNow,
+            updatedAt: firestoreNow,
+          });
+
+          trialBatch.set(db.collection("ai_usage").doc(uid), {
+            providerId: uid,
+            subscriptionId: uid,
+            currentPeriodCalls: 0,
+            trialCallsUsed: 0,
+            totalCallsAllTime: 0,
+            aiCallsLimit: MAX_AI_TRIAL_CALLS,
+            currentPeriodStart: firestoreNow,
+            currentPeriodEnd: null,
+            createdAt: firestoreNow,
+            updatedAt: firestoreNow,
+          });
+
+          await trialBatch.commit();
+
+          await Promise.all([
+            db.doc(`sos_profiles/${uid}`).set({
+              subscriptionStatus: "trialing",
+              hasActiveSubscription: true,
+              aiCallsLimit: MAX_AI_TRIAL_CALLS,
+              aiCallsUsed: 0,
+              updatedAt: firestoreNow,
+            }, { merge: true }),
+            db.doc(`users/${uid}`).set({
+              subscriptionStatus: "trialing",
+              hasActiveSubscription: true,
+              updatedAt: firestoreNow,
+            }, { merge: true }),
+          ]);
+
+          hasActiveSubscription = true;
+          console.log(`[generateOutilToken] ✅ Essai IA auto-initialisé pour ${uid}: ${MAX_AI_TRIAL_CALLS} appels gratuits`);
+        } catch (trialInitError) {
+          console.error(`[generateOutilToken] ❌ Auto-init essai échoué pour ${uid}:`, trialInitError);
+        }
+      }
+
       if (!hasActiveSubscription) {
         throw new HttpsError(
           "permission-denied",

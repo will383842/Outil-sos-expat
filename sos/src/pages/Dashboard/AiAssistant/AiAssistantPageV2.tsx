@@ -146,6 +146,7 @@ export const AiAssistantPageV2: React.FC = () => {
     canMakeAiCall,
     isUnlimited,
     usage,
+    quotaCheck,
     loading: quotaLoading,
   } = useAiQuota();
 
@@ -349,9 +350,25 @@ export const AiAssistantPageV2: React.FC = () => {
   // P1 FIX: Open window synchronously to avoid popup blocker
   // P0 FIX: Remove 'noopener' to allow writing to the window, use link click fallback
   const handleAccessOutil = useCallback(async (overrideProviderId?: string) => {
-    if (!canMakeAiCall && !linkedProviders.find(p => p.id === (overrideProviderId || selectedProviderId))?.hasForcedAccess) {
-      navigate(translatedRoutes.subscriptionPlans);
-      return;
+    const hasForcedAccessForProvider = linkedProviders.find(p => p.id === (overrideProviderId || selectedProviderId))?.hasForcedAccess;
+
+    if (!canMakeAiCall && !hasForcedAccessForProvider) {
+      // Ne rediriger vers les plans que si le trial est épuisé/expiré ou l'abonnement annulé.
+      // Pour "no_subscription" (pas encore d'essai initialisé), on laisse generateOutilToken
+      // gérer l'auto-initialisation du trial — ne pas bloquer le clic.
+      const isBlockedPermanently =
+        quotaCheck?.reason === 'trial_calls_exhausted' ||
+        quotaCheck?.reason === 'trial_expired' ||
+        quotaCheck?.reason === 'quota_exhausted' ||
+        quotaCheck?.reason === 'subscription_canceled' ||
+        quotaCheck?.reason === 'subscription_expired' ||
+        quotaCheck?.reason === 'payment_failed';
+
+      if (isBlockedPermanently) {
+        navigate(translatedRoutes.subscriptionPlans);
+        return;
+      }
+      // Pour 'no_subscription': on continue et laisse le backend auto-initialiser le trial
     }
 
     setIsAccessingOutil(true);

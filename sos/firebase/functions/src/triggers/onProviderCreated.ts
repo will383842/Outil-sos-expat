@@ -751,6 +751,83 @@ export const onProviderCreated = onDocumentCreated(
     const photoUrl = data.profilePhoto || data.photoURL || data.avatar;
     await migrateProfileImage(uid, photoUrl, providerType);
 
+    // 🤖 INITIALISATION ESSAI IA GRATUIT (non-bloquant, idempotent)
+    // Donne automatiquement 3 appels d'essai gratuits à chaque nouveau prestataire
+    // Sans cela, le frontend voit "no_subscription" et redirige vers les plans payants
+    try {
+      const subscriptionRef = admin.firestore().doc(`subscriptions/${uid}`);
+      const existingSub = await subscriptionRef.get();
+
+      if (!existingSub.exists) {
+        const now = admin.firestore.Timestamp.now();
+        const MAX_AI_TRIAL_CALLS = 3; // Sync avec DEFAULT_TRIAL_CONFIG.maxAiCalls dans subscription/constants.ts
+
+        const trialBatch = admin.firestore().batch();
+
+        trialBatch.set(subscriptionRef, {
+          providerId: uid,
+          planId: "trial",
+          tier: "trial",
+          status: "trialing",
+          stripeCustomerId: null,
+          stripeSubscriptionId: null,
+          stripePriceId: null,
+          currency: "EUR",
+          billingPeriod: null,
+          currentPeriodStart: now,
+          currentPeriodEnd: null,      // Pas de limite de temps
+          cancelAtPeriodEnd: false,
+          canceledAt: null,
+          trialStartedAt: now,
+          trialEndsAt: null,           // Pas de limite de temps
+          aiCallsLimit: MAX_AI_TRIAL_CALLS,
+          aiAccessEnabled: true,
+          providerType: providerType,
+          createdAt: now,
+          updatedAt: now,
+        });
+
+        trialBatch.set(admin.firestore().doc(`ai_usage/${uid}`), {
+          providerId: uid,
+          subscriptionId: uid,
+          currentPeriodCalls: 0,
+          trialCallsUsed: 0,
+          totalCallsAllTime: 0,
+          aiCallsLimit: MAX_AI_TRIAL_CALLS,
+          currentPeriodStart: now,
+          currentPeriodEnd: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+
+        await trialBatch.commit();
+
+        // Synchroniser le statut dans sos_profiles et users (non-bloquant)
+        await Promise.all([
+          admin.firestore().doc(`sos_profiles/${uid}`).set({
+            subscriptionStatus: "trialing",
+            hasActiveSubscription: true,
+            aiCallsLimit: MAX_AI_TRIAL_CALLS,
+            aiCallsUsed: 0,
+            updatedAt: now,
+          }, { merge: true }),
+          admin.firestore().doc(`users/${uid}`).set({
+            subscriptionStatus: "trialing",
+            hasActiveSubscription: true,
+            updatedAt: now,
+          }, { merge: true }),
+        ]);
+
+        console.log(`[onProviderCreated] ✅ Essai IA initialisé: ${uid} → ${MAX_AI_TRIAL_CALLS} appels gratuits (sans limite de temps)`);
+      } else {
+        console.log(`[onProviderCreated] ⚠️ Abonnement IA déjà existant pour ${uid}, skip init essai`);
+      }
+    } catch (trialError) {
+      // Non-bloquant: l'inscription continue même si l'init trial échoue
+      console.error(`[onProviderCreated] ❌ Init essai IA échoué (non-bloquant) pour ${uid}:`, trialError);
+    }
+    // 🤖 FIN INITIALISATION ESSAI IA
+
     // ⚠️ PROFILS AAA: Ignorer la création automatique de compte Stripe/PayPal
     // Les profils AAA (gérés en interne par SOS-Expat) utilisent le système de paiement consolidé
     // Ils ont kycDelegated=true et kycStatus='not_required'
