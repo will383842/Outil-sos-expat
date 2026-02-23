@@ -363,14 +363,14 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/dashboard/kyc", component: KycReturn, protected: true, role: ['lawyer', 'expat'], translated: "dashboard-kyc" },
   // Conversations History (Provider Tool)
   { path: "/dashboard/conversations", component: ConversationHistory, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-conversations" },
-  // Affiliate Program Routes - Accessible to all authenticated users (clients, lawyers, expats)
-  { path: "/affiliate", component: AffiliateDashboard, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-dashboard" },
-  { path: "/affiliate/earnings", component: AffiliateEarnings, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-earnings" },
-  { path: "/affiliate/referrals", component: AffiliateReferrals, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-referrals" },
-  { path: "/affiliate/withdraw", component: AffiliateWithdraw, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-withdraw" },
-  { path: "/affiliate/bank-details", component: AffiliateBankDetails, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-bank-details" },
-  { path: "/affiliate/tools", component: AffiliateTools, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-tools" },
-  { path: "/affiliate/telegram", component: AffiliateTelegramOnboarding, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-telegram" },
+  // Affiliate Program Routes - Accessible to all authenticated users (clients, lawyers, expats, admins)
+  { path: "/affiliate", component: AffiliateDashboard, protected: true, role: ['client', 'lawyer', 'expat', 'admin'], translated: "affiliate-dashboard" },
+  { path: "/affiliate/earnings", component: AffiliateEarnings, protected: true, role: ['client', 'lawyer', 'expat', 'admin'], translated: "affiliate-earnings" },
+  { path: "/affiliate/referrals", component: AffiliateReferrals, protected: true, role: ['client', 'lawyer', 'expat', 'admin'], translated: "affiliate-referrals" },
+  { path: "/affiliate/withdraw", component: AffiliateWithdraw, protected: true, role: ['client', 'lawyer', 'expat', 'admin'], translated: "affiliate-withdraw" },
+  { path: "/affiliate/bank-details", component: AffiliateBankDetails, protected: true, role: ['client', 'lawyer', 'expat', 'admin'], translated: "affiliate-bank-details" },
+  { path: "/affiliate/tools", component: AffiliateTools, protected: true, role: ['client', 'lawyer', 'expat', 'admin'], translated: "affiliate-tools" },
+  { path: "/affiliate/telegram", component: AffiliateTelegramOnboarding, protected: true, role: ['client', 'lawyer', 'expat', 'admin'], translated: "affiliate-telegram" },
   // Chatter System Routes - Protected routes for registered chatters
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un chatter ne peut pas être client/lawyer/expat.
   // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
