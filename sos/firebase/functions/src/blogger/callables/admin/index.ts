@@ -71,6 +71,7 @@ export const adminGetBloggersList = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -177,6 +178,7 @@ export const adminGetBloggerDetail = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -298,6 +300,7 @@ export const adminProcessBloggerWithdrawal = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -350,6 +353,7 @@ export const adminUpdateBloggerStatus = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -424,6 +428,7 @@ export const adminGetBloggerConfig = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -448,6 +453,7 @@ export const adminUpdateBloggerConfig = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -492,6 +498,7 @@ export const adminCreateBloggerResource = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -549,6 +556,7 @@ export const adminUpdateBloggerResource = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -587,6 +595,7 @@ export const adminDeleteBloggerResource = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -619,6 +628,7 @@ export const adminCreateBloggerResourceText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -670,6 +680,7 @@ export const adminCreateBloggerGuideTemplate = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -720,6 +731,7 @@ export const adminUpdateBloggerGuideTemplate = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -760,6 +772,7 @@ export const adminCreateBloggerGuideCopyText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -807,6 +820,7 @@ export const adminUpdateBloggerGuideCopyText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -854,6 +868,7 @@ export const adminCreateBloggerGuideBestPractice = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -900,6 +915,7 @@ export const adminUpdateBloggerGuideBestPractice = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -940,6 +956,7 @@ export const adminExportBloggers = onCall(
   {
     region: "europe-west2",
     memory: "1GiB",
+    cpu: 1,
     timeoutSeconds: 300,
   },
   async (request): Promise<{ success: boolean; data: string; count: number }> => {
@@ -1016,6 +1033,7 @@ export const adminGetBloggerLeaderboard = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
   },
   async (request): Promise<{ rankings: unknown[]; month: string }> => {
@@ -1059,6 +1077,7 @@ export const adminGetBloggerResources = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1113,6 +1132,7 @@ export const adminGetBloggerGuide = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1182,6 +1202,7 @@ export const adminSaveBloggerResourceFile = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1264,6 +1285,7 @@ export const adminSaveBloggerResourceText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1336,6 +1358,7 @@ export const adminDeleteBloggerResourceFile = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1371,6 +1394,7 @@ export const adminDeleteBloggerResourceText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1406,6 +1430,7 @@ export const adminSaveBloggerGuideTemplate = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1496,6 +1521,7 @@ export const adminSaveBloggerGuideCopyText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1575,6 +1601,7 @@ export const adminSaveBloggerGuideBestPractice = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1654,6 +1681,7 @@ export const adminDeleteBloggerGuideTemplate = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1689,6 +1717,7 @@ export const adminDeleteBloggerGuideCopyText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1724,6 +1753,7 @@ export const adminBulkBloggerAction = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
   },
@@ -1816,6 +1846,7 @@ export const adminDeleteBloggerGuideBestPractice = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1851,6 +1882,7 @@ export const adminGetBloggerConfigHistory = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

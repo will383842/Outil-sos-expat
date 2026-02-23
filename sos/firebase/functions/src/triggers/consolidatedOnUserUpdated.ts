@@ -46,6 +46,7 @@ export const consolidatedOnUserUpdated = onDocumentUpdated(
     document: "users/{userId}",
     region: "europe-west3",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 120,
     secrets: [OUTIL_SYNC_API_KEY],
   },

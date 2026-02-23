@@ -69,6 +69,7 @@ export const initializeChatterConfig = onCall(
     cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
   },
   async (request): Promise<{ success: boolean; message: string; created: boolean }> => {
@@ -112,6 +113,7 @@ export const resetChatterConfigToDefaults = onCall(
     cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
@@ -917,6 +919,7 @@ export const initializeChatterSystem = onCall(
     cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
   },
   async (request): Promise<{

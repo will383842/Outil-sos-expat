@@ -25,6 +25,7 @@ export const initCountryConfigs = onCall(
   {
     timeoutSeconds: 300, // 5 minutes
     memory: '512MiB',
+    cpu: 0.5,
     region: 'europe-west1',
   },
   async (request) => {
@@ -159,6 +160,7 @@ export const seedCountryConfigsHttp = onRequest(
   {
     timeoutSeconds: 300,
     memory: '512MiB',
+    cpu: 0.5,
     region: 'europe-west1',
   },
   async (req, res) => {

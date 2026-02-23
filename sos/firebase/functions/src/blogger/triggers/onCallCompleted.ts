@@ -289,6 +289,7 @@ export const bloggerOnCallSessionCompleted = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   handleCallCompleted
 );

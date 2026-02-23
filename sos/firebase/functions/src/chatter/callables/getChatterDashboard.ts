@@ -96,6 +96,7 @@ export const getChatterDashboard = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -463,6 +464,7 @@ export const getChatterDashboard = onCall(
           termsAcceptedAt: chatter.termsAcceptedAt || "",
           termsVersion: chatter.termsVersion || "1.0",
           termsType: chatter.termsType || "terms_chatters",
+          isVisible: chatter.isVisible ?? true,
         },
         recentCommissions,
         monthlyStats: {

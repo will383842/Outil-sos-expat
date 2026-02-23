@@ -117,6 +117,7 @@ function getBillingPeriodEnd(): Date {
 export const getPerplexityUsage = functions.onCall(
   {
     region: 'europe-west1',
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 60,
     cors: [/sos-expat\.com$/, /localhost/],

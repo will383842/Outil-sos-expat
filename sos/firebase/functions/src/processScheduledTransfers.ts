@@ -38,6 +38,7 @@ export const processScheduledTransfers = onSchedule(
     region: "europe-west3",
     timeoutSeconds: 540,
     memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - legacy function with simple queries
+    cpu: 0.25,
   },
   async () => {
     const executionId = `legacy-transfer-${Date.now()}`;

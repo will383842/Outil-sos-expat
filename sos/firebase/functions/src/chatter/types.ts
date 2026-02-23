@@ -1104,6 +1104,8 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
     "TV", "UG", "UA", "AE", "GB", "US", "UY", "UZ", "VU", "VA", "VE", "VN", "YE", "ZM", "ZW",
   ],
 
+  isChatterListingPageVisible: true,
+
   version: 1,
 };
 

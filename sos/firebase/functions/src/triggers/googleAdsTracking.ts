@@ -199,6 +199,7 @@ export const onBookingRequestCreatedTrackGoogleAdsLead = onDocumentCreated(
   {
     document: "booking_requests/{requestId}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: GOOGLE_ADS_SECRETS,
   },
   async (event) => {
@@ -369,6 +370,7 @@ export const onUserCreatedTrackGoogleAdsSignUp = onDocumentCreated(
   {
     document: "users/{uid}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: GOOGLE_ADS_SECRETS,
   },
   handleGoogleAdsSignUp
@@ -385,6 +387,7 @@ export const onCallSessionPaymentAuthorizedTrackGoogleAdsCheckout = onDocumentUp
   {
     document: "call_sessions/{sessionId}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: GOOGLE_ADS_SECRETS,
   },
   async (event) => {

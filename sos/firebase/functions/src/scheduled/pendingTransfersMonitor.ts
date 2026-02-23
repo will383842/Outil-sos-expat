@@ -646,6 +646,7 @@ export const pendingTransfersMonitorScheduled = onSchedule(
     timeZone: "Europe/Paris",
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 180,
   },
   async () => {
@@ -738,6 +739,7 @@ export const getDetailedPendingTransfersStats = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
   },
   async (request) => {
@@ -785,6 +787,7 @@ export const triggerPendingTransfersMonitor = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 120,
   },
   async (request) => {
@@ -847,6 +850,7 @@ export const forceRetryPendingTransfer = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
   },
   async (request) => {

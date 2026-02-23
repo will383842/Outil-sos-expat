@@ -68,7 +68,7 @@ function getTasksClient() {
   }
   return _tasksClient;
 }
-const PROJECT_ID = process.env.GCLOUD_PROJECT || 'sos-expat-28430';
+const PROJECT_ID = process.env.GCLOUD_PROJECT || 'sos-urgently-ac307';
 const LOCATION = 'europe-west1';
 const QUEUE_NAME = 'security-escalation-queue';
 
@@ -101,7 +101,7 @@ export async function scheduleEscalation(
     const task = {
       httpRequest: {
         httpMethod: 'POST' as const,
-        url: `https://processescalation-5tfnuxa2hq-ew.a.run.app`,
+        url: `https://processescalation-5tfnuxa2hq-ey.a.run.app`,
         headers: {
           'Content-Type': 'application/json',
         },

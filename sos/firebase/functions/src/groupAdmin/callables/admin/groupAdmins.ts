@@ -101,6 +101,7 @@ export const adminGetGroupAdminsList = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -252,6 +253,7 @@ export const adminGetGroupAdminDetail = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -331,6 +333,7 @@ export const adminUpdateGroupAdminStatus = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -413,6 +416,7 @@ export const adminVerifyGroup = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -488,6 +492,7 @@ export const adminProcessWithdrawal = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -659,6 +664,7 @@ export const adminGetWithdrawalsList = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -794,6 +800,7 @@ export const adminExportGroupAdmins = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -939,6 +946,7 @@ export const adminBulkGroupAdminAction = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

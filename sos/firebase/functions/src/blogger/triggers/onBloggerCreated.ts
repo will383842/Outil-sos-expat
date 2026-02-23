@@ -16,6 +16,7 @@ export const onBloggerCreated = onDocumentCreated(
   {
     document: "bloggers/{bloggerId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const snapshot = event.data;

@@ -56,6 +56,7 @@ export const chatterAggregateActivityFeed = onSchedule(
     schedule: "0 * * * *", // Every hour (optimized from 30min - activity feed doesn't need real-time updates)
     region: "europe-west3",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 120,
     retryCount: 2,
   },

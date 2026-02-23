@@ -214,6 +214,7 @@ export const onBookingRequestCreated = onDocumentCreated(
   {
     document: "booking_requests/{bookingId}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: [OUTIL_SYNC_API_KEY],
   },
   async (event) => {
@@ -309,6 +310,7 @@ export const retryOutilSync = onSchedule(
     timeZone: "Europe/Paris",
     secrets: [OUTIL_SYNC_API_KEY],
     timeoutSeconds: 120,
+    cpu: 0.25,
   },
   async () => {
     const db = admin.firestore();

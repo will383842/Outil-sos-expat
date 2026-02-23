@@ -43,6 +43,7 @@ interface TestResult {
 export const testCAPIConnection = onRequest(
   {
     region: REGION,
+    cpu: 0.25,
     cors: ALLOWED_ORIGINS,
     maxInstances: 5,
     secrets: [META_CAPI_TOKEN],

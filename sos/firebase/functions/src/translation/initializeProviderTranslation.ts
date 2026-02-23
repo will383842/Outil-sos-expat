@@ -10,6 +10,7 @@ export const initializeProviderTranslation = onDocumentCreated(
   {
     document: 'sos_profiles/{providerId}',
     region: 'europe-west3',
+    cpu: 0.083,
   },
   async (event) => {
     const providerId = event.params.providerId;

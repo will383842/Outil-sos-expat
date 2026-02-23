@@ -71,6 +71,7 @@ export const generateOgImage = onRequest(
   {
     region: REGION,
     memory: '512MiB',
+    cpu: 0.5,
     timeoutSeconds: 30,
     maxInstances: 10,
   },

@@ -53,6 +53,7 @@ export const onSecurityAlertCreated = onDocumentCreated(
   {
     document: 'security_alerts/{alertId}',
     region: REGION,
+    cpu: 0.083,
   },
   async (event) => {
     const snapshot = event.data;
@@ -89,6 +90,7 @@ export const onSecurityAlertUpdated = onDocumentUpdated(
   {
     document: 'security_alerts/{alertId}',
     region: REGION,
+    cpu: 0.083,
   },
   async (event) => {
     const before = event.data?.before.data() as SecurityAlert | undefined;
@@ -119,6 +121,7 @@ export const onSecurityAlertUpdated = onDocumentUpdated(
 export const createSecurityAlertHttp = onRequest(
   {
     region: REGION,
+    cpu: 0.25,
     cors: ALLOWED_ORIGINS,
     maxInstances: 50,
   },
@@ -173,6 +176,7 @@ export const createSecurityAlertHttp = onRequest(
 export const processEscalationHttp = onRequest(
   {
     region: REGION,
+    cpu: 0.25,
     invoker: 'private',
     maxInstances: 10,
   },
@@ -209,6 +213,7 @@ export const processEscalationHttp = onRequest(
 export const securityAlertAdminAction = onRequest(
   {
     region: REGION,
+    cpu: 0.25,
     cors: ALLOWED_ORIGINS,
     maxInstances: 20,
   },
@@ -380,6 +385,7 @@ async function unsuspendUser(userId: string, adminId: string): Promise<void> {
 export const getSecurityStats = onRequest(
   {
     region: REGION,
+    cpu: 0.25,
     cors: ALLOWED_ORIGINS,
     maxInstances: 10,
   },
@@ -506,6 +512,7 @@ export const securityDailyCleanup = onSchedule(
   {
     schedule: '0 3 * * *', // 3h du matin
     region: REGION,
+    cpu: 0.25,
     timeZone: 'Europe/Paris',
   },
   async () => {
@@ -536,6 +543,7 @@ export const processSecurityEscalations = onSchedule(
   {
     schedule: '0 8 * * *', // 8h Paris tous les jours
     region: REGION,
+    cpu: 0.25,
     timeZone: 'Europe/Paris',
   },
   async () => {
@@ -561,6 +569,7 @@ export const securityDailyReport = onSchedule(
   {
     schedule: '0 8 * * *', // 8h du matin
     region: REGION,
+    cpu: 0.25,
     timeZone: 'Europe/Paris',
   },
   async () => {
@@ -615,6 +624,7 @@ export const securityDailyReport = onSchedule(
 export const checkBlockedEntity = onRequest(
   {
     region: REGION,
+    cpu: 0.25,
     cors: ALLOWED_ORIGINS,
     maxInstances: 50, // Réduit de 100 à 50
   },

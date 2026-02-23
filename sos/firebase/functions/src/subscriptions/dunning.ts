@@ -362,6 +362,7 @@ export const processDunningQueue = onSchedule(
     timeZone: 'Europe/Paris',
     secrets: [STRIPE_SECRET_KEY],
     memory: '256MiB',
+    cpu: 0.25,
     timeoutSeconds: 300,
   },
   async () => {

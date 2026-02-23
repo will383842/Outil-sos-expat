@@ -93,6 +93,7 @@ const CORS_ORIGINS = [
 export const syncFromOutil = onRequest(
   {
     region: "europe-west3",
+    cpu: 0.25,
     cors: CORS_ORIGINS,
     secrets: [SOS_SYNC_API_KEY],
     timeoutSeconds: 30,

@@ -132,6 +132,7 @@ export const onUserEmailUpdated = onDocumentUpdated(
   {
     document: "users/{uid}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   handleUserEmailUpdated
 );

@@ -55,6 +55,7 @@ function verifyWebhookSecret(req: any): boolean {
 export const handleEmailOpen = onRequest(
   {
     region: "europe-west1",
+    cpu: 0.25,
   },
   // @ts-ignore - Type compatibility issue between firebase-functions and express types
   async (req: any, res: any) => {
@@ -126,6 +127,7 @@ export const handleEmailOpen = onRequest(
 export const handleEmailClick = onRequest(
   {
     region: "europe-west1",
+    cpu: 0.25,
   },
   // @ts-ignore - Type compatibility issue between firebase-functions and express types
   async (req: any, res: any) => {
@@ -225,6 +227,7 @@ export const handleEmailClick = onRequest(
 export const handleEmailBounce = onRequest(
   {
     region: "europe-west1",
+    cpu: 0.25,
   },
   // @ts-ignore - Type compatibility issue between firebase-functions and express types
   async (req: any, res: any) => {
@@ -340,6 +343,7 @@ export const handleEmailBounce = onRequest(
 export const handleEmailComplaint = onRequest(
   {
     region: "europe-west1",
+    cpu: 0.25,
   },
   // @ts-ignore - Type compatibility issue between firebase-functions and express types
   async (req: any, res: any) => {
@@ -439,6 +443,7 @@ export const handleEmailComplaint = onRequest(
 export const handleUnsubscribe = onRequest(
   {
     region: "europe-west1",
+    cpu: 0.25,
   },
   // @ts-ignore - Type compatibility issue between firebase-functions and express types
   async (req: any, res: any) => {

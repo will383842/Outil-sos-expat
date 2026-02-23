@@ -486,6 +486,7 @@ export const getWithdrawalConfirmationStatus = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 15,
     cors: [
       "https://sos-expat.com",

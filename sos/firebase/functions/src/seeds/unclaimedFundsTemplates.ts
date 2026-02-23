@@ -600,6 +600,7 @@ export const initUnclaimedFundsTemplates = onCall(
   {
     region: "europe-west1",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 120,
   },
   async (request) => {

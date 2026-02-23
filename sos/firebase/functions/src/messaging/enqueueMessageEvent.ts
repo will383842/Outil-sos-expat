@@ -24,7 +24,7 @@ function getDb() {
   return admin.firestore();
 }
 
-export const enqueueMessageEvent = onCall({ region: "europe-west1", cors: ALLOWED_ORIGINS }, async (req) => {
+export const enqueueMessageEvent = onCall({ region: "europe-west1", cpu: 0.25, cors: ALLOWED_ORIGINS }, async (req) => {
 
   try {
     console.log("enqueueMessageEvent called", req);

@@ -21,6 +21,7 @@ export const onInvoiceRecordCreated = onDocumentCreated(
   {
     document: "invoice_records/{invoiceId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const invoiceData = event.data?.data();
@@ -138,6 +139,7 @@ export const onInvoiceRecordCreated = onDocumentCreated(
 export const acquireInvoiceLock = onCall(
   {
     region: "europe-west3",
+    cpu: 0.25,
   },
   async (request) => {
     if (!request.auth) {
@@ -203,6 +205,7 @@ export const acquireInvoiceLock = onCall(
 export const releaseInvoiceLock = onCall(
   {
     region: "europe-west3",
+    cpu: 0.25,
   },
   async (request) => {
     if (!request.auth) {
@@ -252,6 +255,7 @@ export const releaseInvoiceLock = onCall(
 export const checkInvoicesExist = onCall(
   {
     region: "europe-west3",
+    cpu: 0.25,
   },
   async (request) => {
     if (!request.auth) {

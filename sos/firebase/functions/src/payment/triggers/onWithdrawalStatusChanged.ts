@@ -500,6 +500,7 @@ export const paymentOnWithdrawalStatusChanged = onDocumentUpdated(
     document: `${WITHDRAWAL_COLLECTION}/{withdrawalId}`,
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 60,
   },
   async (event) => {

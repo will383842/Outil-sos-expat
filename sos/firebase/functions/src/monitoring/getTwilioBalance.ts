@@ -107,6 +107,7 @@ async function fetchTwilioBalance(accountSid: string, authToken: string): Promis
 export const getTwilioBalance = functions.onCall(
   {
     region: 'europe-west1',
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 30,
     secrets: [TWILIO_ACCOUNT_SID_SECRET, TWILIO_AUTH_TOKEN_SECRET],

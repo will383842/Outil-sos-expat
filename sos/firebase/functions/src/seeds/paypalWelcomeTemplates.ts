@@ -1171,6 +1171,8 @@ export const initPayPalWelcomeTemplates = onCall(
   {
     region: "europe-west1",
     cors: true,
+    memory: "256MiB",
+    cpu: 0.25,
   },
   async (request) => {
     // Vérifier que l'utilisateur est admin

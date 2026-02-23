@@ -455,6 +455,7 @@ export const getChatterMessageTemplates = onCall(
     cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
   },
   async (request) => {
     // Verify user is authenticated
@@ -484,6 +485,7 @@ export const adminSeedMessageTemplates = onCall(
     cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
   },
   async (request) => {
     // Verify user is authenticated and is admin
@@ -518,6 +520,7 @@ export const adminCreateMessageTemplate = onCall(
     cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
   },
   async (request) => {
     // Verify user is authenticated and is admin
@@ -569,6 +572,7 @@ export const adminUpdateMessageTemplate = onCall(
     cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
   },
   async (request) => {
     // Verify user is authenticated and is admin
@@ -622,6 +626,7 @@ export const adminDeleteMessageTemplate = onCall(
     cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
   },
   async (request) => {
     // Verify user is authenticated and is admin
@@ -672,6 +677,7 @@ export const adminResetMessageTemplatesToDefaults = onCall(
     cors: ALLOWED_ORIGINS,
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
   },
   async (request) => {
     // Verify user is authenticated and is admin

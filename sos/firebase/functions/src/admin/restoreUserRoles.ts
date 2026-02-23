@@ -47,6 +47,7 @@ export const restoreUserRoles = onCall(
   {
     region: "europe-west1",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 540, // 9 minutes pour traiter beaucoup d'utilisateurs
   },
   async (request): Promise<RestoreSummary> => {
@@ -188,6 +189,7 @@ export const syncAllCustomClaims = onCall(
   {
     region: "europe-west1",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 540,
   },
   async (request): Promise<{ synced: number; failed: number; errors: string[] }> => {
@@ -258,6 +260,8 @@ export const syncAllCustomClaims = onCall(
 export const checkUserRole = onCall(
   {
     region: "europe-west1",
+    memory: "256MiB",
+    cpu: 0.25,
   },
   async (request): Promise<{
     userId: string;

@@ -64,7 +64,7 @@ export async function profileCompletedHandler(event: any) {
 }
 
 export const handleProfileCompleted = onDocumentUpdated(
-  { document: "users/{userId}", region: "europe-west3" },
+  { document: "users/{userId}", region: "europe-west3", cpu: 0.083 },
   profileCompletedHandler
 );
 
@@ -132,7 +132,7 @@ export async function userLoginHandler(event: any) {
 }
 
 export const handleUserLogin = onDocumentUpdated(
-  { document: "users/{userId}", region: "europe-west3" },
+  { document: "users/{userId}", region: "europe-west3", cpu: 0.083 },
   userLoginHandler
 );
 
@@ -236,7 +236,7 @@ export async function providerOnlineStatusHandler(event: any) {
 }
 
 export const handleProviderOnlineStatus = onDocumentUpdated(
-  { document: "users/{userId}", region: "europe-west3" },
+  { document: "users/{userId}", region: "europe-west3", cpu: 0.083 },
   providerOnlineStatusHandler
 );
 
@@ -360,7 +360,7 @@ export async function kycVerificationHandler(event: any) {
 }
 
 export const handleKYCVerification = onDocumentUpdated(
-  { document: "users/{userId}", region: "europe-west3" },
+  { document: "users/{userId}", region: "europe-west3", cpu: 0.083 },
   kycVerificationHandler
 );
 
@@ -425,7 +425,7 @@ export async function paypalConfigurationHandler(event: any) {
 }
 
 export const handlePayPalConfiguration = onDocumentUpdated(
-  { document: "users/{userId}", region: "europe-west3" },
+  { document: "users/{userId}", region: "europe-west3", cpu: 0.083 },
   paypalConfigurationHandler
 );
 
@@ -496,7 +496,7 @@ export async function accountStatusHandler(event: any) {
 }
 
 export const handleAccountStatus = onDocumentUpdated(
-  { document: "users/{userId}", region: "europe-west3" },
+  { document: "users/{userId}", region: "europe-west3", cpu: 0.083 },
   accountStatusHandler
 );
 

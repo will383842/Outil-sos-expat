@@ -385,6 +385,7 @@ async function uploadFile(
 export const exportFilingToFormat = onCall(
   {
     region: 'europe-west1',
+    cpu: 0.5,
     timeoutSeconds: 120,
     memory: '512MiB',
   },
@@ -475,6 +476,7 @@ export const exportFilingToFormat = onCall(
 export const exportFilingAllFormats = onCall(
   {
     region: 'europe-west1',
+    cpu: 0.5,
     timeoutSeconds: 180,
     memory: '512MiB',
   },

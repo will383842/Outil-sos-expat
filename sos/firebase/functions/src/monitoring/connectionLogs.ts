@@ -355,6 +355,7 @@ async function createConnectionLog(input: LogConnectionInput): Promise<string> {
 export const logConnection = onCall(
   {
     region: CONFIG.REGION,
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -434,6 +435,7 @@ export const logConnection = onCall(
 export const getConnectionLogs = onCall(
   {
     region: CONFIG.REGION,
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -528,6 +530,7 @@ export const getConnectionLogs = onCall(
 export const getConnectionStats = onCall(
   {
     region: CONFIG.REGION,
+    cpu: 0.5,
     memory: '512MiB',
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,

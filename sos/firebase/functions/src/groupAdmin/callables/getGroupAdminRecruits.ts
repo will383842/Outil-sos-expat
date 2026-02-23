@@ -56,6 +56,7 @@ export const getGroupAdminRecruits = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },

@@ -622,6 +622,7 @@ function generateAlerts(
 export const getGcpBillingCosts = functions.onCall(
   {
     region: 'europe-west1',
+    cpu: 0.5,
     memory: '512MiB',
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,

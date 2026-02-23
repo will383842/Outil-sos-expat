@@ -32,6 +32,7 @@ export const adminGetInfluencerResources = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -86,6 +87,7 @@ export const adminCreateInfluencerResource = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -147,6 +149,7 @@ export const adminUpdateInfluencerResource = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -187,6 +190,7 @@ export const adminDeleteInfluencerResource = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -222,6 +226,7 @@ export const adminCreateInfluencerResourceText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -273,6 +278,7 @@ export const adminUpdateInfluencerResourceText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -313,6 +319,7 @@ export const adminDeleteInfluencerResourceText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

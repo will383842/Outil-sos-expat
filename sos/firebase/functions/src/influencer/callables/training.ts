@@ -45,6 +45,7 @@ export const getInfluencerTrainingModules = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -168,6 +169,7 @@ export const getInfluencerTrainingModuleContent = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -328,6 +330,7 @@ export const updateInfluencerTrainingProgress = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -388,6 +391,7 @@ export const submitInfluencerTrainingQuiz = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -618,6 +622,7 @@ export const getInfluencerTrainingCertificate = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
   },
   async (request): Promise<GetInfluencerTrainingCertificateResponse> => {

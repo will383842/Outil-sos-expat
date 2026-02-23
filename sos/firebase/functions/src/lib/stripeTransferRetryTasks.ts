@@ -87,7 +87,7 @@ export async function scheduleTransferRetryTask(payload: TransferRetryPayload): 
     || `https://${location}-${projectId}.cloudfunctions.net/executeStripeTransferRetry`;
 
   if (!EXECUTE_STRIPE_TRANSFER_RETRY_URL.value()) {
-    logger.warn(`[scheduleTransferRetryTask] EXECUTE_STRIPE_TRANSFER_RETRY_URL not configured, using v1 fallback URL`);
+    logger.error(`[scheduleTransferRetryTask] CRITICAL: EXECUTE_STRIPE_TRANSFER_RETRY_URL not configured. v1 fallback URL may NOT work with v2 functions. Set this env var immediately.`);
   }
 
   const task = {
@@ -115,6 +115,7 @@ export async function scheduleTransferRetryTask(payload: TransferRetryPayload): 
 export const executeStripeTransferRetry = onRequest(
   {
     region: "europe-west1",
+    cpu: 0.25,
     // P0 AUDIT FIX: Add TASKS_AUTH_SECRET to verify Cloud Tasks auth header
     secrets: [STRIPE_SECRET_KEY, TASKS_AUTH_SECRET],
     timeoutSeconds: 60,

@@ -109,6 +109,7 @@ function ensureJsonSerializable(obj: any): any {
 export const updateProviderTranslation = onCall(
   {
     region: 'europe-west1',
+    cpu: 0.5,
     maxInstances: 5,
     memory: '512MiB',
     timeoutSeconds: 60,

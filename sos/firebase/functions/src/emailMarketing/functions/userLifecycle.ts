@@ -82,6 +82,7 @@ export const handleUserRegistration = onDocumentCreated(
   {
     document: "users/{userId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   handleEmailMarketingRegistration
 );

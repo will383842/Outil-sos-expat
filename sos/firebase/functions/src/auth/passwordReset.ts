@@ -952,6 +952,8 @@ export const sendCustomPasswordResetEmail = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
+    memory: "256MiB",
+    cpu: 0.25,
     secrets: [EMAIL_USER, EMAIL_PASS],
   },
   async (request) => {

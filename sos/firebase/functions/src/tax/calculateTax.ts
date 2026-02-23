@@ -940,6 +940,7 @@ async function logTaxCalculation(
 export const calculateTax = onCall(
   {
     region: 'europe-west1',
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 30,
     maxInstances: 10,
@@ -993,6 +994,7 @@ export { calculateTax as calculateTaxCallable };
 export const getTaxThresholdStatus = onCall(
   {
     region: 'europe-west1',
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 30,
   },
@@ -1025,6 +1027,7 @@ export const getTaxThresholdStatus = onCall(
 export const validateVAT = onCall(
   {
     region: 'europe-west1',
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 30,
   },

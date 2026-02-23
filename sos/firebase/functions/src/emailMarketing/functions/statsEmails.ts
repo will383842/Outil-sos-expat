@@ -17,6 +17,7 @@ export const sendWeeklyStats = onSchedule(
     schedule: "0 8 * * 1", // Every Monday at 08:00 UTC
     timeZone: "Europe/Paris",
     region: "europe-west3",
+    cpu: 0.25,
   },
   async () => {
     console.log("📊 Starting weekly stats email job...");
@@ -101,6 +102,7 @@ export const sendMonthlyStats = onSchedule(
     schedule: "0 8 1 * *", // 1st of every month at 08:00 UTC
     timeZone: "Europe/Paris",
     region: "europe-west3",
+    cpu: 0.25,
   },
   async () => {
     console.log("📊 Starting monthly stats email job...");
@@ -192,6 +194,7 @@ export const sendAnniversaryEmails = onSchedule(
     schedule: "0 9 * * *", // Every day at 09:00 UTC
     timeZone: "Europe/Paris",
     region: "europe-west3",
+    cpu: 0.25,
   },
   async () => {
     console.log("🎂 Starting anniversary emails job...");

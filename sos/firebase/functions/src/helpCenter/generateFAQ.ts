@@ -275,7 +275,10 @@ function generateFAQFromContent(
  * Generates FAQ automatically based on article content
  */
 export const onHelpArticleCreated = onDocumentCreated(
-  'help_articles/{articleId}',
+  {
+    document: 'help_articles/{articleId}',
+    cpu: 0.25,
+  },
   async (event) => {
     const articleId = event.params.articleId;
     const data = event.data?.data();
@@ -321,7 +324,10 @@ export const onHelpArticleCreated = onDocumentCreated(
  * Only regenerates FAQ if content has changed and no FAQs exist
  */
 export const onHelpArticleUpdated = onDocumentUpdated(
-  'help_articles/{articleId}',
+  {
+    document: 'help_articles/{articleId}',
+    cpu: 0.25,
+  },
   async (event) => {
     const articleId = event.params.articleId;
     const beforeData = event.data?.before?.data();

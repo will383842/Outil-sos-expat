@@ -140,6 +140,7 @@ export const requestWithdrawal = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
+    cpu: 0.25,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
     secrets: [...TELEGRAM_SECRETS],

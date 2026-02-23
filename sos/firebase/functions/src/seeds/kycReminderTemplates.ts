@@ -523,6 +523,8 @@ L'équipe SOS Expat`,
 export const initKYCReminderTemplates = onCall(
   {
     region: "europe-west1",
+    memory: "256MiB",
+    cpu: 0.25,
   },
   async (request) => {
     // Vérifier l'authentification admin

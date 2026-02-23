@@ -33,6 +33,7 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import { httpsCallable } from 'firebase/functions';
+import { functionsWest2, auth } from '@/config/firebase';
 import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
 import { clearStoredReferral } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
@@ -518,7 +519,6 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         metaEventId,
       }, formData.password);
 
-      const { functionsWest2, auth } = await import('@/config/firebase');
       const registerInfluencer = httpsCallable(functionsWest2, 'registerInfluencer');
 
       let result;

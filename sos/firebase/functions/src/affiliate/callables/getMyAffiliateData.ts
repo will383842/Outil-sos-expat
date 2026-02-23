@@ -33,6 +33,7 @@ export const getMyAffiliateData = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

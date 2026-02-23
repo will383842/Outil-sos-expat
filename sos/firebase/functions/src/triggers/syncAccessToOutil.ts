@@ -174,6 +174,7 @@ export const onUserAccessUpdated = onDocumentUpdated(
   {
     document: "users/{uid}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: [OUTIL_SYNC_API_KEY],
   },
   handleUserAccessUpdated

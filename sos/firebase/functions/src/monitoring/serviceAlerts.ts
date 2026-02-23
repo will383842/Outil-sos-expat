@@ -779,6 +779,7 @@ export const checkServiceBalances = onSchedule(
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
     memory: '512MiB',
+    cpu: 0.5,
     timeoutSeconds: 120,
     secrets: [
       TWILIO_ACCOUNT_SID_SECRET,
@@ -839,6 +840,7 @@ export const checkServiceBalances = onSchedule(
 export const getServiceBalanceAlerts = onCall(
   {
     region: 'europe-west3',
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -892,6 +894,7 @@ export const getServiceBalanceAlerts = onCall(
 export const acknowledgeServiceBalanceAlert = onCall(
   {
     region: 'europe-west3',
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -949,6 +952,7 @@ export const acknowledgeServiceBalanceAlert = onCall(
 export const updateServiceBalanceThreshold = onCall(
   {
     region: 'europe-west3',
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -1033,6 +1037,7 @@ export const updateServiceBalanceThreshold = onCall(
 export const getServiceBalanceThresholds = onCall(
   {
     region: 'europe-west3',
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -1095,6 +1100,7 @@ export const getServiceBalanceThresholds = onCall(
 export const triggerServiceBalanceCheck = onCall(
   {
     region: 'europe-west3',
+    cpu: 0.5,
     memory: '512MiB',
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,

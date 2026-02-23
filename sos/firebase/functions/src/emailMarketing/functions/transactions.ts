@@ -14,16 +14,17 @@ import { isPaymentCompleted } from "../../utils/paymentStatusUtils";
  */
 export const handleCallCompleted = onDocumentUpdated(
   {
-    document: "calls/{callId}",
+    document: "call_sessions/{sessionId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
-    const callId = event.params.callId;
+    const sessionId = event.params.sessionId;
 
     if (!before || !after) {
-      console.warn(`⚠️ No data for call ${callId}`);
+      console.warn(`⚠️ No data for call session ${sessionId}`);
       return;
     }
 
@@ -114,16 +115,16 @@ export const handleCallCompleted = onDocumentUpdated(
 
         // Log GA4 event
         await logGA4Event("call_completed", {
-          call_id: callId,
+          call_id: sessionId,
           client_id: after.clientId,
           provider_id: after.providerId,
           duration: duration,
           amount: amount,
         });
 
-        console.log(`✅ Call completed emails sent: ${callId}`);
+        console.log(`✅ Call completed emails sent: ${sessionId}`);
       } catch (error: any) {
-        console.error(`❌ Error in handleCallCompleted for ${callId}:`, error);
+        console.error(`❌ Error in handleCallCompleted for ${sessionId}:`, error);
       }
     }
   }
@@ -138,6 +139,7 @@ export const handleReviewSubmitted = onDocumentCreated(
   {
     document: "reviews/{reviewId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const review = event.data?.data();
@@ -387,6 +389,7 @@ export const handlePaymentReceived = onDocumentCreated(
   {
     document: "payments/{paymentId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const payment = event.data?.data();
@@ -453,6 +456,7 @@ export const handlePaymentFailed = onDocumentCreated(
   {
     document: "payments/{paymentId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const payment = event.data?.data();
@@ -519,6 +523,7 @@ export const handlePayoutRequested = onDocumentCreated(
   {
     document: "payouts/{payoutId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const payout = event.data?.data();
@@ -582,6 +587,7 @@ export const handlePayoutSent = onDocumentUpdated(
   {
     document: "payouts/{payoutId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -648,13 +654,14 @@ export const handlePayoutSent = onDocumentUpdated(
  */
 export const handleCallMissed = onDocumentUpdated(
   {
-    document: "calls/{callId}",
+    document: "call_sessions/{sessionId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
-    const callId = event.params.callId;
+    const sessionId = event.params.sessionId;
 
     if (!before || !after) return;
 
@@ -698,14 +705,14 @@ export const handleCallMissed = onDocumentUpdated(
         });
 
         await logGA4Event("call_missed_email_sent", {
-          call_id: callId,
+          call_id: sessionId,
           provider_id: after.providerId,
           variant,
         });
 
-        console.log(`✅ Call missed email sent (variant ${variant}): ${callId}`);
+        console.log(`✅ Call missed email sent (variant ${variant}): ${sessionId}`);
       } catch (error: any) {
-        console.error(`❌ Error in handleCallMissed for ${callId}:`, error);
+        console.error(`❌ Error in handleCallMissed for ${sessionId}:`, error);
       }
     }
   }
@@ -719,6 +726,7 @@ export const handlePayoutFailed = onDocumentUpdated(
   {
     document: "payouts/{payoutId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -779,6 +787,7 @@ export const handlePayoutThresholdReached = onDocumentUpdated(
   {
     document: "users/{userId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -835,6 +844,7 @@ export const handleFirstEarning = onDocumentUpdated(
   {
     document: "users/{userId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -890,6 +900,7 @@ export const handleEarningCredited = onDocumentUpdated(
   {
     document: "users/{userId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -980,6 +991,7 @@ export const handleReferralBonus = onDocumentCreated(
   {
     document: "referral_bonuses/{bonusId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const bonus = event.data?.data();

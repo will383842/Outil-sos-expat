@@ -125,6 +125,7 @@ export const telegramOnNewProvider = onDocumentCreated(
     region: "europe-west3",
     document: "sos_profiles/{profileId}",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
   },

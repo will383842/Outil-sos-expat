@@ -101,6 +101,7 @@ export async function migrateToV2(): Promise<{
         defaultHoldPeriodDays: 7,
         defaultReleaseDelayHours: 24,
         rateHistory: [],
+        isInfluencerListingPageVisible: true,
         version: 2,
         updatedAt: Timestamp.now(),
         updatedBy: "migration_v2",

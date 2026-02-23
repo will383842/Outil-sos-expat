@@ -276,6 +276,7 @@ export const onBookingRequestCreatedTrackLead = onDocumentCreated(
   {
     document: "booking_requests/{requestId}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: [META_CAPI_TOKEN],
   },
   async (event) => {
@@ -422,6 +423,7 @@ export const onUserCreatedTrackRegistration = onDocumentCreated(
   {
     document: "users/{uid}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: [META_CAPI_TOKEN],
   },
   handleCAPIRegistration
@@ -438,6 +440,7 @@ export const onCallSessionPaymentAuthorized = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: [META_CAPI_TOKEN],
   },
   async (event) => {
@@ -531,6 +534,7 @@ export const onContactSubmittedTrackLead = onDocumentCreated(
   {
     document: "contact_submissions/{submissionId}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: [META_CAPI_TOKEN],
   },
   async (event) => {
@@ -637,6 +641,7 @@ export const onCallSessionPaymentCaptured = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: [META_CAPI_TOKEN],
   },
   async (event) => {

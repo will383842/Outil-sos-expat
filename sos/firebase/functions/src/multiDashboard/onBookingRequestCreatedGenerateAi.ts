@@ -39,6 +39,7 @@ export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
     document: "booking_requests/{bookingId}",
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 10,
     maxInstances: 5,
   },

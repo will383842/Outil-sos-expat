@@ -177,6 +177,7 @@ function calculatePercentiles(values: number[]): { p50: number; p95: number; p99
 export const getAgentMetrics = functions.onCall(
   {
     region: 'europe-west1',
+    cpu: 0.5,
     memory: '512MiB',
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -489,6 +490,7 @@ export const saveAgentMetricsHistory = scheduler.onSchedule(
     schedule: '0 8 * * *', // 8h Paris tous les jours
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
+    cpu: 0.25,
   },
   async () => {
     const db = admin.firestore();

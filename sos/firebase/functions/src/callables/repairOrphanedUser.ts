@@ -32,6 +32,7 @@ export const repairOrphanedUser = onCall(
   {
     region: "europe-west1",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: [
       "https://sos-expat.com",

@@ -127,6 +127,7 @@ function formatBalanceAmounts(amounts: Stripe.Balance.Available[] | Stripe.Balan
 export const getStripeBalance = functions.onCall(
   {
     region: 'europe-west1',
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 30,
     secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST],

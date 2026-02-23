@@ -24,6 +24,7 @@ export const stopAutoresponders = onSchedule(
     // 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales
     schedule: "0 8 * * *", // 8h Paris tous les jours
     region: "europe-west3",
+    cpu: 0.25,
     timeZone: "Europe/Paris",
   },
   async (event) => {

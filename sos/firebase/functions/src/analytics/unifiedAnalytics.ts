@@ -774,6 +774,7 @@ async function aggregateFunnelMetrics(
 export const getUnifiedAnalytics = onCall(
   {
     region: CONFIG.region,
+    cpu: 0.5,
     memory: CONFIG.memory,
     timeoutSeconds: CONFIG.timeoutSeconds,
     minInstances: 0,
@@ -931,6 +932,7 @@ export const aggregateDailyAnalytics = onSchedule(
     timeZone: 'UTC',
     region: CONFIG.region,
     memory: CONFIG.memory,
+    cpu: 0.5,
     timeoutSeconds: 300,
   },
   async () => {
@@ -1033,6 +1035,7 @@ export const aggregateDailyAnalytics = onSchedule(
 export const getHistoricalAnalytics = onCall(
   {
     region: CONFIG.region,
+    cpu: 0.25,
     memory: '256MiB',
     timeoutSeconds: 60,
     minInstances: 0,
@@ -1104,6 +1107,7 @@ export const cleanupOldAnalytics = onSchedule(
     timeZone: 'UTC',
     region: CONFIG.region,
     memory: '256MiB',
+    cpu: 0.25,
     timeoutSeconds: 120,
   },
   async () => {

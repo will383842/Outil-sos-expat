@@ -175,6 +175,7 @@ export const savePaymentMethod = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
     memory: '256MiB',
+    cpu: 0.25,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

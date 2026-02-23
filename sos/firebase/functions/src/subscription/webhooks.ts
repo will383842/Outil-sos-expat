@@ -3149,46 +3149,26 @@ export async function handleTransferFailed(
       pendingTransferId = pendingTransferRef.id;
 
       // P1-2 FIX: Programmer le retry automatique via Cloud Tasks
+      // P0 AUDIT FIX: Use scheduleTransferRetryTask which handles v2 URL + auth header correctly
       try {
-        const { CloudTasksClient } = await import('@google-cloud/tasks');
-        const tasksClient = new CloudTasksClient();
+        const { scheduleTransferRetryTask } = await import('../lib/stripeTransferRetryTasks');
 
-        const projectId = process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || 'sos-urgently-ac307';
-        const location = 'europe-west1';
-        const queueName = 'stripe-transfer-retry-queue';
-        const queuePath = tasksClient.queuePath(projectId, location, queueName);
-
-        const callbackUrl = `https://${location}-${projectId}.cloudfunctions.net/executeStripeTransferRetry`;
-
-        const taskPayload = {
+        await scheduleTransferRetryTask({
           pendingTransferId: pendingTransferRef.id,
-          providerId,
-          stripeAccountId: destinationAccount,
+          providerId: providerId || '',
+          stripeAccountId: destinationAccount || '',
           amount,
           currency,
-          sourceTransaction: transfer.source_transaction,
+          sourceTransaction: typeof transfer.source_transaction === 'string'
+            ? transfer.source_transaction
+            : undefined,
           retryCount: 0,
-        };
+        });
 
-        const scheduleTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-        const task = {
-          scheduleTime: { seconds: Math.floor(scheduleTime.getTime() / 1000) },
-          httpRequest: {
-            httpMethod: 'POST' as const,
-            url: callbackUrl,
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: Buffer.from(JSON.stringify(taskPayload)).toString('base64'),
-          },
-        };
-
-        const [createdTask] = await tasksClient.createTask({ parent: queuePath, task });
         logger.info(`[handleTransferFailed] P1-2 FIX: Scheduled retry task for transfer ${transfer.id}`);
 
         // P1 FIX: Update pending_transfer with task info for tracking
         await db.collection('pending_transfers').doc(pendingTransferRef.id).update({
-          cloudTaskName: createdTask.name,
           taskScheduledAt: now,
           status: 'task_scheduled'
         });

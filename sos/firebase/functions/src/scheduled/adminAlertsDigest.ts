@@ -510,6 +510,7 @@ export const adminAlertsDigestDaily = onSchedule(
     timeZone: "Europe/Paris",
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 120,
   },
   async () => {
@@ -618,6 +619,7 @@ export const triggerAdminAlertsDigest = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 60,
   },
   async (request) => {
@@ -694,6 +696,7 @@ export const getAdminAlertsDigestPreview = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
   },
   async (request) => {

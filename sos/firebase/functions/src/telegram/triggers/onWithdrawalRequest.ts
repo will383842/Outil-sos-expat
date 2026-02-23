@@ -241,6 +241,7 @@ export const telegramOnWithdrawalRequest = onDocumentCreated(
     region: "europe-west3",
     document: `${WITHDRAWAL_COLLECTION}/{withdrawalId}`,
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
   },

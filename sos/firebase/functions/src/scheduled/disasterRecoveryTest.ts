@@ -755,7 +755,8 @@ export const runMonthlyDRTest = onSchedule(
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
     memory: '512MiB',
-    timeoutSeconds: 300
+    cpu: 0.5,
+    timeoutSeconds: 300,
   },
   async () => {
     logger.info('[DR Test] Starting monthly disaster recovery test...');

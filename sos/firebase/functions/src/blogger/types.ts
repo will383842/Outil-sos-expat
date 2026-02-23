@@ -1337,6 +1337,8 @@ export const DEFAULT_BLOGGER_CONFIG: Omit<
   bloggerRecruitmentCommissionAmount: 5000, // $50 one-time bonus
   recruitmentCommissionThreshold: 20000,    // $200 — recruited blogger must earn this before recruiter gets $50
 
+  isBloggerListingPageVisible: true,
+
   version: 1,
 };
 

@@ -66,6 +66,7 @@ export const getDomainAuthority = onCall(
   {
     region: "europe-west1",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
   },
   async (request): Promise<GetDomainAuthorityResponse> => {
@@ -133,6 +134,7 @@ export const addManualDomainAuthority = onCall<AddManualScoreRequest>(
   {
     region: "europe-west1",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 30,
   },
   async (request): Promise<AddManualScoreResponse> => {

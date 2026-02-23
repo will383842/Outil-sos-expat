@@ -81,6 +81,7 @@ export const validateVat = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
   },
   async (request: CallableRequest<ValidateVatRequest>): Promise<ValidateVatResponse> => {
     try {
@@ -148,6 +149,7 @@ export const checkReverseCharge = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
   },
   async (request: CallableRequest<CheckReverseChargeRequest>): Promise<CheckReverseChargeResponse> => {
     try {
@@ -202,6 +204,7 @@ export const cleanupVatCache = onSchedule(
     timeZone: "Europe/Paris",
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
   },
   async (_event: ScheduledEvent): Promise<void> => {
     try {

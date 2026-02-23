@@ -44,6 +44,7 @@ export const consolidatedOnCallCompleted = onDocumentUpdated(
     document: "call_sessions/{sessionId}",
     region: "europe-west3",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 120,
   },
   async (event) => {

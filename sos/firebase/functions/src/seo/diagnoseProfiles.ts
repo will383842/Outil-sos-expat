@@ -9,6 +9,7 @@ export const diagnoseProfiles = onRequest(
   {
     region: 'europe-west1',
     memory: '256MiB',
+    cpu: 0.25,
     timeoutSeconds: 60,
   },
   async (req, res) => {

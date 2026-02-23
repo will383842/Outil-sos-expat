@@ -166,6 +166,7 @@ export const migrateProviderSlugs = functions.onRequest(
   {
     region: "europe-west1",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 540,
     maxInstances: 1,
   },

@@ -596,7 +596,7 @@ export class ProviderEarningsService {
  * Récupère le résumé des earnings pour le provider connecté
  */
 export const getProviderEarningsSummary = onCall(
-  { region: "europe-west1", cors: ALLOWED_ORIGINS },
+  { region: "europe-west1", cpu: 0.25, cors: ALLOWED_ORIGINS },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -619,7 +619,7 @@ export const getProviderEarningsSummary = onCall(
  * Récupère l'historique des transactions
  */
 export const getProviderTransactions = onCall(
-  { region: "europe-west1", cors: ALLOWED_ORIGINS },
+  { region: "europe-west1", cpu: 0.25, cors: ALLOWED_ORIGINS },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -648,7 +648,7 @@ export const getProviderTransactions = onCall(
  * Récupère les statistiques mensuelles
  */
 export const getProviderMonthlyStats = onCall(
-  { region: "europe-west1", cors: ALLOWED_ORIGINS },
+  { region: "europe-west1", cpu: 0.25, cors: ALLOWED_ORIGINS },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -673,7 +673,7 @@ export const getProviderMonthlyStats = onCall(
  * Récupère l'historique des virements
  */
 export const getProviderPayoutHistory = onCall(
-  { region: "europe-west1", cors: ALLOWED_ORIGINS },
+  { region: "europe-west1", cpu: 0.25, cors: ALLOWED_ORIGINS },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -698,7 +698,7 @@ export const getProviderPayoutHistory = onCall(
  * Récupère toutes les données du dashboard en une seule requête
  */
 export const getProviderDashboard = onCall(
-  { region: "europe-west1", cors: ALLOWED_ORIGINS },
+  { region: "europe-west1", cpu: 0.25, cors: ALLOWED_ORIGINS },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -735,7 +735,7 @@ export const getProviderDashboard = onCall(
  * Admin: Récupère les earnings d'un provider spécifique
  */
 export const adminGetProviderEarnings = onCall(
-  { region: "europe-west1", cors: ALLOWED_ORIGINS },
+  { region: "europe-west1", cpu: 0.25, cors: ALLOWED_ORIGINS },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");

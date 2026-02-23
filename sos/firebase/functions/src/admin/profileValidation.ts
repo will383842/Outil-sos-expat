@@ -1094,6 +1094,7 @@ export const onValidationCreated = onDocumentCreated(
   {
     document: "validation_queue/{validationId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const db = getDb();
@@ -1160,6 +1161,7 @@ export const onValidationDecision = onDocumentUpdated(
   {
     document: "validation_queue/{validationId}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   async (event) => {
     const db = getDb();

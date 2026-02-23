@@ -106,6 +106,7 @@ function checkRateLimit(ip: string): boolean {
 export const trackCAPIEvent = onRequest(
   {
     region: REGION,
+    cpu: 0.25,
     cors: ALLOWED_ORIGINS,
     maxInstances: 10,
     secrets: [META_CAPI_TOKEN],

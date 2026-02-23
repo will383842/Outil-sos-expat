@@ -886,9 +886,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const openCameraCapture = useCallback(async (facing: 'user' | 'environment' = preferredCamera) => {
     if (!disabled && !isUploading && isCameraSupported) {
       try { await openCamera(facing); } catch {
-        // Camera failed → fallback to file selector so user can still upload
-        console.warn('Camera access failed, falling back to file selector');
-        openFileSelector('image/*');
+        // Camera failed → cannot open file dialog here (async context = no user activation)
+        // User can click the gallery button instead
+        console.warn('Camera access failed. Please use the gallery button to select an image.');
       }
     } else if (!isCameraSupported) {
       // No camera API → open file selector directly

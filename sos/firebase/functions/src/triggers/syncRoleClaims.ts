@@ -82,6 +82,7 @@ export const onUserCreatedSyncClaims = onDocumentCreated(
   {
     document: "users/{uid}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   handleSyncClaimsCreated
 );
@@ -172,6 +173,7 @@ export const onUserUpdatedSyncClaims = onDocumentUpdated(
   {
     document: "users/{uid}",
     region: "europe-west3",
+    cpu: 0.083,
   },
   handleSyncClaimsUpdated
 );

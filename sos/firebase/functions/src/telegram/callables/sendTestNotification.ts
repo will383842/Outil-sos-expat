@@ -203,6 +203,7 @@ export const telegram_sendTestNotification = onCall(
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
   },

@@ -209,6 +209,7 @@ export const renderForBotsV2 = onRequest(
   {
     region: 'europe-west1',
     memory: '2GiB',
+    cpu: 1,
     timeoutSeconds: 120,
     minInstances: 0,
     maxInstances: 10,
@@ -324,6 +325,7 @@ export const invalidateCacheEndpoint = onRequest(
   {
     region: 'europe-west1',
     memory: '256MiB',
+    cpu: 0.25,
     timeoutSeconds: 30,
     minInstances: 0,
     maxInstances: 5,

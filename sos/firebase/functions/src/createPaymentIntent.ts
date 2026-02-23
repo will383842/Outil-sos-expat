@@ -79,6 +79,7 @@ function getLimits() {
 const FUNCTION_OPTIONS = {
   region: PAYMENT_FUNCTIONS_REGION,
   memory: '256MiB' as const,
+  cpu: 0.25,
   concurrency: 1,
   timeoutSeconds: 60,
   minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)

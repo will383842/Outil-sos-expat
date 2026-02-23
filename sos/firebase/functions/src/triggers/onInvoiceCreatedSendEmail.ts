@@ -23,6 +23,7 @@ export const onInvoiceCreatedSendEmail = onDocumentCreated(
     document: "invoice_records/{invoiceId}",
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
   },
   async (event) => {
     const invoiceData = event.data?.data();

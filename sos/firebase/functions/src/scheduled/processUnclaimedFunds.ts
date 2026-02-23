@@ -753,6 +753,7 @@ export const scheduledProcessUnclaimedFunds = onSchedule(
     timeZone: "Europe/Paris",
     region: "europe-west3",
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 540, // 9 minutes max
   },
   async () => {

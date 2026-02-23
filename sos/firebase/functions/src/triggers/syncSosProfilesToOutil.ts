@@ -137,6 +137,7 @@ export const onSosProfileCreated = onDocumentCreated(
   {
     document: "sos_profiles/{uid}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: [OUTIL_SYNC_API_KEY],
   },
   async (event) => {
@@ -175,6 +176,7 @@ export const onSosProfileUpdated = onDocumentUpdated(
   {
     document: "sos_profiles/{uid}",
     region: "europe-west3",
+    cpu: 0.083,
     secrets: [OUTIL_SYNC_API_KEY],
   },
   async (event) => {

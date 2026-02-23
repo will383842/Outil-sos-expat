@@ -83,8 +83,11 @@ function getFunctionsBaseUrl(): string {
   const fromParam = (FUNCTIONS_BASE_URL_PARAM.value() || "").trim();
   if (fromParam) return fromParam.replace(/\/$/, "");
 
+  // P0 AUDIT FIX: v1 cloudfunctions.net URLs do NOT work with v2 functions
+  // Log error clearly so operators know to configure FUNCTIONS_BASE_URL or EXECUTE_PAYOUT_RETRY_TASK_URL
   const region = CLOUD_TASKS_LOCATION.value() || "europe-west1";
   const projectId = getProjectId();
+  console.error(`[PayoutRetry] CRITICAL: FUNCTIONS_BASE_URL not configured. Using v1 fallback which may NOT work with v2 functions. Set EXECUTE_PAYOUT_RETRY_TASK_URL env var.`);
   return `https://${region}-${projectId}.cloudfunctions.net`;
 }
 
@@ -219,6 +222,7 @@ export async function schedulePayoutRetryTask(
 export const executePayoutRetryTask = onRequest(
   {
     region: "europe-west1",
+    cpu: 0.25,
     secrets: [TASKS_AUTH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (req, res) => {
@@ -464,6 +468,7 @@ export async function cancelPayoutRetryTask(taskId: string): Promise<void> {
 export const retryFailedPayout = onCall(
   {
     region: "europe-west1",
+    cpu: 0.25,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (request) => {

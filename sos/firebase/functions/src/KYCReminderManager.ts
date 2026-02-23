@@ -390,6 +390,7 @@ export const scheduledKYCReminders = onSchedule(
     timeZone: "Europe/Paris",
     region: "europe-west3",
     memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - simple queries
+    cpu: 0.25,
     timeoutSeconds: 300, // 5 minutes max
   },
   async () => {
@@ -451,6 +452,7 @@ export const triggerKYCReminders = onCall(
     region: "europe-west3",
     cors: ALLOWED_ORIGINS,
     memory: "512MiB",
+    cpu: 0.5,
     timeoutSeconds: 300,
   },
   async (request) => {
@@ -487,6 +489,7 @@ export const getKYCReminderStatus = onCall(
   {
     region: "europe-west3",
     cors: ALLOWED_ORIGINS,
+    cpu: 0.25,
   },
   async (request) => {
     ensureInitialized();

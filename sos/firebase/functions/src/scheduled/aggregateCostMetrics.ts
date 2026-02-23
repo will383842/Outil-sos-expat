@@ -527,6 +527,7 @@ export const aggregateCostMetrics = onSchedule(
     timeZone: "Europe/Paris",
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 120,
   },
   async () => {

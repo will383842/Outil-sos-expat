@@ -8,7 +8,7 @@
  * and continues for 6 months from recruitment date.
  */
 
-import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
@@ -204,6 +204,7 @@ export const influencerOnProviderRegistered = onDocumentCreated(
     document: "users/{userId}",
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 60,
   },
   handleInfluencerProviderRegistered
@@ -215,26 +216,29 @@ export const influencerOnProviderRegistered = onDocumentCreated(
  * When a recruited provider receives a completed call, create $5 commission
  * for the influencer (if within 6-month window).
  */
-export const influencerOnProviderCallCompleted = onDocumentCreated(
+export const influencerOnProviderCallCompleted = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
     region: "europe-west3",
     memory: "256MiB",
+    cpu: 0.25,
     timeoutSeconds: 60,
   },
   async (event) => {
     ensureInitialized();
 
-    const snapshot = event.data;
-    if (!snapshot) {
+    const before = event.data?.before;
+    const after = event.data?.after;
+    if (!before || !after) {
       return;
     }
 
-    const callData = snapshot.data();
+    const beforeData = before.data();
+    const callData = after.data();
     const sessionId = event.params.sessionId;
 
-    // Only process completed calls
-    if (callData.status !== "completed") {
+    // Only process when status changes TO completed
+    if (beforeData.status === "completed" || callData.status !== "completed") {
       return;
     }
 

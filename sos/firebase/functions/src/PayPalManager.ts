@@ -2548,6 +2548,7 @@ export class PayPalManager {
 export const createPayPalOnboardingLink = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
+    cpu: 0.25,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
   },
   async (request) => {
@@ -2593,6 +2594,7 @@ export const createPayPalOnboardingLink = onCall(
 export const checkPayPalMerchantStatus = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
+    cpu: 0.25,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
   },
   async (request) => {
@@ -2650,6 +2652,7 @@ export const createPayPalOrderHttp = onRequest(
     // P0 FIX: Increased maxInstances and memory to prevent rate limiting
     maxInstances: 15,
     memory: "512MiB",
+    cpu: 0.5,
     // P0 FIX: Added ENCRYPTION_KEY for phone number encryption (Twilio compatibility)
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID, ENCRYPTION_KEY],
     cors: ALLOWED_ORIGINS,
@@ -2933,6 +2936,7 @@ export const capturePayPalOrderHttp = onRequest(
     minInstances: 0,
     maxInstances: 15,
     memory: "512MiB",
+    cpu: 0.5,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
     cors: ALLOWED_ORIGINS,
   },
@@ -3051,6 +3055,7 @@ export const authorizePayPalOrderHttp = onRequest(
     // P0 FIX: Increased maxInstances and memory to prevent rate limiting
     maxInstances: 15,
     memory: "512MiB",
+    cpu: 0.5,
     // P0 FIX: Added ENCRYPTION_KEY and OUTIL_SYNC_API_KEY for sendPaymentNotifications
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, TASKS_AUTH_SECRET, ENCRYPTION_KEY, OUTIL_SYNC_API_KEY],
     cors: ALLOWED_ORIGINS,
@@ -3212,6 +3217,7 @@ export const authorizePayPalOrderHttp = onRequest(
 export const createPayPalOrder = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
+    cpu: 0.25,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID],
     cors: ALLOWED_ORIGINS,
   },
@@ -3366,6 +3372,7 @@ export const createPayPalOrder = onCall(
 export const capturePayPalOrder = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
+    cpu: 0.25,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
     cors: ALLOWED_ORIGINS,
   },
@@ -3628,6 +3635,7 @@ export const paypalWebhook = onRequest(
     region: PAYMENT_FUNCTIONS_REGION,
     // P0 CRITICAL FIX: Allow unauthenticated access for PayPal webhooks (Cloud Run requires explicit public access)
     invoker: "public",
+    cpu: 0.25,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID, META_CAPI_TOKEN],
   },
   async (req, res) => {
@@ -4482,6 +4490,7 @@ export const paypalWebhook = onRequest(
 export const createPayPalPayout = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
+    cpu: 0.25,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (request) => {
@@ -4541,6 +4550,7 @@ export const createPayPalPayout = onCall(
 export const checkPayPalPayoutStatus = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
+    cpu: 0.25,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (request) => {
@@ -4572,6 +4582,7 @@ export const checkPayPalPayoutStatus = onCall(
 export const getRecommendedPaymentGateway = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
+    cpu: 0.25,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {

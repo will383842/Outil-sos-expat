@@ -1126,6 +1126,8 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
   // V2: Rate history
   rateHistory: [],
 
+  isInfluencerListingPageVisible: true,
+
   version: 1,
 };
 
