@@ -146,24 +146,6 @@
     <priority>0.7</priority>
   </url>
 
-  <!-- Prestataires / Providers -->
-  <url>
-    <loc>https://sos-expat.com/fr-fr/prestataires</loc>
-    <lastmod>2026-01-25</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/prestataires"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/providers"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/proveedores"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/anbieter"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/prestadores"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/postavshchiki"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/fuwu-tigongzhe"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/مقدمو-الخدمات"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/seva-pradaata"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/prestataires"/>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-
   <!-- SOS Appel / Emergency Call -->
   <url>
     <loc>https://sos-expat.com/fr-fr/sos-appel</loc>
@@ -198,24 +180,6 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/appel-expatrie"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-  </url>
-
-  <!-- Connexion / Login -->
-  <url>
-    <loc>https://sos-expat.com/fr-fr/connexion</loc>
-    <lastmod>2026-01-25</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/connexion"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/login"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/iniciar-sesion"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/anmeldung"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/entrar"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/vkhod"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/denglu"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/تسجيل-الدخول"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/login"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/connexion"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
   </url>
 
   <!-- Inscription / Register -->
@@ -398,40 +362,5 @@
     <priority>0.4</priority>
   </url>
 
-  <!-- Statut Service / Service Status -->
-  <url>
-    <loc>https://sos-expat.com/fr-fr/statut-service</loc>
-    <lastmod>2026-01-25</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/statut-service"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/service-status"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/estado-servicio"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/dienststatus"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/status-servico"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/status-servisa"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/fuwu-zhuangtai"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/حالة-الخدمة"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/seva-sthiti"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/statut-service"/>
-    <changefreq>daily</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <!-- Réinitialisation mot de passe / Password Reset -->
-  <url>
-    <loc>https://sos-expat.com/fr-fr/reinitialisation-mot-de-passe</loc>
-    <lastmod>2026-01-25</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/reinitialisation-mot-de-passe"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/password-reset"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/restablecer-contrasena"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/passwort-zurucksetzen"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/redefinir-senha"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/sbros-parolya"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/chongzhi-mima"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/إعادة-تعيين-كلمة-المرور"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/password-reset"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/reinitialisation-mot-de-passe"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
 
 </urlset>

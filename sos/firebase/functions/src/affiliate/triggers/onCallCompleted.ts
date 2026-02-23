@@ -223,6 +223,24 @@ export async function handleCallCompleted(
           sessionId,
         });
 
+        // Create commission notification
+        const notifRef = db.collection("affiliate_notifications").doc();
+        const amountDollars = ((commissionResult.amount || 0) / 100).toFixed(2);
+        await notifRef.set({
+          id: notifRef.id,
+          affiliateId: referredByUserId,
+          type: "commission_earned",
+          title: isFirstCall ? "Premier appel converti !" : "Commission appel reçue !",
+          message: `Vous avez gagné $${amountDollars} pour l'appel de ${clientData.email}.`,
+          isRead: false,
+          emailSent: false,
+          data: {
+            commissionId: commissionResult.commissionId,
+            amount: commissionResult.amount,
+          },
+          createdAt: Timestamp.now(),
+        });
+
         // 11. Update referral tracking if first call
         if (isFirstCall) {
           const referralQuery = await db

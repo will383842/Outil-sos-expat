@@ -301,15 +301,16 @@ export const sitemapHelp = onRequest(
       const today = new Date().toISOString().split('T')[0];
 
       // Mapping des slugs de routes par langue
+      // ⚠️ DOIT correspondre exactement aux routes dans localeRoutes.ts (frontend)
       const helpCenterSlug: Record<string, string> = {
         fr: 'centre-aide',
         en: 'help-center',
-        de: 'hilfe-center',
+        de: 'hilfezentrum',        // localeRoutes.ts: "hilfezentrum" (pas "hilfe-center")
         es: 'centro-ayuda',
         pt: 'centro-ajuda',
-        ru: 'centr-pomoshi',
+        ru: 'tsentr-pomoshchi',    // localeRoutes.ts: "tsentr-pomoshchi" (pas "centr-pomoshi")
         ch: 'bangzhu-zhongxin',
-        ar: 'markaz-almusaeada',
+        ar: 'مركز-المساعدة',       // localeRoutes.ts: "مركز-المساعدة" (pas "markaz-almusaeada")
         hi: 'sahayata-kendra',
       };
 
@@ -333,41 +334,72 @@ export const sitemapHelp = onRequest(
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
 
+      // Détecte si un slug a un préfixe de langue interne (ex: "ch-setting-prices" → "ch")
+      // Utilisé pour n'indexer les articles non-traduits que dans leur langue native
+      const detectSlugLangPrefix = (slug: string): string | null => {
+        const match = slug.match(/^([a-z]{2})-/);
+        if (match && LANGUAGES.includes(match[1])) {
+          return match[1];
+        }
+        return null;
+      };
+
+      // Évite les URLs dupliquées dans le sitemap
+      const seenUrls = new Set<string>();
+
       publishedDocs.forEach(doc => {
         const article = doc.data();
+        const isMultilingualSlug = article.slug && typeof article.slug === 'object' && Object.keys(article.slug).length > 0;
 
         // Le slug peut être un string ou un objet multilingue
         const getSlug = (lang: string): string => {
           if (typeof article.slug === 'string') {
             return article.slug;
           }
-          if (article.slug && typeof article.slug === 'object') {
+          if (isMultilingualSlug) {
             return article.slug[lang] || article.slug['fr'] || article.slug['en'] || doc.id;
           }
           return doc.id;
         };
 
+        // Pour les slugs string unique (non traduits), détecter la langue native via le préfixe
+        const baseSlug = typeof article.slug === 'string' ? article.slug : null;
+        const nativeLang = baseSlug ? detectSlugLangPrefix(baseSlug) : null;
+
         LANGUAGES.forEach(lang => {
+          // Si le slug a un préfixe de langue (ex: "ch-"), n'inclure que pour cette langue
+          // Évite d'indexer /fr-fr/centre-aide/ch-guide avec un slug chinois
+          if (nativeLang && nativeLang !== lang) return;
+
           const slug = getSlug(lang);
           const routeSlug = helpCenterSlug[lang] || 'help-center';
           // Use locale format: lang-country (e.g., "hi-in", "fr-fr")
           const locale = getLocaleString(lang);
           const url = `${SITE_URL}/${locale}/${routeSlug}/${slug}`;
 
-          // Génère tous les hreflang en une seule opération
-          const hreflangs = LANGUAGES.map(hrefLang => {
+          // Déduplique les URLs (évite de lister deux fois la même URL si slugs identiques)
+          if (seenUrls.has(url)) return;
+          seenUrls.add(url);
+
+          // Pour les slugs multilingues, générer les hreflang pour toutes les langues
+          // Pour les slugs non traduits avec préfixe de langue, un seul hreflang
+          const hreflangs = (isMultilingualSlug ? LANGUAGES : [lang]).map(hrefLang => {
             const hrefSlug = getSlug(hrefLang);
             const hrefRouteSlug = helpCenterSlug[hrefLang] || 'help-center';
             const hrefLocale = getLocaleString(hrefLang);
             return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLocale}/${hrefRouteSlug}/${hrefSlug}`)}"/>`;
           }).join('\n');
 
-          // x-default uses French locale
-          const defaultLocale = getLocaleString('fr');
+          // x-default: français si multilingue, sinon la langue native du slug
+          const xDefaultLang = isMultilingualSlug ? 'fr' : lang;
+          const defaultLocale = getLocaleString(xDefaultLang);
+          const xDefaultSlug = getSlug(xDefaultLang);
+          const xDefaultRouteSlug = helpCenterSlug[xDefaultLang] || 'help-center';
+
           urlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
-    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/${defaultLocale}/${helpCenterSlug['fr']}/${getSlug('fr')}`)}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/${defaultLocale}/${xDefaultRouteSlug}/${xDefaultSlug}`)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
     <lastmod>${article.updatedAt?.toDate?.()?.toISOString?.()?.split('T')[0] || today}</lastmod>

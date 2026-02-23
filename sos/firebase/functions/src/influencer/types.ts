@@ -1075,7 +1075,7 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
 
   recruitmentWindowMonths: 6,
 
-  minimumWithdrawalAmount: 2500,     // $25 (aligned with Chatter/Blogger/GroupAdmin)
+  minimumWithdrawalAmount: 1000,     // $10
   validationHoldPeriodDays: 7,       // 7 days minimum
   releaseDelayHours: 24,             // 1 day after validation
 

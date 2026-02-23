@@ -3,6 +3,26 @@
 # Limits: 2000 static rules, 100 dynamic rules (with :splat)
 
 # =============================================
+# Root redirect -> default locale (French)
+# Prevents Google from indexing "/" without a canonical
+# =============================================
+/ /fr-fr 301
+
+# =============================================
+# Trailing slash normalization for localized homepages
+# Prevents duplicate indexing of /en-us/ vs /en-us
+# =============================================
+/fr-fr/ /fr-fr 301
+/en-us/ /en-us 301
+/es-es/ /es-es 301
+/de-de/ /de-de 301
+/ru-ru/ /ru-ru 301
+/pt-pt/ /pt-pt 301
+/zh-cn/ /zh-cn 301
+/ar-sa/ /ar-sa 301
+/hi-in/ /hi-in 301
+
+# =============================================
 # Legacy single-language URLs -> new lang-country format
 # /de/... -> /de-de/..., /pt/... -> /pt-pt/..., etc.
 # =============================================
@@ -18,16 +38,47 @@
 /ar/* /ar-sa/:splat 301
 
 # Legacy root language URLs (no trailing content)
-/fr /fr-fr/ 301
-/en /en-us/ 301
-/es /es-es/ 301
-/de /de-de/ 301
-/ru /ru-ru/ 301
-/pt /pt-pt/ 301
-/ch /zh-cn/ 301
-/zh /zh-cn/ 301
-/hi /hi-in/ 301
-/ar /ar-sa/ 301
+/fr /fr-fr 301
+/en /en-us 301
+/es /es-es 301
+/de /de-de 301
+/ru /ru-ru 301
+/pt /pt-pt 301
+/ch /zh-cn 301
+/zh /zh-cn 301
+/hi /hi-in 301
+/ar /ar-sa 301
+
+# =============================================
+# Valid locale variants -> canonical locale
+# (pt-br, zh-tw, fr-ca, en-gb, etc.)
+# =============================================
+/pt-br/* /pt-pt/:splat 301
+/pt-br /pt-pt 301
+/zh-tw/* /zh-cn/:splat 301
+/zh-tw /zh-cn 301
+/zh-hr/* /zh-cn/:splat 301
+/zh-hr /zh-cn 301
+/es-mx/* /es-es/:splat 301
+/es-mx /es-es 301
+/es-ar/* /es-es/:splat 301
+/es-ar /es-es 301
+/fr-ca/* /fr-fr/:splat 301
+/fr-ca /fr-fr 301
+/fr-be/* /fr-fr/:splat 301
+/fr-be /fr-fr 301
+/fr-ch/* /fr-fr/:splat 301
+/fr-ch /fr-fr 301
+/en-gb/* /en-us/:splat 301
+/en-gb /en-us 301
+/en-ca/* /en-us/:splat 301
+/en-ca /en-us 301
+/en-au/* /en-us/:splat 301
+/en-au /en-us 301
+/de-at/* /de-de/:splat 301
+/de-at /de-de 301
+/de-ch/* /de-de/:splat 301
+/de-ch /de-de 301
 
 # =============================================
 # Invalid cross-locale combinations (from broken sitemap generator)
@@ -52,12 +103,12 @@
 /zh-us/* /zh-cn/:splat 301
 
 # Root for invalid cross-locales
-/fr-us /fr-fr/ 301
-/fr-de /fr-fr/ 301
-/fr-gb /fr-fr/ 301
-/es-us /es-es/ 301
-/de-us /de-de/ 301
-/de-fr /de-de/ 301
+/fr-us /fr-fr 301
+/fr-de /fr-fr 301
+/fr-gb /fr-fr 301
+/es-us /es-es 301
+/de-us /de-de 301
+/de-fr /de-de 301
 
 # =============================================
 # Legacy blog/external URLs

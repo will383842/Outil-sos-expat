@@ -33,6 +33,7 @@ import {
   PaymentMethodForm,
   WithdrawalRequestForm,
   WithdrawalTracker,
+  CommissionsHistoryTab,
 } from '@/components/payment';
 import TelegramRequiredBanner from '@/components/Telegram/TelegramRequiredBanner';
 import {
@@ -67,7 +68,7 @@ const UI = {
   },
 } as const;
 
-type TabType = 'withdraw' | 'methods' | 'history';
+type TabType = 'withdraw' | 'methods' | 'history' | 'commissions';
 
 const BloggerPayments: React.FC = () => {
   const intl = useIntl();
@@ -76,6 +77,7 @@ const BloggerPayments: React.FC = () => {
   // Blogger data
   const {
     blogger,
+    commissions,
     isLoading: bloggerLoading,
     error: bloggerError,
   } = useBlogger();
@@ -465,6 +467,22 @@ const BloggerPayments: React.FC = () => {
             <History className="w-4 h-4" />
             <FormattedMessage id="blogger.payments.tab.history" defaultMessage="Historique" />
           </button>
+          <button
+            onClick={() => setActiveTab('commissions')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'commissions'
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+            }`}
+          >
+            <ArrowUpRight className="w-4 h-4" />
+            <FormattedMessage id="blogger.payments.tab.commissions" defaultMessage="Commissions" />
+            {commissions.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/20">
+                {commissions.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -780,6 +798,14 @@ const BloggerPayments: React.FC = () => {
               )}
             </div>
           </div>
+        )}
+        {activeTab === 'commissions' && (
+          <CommissionsHistoryTab
+            commissions={commissions as any}
+            role="blogger"
+            currency="USD"
+            isLoading={bloggerLoading}
+          />
         )}
       </div>
     </BloggerDashboardLayout>

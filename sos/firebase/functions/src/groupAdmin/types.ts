@@ -1129,7 +1129,7 @@ export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "u
   validationHoldPeriodDays: 7,
   releaseDelayHours: 24,
 
-  minimumWithdrawalAmount: 2500,       // $25
+  minimumWithdrawalAmount: 1000,       // $10
   leaderboardSize: 10,
 
   version: 1,

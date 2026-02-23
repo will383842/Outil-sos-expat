@@ -522,21 +522,29 @@ function generateProfileUrlsFromData(profile: any): string[] {
  * Utilise les slugs traduits des routes
  */
 function generateHelpCenterUrls(slug: string): string[] {
+  // ⚠️ DOIT correspondre exactement aux routes dans localeRoutes.ts (frontend)
   const helpCenterSlugs: Record<string, string> = {
     fr: 'centre-aide',
     en: 'help-center',
-    de: 'hilfe-center',
+    de: 'hilfezentrum',       // localeRoutes.ts: "hilfezentrum"
     es: 'centro-ayuda',
     pt: 'centro-ajuda',
-    ru: 'centr-pomoshi',
+    ru: 'tsentr-pomoshchi',   // localeRoutes.ts: "tsentr-pomoshchi"
     ch: 'bangzhu-zhongxin',
-    ar: 'markaz-almusaeada',
+    ar: 'مركز-المساعدة',      // localeRoutes.ts: "مركز-المساعدة"
     hi: 'sahayata-kendra',
   };
 
-  return LANGUAGES.map(lang =>
-    `${SITE_URL}/${lang}/${helpCenterSlugs[lang] || 'help-center'}/${slug}`
-  );
+  // Utilise le format locale complet (fr-fr, en-us, ...) et non le code court (fr, en, ...)
+  const LANGUAGE_TO_COUNTRY_LOCAL: Record<string, string> = {
+    fr: 'fr', en: 'us', es: 'es', de: 'de', ru: 'ru', pt: 'pt', ch: 'cn', hi: 'in', ar: 'sa',
+  };
+  return LANGUAGES.map(lang => {
+    const country = LANGUAGE_TO_COUNTRY_LOCAL[lang] || lang;
+    const urlLang = lang === 'ch' ? 'zh' : lang;
+    const locale = `${urlLang}-${country}`;
+    return `${SITE_URL}/${locale}/${helpCenterSlugs[lang] || 'help-center'}/${slug}`;
+  });
 }
 
 /**

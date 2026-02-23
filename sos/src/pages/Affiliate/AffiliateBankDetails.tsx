@@ -16,13 +16,24 @@ import {
   CreditCard,
   User,
   MapPin,
+  Smartphone,
 } from "lucide-react";
 import { useLocaleNavigate } from "@/multilingual-system";
 import { getTranslatedRouteSlug, type RouteKey } from "@/multilingual-system/core/routing/localeRoutes";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAffiliate } from "@/hooks/useAffiliate";
+import { usePaymentMethods } from "@/hooks/usePayment";
+import { PaymentMethodForm } from "@/components/payment";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import type { BankDetailsInput, BankAccountType } from "@/types/affiliate";
+import type { PaymentDetails } from "@/hooks/usePayment";
+
+// Countries supported by Flutterwave Mobile Money
+const FLUTTERWAVE_COUNTRIES = new Set([
+  'SN', 'CI', 'ML', 'GH', 'KE', 'UG', 'TZ', 'RW', 'BJ', 'TG', 'CM', 'ZA', 'NG',
+  'MG', 'ZM', 'MZ', 'EG', 'MW', 'ET', 'SD', 'DZ', 'MA', 'TN', 'CD', 'AO',
+]);
 
 // Design tokens
 const UI = {
@@ -58,7 +69,33 @@ const AffiliateBankDetails: React.FC = () => {
   const { language } = useApp();
   const langCode = (language || "en") as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar";
 
+  const { user } = useAuth();
   const { affiliateData, isLoading, updateBankDetails } = useAffiliate();
+  const { saveMethod, loading: methodsLoading, refresh: refreshMethods } = usePaymentMethods();
+
+  // Detect Mobile Money eligibility from user country
+  const userCountry = (user?.country || '').toUpperCase();
+  const isMobileMoneyCountry = FLUTTERWAVE_COUNTRIES.has(userCountry);
+
+  const [showMobileMoneyForm, setShowMobileMoneyForm] = useState(false);
+  const [mobileMoneySuccess, setMobileMoneySuccess] = useState(false);
+  const [mobileMoneyError, setMobileMoneyError] = useState<string | null>(null);
+  const [savingMobileMoney, setSavingMobileMoney] = useState(false);
+
+  const handleSaveMobileMoney = async (details: PaymentDetails) => {
+    setSavingMobileMoney(true);
+    setMobileMoneyError(null);
+    try {
+      await saveMethod(details, true);
+      await refreshMethods();
+      setMobileMoneySuccess(true);
+      setShowMobileMoneyForm(false);
+    } catch (err) {
+      setMobileMoneyError(err instanceof Error ? err.message : "Erreur lors de l'enregistrement");
+    } finally {
+      setSavingMobileMoney(false);
+    }
+  };
 
   const [formData, setFormData] = useState<BankDetailsInput>({
     accountType: "iban",
@@ -251,6 +288,52 @@ const AffiliateBankDetails: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Mobile Money Section (Africa countries only) */}
+        {isMobileMoneyCountry && (
+          <div className={`${UI.card} p-5`}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                <Smartphone className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Mobile Money disponible</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Orange Money, Wave, MTN MoMo, M-Pesa et plus encore
+                </p>
+              </div>
+            </div>
+            {mobileMoneySuccess ? (
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">Méthode Mobile Money enregistrée !</span>
+              </div>
+            ) : showMobileMoneyForm ? (
+              <div className="space-y-4">
+                <PaymentMethodForm
+                  onSubmit={handleSaveMobileMoney}
+                  loading={savingMobileMoney}
+                  error={mobileMoneyError}
+                  initialCountry={userCountry}
+                />
+                <button
+                  onClick={() => setShowMobileMoneyForm(false)}
+                  className={`${UI.button.secondary} px-4 py-2 text-sm`}
+                >
+                  Annuler
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowMobileMoneyForm(true)}
+                className={`${UI.button.primary} px-4 py-2 text-sm flex items-center gap-2`}
+              >
+                <Smartphone className="w-4 h-4" />
+                Ajouter Mobile Money
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Form */}

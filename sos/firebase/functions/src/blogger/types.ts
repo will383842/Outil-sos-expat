@@ -1326,7 +1326,7 @@ export const DEFAULT_BLOGGER_CONFIG: Omit<
 
   recruitmentWindowMonths: 6,
 
-  minimumWithdrawalAmount: 2500,     // $25
+  minimumWithdrawalAmount: 1000,     // $10
   validationHoldPeriodDays: 7,       // 7 days
   releaseDelayHours: 24,             // 1 day after validation
 

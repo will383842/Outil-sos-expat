@@ -20,6 +20,8 @@ import {
   PaymentUserType,
   DEFAULT_PAYMENT_CONFIG,
 } from "../types";
+import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
+import { getTelegramBotToken } from "../../lib/secrets";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -151,6 +153,64 @@ async function createUserNotification(
     notificationId: notification.id,
     status: withdrawal.status,
   });
+}
+
+/**
+ * Send email + Telegram to user when their withdrawal fails
+ */
+async function notifyUserWithdrawalFailed(withdrawal: WithdrawalRequest): Promise<void> {
+  const amountFormatted = `$${(withdrawal.amount / 100).toFixed(2)}`;
+  const errorReason = withdrawal.errorMessage || "Erreur inconnue";
+
+  // 1. Email via Zoho SMTP
+  try {
+    const subject = `Votre retrait de ${amountFormatted} n'a pas pu être traité`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #e53e3e;">❌ Retrait échoué</h2>
+        <p>Bonjour ${withdrawal.userName},</p>
+        <p>Malheureusement, votre retrait de <strong>${amountFormatted}</strong> n'a pas pu être traité.</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr><td style="padding: 8px; color: #666;">Montant :</td><td style="padding: 8px;"><strong>${amountFormatted}</strong></td></tr>
+          <tr><td style="padding: 8px; color: #666;">Méthode :</td><td style="padding: 8px;">${withdrawal.provider}</td></tr>
+          <tr><td style="padding: 8px; color: #666;">Raison :</td><td style="padding: 8px; color: #e53e3e;">${errorReason}</td></tr>
+        </table>
+        <p style="color: #276749; font-weight: bold;">✅ Votre solde a été restauré automatiquement.</p>
+        <p>
+          <a href="https://sos-expat.com/${withdrawal.userType}/payments"
+             style="display: inline-block; background: #e53e3e; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+            Réessayer le retrait
+          </a>
+        </p>
+        <p>Si le problème persiste, contactez notre support.</p>
+        <p style="color: #999; font-size: 12px;">— L'équipe SOS Expat</p>
+      </div>
+    `;
+    await sendZoho(withdrawal.userEmail, subject, html);
+    logger.info("[onWithdrawalStatusChanged] Failure email sent", { withdrawalId: withdrawal.id, to: withdrawal.userEmail });
+  } catch (emailErr) {
+    logger.error("[onWithdrawalStatusChanged] Failed to send failure email", { error: emailErr });
+  }
+
+  // 2. Telegram direct message if user has telegramId
+  try {
+    const db = getFirestore();
+    const userDoc = await db.collection("users").doc(withdrawal.userId).get();
+    const telegramId = userDoc.data()?.telegramId as number | undefined;
+
+    if (telegramId) {
+      const botToken = getTelegramBotToken.value();
+      const text = `❌ Votre retrait de *${amountFormatted}* a échoué.\n✅ Votre solde a été restauré.\nContactez le support si besoin.`;
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: telegramId, text, parse_mode: "Markdown" }),
+      });
+      logger.info("[onWithdrawalStatusChanged] Failure Telegram sent", { withdrawalId: withdrawal.id, telegramId });
+    }
+  } catch (tgErr) {
+    logger.error("[onWithdrawalStatusChanged] Failed to send Telegram failure notification", { error: tgErr });
+  }
 }
 
 /**
@@ -571,6 +631,11 @@ export const paymentOnWithdrawalStatusChanged = onDocumentUpdated(
 
       // 4. Send admin notification if applicable
       await sendAdminNotification(withdrawal, oldStatus, newStatus, config);
+
+      // 4b. Notify user via email + Telegram on failure
+      if (newStatus === "failed") {
+        await notifyUserWithdrawalFailed(withdrawal);
+      }
 
       // 5. Handle specific status transitions
       await handleStatusTransition(withdrawal, oldStatus, newStatus);

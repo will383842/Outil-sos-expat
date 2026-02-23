@@ -40,3 +40,6 @@ export {
   type WithdrawalStatusBadgeProps,
   type WithdrawalStatusBadgeSize,
 } from './WithdrawalStatusBadge';
+
+export { default as CommissionsHistoryTab } from './CommissionsHistoryTab';
+export type { CommissionsHistoryTabProps, GenericCommission, CommissionStatus } from './CommissionsHistoryTab';

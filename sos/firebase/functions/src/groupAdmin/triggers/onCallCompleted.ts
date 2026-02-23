@@ -206,6 +206,24 @@ export async function handleCallCompleted(
           groupAdminCommissionAt: Timestamp.now(),
         });
 
+        // Create commission notification
+        const notifRef = db.collection("group_admin_notifications").doc();
+        const amountDollars = ((commission.amount || 0) / 100).toFixed(2);
+        await notifRef.set({
+          id: notifRef.id,
+          groupAdminId,
+          type: "commission_earned",
+          title: "Commission client reçue !",
+          message: `Vous avez gagné $${amountDollars} pour l'appel de la session ${sessionId}.`,
+          isRead: false,
+          emailSent: false,
+          data: {
+            commissionId: commission.id,
+            amount: commission.amount,
+          },
+          createdAt: Timestamp.now(),
+        });
+
         logger.info("[onCallCompletedGroupAdmin] Commission created", {
           sessionId,
           groupAdminId,

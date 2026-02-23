@@ -1077,7 +1077,7 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
 
   recruitmentLinkDurationMonths: 6,
 
-  minimumWithdrawalAmount: 2500,     // $25
+  minimumWithdrawalAmount: 1000,     // $10
   validationHoldPeriodHours: 48,     // 2 days
   releaseDelayHours: 24,             // 1 day after validation
 

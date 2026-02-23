@@ -18,11 +18,6 @@ import {
 import {
   getChatterConfigCached,
   calculateLevelFromEarnings,
-  getLevelBonus,
-  getTop3Bonus,
-  // getZoomBonus, // DISABLED: Zoom bonus feature removed
-  getStreakBonusMultiplier,
-  calculateCommissionWithBonuses,
   getValidationDelayMs,
   getReleaseDelayMs,
 } from "../utils/chatterConfigService";
@@ -215,35 +210,14 @@ export async function createCommission(
       }
     }
 
-    // 6. Calculate bonuses
-    const levelBonus = getLevelBonus(chatter.level, config);
-    const top3Bonus = getTop3Bonus(chatter.currentMonthRank, config);
-    // DISABLED: Zoom bonus feature removed - always 0
+    // 6. No bonus multipliers — finalAmount equals baseAmount
+    const levelBonus = 0;
+    const top3Bonus = 0;
     const zoomBonus = 0;
-    const streakBonus = getStreakBonusMultiplier(chatter.currentStreak || 0, config);
-
-    // 6b. Check for monthly top multiplier (reward for being top 3 previous month)
-    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-    const monthlyTopMultiplier =
-      chatter.monthlyTopMultiplierMonth === currentMonth && chatter.monthlyTopMultiplier > 1.0
-        ? chatter.monthlyTopMultiplier
-        : 1.0;
-
-    const { amount: calculatedAmount, details: calculationDetails } =
-      calculateCommissionWithBonuses(baseAmount, levelBonus, top3Bonus, zoomBonus);
-
-    // Apply streak bonus and monthly top multiplier on top of other bonuses
-    const afterStreakAmount = Math.round(calculatedAmount * streakBonus);
-    const finalAmount = Math.round(afterStreakAmount * monthlyTopMultiplier);
-
-    // Build final calculation details
-    let finalCalculationDetails = calculationDetails;
-    if (streakBonus > 1.0) {
-      finalCalculationDetails += ` × ${streakBonus}x (Streak ${chatter.currentStreak}j)`;
-    }
-    if (monthlyTopMultiplier > 1.0) {
-      finalCalculationDetails += ` × ${monthlyTopMultiplier}x (Top ${chatter.currentMonthRank || '?'} mois précédent)`;
-    }
+    const streakBonus = 1.0;
+    const monthlyTopMultiplier = 1.0;
+    const finalAmount = baseAmount;
+    const finalCalculationDetails = `Base: $${(baseAmount / 100).toFixed(2)}`;
 
     // 7. Create timestamp
     const now = Timestamp.now();
