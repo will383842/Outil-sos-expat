@@ -6255,3 +6255,83 @@ export {
 // Repairs orphaned user accounts where Firebase Auth exists but users/{uid} document doesn't
 // Called automatically from AuthContext when document is not found after retries
 export { repairOrphanedUser } from './callables/repairOrphanedUser';
+
+// ========== EXPORTS MANQUANTS — AUDIT 2026-02-23 ==========
+
+// --- CHATTER : fonctions absentes du bloc principal ---
+export {
+  // Country Rotation
+  assignCountriesToCurrentChatter,
+  adminGetCountryRotationStatus,
+  adminInitializeCountryRotation,
+  // Chatter Config Settings
+  adminGetChatterConfigSettings,
+  adminInitializeChatterConfigSettings,
+  adminToggleFlashBonus,
+  adminUpdateChatterConfigSettings,
+  // Message Templates
+  getChatterMessageTemplates,
+  adminSeedMessageTemplates,
+  adminCreateMessageTemplate,
+  adminUpdateMessageTemplate,
+  adminDeleteMessageTemplate,
+  adminResetMessageTemplatesToDefaults,
+  initializeMessageTemplates,
+  // Push Notifications (FCM)
+  chatterNotifyCommissionEarned,
+  chatterNotifyTeamMemberActivated,
+  chatterNotifyInactiveMembers,
+  chatterNotifyTierBonusUnlocked,
+  chatterNotifyNearTop3,
+  chatterNotifyFlashBonusStart,
+  chatterRegisterFcmToken,
+  chatterUnregisterFcmToken,
+  // Scheduled
+  chatterCreateWeeklyChallenge,
+  chatterUpdateChallengeLeaderboard,
+  chatterEndWeeklyChallenge,
+  chatterTierBonusCheck,
+  chatterMonthlyTop3Rewards,
+  chatterAggregateActivityFeed,
+  getCurrentChallenge,
+  getChallengeHistory,
+} from './chatter';
+
+// getAvailableCountriesForChatter (absent de chatter/index.ts — export direct)
+export { getAvailableCountriesForChatter } from './chatter/callables/countryRotation';
+
+// --- BLOGGER : getBloggerRecruits manquant ---
+export { getBloggerRecruits } from './blogger';
+
+// --- SUBSCRIPTION : scheduled tasks manquants ---
+export {
+  resetBillingCycleQuotas,
+  cleanupExpiredDocuments,
+} from './subscription/scheduledTasks';
+
+// --- SCHEDULED : aggregateCostMetrics manquant ---
+export { aggregateCostMetrics } from './scheduled/aggregateCostMetrics';
+
+// --- TWILIO : twilioRecordingWebhook manquant ---
+export { twilioRecordingWebhook } from './Webhooks/twilioWebhooks';
+
+// --- PAYMENT : fonctions sous noms originaux ---
+// (également déployées sous alias paymentXxx via le bloc payment ci-dessus)
+export { savePaymentMethod } from './payment/callables/savePaymentMethod';
+export { getPaymentMethods } from './payment/callables/getPaymentMethods';
+export { deletePaymentMethod } from './payment/callables/deletePaymentMethod';
+export { setDefaultPaymentMethod } from './payment/callables/setDefaultPaymentMethod';
+export { cancelWithdrawal } from './payment/callables/cancelWithdrawal';
+export { getWithdrawalStatus } from './payment/callables/getWithdrawalStatus';
+export { getWithdrawalHistory } from './payment/callables/getWithdrawalHistory';
+export { adminApproveWithdrawal } from './payment/callables/admin/approveWithdrawal';
+export { adminRejectWithdrawal } from './payment/callables/admin/rejectWithdrawal';
+export { adminGetPaymentConfig } from './payment/callables/admin/getPaymentConfig';
+export { adminUpdatePaymentConfig } from './payment/callables/admin/updatePaymentConfig';
+export { adminGetPendingWithdrawals } from './payment/callables/admin/getPendingWithdrawals';
+export { adminGetPaymentStats } from './payment/callables/admin/getPaymentStats';
+export {
+  adminGetAuditLogs,
+  adminGetAuditLogActions,
+} from './payment/callables/admin/getAuditLogs';
+export { adminExportWithdrawals } from './payment/callables/admin/exportWithdrawals';

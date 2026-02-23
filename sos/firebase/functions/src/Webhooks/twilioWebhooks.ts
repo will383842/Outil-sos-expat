@@ -1176,10 +1176,10 @@ async function handleCallFailed(
  */
 export const twilioRecordingWebhook = onRequest(
   {
-    region: 'europe-west1',
+    region: 'europe-west3',
     // P0 CRITICAL FIX: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
     invoker: "public",
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     maxInstances: 1,
     minInstances: 0,

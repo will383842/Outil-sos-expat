@@ -199,7 +199,7 @@ async function notifyUserWithdrawalFailed(withdrawal: WithdrawalRequest): Promis
     const telegramId = userDoc.data()?.telegramId as number | undefined;
 
     if (telegramId) {
-      const botToken = getTelegramBotToken.value();
+      const botToken = getTelegramBotToken();
       const text = `❌ Votre retrait de *${amountFormatted}* a échoué.\n✅ Votre solde a été restauré.\nContactez le support si besoin.`;
       await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: "POST",
