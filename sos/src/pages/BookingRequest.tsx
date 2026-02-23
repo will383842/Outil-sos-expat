@@ -60,6 +60,7 @@ import { normalizeProvider } from "../types/provider";
 
 import {
   usePricingConfig,
+  getEffectivePrice,
   calculateServiceAmounts,
   detectUserCurrency,
   type ServiceType,
@@ -2596,22 +2597,19 @@ const BookingRequest: React.FC = () => {
   const isLawyer = provider?.type === "lawyer" || provider?.role === "lawyer";
   const role: ServiceType = isLawyer ? "lawyer" : "expat";
 
-  const eurAdmin = pricing?.[role]?.eur;
-  const usdAdmin = pricing?.[role]?.usd;
+  // Utilise getEffectivePrice pour prendre en compte les overrides promo (EUR + USD)
+  const { price: effectiveEUR, standard: standardEUR, override: activeOverrideEUR } = pricing
+    ? getEffectivePrice(pricing, role, 'eur')
+    : { price: null, standard: null, override: null };
+  const { price: effectiveUSD } = pricing
+    ? getEffectivePrice(pricing, role, 'usd')
+    : { price: null };
 
-  // const displayEUR = eurAdmin?.totalAmount ?? FALLBACK_TOTALS[role].eur;
-  // const displayUSD = usdAdmin?.totalAmount ?? FALLBACK_TOTALS[role].usd;
-  // const displayDuration =
-  //   eurAdmin?.duration ??
-  //   usdAdmin?.duration ??
-  //   provider?.duration ??
-  //   FALLBACK_TOTALS[role].duration;
-
-  const baseEUR = eurAdmin?.totalAmount ?? FALLBACK_TOTALS[role].eur;
-  const baseUSD = usdAdmin?.totalAmount ?? FALLBACK_TOTALS[role].usd;
+  const baseEUR = effectiveEUR?.totalAmount ?? FALLBACK_TOTALS[role].eur;
+  const baseUSD = effectiveUSD?.totalAmount ?? FALLBACK_TOTALS[role].usd;
   const displayDuration =
-    eurAdmin?.duration ??
-    usdAdmin?.duration ??
+    effectiveEUR?.duration ??
+    effectiveUSD?.duration ??
     provider?.duration ??
     FALLBACK_TOTALS[role].duration;
 
@@ -2619,12 +2617,22 @@ const BookingRequest: React.FC = () => {
   const serviceKey = role === "lawyer" ? "lawyer_call" : "expat_call";
   const promoApplies = activePromo && activePromo.services.includes(serviceKey);
 
+  // Vérifier si le coupon est cumulable avec l'override actif
+  const stackableDefault = pricing?.overrides?.settings?.stackableDefault;
+  const couponStackable = activeOverrideEUR
+    ? (typeof activeOverrideEUR.stackableWithCoupons === 'boolean'
+        ? activeOverrideEUR.stackableWithCoupons
+        : (stackableDefault ?? false))
+    : true;
+  const couponApplies = promoApplies && couponStackable;
+
+  const hasOverride = activeOverrideEUR !== null;
   let displayEUR = baseEUR;
   let displayUSD = baseUSD;
   let discountEUR = 0;
   let discountUSD = 0;
 
-  if (promoApplies) {
+  if (couponApplies) {
     if (activePromo.discountType === "percentage") {
       discountEUR = baseEUR * (activePromo.discountValue / 100);
       discountUSD = baseUSD * (activePromo.discountValue / 100);
@@ -3239,6 +3247,9 @@ const BookingRequest: React.FC = () => {
                 <p className="text-sm text-gray-500">{isLawyer ? "Avocat" : "Expatrié"} • {displayDuration} min</p>
               </div>
               <div className="text-right">
+                {(hasOverride || discountEUR > 0) && (
+                  <p className="text-xs text-gray-400 line-through">{(standardEUR?.totalAmount ?? baseEUR).toFixed(2)}€</p>
+                )}
                 <p className="text-lg font-bold text-red-600">{displayEUR.toFixed(2)}€</p>
               </div>
             </div>
@@ -3696,6 +3707,11 @@ const BookingRequest: React.FC = () => {
               {/* Price card - Desktop version */}
               <div className="flex items-center justify-center flex-col bg-white rounded-xl p-4 border border-gray-200 min-w-[130px]">
                 <div className="text-center">
+                  {(hasOverride || discountEUR > 0) && (
+                    <div className="text-xs text-gray-400 line-through">
+                      {(standardEUR?.totalAmount ?? baseEUR).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                    </div>
+                  )}
                   <div className="text-3xl font-extrabold text-red-600">{displayEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
                   <div className="text-sm text-gray-500">/ ${displayUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                 </div>
