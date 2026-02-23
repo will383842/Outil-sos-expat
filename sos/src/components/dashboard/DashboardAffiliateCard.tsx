@@ -68,17 +68,17 @@ const DashboardAffiliateCard: React.FC = () => {
   const totalReferrals = referrals.length || affiliateData?.totalReferrals || 0;
 
   return (
-    <div className={`${UI.card} p-4 sm:p-6 overflow-hidden relative`}>
+    <div className={`${UI.card} p-3 sm:p-5 overflow-hidden relative`}>
       {/* Subtle gradient accent */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500" />
 
       {/* Header */}
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 flex-shrink-0">
-          <Gift className="w-6 h-6 text-white" />
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 flex-shrink-0">
+          <Gift className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 dark:text-white text-base sm:text-lg">
+          <h3 className="font-semibold text-gray-900 dark:text-white text-base">
             <FormattedMessage
               id="dashboard.affiliate.title"
               defaultMessage="Gagnez de l'argent en partageant !"
@@ -87,7 +87,7 @@ const DashboardAffiliateCard: React.FC = () => {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             <FormattedMessage
               id="dashboard.affiliate.subtitle"
-              defaultMessage="Partagez votre lien et gagnez des commissions sur chaque inscription, appel et abonnement"
+              defaultMessage="Partagez votre lien et gagnez des commissions sur chaque appel effectué"
             />
           </p>
         </div>
@@ -95,7 +95,7 @@ const DashboardAffiliateCard: React.FC = () => {
 
       {/* Mini stats — uniquement si données disponibles */}
       {hasData && (totalReferrals > 0 || totalEarned > 0) && (
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-2 mb-3">
           <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3 text-center">
             <div className="flex items-center justify-center gap-1.5 mb-1">
               <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -132,7 +132,7 @@ const DashboardAffiliateCard: React.FC = () => {
               {shareUrl}
             </span>
           </div>
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-3">
             <button
               onClick={copyLink}
               className={`flex-1 min-h-[48px] rounded-xl font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${
@@ -164,24 +164,24 @@ const DashboardAffiliateCard: React.FC = () => {
       )}
 
       {/* How it works - 3 steps */}
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/15 dark:to-teal-900/15 rounded-xl p-4 mb-4">
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/15 dark:to-teal-900/15 rounded-xl p-3 mb-3">
+        <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">
           <FormattedMessage
             id="dashboard.affiliate.howItWorks"
             defaultMessage="Comment \u00e7a marche ?"
           />
         </p>
-        <div className="space-y-2.5">
+        <div className="space-y-1.5">
           {[
             { icon: Share2, msgId: "dashboard.affiliate.step1", defaultMsg: "Partagez votre lien avec vos proches" },
-            { icon: Users, msgId: "dashboard.affiliate.step2", defaultMsg: "Ils s'inscrivent via votre lien" },
-            { icon: Zap, msgId: "dashboard.affiliate.step3", defaultMsg: "Vous gagnez des commissions automatiquement" },
+            { icon: Users, msgId: "dashboard.affiliate.step2", defaultMsg: "Ils consultent un expert via votre lien" },
+            { icon: Zap, msgId: "dashboard.affiliate.step3", defaultMsg: "Vous gagnez des commissions sur chaque appel" },
           ].map((step, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-full bg-white dark:bg-white/10 flex items-center justify-center flex-shrink-0 shadow-sm">
-                <step.icon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <div key={i} className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-white dark:bg-white/10 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <step.icon className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-xs text-gray-600 dark:text-gray-300">
                 <FormattedMessage id={step.msgId} defaultMessage={step.defaultMsg} />
               </p>
             </div>

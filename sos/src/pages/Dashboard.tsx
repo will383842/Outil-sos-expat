@@ -2325,14 +2325,6 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                 <ActivePromoBanner providerRole={user.role as "lawyer" | "expat"} />
               )}
 
-              {/* QUICK ACTIONS - Visible on profile tab */}
-              {activeTab === "profile" && (
-                <QuickActions
-                  user={user}
-                  onTabChange={(tab) => setSearchParams({ tab })}
-                />
-              )}
-
               {/* PROFIL — Vue et Édition unifiées */}
               {activeTab === "profile" && (
                 <div className={`${softCard} overflow-hidden tab-content-animate`}>
