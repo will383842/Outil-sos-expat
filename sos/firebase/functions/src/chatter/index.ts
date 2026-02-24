@@ -96,7 +96,7 @@ export { adminToggleChatterVisibility } from "./callables/admin/toggleVisibility
 export {
   adminInitializeCountryRotation,
   adminGetCountryRotationStatus,
-  adminAdvanceCycle,
+  adminAdvanceCycleV2,
   adminUpdateCycleThreshold,
 } from "./callables/countryRotation";
 

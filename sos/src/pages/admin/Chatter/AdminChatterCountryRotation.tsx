@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from "@/config/firebase";
+import { functions, functionsWest2 } from "@/config/firebase";
 
 // Design tokens
 const UI = {
@@ -167,9 +167,9 @@ const AdminChatterCountryRotation: React.FC = () => {
     setError(null);
 
     try {
-      const adminAdvanceCycle = httpsCallable(functionsWest2, 'adminAdvanceCycle');
+      const adminAdvanceCycleV2 = httpsCallable(functions, 'adminAdvanceCycleV2'); // west1 temporarily — west2 quota saturated
 
-      const result = await adminAdvanceCycle();
+      const result = await adminAdvanceCycleV2();
       const data = result.data as { success: boolean; newCycle: number; message?: string };
 
       if (data.success) {

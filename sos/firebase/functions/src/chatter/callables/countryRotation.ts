@@ -222,9 +222,9 @@ export const adminGetCountryRotationStatus = onCall(
 /**
  * Manually advance to next cycle (admin only)
  */
-export const adminAdvanceCycle = onCall(
+export const adminAdvanceCycleV2 = onCall(
   {
-    region: "europe-west2",
+    region: "europe-west1", // Temporarily west1 — west2 quota saturated by stuck Cloud Run deletions
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
@@ -248,7 +248,7 @@ export const adminAdvanceCycle = onCall(
       };
     } catch (error) {
       if (error instanceof HttpsError) throw error;
-      logger.error("[adminAdvanceCycle] Error", { error });
+      logger.error("[adminAdvanceCycleV2] Error", { error });
       throw new HttpsError("internal", "Failed to advance cycle");
     }
   }

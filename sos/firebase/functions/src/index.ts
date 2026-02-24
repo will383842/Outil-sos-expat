@@ -2956,7 +2956,7 @@ export {
   adminExportChatters,
   adminBulkChatterAction,
   // Admin Country Rotation
-  adminAdvanceCycle,
+  adminAdvanceCycleV2, // Renamed from adminAdvanceCycle (old Cloud Run service stuck in deletion)
   adminUpdateCycleThreshold,
   // Admin Posts
   adminGetPendingPosts,
