@@ -47,7 +47,7 @@ export const adminGetTrainingModules = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -127,7 +127,7 @@ export const adminCreateTrainingModule = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -230,7 +230,7 @@ export const adminUpdateTrainingModule = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -307,7 +307,7 @@ export const adminDeleteTrainingModule = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -382,7 +382,7 @@ export const adminSeedTrainingModules = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
   },
@@ -423,7 +423,7 @@ export const adminReorderTrainingModules = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },

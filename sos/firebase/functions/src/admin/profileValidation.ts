@@ -406,7 +406,7 @@ export const approveProfile = onCall(
   {
     region: "europe-west3",
     memory: "512MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     minInstances: 0,
     timeoutSeconds: 120,
   },
@@ -533,7 +533,7 @@ export const rejectProfile = onCall(
   {
     region: "europe-west3",
     memory: "512MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     minInstances: 0,
     timeoutSeconds: 120,
   },
@@ -643,7 +643,7 @@ export const requestChanges = onCall(
   {
     region: "europe-west3",
     memory: "512MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     minInstances: 0,
     timeoutSeconds: 120,
   },
@@ -773,7 +773,7 @@ export const getValidationQueue = onCall(
   {
     region: "europe-west3",
     memory: "512MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     minInstances: 0,
     timeoutSeconds: 120,
   },

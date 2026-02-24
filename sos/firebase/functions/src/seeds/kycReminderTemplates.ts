@@ -524,7 +524,7 @@ export const initKYCReminderTemplates = onCall(
   {
     region: "europe-west1",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (request) => {
     // Vérifier l'authentification admin

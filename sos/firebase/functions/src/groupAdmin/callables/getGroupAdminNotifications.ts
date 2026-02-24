@@ -36,7 +36,7 @@ export const getGroupAdminNotifications = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

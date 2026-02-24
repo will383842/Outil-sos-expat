@@ -38,7 +38,7 @@ export const notificationRetry = onSchedule(
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
   },
   async () => {
     console.log("🔄 [NotificationRetry] Starting retry process...");
@@ -228,7 +228,7 @@ async function moveToDeadLetterQueue(
 export const triggerNotificationRetry = onCall(
   {
     region: "europe-west3",
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (request) => {
     if (!request.auth) {
@@ -272,7 +272,7 @@ export const triggerNotificationRetry = onCall(
 export const retrySpecificDelivery = onCall(
   {
     region: "europe-west3",
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (request) => {
     if (!request.auth) {
@@ -351,7 +351,7 @@ export const retrySpecificDelivery = onCall(
 export const getDLQStats = onCall(
   {
     region: "europe-west3",
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (request) => {
     if (!request.auth) {

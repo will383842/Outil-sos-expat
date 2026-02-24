@@ -48,21 +48,21 @@ function getDb() {
 const FUNCTION_CONFIG = {
   region: "europe-west1",
   memory: "256MiB" as const,
-  cpu: 0.25,
+  cpu: 0.083,
   timeoutSeconds: 60,
 };
 
 const BULK_FUNCTION_CONFIG = {
   region: "europe-west1",
   memory: "512MiB" as const,
-  cpu: 0.5,
+  cpu: 0.083,
   timeoutSeconds: 300,
 };
 
 const HARD_DELETE_CONFIG = {
   region: "europe-west1",
   memory: "1GiB" as const,
-  cpu: 1,
+  cpu: 0.083,
   timeoutSeconds: 540, // 9 minutes for GDPR purge
 };
 

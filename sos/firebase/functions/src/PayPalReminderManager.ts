@@ -444,7 +444,7 @@ export const scheduledPayPalReminders = onSchedule(
     timeZone: "Europe/Paris",
     region: "europe-west3",
     memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - simple queries
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 300,
   },
   async () => {
@@ -463,7 +463,7 @@ export const triggerPayPalReminders = onCall(
     region: "europe-west3",
     cors: ALLOWED_ORIGINS,
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
   },
   async (request) => {
@@ -503,7 +503,7 @@ export const getPayPalReminderStatus = onCall(
     region: "europe-west3",
     cors: ALLOWED_ORIGINS,
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (request) => {
     // Verifier les permissions admin

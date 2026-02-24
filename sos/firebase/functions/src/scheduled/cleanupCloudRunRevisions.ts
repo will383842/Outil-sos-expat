@@ -85,7 +85,7 @@ export const cleanupCloudRunRevisions = scheduler.onSchedule(
     timeZone: 'Europe/Paris',
     region: 'europe-west1',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 540, // 9 min — peut y avoir beaucoup de services
   },
   async () => {

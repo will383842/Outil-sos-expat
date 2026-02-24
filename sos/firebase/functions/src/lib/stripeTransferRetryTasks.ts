@@ -115,7 +115,7 @@ export async function scheduleTransferRetryTask(payload: TransferRetryPayload): 
 export const executeStripeTransferRetry = onRequest(
   {
     region: "europe-west1",
-    cpu: 0.25,
+    cpu: 0.083,
     // P0 AUDIT FIX: Add TASKS_AUTH_SECRET to verify Cloud Tasks auth header
     secrets: [STRIPE_SECRET_KEY, TASKS_AUTH_SECRET],
     timeoutSeconds: 60,

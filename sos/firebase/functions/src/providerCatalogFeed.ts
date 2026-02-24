@@ -385,7 +385,7 @@ export const providerCatalogFeed = onRequest(
     region: "europe-west1", // Changed from us-central1 to reduce egress costs
     timeoutSeconds: 300, // 5 minutes max
     memory: "512MiB",
-    cpu: 1,
+    cpu: 0.083,
     maxInstances: 5,
     minInstances: 0,
     concurrency: 10,

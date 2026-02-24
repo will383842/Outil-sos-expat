@@ -74,7 +74,7 @@ export const adminGetInfluencersList = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -198,7 +198,7 @@ export const adminGetInfluencerDetail = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -295,7 +295,7 @@ export const adminProcessInfluencerWithdrawal = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -372,7 +372,7 @@ export const adminUpdateInfluencerStatus = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -454,7 +454,7 @@ export const adminGetPendingInfluencerWithdrawals = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -480,7 +480,7 @@ export const adminGetInfluencerConfig = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -502,7 +502,7 @@ export const adminUpdateInfluencerConfig = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -543,7 +543,7 @@ export const adminUpdateCommissionRules = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -604,7 +604,7 @@ export const adminGetRateHistory = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -639,7 +639,7 @@ export const adminUpdateAntiFraudConfig = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -680,7 +680,7 @@ export const adminGetInfluencerLeaderboard = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -746,7 +746,7 @@ export const adminExportInfluencers = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
   },
@@ -879,7 +879,7 @@ export const adminBulkInfluencerAction = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
   },

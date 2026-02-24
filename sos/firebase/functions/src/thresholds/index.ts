@@ -36,14 +36,14 @@ const REGION = 'europe-west3';
 const standardConfig = {
   region: REGION,
   memory: '256MiB' as const,
-  cpu: 0.25,
+  cpu: 0.083,
   maxInstances: 10,
 };
 
 const scheduledConfig = {
   region: REGION,
   memory: '512MiB' as const,
-  cpu: 0.5,
+  cpu: 0.083,
   maxInstances: 1,
   timeoutSeconds: 300,
 };

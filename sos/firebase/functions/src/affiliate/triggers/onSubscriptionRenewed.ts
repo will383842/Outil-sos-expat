@@ -76,7 +76,7 @@ export const affiliateOnSubscriptionRenewed = onDocumentUpdated(
     document: "subscriptions/{providerId}",
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (event) => {

@@ -32,7 +32,7 @@ export const getInfluencerResources = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -133,7 +133,7 @@ export const downloadInfluencerResource = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -219,7 +219,7 @@ export const copyInfluencerResourceText = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

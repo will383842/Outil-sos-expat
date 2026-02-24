@@ -260,7 +260,7 @@ function serializeForResponse(obj: any, seen: WeakSet<object> = new WeakSet(), d
 export const translateProvider = onCall(
   {
     region: 'europe-west1',
-    cpu: 0.5,
+    cpu: 0.083,
     maxInstances: 10,
     memory: '512MiB',
     timeoutSeconds: 120,

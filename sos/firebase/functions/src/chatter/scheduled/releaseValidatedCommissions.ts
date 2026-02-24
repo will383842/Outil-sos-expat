@@ -24,7 +24,7 @@ export const chatterReleaseValidatedCommissions = onSchedule(
     schedule: "30 * * * *", // Every hour at minute 30
     region: "europe-west3",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
     retryCount: 3,
   },

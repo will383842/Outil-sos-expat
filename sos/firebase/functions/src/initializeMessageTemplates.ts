@@ -6,7 +6,7 @@ import { MessageTemplate } from './MessageManager';
 const CPU_OPTIMIZED_CONFIG = {
   region: 'europe-west1' as const,
   memory: '256MiB' as const,
-  cpu: 0.25 as const,
+  cpu: 0.083 as const,
   timeoutSeconds: 120,
   maxInstances: 3,
   minInstances: 0,

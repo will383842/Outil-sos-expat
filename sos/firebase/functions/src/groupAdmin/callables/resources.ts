@@ -32,7 +32,7 @@ export const getGroupAdminResources = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -124,7 +124,7 @@ export const getGroupAdminResourceContent = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -212,7 +212,7 @@ export const trackGroupAdminResourceUsage = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -300,7 +300,7 @@ export const getGroupAdminProcessedResourceContent = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

@@ -43,7 +43,7 @@ export const ALLOWED_ORIGINS = [
 export const emergencyConfig = {
   region: "europe-west1" as const,
   memory: "256MiB" as const,
-  cpu: 0.25,
+  cpu: 0.083,  // QUOTA FIX: 0.25 → 0.083 (min Firebase) to stay under 48 vCPU/region
   maxInstances: 3,
   minInstances: 0,
   concurrency: 1,
@@ -59,7 +59,7 @@ export const emergencyConfig = {
 export const adminConfig = {
   region: "europe-west1" as const,
   memory: "512MiB" as const,
-  cpu: 0.25,  // Reduced from 0.5 - admin functions mostly do simple DB operations
+  cpu: 0.083,  // QUOTA FIX: 0.25 → 0.083 to stay under 48 vCPU/region
   maxInstances: 5,
   minInstances: 0,
   concurrency: 1,
@@ -75,7 +75,7 @@ export const adminConfig = {
 export const chatterAdminConfig = {
   region: "europe-west2" as const,
   memory: "512MiB" as const,
-  cpu: 0.25,
+  cpu: 0.083,  // QUOTA FIX: 0.25 → 0.083 to stay under 48 vCPU/region
   maxInstances: 5,
   minInstances: 0,
   concurrency: 1,
@@ -89,7 +89,7 @@ export const chatterAdminConfig = {
 export const affiliateAdminConfig = {
   region: "europe-west2" as const,
   memory: "512MiB" as const,
-  cpu: 0.25,
+  cpu: 0.083,  // QUOTA FIX: 0.25 → 0.083 to stay under 48 vCPU/region
   maxInstances: 5,
   minInstances: 0,
   concurrency: 1,
@@ -105,10 +105,10 @@ export const affiliateAdminConfig = {
 export const userConfig = {
   region: "europe-west1" as const,
   memory: "512MiB" as const,
-  cpu: 1,  // FIX: concurrency > 1 requires cpu >= 1
+  cpu: 0.083,  // QUOTA FIX: 1.0 → 0.083 to stay under 48 vCPU/region
   maxInstances: 20,
   minInstances: 0,
-  concurrency: 10,
+  concurrency: 1,  // QUOTA FIX: 10 → 1 (cpu < 1 requires concurrency = 1)
   cors: ALLOWED_ORIGINS,
 };
 
@@ -120,10 +120,10 @@ export const userConfig = {
 export const highTrafficConfig = {
   region: "europe-west1" as const,
   memory: "512MiB" as const,
-  cpu: 1,
+  cpu: 0.083,  // QUOTA FIX: 1.0 → 0.083 to stay under 48 vCPU/region
   maxInstances: 50,
-  minInstances: 0, // Reduced from 1 to save costs - cold start is acceptable
-  concurrency: 40,
+  minInstances: 0,
+  concurrency: 1,  // QUOTA FIX: 40 → 1 (cpu < 1 requires concurrency = 1)
   cors: ALLOWED_ORIGINS,
 };
 
@@ -135,10 +135,10 @@ export const highTrafficConfig = {
 export const webhookConfig = {
   region: "europe-west1" as const,
   memory: "512MiB" as const,
-  cpu: 0.25,  // Reduced from 0.5 - webhooks mostly wait for external API responses
+  cpu: 0.083,  // QUOTA FIX: 0.25 → 0.083 to stay under 48 vCPU/region
   maxInstances: 30,
   minInstances: 0,
-  concurrency: 1, // Important: one webhook at a time per instance
+  concurrency: 1,
   cors: ALLOWED_ORIGINS,
 };
 
@@ -150,7 +150,7 @@ export const webhookConfig = {
 export const scheduledConfig = {
   region: "europe-west1" as const,
   memory: "512MiB" as const,
-  cpu: 0.25,  // Reduced from 0.5 - scheduled tasks mostly do DB operations
+  cpu: 0.083,  // QUOTA FIX: 0.25 → 0.083 to stay under 48 vCPU/region
   maxInstances: 1,
   minInstances: 0,
   concurrency: 1,
@@ -182,7 +182,7 @@ export const triggerConfig = {
 export const heavyProcessingConfig = {
   region: "europe-west1" as const,
   memory: "1GiB" as const,
-  cpu: 1,
+  cpu: 0.25,  // QUOTA FIX: 1.0 → 0.25 (heavy tasks like PDF/backup need more than 0.083)
   maxInstances: 5,
   minInstances: 0,
   concurrency: 1,

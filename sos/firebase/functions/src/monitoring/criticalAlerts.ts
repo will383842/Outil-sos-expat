@@ -490,7 +490,7 @@ export const runSystemHealthCheck = onSchedule(
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 120
   },
   async () => {
@@ -520,7 +520,7 @@ export const cleanupOldAlerts = onSchedule(
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async () => {
     const db = admin.firestore();

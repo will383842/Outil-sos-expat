@@ -64,7 +64,7 @@ const findCallSessionByPaymentId = async (database: any, paymentId: string): Pro
 const emergencyConfig = {
   region: "europe-west1",
   memory: "256MiB" as const,
-  cpu: 0.25,
+  cpu: 0.083,
   maxInstances: 3,
   minInstances: 0,
   concurrency: 1,
@@ -992,7 +992,7 @@ export const executeCallTask = onRequest(
     // P0 FIX: Use fractional CPU to reduce quota consumption (like twilioCallWebhook)
     // With concurrency: 1, we can use cpu < 1 which uses less quota per instance
     // 0.25 CPU is sufficient since function mostly waits for Twilio API responses
-    cpu: 0.25,
+    cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
     concurrency: 1,   // P0 FIX: Set to 1 to allow fractional CPU (concurrency > 1 requires cpu >= 1)
@@ -1011,7 +1011,7 @@ export const setProviderAvailableTask = onRequest(
     region: CALL_FUNCTIONS_REGION,
     timeoutSeconds: 30,
     memory: "256MiB" as const,
-    cpu: 0.25,
+    cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,
     concurrency: 1,
@@ -1029,7 +1029,7 @@ export const busySafetyTimeoutTask = onRequest(
     region: CALL_FUNCTIONS_REGION,
     timeoutSeconds: 30,
     memory: "256MiB" as const,
-    cpu: 0.25,
+    cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,
     concurrency: 1,
@@ -1300,7 +1300,7 @@ export const scheduledCleanup = onSchedule(
   {
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     maxInstances: 1,
     minInstances: 0,
     concurrency: 1,

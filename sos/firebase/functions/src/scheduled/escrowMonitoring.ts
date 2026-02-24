@@ -478,7 +478,7 @@ export const escrowMonitoringDaily = onSchedule(
     schedule: "0 8 * * *", // Tous les jours à 8h00 UTC
     timeZone: "UTC",
     region: "europe-west3",
-    cpu: 0.25,
+    cpu: 0.083,
     secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST],
   },
   async () => {

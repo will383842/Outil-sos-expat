@@ -51,10 +51,10 @@ export const adminGetRestoreConfirmationCode = onCall(
     region: "europe-west1",
     timeoutSeconds: 30,
     memory: "256MiB",
-    cpu: 1,
+    cpu: 0.083,
     minInstances: 0,
     maxInstances: 10,
-    concurrency: 80,
+    concurrency: 1,
   },
   async (request) => {
     if (!request.auth) {

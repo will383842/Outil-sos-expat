@@ -223,7 +223,7 @@ export const executePayoutRetryTask = onRequest(
   {
     region: "europe-west1",
     invoker: "public", // P0 FIX: Required for Cloud Tasks to invoke this function
-    cpu: 0.25,
+    cpu: 0.083,
     secrets: [TASKS_AUTH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (req, res) => {
@@ -469,7 +469,7 @@ export async function cancelPayoutRetryTask(taskId: string): Promise<void> {
 export const retryFailedPayout = onCall(
   {
     region: "europe-west1",
-    cpu: 0.25,
+    cpu: 0.083,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (request) => {

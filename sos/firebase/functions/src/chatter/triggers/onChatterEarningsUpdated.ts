@@ -34,7 +34,7 @@ export const chatterOnChatterEarningsUpdated = onDocumentUpdated(
     document: "chatters/{chatterId}",
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 120,
   },
   async (event) => {

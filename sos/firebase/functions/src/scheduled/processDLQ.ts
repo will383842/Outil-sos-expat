@@ -87,7 +87,7 @@ export const processWebhookDLQ = onSchedule(
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 300,
   },
   async () => {
@@ -181,7 +181,7 @@ export const cleanupWebhookDLQ = onSchedule(
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async () => {
     logger.info('[DLQ Cleanup] Starting cleanup...');

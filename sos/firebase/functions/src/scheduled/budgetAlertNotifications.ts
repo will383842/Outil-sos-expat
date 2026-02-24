@@ -55,7 +55,7 @@ export const checkBudgetAlertsScheduled = onSchedule(
     timeZone: "Europe/Paris",
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 120,
   },
   async () => {
@@ -138,7 +138,7 @@ export const triggerBudgetAlertCheck = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (request) => {
@@ -208,7 +208,7 @@ export const checkSingleServiceBudget = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (request) => {

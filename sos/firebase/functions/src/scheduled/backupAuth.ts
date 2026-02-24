@@ -133,7 +133,7 @@ export const backupFirebaseAuth = onSchedule(
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
     memory: '1GiB',
-    cpu: 1,
+    cpu: 0.083,
     timeoutSeconds: 540
   },
   async () => {
@@ -262,7 +262,7 @@ export const cleanupOldAuthBackups = onSchedule(
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async () => {
     logger.info('[AuthBackup] Starting cleanup of old backups...');

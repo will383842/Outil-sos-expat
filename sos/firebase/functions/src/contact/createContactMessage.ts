@@ -142,7 +142,7 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining
 export const createContactMessage = onRequest(
   {
     region: REGION,
-    cpu: 0.25,
+    cpu: 0.083,
     cors: ALLOWED_ORIGINS,
     maxInstances: 10,
     secrets: [META_CAPI_TOKEN],

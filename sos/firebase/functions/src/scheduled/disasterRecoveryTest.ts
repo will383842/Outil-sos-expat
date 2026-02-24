@@ -755,7 +755,7 @@ export const runMonthlyDRTest = onSchedule(
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
     memory: '512MiB',
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
   },
   async () => {

@@ -52,7 +52,7 @@ export const adminProcessPayoutWise = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
     secrets: WISE_PAYOUT_SECRETS,
@@ -237,7 +237,7 @@ export const adminProcessPayoutManual = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
     secrets: [ENCRYPTION_KEY],
@@ -360,7 +360,7 @@ export const adminRejectPayout = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -485,7 +485,7 @@ export const adminApprovePayout = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -580,7 +580,7 @@ export const adminGetPendingPayouts = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

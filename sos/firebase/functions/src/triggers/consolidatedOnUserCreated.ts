@@ -67,7 +67,7 @@ export const consolidatedOnUserCreated = onDocumentCreated(
     document: "users/{userId}",
     region: "europe-west3",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 120,
     secrets: [
       TELEGRAM_BOT_TOKEN,

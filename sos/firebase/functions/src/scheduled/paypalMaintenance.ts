@@ -40,7 +40,7 @@ export const cleanupUncapturedPayPalOrders = onSchedule(
     timeZone: "Europe/Paris",
     timeoutSeconds: 300, // 5 minutes pour traiter les annulations API
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async () => {
@@ -182,7 +182,7 @@ export const sendPayoutSuccessEmail = onDocumentUpdated(
   {
     document: "paypal_payouts/{payoutId}",
     region: "europe-west3",
-    cpu: 0.25,
+    cpu: 0.083,
     secrets: EMAIL_SECRETS,
   },
   async (event) => {

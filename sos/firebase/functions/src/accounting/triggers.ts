@@ -19,7 +19,7 @@ import { JournalEntry } from './types';
 const TRIGGER_CONFIG = {
   region: 'europe-west3',
   memory: '256MiB' as const,
-  cpu: 0.25,
+  cpu: 0.083,
   timeoutSeconds: 60,
 };
 

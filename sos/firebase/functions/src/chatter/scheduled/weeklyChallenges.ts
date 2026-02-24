@@ -529,7 +529,7 @@ export const chatterCreateWeeklyChallenge = onSchedule(
     schedule: "5 0 * * 1", // Every Monday at 00:05 UTC
     region: "europe-west3",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
     retryCount: 3,
   },
@@ -557,7 +557,7 @@ export const chatterUpdateChallengeLeaderboard = onSchedule(
     schedule: "0 * * * *", // Every hour at minute 0
     region: "europe-west3",
     memory: "1GiB",
-    cpu: 1,
+    cpu: 0.083,
     timeoutSeconds: 540,
     retryCount: 2,
   },
@@ -586,7 +586,7 @@ export const chatterEndWeeklyChallenge = onSchedule(
     schedule: "55 23 * * 0", // Every Sunday at 23:55 UTC
     region: "europe-west3",
     memory: "1GiB",
-    cpu: 1,
+    cpu: 0.083,
     timeoutSeconds: 540,
     retryCount: 3,
   },
@@ -615,7 +615,7 @@ export const getCurrentChallenge = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
   },
   async (request: CallableRequest): Promise<{
@@ -660,7 +660,7 @@ export const getChallengeHistory = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
   },
   async (

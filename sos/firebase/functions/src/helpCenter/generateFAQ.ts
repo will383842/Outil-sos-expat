@@ -277,7 +277,7 @@ function generateFAQFromContent(
 export const onHelpArticleCreated = onDocumentCreated(
   {
     document: 'help_articles/{articleId}',
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (event) => {
     const articleId = event.params.articleId;
@@ -326,7 +326,7 @@ export const onHelpArticleCreated = onDocumentCreated(
 export const onHelpArticleUpdated = onDocumentUpdated(
   {
     document: 'help_articles/{articleId}',
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (event) => {
     const articleId = event.params.articleId;

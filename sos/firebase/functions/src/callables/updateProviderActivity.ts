@@ -5,7 +5,7 @@ import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 const FUNCTION_OPTIONS = {
   region: 'europe-west1' as const,
   cors: ALLOWED_ORIGINS,
-  cpu: 0.25,
+  cpu: 0.083,
 };
 
 // Lazy initialization to avoid issues during deployment analysis

@@ -81,7 +81,7 @@ export const twilioCallWebhook = onRequest(
     // P0 CRITICAL FIX 2026-02-04: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
     invoker: "public",
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     maxInstances: 10,  // P1 FIX: Increased from 3 for better scalability
     minInstances: 1,   // P0 FIX 2026-02-23: Restored to 1 — cold start on real-time Twilio webhook is unacceptable
     timeoutSeconds: 90, // P1-2 FIX 2026-02-23: Explicit 90s — validation + Firestore + Cloud Tasks scheduling
@@ -1225,7 +1225,7 @@ export const twilioAmdTwiml = onRequest(
     // P0 CRITICAL FIX 2026-02-04: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
     invoker: "public",
     memory: '256MiB',  // P0 FIX: 128MiB was too low (firebase-admin requires ~150MB)
-    cpu: 0.25,
+    cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,  // Reduced to 0 to free CPU quota for createPaymentIntent. AMD TwiML is called after AMD detection completes, brief cold start acceptable.
     concurrency: 1,
@@ -1943,7 +1943,7 @@ export const twilioGatherResponse = onRequest(
     // P0 CRITICAL FIX 2026-02-04: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
     invoker: "public",
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
     concurrency: 1,

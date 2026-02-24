@@ -888,7 +888,7 @@ export const runFunctionalHealthCheck = onSchedule(
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '512MiB',
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300
   },
   async () => {
@@ -921,7 +921,7 @@ export const runCriticalFunctionalCheck = onSchedule(
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 120
   },
   async () => {
@@ -949,7 +949,7 @@ export const cleanupFunctionalData = onSchedule(
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB',
-    cpu: 0.25
+    cpu: 0.083
   },
   async () => {
     const thirtyDaysAgo = new Date();

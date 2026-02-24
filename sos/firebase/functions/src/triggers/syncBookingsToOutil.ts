@@ -310,7 +310,7 @@ export const retryOutilSync = onSchedule(
     timeZone: "Europe/Paris",
     secrets: [OUTIL_SYNC_API_KEY],
     timeoutSeconds: 120,
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async () => {
     const db = admin.firestore();

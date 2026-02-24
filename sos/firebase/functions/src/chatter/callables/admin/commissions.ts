@@ -629,7 +629,7 @@ export const adminGetCommissionStats = onCall(
  * Export commissions to CSV format
  */
 export const adminExportCommissionsCSV = onCall(
-  { ...adminConfig, timeoutSeconds: 120, memory: "1GiB", cpu: 1 },
+  { ...adminConfig, timeoutSeconds: 120, memory: "1GiB", cpu: 0.083 },
   async (request): Promise<{ success: boolean; csv: string; count: number }> => {
     ensureInitialized();
     await assertAdmin(request);

@@ -18,7 +18,7 @@ export const checkProviderInactivity = scheduler.onSchedule(
     // ✅ BUG FIX: Ajouter configuration pour éviter les échecs silencieux
     region: 'europe-west3',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 180, // 3 minutes max pour traiter tous les prestataires
   },
   async () => {

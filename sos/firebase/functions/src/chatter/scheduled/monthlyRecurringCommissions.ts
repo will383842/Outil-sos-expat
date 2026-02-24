@@ -39,7 +39,7 @@ export const chatterMonthlyRecurringCommissions = onSchedule(
     schedule: "0 2 1 * *", // 1st of each month at 02:00 UTC
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 120,
     retryCount: 2,
   },
@@ -82,7 +82,7 @@ export const chatterValidatePendingReferralCommissions = onSchedule(
     schedule: "0 3 * * *", // Daily at 03:00 UTC
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 300,
     retryCount: 2,
   },

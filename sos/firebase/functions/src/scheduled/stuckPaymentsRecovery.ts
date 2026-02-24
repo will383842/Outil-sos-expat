@@ -72,7 +72,7 @@ export const stuckPaymentsRecovery = onSchedule(
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     // P0 FIX 2026-02-01: Added PayPal secrets for stuck PayPal payments recovery
     secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
@@ -746,7 +746,7 @@ async function alertStuckPayments(
 export const triggerStuckPaymentsRecovery = onCall(
   {
     region: "europe-west3",
-    cpu: 0.25,
+    cpu: 0.083,
     // P0 FIX 2026-02-01: Added PayPal secrets
     secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
@@ -805,7 +805,7 @@ export const triggerStuckPaymentsRecovery = onCall(
 export const capturePayPalPaymentManually = onCall(
   {
     region: "europe-west3",
-    cpu: 0.25,
+    cpu: 0.083,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (request) => {

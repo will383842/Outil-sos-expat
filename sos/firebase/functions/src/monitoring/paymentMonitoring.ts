@@ -467,7 +467,7 @@ export const runPaymentHealthCheck = onSchedule(
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 120
   },
   async () => {
@@ -496,7 +496,7 @@ export const collectDailyPaymentMetrics = onSchedule(
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
     memory: '256MiB',
-    cpu: 0.25
+    cpu: 0.083
   },
   async () => {
     functionsLogger.info('[PaymentMonitoring] Collecting daily metrics...');
@@ -519,7 +519,7 @@ export const cleanupOldPaymentAlerts = onSchedule(
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
     memory: '256MiB',
-    cpu: 0.25
+    cpu: 0.083
   },
   async () => {
     const sevenDaysAgo = new Date();

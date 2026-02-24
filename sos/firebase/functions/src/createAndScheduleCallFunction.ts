@@ -135,7 +135,7 @@ export const createAndScheduleCallHTTPS = onCall(
   {
     region: 'europe-west1',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     maxInstances: 3,
     minInstances: 1,
     concurrency: 1,
@@ -541,8 +541,13 @@ export const createAndScheduleCallHTTPS = onCall(
         }
       } catch (scheduleError) {
         console.error(`❌ [${requestId}] Erreur planification Cloud Task:`, scheduleError);
-        // On ne fait pas échouer la création de session, juste un warning
-        // L'appel pourra être relancé manuellement si besoin
+        // CRITICAL: scheduling failure = call will never happen, throw to fail the function
+        // The payment is only authorized (capture_method=manual), not captured yet
+        throw new HttpsError(
+          'internal',
+          'Erreur lors de la planification de l\'appel. Veuillez réessayer.',
+          { requestId, scheduleError: String(scheduleError) }
+        );
       }
 
       // ========================================

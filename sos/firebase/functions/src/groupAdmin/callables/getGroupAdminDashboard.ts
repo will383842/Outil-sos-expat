@@ -36,7 +36,7 @@ export const getGroupAdminDashboard = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

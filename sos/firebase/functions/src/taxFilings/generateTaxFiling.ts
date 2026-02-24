@@ -323,7 +323,7 @@ interface GenerateTaxFilingResponse {
 export const generateTaxFiling = onCall(
   {
     region: 'europe-west1',
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
     memory: '512MiB',
   },
@@ -447,7 +447,7 @@ export const generateTaxFiling = onCall(
 export const generateAllTaxFilings = onCall(
   {
     region: 'europe-west1',
-    cpu: 1,
+    cpu: 0.083,
     timeoutSeconds: 540,
     memory: '1GiB',
   },

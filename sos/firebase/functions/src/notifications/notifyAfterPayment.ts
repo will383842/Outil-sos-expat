@@ -10,7 +10,7 @@ const CPU_OPTIMIZED_CONFIG = {
   region: 'europe-west1' as const,
   cors: ALLOWED_ORIGINS,
   memory: '256MiB' as const,
-  cpu: 0.25 as const,
+  cpu: 0.083 as const,
   timeoutSeconds: 30,
   maxInstances: 3,
   minInstances: 0,

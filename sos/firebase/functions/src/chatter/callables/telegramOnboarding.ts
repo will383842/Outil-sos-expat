@@ -365,7 +365,7 @@ export const generateTelegramLink = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: [
       "https://sos-expat.com",
@@ -473,7 +473,7 @@ export const checkTelegramLinkStatus = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 15,
     cors: [
       "https://sos-expat.com",
@@ -573,7 +573,7 @@ export const telegramChatterBotWebhook = onRequest(
   {
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     // Allow unauthenticated access (Telegram servers need to call this)
     invoker: "public",
@@ -985,7 +985,7 @@ export const skipTelegramOnboarding = onCall(
   {
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 15,
     cors: [
       "https://sos-expat.com",

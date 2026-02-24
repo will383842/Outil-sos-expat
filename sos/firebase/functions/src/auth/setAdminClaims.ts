@@ -52,7 +52,7 @@ export const setAdminClaims = onCall(
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (request) => {
     if (!request.auth) {
@@ -111,7 +111,7 @@ export const bootstrapFirstAdmin = onCall(
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (request) => {
     if (!request.auth) {
@@ -191,7 +191,7 @@ export const initializeAdminClaims = onCall(
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (request) => {
     // P0 SECURITY FIX: Require authentication

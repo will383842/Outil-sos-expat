@@ -72,7 +72,7 @@ export const registerLocalBackup = onCall(
   {
     region: "europe-west1",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
   },
   async (request) => {
@@ -135,7 +135,7 @@ export const listLocalBackups = onCall(
   {
     region: "europe-west1",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
   },
   async (request) => {
@@ -183,7 +183,7 @@ export const deleteLocalBackupRecord = onCall(
   {
     region: "europe-west1",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
   },
   async (request) => {

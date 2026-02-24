@@ -223,7 +223,7 @@ export const monitorTelegramUsage = onSchedule(
     schedule: '0 9 * * *', // 9h Paris every day
     timeZone: 'Europe/Paris',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 120,
     secrets: [TELEGRAM_BOT_TOKEN],
   },

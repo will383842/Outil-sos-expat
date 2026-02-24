@@ -198,7 +198,7 @@ export const migrateProfileSlugs = onRequest(
   {
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 540, // 9 minutes max
     maxInstances: 1,
     invoker: 'public', // Allow unauthenticated access (protected by API key)
@@ -354,7 +354,7 @@ export const auditProfileSlugs = onRequest(
   {
     region: REGION,
     memory: '512MiB',
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
     maxInstances: 1,
     invoker: 'public', // Allow unauthenticated access (protected by API key)

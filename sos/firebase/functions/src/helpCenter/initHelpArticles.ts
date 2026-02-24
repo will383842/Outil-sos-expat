@@ -20,7 +20,7 @@ export const initSingleHelpArticle = onRequest(
   {
     region: 'europe-west1',
     memory: '512MiB',
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
     cors: ALLOWED_ORIGINS,
   },
@@ -64,7 +64,7 @@ export const initHelpArticlesBatch = onRequest(
   {
     region: 'europe-west1',
     memory: '1GiB',
-    cpu: 1,
+    cpu: 0.083,
     timeoutSeconds: 540,
     cors: ALLOWED_ORIGINS,
   },
@@ -108,7 +108,7 @@ export const checkHelpCategories = onRequest(
   {
     region: 'europe-west1',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -135,7 +135,7 @@ export const clearHelpArticles = onRequest(
   {
     region: 'europe-west1',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
   },

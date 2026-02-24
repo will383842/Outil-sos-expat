@@ -722,7 +722,7 @@ async function getOrCreateStripeCustomer(
 
 export const createSubscription = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onCall(async (data, context) => {
     // Verify authentication
     if (!context.auth) {
@@ -925,7 +925,7 @@ export const createSubscription = functions
 
 export const updateSubscription = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onCall(async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -1010,7 +1010,7 @@ export {
 
 export const createStripePortalSession = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onCall(async (_data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -1042,7 +1042,7 @@ export const createStripePortalSession = functions
 
 export const checkAiQuota = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onCall(async (_data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -1187,7 +1187,7 @@ export const checkAiQuota = functions
 
 export const recordAiCall = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onCall(async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -1359,7 +1359,7 @@ export const recordAiCall = functions
  */
 export const processAiCall = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onCall(async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -1614,7 +1614,7 @@ export const processAiCall = functions
 // DISABLED: export const stripeWebhook = functions
 export const _stripeWebhook_DISABLED = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onRequest(async (req, res) => {
     // P0 FIX: This function is disabled - returning 410 Gone
     console.warn('[DEPRECATED] subscription/stripeWebhook called but is disabled. Use main stripeWebhook instead.');
@@ -1900,7 +1900,7 @@ async function isAdminV2(request: { auth?: { uid: string; token: { admin?: boole
 export const updateTrialConfig = onCall(
   {
     region: 'europe-west1',
-    cpu: 0.25,
+    cpu: 0.083,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -1951,7 +1951,7 @@ export const updateTrialConfig = onCall(
 export const updatePlanPricing = onCall(
   {
     region: 'europe-west1',
-    cpu: 0.25,
+    cpu: 0.083,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -2038,7 +2038,7 @@ export const updatePlanPricing = onCall(
 export const updateTrialConfigV2 = onCall(
   {
     region: 'europe-west1',
-    cpu: 0.25,
+    cpu: 0.083,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -2090,7 +2090,7 @@ export const updateTrialConfigV2 = onCall(
 export const updatePlanPricingV2 = onCall(
   {
     region: 'europe-west1',
-    cpu: 0.25,
+    cpu: 0.083,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -2175,7 +2175,7 @@ export const updatePlanPricingV2 = onCall(
  */
 export const initializeSubscriptionPlans = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onCall(async (_data, context) => {
     // Verify admin (via custom claims or Firestore)
     if (!await isAdmin(context)) {
@@ -2291,7 +2291,7 @@ export const initializeSubscriptionPlans = functions
  */
 export const setFreeAiAccess = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onCall(async (data, context) => {
     // Verify admin (via custom claims or Firestore)
     if (!await isAdmin(context)) {
@@ -2371,7 +2371,7 @@ export const setFreeAiAccess = functions
  */
 export const createAnnualStripePrices = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onCall(async (_data, context) => {
     // Verify admin
     if (!await isAdmin(context)) {
@@ -2540,7 +2540,7 @@ export const createAnnualStripePrices = functions
  * Use this if monthly prices are missing
  */
 export const createMonthlyStripePrices = functions
-  .runWith({ secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST], cpu: 0.25 })
+  .runWith({ secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST], cpu: 0.083 })
   .region('europe-west1')
   .https.onCall(async (_data, context) => {
     // Verify admin
@@ -2670,7 +2670,7 @@ export const createMonthlyStripePrices = functions
  */
 export const migrateSubscriptionPlansTo9Languages = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.25 })
+  .runWith({ cpu: 0.083 })
   .https.onCall(async (_data, context) => {
     // Verify admin
     if (!await isAdmin(context)) {

@@ -603,7 +603,7 @@ export const onProviderCreated = onDocumentCreated(
     document: "sos_profiles/{uid}",
     region: "europe-west3",
     memory: "512MiB",      // P1 FIX: Stripe API + storage upload need more than default 256MiB
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,   // P1 FIX: Explicit 5-min timeout (Stripe account creation can be slow)
     secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, META_CAPI_TOKEN],
   },

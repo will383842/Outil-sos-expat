@@ -96,7 +96,7 @@ export const adminGetRecruitmentsList = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -237,7 +237,7 @@ export const adminGetGroupAdminRecruits = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

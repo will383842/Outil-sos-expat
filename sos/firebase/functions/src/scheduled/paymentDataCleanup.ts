@@ -31,7 +31,7 @@ export const paymentDataCleanup = onSchedule(
     timeZone: "Europe/Paris",
     timeoutSeconds: 540,
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
   },
   async () => {
     console.log("🧹 [PaymentCleanup] Starting scheduled cleanup...");

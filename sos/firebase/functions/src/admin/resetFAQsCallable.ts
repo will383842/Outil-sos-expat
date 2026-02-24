@@ -241,7 +241,7 @@ export const adminResetFAQs = onCall(
   {
     region: "europe-west1",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 540, // 9 minutes
   },
   async (request) => {

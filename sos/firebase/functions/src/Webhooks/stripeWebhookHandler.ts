@@ -1423,7 +1423,7 @@ export const stripeWebhook = onRequest(
     region: "europe-west3", // Coherence avec createPaymentIntent (payments en west3)
     invoker: "public", // P0 CRITICAL FIX: Allow unauthenticated access for Stripe webhooks
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     secrets: [
       STRIPE_SECRET_KEY_TEST,
       STRIPE_SECRET_KEY_LIVE,

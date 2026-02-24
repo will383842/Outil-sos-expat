@@ -38,7 +38,7 @@ export const adminGetInfluencerTrainingModules = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
   },
   async (request): Promise<{
@@ -116,7 +116,7 @@ export const adminCreateInfluencerTrainingModule = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (request): Promise<{ success: boolean; moduleId: string }> => {
@@ -216,7 +216,7 @@ export const adminUpdateInfluencerTrainingModule = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -291,7 +291,7 @@ export const adminDeleteInfluencerTrainingModule = onCall(
   {
     region: "europe-west2",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 30,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -356,7 +356,7 @@ export const adminSeedInfluencerTrainingModules = onCall(
   {
     region: "europe-west2",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 120,
   },
   async (request): Promise<{ success: boolean; modulesCreated: number; errors: string[] }> => {

@@ -69,7 +69,7 @@ export const migrateProvidersToUid = onCall(
     region: "europe-west1",
     timeoutSeconds: 540, // 9 minutes
     memory: "1GiB",
-    cpu: 1, // Required when memory > 512MiB
+    cpu: 0.083,
   },
   async (request: CallableRequest<MigrationRequest>): Promise<MigrationResult> => {
     // Check if user is admin

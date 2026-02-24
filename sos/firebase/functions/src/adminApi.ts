@@ -73,7 +73,7 @@ export const api = onRequest(
   {
     region: 'europe-west1',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     concurrency: 1,
     timeoutSeconds: 60,
     minInstances: 0,

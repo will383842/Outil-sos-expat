@@ -170,7 +170,7 @@ export const chatterOnProviderRegistered = onDocumentCreated(
     document: "users/{userId}",
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   handleChatterProviderRegistered
@@ -289,7 +289,7 @@ export const chatterOnClientRegistered = onDocumentCreated(
     document: "users/{userId}",
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   handleChatterClientRegistered

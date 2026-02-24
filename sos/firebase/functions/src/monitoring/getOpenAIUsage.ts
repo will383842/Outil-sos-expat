@@ -363,7 +363,7 @@ function processCostsData(costsData: OpenAICostsAPIResponse): {
 export const getOpenAIUsage = functions.onCall(
   {
     region: 'europe-west1',
-    cpu: 0.25,
+    cpu: 0.083,
     memory: '256MiB',
     timeoutSeconds: 60,
     secrets: [OPENAI_API_KEY],

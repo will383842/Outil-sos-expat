@@ -33,7 +33,7 @@ export const forceEndCallTask = onRequest(
     // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
     region: CALL_FUNCTIONS_REGION,
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     maxInstances: 5,
     minInstances: 0,
     concurrency: 1,

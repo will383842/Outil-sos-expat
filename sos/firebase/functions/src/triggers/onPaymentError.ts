@@ -335,7 +335,7 @@ export const onPaymentRecordCreated = onDocumentCreated(
     document: "payment_records/{paymentId}",
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (event) => {
     const paymentData = event.data?.data();
@@ -365,7 +365,7 @@ export const onPaymentRecordUpdated = onDocumentUpdated(
     document: "payment_records/{paymentId}",
     region: "europe-west3",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (event) => {
     const beforeData = event.data?.before.data();

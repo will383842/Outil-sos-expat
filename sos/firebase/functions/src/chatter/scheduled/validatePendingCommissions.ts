@@ -23,7 +23,7 @@ export const chatterValidatePendingCommissions = onSchedule(
     schedule: "0 * * * *", // Every hour at minute 0
     region: "europe-west3",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
     retryCount: 3,
   },

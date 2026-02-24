@@ -190,7 +190,7 @@ import * as path from "node:path";
 export const admin_templates_seed = onCall({
     region: "europe-west1",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     minInstances: 0,
     timeoutSeconds: 120
   }, async (req) => {
@@ -260,7 +260,7 @@ import { UnclaimedFundsProcessor } from "../scheduled/processUnclaimedFunds";
 export const admin_unclaimed_funds_stats = onCall({
   region: "europe-west1",
   memory: "256MiB",
-  cpu: 0.25,
+  cpu: 0.083,
   timeoutSeconds: 60
 }, async (req) => {
   assertAdmin(req);
@@ -277,7 +277,7 @@ export const admin_unclaimed_funds_stats = onCall({
 export const admin_unclaimed_funds_list = onCall({
   region: "europe-west1",
   memory: "256MiB",
-  cpu: 0.25,
+  cpu: 0.083,
   timeoutSeconds: 60
 }, async (req) => {
   assertAdmin(req);
@@ -307,7 +307,7 @@ export const admin_unclaimed_funds_list = onCall({
 export const admin_forfeited_funds_list = onCall({
   region: "europe-west1",
   memory: "256MiB",
-  cpu: 0.25,
+  cpu: 0.083,
   timeoutSeconds: 60
 }, async (req) => {
   assertAdmin(req);
@@ -338,7 +338,7 @@ export const admin_forfeited_funds_list = onCall({
 export const admin_process_exceptional_claim = onCall({
   region: "europe-west1",
   memory: "256MiB",
-  cpu: 0.25,
+  cpu: 0.083,
   timeoutSeconds: 120
 }, async (req) => {
   assertAdmin(req);
@@ -394,7 +394,7 @@ export const admin_process_exceptional_claim = onCall({
 export const admin_trigger_unclaimed_funds_processing = onCall({
   region: "europe-west1",
   memory: "512MiB",
-  cpu: 0.5,
+  cpu: 0.083,
   timeoutSeconds: 300
 }, async (req) => {
   assertAdmin(req);
@@ -416,7 +416,7 @@ import { StripeManager } from "../StripeManager";
 export const adminRefundPayment = onCall({
   region: "europe-west1",
   memory: "512MiB",
-  cpu: 0.5,
+  cpu: 0.083,
   timeoutSeconds: 120,
 }, async (req) => {
   assertAdmin(req);
@@ -457,7 +457,7 @@ export const adminRefundPayment = onCall({
 export const adminBulkRefund = onCall({
   region: "europe-west1",
   memory: "512MiB",
-  cpu: 0.5,
+  cpu: 0.083,
   timeoutSeconds: 300,
 }, async (req) => {
   assertAdmin(req);

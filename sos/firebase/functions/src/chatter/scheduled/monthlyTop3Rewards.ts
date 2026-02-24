@@ -550,7 +550,7 @@ export const chatterMonthlyTop3Rewards = onSchedule(
     schedule: "30 0 1 * *", // 1st of month at 00:30 UTC
     region: "europe-west3",
     memory: "1GiB",
-    cpu: 1,
+    cpu: 0.083,
     timeoutSeconds: 540, // 9 minutes
     retryCount: 3,
   },

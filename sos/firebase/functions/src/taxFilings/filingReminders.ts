@@ -107,7 +107,7 @@ export const sendFilingReminders = onSchedule(
     region: 'europe-west1',
     timeoutSeconds: 120,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
   },
   async (_event: ScheduledEvent) => {
     logger.info('Starting tax filing reminders check');
@@ -185,7 +185,7 @@ export const sendFilingReminders = onSchedule(
 export const triggerFilingReminders = onCall(
   {
     region: 'europe-west1',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 120,
     memory: '256MiB',
   },

@@ -79,7 +79,7 @@ function getLimits() {
 const FUNCTION_OPTIONS = {
   region: PAYMENT_FUNCTIONS_REGION,
   memory: '256MiB' as const,
-  cpu: 0.25,
+  cpu: 0.083,
   concurrency: 1,
   timeoutSeconds: 120, // P1-2 FIX 2026-02-23: 60→120s — 40+ Firestore ops + Stripe API calls need margin
   minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)

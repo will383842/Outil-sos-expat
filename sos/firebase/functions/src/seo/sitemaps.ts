@@ -104,7 +104,7 @@ export const sitemapProfiles = onRequest(
   {
     region: 'europe-west1',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
     maxInstances: 5,
     minInstances: 0,
@@ -265,7 +265,7 @@ export const sitemapHelp = onRequest(
   {
     region: 'europe-west1',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
     maxInstances: 3,
     minInstances: 0,
@@ -435,7 +435,7 @@ export const sitemapLanding = onRequest(
   {
     region: 'europe-west1',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
     maxInstances: 3,
     minInstances: 0,
@@ -511,7 +511,7 @@ export const sitemapFaq = onRequest(
   {
     region: 'europe-west1',
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
     maxInstances: 3,
     minInstances: 0,

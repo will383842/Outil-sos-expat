@@ -28,7 +28,7 @@ export const bloggerValidatePendingCommissions = onSchedule(
     region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
   },
   async () => {
@@ -58,7 +58,7 @@ export const bloggerReleaseValidatedCommissions = onSchedule(
     region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
   },
   async () => {
@@ -88,7 +88,7 @@ export const bloggerUpdateMonthlyRankings = onSchedule(
     region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
   },
   async () => {
@@ -118,7 +118,7 @@ export const bloggerDeactivateExpiredRecruitments = onSchedule(
     region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "256MiB",
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 120,
   },
   async () => {
@@ -147,7 +147,7 @@ export const bloggerFinalizeMonthlyRankings = onSchedule(
     region: "europe-west3",
     timeZone: "Europe/Paris",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 300,
   },
   async () => {

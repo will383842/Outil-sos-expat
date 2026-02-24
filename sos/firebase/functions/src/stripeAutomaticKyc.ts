@@ -262,7 +262,7 @@ export const checkKycStatus = onCall<KycStatusData>(
  * Cette fonction crée des comptes Custom qui nécessitent plus de travail de KYC
  */
 export const createCustomAccount = onCall(
-  { region: "europe-west1", cpu: 0.25 },
+  { region: "europe-west1", cpu: 0.083 },
   async (request) => {
     console.warn("⚠️ createCustomAccount is deprecated. Use createExpressAccount instead.");
 

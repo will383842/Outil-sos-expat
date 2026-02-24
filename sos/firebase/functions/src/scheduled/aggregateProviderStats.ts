@@ -53,7 +53,7 @@ export const aggregateProviderStats = onSchedule(
     timeZone: "Europe/Paris",
     timeoutSeconds: 540, // 9 minutes
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
   },
   async () => {
     console.log("📊 [ProviderStats] Starting hourly aggregation...");
@@ -79,7 +79,7 @@ export const triggerProviderStatsAggregation = onCall(
   {
     region: "europe-west3",
     memory: "512MiB",
-    cpu: 0.5,
+    cpu: 0.083,
     timeoutSeconds: 540,
   },
   async (req) => {
@@ -426,7 +426,7 @@ export const backfillProviderStats = onCall(
   {
     region: "europe-west3",
     memory: "1GiB",
-    cpu: 1,
+    cpu: 0.083,
     timeoutSeconds: 540,
   },
   async (req) => {

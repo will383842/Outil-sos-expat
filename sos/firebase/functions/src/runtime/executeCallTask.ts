@@ -158,8 +158,8 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
       if (providerId) {
         const profileDoc = await db.collection('sos_profiles').doc(providerId).get();
         const profileData = profileDoc.data();
-        if (profileData && profileData.status !== 'available') {
-          logger.warn(`⚠️ [executeCallTask] Provider ${providerId} is no longer available (status: ${profileData.status}), aborting call`);
+        if (profileData && (profileData.availability !== 'available' || profileData.isOnline !== true)) {
+          logger.warn(`⚠️ [executeCallTask] Provider ${providerId} is no longer available (availability: ${profileData.availability}, isOnline: ${profileData.isOnline}), aborting call`);
           await lockRef.update({ status: 'aborted_provider_unavailable', updatedAt: new Date() });
 
           // C1 AUDIT FIX: Cancel payment immediately when provider is unavailable
@@ -188,7 +188,7 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
           });
           return;
         }
-        logger.info(`✅ [executeCallTask] Provider ${providerId} still available`);
+        logger.info(`✅ [executeCallTask] Provider ${providerId} still available (availability: ${profileData?.availability}, isOnline: ${profileData?.isOnline})`);
       }
     }
 
@@ -330,7 +330,7 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
 //   {
 //     region: "europe-west1",
 //     memory: "512MiB",
-//     cpu: 0.25,              // réduit la pression CPU
+//     cpu: 0.083,              // réduit la pression CPU
 //     maxInstances: 10,       // limite le fan-out
 //     minInstances: 0,        // pas de réservation permanente
 //     concurrency: 1,         // OK avec cpu < 1

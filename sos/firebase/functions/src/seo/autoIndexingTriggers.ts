@@ -23,7 +23,7 @@ export const onProfileCreated = onDocumentCreated(
     document: 'sos_profiles/{profileId}',
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (event) => {
@@ -86,7 +86,7 @@ export const onProfileUpdated = onDocumentUpdated(
     document: 'sos_profiles/{profileId}',
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (event) => {
@@ -142,7 +142,7 @@ export const onBlogPostCreated = onDocumentCreated(
     document: 'blog_posts/{postId}',
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (event) => {
@@ -189,7 +189,7 @@ export const onBlogPostUpdated = onDocumentUpdated(
     document: 'blog_posts/{postId}',
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (event) => {
@@ -223,7 +223,7 @@ export const onHelpArticleCreated = onDocumentCreated(
     document: 'help_articles/{articleId}',
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (event) => {
@@ -270,7 +270,7 @@ export const onHelpArticleUpdated = onDocumentUpdated(
     document: 'help_articles/{articleId}',
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (event) => {
@@ -311,7 +311,7 @@ export const onLandingPageCreated = onDocumentCreated(
     document: 'landing_pages/{pageId}',
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (event) => {
@@ -349,7 +349,7 @@ export const onFaqCreated = onDocumentCreated(
     document: 'faqs/{faqId}',
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (event) => {
@@ -396,7 +396,7 @@ export const onFaqUpdated = onDocumentUpdated(
     document: 'faqs/{faqId}',
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async (event) => {
@@ -440,7 +440,7 @@ export const scheduledSitemapPing = onSchedule(
     schedule: '0 8 * * *', // 8h Paris tous les jours
     region: REGION,
     memory: '256MiB',
-    cpu: 0.25,
+    cpu: 0.083,
     timeoutSeconds: 60,
   },
   async () => {
