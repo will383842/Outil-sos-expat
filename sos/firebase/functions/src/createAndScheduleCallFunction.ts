@@ -134,7 +134,7 @@ async function calculateProviderEarnings(
 export const createAndScheduleCallHTTPS = onCall(
   {
     region: 'europe-west1',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     maxInstances: 3,
     minInstances: 1,

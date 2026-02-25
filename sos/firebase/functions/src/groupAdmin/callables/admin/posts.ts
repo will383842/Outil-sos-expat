@@ -65,7 +65,7 @@ interface CreatePostInput {
 export const adminCreatePost = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -156,7 +156,7 @@ interface UpdatePostInput {
 export const adminUpdatePost = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -232,7 +232,7 @@ export const adminUpdatePost = onCall(
 export const adminDeletePost = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -296,7 +296,7 @@ interface GetPostsListInput {
 export const adminGetPostsList = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

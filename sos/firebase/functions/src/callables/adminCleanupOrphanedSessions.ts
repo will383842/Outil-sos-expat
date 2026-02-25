@@ -203,7 +203,7 @@ export const adminGetOrphanedSessionsStats = onCall<void, Promise<{
 }>>(
   {
     region: 'europe-west1',
-    memory: '128MiB',
+    memory: '256MiB',
   },
   async (request) => {
     if (!request.auth) {

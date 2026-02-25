@@ -68,7 +68,7 @@ export const initializeChatterConfig = onCall(
   {
     cors: ALLOWED_ORIGINS,
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },
@@ -112,7 +112,7 @@ export const resetChatterConfigToDefaults = onCall(
   {
     cors: ALLOWED_ORIGINS,
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },
@@ -918,7 +918,7 @@ export const initializeChatterSystem = onCall(
   {
     cors: ALLOWED_ORIGINS,
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
   },

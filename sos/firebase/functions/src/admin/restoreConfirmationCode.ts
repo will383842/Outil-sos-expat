@@ -50,7 +50,7 @@ export const adminGetRestoreConfirmationCode = onCall(
   {
     region: "europe-west1",
     timeoutSeconds: 30,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     minInstances: 0,
     maxInstances: 10,

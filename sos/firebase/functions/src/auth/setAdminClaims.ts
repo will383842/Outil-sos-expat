@@ -51,7 +51,7 @@ export const setAdminClaims = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -110,7 +110,7 @@ export const bootstrapFirstAdmin = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -190,7 +190,7 @@ export const initializeAdminClaims = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {

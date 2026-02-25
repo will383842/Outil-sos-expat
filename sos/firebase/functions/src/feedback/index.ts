@@ -56,7 +56,7 @@ const FEEDBACK_COLLECTION = 'user_feedback';
 
 const functionConfig = {
   region: "europe-west1",
-  memory: "128MiB" as const,
+  memory: "256MiB" as const,
   cpu: 0.083,
   maxInstances: 5,
   minInstances: 0,

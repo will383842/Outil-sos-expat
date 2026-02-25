@@ -31,7 +31,7 @@ export const affiliateOnSubscriptionCreated = onDocumentCreated(
   {
     document: "subscriptions/{providerId}",
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
   },

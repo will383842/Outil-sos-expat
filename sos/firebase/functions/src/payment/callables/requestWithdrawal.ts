@@ -139,7 +139,7 @@ function validateInput(input: RequestWithdrawalInput): void {
 export const requestWithdrawal = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,

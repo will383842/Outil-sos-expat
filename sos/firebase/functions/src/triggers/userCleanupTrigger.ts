@@ -13,7 +13,7 @@ import { logger } from "firebase-functions/v2";
 // Configuration du trigger
 const triggerConfig = {
   region: "europe-west3",
-  memory: "128MiB" as const,
+  memory: "256MiB" as const,
   timeoutSeconds: 60,
 };
 

@@ -73,7 +73,7 @@ async function checkAdmin(auth: { uid: string } | undefined): Promise<string> {
 export const adminGetInfluencersList = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -197,7 +197,7 @@ export const adminGetInfluencersList = onCall(
 export const adminGetInfluencerDetail = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -294,7 +294,7 @@ export const adminGetInfluencerDetail = onCall(
 export const adminProcessInfluencerWithdrawal = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -371,7 +371,7 @@ export const adminProcessInfluencerWithdrawal = onCall(
 export const adminUpdateInfluencerStatus = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -453,7 +453,7 @@ export const adminUpdateInfluencerStatus = onCall(
 export const adminGetPendingInfluencerWithdrawals = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -479,7 +479,7 @@ export const adminGetPendingInfluencerWithdrawals = onCall(
 export const adminGetInfluencerConfig = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -501,7 +501,7 @@ export const adminGetInfluencerConfig = onCall(
 export const adminUpdateInfluencerConfig = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -542,7 +542,7 @@ export const adminUpdateInfluencerConfig = onCall(
 export const adminUpdateCommissionRules = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -603,7 +603,7 @@ export const adminUpdateCommissionRules = onCall(
 export const adminGetRateHistory = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -638,7 +638,7 @@ export const adminGetRateHistory = onCall(
 export const adminUpdateAntiFraudConfig = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -679,7 +679,7 @@ export const adminUpdateAntiFraudConfig = onCall(
 export const adminGetInfluencerLeaderboard = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -745,7 +745,7 @@ export const adminGetInfluencerLeaderboard = onCall(
 export const adminExportInfluencers = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
@@ -878,7 +878,7 @@ export {
 export const adminBulkInfluencerAction = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,

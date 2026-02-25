@@ -84,7 +84,7 @@ export const cleanupCloudRunRevisions = scheduler.onSchedule(
     schedule: '0 3 * * 0', // Chaque dimanche à 3h00
     timeZone: 'Europe/Paris',
     region: 'europe-west1',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 540, // 9 min — peut y avoir beaucoup de services
   },

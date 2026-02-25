@@ -95,7 +95,7 @@ interface RecruitmentsListInput {
 export const adminGetRecruitmentsList = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -236,7 +236,7 @@ interface GetRecruitsInput {
 export const adminGetGroupAdminRecruits = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

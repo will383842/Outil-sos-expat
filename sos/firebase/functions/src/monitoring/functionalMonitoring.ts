@@ -920,7 +920,7 @@ export const runCriticalFunctionalCheck = onSchedule(
     schedule: '0 */4 * * *', // Toutes les 4 heures
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 120
   },
@@ -948,7 +948,7 @@ export const cleanupFunctionalData = onSchedule(
     schedule: '0 4 * * 0', // Dimanche 4h
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083
   },
   async () => {

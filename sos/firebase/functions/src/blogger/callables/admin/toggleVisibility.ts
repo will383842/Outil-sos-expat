@@ -24,7 +24,7 @@ interface ToggleBloggerVisibilityResponse {
 export const adminToggleBloggerVisibility = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

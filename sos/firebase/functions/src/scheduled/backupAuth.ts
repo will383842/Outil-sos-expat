@@ -261,7 +261,7 @@ export const cleanupOldAuthBackups = onSchedule(
     schedule: '0 4 1 * *', // 1er du mois à 4h
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
   },
   async () => {

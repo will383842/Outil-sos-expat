@@ -281,7 +281,7 @@ export const cleanupOldBackups = onSchedule(
     schedule: "0 4 * * 0", // Dimanche a 4h
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
   },

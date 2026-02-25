@@ -61,7 +61,7 @@ async function assertAdmin(request: CallableRequest): Promise<string> {
 // ============================================================================
 
 export const adminGetGroupAdminPromotions = onCall(
-  { ...affiliateAdminConfig, memory: "128MiB", timeoutSeconds: 60 },
+  { ...affiliateAdminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{
     promotions: Array<AffiliatePromotion & {
       stats?: {
@@ -103,7 +103,7 @@ export const adminGetGroupAdminPromotions = onCall(
 // ============================================================================
 
 export const adminCreateGroupAdminPromotion = onCall(
-  { ...affiliateAdminConfig, memory: "128MiB", timeoutSeconds: 60 },
+  { ...affiliateAdminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; promotionId?: string; error?: string }> => {
     ensureInitialized();
     const adminUid = await assertAdmin(request);
@@ -153,7 +153,7 @@ export const adminCreateGroupAdminPromotion = onCall(
 // ============================================================================
 
 export const adminUpdateGroupAdminPromotion = onCall(
-  { ...affiliateAdminConfig, memory: "128MiB", timeoutSeconds: 60 },
+  { ...affiliateAdminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; error?: string }> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -207,7 +207,7 @@ export const adminUpdateGroupAdminPromotion = onCall(
 // ============================================================================
 
 export const adminDeleteGroupAdminPromotion = onCall(
-  { ...affiliateAdminConfig, memory: "128MiB", timeoutSeconds: 60 },
+  { ...affiliateAdminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; error?: string }> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -232,7 +232,7 @@ export const adminDeleteGroupAdminPromotion = onCall(
 // ============================================================================
 
 export const adminGetGroupAdminPromotionStats = onCall(
-  { ...affiliateAdminConfig, memory: "128MiB", timeoutSeconds: 60 },
+  { ...affiliateAdminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{
     promotion: AffiliatePromotion | null;
     stats: {
@@ -321,7 +321,7 @@ export const adminGetGroupAdminPromotionStats = onCall(
 // ============================================================================
 
 export const adminDuplicateGroupAdminPromotion = onCall(
-  { ...affiliateAdminConfig, memory: "128MiB", timeoutSeconds: 60 },
+  { ...affiliateAdminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; promotionId?: string; error?: string }> => {
     ensureInitialized();
     const adminUid = await assertAdmin(request);

@@ -46,7 +46,7 @@ async function checkAdminRole(uid: string): Promise<boolean> {
 export const adminGetTrainingModules = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -126,7 +126,7 @@ interface CreateModuleInput {
 export const adminCreateTrainingModule = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -229,7 +229,7 @@ interface UpdateModuleInput {
 export const adminUpdateTrainingModule = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -306,7 +306,7 @@ export const adminUpdateTrainingModule = onCall(
 export const adminDeleteTrainingModule = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -381,7 +381,7 @@ export const adminDeleteTrainingModule = onCall(
 export const adminSeedTrainingModules = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
@@ -422,7 +422,7 @@ export const adminSeedTrainingModules = onCall(
 export const adminReorderTrainingModules = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,

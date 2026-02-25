@@ -389,7 +389,7 @@ export const scheduledKYCReminders = onSchedule(
     schedule: "0 10 * * *", // Tous les jours à 10h00
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "128MiB", // OPTIMIZED: Reduced from 512MiB - simple queries
+    memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - simple queries
     cpu: 0.083,
     timeoutSeconds: 300, // 5 minutes max
   },

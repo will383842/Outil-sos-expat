@@ -102,7 +102,7 @@ function generateReplyHtml(firstName: string, userMessage: string, adminReply: s
 export const sendContactReply = onCall<ContactReplyRequest>(
   {
     region: 'europe-west1',
-    memory: '128MiB',
+    memory: '256MiB',
   },
   async (request) => {
     // Vérifier l'authentification admin

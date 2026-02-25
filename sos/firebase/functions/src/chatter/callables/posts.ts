@@ -67,7 +67,7 @@ async function assertAdmin(request: CallableRequest): Promise<string> {
  * Submit a new post
  */
 export const submitPost = onCall(
-  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     ensureInitialized();
     const uid = assertAuthenticated(request);
@@ -141,7 +141,7 @@ export const submitPost = onCall(
  * Get current chatter's posts
  */
 export const getMyPosts = onCall(
-  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     ensureInitialized();
     const uid = assertAuthenticated(request);
@@ -183,7 +183,7 @@ export const getMyPosts = onCall(
  * Get pending posts for moderation
  */
 export const adminGetPendingPosts = onCall(
-  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     ensureInitialized();
     await assertAdmin(request);
@@ -214,7 +214,7 @@ export const adminGetPendingPosts = onCall(
  * Moderate a post
  */
 export const adminModeratePost = onCall(
-  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
     ensureInitialized();
     const adminId = await assertAdmin(request);

@@ -466,7 +466,7 @@ export const runPaymentHealthCheck = onSchedule(
     schedule: '0 */4 * * *', // Every 4 hours (paiements = garder réactif)
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 120
   },
@@ -495,7 +495,7 @@ export const collectDailyPaymentMetrics = onSchedule(
     schedule: '0 6 * * *', // 6h du matin
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083
   },
   async () => {
@@ -518,7 +518,7 @@ export const cleanupOldPaymentAlerts = onSchedule(
     schedule: '0 3 * * 0', // Dimanche à 3h
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083
   },
   async () => {

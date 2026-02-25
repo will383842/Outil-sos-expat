@@ -838,7 +838,7 @@ export const getServiceBalanceAlerts = onCall(
   {
     region: 'europe-west3',
     cpu: 0.083,
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -892,7 +892,7 @@ export const acknowledgeServiceBalanceAlert = onCall(
   {
     region: 'europe-west3',
     cpu: 0.083,
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -950,7 +950,7 @@ export const updateServiceBalanceThreshold = onCall(
   {
     region: 'europe-west3',
     cpu: 0.083,
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -1035,7 +1035,7 @@ export const getServiceBalanceThresholds = onCall(
   {
     region: 'europe-west3',
     cpu: 0.083,
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

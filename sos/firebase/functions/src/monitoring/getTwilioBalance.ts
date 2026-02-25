@@ -108,7 +108,7 @@ export const getTwilioBalance = functions.onCall(
   {
     region: 'europe-west1',
     cpu: 0.083,
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 30,
     secrets: [TWILIO_ACCOUNT_SID_SECRET, TWILIO_AUTH_TOKEN_SECRET],
     cors: [/sos-expat\.com$/, /localhost/],

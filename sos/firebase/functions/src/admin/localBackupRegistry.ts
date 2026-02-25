@@ -71,7 +71,7 @@ interface LocalBackupRecord {
 export const registerLocalBackup = onCall(
   {
     region: "europe-west1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },
@@ -134,7 +134,7 @@ export const registerLocalBackup = onCall(
 export const listLocalBackups = onCall(
   {
     region: "europe-west1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },
@@ -182,7 +182,7 @@ export const listLocalBackups = onCall(
 export const deleteLocalBackupRecord = onCall(
   {
     region: "europe-west1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },

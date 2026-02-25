@@ -63,7 +63,7 @@ const findCallSessionByPaymentId = async (database: any, paymentId: string): Pro
 // === CPU/MEM CONFIGS to control vCPU usage ===
 const emergencyConfig = {
   region: "europe-west1",
-  memory: "128MiB" as const,
+  memory: "256MiB" as const,
   cpu: 0.083,
   maxInstances: 3,
   minInstances: 0,
@@ -426,7 +426,7 @@ const GLOBAL_SECRETS = [
 // ⚠️ cast 'as any' pour accepter eventarc si les types ne sont pas à jour
 setGlobalOptions({
   region: "europe-west1",
-  memory: "128MiB",
+  memory: "256MiB",
   eventarc: { location: "europe-west1" },
   secrets: GLOBAL_SECRETS,
 } as any);
@@ -1011,7 +1011,7 @@ export const setProviderAvailableTask = onRequest(
     // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
     region: CALL_FUNCTIONS_REGION,
     timeoutSeconds: 30,
-    memory: "128MiB" as const,
+    memory: "256MiB" as const,
     cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,
@@ -1029,7 +1029,7 @@ export const busySafetyTimeoutTask = onRequest(
   {
     region: CALL_FUNCTIONS_REGION,
     timeoutSeconds: 30,
-    memory: "128MiB" as const,
+    memory: "256MiB" as const,
     cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,
@@ -1300,7 +1300,7 @@ export { stripeWebhook } from "./Webhooks/stripeWebhookHandler";
 export const scheduledCleanup = onSchedule(
   {
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     maxInstances: 1,
     minInstances: 0,
@@ -1912,7 +1912,7 @@ export const manuallyTriggerCallExecution = onCall(
 export const testWebhook = onRequest(
   {
     region: "europe-west1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.1,
     minInstances: 0,
     concurrency: 1,

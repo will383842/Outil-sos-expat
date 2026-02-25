@@ -9,7 +9,7 @@ import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 const CPU_OPTIMIZED_CONFIG = {
   region: 'europe-west1' as const,
   cors: ALLOWED_ORIGINS,
-  memory: '128MiB' as const,
+  memory: '256MiB' as const,
   cpu: 0.083 as const,
   timeoutSeconds: 30,
   maxInstances: 3,

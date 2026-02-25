@@ -68,7 +68,7 @@ interface GetReferralStatsResponse {
 }
 
 export const adminGetReferralStats = onCall(
-  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<GetReferralStatsResponse> => {
     ensureInitialized();
 
@@ -270,7 +270,7 @@ interface GetFraudAlertsResponse {
 }
 
 export const adminGetReferralFraudAlerts = onCall(
-  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<GetFraudAlertsResponse> => {
     ensureInitialized();
 
@@ -325,7 +325,7 @@ interface ReviewFraudAlertInput {
 }
 
 export const adminReviewFraudAlert = onCall(
-  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
 
@@ -374,7 +374,7 @@ interface GetReferralCommissionsResponse {
 }
 
 export const adminGetReferralCommissions = onCall(
-  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<GetReferralCommissionsResponse> => {
     ensureInitialized();
 

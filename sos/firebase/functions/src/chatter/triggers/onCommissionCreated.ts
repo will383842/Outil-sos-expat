@@ -23,7 +23,7 @@ export const chatterOnCommissionCreated = onDocumentCreated(
   {
     document: "chatter_commissions/{commissionId}",
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },

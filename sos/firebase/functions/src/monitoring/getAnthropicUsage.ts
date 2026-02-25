@@ -130,7 +130,7 @@ export const getAnthropicUsage = functions.onCall(
   {
     region: 'europe-west1',
     cpu: 0.083,
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 60,
     cors: [/sos-expat\.com$/, /localhost/],
   },

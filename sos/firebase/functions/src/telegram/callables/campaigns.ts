@@ -91,7 +91,7 @@ export const telegram_createCampaign = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -195,7 +195,7 @@ export const telegram_getCampaigns = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -265,7 +265,7 @@ export const telegram_cancelCampaign = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -317,7 +317,7 @@ export const telegram_getCampaignDetail = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

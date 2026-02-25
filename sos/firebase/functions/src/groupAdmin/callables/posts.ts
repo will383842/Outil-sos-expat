@@ -31,7 +31,7 @@ function ensureInitialized() {
 export const getGroupAdminPosts = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -123,7 +123,7 @@ interface PostContentResponse {
 export const getGroupAdminPostContent = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -226,7 +226,7 @@ interface ProcessedPostResponse {
 export const getGroupAdminProcessedPost = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -385,7 +385,7 @@ interface TrackPostUsageInput {
 export const trackGroupAdminPostUsage = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

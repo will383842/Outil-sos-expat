@@ -48,7 +48,7 @@ async function verifyAdmin(userId: string, authToken?: Record<string, unknown>):
 export const adminGetGroupAdminConfig = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -97,7 +97,7 @@ interface UpdateConfigInput {
 export const adminUpdateGroupAdminConfig = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -191,7 +191,7 @@ export const adminUpdateGroupAdminConfig = onCall(
 export const adminGetGroupAdminConfigHistory = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

@@ -65,7 +65,7 @@ const DOC_PATH = "seo/domainAuthority";
 export const getDomainAuthority = onCall(
   {
     region: "europe-west1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },
@@ -133,7 +133,7 @@ export const getDomainAuthority = onCall(
 export const addManualDomainAuthority = onCall<AddManualScoreRequest>(
   {
     region: "europe-west1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },

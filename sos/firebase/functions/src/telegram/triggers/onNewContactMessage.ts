@@ -100,7 +100,7 @@ export const telegramOnNewContactMessage = onDocumentCreated(
   {
     region: "europe-west3",
     document: "contact_messages/{messageId}",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

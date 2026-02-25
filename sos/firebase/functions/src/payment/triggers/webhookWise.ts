@@ -268,7 +268,7 @@ export const paymentWebhookWise = onRequest(
     region: "europe-west3",
     // P0 CRITICAL FIX: Allow unauthenticated access for Wise webhooks (Cloud Run requires explicit public access)
     invoker: "public",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [WISE_WEBHOOK_SECRET],

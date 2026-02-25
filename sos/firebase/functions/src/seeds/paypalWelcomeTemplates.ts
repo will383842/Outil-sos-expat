@@ -1171,7 +1171,7 @@ export const initPayPalWelcomeTemplates = onCall(
   {
     region: "europe-west1",
     cors: true,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {

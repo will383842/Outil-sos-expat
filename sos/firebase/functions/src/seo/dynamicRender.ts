@@ -324,7 +324,7 @@ export function invalidateCache(pathPattern?: string): number {
 export const invalidateCacheEndpoint = onRequest(
   {
     region: 'europe-west1',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 30,
     minInstances: 0,

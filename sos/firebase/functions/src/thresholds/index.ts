@@ -35,7 +35,7 @@ const REGION = 'europe-west3';
 
 const standardConfig = {
   region: REGION,
-  memory: '128MiB' as const,
+  memory: '256MiB' as const,
   cpu: 0.083,
   maxInstances: 10,
 };

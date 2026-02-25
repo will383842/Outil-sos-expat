@@ -54,7 +54,7 @@ export const checkBudgetAlertsScheduled = onSchedule(
     schedule: "0 0,6,12,18 * * *", // Every 6 hours
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
   },
@@ -137,7 +137,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 export const triggerBudgetAlertCheck = onCall(
   {
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -207,7 +207,7 @@ export const triggerBudgetAlertCheck = onCall(
 export const checkSingleServiceBudget = onCall(
   {
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
   },

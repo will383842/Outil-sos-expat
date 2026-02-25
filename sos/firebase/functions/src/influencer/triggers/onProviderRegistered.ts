@@ -203,7 +203,7 @@ export const influencerOnProviderRegistered = onDocumentCreated(
   {
     document: "users/{userId}",
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -220,7 +220,7 @@ export const influencerOnProviderCallCompleted = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
   },

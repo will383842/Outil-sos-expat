@@ -454,7 +454,7 @@ export const getChatterMessageTemplates = onCall(
   {
     cors: ALLOWED_ORIGINS,
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -484,7 +484,7 @@ export const adminSeedMessageTemplates = onCall(
   {
     cors: ALLOWED_ORIGINS,
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -519,7 +519,7 @@ export const adminCreateMessageTemplate = onCall(
   {
     cors: ALLOWED_ORIGINS,
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -571,7 +571,7 @@ export const adminUpdateMessageTemplate = onCall(
   {
     cors: ALLOWED_ORIGINS,
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -625,7 +625,7 @@ export const adminDeleteMessageTemplate = onCall(
   {
     cors: ALLOWED_ORIGINS,
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -676,7 +676,7 @@ export const adminResetMessageTemplatesToDefaults = onCall(
   {
     cors: ALLOWED_ORIGINS,
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {

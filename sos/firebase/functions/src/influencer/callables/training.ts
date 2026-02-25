@@ -44,7 +44,7 @@ function ensureInitialized() {
 export const getInfluencerTrainingModules = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -168,7 +168,7 @@ export const getInfluencerTrainingModules = onCall(
 export const getInfluencerTrainingModuleContent = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -329,7 +329,7 @@ export const getInfluencerTrainingModuleContent = onCall(
 export const updateInfluencerTrainingProgress = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -390,7 +390,7 @@ export const updateInfluencerTrainingProgress = onCall(
 export const submitInfluencerTrainingQuiz = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -621,7 +621,7 @@ export const submitInfluencerTrainingQuiz = onCall(
 export const getInfluencerTrainingCertificate = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },

@@ -47,7 +47,7 @@ function getDb() {
 
 const FUNCTION_CONFIG = {
   region: "europe-west1",
-  memory: "128MiB" as const,
+  memory: "256MiB" as const,
   cpu: 0.083,
   timeoutSeconds: 60,
 };

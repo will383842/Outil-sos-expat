@@ -27,7 +27,7 @@ export const bloggerValidatePendingCommissions = onSchedule(
     schedule: "0 * * * *", // Every hour at minute 0
     region: "europe-west3",
     timeZone: "Europe/Paris",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -57,7 +57,7 @@ export const bloggerReleaseValidatedCommissions = onSchedule(
     schedule: "30 * * * *", // Every hour at minute 30
     region: "europe-west3",
     timeZone: "Europe/Paris",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -87,7 +87,7 @@ export const bloggerUpdateMonthlyRankings = onSchedule(
     schedule: "0 0 * * *", // Daily at midnight
     region: "europe-west3",
     timeZone: "Europe/Paris",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -117,7 +117,7 @@ export const bloggerDeactivateExpiredRecruitments = onSchedule(
     schedule: "0 1 * * *", // Daily at 1 AM
     region: "europe-west3",
     timeZone: "Europe/Paris",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
   },
@@ -146,7 +146,7 @@ export const bloggerFinalizeMonthlyRankings = onSchedule(
     schedule: "0 2 1 * *", // 1st of each month at 2 AM
     region: "europe-west3",
     timeZone: "Europe/Paris",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
   },

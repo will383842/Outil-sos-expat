@@ -128,7 +128,7 @@ export const getStripeBalance = functions.onCall(
   {
     region: 'europe-west1',
     cpu: 0.083,
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 30,
     secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST],
     cors: [/sos-expat\.com$/, /localhost/],

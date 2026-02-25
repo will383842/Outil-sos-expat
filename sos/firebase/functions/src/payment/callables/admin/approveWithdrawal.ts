@@ -60,7 +60,7 @@ interface ApproveWithdrawalInput {
  * The withdrawal status changes from 'pending' or 'validating' to 'approved'.
  */
 export const adminApproveWithdrawal = onCall(
-  { ...adminConfig, memory: '128MiB', timeoutSeconds: 30 },
+  { ...adminConfig, memory: '256MiB', timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean; message: string; withdrawal: WithdrawalRequest }> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);

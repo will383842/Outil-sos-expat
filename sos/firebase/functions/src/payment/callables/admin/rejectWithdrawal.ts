@@ -76,7 +76,7 @@ function getUserCollectionName(userType: PaymentUserType): string {
  * The withdrawal amount is returned to the user's available balance.
  */
 export const adminRejectWithdrawal = onCall(
-  { ...adminConfig, memory: '128MiB', timeoutSeconds: 30 },
+  { ...adminConfig, memory: '256MiB', timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean; message: string; withdrawal: WithdrawalRequest }> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);

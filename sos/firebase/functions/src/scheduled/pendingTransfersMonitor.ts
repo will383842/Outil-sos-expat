@@ -645,7 +645,7 @@ export const pendingTransfersMonitorScheduled = onSchedule(
     schedule: "0 */6 * * *", // Every 6 hours
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 180,
   },
@@ -738,7 +738,7 @@ export const pendingTransfersMonitorScheduled = onSchedule(
 export const getDetailedPendingTransfersStats = onCall(
   {
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },
@@ -786,7 +786,7 @@ export const getDetailedPendingTransfersStats = onCall(
 export const triggerPendingTransfersMonitor = onCall(
   {
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
   },
@@ -849,7 +849,7 @@ export const triggerPendingTransfersMonitor = onCall(
 export const forceRetryPendingTransfer = onCall(
   {
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },

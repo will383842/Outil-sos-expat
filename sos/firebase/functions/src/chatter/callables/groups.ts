@@ -70,7 +70,7 @@ async function assertAdmin(request: CallableRequest): Promise<string> {
 export const submitGroup = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -149,7 +149,7 @@ export const submitGroup = onCall(
 export const getAvailableGroups = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -197,7 +197,7 @@ export const getAvailableGroups = onCall(
 export const getMyGroups = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -231,7 +231,7 @@ export const getMyGroups = onCall(
 export const joinGroupAsChatter = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -296,7 +296,7 @@ export const joinGroupAsChatter = onCall(
 export const adminGetGroups = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -345,7 +345,7 @@ export const adminGetGroups = onCall(
 export const adminUpdateGroupStatus = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

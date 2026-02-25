@@ -42,8 +42,8 @@ export const ALLOWED_ORIGINS = [
  */
 export const emergencyConfig = {
   region: "europe-west1" as const,
-  memory: "128MiB" as const,
-  cpu: 0.083,  // QUOTA FIX: 0.25 → 0.083 (min Firebase) to stay under 48 vCPU/region
+  memory: "256MiB" as const,  // FIX: 128MiB caused OOM (174MiB used at startup)
+  cpu: 0.083,
   maxInstances: 3,
   minInstances: 0,
   concurrency: 1,
@@ -74,8 +74,8 @@ export const adminConfig = {
  */
 export const chatterAdminConfig = {
   region: "us-central1" as const,
-  memory: "128MiB" as const,
-  cpu: 0.125,  // TEMP: 0.083 → 0.125 for cold start on new region (184×0.125=23 vCPU < 24 quota)
+  memory: "256MiB" as const,  // FIX: 128MiB caused OOM (174MiB used at startup)
+  cpu: 0.083,
   maxInstances: 5,
   minInstances: 0,
   concurrency: 1,
@@ -88,8 +88,8 @@ export const chatterAdminConfig = {
  */
 export const affiliateAdminConfig = {
   region: "us-central1" as const,
-  memory: "128MiB" as const,
-  cpu: 0.125,  // TEMP: 0.083 → 0.125 for cold start on new region (184×0.125=23 vCPU < 24 quota)
+  memory: "256MiB" as const,  // FIX: 128MiB caused OOM (174MiB used at startup)
+  cpu: 0.083,
   maxInstances: 5,
   minInstances: 0,
   concurrency: 1,
@@ -164,9 +164,7 @@ export const scheduledConfig = {
  */
 export const triggerConfig = {
   region: "europe-west3" as const,
-  memory: "128MiB" as const,
-  // P0 AUDIT FIX 2026-02-21: Reduced from 0.25 to 0.083 (1/12 vCPU)
-  // 248 services × 0.25 = 62 vCPU → exceeds quota. 248 × 0.083 = 20.6 vCPU
+  memory: "256MiB" as const,  // FIX: 128MiB caused OOM (174MiB used at startup)
   cpu: 0.083,
   maxInstances: 10,
   minInstances: 0,

@@ -364,7 +364,7 @@ async function sendTelegramMessage(
 export const generateTelegramLink = onCall(
   {
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: [
@@ -472,7 +472,7 @@ export const generateTelegramLink = onCall(
 export const checkTelegramLinkStatus = onCall(
   {
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 15,
     cors: [
@@ -572,7 +572,7 @@ export const checkTelegramLinkStatus = onCall(
 export const telegramChatterBotWebhook = onRequest(
   {
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     // Allow unauthenticated access (Telegram servers need to call this)
@@ -984,7 +984,7 @@ export const telegramChatterBotWebhook = onRequest(
 export const skipTelegramOnboarding = onCall(
   {
     region: "europe-west3",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 15,
     cors: [

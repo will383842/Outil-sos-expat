@@ -17,7 +17,7 @@ export const checkProviderInactivity = scheduler.onSchedule(
     timeZone: 'Europe/Paris',
     // ✅ BUG FIX: Ajouter configuration pour éviter les échecs silencieux
     region: 'europe-west3',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 180, // 3 minutes max pour traiter tous les prestataires
   },

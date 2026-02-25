@@ -1036,7 +1036,7 @@ export const getHistoricalAnalytics = onCall(
   {
     region: CONFIG.region,
     cpu: 0.083,
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 60,
     minInstances: 0,
   },
@@ -1106,7 +1106,7 @@ export const cleanupOldAnalytics = onSchedule(
     schedule: '0 2 * * 0', // 02:00 UTC every Sunday
     timeZone: 'UTC',
     region: CONFIG.region,
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 120,
   },

@@ -107,7 +107,7 @@ export const initHelpArticlesBatch = onRequest(
 export const checkHelpCategories = onRequest(
   {
     region: 'europe-west1',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -134,7 +134,7 @@ export const checkHelpCategories = onRequest(
 export const clearHelpArticles = onRequest(
   {
     region: 'europe-west1',
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,

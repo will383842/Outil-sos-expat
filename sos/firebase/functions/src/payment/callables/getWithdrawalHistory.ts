@@ -133,7 +133,7 @@ function validateInput(input: GetWithdrawalHistoryInput): void {
 export const getWithdrawalHistory = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

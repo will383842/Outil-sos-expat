@@ -31,7 +31,7 @@ function ensureInitialized() {
 export const getGroupAdminResources = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -123,7 +123,7 @@ interface ResourceContentResponse {
 export const getGroupAdminResourceContent = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -211,7 +211,7 @@ interface TrackResourceUsageInput {
 export const trackGroupAdminResourceUsage = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -299,7 +299,7 @@ interface ProcessedContentResponse {
 export const getGroupAdminProcessedResourceContent = onCall(
   {
     region: "us-central1",
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

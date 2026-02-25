@@ -106,7 +106,7 @@ export const sendFilingReminders = onSchedule(
     timeZone: 'Europe/Tallinn',
     region: 'europe-west1',
     timeoutSeconds: 120,
-    memory: '128MiB',
+    memory: '256MiB',
     cpu: 0.083,
   },
   async (_event: ScheduledEvent) => {
@@ -187,7 +187,7 @@ export const triggerFilingReminders = onCall(
     region: 'europe-west1',
     cpu: 0.083,
     timeoutSeconds: 120,
-    memory: '128MiB',
+    memory: '256MiB',
   },
   async (request) => {
     // Check authentication

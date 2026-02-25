@@ -216,7 +216,7 @@ export const generateOutilToken = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
     // Use the App Engine default service account which has Firestore access
     serviceAccount: "sos-urgently-ac307@appspot.gserviceaccount.com",

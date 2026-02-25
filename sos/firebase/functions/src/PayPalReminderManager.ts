@@ -443,7 +443,7 @@ export const scheduledPayPalReminders = onSchedule(
     schedule: "0 10 * * *",
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "128MiB", // OPTIMIZED: Reduced from 512MiB - simple queries
+    memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - simple queries
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -502,7 +502,7 @@ export const getPayPalReminderStatus = onCall(
   {
     region: "europe-west3",
     cors: ALLOWED_ORIGINS,
-    memory: "128MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async (request) => {
