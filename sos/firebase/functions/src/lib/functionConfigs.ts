@@ -74,7 +74,7 @@ export const adminConfig = {
  */
 export const chatterAdminConfig = {
   region: "europe-west2" as const,
-  memory: "512MiB" as const,
+  memory: "256MiB" as const,
   cpu: 0.083,  // QUOTA FIX: 0.25 → 0.083 to stay under 48 vCPU/region
   maxInstances: 5,
   minInstances: 0,
@@ -88,7 +88,7 @@ export const chatterAdminConfig = {
  */
 export const affiliateAdminConfig = {
   region: "europe-west2" as const,
-  memory: "512MiB" as const,
+  memory: "256MiB" as const,
   cpu: 0.083,  // QUOTA FIX: 0.25 → 0.083 to stay under 48 vCPU/region
   maxInstances: 5,
   minInstances: 0,

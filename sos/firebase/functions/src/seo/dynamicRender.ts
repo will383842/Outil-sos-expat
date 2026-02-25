@@ -208,7 +208,7 @@ async function renderPage(url: string): Promise<string> {
 export const renderForBotsV2 = onRequest(
   {
     region: 'europe-west1',
-    memory: '2GiB',
+    memory: '512MiB',
     cpu: 0.083,
     timeoutSeconds: 120,
     minInstances: 0,

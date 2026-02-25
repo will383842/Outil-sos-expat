@@ -19,7 +19,6 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
-import { defineSecret } from 'firebase-functions/params';
 import Stripe from 'stripe';
 
 // Import credentials from existing lib modules
@@ -35,9 +34,7 @@ import {
   getStripeSecretKey,
 } from '../lib/stripe';
 import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
-
-// AI Service API Keys
-const OPENAI_API_KEY = defineSecret('OPENAI_API_KEY');
+import { OPENAI_API_KEY } from '../lib/secrets';
 
 // ============================================================================
 // TYPES

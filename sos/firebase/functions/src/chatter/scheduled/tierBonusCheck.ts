@@ -367,7 +367,7 @@ export const chatterTierBonusCheck = onSchedule(
     schedule: "0 3 * * *", // Every day at 3:00 AM
     region: "europe-west3",
     timeZone: "Europe/Paris",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 540, // 9 minutes (processing many chatters might take time)
     retryCount: 2,

@@ -425,7 +425,7 @@ async function calculateCallStats(
 export const backfillProviderStats = onCall(
   {
     region: "europe-west3",
-    memory: "1GiB",
+    memory: "512MiB",
     cpu: 0.083,
     timeoutSeconds: 540,
   },

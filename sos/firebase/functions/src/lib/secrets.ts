@@ -147,6 +147,24 @@ export const FLUTTERWAVE_SECRETS = [
 ];
 
 // ============================================================================
+// META CONVERSIONS API
+// ============================================================================
+
+export const META_CAPI_TOKEN = defineSecret("META_CAPI_TOKEN");
+
+/** Meta CAPI secrets for function config */
+export const META_CAPI_SECRETS = [META_CAPI_TOKEN];
+
+// ============================================================================
+// OPENAI
+// ============================================================================
+
+export const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
+
+/** OpenAI secrets for function config */
+export const OPENAI_SECRETS = [OPENAI_API_KEY];
+
+// ============================================================================
 // EXTERNAL API KEYS
 // ============================================================================
 

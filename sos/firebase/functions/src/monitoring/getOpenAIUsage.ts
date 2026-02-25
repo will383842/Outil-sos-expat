@@ -14,13 +14,7 @@
 import * as functions from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
-import { defineSecret } from 'firebase-functions/params';
-
-// ============================================================================
-// SECRETS
-// ============================================================================
-
-const OPENAI_API_KEY = defineSecret('OPENAI_API_KEY');
+import { OPENAI_API_KEY } from '../lib/secrets';
 
 // ============================================================================
 // TYPES

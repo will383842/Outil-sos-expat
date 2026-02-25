@@ -381,7 +381,7 @@ export const adminDeleteTrainingModule = onCall(
 export const adminSeedTrainingModules = onCall(
   {
     region: "europe-west2",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,

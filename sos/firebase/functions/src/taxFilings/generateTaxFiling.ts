@@ -449,7 +449,7 @@ export const generateAllTaxFilings = onCall(
     region: 'europe-west1',
     cpu: 0.083,
     timeoutSeconds: 540,
-    memory: '1GiB',
+    memory: '512MiB',
   },
   async (request) => {
     // Check authentication

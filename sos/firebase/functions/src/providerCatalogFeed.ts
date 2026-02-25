@@ -388,7 +388,7 @@ export const providerCatalogFeed = onRequest(
     cpu: 0.083,
     maxInstances: 5,
     minInstances: 0,
-    concurrency: 10,
+    concurrency: 1,
     cors: true, // Permettre les requetes cross-origin pour Meta
   },
   async (req: Request, res: Response) => {

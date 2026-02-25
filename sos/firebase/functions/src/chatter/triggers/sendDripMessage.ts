@@ -39,7 +39,7 @@ export const sendChatterDripMessages = onSchedule(
   {
     ...scheduledConfig,
     region: "europe-west3" as const, // FIX: match deployed region (chatter scheduled functions are in west3)
-    memory: "512MiB" as const,
+    memory: "256MiB" as const,
     schedule: "0 10 * * *", // Every day at 10:00 AM
     timeZone: "Europe/Paris",
     timeoutSeconds: 540, // 9 minutes (lots of chatters to process)

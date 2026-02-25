@@ -1794,8 +1794,10 @@ service cloud.firestore {
                    resource.data.providerId == request.auth.uid ||
                    isAdmin() || isDev());
 
-      // Création: utilisateur authentifié (client ou Cloud Functions)
-      allow create: if isAuthenticated();
+      // Création: le clientId doit correspondre à l'utilisateur authentifié
+      // P1 SECURITY FIX: Empêche l'usurpation d'identité dans les conversations
+      allow create: if isAuthenticated() &&
+                    request.resource.data.clientId == request.auth.uid;
 
       // Mise à jour: participants ou admin
       allow update: if isAuthenticated() &&
@@ -2981,6 +2983,36 @@ service cloud.firestore {
       // Lecture: admin uniquement (audit trail)
       allow read: if isAdmin() || isDev();
       // Écriture: Cloud Functions uniquement (callable admin)
+      allow write: if false;
+    }
+
+    // ================= AFFILIATE NOTIFICATIONS =================
+    // P1-6 SECURITY FIX: Règle manquante — collection utilisée par onCallCompleted
+    match /affiliate_notifications/{notifId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.affiliateId == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+
+    // ================= FORFEITED FUNDS =================
+    // P1-6 SECURITY FIX: Règle manquante — collection utilisée par admin callables
+    match /forfeited_funds/{fundId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ================= PAYPAL VERIFICATION CODES =================
+    // P1-6 SECURITY FIX: Règle manquante — collection utilisée par emailVerification
+    match /paypal_verification_codes/{codeId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+
+    // ================= TRANSFER RETRY LOGS =================
+    // P1-6 SECURITY FIX: Règle manquante — collection utilisée par stripeTransferRetryTasks
+    match /transfer_retry_logs/{logId} {
+      allow read: if isAdmin();
       allow write: if false;
     }
 

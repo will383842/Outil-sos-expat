@@ -61,7 +61,7 @@ const BULK_FUNCTION_CONFIG = {
 
 const HARD_DELETE_CONFIG = {
   region: "europe-west1",
-  memory: "1GiB" as const,
+  memory: "512MiB" as const,
   cpu: 0.083,
   timeoutSeconds: 540, // 9 minutes for GDPR purge
 };

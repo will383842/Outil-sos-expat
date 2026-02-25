@@ -73,7 +73,7 @@ async function checkAdmin(auth: { uid: string } | undefined): Promise<string> {
 export const adminGetInfluencersList = onCall(
   {
     region: "europe-west2",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -197,7 +197,7 @@ export const adminGetInfluencersList = onCall(
 export const adminGetInfluencerDetail = onCall(
   {
     region: "europe-west2",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -745,7 +745,7 @@ export const adminGetInfluencerLeaderboard = onCall(
 export const adminExportInfluencers = onCall(
   {
     region: "europe-west2",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
@@ -878,7 +878,7 @@ export {
 export const adminBulkInfluencerAction = onCall(
   {
     region: "europe-west2",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,

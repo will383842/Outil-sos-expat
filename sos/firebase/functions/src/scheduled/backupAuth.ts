@@ -132,7 +132,7 @@ export const backupFirebaseAuth = onSchedule(
     schedule: '0 3 * * *', // Tous les jours à 3h
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
-    memory: '1GiB',
+    memory: '512MiB',
     cpu: 0.083,
     timeoutSeconds: 540
   },

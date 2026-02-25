@@ -70,7 +70,7 @@ async function checkAdmin(uid: string): Promise<void> {
 export const adminGetBloggersList = onCall(
   {
     region: "europe-west2",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -177,7 +177,7 @@ export const adminGetBloggersList = onCall(
 export const adminGetBloggerDetail = onCall(
   {
     region: "europe-west2",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -299,7 +299,7 @@ export const adminGetBloggerDetail = onCall(
 export const adminProcessBloggerWithdrawal = onCall(
   {
     region: "europe-west2",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -955,7 +955,7 @@ export const adminUpdateBloggerGuideBestPractice = onCall(
 export const adminExportBloggers = onCall(
   {
     region: "europe-west2",
-    memory: "1GiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -1752,7 +1752,7 @@ export const adminDeleteBloggerGuideCopyText = onCall(
 export const adminBulkBloggerAction = onCall(
   {
     region: "europe-west2",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,

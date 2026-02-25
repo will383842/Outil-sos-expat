@@ -35,7 +35,7 @@ function ensureInitialized() {
 export const getGroupAdminDashboard = onCall(
   {
     region: "europe-west2",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

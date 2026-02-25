@@ -15,9 +15,9 @@
  */
 
 import { createHash } from "crypto";
-import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions/v2";
 import Stripe from "stripe";
+import { META_CAPI_TOKEN } from "./lib/secrets";
 
 // ============================================================================
 // Configuration
@@ -29,8 +29,8 @@ const META_PIXEL_ID = "2204016713738311";
 /** Meta Conversions API endpoint */
 const META_CAPI_ENDPOINT = `https://graph.facebook.com/v18.0/${META_PIXEL_ID}/events`;
 
-/** Meta CAPI Access Token (stored as Firebase Secret) */
-export const META_CAPI_TOKEN = defineSecret("META_CAPI_TOKEN");
+// Re-export for backward compatibility
+export { META_CAPI_TOKEN };
 
 // ============================================================================
 // Interfaces
