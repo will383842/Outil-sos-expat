@@ -68,3 +68,289 @@
   >> [33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/adminCreateInfluencerTrainingModule?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 409, unable to queue the operation
 [33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/adminCreateInfluencerTrainingModule?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 409, unable to queue the operation
 [18:09:36] Lot 25/352 | adminCreateManualBackup + adminCreatePromotion
+[19:30:51] ⚠️  Quota — pause 3 min
+[20:27:26] ❌ ÉCHEC: adminCreateManualBackup + adminCreatePromotion
+[20:27:57] Lot 26/352 | adminDeleteBackup + adminDeleteBloggerArticle
+[20:28:36] ❌ ÉCHEC: adminDeleteBackup + adminDeleteBloggerArticle
+  >> [1m[31mError:[39m[22m User code failed to load. Cannot determine backend specification. Timeout after 10000. See https://firebase.google.com/docs/functions/tips#avoid_deployment_timeouts_during_initialization'
+[20:29:07] Lot 27/352 | adminDeleteBloggerResource + adminDeleteChatterTrainingModule
+[21:49:24] ⚠️  Quota — pause 3 min
+[22:53:45] ❌ ÉCHEC: adminDeleteBloggerResource + adminDeleteChatterTrainingModule
+[22:54:15] Lot 28/352 | adminDeleteGroupAdminPost + adminDeleteGroupAdminPromotion
+[23:09:03] ❌ ÉCHEC: adminDeleteGroupAdminPost + adminDeleteGroupAdminPromotion
+  >> [33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/adminDeleteGroupAdminPost?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 404, Resource 'projects/sos-urgently-ac307/locations/europe-west2/functions/adminDeleteGroupAdminPost' was not found
+[23:09:33] Lot 29/352 | adminDeleteGroupAdminResource + adminDeleteInfluencerPromotion
+[23:10:00] ❌ ÉCHEC: adminDeleteGroupAdminResource + adminDeleteInfluencerPromotion
+  >> 
+[23:10:30] Lot 30/352 | adminDeleteInfluencerResource + adminDeleteInfluencerResourceText
+[00:32:19] ⚠️  Quota — pause 3 min
+[01:55:43] ❌ ÉCHEC: adminDeleteInfluencerResource + adminDeleteInfluencerResourceText
+[01:56:13] Lot 31/352 | adminDeleteInfluencerTrainingModule + adminDeletePromotion
+[09:11:08] ⚠️  Quota — pause 3 min
+[10:40:24] ❌ ÉCHEC: adminDeleteInfluencerTrainingModule + adminDeletePromotion
+[10:40:54] Lot 32/352 | adminDuplicateGroupAdminPromotion + adminDuplicateInfluencerPromotion
+[10:41:34] ❌ ÉCHEC: adminDuplicateGroupAdminPromotion + adminDuplicateInfluencerPromotion
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:42:04] Lot 33/352 | adminDuplicatePromotion + adminExportBloggers
+[10:42:44] ❌ ÉCHEC: adminDuplicatePromotion + adminExportBloggers
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:43:14] Lot 34/352 | adminExportChatters + adminExportCommissionsCSV
+[10:43:54] ❌ ÉCHEC: adminExportChatters + adminExportCommissionsCSV
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:44:24] Lot 35/352 | adminExportGroupAdmins + adminForceAiAccess
+[10:45:03] ❌ ÉCHEC: adminExportGroupAdmins + adminForceAiAccess
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:45:33] Lot 36/352 | adminForceRetryDLQEvent + adminGetBloggerArticles
+[10:46:12] ❌ ÉCHEC: adminForceRetryDLQEvent + adminGetBloggerArticles
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:46:42] Lot 37/352 | adminGetBloggerConfig + adminGetBloggerConfigHistory
+[10:47:20] ❌ ÉCHEC: adminGetBloggerConfig + adminGetBloggerConfigHistory
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:47:50] Lot 38/352 | adminGetBloggerDetail + adminGetBloggerLeaderboard
+[10:48:29] ❌ ÉCHEC: adminGetBloggerDetail + adminGetBloggerLeaderboard
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:49:00] Lot 39/352 | adminGetBloggersList + adminGetChatterConfig
+[10:49:39] ❌ ÉCHEC: adminGetBloggersList + adminGetChatterConfig
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:50:09] Lot 40/352 | adminGetChatterConfigHistory + adminGetChatterDetail
+[10:50:48] ❌ ÉCHEC: adminGetChatterConfigHistory + adminGetChatterDetail
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:51:18] Lot 41/352 | adminGetChatterLeaderboard + adminGetChattersList
+[10:51:57] ❌ ÉCHEC: adminGetChatterLeaderboard + adminGetChattersList
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:52:27] Lot 42/352 | adminGetChatterTrainingModules + adminGetCommissionsDetailed
+[10:53:09] ❌ ÉCHEC: adminGetChatterTrainingModules + adminGetCommissionsDetailed
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:53:40] Lot 43/352 | adminGetCommissionStats + adminGetDisputeDetails
+[10:54:18] ❌ ÉCHEC: adminGetCommissionStats + adminGetDisputeDetails
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:54:48] Lot 44/352 | adminGetDLQStats + adminGetGroupAdminConfig
+[10:55:27] ❌ ÉCHEC: adminGetDLQStats + adminGetGroupAdminConfig
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:55:57] Lot 45/352 | adminGetGroupAdminConfigHistory + adminGetGroupAdminDetail
+[10:56:36] ❌ ÉCHEC: adminGetGroupAdminConfigHistory + adminGetGroupAdminDetail
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:57:07] Lot 46/352 | adminGetGroupAdminPostsList + adminGetGroupAdminPromotions
+[10:57:51] ❌ ÉCHEC: adminGetGroupAdminPostsList + adminGetGroupAdminPromotions
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:58:21] Lot 47/352 | adminGetGroupAdminPromotionStats + adminGetGroupAdminRecruits
+[10:59:01] ❌ ÉCHEC: adminGetGroupAdminPromotionStats + adminGetGroupAdminRecruits
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[10:59:32] Lot 48/352 | adminGetGroupAdminResourcesList + adminGetGroupAdminsList
+[11:00:10] ❌ ÉCHEC: adminGetGroupAdminResourcesList + adminGetGroupAdminsList
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:00:41] Lot 49/352 | adminGetGroupAdminWithdrawalsList + adminGetGroups
+[11:01:22] ❌ ÉCHEC: adminGetGroupAdminWithdrawalsList + adminGetGroups
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:01:52] Lot 50/352 | adminGetInfluencerConfig + adminGetInfluencerDetail
+[11:02:28] ❌ ÉCHEC: adminGetInfluencerConfig + adminGetInfluencerDetail
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:02:59] Lot 51/352 | adminGetInfluencerLeaderboard + adminGetInfluencerPromotions
+[11:03:38] ❌ ÉCHEC: adminGetInfluencerLeaderboard + adminGetInfluencerPromotions
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:04:08] Lot 52/352 | adminGetInfluencerPromotionStats + adminGetInfluencerResources
+[11:04:46] ❌ ÉCHEC: adminGetInfluencerPromotionStats + adminGetInfluencerResources
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:05:16] Lot 53/352 | adminGetInfluencersList + adminGetInfluencerTrainingModules
+[11:05:55] ❌ ÉCHEC: adminGetInfluencersList + adminGetInfluencerTrainingModules
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:06:25] Lot 54/352 | adminGetOrphanedProvidersStats + adminGetOrphanedSessionsStats
+[11:07:05] ❌ ÉCHEC: adminGetOrphanedProvidersStats + adminGetOrphanedSessionsStats
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:07:35] Lot 55/352 | adminGetPendingChatterWithdrawals + adminGetPendingInfluencerWithdrawals
+[11:08:18] ❌ ÉCHEC: adminGetPendingChatterWithdrawals + adminGetPendingInfluencerWithdrawals
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:08:49] Lot 56/352 | adminGetPendingPayouts + adminGetPendingPosts
+[11:09:27] ❌ ÉCHEC: adminGetPendingPayouts + adminGetPendingPosts
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:09:57] Lot 57/352 | adminGetPromotions + adminGetPromotionStats
+[11:10:36] ❌ ÉCHEC: adminGetPromotions + adminGetPromotionStats
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:11:06] Lot 58/352 | adminGetProviderEarnings + adminGetProviderSubscriptionHistory
+[11:11:44] ❌ ÉCHEC: adminGetProviderEarnings + adminGetProviderSubscriptionHistory
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:12:14] Lot 59/352 | adminGetRecruitmentsList + adminGetReferralCommissions
+[11:12:53] ❌ ÉCHEC: adminGetRecruitmentsList + adminGetReferralCommissions
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:13:24] Lot 60/352 | adminGetReferralFraudAlerts + adminGetReferralStats
+[11:14:02] ❌ ÉCHEC: adminGetReferralFraudAlerts + adminGetReferralStats
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:14:32] Lot 61/352 | adminGetReferralTree + adminGetRestoreConfirmationCode
+[11:15:13] ❌ ÉCHEC: adminGetReferralTree + adminGetRestoreConfirmationCode
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:15:43] Lot 62/352 | adminGetSubscriptionStats + adminListBackups
+[11:16:20] ❌ ÉCHEC: adminGetSubscriptionStats + adminListBackups
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:16:50] Lot 63/352 | adminListGcpBackups + adminModeratePost
+[11:17:29] ❌ ÉCHEC: adminListGcpBackups + adminModeratePost
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:18:00] Lot 64/352 | adminPreviewRestore + adminProcessBloggerWithdrawal
+[11:18:38] ❌ ÉCHEC: adminPreviewRestore + adminProcessBloggerWithdrawal
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:19:08] Lot 65/352 | adminProcessChatterWithdrawal + adminProcessGroupAdminWithdrawal
+[11:19:58] ❌ ÉCHEC: adminProcessChatterWithdrawal + adminProcessGroupAdminWithdrawal
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:20:28] Lot 66/352 | adminProcessInfluencerWithdrawal + adminProcessPayoutManual
+[11:21:05] ❌ ÉCHEC: adminProcessInfluencerWithdrawal + adminProcessPayoutManual
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:21:35] Lot 67/352 | adminProcessPayoutWise + adminRefundPayment
+[11:22:17] ❌ ÉCHEC: adminProcessPayoutWise + adminRefundPayment
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:22:47] Lot 68/352 | adminRejectPayout + adminReorderChatterTrainingModules
+[11:23:26] ❌ ÉCHEC: adminRejectPayout + adminReorderChatterTrainingModules
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:23:56] Lot 69/352 | adminResetFAQs + adminResetQuota
+[11:24:37] ❌ ÉCHEC: adminResetFAQs + adminResetQuota
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:25:08] Lot 70/352 | adminRestoreAuth + adminRestoreFirestore
+[11:25:44] ❌ ÉCHEC: adminRestoreAuth + adminRestoreFirestore
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:26:15] Lot 71/352 | adminReviewFraudAlert + adminSoftDeleteUser
+[11:26:49] ❌ ÉCHEC: adminReviewFraudAlert + adminSoftDeleteUser
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:27:19] Lot 72/352 | adminSyncStripePrices + adminToggleBloggerVisibility
+[11:27:59] ❌ ÉCHEC: adminSyncStripePrices + adminToggleBloggerVisibility
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:28:29] Lot 73/352 | adminToggleChatterVisibility + adminToggleGroupAdminVisibility
+[11:29:16] ❌ ÉCHEC: adminToggleChatterVisibility + adminToggleGroupAdminVisibility
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:29:46] Lot 74/352 | adminToggleInfluencerVisibility + adminUpdateAffiliateConfig
+[11:30:26] ❌ ÉCHEC: adminToggleInfluencerVisibility + adminUpdateAffiliateConfig
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:30:56] Lot 75/352 | adminUpdateBloggerArticle + adminUpdateBloggerConfig
+[11:31:39] ❌ ÉCHEC: adminUpdateBloggerArticle + adminUpdateBloggerConfig
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:32:09] Lot 76/352 | adminUpdateBloggerGuideBestPractice + adminUpdateBloggerGuideCopyText
+[11:32:48] ❌ ÉCHEC: adminUpdateBloggerGuideBestPractice + adminUpdateBloggerGuideCopyText
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:33:18] Lot 77/352 | adminUpdateBloggerGuideTemplate + adminUpdateBloggerResource
+[11:33:56] ❌ ÉCHEC: adminUpdateBloggerGuideTemplate + adminUpdateBloggerResource
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:34:26] Lot 78/352 | adminUpdateBloggerStatus + adminUpdateChatterConfig
+[11:35:07] ❌ ÉCHEC: adminUpdateBloggerStatus + adminUpdateChatterConfig
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:35:37] Lot 79/352 | adminUpdateChatterStatus + adminUpdateChatterTrainingModule
+[11:36:21] ❌ ÉCHEC: adminUpdateChatterStatus + adminUpdateChatterTrainingModule
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:36:51] Lot 80/352 | adminUpdateCycleThreshold + adminUpdateGroupAdminConfig
+[11:37:31] ❌ ÉCHEC: adminUpdateCycleThreshold + adminUpdateGroupAdminConfig
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:38:02] Lot 81/352 | adminUpdateGroupAdminPost + adminUpdateGroupAdminPromotion
+[11:38:41] ❌ ÉCHEC: adminUpdateGroupAdminPost + adminUpdateGroupAdminPromotion
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:39:11] Lot 82/352 | adminUpdateGroupAdminResource + adminUpdateGroupAdminStatus
+[11:39:51] ❌ ÉCHEC: adminUpdateGroupAdminResource + adminUpdateGroupAdminStatus
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:40:21] Lot 83/352 | adminUpdateGroupAdminVisibility + adminUpdateGroupStatus
+[11:41:01] ⚠️  Quota — pause 3 min
+[11:44:43] ❌ ÉCHEC: adminUpdateGroupAdminVisibility + adminUpdateGroupStatus
+[11:45:13] Lot 84/352 | adminUpdateInfluencerConfig + adminUpdateInfluencerPromotion
+[11:45:55] ❌ ÉCHEC: adminUpdateInfluencerConfig + adminUpdateInfluencerPromotion
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:46:25] Lot 85/352 | adminUpdateInfluencerResource + adminUpdateInfluencerResourceText
+[11:47:06] ❌ ÉCHEC: adminUpdateInfluencerResource + adminUpdateInfluencerResourceText
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:47:36] Lot 86/352 | adminUpdateInfluencerStatus + adminUpdateInfluencerTrainingModule
+[11:48:15] ❌ ÉCHEC: adminUpdateInfluencerStatus + adminUpdateInfluencerTrainingModule
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:48:46] Lot 87/352 | adminUpdateMeetingStatus + adminUpdatePromotion
+[11:49:25] ❌ ÉCHEC: adminUpdateMeetingStatus + adminUpdatePromotion
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:49:55] Lot 88/352 | adminUpdateStatus + adminVerifyGroup
+[11:50:34] ❌ ÉCHEC: adminUpdateStatus + adminVerifyGroup
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:51:04] Lot 89/352 | affiliateOnSubscriptionCreated + affiliateOnSubscriptionRenewed
+[11:51:41] ❌ ÉCHEC: affiliateOnSubscriptionCreated + affiliateOnSubscriptionRenewed
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:52:11] Lot 90/352 | affiliateReleaseHeldCommissions + aggregateDailyAnalytics
+[11:52:47] ❌ ÉCHEC: affiliateReleaseHeldCommissions + aggregateDailyAnalytics
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:53:17] Lot 91/352 | aggregateProviderStats + api
+[11:53:58] ❌ ÉCHEC: aggregateProviderStats + api
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:54:28] Lot 92/352 | approveProfile + assignValidation
+[11:55:09] ❌ ÉCHEC: approveProfile + assignValidation
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:55:39] Lot 93/352 | auditProfileSlugs + authorizePayPalOrderHttp
+[11:56:19] ❌ ÉCHEC: auditProfileSlugs + authorizePayPalOrderHttp
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:56:49] Lot 94/352 | awardBloggerRecruitmentCommission + backfillProviderStats
+[11:57:28] ❌ ÉCHEC: awardBloggerRecruitmentCommission + backfillProviderStats
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:57:58] Lot 95/352 | backupFirebaseAuth + backupStorageToDR
+[11:58:39] ❌ ÉCHEC: backupFirebaseAuth + backupStorageToDR
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[11:59:09] Lot 96/352 | blockProvider + bloggerDeactivateExpiredRecruitments
+[11:59:46] ❌ ÉCHEC: blockProvider + bloggerDeactivateExpiredRecruitments
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[12:00:16] Lot 97/352 | bloggerFinalizeMonthlyRankings + bloggerRequestWithdrawal
+[12:01:05] ❌ ÉCHEC: bloggerFinalizeMonthlyRankings + bloggerRequestWithdrawal
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[12:01:36] Lot 98/352 | bloggerUpdateMonthlyRankings + bootstrapFirstAdmin
+[12:02:23] ❌ ÉCHEC: bloggerUpdateMonthlyRankings + bootstrapFirstAdmin
+  >> [1m[31mError:[39m[22m The following functions are configured to allow concurrent execution and less than one full CPU. This is not supported: generateProviderFeed,providerCatalogFeed
+[12:02:53] Lot 99/352 | bulkBlockProviders + bulkDeleteProviders
+[12:03:39] ❌ ÉCHEC: bulkBlockProviders + bulkDeleteProviders
+  >> [1m[31mError:[39m[22m The functions adminExportWithdrawals,generateAllTaxFilings,hardDeleteProvider,paymentAdminExport,renderForBotsV2,backfillProviderStats,backupFirebaseAuth,backupStorageToDR,chatterEndWeeklyChallenge,chatterMonthlyTop3Rewards,chatterUpdateChallengeLeaderboard,dailyCrossRegionBackup,generateSitemaps,onProviderChange,scheduledSitemapGeneration,adminExportBloggers,adminExportCommissionsCSV have too little CPU for their memory allocation. A minimum of 0.5 CPU is needed to set a memory limit greater than 512MiB
+[12:04:09] Lot 100/352 | bulkHideProviders + bulkSuspendProviders
+[12:04:52] ❌ ÉCHEC: bulkHideProviders + bulkSuspendProviders
+  >> [1m[31mError:[39m[22m The functions adminExportWithdrawals,generateAllTaxFilings,hardDeleteProvider,paymentAdminExport,renderForBotsV2,backfillProviderStats,backupFirebaseAuth,backupStorageToDR,chatterEndWeeklyChallenge,chatterMonthlyTop3Rewards,chatterUpdateChallengeLeaderboard,dailyCrossRegionBackup,generateSitemaps,onProviderChange,scheduledSitemapGeneration,adminExportBloggers,adminExportCommissionsCSV have too little CPU for their memory allocation. A minimum of 0.5 CPU is needed to set a memory limit greater than 512MiB
+[12:05:22] Lot 101/352 | bulkUnblockProviders + bulkUnhideProviders
+[12:06:08] ❌ ÉCHEC: bulkUnblockProviders + bulkUnhideProviders
+  >> [1m[31mError:[39m[22m The functions adminExportWithdrawals,generateAllTaxFilings,hardDeleteProvider,paymentAdminExport,renderForBotsV2,backfillProviderStats,backupFirebaseAuth,backupStorageToDR,chatterEndWeeklyChallenge,chatterMonthlyTop3Rewards,chatterUpdateChallengeLeaderboard,dailyCrossRegionBackup,generateSitemaps,onProviderChange,scheduledSitemapGeneration,adminExportBloggers,adminExportCommissionsCSV have too little CPU for their memory allocation. A minimum of 0.5 CPU is needed to set a memory limit greater than 512MiB
+[12:06:38] Lot 102/352 | bulkUnsuspendProviders + busySafetyTimeoutTask
+[12:07:32] ❌ ÉCHEC: bulkUnsuspendProviders + busySafetyTimeoutTask
+  >> [1m[31mError:[39m[22m No function matches the filter: default:bulkUnsuspendProviders
+[12:08:03] Lot 103/352 | calculateTax + calculateTaxCallable
+[12:09:05] ❌ ÉCHEC: calculateTax + calculateTaxCallable
+  >> [1m[31mError:[39m[22m No function matches the filter: default:calculateTax
+[12:09:35] Lot 104/352 | cancelSubscription + capturePayPalOrderHttp
+[12:11:57] ❌ ÉCHEC: cancelSubscription + capturePayPalOrderHttp
+  >> 
+[12:12:27] Lot 105/352 | capturePayPalPaymentManually + chatter_getDripStats
+[12:14:50] ✅ OK: capturePayPalPaymentManually + chatter_getDripStats
+[12:15:20] Lot 106/352 | chatter_previewDripMessage + chatter_sendDripMessage
+[12:17:53] ✅ OK: chatter_previewDripMessage + chatter_sendDripMessage
+[12:18:23] Lot 107/352 | chatterMonthlyRecurringCommissions + chatterOnChatterCreated
+[12:20:49] ✅ OK: chatterMonthlyRecurringCommissions + chatterOnChatterCreated
+[12:21:20] Lot 108/352 | chatterOnChatterEarningsUpdated + chatterOnCommissionCreated
+[12:23:53] ✅ OK: chatterOnChatterEarningsUpdated + chatterOnCommissionCreated
+[12:24:23] Lot 109/352 | chatterRequestWithdrawal + chatterValidatePendingReferralCommissions
+[13:27:22] ❌ ÉCHEC: chatterRequestWithdrawal + chatterValidatePendingReferralCommissions
+  >> [33m[1m!  functions:[22m[39m Request to https://cloudfunctions.googleapis.com/v2/projects/sos-urgently-ac307/locations/europe-west2/functions/chatterRequestWithdrawal?updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.secretEnvironmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2Clabels had HTTP Error: 400, Invalid Request. Violations: tokens must be used within an hour of being created.
+Functions deploy had errors with the following functions:
+[13:27:52] Lot 110/352 | checkAiAccess + checkAndIncrementAiUsage
+[13:31:26] ✅ OK: checkAiAccess + checkAndIncrementAiUsage
+[13:31:56] Lot 111/352 | checkBlockedEntity + checkBloggerClientReferral
+[13:32:58] ❌ ÉCHEC: checkBlockedEntity + checkBloggerClientReferral
+  >> [1m[31mError:[39m[22m No function matches the filter: default:checkBloggerClientReferral
+[13:33:28] Lot 112/352 | checkBloggerProviderRecruitment + checkBudgetAlertsScheduled
+[13:34:20] ❌ ÉCHEC: checkBloggerProviderRecruitment + checkBudgetAlertsScheduled
+  >> [1m[31mError:[39m[22m No function matches the filter: default:checkBloggerProviderRecruitment
+[13:34:50] Lot 113/352 | checkInvoicesExist + checkKycStatus
+[13:37:24] ✅ OK: checkInvoicesExist + checkKycStatus
+[13:37:54] Lot 114/352 | checkLowProviderAvailability + checkPastDueSubscriptions
+[13:40:25] ✅ OK: checkLowProviderAvailability + checkPastDueSubscriptions
+[13:40:56] Lot 115/352 | checkPayPalPayoutStatus + checkProviderInactivity
+[13:43:33] ✅ OK: checkPayPalPayoutStatus + checkProviderInactivity
+[13:44:03] Lot 116/352 | checkReverseCharge + checkServiceBalances
+[13:46:18] ✅ OK: checkReverseCharge + checkServiceBalances
+[13:46:48] Lot 117/352 | checkSingleServiceBudget + checkStripeAccountStatus
+[13:49:21] ✅ OK: checkSingleServiceBudget + checkStripeAccountStatus
+[13:49:51] Lot 118/352 | checkTelegramLinkStatus + checkThresholdsDaily
+[13:52:13] ✅ OK: checkTelegramLinkStatus + checkThresholdsDaily
+[13:52:44] Lot 119/352 | checkUserRole + cleanupCloudRunRevisions
+[13:55:20] ✅ OK: checkUserRole + cleanupCloudRunRevisions
+[13:55:50] Lot 120/352 | cleanupDRBackups + cleanupExpiredTrials
+[13:58:07] ✅ OK: cleanupDRBackups + cleanupExpiredTrials
+[13:58:37] Lot 121/352 | cleanupExpiredWithdrawalConfirmations + cleanupFunctionalData
+[14:01:06] ✅ OK: cleanupExpiredWithdrawalConfirmations + cleanupFunctionalData
+[14:01:36] Lot 122/352 | cleanupOldAlerts + cleanupOldAnalytics
+[14:04:27] ✅ OK: cleanupOldAlerts + cleanupOldAnalytics
+[14:04:57] Lot 123/352 | cleanupOldAuthBackups + cleanupOldBackups
+[14:07:07] ✅ OK: cleanupOldAuthBackups + cleanupOldBackups
+[14:07:37] Lot 124/352 | cleanupOldPaymentAlerts + cleanupOrphanedAgentTasks
+[14:09:49] ✅ OK: cleanupOldPaymentAlerts + cleanupOrphanedAgentTasks
+[14:10:19] Lot 125/352 | cleanupOrphanedProfiles + cleanupOrphanedSessions
+[14:12:39] ✅ OK: cleanupOrphanedProfiles + cleanupOrphanedSessions
+[14:13:09] Lot 126/352 | cleanupTempStorageFiles + cleanupUncapturedPayPalOrders
