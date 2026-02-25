@@ -521,7 +521,7 @@ export const chatterOnCallCompleted = onDocumentUpdated(
   {
     document: "call_sessions/{sessionId}",
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
   },

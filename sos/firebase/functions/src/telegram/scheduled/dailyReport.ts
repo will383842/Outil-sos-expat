@@ -333,7 +333,7 @@ export const telegramDailyReport = onSchedule(
     region: 'europe-west3',
     schedule: '0 19 * * *', // 19:00 UTC = 20:00 Paris (winter) or 21:00 Paris (summer)
     timeZone: 'Europe/Paris', // This ensures the schedule respects Paris DST
-    memory: '512MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 120,
     secrets: [TELEGRAM_BOT_TOKEN],

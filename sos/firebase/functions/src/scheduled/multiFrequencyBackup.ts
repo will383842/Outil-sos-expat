@@ -220,7 +220,7 @@ export const morningBackup = onSchedule(
     schedule: "0 3 * * *",
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "512MiB",
+    memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -281,7 +281,7 @@ export const cleanupOldBackups = onSchedule(
     schedule: "0 4 * * 0", // Dimanche a 4h
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
   },

@@ -51,7 +51,7 @@ export const providerNoAnswerTwiML = onRequest(
     region: CALL_FUNCTIONS_REGION,
     // P0 CRITICAL FIX 2026-02-04: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
     invoker: "public",
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     maxInstances: 3,
     minInstances: 0,

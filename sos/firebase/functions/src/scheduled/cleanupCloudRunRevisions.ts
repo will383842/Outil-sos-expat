@@ -15,7 +15,7 @@ import * as admin from 'firebase-admin';
 import { GoogleAuth } from 'google-auth-library';
 
 const PROJECT_ID = 'sos-urgently-ac307';
-const REGIONS = ['europe-west1', 'europe-west2', 'europe-west3'];
+const REGIONS = ['europe-west1', 'us-central1', 'europe-west3'];
 const REVISIONS_TO_KEEP = 3;
 const BASE_URL = 'https://run.googleapis.com/v2';
 
@@ -84,7 +84,7 @@ export const cleanupCloudRunRevisions = scheduler.onSchedule(
     schedule: '0 3 * * 0', // Chaque dimanche à 3h00
     timeZone: 'Europe/Paris',
     region: 'europe-west1',
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 540, // 9 min — peut y avoir beaucoup de services
   },

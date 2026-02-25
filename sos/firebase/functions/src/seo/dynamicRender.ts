@@ -208,8 +208,8 @@ async function renderPage(url: string): Promise<string> {
 export const renderForBotsV2 = onRequest(
   {
     region: 'europe-west1',
-    memory: '512MiB',
-    cpu: 0.083,
+    memory: '512MiB',  // FIX: Puppeteer needs 538-611 MiB at runtime
+    cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 120,
     minInstances: 0,
     maxInstances: 10,
@@ -324,7 +324,7 @@ export function invalidateCache(pathPattern?: string): number {
 export const invalidateCacheEndpoint = onRequest(
   {
     region: 'europe-west1',
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 30,
     minInstances: 0,

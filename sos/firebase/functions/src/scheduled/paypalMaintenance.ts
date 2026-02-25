@@ -39,7 +39,7 @@ export const cleanupUncapturedPayPalOrders = onSchedule(
     region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300, // 5 minutes pour traiter les annulations API
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },

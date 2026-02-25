@@ -509,7 +509,7 @@ export const adminAlertsDigestDaily = onSchedule(
     schedule: "0 9 * * *", // Every day at 9:00 AM
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
   },
@@ -618,7 +618,7 @@ export const adminAlertsDigestDaily = onSchedule(
 export const triggerAdminAlertsDigest = onCall(
   {
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -695,7 +695,7 @@ export const triggerAdminAlertsDigest = onCall(
 export const getAdminAlertsDigestPreview = onCall(
   {
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
   },

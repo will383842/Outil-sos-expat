@@ -111,7 +111,7 @@ export const updateProviderTranslation = onCall(
     region: 'europe-west1',
     cpu: 0.083,
     maxInstances: 5,
-    memory: '512MiB',
+    memory: '256MiB',
     timeoutSeconds: 60,
   },
   async (request) => {

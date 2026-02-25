@@ -320,7 +320,7 @@ export const onMessageEventCreate = onDocumentCreated(
   {
     region: "europe-west3",
     document: "message_events/{id}",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     secrets: [

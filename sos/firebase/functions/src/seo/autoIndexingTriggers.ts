@@ -22,7 +22,7 @@ export const onProfileCreated = onDocumentCreated(
   {
     document: 'sos_profiles/{profileId}',
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -85,7 +85,7 @@ export const onProfileUpdated = onDocumentUpdated(
   {
     document: 'sos_profiles/{profileId}',
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -141,7 +141,7 @@ export const onBlogPostCreated = onDocumentCreated(
   {
     document: 'blog_posts/{postId}',
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -188,7 +188,7 @@ export const onBlogPostUpdated = onDocumentUpdated(
   {
     document: 'blog_posts/{postId}',
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -222,7 +222,7 @@ export const onHelpArticleCreated = onDocumentCreated(
   {
     document: 'help_articles/{articleId}',
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -269,7 +269,7 @@ export const onHelpArticleUpdated = onDocumentUpdated(
   {
     document: 'help_articles/{articleId}',
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -310,7 +310,7 @@ export const onLandingPageCreated = onDocumentCreated(
   {
     document: 'landing_pages/{pageId}',
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -348,7 +348,7 @@ export const onFaqCreated = onDocumentCreated(
   {
     document: 'faqs/{faqId}',
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -395,7 +395,7 @@ export const onFaqUpdated = onDocumentUpdated(
   {
     document: 'faqs/{faqId}',
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },
@@ -439,7 +439,7 @@ export const scheduledSitemapPing = onSchedule(
     // 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales (low traffic)
     schedule: '0 8 * * *', // 8h Paris tous les jours
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },

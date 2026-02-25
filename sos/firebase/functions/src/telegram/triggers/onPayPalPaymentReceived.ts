@@ -165,7 +165,7 @@ export const telegramOnPayPalPaymentReceived = onDocumentWritten(
   {
     region: "europe-west3",
     document: "paypal_orders/{orderId}",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

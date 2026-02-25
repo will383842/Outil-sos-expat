@@ -145,7 +145,7 @@ export const telegram_updateConfig = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -250,7 +250,7 @@ export const telegram_getConfig = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -327,7 +327,7 @@ export const telegram_getChatId = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -404,7 +404,7 @@ export const telegram_validateBot = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -450,7 +450,7 @@ export const telegram_updateTemplate = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -556,7 +556,7 @@ export const telegram_getTemplates = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

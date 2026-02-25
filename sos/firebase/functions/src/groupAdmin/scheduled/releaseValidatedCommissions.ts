@@ -40,7 +40,7 @@ export const releaseValidatedGroupAdminCommissions = onSchedule(
     schedule: "30 * * * *", // Every hour at minute 30
     timeZone: "UTC",
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
     retryCount: 3,

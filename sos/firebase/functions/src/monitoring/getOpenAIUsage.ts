@@ -358,7 +358,7 @@ export const getOpenAIUsage = functions.onCall(
   {
     region: 'europe-west1',
     cpu: 0.083,
-    memory: '256MiB',
+    memory: '128MiB',
     timeoutSeconds: 60,
     secrets: [OPENAI_API_KEY],
     cors: [/sos-expat\.com$/, /localhost/],

@@ -26,7 +26,7 @@ export const affiliateReleaseHeldCommissions = onSchedule(
   {
     schedule: "0 * * * *", // Every hour at minute 0
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
     retryCount: 3,

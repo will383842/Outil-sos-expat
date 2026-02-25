@@ -54,7 +54,7 @@ export const processTelegramCampaigns = onSchedule(
   {
     schedule: "*/5 * * * *", // Every 5 minutes (optimized from every minute - saves ~80% invocations)
     region: "europe-west1",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 240, // Increased to process larger batches per run
     maxInstances: 1,

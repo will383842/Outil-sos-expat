@@ -29,7 +29,7 @@ export const chatterOnChatterCreated = onDocumentCreated(
   {
     document: "chatters/{chatterId}",
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
   },

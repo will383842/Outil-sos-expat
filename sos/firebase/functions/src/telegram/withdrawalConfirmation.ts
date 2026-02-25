@@ -485,7 +485,7 @@ export async function handleWithdrawalCallback(
 export const getWithdrawalConfirmationStatus = onCall(
   {
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 15,
     cors: [

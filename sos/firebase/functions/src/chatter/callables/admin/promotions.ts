@@ -81,7 +81,7 @@ interface GetPromotionsResponse {
 }
 
 export const adminGetPromotions = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
   async (request): Promise<GetPromotionsResponse> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -132,7 +132,7 @@ interface CreatePromotionApiInput {
 }
 
 export const adminCreatePromotion = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; promotionId?: string; error?: string }> => {
     ensureInitialized();
     const adminUid = await assertAdmin(request);
@@ -188,7 +188,7 @@ interface UpdatePromotionApiInput {
 }
 
 export const adminUpdatePromotion = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; error?: string }> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -236,7 +236,7 @@ interface DeletePromotionInput {
 }
 
 export const adminDeletePromotion = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; error?: string }> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -283,7 +283,7 @@ interface GetPromotionStatsResponse {
 }
 
 export const adminGetPromotionStats = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
   async (request): Promise<GetPromotionStatsResponse> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -371,7 +371,7 @@ interface DuplicatePromotionInput {
 }
 
 export const adminDuplicatePromotion = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
   async (
     request
   ): Promise<{ success: boolean; promotionId?: string; error?: string }> => {

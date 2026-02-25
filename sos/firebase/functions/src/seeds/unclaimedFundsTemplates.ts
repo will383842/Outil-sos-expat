@@ -599,7 +599,7 @@ L'équipe SOS Expat`,
 export const initUnclaimedFundsTemplates = onCall(
   {
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
   },

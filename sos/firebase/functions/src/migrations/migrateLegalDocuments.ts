@@ -388,7 +388,7 @@ The Platform, its trademarks, logos, databases and content are protected. No rig
  */
 export const migrateLegalDocuments = functions
   .region("europe-west1")
-  .runWith({ timeoutSeconds: 540, memory: "512MB" })
+  .runWith({ timeoutSeconds: 540, memory: "256MB" })
   .https.onCall(async (_data, context) => {
     // Check if caller is admin
     if (!context.auth) {
@@ -453,7 +453,7 @@ export const migrateLegalDocuments = functions
  */
 export const migrateLegalDocumentsHttp = functions
   .region("europe-west1")
-  .runWith({ timeoutSeconds: 540, memory: "512MB" })
+  .runWith({ timeoutSeconds: 540, memory: "256MB" })
   .https.onRequest(async (req, res) => {
     // Only allow POST requests
     if (req.method !== "POST") {

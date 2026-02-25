@@ -36,7 +36,7 @@ export const cleanupOrphanedAgentTasks = scheduler.onSchedule(
     schedule: '0 8 * * *', // 8h Paris tous les jours
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
-    memory: '512MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 300, // 5 minutes max
   },

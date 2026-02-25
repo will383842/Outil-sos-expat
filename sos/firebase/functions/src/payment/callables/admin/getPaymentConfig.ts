@@ -55,7 +55,7 @@ async function verifyAdmin(request: CallableRequest): Promise<string> {
  * - Provider settings
  */
 export const adminGetPaymentConfig = onCall(
-  { ...adminConfig, memory: '256MiB', timeoutSeconds: 30 },
+  { ...adminConfig, memory: '128MiB', timeoutSeconds: 30 },
   async (request): Promise<{ config: PaymentConfig }> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);

@@ -178,7 +178,7 @@ export const getAgentMetrics = functions.onCall(
   {
     region: 'europe-west1',
     cpu: 0.083,
-    memory: '512MiB',
+    memory: '256MiB',
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },

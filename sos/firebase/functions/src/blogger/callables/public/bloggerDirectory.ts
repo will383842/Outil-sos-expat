@@ -46,8 +46,8 @@ interface GetBloggerDirectoryResponse {
 
 export const getBloggerDirectory = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

@@ -80,7 +80,7 @@ export const twilioCallWebhook = onRequest(
     region: CALL_FUNCTIONS_REGION,
     // P0 CRITICAL FIX 2026-02-04: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
     invoker: "public",
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     maxInstances: 10,  // P1 FIX: Increased from 3 for better scalability
     minInstances: 1,   // P0 FIX 2026-02-23: Restored to 1 — cold start on real-time Twilio webhook is unacceptable
@@ -1185,7 +1185,7 @@ export const twilioRecordingWebhook = onRequest(
     region: 'europe-west3',
     // P0 CRITICAL FIX: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
     invoker: "public",
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     maxInstances: 1,
     minInstances: 0,
@@ -1224,7 +1224,7 @@ export const twilioAmdTwiml = onRequest(
     region: CALL_FUNCTIONS_REGION,
     // P0 CRITICAL FIX 2026-02-04: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
     invoker: "public",
-    memory: '256MiB',  // P0 FIX: 128MiB was too low (firebase-admin requires ~150MB)
+    memory: '128MiB',  // P0 FIX: 128MiB was too low (firebase-admin requires ~150MB)
     cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,  // Reduced to 0 to free CPU quota for createPaymentIntent. AMD TwiML is called after AMD detection completes, brief cold start acceptable.
@@ -1942,7 +1942,7 @@ export const twilioGatherResponse = onRequest(
     region: CALL_FUNCTIONS_REGION,
     // P0 CRITICAL FIX 2026-02-04: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
     invoker: "public",
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)

@@ -430,7 +430,7 @@ export const sendPayPalVerificationCode = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     secrets: EMAIL_SECRETS, // P0-10 FIX: Utiliser l'array centralisé
   },
@@ -564,7 +564,7 @@ export const verifyPayPalCode = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -746,7 +746,7 @@ export const resendPayPalVerificationCode = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     secrets: EMAIL_SECRETS, // P0-10 FIX: Utiliser l'array centralisé
   },

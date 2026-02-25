@@ -941,7 +941,7 @@ export const calculateTax = onCall(
   {
     region: 'europe-west1',
     cpu: 0.083,
-    memory: '256MiB',
+    memory: '128MiB',
     timeoutSeconds: 30,
     maxInstances: 10,
   },
@@ -995,7 +995,7 @@ export const getTaxThresholdStatus = onCall(
   {
     region: 'europe-west1',
     cpu: 0.083,
-    memory: '256MiB',
+    memory: '128MiB',
     timeoutSeconds: 30,
   },
   async (request) => {
@@ -1028,7 +1028,7 @@ export const validateVAT = onCall(
   {
     region: 'europe-west1',
     cpu: 0.083,
-    memory: '256MiB',
+    memory: '128MiB',
     timeoutSeconds: 30,
   },
   async (request) => {

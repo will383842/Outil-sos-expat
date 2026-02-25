@@ -172,7 +172,7 @@ export const telegramOnCallCompleted = onDocumentUpdated(
   {
     region: "europe-west3",
     document: "call_sessions/{sessionId}",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

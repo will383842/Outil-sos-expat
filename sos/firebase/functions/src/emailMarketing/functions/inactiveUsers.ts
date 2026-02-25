@@ -15,7 +15,7 @@ export const detectInactiveUsers = onSchedule(
     schedule: "every 24 hours",
     region: "europe-west3",
     timeZone: "UTC",
-    memory: "256MiB", // OPTIMIZED: Added explicit memory allocation
+    memory: "128MiB", // OPTIMIZED: Added explicit memory allocation
     cpu: 0.083,
   },
   async (_event) => {

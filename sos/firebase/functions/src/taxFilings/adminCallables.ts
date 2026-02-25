@@ -37,7 +37,7 @@ export const updateFilingStatus = onCall<UpdateStatusRequest, Promise<UpdateStat
   {
     region: 'europe-west1',
     timeoutSeconds: 30,
-    memory: '256MiB',
+    memory: '128MiB',
   },
   async (request: CallableRequest<UpdateStatusRequest>): Promise<UpdateStatusResponse> => {
     const { auth, data } = request;
@@ -159,7 +159,7 @@ export const deleteFilingDraft = onCall<DeleteDraftRequest>(
   {
     region: 'europe-west1',
     timeoutSeconds: 30,
-    memory: '256MiB',
+    memory: '128MiB',
   },
   async (request: CallableRequest<DeleteDraftRequest>) => {
     const { auth, data } = request;
@@ -252,7 +252,7 @@ export const updateFilingAmounts = onCall<UpdateAmountsRequest>(
   {
     region: 'europe-west1',
     timeoutSeconds: 30,
-    memory: '256MiB',
+    memory: '128MiB',
   },
   async (request: CallableRequest<UpdateAmountsRequest>) => {
     const { auth, data } = request;

@@ -384,7 +384,7 @@ export const providerCatalogFeed = onRequest(
   {
     region: "europe-west1", // Changed from us-central1 to reduce egress costs
     timeoutSeconds: 300, // 5 minutes max
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     maxInstances: 5,
     minInstances: 0,
@@ -507,4 +507,5 @@ export const providerCatalogFeed = onRequest(
 /**
  * Export par defaut pour usage dans index.ts
  */
-export { providerCatalogFeed as generateProviderFeed };
+// REMOVED: duplicate alias export caused "concurrent execution" deploy error
+// export { providerCatalogFeed as generateProviderFeed };

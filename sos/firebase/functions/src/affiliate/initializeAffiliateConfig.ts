@@ -184,8 +184,8 @@ const DEFAULT_AFFILIATE_CONFIG: Omit<AffiliateConfig, "updatedAt" | "updatedBy" 
  */
 export const initializeAffiliateConfig = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -255,8 +255,8 @@ export const initializeAffiliateConfig = onCall(
  */
 export const resetAffiliateConfigToDefaults = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

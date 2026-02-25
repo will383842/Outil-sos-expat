@@ -36,7 +36,7 @@ function assertAdmin(ctx: any) {
 export const admin_templates_list = onCall({
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60
@@ -56,7 +56,7 @@ export const admin_templates_list = onCall({
 export const admin_templates_get = onCall({
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60
@@ -83,7 +83,7 @@ type TemplatePayload = { email?: EmailTpl; sms?: SmsTpl; push?: PushTpl };
 export const admin_templates_upsert = onCall({
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60
@@ -109,7 +109,7 @@ export const admin_templates_upsert = onCall({
 export const admin_routing_get = onCall({
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60
@@ -132,7 +132,7 @@ type RoutingEntry = {
 /** 5) ROUTING UPSERT: merge une entrée de routing pour un eventId */
 export const admin_routing_upsert = onCall({
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60
@@ -154,7 +154,7 @@ export const admin_routing_upsert = onCall({
 /** 6) TEST SEND: crée un doc message_events de test que le worker va traiter */
 export const admin_testSend = onCall({
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60
@@ -189,7 +189,7 @@ import * as path from "node:path";
 
 export const admin_templates_seed = onCall({
     region: "europe-west1",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     minInstances: 0,
     timeoutSeconds: 120
@@ -259,7 +259,7 @@ import { UnclaimedFundsProcessor } from "../scheduled/processUnclaimedFunds";
  */
 export const admin_unclaimed_funds_stats = onCall({
   region: "europe-west1",
-  memory: "256MiB",
+  memory: "128MiB",
   cpu: 0.083,
   timeoutSeconds: 60
 }, async (req) => {
@@ -276,7 +276,7 @@ export const admin_unclaimed_funds_stats = onCall({
  */
 export const admin_unclaimed_funds_list = onCall({
   region: "europe-west1",
-  memory: "256MiB",
+  memory: "128MiB",
   cpu: 0.083,
   timeoutSeconds: 60
 }, async (req) => {
@@ -306,7 +306,7 @@ export const admin_unclaimed_funds_list = onCall({
  */
 export const admin_forfeited_funds_list = onCall({
   region: "europe-west1",
-  memory: "256MiB",
+  memory: "128MiB",
   cpu: 0.083,
   timeoutSeconds: 60
 }, async (req) => {
@@ -337,7 +337,7 @@ export const admin_forfeited_funds_list = onCall({
  */
 export const admin_process_exceptional_claim = onCall({
   region: "europe-west1",
-  memory: "256MiB",
+  memory: "128MiB",
   cpu: 0.083,
   timeoutSeconds: 120
 }, async (req) => {
@@ -393,7 +393,7 @@ export const admin_process_exceptional_claim = onCall({
  */
 export const admin_trigger_unclaimed_funds_processing = onCall({
   region: "europe-west1",
-  memory: "512MiB",
+  memory: "256MiB",
   cpu: 0.083,
   timeoutSeconds: 300
 }, async (req) => {
@@ -415,7 +415,7 @@ import { StripeManager } from "../StripeManager";
  */
 export const adminRefundPayment = onCall({
   region: "europe-west1",
-  memory: "512MiB",
+  memory: "256MiB",
   cpu: 0.083,
   timeoutSeconds: 120,
 }, async (req) => {
@@ -456,7 +456,7 @@ export const adminRefundPayment = onCall({
  */
 export const adminBulkRefund = onCall({
   region: "europe-west1",
-  memory: "512MiB",
+  memory: "256MiB",
   cpu: 0.083,
   timeoutSeconds: 300,
 }, async (req) => {

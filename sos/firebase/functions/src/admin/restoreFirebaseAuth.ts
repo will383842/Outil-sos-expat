@@ -385,7 +385,7 @@ export const listRestorableAuthBackups = functions
  */
 export const validateAuthBackup = functions
   .region('europe-west1')
-  .runWith({ timeoutSeconds: 120, memory: '512MB' })
+  .runWith({ timeoutSeconds: 120, memory: '256MB' })
   .https.onCall(async (data: { backupId: string }, context) => {
     await verifyAdmin(context);
 

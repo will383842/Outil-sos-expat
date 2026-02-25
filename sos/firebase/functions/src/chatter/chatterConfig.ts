@@ -496,8 +496,8 @@ async function assertAdmin(auth: { uid: string; token?: Record<string, unknown> 
 export const adminUpdateChatterConfigSettings = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60,
@@ -603,8 +603,8 @@ export const adminUpdateChatterConfigSettings = onCall(
 export const adminGetChatterConfigSettings = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,
@@ -645,8 +645,8 @@ export const adminGetChatterConfigSettings = onCall(
 export const adminInitializeChatterConfigSettings = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,
@@ -699,8 +699,8 @@ export const adminInitializeChatterConfigSettings = onCall(
 export const adminToggleFlashBonus = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,

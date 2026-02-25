@@ -30,7 +30,7 @@ export const paymentDataCleanup = onSchedule(
     region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 540,
-    memory: "512MiB",
+    memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,
   },
   async () => {

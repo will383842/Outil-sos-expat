@@ -48,7 +48,7 @@ export const consolidatedValidateCommissions = onSchedule(
     schedule: "0 * * * *", // Every hour at minute 0
     region: "europe-west3",
     timeZone: "Europe/Paris",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
     retryCount: 3,
@@ -108,7 +108,7 @@ export const consolidatedReleaseCommissions = onSchedule(
     schedule: "30 * * * *", // Every hour at minute 30
     region: "europe-west3",
     timeZone: "Europe/Paris",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
     retryCount: 3,

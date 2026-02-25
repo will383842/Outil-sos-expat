@@ -453,8 +453,8 @@ export async function resetMessageTemplatesToDefaults(
 export const getChatterMessageTemplates = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -483,8 +483,8 @@ export const getChatterMessageTemplates = onCall(
 export const adminSeedMessageTemplates = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -518,8 +518,8 @@ export const adminSeedMessageTemplates = onCall(
 export const adminCreateMessageTemplate = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -570,8 +570,8 @@ export const adminCreateMessageTemplate = onCall(
 export const adminUpdateMessageTemplate = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -624,8 +624,8 @@ export const adminUpdateMessageTemplate = onCall(
 export const adminDeleteMessageTemplate = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -675,8 +675,8 @@ export const adminDeleteMessageTemplate = onCall(
 export const adminResetMessageTemplatesToDefaults = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
   },
   async (request) => {
@@ -714,7 +714,7 @@ export const adminResetMessageTemplatesToDefaults = onCall(
  */
 export const initializeMessageTemplates = functionsV1
   .region("europe-west1")
-  .runWith({ memory: "256MB" })
+  .runWith({ memory: "128MB" })
   .https.onRequest(async (req, res) => {
     // Only allow POST requests
     if (req.method !== "POST") {

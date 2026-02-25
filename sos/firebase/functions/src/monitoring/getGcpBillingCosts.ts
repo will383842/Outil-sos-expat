@@ -623,7 +623,7 @@ export const getGcpBillingCosts = functions.onCall(
   {
     region: 'europe-west1',
     cpu: 0.083,
-    memory: '512MiB',
+    memory: '256MiB',
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
   },

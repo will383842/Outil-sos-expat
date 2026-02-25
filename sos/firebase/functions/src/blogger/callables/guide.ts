@@ -29,8 +29,8 @@ import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 export const getBloggerGuide = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -150,8 +150,8 @@ export const getBloggerGuide = onCall(
 
 export const copyBloggerGuideText = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -273,7 +273,7 @@ export const copyBloggerGuideText = onCall(
 
 export const trackBloggerGuideUsage = onCall(
   {
-    region: "europe-west2",
+    region: "us-central1",
     memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 15,

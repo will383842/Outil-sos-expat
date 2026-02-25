@@ -262,7 +262,7 @@ export const translateProvider = onCall(
     region: 'europe-west1',
     cpu: 0.083,
     maxInstances: 10,
-    memory: '512MiB',
+    memory: '256MiB',
     timeoutSeconds: 120,
   },
   async (request) => {

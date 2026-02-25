@@ -5,7 +5,7 @@ import { MessageTemplate } from './MessageManager';
 // Configuration d'optimisation CPU
 const CPU_OPTIMIZED_CONFIG = {
   region: 'europe-west1' as const,
-  memory: '256MiB' as const,
+  memory: '128MiB' as const,
   cpu: 0.083 as const,
   timeoutSeconds: 120,
   maxInstances: 3,

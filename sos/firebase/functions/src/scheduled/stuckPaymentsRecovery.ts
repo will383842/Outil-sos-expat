@@ -71,7 +71,7 @@ export const stuckPaymentsRecovery = onSchedule(
     region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
-    memory: "512MiB",
+    memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,
     // P0 FIX 2026-02-01: Added PayPal secrets for stuck PayPal payments recovery
     secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],

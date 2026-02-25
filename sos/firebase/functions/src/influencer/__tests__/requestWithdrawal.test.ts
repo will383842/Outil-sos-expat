@@ -3,7 +3,7 @@
  *
  * Covers: auth, Telegram gate, influencer profile validation,
  * minimum withdrawal ($10 = 1000 cents), happy paths, Telegram failure.
- * Region: europe-west2
+ * Region: us-central1
  */
 
 // ============================================================================

@@ -536,7 +536,7 @@ function generateCostAlerts(metrics: {
 export const getCostMetrics = functions
   .region('europe-west1')
   .runWith({
-    memory: '256MB',
+    memory: '128MB',
     timeoutSeconds: 60,
   })
   .https.onCall(async (data, context): Promise<CostMetrics> => {

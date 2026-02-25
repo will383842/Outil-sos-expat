@@ -228,7 +228,7 @@ async function findExistingPrices(
  */
 export const syncSubscriptionPlansToStripe = functions
   .region('europe-west1')
-  .runWith({ timeoutSeconds: 300, memory: '512MB' })
+  .runWith({ timeoutSeconds: 300, memory: '256MB' })
   .https.onCall(async (_data, context) => {
     // Verification admin
     if (!(await isAdmin(context))) {
@@ -442,7 +442,7 @@ export const syncSubscriptionPlansToStripe = functions
  */
 export const updateStripePrices = functions
   .region('europe-west1')
-  .runWith({ timeoutSeconds: 300, memory: '512MB' })
+  .runWith({ timeoutSeconds: 300, memory: '256MB' })
   .https.onCall(
     async (
       data: {
@@ -1046,7 +1046,7 @@ export const onSubscriptionPlanPricingUpdate = functions
   .region('europe-west1')
   .runWith({
     timeoutSeconds: 120,
-    memory: '256MB',
+    memory: '128MB',
     // Limiter les invocations pour controler les couts
     maxInstances: 5,
   })

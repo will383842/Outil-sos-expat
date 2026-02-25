@@ -289,7 +289,7 @@ export const processTelegramQueue = onSchedule(
     region: 'europe-west3',
     schedule: '*/5 * * * *', // Every 5 minutes (optimized from every minute - saves ~80% invocations)
     timeZone: 'Europe/Paris',
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 120, // Increased to process larger batches per run
     maxInstances: 1,

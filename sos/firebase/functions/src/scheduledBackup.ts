@@ -84,7 +84,7 @@ export const scheduledBackup = onSchedule(
     schedule: "0 3 * * *",
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "512MiB",
+    memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,
   },
   async () => {

@@ -3,7 +3,7 @@
  *
  * Public page (no auth required) listing all visible Bloggers.
  * Dark/gradient design: purple/indigo palette.
- * Firebase callable: getBloggerDirectory (europe-west2)
+ * Firebase callable: getBloggerDirectory (us-central1)
  */
 
 import React, { useState, useEffect, useCallback } from "react";

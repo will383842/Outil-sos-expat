@@ -952,7 +952,7 @@ export const sendCustomPasswordResetEmail = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     secrets: [EMAIL_USER, EMAIL_PASS],
   },

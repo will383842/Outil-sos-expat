@@ -72,7 +72,7 @@ function pctChange(curr: number, prev: number) {
 export const api = onRequest(
   {
     region: 'europe-west1',
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     concurrency: 1,
     timeoutSeconds: 60,

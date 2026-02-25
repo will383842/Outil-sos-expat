@@ -3,7 +3,7 @@
  *
  * Public page (no auth required) listing all visible Group Admins.
  * Dark/gradient design: slate/indigo/emerald palette.
- * Firebase callable: getGroupAdminDirectory (europe-west2)
+ * Firebase callable: getGroupAdminDirectory (us-central1)
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";

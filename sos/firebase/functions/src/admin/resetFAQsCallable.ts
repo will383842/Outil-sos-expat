@@ -240,7 +240,7 @@ async function translateFAQ(question: string, answer: string): Promise<{
 export const adminResetFAQs = onCall(
   {
     region: "europe-west1",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 540, // 9 minutes
   },

@@ -157,7 +157,7 @@ export const resetBillingCycleQuotas = onSchedule(
     region: 'europe-west3',
     timeZone: 'UTC',
     secrets: [MAILWIZZ_API_KEY_SECRET],
-    memory: '512MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 540, // 9 minutes
   },
@@ -292,7 +292,7 @@ export const checkPastDueSubscriptions = onSchedule(
     region: 'europe-west3',
     timeZone: 'UTC',
     secrets: [MAILWIZZ_API_KEY_SECRET],
-    memory: '256MiB', // OPTIMIZED: Reduced from 512MiB - simple queries
+    memory: '128MiB', // OPTIMIZED: Reduced from 512MiB - simple queries
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -420,7 +420,7 @@ export const sendQuotaAlerts = onSchedule(
     region: 'europe-west3',
     timeZone: 'UTC',
     secrets: [MAILWIZZ_API_KEY_SECRET],
-    memory: '256MiB', // OPTIMIZED: Reduced from 512MiB - simple queries
+    memory: '128MiB', // OPTIMIZED: Reduced from 512MiB - simple queries
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -544,7 +544,7 @@ export const cleanupExpiredTrials = onSchedule(
     region: 'europe-west3',
     timeZone: 'UTC',
     secrets: [MAILWIZZ_API_KEY_SECRET, STRIPE_SECRET_KEY],
-    memory: '256MiB', // OPTIMIZED: Reduced from 512MiB - simple queries
+    memory: '128MiB', // OPTIMIZED: Reduced from 512MiB - simple queries
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -668,7 +668,7 @@ export const cleanupExpiredDocuments = onSchedule(
     schedule: '0 3 * * *', // Hour 3, Every day
     region: 'europe-west3',
     timeZone: 'UTC',
-    memory: '256MiB', // OPTIMIZED: Reduced from 512MiB - simple cleanup queries
+    memory: '128MiB', // OPTIMIZED: Reduced from 512MiB - simple cleanup queries
     cpu: 0.083,
     timeoutSeconds: 300,
   },

@@ -38,7 +38,7 @@ export const migratePhoneEncryption = functions
   .region('europe-west1')
   .runWith({
     timeoutSeconds: 540,
-    memory: '512MB'
+    memory: '256MB'
   })
   .https.onCall(async (data, context) => {
     // Verify admin authentication

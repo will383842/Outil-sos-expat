@@ -523,7 +523,7 @@ L'équipe SOS Expat`,
 export const initKYCReminderTemplates = onCall(
   {
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
   },
   async (request) => {

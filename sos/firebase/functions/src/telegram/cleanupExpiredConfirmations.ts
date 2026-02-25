@@ -31,7 +31,7 @@ export const cleanupExpiredWithdrawalConfirmations = scheduler.onSchedule(
     schedule: "every 5 minutes",
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     secrets: [...TELEGRAM_SECRETS],

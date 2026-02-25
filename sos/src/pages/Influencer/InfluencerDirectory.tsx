@@ -3,7 +3,7 @@
  *
  * Public page (no auth required) listing all visible Influencers.
  * Dark/gradient design: red/orange/purple palette.
- * Firebase callable: getInfluencerDirectory (europe-west2)
+ * Firebase callable: getInfluencerDirectory (us-central1)
  */
 
 import React, { useState, useEffect, useCallback } from "react";

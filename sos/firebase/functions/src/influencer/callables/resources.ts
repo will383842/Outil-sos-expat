@@ -30,8 +30,8 @@ import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 export const getInfluencerResources = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -131,8 +131,8 @@ export const getInfluencerResources = onCall(
 
 export const downloadInfluencerResource = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -217,8 +217,8 @@ export const downloadInfluencerResource = onCall(
 
 export const copyInfluencerResourceText = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

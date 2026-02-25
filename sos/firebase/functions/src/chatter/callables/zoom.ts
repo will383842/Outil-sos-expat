@@ -17,7 +17,7 @@ const db = () => getFirestore();
  * Get upcoming Zoom meetings for chatters
  */
 export const getZoomMeetings = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -44,7 +44,7 @@ export const getZoomMeetings = onCall(
  * Record attendance for a Zoom meeting
  */
 export const recordZoomAttendance = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -85,7 +85,7 @@ export const recordZoomAttendance = onCall(
  * Get chatter's attendance history
  */
 export const getMyZoomAttendances = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -109,7 +109,7 @@ export const getMyZoomAttendances = onCall(
  * Create a new Zoom meeting (admin only)
  */
 export const adminCreateZoomMeeting = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -166,7 +166,7 @@ export const adminCreateZoomMeeting = onCall(
  * Update a Zoom meeting (admin only)
  */
 export const adminUpdateZoomMeeting = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -203,7 +203,7 @@ export const adminUpdateZoomMeeting = onCall(
  * Get all meetings with filters (admin only)
  */
 export const adminGetZoomMeetings = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -231,7 +231,7 @@ export const adminGetZoomMeetings = onCall(
  * Get meeting attendees (admin only)
  */
 export const adminGetMeetingAttendees = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -263,7 +263,7 @@ export const adminGetMeetingAttendees = onCall(
  * Update meeting status (admin only)
  */
 export const adminUpdateMeetingStatus = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");

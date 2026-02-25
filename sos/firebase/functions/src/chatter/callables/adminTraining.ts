@@ -45,8 +45,8 @@ async function checkAdminRole(uid: string): Promise<boolean> {
 
 export const adminGetTrainingModules = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -125,8 +125,8 @@ interface CreateModuleInput {
 
 export const adminCreateTrainingModule = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -228,8 +228,8 @@ interface UpdateModuleInput {
 
 export const adminUpdateTrainingModule = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -305,8 +305,8 @@ export const adminUpdateTrainingModule = onCall(
 
 export const adminDeleteTrainingModule = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -380,8 +380,8 @@ export const adminDeleteTrainingModule = onCall(
 
 export const adminSeedTrainingModules = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
@@ -421,8 +421,8 @@ export const adminSeedTrainingModules = onCall(
 
 export const adminReorderTrainingModules = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,

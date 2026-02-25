@@ -197,7 +197,7 @@ function generateMultilingualSlugs(
 export const migrateProfileSlugs = onRequest(
   {
     region: REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 540, // 9 minutes max
     maxInstances: 1,
@@ -353,7 +353,7 @@ export const migrateProfileSlugs = onRequest(
 export const auditProfileSlugs = onRequest(
   {
     region: REGION,
-    memory: '512MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 300,
     maxInstances: 1,

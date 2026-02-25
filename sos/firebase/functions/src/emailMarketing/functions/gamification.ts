@@ -18,7 +18,7 @@ export const handleMilestoneReached = onDocumentUpdated(
   {
     document: "users/{userId}",
     region: "europe-west3",
-    memory: "256MiB" as const,
+    memory: "128MiB" as const,
     cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,
@@ -91,7 +91,7 @@ export const handleBadgeUnlocked = onDocumentCreated(
   {
     document: "user_badges/{badgeId}",
     region: "europe-west3",
-    memory: "256MiB" as const,
+    memory: "128MiB" as const,
     cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,

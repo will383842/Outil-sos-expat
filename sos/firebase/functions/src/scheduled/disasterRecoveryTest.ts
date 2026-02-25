@@ -754,7 +754,7 @@ export const runMonthlyDRTest = onSchedule(
     schedule: '0 6 1 * *', // 1er du mois à 6h
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
-    memory: '512MiB',
+    memory: '256MiB',  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -881,7 +881,7 @@ export const runMonthlyDRTest = onSchedule(
  */
 export const runDRTestManual = functions
   .region('europe-west1')
-  .runWith({ timeoutSeconds: 300, memory: '512MB' })
+  .runWith({ timeoutSeconds: 300, memory: '256MB' })
   .https.onCall(async (_data, context) => {
     // Vérifier l'authentification admin
     if (!context.auth) {

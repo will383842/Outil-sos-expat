@@ -71,7 +71,7 @@ export const telegram_reprocessDeadLetters = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],
@@ -169,7 +169,7 @@ export const telegram_sendOneOff = onCall(
   {
     region: "europe-west1",
     cors: ALLOWED_ORIGINS,
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
     secrets: [TELEGRAM_BOT_TOKEN],

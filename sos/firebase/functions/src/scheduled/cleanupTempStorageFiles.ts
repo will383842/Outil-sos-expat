@@ -99,7 +99,7 @@ export const cleanupTempStorageFiles = scheduler.onSchedule(
     schedule: 'every day 03:00',
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
-    memory: '512MiB',
+    memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 300, // 5 minutes max
   },

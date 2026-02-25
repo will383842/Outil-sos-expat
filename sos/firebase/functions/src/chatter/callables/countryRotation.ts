@@ -69,8 +69,8 @@ async function assertAdmin(request: CallableRequest): Promise<string> {
  */
 export const getAvailableCountriesForChatter = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -107,8 +107,8 @@ export const getAvailableCountriesForChatter = onCall(
  */
 export const assignCountriesToCurrentChatter = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -164,8 +164,8 @@ export const assignCountriesToCurrentChatter = onCall(
  */
 export const adminInitializeCountryRotation = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
@@ -189,8 +189,8 @@ export const adminInitializeCountryRotation = onCall(
  */
 export const adminGetCountryRotationStatus = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -225,7 +225,7 @@ export const adminGetCountryRotationStatus = onCall(
 export const adminAdvanceCycleV2 = onCall(
   {
     region: "europe-west1", // Temporarily west1 — west2 quota saturated by stuck Cloud Run deletions
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -259,8 +259,8 @@ export const adminAdvanceCycleV2 = onCall(
  */
 export const adminUpdateCycleThreshold = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

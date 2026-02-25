@@ -320,7 +320,7 @@ export const adminGetChatterDetail = onCall(
 // ============================================================================
 
 export const adminProcessWithdrawal = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean; message: string }> => {
     ensureInitialized();
     const adminId = await assertAdmin(request);
@@ -397,7 +397,7 @@ export const adminProcessWithdrawal = onCall(
 // ============================================================================
 
 export const adminUpdateChatterStatus = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean; message: string }> => {
     ensureInitialized();
     const adminId = await assertAdmin(request);
@@ -480,7 +480,7 @@ export const adminUpdateChatterStatus = onCall(
 // ============================================================================
 
 export const adminGetPendingWithdrawals = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request): Promise<{
     success: boolean;
     withdrawals: ChatterWithdrawal[];
@@ -593,7 +593,7 @@ export const adminExportChatters = onCall(
  * Bulk actions on multiple chatters
  */
 export const adminBulkChatterAction = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request) => {
     ensureInitialized();
     await assertAdmin(request);
@@ -660,7 +660,7 @@ export const adminBulkChatterAction = onCall(
  * Get current chatter system configuration
  */
 export const adminGetChatterConfig = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request): Promise<{ config: ChatterConfig }> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -704,7 +704,7 @@ export const adminGetChatterConfig = onCall(
  * Update chatter system configuration
  */
 export const adminUpdateChatterConfig = onCall(
-  { ...adminConfig, memory: "256MiB", timeoutSeconds: 30 },
+  { ...adminConfig, memory: "128MiB", timeoutSeconds: 30 },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
     const adminId = await assertAdmin(request);

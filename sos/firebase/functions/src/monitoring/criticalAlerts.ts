@@ -489,7 +489,7 @@ export const runSystemHealthCheck = onSchedule(
     schedule: '0 8 * * *', // 8h Paris tous les jours
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 120
   },
@@ -519,7 +519,7 @@ export const cleanupOldAlerts = onSchedule(
     schedule: '0 5 1 * *', // 1er du mois à 5h
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
   },
   async () => {

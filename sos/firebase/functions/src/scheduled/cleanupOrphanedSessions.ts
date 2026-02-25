@@ -377,7 +377,7 @@ export const cleanupOrphanedSessions = scheduler.onSchedule(
     schedule: '0 * * * *', // Toutes les heures à minute 0
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
-    memory: '512MiB', // Plus de mémoire pour les appels API
+    memory: '256MiB', // Plus de mémoire pour les appels API
     cpu: 0.083,
     timeoutSeconds: 300, // 5 minutes max
     // P0 FIX: Secrets nécessaires pour Stripe, PayPal et Twilio

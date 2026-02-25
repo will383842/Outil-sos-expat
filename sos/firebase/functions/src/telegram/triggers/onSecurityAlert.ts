@@ -134,7 +134,7 @@ export const telegramOnSecurityAlert = onDocumentCreated(
   {
     region: "europe-west3",
     document: "security_alerts/{alertId}",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

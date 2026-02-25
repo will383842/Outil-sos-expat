@@ -901,8 +901,8 @@ export const chatterNotifyFlashBonusStart = onCall(
 export const chatterRegisterFcmToken = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,
@@ -990,8 +990,8 @@ export const chatterRegisterFcmToken = onCall(
 export const chatterUnregisterFcmToken = onCall(
   {
     cors: ALLOWED_ORIGINS,
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,

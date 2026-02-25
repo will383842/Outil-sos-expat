@@ -216,7 +216,7 @@ async function sendNotification(
 export const submitForValidation = onCall(
   {
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60,
@@ -330,7 +330,7 @@ export const submitForValidation = onCall(
 export const assignValidation = onCall(
   {
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60,
@@ -405,7 +405,7 @@ export const assignValidation = onCall(
 export const approveProfile = onCall(
   {
     region: "europe-west3",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     minInstances: 0,
     timeoutSeconds: 120,
@@ -532,7 +532,7 @@ export const approveProfile = onCall(
 export const rejectProfile = onCall(
   {
     region: "europe-west3",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     minInstances: 0,
     timeoutSeconds: 120,
@@ -642,7 +642,7 @@ export const rejectProfile = onCall(
 export const requestChanges = onCall(
   {
     region: "europe-west3",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     minInstances: 0,
     timeoutSeconds: 120,
@@ -772,7 +772,7 @@ export const requestChanges = onCall(
 export const getValidationQueue = onCall(
   {
     region: "europe-west3",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     minInstances: 0,
     timeoutSeconds: 120,
@@ -1015,7 +1015,7 @@ export const getValidationQueue = onCall(
 export const getValidationHistory = onCall(
   {
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60,
@@ -1256,7 +1256,7 @@ export const onValidationDecision = onDocumentUpdated(
 export const resubmitForValidation = onCall(
   {
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60,

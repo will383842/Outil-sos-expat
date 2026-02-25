@@ -387,7 +387,7 @@ export const exportFilingToFormat = onCall(
     region: 'europe-west1',
     cpu: 0.083,
     timeoutSeconds: 120,
-    memory: '512MiB',
+    memory: '256MiB',
   },
   async (request): Promise<ExportResponse> => {
     // Check authentication
@@ -478,7 +478,7 @@ export const exportFilingAllFormats = onCall(
     region: 'europe-west1',
     cpu: 0.083,
     timeoutSeconds: 180,
-    memory: '512MiB',
+    memory: '256MiB',
   },
   async (request) => {
     // Check authentication

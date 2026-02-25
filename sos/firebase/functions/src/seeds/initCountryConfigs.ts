@@ -24,7 +24,7 @@ import { ALL_SUBDIVISIONS } from './seedSubdivisionConfigs';
 export const initCountryConfigs = onCall(
   {
     timeoutSeconds: 300, // 5 minutes
-    memory: '512MiB',
+    memory: '256MiB',
     cpu: 0.083,
     region: 'europe-west1',
   },
@@ -159,7 +159,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 export const seedCountryConfigsHttp = onRequest(
   {
     timeoutSeconds: 300,
-    memory: '512MiB',
+    memory: '256MiB',
     cpu: 0.083,
     region: 'europe-west1',
   },

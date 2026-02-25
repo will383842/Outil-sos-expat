@@ -37,7 +37,7 @@ export const notificationRetry = onSchedule(
     region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
   },
   async () => {

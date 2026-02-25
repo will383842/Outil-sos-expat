@@ -46,7 +46,7 @@ interface RestoreSummary {
 export const restoreUserRoles = onCall(
   {
     region: "europe-west1",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 540, // 9 minutes pour traiter beaucoup d'utilisateurs
   },
@@ -188,7 +188,7 @@ export const restoreUserRoles = onCall(
 export const syncAllCustomClaims = onCall(
   {
     region: "europe-west1",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 540,
   },
@@ -260,7 +260,7 @@ export const syncAllCustomClaims = onCall(
 export const checkUserRole = onCall(
   {
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
   },
   async (request): Promise<{

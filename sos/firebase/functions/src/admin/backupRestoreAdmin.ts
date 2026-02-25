@@ -218,7 +218,7 @@ async function getCurrentCollectionCounts(): Promise<Record<string, number>> {
  */
 export const adminListBackups = functions
   .region("europe-west1")
-  .runWith({ timeoutSeconds: 60, memory: "256MB" })
+  .runWith({ timeoutSeconds: 60, memory: "128MB" })
   .https.onCall(async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Authentication required");
@@ -286,7 +286,7 @@ export const adminListBackups = functions
  */
 export const adminPreviewRestore = functions
   .region("europe-west1")
-  .runWith({ timeoutSeconds: 120, memory: "512MB" })
+  .runWith({ timeoutSeconds: 120, memory: "256MB" })
   .https.onCall(async (data: RestoreOptions, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Authentication required");
@@ -578,7 +578,7 @@ export const adminRestoreFirestore = functions
  */
 export const adminCheckRestoreStatus = functions
   .region("europe-west1")
-  .runWith({ timeoutSeconds: 60, memory: "256MB" })
+  .runWith({ timeoutSeconds: 60, memory: "128MB" })
   .https.onCall(async (data: { trackingId?: string; operationName?: string }, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Authentication required");
@@ -794,7 +794,7 @@ export const adminRestoreAuth = functions
  */
 export const adminCreateManualBackup = functions
   .region("europe-west1")
-  .runWith({ timeoutSeconds: 300, memory: "512MB" })
+  .runWith({ timeoutSeconds: 300, memory: "256MB" })
   .https.onCall(async (data: { includeAuth?: boolean; description?: string }, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Authentication required");

@@ -234,7 +234,7 @@ export const adminGetAuditLogs = onCall(
  * Returns the list of possible audit log actions for filtering.
  */
 export const adminGetAuditLogActions = onCall(
-  { ...adminConfig, memory: '256MiB', timeoutSeconds: 10 },
+  { ...adminConfig, memory: '128MiB', timeoutSeconds: 10 },
   async (request): Promise<{ actions: string[] }> => {
     ensureInitialized();
     await verifyAdmin(request);

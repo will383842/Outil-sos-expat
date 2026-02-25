@@ -18,7 +18,7 @@ import { JournalEntry } from './types';
 
 const TRIGGER_CONFIG = {
   region: 'europe-west3',
-  memory: '256MiB' as const,
+  memory: '128MiB' as const,
   cpu: 0.083,
   timeoutSeconds: 60,
 };
@@ -307,7 +307,7 @@ export const onSubscriptionPaymentReceived = onDocumentUpdated(
 export const postJournalEntry = onCall(
   {
     ...TRIGGER_CONFIG,
-    memory: '256MiB' as const,
+    memory: '128MiB' as const,
   },
   async (request) => {
     // Verifier l'authentification
@@ -339,7 +339,7 @@ export const postJournalEntry = onCall(
 export const reverseJournalEntry = onCall(
   {
     ...TRIGGER_CONFIG,
-    memory: '256MiB' as const,
+    memory: '128MiB' as const,
   },
   async (request) => {
     if (!request.auth) {
@@ -381,7 +381,7 @@ export const reverseJournalEntry = onCall(
 export const regenerateJournalEntry = onCall(
   {
     ...TRIGGER_CONFIG,
-    memory: '256MiB' as const,
+    memory: '128MiB' as const,
   },
   async (request) => {
     if (!request.auth) {
@@ -436,7 +436,7 @@ export const regenerateJournalEntry = onCall(
 export const getAccountingStats = onCall(
   {
     ...TRIGGER_CONFIG,
-    memory: '256MiB' as const,
+    memory: '128MiB' as const,
   },
   async (request) => {
     if (!request.auth) {
@@ -469,7 +469,7 @@ export const getAccountingStats = onCall(
 export const generateOssVatDeclaration = onCall(
   {
     ...TRIGGER_CONFIG,
-    memory: '512MiB' as const,
+    memory: '256MiB' as const,
     timeoutSeconds: 120,
   },
   async (request) => {
@@ -503,7 +503,7 @@ export const generateOssVatDeclaration = onCall(
 export const getAccountBalances = onCall(
   {
     ...TRIGGER_CONFIG,
-    memory: '512MiB' as const,
+    memory: '256MiB' as const,
     timeoutSeconds: 120,
   },
   async (request) => {

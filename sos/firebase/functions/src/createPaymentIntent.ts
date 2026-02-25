@@ -78,7 +78,7 @@ function getLimits() {
    ──────────────────────────────────────────────────────────────────────────── */
 const FUNCTION_OPTIONS = {
   region: PAYMENT_FUNCTIONS_REGION,
-  memory: '256MiB' as const,
+  memory: '128MiB' as const,
   cpu: 0.083,
   concurrency: 1,
   timeoutSeconds: 120, // P1-2 FIX 2026-02-23: 60→120s — 40+ Firestore ops + Stripe API calls need margin

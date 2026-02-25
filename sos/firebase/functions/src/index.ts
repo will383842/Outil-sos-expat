@@ -63,7 +63,7 @@ const findCallSessionByPaymentId = async (database: any, paymentId: string): Pro
 // === CPU/MEM CONFIGS to control vCPU usage ===
 const emergencyConfig = {
   region: "europe-west1",
-  memory: "256MiB" as const,
+  memory: "128MiB" as const,
   cpu: 0.083,
   maxInstances: 3,
   minInstances: 0,
@@ -426,6 +426,7 @@ const GLOBAL_SECRETS = [
 // ⚠️ cast 'as any' pour accepter eventarc si les types ne sont pas à jour
 setGlobalOptions({
   region: "europe-west1",
+  memory: "128MiB",
   eventarc: { location: "europe-west1" },
   secrets: GLOBAL_SECRETS,
 } as any);
@@ -988,7 +989,7 @@ export const executeCallTask = onRequest(
     // 3 retries: 3*150 + 2*15 = 480s minimum
     // 120s was causing premature function timeout → only 2 retries executed
     timeoutSeconds: 540,
-    memory: "512MiB",
+    memory: "256MiB",
     // P0 FIX: Use fractional CPU to reduce quota consumption (like twilioCallWebhook)
     // With concurrency: 1, we can use cpu < 1 which uses less quota per instance
     // 0.25 CPU is sufficient since function mostly waits for Twilio API responses
@@ -1010,7 +1011,7 @@ export const setProviderAvailableTask = onRequest(
     // P0 FIX 2026-02-04: Migrated to dedicated region for call functions to avoid quota issues
     region: CALL_FUNCTIONS_REGION,
     timeoutSeconds: 30,
-    memory: "256MiB" as const,
+    memory: "128MiB" as const,
     cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,
@@ -1028,7 +1029,7 @@ export const busySafetyTimeoutTask = onRequest(
   {
     region: CALL_FUNCTIONS_REGION,
     timeoutSeconds: 30,
-    memory: "256MiB" as const,
+    memory: "128MiB" as const,
     cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,
@@ -1299,7 +1300,7 @@ export { stripeWebhook } from "./Webhooks/stripeWebhookHandler";
 export const scheduledCleanup = onSchedule(
   {
     region: "europe-west3",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     maxInstances: 1,
     minInstances: 0,
@@ -1911,7 +1912,7 @@ export const manuallyTriggerCallExecution = onCall(
 export const testWebhook = onRequest(
   {
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.1,
     minInstances: 0,
     concurrency: 1,
@@ -2074,7 +2075,7 @@ export { generateSitemaps, onProviderChange, scheduledSitemapGeneration } from '
 // ========== META DYNAMIC ADS - PROVIDER CATALOG FEED ==========
 // HTTP endpoint: https://europe-west1-sos-expat.cloudfunctions.net/providerCatalogFeed
 // Generates CSV feed of active providers for Facebook Product Catalog
-export { providerCatalogFeed, generateProviderFeed } from './providerCatalogFeed';
+export { providerCatalogFeed } from './providerCatalogFeed';
 
 // ========== TRANSLATION FUNCTIONS ==========
 // DISABLED 2026-01-31: Provider translation system temporarily disabled
@@ -3100,10 +3101,8 @@ export {
   onBloggerCreated,
   // bloggerOnProviderCreated → replaced by handleBloggerProviderRegistered in consolidatedOnUserCreated
   // bloggerOnCallSessionCompleted,  // → consolidatedOnCallCompleted
-  checkBloggerClientReferral,
-  checkBloggerProviderRecruitment,
-  awardBloggerRecruitmentCommission,
-  deactivateExpiredRecruitments,
+  // REMOVED: checkBloggerClientReferral, checkBloggerProviderRecruitment — helpers, not Cloud Functions
+  // REMOVED: awardBloggerRecruitmentCommission, deactivateExpiredRecruitments — helpers, not Cloud Functions
   // User callables
   registerBlogger,
   getBloggerDashboard,

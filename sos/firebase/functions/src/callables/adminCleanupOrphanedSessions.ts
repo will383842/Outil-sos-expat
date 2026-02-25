@@ -34,7 +34,7 @@ interface CleanupResult {
 export const adminCleanupOrphanedSessions = onCall<{ dryRun?: boolean }, Promise<CleanupResult>>(
   {
     region: 'europe-west1',
-    memory: '512MiB',
+    memory: '256MiB',
     timeoutSeconds: 300,
   },
   async (request) => {
@@ -203,7 +203,7 @@ export const adminGetOrphanedSessionsStats = onCall<void, Promise<{
 }>>(
   {
     region: 'europe-west1',
-    memory: '256MiB',
+    memory: '128MiB',
   },
   async (request) => {
     if (!request.auth) {

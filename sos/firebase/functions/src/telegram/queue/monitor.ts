@@ -222,7 +222,7 @@ export const monitorTelegramUsage = onSchedule(
     region: 'europe-west3',
     schedule: '0 9 * * *', // 9h Paris every day
     timeZone: 'Europe/Paris',
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 120,
     secrets: [TELEGRAM_BOT_TOKEN],

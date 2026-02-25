@@ -356,7 +356,7 @@ export const logConnection = onCall(
   {
     region: CONFIG.REGION,
     cpu: 0.083,
-    memory: '256MiB',
+    memory: '128MiB',
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -436,7 +436,7 @@ export const getConnectionLogs = onCall(
   {
     region: CONFIG.REGION,
     cpu: 0.083,
-    memory: '256MiB',
+    memory: '128MiB',
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
@@ -531,7 +531,7 @@ export const getConnectionStats = onCall(
   {
     region: CONFIG.REGION,
     cpu: 0.083,
-    memory: '512MiB',
+    memory: '256MiB',
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
   },

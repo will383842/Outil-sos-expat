@@ -440,7 +440,7 @@ export const paymentProcessAutomaticPayments = onSchedule(
   {
     schedule: "every 15 minutes",
     region: "europe-west3",
-    memory: "512MiB",
+    memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,
     timeoutSeconds: 300, // 5 minutes
     secrets: [...WISE_SECRETS, ...FLUTTERWAVE_SECRETS, ENCRYPTION_KEY],

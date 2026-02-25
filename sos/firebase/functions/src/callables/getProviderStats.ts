@@ -52,7 +52,7 @@ function assertAdmin(ctx: { auth?: { uid?: string; token?: Record<string, unknow
 export const getProviderStats = onCall<GetProviderStatsParams, Promise<GetProviderStatsResponse>>(
   {
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "128MiB",
     timeoutSeconds: 60,
   },
   async (req) => {
@@ -198,7 +198,7 @@ export const getProviderStatsSummary = onCall<
 >(
   {
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "128MiB",
     timeoutSeconds: 60,
   },
   async (req) => {
@@ -299,7 +299,7 @@ export const getProviderStatsMonths = onCall<
 >(
   {
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "128MiB",
     timeoutSeconds: 30,
   },
   async (req) => {
@@ -360,7 +360,7 @@ export const exportProviderStatsCsv = onCall<
 >(
   {
     region: "europe-west1",
-    memory: "512MiB",
+    memory: "256MiB",
     timeoutSeconds: 120,
   },
   async (req) => {

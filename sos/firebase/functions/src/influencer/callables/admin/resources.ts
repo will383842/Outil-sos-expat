@@ -30,8 +30,8 @@ async function checkAdmin(uid: string): Promise<void> {
 
 export const adminGetInfluencerResources = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -85,8 +85,8 @@ export const adminGetInfluencerResources = onCall(
 
 export const adminCreateInfluencerResource = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -147,8 +147,8 @@ export const adminCreateInfluencerResource = onCall(
 
 export const adminUpdateInfluencerResource = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -188,8 +188,8 @@ export const adminUpdateInfluencerResource = onCall(
 
 export const adminDeleteInfluencerResource = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -224,8 +224,8 @@ export const adminDeleteInfluencerResource = onCall(
 
 export const adminCreateInfluencerResourceText = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -276,8 +276,8 @@ export const adminCreateInfluencerResourceText = onCall(
 
 export const adminUpdateInfluencerResourceText = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -317,8 +317,8 @@ export const adminUpdateInfluencerResourceText = onCall(
 
 export const adminDeleteInfluencerResourceText = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

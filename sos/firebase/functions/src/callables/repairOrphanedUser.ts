@@ -31,7 +31,7 @@ interface RepairResult {
 export const repairOrphanedUser = onCall(
   {
     region: "europe-west1",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: [

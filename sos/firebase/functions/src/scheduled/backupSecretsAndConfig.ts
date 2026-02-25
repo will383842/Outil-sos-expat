@@ -323,7 +323,7 @@ export const monthlySecretsConfigBackup = onSchedule(
     schedule: "0 2 1 * *", // 1er du mois à 2h
     timeZone: "Europe/Paris",
     region: "europe-west3",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
   },
@@ -471,7 +471,7 @@ export const monthlySecretsConfigBackup = onSchedule(
  */
 export const triggerSecretsAudit = functions
   .region("europe-west1")
-  .runWith({ timeoutSeconds: 120, memory: "256MB" })
+  .runWith({ timeoutSeconds: 120, memory: "128MB" })
   .https.onCall(async (_data, context) => {
     // Vérifier l'authentification admin
     if (!context.auth) {

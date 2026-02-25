@@ -85,7 +85,7 @@ async function getUserType(userId: string): Promise<PaymentUserType | null> {
 export const getPaymentMethods = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

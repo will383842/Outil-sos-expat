@@ -189,7 +189,7 @@ export interface DailyAnalyticsDoc {
 
 const CONFIG = {
   region: 'europe-west1' as const,
-  memory: '512MiB' as const,
+  memory: '256MiB' as const,
   timeoutSeconds: 120,
   collections: {
     users: 'users',
@@ -1036,7 +1036,7 @@ export const getHistoricalAnalytics = onCall(
   {
     region: CONFIG.region,
     cpu: 0.083,
-    memory: '256MiB',
+    memory: '128MiB',
     timeoutSeconds: 60,
     minInstances: 0,
   },
@@ -1106,7 +1106,7 @@ export const cleanupOldAnalytics = onSchedule(
     schedule: '0 2 * * 0', // 02:00 UTC every Sunday
     timeZone: 'UTC',
     region: CONFIG.region,
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 120,
   },

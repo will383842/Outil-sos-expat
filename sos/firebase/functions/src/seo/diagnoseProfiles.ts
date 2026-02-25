@@ -8,7 +8,7 @@ import * as admin from 'firebase-admin';
 export const diagnoseProfiles = onRequest(
   {
     region: 'europe-west1',
-    memory: '256MiB',
+    memory: '128MiB',
     cpu: 0.083,
     timeoutSeconds: 60,
   },

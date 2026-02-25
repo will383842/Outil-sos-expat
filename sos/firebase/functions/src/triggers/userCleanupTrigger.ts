@@ -13,7 +13,7 @@ import { logger } from "firebase-functions/v2";
 // Configuration du trigger
 const triggerConfig = {
   region: "europe-west3",
-  memory: "256MiB" as const,
+  memory: "128MiB" as const,
   timeoutSeconds: 60,
 };
 
@@ -175,7 +175,7 @@ const cleanupOrphanedProfilesInternal = async (): Promise<{
 export const cleanupOrphanedProfiles = onCall(
   {
     ...triggerConfig,
-    memory: "512MiB" as const,
+    memory: "256MiB" as const,
     timeoutSeconds: 300, // 5 minutes pour traiter beaucoup de profils
   },
   async (request) => {

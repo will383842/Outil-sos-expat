@@ -41,8 +41,8 @@ export interface BloggerArticle {
 
 export const getBloggerArticles = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -117,8 +117,8 @@ export const getBloggerArticles = onCall(
 
 export const copyBloggerArticle = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -212,8 +212,8 @@ async function checkAdmin(uid: string): Promise<void> {
 
 export const adminGetBloggerArticles = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -243,8 +243,8 @@ export const adminGetBloggerArticles = onCall(
 
 export const adminCreateBloggerArticle = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -292,8 +292,8 @@ export const adminCreateBloggerArticle = onCall(
 
 export const adminUpdateBloggerArticle = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
@@ -328,8 +328,8 @@ export const adminUpdateBloggerArticle = onCall(
 
 export const adminDeleteBloggerArticle = onCall(
   {
-    region: "europe-west2",
-    memory: "256MiB",
+    region: "us-central1",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,

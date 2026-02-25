@@ -2651,7 +2651,7 @@ export const createPayPalOrderHttp = onRequest(
     minInstances: 1,
     // P0 FIX: Increased maxInstances and memory to prevent rate limiting
     maxInstances: 15,
-    memory: "512MiB",
+    memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,
     // P0 FIX: Added ENCRYPTION_KEY for phone number encryption (Twilio compatibility)
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID, ENCRYPTION_KEY],
@@ -2935,7 +2935,7 @@ export const capturePayPalOrderHttp = onRequest(
     // CORS works fine on cold start (cors: ALLOWED_ORIGINS handles it)
     minInstances: 0,
     maxInstances: 15,
-    memory: "512MiB",
+    memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
     cors: ALLOWED_ORIGINS,
@@ -3054,7 +3054,7 @@ export const authorizePayPalOrderHttp = onRequest(
     minInstances: 1,
     // P0 FIX: Increased maxInstances and memory to prevent rate limiting
     maxInstances: 15,
-    memory: "512MiB",
+    memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,
     // P0 FIX: Added ENCRYPTION_KEY and OUTIL_SYNC_API_KEY for sendPaymentNotifications
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, TASKS_AUTH_SECRET, ENCRYPTION_KEY, OUTIL_SYNC_API_KEY],

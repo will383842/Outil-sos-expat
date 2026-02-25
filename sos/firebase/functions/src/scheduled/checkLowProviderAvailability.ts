@@ -255,7 +255,7 @@ export const checkLowProviderAvailability = functions
   .region('europe-west1')
   .runWith({
     timeoutSeconds: 60,
-    memory: '256MB',
+    memory: '128MB',
   })
   .pubsub.schedule('every 60 minutes')
   .timeZone('Europe/Paris')

@@ -3,7 +3,7 @@
  *
  * Public page (no auth required) listing all visible Chatters.
  * Dark/gradient design: red/orange palette.
- * Firebase callable: getChatterDirectory (europe-west2)
+ * Firebase callable: getChatterDirectory (us-central1)
  */
 
 import React, { useState, useEffect, useCallback } from "react";

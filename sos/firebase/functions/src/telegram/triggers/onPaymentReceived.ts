@@ -223,7 +223,7 @@ export const telegramOnPaymentReceived = onDocumentWritten(
   {
     region: "europe-west3",
     document: "payments/{paymentId}",
-    memory: "256MiB",
+    memory: "128MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
     secrets: [TELEGRAM_BOT_TOKEN],

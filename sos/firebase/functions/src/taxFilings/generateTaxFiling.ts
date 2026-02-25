@@ -325,7 +325,7 @@ export const generateTaxFiling = onCall(
     region: 'europe-west1',
     cpu: 0.083,
     timeoutSeconds: 300,
-    memory: '512MiB',
+    memory: '256MiB',
   },
   async (request): Promise<GenerateTaxFilingResponse> => {
     // Check authentication
@@ -449,7 +449,7 @@ export const generateAllTaxFilings = onCall(
     region: 'europe-west1',
     cpu: 0.083,
     timeoutSeconds: 540,
-    memory: '512MiB',
+    memory: '256MiB',
   },
   async (request) => {
     // Check authentication

@@ -165,7 +165,7 @@ function generateMultilingualSlugs(
 export const migrateProviderSlugs = functions.onRequest(
   {
     region: "europe-west1",
-    memory: "512MiB",
+    memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 540,
     maxInstances: 1,

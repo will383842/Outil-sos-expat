@@ -55,7 +55,7 @@ export const twilioConferenceWebhook = onRequest(
     region: CALL_FUNCTIONS_REGION,
     // P0 CRITICAL FIX 2026-02-04: Allow unauthenticated access for Twilio webhooks (Cloud Run requires explicit public access)
     invoker: "public",
-    memory: '512MiB',  // P0 FIX: Increased for payment capture operations
+    memory: '256MiB',  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,         // P0 FIX: Reduced to save quota (function mostly waits for API responses)
     timeoutSeconds: 540, // P1 FIX: 9 minutes — payment capture + Stripe API calls can be slow
     maxInstances: 10,  // P0 FIX: Increased for better scalability during peak
