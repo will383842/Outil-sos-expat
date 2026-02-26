@@ -187,8 +187,10 @@ async function getAdminEmails(): Promise<string[]> {
  */
 async function fetchTwilioBalance(): Promise<BalanceResult> {
   try {
-    const accountSid = getTwilioAccountSid();
-    const authToken = getTwilioAuthToken();
+    // AUDIT FIX 2026-02-26: Trim credentials to remove trailing CRLF/whitespace
+    // Firebase secrets can contain trailing newlines that break Base64 auth
+    const accountSid = getTwilioAccountSid()?.trim();
+    const authToken = getTwilioAuthToken()?.trim();
 
     if (!accountSid || !authToken) {
       return {
@@ -213,6 +215,14 @@ async function fetchTwilioBalance(): Promise<BalanceResult> {
 
     if (!response.ok) {
       const errorText = await response.text();
+      // AUDIT FIX 2026-02-26: Better error logging for 401 diagnosis
+      if (response.status === 401) {
+        logger.error('[ServiceAlerts] Twilio 401 Unauthorized — Auth Token likely rotated or invalid', {
+          accountSidPrefix: accountSid.substring(0, 8) + '...',
+          authTokenLength: authToken.length,
+          hint: 'Update TWILIO_AUTH_TOKEN in Firebase Secret Manager: firebase functions:secrets:set TWILIO_AUTH_TOKEN',
+        });
+      }
       throw new Error(`Twilio API error: ${response.status} - ${errorText}`);
     }
 

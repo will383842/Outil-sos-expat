@@ -68,9 +68,12 @@ async function verifyAdminAccess(uid: string): Promise<boolean> {
  * @see https://www.twilio.com/docs/usage/api/account-balance
  */
 async function fetchTwilioBalance(accountSid: string, authToken: string): Promise<TwilioApiBalanceResponse> {
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Balance.json`;
+  // AUDIT FIX 2026-02-26: Trim credentials to remove trailing CRLF/whitespace
+  const trimmedSid = accountSid.trim();
+  const trimmedToken = authToken.trim();
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${trimmedSid}/Balance.json`;
 
-  const credentials = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+  const credentials = Buffer.from(`${trimmedSid}:${trimmedToken}`).toString('base64');
 
   const response = await fetch(url, {
     method: 'GET',
