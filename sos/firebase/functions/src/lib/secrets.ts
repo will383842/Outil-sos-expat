@@ -97,7 +97,7 @@ export const PAYPAL_CLIENT_SECRET = defineSecret("PAYPAL_CLIENT_SECRET");
 export const PAYPAL_WEBHOOK_ID = defineSecret("PAYPAL_WEBHOOK_ID");
 export const PAYPAL_PARTNER_ID = defineSecret("PAYPAL_PARTNER_ID");
 export const PAYPAL_PLATFORM_MERCHANT_ID = defineSecret("PAYPAL_PLATFORM_MERCHANT_ID");
-export const PAYPAL_MODE = defineString("PAYPAL_MODE", { default: "sandbox" });
+export const PAYPAL_MODE = defineString("PAYPAL_MODE", { default: "live" });
 
 /** All PayPal secrets for function config */
 export const PAYPAL_SECRETS = [
@@ -534,7 +534,11 @@ export function getPayPalMode(): 'sandbox' | 'live' {
     return envMode;
   }
 
-  return 'sandbox';
+  // P1-1 AUDIT FIX: Default is now 'live' (defineString default changed too).
+  // Sandbox is only used if explicitly requested via PAYPAL_MODE=sandbox.
+  // This prevents accidental sandbox mode in production if the param is missing.
+  console.warn('[Secrets] PAYPAL_MODE not resolved from any source — defaulting to LIVE');
+  return 'live';
 }
 
 export function getPayPalClientId(): string {

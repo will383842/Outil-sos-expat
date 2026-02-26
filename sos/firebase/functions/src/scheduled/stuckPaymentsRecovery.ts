@@ -31,6 +31,7 @@ import {
   // P0 FIX 2026-02-01: PayPal secrets for stuck PayPal payments recovery
   PAYPAL_CLIENT_ID,
   PAYPAL_CLIENT_SECRET,
+  PAYPAL_PARTNER_ID, // P1-2 AUDIT FIX: Required by PayPalManager.apiRequest() for Partner-Attribution-Id header
 } from "../lib/secrets";
 
 // Configuration
@@ -74,7 +75,7 @@ export const stuckPaymentsRecovery = onSchedule(
     memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
     cpu: 0.083,
     // P0 FIX 2026-02-01: Added PayPal secrets for stuck PayPal payments recovery
-    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
   },
   async () => {
     console.log("🔧 [StuckPayments] Starting stuck payments recovery...");
@@ -748,7 +749,7 @@ export const triggerStuckPaymentsRecovery = onCall(
     region: "europe-west3",
     cpu: 0.083,
     // P0 FIX 2026-02-01: Added PayPal secrets
-    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
   },
   async (request) => {
     if (!request.auth) {
@@ -806,7 +807,7 @@ export const capturePayPalPaymentManually = onCall(
   {
     region: "europe-west3",
     cpu: 0.083,
-    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
   },
   async (request) => {
     if (!request.auth) {

@@ -179,9 +179,14 @@ export class AccountingService {
       // Recuperer les infos client
       const customerInfo = await this.getCustomerInfo(paymentData.clientId);
 
-      // Calculer les frais Stripe (2.9% + 0.25 EUR)
+      // Calculer les frais — utiliser le feeBreakdown stocké si disponible, sinon fallback ancien calcul
       const amountEur = centsToEur(paymentData.amount || 0);
-      const stripeFeeEur = round2(amountEur * 0.029 + 0.25);
+      const feeBreakdown = paymentData.feeBreakdown as { processingFee?: number } | undefined;
+      const currency = (paymentData.currency || 'EUR').toUpperCase();
+      const fallbackFixedFee = currency === 'USD' ? 0.30 : 0.25;
+      const stripeFeeEur = feeBreakdown?.processingFee != null
+        ? round2(feeBreakdown.processingFee)
+        : round2(amountEur * 0.029 + fallbackFixedFee);
       const commissionEur = centsToEur(paymentData.commissionAmount || 0);
       const providerAmountEur = centsToEur(paymentData.providerAmount || 0);
 

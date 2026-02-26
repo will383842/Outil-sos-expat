@@ -11,6 +11,8 @@ import { getStripeSecretKey, getStripeSecretKeyLegacy, getStripeMode, validateSt
 import { PayPalManager } from './PayPalManager';
 // P0 FIX 2026-01-30: Circuit breaker for Stripe API resilience
 import { stripeCircuitBreaker, CircuitBreakerError } from './lib/circuitBreaker';
+// FEE CALCULATION: Frais de traitement déduits du prestataire
+import { calculateEstimatedFees, roundAmount } from './services/feeCalculationService';
 // P0 FIX 2026-02-12: Cancel ALL affiliate commissions on refund (5 systems)
 import { cancelCommissionsForCallSession as cancelChatterCommissions } from './chatter/services/chatterCommissionService';
 import { cancelCommissionsForCallSession as cancelInfluencerCommissions } from './influencer/services/influencerCommissionService';
@@ -176,6 +178,8 @@ interface PaymentDoc {
   destinationAccountId?: string;
   /** @deprecated - conservé pour compatibilité avec anciens paiements */
   transferAmountCents?: number;
+  /** Breakdown des frais de traitement (déduits du prestataire) */
+  feeBreakdown?: Record<string, unknown>;
 }
 
 /* ===================================================================
@@ -478,6 +482,27 @@ export class StripeManager {
       const commissionAmountCents = toCents(commissionEuros);
       const providerAmountCents = toCents(data.providerAmount);
 
+      // ===== CALCUL DES FRAIS DE TRAITEMENT (déduits du prestataire) =====
+      const estimatedFees = await calculateEstimatedFees(
+        'stripe',
+        data.amount,        // montant total en devise
+        data.providerAmount, // montant brut prestataire en devise
+        currency,
+      );
+      const estimatedFeeCents = toCents(estimatedFees.processingFee);
+      // application_fee ajusté = commission SOS + frais Stripe (le prestataire absorbe les frais)
+      const adjustedApplicationFeeCents = commissionAmountCents + estimatedFeeCents;
+      const providerNetAmountCents = amountCents - adjustedApplicationFeeCents;
+
+      console.log('[createPaymentIntent] Fee calculation:', {
+        processingFee: estimatedFees.processingFee,
+        processingFeeCents: estimatedFeeCents,
+        commissionCents: commissionAmountCents,
+        adjustedAppFeeCents: adjustedApplicationFeeCents,
+        providerGrossCents: providerAmountCents,
+        providerNetCents: providerNetAmountCents,
+      });
+
       // ===== DESTINATION CHARGES vs PLATFORM ESCROW =====
       // Priorité: providerStripeAccountId > destinationAccountId (legacy)
       // FIX 2026-01-30: Utiliser DESTINATION CHARGES au lieu de DIRECT CHARGES
@@ -564,9 +589,12 @@ export class StripeManager {
         currency,
         serviceType: data.serviceType,
         commissionEuros,
-        applicationFeeCents: commissionAmountCents,
-        providerEuros: data.providerAmount,
-        providerReceivesCents: amountCents - commissionAmountCents,
+        commissionCents: commissionAmountCents,
+        processingFeeCents: estimatedFeeCents,
+        adjustedApplicationFeeCents,
+        providerGrossEuros: data.providerAmount,
+        providerNetEuros: roundAmount(data.providerAmount - estimatedFees.processingFee),
+        providerNetCents: providerNetAmountCents,
         mode: this.mode,
         useDestinationCharges,
         providerKycComplete,
@@ -596,7 +624,8 @@ export class StripeManager {
           transfer_data: {
             destination: providerStripeAccountId,
           },
-          application_fee_amount: commissionAmountCents,
+          // FEE FIX: application_fee = commission SOS + frais Stripe (prestataire absorbe les frais)
+          application_fee_amount: adjustedApplicationFeeCents,
         } : {}),
         metadata: {
           clientId: data.clientId,
@@ -605,9 +634,12 @@ export class StripeManager {
           providerType: data.providerType,
           commissionAmountCents: String(commissionAmountCents),
           providerAmountCents: String(providerAmountCents),
-          applicationFeeCents: String(commissionAmountCents),
+          applicationFeeCents: String(adjustedApplicationFeeCents),
+          processingFeeCents: String(estimatedFeeCents),
+          providerNetAmountCents: String(providerNetAmountCents),
           commissionAmountEuros: commissionEuros.toFixed(2),
           providerAmountEuros: data.providerAmount.toFixed(2),
+          providerNetAmountEuros: roundAmount(data.providerAmount - estimatedFees.processingFee).toFixed(2),
           environment: process.env.NODE_ENV || 'development',
           mode: this.mode,
           useDestinationCharges: String(useDestinationCharges),
@@ -680,7 +712,8 @@ export class StripeManager {
         status: paymentIntent.status,
         mode: this.mode,
         useDestinationCharges,
-        applicationFeeAmount: useDestinationCharges ? commissionAmountCents : 0,
+        applicationFeeAmount: useDestinationCharges ? adjustedApplicationFeeCents : 0,
+        processingFeeCents: estimatedFeeCents,
         transferDestination: useDestinationCharges ? providerStripeAccountId : 'N/A (platform escrow)',
         createdOnAccount: 'plateforme (toujours)',
       });
@@ -696,9 +729,21 @@ export class StripeManager {
           useDirectCharges: false, // Legacy: toujours false (on utilise Destination Charges)
           useDestinationCharges,
           providerStripeAccountId,
-          applicationFeeAmountCents: useDestinationCharges ? commissionAmountCents : undefined,
+          applicationFeeAmountCents: useDestinationCharges ? adjustedApplicationFeeCents : undefined,
           pendingTransferRequired,
           providerKycComplete,
+          feeBreakdown: {
+            gateway: 'stripe',
+            currency,
+            processingFee: estimatedFees.processingFee,
+            processingFeeCents: estimatedFeeCents,
+            payoutFee: 0,
+            totalFees: estimatedFees.processingFee,
+            providerGrossAmount: data.providerAmount,
+            providerNetAmount: estimatedFees.providerNetAmount,
+            providerGrossAmountCents: providerAmountCents,
+            providerNetAmountCents: providerNetAmountCents,
+          },
         }
       );
 
@@ -714,7 +759,9 @@ export class StripeManager {
             callSessionId: data.callSessionId || null,
             amount: amountCents,
             providerAmount: providerAmountCents,
+            providerNetAmount: providerNetAmountCents,
             commissionAmount: commissionAmountCents,
+            adjustedApplicationFeeCents,
             currency,
             status: 'pending_kyc', // Statut: en attente de KYC
             reason: 'Provider KYC not completed at payment time',
@@ -726,7 +773,8 @@ export class StripeManager {
           console.log('[createPaymentIntent] Pending transfer créé - sera traité après KYC du provider:', {
             paymentIntentId: paymentIntent.id,
             providerId: data.providerId,
-            providerAmount: providerAmountCents / 100,
+            providerGrossAmount: providerAmountCents / 100,
+            providerNetAmount: providerNetAmountCents / 100,
           });
         } catch (pendingError) {
           console.error('[createPaymentIntent] Erreur création pending_transfer:', pendingError);
@@ -1388,7 +1436,7 @@ export class StripeManager {
    */
   private async handlePayPalProviderPayout(
     providerId: string,
-    capturedAmountCents: number,
+    _capturedAmountCents: number,
     currency: 'EUR' | 'USD',
     sessionId: string
   ): Promise<void> {
@@ -1482,7 +1530,14 @@ export class StripeManager {
       return; // FAIL-FAST: Ne pas procéder sans données de paiement
     }
 
-    console.log(`[handlePayPalProviderPayout] P0 FIX: Using correct provider amount: ${providerAmountCents} cents (NOT total: ${capturedAmountCents} cents)`);
+    // FEE FIX: Utiliser le montant NET (après déduction des frais) si disponible
+    const paymentDataForFees = paymentDoc.docs[0]?.data();
+    const providerNetAmountFromFees = paymentDataForFees?.feeBreakdown?.providerNetAmountCents;
+    const effectiveProviderAmountCents = (typeof providerNetAmountFromFees === 'number' && providerNetAmountFromFees > 0)
+      ? providerNetAmountFromFees
+      : providerAmountCents; // fallback: montant brut pour anciens paiements
+
+    console.log(`[handlePayPalProviderPayout] Provider amount: gross=${providerAmountCents} cents, net=${providerNetAmountFromFees ?? 'N/A'} cents, effective=${effectiveProviderAmountCents} cents`);
 
     // 2. Vérifier si le provider utilise PayPal
     if (provider?.paymentGateway !== 'paypal') {
@@ -1539,11 +1594,11 @@ export class StripeManager {
       console.error(`[handlePayPalProviderPayout] No PayPal email available for ${providerId} - creating pending payout`);
 
       // Créer une entrée dans pending_paypal_payouts pour traitement ultérieur
-      // P0 FIX: utiliser providerAmountCents, pas capturedAmountCents (montant total)
+      // FEE FIX: utiliser effectiveProviderAmountCents (montant NET après frais)
       await this.db.collection('pending_paypal_payouts').add({
         providerId,
         sessionId,
-        amountCents: providerAmountCents, // P0 FIX: montant provider, pas total
+        amountCents: effectiveProviderAmountCents,
         currency,
         status: 'pending_email',
         reason: 'No PayPal email configured',
@@ -1557,8 +1612,8 @@ export class StripeManager {
     // Use the effective email for the payout
     const paypalEmail = effectivePaypalEmail;
 
-    // 5. Convertir en unité principale pour PayPal (providerAmountCents déjà calculé au début)
-    const providerAmount = providerAmountCents / 100;
+    // 5. Convertir en unité principale pour PayPal — utiliser le montant NET (frais déduits)
+    const providerAmount = effectiveProviderAmountCents / 100;
 
     console.log(`[handlePayPalProviderPayout] Creating PayPal payout for provider ${providerId}:`, {
       paypalEmail,
@@ -1617,11 +1672,11 @@ export class StripeManager {
     } else {
       console.error(`[handlePayPalProviderPayout] ❌ PayPal payout failed:`, payoutResult.error);
 
-      // Créer une entrée pour retry via Cloud Tasks
+      // Créer une entrée pour retry via Cloud Tasks — FEE FIX: utiliser montant NET
       await this.db.collection('pending_paypal_payouts').add({
         providerId,
         sessionId,
-        amountCents: providerAmountCents,
+        amountCents: effectiveProviderAmountCents,
         currency,
         paypalEmail,
         status: 'failed',
@@ -2435,6 +2490,8 @@ async cancelPayment(
       // KYC / Pending Transfer
       pendingTransferRequired?: boolean;
       providerKycComplete?: boolean;
+      // Fee breakdown (frais déduits du prestataire)
+      feeBreakdown?: Record<string, unknown>;
     }
   ): Promise<void> {
     // FIX: Get client country for analytics
@@ -2486,6 +2543,9 @@ async cancelPayment(
       useDestinationCharges: cents.useDestinationCharges || false,
       ...(cents.destinationAccountId ? { destinationAccountId: cents.destinationAccountId } : {}),
       ...(cents.transferAmountCents !== undefined ? { transferAmountCents: cents.transferAmountCents } : {}),
+
+      // ===== Fee Breakdown (frais déduits du prestataire) =====
+      ...(cents.feeBreakdown ? { feeBreakdown: cents.feeBreakdown } : {}),
     };
 
     await this.db.collection('payments').doc(paymentIntent.id).set(paymentRecord as unknown as admin.firestore.DocumentData);

@@ -28,7 +28,8 @@ interface PendingTransfer {
   clientId: string;
   callSessionId: string | null;
   amount: number; // en centimes
-  providerAmount: number; // en centimes
+  providerAmount: number; // en centimes (montant brut)
+  providerNetAmount?: number; // en centimes (montant net après frais, optionnel pour rétro-compat)
   commissionAmount: number; // en centimes
   currency: string;
   status: "pending_kyc" | "processing" | "completed" | "failed";
@@ -136,8 +137,9 @@ export async function processPendingTransfersForProvider(
         }
 
         // Executer le transfert Stripe
-        // Note: providerAmount est deja en centimes, mais transferToProvider attend des euros
-        const providerAmountEuros = transfer.providerAmount / 100;
+        // FEE FIX: Utiliser providerNetAmount (frais déduits) si disponible, sinon fallback brut
+        const effectiveAmountCents = transfer.providerNetAmount ?? transfer.providerAmount;
+        const providerAmountEuros = effectiveAmountCents / 100;
 
         const transferResult = await stripeManager.transferToProvider(
           providerId,

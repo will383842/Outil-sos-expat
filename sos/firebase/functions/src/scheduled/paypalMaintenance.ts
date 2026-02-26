@@ -13,7 +13,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import * as nodemailer from "nodemailer";
 
-import { EMAIL_USER, EMAIL_PASS, EMAIL_SECRETS, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } from "../lib/secrets";
+import { EMAIL_USER, EMAIL_PASS, EMAIL_SECRETS, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID } from "../lib/secrets";
 import { maskEmail } from "../utils/logs/maskSensitiveData";
 import { PayPalManager } from "../PayPalManager";
 
@@ -41,7 +41,7 @@ export const cleanupUncapturedPayPalOrders = onSchedule(
     timeoutSeconds: 300, // 5 minutes pour traiter les annulations API
     memory: "256MiB",
     cpu: 0.083,
-    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
   },
   async () => {
     console.log("[PayPalCleanup] Starting cleanup of uncaptured orders...");

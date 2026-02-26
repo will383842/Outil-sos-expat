@@ -32,6 +32,7 @@ import {
   STRIPE_MODE, // Note: This is a defineString, not a secret
   PAYPAL_CLIENT_ID,
   PAYPAL_CLIENT_SECRET,
+  PAYPAL_PARTNER_ID,
   TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN,
 } from '../lib/secrets';
@@ -387,6 +388,7 @@ export const cleanupOrphanedSessions = scheduler.onSchedule(
       STRIPE_SECRET_KEY_LIVE,
       PAYPAL_CLIENT_ID,
       PAYPAL_CLIENT_SECRET,
+      PAYPAL_PARTNER_ID, // P1-2 AUDIT FIX: Required by PayPalManager.apiRequest() for Partner-Attribution-Id header
       TWILIO_ACCOUNT_SID,
       TWILIO_AUTH_TOKEN,
     ],

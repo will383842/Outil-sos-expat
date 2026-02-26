@@ -37,6 +37,8 @@ import { cancelCommissionsForCallSession as cancelInfluencerCommissions } from "
 import { cancelBloggerCommissionsForCallSession as cancelBloggerCommissions } from "./blogger/services/bloggerCommissionService";
 import { cancelCommissionsForCallSession as cancelGroupAdminCommissions } from "./groupAdmin/services/groupAdminCommissionService";
 import { cancelCommissionsForCallSession as cancelAffiliateCommissions } from "./affiliate/services/commissionService";
+// FEE CALCULATION: Frais de traitement déduits du prestataire
+import { calculateEstimatedFees } from "./services/feeCalculationService";
 // P0 FIX: Import setProviderBusy to reserve provider immediately after payment authorization
 import { setProviderBusy } from "./callables/providerStatusManager";
 import { PAYMENT_FUNCTIONS_REGION } from "./configs/callRegion";
@@ -689,6 +691,23 @@ export class PayPalManager {
     const totalAmount = data.amount.toFixed(2);
     console.log(`🔶 [PAYPAL_DEBUG] Formatted amount: ${totalAmount}`);
 
+    // ===== CALCUL DES FRAIS DE TRAITEMENT (déduits du prestataire) =====
+    const estimatedFees = await calculateEstimatedFees(
+      'paypal',
+      data.amount,
+      data.providerAmount,
+      data.currency,
+    );
+    const providerNetAmount = estimatedFees.providerNetAmount;
+
+    console.log(`🔶 [PAYPAL_DEBUG] Fee calculation:`, {
+      processingFee: estimatedFees.processingFee,
+      payoutFee: estimatedFees.payoutFee,
+      totalFees: estimatedFees.totalFees,
+      providerGross: data.providerAmount,
+      providerNet: providerNetAmount,
+    });
+
     // Ordre simple: l'argent va à SOS-Expat, pas de split automatique
     // AUTHORIZE flow: comme Stripe, on prend seulement une autorisation
     // La capture se fait après 2 minutes d'appel, sinon on void l'autorisation
@@ -741,11 +760,21 @@ export class PayPalManager {
       providerPayPalEmail: data.providerPayPalEmail || null, // Email pour le payout (null si non défini)
       amount: data.amount,
       providerAmount: data.providerAmount,
+      providerNetAmount,
       platformFee: data.platformFee,
       currency: data.currency,
       status: response.status,
       approvalUrl,
       simpleFlow: true, // Flag pour déclencher le payout après capture
+      feeBreakdown: {
+        gateway: 'paypal',
+        currency: data.currency,
+        processingFee: estimatedFees.processingFee,
+        payoutFee: estimatedFees.payoutFee,
+        totalFees: estimatedFees.totalFees,
+        providerGrossAmount: data.providerAmount,
+        providerNetAmount,
+      },
       intent: "AUTHORIZE", // AUTHORIZE flow: comme Stripe, capture après 2 min
       payoutStatus: "pending", // En attente du payout
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -783,6 +812,8 @@ export class PayPalManager {
         paymentFlow: "simple_payout",
         status: "pending_approval",
         amount: data.amount,
+        providerAmount: data.providerAmount,
+        providerNetAmount,
         currency: data.currency,
       },
       participants: {
@@ -992,6 +1023,7 @@ export class PayPalManager {
         paymentFlow: "direct_split",
         status: "pending_approval",
         amount: data.amount,
+        providerAmount: data.providerAmount,
         currency: data.currency,
       },
       participants: {
@@ -1359,13 +1391,20 @@ export class PayPalManager {
         ? parseFloat(sellerReceivableBreakdown.platform_fees[0].amount.value)
         : 0);
 
-    const providerAmount = isSimpleFlow
+    // Montant brut du prestataire (avant frais de traitement)
+    const providerGrossAmount = isSimpleFlow
       ? (orderData.providerAmount || grossAmount - connectionFeeAmount)
       : (sellerReceivableBreakdown?.net_amount?.value
         ? parseFloat(sellerReceivableBreakdown.net_amount.value)
         : grossAmount - connectionFeeAmount);
 
-    console.log(`💳 [PAYPAL] Capture completed - Total: ${grossAmount} ${captureCurrency}, Frais de mise en relation: ${connectionFeeAmount}, Provider: ${providerAmount}`);
+    // FEE FIX: Utiliser providerNetAmount (après déduction frais) pour le payout
+    // Fallback chaîné pour rétro-compatibilité avec les anciennes commandes
+    const providerAmount = isSimpleFlow
+      ? (orderData.providerNetAmount ?? orderData.providerAmount ?? providerGrossAmount)
+      : providerGrossAmount;
+
+    console.log(`💳 [PAYPAL] Capture completed - Total: ${grossAmount} ${captureCurrency}, Frais: ${connectionFeeAmount}, Provider gross: ${providerGrossAmount}, Provider net (payout): ${providerAmount}`);
 
     let payoutTriggered = false;
     let payoutId: string | undefined;
@@ -1379,8 +1418,34 @@ export class PayPalManager {
 
     // ===== FLUX SIMPLE: Déclencher le Payout automatiquement =====
     if (isSimpleFlow && providerAmount > 0) {
+      // P1-3 AUDIT FIX: Atomic lock to prevent double payout from parallel captureOrder() calls.
+      // Two instances could pass createPayout()'s dedup check simultaneously before either writes.
+      // This transaction claims exclusive payout rights on the order document.
+      let payoutAlreadyClaimed = false;
+      try {
+        await this.db.runTransaction(async (transaction) => {
+          const orderSnap = await transaction.get(this.db.collection("paypal_orders").doc(orderId));
+          const snapData = orderSnap.data();
+          if (snapData?.payoutClaimed === true) {
+            payoutAlreadyClaimed = true;
+            return; // Another instance already claimed payout
+          }
+          transaction.update(orderSnap.ref, {
+            payoutClaimed: true,
+            payoutClaimedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        });
+      } catch (txError) {
+        console.error(`❌ [PAYPAL] Payout claim transaction failed for ${orderId}:`, txError);
+        // On transaction failure, skip payout to be safe (will be retried by recovery cron)
+        payoutAlreadyClaimed = true;
+      }
+
+      if (payoutAlreadyClaimed) {
+        console.log(`⚠️ [PAYPAL] Payout already claimed for order ${orderId} — skipping to prevent double payout`);
+      }
       // AAA Internal Mode: Skip payout - money stays on platform
-      if (aaaDecision?.skipPayout) {
+      else if (aaaDecision?.skipPayout) {
         console.log(`💼 [AAA] SKIPPING payout for AAA profile ${orderData.providerId} (internal mode)`);
         payoutTriggered = true; // Mark as "handled" even though no actual payout
         payoutId = `AAA_INTERNAL_${orderData.callSessionId}`;

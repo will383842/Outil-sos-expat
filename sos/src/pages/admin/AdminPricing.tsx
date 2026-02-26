@@ -26,6 +26,7 @@ import {
   limit,
 } from "firebase/firestore";
 import AdminLayout from "../../components/admin/AdminLayout";
+import FeeManagement from "../../components/admin/FeeManagement";
 import { db } from "../../config/firebase";
 import { useAuth } from "../../contexts/AuthContext";
 import { clearPricingCache } from "../../services/pricingService";
@@ -1305,6 +1306,11 @@ const AdminPricing: React.FC = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Frais de traitement — déduits du prestataire */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6 p-6">
+          <FeeManagement />
         </div>
 
         {/* Aide rapide - Design moderne */}

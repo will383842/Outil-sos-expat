@@ -23,6 +23,7 @@ import { syncPaymentStatus } from "../utils/paymentSync";
 import {
   PAYPAL_CLIENT_ID,
   PAYPAL_CLIENT_SECRET,
+  PAYPAL_PARTNER_ID, // P1-2 AUDIT FIX: Required by PayPalManager.apiRequest() for Partner-Attribution-Id header
   TASKS_AUTH_SECRET,
   getTasksAuthSecret,
   isValidTaskAuth,
@@ -225,7 +226,7 @@ export const executePayoutRetryTask = onRequest(
     region: "europe-west1",
     invoker: "public", // P0 FIX: Required for Cloud Tasks to invoke this function
     cpu: 0.083,
-    secrets: [TASKS_AUTH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    secrets: [TASKS_AUTH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
   },
   async (req, res) => {
     console.log("🔄 [PayoutRetry] Executing payout retry task");
@@ -471,7 +472,7 @@ export const retryFailedPayout = onCall(
   {
     region: "europe-west1",
     cpu: 0.083,
-    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
   },
   async (request) => {
     // Vérifier l'authentification
