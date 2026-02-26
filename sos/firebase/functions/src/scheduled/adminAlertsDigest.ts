@@ -118,6 +118,7 @@ async function getAlertsSummary(): Promise<AlertSummary> {
   const unreadSnapshot = await db
     .collection("admin_alerts")
     .where("read", "==", false)
+    .limit(10000)
     .get();
 
   const summary: AlertSummary = {
@@ -183,6 +184,7 @@ async function getPendingTransfersSummary(): Promise<PendingTransferSummary> {
   const pendingKycSnapshot = await db
     .collection("pending_transfers")
     .where("status", "==", "pending_kyc")
+    .limit(5000)
     .get();
 
   pendingKycSnapshot.docs.forEach((doc) => {
@@ -206,6 +208,7 @@ async function getPendingTransfersSummary(): Promise<PendingTransferSummary> {
   const failedSnapshot = await db
     .collection("pending_transfers")
     .where("status", "==", "failed")
+    .limit(5000)
     .get();
 
   failedSnapshot.docs.forEach((doc) => {
@@ -219,6 +222,7 @@ async function getPendingTransfersSummary(): Promise<PendingTransferSummary> {
   const processingSnapshot = await db
     .collection("pending_transfers")
     .where("status", "==", "processing")
+    .limit(5000)
     .get();
 
   summary.processing = processingSnapshot.size;

@@ -126,7 +126,9 @@ export async function handleSyncClaimsUpdated(event: any) {
     try {
       // Mettre à jour les custom claims
       await admin.auth().setCustomUserClaims(uid, { role: newRole });
-      console.log(`[syncRoleClaims] ✅ Custom Claims mis à jour: role=${newRole} pour: ${uid}`);
+      // Révoquer les tokens pour forcer le client à récupérer les nouveaux claims
+      await admin.auth().revokeRefreshTokens(uid);
+      console.log(`[syncRoleClaims] ✅ Custom Claims mis à jour + tokens révoqués: role=${newRole} pour: ${uid}`);
 
       // Log d'audit
       await admin.firestore().collection("auth_claims_logs").add({

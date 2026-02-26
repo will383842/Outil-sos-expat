@@ -16,7 +16,7 @@ export const SUBSCRIPTION_STATUS = [
   'trialing',
   'active',
   'past_due',
-  'canceled',
+  'cancelled',
   'expired',
   'paused',
   'suspended'

@@ -18,7 +18,7 @@ export { telegramOnWithdrawalRequest } from './telegram/triggers/onWithdrawalReq
 // Scheduled
 export { telegramDailyReport } from './telegram/scheduled/dailyReport';
 
-// Callables (admin)
+// Callables (admin config)
 export { telegram_sendTestNotification } from './telegram/callables/sendTestNotification';
 export {
   telegram_updateConfig,
@@ -28,3 +28,33 @@ export {
   telegram_updateTemplate,
   telegram_getTemplates,
 } from './telegram/callables/updateTelegramConfig';
+
+// Callables (admin queries)
+export {
+  telegram_getNotificationLogs,
+  telegram_getQueueStats,
+  telegram_getSubscriberStats,
+} from './telegram/callables/adminQueries';
+
+// Callables (admin actions)
+export {
+  telegram_reprocessDeadLetters,
+  telegram_sendOneOff,
+} from './telegram/callables/adminActions';
+
+// Callables (campaigns)
+export {
+  telegram_createCampaign,
+  telegram_getCampaigns,
+  telegram_cancelCampaign,
+  telegram_getCampaignDetail,
+} from './telegram/callables/campaigns';
+
+// Queue processors
+export { processTelegramQueue } from './telegram/queue/processor';
+export { monitorTelegramUsage } from './telegram/queue/monitor';
+export { processTelegramCampaigns } from './telegram/queue/campaignProcessor';
+
+// Withdrawal confirmations
+export { getWithdrawalConfirmationStatus } from './telegram/withdrawalConfirmation';
+export { cleanupExpiredWithdrawalConfirmations } from './telegram/cleanupExpiredConfirmations';

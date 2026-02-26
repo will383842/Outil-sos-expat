@@ -43,7 +43,7 @@ interface SubscriptionDoc {
   providerId: string;
   planId: string;
   tier: string;
-  status: 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired' | 'suspended' | 'paused';
+  status: 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'suspended' | 'paused';
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   trialStartedAt?: FirebaseFirestore.Timestamp;

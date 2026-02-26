@@ -149,7 +149,7 @@ export function clearPlanCache(): void {
 
 type ProviderType = 'lawyer' | 'expat_aidant';
 type SubscriptionTier = 'trial' | 'basic' | 'standard' | 'pro' | 'unlimited';
-type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired' | 'paused' | 'suspended';
+type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused' | 'suspended';
 type Currency = 'EUR' | 'USD';
 type BillingPeriod = 'monthly' | 'yearly';
 
@@ -2783,7 +2783,7 @@ function mapStripeStatus(stripeStatus: Stripe.Subscription.Status): Subscription
     case 'past_due':
       return 'past_due';
     case 'canceled':
-      return 'canceled';
+      return 'cancelled';
     case 'unpaid':
       return 'past_due';
     case 'incomplete':

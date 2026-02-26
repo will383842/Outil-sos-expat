@@ -466,7 +466,7 @@ export const triggerKYCReminders = onCall(
     const userDoc = await admin.firestore().collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+    if (!userData?.role || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Only admins can trigger KYC reminders");
     }
 
@@ -501,7 +501,7 @@ export const getKYCReminderStatus = onCall(
     const userDoc = await admin.firestore().collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+    if (!userData?.role || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Only admins can view KYC status");
     }
 

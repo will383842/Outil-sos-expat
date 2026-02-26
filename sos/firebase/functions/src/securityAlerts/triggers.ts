@@ -132,12 +132,42 @@ export const createSecurityAlertHttp = onRequest(
       return;
     }
 
-    // Vérifier l'authentification (API key ou service account)
-    const apiKey = req.headers['x-api-key'];
+    // Vérifier l'authentification (API key validée ou Bearer token admin)
+    const apiKey = req.headers['x-api-key'] as string | undefined;
     const authHeader = req.headers.authorization;
 
     if (!apiKey && !authHeader) {
       res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // Valider l'API key contre le secret stocké (si API key fournie)
+    if (apiKey) {
+      const { getTasksAuthSecret } = await import('../lib/secrets');
+      const validKey = getTasksAuthSecret();
+      if (!validKey || apiKey !== validKey) {
+        res.status(401).json({ error: 'Invalid API key' });
+        return;
+      }
+    } else if (authHeader?.startsWith('Bearer ')) {
+      // Valider le Bearer token Firebase
+      try {
+        const token = authHeader.split('Bearer ')[1];
+        const firebaseAdmin = await import('firebase-admin');
+        const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+        if (decodedToken.role !== 'admin') {
+          const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+          if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
+            res.status(403).json({ error: 'Forbidden - Admin access required' });
+            return;
+          }
+        }
+      } catch (authError) {
+        res.status(401).json({ error: 'Invalid token' });
+        return;
+      }
+    } else {
+      res.status(401).json({ error: 'Invalid authorization format' });
       return;
     }
 
@@ -223,14 +253,34 @@ export const securityAlertAdminAction = onRequest(
       return;
     }
 
-    // Vérifier l'auth admin
+    // Vérifier l'auth admin avec validation réelle du token
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized - Bearer token required' });
+      return;
+    }
+
+    let verifiedAdminUid: string;
+    try {
+      const token = authHeader.split('Bearer ')[1];
+      const firebaseAdmin = await import('firebase-admin');
+      const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+      if (decodedToken.role !== 'admin') {
+        const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+        if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
+          res.status(403).json({ error: 'Forbidden - Admin access required' });
+          return;
+        }
+      }
+      verifiedAdminUid = decodedToken.uid;
+    } catch (authError) {
+      res.status(401).json({ error: 'Invalid token' });
       return;
     }
 
     const { action, alertId, adminId, notes, targetIp, targetUserId } = req.body;
+    // Utiliser le uid vérifié comme fallback si adminId n'est pas fourni
+    const effectiveAdminId = adminId || verifiedAdminUid;
 
     try {
       switch (action) {
@@ -239,7 +289,7 @@ export const securityAlertAdminAction = onRequest(
         case 'false_positive':
         case 'investigate':
           await updateAlertStatus(alertId, action === 'false_positive' ? 'false_positive' :
-            action === 'investigate' ? 'investigating' : action, adminId, notes);
+            action === 'investigate' ? 'investigating' : action, effectiveAdminId, notes);
           res.status(200).json({ success: true });
           break;
 
@@ -248,7 +298,7 @@ export const securityAlertAdminAction = onRequest(
             res.status(400).json({ error: 'Missing targetIp' });
             return;
           }
-          await blockIPManually(targetIp, adminId, notes);
+          await blockIPManually(targetIp, effectiveAdminId, notes);
           res.status(200).json({ success: true });
           break;
 
@@ -257,7 +307,7 @@ export const securityAlertAdminAction = onRequest(
             res.status(400).json({ error: 'Missing targetIp' });
             return;
           }
-          await unblockIP(targetIp, adminId);
+          await unblockIP(targetIp, effectiveAdminId);
           res.status(200).json({ success: true });
           break;
 
@@ -266,7 +316,7 @@ export const securityAlertAdminAction = onRequest(
             res.status(400).json({ error: 'Missing targetUserId' });
             return;
           }
-          await suspendUserManually(targetUserId, adminId, notes);
+          await suspendUserManually(targetUserId, effectiveAdminId, notes);
           res.status(200).json({ success: true });
           break;
 
@@ -275,7 +325,7 @@ export const securityAlertAdminAction = onRequest(
             res.status(400).json({ error: 'Missing targetUserId' });
             return;
           }
-          await unsuspendUser(targetUserId, adminId);
+          await unsuspendUser(targetUserId, effectiveAdminId);
           res.status(200).json({ success: true });
           break;
 
@@ -508,27 +558,28 @@ async function getBlockedEntitiesStats(): Promise<Record<string, unknown>> {
 /**
  * Nettoyage quotidien des rate limits expirés et archivage des vieilles alertes
  */
+/** Exported handler for consolidation */
+export async function securityDailyCleanupHandler(): Promise<void> {
+  console.log('[Scheduled] Starting daily security cleanup');
+  try {
+    const [rateLimitsDeleted, alertsArchived] = await Promise.all([
+      cleanupExpiredRateLimits(),
+      archiveOldResolvedAlerts(30),
+    ]);
+    console.log(`[Scheduled] Cleanup complete: ${rateLimitsDeleted} rate limits, ${alertsArchived} alerts archived`);
+  } catch (error) {
+    console.error('[Scheduled] Cleanup error:', error);
+  }
+}
+
 export const securityDailyCleanup = onSchedule(
   {
-    schedule: '0 3 * * *', // 3h du matin
+    schedule: '0 3 * * *',
     region: REGION,
     cpu: 0.083,
     timeZone: 'Europe/Paris',
   },
-  async () => {
-    console.log('[Scheduled] Starting daily security cleanup');
-
-    try {
-      const [rateLimitsDeleted, alertsArchived] = await Promise.all([
-        cleanupExpiredRateLimits(),
-        archiveOldResolvedAlerts(30),
-      ]);
-
-      console.log(`[Scheduled] Cleanup complete: ${rateLimitsDeleted} rate limits, ${alertsArchived} alerts archived`);
-    } catch (error) {
-      console.error('[Scheduled] Cleanup error:', error);
-    }
-  }
+  securityDailyCleanupHandler
 );
 
 // ==========================================
@@ -539,23 +590,26 @@ export const securityDailyCleanup = onSchedule(
  * Traitement des escalades en attente 1×/jour à 8h
  * 2025-01-16: Réduit à quotidien pour économies maximales (low traffic)
  */
+/** Exported handler for consolidation */
+export async function processSecurityEscalationsHandler(): Promise<void> {
+  try {
+    const processed = await processPendingEscalations();
+    if (processed > 0) {
+      console.log(`[Scheduled] Processed ${processed} pending escalations`);
+    }
+  } catch (error) {
+    console.error('[Scheduled] Escalation processing error:', error);
+  }
+}
+
 export const processSecurityEscalations = onSchedule(
   {
-    schedule: '0 8 * * *', // 8h Paris tous les jours
+    schedule: '0 8 * * *',
     region: REGION,
     cpu: 0.083,
     timeZone: 'Europe/Paris',
   },
-  async () => {
-    try {
-      const processed = await processPendingEscalations();
-      if (processed > 0) {
-        console.log(`[Scheduled] Processed ${processed} pending escalations`);
-      }
-    } catch (error) {
-      console.error('[Scheduled] Escalation processing error:', error);
-    }
-  }
+  processSecurityEscalationsHandler
 );
 
 // ==========================================
@@ -565,52 +619,50 @@ export const processSecurityEscalations = onSchedule(
 /**
  * Génère et envoie un rapport quotidien de sécurité
  */
+/** Exported handler for consolidation */
+export async function securityDailyReportHandler(): Promise<void> {
+  console.log('[Scheduled] Generating daily security report');
+  try {
+    const [escalationStats, recentAlerts, blockedEntities] = await Promise.all([
+      getEscalationStats(24),
+      getRecentAlertsStats(),
+      getBlockedEntitiesStats(),
+    ]);
+    const alertStats = recentAlerts as {
+      total: number;
+      bySeverity: Record<AlertSeverity, number>;
+    };
+    if (alertStats.total > 0 || (escalationStats.totalEscalated > 0)) {
+      await db.collection('message_events').add({
+        eventId: 'security.daily_report',
+        recipientType: 'admin_all',
+        locale: 'fr',
+        data: {
+          date: new Date().toLocaleDateString('fr-FR'),
+          totalAlerts: alertStats.total,
+          criticalAlerts: alertStats.bySeverity.critical || 0,
+          emergencyAlerts: alertStats.bySeverity.emergency || 0,
+          escalatedAlerts: escalationStats.totalEscalated,
+          blockedEntities: blockedEntities,
+        },
+        channels: ['email'],
+        status: 'pending',
+        createdAt: Timestamp.now(),
+      });
+    }
+  } catch (error) {
+    console.error('[Scheduled] Daily report error:', error);
+  }
+}
+
 export const securityDailyReport = onSchedule(
   {
-    schedule: '0 8 * * *', // 8h du matin
+    schedule: '0 8 * * *',
     region: REGION,
     cpu: 0.083,
     timeZone: 'Europe/Paris',
   },
-  async () => {
-    console.log('[Scheduled] Generating daily security report');
-
-    try {
-      const [escalationStats, recentAlerts, blockedEntities] = await Promise.all([
-        getEscalationStats(24),
-        getRecentAlertsStats(),
-        getBlockedEntitiesStats(),
-      ]);
-
-      // Créer une notification digest pour les admins
-      const alertStats = recentAlerts as {
-        total: number;
-        bySeverity: Record<AlertSeverity, number>;
-      };
-
-      if (alertStats.total > 0 || (escalationStats.totalEscalated > 0)) {
-        await db.collection('message_events').add({
-          eventId: 'security.daily_report',
-          recipientType: 'admin_all',
-          locale: 'fr',
-          data: {
-            date: new Date().toLocaleDateString('fr-FR'),
-            totalAlerts: alertStats.total,
-            criticalAlerts: alertStats.bySeverity.critical || 0,
-            emergencyAlerts: alertStats.bySeverity.emergency || 0,
-            escalatedAlerts: escalationStats.totalEscalated,
-            blockedEntities: blockedEntities,
-          },
-          channels: ['email'],
-          status: 'pending',
-          createdAt: Timestamp.now(),
-        });
-      }
-
-    } catch (error) {
-      console.error('[Scheduled] Daily report error:', error);
-    }
-  }
+  securityDailyReportHandler
 );
 
 // ==========================================

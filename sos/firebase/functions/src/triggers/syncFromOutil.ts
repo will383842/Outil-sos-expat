@@ -19,10 +19,10 @@
  */
 
 import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
 import * as admin from "firebase-admin";
 import type { Request, Response } from "express";
+import { SOS_SYNC_API_KEY } from "../lib/secrets";
 
 // Lazy initialization to avoid issues during deployment analysis
 const IS_DEPLOYMENT_ANALYSIS =
@@ -47,7 +47,7 @@ function getDb() {
 }
 
 // Secret pour l'authentification depuis Outil-sos-expat
-const SOS_SYNC_API_KEY = defineSecret("SOS_SYNC_API_KEY");
+// Imported from lib/secrets.ts
 
 // =============================================================================
 // TYPES

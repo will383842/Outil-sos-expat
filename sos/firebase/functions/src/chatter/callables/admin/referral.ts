@@ -39,7 +39,7 @@ function assertAdmin(request: { auth?: { uid?: string; token?: Record<string, un
   if (!uid) {
     throw new HttpsError("unauthenticated", "Authentication required");
   }
-  const isAdmin = claims?.admin === true || claims?.role === "admin" || claims?.role === "dev";
+  const isAdmin = claims?.admin === true || claims?.role === "admin";
   if (!isAdmin) {
     throw new HttpsError("permission-denied", "Admin access required");
   }

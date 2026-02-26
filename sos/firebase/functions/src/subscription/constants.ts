@@ -18,7 +18,7 @@ export const SUBSCRIPTION_STATUSES = [
   'trialing',   // En période d'essai
   'active',     // Abonnement actif et payé
   'past_due',   // Paiement en retard (grace period)
-  'canceled',   // Annulé (accès jusqu'à fin période)
+  'cancelled',  // Annulé (accès jusqu'à fin période)
   'expired',    // Expiré (plus d'accès)
   'paused',     // Mis en pause
   'suspended'   // Suspendu (après 7j past_due)
@@ -192,7 +192,7 @@ export function isStatusAllowingAccess(status: SubscriptionStatus): boolean {
  * Vérifie si un statut nécessite une action utilisateur
  */
 export function isStatusRequiringAction(status: SubscriptionStatus): boolean {
-  return ['past_due', 'canceled', 'expired', 'suspended'].includes(status);
+  return ['past_due', 'cancelled', 'expired', 'suspended'].includes(status);
 }
 
 // ============================================================================

@@ -360,6 +360,7 @@ export const AiAssistantPageV2: React.FC = () => {
         quotaCheck?.reason === 'trial_calls_exhausted' ||
         quotaCheck?.reason === 'trial_expired' ||
         quotaCheck?.reason === 'quota_exhausted' ||
+        quotaCheck?.reason === 'subscription_cancelled' ||
         quotaCheck?.reason === 'subscription_canceled' ||
         quotaCheck?.reason === 'subscription_expired' ||
         quotaCheck?.reason === 'payment_failed';

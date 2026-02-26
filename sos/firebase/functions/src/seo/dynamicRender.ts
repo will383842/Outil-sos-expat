@@ -9,12 +9,12 @@
  */
 
 import { onRequest } from 'firebase-functions/v2/https';
-import { defineSecret } from 'firebase-functions/params';
 import * as logger from 'firebase-functions/logger';
 import type { Request, Response } from 'express';
+import { CACHE_INVALIDATION_KEY } from '../lib/secrets';
 
-// Define secret for cache invalidation authentication
-const CACHE_INVALIDATION_KEY = defineSecret('CACHE_INVALIDATION_KEY');
+// Secret for cache invalidation authentication
+// Imported from lib/secrets.ts
 
 // Lazy-loaded modules to avoid deployment timeout
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

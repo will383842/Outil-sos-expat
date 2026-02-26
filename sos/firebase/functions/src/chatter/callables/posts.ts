@@ -47,12 +47,12 @@ async function assertAdmin(request: CallableRequest): Promise<string> {
   const uid = request.auth.uid;
 
   const role = request.auth.token?.role as string | undefined;
-  if (role === "admin" || role === "dev") {
+  if (role === "admin") {
     return uid;
   }
 
   const userDoc = await db.collection("users").doc(uid).get();
-  if (!userDoc.exists || !["admin", "dev"].includes(userDoc.data()?.role)) {
+  if (!userDoc.exists || userDoc.data()?.role !== "admin") {
     throw new HttpsError("permission-denied", "Admin access required");
   }
 

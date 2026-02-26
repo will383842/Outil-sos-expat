@@ -460,7 +460,7 @@ async function assertAdmin(auth: { uid: string; token?: Record<string, unknown> 
   const db = getDb();
   const userDoc = await db.collection("users").doc(auth.uid).get();
 
-  if (!userDoc.exists || !["admin", "dev"].includes(userDoc.data()?.role)) {
+  if (!userDoc.exists || userDoc.data()?.role !== "admin") {
     throw new HttpsError("permission-denied", "Admin access required");
   }
 }

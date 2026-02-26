@@ -612,7 +612,7 @@ export const initUnclaimedFundsTemplates = onCall(
     const userDoc = await admin.firestore().collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+    if (!userData?.role || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Admin access required");
     }
 

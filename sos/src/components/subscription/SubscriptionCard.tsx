@@ -52,6 +52,7 @@ const STATUS_BADGES: Record<string, { bg: string; text: string; labelKey: string
   trialing: { bg: 'bg-blue-100', text: 'text-blue-700', labelKey: 'subscription.status.trialing' },
   active: { bg: 'bg-green-100', text: 'text-green-700', labelKey: 'subscription.status.active' },
   past_due: { bg: 'bg-red-100', text: 'text-red-700', labelKey: 'subscription.status.past_due' },
+  cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', labelKey: 'subscription.status.canceled' },
   canceled: { bg: 'bg-gray-100', text: 'text-gray-700', labelKey: 'subscription.status.canceled' },
   expired: { bg: 'bg-gray-100', text: 'text-gray-700', labelKey: 'subscription.status.expired' },
   paused: { bg: 'bg-yellow-100', text: 'text-yellow-700', labelKey: 'subscription.status.paused' }

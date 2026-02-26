@@ -193,6 +193,7 @@ async function getProviderStats(): Promise<ProviderStats> {
   const snapshot = await getDb()
     .collection('sos_profiles')
     .where('type', 'in', ['lawyer', 'expat'])
+    .limit(5000)
     .get();
 
   let totalProviders = 0;
@@ -255,7 +256,7 @@ export const checkLowProviderAvailability = functions
   .region('europe-west1')
   .runWith({
     timeoutSeconds: 60,
-    memory: '128MB',
+    memory: '256MB',
   })
   .pubsub.schedule('every 60 minutes')
   .timeZone('Europe/Paris')

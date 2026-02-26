@@ -11,6 +11,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { scheduledConfig } from "../../lib/functionConfigs";
+import { enqueueTelegramMessage } from "../../telegram/queue/enqueue";
 
 // Import drip messages data
 // Note: This will be loaded from Firestore collection 'chatter_drip_messages'
@@ -126,20 +127,11 @@ export const sendChatterDripMessages = onSchedule(
           // 5. Replace variables in message
           const personalizedMessage = messageText.replace(/\{\{firstName\}\}/g, chatter.firstName);
 
-          // 6. Send via Telegram using existing service
-          // TODO: Call telegram sendMessage function
-          // For now, we'll queue it in telegram_queue collection
-          await db.collection("telegram_queue").add({
-            telegram_id: chatter.telegramId,
-            message: personalizedMessage,
-            parse_mode: "HTML",
-            status: "pending",
-            source: "chatter_drip",
-            metadata: {
-              chatterId: chatter.id,
-              day: daysSinceRegistration,
-            },
-            createdAt: Timestamp.now(),
+          // 6. Send via Telegram global queue (rate-limited, with retries)
+          await enqueueTelegramMessage(chatter.telegramId!, personalizedMessage, {
+            parseMode: "HTML",
+            priority: "campaign",
+            sourceEventType: `chatter_drip_day_${daysSinceRegistration}`,
           });
 
           // 7. Update chatter's lastDripMessageDay
@@ -211,18 +203,11 @@ export const sendDripMessageManual = async (
 
     const personalizedMessage = messageText.replace(/\{\{firstName\}\}/g, chatter.firstName);
 
-    // Queue message
-    await db.collection("telegram_queue").add({
-      telegram_id: chatter.telegramId,
-      message: personalizedMessage,
-      parse_mode: "HTML",
-      status: "pending",
-      source: "chatter_drip_manual",
-      metadata: {
-        chatterId,
-        day,
-      },
-      createdAt: Timestamp.now(),
+    // Queue message via global Telegram queue
+    await enqueueTelegramMessage(chatter.telegramId!, personalizedMessage, {
+      parseMode: "HTML",
+      priority: "realtime",
+      sourceEventType: `chatter_drip_manual_day_${day}`,
     });
 
     return { success: true };

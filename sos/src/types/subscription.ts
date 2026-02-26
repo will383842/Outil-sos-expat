@@ -23,7 +23,8 @@ export type SubscriptionStatus =
   | 'trialing'      // En période d'essai
   | 'active'        // Abonnement actif et payé
   | 'past_due'      // Paiement en retard (grace period 7j)
-  | 'canceled'      // Annulé (accès jusqu'à fin période)
+  | 'cancelled'     // Annulé (accès jusqu'à fin période)
+  | 'canceled'      // Legacy (transition)
   | 'expired'       // Expiré (plus d'accès)
   | 'paused'        // Mis en pause
   | 'suspended';    // P0 FIX: Suspendu (après 7j past_due, accès coupé)
@@ -207,7 +208,8 @@ export type QuotaBlockReason =
   | 'trial_calls_exhausted'   // 3 appels essai utilisés
   | 'quota_exhausted'         // Quota mensuel atteint
   | 'subscription_expired'    // Abonnement expiré
-  | 'subscription_canceled'   // Abonnement annulé
+  | 'subscription_cancelled'  // Abonnement annulé
+  | 'subscription_canceled'   // Legacy (transition)
   | 'payment_failed'          // Paiement échoué
   | 'no_subscription';        // Pas d'abonnement
 

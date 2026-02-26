@@ -142,7 +142,7 @@ export const IaDashboardTab: React.FC = () => {
             convertedFromTrial++;
             totalTrialEver++;
           }
-        } else if (sub.status === 'canceled' || sub.status === 'expired') {
+        } else if (sub.status === 'cancelled' || sub.status === 'canceled' || sub.status === 'expired') {
           const canceledAt = sub.canceledAt?.toDate?.() || sub.updatedAt?.toDate?.();
           if (canceledAt && canceledAt > thirtyDaysAgo) {
             canceledLast30Days++;
@@ -216,7 +216,7 @@ export const IaDashboardTab: React.FC = () => {
           total: active + trial,
           active,
           trial,
-          canceled
+          cancelled: canceled
         });
       }
 

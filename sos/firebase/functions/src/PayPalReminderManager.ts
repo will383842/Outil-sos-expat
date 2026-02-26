@@ -477,7 +477,7 @@ export const triggerPayPalReminders = onCall(
     const userDoc = await db.collection("users").doc(auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData || !["admin", "dev"].includes(userData.role)) {
+    if (!userData || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Admin access required");
     }
 
@@ -516,7 +516,7 @@ export const getPayPalReminderStatus = onCall(
     const userDoc = await db.collection("users").doc(auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData || !["admin", "dev"].includes(userData.role)) {
+    if (!userData || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Admin access required");
     }
 

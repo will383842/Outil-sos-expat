@@ -49,17 +49,6 @@ const ultraLogger = {
   traceImport: (..._args: any[]) => {},
 };
 const traceFunction = <T extends (...args: any[]) => any>(fn: T, _functionName?: string, _source?: string): T => fn;
-// P1-13: Sync atomique payments <-> call_sessions
-// TEMP DISABLED 2026-02-12: Avoid module-level initialization for deployment
-// import { syncPaymentStatus, findCallSessionByPaymentId } from "./utils/paymentSync";
-// 🔒 Phone number decryption for notifications
-// import { decryptPhoneNumber } from "./utils/encryption";
-
-// Stubs for temporarily disabled imports
-const decryptPhoneNumber = (encrypted: string): string => encrypted;
-const syncPaymentStatus = async (...args: any[]): Promise<void> => { console.log('[stub] syncPaymentStatus', ...args); };
-const findCallSessionByPaymentId = async (database: any, paymentId: string): Promise<any> => { console.log('[stub] findCallSessionByPaymentId', database, paymentId); return null; };
-
 // === CPU/MEM CONFIGS to control vCPU usage ===
 const emergencyConfig = {
   region: "europe-west1",
@@ -87,7 +76,6 @@ import {
   TASKS_AUTH_SECRET,
   OUTIL_API_KEY,
   OUTIL_SYNC_API_KEY,
-  getOutilIngestEndpoint,
 } from "./lib/secrets";
 
 // P0 FIX 2026-02-04: Import call region from centralized config - dedicated region for call functions
@@ -173,7 +161,7 @@ export { cleanupCloudRunRevisions } from "./scheduled/cleanupCloudRunRevisions";
 // P0-2 FIX: Stuck payments recovery (requires_capture > 10min)
 export {
   stuckPaymentsRecovery,
-  triggerStuckPaymentsRecovery,
+  // triggerStuckPaymentsRecovery, // REMOVED: quota optimization — scheduled version runs every 30min
   // P0 FIX 2026-02-01: Added manual PayPal capture function
   capturePayPalPaymentManually,
 } from "./scheduled/stuckPaymentsRecovery";
@@ -181,7 +169,7 @@ export {
 // P1-6 FIX: Notification retry mechanism
 export {
   notificationRetry,
-  triggerNotificationRetry,
+  // triggerNotificationRetry, // REMOVED: quota optimization — scheduled version runs every 4h
   retrySpecificDelivery,
   getDLQStats,
 } from "./scheduled/notificationRetry";
@@ -199,7 +187,7 @@ export { escrowMonitoringDaily } from "./scheduled/escrowMonitoring";
 // - Sends at 9:00 AM Paris time daily
 export {
   adminAlertsDigestDaily,
-  triggerAdminAlertsDigest,
+  // triggerAdminAlertsDigest, // REMOVED: quota optimization — scheduled version runs hourly
   getAdminAlertsDigestPreview,
 } from "./scheduled/adminAlertsDigest";
 
@@ -211,7 +199,7 @@ export {
 export {
   pendingTransfersMonitorScheduled,
   getDetailedPendingTransfersStats,
-  triggerPendingTransfersMonitor,
+  // triggerPendingTransfersMonitor, // REMOVED: quota optimization — scheduled version runs every 6h
   forceRetryPendingTransfer,
 } from "./scheduled/pendingTransfersMonitor";
 
@@ -220,7 +208,7 @@ export {
 // - Urgent email at 100% of budget
 export {
   checkBudgetAlertsScheduled,
-  triggerBudgetAlertCheck,
+  // triggerBudgetAlertCheck, // REMOVED: quota optimization — scheduled version runs every 6h
   checkSingleServiceBudget,
 } from "./scheduled/budgetAlertNotifications";
 
@@ -272,7 +260,7 @@ export {
 // PayPal Onboarding Reminders
 export {
   scheduledPayPalReminders,
-  triggerPayPalReminders,
+  // triggerPayPalReminders, // REMOVED: quota optimization — scheduled version runs daily
   getPayPalReminderStatus,
 } from "./PayPalReminderManager";
 
@@ -459,7 +447,6 @@ import {
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import Stripe from "stripe";
-import type { Request as ExpressRequest, Response } from "express";
 
 // ====== FIREBASE ADMIN INITIALIZATION (GLOBAL) ======
 // Initialize Firebase Admin once at module level
@@ -487,10 +474,6 @@ ultraLogger.debug("IMPORTS", "Imports principaux chargés avec succès");
 // P0 FIX: Import from centralized secrets.ts
 import {
   STRIPE_MODE,
-  STRIPE_WEBHOOK_SECRET_TEST,
-  STRIPE_WEBHOOK_SECRET_LIVE,
-  STRIPE_CONNECT_WEBHOOK_SECRET_TEST,
-  STRIPE_CONNECT_WEBHOOK_SECRET_LIVE,
 } from "./lib/secrets";
 
 // P1-4 FIX: Removed Stripe secrets exports (not Cloud Functions)
@@ -505,20 +488,6 @@ function getStripeSecretKey(): string {
     ? STRIPE_SECRET_KEY_LIVE.value() || ""
     : STRIPE_SECRET_KEY_TEST.value() || "";
 }
-function getStripeWebhookSecret(): string {
-  // P0 FIX: trim() to handle Windows CRLF in secrets
-  return isLive()
-    ? (STRIPE_WEBHOOK_SECRET_LIVE.value() || "").trim()
-    : (STRIPE_WEBHOOK_SECRET_TEST.value() || "").trim();
-}
-
-// Helper pour le webhook Connect (Direct Charges) - internal use only
-function getStripeConnectWebhookSecret(): string {
-  // P0 FIX: trim() to handle Windows CRLF in secrets
-  return isLive()
-    ? (STRIPE_CONNECT_WEBHOOK_SECRET_LIVE.value() || "").trim()
-    : (STRIPE_CONNECT_WEBHOOK_SECRET_TEST.value() || "").trim();
-}
 
 // ====== INTERFACES DE DEBUGGING ======
 interface UltraDebugMetadata {
@@ -528,14 +497,6 @@ interface UltraDebugMetadata {
   functionName: string;
   startTime: number;
   environment: string;
-}
-
-interface DebuggedRequest extends ExpressRequest {
-  debugMetadata?: UltraDebugMetadata;
-}
-
-interface FirebaseRequest extends DebuggedRequest {
-  rawBody: Buffer;
 }
 
 // ====== TYPES POUR LES FONCTIONS ADMIN ======
@@ -834,36 +795,6 @@ function wrapCallableFunction<T>(
   };
 }
 
-// ====== WRAPPER POUR FONCTIONS HTTP ======
- 
-function wrapHttpFunction(
-  functionName: string,
-  originalFunction: (req: FirebaseRequest, res: Response) => Promise<void>
-): any {
-   
-  return async (req: any, res: any) => {
-    const metadata = createDebugMetadata(functionName);
-    // Cast to FirebaseRequest for internal use
-    const firebaseReq = req as unknown as FirebaseRequest;
-    (firebaseReq as DebuggedRequest).debugMetadata = metadata;
-
-    logFunctionStart(metadata, {
-      method: req.method,
-      url: req.url,
-      headers: req.headers,
-      query: req.query,
-      body: req.body,
-    });
-
-    try {
-      await originalFunction(firebaseReq, res);
-      logFunctionEnd(metadata, { statusCode: res.statusCode });
-    } catch (error) {
-      logFunctionEnd(metadata, undefined, error as Error);
-      throw error;
-    }
-  };
-}
 
 // ====== EXPORTS DIRECTS ======
 ultraLogger.info("EXPORTS", "Début du chargement des exports directs");
@@ -946,10 +877,10 @@ export {
   securityAlertAdminAction,
   getSecurityStats,
   checkBlockedEntity,
-  // Scheduled Functions
-  securityDailyCleanup,
-  processSecurityEscalations,
-  securityDailyReport,
+  // Scheduled Functions — CONSOLIDATED into consolidatedSecurityDaily
+  // securityDailyCleanup,
+  // processSecurityEscalations,
+  // securityDailyReport,
 } from "./securityAlerts/triggers";
 
 // Detectors (pour utilisation dans d'autres fonctions)
@@ -2033,8 +1964,8 @@ export {
 
 // ========== SYSTEM MONITORING & ALERTS ==========
 export {
-  runSystemHealthCheck,
-  cleanupOldAlerts,
+  // runSystemHealthCheck, // CONSOLIDATED into consolidatedDailyMonitoring
+  // cleanupOldAlerts, // CONSOLIDATED into consolidatedWeeklyCleanup
   getActiveAlerts,
   acknowledgeAlert,
   getSystemHealthSummary
@@ -2105,14 +2036,15 @@ export {
 // handleProfileCompleted, handleUserLogin, handleProviderOnlineStatus,
 // handleKYCVerification, handlePayPalConfiguration, handleAccountStatus
 export {
-  stopAutoresponders,
+  // stopAutoresponders, // CONSOLIDATED into consolidatedDailyEmails
   stopAutorespondersForUser,
 } from './emailMarketing/functions/stopAutoresponders';
-export { detectInactiveUsers } from './emailMarketing/functions/inactiveUsers';
+// export { detectInactiveUsers } from './emailMarketing/functions/inactiveUsers'; // CONSOLIDATED into consolidatedDailyEmails
 // Gamification triggers
 export { handleMilestoneReached, handleBadgeUnlocked } from './emailMarketing/functions/gamification';
 // Scheduled stats emails
-export { sendWeeklyStats, sendMonthlyStats, sendAnniversaryEmails } from './emailMarketing/functions/statsEmails';
+export { sendWeeklyStats, sendMonthlyStats } from './emailMarketing/functions/statsEmails';
+// sendAnniversaryEmails — CONSOLIDATED into consolidatedDailyEmails
 
 // ============================================
 // SUBSCRIPTION FUNCTIONS
@@ -2500,7 +2432,7 @@ export { sendCustomPasswordResetEmail } from './auth/passwordReset';
 export {
   runPaymentHealthCheck,
   collectDailyPaymentMetrics,
-  cleanupOldPaymentAlerts,
+  // cleanupOldPaymentAlerts, // CONSOLIDATED into consolidatedWeeklyCleanup
   getPaymentAlerts,
   resolvePaymentAlert,
   getPaymentMetrics
@@ -2511,7 +2443,7 @@ export {
 export {
   runFunctionalHealthCheck,
   runCriticalFunctionalCheck,
-  cleanupFunctionalData,
+  // cleanupFunctionalData, // CONSOLIDATED into consolidatedWeeklyCleanup
   getFunctionalAlerts,
   resolveFunctionalAlert,
   getFunctionalHealthSummary,
@@ -2528,7 +2460,10 @@ export { getFirebaseUsage } from "./monitoring/getFirebaseUsage";
 export { getGcpBillingCosts } from "./monitoring/getGcpBillingCosts";
 
 // Agent monitoring dashboard
-export { getAgentMetrics, saveAgentMetricsHistory } from "./monitoring/getAgentMetrics";
+export {
+  getAgentMetrics,
+  // saveAgentMetricsHistory, // CONSOLIDATED into consolidatedDailyMonitoring
+} from "./monitoring/getAgentMetrics";
 
 // OpenAI usage monitoring
 export { getOpenAIUsage } from "./monitoring/getOpenAIUsage";
@@ -3414,8 +3349,15 @@ export {
   cleanupExpiredDocuments,
 } from './subscription/scheduledTasks';
 
-// --- SCHEDULED : aggregateCostMetrics manquant ---
-export { aggregateCostMetrics } from './scheduled/aggregateCostMetrics';
+// --- SCHEDULED : aggregateCostMetrics — CONSOLIDATED into consolidatedDailyMonitoring ---
+// export { aggregateCostMetrics } from './scheduled/aggregateCostMetrics';
+
+// ========== CONSOLIDATED SCHEDULED FUNCTIONS (Quota Optimization 2026-02-26) ==========
+// Merging multiple scheduled functions into fewer to reduce Cloud Run memory quota in europe-west3
+export { consolidatedDailyMonitoring } from './scheduled/consolidatedDailyMonitoring';
+export { consolidatedWeeklyCleanup } from './scheduled/consolidatedWeeklyCleanup';
+export { consolidatedDailyEmails } from './scheduled/consolidatedDailyEmails';
+export { consolidatedSecurityDaily } from './scheduled/consolidatedSecurityDaily';
 
 // --- TWILIO : twilioRecordingWebhook manquant ---
 export { twilioRecordingWebhook } from './Webhooks/twilioWebhooks';

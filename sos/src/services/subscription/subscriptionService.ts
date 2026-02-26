@@ -838,10 +838,10 @@ export async function checkAiQuota(providerId: string): Promise<QuotaCheckResult
   }
 
   // Vérifier le statut de l'abonnement
-  if (subscription.status === 'expired' || subscription.status === 'canceled') {
+  if (subscription.status === 'expired' || subscription.status === 'cancelled' || subscription.status === 'canceled') {
     return {
       allowed: false,
-      reason: subscription.status === 'expired' ? 'subscription_expired' : 'subscription_canceled',
+      reason: subscription.status === 'expired' ? 'subscription_expired' : 'subscription_cancelled',
       currentUsage: usage?.currentPeriodCalls ?? 0,
       limit: DEFAULT_AI_CALLS_LIMIT[subscription.tier] ?? 0,
       remaining: 0,

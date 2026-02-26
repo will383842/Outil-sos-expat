@@ -30,7 +30,8 @@ export interface DailySubscriberData {
   total: number;
   active: number;
   trial: number;
-  canceled: number;
+  cancelled: number;
+  canceled?: number;  // Legacy (transition)
 }
 
 export interface PlanDistributionData {

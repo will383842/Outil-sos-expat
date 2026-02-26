@@ -200,17 +200,14 @@ export interface TelegramAdminLog {
  * Variables disponibles pour le template new_registration
  */
 export interface NewRegistrationVars {
-  /** Role de l'utilisateur en francais (ex: "Avocat", "Client") */
+  /** Role (i18n key) */
+  ROLE?: string;
+  /** Role (backward compat) */
   ROLE_FR: string;
-  /** Adresse email de l'utilisateur */
   EMAIL: string;
-  /** Numero de telephone (format international) */
   PHONE: string;
-  /** Pays de residence */
   COUNTRY: string;
-  /** Date d'inscription (format DD/MM/YYYY) */
   DATE: string;
-  /** Heure d'inscription (format HH:MM) */
   TIME: string;
 }
 
@@ -218,17 +215,14 @@ export interface NewRegistrationVars {
  * Variables disponibles pour le template call_completed
  */
 export interface CallCompletedVars {
-  /** Nom du client qui a passe l'appel */
   CLIENT_NAME: string;
-  /** Nom du prestataire qui a recu l'appel */
   PROVIDER_NAME: string;
-  /** Type de prestataire en francais (ex: "Avocat", "Expatrie") */
+  /** Provider type (i18n key) */
+  PROVIDER_TYPE?: string;
+  /** Provider type (backward compat) */
   PROVIDER_TYPE_FR: string;
-  /** Duree de l'appel en minutes */
   DURATION_MINUTES: string;
-  /** Date de l'appel (format DD/MM/YYYY) */
   DATE: string;
-  /** Heure de fin de l'appel (format HH:MM) */
   TIME: string;
 }
 
@@ -269,19 +263,13 @@ export interface DailyReportVars {
  * Nouveau prestataire a valider
  */
 export interface NewProviderVars {
-  /** Nom du prestataire */
   PROVIDER_NAME: string;
-  /** Type de prestataire en francais (ex: "Avocat", "Expatrie") */
+  PROVIDER_TYPE?: string;
   PROVIDER_TYPE_FR: string;
-  /** Adresse email du prestataire */
   EMAIL: string;
-  /** Numero de telephone (format international) */
   PHONE: string;
-  /** Pays du prestataire */
   COUNTRY: string;
-  /** Date de la demande (format DD/MM/YYYY) */
   DATE: string;
-  /** Heure de la demande (format HH:MM) */
   TIME: string;
 }
 
@@ -328,19 +316,13 @@ export interface NegativeReviewVars {
  * Alerte de securite
  */
 export interface SecurityAlertVars {
-  /** Type d'alerte en francais (ex: "Connexion suspecte", "Tentative de fraude") */
+  ALERT_TYPE?: string;
   ALERT_TYPE_FR: string;
-  /** Email de l'utilisateur concerne */
   USER_EMAIL: string;
-  /** Adresse IP source */
   IP_ADDRESS: string;
-  /** Pays d'origine de la connexion */
   COUNTRY: string;
-  /** Details supplementaires de l'alerte */
   DETAILS: string;
-  /** Date de l'alerte (format DD/MM/YYYY) */
   DATE: string;
-  /** Heure de l'alerte (format HH:MM) */
   TIME: string;
 }
 
@@ -349,17 +331,12 @@ export interface SecurityAlertVars {
  * Demande de retrait affilie
  */
 export interface WithdrawalRequestVars {
-  /** Nom de l'utilisateur demandeur */
   USER_NAME: string;
-  /** Type d'utilisateur en francais (ex: "Influenceur", "Blogueur") */
+  USER_TYPE?: string;
   USER_TYPE_FR: string;
-  /** Montant demande en euros */
   AMOUNT: string;
-  /** Methode de paiement choisie */
   PAYMENT_METHOD: string;
-  /** Date de la demande (format DD/MM/YYYY) */
   DATE: string;
-  /** Heure de la demande (format HH:MM) */
   TIME: string;
 }
 

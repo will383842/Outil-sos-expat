@@ -62,6 +62,7 @@ async function getEscrowStats(db: admin.firestore.Firestore): Promise<EscrowStat
   const stripePendingSnap = await db
     .collection("pending_transfers")
     .where("status", "==", "pending_kyc")
+    .limit(5000)
     .get();
 
   let stripePendingAmount = 0;
@@ -88,6 +89,7 @@ async function getEscrowStats(db: admin.firestore.Firestore): Promise<EscrowStat
   const paypalFailedSnap = await db
     .collection("failed_payouts_alerts")
     .where("status", "in", ["pending", "failed", "max_retries_reached"])
+    .limit(5000)
     .get();
 
   let paypalFailedAmount = 0;
@@ -133,7 +135,7 @@ async function sendKycReminders(db: admin.firestore.Firestore): Promise<number> 
   let remindersSent = 0;
 
   // Récupérer les pending_transfers groupés par provider
-  const pendingSnap = await db.collection("pending_transfers").where("status", "==", "pending_kyc").get();
+  const pendingSnap = await db.collection("pending_transfers").where("status", "==", "pending_kyc").limit(5000).get();
 
   const providerPendingMap = new Map<
     string,
@@ -166,6 +168,7 @@ async function sendKycReminders(db: admin.firestore.Firestore): Promise<number> 
   const paypalSnap = await db
     .collection("failed_payouts_alerts")
     .where("status", "in", ["pending", "failed", "max_retries_reached"])
+    .limit(5000)
     .get();
 
   paypalSnap.forEach((doc) => {

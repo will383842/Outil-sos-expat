@@ -29,7 +29,7 @@ function ensureInitialized() {
 async function verifyAdmin(userId: string, authToken?: Record<string, unknown>): Promise<void> {
   // Check custom claims first (faster, no Firestore read)
   const tokenRole = authToken?.role as string | undefined;
-  if (tokenRole === "admin" || tokenRole === "dev") {
+  if (tokenRole === "admin") {
     return;
   }
 
@@ -42,7 +42,7 @@ async function verifyAdmin(userId: string, authToken?: Record<string, unknown>):
   }
 
   const userData = userDoc.data();
-  if (!userData || !["admin", "dev"].includes(userData.role)) {
+  if (!userData || userData.role !== "admin") {
     throw new HttpsError("permission-denied", "Admin access required");
   }
 }

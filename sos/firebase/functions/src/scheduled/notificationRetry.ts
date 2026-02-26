@@ -240,7 +240,7 @@ export const triggerNotificationRetry = onCall(
     const userDoc = await db.collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+    if (!userData?.role || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Only admins can trigger retry");
     }
 
@@ -290,7 +290,7 @@ export const retrySpecificDelivery = onCall(
     const userDoc = await db.collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+    if (!userData?.role || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Only admins can retry deliveries");
     }
 

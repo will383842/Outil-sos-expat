@@ -78,8 +78,15 @@ export const registerLocalBackup = onCall(
   async (request) => {
     const db = getDb();
 
-    // Vérifier l'authentification admin (optionnel, peut être appelé par script)
-    // Si appelé par script sans auth, on vérifie un token secret
+    // Vérifier l'authentification admin
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentication required");
+    }
+    const token = request.auth.token;
+    if (token.role !== "admin" && !token.admin) {
+      throw new HttpsError("permission-denied", "Admin access required");
+    }
+
     const data = request.data;
 
     if (!data.backupDate || !data.backupPath) {

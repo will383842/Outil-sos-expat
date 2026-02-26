@@ -25,6 +25,7 @@ import {
   PAYPAL_CLIENT_SECRET,
   TASKS_AUTH_SECRET,
   getTasksAuthSecret,
+  isValidTaskAuth,
 } from "./secrets";
 
 // Configuration Cloud Tasks
@@ -239,7 +240,7 @@ export const executePayoutRetryTask = onRequest(
     const authHeader = req.headers["x-task-auth"];
     const expectedAuth = getTasksAuthSecret();
 
-    if (!authHeader || authHeader !== expectedAuth) {
+    if (!isValidTaskAuth(String(authHeader || ""), expectedAuth)) {
       console.error("❌ [PayoutRetry] Invalid or missing X-Task-Auth header");
       res.status(401).send("Unauthorized");
       return;
@@ -483,7 +484,7 @@ export const retryFailedPayout = onCall(
     const userDoc = await db.collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+    if (!userData?.role || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Only admins can retry payouts");
     }
 

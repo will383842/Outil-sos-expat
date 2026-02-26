@@ -38,7 +38,8 @@ export type SubscriptionStatus =
   | 'active'
   | 'trialing'
   | 'past_due'
-  | 'canceled'
+  | 'cancelled'
+  | 'canceled'   // Legacy (transition)
   | 'unpaid'
   | 'paused';
 
@@ -383,7 +384,7 @@ export function isTransactionType(value: string): value is TransactionType {
 }
 
 export function isSubscriptionStatus(value: string): value is SubscriptionStatus {
-  return ['active', 'trialing', 'past_due', 'canceled', 'unpaid', 'paused'].includes(value);
+  return ['active', 'trialing', 'past_due', 'cancelled', 'canceled', 'unpaid', 'paused'].includes(value);
 }
 
 export function isCurrencyCode(value: string): value is CurrencyCode {
@@ -411,7 +412,7 @@ export const TRANSACTION_TYPES: readonly TransactionType[] = [
 ] as const;
 
 export const SUBSCRIPTION_STATUSES: readonly SubscriptionStatus[] = [
-  'active', 'trialing', 'past_due', 'canceled', 'unpaid', 'paused'
+  'active', 'trialing', 'past_due', 'cancelled', 'canceled', 'unpaid', 'paused'
 ] as const;
 
 export const CURRENCY_CODES: readonly CurrencyCode[] = [
@@ -465,10 +466,11 @@ export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
   dispute: 'Litige',
 };
 
-export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
+export const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   active: 'Actif',
   trialing: 'Essai',
   past_due: 'En retard',
+  cancelled: 'Annulé',
   canceled: 'Annulé',
   unpaid: 'Impayé',
   paused: 'Suspendu',

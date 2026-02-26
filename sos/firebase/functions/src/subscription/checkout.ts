@@ -348,7 +348,7 @@ async function isProviderEligibleForTrial(
   }
 
   // If they have or had an active subscription, not eligible
-  if (subData?.status && ['active', 'past_due', 'canceled', 'expired'].includes(subData.status)) {
+  if (subData?.status && ['active', 'past_due', 'cancelled', 'canceled', 'expired'].includes(subData.status)) {
     logger.info('Provider already had subscription', { providerId, status: subData.status });
     return false;
   }

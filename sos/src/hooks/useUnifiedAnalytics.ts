@@ -60,7 +60,7 @@ export interface CallMetrics {
   callsInitiated: number;
   callsCompleted: number;
   callsFailed: number;
-  callsCanceled: number;
+  callsCancelled: number;
   avgDurationSeconds: number;
   totalDurationMinutes: number;
   successRate: number;            // Percentage

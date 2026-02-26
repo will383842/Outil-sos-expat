@@ -139,11 +139,12 @@ type SortOrder = 'asc' | 'desc';
 // CONSTANTS
 // ============================================================================
 
-const STATUS_CONFIG: Record<SubscriptionStatus, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
   trialing: { label: 'Trialing', color: 'text-blue-700', bgColor: 'bg-blue-100', icon: <Sparkles className="w-3 h-3" /> },
   active: { label: 'Active', color: 'text-green-700', bgColor: 'bg-green-100', icon: <Check className="w-3 h-3" /> },
   past_due: { label: 'Past Due', color: 'text-amber-700', bgColor: 'bg-amber-100', icon: <Clock className="w-3 h-3" /> },
-  canceled: { label: 'Canceled', color: 'text-gray-600', bgColor: 'bg-gray-100', icon: <XCircle className="w-3 h-3" /> },
+  cancelled: { label: 'Cancelled', color: 'text-gray-600', bgColor: 'bg-gray-100', icon: <XCircle className="w-3 h-3" /> },
+  canceled: { label: 'Cancelled', color: 'text-gray-600', bgColor: 'bg-gray-100', icon: <XCircle className="w-3 h-3" /> },
   expired: { label: 'Expired', color: 'text-red-700', bgColor: 'bg-red-100', icon: <X className="w-3 h-3" /> },
   paused: { label: 'Paused', color: 'text-purple-700', bgColor: 'bg-purple-100', icon: <Pause className="w-3 h-3" /> },
   suspended: { label: 'Suspended', color: 'text-red-800', bgColor: 'bg-red-200', icon: <AlertCircle className="w-3 h-3" /> },
@@ -719,7 +720,7 @@ const Subscriptions: React.FC = () => {
       const activeCount = subsList.filter((s) => s.status === 'active').length;
       const trialingCount = subsList.filter((s) => s.status === 'trialing').length;
       const pastDueCount = subsList.filter((s) => s.status === 'past_due').length;
-      const canceledCount = subsList.filter((s) => s.status === 'canceled' || s.status === 'expired').length;
+      const canceledCount = subsList.filter((s) => s.status === 'cancelled' || s.status === 'canceled' || s.status === 'expired').length;
 
       // Calculate MRR
       const mrr = subsList
@@ -776,7 +777,12 @@ const Subscriptions: React.FC = () => {
 
     // Status filter
     if (statusFilter !== 'all') {
-      result = result.filter((s) => s.status === statusFilter);
+      result = result.filter((s) => {
+        if (statusFilter === 'cancelled') {
+          return s.status === 'cancelled' || s.status === 'canceled';
+        }
+        return s.status === statusFilter;
+      });
     }
 
     // Plan filter
@@ -1085,7 +1091,7 @@ const Subscriptions: React.FC = () => {
               <option value="active">{intl.formatMessage({ id: 'admin.finance.subscriptions.filter.active', defaultMessage: 'Active' })}</option>
               <option value="trialing">{intl.formatMessage({ id: 'admin.finance.subscriptions.filter.trialing', defaultMessage: 'Trialing' })}</option>
               <option value="past_due">{intl.formatMessage({ id: 'admin.finance.subscriptions.filter.pastDue', defaultMessage: 'Past Due' })}</option>
-              <option value="canceled">{intl.formatMessage({ id: 'admin.finance.subscriptions.filter.canceled', defaultMessage: 'Canceled' })}</option>
+              <option value="cancelled">{intl.formatMessage({ id: 'admin.finance.subscriptions.filter.canceled', defaultMessage: 'Canceled' })}</option>
             </select>
 
             {/* Plan Filter */}

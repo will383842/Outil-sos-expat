@@ -19,6 +19,7 @@ import {
   STRIPE_SECRET_KEY,
   TASKS_AUTH_SECRET,
   getTasksAuthSecret,
+  isValidTaskAuth,
 } from "./secrets";
 
 // P0 AUDIT FIX: Cloud Run URL configurable (v2 format, NOT v1 cloudfunctions.net)
@@ -135,7 +136,7 @@ export const executeStripeTransferRetry = onRequest(
       const authHeader = request.headers["x-task-auth"];
       const expectedAuth = getTasksAuthSecret();
 
-      if (!authHeader || authHeader !== expectedAuth) {
+      if (!isValidTaskAuth(String(authHeader || ""), expectedAuth)) {
         logger.error("[executeStripeTransferRetry] Invalid or missing X-Task-Auth header");
         response.status(401).send("Unauthorized");
         return;

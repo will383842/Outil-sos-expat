@@ -210,6 +210,7 @@ export function useAiQuota(): UseAiQuotaReturn {
       trial_calls_exhausted: 'subscription.errors.trialCallsExhausted',
       quota_exhausted: 'subscription.errors.quotaExhausted',
       subscription_expired: 'subscription.errors.subscriptionExpired',
+      subscription_cancelled: 'subscription.errors.subscriptionCanceled',
       subscription_canceled: 'subscription.errors.subscriptionCanceled',
       payment_failed: 'subscription.errors.paymentFailed',
       no_subscription: 'subscription.errors.noSubscription'

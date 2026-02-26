@@ -13,6 +13,27 @@ export const diagnoseProfiles = onRequest(
     timeoutSeconds: 60,
   },
   async (req, res) => {
+    // Vérifier l'authentification admin
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Unauthorized - Bearer token required' });
+      return;
+    }
+    try {
+      const token = authHeader.split('Bearer ')[1];
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      if (decodedToken.role !== 'admin') {
+        const userDoc = await admin.firestore().collection('users').doc(decodedToken.uid).get();
+        if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
+          res.status(403).json({ error: 'Forbidden - Admin access required' });
+          return;
+        }
+      }
+    } catch (authError) {
+      res.status(401).json({ error: 'Invalid token' });
+      return;
+    }
+
     const db = admin.firestore();
     const searchName = req.query.name as string || 'julien';
     const searchShortId = req.query.shortId as string || '';

@@ -38,19 +38,6 @@ export const traceFunction = <T extends (...args: any[]) => any>(
   _source?: string
 ): T => fn;
 
-// ====== STUBS for disabled imports (matches index.ts) ======
-export const decryptPhoneNumber = (encrypted: string): string => encrypted;
-export const syncPaymentStatus = async (...args: any[]): Promise<void> => {
-  console.log("[stub] syncPaymentStatus", ...args);
-};
-export const findCallSessionByPaymentId = async (
-  database: any,
-  paymentId: string
-): Promise<any> => {
-  console.log("[stub] findCallSessionByPaymentId", database, paymentId);
-  return null;
-};
-
 // ====== INTERFACES ======
 export interface UltraDebugMetadata {
   sessionId: string;

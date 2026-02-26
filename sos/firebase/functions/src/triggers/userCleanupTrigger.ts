@@ -13,13 +13,53 @@ import { logger } from "firebase-functions/v2";
 // Configuration du trigger
 const triggerConfig = {
   region: "europe-west3",
-  memory: "256MiB" as const,
-  timeoutSeconds: 60,
+  memory: "512MiB" as const,
+  timeoutSeconds: 120,
 };
 
 /**
+ * Batch-delete all docs matching a query, with pagination (500 per batch).
+ * Recurses until no docs remain.
+ */
+async function deleteQueryResults(
+  query: FirebaseFirestore.Query,
+  db: FirebaseFirestore.Firestore
+): Promise<number> {
+  const snapshot = await query.limit(500).get();
+  if (snapshot.empty) return 0;
+
+  const batch = db.batch();
+  snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+  await batch.commit();
+
+  const count = snapshot.size;
+  if (count === 500) {
+    // More docs may remain — recurse
+    return count + await deleteQueryResults(query, db);
+  }
+  return count;
+}
+
+/**
+ * Delete a single doc by collection/docId if it exists.
+ */
+async function deleteDocIfExists(
+  db: FirebaseFirestore.Firestore,
+  collection: string,
+  docId: string
+): Promise<boolean> {
+  const ref = db.collection(collection).doc(docId);
+  const doc = await ref.get();
+  if (doc.exists) {
+    await ref.delete();
+    return true;
+  }
+  return false;
+}
+
+/**
  * Trigger déclenché quand un document est supprimé de la collection 'users'
- * Supprime automatiquement le profil correspondant dans 'sos_profiles'
+ * Nettoie toutes les collections associées à cet utilisateur
  */
 export const onUserDeleted = onDocumentDeleted(
   {
@@ -36,69 +76,92 @@ export const onUserDeleted = onDocumentDeleted(
     });
 
     const db = admin.firestore();
-    const batch = db.batch();
-    let deletedCount = 0;
+    let totalDeleted = 0;
+    const cleanedCollections: string[] = [];
 
     try {
-      // 1. Supprimer le profil dans sos_profiles
-      const profileRef = db.collection("sos_profiles").doc(userId);
-      const profileDoc = await profileRef.get();
+      // ====================================================================
+      // 1. Documents directs (par userId comme doc ID)
+      // ====================================================================
+      const directDocCollections = [
+        "sos_profiles",
+        "kyc_documents",
+        "chatters",
+        "bloggers",
+        "chatter_call_counts",
+        "chatter_badges",
+      ];
 
-      if (profileDoc.exists) {
-        batch.delete(profileRef);
-        deletedCount++;
-        logger.info(`[USER_CLEANUP] Profil sos_profiles trouvé et marqué pour suppression: ${userId}`);
-      } else {
-        logger.info(`[USER_CLEANUP] Pas de profil sos_profiles pour: ${userId}`);
+      for (const collection of directDocCollections) {
+        const deleted = await deleteDocIfExists(db, collection, userId);
+        if (deleted) {
+          totalDeleted++;
+          cleanedCollections.push(collection);
+          logger.info(`[USER_CLEANUP] Supprimé ${collection}/${userId}`);
+        }
       }
 
-      // 2. Supprimer les documents KYC associés
-      const kycRef = db.collection("kyc_documents").doc(userId);
-      const kycDoc = await kycRef.get();
+      // ====================================================================
+      // 2. Collections query-based (where userId/chatterId/providerId == deletedUserId)
+      // ====================================================================
+      const queryCollections: Array<{ collection: string; field: string }> = [
+        // Notifications
+        { collection: "notifications", field: "userId" },
+        { collection: "chatter_notifications", field: "chatterId" },
+        { collection: "blogger_notifications", field: "bloggerId" },
+        { collection: "influencer_notifications", field: "influencerId" },
+        { collection: "group_admin_notifications", field: "groupAdminId" },
+        // Commissions
+        { collection: "chatter_commissions", field: "chatterId" },
+        { collection: "blogger_commissions", field: "bloggerId" },
+        { collection: "influencer_commissions", field: "influencerId" },
+        { collection: "group_admin_commissions", field: "groupAdminId" },
+        { collection: "affiliate_commissions", field: "affiliateId" },
+        // Withdrawals
+        { collection: "chatter_withdrawals", field: "chatterId" },
+        { collection: "blogger_withdrawals", field: "bloggerId" },
+        { collection: "influencer_withdrawals", field: "influencerId" },
+        { collection: "group_admin_withdrawals", field: "groupAdminId" },
+        // Activity
+        { collection: "chatter_posts", field: "chatterId" },
+        { collection: "chatter_activity_feed", field: "chatterId" },
+        // Telegram
+        { collection: "telegram_onboarding_links", field: "userId" },
+        // Provider logs
+        { collection: "provider_status_logs", field: "providerId" },
+        { collection: "provider_action_logs", field: "providerId" },
+      ];
 
-      if (kycDoc.exists) {
-        batch.delete(kycRef);
-        deletedCount++;
-        logger.info(`[USER_CLEANUP] Document KYC trouvé et marqué pour suppression: ${userId}`);
+      for (const { collection, field } of queryCollections) {
+        const query = db.collection(collection).where(field, "==", userId);
+        const count = await deleteQueryResults(query, db);
+        if (count > 0) {
+          totalDeleted += count;
+          cleanedCollections.push(`${collection}(${count})`);
+          logger.info(`[USER_CLEANUP] Supprimé ${count} docs de ${collection}`);
+        }
       }
 
-      // 3. Supprimer les notifications de l'utilisateur
-      const notificationsSnap = await db
-        .collection("notifications")
-        .where("userId", "==", userId)
-        .limit(100)
-        .get();
-
-      notificationsSnap.docs.forEach((doc) => {
-        batch.delete(doc.ref);
-        deletedCount++;
-      });
-
-      if (notificationsSnap.size > 0) {
-        logger.info(`[USER_CLEANUP] ${notificationsSnap.size} notifications marquées pour suppression`);
-      }
-
-      // 4. Logger l'action dans admin_audit_logs
-      const auditRef = db.collection("admin_audit_logs").doc();
-      batch.set(auditRef, {
+      // ====================================================================
+      // 3. Logger l'action dans admin_audit_logs
+      // ====================================================================
+      await db.collection("admin_audit_logs").add({
         action: "user_cleanup_cascade",
         userId: userId,
         deletedUserEmail: deletedUserData?.email || "unknown",
         deletedUserRole: deletedUserData?.role || "unknown",
-        deletedDocuments: deletedCount,
+        deletedDocuments: totalDeleted,
+        cleanedCollections,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
         triggeredBy: "onUserDeleted_trigger",
       });
 
-      // Exécuter le batch
-      await batch.commit();
-
       logger.info(`[USER_CLEANUP] Nettoyage terminé pour ${userId}`, {
-        deletedDocuments: deletedCount,
-        collections: ["sos_profiles", "kyc_documents", "notifications"],
+        deletedDocuments: totalDeleted,
+        cleanedCollections,
       });
 
-      return { success: true, deletedDocuments: deletedCount };
+      return { success: true, deletedDocuments: totalDeleted };
     } catch (error) {
       logger.error(`[USER_CLEANUP] Erreur lors du nettoyage pour ${userId}:`, error);
       throw error;

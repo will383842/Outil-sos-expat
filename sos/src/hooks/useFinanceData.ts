@@ -566,10 +566,10 @@ export function useFinanceKPIs(dateRange: { from: Date; to: Date }): UseFinanceK
         where('status', 'in', ['active', 'trialing'])
       );
 
-      // Fetch canceled subscriptions for churn rate calculation
+      // Fetch cancelled subscriptions for churn rate calculation
       const canceledSubscriptionsQuery = query(
         collection(db, 'subscriptions'),
-        where('status', '==', 'canceled'),
+        where('status', 'in', ['cancelled', 'canceled']),
         where('canceledAt', '>=', Timestamp.fromDate(dateRange.from)),
         where('canceledAt', '<=', Timestamp.fromDate(dateRange.to))
       );

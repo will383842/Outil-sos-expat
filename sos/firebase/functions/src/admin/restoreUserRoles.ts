@@ -214,7 +214,7 @@ export const syncAllCustomClaims = onCall(
       // Récupérer tous les utilisateurs avec un rôle défini
       const usersSnapshot = await db
         .collection("users")
-        .where("role", "in", ["client", "lawyer", "expat", "admin"])
+        .where("role", "in", ["client", "lawyer", "expat", "admin", "chatter", "influencer", "blogger", "groupAdmin"])
         .get();
 
       console.log(`[syncAllCustomClaims] Trouvé ${usersSnapshot.size} utilisateurs à synchroniser`);

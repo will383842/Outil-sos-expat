@@ -90,6 +90,7 @@ function buildTestVariables(eventType: TelegramEventType): NewRegistrationVars |
   switch (eventType) {
     case "new_registration":
       return {
+        ROLE: "Avocat",
         ROLE_FR: "Avocat",
         EMAIL: "test@example.com",
         PHONE: "+33612345678",
@@ -102,6 +103,7 @@ function buildTestVariables(eventType: TelegramEventType): NewRegistrationVars |
       return {
         CLIENT_NAME: "Jean Dupont",
         PROVIDER_NAME: "Marie Martin",
+        PROVIDER_TYPE: "Avocat",
         PROVIDER_TYPE_FR: "Avocat",
         DURATION_MINUTES: "15",
         DATE: date,
@@ -129,6 +131,7 @@ function buildTestVariables(eventType: TelegramEventType): NewRegistrationVars |
     case "new_provider":
       return {
         PROVIDER_NAME: "Pierre Durand",
+        PROVIDER_TYPE: "Avocat",
         PROVIDER_TYPE_FR: "Avocat",
         EMAIL: "pierre.durand@example.com",
         PHONE: "+33698765432",
@@ -159,6 +162,7 @@ function buildTestVariables(eventType: TelegramEventType): NewRegistrationVars |
 
     case "security_alert":
       return {
+        ALERT_TYPE: "Connexion suspecte",
         ALERT_TYPE_FR: "Connexion suspecte",
         USER_EMAIL: "user@example.com",
         IP_ADDRESS: "192.168.1.100",
@@ -171,6 +175,7 @@ function buildTestVariables(eventType: TelegramEventType): NewRegistrationVars |
     case "withdrawal_request":
       return {
         USER_NAME: "Julie Moreau",
+        USER_TYPE: "Influenceur",
         USER_TYPE_FR: "Influenceur",
         AMOUNT: "150",
         PAYMENT_METHOD: "Virement bancaire",

@@ -471,7 +471,7 @@ export const monthlySecretsConfigBackup = onSchedule(
  */
 export const triggerSecretsAudit = functions
   .region("europe-west1")
-  .runWith({ timeoutSeconds: 120, memory: "128MB" })
+  .runWith({ timeoutSeconds: 120, memory: "256MB" })
   .https.onCall(async (_data, context) => {
     // Vérifier l'authentification admin
     if (!context.auth) {
@@ -480,7 +480,7 @@ export const triggerSecretsAudit = functions
 
     const userDoc = await admin.firestore().collection("users").doc(context.auth.uid).get();
     const userData = userDoc.data();
-    if (userData?.role !== "admin" && userData?.role !== "dev") {
+    if (userData?.role !== "admin") {
       throw new functions.https.HttpsError("permission-denied", "Admin access required");
     }
 
@@ -542,7 +542,7 @@ export const listSecretsAudits = functions
 
     const userDoc = await admin.firestore().collection("users").doc(context.auth.uid).get();
     const userData = userDoc.data();
-    if (userData?.role !== "admin" && userData?.role !== "dev") {
+    if (userData?.role !== "admin") {
       throw new functions.https.HttpsError("permission-denied", "Admin access required");
     }
 
@@ -585,7 +585,7 @@ export const getSecretsRestoreGuide = functions
 
     const userDoc = await admin.firestore().collection("users").doc(context.auth.uid).get();
     const userData = userDoc.data();
-    if (userData?.role !== "admin" && userData?.role !== "dev") {
+    if (userData?.role !== "admin") {
       throw new functions.https.HttpsError("permission-denied", "Admin access required");
     }
 

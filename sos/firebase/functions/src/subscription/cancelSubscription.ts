@@ -60,7 +60,7 @@ const getDb = () => {
 // TYPES
 // ============================================================================
 
-type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired' | 'paused';
+type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused';
 
 interface SubscriptionData {
   providerId: string;
@@ -446,7 +446,7 @@ async function sendReactivationEmail(
  */
 async function logSubscriptionAction(
   providerId: string,
-  action: 'canceled' | 'reactivated',
+  action: 'cancelled' | 'reactivated',
   details: Record<string, unknown>
 ): Promise<void> {
   try {
@@ -515,10 +515,10 @@ export const cancelSubscription = functions
         throw new functions.https.HttpsError('not-found', 'No active subscription found');
       }
 
-      if (subData.status === 'canceled' || subData.status === 'expired') {
+      if (subData.status === 'cancelled' || subData.status === 'expired') {
         throw new functions.https.HttpsError(
           'failed-precondition',
-          'Subscription is already canceled or expired'
+          'Subscription is already cancelled or expired'
         );
       }
 
@@ -562,7 +562,7 @@ export const cancelSubscription = functions
       await sendCancellationEmail(providerData, endDate, reason);
 
       // 9. Log the action
-      await logSubscriptionAction(providerId, 'canceled', {
+      await logSubscriptionAction(providerId, 'cancelled', {
         stripeSubscriptionId: subData.stripeSubscriptionId,
         reason: reason || 'user_requested',
         currentPeriodEnd: endDate.toISOString(),
@@ -570,11 +570,11 @@ export const cancelSubscription = functions
         planId: subData.planId
       });
 
-      console.log(`[CancelSubscription] Subscription canceled for provider ${providerId}, ends ${endDate.toISOString()}`);
+      console.log(`[CancelSubscription] Subscription cancelled for provider ${providerId}, ends ${endDate.toISOString()}`);
 
       return {
         success: true,
-        message: 'Subscription will be canceled at the end of the current period',
+        message: 'Subscription will be cancelled at the end of the current period',
         currentPeriodEnd: endDate.toISOString(),
         cancelAtPeriodEnd: true
       };
@@ -636,7 +636,7 @@ export const reactivateSubscription = functions
         throw new functions.https.HttpsError('not-found', 'No active subscription found');
       }
 
-      if (subData.status === 'canceled' || subData.status === 'expired') {
+      if (subData.status === 'cancelled' || subData.status === 'expired') {
         throw new functions.https.HttpsError(
           'failed-precondition',
           'Subscription has already ended. Please create a new subscription.'
@@ -774,7 +774,7 @@ export const pauseSubscription = functions
       });
 
       // Log the action
-      await logSubscriptionAction(providerId, 'canceled', {
+      await logSubscriptionAction(providerId, 'cancelled', {
         action: 'paused',
         stripeSubscriptionId: subData.stripeSubscriptionId,
         tier: subData.tier,

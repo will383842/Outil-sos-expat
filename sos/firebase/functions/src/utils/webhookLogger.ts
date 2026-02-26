@@ -10,10 +10,10 @@
 
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
-import { defineSecret } from 'firebase-functions/params';
+import { SENTRY_DSN } from '../lib/secrets';
 
-// Secret Sentry DSN (optionnel)
-export const SENTRY_DSN = defineSecret('SENTRY_DSN');
+// Re-export SENTRY_DSN for consumers that import from here
+export { SENTRY_DSN };
 
 // Lazy initialization to prevent deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =

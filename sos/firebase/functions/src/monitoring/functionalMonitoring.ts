@@ -733,7 +733,7 @@ async function checkPaymentFlowHealth(): Promise<void> {
 
     const stripeFailed = stripePayments.docs.filter(doc => {
       const status = doc.data().status;
-      return status === 'failed' || status === 'canceled';
+      return status === 'failed' || status === 'cancelled' || status === 'canceled';
     });
 
     // ========== PAYPAL ==========
@@ -943,6 +943,39 @@ export const runCriticalFunctionalCheck = onSchedule(
 /**
  * Nettoyage des anciennes alertes et métriques
  */
+/** Exported handler for consolidation */
+export async function cleanupFunctionalDataHandler(): Promise<void> {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  try {
+    const oldAlerts = await db().collection(CONFIG.ALERTS_COLLECTION)
+      .where('resolved', '==', true)
+      .where('createdAt', '<', admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
+      .limit(500)
+      .get();
+    if (!oldAlerts.empty) {
+      const batch = db().batch();
+      oldAlerts.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      functionsLogger.info(`[FunctionalMonitoring] Cleaned ${oldAlerts.size} old alerts`);
+    }
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+    const oldMetrics = await db().collection(CONFIG.METRICS_COLLECTION)
+      .where('timestamp', '<', admin.firestore.Timestamp.fromDate(sixtyDaysAgo))
+      .limit(500)
+      .get();
+    if (!oldMetrics.empty) {
+      const batch = db().batch();
+      oldMetrics.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      functionsLogger.info(`[FunctionalMonitoring] Cleaned ${oldMetrics.size} old metrics`);
+    }
+  } catch (error) {
+    functionsLogger.error('[FunctionalMonitoring] Cleanup failed:', error);
+  }
+}
+
 export const cleanupFunctionalData = onSchedule(
   {
     schedule: '0 4 * * 0', // Dimanche 4h
@@ -951,45 +984,7 @@ export const cleanupFunctionalData = onSchedule(
     memory: '256MiB',
     cpu: 0.083
   },
-  async () => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    try {
-      // Supprimer les anciennes alertes résolues
-      const oldAlerts = await db().collection(CONFIG.ALERTS_COLLECTION)
-        .where('resolved', '==', true)
-        .where('createdAt', '<', admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
-        .limit(500)
-        .get();
-
-      if (!oldAlerts.empty) {
-        const batch = db().batch();
-        oldAlerts.docs.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        functionsLogger.info(`[FunctionalMonitoring] Cleaned ${oldAlerts.size} old alerts`);
-      }
-
-      // Garder 60 jours de métriques
-      const sixtyDaysAgo = new Date();
-      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-
-      const oldMetrics = await db().collection(CONFIG.METRICS_COLLECTION)
-        .where('timestamp', '<', admin.firestore.Timestamp.fromDate(sixtyDaysAgo))
-        .limit(500)
-        .get();
-
-      if (!oldMetrics.empty) {
-        const batch = db().batch();
-        oldMetrics.docs.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        functionsLogger.info(`[FunctionalMonitoring] Cleaned ${oldMetrics.size} old metrics`);
-      }
-
-    } catch (error) {
-      functionsLogger.error('[FunctionalMonitoring] Cleanup failed:', error);
-    }
-  }
+  cleanupFunctionalDataHandler
 );
 
 // ============================================================================
@@ -1136,7 +1131,7 @@ export const triggerFunctionalCheck = functions
     // Vérifier que c'est un admin
     const userDoc = await db().collection('users').doc(context.auth.uid).get();
     const userData = userDoc.data();
-    if (userData?.role !== 'admin' && userData?.role !== 'dev') {
+    if (userData?.role !== 'admin') {
       throw new functions.https.HttpsError('permission-denied', 'Admin access required');
     }
 

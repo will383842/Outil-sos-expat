@@ -142,6 +142,7 @@ async function aggregateStatsForMonth(month: string): Promise<{ providersProcess
   const providersSnapshot = await db
     .collection("users")
     .where("role", "in", ["lawyer", "expat"])
+    .limit(5000)
     .get();
 
   console.log(`📊 [ProviderStats] Found ${providersSnapshot.size} providers`);

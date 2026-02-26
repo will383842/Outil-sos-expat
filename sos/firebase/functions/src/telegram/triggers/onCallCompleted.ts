@@ -262,10 +262,12 @@ export const telegramOnCallCompleted = onDocumentUpdated(
       const completedDate = after.completedAt || Timestamp.now();
 
       // 8. Build notification variables
+      const providerTypeFrench = getProviderTypeFrench(providerType);
       const variables = {
         CLIENT_NAME: clientName,
         PROVIDER_NAME: providerName,
-        PROVIDER_TYPE_FR: getProviderTypeFrench(providerType),
+        PROVIDER_TYPE: providerTypeFrench,
+        PROVIDER_TYPE_FR: providerTypeFrench, // backward compat
         DURATION_MINUTES: durationMinutes.toString(),
         DATE: formatDateParis(completedDate),
         TIME: formatTimeParis(completedDate),

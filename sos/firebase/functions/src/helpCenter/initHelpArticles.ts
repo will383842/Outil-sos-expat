@@ -2,6 +2,7 @@
 // Cloud Function pour initialiser les articles du Help Center
 
 import { onRequest } from 'firebase-functions/v2/https';
+import * as admin from 'firebase-admin';
 import {
   initializeHelpArticle,
   initializeArticlesBatch,
@@ -10,6 +11,36 @@ import {
   HelpArticleData
 } from '../services/helpArticles/helpArticlesInit';
 import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
+
+/**
+ * Vérifie que la requête provient d'un admin authentifié.
+ * Retourne le uid de l'admin, ou envoie une réponse d'erreur et retourne null.
+ */
+async function verifyAdminRequest(
+  req: import('firebase-functions/v2/https').Request,
+  res: import('express').Response
+): Promise<string | null> {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized - Bearer token required' });
+    return null;
+  }
+  try {
+    const token = authHeader.split('Bearer ')[1];
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    if (decodedToken.role !== 'admin') {
+      const userDoc = await admin.firestore().collection('users').doc(decodedToken.uid).get();
+      if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
+        res.status(403).json({ error: 'Forbidden - Admin access required' });
+        return null;
+      }
+    }
+    return decodedToken.uid;
+  } catch {
+    res.status(401).json({ error: 'Invalid token' });
+    return null;
+  }
+}
 
 /**
  * Cloud Function: Initialise un seul article
@@ -29,6 +60,9 @@ export const initSingleHelpArticle = onRequest(
       res.status(405).json({ error: 'Method not allowed' });
       return;
     }
+
+    const adminUid = await verifyAdminRequest(req, res);
+    if (!adminUid) return;
 
     try {
       const { article, dryRun = false } = req.body as {
@@ -74,6 +108,9 @@ export const initHelpArticlesBatch = onRequest(
       return;
     }
 
+    const adminUid = await verifyAdminRequest(req, res);
+    if (!adminUid) return;
+
     try {
       const { articles, batchSize = 3, dryRun = false } = req.body as {
         articles: HelpArticleData[];
@@ -112,7 +149,10 @@ export const checkHelpCategories = onRequest(
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
   },
-  async (_req, res) => {
+  async (req, res) => {
+    const adminUid = await verifyAdminRequest(req, res);
+    if (!adminUid) return;
+
     try {
       const result = await checkCategoriesExist();
       res.status(200).json(result);
@@ -144,6 +184,9 @@ export const clearHelpArticles = onRequest(
       res.status(405).json({ error: 'Method not allowed' });
       return;
     }
+
+    const adminUid = await verifyAdminRequest(req, res);
+    if (!adminUid) return;
 
     try {
       const { confirmDelete } = req.body as { confirmDelete?: string };

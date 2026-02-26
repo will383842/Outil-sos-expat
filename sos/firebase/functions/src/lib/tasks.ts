@@ -250,7 +250,6 @@ export async function scheduleCallTask(
     console.log(`📋 [CloudTasks][${debugId}] Auth secret:`, {
       hasValue: !!authSecret,
       length: authSecret?.length || 0,
-      prefix: authSecret ? authSecret.substring(0, 8) + '...' : 'MISSING'
     });
 
     if (!authSecret) {

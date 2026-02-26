@@ -3887,6 +3887,238 @@ export const paypalWebhook = onRequest(
           }
           break;
 
+        case "PAYMENT.CAPTURE.DENIED": {
+          // ========== Webhook fix: Handle denied captures ==========
+          // CAPTURE.DENIED = payment failed to capture (funds not collected)
+          // No provider debit needed since payment was never captured
+          const deniedResource = event.resource;
+          const deniedCaptureId = deniedResource?.id;
+          const deniedOrderId = deniedResource?.supplementary_data?.related_ids?.order_id;
+          const deniedAmount = parseFloat(deniedResource?.amount?.value || "0");
+          const deniedCurrency = deniedResource?.amount?.currency_code || "EUR";
+
+          console.log("🚫 [PAYPAL] Capture DENIED:", deniedCaptureId, `${deniedAmount} ${deniedCurrency}`);
+
+          try {
+            // Find the paypal_orders doc
+            if (deniedOrderId) {
+              const orderDoc = await db.collection("paypal_orders").doc(deniedOrderId).get();
+              if (orderDoc.exists) {
+                const orderData = orderDoc.data();
+                const deniedCallSessionId = orderData?.callSessionId;
+
+                // Update paypal_orders status
+                await orderDoc.ref.update({
+                  status: "denied",
+                  deniedAt: admin.firestore.FieldValue.serverTimestamp(),
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+
+                // Update call_sessions payment status
+                if (deniedCallSessionId) {
+                  await db.collection("call_sessions").doc(deniedCallSessionId).update({
+                    "payment.status": "denied",
+                    "payment.deniedAt": admin.firestore.FieldValue.serverTimestamp(),
+                    "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
+                  });
+                }
+
+                // Update payments doc
+                const deniedPaymentQuery = await db.collection("payments")
+                  .where("paypalOrderId", "==", deniedOrderId)
+                  .limit(1)
+                  .get();
+                if (!deniedPaymentQuery.empty) {
+                  await deniedPaymentQuery.docs[0].ref.update({
+                    status: "denied",
+                    deniedAt: admin.firestore.FieldValue.serverTimestamp(),
+                  });
+                }
+              }
+            }
+
+            // Alert admin
+            await db.collection("admin_notifications").add({
+              type: "paypal_capture_denied",
+              severity: "high",
+              title: "PayPal Capture DENIED",
+              message: `Capture ${deniedCaptureId} denied for order ${deniedOrderId} (${deniedAmount} ${deniedCurrency})`,
+              data: {
+                captureId: deniedCaptureId,
+                orderId: deniedOrderId,
+                amount: deniedAmount,
+                currency: deniedCurrency,
+              },
+              read: false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          } catch (deniedError) {
+            console.error("❌ [PAYPAL] Error handling CAPTURE.DENIED:", deniedError);
+            await db.collection("admin_alerts").add({
+              type: "paypal_capture_denied_error",
+              severity: "critical",
+              title: "Erreur traitement PayPal CAPTURE.DENIED",
+              message: `Erreur lors du traitement de CAPTURE.DENIED pour ${deniedCaptureId}`,
+              data: {
+                captureId: deniedCaptureId,
+                orderId: deniedOrderId,
+                error: deniedError instanceof Error ? deniedError.message : "Unknown",
+              },
+              read: false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+          break;
+        }
+
+        case "PAYMENT.CAPTURE.REVERSED": {
+          // ========== Webhook fix: Handle reversed captures ==========
+          // CAPTURE.REVERSED = post-capture reversal (chargeback, bank reversal)
+          // Must debit provider + cancel commissions (similar to REFUNDED)
+          const reversedResource = event.resource;
+          const reversedCaptureId = reversedResource?.id;
+          const reversedAmount = parseFloat(reversedResource?.amount?.value || "0");
+          const reversedCurrency = reversedResource?.amount?.currency_code || "EUR";
+
+          console.log("⚠️ [PAYPAL] Capture REVERSED:", reversedCaptureId, `${reversedAmount} ${reversedCurrency}`);
+
+          if (reversedCaptureId && reversedAmount > 0) {
+            try {
+              // Find original payment by captureId or orderId
+              let reversedPaymentDoc;
+              const reversedPaymentQuery = await db.collection("payments")
+                .where("paypalCaptureId", "==", reversedCaptureId)
+                .limit(1)
+                .get();
+              reversedPaymentDoc = reversedPaymentQuery.docs[0];
+
+              if (!reversedPaymentDoc) {
+                const reversedOrderId = reversedResource?.supplementary_data?.related_ids?.order_id;
+                if (reversedOrderId) {
+                  const orderPaymentQuery = await db.collection("payments")
+                    .where("paypalOrderId", "==", reversedOrderId)
+                    .limit(1)
+                    .get();
+                  reversedPaymentDoc = orderPaymentQuery.docs[0];
+                }
+              }
+
+              if (reversedPaymentDoc) {
+                const reversedPaymentData = reversedPaymentDoc.data();
+                const reversedProviderId = reversedPaymentData.providerId;
+                const reversedCallSessionId = reversedPaymentData.callSessionId;
+
+                if (reversedProviderId) {
+                  // Debit provider balance
+                  const { ProviderEarningsService } = await import("./ProviderEarningsService");
+                  const earningsService = new ProviderEarningsService(db);
+
+                  // Compute provider refund amount using stored ratio
+                  let providerReversalAmount: number;
+                  const storedProviderAmt = reversedPaymentData.providerAmountEuros || reversedPaymentData.providerAmount;
+                  const storedTotalAmt = reversedPaymentData.amountInEuros || reversedPaymentData.amount;
+                  if (storedProviderAmt && storedTotalAmt && storedTotalAmt > 0) {
+                    const providerRatio = storedProviderAmt / storedTotalAmt;
+                    providerReversalAmount = reversedAmount * providerRatio;
+                  } else {
+                    providerReversalAmount = reversedAmount * 0.61;
+                    console.warn(`⚠️ [PAYPAL] REVERSED: Using legacy 61% ratio`);
+                  }
+
+                  await earningsService.deductProviderBalance({
+                    providerId: reversedProviderId,
+                    amount: providerReversalAmount,
+                    currency: reversedCurrency,
+                    reason: `Reversal PayPal - Capture ${reversedCaptureId}`,
+                    callSessionId: reversedCallSessionId || undefined,
+                    metadata: {
+                      paypalCaptureId: reversedCaptureId,
+                      totalReversalAmount: reversedAmount,
+                      source: "paypal_webhook_reversal",
+                    },
+                  });
+
+                  console.log(`✅ [PAYPAL] Provider ${reversedProviderId} debited ${providerReversalAmount} ${reversedCurrency} (reversal)`);
+
+                  // Update payment status
+                  await reversedPaymentDoc.ref.update({
+                    status: "reversed",
+                    reversedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    reversalAmount: reversedAmount,
+                    providerReversalAmount: providerReversalAmount,
+                  });
+
+                  // Update call_sessions
+                  if (reversedCallSessionId) {
+                    await db.collection("call_sessions").doc(reversedCallSessionId).update({
+                      "payment.status": "reversed",
+                      "payment.reversedAt": admin.firestore.FieldValue.serverTimestamp(),
+                      "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                  }
+
+                  // Cancel ALL affiliate commissions (same as REFUNDED)
+                  if (reversedCallSessionId) {
+                    try {
+                      const cancelReason = `PayPal reversal: capture ${reversedCaptureId}`;
+                      const commissionResults = await Promise.allSettled([
+                        cancelChatterCommissions(reversedCallSessionId, cancelReason, "system_refund"),
+                        cancelInfluencerCommissions(reversedCallSessionId, cancelReason, "system_refund"),
+                        cancelBloggerCommissions(reversedCallSessionId, cancelReason, "system_refund"),
+                        cancelGroupAdminCommissions(reversedCallSessionId, cancelReason),
+                        cancelAffiliateCommissions(reversedCallSessionId, cancelReason, "system_refund"),
+                      ]);
+
+                      const commLabels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate'] as const;
+                      let commTotalCancelled = 0;
+                      for (let i = 0; i < commissionResults.length; i++) {
+                        const r = commissionResults[i];
+                        if (r.status === 'fulfilled') {
+                          commTotalCancelled += r.value.cancelledCount;
+                        } else {
+                          console.error(`[PAYPAL webhook] Failed to cancel ${commLabels[i]} commissions (reversal):`, r.reason);
+                        }
+                      }
+                      console.log(`✅ [PAYPAL webhook] Cancelled ${commTotalCancelled} commissions for reversed session ${reversedCallSessionId}`);
+                    } catch (commError) {
+                      console.error("❌ [PAYPAL webhook] Failed to cancel commissions (reversal):", commError);
+                    }
+                  }
+                } else {
+                  console.warn("⚠️ [PAYPAL] Reversal: No providerId found in payment document");
+                }
+              } else {
+                console.warn(`⚠️ [PAYPAL] Reversal: Could not find payment for capture ${reversedCaptureId}`);
+                await db.collection("paypal_refund_orphans").add({
+                  type: "reversal",
+                  captureId: reversedCaptureId,
+                  amount: reversedAmount,
+                  currency: reversedCurrency,
+                  rawResource: reversedResource,
+                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+              }
+            } catch (reversalError) {
+              console.error("❌ [PAYPAL] Error handling CAPTURE.REVERSED:", reversalError);
+              await db.collection("admin_alerts").add({
+                type: "paypal_reversal_handling_failed",
+                severity: "critical",
+                title: "Échec traitement reversal PayPal",
+                message: `Impossible de traiter le reversal PayPal ${reversedCaptureId}`,
+                data: {
+                  captureId: reversedCaptureId,
+                  amount: reversedAmount,
+                  currency: reversedCurrency,
+                  error: reversalError instanceof Error ? reversalError.message : "Unknown",
+                },
+                read: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+          }
+          break;
+        }
+
         case "PAYMENT.CAPTURE.REFUNDED":
           // ========== P0-1 FIX: Débiter le provider lors d'un remboursement PayPal ==========
           // Alignement avec Stripe qui débite le provider via deductProviderBalance()
@@ -4503,7 +4735,7 @@ export const createPayPalPayout = onCall(
     const userDoc = await db.collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+    if (!userData?.role || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Only admins can create payouts");
     }
 

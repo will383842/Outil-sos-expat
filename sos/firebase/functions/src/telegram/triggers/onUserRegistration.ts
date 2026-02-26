@@ -152,7 +152,8 @@ export async function handleTelegramUserRegistration(event: any) {
       const roleFr = translateRoleToFrench(role);
 
       const variables = {
-        ROLE_FR: roleFr,
+        ROLE: roleFr,
+        ROLE_FR: roleFr, // backward compat
         EMAIL: email,
         PHONE: phoneNumber,
         COUNTRY: country,

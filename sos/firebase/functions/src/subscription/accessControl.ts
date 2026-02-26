@@ -49,7 +49,7 @@ export type { SubscriptionStatus, SubscriptionTier };
 export type AiAccessDeniedReason =
   | 'no_subscription'
   | 'subscription_expired'
-  | 'subscription_canceled'
+  | 'subscription_cancelled'
   | 'payment_failed'
   | 'quota_exhausted'
   | 'trial_expired'
@@ -532,8 +532,8 @@ export const checkAiAccess = functions
         } as AiAccessCheckResult;
       }
 
-      // 7. Verification des autres statuts (canceled, expired, paused)
-      if (status === 'canceled') {
+      // 7. Verification des autres statuts (cancelled, expired, paused)
+      if (status === 'cancelled') {
         // Verifier si acces jusqu'a fin de periode
         const periodEnd = subscription.currentPeriodEnd?.toDate ? subscription.currentPeriodEnd.toDate() : null;
 
@@ -557,7 +557,7 @@ export const checkAiAccess = functions
 
         return {
           allowed: false,
-          reason: 'subscription_canceled',
+          reason: 'subscription_cancelled',
           currentUsage: usage.currentPeriodCalls || 0,
           limit: 0,
           remaining: 0,
@@ -1069,7 +1069,7 @@ export async function checkAiAccessInternal(providerId: string): Promise<AiAcces
   // 7. Autres statuts
   return {
     allowed: false,
-    reason: status === 'canceled' ? 'subscription_canceled' : 'subscription_expired',
+    reason: status === 'cancelled' ? 'subscription_cancelled' : 'subscription_expired',
     currentUsage: usage.currentPeriodCalls || 0,
     limit: 0,
     remaining: 0,
@@ -1565,9 +1565,9 @@ export async function checkAndIncrementAiUsageAtomic(providerId: string): Promis
       };
     }
 
-    // ========== Autres statuts (canceled, expired, paused, suspended) ==========
+    // ========== Autres statuts (cancelled, expired, paused, suspended) ==========
     const reason: AiAccessDeniedReason =
-      status === 'canceled' ? 'subscription_canceled' :
+      status === 'cancelled' ? 'subscription_cancelled' :
       status === 'suspended' ? 'payment_failed' :
       'subscription_expired';
 

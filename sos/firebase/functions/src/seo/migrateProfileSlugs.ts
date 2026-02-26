@@ -205,10 +205,24 @@ export const migrateProfileSlugs = onRequest(
     concurrency: 1,
   },
   async (req, res) => {
-    // Security: Only allow POST or require a secret key
-    const authKey = req.query.key || req.headers['x-migration-key'];
-    if (authKey !== 'sos-expat-migrate-2024') {
-      res.status(403).json({ error: 'Unauthorized. Provide ?key=sos-expat-migrate-2024' });
+    // Vérifier l'authentification admin
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Unauthorized - Bearer token required' });
+      return;
+    }
+    try {
+      const token = authHeader.split('Bearer ')[1];
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      if (decodedToken.role !== 'admin') {
+        const userDoc = await admin.firestore().collection('users').doc(decodedToken.uid).get();
+        if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
+          res.status(403).json({ error: 'Forbidden - Admin access required' });
+          return;
+        }
+      }
+    } catch {
+      res.status(401).json({ error: 'Invalid token' });
       return;
     }
 
@@ -360,10 +374,24 @@ export const auditProfileSlugs = onRequest(
     invoker: 'public', // Allow unauthenticated access (protected by API key)
   },
   async (req, res) => {
-    // Security check
-    const authKey = req.query.key || req.headers['x-migration-key'];
-    if (authKey !== 'sos-expat-migrate-2024') {
-      res.status(403).json({ error: 'Unauthorized. Provide ?key=sos-expat-migrate-2024' });
+    // Vérifier l'authentification admin
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Unauthorized - Bearer token required' });
+      return;
+    }
+    try {
+      const token = authHeader.split('Bearer ')[1];
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      if (decodedToken.role !== 'admin') {
+        const userDoc = await admin.firestore().collection('users').doc(decodedToken.uid).get();
+        if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
+          res.status(403).json({ error: 'Forbidden - Admin access required' });
+          return;
+        }
+      }
+    } catch {
+      res.status(401).json({ error: 'Invalid token' });
       return;
     }
 

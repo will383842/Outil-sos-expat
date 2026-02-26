@@ -16,35 +16,29 @@
  */
 
 import { createHash } from "crypto";
-import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions/v2";
 import Stripe from "stripe";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import {
+  GOOGLE_ADS_CUSTOMER_ID,
+  GOOGLE_ADS_PURCHASE_CONVERSION_ID,
+  GOOGLE_ADS_LEAD_CONVERSION_ID,
+  GOOGLE_ADS_DEVELOPER_TOKEN,
+  GOOGLE_ADS_REFRESH_TOKEN,
+  GOOGLE_ADS_CLIENT_ID,
+  GOOGLE_ADS_CLIENT_SECRET,
+} from "./lib/secrets";
 
-// ============================================================================
-// Configuration
-// ============================================================================
-
-/** Google Ads Customer ID (format: 123-456-7890 or 1234567890) */
-export const GOOGLE_ADS_CUSTOMER_ID = defineSecret("GOOGLE_ADS_CUSTOMER_ID");
-
-/** Google Ads Conversion Action ID for Purchase */
-export const GOOGLE_ADS_PURCHASE_CONVERSION_ID = defineSecret("GOOGLE_ADS_PURCHASE_CONVERSION_ID");
-
-/** Google Ads Conversion Action ID for Lead */
-export const GOOGLE_ADS_LEAD_CONVERSION_ID = defineSecret("GOOGLE_ADS_LEAD_CONVERSION_ID");
-
-/** Google Ads API Developer Token */
-export const GOOGLE_ADS_DEVELOPER_TOKEN = defineSecret("GOOGLE_ADS_DEVELOPER_TOKEN");
-
-/** Google OAuth Refresh Token */
-export const GOOGLE_ADS_REFRESH_TOKEN = defineSecret("GOOGLE_ADS_REFRESH_TOKEN");
-
-/** Google OAuth Client ID */
-export const GOOGLE_ADS_CLIENT_ID = defineSecret("GOOGLE_ADS_CLIENT_ID");
-
-/** Google OAuth Client Secret */
-export const GOOGLE_ADS_CLIENT_SECRET = defineSecret("GOOGLE_ADS_CLIENT_SECRET");
+// Re-export for consumers that import from here
+export {
+  GOOGLE_ADS_CUSTOMER_ID,
+  GOOGLE_ADS_PURCHASE_CONVERSION_ID,
+  GOOGLE_ADS_LEAD_CONVERSION_ID,
+  GOOGLE_ADS_DEVELOPER_TOKEN,
+  GOOGLE_ADS_REFRESH_TOKEN,
+  GOOGLE_ADS_CLIENT_ID,
+  GOOGLE_ADS_CLIENT_SECRET,
+};
 
 // ============================================================================
 // Interfaces

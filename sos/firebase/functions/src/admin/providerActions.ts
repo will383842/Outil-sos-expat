@@ -379,6 +379,13 @@ export const blockProvider = onCall(FUNCTION_CONFIG, async (req) => {
       banReason: reason,
     });
 
+    // Révoquer les tokens pour forcer une déconnexion immédiate
+    try {
+      await admin.auth().revokeRefreshTokens(providerId);
+    } catch (revokeErr) {
+      logger.warn(`[PROVIDER_ACTION] Could not revoke tokens for ${providerId}:`, revokeErr);
+    }
+
     await logProviderAction(adminUid, providerId, "BLOCK", reason);
     await notifyProvider(providerId, "provider_blocked", { action: "blocked", reason });
 
@@ -480,6 +487,13 @@ export const suspendProvider = onCall(FUNCTION_CONFIG, async (req) => {
 
     await updateProviderAtomic(providerId, suspensionData);
 
+    // Révoquer les tokens pour forcer une déconnexion immédiate
+    try {
+      await admin.auth().revokeRefreshTokens(providerId);
+    } catch (revokeErr) {
+      logger.warn(`[PROVIDER_ACTION] Could not revoke tokens for ${providerId}:`, revokeErr);
+    }
+
     await logProviderAction(adminUid, providerId, "SUSPEND", reason, { until });
     await notifyProvider(providerId, "provider_suspended", {
       action: "suspended",
@@ -572,8 +586,9 @@ export const softDeleteProvider = onCall(FUNCTION_CONFIG, async (req) => {
       deleteReason: reason || "Admin soft delete",
     });
 
-    // Disable Firebase Auth account
+    // Disable Firebase Auth account + révoquer les tokens
     try {
+      await admin.auth().revokeRefreshTokens(providerId);
       await admin.auth().updateUser(providerId, { disabled: true });
     } catch (authError) {
       logger.warn(`[PROVIDER_ACTION] Could not disable auth for ${providerId}:`, authError);
@@ -788,12 +803,18 @@ export const hardDeleteProvider = onCall(HARD_DELETE_CONFIG, async (req) => {
     // =========================================================================
     try {
       const notificationsQuery = getDb().collection("notifications").where("userId", "==", providerId);
-      const notifications = await notificationsQuery.get();
-      const notifBatch = getDb().batch();
-      notifications.docs.forEach((doc) => notifBatch.delete(doc.ref));
-      await notifBatch.commit();
+      let totalNotifDeleted = 0;
+      let notifBatch = await notificationsQuery.limit(500).get();
+      while (!notifBatch.empty) {
+        const batch = getDb().batch();
+        notifBatch.docs.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        totalNotifDeleted += notifBatch.size;
+        if (notifBatch.size < 500) break;
+        notifBatch = await notificationsQuery.limit(500).get();
+      }
       deletionSummary.deletedCollections.push("notifications");
-      logger.info(`[PROVIDER_ACTION] Deleted ${notifications.size} notifications for ${providerId}`);
+      logger.info(`[PROVIDER_ACTION] Deleted ${totalNotifDeleted} notifications for ${providerId}`);
     } catch (notifError) {
       logger.warn(`[PROVIDER_ACTION] Error deleting notifications:`, notifError);
     }

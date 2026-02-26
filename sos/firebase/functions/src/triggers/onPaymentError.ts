@@ -22,6 +22,7 @@
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import { logError } from "../utils/logs/logError";
+import { enqueueTelegramMessage } from "../telegram/queue/enqueue";
 
 interface PaymentErrorAlert {
   alertId: string;
@@ -176,25 +177,19 @@ ${emoji} <b>Erreur de paiement ${alert.priority.toUpperCase()}</b>
 🔗 <a href="https://console.firebase.google.com/project/sos-urgently-ac307/firestore/data/payment_records/${alert.paymentId}">Voir dans Firestore</a>
 `.trim();
 
-    // Send to each admin via their Telegram bot
+    // Send to each admin via Telegram global queue (rate-limited, with retries)
     const sendPromises = adminsSnapshot.docs.map(async (adminDoc) => {
       const adminData = adminDoc.data();
-      const telegramId = adminData.telegram_id;
+      const telegramId = adminData.telegram_id || adminData.telegramId;
 
       if (!telegramId) {
         return;
       }
 
-      // Create notification event for Telegram bot to process
-      await db.collection("telegram_notifications").add({
-        recipientId: telegramId,
-        message,
+      await enqueueTelegramMessage(telegramId, message, {
         parseMode: "HTML",
-        type: "payment_error_alert",
-        priority: alert.priority,
-        alertId: alert.alertId,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        processed: false,
+        priority: "realtime",
+        sourceEventType: "payment_error_alert",
       });
     });
 

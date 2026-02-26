@@ -64,7 +64,7 @@ const getDb = () => {
 // TYPES
 // ============================================================================
 
-type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired' | 'paused';
+type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused';
 
 interface AdminActionLog {
   adminId: string;
@@ -552,11 +552,11 @@ export const adminCancelSubscription = functions
         canceledAt = new Date();
 
         await getDb().doc(`subscriptions/${providerId}`).update({
-          status: 'canceled',
+          status: 'cancelled',
           cancelAtPeriodEnd: false,
           canceledAt: now,
           canceledBy: adminId,
-          cancelReason: reason || 'admin_canceled',
+          cancelReason: reason || 'admin_cancelled',
           updatedAt: now,
         });
       } else {
@@ -576,7 +576,7 @@ export const adminCancelSubscription = functions
           cancelAtPeriodEnd: true,
           canceledAt: now,
           canceledBy: adminId,
-          cancelReason: reason || 'admin_canceled',
+          cancelReason: reason || 'admin_cancelled',
           updatedAt: now,
         });
       }
@@ -584,9 +584,9 @@ export const adminCancelSubscription = functions
       // Logger dans subscription_logs
       await getDb().collection('subscription_logs').add({
         providerId,
-        action: 'subscription_canceled',
+        action: 'subscription_cancelled',
         immediate,
-        reason: reason || 'admin_canceled',
+        reason: reason || 'admin_cancelled',
         canceledBy: adminId,
         timestamp: now,
         stripeSubscriptionId,
@@ -616,7 +616,7 @@ export const adminCancelSubscription = functions
         providerId,
         immediate,
         effectiveCancelDate: canceledAt.toISOString(),
-        reason: reason || 'admin_canceled',
+        reason: reason || 'admin_cancelled',
       };
     } catch (error: any) {
       await logAdminAction(adminId, 'adminCancelSubscription', providerId, 'subscription', { immediate, reason }, false, error.message);
@@ -651,7 +651,7 @@ export const adminGetSubscriptionStats = functions
         active: 0,
         trialing: 0,
         past_due: 0,
-        canceled: 0,
+        cancelled: 0,
         expired: 0,
         paused: 0,
       };
@@ -689,7 +689,7 @@ export const adminGetSubscriptionStats = functions
         const createdAt = data.createdAt?.toDate?.();
         const canceledAt = data.canceledAt?.toDate?.();
 
-        if (createdAt && createdAt < oneMonthAgo && status !== 'canceled') {
+        if (createdAt && createdAt < oneMonthAgo && status !== 'cancelled') {
           activeLastMonth++;
         }
 

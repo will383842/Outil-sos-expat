@@ -484,6 +484,22 @@ async function checkErrorRate(): Promise<void> {
  * Job de monitoring exécuté 1×/jour à 8h
  * 2025-01-16: Réduit à quotidien pour économies maximales (low traffic)
  */
+/** Exported handler for consolidation */
+export async function runSystemHealthCheckHandler(): Promise<void> {
+  logger.info('[Monitoring] Starting system health check...');
+  try {
+    await Promise.all([
+      checkDLQHealth(),
+      checkBackupHealth(),
+      checkDisputeHealth(),
+      checkErrorRate()
+    ]);
+    logger.info('[Monitoring] Health check completed');
+  } catch (error) {
+    logger.error('[Monitoring] Health check failed:', error);
+  }
+}
+
 export const runSystemHealthCheck = onSchedule(
   {
     schedule: '0 8 * * *', // 8h Paris tous les jours
@@ -493,27 +509,35 @@ export const runSystemHealthCheck = onSchedule(
     cpu: 0.083,
     timeoutSeconds: 120
   },
-  async () => {
-    logger.info('[Monitoring] Starting system health check...');
-
-    try {
-      await Promise.all([
-        checkDLQHealth(),
-        checkBackupHealth(),
-        checkDisputeHealth(),
-        checkErrorRate()
-      ]);
-
-      logger.info('[Monitoring] Health check completed');
-    } catch (error) {
-      logger.error('[Monitoring] Health check failed:', error);
-    }
-  }
+  runSystemHealthCheckHandler
 );
 
 /**
  * Nettoyage des anciennes alertes (mensuel)
  */
+/** Exported handler for consolidation */
+export async function cleanupOldAlertsHandler(): Promise<void> {
+  const db = admin.firestore();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  try {
+    const oldAlerts = await db.collection(CONFIG.ALERTS_COLLECTION)
+      .where('acknowledged', '==', true)
+      .where('createdAt', '<', admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
+      .limit(500)
+      .get();
+
+    const batch = db.batch();
+    oldAlerts.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    logger.info(`[Monitoring] Cleaned up ${oldAlerts.size} old alerts`);
+  } catch (error) {
+    logger.error('[Monitoring] Alert cleanup failed:', error);
+  }
+}
+
 export const cleanupOldAlerts = onSchedule(
   {
     schedule: '0 5 1 * *', // 1er du mois à 5h
@@ -522,29 +546,7 @@ export const cleanupOldAlerts = onSchedule(
     memory: '256MiB',
     cpu: 0.083,
   },
-  async () => {
-    const db = admin.firestore();
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    try {
-      // Supprimer les alertes acknowledged de plus de 30 jours
-      const oldAlerts = await db.collection(CONFIG.ALERTS_COLLECTION)
-        .where('acknowledged', '==', true)
-        .where('createdAt', '<', admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
-        .limit(500)
-        .get();
-
-      const batch = db.batch();
-      oldAlerts.docs.forEach(doc => batch.delete(doc.ref));
-      await batch.commit();
-
-      logger.info(`[Monitoring] Cleaned up ${oldAlerts.size} old alerts`);
-    } catch (error) {
-      logger.error('[Monitoring] Alert cleanup failed:', error);
-    }
-  }
+  cleanupOldAlertsHandler
 );
 
 // ============================================================================
@@ -563,7 +565,7 @@ export const getActiveAlerts = functions
 
     const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
     const userData = userDoc.data();
-    if (userData?.role !== 'admin' && userData?.role !== 'dev') {
+    if (userData?.role !== 'admin') {
       throw new functions.https.HttpsError('permission-denied', 'Admin access required');
     }
 
@@ -600,7 +602,7 @@ export const acknowledgeAlert = functions
 
     const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
     const userData = userDoc.data();
-    if (userData?.role !== 'admin' && userData?.role !== 'dev') {
+    if (userData?.role !== 'admin') {
       throw new functions.https.HttpsError('permission-denied', 'Admin access required');
     }
 
@@ -639,7 +641,7 @@ export const getSystemHealthSummary = functions
 
     const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
     const userData = userDoc.data();
-    if (userData?.role !== 'admin' && userData?.role !== 'dev') {
+    if (userData?.role !== 'admin') {
       throw new functions.https.HttpsError('permission-denied', 'Admin access required');
     }
 

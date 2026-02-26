@@ -6,7 +6,7 @@ import { setProviderAvailable } from "../callables/providerStatusManager";
 import { logError } from "../utils/logs/logError";
 import { logger as prodLogger } from "../utils/productionLogger";
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
-import { TASKS_AUTH_SECRET } from "../lib/secrets";
+import { TASKS_AUTH_SECRET, isValidTaskAuth } from "../lib/secrets";
 
 interface SetProviderAvailablePayload {
   providerId: string;
@@ -38,18 +38,11 @@ export async function runSetProviderAvailableTask(req: Request, res: Response): 
     console.log(`🔐 [${debugId}] Auth check:`, {
       hasAuthHeader: !!authHeader,
       hasExpectedAuth: !!expectedAuth,
-      authMatch: authHeader === expectedAuth
     });
 
-    if (!authHeader) {
-      console.error(`❌ [${debugId}] Missing X-Task-Auth header`);
-      res.status(401).send("Missing X-Task-Auth header");
-      return;
-    }
-
-    if (authHeader !== expectedAuth) {
-      console.error(`❌ [${debugId}] Invalid X-Task-Auth header`);
-      res.status(401).send("Invalid X-Task-Auth header");
+    if (!isValidTaskAuth(authHeader, expectedAuth)) {
+      console.error(`❌ [${debugId}] Invalid or missing X-Task-Auth header`);
+      res.status(401).send("Unauthorized");
       return;
     }
 

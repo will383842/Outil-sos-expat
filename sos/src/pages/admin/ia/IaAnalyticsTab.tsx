@@ -651,7 +651,7 @@ export const IaAnalyticsTab: React.FC = () => {
         }
 
         // Track churned
-        if (sub.status === 'canceled' || sub.status === 'expired') {
+        if (sub.status === 'cancelled' || sub.status === 'canceled' || sub.status === 'expired') {
           cohort.churned.add(sub.providerId);
         }
       });

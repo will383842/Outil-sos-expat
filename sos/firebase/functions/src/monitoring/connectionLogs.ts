@@ -452,7 +452,7 @@ export const getConnectionLogs = onCall(
       .doc(request.auth.uid)
       .get();
     const userData = userDoc.data();
-    if (userData?.role !== 'admin' && userData?.role !== 'dev') {
+    if (userData?.role !== 'admin') {
       throw new HttpsError('permission-denied', 'Admin access required');
     }
 
@@ -547,7 +547,7 @@ export const getConnectionStats = onCall(
       .doc(request.auth.uid)
       .get();
     const userData = userDoc.data();
-    if (userData?.role !== 'admin' && userData?.role !== 'dev') {
+    if (userData?.role !== 'admin') {
       throw new HttpsError('permission-denied', 'Admin access required');
     }
 

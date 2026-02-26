@@ -496,7 +496,7 @@ export class TwilioCallManager {
     providerLanguages?: string[];
   }): Promise<CallSessionState> {
     try {
-      const BYPASS_VALIDATIONS = process.env.TEST_BYPASS_VALIDATIONS === "1";
+      const BYPASS_VALIDATIONS = process.env.FUNCTIONS_EMULATOR === "true" && process.env.TEST_BYPASS_VALIDATIONS === "1";
       if (!params.sessionId || !params.providerId || !params.clientId) {
         throw new Error(
           "Paramètres requis manquants: sessionId, providerId, clientId"
@@ -748,7 +748,7 @@ export class TwilioCallManager {
     }
 
     logger.info(`📞 [${execId}] STEP 3: Session status OK, proceeding to payment validation`);
-    const BYPASS_VALIDATIONS = process.env.TEST_BYPASS_VALIDATIONS === "1";
+    const BYPASS_VALIDATIONS = process.env.FUNCTIONS_EMULATOR === "true" && process.env.TEST_BYPASS_VALIDATIONS === "1";
     logger.info(`📞 [${execId}]   TEST_BYPASS_VALIDATIONS: ${BYPASS_VALIDATIONS}`);
     logger.info(`📞 [${execId}]   call_sessions.payment.status: "${callSession.payment?.status}"`);
 

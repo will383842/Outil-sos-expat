@@ -20,9 +20,9 @@
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
+import { OUTIL_SERVICE_ACCOUNT_KEY } from "../lib/secrets";
 
 // Lazy initialization to avoid issues during deployment analysis
 const IS_DEPLOYMENT_ANALYSIS =
@@ -43,7 +43,8 @@ function ensureInitialized() {
 
 // Secret contenant le JSON du service account de l'Outil project
 // IMPORTANT: Créer ce secret avec la clé JSON du service account outils-sos-expat
-const OUTIL_SERVICE_ACCOUNT = defineSecret("OUTIL_SERVICE_ACCOUNT_KEY");
+// Imported from lib/secrets.ts as OUTIL_SERVICE_ACCOUNT_KEY
+const OUTIL_SERVICE_ACCOUNT = OUTIL_SERVICE_ACCOUNT_KEY;
 
 // Instance Firebase Admin pour l'Outil project (pour générer les custom tokens)
 let outilApp: admin.app.App | null = null;

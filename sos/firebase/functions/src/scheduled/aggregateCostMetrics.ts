@@ -521,6 +521,62 @@ async function checkThresholdsAndAlert(
  * Agregation des metriques de cout - Execute 1×/jour à 8h
  * 2025-01-16: Réduit à quotidien pour économies maximales
  */
+/** Exported handler for consolidation */
+export async function aggregateCostMetricsHandler(): Promise<void> {
+  ensureInitialized();
+  const startTime = Date.now();
+  const db = admin.firestore();
+
+  logger.info("[CostMetrics] Starting hourly cost metrics aggregation...");
+
+  try {
+    const rateLimits = await getRateLimitCounters(db);
+    logger.info("[CostMetrics] Rate limits retrieved:", { sms: rateLimits.sms, voice: rateLimits.voice });
+    const period = getPeriodString();
+    const monthlyAccumulated = await getMonthlyAccumulatedCounts(db, period);
+    const smsHourlyCount = rateLimits.sms?.count || 0;
+    const voiceHourlyCount = rateLimits.voice?.count || 0;
+    const smsMonthlyCost = calculateSmsCost(monthlyAccumulated.smsCount + smsHourlyCount);
+    const voiceMonthlyCost = calculateVoiceCost(monthlyAccumulated.voiceCount + voiceHourlyCount);
+    const smsProjectedCost = projectMonthlyCost(smsMonthlyCost);
+    const voiceProjectedCost = projectMonthlyCost(voiceMonthlyCost);
+    const totalProjectedCost = smsProjectedCost + voiceProjectedCost;
+    await storeCostMetrics(db, rateLimits.sms, rateLimits.voice, monthlyAccumulated);
+    await checkThresholdsAndAlert(db, smsProjectedCost, voiceProjectedCost, totalProjectedCost);
+    await db.collection("system_logs").add({
+      type: "cost_metrics_aggregation",
+      success: true,
+      smsCount: smsHourlyCount,
+      voiceCount: voiceHourlyCount,
+      smsProjectedCost, voiceProjectedCost, totalProjectedCost,
+      executionTimeMs: Date.now() - startTime,
+      createdAt: admin.firestore.Timestamp.now(),
+    });
+    logger.info(
+      `[CostMetrics] Aggregation completed successfully in ${Date.now() - startTime}ms. ` +
+        `Projected monthly cost: ${totalProjectedCost.toFixed(2)} EUR`
+    );
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error("[CostMetrics] Aggregation failed:", err);
+    await db.collection("system_logs").add({
+      type: "cost_metrics_aggregation",
+      success: false,
+      error: err.message,
+      executionTimeMs: Date.now() - startTime,
+      createdAt: admin.firestore.Timestamp.now(),
+    });
+    await db.collection("system_alerts").add({
+      type: "cost_aggregation_failure",
+      severity: "warning",
+      message: `Cost metrics aggregation failed: ${err.message}`,
+      acknowledged: false,
+      createdAt: admin.firestore.Timestamp.now(),
+    });
+    throw error;
+  }
+}
+
 export const aggregateCostMetrics = onSchedule(
   {
     schedule: "0 8 * * *", // 8h Paris tous les jours
@@ -530,85 +586,7 @@ export const aggregateCostMetrics = onSchedule(
     cpu: 0.083,
     timeoutSeconds: 120,
   },
-  async () => {
-    ensureInitialized();
-    const startTime = Date.now();
-    const db = admin.firestore();
-
-    logger.info("[CostMetrics] Starting hourly cost metrics aggregation...");
-
-    try {
-      // 1. Lire les compteurs rate_limits
-      const rateLimits = await getRateLimitCounters(db);
-
-      logger.info("[CostMetrics] Rate limits retrieved:", {
-        sms: rateLimits.sms,
-        voice: rateLimits.voice,
-      });
-
-      // 2. Recuperer les cumuls mensuels existants
-      const period = getPeriodString();
-      const monthlyAccumulated = await getMonthlyAccumulatedCounts(db, period);
-
-      // 3. Calculer les couts projetes
-      const smsHourlyCount = rateLimits.sms?.count || 0;
-      const voiceHourlyCount = rateLimits.voice?.count || 0;
-
-      const smsMonthlyCost = calculateSmsCost(monthlyAccumulated.smsCount + smsHourlyCount);
-      const voiceMonthlyCost = calculateVoiceCost(monthlyAccumulated.voiceCount + voiceHourlyCount);
-
-      const smsProjectedCost = projectMonthlyCost(smsMonthlyCost);
-      const voiceProjectedCost = projectMonthlyCost(voiceMonthlyCost);
-      const totalProjectedCost = smsProjectedCost + voiceProjectedCost;
-
-      // 4. Stocker les metriques
-      await storeCostMetrics(db, rateLimits.sms, rateLimits.voice, monthlyAccumulated);
-
-      // 5. Verifier les seuils et creer des alertes si necessaire
-      await checkThresholdsAndAlert(db, smsProjectedCost, voiceProjectedCost, totalProjectedCost);
-
-      // 6. Log dans system_logs pour audit
-      await db.collection("system_logs").add({
-        type: "cost_metrics_aggregation",
-        success: true,
-        smsCount: smsHourlyCount,
-        voiceCount: voiceHourlyCount,
-        smsProjectedCost,
-        voiceProjectedCost,
-        totalProjectedCost,
-        executionTimeMs: Date.now() - startTime,
-        createdAt: admin.firestore.Timestamp.now(),
-      });
-
-      logger.info(
-        `[CostMetrics] Aggregation completed successfully in ${Date.now() - startTime}ms. ` +
-          `Projected monthly cost: ${totalProjectedCost.toFixed(2)} EUR`
-      );
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error("[CostMetrics] Aggregation failed:", err);
-
-      // Log l'erreur
-      await db.collection("system_logs").add({
-        type: "cost_metrics_aggregation",
-        success: false,
-        error: err.message,
-        executionTimeMs: Date.now() - startTime,
-        createdAt: admin.firestore.Timestamp.now(),
-      });
-
-      // Creer une alerte systeme
-      await db.collection("system_alerts").add({
-        type: "cost_aggregation_failure",
-        severity: "warning",
-        message: `Cost metrics aggregation failed: ${err.message}`,
-        acknowledged: false,
-        createdAt: admin.firestore.Timestamp.now(),
-      });
-
-      throw error;
-    }
-  }
+  aggregateCostMetricsHandler
 );
 
 /**

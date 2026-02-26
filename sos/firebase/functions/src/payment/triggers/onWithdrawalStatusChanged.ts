@@ -21,7 +21,7 @@ import {
   DEFAULT_PAYMENT_CONFIG,
 } from "../types";
 import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
-import { getTelegramBotToken } from "../../lib/secrets";
+import { enqueueTelegramMessage } from "../../telegram/queue/enqueue";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -192,24 +192,23 @@ async function notifyUserWithdrawalFailed(withdrawal: WithdrawalRequest): Promis
     logger.error("[onWithdrawalStatusChanged] Failed to send failure email", { error: emailErr });
   }
 
-  // 2. Telegram direct message if user has telegramId
+  // 2. Telegram via global queue (rate-limited, with retries)
   try {
     const db = getFirestore();
     const userDoc = await db.collection("users").doc(withdrawal.userId).get();
     const telegramId = userDoc.data()?.telegramId as number | undefined;
 
     if (telegramId) {
-      const botToken = getTelegramBotToken();
       const text = `❌ Votre retrait de *${amountFormatted}* a échoué.\n✅ Votre solde a été restauré.\nContactez le support si besoin.`;
-      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: telegramId, text, parse_mode: "Markdown" }),
+      await enqueueTelegramMessage(telegramId, text, {
+        parseMode: "Markdown",
+        priority: "realtime",
+        sourceEventType: "withdrawal_failed_user",
       });
-      logger.info("[onWithdrawalStatusChanged] Failure Telegram sent", { withdrawalId: withdrawal.id, telegramId });
+      logger.info("[onWithdrawalStatusChanged] Failure Telegram enqueued", { withdrawalId: withdrawal.id, telegramId });
     }
   } catch (tgErr) {
-    logger.error("[onWithdrawalStatusChanged] Failed to send Telegram failure notification", { error: tgErr });
+    logger.error("[onWithdrawalStatusChanged] Failed to enqueue Telegram failure notification", { error: tgErr });
   }
 }
 

@@ -1046,7 +1046,7 @@ export const onSubscriptionPlanPricingUpdate = functions
   .region('europe-west1')
   .runWith({
     timeoutSeconds: 120,
-    memory: '128MB',
+    memory: '256MB',
     // Limiter les invocations pour controler les couts
     maxInstances: 5,
   })

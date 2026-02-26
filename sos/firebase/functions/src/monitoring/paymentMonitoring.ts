@@ -133,7 +133,7 @@ async function checkStripePayments(): Promise<void> {
   try {
     // Check failed payments in last hour
     const failedPayments = await db().collection('payments')
-      .where('status', 'in', ['failed', 'canceled'])
+      .where('status', 'in', ['failed', 'cancelled', 'canceled'])
       .where('gateway', '==', 'stripe')
       .where('updatedAt', '>=', timestampOneHourAgo)
       .get();
@@ -513,6 +513,39 @@ export const collectDailyPaymentMetrics = onSchedule(
 /**
  * Nettoyage des anciennes alertes (hebdomadaire)
  */
+/** Exported handler for consolidation */
+export async function cleanupOldPaymentAlertsHandler(): Promise<void> {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  try {
+    const oldAlerts = await db().collection(CONFIG.ALERTS_COLLECTION)
+      .where('resolved', '==', true)
+      .where('createdAt', '<', admin.firestore.Timestamp.fromDate(sevenDaysAgo))
+      .limit(500)
+      .get();
+    if (!oldAlerts.empty) {
+      const batch = db().batch();
+      oldAlerts.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      functionsLogger.info(`[PaymentMonitoring] Cleaned up ${oldAlerts.size} old alerts`);
+    }
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const oldMetrics = await db().collection(CONFIG.METRICS_COLLECTION)
+      .where('timestamp', '<', admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
+      .limit(500)
+      .get();
+    if (!oldMetrics.empty) {
+      const batch = db().batch();
+      oldMetrics.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      functionsLogger.info(`[PaymentMonitoring] Cleaned up ${oldMetrics.size} old metrics`);
+    }
+  } catch (error) {
+    functionsLogger.error('[PaymentMonitoring] Cleanup failed:', error);
+  }
+}
+
 export const cleanupOldPaymentAlerts = onSchedule(
   {
     schedule: '0 3 * * 0', // Dimanche à 3h
@@ -521,44 +554,7 @@ export const cleanupOldPaymentAlerts = onSchedule(
     memory: '256MiB',
     cpu: 0.083
   },
-  async () => {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    try {
-      const oldAlerts = await db().collection(CONFIG.ALERTS_COLLECTION)
-        .where('resolved', '==', true)
-        .where('createdAt', '<', admin.firestore.Timestamp.fromDate(sevenDaysAgo))
-        .limit(500)
-        .get();
-
-      if (!oldAlerts.empty) {
-        const batch = db().batch();
-        oldAlerts.docs.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        functionsLogger.info(`[PaymentMonitoring] Cleaned up ${oldAlerts.size} old alerts`);
-      }
-
-      // Keep only last 30 days of metrics
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const oldMetrics = await db().collection(CONFIG.METRICS_COLLECTION)
-        .where('timestamp', '<', admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
-        .limit(500)
-        .get();
-
-      if (!oldMetrics.empty) {
-        const batch = db().batch();
-        oldMetrics.docs.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        functionsLogger.info(`[PaymentMonitoring] Cleaned up ${oldMetrics.size} old metrics`);
-      }
-
-    } catch (error) {
-      functionsLogger.error('[PaymentMonitoring] Cleanup failed:', error);
-    }
-  }
+  cleanupOldPaymentAlertsHandler
 );
 
 // =====================

@@ -1,13 +1,14 @@
-import { defineString, defineSecret } from "firebase-functions/params";
+import { defineString } from "firebase-functions/params";
+import {
+  MAILWIZZ_API_KEY,
+  MAILWIZZ_WEBHOOK_SECRET,
+  GA4_API_SECRET,
+} from "../lib/secrets";
 
 // MailWizz Configuration - Using Firebase Secret Manager
 // SECURITY: API keys are stored in Firebase Secret Manager, not hardcoded
-const MAILWIZZ_API_KEY_SECRET = defineSecret("MAILWIZZ_API_KEY");
-const MAILWIZZ_WEBHOOK_SECRET = defineSecret("MAILWIZZ_WEBHOOK_SECRET");
-
-// GA4 Configuration - Using Firebase Secret Manager
-// SECURITY: GA4 API Secret must be stored in Firebase Secret Manager
-const GA4_API_SECRET = defineSecret("GA4_API_SECRET");
+// Alias for backward compatibility
+const MAILWIZZ_API_KEY_SECRET = MAILWIZZ_API_KEY;
 
 /**
  * Get MailWizz API key from Firebase Secret Manager
@@ -20,7 +21,7 @@ export function getMailWizzApiKey(): string {
 /**
  * Export the secrets for use in runWith({ secrets: [...] })
  */
-export { MAILWIZZ_API_KEY_SECRET, MAILWIZZ_WEBHOOK_SECRET, GA4_API_SECRET };
+export { MAILWIZZ_API_KEY_SECRET, MAILWIZZ_WEBHOOK_SECRET, GA4_API_SECRET, MAILWIZZ_API_KEY };
 
 /**
  * Get GA4 API Secret from Firebase Secret Manager

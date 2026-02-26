@@ -117,7 +117,7 @@ async function verifyAdminAccess(uid: string): Promise<boolean> {
   try {
     const userDoc = await db().collection('users').doc(uid).get();
     const userData = userDoc.data();
-    return userData?.role === 'admin' || userData?.role === 'dev';
+    return userData?.role === 'admin';
   } catch (error) {
     logger.error('[CostMetrics] Error verifying admin access:', error);
     return false;
@@ -536,7 +536,7 @@ function generateCostAlerts(metrics: {
 export const getCostMetrics = functions
   .region('europe-west1')
   .runWith({
-    memory: '128MB',
+    memory: '256MB',
     timeoutSeconds: 60,
   })
   .https.onCall(async (data, context): Promise<CostMetrics> => {

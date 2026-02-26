@@ -145,7 +145,7 @@ function isStatusPastDue(status?: SubscriptionStatus): boolean {
  * Vérifie si l'abonnement est annulé
  */
 function isStatusCanceled(status?: SubscriptionStatus): boolean {
-  return status === 'canceled' || status === 'expired';
+  return status === 'cancelled' || status === 'canceled' || status === 'expired';
 }
 
 // ============================================================================

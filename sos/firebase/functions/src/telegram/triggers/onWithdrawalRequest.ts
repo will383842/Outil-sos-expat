@@ -292,7 +292,8 @@ export const telegramOnWithdrawalRequest = onDocumentCreated(
       // 6. Build notification variables
       const variables: WithdrawalRequestVars = {
         USER_NAME: userName || "Utilisateur",
-        USER_TYPE_FR: userTypeFr,
+        USER_TYPE: userTypeFr,
+        USER_TYPE_FR: userTypeFr, // backward compat
         AMOUNT: formattedAmount,
         PAYMENT_METHOD: paymentMethod,
         DATE: formatDateParis(requestDate),

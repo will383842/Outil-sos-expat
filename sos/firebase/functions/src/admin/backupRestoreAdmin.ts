@@ -132,7 +132,7 @@ interface RestoreResult {
 async function isAdmin(uid: string): Promise<boolean> {
   const userDoc = await getDb().collection("users").doc(uid).get();
   const userData = userDoc.data();
-  return userData?.role === "admin" || userData?.role === "dev";
+  return userData?.role === "admin";
 }
 
 /**
@@ -218,7 +218,7 @@ async function getCurrentCollectionCounts(): Promise<Record<string, number>> {
  */
 export const adminListBackups = functions
   .region("europe-west1")
-  .runWith({ timeoutSeconds: 60, memory: "128MB" })
+  .runWith({ timeoutSeconds: 60, memory: "256MB" })
   .https.onCall(async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Authentication required");
@@ -578,7 +578,7 @@ export const adminRestoreFirestore = functions
  */
 export const adminCheckRestoreStatus = functions
   .region("europe-west1")
-  .runWith({ timeoutSeconds: 60, memory: "128MB" })
+  .runWith({ timeoutSeconds: 60, memory: "256MB" })
   .https.onCall(async (data: { trackingId?: string; operationName?: string }, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Authentication required");

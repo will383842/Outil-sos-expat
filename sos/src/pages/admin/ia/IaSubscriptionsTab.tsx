@@ -99,10 +99,11 @@ interface TierStat {
 // CONSTANTS
 // ============================================================================
 
-const STATUS_CONFIG: Record<SubscriptionStatus, { label: string; color: string; icon: React.ReactNode }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   trialing: { label: 'Essai', color: 'bg-blue-100 text-blue-700', icon: <Sparkles className="w-3 h-3" /> },
   active: { label: 'Actif', color: 'bg-green-100 text-green-700', icon: <Check className="w-3 h-3" /> },
   past_due: { label: 'En retard', color: 'bg-amber-100 text-amber-700', icon: <Clock className="w-3 h-3" /> },
+  cancelled: { label: 'Annulé', color: 'bg-gray-100 text-gray-600', icon: <XCircle className="w-3 h-3" /> },
   canceled: { label: 'Annulé', color: 'bg-gray-100 text-gray-600', icon: <XCircle className="w-3 h-3" /> },
   expired: { label: 'Expiré', color: 'bg-red-100 text-red-700', icon: <X className="w-3 h-3" /> },
   paused: { label: 'En pause', color: 'bg-purple-100 text-purple-700', icon: <Clock className="w-3 h-3" /> },
@@ -414,7 +415,7 @@ export const IaSubscriptionsTab: React.FC = () => {
     const active = subscriptions.filter(s => s.status === 'active' || s.status === 'trialing');
     const activeOnly = subscriptions.filter(s => s.status === 'active');
     const trial = subscriptions.filter(s => s.status === 'trialing');
-    const canceled = subscriptions.filter(s => s.status === 'canceled' || s.status === 'expired');
+    const canceled = subscriptions.filter(s => s.status === 'cancelled' || s.status === 'canceled' || s.status === 'expired');
     const pastDue = subscriptions.filter(s => s.status === 'past_due');
 
     // MRR calculation
@@ -652,7 +653,11 @@ export const IaSubscriptionsTab: React.FC = () => {
           return false;
         }
       }
-      if (filters.status !== 'all' && sub.status !== filters.status) return false;
+      if (filters.status !== 'all') {
+        if (filters.status === 'cancelled') {
+          if (sub.status !== 'cancelled' && sub.status !== 'canceled') return false;
+        } else if (sub.status !== filters.status) return false;
+      }
       if (filters.tier !== 'all' && sub.tier !== filters.tier) return false;
       if (filters.billingPeriod !== 'all' && sub.billingPeriod !== filters.billingPeriod) return false;
       if (filters.providerType !== 'all' && sub.providerType !== filters.providerType) return false;
@@ -901,7 +906,7 @@ export const IaSubscriptionsTab: React.FC = () => {
                 <option value="active">Actif</option>
                 <option value="trialing">Essai</option>
                 <option value="past_due">En retard</option>
-                <option value="canceled">Annulé</option>
+                <option value="cancelled">Annulé</option>
                 <option value="expired">Expiré</option>
               </select>
 

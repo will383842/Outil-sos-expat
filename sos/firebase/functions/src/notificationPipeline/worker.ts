@@ -209,7 +209,7 @@ async function sendOne(
 
           if (!parentSnap.empty) {
             const parentData = parentSnap.docs[0].data();
-            const telegramChatId = parentData.telegramChatId;
+            const telegramChatId = parentData.telegramId || parentData.telegramChatId;
             if (telegramChatId) {
               console.log(`📱 [Telegram] Sending booking_paid notification to chat ${telegramChatId}`);
               const tgResult = await sendTelegramMessage(telegramChatId, text);

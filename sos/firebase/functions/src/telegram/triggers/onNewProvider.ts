@@ -181,7 +181,8 @@ export const telegramOnNewProvider = onDocumentCreated(
 
       const variables = {
         PROVIDER_NAME: displayName,
-        PROVIDER_TYPE_FR: providerTypeFr,
+        PROVIDER_TYPE: providerTypeFr,
+        PROVIDER_TYPE_FR: providerTypeFr, // backward compat
         EMAIL: email,
         PHONE: phoneNumber,
         COUNTRY: country,

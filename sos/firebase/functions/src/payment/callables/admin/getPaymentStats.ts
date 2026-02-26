@@ -31,14 +31,14 @@ async function verifyAdmin(request: CallableRequest): Promise<string> {
 
   // Check custom claims first (faster)
   const role = request.auth.token?.role as string | undefined;
-  if (role === 'admin' || role === 'dev') {
+  if (role === 'admin') {
     return uid;
   }
 
   // Fall back to Firestore check
   const db = getFirestore();
   const userDoc = await db.collection('users').doc(uid).get();
-  if (!userDoc.exists || !['admin', 'dev'].includes(userDoc.data()?.role)) {
+  if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
     throw new HttpsError('permission-denied', 'Admin access required');
   }
 

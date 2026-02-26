@@ -216,7 +216,7 @@ export const adminForceRetryDLQEvent = functions
 
     const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
     const userData = userDoc.data();
-    if (userData?.role !== 'admin' && userData?.role !== 'dev') {
+    if (userData?.role !== 'admin') {
       throw new functions.https.HttpsError('permission-denied', 'Admin access required');
     }
 
@@ -265,7 +265,7 @@ export const adminGetDLQStats = functions
 
     const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
     const userData = userDoc.data();
-    if (userData?.role !== 'admin' && userData?.role !== 'dev') {
+    if (userData?.role !== 'admin') {
       throw new functions.https.HttpsError('permission-denied', 'Admin access required');
     }
 

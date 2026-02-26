@@ -17,6 +17,7 @@ import {
   TWILIO_PHONE_NUMBER,
   TWILIO_SECRETS,
   getTasksAuthSecret,
+  isValidTaskAuth,
 } from "../lib/secrets";
 
 // Re-export for backwards compatibility
@@ -44,18 +45,11 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
       authHeaderLength: authHeader.length,
       hasExpectedAuth: !!expectedAuth,
       expectedAuthLength: expectedAuth.length,
-      authMatch: authHeader === expectedAuth
     });
 
-    if (!authHeader) {
-      logger.error('❌ [executeCallTask] Missing X-Task-Auth header');
-      res.status(401).send("Missing X-Task-Auth header");
-      return;
-    }
-
-    if (authHeader !== expectedAuth) {
-      logger.error('❌ [executeCallTask] Invalid X-Task-Auth header');
-      res.status(401).send("Invalid X-Task-Auth header");
+    if (!isValidTaskAuth(authHeader, expectedAuth)) {
+      logger.error('❌ [executeCallTask] Invalid or missing X-Task-Auth header');
+      res.status(401).send("Unauthorized");
       return;
     }
 

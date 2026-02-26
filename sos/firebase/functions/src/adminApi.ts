@@ -136,6 +136,7 @@ export const api = onRequest(
               'requires_capture',
               'processing',
             ])
+            .limit(5000)
             .get();
 
           const monthlyRevenue = curr.totalAmount || 0;

@@ -15,12 +15,12 @@
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
 import { timingSafeEqual, randomBytes } from "crypto";
+import { MULTI_DASHBOARD_PASSWORD } from "../lib/secrets";
 
 // Secret for dashboard password (stored in Google Cloud Secret Manager)
-const MULTI_DASHBOARD_PASSWORD = defineSecret("MULTI_DASHBOARD_PASSWORD");
+// Imported from lib/secrets.ts
 
 // =============================================================================
 // TYPES

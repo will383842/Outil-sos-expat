@@ -84,7 +84,7 @@ export const initializeChatterConfig = onCall(
     const db = getFirestore();
     const userDoc = await db.collection("users").doc(request.auth.uid).get();
 
-    if (!userDoc.exists || !["admin", "dev"].includes(userDoc.data()?.role)) {
+    if (!userDoc.exists || userDoc.data()?.role !== "admin") {
       throw new HttpsError("permission-denied", "Admin access required");
     }
 
@@ -943,7 +943,7 @@ export const initializeChatterSystem = onCall(
     const db = getFirestore();
     const userDoc = await db.collection("users").doc(request.auth.uid).get();
 
-    if (!userDoc.exists || !["admin", "dev"].includes(userDoc.data()?.role)) {
+    if (!userDoc.exists || userDoc.data()?.role !== "admin") {
       throw new HttpsError("permission-denied", "Admin access required");
     }
 

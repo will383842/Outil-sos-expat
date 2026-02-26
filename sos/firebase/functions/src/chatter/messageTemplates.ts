@@ -714,7 +714,7 @@ export const adminResetMessageTemplatesToDefaults = onCall(
  */
 export const initializeMessageTemplates = functionsV1
   .region("europe-west1")
-  .runWith({ memory: "128MB" })
+  .runWith({ memory: "256MB" })
   .https.onRequest(async (req, res) => {
     // Only allow POST requests
     if (req.method !== "POST") {

@@ -485,6 +485,35 @@ export const getAgentMetrics = functions.onCall(
  * Scheduled function pour sauvegarder les métriques historiques
  * 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales
  */
+/** Exported handler for consolidation */
+export async function saveAgentMetricsHistoryHandler(): Promise<void> {
+  const db = admin.firestore();
+  try {
+    const metricsRef = db.collection('agent_metrics_history');
+    const now = Date.now();
+    const startTime = now - 60 * 60 * 1000;
+    const tasksSnapshot = await db.collection('agent_tasks')
+      .where('createdAt', '>=', admin.firestore.Timestamp.fromMillis(startTime))
+      .get();
+    const total = tasksSnapshot.size;
+    const completed = tasksSnapshot.docs.filter(d => d.data().status === 'COMPLETED').length;
+    const failed = tasksSnapshot.docs.filter(d => d.data().status === 'FAILED').length;
+    await metricsRef.add({
+      timestamp: admin.firestore.Timestamp.now(),
+      period: '1h',
+      totalTasks: total,
+      completedTasks: completed,
+      failedTasks: failed,
+      successRate: total > 0 ? Math.round((completed / total) * 100) : 100,
+      errorRate: total > 0 ? Math.round((failed / total) * 100) : 0,
+      expireAt: admin.firestore.Timestamp.fromMillis(now + 30 * 24 * 60 * 60 * 1000)
+    });
+    logger.info('[AGENT_METRICS_HISTORY] Saved hourly snapshot', { total, completed, failed });
+  } catch (error) {
+    logger.error('[AGENT_METRICS_HISTORY] Error saving snapshot', error);
+  }
+}
+
 export const saveAgentMetricsHistory = scheduler.onSchedule(
   {
     schedule: '0 8 * * *', // 8h Paris tous les jours
@@ -492,42 +521,5 @@ export const saveAgentMetricsHistory = scheduler.onSchedule(
     region: 'europe-west3',
     cpu: 0.083,
   },
-  async () => {
-    const db = admin.firestore();
-
-    try {
-      // Appeler la fonction de métriques
-      const metricsRef = db.collection('agent_metrics_history');
-
-      // Calculer les métriques (version simplifiée inline)
-      const now = Date.now();
-      const startTime = now - 60 * 60 * 1000; // 1 heure
-
-      const tasksSnapshot = await db.collection('agent_tasks')
-        .where('createdAt', '>=', admin.firestore.Timestamp.fromMillis(startTime))
-        .get();
-
-      const total = tasksSnapshot.size;
-      const completed = tasksSnapshot.docs.filter(d => d.data().status === 'COMPLETED').length;
-      const failed = tasksSnapshot.docs.filter(d => d.data().status === 'FAILED').length;
-
-      // Sauvegarder un snapshot horaire
-      await metricsRef.add({
-        timestamp: admin.firestore.Timestamp.now(),
-        period: '1h',
-        totalTasks: total,
-        completedTasks: completed,
-        failedTasks: failed,
-        successRate: total > 0 ? Math.round((completed / total) * 100) : 100,
-        errorRate: total > 0 ? Math.round((failed / total) * 100) : 0,
-        // TTL: garder 30 jours d'historique
-        expireAt: admin.firestore.Timestamp.fromMillis(now + 30 * 24 * 60 * 60 * 1000)
-      });
-
-      logger.info('[AGENT_METRICS_HISTORY] Saved hourly snapshot', { total, completed, failed });
-
-    } catch (error) {
-      logger.error('[AGENT_METRICS_HISTORY] Error saving snapshot', error);
-    }
-  }
+  saveAgentMetricsHistoryHandler
 );

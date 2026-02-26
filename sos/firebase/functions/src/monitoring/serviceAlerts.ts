@@ -146,7 +146,7 @@ async function verifyAdminAccess(uid: string): Promise<boolean> {
   try {
     const userDoc = await db().collection(COLLECTIONS.USERS).doc(uid).get();
     const userData = userDoc.data();
-    return userData?.role === 'admin' || userData?.role === 'dev' || userData?.role === 'super_admin';
+    return userData?.role === 'admin' || userData?.role === 'super_admin';
   } catch (error) {
     logger.error('[ServiceAlerts] Error verifying admin access:', error);
     return false;
@@ -160,7 +160,7 @@ async function getAdminEmails(): Promise<string[]> {
   try {
     const adminsSnapshot = await db()
       .collection(COLLECTIONS.USERS)
-      .where('role', 'in', ['admin', 'super_admin', 'dev'])
+      .where('role', 'in', ['admin', 'super_admin'])
       .get();
 
     const emails: string[] = [];

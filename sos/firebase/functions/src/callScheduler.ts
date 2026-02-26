@@ -133,6 +133,7 @@ class CallSchedulerManager {
       const todayQuery = await database
         .collection('call_sessions')
         .where('metadata.createdAt', '>=', todayTimestamp)
+        .limit(5000)
         .get();
 
       this.stats.completedToday = 0;

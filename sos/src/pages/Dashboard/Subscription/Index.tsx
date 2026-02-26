@@ -64,6 +64,7 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> =
   trialing: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
   active: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
   past_due: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+  cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', dot: 'bg-gray-400' },
   canceled: { bg: 'bg-gray-100', text: 'text-gray-700', dot: 'bg-gray-400' },
   expired: { bg: 'bg-gray-100', text: 'text-gray-700', dot: 'bg-gray-400' },
   paused: { bg: 'bg-yellow-100', text: 'text-yellow-700', dot: 'bg-yellow-500' }

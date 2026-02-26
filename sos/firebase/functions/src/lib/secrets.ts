@@ -185,6 +185,70 @@ export const BACKLINK_ENGINE_WEBHOOK_SECRET = defineSecret("BACKLINK_ENGINE_WEBH
 export const BACKLINK_ENGINE_SECRETS = [BACKLINK_ENGINE_WEBHOOK_SECRET];
 
 // ============================================================================
+// OUTIL SERVICE ACCOUNT (SSO for Outil IA)
+// ============================================================================
+
+export const OUTIL_SERVICE_ACCOUNT_KEY = defineSecret("OUTIL_SERVICE_ACCOUNT_KEY");
+
+// ============================================================================
+// SENTRY
+// ============================================================================
+
+export const SENTRY_DSN = defineSecret("SENTRY_DSN");
+
+// ============================================================================
+// EMAIL MARKETING (MailWizz + GA4)
+// ============================================================================
+
+export const MAILWIZZ_API_KEY = defineSecret("MAILWIZZ_API_KEY");
+export const MAILWIZZ_WEBHOOK_SECRET = defineSecret("MAILWIZZ_WEBHOOK_SECRET");
+export const GA4_API_SECRET = defineSecret("GA4_API_SECRET");
+
+/** All Email Marketing secrets for function config */
+export const EMAIL_MARKETING_SECRETS = [MAILWIZZ_API_KEY, MAILWIZZ_WEBHOOK_SECRET, GA4_API_SECRET];
+
+// ============================================================================
+// GOOGLE ADS CONVERSIONS API
+// ============================================================================
+
+export const GOOGLE_ADS_CUSTOMER_ID = defineSecret("GOOGLE_ADS_CUSTOMER_ID");
+export const GOOGLE_ADS_PURCHASE_CONVERSION_ID = defineSecret("GOOGLE_ADS_PURCHASE_CONVERSION_ID");
+export const GOOGLE_ADS_LEAD_CONVERSION_ID = defineSecret("GOOGLE_ADS_LEAD_CONVERSION_ID");
+export const GOOGLE_ADS_DEVELOPER_TOKEN = defineSecret("GOOGLE_ADS_DEVELOPER_TOKEN");
+export const GOOGLE_ADS_REFRESH_TOKEN = defineSecret("GOOGLE_ADS_REFRESH_TOKEN");
+export const GOOGLE_ADS_CLIENT_ID = defineSecret("GOOGLE_ADS_CLIENT_ID");
+export const GOOGLE_ADS_CLIENT_SECRET = defineSecret("GOOGLE_ADS_CLIENT_SECRET");
+
+/** All Google Ads secrets for function config */
+export const GOOGLE_ADS_SECRETS = [
+  GOOGLE_ADS_CUSTOMER_ID,
+  GOOGLE_ADS_PURCHASE_CONVERSION_ID,
+  GOOGLE_ADS_LEAD_CONVERSION_ID,
+  GOOGLE_ADS_DEVELOPER_TOKEN,
+  GOOGLE_ADS_REFRESH_TOKEN,
+  GOOGLE_ADS_CLIENT_ID,
+  GOOGLE_ADS_CLIENT_SECRET,
+];
+
+// ============================================================================
+// SYNC API KEY (Outil -> SOS synchronization)
+// ============================================================================
+
+export const SOS_SYNC_API_KEY = defineSecret("SOS_SYNC_API_KEY");
+
+// ============================================================================
+// MULTI DASHBOARD
+// ============================================================================
+
+export const MULTI_DASHBOARD_PASSWORD = defineSecret("MULTI_DASHBOARD_PASSWORD");
+
+// ============================================================================
+// SEO / CACHE INVALIDATION
+// ============================================================================
+
+export const CACHE_INVALIDATION_KEY = defineSecret("CACHE_INVALIDATION_KEY");
+
+// ============================================================================
 // TELEGRAM SECRETS
 // ============================================================================
 
@@ -331,7 +395,6 @@ export function getStripeSecretKeyLive(): string {
       hasValue: !!secretValue,
       length: secretValue?.length || 0,
       startsWithSkLive: secretValue?.startsWith('sk_live_') || false,
-      prefix: secretValue?.substring(0, 10) || 'empty',
     });
   } catch (err) {
     // P0 FIX: Log the error instead of silently ignoring
@@ -361,7 +424,6 @@ export function getStripeSecretKeyTest(): string {
       hasValue: !!secretValue,
       length: secretValue?.length || 0,
       startsWithSkTest: secretValue?.startsWith('sk_test_') || false,
-      prefix: secretValue?.substring(0, 10) || 'empty',
     });
   } catch (err) {
     // P0 FIX: Log the error instead of silently ignoring
@@ -867,6 +929,24 @@ export const TELEGRAM_NOTIFICATION_SECRETS = [
   ...TELEGRAM_SECRETS,
 ];
 
+// ============================================================================
+// TIMING-SAFE AUTH COMPARISON (Cloud Tasks)
+// ============================================================================
+
+import crypto from "crypto";
+
+/**
+ * Timing-safe comparison for Cloud Tasks X-Task-Auth header.
+ * Prevents timing attacks that could leak the secret byte-by-byte.
+ */
+export function isValidTaskAuth(received: string, expected: string): boolean {
+  if (!received || !expected) return false;
+  const a = Buffer.from(received, "utf8");
+  const b = Buffer.from(expected, "utf8");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
 /** All secrets - use sparingly, prefer specific arrays */
 export const ALL_SECRETS = [
   ...TWILIO_SECRETS,
@@ -876,8 +956,15 @@ export const ALL_SECRETS = [
   ...FLUTTERWAVE_SECRETS,
   ...TELEGRAM_SECRETS,
   ...EMAIL_SECRETS,
+  ...EMAIL_MARKETING_SECRETS,
+  ...GOOGLE_ADS_SECRETS,
   ENCRYPTION_KEY,
   TASKS_AUTH_SECRET,
   OUTIL_API_KEY,
   OUTIL_SYNC_API_KEY,
+  OUTIL_SERVICE_ACCOUNT_KEY,
+  SENTRY_DSN,
+  SOS_SYNC_API_KEY,
+  MULTI_DASHBOARD_PASSWORD,
+  CACHE_INVALIDATION_KEY,
 ];

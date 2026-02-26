@@ -206,7 +206,7 @@ function mapStripeStatus(stripeStatus: Stripe.Subscription.Status): Subscription
     case 'past_due':
       return 'past_due';
     case 'canceled':
-      return 'canceled';
+      return 'cancelled';
     case 'unpaid':
       return 'past_due';
     case 'incomplete':
@@ -551,7 +551,7 @@ export async function handleSubscriptionCreated(
     // Réactiver seulement si le profil existait et était masqué
     if (sosProfileDoc.exists) {
       const profileData = sosProfileDoc.data();
-      if (profileData?.hiddenReason === 'subscription_canceled' || profileData?.isActive === false) {
+      if (profileData?.hiddenReason === 'subscription_cancelled' || profileData?.hiddenReason === 'subscription_canceled' || profileData?.isActive === false) {
         profileUpdate.isVisible = true;
         profileUpdate.isActive = true;
         profileUpdate.hiddenReason = admin.firestore.FieldValue.delete();
@@ -936,7 +936,7 @@ export async function handleSubscriptionUpdated(
 
 /**
  * Handler pour customer.subscription.deleted
- * - Mettre status='canceled' dans Firestore
+ * - Mettre status='cancelled' dans Firestore
  * - Couper accès IA (aiAccessEnabled=false)
  * - Envoyer email de fin d'abonnement
  * - Retour au plan gratuit (trial avec 0 appels restants)
@@ -975,7 +975,7 @@ export async function handleSubscriptionDeleted(
 
     // Mettre à jour le document subscription - retour au plan trial
     const updates = {
-      status: 'canceled' as SubscriptionStatus,
+      status: 'cancelled' as SubscriptionStatus,
       tier: 'trial' as SubscriptionTier,
       planId: 'trial',
       aiAccessEnabled: false,
@@ -996,7 +996,7 @@ export async function handleSubscriptionDeleted(
     };
 
     await db.doc(`subscriptions/${providerId}`).update(updates);
-    logger.info(`[handleSubscriptionDeleted] Set status to canceled for ${providerId}`);
+    logger.info(`[handleSubscriptionDeleted] Set status to cancelled for ${providerId}`);
 
     // AUDIT-FIX M2: Utiliser set+merge au lieu de update pour éviter l'échec si le doc n'existe pas
     await db.doc(`ai_usage/${providerId}`).set({
@@ -1014,19 +1014,19 @@ export async function handleSubscriptionDeleted(
     await sosProfileRef.set({
       isVisible: false,
       isActive: false,
-      hiddenReason: 'subscription_canceled',
+      hiddenReason: 'subscription_cancelled',
       hiddenAt: now,
-      subscriptionStatus: 'canceled',
+      subscriptionStatus: 'cancelled',
       hasActiveSubscription: false,
       updatedAt: now
     }, { merge: true });
     // AUDIT-FIX m4: Also sync subscriptionStatus to users/{uid} for frontend reads
     await db.doc(`users/${providerId}`).set({
-      subscriptionStatus: 'canceled',
+      subscriptionStatus: 'cancelled',
       hasActiveSubscription: false,
       updatedAt: now
     }, { merge: true });
-    logger.info(`[handleSubscriptionDeleted] Synced sos_profile+users subscriptionStatus=canceled for ${providerId}`)
+    logger.info(`[handleSubscriptionDeleted] Synced sos_profile+users subscriptionStatus=cancelled for ${providerId}`)
 
     // Logger l'action
     await logSubscriptionAction({

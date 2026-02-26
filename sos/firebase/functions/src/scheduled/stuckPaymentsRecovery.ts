@@ -760,7 +760,7 @@ export const triggerStuckPaymentsRecovery = onCall(
     const userDoc = await db.collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+    if (!userData?.role || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Only admins can trigger recovery");
     }
 
@@ -818,7 +818,7 @@ export const capturePayPalPaymentManually = onCall(
     const userDoc = await db.collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+    if (!userData?.role || userData.role !== "admin") {
       throw new HttpsError("permission-denied", "Only admins can manually capture payments");
     }
 

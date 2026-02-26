@@ -189,83 +189,70 @@ export const sendMonthlyStats = onSchedule(
  * Schedule: Every day at 09:00 UTC
  * Sends a 1-year anniversary email to users who registered exactly 1 year ago (±12h)
  */
+/** Exported handler for consolidation */
+export async function sendAnniversaryEmailsHandler(): Promise<void> {
+  console.log("🎂 Starting anniversary emails job...");
+
+  const mailwizz = new MailwizzAPI();
+  const now = new Date();
+  const oneYearAgo = new Date(now);
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const windowStart = new Date(oneYearAgo.getTime() - 12 * 60 * 60 * 1000);
+  const windowEnd = new Date(oneYearAgo.getTime() + 12 * 60 * 60 * 1000);
+
+  try {
+    const usersSnap = await admin.firestore().collection("users")
+      .where("createdAt", ">=", admin.firestore.Timestamp.fromDate(windowStart))
+      .where("createdAt", "<=", admin.firestore.Timestamp.fromDate(windowEnd))
+      .get();
+
+    console.log(`🎂 Found ${usersSnap.size} users with anniversary today`);
+    let sent = 0;
+    let errors = 0;
+
+    for (const doc of usersSnap.docs) {
+      const user = doc.data();
+      const userId = doc.id;
+      if (!user.email) continue;
+      try {
+        const lang = getLanguageCode(user.language || user.preferredLanguage || user.lang || "en");
+        const isProvider = user.role === "provider" || user.role === "lawyer";
+        const rolePrefix = isProvider ? "PRO" : "CLI";
+        await mailwizz.sendTransactional({
+          to: user.email || userId,
+          template: `TR_${rolePrefix}_anniversary_${lang}`,
+          customFields: {
+            FNAME: user.firstName || "",
+            YEARS: "1",
+            TOTAL_CALLS: (user.totalCalls || 0).toString(),
+            TOTAL_CLIENTS: (user.totalClients || 0).toString(),
+            TOTAL_EARNINGS: isProvider ? (user.totalEarnings || 0).toString() : "0",
+            DASHBOARD_URL: "https://sos-expat.com/dashboard",
+          },
+        });
+        sent++;
+      } catch (emailError) {
+        errors++;
+        console.error(`❌ Error sending anniversary email to ${userId}:`, emailError);
+      }
+    }
+
+    await logGA4Event("anniversary_emails_sent", {
+      sent, errors, total_users: usersSnap.size,
+      anniversary_date: oneYearAgo.toISOString().split("T")[0],
+    });
+    console.log(`✅ Anniversary emails sent: ${sent} success, ${errors} errors`);
+  } catch (error: any) {
+    console.error("❌ Error in sendAnniversaryEmails:", error);
+  }
+}
+
 export const sendAnniversaryEmails = onSchedule(
   {
-    schedule: "0 9 * * *", // Every day at 09:00 UTC
+    schedule: "0 9 * * *",
     timeZone: "Europe/Paris",
     region: "europe-west3",
     cpu: 0.083,
   },
-  async () => {
-    console.log("🎂 Starting anniversary emails job...");
-
-    const mailwizz = new MailwizzAPI();
-    const now = new Date();
-
-    // Target: users who created their account exactly 1 year ago (±12h window)
-    const oneYearAgo = new Date(now);
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-    const windowStart = new Date(oneYearAgo.getTime() - 12 * 60 * 60 * 1000);
-    const windowEnd = new Date(oneYearAgo.getTime() + 12 * 60 * 60 * 1000);
-
-    try {
-      const usersSnap = await admin
-        .firestore()
-        .collection("users")
-        .where("createdAt", ">=", admin.firestore.Timestamp.fromDate(windowStart))
-        .where("createdAt", "<=", admin.firestore.Timestamp.fromDate(windowEnd))
-        .get();
-
-      console.log(`🎂 Found ${usersSnap.size} users with anniversary today`);
-
-      let sent = 0;
-      let errors = 0;
-
-      for (const doc of usersSnap.docs) {
-        const user = doc.data();
-        const userId = doc.id;
-
-        if (!user.email) continue;
-
-        try {
-          const lang = getLanguageCode(
-            user.language || user.preferredLanguage || user.lang || "en"
-          );
-
-          const isProvider = user.role === "provider" || user.role === "lawyer";
-          const rolePrefix = isProvider ? "PRO" : "CLI";
-
-          await mailwizz.sendTransactional({
-            to: user.email || userId,
-            template: `TR_${rolePrefix}_anniversary_${lang}`,
-            customFields: {
-              FNAME: user.firstName || "",
-              YEARS: "1",
-              TOTAL_CALLS: (user.totalCalls || 0).toString(),
-              TOTAL_CLIENTS: (user.totalClients || 0).toString(),
-              TOTAL_EARNINGS: isProvider ? (user.totalEarnings || 0).toString() : "0",
-              DASHBOARD_URL: "https://sos-expat.com/dashboard",
-            },
-          });
-
-          sent++;
-        } catch (emailError) {
-          errors++;
-          console.error(`❌ Error sending anniversary email to ${userId}:`, emailError);
-        }
-      }
-
-      await logGA4Event("anniversary_emails_sent", {
-        sent,
-        errors,
-        total_users: usersSnap.size,
-        anniversary_date: oneYearAgo.toISOString().split("T")[0],
-      });
-
-      console.log(`✅ Anniversary emails sent: ${sent} success, ${errors} errors`);
-    } catch (error: any) {
-      console.error("❌ Error in sendAnniversaryEmails:", error);
-    }
-  }
+  sendAnniversaryEmailsHandler
 );

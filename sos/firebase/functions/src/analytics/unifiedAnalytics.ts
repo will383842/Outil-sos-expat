@@ -57,7 +57,7 @@ export interface CallMetrics {
   callsInitiated: number;
   callsCompleted: number;
   callsFailed: number;
-  callsCanceled: number;
+  callsCancelled: number;
   avgDurationSeconds: number;
   totalDurationMinutes: number;
   successRate: number;            // Percentage
@@ -474,7 +474,7 @@ async function aggregateCallMetrics(
         totalDuration += duration;
       } else if (status === 'failed') {
         failed++;
-      } else if (status === 'canceled' || status === 'cancelled') {
+      } else if (status === 'cancelled') {
         canceled++;
       }
 
@@ -499,7 +499,7 @@ async function aggregateCallMetrics(
       callsInitiated: initiated,
       callsCompleted: completed,
       callsFailed: failed,
-      callsCanceled: canceled,
+      callsCancelled: canceled,
       avgDurationSeconds: Math.round(avgDuration),
       totalDurationMinutes: Math.round(totalDuration / 60),
       successRate: Math.round(successRate * 100) / 100,
@@ -833,7 +833,7 @@ export const getUnifiedAnalytics = onCall(
               callsInitiated: cached.callsInitiated,
               callsCompleted: cached.callsCompleted,
               callsFailed: cached.callsFailed,
-              callsCanceled: 0,
+              callsCancelled: 0,
               avgDurationSeconds: cached.avgDurationSeconds,
               totalDurationMinutes: 0,
               successRate: cached.callsInitiated > 0 ? (cached.callsCompleted / cached.callsInitiated) * 100 : 0,

@@ -27,7 +27,7 @@ async function isAdmin(uid: string): Promise<boolean> {
   const db = getFirestore();
   const userDoc = await db.collection("users").doc(uid).get();
   const userData = userDoc.data();
-  return userData?.role === "admin" || userData?.role === "dev";
+  return userData?.role === "admin";
 }
 
 /**

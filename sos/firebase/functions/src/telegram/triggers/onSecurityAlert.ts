@@ -179,7 +179,8 @@ export const telegramOnSecurityAlert = onDocumentCreated(
 
       // 5. Build notification variables
       const variables: SecurityAlertVars = {
-        ALERT_TYPE_FR: alertTypeFr,
+        ALERT_TYPE: alertTypeFr,
+        ALERT_TYPE_FR: alertTypeFr, // backward compat
         USER_EMAIL: userEmail,
         IP_ADDRESS: ipAddress,
         COUNTRY: country,

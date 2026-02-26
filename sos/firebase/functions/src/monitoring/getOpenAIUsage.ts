@@ -137,7 +137,7 @@ async function verifyAdminAccess(uid: string): Promise<boolean> {
   try {
     const userDoc = await db().collection('users').doc(uid).get();
     const userData = userDoc.data();
-    return userData?.role === 'admin' || userData?.role === 'dev';
+    return userData?.role === 'admin';
   } catch (error) {
     logger.error('[OpenAIUsage] Error verifying admin access:', error);
     return false;

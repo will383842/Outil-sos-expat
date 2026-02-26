@@ -253,7 +253,7 @@ export const adminResetFAQs = onCall(
     const userDoc = await getDb().collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
-    if (!userData?.roles?.includes("admin") && !userData?.isAdmin) {
+    if (userData?.role !== "admin" && !userData?.isAdmin) {
       throw new HttpsError("permission-denied", "Vous devez être administrateur");
     }
 

@@ -80,6 +80,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, intl }) => {
     trialing: { bg: 'bg-blue-100', text: 'text-blue-700' },
     active: { bg: 'bg-green-100', text: 'text-green-700' },
     past_due: { bg: 'bg-red-100', text: 'text-red-700' },
+    cancelled: { bg: 'bg-gray-100', text: 'text-gray-700' },
     canceled: { bg: 'bg-gray-100', text: 'text-gray-700' },
     expired: { bg: 'bg-gray-100', text: 'text-gray-700' },
     paused: { bg: 'bg-yellow-100', text: 'text-yellow-700' }

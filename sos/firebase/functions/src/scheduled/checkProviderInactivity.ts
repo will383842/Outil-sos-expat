@@ -34,6 +34,7 @@ export const checkProviderInactivity = scheduler.onSchedule(
       const onlineProvidersSnapshot = await db
         .collection('sos_profiles')
         .where('isOnline', '==', true)
+        .limit(2000)
         .get();
 
       // Filtrer uniquement les prestataires (lawyers et expats) en mémoire

@@ -7,7 +7,7 @@ import { logError } from "../utils/logs/logError";
 import { logCallRecord } from "../utils/logs/logCallRecord";
 import { logger as prodLogger } from "../utils/productionLogger";
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
-import { TASKS_AUTH_SECRET } from "../lib/secrets";
+import { TASKS_AUTH_SECRET, isValidTaskAuth } from "../lib/secrets";
 // P0 FIX: Import call region from centralized config - dedicated region for call functions
 import { CALL_FUNCTIONS_REGION } from "../configs/callRegion";
 
@@ -54,7 +54,7 @@ export const forceEndCallTask = onRequest(
       const authHeader = req.get("X-Task-Auth") || "";
       const expectedAuth = TASKS_AUTH_SECRET.value() || "";
 
-      if (!authHeader || authHeader !== expectedAuth) {
+      if (!isValidTaskAuth(authHeader, expectedAuth)) {
         console.error(`🛑 [${debugId}] ❌ Authentication failed`);
         res.status(401).send("Unauthorized");
         return;
