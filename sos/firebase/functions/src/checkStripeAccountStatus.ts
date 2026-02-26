@@ -183,9 +183,12 @@ export const checkStripeAccountStatus = onCall<{
     const eventuallyDue = account.requirements?.eventually_due || [];
     const pastDue = account.requirements?.past_due || [];
 
+    // P1 FIX: Also require payouts_enabled — a provider with charges_enabled but
+    // payouts_enabled=false can receive payments but Stripe blocks bank transfers.
     const isComplete =
       account.details_submitted === true &&
       account.charges_enabled === true &&
+      account.payouts_enabled === true &&
       currentlyDue.length === 0;
 
     // P0 FIX: Detect if account mode doesn't match current Stripe mode

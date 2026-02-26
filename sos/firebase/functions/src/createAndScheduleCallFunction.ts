@@ -26,6 +26,7 @@ import {
 // P3 FIX: Import country utils for converting ISO codes to full names
 import { getCountryName } from './utils/countryUtils';
 import { ALLOWED_ORIGINS } from "./lib/functionConfigs";
+import { checkRateLimit, RATE_LIMITS } from "./lib/rateLimiter";
 
 // ✅ Interface corrigée pour correspondre exactement aux données frontend
 interface CreateCallRequest {
@@ -172,6 +173,8 @@ export const createAndScheduleCallHTTPS = onCall(
 
       const userId = request.auth.uid;
       console.log(`✅ [${requestId}] Utilisateur authentifié: ${userId.substring(0, 8)}...`);
+
+      await checkRateLimit(userId, "createAndScheduleCall", RATE_LIMITS.CREATE_CALL);
 
       // ========================================
       // 2. VALIDATION DES DONNÉES DÉTAILLÉE

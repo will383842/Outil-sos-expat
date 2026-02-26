@@ -296,10 +296,7 @@ async function validateVATNumber(countryCode: string, vatNumber: string): Promis
     };
   }
 
-  // In production, call VIES SOAP API here
-  // For now, simulate validation (format check passed)
-  // TODO: Implement actual VIES SOAP call
-
+  // P2-8 FIX: Real VIES SOAP API call with cache
   try {
     // Check cache first
     const cacheRef = db.collection('vies_cache').doc(`${countryCode}${cleanVat}`);
@@ -316,15 +313,54 @@ async function validateVATNumber(countryCode: string, vatNumber: string): Promis
       }
     }
 
-    // Simulate VIES call (in production, use actual SOAP API)
-    // For demo purposes, we accept format-valid VAT numbers
+    // Call real VIES SOAP API
+    const soapBody = `<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:ec.europa.eu:taxud:vies:services:checkVat:types">
+  <soapenv:Body>
+    <urn:checkVat>
+      <urn:countryCode>${countryCode}</urn:countryCode>
+      <urn:vatNumber>${cleanVat}</urn:vatNumber>
+    </urn:checkVat>
+  </soapenv:Body>
+</soapenv:Envelope>`;
+
+    const viesResponse = await fetch(
+      'https://ec.europa.eu/taxation_customs/vies/services/checkVatService',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/xml; charset=utf-8',
+          'SOAPAction': '',
+        },
+        body: soapBody,
+        signal: AbortSignal.timeout(10000), // 10s timeout
+      }
+    );
+
+    if (!viesResponse.ok) {
+      throw new Error(`VIES HTTP error: ${viesResponse.status}`);
+    }
+
+    const xmlText = await viesResponse.text();
+
+    // Parse SOAP response (simple XML extraction — no external dependency needed)
+    const extractTag = (xml: string, tag: string): string | undefined => {
+      const regex = new RegExp(`<(?:[a-z]+:)?${tag}>([\\s\\S]*?)</(?:[a-z]+:)?${tag}>`);
+      const match = xml.match(regex);
+      return match ? match[1].trim() : undefined;
+    };
+
+    const valid = extractTag(xmlText, 'valid') === 'true';
+    const name = extractTag(xmlText, 'name');
+    const address = extractTag(xmlText, 'address');
+
     const response: VIESResponse = {
-      valid: isFormatValid,
+      valid,
       countryCode,
       vatNumber: cleanVat,
       requestDate: new Date().toISOString(),
-      name: isFormatValid ? 'Company Name (VIES)' : undefined,
-      address: isFormatValid ? 'Company Address (VIES)' : undefined,
+      name: valid && name && name !== '---' ? name : undefined,
+      address: valid && address && address !== '---' ? address : undefined,
     };
 
     // Cache the response
@@ -333,10 +369,11 @@ async function validateVATNumber(countryCode: string, vatNumber: string): Promis
       timestamp: FieldValue.serverTimestamp(),
     });
 
+    logger.info('VIES validation result', { countryCode, vatNumber: cleanVat, valid });
     return response;
   } catch (error) {
-    logger.error('VIES validation error', { error, countryCode, vatNumber: cleanVat });
-    // Return format validation result on error
+    logger.error('VIES validation error (falling back to format check)', { error, countryCode, vatNumber: cleanVat });
+    // Fallback: return format validation result if VIES API is unavailable
     return {
       valid: isFormatValid,
       countryCode,

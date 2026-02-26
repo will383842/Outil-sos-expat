@@ -15,6 +15,7 @@
  *   - invoice.* (created, paid, payment_failed, payment_action_required)
  *   - payment_method.* (attached, updated)
  *   - transfer.* (created, reversed, failed)
+ *   - payout.failed
  */
 
 import { onRequest } from "firebase-functions/v2/https";
@@ -66,6 +67,7 @@ import {
   handleInvoicePaymentActionRequired,
   handleInvoiceCreated,
   handlePaymentMethodUpdated,
+  handlePayoutFailed,
 } from "../subscription/webhooks";
 import { addToDeadLetterQueue } from "../subscription/deadLetterQueue";
 
@@ -958,33 +960,72 @@ const handleTransferFailed = traceFunction(
         requiresManualReview: true,
       }, { merge: true });
 
-      // Enregistrer comme fond non reclame
+      // P1 FIX: Schedule automatic retry before registering as unclaimed
       if (callSessionId) {
+        let retryScheduled = false;
         try {
-          const { UnclaimedFundsManager, UNCLAIMED_FUNDS_CONFIG } = await import("../UnclaimedFundsManager");
-          const manager = new UnclaimedFundsManager(database);
+          const { scheduleTransferRetryTask } = await import("../lib/stripeTransferRetryTasks");
+          const destination = typeof transfer.destination === "string"
+            ? transfer.destination
+            : (transfer.destination as any)?.id;
 
-          const sessionDoc = await database.collection("call_sessions").doc(callSessionId).get();
-          const sessionData = sessionDoc.data();
+          if (destination) {
+            // Check if a pending_transfer exists for this session (created by StripeManager)
+            const pendingQuery = await database
+              .collection("pending_transfers")
+              .where("callSessionId", "==", callSessionId)
+              .where("status", "==", "pending_kyc")
+              .limit(1)
+              .get();
 
-          if (sessionData) {
-            await manager.registerUnclaimedFund({
-              paymentIntentId: sessionData.payment?.paymentIntentId || transfer.source_transaction as string,
-              chargeId: transfer.source_transaction as string,
-              callSessionId,
-              totalAmount: sessionData.payment?.amount || transfer.amount,
-              providerAmount: transfer.amount,
-              platformAmount: (sessionData.payment?.amount || transfer.amount) - transfer.amount,
+            const pendingTransferId = pendingQuery.empty
+              ? `retry_${transfer.id}`
+              : pendingQuery.docs[0].id;
+
+            await scheduleTransferRetryTask({
+              pendingTransferId,
+              providerId: transfer.metadata?.providerId || "",
+              stripeAccountId: destination,
+              amount: transfer.amount,
               currency: transfer.currency,
-              clientId: sessionData.clientId,
-              providerId: sessionData.providerId,
-              reason: UNCLAIMED_FUNDS_CONFIG.REASONS.TRANSFER_FAILED,
-              reasonDetails: `Transfer ${transfer.id} failed to destination ${transfer.destination}`,
+              sourceTransaction: transfer.source_transaction as string | undefined,
+              retryCount: 0,
             });
-            console.log("Unclaimed fund registered for failed transfer:", transfer.id);
+            retryScheduled = true;
+            console.log("Transfer retry scheduled for failed transfer:", transfer.id);
           }
-        } catch (unclaimedError) {
-          console.error("Failed to register unclaimed fund:", unclaimedError);
+        } catch (retryError) {
+          console.error("Failed to schedule transfer retry (will register as unclaimed):", retryError);
+        }
+
+        // Register as unclaimed only if retry was NOT scheduled
+        if (!retryScheduled) {
+          try {
+            const { UnclaimedFundsManager, UNCLAIMED_FUNDS_CONFIG } = await import("../UnclaimedFundsManager");
+            const manager = new UnclaimedFundsManager(database);
+
+            const sessionDoc = await database.collection("call_sessions").doc(callSessionId).get();
+            const sessionData = sessionDoc.data();
+
+            if (sessionData) {
+              await manager.registerUnclaimedFund({
+                paymentIntentId: sessionData.payment?.paymentIntentId || transfer.source_transaction as string,
+                chargeId: transfer.source_transaction as string,
+                callSessionId,
+                totalAmount: sessionData.payment?.amount || transfer.amount,
+                providerAmount: transfer.amount,
+                platformAmount: (sessionData.payment?.amount || transfer.amount) - transfer.amount,
+                currency: transfer.currency,
+                clientId: sessionData.clientId,
+                providerId: sessionData.providerId,
+                reason: UNCLAIMED_FUNDS_CONFIG.REASONS.TRANSFER_FAILED,
+                reasonDetails: `Transfer ${transfer.id} failed to destination ${transfer.destination}`,
+              });
+              console.log("Unclaimed fund registered for failed transfer:", transfer.id);
+            }
+          } catch (unclaimedError) {
+            console.error("Failed to register unclaimed fund:", unclaimedError);
+          }
         }
       }
 
@@ -1040,10 +1081,15 @@ export const stripeWebhook = onRequest(
   wrapHttpFunction(
     "stripeWebhook",
     async (req: FirebaseRequest, res: Response) => {
+      // P2-4 FIX: Reject non-POST requests (Stripe only sends POST)
+      if (req.method !== "POST") {
+        console.log(`STRIPE WEBHOOK REJECTED: Method ${req.method} not allowed`);
+        res.status(405).json({ error: "Method not allowed", allowed: "POST" });
+        return;
+      }
+
       // STEP 1: Log webhook start
       console.log("STRIPE WEBHOOK START");
-      console.log("Request method:", req.method);
-      console.log("Content-Type:", req.headers["content-type"]);
       console.log("Stripe mode:", isLive() ? "live" : "test");
 
       const signature = req.headers["stripe-signature"];
@@ -1078,11 +1124,8 @@ export const stripeWebhook = onRequest(
           return;
         }
 
+        // P2-5 FIX: Only log body length, NOT content (may contain sensitive payment data)
         console.log("Raw body length:", rawBodyBuffer.length);
-        console.log(
-          "Raw body preview:",
-          rawBodyBuffer.slice(0, 100).toString("utf8")
-        );
 
         // STEP 3: Validate webhook secret
         let webhookSecret: string;
@@ -1195,17 +1238,42 @@ export const stripeWebhook = onRequest(
           console.log(`IDEMPOTENCY: Event ${event.id} status="${existingStatus}" - allowing re-processing`);
         }
 
-        // Mark event as being processed
-        await webhookEventRef.set({
-          eventId: event.id,
-          eventType: event.type,
-          processedAt: admin.firestore.FieldValue.serverTimestamp(),
-          status: "processing",
-          objectId,
-          expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        // P0 FIX: Atomic idempotency claim via transaction to prevent race conditions
+        const claimed = await admin.firestore().runTransaction(async (tx) => {
+          const freshDoc = await tx.get(webhookEventRef);
+          if (freshDoc.exists && freshDoc.data()?.status === "completed") {
+            return false; // Already processed
+          }
+          tx.set(webhookEventRef, {
+            eventId: event.id,
+            eventType: event.type,
+            processedAt: admin.firestore.FieldValue.serverTimestamp(),
+            status: "processing",
+            objectId,
+            expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          });
+          return true;
         });
 
-        // STEP 6: Event processing
+        if (!claimed) {
+          console.log(`IDEMPOTENCY (tx): Event ${event.id} already completed`);
+          res.status(200).json({ received: true, duplicate: true, eventId: event.id });
+          return;
+        }
+
+        // P0 FIX: Respond 200 immediately after signature verification + idempotency claim.
+        // Firebase Functions v2 (Cloud Run) continues executing after res.send()
+        // as long as there are pending promises, until timeoutSeconds is reached.
+        // This prevents Stripe from timing out and retrying while we process.
+        res.status(200).json({
+          received: true,
+          eventId: event.id,
+          eventType: event.type,
+          objectId,
+          timestamp: new Date().toISOString(),
+        });
+
+        // STEP 6: Event processing (runs after 200 response sent)
         try {
           switch (event.type) {
             case "payment_intent.created":
@@ -1914,31 +1982,69 @@ export const stripeWebhook = onRequest(
               }
               break;
 
-            default:
-              // TRANSFER EVENTS (Destination Charges)
-              if (event.type === "transfer.created") {
-                console.log("Processing transfer.created (Destination Charges)");
+            case "payout.failed":
+              console.log("Processing payout.failed");
+              try {
+                await handlePayoutFailed(
+                  event.data.object as Stripe.Payout,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("Handled payout.failed");
+              } catch (subError) {
+                console.error("Error in handlePayoutFailed:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handlePayoutFailed" });
+                throw subError;
+              }
+              break;
+
+            // FIX: Promoted transfer events from default: to dedicated case blocks with DLQ
+            case "transfer.created":
+              console.log("Processing transfer.created (Destination Charges)");
+              try {
                 await handleTransferCreated(
                   event.data.object as Stripe.Transfer,
                   database
                 );
-              } else if (event.type === "transfer.reversed") {
-                console.log("Processing transfer.reversed");
+                console.log("Handled transfer.created");
+              } catch (subError) {
+                console.error("Error in handleTransferCreated:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleTransferCreated" });
+                throw subError;
+              }
+              break;
+
+            case "transfer.reversed":
+              console.log("Processing transfer.reversed");
+              try {
                 await handleTransferReversed(
                   event.data.object as Stripe.Transfer,
                   database
                 );
-              } else if ((event.type as string) === "transfer.failed") {
-                console.log("Processing transfer.failed");
+                console.log("Handled transfer.reversed");
+              } catch (subError) {
+                console.error("Error in handleTransferReversed:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleTransferReversed" });
+                throw subError;
+              }
+              break;
+
+            case "transfer.failed" as any:
+              console.log("Processing transfer.failed");
+              try {
                 await handleTransferFailed(
                   (event.data as { object: Stripe.Transfer }).object,
                   database
                 );
-              } else if ((event.type as string).startsWith("transfer.")) {
-                console.log("Unhandled transfer event:", event.type);
-              } else {
-                console.log("Unhandled event type:", event.type);
+                console.log("Handled transfer.failed");
+              } catch (subError) {
+                console.error("Error in handleTransferFailed:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleTransferFailed" });
+                throw subError;
               }
+              break;
+
+            default:
+              console.log("Unhandled event type:", event.type);
           }
 
           console.log("WEBHOOK SUCCESS");
@@ -1959,47 +2065,60 @@ export const stripeWebhook = onRequest(
             }
           );
 
-          res.status(200).json({
-            received: true,
-            eventId: event.id,
-            eventType: event.type,
-            objectId,
-            timestamp: new Date().toISOString(),
-          });
+          // Note: 200 response already sent before processing (early acknowledge)
         } catch (eventHandlerError) {
-          console.log("EVENT HANDLER ERROR:", eventHandlerError);
+          // Note: 200 already sent to Stripe. Errors are handled via DLQ + idempotency.
+          // On next Stripe retry (if any), the event will be re-processed since status != "completed".
+          console.log("EVENT HANDLER ERROR (post-acknowledge):", eventHandlerError);
 
-          // Mark event as failed but processed
+          const errorMessage = eventHandlerError instanceof Error
+            ? eventHandlerError.message
+            : String(eventHandlerError);
+          const errorCode = (eventHandlerError as any)?.code ?? "";
+
+          const isTransientError =
+            errorCode === "UNAVAILABLE" ||
+            errorCode === "DEADLINE_EXCEEDED" ||
+            errorCode === "RESOURCE_EXHAUSTED" ||
+            errorCode === "ABORTED" ||
+            errorMessage.includes("timeout") ||
+            errorMessage.includes("ECONNRESET") ||
+            errorMessage.includes("RETRY_NEEDED") ||
+            errorMessage.includes("ECONNREFUSED") ||
+            errorMessage.includes("socket hang up");
+
+          // Mark event with appropriate failure status
           await webhookEventRef.update({
-            status: "failed",
+            status: isTransientError ? "failed" : "failed_permanent",
             failedAt: admin.firestore.FieldValue.serverTimestamp(),
-            error: eventHandlerError instanceof Error
-              ? eventHandlerError.message
-              : String(eventHandlerError),
-          });
+            error: errorMessage,
+            errorType: isTransientError ? "transient" : "permanent",
+          }).catch((updateErr: unknown) => console.error("Failed to update webhook event status:", updateErr));
 
-          ultraLogger.error(
-            "STRIPE_WEBHOOK_HANDLER",
-            "Erreur dans le gestionnaire d'evenements",
-            {
-              eventType: event.type,
-              eventId: event.id,
-              error:
-                eventHandlerError instanceof Error
-                  ? eventHandlerError.message
-                  : String(eventHandlerError),
+          if (isTransientError) {
+            ultraLogger.warn(
+              "STRIPE_WEBHOOK_TRANSIENT_ERROR",
+              "Erreur transitoire — sera re-traitee au prochain delivery Stripe",
+              { eventType: event.type, eventId: event.id, error: errorMessage }
+            );
+          } else {
+            // Permanent error: add to DLQ for manual review/retry
+            try {
+              await addToDeadLetterQueue(event, eventHandlerError as Error, {
+                handler: event.type,
+                isTransient: false,
+              });
+              console.log(`Event ${event.id} added to Dead Letter Queue (permanent error)`);
+            } catch (dlqError) {
+              console.error("Failed to add to DLQ:", dlqError);
             }
-          );
 
-          // P0 FIX: Return 500 so Stripe retries transient failures
-          res.status(500).json({
-            received: true,
-            eventId: event.id,
-            handlerError:
-              eventHandlerError instanceof Error
-                ? eventHandlerError.message
-                : "Unknown handler error",
-          });
+            ultraLogger.error(
+              "STRIPE_WEBHOOK_PERMANENT_ERROR",
+              "Erreur permanente — ajoutee a la DLQ",
+              { eventType: event.type, eventId: event.id, error: errorMessage }
+            );
+          }
         }
       } catch (error) {
         console.log("FATAL ERROR:", error);
@@ -2017,7 +2136,10 @@ export const stripeWebhook = onRequest(
           }
         );
 
-        res.status(400).send(`Fatal Error: ${error}`);
+        // Only send response if not already sent (early acknowledge may have fired)
+        if (!res.headersSent) {
+          res.status(400).send(`Fatal Error: ${error}`);
+        }
       }
     }
   )

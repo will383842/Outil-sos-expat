@@ -11,6 +11,7 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { WithdrawalRequest, WithdrawalStatus, StatusHistoryEntry } from '../../types';
 import { adminConfig } from '../../../lib/functionConfigs';
+import { checkRateLimit, RATE_LIMITS } from '../../../lib/rateLimiter';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -64,6 +65,7 @@ export const adminApproveWithdrawal = onCall(
   async (request): Promise<{ success: boolean; message: string; withdrawal: WithdrawalRequest }> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);
+    await checkRateLimit(adminId, "approveWithdrawal", RATE_LIMITS.WITHDRAWAL);
 
     const db = getFirestore();
     const input = request.data as ApproveWithdrawalInput;

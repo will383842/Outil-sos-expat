@@ -1019,6 +1019,30 @@ export const createPaymentIntent = onCall(
         throw new HttpsError('invalid-argument', coherence.error ?? 'Incohérence montants');
       }
 
+      // P1 SECURITY FIX: Validate commission split server-side
+      // The provider amount should ALWAYS match server config (discounts reduce commission, not provider share).
+      // The commission (platform fee) may be reduced by coupons/affiliate discounts, but never below 0.
+      const expectedProviderAmount = cfg.providerAmount;
+      const providerDiff = Math.abs(providerAmountInMainUnit - expectedProviderAmount);
+      if (providerDiff > 0.5) {
+        logger.error('[createPaymentIntent] Provider amount mismatch - REJECTING', {
+          receivedProviderAmount: providerAmountInMainUnit,
+          expectedProviderAmount,
+          userId: request.auth?.uid,
+        });
+        throw new HttpsError('invalid-argument', 'Montant prestataire invalide');
+      }
+      // Commission must be: 0 <= received <= original (discounts can reduce it, but not inflate it)
+      const maxCommission = cfg.connectionFeeAmount;
+      if (commissionAmountInMainUnit < -0.01 || commissionAmountInMainUnit > maxCommission + 0.5) {
+        logger.error('[createPaymentIntent] Commission amount out of range - REJECTING', {
+          receivedCommission: commissionAmountInMainUnit,
+          maxCommission,
+          userId: request.auth?.uid,
+        });
+        throw new HttpsError('invalid-argument', 'Commission plateforme invalide');
+      }
+
       // Clé Stripe (safe)
       const stripeSecretKey = getStripeSecretKeySafe();
 

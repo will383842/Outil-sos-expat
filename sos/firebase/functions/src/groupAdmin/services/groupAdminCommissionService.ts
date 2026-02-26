@@ -110,48 +110,60 @@ export async function createClientReferralCommission(
       // Promotion service unavailable — proceed without promo
     }
 
-    // Create commission
-    const commission = await createCommission(
+    // P0 FIX: Atomic transaction — commission creation + balance update
+    const commissionRef = getDb().collection("group_admin_commissions").doc();
+    const now = Timestamp.now();
+    const currentMonth = new Date().toISOString().substring(0, 7);
+
+    const commission: GroupAdminCommission = {
+      id: commissionRef.id,
       groupAdminId,
-      "client_referral",
+      type: "client_referral",
+      status: "pending",
       amount,
+      originalAmount: amount,
+      currency: "USD",
       description,
-      {
-        sourceClientId: clientId,
-        sourceCallId: callId,
-        ...(promoId ? { promotionId: promoId, promoMultiplier } : {}),
+      createdAt: now,
+      sourceClientId: clientId,
+      sourceCallId: callId,
+      ...(promoId ? { promotionId: promoId, promoMultiplier } : {}),
+    };
+
+    await getDb().runTransaction(async (tx) => {
+      // Re-read GroupAdmin inside transaction to avoid stale data
+      const freshGroupAdminDoc = await tx.get(groupAdminDoc.ref);
+      if (!freshGroupAdminDoc.exists) {
+        throw new Error("GroupAdmin document disappeared during transaction");
       }
-    );
+      const freshGroupAdmin = freshGroupAdminDoc.data() as GroupAdmin;
 
-    if (commission) {
-      // Update GroupAdmin stats
-      const currentMonth = new Date().toISOString().substring(0, 7);
-
-      await groupAdminDoc.ref.update({
+      tx.set(commissionRef, commission);
+      tx.update(groupAdminDoc.ref, {
         totalClients: FieldValue.increment(1),
         totalCommissions: FieldValue.increment(1),
         pendingBalance: FieldValue.increment(amount),
-        "currentMonthStats.clients": groupAdmin.currentMonthStats.month === currentMonth
+        "currentMonthStats.clients": freshGroupAdmin.currentMonthStats.month === currentMonth
           ? FieldValue.increment(1)
           : 1,
-        "currentMonthStats.earnings": groupAdmin.currentMonthStats.month === currentMonth
+        "currentMonthStats.earnings": freshGroupAdmin.currentMonthStats.month === currentMonth
           ? FieldValue.increment(amount)
           : amount,
         "currentMonthStats.month": currentMonth,
         updatedAt: Timestamp.now(),
       });
+    });
 
-      logger.info("[GroupAdminCommission] Client referral commission created", {
-        groupAdminId,
-        commissionId: commission.id,
-        amount,
-        clientId,
-        callId,
-      });
+    logger.info("[GroupAdminCommission] Client referral commission created (atomic)", {
+      groupAdminId,
+      commissionId: commission.id,
+      amount,
+      clientId,
+      callId,
+    });
 
-      // Check if this GroupAdmin was recruited and if the threshold is now met
-      await checkAndPayRecruitmentCommission(groupAdminId);
-    }
+    // Check if this GroupAdmin was recruited and if the threshold is now met
+    await checkAndPayRecruitmentCommission(groupAdminId);
 
     return commission;
   } catch (error) {
@@ -447,37 +459,47 @@ export async function createManualAdjustment(
   notes?: string
 ): Promise<GroupAdminCommission | null> {
   try {
-    const commission = await createCommission(
+    // P0 FIX: Atomic transaction — commission creation + balance update
+    const commissionRef = getDb().collection("group_admin_commissions").doc();
+    const now = Timestamp.now();
+    const groupAdminRef = getDb().collection("group_admins").doc(groupAdminId);
+
+    const commission: GroupAdminCommission = {
+      id: commissionRef.id,
       groupAdminId,
-      "manual_adjustment",
+      type: "manual_adjustment",
+      status: "available",
       amount,
+      originalAmount: amount,
+      currency: "USD",
       description,
-      {
-        adjustedBy: adminId,
-        adjustmentNotes: notes,
-      }
-    );
+      createdAt: now,
+      availableAt: now,
+      adjustedBy: adminId,
+      adjustmentNotes: notes,
+    };
 
-    if (commission) {
-      // Update GroupAdmin balance (manual adjustments go directly to available)
-      const groupAdminDoc = await getDb().collection("group_admins").doc(groupAdminId).get();
-
-      if (groupAdminDoc.exists) {
-        await groupAdminDoc.ref.update({
-          totalCommissions: FieldValue.increment(1),
-          totalEarned: FieldValue.increment(amount),
-          availableBalance: FieldValue.increment(amount),
-          updatedAt: Timestamp.now(),
-        });
+    await getDb().runTransaction(async (tx) => {
+      const groupAdminDoc = await tx.get(groupAdminRef);
+      if (!groupAdminDoc.exists) {
+        throw new Error("GroupAdmin not found");
       }
 
-      logger.info("[GroupAdminCommission] Manual adjustment created", {
-        groupAdminId,
-        commissionId: commission.id,
-        amount,
-        adminId,
+      tx.set(commissionRef, commission);
+      tx.update(groupAdminRef, {
+        totalCommissions: FieldValue.increment(1),
+        totalEarned: FieldValue.increment(amount),
+        availableBalance: FieldValue.increment(amount),
+        updatedAt: Timestamp.now(),
       });
-    }
+    });
+
+    logger.info("[GroupAdminCommission] Manual adjustment created (atomic)", {
+      groupAdminId,
+      commissionId: commission.id,
+      amount,
+      adminId,
+    });
 
     return commission;
   } catch (error) {

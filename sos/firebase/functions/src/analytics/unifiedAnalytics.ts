@@ -199,8 +199,8 @@ const CONFIG = {
     analyticsDaily: 'analytics_daily',
     siteVisits: 'site_visits',
   },
-  // Platform fee percentage (20%)
-  platformFeePercentage: 0.20,
+  // P2-1 FIX: Platform fee percentage used ONLY as fallback when payment doc lacks actual fee data
+  platformFeePercentageFallback: 0.20,
   // Churn period in days (users inactive for this many days are considered churned)
   churnPeriodDays: 90,
   // Active provider threshold (minimum calls in last 30 days)
@@ -575,10 +575,30 @@ async function aggregateRevenueMetrics(
       transactionCount++;
       totalRevenue += amount;
 
-      // Calculate platform fee and provider payout
-      const fee = Math.round(amount * CONFIG.platformFeePercentage);
+      // P2-1 FIX: Use actual commission/provider amounts from payment doc instead of hardcoded 20%
+      // Fields named *Cents are ALWAYS in cents — no heuristic needed
+      // Fields named platformFee (no suffix) may be in euros — use heuristic only for those
+      let fee: number;
+      let payout: number;
+      if (data.commissionAmountCents !== undefined && data.commissionAmountCents !== null) {
+        fee = Math.round(data.commissionAmountCents); // Already in cents
+        payout = (data.providerAmountCents !== undefined && data.providerAmountCents !== null)
+          ? Math.round(data.providerAmountCents)
+          : (amount - fee);
+      } else if (data.platformFeeInCents !== undefined && data.platformFeeInCents !== null) {
+        fee = Math.round(data.platformFeeInCents); // Already in cents
+        payout = amount - fee;
+      } else if (data.platformFee !== undefined && data.platformFee !== null) {
+        // platformFee may be in euros (< 100) or cents (>= 100) — heuristic acceptable here only
+        fee = data.platformFee >= 100 ? Math.round(data.platformFee) : Math.round(data.platformFee * 100);
+        payout = amount - fee;
+      } else {
+        // Fallback: approximate with default percentage for old payments without actual data
+        fee = Math.round(amount * CONFIG.platformFeePercentageFallback);
+        payout = amount - fee;
+      }
       platformFees += fee;
-      providerPayouts += (amount - fee);
+      providerPayouts += payout;
 
       // Time-based revenue
       const createdDate = createdAt.toDate();

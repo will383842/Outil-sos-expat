@@ -8,6 +8,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
+import { checkRateLimit, RATE_LIMITS } from "../lib/rateLimiter";
 
 const db = getFirestore();
 
@@ -71,6 +72,8 @@ export const setAdminClaims = onCall(
       );
     }
 
+    await checkRateLimit(uid, "setAdminClaims", RATE_LIMITS.ADMIN_CLAIMS);
+
     try {
       // Définir les custom claims (admin: true pour compatibilité avec toutes les fonctions)
       await getAuth().setCustomUserClaims(uid, { role: "admin", admin: true });
@@ -132,6 +135,8 @@ export const bootstrapFirstAdmin = onCall(
         "Cet email n'est pas autorisé comme admin"
       );
     }
+
+    await checkRateLimit(uid, "bootstrapFirstAdmin", RATE_LIMITS.ADMIN_CLAIMS);
 
     try {
       // 1. Définir les custom claims Firebase Auth
@@ -229,6 +234,8 @@ export const initializeAdminClaims = onCall(
         "Cet email n'est pas dans la whitelist admin"
       );
     }
+
+    await checkRateLimit(request.auth.uid, "initializeAdminClaims", RATE_LIMITS.ADMIN_CLAIMS);
 
     try {
       // Trouver l'utilisateur par email

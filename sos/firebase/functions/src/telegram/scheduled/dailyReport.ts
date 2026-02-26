@@ -26,8 +26,8 @@ import { DailyReportVars } from '../types';
 
 const LOG_PREFIX = '[TelegramDailyReport]';
 
-/** Commission rate for SOS Expat (20%) */
-const COMMISSION_RATE = 0.20;
+/** Commission rate for SOS Expat (20%) - used as fallback only */
+const COMMISSION_RATE_FALLBACK = 0.20;
 
 /** Paris timezone for date calculations */
 const PARIS_TIMEZONE = 'Europe/Paris';
@@ -236,13 +236,13 @@ async function countCallsCompletedToday(
 
 /**
  * Sum payments received today
- * Returns total amount in euros
+ * Returns total amount in euros + actual commission if available
  */
 async function sumPaymentsReceivedToday(
   db: admin.firestore.Firestore,
   startOfDay: Date,
   endOfDay: Date
-): Promise<number> {
+): Promise<{ totalAmount: number; totalCommissionActual: number | null }> {
   try {
     const startTimestamp = admin.firestore.Timestamp.fromDate(startOfDay);
     const endTimestamp = admin.firestore.Timestamp.fromDate(endOfDay);
@@ -256,6 +256,8 @@ async function sumPaymentsReceivedToday(
       .get();
 
     let totalAmount = 0;
+    let totalCommissionActual = 0;
+    let hasActualCommission = false;
 
     for (const doc of paymentsSnapshot.docs) {
       const data = doc.data();
@@ -278,13 +280,27 @@ async function sumPaymentsReceivedToday(
       }
 
       totalAmount += amount;
+
+      // P2-1 FIX: Accumulate actual commission from payment docs
+      // Fields named *Cents are ALWAYS in cents, no heuristic needed
+      if (data.commissionAmountCents !== undefined && data.commissionAmountCents !== null) {
+        totalCommissionActual += data.commissionAmountCents / 100;
+        hasActualCommission = true;
+      } else if (data.platformFeeInCents !== undefined && data.platformFeeInCents !== null) {
+        totalCommissionActual += data.platformFeeInCents / 100;
+        hasActualCommission = true;
+      } else if (data.platformFee !== undefined && data.platformFee !== null) {
+        // platformFee (no suffix) — heuristic: >= 100 means cents, otherwise euros
+        totalCommissionActual += data.platformFee >= 100 ? data.platformFee / 100 : data.platformFee;
+        hasActualCommission = true;
+      }
     }
 
-    logger.info(`${LOG_PREFIX} Payments received today: ${totalAmount.toFixed(2)} EUR (${paymentsSnapshot.size} transactions)`);
-    return totalAmount;
+    logger.info(`${LOG_PREFIX} Payments received today: ${totalAmount.toFixed(2)} EUR (${paymentsSnapshot.size} transactions), actualCommission: ${hasActualCommission ? totalCommissionActual.toFixed(2) : 'N/A'}`);
+    return { totalAmount, totalCommissionActual: hasActualCommission ? totalCommissionActual : null };
   } catch (error) {
     logger.error(`${LOG_PREFIX} Error summing payments:`, error);
-    return 0;
+    return { totalAmount: 0, totalCommissionActual: null };
   }
 }
 
@@ -360,14 +376,18 @@ export const telegramDailyReport = onSchedule(
       });
 
       // 3. Aggregate today's data in parallel
-      const [registrationCount, callCount, totalPayments] = await Promise.all([
+      const [registrationCount, callCount, paymentResult] = await Promise.all([
         countUsersCreatedToday(db, startOfDay, endOfDay),
         countCallsCompletedToday(db, startOfDay, endOfDay),
         sumPaymentsReceivedToday(db, startOfDay, endOfDay),
       ]);
 
-      // 4. Calculate commission (20%)
-      const commission = totalPayments * COMMISSION_RATE;
+      const totalPayments = paymentResult.totalAmount;
+
+      // P2-1 FIX: Use actual commission from payment docs, fallback to estimated 20%
+      const commission = paymentResult.totalCommissionActual !== null
+        ? paymentResult.totalCommissionActual
+        : totalPayments * COMMISSION_RATE_FALLBACK;
 
       // 5. Build template variables
       const now = new Date();

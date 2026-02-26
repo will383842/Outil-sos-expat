@@ -175,26 +175,31 @@ function getAmountInEur(payment: PaymentDocument): number {
 
 /**
  * Calculate commission amount
- * Uses rate from payment data if available, otherwise uses default 20%
+ * P2-1 FIX: Prioritize actual commission from payment doc, fallback to 20% estimate
  */
 function calculateCommission(
   totalAmountEur: number,
   payment: PaymentDocument
 ): number {
-  // First, check if platform fee is directly available
-  if (payment.platformFee !== undefined) {
-    // If > 100, assume it's in cents
-    if (payment.platformFee > 100) {
-      return payment.platformFee / 100;
-    }
-    return payment.platformFee;
+  // P2-1 FIX: Prioritize actual commission from payment doc, fallback to 20% estimate
+  // Order aligned with unifiedAnalytics.ts and dailyReport.ts for consistency
+
+  // 1. commissionAmountCents — always in cents (set by StripeManager on capture)
+  if ((payment as any).commissionAmountCents !== undefined) {
+    return (payment as any).commissionAmountCents / 100;
   }
 
+  // 2. platformFeeInCents — always in cents
   if (payment.platformFeeInCents !== undefined) {
     return payment.platformFeeInCents / 100;
   }
 
-  // Calculate from commission rate if available
+  // 3. platformFee (no suffix) — heuristic: >= 100 means cents, otherwise euros
+  if (payment.platformFee !== undefined) {
+    return payment.platformFee >= 100 ? payment.platformFee / 100 : payment.platformFee;
+  }
+
+  // 4. Fallback: calculate from commission rate if available, else default 20%
   const commissionRate = payment.commissionRate ?? DEFAULT_COMMISSION_RATE;
   return totalAmountEur * commissionRate;
 }

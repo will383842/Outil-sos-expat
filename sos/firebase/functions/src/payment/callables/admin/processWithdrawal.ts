@@ -10,6 +10,7 @@ import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { adminConfig } from '../../../lib/functionConfigs';
+import { checkRateLimit, RATE_LIMITS } from '../../../lib/rateLimiter';
 import {
   WithdrawalRequest,
   WithdrawalStatus,
@@ -122,6 +123,7 @@ export const adminProcessWithdrawal = onCall(
   }> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);
+    await checkRateLimit(adminId, "processWithdrawal", RATE_LIMITS.WITHDRAWAL);
 
     const db = getFirestore();
     const input = request.data as ProcessWithdrawalInput;

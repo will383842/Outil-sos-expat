@@ -136,7 +136,7 @@ export const notifyExpiringPromotions = onSchedule(
     try {
       const adminsSnap = await db
         .collection("users")
-        .where("role", "in", ["admin"])
+        .where("role", "in", ["admin", "super_admin"])
         .get();
 
       if (adminsSnap.empty) {

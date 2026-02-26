@@ -181,6 +181,12 @@ export {
 // - Stripe balance check
 export { escrowMonitoringDaily } from "./scheduled/escrowMonitoring";
 
+// P2-7: STRIPE RECONCILIATION: Daily check Stripe PaymentIntents vs Firestore payments
+// - Detects missing payments, amount mismatches, status divergences
+// - Stores reports in reconciliation_reports collection
+// - Alerts admin on mismatches
+export { stripeReconciliation } from "./scheduled/stripeReconciliation";
+
 // ADMIN ALERTS DIGEST: Daily email summary to admins
 // - Aggregates unread admin_alerts by priority (critical, high, medium, low)
 // - Includes pending_transfers status summary

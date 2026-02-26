@@ -84,12 +84,16 @@ export async function scheduleTransferRetryTask(payload: TransferRetryPayload): 
   const scheduleTime = new Date(Date.now() + delaySeconds * 1000);
 
   // P0 AUDIT FIX: Use Cloud Run v2 URL (NOT v1 cloudfunctions.net which doesn't work with v2 functions)
-  const callbackUrl = EXECUTE_STRIPE_TRANSFER_RETRY_URL.value()
-    || `https://${location}-${projectId}.cloudfunctions.net/executeStripeTransferRetry`;
+  // FIX: v2 Cloud Run URL format is https://executestripetransferretry-<hash>-<region>.a.run.app
+  // Since we can't guess the hash, use the env var OR construct a valid v2 URL pattern
+  const configuredUrl = EXECUTE_STRIPE_TRANSFER_RETRY_URL.value();
 
-  if (!EXECUTE_STRIPE_TRANSFER_RETRY_URL.value()) {
-    logger.error(`[scheduleTransferRetryTask] CRITICAL: EXECUTE_STRIPE_TRANSFER_RETRY_URL not configured. v1 fallback URL may NOT work with v2 functions. Set this env var immediately.`);
+  if (!configuredUrl) {
+    logger.error(`[scheduleTransferRetryTask] CRITICAL: EXECUTE_STRIPE_TRANSFER_RETRY_URL not configured. Transfer retry task will NOT be scheduled. Configure this env var with the Cloud Run URL from: gcloud run services describe executeStipeTransferRetry --region=${location} --format="value(status.url)"`);
+    throw new Error("EXECUTE_STRIPE_TRANSFER_RETRY_URL not configured — cannot schedule retry task");
   }
+
+  const callbackUrl = configuredUrl;
 
   const task = {
     scheduleTime: { seconds: Math.floor(scheduleTime.getTime() / 1000) },

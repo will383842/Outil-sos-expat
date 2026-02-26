@@ -1741,8 +1741,10 @@ export class StripeManager {
       if (amount !== undefined) refundData.amount = toCents(amount);
 
       // ===== P0 FIX: Idempotency key pour le remboursement =====
-      // IMPORTANT: NE PAS inclure Date.now() - un remboursement ne doit se faire qu'une seule fois
-      const refundIdempotencyKey = `refund_${paymentIntentId}_${amount || 'full'}`;
+      // P2-2 FIX: Include refund reason/counter to distinguish multiple partial refunds of same amount
+      // Use a refund counter from the payment doc to make each partial refund unique
+      const existingRefunds = paymentData?.refundHistory?.length || paymentData?.refundCount || 0;
+      const refundIdempotencyKey = `refund_${paymentIntentId}_${amount || 'full'}_${existingRefunds}`;
       stripeOptions.idempotencyKey = refundIdempotencyKey.substring(0, 255);
 
       // P0 FIX 2026-01-30: Wrap refund with circuit breaker
@@ -1776,6 +1778,14 @@ export class StripeManager {
         refundedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         sessionId: sessionId || null,
+        // P2-2 FIX: Increment refundCount + append to refundHistory for idempotency key uniqueness
+        refundCount: admin.firestore.FieldValue.increment(1),
+        refundHistory: admin.firestore.FieldValue.arrayUnion({
+          refundId: refund.id,
+          amount: refund.amount,
+          reason: reason,
+          createdAt: new Date().toISOString(),
+        }),
       };
 
       // Ajouter les infos de reverse transfer si applicable
