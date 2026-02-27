@@ -382,7 +382,7 @@ export function useBlogger(): UseBloggerReturn {
   }, [blogger?.affiliateCodeRecruitment]);
 
   const minimumWithdrawal = useMemo(() => {
-    return dashboardData?.config?.minimumWithdrawalAmount || 2500; // $25 default
+    return dashboardData?.config?.minimumWithdrawalAmount || 3000; // $30 default
   }, [dashboardData]);
 
   const canWithdraw = useMemo(() => {

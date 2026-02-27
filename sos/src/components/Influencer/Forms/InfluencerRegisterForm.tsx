@@ -534,10 +534,12 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
           communitySize: formData.communitySize ? parseInt(formData.communitySize) : undefined,
           communityNiche: formData.communityNiche || undefined,
           interventionCountries: formData.interventionCountries.length > 0 ? formData.interventionCountries : undefined,
-          recruiterCode: formData.referralCode || undefined,
+          recruitmentCode: formData.referralCode || undefined,
           termsAcceptedAt: new Date().toISOString(),
           termsVersion: "3.0",
           termsType: "terms_influencers",
+          termsAffiliateVersion: "1.0",
+          termsAffiliateType: "terms_affiliate",
           termsAcceptanceMeta: {
             userAgent: navigator.userAgent,
             language: navigator.language,
@@ -1193,7 +1195,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
           <span className="text-sm leading-relaxed">
             <FormattedMessage
               id="influencer.register.acceptTerms"
-              defaultMessage="I accept the {termsLink} and the {privacyLink}"
+              defaultMessage="I accept the {termsLink}, the {affiliateTermsLink} and the {privacyLink}"
               values={{
                 termsLink: (
                   <Link
@@ -1203,6 +1205,16 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
                     className="underline font-medium text-red-400 hover:text-red-300"
                   >
                     <FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" />
+                  </Link>
+                ),
+                affiliateTermsLink: (
+                  <Link
+                    to="/cgu-affiliation"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline font-medium text-red-400 hover:text-red-300"
+                  >
+                    <FormattedMessage id="form.affiliateTerms" defaultMessage="Affiliate Program Terms" />
                   </Link>
                 ),
                 privacyLink: (

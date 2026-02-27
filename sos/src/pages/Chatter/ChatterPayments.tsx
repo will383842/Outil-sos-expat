@@ -690,7 +690,9 @@ const ChatterPayments: React.FC = () => {
                             <p className="text-sm dark:text-gray-400">
                               {method.methodType === 'mobile_money'
                                 ? 'Mobile Money'
-                                : 'Virement bancaire'}
+                                : method.methodType === 'wise'
+                                  ? 'Wise'
+                                  : 'Virement bancaire'}
                               {'country' in method.details && method.details.country && ` - ${method.details.country}`}
                             </p>
                           </div>

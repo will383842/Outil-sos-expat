@@ -23,7 +23,7 @@ export type PaymentProvider = 'wise' | 'flutterwave';
  * - bank_transfer: Traditional bank account (via Wise)
  * - mobile_money: Mobile money wallets (via Flutterwave)
  */
-export type PaymentMethodType = 'bank_transfer' | 'mobile_money';
+export type PaymentMethodType = 'bank_transfer' | 'mobile_money' | 'wise';
 
 /**
  * User types that can request withdrawals from the system
@@ -243,8 +243,14 @@ export interface WithdrawalRequest {
   // Amount Information
   // -------------------------
 
-  /** Amount in cents (smallest currency unit) */
+  /** Amount in cents (smallest currency unit) — what user receives */
   amount: number;
+
+  /** SOS-Expat withdrawal fee in cents (e.g., 300 = $3) */
+  withdrawalFee?: number;
+
+  /** Total debited from balance: amount + withdrawalFee */
+  totalDebited?: number;
 
   /** Source currency (always USD in our system) */
   sourceCurrency: 'USD';
@@ -528,7 +534,7 @@ export const DEFAULT_PAYMENT_CONFIG: Omit<PaymentConfig, 'updatedAt' | 'updatedB
   autoPaymentThreshold: 50000, // $500 - auto below, manual above
 
   // Limits (in cents)
-  minimumWithdrawal: 1000,     // $10 minimum
+  minimumWithdrawal: 3000,     // $30 minimum
   maximumWithdrawal: 500000,   // $5,000 maximum per withdrawal
   dailyLimit: 500000,          // $5,000 per day
   monthlyLimit: 2000000,       // $20,000 per month

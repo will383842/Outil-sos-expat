@@ -93,8 +93,8 @@ const GroupAdminPayments: React.FC = () => {
   };
 
   const handleWithdraw = async () => {
-    if (!profile || withdrawForm.amount < 2500) {
-      setError('Minimum withdrawal is $25');
+    if (!profile || withdrawForm.amount < 3000) {
+      setError('Minimum withdrawal is $30');
       return;
     }
     if (withdrawForm.amount > profile.availableBalance) {
@@ -261,7 +261,7 @@ const GroupAdminPayments: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setShowWithdrawForm(true)}
-                  disabled={profile.availableBalance < 2500 || !!profile.pendingWithdrawalId || !user?.telegramId}
+                  disabled={profile.availableBalance < 3000 || !!profile.pendingWithdrawalId || !user?.telegramId}
                   className="bg-white text-green-600 font-bold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Withdraw
@@ -287,10 +287,10 @@ const GroupAdminPayments: React.FC = () => {
                       value={withdrawForm.amount}
                       onChange={(e) => setWithdrawForm({ ...withdrawForm, amount: Number(e.target.value) })}
                       max={profile.availableBalance}
-                      min={2500}
+                      min={3000}
                       className="w-full px-4 py-2 border dark:border-white/10 rounded-lg bg-white dark:bg-white/10 text-gray-900 dark:text-white"
                     />
-                    <p className="text-xs dark:text-gray-300 mt-1">Min: $25 | Max: {formatGroupAdminAmount(profile.availableBalance)}</p>
+                    <p className="text-xs dark:text-gray-300 mt-1">Min: $30 | Max: {formatGroupAdminAmount(profile.availableBalance)}</p>
                   </div>
 
                   <div>

@@ -93,6 +93,8 @@ export {
   adminDeleteInfluencerPromotion,
   adminGetInfluencerPromotionStats,
   adminDuplicateInfluencerPromotion,
+  // Admin withdrawals
+  adminGetInfluencerWithdrawals,
 } from "./callables/admin";
 
 export { adminToggleInfluencerVisibility } from "./callables/admin/toggleVisibility";

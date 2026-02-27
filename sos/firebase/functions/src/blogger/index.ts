@@ -91,6 +91,9 @@ export {
   adminDeleteBloggerGuideCopyText,
   adminDeleteBloggerGuideBestPractice,
 
+  // Admin withdrawals
+  adminGetBloggerWithdrawals,
+
   // Public directory
   getBloggerDirectory,
 

@@ -24,6 +24,7 @@ const FEE_CONFIG = {
     usd: { percentageFee: 0.029, fixedFee: 0.49, fxFeePercent: 0.03 },
     payoutFee: { percentageFee: 0.02, fixedFee: 0, maxFee: 20 },
   },
+  withdrawalFees: { fixedFee: 3, currency: "USD" },
   createdAt: FieldValue.serverTimestamp(),
   updatedAt: FieldValue.serverTimestamp(),
   updatedBy: "seed-script",

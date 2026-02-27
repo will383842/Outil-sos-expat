@@ -483,10 +483,12 @@ const BloggerRegister: React.FC = () => {
           blogTraffic: formData.blogTraffic as RegisterBloggerInput['blogTraffic'],
           blogDescription: formData.blogDescription,
           definitiveRoleAcknowledged: formData.definitiveRoleAcknowledged,
-          recruiterCode: formData.referralCode || undefined,
+          recruitmentCode: formData.referralCode || undefined,
           termsAcceptedAt: new Date().toISOString(),
           termsVersion: "3.0",
           termsType: "terms_bloggers",
+          termsAffiliateVersion: "1.0",
+          termsAffiliateType: "terms_affiliate",
           termsAcceptanceMeta: {
             userAgent: navigator.userAgent,
             language: navigator.language,
@@ -1034,9 +1036,10 @@ const BloggerRegister: React.FC = () => {
                         <span className="text-sm leading-relaxed text-gray-300">
                           <FormattedMessage
                             id="blogger.register.acceptTerms"
-                            defaultMessage="I accept the {termsLink} and the {privacyLink}"
+                            defaultMessage="I accept the {termsLink}, the {affiliateTermsLink} and the {privacyLink}"
                             values={{
                               termsLink: <Link to="/cgu-bloggers" target="_blank" rel="noopener noreferrer" className="underline font-medium text-purple-400 hover:text-purple-300"><FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" /></Link>,
+                              affiliateTermsLink: <Link to="/cgu-affiliation" target="_blank" rel="noopener noreferrer" className="underline font-medium text-purple-400 hover:text-purple-300"><FormattedMessage id="form.affiliateTerms" defaultMessage="Affiliate Program Terms" /></Link>,
                               privacyLink: <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline font-medium text-purple-400 hover:text-purple-300"><FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" /></Link>,
                             }}
                           />

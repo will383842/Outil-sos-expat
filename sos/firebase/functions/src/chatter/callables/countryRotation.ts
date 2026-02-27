@@ -200,7 +200,14 @@ export const adminGetCountryRotationStatus = onCall(
     await assertAdmin(request);
 
     try {
-      const result = await getCountryRotationStatus();
+      let result = await getCountryRotationStatus();
+
+      // Auto-initialize if not yet set up
+      if (!result.success && result.error === "Country rotation not initialized") {
+        logger.info("[adminGetCountryRotationStatus] Auto-initializing country rotation");
+        await initializeCountryRotation();
+        result = await getCountryRotationStatus();
+      }
 
       if (!result.success) {
         throw new HttpsError("internal", result.error || "Failed to get status");

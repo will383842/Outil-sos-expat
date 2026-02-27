@@ -458,6 +458,12 @@ export interface Chatter {
   /** Type of terms accepted */
   termsType: string; // "terms_chatters"
 
+  /** Version of affiliate terms accepted (e.g., "1.0") */
+  termsAffiliateVersion?: string;
+
+  /** Type of affiliate terms (e.g., "terms_affiliate") */
+  termsAffiliateType?: string;
+
   /** Metadata about the acceptance for legal compliance */
   termsAcceptanceMeta?: {
     userAgent?: string;
@@ -1077,7 +1083,7 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
 
   recruitmentLinkDurationMonths: 6,
 
-  minimumWithdrawalAmount: 1000,     // $10
+  minimumWithdrawalAmount: 3000,     // $30
   validationHoldPeriodHours: 48,     // 2 days
   releaseDelayHours: 24,             // 1 day after validation
 
@@ -2292,6 +2298,8 @@ export interface RegisterChatterInput {
   termsAcceptedAt?: string;
   termsVersion?: string;
   termsType?: string;
+  termsAffiliateVersion?: string;
+  termsAffiliateType?: string;
   termsAcceptanceMeta?: {
     userAgent?: string;
     language?: string;

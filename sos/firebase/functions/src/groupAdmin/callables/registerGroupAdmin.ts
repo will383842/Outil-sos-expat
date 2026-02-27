@@ -414,6 +414,8 @@ export const registerGroupAdmin = onCall(
         termsAcceptedAt: input.termsAcceptedAt || now.toDate().toISOString(),
         termsVersion: input.termsVersion || "3.0",
         termsType: input.termsType || "terms_group_admins",
+        termsAffiliateVersion: input.termsAffiliateVersion || "1.0",
+        termsAffiliateType: input.termsAffiliateType || "terms_affiliate",
         termsAcceptanceMeta: input.termsAcceptanceMeta || {
           userAgent: request.rawRequest?.headers?.["user-agent"] || "unknown",
           language: input.language || "en",

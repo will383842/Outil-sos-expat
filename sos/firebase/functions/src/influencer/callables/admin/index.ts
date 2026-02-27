@@ -1016,3 +1016,148 @@ export const adminBulkInfluencerAction = onCall(
 );
 
 export { adminToggleInfluencerVisibility } from "./toggleVisibility";
+
+// ============================================================================
+// GET INFLUENCER WITHDRAWALS (Admin)
+// Lists all influencer withdrawals from payment_withdrawals with pagination,
+// status filter, search, and stats.
+// ============================================================================
+
+export const adminGetInfluencerWithdrawals = onCall(
+  {
+    region: "us-central1",
+    memory: "256MiB",
+    cpu: 0.083,
+    timeoutSeconds: 30,
+    cors: ALLOWED_ORIGINS,
+  },
+  async (request): Promise<{
+    withdrawals: any[];
+    total: number;
+    page: number;
+    limit: number;
+    stats?: {
+      pendingCount: number;
+      pendingAmount: number;
+      completedThisMonth: number;
+      completedAmountThisMonth: number;
+    };
+  }> => {
+    await checkAdmin(request.auth);
+
+    const db = getFirestore();
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      search,
+      includeStats,
+    } = (request.data || {}) as {
+      page?: number;
+      limit?: number;
+      status?: string;
+      search?: string;
+      includeStats?: boolean;
+    };
+
+    try {
+      // Build query on centralized payment_withdrawals collection
+      let query: FirebaseFirestore.Query = db.collection("payment_withdrawals")
+        .where("userType", "==", "influencer");
+
+      if (status) {
+        query = query.where("status", "==", status);
+      }
+
+      query = query.orderBy("requestedAt", "desc");
+
+      // Get all matching docs for total count + search filtering
+      const allSnapshot = await query.get();
+      let allDocs = allSnapshot.docs;
+
+      // Client-side search (name, email)
+      if (search) {
+        const searchLower = search.toLowerCase();
+        allDocs = allDocs.filter((doc) => {
+          const d = doc.data();
+          return (
+            d.userName?.toLowerCase().includes(searchLower) ||
+            d.userEmail?.toLowerCase().includes(searchLower) ||
+            doc.id.toLowerCase().includes(searchLower)
+          );
+        });
+      }
+
+      const total = allDocs.length;
+
+      // Paginate
+      const startIndex = (page - 1) * limit;
+      const pageDocs = allDocs.slice(startIndex, startIndex + limit);
+
+      // Map to frontend format
+      const withdrawals = pageDocs.map((doc) => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          influencerId: d.userId,
+          influencerName: d.userName || "Unknown",
+          influencerEmail: d.userEmail || "",
+          amount: d.amount || 0,
+          paymentMethod: d.methodType || d.provider || "unknown",
+          paymentDetails: d.paymentDetails || {},
+          status: d.status,
+          rejectionReason: d.rejectionReason || d.errorMessage || null,
+          requestedAt: d.requestedAt || d.createdAt || "",
+          processedAt: d.processedAt || null,
+          completedAt: d.completedAt || d.sentAt || null,
+        };
+      });
+
+      // Stats
+      let stats;
+      if (includeStats) {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+        const allInfluencerWithdrawals = await db.collection("payment_withdrawals")
+          .where("userType", "==", "influencer")
+          .get();
+
+        let pendingCount = 0;
+        let pendingAmount = 0;
+        let completedThisMonth = 0;
+        let completedAmountThisMonth = 0;
+
+        allInfluencerWithdrawals.docs.forEach((doc) => {
+          const d = doc.data();
+          if (["pending", "validating", "approved", "queued"].includes(d.status)) {
+            pendingCount++;
+            pendingAmount += d.amount || 0;
+          }
+          if (
+            ["sent", "completed"].includes(d.status) &&
+            (d.completedAt >= monthStart || d.sentAt >= monthStart)
+          ) {
+            completedThisMonth++;
+            completedAmountThisMonth += d.amount || 0;
+          }
+        });
+
+        stats = { pendingCount, pendingAmount, completedThisMonth, completedAmountThisMonth };
+      }
+
+      logger.info("[adminGetInfluencerWithdrawals] Success", {
+        total,
+        returned: withdrawals.length,
+        page,
+      });
+
+      return { withdrawals, total, page, limit, stats };
+    } catch (error) {
+      logger.error("[adminGetInfluencerWithdrawals] Error", {
+        error: error instanceof Error ? error.message : "Unknown",
+      });
+      throw new HttpsError("internal", "Failed to fetch influencer withdrawals");
+    }
+  }
+);

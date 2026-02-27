@@ -132,6 +132,8 @@ export interface ChatterRegistrationData {
   termsAcceptedAt?: string;
   termsVersion?: string;
   termsType?: string;
+  termsAffiliateVersion?: string;
+  termsAffiliateType?: string;
   termsAcceptanceMeta?: {
     userAgent: string;
     language: string;
@@ -484,6 +486,8 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       termsAcceptedAt: new Date().toISOString(),
       termsVersion: "3.0",
       termsType: "terms_chatters",
+      termsAffiliateVersion: "1.0",
+      termsAffiliateType: "terms_affiliate",
       termsAcceptanceMeta: {
         userAgent: navigator.userAgent,
         language: navigator.language,
@@ -946,7 +950,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           <span className={`text-sm leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
             <FormattedMessage
               id="chatter.register.acceptTerms"
-              defaultMessage="I accept the {termsLink} and the {privacyLink}"
+              defaultMessage="I accept the {termsLink}, the {affiliateTermsLink} and the {privacyLink}"
               values={{
                 termsLink: (
                   <Link
@@ -956,6 +960,16 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
                     className={`underline font-medium ${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
                   >
                     <FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" />
+                  </Link>
+                ),
+                affiliateTermsLink: (
+                  <Link
+                    to="/cgu-affiliation"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`underline font-medium ${darkMode ? 'text-amber-400 hover:text-amber-300' : 'text-red-500 hover:text-red-600'}`}
+                  >
+                    <FormattedMessage id="form.affiliateTerms" defaultMessage="Affiliate Program Terms" />
                   </Link>
                 ),
                 privacyLink: (

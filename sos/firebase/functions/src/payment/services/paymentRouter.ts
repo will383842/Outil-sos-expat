@@ -239,11 +239,14 @@ export class PaymentRouter {
     countryCode: string,
     methodType: PaymentMethodType
   ): ProviderDeterminationResult {
+    // Normalize 'wise' to 'bank_transfer' for routing purposes
+    const effectiveMethodType: PaymentMethodType = methodType === 'wise' ? 'bank_transfer' : methodType;
     const upperCountryCode = countryCode.toUpperCase();
 
     logger.info('[PaymentRouter] Determining provider', {
       countryCode: upperCountryCode,
       methodType,
+      effectiveMethodType,
     });
 
     // Check if country is sanctioned
@@ -279,9 +282,9 @@ export class PaymentRouter {
     }
 
     // Check if the requested method type matches what's available
-    if (methodType !== countryMethodType) {
+    if (effectiveMethodType !== countryMethodType) {
       // Allow bank transfers via Wise for countries that have mobile money as primary
-      if (methodType === 'bank_transfer' && this.config.wiseEnabled) {
+      if (effectiveMethodType === 'bank_transfer' && this.config.wiseEnabled) {
         // Wise can handle bank transfers in most countries
         return {
           provider: 'wise',
@@ -290,7 +293,7 @@ export class PaymentRouter {
       }
 
       // Mobile money requested for a bank transfer country
-      if (methodType === 'mobile_money' && recommendedProvider === 'wise') {
+      if (effectiveMethodType === 'mobile_money' && recommendedProvider === 'wise') {
         return {
           provider: 'wise',
           supported: false,
@@ -310,7 +313,7 @@ export class PaymentRouter {
 
     if (recommendedProvider === 'flutterwave' && !this.config.flutterwaveEnabled) {
       // Try to fall back to Wise for bank transfers
-      if (methodType === 'bank_transfer' && this.config.wiseEnabled) {
+      if (effectiveMethodType === 'bank_transfer' && this.config.wiseEnabled) {
         return {
           provider: 'wise',
           supported: true,
@@ -505,8 +508,9 @@ export class PaymentRouter {
     });
 
     try {
-      // Step 1: Determine provider
-      const determination = this.determineProvider(countryCode, methodType);
+      // Step 1: Determine provider (normalize 'wise' → 'bank_transfer' for routing)
+      const effectiveMethodType: PaymentMethodType = methodType === 'wise' ? 'bank_transfer' : methodType;
+      const determination = this.determineProvider(countryCode, effectiveMethodType);
 
       if (!determination.supported) {
         logger.error('[PaymentRouter] Payment not supported', {

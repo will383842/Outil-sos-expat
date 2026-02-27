@@ -34,6 +34,7 @@ import {
 } from '../types';
 import { createPaymentRouter } from './paymentRouter';
 import { encryptFields, decryptFields } from '../../utils/encryption';
+import { getWithdrawalFee } from '../../services/feeCalculationService';
 
 // Sensitive fields to encrypt for each payment detail type
 const BANK_SENSITIVE_FIELDS: (keyof BankTransferDetails)[] = [
@@ -114,6 +115,7 @@ interface SavePaymentMethodParams {
   userType: PaymentUserType;
   details: BankTransferDetails | MobileMoneyDetails;
   setAsDefault?: boolean;
+  methodType?: PaymentMethodType;
 }
 
 interface CreateWithdrawalParams {
@@ -215,10 +217,10 @@ export class PaymentService {
 
     // Determine provider based on payment type
     const provider: PaymentProvider = details.type === 'bank_transfer' ? 'wise' : 'flutterwave';
-    const methodType: PaymentMethodType = details.type;
+    const methodType: PaymentMethodType = params.methodType || details.type;
 
     // Check for existing matching payment method to avoid duplicates
-    const existingMethod = await this.findMatchingPaymentMethod(userId, userType, details);
+    const existingMethod = await this.findMatchingPaymentMethod(userId, userType, details, methodType);
     if (existingMethod) {
       logger.info('[PaymentService.savePaymentMethod] Reusing existing payment method', {
         methodId: existingMethod.id,
@@ -310,13 +312,14 @@ export class PaymentService {
   private async findMatchingPaymentMethod(
     userId: string,
     userType: PaymentUserType,
-    details: BankTransferDetails | MobileMoneyDetails
+    details: BankTransferDetails | MobileMoneyDetails,
+    methodType?: PaymentMethodType
   ): Promise<UserPaymentMethod | null> {
     const snapshot = await this.db
       .collection(COLLECTIONS.PAYMENT_METHODS)
       .where('userId', '==', userId)
       .where('userType', '==', userType)
-      .where('methodType', '==', details.type)
+      .where('methodType', '==', methodType || details.type)
       .get();
 
     if (snapshot.empty) {
@@ -336,16 +339,18 @@ export class PaymentService {
           isMatch = (existingDetails as MobileMoneyDetails).phoneNumber === details.phoneNumber
             && (existingDetails as MobileMoneyDetails).provider === details.provider;
           break;
-        case 'bank_transfer':
+        case 'bank_transfer': {
+          const existingBank = existingDetails as BankTransferDetails;
           isMatch = (
-            ((existingDetails as BankTransferDetails).iban && details.iban
-              ? (existingDetails as BankTransferDetails).iban === details.iban
+            (existingBank.iban && (details as BankTransferDetails).iban
+              ? existingBank.iban === (details as BankTransferDetails).iban
               : false) ||
-            ((existingDetails as BankTransferDetails).accountNumber && details.accountNumber
-              ? (existingDetails as BankTransferDetails).accountNumber === details.accountNumber
+            (existingBank.accountNumber && (details as BankTransferDetails).accountNumber
+              ? existingBank.accountNumber === (details as BankTransferDetails).accountNumber
               : false)
           );
           break;
+        }
       }
 
       if (isMatch) {
@@ -508,6 +513,11 @@ export class PaymentService {
       config.paymentMode === 'automatic' ||
       (config.paymentMode === 'hybrid' && amount <= config.autoPaymentThreshold);
 
+    // 3b. Get withdrawal fee from admin config
+    const feeConfig = await getWithdrawalFee();
+    const withdrawalFee = feeConfig.fixedFee * 100; // Convert dollars to cents
+    const totalDebited = amount + withdrawalFee;
+
     // 4. Create the withdrawal
     const now = new Date().toISOString();
     const withdrawalRef = this.db.collection(COLLECTIONS.WITHDRAWALS).doc();
@@ -518,7 +528,7 @@ export class PaymentService {
       timestamp: now,
       actor: userId,
       actorType: 'user',
-      note: 'Withdrawal request submitted',
+      note: `Withdrawal request submitted (fee: $${feeConfig.fixedFee})`,
     };
 
     const withdrawal: WithdrawalRequest = {
@@ -528,6 +538,8 @@ export class PaymentService {
       userEmail,
       userName,
       amount,
+      withdrawalFee,
+      totalDebited,
       sourceCurrency: 'USD',
       targetCurrency: paymentMethod.details.currency,
       paymentMethodId,
@@ -558,8 +570,8 @@ export class PaymentService {
         throw new Error('A withdrawal request is already pending');
       }
 
-      // Deduct from user's available balance
-      await this.deductUserBalance(userId, userType, amount, transaction);
+      // Deduct from user's available balance (amount + withdrawal fee)
+      await this.deductUserBalance(userId, userType, totalDebited, transaction);
 
       // Create withdrawal document
       transaction.set(withdrawalRef, withdrawal);
@@ -570,6 +582,8 @@ export class PaymentService {
       userId,
       userType,
       amount,
+      withdrawalFee,
+      totalDebited,
       isAutomatic,
     });
 
@@ -667,7 +681,7 @@ export class PaymentService {
         statusHistory: FieldValue.arrayUnion(historyEntry),
       });
 
-      // 3. Refund balance in the SAME transaction
+      // 3. Refund balance in the SAME transaction (amount + withdrawal fee)
       const collectionName = this.getUserCollectionName(withdrawal.userType);
       const userRef = this.db.collection(collectionName).doc(withdrawal.userId);
       const userDoc = await transaction.get(userRef);
@@ -678,9 +692,10 @@ export class PaymentService {
 
       const userData = userDoc.data()!;
       const currentBalance = userData.availableBalance || 0;
+      const refundAmount = withdrawal.totalDebited || withdrawal.amount;
 
       transaction.update(userRef, {
-        availableBalance: currentBalance + withdrawal.amount,
+        availableBalance: currentBalance + refundAmount,
         updatedAt: Timestamp.now(),
       });
     });
@@ -783,7 +798,7 @@ export class PaymentService {
         errorMessage: reason,
       });
 
-      // Refund balance in the SAME transaction
+      // Refund balance in the SAME transaction (amount + withdrawal fee)
       const collectionName = this.getUserCollectionName(withdrawal.userType);
       const userRef = this.db.collection(collectionName).doc(withdrawal.userId);
       const userDoc = await transaction.get(userRef);
@@ -794,9 +809,10 @@ export class PaymentService {
 
       const userData = userDoc.data()!;
       const currentBalance = userData.availableBalance || 0;
+      const refundAmount = withdrawal.totalDebited || withdrawal.amount;
 
       transaction.update(userRef, {
-        availableBalance: currentBalance + withdrawal.amount,
+        availableBalance: currentBalance + refundAmount,
         updatedAt: Timestamp.now(),
       });
     });
@@ -1102,7 +1118,7 @@ export class PaymentService {
         lastRetryAt: now,
       });
 
-      // Refund balance atomically if max retries exceeded
+      // Refund balance atomically if max retries exceeded (amount + withdrawal fee)
       if (shouldRefund) {
         const collectionName = this.getUserCollectionName(withdrawal.userType);
         const userRef = this.db.collection(collectionName).doc(withdrawal.userId);
@@ -1111,8 +1127,9 @@ export class PaymentService {
         if (userDoc.exists) {
           const userData = userDoc.data()!;
           const currentBalance = userData.availableBalance || 0;
+          const refundAmount = withdrawal.totalDebited || withdrawal.amount;
           transaction.update(userRef, {
-            availableBalance: currentBalance + withdrawal.amount,
+            availableBalance: currentBalance + refundAmount,
             updatedAt: Timestamp.now(),
           });
         }
@@ -1332,13 +1349,16 @@ export class PaymentService {
       };
     }
 
-    // Check user balance
+    // Check user balance (must cover amount + withdrawal fee)
     const availableBalance = await this.getUserAvailableBalance(userId, userType);
+    const feeConfig = await getWithdrawalFee();
+    const withdrawalFee = feeConfig.fixedFee * 100; // Convert to cents
+    const totalNeeded = amount + withdrawalFee;
 
-    if (amount > availableBalance) {
+    if (totalNeeded > availableBalance) {
       return {
         valid: false,
-        error: `Insufficient balance. Available: $${(availableBalance / 100).toFixed(2)}`,
+        error: `Insufficient balance. You need $${(totalNeeded / 100).toFixed(2)} (including $${feeConfig.fixedFee} withdrawal fee). Available: $${(availableBalance / 100).toFixed(2)}`,
       };
     }
 

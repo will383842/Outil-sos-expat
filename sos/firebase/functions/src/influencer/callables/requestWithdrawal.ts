@@ -229,6 +229,7 @@ export const requestWithdrawal = onCall(
         userType: "influencer",
         details: centralizedDetails,
         setAsDefault: true,
+        methodType: input.paymentMethod === "wise" ? "wise" : undefined,
       });
 
       // 10. Create withdrawal via centralized service

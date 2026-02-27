@@ -168,6 +168,7 @@ export const requestGroupAdminWithdrawal = onCall(
         userType: "group_admin",
         details: centralizedDetails,
         setAsDefault: true,
+        methodType: input.paymentMethod === "wise" ? "wise" : undefined,
       });
 
       // 6. Get payment config for auto/manual mode

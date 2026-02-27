@@ -15,6 +15,11 @@ export interface PayoutFeeRate {
   maxFee: number;          // ex: 20 (plafond en devise)
 }
 
+export interface WithdrawalFeeConfig {
+  fixedFee: number;        // Frais fixe par retrait (en devise, ex: 3 = 3$)
+  currency: string;        // Devise (ex: 'USD')
+}
+
 export interface FeeConfig {
   stripe: {
     eur: ProcessorFeeRate;
@@ -25,6 +30,7 @@ export interface FeeConfig {
     usd: ProcessorFeeRate;
     payoutFee: PayoutFeeRate;
   };
+  withdrawalFees: WithdrawalFeeConfig;
 }
 
 export interface EstimatedFees {
@@ -57,6 +63,7 @@ const DEFAULT_FEE_CONFIG: FeeConfig = {
     usd: { percentageFee: 0.029, fixedFee: 0.49, fxFeePercent: 0.03 },
     payoutFee: { percentageFee: 0.02, fixedFee: 0, maxFee: 20 },
   },
+  withdrawalFees: { fixedFee: 3, currency: 'USD' },
 };
 
 /* ==================== Cache ==================== */
@@ -82,6 +89,10 @@ export async function getFeeConfig(): Promise<FeeConfig> {
     if (doc.exists) {
       const data = doc.data() as FeeConfig;
       if (isValidFeeConfig(data)) {
+        // Rétrocompatibilité : si withdrawalFees manquant, utiliser la valeur par défaut
+        if (!data.withdrawalFees) {
+          data.withdrawalFees = DEFAULT_FEE_CONFIG.withdrawalFees;
+        }
         cachedConfig = data;
         cacheTimestamp = now;
         return data;
@@ -160,6 +171,15 @@ export function clearFeeConfigCache(): void {
   cacheTimestamp = 0;
 }
 
+/**
+ * Récupère la config des frais de retrait des commissions affiliés.
+ * Retourne le montant fixe et la devise (ex: { fixedFee: 3, currency: 'USD' }).
+ */
+export async function getWithdrawalFee(): Promise<WithdrawalFeeConfig> {
+  const config = await getFeeConfig();
+  return config.withdrawalFees;
+}
+
 /* ==================== Validation ==================== */
 
 function isValidProcessorFeeRate(rate: unknown): rate is ProcessorFeeRate {
@@ -182,11 +202,23 @@ function isValidPayoutFeeRate(rate: unknown): rate is PayoutFeeRate {
   );
 }
 
+function isValidWithdrawalFeeConfig(config: unknown): config is WithdrawalFeeConfig {
+  if (!config || typeof config !== 'object') return false;
+  const c = config as Record<string, unknown>;
+  return (
+    typeof c.fixedFee === 'number' && isFinite(c.fixedFee) && c.fixedFee >= 0 &&
+    typeof c.currency === 'string' && c.currency.length > 0
+  );
+}
+
 function isValidFeeConfig(data: unknown): data is FeeConfig {
   if (!data || typeof data !== 'object') return false;
   const d = data as Record<string, unknown>;
   const stripe = d.stripe as Record<string, unknown> | undefined;
   const paypal = d.paypal as Record<string, unknown> | undefined;
+
+  // withdrawalFees est optionnel pour la rétrocompatibilité (documents existants sans ce champ)
+  const hasValidWithdrawalFees = !d.withdrawalFees || isValidWithdrawalFeeConfig(d.withdrawalFees);
 
   return !!(
     stripe &&
@@ -195,6 +227,7 @@ function isValidFeeConfig(data: unknown): data is FeeConfig {
     paypal &&
     isValidProcessorFeeRate(paypal.eur) &&
     isValidProcessorFeeRate(paypal.usd) &&
-    isValidPayoutFeeRate(paypal.payoutFee)
+    isValidPayoutFeeRate(paypal.payoutFee) &&
+    hasValidWithdrawalFees
   );
 }

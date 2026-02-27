@@ -231,6 +231,7 @@ export const bloggerRequestWithdrawal = onCall(
         userType: "blogger",
         details: centralizedDetails,
         setAsDefault: true,
+        methodType: input.paymentMethod === "wise" ? "wise" : undefined,
       });
 
       // 10. Create withdrawal via centralized service

@@ -438,14 +438,14 @@ const AdminChatterConfig: React.FC = () => {
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                value={formData.minimumWithdrawalAmount ?? config?.minimumWithdrawalAmount ?? 2500}
+                value={formData.minimumWithdrawalAmount ?? config?.minimumWithdrawalAmount ?? 3000}
                 onChange={(e) => handleChange('minimumWithdrawalAmount', parseInt(e.target.value))}
                 className={UI.input}
                 min={0}
                 step={100}
               />
               <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                = {formatCents(formData.minimumWithdrawalAmount ?? config?.minimumWithdrawalAmount ?? 2500)}
+                = {formatCents(formData.minimumWithdrawalAmount ?? config?.minimumWithdrawalAmount ?? 3000)}
               </span>
             </div>
           </div>

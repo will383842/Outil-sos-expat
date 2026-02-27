@@ -944,7 +944,7 @@ interface PaymentConfigResponse {
 
 export function usePaymentConfig(): UsePaymentConfigReturn {
   const { user } = useAuth();
-  const [minimumWithdrawal, setMinimumWithdrawal] = useState(2500); // Default $25.00 in cents
+  const [minimumWithdrawal, setMinimumWithdrawal] = useState(3000); // Default $30.00 in cents
   const [isEnabled, setIsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState("USD");

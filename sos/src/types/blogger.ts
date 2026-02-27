@@ -523,10 +523,12 @@ export interface RegisterBloggerInput {
   blogTraffic: BlogTrafficTier;
   blogDescription?: string;
   definitiveRoleAcknowledged: boolean;
-  recruiterCode?: string;
+  recruitmentCode?: string;
   termsAcceptedAt?: string;
   termsVersion?: string;
   termsType?: string;
+  termsAffiliateVersion?: string;
+  termsAffiliateType?: string;
   termsAcceptanceMeta?: {
     userAgent: string;
     language: string;

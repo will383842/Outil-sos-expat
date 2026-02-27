@@ -81,6 +81,9 @@ const FEE_CONFIG: Record<PaymentMethodType, FeeConfig> = {
   },
 };
 
+/** SOS-Expat withdrawal fee in cents (configurable via admin, display default) */
+const SOS_WITHDRAWAL_FEE_CENTS = 300; // $3.00
+
 // ============================================================================
 // MOCK HOOKS (to be replaced with actual implementations)
 // ============================================================================
@@ -112,7 +115,7 @@ const usePaymentMethods = (): UsePaymentMethodsReturn => {
 const usePaymentConfig = (): UsePaymentConfigReturn => {
   // This would normally fetch from Firebase config
   return {
-    minimumWithdrawal: 1000, // $10.00 in cents
+    minimumWithdrawal: 3000, // $30.00 in cents
     maximumWithdrawal: 1000000, // $10,000.00 in cents
     loading: false,
   };
@@ -171,6 +174,7 @@ const getMethodIcon = (methodType: PaymentMethodType) => {
     case 'mobile_money':
       return Smartphone;
     case 'bank_transfer':
+    case 'wise':
       return Building2;
     default:
       return CreditCard;
@@ -267,9 +271,9 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
     return methods.find((m) => m.id === selectedMethodId) || null;
   }, [methods, selectedMethodId]);
 
-  // Calculate final amount
+  // Calculate final amount (what user receives, excluding SOS withdrawal fee)
   const finalAmount = useMemo(() => {
-    if (withdrawAmount === 'all') return availableBalance;
+    if (withdrawAmount === 'all') return Math.max(0, availableBalance - SOS_WITHDRAWAL_FEE_CENTS);
     return customAmount;
   }, [withdrawAmount, customAmount, availableBalance]);
 
@@ -278,6 +282,12 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
     if (!selectedMethod) return { fee: 0, netAmount: finalAmount };
     return calculateFees(finalAmount, selectedMethod.methodType);
   }, [finalAmount, selectedMethod]);
+
+  // Minimum balance needed = minimum withdrawal + withdrawal fee
+  const minimumBalanceNeeded = minimumWithdrawal + SOS_WITHDRAWAL_FEE_CENTS;
+
+  // Balance too low for any withdrawal (between $30 and $32.99)
+  const balanceTooLowForFee = availableBalance >= minimumWithdrawal && availableBalance < minimumBalanceNeeded;
 
   // Validation
   const canSubmit = useMemo(() => {
@@ -312,10 +322,10 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
   };
 
   // Handle form submission
+  // Always send finalAmount (which already accounts for the $3 withdrawal fee in "all" mode)
   const handleSubmit = async () => {
     if (!selectedMethodId || !canSubmit) return;
-    const amount = withdrawAmount === 'custom' ? customAmount : undefined;
-    await onSubmit(selectedMethodId, amount);
+    await onSubmit(selectedMethodId, finalAmount);
   };
 
   // ============================================================================
@@ -532,7 +542,9 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
                   )}
                   {selectedMethod.methodType === 'mobile_money'
                     ? 'Mobile Money'
-                    : 'Virement bancaire'}
+                    : selectedMethod.methodType === 'wise'
+                      ? 'Wise'
+                      : 'Virement bancaire'}
                 </p>
               </div>
             </div>
@@ -591,7 +603,9 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
                       )}
                       {method.methodType === 'mobile_money'
                         ? 'Mobile Money'
-                        : 'Virement bancaire'}
+                        : method.methodType === 'wise'
+                          ? 'Wise'
+                          : 'Virement bancaire'}
                     </p>
                   </div>
                   {isSelected && <CheckCircle className="w-5 h-5 text-red-500" />}
@@ -708,14 +722,40 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600 dark:text-gray-400">
               <FormattedMessage
-                id="payment.withdrawal.fees"
-                defaultMessage="Frais estimes"
+                id="payment.withdrawal.amount.label"
+                defaultMessage="Montant du retrait"
               />
             </span>
             <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {feeEstimate.fee > 0 ? `- ${formatMoney(feeEstimate.fee)}` : 'Gratuit'}
+              {formatMoney(finalAmount)}
             </span>
           </div>
+
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              <FormattedMessage
+                id="payment.withdrawal.sosExpatFee"
+                defaultMessage="Frais de retrait"
+              />
+            </span>
+            <span className="text-sm font-medium text-red-600 dark:text-red-400">
+              - {formatMoney(SOS_WITHDRAWAL_FEE_CENTS)}
+            </span>
+          </div>
+
+          {feeEstimate.fee > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                <FormattedMessage
+                  id="payment.withdrawal.transferFees"
+                  defaultMessage="Frais de transfert (est.)"
+                />
+              </span>
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                - {formatMoney(feeEstimate.fee)}
+              </span>
+            </div>
+          )}
 
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -743,6 +783,37 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
               {formatMoney(feeEstimate.netAmount)}
             </span>
           </div>
+
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500 dark:text-gray-500">
+              <FormattedMessage
+                id="payment.withdrawal.totalDebited"
+                defaultMessage="Total debite de votre solde"
+              />
+            </span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {formatMoney(finalAmount + SOS_WITHDRAWAL_FEE_CENTS)}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Balance too low for fee warning */}
+      {balanceTooLowForFee && (
+        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-700 dark:text-amber-300">
+            <FormattedMessage
+              id="payment.withdrawal.balanceTooLowForFee"
+              defaultMessage="Your balance of {balance} is not enough to cover the minimum withdrawal of {minimum} plus the {fee} withdrawal fee. You need at least {needed}."
+              values={{
+                balance: formatMoney(availableBalance),
+                minimum: formatMoney(minimumWithdrawal),
+                fee: formatMoney(SOS_WITHDRAWAL_FEE_CENTS),
+                needed: formatMoney(minimumBalanceNeeded),
+              }}
+            />
+          </p>
         </div>
       )}
 

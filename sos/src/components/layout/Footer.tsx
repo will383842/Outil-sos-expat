@@ -631,6 +631,11 @@ const Footer: React.FC = () => {
         href: `/${getTranslatedRouteSlug("terms-group-admins", resolvedLang)}`,
         order: 73,
       },
+      {
+        label: intl.formatMessage({ id: "footer.legal.termsAffiliate", defaultMessage: "CGU Affiliation" }),
+        href: `/${getTranslatedRouteSlug("terms-affiliate", resolvedLang)}`,
+        order: 74,
+      },
     ],
     [intl, resolvedLang]
   );

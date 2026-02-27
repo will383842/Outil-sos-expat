@@ -6,6 +6,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { Link } from 'react-router-dom';
 import {
   User,
   Mail,
@@ -156,6 +157,8 @@ export interface GroupAdminRegistrationData {
   termsAcceptedAt?: string;
   termsVersion?: string;
   termsType?: string;
+  termsAffiliateVersion?: string;
+  termsAffiliateType?: string;
   termsAcceptanceMeta?: {
     userAgent: string;
     language: string;
@@ -444,6 +447,8 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
       termsAcceptedAt: now.toISOString(),
       termsVersion: '3.0',
       termsType: 'terms_group_admins',
+      termsAffiliateVersion: '1.0',
+      termsAffiliateType: 'terms_affiliate',
       termsAcceptanceMeta: {
         userAgent: navigator.userAgent,
         language: navigator.language,
@@ -1107,10 +1112,11 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
               <span className="text-sm group-hover:text-white transition-colors">
                 <FormattedMessage
                   id="groupadmin.register.terms"
-                  defaultMessage="I accept the {terms} and {privacy}"
+                  defaultMessage="I accept the {terms}, the {affiliateTerms} and {privacy}"
                   values={{
-                    terms: <a href="/terms" className="text-indigo-400 hover:text-indigo-300 underline">Terms of Service</a>,
-                    privacy: <a href="/privacy-policy" className="text-indigo-400 hover:text-indigo-300 underline">Privacy Policy</a>,
+                    terms: <Link to="/cgu-group-admins" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline"><FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" /></Link>,
+                    affiliateTerms: <Link to="/cgu-affiliation" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline"><FormattedMessage id="form.affiliateTerms" defaultMessage="Affiliate Program Terms" /></Link>,
+                    privacy: <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline"><FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" /></Link>,
                   }}
                 />
               </span>

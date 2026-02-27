@@ -62,7 +62,7 @@ interface ChatterDetail {
   bestStreak: number;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
-  recruiterCode?: string;
+  recruitedByCode?: string;
   suspendedAt?: string;
   suspendReason?: string;
   createdAt: string;
@@ -389,9 +389,9 @@ const AdminChatterDetail: React.FC = () => {
             </p>
           </div>
         </div>
-        {chatter.recruiterCode && (
+        {chatter.recruitedByCode && (
           <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-            Recruté par: <span className="font-medium">{chatter.recruiterCode}</span>
+            Recruté par: <span className="font-medium">{chatter.recruitedByCode}</span>
           </p>
         )}
       </div>

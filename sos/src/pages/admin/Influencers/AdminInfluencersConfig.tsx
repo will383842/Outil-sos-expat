@@ -57,7 +57,7 @@ const DEFAULT_CONFIG: InfluencerConfig = {
   clientReferralCommission: 1000,
   providerRecruitmentCommission: 500,
   clientDiscountPercent: 5,
-  minimumWithdrawalAmount: 5000,
+  minimumWithdrawalAmount: 3000, // $30
   commissionValidationDays: 7,
   commissionReleaseHours: 24,
   recruitmentCommissionWindowMonths: 6,

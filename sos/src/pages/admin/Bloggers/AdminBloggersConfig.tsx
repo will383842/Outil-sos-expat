@@ -64,7 +64,7 @@ const DEFAULT_CONFIG: BloggerConfig = {
   clientReferralCommission: 1000, // Fixed $10
   providerRecruitmentCommission: 500, // Fixed $5
   clientDiscountPercent: 0, // No discount for bloggers
-  minimumWithdrawalAmount: 2500, // $25 default
+  minimumWithdrawalAmount: 3000, // $30 default
   commissionValidationDays: 7,
   commissionReleaseHours: 24,
   recruitmentCommissionWindowMonths: 6,

@@ -351,6 +351,12 @@ export interface GroupAdmin {
   /** Type of terms (e.g., "terms_group_admins") */
   termsType?: string;
 
+  /** Version of affiliate terms accepted (e.g., "1.0") */
+  termsAffiliateVersion?: string;
+
+  /** Type of affiliate terms (e.g., "terms_affiliate") */
+  termsAffiliateType?: string;
+
   /** Metadata about the acceptance context */
   termsAcceptanceMeta?: {
     userAgent: string;
@@ -1074,7 +1080,7 @@ export interface GroupAdminConfig {
 
   // ---- Withdrawal Settings ----
 
-  /** Minimum withdrawal amount in cents ($25 = 2500) */
+  /** Minimum withdrawal amount in cents ($30 = 3000) */
   minimumWithdrawalAmount: number;
 
   // ---- Leaderboard ----
@@ -1129,7 +1135,7 @@ export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "u
   validationHoldPeriodDays: 7,
   releaseDelayHours: 24,
 
-  minimumWithdrawalAmount: 1000,       // $10
+  minimumWithdrawalAmount: 3000,       // $30
   leaderboardSize: 10,
 
   version: 1,
@@ -1197,6 +1203,8 @@ export interface RegisterGroupAdminRequest {
   termsAcceptedAt?: string;
   termsVersion?: string;
   termsType?: string;
+  termsAffiliateVersion?: string;
+  termsAffiliateType?: string;
   termsAcceptanceMeta?: {
     userAgent: string;
     language: string;

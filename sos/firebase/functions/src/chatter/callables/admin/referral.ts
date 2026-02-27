@@ -192,7 +192,10 @@ export const adminGetReferralTree = onCall(
     // SECURITY: Verify admin auth
     assertAdmin(request);
 
-    const input = request.data as GetReferralTreeInput;
+    const input = (request.data || {}) as GetReferralTreeInput;
+    if (!input.chatterId) {
+      throw new HttpsError("invalid-argument", "chatterId is required");
+    }
     const maxDepth = input.maxDepth || 3;
     const db = getFirestore();
 
@@ -248,6 +251,7 @@ export const adminGetReferralTree = onCall(
         totalNodes: countNodes(root),
       };
     } catch (error) {
+      if (error instanceof HttpsError) throw error;
       logger.error("[adminGetReferralTree] Error", { error });
       throw new HttpsError("internal", "Failed to get referral tree");
     }

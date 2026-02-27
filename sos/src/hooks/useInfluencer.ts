@@ -382,7 +382,7 @@ export function useInfluencer(): UseInfluencerReturn {
     return `https://sos-expat.com/rec/i/${dashboardData.influencer.affiliateCodeRecruitment}`;
   }, [dashboardData, langCode]);
 
-  const minimumWithdrawal = dashboardData?.config?.minimumWithdrawalAmount || 5000; // $50 default
+  const minimumWithdrawal = dashboardData?.config?.minimumWithdrawalAmount || 3000; // $30 default
 
   const canWithdraw = useMemo(() => {
     if (!dashboardData) return false;

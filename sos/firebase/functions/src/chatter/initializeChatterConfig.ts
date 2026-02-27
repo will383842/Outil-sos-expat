@@ -269,13 +269,13 @@ export async function initializeQuizQuestionsInternal(): Promise<number> {
         },
         {
           id: "b",
-          text: "15$",
-          translations: { en: "$15" },
+          text: "20$",
+          translations: { en: "$20" },
         },
         {
           id: "c",
-          text: "25$",
-          translations: { en: "$25" },
+          text: "30$",
+          translations: { en: "$30" },
         },
         {
           id: "d",
@@ -284,9 +284,9 @@ export async function initializeQuizQuestionsInternal(): Promise<number> {
         },
       ],
       correctAnswerId: "c",
-      explanation: "Le montant minimum de retrait est de 25$ pour limiter les frais de transaction.",
+      explanation: "Le montant minimum de retrait est de 30$ (+ 3$ de frais de retrait par transaction).",
       explanationTranslations: {
-        en: "The minimum withdrawal amount is $25 to limit transaction fees.",
+        en: "The minimum withdrawal amount is $30 (+ $3 withdrawal fee per transaction).",
       },
       category: "rules" as const,
       difficulty: "easy" as const,

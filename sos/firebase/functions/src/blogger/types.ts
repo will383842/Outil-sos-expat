@@ -342,6 +342,12 @@ export interface Blogger {
   /** Type of terms (e.g., "terms_bloggers") */
   termsType?: string;
 
+  /** Version of affiliate terms accepted (e.g., "1.0") */
+  termsAffiliateVersion?: string;
+
+  /** Type of affiliate terms (e.g., "terms_affiliate") */
+  termsAffiliateType?: string;
+
   /** Metadata about the acceptance context */
   termsAcceptanceMeta?: {
     userAgent: string;
@@ -1326,7 +1332,7 @@ export const DEFAULT_BLOGGER_CONFIG: Omit<
 
   recruitmentWindowMonths: 6,
 
-  minimumWithdrawalAmount: 1000,     // $10
+  minimumWithdrawalAmount: 3000,     // $30
   validationHoldPeriodDays: 7,       // 7 days
   releaseDelayHours: 24,             // 1 day after validation
 
@@ -1368,7 +1374,7 @@ export interface RegisterBloggerInput {
   // Definitive role acknowledgment (REQUIRED)
   definitiveRoleAcknowledged: boolean;
 
-  recruiterCode?: string; // Recruitment code from URL
+  recruitmentCode?: string; // Recruitment code from URL
   referralCapturedAt?: string; // ISO date - when the referral code was captured (for 30-day window enforcement)
 
   // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
@@ -1376,6 +1382,8 @@ export interface RegisterBloggerInput {
   termsAcceptedAt?: string;
   termsVersion?: string;
   termsType?: string;
+  termsAffiliateVersion?: string;
+  termsAffiliateType?: string;
   termsAcceptanceMeta?: {
     userAgent: string;
     language: string;

@@ -241,15 +241,16 @@ export const registerBlogger = onCall(
       // 7. Find recruiter if recruitment code provided
       let recruitedBy: string | null = null;
       let recruitedByCode: string | null = null;
+      const recruitmentCode = input.recruitmentCode || (input as any).recruiterCode;
 
-      if (input.recruiterCode) {
+      if (recruitmentCode) {
         let referralExpired = false;
         if (input.referralCapturedAt) {
           const capturedDate = new Date(input.referralCapturedAt);
           const windowMs = 30 * 24 * 60 * 60 * 1000; // 30 days
           if (Date.now() - capturedDate.getTime() > windowMs) {
             logger.warn("[registerBlogger] Recruitment code expired (>30 days)", {
-              code: input.recruiterCode,
+              code: recruitmentCode,
               capturedAt: input.referralCapturedAt,
             });
             referralExpired = true;
@@ -259,14 +260,14 @@ export const registerBlogger = onCall(
         if (!referralExpired) {
           const recruiterQuery = await db
             .collection("bloggers")
-            .where("affiliateCodeRecruitment", "==", input.recruiterCode.toUpperCase())
+            .where("affiliateCodeRecruitment", "==", recruitmentCode.toUpperCase())
             .where("status", "==", "active")
             .limit(1)
             .get();
 
           if (!recruiterQuery.empty) {
             recruitedBy = recruiterQuery.docs[0].id;
-            recruitedByCode = input.recruiterCode.toUpperCase();
+            recruitedByCode = recruitmentCode.toUpperCase();
           }
         }
       }
@@ -275,7 +276,7 @@ export const registerBlogger = onCall(
       if (recruitedBy && recruitedBy === uid) {
         logger.warn("[registerBlogger] Self-referral detected, ignoring recruitment code", {
           uid,
-          code: input.recruiterCode,
+          code: recruitmentCode,
         });
         recruitedBy = null;
         recruitedByCode = null;
@@ -388,6 +389,8 @@ export const registerBlogger = onCall(
         termsAcceptedAt: input.termsAcceptedAt || now.toDate().toISOString(),
         termsVersion: input.termsVersion || "3.0",
         termsType: input.termsType || "terms_bloggers",
+        termsAffiliateVersion: input.termsAffiliateVersion || "1.0",
+        termsAffiliateType: input.termsAffiliateType || "terms_affiliate",
         termsAcceptanceMeta: input.termsAcceptanceMeta || {
           userAgent: request.rawRequest?.headers?.["user-agent"] || "unknown",
           language: input.language || "en",

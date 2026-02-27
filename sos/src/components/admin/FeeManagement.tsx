@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useAuth } from "../../contexts/AuthContext";
-import { Save, RotateCcw, Percent, CreditCard, Wallet, AlertTriangle, ArrowDown } from "lucide-react";
+import { Save, RotateCcw, Percent, CreditCard, Wallet, AlertTriangle, ArrowDown, DollarSign, Banknote } from "lucide-react";
 
 /* =========================================
  * Types
@@ -21,9 +21,15 @@ interface PayoutFeeRate {
   maxFee: number;
 }
 
+interface WithdrawalFeeConfig {
+  fixedFee: number;
+  currency: string;
+}
+
 interface FeeConfig {
   stripe: { eur: ProcessorFeeRate; usd: ProcessorFeeRate };
   paypal: { eur: ProcessorFeeRate; usd: ProcessorFeeRate; payoutFee: PayoutFeeRate };
+  withdrawalFees: WithdrawalFeeConfig;
 }
 
 const DEFAULT_FEE_CONFIG: FeeConfig = {
@@ -36,6 +42,7 @@ const DEFAULT_FEE_CONFIG: FeeConfig = {
     usd: { percentageFee: 0.029, fixedFee: 0.49, fxFeePercent: 0.03 },
     payoutFee: { percentageFee: 0.02, fixedFee: 0, maxFee: 20 },
   },
+  withdrawalFees: { fixedFee: 3, currency: "USD" },
 };
 
 /* =========================================
@@ -88,7 +95,13 @@ const FeeManagement: React.FC = () => {
         const snap = await getDoc(doc(db, "admin_config", "fees"));
         if (snap.exists()) {
           const data = snap.data() as FeeConfig;
-          if (data.stripe && data.paypal) setConfig(data);
+          if (data.stripe && data.paypal) {
+            // Rétrocompatibilité : ajouter withdrawalFees si absent
+            if (!data.withdrawalFees) {
+              data.withdrawalFees = DEFAULT_FEE_CONFIG.withdrawalFees;
+            }
+            setConfig(data);
+          }
         }
       } catch (err) {
         console.error("Erreur chargement config fees:", err);
@@ -139,6 +152,14 @@ const FeeManagement: React.FC = () => {
     setConfig((prev) => ({
       ...prev,
       paypal: { ...prev.paypal, payoutFee: { ...prev.paypal.payoutFee, [field]: value } },
+    }));
+    setDirty(true);
+  };
+
+  const updateWithdrawalFees = (field: keyof WithdrawalFeeConfig, value: number | string) => {
+    setConfig((prev) => ({
+      ...prev,
+      withdrawalFees: { ...prev.withdrawalFees, [field]: value },
     }));
     setDirty(true);
   };
@@ -305,6 +326,64 @@ const FeeManagement: React.FC = () => {
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Frais de retrait des commissions */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-5 py-3 border-b border-amber-100">
+          <div className="flex items-center gap-2">
+            <Banknote className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-gray-900">Frais de retrait des commissions</h3>
+          </div>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <p className="text-sm text-amber-800">
+              Ce montant fixe est automatiquement deduit du montant de chaque retrait de commissions affilies
+              (chatters, influenceurs, blogueurs, admins de groupe).
+              Par exemple, si un affilie retire 50$ avec des frais de 3$, il recevra 47$.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Frais fixe par retrait ($)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={config.withdrawalFees.fixedFee}
+                  onChange={(e) => updateWithdrawalFees("fixedFee", parseFloat(e.target.value || "0"))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                />
+                <DollarSign className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              </div>
+            </div>
+            <div className="flex items-end">
+              <div className="bg-gray-50 rounded-lg px-4 py-2 border border-gray-100 text-sm text-gray-600">
+                Devise : <span className="font-semibold">{config.withdrawalFees.currency}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Mini simulateur retrait */}
+          <div className="border-t border-gray-100 pt-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Exemple de retrait</h4>
+            <div className="flex flex-wrap items-center justify-center gap-2 text-sm bg-gray-50 rounded-xl p-3 border border-gray-100">
+              <span className="bg-blue-100 text-blue-800 px-3 py-1.5 rounded-lg font-medium">
+                Affilie demande 50.00 $
+              </span>
+              <ArrowDown className="w-4 h-4 text-gray-400 rotate-[-90deg]" />
+              <span className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg font-medium">
+                Frais : -{config.withdrawalFees.fixedFee.toFixed(2)} $
+              </span>
+              <ArrowDown className="w-4 h-4 text-gray-400 rotate-[-90deg]" />
+              <span className="bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg font-bold">
+                Recoit {(50 - config.withdrawalFees.fixedFee).toFixed(2)} $
+              </span>
             </div>
           </div>
         </div>

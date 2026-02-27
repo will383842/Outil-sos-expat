@@ -3031,6 +3031,8 @@ export {
   adminDuplicateInfluencerPromotion,
   // Admin - Visibility Toggle
   adminToggleInfluencerVisibility,
+  // Admin withdrawals
+  adminGetInfluencerWithdrawals,
 } from './influencer';
 
 // ========== BLOGGER SYSTEM ==========
@@ -3079,6 +3081,11 @@ export {
   adminExportBloggers,
   adminBulkBloggerAction,
   adminGetBloggerLeaderboard,
+  // Admin GET resources/guide (NEW - were missing from exports)
+  adminGetBloggerResources,
+  adminGetBloggerGuide,
+  // Admin withdrawals
+  adminGetBloggerWithdrawals,
   // Articles
   getBloggerArticles,
   copyBloggerArticle,

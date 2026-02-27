@@ -344,7 +344,7 @@ export function useChatter(): UseChatterReturn {
     return `${window.location.origin}/${providerRoute}?ref=${dashboardData.chatter.affiliateCodeRecruitment}`;
   }, [dashboardData, langCode]);
 
-  const minimumWithdrawal = dashboardData?.config?.minimumWithdrawalAmount || 2500;
+  const minimumWithdrawal = dashboardData?.config?.minimumWithdrawalAmount || 3000;
 
   const canWithdraw = useMemo(() => {
     if (!dashboardData) return false;

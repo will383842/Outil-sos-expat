@@ -138,7 +138,7 @@ export const PaymentMethodIcon: React.FC<PaymentMethodIconProps> = ({
     );
   };
 
-  if (methodType === 'bank_transfer') {
+  if (methodType === 'bank_transfer' || methodType === 'wise') {
     return renderBankTransferIcon();
   }
 

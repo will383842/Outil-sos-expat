@@ -317,6 +317,12 @@ export interface Influencer {
   /** Type of terms (e.g., "terms_influencers") */
   termsType?: string;
 
+  /** Version of affiliate terms accepted (e.g., "1.0") */
+  termsAffiliateVersion?: string;
+
+  /** Type of affiliate terms (e.g., "terms_affiliate") */
+  termsAffiliateType?: string;
+
   /** Metadata about the acceptance context */
   termsAcceptanceMeta?: {
     userAgent: string;
@@ -839,7 +845,7 @@ export interface InfluencerConfig {
 
   // ---- Withdrawal Settings ----
 
-  /** Minimum withdrawal amount (cents) - $50 = 5000 */
+  /** Minimum withdrawal amount (cents) - $30 = 3000 */
   minimumWithdrawalAmount: number;
 
   /** Hold period before commission is validated (days) */
@@ -1075,7 +1081,7 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
 
   recruitmentWindowMonths: 6,
 
-  minimumWithdrawalAmount: 1000,     // $10
+  minimumWithdrawalAmount: 3000,     // $30
   validationHoldPeriodDays: 7,       // 7 days minimum
   releaseDelayHours: 24,             // 1 day after validation
 
@@ -1524,7 +1530,7 @@ export interface RegisterInfluencerInput {
     website?: string;
     other?: string;
   };
-  recruiterCode?: string; // Recruitment code from URL
+  recruitmentCode?: string; // Recruitment code from URL
   referralCapturedAt?: string; // ISO date - when the referral code was captured (for 30-day window enforcement)
 
   // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
@@ -1532,6 +1538,8 @@ export interface RegisterInfluencerInput {
   termsAcceptedAt?: string;
   termsVersion?: string;
   termsType?: string;
+  termsAffiliateVersion?: string;
+  termsAffiliateType?: string;
   termsAcceptanceMeta?: {
     userAgent: string;
     language: string;

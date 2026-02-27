@@ -163,12 +163,15 @@ function getPaymentMethodDescription(withdrawal: WithdrawalDocument): string {
     return `${providerName}`;
   }
 
-  if (methodType === "bank_transfer") {
+  if (methodType === "bank_transfer" || methodType === "wise") {
     const bankName = details?.bankName;
+    if (methodType === "wise" || provider === "wise") {
+      return bankName ? `Wise (${bankName})` : "Wise (Virement)";
+    }
     if (bankName) {
       return `Virement bancaire (${bankName})`;
     }
-    return provider === "wise" ? "Wise (Virement)" : "Virement bancaire";
+    return "Virement bancaire";
   }
 
   // Fallback

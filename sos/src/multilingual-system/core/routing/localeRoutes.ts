@@ -255,6 +255,7 @@ export type RouteKey =
   | "terms-influencers"   // /terms-influencers -> /cgu-influenceurs, etc.
   | "terms-bloggers"      // /terms-bloggers -> /cgu-bloggeurs, etc.
   | "terms-group-admins"  // /terms-group-admins -> /cgu-admins-groupe, etc.
+  | "terms-affiliate"     // /terms-affiliate -> /cgu-affiliation, etc.
   | "sos-call"         // /sos-appel -> /emergency-call, /notruf, etc.
   | "expat-call"       // /appel-expatrie -> /expat-call, etc.
   | "pricing"          // /tarifs -> /pricing, /preise, etc.
@@ -502,6 +503,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "tiaokuan-qunguanli",
     hi: "shartein-group-admins",
     ar: "شروط-مشرفي-المجموعات",
+  },
+  "terms-affiliate": {
+    fr: "cgu-affiliation",
+    en: "terms-affiliate",
+    es: "terminos-afiliacion",
+    de: "agb-partnerprogramm",
+    ru: "usloviya-partnerstva",
+    pt: "termos-afiliacao",
+    ch: "tiaokuan-lianmeng",
+    hi: "shartein-affiliate",
+    ar: "شروط-الشراكة",
   },
   "sos-call": {
     fr: "sos-appel",
