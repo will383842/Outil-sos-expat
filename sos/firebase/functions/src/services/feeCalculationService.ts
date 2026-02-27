@@ -139,8 +139,13 @@ export async function calculateEstimatedFees(
     ? (config.stripe[cur] || config.stripe.eur)
     : (config.paypal[cur] || config.paypal.eur);
 
+  // P1-2 FIX: Inclure fxFeePercent (frais cross-border) dans le calcul.
+  // Stripe: +1% sur transactions cross-border, PayPal: +3%.
+  // Appliqué en worst-case (estimation haute) pour éviter de sous-estimer les frais
+  // et que la plateforme absorbe la différence.
+  const effectivePercentage = processorRate.percentageFee + (processorRate.fxFeePercent || 0);
   const processingFee = roundAmount(
-    totalAmount * processorRate.percentageFee + processorRate.fixedFee
+    totalAmount * effectivePercentage + processorRate.fixedFee
   );
 
   // Frais de payout (PayPal uniquement, appliqués sur le montant provider)

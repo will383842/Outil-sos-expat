@@ -93,6 +93,37 @@ export async function handleCallCompleted(
         return;
       }
 
+      // P1-1 FIX: Skip if a role-specific handler already covers this referral.
+      // When a user signs up via a chatter/influencer/blogger/groupAdmin link,
+      // affiliateOnUserCreated writes BOTH referredByUserId AND the role-specific
+      // field (e.g. referredByChatterId). Without this guard, the consolidated
+      // trigger creates commissions in BOTH systems → double payout.
+      // Role-specific handlers take priority; affiliate handler is the fallback
+      // for "pure" affiliate referrals that have no role-specific counterpart.
+      const hasRoleSpecificReferral =
+        clientData.referredByChatterId ||
+        clientData.chatterReferredBy ||
+        clientData.referredByInfluencerId ||
+        clientData.influencerReferredBy ||
+        clientData.referredByBlogger ||
+        clientData.bloggerReferredBy ||
+        clientData.referredByGroupAdmin ||
+        clientData.groupAdminReferredBy;
+
+      if (hasRoleSpecificReferral) {
+        logger.info("[affiliateOnCallCompleted] Skipping — handled by role-specific handler", {
+          sessionId,
+          clientId,
+          referredByChatterId: !!clientData.referredByChatterId,
+          chatterReferredBy: !!clientData.chatterReferredBy,
+          referredByInfluencerId: !!clientData.referredByInfluencerId,
+          influencerReferredBy: !!clientData.influencerReferredBy,
+          referredByBlogger: !!clientData.referredByBlogger,
+          referredByGroupAdmin: !!clientData.referredByGroupAdmin,
+        });
+        return;
+      }
+
       // 3. Calculate call duration
       const callDuration = after.duration || after.durationSeconds || 0;
 

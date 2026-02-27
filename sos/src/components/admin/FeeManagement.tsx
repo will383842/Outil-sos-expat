@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp, arrayUnion } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useAuth } from "../../contexts/AuthContext";
 import { Save, RotateCcw, Percent, CreditCard, Wallet, AlertTriangle, ArrowDown, DollarSign, Banknote } from "lucide-react";
@@ -60,7 +60,9 @@ function simulateFees(
   config: FeeConfig
 ) {
   const rate = config[gateway][currency] as ProcessorFeeRate;
-  const processingFee = +(totalAmount * rate.percentageFee + rate.fixedFee).toFixed(2);
+  // P1-2 FIX: Include fxFeePercent in simulation (matches backend calculateEstimatedFees)
+  const effectivePercentage = rate.percentageFee + (rate.fxFeePercent || 0);
+  const processingFee = +(totalAmount * effectivePercentage + rate.fixedFee).toFixed(2);
   let payoutFee = 0;
   if (gateway === "paypal") {
     const pr = config.paypal.payoutFee;
@@ -116,11 +118,33 @@ const FeeManagement: React.FC = () => {
     if (!user) return;
     setSaving(true);
     try {
+      // P2-2 FIX: Read previous config for audit trail
+      const prevSnap = await getDoc(doc(db, "admin_config", "fees"));
+      const prevData = prevSnap.exists() ? prevSnap.data() : null;
+      // Extract only fee fields (exclude metadata like updatedAt, feeHistory)
+      const prevFees = prevData ? {
+        stripe: prevData.stripe,
+        paypal: prevData.paypal,
+        withdrawalFees: prevData.withdrawalFees,
+      } : null;
+
       await setDoc(doc(db, "admin_config", "fees"), {
         ...config,
         updatedAt: serverTimestamp(),
         updatedBy: user.uid,
-      });
+        // P2-2 FIX: Audit trail — who changed what, when, and the previous values
+        feeHistory: arrayUnion({
+          changedAt: Timestamp.now(),
+          changedBy: user.uid,
+          changedByEmail: user.email ?? "unknown",
+          previousFees: prevFees,
+          newFees: {
+            stripe: config.stripe,
+            paypal: config.paypal,
+            withdrawalFees: config.withdrawalFees,
+          },
+        }),
+      }, { merge: true });
       setDirty(false);
       toast.success("Frais de traitement sauvegardés");
     } catch (err) {

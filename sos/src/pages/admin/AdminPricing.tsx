@@ -24,6 +24,7 @@ import {
   where,
   getDocs,
   limit,
+  arrayUnion,
 } from "firebase/firestore";
 import AdminLayout from "../../components/admin/AdminLayout";
 import FeeManagement from "../../components/admin/FeeManagement";
@@ -322,20 +323,35 @@ const AdminPricing: React.FC = () => {
     }
 
     const performSave = async () => {
+      // P2-1 FIX: Read previous values for audit trail
+      const prevSnap = await getDoc(doc(db, "admin_config", "pricing"));
+      const prevData = prevSnap.exists() ? prevSnap.data() : {};
+      const prevNode = prevData?.[service]?.[currency] ?? null;
+
+      const newNode = {
+        connectionFeeAmount: Number(selBase.connectionFeeAmount),
+        providerAmount: Number(selBase.providerAmount),
+        totalAmount: Number(selBase.totalAmount),
+        currency,
+        duration: Number(selBase.duration),
+      };
+
       await setDoc(
         doc(db, "admin_config", "pricing"),
         {
-          [service]: {
-            [currency]: {
-              connectionFeeAmount: Number(selBase.connectionFeeAmount),
-              providerAmount: Number(selBase.providerAmount),
-              totalAmount: Number(selBase.totalAmount),
-              currency,
-              duration: Number(selBase.duration),
-            },
-          },
+          [service]: { [currency]: newNode },
           updatedAt: serverTimestamp(),
           updatedBy: user?.uid ?? "admin",
+          // P2-1 FIX: Audit trail — who changed what, when, and the previous values
+          priceHistory: arrayUnion({
+            changedAt: Timestamp.now(),
+            changedBy: user?.uid ?? "admin",
+            changedByEmail: user?.email ?? "unknown",
+            service,
+            currency,
+            previousValues: prevNode,
+            newValues: newNode,
+          }),
         },
         { merge: true }
       );
