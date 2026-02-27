@@ -53,6 +53,5 @@ export {
   adminToggleCaptainQualityBonus,
   adminGetCaptainsList,
   adminGetCaptainDetail,
-  adminGetCaptainPaymentSummary,
   adminExportCaptainCSV,
 } from "./admin/captain";

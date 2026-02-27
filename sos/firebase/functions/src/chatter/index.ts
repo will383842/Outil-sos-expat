@@ -129,7 +129,6 @@ export {
   adminToggleCaptainQualityBonus,
   adminGetCaptainsList,
   adminGetCaptainDetail,
-  adminGetCaptainPaymentSummary,
   adminExportCaptainCSV,
 } from "./callables/admin/captain";
 
