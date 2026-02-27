@@ -960,6 +960,45 @@ const handleTransferFailed = traceFunction(
         requiresManualReview: true,
       }, { merge: true });
 
+      // P1-2 FIX 2026-02-27: Create urgent admin alert for failed transfer
+      await database.collection("admin_alerts").add({
+        type: "transfer_failed",
+        priority: "critical",
+        title: "Transfert prestataire echoue",
+        message: `Le transfert ${transfer.id} de ${transfer.amount / 100} ${transfer.currency} vers ${transfer.destination} a echoue. Verifier le compte prestataire.`,
+        transferId: transfer.id,
+        callSessionId: callSessionId || null,
+        amount: transfer.amount,
+        currency: transfer.currency,
+        destination: transfer.destination,
+        read: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // P1-2 FIX 2026-02-27: Notify provider about pending payout resolution
+      if (callSessionId) {
+        try {
+          const sessionDoc = await database.collection("call_sessions").doc(callSessionId).get();
+          const sessionData = sessionDoc.data();
+          const providerId = sessionData?.providerId || transfer.metadata?.providerId;
+          if (providerId) {
+            await database.collection("message_events").add({
+              eventId: "payment.transfer_failed.provider",
+              locale: "fr",
+              to: { uid: providerId },
+              context: {
+                sessionId: callSessionId,
+                AMOUNT: `${(transfer.amount / 100).toFixed(2)} ${transfer.currency?.toUpperCase()}`,
+              },
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              status: "pending",
+            });
+          }
+        } catch (notifError) {
+          console.error("Failed to notify provider about transfer failure:", notifError);
+        }
+      }
+
       // P1 FIX: Schedule automatic retry before registering as unclaimed
       if (callSessionId) {
         let retryScheduled = false;

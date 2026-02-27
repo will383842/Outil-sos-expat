@@ -20,6 +20,13 @@ import { syncPaymentStatus } from "./utils/paymentSync";
 // Production logger
 import { logger as prodLogger } from "./utils/productionLogger";
 import { captureError } from "./config/sentry";
+// P1-3 FIX 2026-02-27: Cancel ALL affiliate commissions on refund (5 systems)
+// Parity with PayPalManager.refundPayment() and stripeWebhookHandler charge.refunded
+import { cancelCommissionsForCallSession as cancelChatterCommissions } from "./chatter/services/chatterCommissionService";
+import { cancelCommissionsForCallSession as cancelInfluencerCommissions } from "./influencer/services/influencerCommissionService";
+import { cancelBloggerCommissionsForCallSession as cancelBloggerCommissions } from "./blogger/services/bloggerCommissionService";
+import { cancelCommissionsForCallSession as cancelGroupAdminCommissions } from "./groupAdmin/services/groupAdminCommissionService";
+import { cancelCommissionsForCallSession as cancelAffiliateCommissions } from "./affiliate/services/commissionService";
 
 // =============================
 // Typage fort du JSON de prompts
@@ -2305,6 +2312,40 @@ export class TwilioCallManager {
           "metadata.updatedAt": admin.firestore.Timestamp.now(),
         });
         logger.info(`✅ Paiement ${sessionId} traité avec succès: ${newStatus}`);
+
+        // =====================================================
+        // P1-3 FIX 2026-02-27: Cancel ALL affiliate commissions on refund
+        // Parity with PayPalManager.refundPayment() and stripeWebhookHandler charge.refunded
+        // Using Promise.allSettled to ensure ALL cancellations run independently
+        // (Promise.all would abort remaining on first failure = money leak)
+        // =====================================================
+        try {
+          const cancelReason = `processRefund: ${reason}`;
+          const commissionResults = await Promise.allSettled([
+            cancelChatterCommissions(sessionId, cancelReason, "system_refund"),
+            cancelInfluencerCommissions(sessionId, cancelReason, "system_refund"),
+            cancelBloggerCommissions(sessionId, cancelReason, "system_refund"),
+            cancelGroupAdminCommissions(sessionId, cancelReason),
+            cancelAffiliateCommissions(sessionId, cancelReason, "system_refund"),
+          ]);
+
+          const labels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate'] as const;
+          let totalCancelled = 0;
+          for (let i = 0; i < commissionResults.length; i++) {
+            const r = commissionResults[i];
+            if (r.status === 'fulfilled' && r.value && typeof r.value === 'object' && 'cancelledCount' in r.value) {
+              totalCancelled += (r.value as any).cancelledCount || 0;
+            } else if (r.status === 'rejected') {
+              logger.error(`⚠️ [processRefund] Failed to cancel ${labels[i]} commissions:`, r.reason);
+            }
+          }
+          if (totalCancelled > 0) {
+            logger.info(`💰 [processRefund] Cancelled ${totalCancelled} commission(s) for session ${sessionId}`);
+          }
+        } catch (commissionError) {
+          // Non-blocking: don't fail the refund if commission cancellation fails
+          logger.error(`⚠️ [processRefund] Commission cancellation error (non-blocking):`, commissionError);
+        }
 
         // =====================================================
         // P0 FIX 2026-02-03: Send notifications for early disconnect refunds

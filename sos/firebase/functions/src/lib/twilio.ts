@@ -1,6 +1,7 @@
 import twilio from "twilio";
 import { Twilio } from "twilio";
 import { Request, Response } from "express";
+import * as admin from "firebase-admin";
 
 // P0 FIX: Import from centralized secrets - NEVER call defineSecret() here!
 import {
@@ -238,6 +239,40 @@ export const TWILIO_ACCOUNT_SID_SECRET = TWILIO_ACCOUNT_SID;
 export const TWILIO_AUTH_TOKEN_SECRET = TWILIO_AUTH_TOKEN;
 export const TWILIO_PHONE_NUMBER_SECRET = TWILIO_PHONE_NUMBER;
 
+// P1-6 FIX 2026-02-27: Configurable crypto validation blocking mode
+// Reads from admin_config/twilio_security.cryptoValidationBlocking
+// Cached for 5 minutes. Uses synchronous cache read + background refresh
+// to avoid making validateTwilioWebhookSignature async (7 callers).
+// Default: false (monitoring mode) — admin can set to true via Firestore.
+let cryptoBlockingCached = false;
+let cryptoBlockingLastFetch = 0;
+const CRYPTO_BLOCKING_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+let cryptoBlockingFetchInProgress = false;
+
+function refreshCryptoBlockingConfig(): void {
+  if (cryptoBlockingFetchInProgress) return;
+  cryptoBlockingFetchInProgress = true;
+  admin.firestore().collection("admin_config").doc("twilio_security").get()
+    .then((doc) => {
+      cryptoBlockingCached = doc.exists ? doc.data()?.cryptoValidationBlocking === true : false;
+      cryptoBlockingLastFetch = Date.now();
+    })
+    .catch(() => {
+      // On error, keep current value (default: false = monitoring)
+    })
+    .finally(() => {
+      cryptoBlockingFetchInProgress = false;
+    });
+}
+
+function isCryptoValidationBlocking(): boolean {
+  const now = Date.now();
+  if (now - cryptoBlockingLastFetch > CRYPTO_BLOCKING_CACHE_TTL) {
+    refreshCryptoBlockingConfig(); // fire-and-forget background fetch
+  }
+  return cryptoBlockingCached; // return current cached value (default: false)
+}
+
 /**
  * Valide la signature d'un webhook Twilio
  *
@@ -327,28 +362,38 @@ export function validateTwilioWebhookSignature(
         }
       }
 
-      // Signature mismatch — MONITORING MODE: log but DO NOT block
-      // This allows us to verify URL reconstruction works in production
-      // before switching to blocking mode (which would break all calls if wrong)
-      console.warn("[TWILIO_VALIDATION] ⚠️ MONITORING: Cryptographic signature FAILED (request ALLOWED)", {
-        urlUsed: fullUrl,
-        bodyKeys: Object.keys(params).length,
-        signaturePrefix: twilioSignature.substring(0, 10) + '...',
-        action: "ALLOWED — monitoring mode, not blocking",
-        // TODO: Once this never fires for legitimate Twilio calls,
-        // switch to: if (res) res.status(403).send("Forbidden: Invalid signature"); return false;
-      });
-      // MONITORING: fall through to accept (layers 1+2 already passed)
-      return true;
+      // P1-6 FIX 2026-02-27: Configurable blocking vs monitoring mode
+      // Check Firestore flag to decide whether to block or just log.
+      // Default: MONITORING (safe). Admin can enable blocking via:
+      //   admin_config/twilio_security → { cryptoValidationBlocking: true }
+      // This avoids redeployment and allows instant rollback if blocking breaks calls.
+      const shouldBlock = isCryptoValidationBlocking();
+      if (shouldBlock) {
+        console.error("[TWILIO_VALIDATION] ❌ BLOCKING: Cryptographic signature FAILED", {
+          urlUsed: fullUrl,
+          bodyKeys: Object.keys(params).length,
+          signaturePrefix: twilioSignature.substring(0, 10) + '...',
+          action: "BLOCKED — cryptographic validation enforced via admin_config",
+        });
+        if (res) res.status(403).send("Forbidden: Invalid signature");
+        return false;
+      } else {
+        console.warn("[TWILIO_VALIDATION] ⚠️ MONITORING: Cryptographic signature FAILED (request ALLOWED)", {
+          urlUsed: fullUrl,
+          bodyKeys: Object.keys(params).length,
+          signaturePrefix: twilioSignature.substring(0, 10) + '...',
+          action: "ALLOWED — monitoring mode. Set admin_config/twilio_security.cryptoValidationBlocking=true to block",
+        });
+        return true;
+      }
     }
 
-    // No Host header available — fall through to basic validation
-    console.warn("[TWILIO_VALIDATION] No Host header, cannot verify cryptographic signature");
+    // No Host header — cannot verify crypto, fall through
+    console.warn("[TWILIO_VALIDATION] No Host header, cannot verify cryptographic signature — accepted on layers 1+2");
   }
 
-  // Fallback: if authToken unavailable, accept based on header + AccountSid
-  // This should only happen during cold start or misconfiguration
-  console.warn("[TWILIO_VALIDATION] Fallback: accepted on header + AccountSid only (no crypto)");
+  // authToken unavailable — cannot verify crypto (cold start or misconfiguration)
+  console.warn("[TWILIO_VALIDATION] Fallback: accepted on header + AccountSid only (no crypto available)");
   return true;
 }
 

@@ -260,11 +260,13 @@ export const stripeCircuitBreaker = new CircuitBreaker({
 });
 
 // PayPal API circuit breaker
+// P1-4 FIX 2026-02-27: requestTimeout=55s covers apiRequest's internal retry chain
+// (3 retries × 15s timeout + exponential backoff 1s+2s+4s ≈ 52s worst case)
 export const paypalCircuitBreaker = new CircuitBreaker({
   name: 'PayPal',
   failureThreshold: 5,
   resetTimeout: 30000,
-  requestTimeout: 20000, // PayPal can be slower
+  requestTimeout: 55000, // Covers apiRequest's 3 retries + backoff
   onOpen: () => {
     logger.error('[PayPal Circuit Breaker] OPEN - PayPal API may be experiencing issues');
   },

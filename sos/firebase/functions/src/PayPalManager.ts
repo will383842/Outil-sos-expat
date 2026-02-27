@@ -39,6 +39,8 @@ import { cancelCommissionsForCallSession as cancelGroupAdminCommissions } from "
 import { cancelCommissionsForCallSession as cancelAffiliateCommissions } from "./affiliate/services/commissionService";
 // FEE CALCULATION: Frais de traitement déduits du prestataire
 import { calculateEstimatedFees } from "./services/feeCalculationService";
+// P1-4 FIX 2026-02-27: Circuit breaker for PayPal API resilience (parity with Stripe)
+import { paypalCircuitBreaker } from "./lib/circuitBreaker";
 // P0 FIX: Import setProviderBusy to reserve provider immediately after payment authorization
 import { setProviderBusy } from "./callables/providerStatusManager";
 import { PAYMENT_FUNCTIONS_REGION } from "./configs/callRegion";
@@ -439,79 +441,84 @@ export class PayPalManager {
     timeoutMs: number = 15000, // 15 secondes par défaut
     maxRetries: number = 3
   ): Promise<T> {
-    let lastError: Error | null = null;
+    // P1-4 FIX 2026-02-27: Wrap with circuit breaker for PayPal API resilience
+    // Circuit breaker opens after 5 consecutive failures, resets after 30s
+    // This prevents cascade of retries when PayPal API is down
+    return paypalCircuitBreaker.execute(async () => {
+      let lastError: Error | null = null;
 
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        const token = await this.getAccessToken();
-
-        // P1-12: Créer un AbortController pour le timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          const response = await fetch(`${PAYPAL_CONFIG.BASE_URL}${endpoint}`, {
-            method,
-            signal: controller.signal,
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json",
-              "PayPal-Partner-Attribution-Id": getPayPalPartnerId(),
-            },
-            body: body ? JSON.stringify(body) : undefined,
-          });
+          const token = await this.getAccessToken();
 
-          clearTimeout(timeoutId);
+          // P1-12: Créer un AbortController pour le timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            const statusCode = response.status;
+          try {
+            const response = await fetch(`${PAYPAL_CONFIG.BASE_URL}${endpoint}`, {
+              method,
+              signal: controller.signal,
+              headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+                "PayPal-Partner-Attribution-Id": getPayPalPartnerId(),
+              },
+              body: body ? JSON.stringify(body) : undefined,
+            });
 
-            // P2-9: Retry only on transient errors (5xx, 429)
-            if (statusCode >= 500 || statusCode === 429) {
-              throw new Error(`PayPal API transient error (${statusCode}): ${errorText}`);
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              const statusCode = response.status;
+
+              // P2-9: Retry only on transient errors (5xx, 429)
+              if (statusCode >= 500 || statusCode === 429) {
+                throw new Error(`PayPal API transient error (${statusCode}): ${errorText}`);
+              }
+
+              // Client errors (4xx except 429) - don't retry
+              console.error(`❌ [PAYPAL] API error (${endpoint}):`, errorText);
+              throw new Error(`PayPal API error: ${errorText}`);
             }
 
-            // Client errors (4xx except 429) - don't retry
-            console.error(`❌ [PAYPAL] API error (${endpoint}):`, errorText);
-            throw new Error(`PayPal API error: ${errorText}`);
+            return response.json() as Promise<T>;
+          } catch (error) {
+            clearTimeout(timeoutId);
+            throw error;
+          }
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(String(error));
+
+          // P1-12: Handle timeout specifically
+          if (lastError.name === 'AbortError') {
+            console.error(`❌ [PAYPAL] API timeout after ${timeoutMs}ms for ${endpoint}`);
+            lastError = new Error(`PayPal API timeout: Request exceeded ${timeoutMs}ms`);
           }
 
-          return response.json() as Promise<T>;
-        } catch (error) {
-          clearTimeout(timeoutId);
-          throw error;
+          // P2-9: Check if we should retry (transient errors only)
+          const isTransientError = lastError.message.includes('transient error') ||
+            lastError.message.includes('timeout') ||
+            lastError.message.includes('ECONNRESET') ||
+            lastError.message.includes('network');
+
+          if (isTransientError && attempt < maxRetries - 1) {
+            // Exponential backoff: 1s, 2s, 4s
+            const delayMs = Math.pow(2, attempt) * 1000;
+            console.warn(`⚠️ [PAYPAL] Retry ${attempt + 1}/${maxRetries} for ${endpoint} in ${delayMs}ms`);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+            continue;
+          }
+
+          // Non-retryable error or max retries reached
+          throw lastError;
         }
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error));
-
-        // P1-12: Handle timeout specifically
-        if (lastError.name === 'AbortError') {
-          console.error(`❌ [PAYPAL] API timeout after ${timeoutMs}ms for ${endpoint}`);
-          lastError = new Error(`PayPal API timeout: Request exceeded ${timeoutMs}ms`);
-        }
-
-        // P2-9: Check if we should retry (transient errors only)
-        const isTransientError = lastError.message.includes('transient error') ||
-          lastError.message.includes('timeout') ||
-          lastError.message.includes('ECONNRESET') ||
-          lastError.message.includes('network');
-
-        if (isTransientError && attempt < maxRetries - 1) {
-          // Exponential backoff: 1s, 2s, 4s
-          const delayMs = Math.pow(2, attempt) * 1000;
-          console.warn(`⚠️ [PAYPAL] Retry ${attempt + 1}/${maxRetries} for ${endpoint} in ${delayMs}ms`);
-          await new Promise(resolve => setTimeout(resolve, delayMs));
-          continue;
-        }
-
-        // Non-retryable error or max retries reached
-        throw lastError;
       }
-    }
 
-    // Should never reach here, but TypeScript needs it
-    throw lastError || new Error('Unknown error');
+      // Should never reach here, but TypeScript needs it
+      throw lastError || new Error('Unknown error');
+    });
   }
 
   // ====== ONBOARDING MARCHAND ======
