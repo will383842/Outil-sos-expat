@@ -941,6 +941,20 @@
       ]
     },
     {
+      "collectionGroup": "chatters",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "telegramId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "chatter_commissions",
       "queryScope": "COLLECTION",
       "fields": [

@@ -24,8 +24,8 @@ interface ToggleChatterVisibilityResponse {
 export const adminToggleChatterVisibility = onCall(
   {
     region: "us-central1",
-    memory: "256MiB",
-    cpu: 0.083,
+    memory: "512MiB",  // FIX: 256MiB caused OOM under load
+    cpu: 0.5,  // memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },

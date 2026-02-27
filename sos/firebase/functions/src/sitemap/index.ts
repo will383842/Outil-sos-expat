@@ -144,8 +144,8 @@ export const scheduledSitemapGeneration = onSchedule(
   {
     region: 'europe-west3',
     timeoutSeconds: 540,
-    memory: '256MiB',
-    cpu: 0.083,
+    memory: '512MiB',  // FIX: OOM at 257 MiB
+    cpu: 0.5,  // memory > 256MiB requires cpu >= 0.5
     maxInstances: 1,
     minInstances: 0,
     schedule: 'every 24 hours',

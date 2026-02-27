@@ -194,7 +194,7 @@ export interface AdminGetCommissionStatsResponse {
  * Get detailed commissions with advanced filters
  */
 export const adminGetCommissionsDetailed = onCall(
-  { ...adminConfig, timeoutSeconds: 60, memory: "256MiB" },
+  { ...adminConfig, timeoutSeconds: 60 },
   async (request): Promise<AdminGetCommissionsDetailedResponse> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -412,7 +412,7 @@ export const adminGetCommissionsDetailed = onCall(
  * Get commission dashboard statistics
  */
 export const adminGetCommissionStats = onCall(
-  { ...adminConfig, timeoutSeconds: 60, memory: "256MiB" },
+  { ...adminConfig, timeoutSeconds: 60 },
   async (request): Promise<AdminGetCommissionStatsResponse> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -629,7 +629,7 @@ export const adminGetCommissionStats = onCall(
  * Export commissions to CSV format
  */
 export const adminExportCommissionsCSV = onCall(
-  { ...adminConfig, timeoutSeconds: 120, memory: "256MiB", cpu: 0.083 },
+  { ...adminConfig, timeoutSeconds: 120 },
   async (request): Promise<{ success: boolean; csv: string; count: number }> => {
     ensureInitialized();
     await assertAdmin(request);

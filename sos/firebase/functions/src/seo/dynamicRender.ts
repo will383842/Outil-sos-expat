@@ -208,8 +208,8 @@ async function renderPage(url: string): Promise<string> {
 export const renderForBotsV2 = onRequest(
   {
     region: 'europe-west1',
-    memory: '512MiB',  // FIX: Puppeteer needs 538-611 MiB at runtime
-    cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
+    memory: '1GiB',  // FIX: Puppeteer uses 525-590 MiB at runtime, 512MiB causes recurrent OOM
+    cpu: 0.5,  // memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 120,
     minInstances: 0,
     maxInstances: 10,
