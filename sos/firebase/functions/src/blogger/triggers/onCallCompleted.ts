@@ -34,7 +34,8 @@ export async function checkBloggerClientReferral(
   clientId: string,
   clientEmail: string,
   callDuration: number,
-  connectionFee: number
+  connectionFee: number,
+  providerType?: 'lawyer' | 'expat'
 ): Promise<{ awarded: boolean; commissionId?: string; error?: string }> {
   const db = getFirestore();
 
@@ -91,7 +92,8 @@ export async function checkBloggerClientReferral(
         clientId,
         clientEmail,
         callDuration,
-        connectionFee
+        connectionFee,
+        providerType
       );
     }
 
@@ -114,7 +116,8 @@ export async function checkBloggerClientReferral(
       clientId,
       clientEmail,
       callDuration,
-      connectionFee
+      connectionFee,
+      providerType
     );
   } catch (error) {
     logger.error("[checkBloggerClientReferral] Error", { callSessionId, error });
@@ -134,7 +137,8 @@ async function awardBloggerCommission(
   clientId: string,
   clientEmail: string,
   callDuration: number,
-  connectionFee: number
+  connectionFee: number,
+  providerType?: 'lawyer' | 'expat'
 ): Promise<{ awarded: boolean; commissionId?: string; error?: string }> {
   const db = getFirestore();
 
@@ -164,7 +168,7 @@ async function awardBloggerCommission(
     return { awarded: false, error: "Commission already exists for this call" };
   }
 
-  // Create commission (FIXED amount from config)
+  // Create commission (split by provider type: lawyer=$5, expat=$3)
   const result = await createBloggerCommission({
     bloggerId,
     type: "client_referral",
@@ -177,8 +181,10 @@ async function awardBloggerCommission(
         callSessionId,
         callDuration,
         connectionFee,
+        providerType,
       },
     },
+    providerType,
     description: `Commission client référé - Appel #${callSessionId.slice(-6)}`,
   });
 
@@ -248,13 +254,15 @@ export async function handleCallCompleted(
       return;
     }
 
-    // Check for blogger referral and award $10 client commission
+    // Check for blogger referral and award commission (split by provider type)
+    const providerType = after.providerType ?? after.metadata?.providerType;
     const result = await checkBloggerClientReferral(
       sessionId,
       clientId,
       clientEmail,
       duration,
-      connectionFee
+      connectionFee,
+      providerType
     );
 
     if (result.awarded) {

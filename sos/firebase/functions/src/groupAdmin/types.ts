@@ -1052,6 +1052,11 @@ export interface GroupAdminConfig {
   /** Client referral commission ($10 = 1000) */
   commissionClientAmount: number;
 
+  /** Commission client referral — lawyer provider (500 cents = $5) */
+  commissionClientAmountLawyer?: number;
+  /** Commission client referral — expat provider (300 cents = $3) */
+  commissionClientAmountExpat?: number;
+
   /** Recruitment commission ($50 = 5000) */
   commissionRecruitmentAmount: number;
 
@@ -1125,6 +1130,8 @@ export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "u
 
   // All amounts in USD cents — fixed values, independent of call currency (EUR/USD/etc.)
   commissionClientAmount: 1000,        // $10 per client referral
+  commissionClientAmountLawyer: 500,   // $5 per client referral (lawyer)
+  commissionClientAmountExpat: 300,    // $3 per client referral (expat)
   commissionRecruitmentAmount: 5000,    // $50 per recruited admin (paid once threshold met)
   clientDiscountAmount: 500,           // $5 discount for client
   recruitmentCommissionThreshold: 20000, // $200 — recruited admin must earn this in commissions before recruiter gets $50

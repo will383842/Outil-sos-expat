@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useIntl } from "react-intl";
 import {
   Settings,
   Save,
@@ -342,6 +343,7 @@ const CommissionRuleEditor: React.FC<{
   rule: CommissionRule;
   onChange: (rule: CommissionRule) => void;
 }> = ({ actionType, rule, onChange }) => {
+  const intl = useIntl();
   const [isOpen, setIsOpen] = useState(false);
 
   const getIcon = () => {
@@ -430,6 +432,26 @@ const CommissionRuleEditor: React.FC<{
               suffix="€"
               isCents
             />
+          )}
+
+          {/* Split by provider type (for call-related rules) */}
+          {(actionType === "referral_first_call" || actionType === "referral_recurring_call") && (
+            <div className="grid grid-cols-2 gap-4 mt-3">
+              <NumberInput
+                label={intl.formatMessage({ id: 'admin.commission.fixedAmountLawyer', defaultMessage: 'Montant fixe — Avocat' })}
+                value={rule.fixedAmountLawyer ?? rule.fixedAmount}
+                onChange={(v) => updateRule({ fixedAmountLawyer: v })}
+                suffix="$"
+                isCents
+              />
+              <NumberInput
+                label={intl.formatMessage({ id: 'admin.commission.fixedAmountExpat', defaultMessage: 'Montant fixe — Expatrié' })}
+                value={rule.fixedAmountExpat ?? rule.fixedAmount}
+                onChange={(v) => updateRule({ fixedAmountExpat: v })}
+                suffix="$"
+                isCents
+              />
+            </div>
           )}
 
           {/* Percentage rate */}
@@ -586,6 +608,7 @@ const SaveModal: React.FC<{
 
 const AdminAffiliateConfig: React.FC = () => {
   const { user } = useAuth();
+  const intl = useIntl();
   const db = getFirestore();
   const functions = functionsWest2;
 

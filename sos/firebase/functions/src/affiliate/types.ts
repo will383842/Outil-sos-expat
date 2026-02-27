@@ -523,6 +523,11 @@ export interface CommissionRule {
 
   /** Human-readable description */
   description: string;
+
+  /** Fixed amount override for lawyer providers (cents) */
+  fixedAmountLawyer?: number;
+  /** Fixed amount override for expat providers (cents) */
+  fixedAmountExpat?: number;
 }
 
 /**
@@ -922,6 +927,8 @@ export const DEFAULT_AFFILIATE_CONFIG: Omit<
         providerTypes: ["lawyer", "expat"],
       },
       description: "50% des frais de connexion du 1er appel",
+      fixedAmountLawyer: 500,  // $5 override for lawyer
+      fixedAmountExpat: 300,   // $3 override for expat
     },
     referral_recurring_call: {
       enabled: true,
@@ -937,6 +944,8 @@ export const DEFAULT_AFFILIATE_CONFIG: Omit<
         lifetimeLimit: 0, // unlimited
       },
       description: "20% des frais de connexion des appels suivants",
+      fixedAmountLawyer: 500,  // $5 override for lawyer
+      fixedAmountExpat: 300,   // $3 override for expat
     },
     referral_subscription: {
       enabled: true,

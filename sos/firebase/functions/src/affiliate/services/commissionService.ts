@@ -207,9 +207,10 @@ export async function createCommission(
       amount = input.overrideAmount;
       calculationDetails = `Ajustement manuel: ${formatCents(amount)}`;
     } else {
-      // Calculate based on rule
+      // Calculate based on rule (with provider type split)
       const baseAmountForCalc = getBaseAmountForRule(rule, input.amounts);
-      const calcResult = calculateCommission(rule, baseAmountForCalc, capturedRates, input.type);
+      const providerType = input.context?.providerType as 'lawyer' | 'expat' | undefined;
+      const calcResult = calculateCommission(rule, baseAmountForCalc, capturedRates, input.type, providerType);
 
       if (!calcResult.success) {
         logger.warn("[CommissionService] Calculation failed", {

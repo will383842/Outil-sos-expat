@@ -383,7 +383,7 @@ const ChatterLanding: React.FC = () => {
               <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
                 {/* Source 1 : Appels directs */}
                 <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black mb-1">10$</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">3-5$</div>
                   <div className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.hero.source1" defaultMessage="par appel direct" /></div>
                 </div>
 
@@ -588,7 +588,7 @@ const ChatterLanding: React.FC = () => {
                   <FormattedMessage id="chatter.landing.source1.desc" defaultMessage="Parcourez les groupes Facebook et forums. Aidez ceux qui ont besoin en partageant votre lien." />
                 </p>
                 <div className="text-2xl sm:text-3xl lg:text-4xl font-black">
-                  10${local(10)} / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
+                  3-5${local(4)} / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
                 </div>
               </article>
 
@@ -893,7 +893,7 @@ const ChatterLanding: React.FC = () => {
                         <FormattedMessage id="chatter.landing.agency.you" defaultMessage="Vous = Le directeur" />
                       </div>
                       <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-amber-400">
-                        10${local(10)} / <FormattedMessage id="chatter.landing.agency.persoCall" defaultMessage="appel perso" />
+                        3-5${local(4)} / <FormattedMessage id="chatter.landing.agency.persoCall" defaultMessage="appel perso" />
                       </div>
                     </div>
                   </div>
@@ -1026,7 +1026,7 @@ const ChatterLanding: React.FC = () => {
 
                   {/* Message motivant */}
                   <p className="text-sm sm:text-base font-bold mb-2">
-                    <FormattedMessage id="chatter.landing.calc.motivation" defaultMessage="🎯 Sans compter VOS appels directs à 10$ !" />
+                    <FormattedMessage id="chatter.landing.calc.motivation" defaultMessage="🎯 Sans compter VOS appels directs à 3 à 5$ !" />
                   </p>
                   <p className="text-xs sm:text-sm">
                     <FormattedMessage id="chatter.landing.calc.forever" defaultMessage="À vie. Tant que votre agence tourne." />

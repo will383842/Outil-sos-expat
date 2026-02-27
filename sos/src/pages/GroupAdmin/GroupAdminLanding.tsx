@@ -745,19 +745,19 @@ const GroupAdminLanding: React.FC = () => {
                     <FormattedMessage id="groupAdmin.landing.calc.monthlyEarnings" defaultMessage="VOS REVENUS MENSUELS ESTIMÉS" />
                   </p>
                   <p className="text-5xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400 mb-2" aria-live="polite">
-                    +{Math.round((groupMembers * conversionRate / 100) * 10)}$
+                    +{Math.round((groupMembers * conversionRate / 100) * 4)}$
                   </p>
 
                   {/* Détails */}
                   <div className="text-xs sm:text-sm mb-1">
                     <FormattedMessage
                       id="groupAdmin.landing.calc.details"
-                      defaultMessage="{members} membres × {rate}% = {calls} appels × 10$ = {earnings}$/mois"
+                      defaultMessage="{members} membres × {rate}% = {calls} appels × 4$ avg = {earnings}$/mois"
                       values={{
                         members: groupMembers.toLocaleString(),
                         rate: conversionRate.toFixed(1),
                         calls: Math.round(groupMembers * conversionRate / 100),
-                        earnings: Math.round((groupMembers * conversionRate / 100) * 10)
+                        earnings: Math.round((groupMembers * conversionRate / 100) * 4)
                       }}
                     />
                   </div>

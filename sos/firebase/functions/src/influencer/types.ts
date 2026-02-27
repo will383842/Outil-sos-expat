@@ -835,6 +835,15 @@ export interface InfluencerConfig {
   /** Fixed commission per provider recruitment call ($5 = 500 cents) */
   commissionRecruitmentAmount: number;
 
+  /** Commission client referral — lawyer provider (500 cents = $5) */
+  commissionClientAmountLawyer?: number;
+  /** Commission client referral — expat provider (300 cents = $3) */
+  commissionClientAmountExpat?: number;
+  /** Commission recruitment — lawyer provider (500 cents = $5) */
+  commissionRecruitmentAmountLawyer?: number;
+  /** Commission recruitment — expat provider (300 cents = $3) */
+  commissionRecruitmentAmountExpat?: number;
+
   /** Client discount percentage for referral (5% = 5) */
   clientDiscountPercent: number;
 
@@ -1077,6 +1086,10 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
 
   commissionClientAmount: 1000,      // $10
   commissionRecruitmentAmount: 500,  // $5
+  commissionClientAmountLawyer: 500,       // $5 - lawyer
+  commissionClientAmountExpat: 300,        // $3 - expat
+  commissionRecruitmentAmountLawyer: 500,  // $5 - lawyer
+  commissionRecruitmentAmountExpat: 300,   // $3 - expat
   clientDiscountPercent: 5,          // 5% discount for referred clients
 
   recruitmentWindowMonths: 6,

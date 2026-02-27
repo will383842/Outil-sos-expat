@@ -43,7 +43,8 @@ export async function createClientReferralCommission(
   groupAdminId: string,
   clientId: string,
   callId: string,
-  description: string = "Client referral commission"
+  description: string = "Client referral commission",
+  providerType?: 'lawyer' | 'expat'
 ): Promise<GroupAdminCommission | null> {
   try {
     // Get GroupAdmin
@@ -78,8 +79,8 @@ export async function createClientReferralCommission(
       return null;
     }
 
-    // Get commission amount
-    let amount = await getClientCommissionAmount();
+    // Get commission amount (split by provider type)
+    let amount = await getClientCommissionAmount(providerType);
 
     // Check for active promotions
     let promoId: string | undefined;

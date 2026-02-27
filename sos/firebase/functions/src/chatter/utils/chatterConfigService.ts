@@ -286,8 +286,15 @@ export function getFlashBonusMultiplier(config: ChatterConfig): number {
  * Get commission amount for a direct client call
  * Applies flash bonus multiplier if active
  */
-export function getClientCallCommission(config: ChatterConfig): number {
-  const base = config.commissionClientCallAmount || 1000; // Default $10
+export function getClientCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat'): number {
+  let base: number;
+  if (providerType === 'lawyer' && config.commissionClientCallAmountLawyer != null) {
+    base = config.commissionClientCallAmountLawyer;
+  } else if (providerType === 'expat' && config.commissionClientCallAmountExpat != null) {
+    base = config.commissionClientCallAmountExpat;
+  } else {
+    base = config.commissionClientCallAmount || 1000;
+  }
   const flashMultiplier = getFlashBonusMultiplier(config);
   return Math.round(base * flashMultiplier);
 }
@@ -343,8 +350,15 @@ export function getActivationCallsRequired(config: ChatterConfig): number {
  * Get commission amount for recruited provider's call
  * Applies flash bonus multiplier if active
  */
-export function getProviderCallCommission(config: ChatterConfig): number {
-  const base = config.commissionProviderCallAmount || 500; // Default $5
+export function getProviderCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat'): number {
+  let base: number;
+  if (providerType === 'lawyer' && config.commissionProviderCallAmountLawyer != null) {
+    base = config.commissionProviderCallAmountLawyer;
+  } else if (providerType === 'expat' && config.commissionProviderCallAmountExpat != null) {
+    base = config.commissionProviderCallAmountExpat;
+  } else {
+    base = config.commissionProviderCallAmount || 500;
+  }
   const flashMultiplier = getFlashBonusMultiplier(config);
   return Math.round(base * flashMultiplier);
 }

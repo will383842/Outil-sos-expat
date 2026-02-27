@@ -40,6 +40,12 @@ interface BloggerConfig {
   providerRecruitmentCommission: number; // Always 500 ($5)
   clientDiscountPercent: number; // Always 0%
 
+  // Split commissions by provider type (cents)
+  commissionClientAmountLawyer?: number;
+  commissionClientAmountExpat?: number;
+  commissionRecruitmentAmountLawyer?: number;
+  commissionRecruitmentAmountExpat?: number;
+
   // Configurable settings
   minimumWithdrawalAmount: number;
   commissionValidationDays: number;
@@ -134,6 +140,10 @@ const AdminBloggersConfig: React.FC = () => {
           isSystemActive: config.isSystemActive,
           newRegistrationsEnabled: config.newRegistrationsEnabled,
           withdrawalsEnabled: config.withdrawalsEnabled,
+          commissionClientAmountLawyer: config.commissionClientAmountLawyer,
+          commissionClientAmountExpat: config.commissionClientAmountExpat,
+          commissionRecruitmentAmountLawyer: config.commissionRecruitmentAmountLawyer,
+          commissionRecruitmentAmountExpat: config.commissionRecruitmentAmountExpat,
         },
       });
       setSuccess(true);
@@ -319,41 +329,91 @@ const AdminBloggersConfig: React.FC = () => {
           </div>
         </div>
 
-        {/* Fixed Commissions Info - Read Only */}
-        <div className={`${UI.card} p-6 bg-purple-50 dark:bg-purple-900/20`}>
+        {/* Commissions split par type de prestataire */}
+        <div className={`${UI.card} p-6`}>
           <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-purple-500" />
-            <FormattedMessage id="admin.bloggers.config.fixedCommissions" defaultMessage="Commissions fixes (non modifiables)" />
+            <FormattedMessage id="admin.commission.byProviderType" defaultMessage="Commissions par type de prestataire" />
           </h2>
 
-          <div className="flex items-start gap-3 mb-4">
-            <Info className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-purple-700 dark:text-purple-300">
-              <FormattedMessage
-                id="admin.bloggers.config.fixedCommissionsInfo"
-                defaultMessage="Les commissions des blogueurs sont fixes et ne peuvent pas être modifiées. C'est une caractéristique distinctive du programme blogueur par rapport aux chatters et influenceurs."
-              />
-            </p>
+          {/* Commission client — split avocat/expatrié */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FormattedMessage id="admin.commission.clientCall" defaultMessage="Commission appel client" />
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.lawyerLabel" defaultMessage="Avocat" /></label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={((config.commissionClientAmountLawyer ?? 500) / 100).toFixed(2)}
+                    onChange={(e) => handleChange('commissionClientAmountLawyer', Math.round(parseFloat(e.target.value || '0') * 100))}
+                    className={`${UI.input} pl-8`}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.expatLabel" defaultMessage="Expatrié" /></label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={((config.commissionClientAmountExpat ?? 300) / 100).toFixed(2)}
+                    onChange={(e) => handleChange('commissionClientAmountExpat', Math.round(parseFloat(e.target.value || '0') * 100))}
+                    className={`${UI.input} pl-8`}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-4 bg-white dark:bg-white/5 rounded-xl">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Commission par appel référé</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">$10.00</p>
-              <p className="text-xs text-gray-400 mt-1">Montant fixe</p>
+          {/* Commission recrutement — split avocat/expatrié */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FormattedMessage id="admin.commission.providerRecruitment" defaultMessage="Commission recrutement prestataire" />
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.lawyerLabel" defaultMessage="Avocat" /></label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={((config.commissionRecruitmentAmountLawyer ?? 500) / 100).toFixed(2)}
+                    onChange={(e) => handleChange('commissionRecruitmentAmountLawyer', Math.round(parseFloat(e.target.value || '0') * 100))}
+                    className={`${UI.input} pl-8`}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.expatLabel" defaultMessage="Expatrié" /></label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={((config.commissionRecruitmentAmountExpat ?? 300) / 100).toFixed(2)}
+                    onChange={(e) => handleChange('commissionRecruitmentAmountExpat', Math.round(parseFloat(e.target.value || '0') * 100))}
+                    className={`${UI.input} pl-8`}
+                  />
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div className="p-4 bg-white dark:bg-white/5 rounded-xl">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Commission par appel partenaire</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">$5.00</p>
-              <p className="text-xs text-gray-400 mt-1">Par appel du partenaire</p>
-            </div>
-
-            <div className="p-4 bg-white dark:bg-white/5 rounded-xl">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Remise client</p>
-              <p className="text-2xl font-bold text-gray-400 dark:text-gray-500">0%</p>
-              <p className="text-xs text-gray-400 mt-1">Pas de remise client</p>
-            </div>
+          <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+            <p className="text-xs text-purple-700 dark:text-purple-300">
+              Remise client : 0% (pas de remise pour les blogueurs)
+            </p>
           </div>
         </div>
 

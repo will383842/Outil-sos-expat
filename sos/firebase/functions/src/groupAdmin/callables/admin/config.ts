@@ -79,6 +79,8 @@ interface UpdateConfigInput {
   withdrawalsEnabled?: boolean;
   isGroupAdminListingPageVisible?: boolean;
   commissionClientAmount?: number;
+  commissionClientAmountLawyer?: number;
+  commissionClientAmountExpat?: number;
   commissionRecruitmentAmount?: number;
   clientDiscountAmount?: number;
   recruitmentCommissionThreshold?: number;
@@ -118,6 +120,14 @@ export const adminUpdateGroupAdminConfig = onCall(
       throw new HttpsError("invalid-argument", "Commission amount cannot be negative");
     }
 
+    if (input.commissionClientAmountLawyer !== undefined && input.commissionClientAmountLawyer < 0) {
+      throw new HttpsError("invalid-argument", "Commission amount (lawyer) cannot be negative");
+    }
+
+    if (input.commissionClientAmountExpat !== undefined && input.commissionClientAmountExpat < 0) {
+      throw new HttpsError("invalid-argument", "Commission amount (expat) cannot be negative");
+    }
+
     if (input.commissionRecruitmentAmount !== undefined && input.commissionRecruitmentAmount < 0) {
       throw new HttpsError("invalid-argument", "Recruitment commission amount cannot be negative");
     }
@@ -154,6 +164,8 @@ export const adminUpdateGroupAdminConfig = onCall(
       if (input.withdrawalsEnabled !== undefined) updates.withdrawalsEnabled = input.withdrawalsEnabled;
       if (input.isGroupAdminListingPageVisible !== undefined) updates.isGroupAdminListingPageVisible = input.isGroupAdminListingPageVisible;
       if (input.commissionClientAmount !== undefined) updates.commissionClientAmount = input.commissionClientAmount;
+      if (input.commissionClientAmountLawyer !== undefined) updates.commissionClientAmountLawyer = input.commissionClientAmountLawyer;
+      if (input.commissionClientAmountExpat !== undefined) updates.commissionClientAmountExpat = input.commissionClientAmountExpat;
       if (input.commissionRecruitmentAmount !== undefined) updates.commissionRecruitmentAmount = input.commissionRecruitmentAmount;
       if (input.clientDiscountAmount !== undefined) updates.clientDiscountAmount = input.clientDiscountAmount;
       if (input.recruitmentCommissionThreshold !== undefined) updates.recruitmentCommissionThreshold = input.recruitmentCommissionThreshold;

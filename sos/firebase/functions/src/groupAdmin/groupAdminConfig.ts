@@ -158,10 +158,16 @@ export async function areWithdrawalsEnabled(): Promise<boolean> {
 }
 
 /**
- * Get client commission amount in cents
+ * Get client commission amount in cents (split by provider type)
  */
-export async function getClientCommissionAmount(): Promise<number> {
+export async function getClientCommissionAmount(providerType?: 'lawyer' | 'expat'): Promise<number> {
   const config = await getGroupAdminConfig();
+  if (providerType === 'lawyer' && config.commissionClientAmountLawyer != null) {
+    return config.commissionClientAmountLawyer;
+  }
+  if (providerType === 'expat' && config.commissionClientAmountExpat != null) {
+    return config.commissionClientAmountExpat;
+  }
   return config.commissionClientAmount;
 }
 

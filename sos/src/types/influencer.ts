@@ -440,6 +440,12 @@ export interface InfluencerConfig {
   clientReferralCommission: number;
   providerRecruitmentCommission: number;
 
+  // Split commissions by provider type (cents)
+  commissionClientAmountLawyer?: number;
+  commissionClientAmountExpat?: number;
+  commissionRecruitmentAmountLawyer?: number;
+  commissionRecruitmentAmountExpat?: number;
+
   // Client discount
   clientDiscountPercent: number;
 

@@ -279,6 +279,8 @@ export interface CommissionRule {
     requireFirstCall?: boolean;
   };
   description: string;
+  fixedAmountLawyer?: number;
+  fixedAmountExpat?: number;
 }
 
 export interface AffiliateConfig {

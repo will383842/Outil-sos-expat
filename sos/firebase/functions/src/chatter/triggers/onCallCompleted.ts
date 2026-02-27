@@ -173,7 +173,7 @@ export async function handleCallCompleted(
       // 1. DIRECT CLIENT CALL COMMISSION ($10)
       // ========================================================================
 
-      const clientCallAmount = getClientCallCommission(config);
+      const clientCallAmount = getClientCallCommission(config, session.providerType);
 
       const clientCallResult = await createCommission({
         chatterId,
@@ -630,7 +630,7 @@ async function processProviderRecruitmentCommission(
     }
 
     // Create commission for provider call
-    const providerCallAmount = getProviderCallCommission(config);
+    const providerCallAmount = getProviderCallCommission(config, session.providerType);
 
     const providerCallResult = await createCommission({
       chatterId: recruiterChatterId,

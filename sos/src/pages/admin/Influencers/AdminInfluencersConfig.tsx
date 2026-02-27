@@ -165,6 +165,10 @@ const AdminInfluencersConfig: React.FC = () => {
         updates: {
           clientReferralCommission: config.clientReferralCommission,
           providerRecruitmentCommission: config.providerRecruitmentCommission,
+          commissionClientAmountLawyer: config.commissionClientAmountLawyer,
+          commissionClientAmountExpat: config.commissionClientAmountExpat,
+          commissionRecruitmentAmountLawyer: config.commissionRecruitmentAmountLawyer,
+          commissionRecruitmentAmountExpat: config.commissionRecruitmentAmountExpat,
           clientDiscountPercent: config.clientDiscountPercent,
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
           commissionValidationDays: config.commissionValidationDays,
@@ -466,38 +470,76 @@ const AdminInfluencersConfig: React.FC = () => {
                 Ces valeurs sont utilisées pour les nouveaux influenceurs. Pour modifier les règles détaillées, allez dans l'onglet "Règles de commission".
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    <FormattedMessage id="admin.config.clientCommission" defaultMessage="Commission parrainage client" />
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={(config.clientReferralCommission / 100).toFixed(2)}
-                      onChange={(e) => handleChange('clientReferralCommission', Math.round(parseFloat(e.target.value || '0') * 100))}
-                      className={`${UI.input} pl-8`}
-                    />
+              {/* Commission client — split avocat/expatrié */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FormattedMessage id="admin.commission.clientByType" defaultMessage="Commission client (par type de prestataire)" />
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.lawyerLabel" defaultMessage="Avocat" /></label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={((config.commissionClientAmountLawyer ?? 500) / 100).toFixed(2)}
+                        onChange={(e) => handleChange('commissionClientAmountLawyer', Math.round(parseFloat(e.target.value || '0') * 100))}
+                        className={`${UI.input} pl-8`}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.expatLabel" defaultMessage="Expatrié" /></label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={((config.commissionClientAmountExpat ?? 300) / 100).toFixed(2)}
+                        onChange={(e) => handleChange('commissionClientAmountExpat', Math.round(parseFloat(e.target.value || '0') * 100))}
+                        className={`${UI.input} pl-8`}
+                      />
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    <FormattedMessage id="admin.config.recruitCommission" defaultMessage="Commission partenaire" />
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={(config.providerRecruitmentCommission / 100).toFixed(2)}
-                      onChange={(e) => handleChange('providerRecruitmentCommission', Math.round(parseFloat(e.target.value || '0') * 100))}
-                      className={`${UI.input} pl-8`}
-                    />
+              {/* Commission recrutement — split avocat/expatrié */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FormattedMessage id="admin.commission.recruitmentByType" defaultMessage="Commission recrutement (par type de prestataire)" />
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.lawyerLabel" defaultMessage="Avocat" /></label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={((config.commissionRecruitmentAmountLawyer ?? 500) / 100).toFixed(2)}
+                        onChange={(e) => handleChange('commissionRecruitmentAmountLawyer', Math.round(parseFloat(e.target.value || '0') * 100))}
+                        className={`${UI.input} pl-8`}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.expatLabel" defaultMessage="Expatrié" /></label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={((config.commissionRecruitmentAmountExpat ?? 300) / 100).toFixed(2)}
+                        onChange={(e) => handleChange('commissionRecruitmentAmountExpat', Math.round(parseFloat(e.target.value || '0') * 100))}
+                        className={`${UI.input} pl-8`}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

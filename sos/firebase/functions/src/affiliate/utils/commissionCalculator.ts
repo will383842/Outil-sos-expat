@@ -51,7 +51,8 @@ export function calculateCommission(
   rule: CommissionRule,
   baseAmountCents: number,
   capturedRates?: CapturedRates,
-  actionType?: CommissionActionType
+  actionType?: CommissionActionType,
+  providerType?: 'lawyer' | 'expat'
 ): CommissionCalculationResult {
   if (!rule.enabled) {
     return {
@@ -63,6 +64,30 @@ export function calculateCommission(
       calculationDetails: "Rule is disabled",
       success: false,
       error: "Commission rule is disabled",
+    };
+  }
+
+  // Override by provider type if split amounts are defined
+  if (providerType === 'lawyer' && rule.fixedAmountLawyer != null) {
+    return {
+      success: true,
+      amount: rule.fixedAmountLawyer,
+      calculationType: 'fixed',
+      baseAmount: baseAmountCents,
+      fixedAmount: rule.fixedAmountLawyer,
+      rateApplied: null,
+      calculationDetails: `Montant fixe avocat: ${formatCents(rule.fixedAmountLawyer)}`,
+    };
+  }
+  if (providerType === 'expat' && rule.fixedAmountExpat != null) {
+    return {
+      success: true,
+      amount: rule.fixedAmountExpat,
+      calculationType: 'fixed',
+      baseAmount: baseAmountCents,
+      fixedAmount: rule.fixedAmountExpat,
+      rateApplied: null,
+      calculationDetails: `Montant fixe expatrié: ${formatCents(rule.fixedAmountExpat)}`,
     };
   }
 

@@ -246,7 +246,7 @@ const InfluencerLanding: React.FC = () => {
   const monthlyViews = calcVideos * calcViewsPerVideo;
   const monthlyClicks = Math.floor((monthlyViews * calcClickRate) / 100);
   const monthlyClients = Math.floor((monthlyClicks * calcConversionRate) / 100);
-  const monthlyEarnings = monthlyClients * 10;
+  const monthlyEarnings = monthlyClients * 4;
 
   const registerRoute = `/${getTranslatedRouteSlug('influencer-register' as RouteKey, langCode)}`;
   const goToRegister = () => navigate(registerRoute);
@@ -320,7 +320,7 @@ const InfluencerLanding: React.FC = () => {
             </div>
 
             <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
-              <span className="text-amber-400"><FormattedMessage id="influencer.hero.earn" defaultMessage="Earn" /> $10{local(10)}</span>
+              <span className="text-amber-400"><FormattedMessage id="influencer.hero.earn" defaultMessage="Earn" /> $3-5{local(4)}</span>
               <br />
               <span className="text-2xl sm:text-4xl lg:text-5xl">
                 <FormattedMessage id="influencer.hero.perClient" defaultMessage="Per Client Referred" />
@@ -703,12 +703,12 @@ const InfluencerLanding: React.FC = () => {
               {/* Main earning card */}
               <div className="bg-gradient-to-br from-red-500/15 to-orange-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 text-center">
                 <Phone className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-red-400 opacity-80" aria-hidden="true" />
-                <div className="text-5xl sm:text-6xl lg:text-7xl font-black mb-2">$10{local(10) && <span className="text-2xl sm:text-3xl lg:text-4xl">{local(10)}</span>}</div>
+                <div className="text-5xl sm:text-6xl lg:text-7xl font-black mb-2">$3-5{local(4) && <span className="text-2xl sm:text-3xl lg:text-4xl">{local(4)}</span>}</div>
                 <p className="text-base sm:text-lg">
                   <FormattedMessage id="influencer.earnings.perCall" defaultMessage="Per client call to a lawyer or expat helper" />
                 </p>
                 <div className="flex justify-center gap-2 sm:gap-3 mt-4 sm:mt-6">
-                  {['10 = $100', '50 = $500', '100 = $1000'].map((v) => (
+                  {['10 = $40', '50 = $200', '100 = $400'].map((v) => (
                     <span key={v} className="bg-white/10 rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm">{v}</span>
                   ))}
                 </div>
@@ -744,7 +744,7 @@ const InfluencerLanding: React.FC = () => {
                     <p className="text-sm mb-1"><FormattedMessage id="influencer.calculator.result" defaultMessage="Estimated monthly earnings" /></p>
                     <p className="text-4xl sm:text-5xl font-black" aria-live="polite">${monthlyEarnings}</p>
                     <p className="text-xs sm:text-sm mt-2">
-                      {monthlyViews.toLocaleString()} <FormattedMessage id="influencer.calculator.views.label" defaultMessage="views" /> × {calcClickRate}% = {monthlyClicks.toLocaleString()} <FormattedMessage id="influencer.calculator.clicks" defaultMessage="clicks" /> × {calcConversionRate}% = {monthlyClients} <FormattedMessage id="influencer.calculator.clients" defaultMessage="clients" /> × $10
+                      {monthlyViews.toLocaleString()} <FormattedMessage id="influencer.calculator.views.label" defaultMessage="views" /> × {calcClickRate}% = {monthlyClicks.toLocaleString()} <FormattedMessage id="influencer.calculator.clicks" defaultMessage="clicks" /> × {calcConversionRate}% = {monthlyClients} <FormattedMessage id="influencer.calculator.clients" defaultMessage="clients" /> × $4 avg
                     </p>
                   </div>
                   <p className="text-xs">

@@ -192,11 +192,13 @@ export async function handleCallCompleted(
       // ================================================================
       // CREATE COMMISSION
       // ================================================================
+      const providerType = afterData.providerType ?? afterData.metadata?.providerType;
       const commission = await createClientReferralCommission(
         groupAdminId,
         afterData.clientId,
         sessionId,
-        `Client referral commission for session ${sessionId}`
+        `Client referral commission for session ${sessionId}`,
+        providerType
       );
 
       if (commission) {

@@ -158,7 +158,7 @@ export async function handleCallCompleted(
         return;
       }
 
-      // Create commission ($10 fixed)
+      // Create commission (split by provider type: lawyer=$5, expat=$3)
       const result = await createCommission({
         influencerId,
         type: "client_referral",
@@ -172,8 +172,10 @@ export async function handleCallCompleted(
             callDuration: afterData.duration,
             connectionFee: afterData.connectionFee,
             discountApplied: config.clientDiscountPercent,
+            providerType: afterData.providerType,
           },
         },
+        providerType: afterData.providerType,
       });
 
       if (result.success) {

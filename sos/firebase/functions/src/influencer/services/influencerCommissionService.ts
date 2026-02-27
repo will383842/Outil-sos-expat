@@ -66,6 +66,7 @@ export interface CreateCommissionInput {
   amount?: number; // Override amount (otherwise use config/captured rates)
   baseAmount?: number; // Base amount for percentage calculations (V2)
   description?: string;
+  providerType?: 'lawyer' | 'expat'; // Split commissions by provider type
 }
 
 export interface CreateCommissionResult {
@@ -88,8 +89,19 @@ export function calculateCommissionAmount(
   influencer: Influencer,
   type: InfluencerCommissionType,
   baseAmount: number,
-  config: InfluencerConfig
+  config: InfluencerConfig,
+  providerType?: 'lawyer' | 'expat'
 ): number {
+  // Split by provider type: override with specific amounts if defined
+  if (providerType === 'lawyer') {
+    if (type === 'client_referral' && config.commissionClientAmountLawyer != null) return config.commissionClientAmountLawyer;
+    if (type === 'recruitment' && config.commissionRecruitmentAmountLawyer != null) return config.commissionRecruitmentAmountLawyer;
+  }
+  if (providerType === 'expat') {
+    if (type === 'client_referral' && config.commissionClientAmountExpat != null) return config.commissionClientAmountExpat;
+    if (type === 'recruitment' && config.commissionRecruitmentAmountExpat != null) return config.commissionRecruitmentAmountExpat;
+  }
+
   // V2: Use captured rates if available (frozen at registration)
   if (influencer.capturedRates && influencer.capturedRates.rules[type]) {
     const capturedRule = influencer.capturedRates.rules[type]!;
@@ -217,7 +229,7 @@ export async function createCommission(
         || source.details?.connectionFee
         || 0;
 
-      baseCommissionAmount = calculateCommissionAmount(influencer, type, base, config);
+      baseCommissionAmount = calculateCommissionAmount(influencer, type, base, config, input.providerType);
     }
 
     // 5b. Check for active promotions

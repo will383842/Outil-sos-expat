@@ -219,7 +219,7 @@ const BloggerLanding: React.FC = () => {
   const [calcConversionRate, setCalcConversionRate] = useState(1.0);
   const monthlyVisits = calcArticles * calcVisitsPerArticle * 30;
   const monthlyClients = Math.floor((monthlyVisits * calcConversionRate) / 100);
-  const monthlyEarnings = monthlyClients * 10;
+  const monthlyEarnings = monthlyClients * 4;
   const formatArticles = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : `${n}`;
 
   const registerRoute = `/${getTranslatedRouteSlug('blogger-register' as RouteKey, langCode)}`;
@@ -336,7 +336,7 @@ const BloggerLanding: React.FC = () => {
               <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
                 {/* Source 1 : Appels lecteurs */}
                 <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black mb-1">$10</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">$3-5</div>
                   <div className="text-xs sm:text-sm"><FormattedMessage id="blogger.hero.source1" defaultMessage="par appel lecteur" /></div>
                 </div>
 
@@ -851,7 +851,7 @@ const BloggerLanding: React.FC = () => {
                   </p>
                   <p className="text-4xl sm:text-5xl font-black">${monthlyEarnings.toLocaleString()}</p>
                   <p className="text-sm opacity-80 mt-2">
-                    {monthlyVisits.toLocaleString()} <FormattedMessage id="blogger.existing.calculator.visits.label" defaultMessage="visits" /> × {calcConversionRate.toFixed(1)}% = {monthlyClients.toLocaleString()} <FormattedMessage id="blogger.existing.calculator.clients" defaultMessage="clients" /> × $10
+                    {monthlyVisits.toLocaleString()} <FormattedMessage id="blogger.existing.calculator.visits.label" defaultMessage="visits" /> × {calcConversionRate.toFixed(1)}% = {monthlyClients.toLocaleString()} <FormattedMessage id="blogger.existing.calculator.clients" defaultMessage="clients" /> × $4 avg
                   </p>
                 </div>
 
@@ -937,10 +937,10 @@ const BloggerLanding: React.FC = () => {
             {/* Example articles */}
             <div className="mt-8 grid lg:grid-cols-4 gap-3 sm:gap-4">
               {[
-                { emoji: '💻', typeId: 'blogger.example.nomad.type', typeDefault: 'Digital Nomad:', textId: 'blogger.example.nomad.text', textDefault: 'Guide visa digital nomad Espagne 2026', earning: '$10/appel', colorClass: 'text-purple-400' },
-                { emoji: '✈️', typeId: 'blogger.example.travel.type', typeDefault: 'Blog voyage:', textId: 'blogger.example.travel.text', textDefault: 'Que faire si vous perdez votre passeport en Thaïlande', earning: '$10/appel urgence', colorClass: 'text-blue-400' },
-                { emoji: '🏖️', typeId: 'blogger.example.vacation.type', typeDefault: 'Blog vacances:', textId: 'blogger.example.vacation.text', textDefault: 'Visa touriste Bali : comment prolonger son séjour', earning: '$10/appel', colorClass: 'text-orange-400' },
-                { emoji: '🌍', typeId: 'blogger.example.expat.type', typeDefault: 'Blog expat:', textId: 'blogger.example.expat.text', textDefault: 'S\'installer en France : les démarches admin à connaître', earning: '$10/appel conseil', colorClass: 'text-green-400' },
+                { emoji: '💻', typeId: 'blogger.example.nomad.type', typeDefault: 'Digital Nomad:', textId: 'blogger.example.nomad.text', textDefault: 'Guide visa digital nomad Espagne 2026', earning: '$3-5/appel', colorClass: 'text-purple-400' },
+                { emoji: '✈️', typeId: 'blogger.example.travel.type', typeDefault: 'Blog voyage:', textId: 'blogger.example.travel.text', textDefault: 'Que faire si vous perdez votre passeport en Thaïlande', earning: '$3-5/appel', colorClass: 'text-blue-400' },
+                { emoji: '🏖️', typeId: 'blogger.example.vacation.type', typeDefault: 'Blog vacances:', textId: 'blogger.example.vacation.text', textDefault: 'Visa touriste Bali : comment prolonger son séjour', earning: '$3-5/appel', colorClass: 'text-orange-400' },
+                { emoji: '🌍', typeId: 'blogger.example.expat.type', typeDefault: 'Blog expat:', textId: 'blogger.example.expat.text', textDefault: 'S\'installer en France : les démarches admin à connaître', earning: '$3-5/appel', colorClass: 'text-green-400' },
               ].map((ex, i) => (
                 <div key={i} className="bg-white/10 border rounded-2xl p-3 sm:p-4">
                   <div className="text-xl sm:text-2xl mb-2">{ex.emoji}</div>
@@ -1037,12 +1037,12 @@ const BloggerLanding: React.FC = () => {
             {/* Main earning card */}
             <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-6 sm:p-10 text-center mb-6">
               <Phone className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 opacity-80" aria-hidden="true" />
-              <div className="text-5xl sm:text-7xl font-black mb-2">$10</div>
+              <div className="text-5xl sm:text-7xl font-black mb-2">$3-5</div>
               <p className="text-lg sm:text-xl opacity-90">
                 <FormattedMessage id="blogger.earnings.perCall" defaultMessage="Par appel client pour tout type d'assistance" />
               </p>
               <div className="mt-5 flex justify-center gap-3 text-sm">
-                {['10 = $100', '50 = $500', '100 = $1000'].map((text, i) => (
+                {['10 = $40', '50 = $200', '100 = $400'].map((text, i) => (
                   <div key={i} className="bg-white/10 rounded-full px-4 py-2">{text.split('=')[0]} clients = ${text.split('$')[1]}</div>
                 ))}
               </div>
@@ -1112,7 +1112,7 @@ const BloggerLanding: React.FC = () => {
                     <FormattedMessage id="blogger.passive.you" defaultMessage="VOUS" />
                   </span>
                   <span className="text-gray-300 text-xs sm:text-sm text-center">
-                    <FormattedMessage id="blogger.passive.you.earn" defaultMessage="$10/client + $5/appel des prestataires" />
+                    <FormattedMessage id="blogger.passive.you.earn" defaultMessage="$3-5/client + $5/appel des prestataires" />
                   </span>
                 </div>
 

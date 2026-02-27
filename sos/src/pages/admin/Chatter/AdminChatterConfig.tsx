@@ -48,6 +48,10 @@ interface ChatterConfig {
   trainingEnabled: boolean;
   commissionClientAmount: number;
   commissionRecruitmentAmount: number;
+  commissionClientCallAmountLawyer?: number;
+  commissionClientCallAmountExpat?: number;
+  commissionProviderCallAmountLawyer?: number;
+  commissionProviderCallAmountExpat?: number;
   levelBonuses: {
     level1: number;
     level2: number;
@@ -360,47 +364,91 @@ const AdminChatterConfig: React.FC = () => {
           <FormattedMessage id="admin.chatterConfig.commissions" defaultMessage="Montants des commissions" />
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+          {/* Commission appel client — split avocat/expatrié */}
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.clientCommission" defaultMessage="Commission par appel référé (cents)" />
+              <FormattedMessage id="admin.commission.clientByType" defaultMessage="Commission appel client (par type de prestataire)" />
             </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={formData.commissionClientAmount ?? config?.commissionClientAmount ?? 1000}
-                onChange={(e) => handleChange('commissionClientAmount', parseInt(e.target.value))}
-                className={UI.input}
-                min={0}
-                step={100}
-              />
-              <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                = {formatCents(formData.commissionClientAmount ?? config?.commissionClientAmount ?? 1000)}
-              </span>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.lawyerLabel" defaultMessage="Avocat" /> (cents)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={formData.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmountLawyer ?? 500}
+                    onChange={(e) => handleChange('commissionClientCallAmountLawyer', parseInt(e.target.value))}
+                    className={UI.input}
+                    min={0}
+                    step={100}
+                  />
+                  <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    = {formatCents(formData.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmountLawyer ?? 500)}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.expatLabel" defaultMessage="Expatrié" /> (cents)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={formData.commissionClientCallAmountExpat ?? config?.commissionClientCallAmountExpat ?? 300}
+                    onChange={(e) => handleChange('commissionClientCallAmountExpat', parseInt(e.target.value))}
+                    className={UI.input}
+                    min={0}
+                    step={100}
+                  />
+                  <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    = {formatCents(formData.commissionClientCallAmountExpat ?? config?.commissionClientCallAmountExpat ?? 300)}
+                  </span>
+                </div>
+              </div>
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="admin.chatterConfig.clientCommission.desc" defaultMessage="Commission fixe pour chaque client qui effectue un appel payant" />
+              <FormattedMessage id="admin.commission.clientByType.desc" defaultMessage="Commission fixe pour chaque client qui effectue un appel payant" />
             </p>
           </div>
 
-          <div>
+          {/* Commission prestataire recruté — split avocat/expatrié */}
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.recruitmentCommission" defaultMessage="Commission par partenaire (cents)" />
+              <FormattedMessage id="admin.commission.providerByType" defaultMessage="Commission prestataire recruté (par type)" />
             </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={formData.commissionRecruitmentAmount ?? config?.commissionRecruitmentAmount ?? 500}
-                onChange={(e) => handleChange('commissionRecruitmentAmount', parseInt(e.target.value))}
-                className={UI.input}
-                min={0}
-                step={100}
-              />
-              <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                = {formatCents(formData.commissionRecruitmentAmount ?? config?.commissionRecruitmentAmount ?? 500)}
-              </span>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.lawyerLabel" defaultMessage="Avocat" /> (cents)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={formData.commissionProviderCallAmountLawyer ?? config?.commissionProviderCallAmountLawyer ?? 500}
+                    onChange={(e) => handleChange('commissionProviderCallAmountLawyer', parseInt(e.target.value))}
+                    className={UI.input}
+                    min={0}
+                    step={100}
+                  />
+                  <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    = {formatCents(formData.commissionProviderCallAmountLawyer ?? config?.commissionProviderCallAmountLawyer ?? 500)}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.expatLabel" defaultMessage="Expatrié" /> (cents)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={formData.commissionProviderCallAmountExpat ?? config?.commissionProviderCallAmountExpat ?? 300}
+                    onChange={(e) => handleChange('commissionProviderCallAmountExpat', parseInt(e.target.value))}
+                    className={UI.input}
+                    min={0}
+                    step={100}
+                  />
+                  <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    = {formatCents(formData.commissionProviderCallAmountExpat ?? config?.commissionProviderCallAmountExpat ?? 300)}
+                  </span>
+                </div>
+              </div>
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="admin.chatterConfig.recruitmentCommission.desc" defaultMessage="Commission pour chaque appel reçu par un partenaire (6 mois)" />
+              <FormattedMessage id="admin.commission.providerByType.desc" defaultMessage="Commission pour chaque appel reçu par un partenaire recruté (6 mois)" />
             </p>
           </div>
         </div>

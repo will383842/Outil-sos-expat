@@ -881,6 +881,15 @@ export interface ChatterConfig {
   /** Commission when recruited provider receives a call ($5 = 500 cents) */
   commissionProviderCallAmount: number;
 
+  /** Commission client call — lawyer provider (500 cents = $5) */
+  commissionClientCallAmountLawyer?: number;
+  /** Commission client call — expat provider (300 cents = $3) */
+  commissionClientCallAmountExpat?: number;
+  /** Commission provider call — lawyer provider (500 cents = $5) */
+  commissionProviderCallAmountLawyer?: number;
+  /** Commission provider call — expat provider (300 cents = $3) */
+  commissionProviderCallAmountExpat?: number;
+
   /** Duration in months for recruitment commission window (unified field) */
   recruitmentWindowMonths: number;
 
@@ -1040,6 +1049,10 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   commissionN1RecruitBonusAmount: 100,    // $1 - N1 recruits someone who activates
   activationCallsRequired: 2,             // 2 calls to activate (anti-fraud)
   commissionProviderCallAmount: 500,      // $5 - Provider recruitment call
+  commissionClientCallAmountLawyer: 500,  // $5 - Client call with lawyer
+  commissionClientCallAmountExpat: 300,   // $3 - Client call with expat
+  commissionProviderCallAmountLawyer: 500, // $5 - Provider call with lawyer
+  commissionProviderCallAmountExpat: 300,  // $3 - Provider call with expat
   recruitmentWindowMonths: 6,             // 6 months window for recruitment commissions
   providerRecruitmentDurationMonths: 6,   // @deprecated Use recruitmentWindowMonths instead
   flashBonusMultiplier: 1.0,              // No flash bonus by default

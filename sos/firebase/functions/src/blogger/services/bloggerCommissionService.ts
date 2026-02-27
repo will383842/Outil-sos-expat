@@ -58,6 +58,7 @@ export interface CreateBloggerCommissionInput {
   };
   baseAmount?: number; // Override base amount (otherwise use config)
   description?: string;
+  providerType?: 'lawyer' | 'expat'; // Split commissions by provider type
 }
 
 export interface CreateBloggerCommissionResult {
@@ -80,7 +81,7 @@ export async function createBloggerCommission(
   input: CreateBloggerCommissionInput
 ): Promise<CreateBloggerCommissionResult> {
   const db = getFirestore();
-  const { bloggerId, type, source, baseAmount: inputBaseAmount, description } = input;
+  const { bloggerId, type, source, baseAmount: inputBaseAmount, description, providerType } = input;
 
   try {
     // 1. Get blogger data
@@ -116,10 +117,22 @@ export async function createBloggerCommission(
     } else {
       switch (type) {
         case "client_referral":
-          amount = config.commissionClientAmount;
+          if (providerType === 'lawyer' && config.commissionClientAmountLawyer != null) {
+            amount = config.commissionClientAmountLawyer;
+          } else if (providerType === 'expat' && config.commissionClientAmountExpat != null) {
+            amount = config.commissionClientAmountExpat;
+          } else {
+            amount = config.commissionClientAmount;
+          }
           break;
         case "recruitment":
-          amount = config.commissionRecruitmentAmount;
+          if (providerType === 'lawyer' && config.commissionRecruitmentAmountLawyer != null) {
+            amount = config.commissionRecruitmentAmountLawyer;
+          } else if (providerType === 'expat' && config.commissionRecruitmentAmountExpat != null) {
+            amount = config.commissionRecruitmentAmountExpat;
+          } else {
+            amount = config.commissionRecruitmentAmount;
+          }
           break;
         case "manual_adjustment":
           amount = 0; // Must be provided via inputBaseAmount

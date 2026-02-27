@@ -195,7 +195,7 @@ export async function awardBloggerRecruitmentCommission(
         (30 * 24 * 60 * 60 * 1000)
       );
 
-      // Create commission
+      // Create commission (split by provider type)
       const result = await createBloggerCommission({
         bloggerId: recruitment.bloggerId,
         type: "recruitment",
@@ -211,6 +211,7 @@ export async function awardBloggerRecruitmentCommission(
             monthsRemaining,
           },
         },
+        providerType: recruitment.providerType,
         description: `Commission recrutement - ${recruitment.providerName} - Appel #${callId.slice(-6)}`,
       });
 

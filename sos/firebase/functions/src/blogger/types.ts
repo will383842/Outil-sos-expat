@@ -1246,6 +1246,15 @@ export interface BloggerConfig {
   /** Fixed commission per provider recruitment call ($5 = 500 cents) */
   commissionRecruitmentAmount: number;
 
+  /** Commission client referral — lawyer provider (500 cents = $5) */
+  commissionClientAmountLawyer?: number;
+  /** Commission client referral — expat provider (300 cents = $3) */
+  commissionClientAmountExpat?: number;
+  /** Commission recruitment — lawyer provider (500 cents = $5) */
+  commissionRecruitmentAmountLawyer?: number;
+  /** Commission recruitment — expat provider (300 cents = $3) */
+  commissionRecruitmentAmountExpat?: number;
+
   /** Client discount percentage (0% for bloggers) */
   clientDiscountPercent: number;
 
@@ -1328,6 +1337,10 @@ export const DEFAULT_BLOGGER_CONFIG: Omit<
 
   commissionClientAmount: 1000,      // $10 FIXED
   commissionRecruitmentAmount: 500,  // $5 FIXED
+  commissionClientAmountLawyer: 500,       // $5 - lawyer
+  commissionClientAmountExpat: 300,        // $3 - expat
+  commissionRecruitmentAmountLawyer: 500,  // $5 - lawyer
+  commissionRecruitmentAmountExpat: 300,   // $3 - expat
   clientDiscountPercent: 0,          // 0% discount (vs 5% for influencers)
 
   recruitmentWindowMonths: 6,
@@ -1652,6 +1665,10 @@ export interface AdminGetBloggerConfigResponse {
 export interface AdminUpdateBloggerConfigInput {
   commissionClientAmount?: number;
   commissionRecruitmentAmount?: number;
+  commissionClientAmountLawyer?: number;
+  commissionClientAmountExpat?: number;
+  commissionRecruitmentAmountLawyer?: number;
+  commissionRecruitmentAmountExpat?: number;
   minimumWithdrawalAmount?: number;
   validationHoldPeriodDays?: number;
   releaseDelayHours?: number;

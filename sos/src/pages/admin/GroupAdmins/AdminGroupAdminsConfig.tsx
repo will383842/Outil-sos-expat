@@ -38,6 +38,8 @@ interface GroupAdminConfig {
   newRegistrationsEnabled: boolean;
   withdrawalsEnabled: boolean;
   commissionClientAmount: number;
+  commissionClientAmountLawyer?: number;
+  commissionClientAmountExpat?: number;
   commissionRecruitmentAmount: number;
   clientDiscountAmount: number;
   recruitmentCommissionThreshold: number;
@@ -300,17 +302,34 @@ const AdminGroupAdminsConfig: React.FC = () => {
             {intl.formatMessage({ id: 'groupAdmin.admin.config.commissionSettings' })}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.clientCommission' })}</label>
-              <input
-                type="number"
-                value={config.commissionClientAmount}
-                onChange={(e) => updateField('commissionClientAmount', parseInt(e.target.value) || 0)}
-                className={UI.input}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {intl.formatMessage({ id: 'groupAdmin.admin.config.currentPerClient' }, { amount: (config.commissionClientAmount / 100).toFixed(2) })}
-              </p>
+            <div className="md:col-span-2">
+              <label className={UI.label}>{intl.formatMessage({ id: 'admin.commission.clientByType', defaultMessage: 'Commission client (par type de prestataire)' })}</label>
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{intl.formatMessage({ id: 'admin.commission.lawyerLabel', defaultMessage: 'Avocat' })} (cents)</label>
+                  <input
+                    type="number"
+                    value={config.commissionClientAmountLawyer ?? 500}
+                    onChange={(e) => updateField('commissionClientAmountLawyer', parseInt(e.target.value) || 0)}
+                    className={UI.input}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    = ${((config.commissionClientAmountLawyer ?? 500) / 100).toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{intl.formatMessage({ id: 'admin.commission.expatLabel', defaultMessage: 'Expatrié' })} (cents)</label>
+                  <input
+                    type="number"
+                    value={config.commissionClientAmountExpat ?? 300}
+                    onChange={(e) => updateField('commissionClientAmountExpat', parseInt(e.target.value) || 0)}
+                    className={UI.input}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    = ${((config.commissionClientAmountExpat ?? 300) / 100).toFixed(2)}
+                  </p>
+                </div>
+              </div>
             </div>
             <div>
               <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.recruitmentCommission' })}</label>
