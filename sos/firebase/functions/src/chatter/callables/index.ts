@@ -42,3 +42,17 @@ export { getChatterDirectory } from "./public";
 
 // Admin visibility toggle
 export { adminToggleChatterVisibility } from "./admin/toggleVisibility";
+
+// Captain Chatter
+export { getCaptainDashboard } from "./captain";
+
+// Admin Captain Chatter
+export {
+  adminPromoteToCaptain,
+  adminRevokeCaptain,
+  adminToggleCaptainQualityBonus,
+  adminGetCaptainsList,
+  adminGetCaptainDetail,
+  adminGetCaptainPaymentSummary,
+  adminExportCaptainCSV,
+} from "./admin/captain";

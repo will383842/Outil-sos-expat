@@ -221,11 +221,16 @@ export async function checkReferralFraud(
         : undefined,
     };
   } catch (error) {
-    logger.error("[FraudDetection] Error during fraud check", {
-      error,
-      affiliateId,
-      refereeEmail,
-    });
+    // Use console.error to avoid logger.error serialization issues with Firestore errors
+    try {
+      logger.warn("[FraudDetection] Fraud check failed, allowing registration", {
+        errorMessage: error instanceof Error ? error.message : String(error),
+        affiliateId,
+        refereeEmail,
+      });
+    } catch (_logErr) {
+      console.warn("[FraudDetection] Fraud check failed for", affiliateId);
+    }
 
     // On error, allow but flag for review
     return {

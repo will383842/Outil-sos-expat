@@ -284,12 +284,23 @@ export const registerBlogger = onCall(
       }
 
       // 7b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
-      const fraudResult = await checkReferralFraud(
-        recruitedBy || uid,
-        input.email.toLowerCase(),
-        request.rawRequest?.ip || null,
-        null
-      );
+      // Wrapped in try-catch: fraud check must NEVER block registration
+      let fraudResult: { allowed: boolean; riskScore: number; issues: Array<{ type: string; severity: string; description: string }>; shouldAlert: boolean; blockReason?: string } = {
+        allowed: true, riskScore: 0, issues: [], shouldAlert: false,
+      };
+      try {
+        fraudResult = await checkReferralFraud(
+          recruitedBy || uid,
+          input.email.toLowerCase(),
+          request.rawRequest?.ip || null,
+          null
+        );
+      } catch (fraudError) {
+        logger.warn("[registerBlogger] Fraud check failed, continuing registration", {
+          errorMessage: fraudError instanceof Error ? fraudError.message : String(fraudError),
+          uid,
+        });
+      }
       if (!fraudResult.allowed) {
         logger.warn("[registerBlogger] Fraud check blocked registration", {
           uid,

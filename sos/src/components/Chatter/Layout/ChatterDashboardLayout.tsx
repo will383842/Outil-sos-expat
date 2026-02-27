@@ -4,7 +4,7 @@
  * Mobile-first: Bottom nav + drawer for mobile, sidebar for desktop
  */
 
-import React, { ReactNode, useState, useCallback, useMemo } from 'react';
+import React, { ReactNode, useState, useCallback, useMemo, useEffect } from 'react';
 import { useIntl } from 'react-intl';
 import { useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '@/multilingual-system';
@@ -27,8 +27,11 @@ import {
   Video,
   BookOpen,
   DollarSign,
+  Crown,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
@@ -62,6 +65,17 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
   const [loggingOut, setLoggingOut] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isCaptain, setIsCaptain] = useState(false);
+
+  // Check if chatter is a captain (load once)
+  useEffect(() => {
+    if (!user?.uid) return;
+    getDoc(doc(db, "chatters", user.uid)).then((snap) => {
+      if (snap.exists() && snap.data()?.role === 'captainChatter') {
+        setIsCaptain(true);
+      }
+    }).catch(() => {});
+  }, [user?.uid]);
 
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
@@ -158,6 +172,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     if (path.includes('/referral-earnings') || path.includes('/gains-parrainage')) return 'referral-earnings';
     if (path.includes('/referrals') || path.includes('/filleuls')) return 'referrals';
     if (path.includes('/refer') || path.includes('/parrainer')) return 'refer';
+    if (path.includes('/mon-equipe') || path.includes('/my-team')) return 'captain-team';
     if (path.includes('/profil') || path.includes('/profile')) return 'profile';
     return 'dashboard';
   };
@@ -228,6 +243,13 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       route: translatedRoutes.refer,
       labels: { fr: "Parrainer", en: "Refer", es: "Referir", de: "Empfehlen", ru: "Пригласить", pt: "Indicar", ch: "推荐", hi: "रेफर करें", ar: "إحالة" },
     },
+    // Captain team menu item (conditional)
+    ...(isCaptain ? [{
+      key: "captain-team",
+      icon: <Crown className="mr-3 h-5 w-5" />,
+      route: '/chatter/mon-equipe',
+      labels: { fr: "Mon équipe", en: "My Team", es: "Mi Equipo", de: "Mein Team", ru: "Моя команда", pt: "Minha Equipe", ch: "我的团队", hi: "मेरी टीम", ar: "فريقي" },
+    }] : []),
     {
       key: "profile",
       icon: <User className="mr-3 h-5 w-5" />,

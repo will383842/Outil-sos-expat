@@ -3344,10 +3344,20 @@ export {
   chatterUpdateChallengeLeaderboard,
   chatterEndWeeklyChallenge,
   chatterTierBonusCheck,
+  chatterResetCaptainMonthly,
   chatterMonthlyTop3Rewards,
   chatterAggregateActivityFeed,
   getCurrentChallenge,
   getChallengeHistory,
+  // Captain Chatter
+  getCaptainDashboard,
+  adminPromoteToCaptain,
+  adminRevokeCaptain,
+  adminToggleCaptainQualityBonus,
+  adminGetCaptainsList,
+  adminGetCaptainDetail,
+  adminGetCaptainPaymentSummary,
+  adminExportCaptainCSV,
 } from './chatter';
 
 // getAvailableCountriesForChatter (absent de chatter/index.ts — export direct)

@@ -160,6 +160,7 @@ const ChatterReferrals = lazy(() => import('./pages/Chatter/ChatterReferrals'));
 const ChatterReferralEarnings = lazy(() => import('./pages/Chatter/ChatterReferralEarnings'));
 const ChatterRefer = lazy(() => import('./pages/Chatter/ChatterRefer'));
 const ChatterProfile = lazy(() => import('./pages/Chatter/ChatterProfile'));
+const ChatterCaptainDashboard = lazy(() => import('./pages/Chatter/ChatterCaptainDashboard'));
 // Influencer System
 const InfluencerLanding = lazy(() => import('./pages/Influencer/InfluencerLanding'));
 const InfluencerRegister = lazy(() => import('./pages/Influencer/InfluencerRegister'));
@@ -388,6 +389,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/chatter/filleuls", component: ChatterReferrals, protected: true, role: 'chatter', translated: "chatter-referrals" },
   { path: "/chatter/gains-parrainage", component: ChatterReferralEarnings, protected: true, role: 'chatter', translated: "chatter-referral-earnings" },
   { path: "/chatter/parrainer", component: ChatterRefer, protected: true, role: 'chatter', translated: "chatter-refer" },
+  { path: "/chatter/mon-equipe", component: ChatterCaptainDashboard, protected: true, role: 'chatter' },
   { path: "/chatter/profil", component: ChatterProfile, protected: true, role: 'chatter' },
 
   // Influencer System Routes - Protected routes for registered influencers

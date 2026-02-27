@@ -335,7 +335,17 @@ async function updateChallengeLeaderboardInternal(
           .where("status", "!=", "cancelled")
           .get();
 
-        score = n1CallsQuery.size + n2CallsQuery.size;
+        // Captain calls (captain_call replaces n1_call/n2_call for captains)
+        const captainCallsQuery = await db
+          .collection("chatter_commissions")
+          .where("chatterId", "==", chatterDoc.id)
+          .where("type", "==", "captain_call")
+          .where("createdAt", ">=", Timestamp.fromDate(startDate))
+          .where("createdAt", "<=", Timestamp.fromDate(endDate))
+          .where("status", "!=", "cancelled")
+          .get();
+
+        score = n1CallsQuery.size + n2CallsQuery.size + captainCallsQuery.size;
         break;
       }
     }
@@ -705,7 +715,7 @@ export const getChallengeHistory = onCall(
  */
 export async function updateChatterChallengeScore(
   chatterId: string,
-  actionType: "client_call" | "n1_call" | "n2_call" | "recruit" | "provider_call"
+  actionType: "client_call" | "n1_call" | "n2_call" | "captain_call" | "recruit" | "provider_call"
 ): Promise<void> {
   ensureInitialized();
   const db = getFirestore();
@@ -734,7 +744,7 @@ export async function updateChatterChallengeScore(
         isRelevant = actionType === "client_call";
         break;
       case "team":
-        isRelevant = actionType === "n1_call" || actionType === "n2_call";
+        isRelevant = actionType === "n1_call" || actionType === "n2_call" || actionType === "captain_call";
         break;
     }
 

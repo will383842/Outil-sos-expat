@@ -364,6 +364,20 @@ export function getProviderCallCommission(config: ChatterConfig, providerType?: 
 }
 
 /**
+ * Get commission amount for captain chatter calls (N1/N2 of captain)
+ * No flash bonus applied — captain commissions are fixed rates
+ */
+export function getCaptainCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat'): number {
+  if (providerType === 'lawyer' && config.commissionCaptainCallAmountLawyer != null) {
+    return config.commissionCaptainCallAmountLawyer;
+  }
+  if (providerType === 'expat' && config.commissionCaptainCallAmountExpat != null) {
+    return config.commissionCaptainCallAmountExpat;
+  }
+  return config.commissionCaptainCallAmountLawyer ?? 200;
+}
+
+/**
  * Get the duration (in months) for provider recruitment commission
  */
 export function getProviderRecruitmentDurationMonths(config: ChatterConfig): number {

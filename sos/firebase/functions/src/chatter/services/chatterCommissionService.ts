@@ -198,6 +198,12 @@ export async function createCommission(
           // $5 per call for providers recruited by this chatter (6 months window)
           baseAmount = config.commissionProviderCallAmount || 500;
           break;
+        // Captain commissions (amount passed in by caller)
+        case "captain_call":
+        case "captain_tier_bonus":
+        case "captain_quality_bonus":
+          baseAmount = 0; // Will be overridden by inputBaseAmount
+          break;
         // LEGACY types (kept for backward compatibility)
         case "client_referral":
           baseAmount = config.commissionClientAmount || config.commissionClientCallAmount || 1000;
@@ -287,7 +293,7 @@ export async function createCommission(
       const commissionsByType = { ...currentData.commissionsByType };
       // NEW SIMPLIFIED SYSTEM: client_call, n1_call, n2_call count as client_referral
       // activation_bonus, n1_recruit_bonus count as recruitment
-      if (type === "client_referral" || type === "client_call" || type === "n1_call" || type === "n2_call") {
+      if (type === "client_referral" || type === "client_call" || type === "n1_call" || type === "n2_call" || type === "captain_call") {
         commissionsByType.client_referral.count += 1;
         commissionsByType.client_referral.amount += finalAmount;
       } else if (type === "recruitment" || type === "activation_bonus" || type === "n1_recruit_bonus") {

@@ -82,6 +82,11 @@ interface ChatterConfig {
   updatedAt?: string;
   updatedBy?: string;
   isChatterListingPageVisible?: boolean;
+  // Captain Chatter
+  commissionCaptainCallAmountLawyer?: number;
+  commissionCaptainCallAmountExpat?: number;
+  captainTiers?: Array<{ name: string; minCalls: number; bonus: number }>;
+  captainQualityBonusAmount?: number;
 }
 
 const AdminChatterConfig: React.FC = () => {
@@ -451,6 +456,74 @@ const AdminChatterConfig: React.FC = () => {
               <FormattedMessage id="admin.commission.providerByType.desc" defaultMessage="Commission pour chaque appel reçu par un partenaire recruté (6 mois)" />
             </p>
           </div>
+        </div>
+
+        {/* Captain Chatter Commissions */}
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
+          <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <span className="text-yellow-500">&#128081;</span>
+            <FormattedMessage id="admin.chatterConfig.captainCommissions" defaultMessage="Commissions Capitaine Chatter" />
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FormattedMessage id="admin.chatterConfig.captainCallLawyer" defaultMessage="Captain call — avocat (cents)" />
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={formData.commissionCaptainCallAmountLawyer ?? config?.commissionCaptainCallAmountLawyer ?? 200}
+                  onChange={(e) => handleChange('commissionCaptainCallAmountLawyer', parseInt(e.target.value))}
+                  className={UI.input}
+                  min={0}
+                  step={50}
+                />
+                <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  = {formatCents(formData.commissionCaptainCallAmountLawyer ?? config?.commissionCaptainCallAmountLawyer ?? 200)}
+                </span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FormattedMessage id="admin.chatterConfig.captainCallExpat" defaultMessage="Captain call — expatrié (cents)" />
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={formData.commissionCaptainCallAmountExpat ?? config?.commissionCaptainCallAmountExpat ?? 100}
+                  onChange={(e) => handleChange('commissionCaptainCallAmountExpat', parseInt(e.target.value))}
+                  className={UI.input}
+                  min={0}
+                  step={50}
+                />
+                <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  = {formatCents(formData.commissionCaptainCallAmountExpat ?? config?.commissionCaptainCallAmountExpat ?? 100)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FormattedMessage id="admin.chatterConfig.captainQualityBonus" defaultMessage="Bonus qualité capitaine (cents)" />
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={formData.captainQualityBonusAmount ?? config?.captainQualityBonusAmount ?? 5000}
+                onChange={(e) => handleChange('captainQualityBonusAmount', parseInt(e.target.value))}
+                className={UI.input}
+                min={0}
+                step={500}
+                style={{ maxWidth: 200 }}
+              />
+              <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                = {formatCents(formData.captainQualityBonusAmount ?? config?.captainQualityBonusAmount ?? 5000)}
+              </span>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <FormattedMessage id="admin.chatterConfig.captainCommissions.desc" defaultMessage="Le capitaine reçoit ces commissions À LA PLACE des commissions N1/N2 standard. Paliers mensuels configurables dans la liste capitaines." />
+          </p>
         </div>
 
         {/* Recruiter Milestone Bonus */}

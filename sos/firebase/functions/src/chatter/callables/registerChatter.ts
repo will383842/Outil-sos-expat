@@ -313,12 +313,23 @@ export const registerChatter = onCall(
       }
 
       // 9. LIGHTWEIGHT FRAUD CHECK (same as influencer/blogger/groupAdmin)
-      const fraudResult = await checkReferralFraud(
-        recruitedBy || userId, // Use recruiter ID if exists, otherwise self
-        input.email,
-        request.rawRequest?.ip || null,
-        null // No device fingerprint for chatters
-      );
+      // Wrapped in try-catch: fraud check must NEVER block registration
+      let fraudResult: { allowed: boolean; riskScore: number; issues: Array<{ type: string; severity: string; description: string }>; shouldAlert: boolean; blockReason?: string } = {
+        allowed: true, riskScore: 0, issues: [], shouldAlert: false,
+      };
+      try {
+        fraudResult = await checkReferralFraud(
+          recruitedBy || userId,
+          input.email,
+          request.rawRequest?.ip || null,
+          null
+        );
+      } catch (fraudError) {
+        logger.warn("[registerChatter] Fraud check failed, continuing registration", {
+          errorMessage: fraudError instanceof Error ? fraudError.message : String(fraudError),
+          userId,
+        });
+      }
 
       if (!fraudResult.allowed) {
         logger.warn("[registerChatter] Blocked by fraud detection", {

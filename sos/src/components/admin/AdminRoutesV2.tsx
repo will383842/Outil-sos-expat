@@ -345,6 +345,12 @@ const AdminChatterPayments = lazy(
 const AdminChatterConfig = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterConfig")
 );
+const AdminCaptainsList = lazy(
+  () => import("../../pages/admin/Chatter/AdminCaptainsList")
+);
+const AdminCaptainDetail = lazy(
+  () => import("../../pages/admin/Chatter/AdminCaptainDetail")
+);
 const AdminChatterReferrals = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterReferrals")
 );
@@ -1184,6 +1190,22 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminChatterPayments />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/captains"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminCaptainsList />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/captains/:captainId"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminCaptainDetail />
           </Suspense>
         }
       />

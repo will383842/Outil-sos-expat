@@ -28,6 +28,8 @@ import {
   PlayCircle,
   Loader2,
   RefreshCw,
+  Crown,
+  Shield,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -229,6 +231,12 @@ const AdminChatterDetail: React.FC = () => {
                   <Star className="w-4 h-4 text-red-500" />
                   {getLevelName(chatter.level)}
                 </span>
+                {(chatter as any).role === 'captainChatter' && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                    <Crown className="w-3.5 h-3.5" />
+                    Capitaine
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -281,6 +289,68 @@ const AdminChatterDetail: React.FC = () => {
                 <XCircle className="w-4 h-4" />
                 <FormattedMessage id="admin.chatters.ban" defaultMessage="Bannir" />
               </button>
+            )}
+
+            {/* Captain Actions */}
+            {chatter.status === 'active' && (chatter as any).role !== 'captainChatter' && (
+              <button
+                onClick={async () => {
+                  if (!window.confirm('Promouvoir ce chatter en Capitaine Chatter ?')) return;
+                  try {
+                    const fn = httpsCallable(functionsWest2, 'adminPromoteToCaptain');
+                    await fn({ chatterId: chatter.id });
+                    toast.success('Chatter promu capitaine !');
+                    fetchChatter();
+                  } catch (err: any) {
+                    toast.error(err.message || 'Erreur');
+                  }
+                }}
+                disabled={actionLoading}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-xl transition-all px-4 py-2 flex items-center gap-2"
+              >
+                <Crown className="w-4 h-4" />
+                <FormattedMessage id="admin.chatters.promoteCaptain" defaultMessage="Promouvoir Capitaine" />
+              </button>
+            )}
+
+            {(chatter as any).role === 'captainChatter' && (
+              <>
+                <button
+                  onClick={async () => {
+                    try {
+                      const fn = httpsCallable(functionsWest2, 'adminToggleCaptainQualityBonus');
+                      await fn({ chatterId: chatter.id, enabled: !(chatter as any).captainQualityBonusEnabled });
+                      toast.success('Bonus qualité mis à jour');
+                      fetchChatter();
+                    } catch (err: any) {
+                      toast.error(err.message || 'Erreur');
+                    }
+                  }}
+                  disabled={actionLoading}
+                  className={`${(chatter as any).captainQualityBonusEnabled ? UI.button.success : UI.button.secondary} px-4 py-2 flex items-center gap-2`}
+                >
+                  <Shield className="w-4 h-4" />
+                  {(chatter as any).captainQualityBonusEnabled ? 'Bonus Qualité ON' : 'Bonus Qualité OFF'}
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!window.confirm('Révoquer le statut de capitaine ?')) return;
+                    try {
+                      const fn = httpsCallable(functionsWest2, 'adminRevokeCaptain');
+                      await fn({ chatterId: chatter.id });
+                      toast.success('Statut capitaine révoqué');
+                      fetchChatter();
+                    } catch (err: any) {
+                      toast.error(err.message || 'Erreur');
+                    }
+                  }}
+                  disabled={actionLoading}
+                  className={`${UI.button.danger} px-4 py-2 flex items-center gap-2`}
+                >
+                  <Crown className="w-4 h-4" />
+                  <FormattedMessage id="admin.chatters.revokeCaptain" defaultMessage="Révoquer Capitaine" />
+                </button>
+              </>
             )}
           </div>
         </div>

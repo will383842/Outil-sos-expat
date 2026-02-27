@@ -29,6 +29,9 @@ export {
   calculateMonthlyRankings,
 } from "./monthlyTop3Rewards";
 
+// Captain Monthly Reset (1st of month at 00:05 UTC)
+export { chatterResetCaptainMonthly } from "./resetCaptainMonthly";
+
 // Activity Feed Aggregation (every 5 minutes)
 export {
   chatterAggregateActivityFeed,

@@ -36,6 +36,7 @@ import {
   getFlashBonusMultiplier,
   getProviderCallCommission,
   getProviderRecruitmentDurationMonths,
+  getCaptainCallCommission,
 } from "../utils/chatterConfigService";
 import { updateChatterChallengeScore } from "../scheduled/weeklyChallenges";
 
@@ -400,63 +401,74 @@ export async function handleCallCompleted(
 
       // ========================================================================
       // 5. N1 CALL COMMISSION ($1) - If chatter has a recruiter
+      //    Captain check: if N1 is captain, gets captain_call instead
       // ========================================================================
 
       if (chatter.recruitedBy) {
-        const n1CallAmount = getN1CallCommission(config);
+        // Check if N1 recruiter is a captain
+        const n1Doc = await db.collection("chatters").doc(chatter.recruitedBy).get();
+        const n1Data = n1Doc.exists ? n1Doc.data() as Chatter : null;
+        const n1IsCaptain = n1Data?.role === 'captainChatter';
 
-        const n1Result = await createCommission({
-          chatterId: chatter.recruitedBy,
-          type: "n1_call",
-          source: {
-            id: sessionId,
-            type: "call_session",
-            details: {
-              clientId: session.clientId,
-              clientEmail: clientData.email,
-              callSessionId: sessionId,
-              callDuration: session.duration,
-              providerId: chatterId,
-              providerEmail: chatter.email,
+        if (n1IsCaptain) {
+          // Captain gets captain_call INSTEAD of n1_call
+          const captainN1Amount = getCaptainCallCommission(config, session.providerType);
+
+          const captainN1Result = await createCommission({
+            chatterId: chatter.recruitedBy,
+            type: "captain_call",
+            source: {
+              id: sessionId,
+              type: "call_session",
+              details: {
+                clientId: session.clientId,
+                clientEmail: clientData.email,
+                callSessionId: sessionId,
+                callDuration: session.duration,
+                providerId: chatterId,
+                providerEmail: chatter.email,
+                level: "n1",
+                providerType: session.providerType,
+              },
             },
-          },
-          baseAmount: n1CallAmount,
-          description: `Commission N1 (appel de ${chatter.firstName} ${chatter.lastName.charAt(0)}.)${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
-        });
-
-        if (n1Result.success) {
-          logger.info("[chatterOnCallCompleted] N1 call commission created", {
-            sessionId,
-            n1ParrainId: chatter.recruitedBy,
-            chatterWhoCalled: chatterId,
-            commissionId: n1Result.commissionId,
-            amount: n1Result.amount,
+            baseAmount: captainN1Amount,
+            description: `Commission capitaine \u2014 appel N1 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}`,
           });
 
-          await createCommissionNotification(
-            db,
-            chatter.recruitedBy,
-            "commission_earned",
-            "Commission N1 !",
-            `Votre filleul ${chatter.firstName} ${chatter.lastName.charAt(0)}. a g\u00e9n\u00e9r\u00e9 un appel ! +$${(n1CallAmount / 100).toFixed(2)}`,
-            n1Result.commissionId!,
-            n1Result.amount!
-          );
+          if (captainN1Result.success) {
+            logger.info("[chatterOnCallCompleted] Captain N1 call commission created", {
+              sessionId,
+              captainId: chatter.recruitedBy,
+              chatterWhoCalled: chatterId,
+              commissionId: captainN1Result.commissionId,
+              amount: captainN1Result.amount,
+            });
 
-          // Update weekly challenge score for N1 call
-          await updateChatterChallengeScore(chatter.recruitedBy, "n1_call");
-        }
+            // Increment captain monthly counter
+            await db.collection("chatters").doc(chatter.recruitedBy).update({
+              captainMonthlyTeamCalls: FieldValue.increment(1),
+              updatedAt: Timestamp.now(),
+            });
 
-        // ========================================================================
-        // 6. N2 CALL COMMISSION ($0.50) - If chatter's recruiter also has a recruiter
-        // ========================================================================
+            await createCommissionNotification(
+              db,
+              chatter.recruitedBy,
+              "commission_earned",
+              "Commission Capitaine !",
+              `Votre filleul ${chatter.firstName} ${chatter.lastName.charAt(0)}. a g\u00e9n\u00e9r\u00e9 un appel ! +$${(captainN1Amount / 100).toFixed(2)}`,
+              captainN1Result.commissionId!,
+              captainN1Result.amount!
+            );
 
-        if (chatter.parrainNiveau2Id) {
-          const n2CallAmount = getN2CallCommission(config);
+            await updateChatterChallengeScore(chatter.recruitedBy, "captain_call");
+          }
+        } else {
+          // Standard n1_call commission
+          const n1CallAmount = getN1CallCommission(config);
 
-          const n2Result = await createCommission({
-            chatterId: chatter.parrainNiveau2Id,
-            type: "n2_call",
+          const n1Result = await createCommission({
+            chatterId: chatter.recruitedBy,
+            type: "n1_call",
             source: {
               id: sessionId,
               type: "call_session",
@@ -469,38 +481,143 @@ export async function handleCallCompleted(
                 providerEmail: chatter.email,
               },
             },
-            baseAmount: n2CallAmount,
-            description: `Commission N2 (appel de ${chatter.firstName} ${chatter.lastName.charAt(0)}.)${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+            baseAmount: n1CallAmount,
+            description: `Commission N1 (appel de ${chatter.firstName} ${chatter.lastName.charAt(0)}.)${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
           });
 
-          if (n2Result.success) {
-            logger.info("[chatterOnCallCompleted] N2 call commission created", {
+          if (n1Result.success) {
+            logger.info("[chatterOnCallCompleted] N1 call commission created", {
               sessionId,
-              n2ParrainId: chatter.parrainNiveau2Id,
               n1ParrainId: chatter.recruitedBy,
               chatterWhoCalled: chatterId,
-              commissionId: n2Result.commissionId,
-              amount: n2Result.amount,
+              commissionId: n1Result.commissionId,
+              amount: n1Result.amount,
             });
-
-            // Get N1 recruiter name for notification
-            const n1Doc = await db.collection("chatters").doc(chatter.recruitedBy).get();
-            const n1Name = n1Doc.exists
-              ? `${(n1Doc.data() as Chatter).firstName} ${(n1Doc.data() as Chatter).lastName.charAt(0)}.`
-              : "votre filleul N1";
 
             await createCommissionNotification(
               db,
-              chatter.parrainNiveau2Id,
+              chatter.recruitedBy,
               "commission_earned",
-              "Commission N2 !",
-              `Le filleul de ${n1Name} a g\u00e9n\u00e9r\u00e9 un appel ! +$${(n2CallAmount / 100).toFixed(2)}`,
-              n2Result.commissionId!,
-              n2Result.amount!
+              "Commission N1 !",
+              `Votre filleul ${chatter.firstName} ${chatter.lastName.charAt(0)}. a g\u00e9n\u00e9r\u00e9 un appel ! +$${(n1CallAmount / 100).toFixed(2)}`,
+              n1Result.commissionId!,
+              n1Result.amount!
             );
 
-            // Update weekly challenge score for N2 call (counts as team action)
-            await updateChatterChallengeScore(chatter.parrainNiveau2Id, "n2_call");
+            await updateChatterChallengeScore(chatter.recruitedBy, "n1_call");
+          }
+        }
+
+        // ========================================================================
+        // 6. N2 CALL COMMISSION ($0.50) - If chatter's recruiter also has a recruiter
+        //    Captain check: if N2 is captain, gets captain_call instead
+        // ========================================================================
+
+        if (chatter.parrainNiveau2Id) {
+          const n2Doc = await db.collection("chatters").doc(chatter.parrainNiveau2Id).get();
+          const n2Data = n2Doc.exists ? n2Doc.data() as Chatter : null;
+          const n2IsCaptain = n2Data?.role === 'captainChatter';
+
+          if (n2IsCaptain) {
+            // Captain gets captain_call INSTEAD of n2_call
+            const captainN2Amount = getCaptainCallCommission(config, session.providerType);
+
+            const captainN2Result = await createCommission({
+              chatterId: chatter.parrainNiveau2Id,
+              type: "captain_call",
+              source: {
+                id: sessionId,
+                type: "call_session",
+                details: {
+                  clientId: session.clientId,
+                  clientEmail: clientData.email,
+                  callSessionId: sessionId,
+                  callDuration: session.duration,
+                  providerId: chatterId,
+                  providerEmail: chatter.email,
+                  level: "n2",
+                  providerType: session.providerType,
+                },
+              },
+              baseAmount: captainN2Amount,
+              description: `Commission capitaine \u2014 appel N2 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}`,
+            });
+
+            if (captainN2Result.success) {
+              logger.info("[chatterOnCallCompleted] Captain N2 call commission created", {
+                sessionId,
+                captainId: chatter.parrainNiveau2Id,
+                chatterWhoCalled: chatterId,
+                commissionId: captainN2Result.commissionId,
+                amount: captainN2Result.amount,
+              });
+
+              await db.collection("chatters").doc(chatter.parrainNiveau2Id).update({
+                captainMonthlyTeamCalls: FieldValue.increment(1),
+                updatedAt: Timestamp.now(),
+              });
+
+              await createCommissionNotification(
+                db,
+                chatter.parrainNiveau2Id,
+                "commission_earned",
+                "Commission Capitaine !",
+                `Un filleul N2 a g\u00e9n\u00e9r\u00e9 un appel ! +$${(captainN2Amount / 100).toFixed(2)}`,
+                captainN2Result.commissionId!,
+                captainN2Result.amount!
+              );
+
+              await updateChatterChallengeScore(chatter.parrainNiveau2Id, "captain_call");
+            }
+          } else {
+            // Standard n2_call commission
+            const n2CallAmount = getN2CallCommission(config);
+
+            const n2Result = await createCommission({
+              chatterId: chatter.parrainNiveau2Id,
+              type: "n2_call",
+              source: {
+                id: sessionId,
+                type: "call_session",
+                details: {
+                  clientId: session.clientId,
+                  clientEmail: clientData.email,
+                  callSessionId: sessionId,
+                  callDuration: session.duration,
+                  providerId: chatterId,
+                  providerEmail: chatter.email,
+                },
+              },
+              baseAmount: n2CallAmount,
+              description: `Commission N2 (appel de ${chatter.firstName} ${chatter.lastName.charAt(0)}.)${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+            });
+
+            if (n2Result.success) {
+              logger.info("[chatterOnCallCompleted] N2 call commission created", {
+                sessionId,
+                n2ParrainId: chatter.parrainNiveau2Id,
+                n1ParrainId: chatter.recruitedBy,
+                chatterWhoCalled: chatterId,
+                commissionId: n2Result.commissionId,
+                amount: n2Result.amount,
+              });
+
+              const n1Name = n1Data
+                ? `${n1Data.firstName} ${n1Data.lastName.charAt(0)}.`
+                : "votre filleul N1";
+
+              await createCommissionNotification(
+                db,
+                chatter.parrainNiveau2Id,
+                "commission_earned",
+                "Commission N2 !",
+                `Le filleul de ${n1Name} a g\u00e9n\u00e9r\u00e9 un appel ! +$${(n2CallAmount / 100).toFixed(2)}`,
+                n2Result.commissionId!,
+                n2Result.amount!
+              );
+
+              await updateChatterChallengeScore(chatter.parrainNiveau2Id, "n2_call");
+            }
           }
         }
       }

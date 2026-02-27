@@ -119,6 +119,20 @@ export {
   adminDuplicatePromotion,
 } from "./callables/admin/promotions";
 
+// Captain Chatter (user callable)
+export { getCaptainDashboard } from "./callables/captain";
+
+// Admin Captain Chatter
+export {
+  adminPromoteToCaptain,
+  adminRevokeCaptain,
+  adminToggleCaptainQualityBonus,
+  adminGetCaptainsList,
+  adminGetCaptainDetail,
+  adminGetCaptainPaymentSummary,
+  adminExportCaptainCSV,
+} from "./callables/admin/captain";
+
 // Admin Commissions Tracker
 export {
   adminGetCommissionsDetailed,
@@ -194,6 +208,8 @@ export {
   updateChatterChallengeScore,
   // Tier Bonus
   chatterTierBonusCheck,
+  // Captain Monthly Reset
+  chatterResetCaptainMonthly,
   // Monthly Top 3
   chatterMonthlyTop3Rewards,
   // Activity Feed

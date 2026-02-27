@@ -751,6 +751,10 @@ export const adminUpdateChatterConfig = onCall(
         "commissionClientCallAmountExpat",
         "commissionProviderCallAmountLawyer",
         "commissionProviderCallAmountExpat",
+        "commissionCaptainCallAmountLawyer",
+        "commissionCaptainCallAmountExpat",
+        "captainTiers",
+        "captainQualityBonusAmount",
       ];
 
       const sanitizedUpdates: Record<string, unknown> = {};

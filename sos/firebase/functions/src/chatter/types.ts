@@ -79,7 +79,10 @@ export type ChatterCommissionType =
   | "threshold_50_n2"       // LEGACY: Filleul N2 reached $50 threshold
   | "recurring_5pct"        // LEGACY: Old monthly 5% system, replaced by per-call commissions - kept for DB compatibility
   | "tier_bonus"            // Tier bonus (5/10/20/50/100/500 filleuls)
-  | "bonus_telegram";       // Telegram onboarding bonus ($50, unlocked at $150 earnings)
+  | "bonus_telegram"        // Telegram onboarding bonus ($50, unlocked at $150 earnings)
+  | "captain_call"          // Captain commission on N1/N2 call (replaces n1_call/n2_call)
+  | "captain_tier_bonus"    // Monthly tier bonus for captain
+  | "captain_quality_bonus"; // Manual quality bonus for captain
 
 /**
  * Commission status lifecycle
@@ -394,6 +397,20 @@ export interface Chatter {
 
   /** Tier bonuses already paid to this chatter (5, 10, 20, 50, 100, 500 filleuls) */
   tierBonusesPaid: number[];
+
+  // ---- Captain Chatter ----
+  /** Role: undefined = regular chatter, 'captainChatter' = captain */
+  role?: 'captainChatter';
+  /** When promoted to captain */
+  captainPromotedAt?: Timestamp;
+  /** Admin who promoted */
+  captainPromotedBy?: string;
+  /** Monthly team calls counter (N1+N2 calls, reset 1st of month) */
+  captainMonthlyTeamCalls?: number;
+  /** Current tier based on monthly calls */
+  captainCurrentTier?: string;
+  /** Whether admin enabled quality bonus for this captain */
+  captainQualityBonusEnabled?: boolean;
 
   // ---- Telegram Integration ----
 
@@ -890,6 +907,16 @@ export interface ChatterConfig {
   /** Commission provider call — expat provider (300 cents = $3) */
   commissionProviderCallAmountExpat?: number;
 
+  // === CAPTAIN CHATTER COMMISSIONS (configurable admin) ===
+  /** Commission captain call — lawyer provider (200 cents = $2) */
+  commissionCaptainCallAmountLawyer?: number;
+  /** Commission captain call — expat provider (100 cents = $1) */
+  commissionCaptainCallAmountExpat?: number;
+  /** Captain monthly tier thresholds and bonuses */
+  captainTiers?: Array<{ name: string; minCalls: number; bonus: number }>;
+  /** Captain quality bonus amount (5000 cents = $50) */
+  captainQualityBonusAmount?: number;
+
   /** Duration in months for recruitment commission window (unified field) */
   recruitmentWindowMonths: number;
 
@@ -1053,6 +1080,16 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   commissionClientCallAmountExpat: 300,   // $3 - Client call with expat
   commissionProviderCallAmountLawyer: 500, // $5 - Provider call with lawyer
   commissionProviderCallAmountExpat: 300,  // $3 - Provider call with expat
+  commissionCaptainCallAmountLawyer: 200, // $2 - Captain call with lawyer
+  commissionCaptainCallAmountExpat: 100,  // $1 - Captain call with expat
+  captainTiers: [
+    { name: "Bronze", minCalls: 20, bonus: 2500 },
+    { name: "Argent", minCalls: 50, bonus: 5000 },
+    { name: "Or", minCalls: 100, bonus: 10000 },
+    { name: "Platine", minCalls: 200, bonus: 20000 },
+    { name: "Diamant", minCalls: 400, bonus: 40000 },
+  ],
+  captainQualityBonusAmount: 5000,        // $50 - Quality bonus
   recruitmentWindowMonths: 6,             // 6 months window for recruitment commissions
   providerRecruitmentDurationMonths: 6,   // @deprecated Use recruitmentWindowMonths instead
   flashBonusMultiplier: 1.0,              // No flash bonus by default
