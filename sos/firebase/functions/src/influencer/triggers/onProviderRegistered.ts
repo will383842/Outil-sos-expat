@@ -299,6 +299,38 @@ export const influencerOnProviderCallCompleted = onDocumentUpdated(
         return;
       }
 
+      // Anti-double payment: skip if same influencer referred the client AND recruited the provider
+      const clientIdForCheck = callData.clientId || callData.userId;
+      if (clientIdForCheck) {
+        const clientDocForCheck = await db.collection("users").doc(clientIdForCheck).get();
+        if (clientDocForCheck.exists) {
+          const clientCheckData = clientDocForCheck.data();
+
+          // Check via direct ID field (if available)
+          if (clientCheckData?.referredByInfluencerId === referral.influencerId) {
+            logger.info("[influencerOnProviderCallCompleted] Skipping — anti-double via ID", {
+              influencerId: referral.influencerId, clientId: clientIdForCheck, sessionId,
+            });
+            return;
+          }
+
+          // Check via influencer code (fallback — referredByInfluencerId may not be set)
+          const clientInfluencerCode = clientCheckData?.influencerCode;
+          if (clientInfluencerCode && clientCheckData?.referredByInfluencer) {
+            const influencerByCode = await db.collection("influencers")
+              .where("affiliateCodeClient", "==", clientInfluencerCode)
+              .limit(1)
+              .get();
+            if (!influencerByCode.empty && influencerByCode.docs[0].id === referral.influencerId) {
+              logger.info("[influencerOnProviderCallCompleted] Skipping — anti-double via code", {
+                influencerId: referral.influencerId, clientId: clientIdForCheck, sessionId,
+              });
+              return;
+            }
+          }
+        }
+      }
+
       // Calculate months remaining
       const diffMs = windowEnd.getTime() - now.getTime();
       const monthsRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30));

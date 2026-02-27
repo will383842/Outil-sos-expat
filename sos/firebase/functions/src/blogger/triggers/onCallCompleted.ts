@@ -71,7 +71,7 @@ export async function checkBloggerClientReferral(
     if (!bloggerCode) {
       // Check attribution collection as fallback
       const attributionQuery = await db
-        .collection("blogger_clicks")
+        .collection("blogger_affiliate_clicks")
         .where("conversionId", "==", clientId)
         .where("converted", "==", true)
         .limit(1)
@@ -277,7 +277,8 @@ export async function handleCallCompleted(
       const recruitResult = await awardBloggerRecruitmentCommission(
         providerId,
         sessionId,
-        duration
+        duration,
+        clientId // Anti-double payment: skip blogger who also referred this client
       );
       if (recruitResult.awarded) {
         logger.info("[bloggerOnCallSessionCompleted] Provider recruitment commissions awarded", {

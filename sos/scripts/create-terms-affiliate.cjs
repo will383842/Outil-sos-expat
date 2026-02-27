@@ -44,9 +44,9 @@ const TERMS_AFFILIATE = {
 <h3>3.1 Montants fixes</h3>
 <p>Les commissions sont des montants FIXES en USD, non soumis à TVA, définis par rôle :</p>
 <ul>
-  <li>Commission par appel client référé : montant fixe (ex : 10$ par appel payant).</li>
-  <li>Commission par appel prestataire recruté : montant fixe (ex : 5$ par appel).</li>
-  <li>Les montants exacts sont définis dans les CGU spécifiques à chaque rôle et sont consultables dans le tableau de bord.</li>
+  <li>Commission par appel client référé : montant fixe différencié selon le type de prestataire consulté — 5$ (avocat) ou 3$ (expatrié aidant) par appel payant.</li>
+  <li>Commission par appel prestataire recruté : montant fixe différencié — 5$ (avocat) ou 3$ (expatrié aidant) par appel reçu.</li>
+  <li>Les montants exacts sont paramétrables par SOS-Expat et consultables dans le tableau de bord.</li>
 </ul>
 <h3>3.2 Gel des taux</h3>
 <p>Les taux de commission sont gelés au moment de l'inscription et ne changent pas même si la configuration globale est modifiée.</p>
@@ -56,6 +56,8 @@ const TERMS_AFFILIATE = {
 <p>Les commissions de recrutement s'appliquent pendant 6 mois après l'inscription du recruté.</p>
 <h3>3.5 Attribution</h3>
 <p>L'attribution se fait par cookie Last-Click avec une durée de 30 jours.</p>
+<h3>3.6 Non-cumul des commissions</h3>
+<p>Si un même Affilié a référé le client ET recruté le prestataire consulté lors d'un même appel, seule la commission de référencement client est versée. Les commissions client et recrutement ne sont pas cumulables sur un même appel pour le même Affilié.</p>
 
 <h2>Article 4 — Paiement des commissions</h2>
 <h3>4.1 Seuil minimum de retrait</h3>
@@ -177,9 +179,9 @@ const TERMS_AFFILIATE = {
 <h3>3.1 Fixed Amounts</h3>
 <p>Commissions are FIXED amounts in USD, not subject to VAT, defined per role:</p>
 <ul>
-  <li>Commission per referred client call: fixed amount (e.g., $10 per paid call).</li>
-  <li>Commission per recruited provider call: fixed amount (e.g., $5 per call).</li>
-  <li>Exact amounts are defined in the specific terms and conditions for each role and are available in the dashboard.</li>
+  <li>Commission per referred client call: differentiated fixed amount based on provider type — $5 (lawyer) or $3 (expat helper) per paid call.</li>
+  <li>Commission per recruited provider call: differentiated fixed amount — $5 (lawyer) or $3 (expat helper) per call received.</li>
+  <li>Exact amounts are configurable by SOS-Expat and available in the dashboard.</li>
 </ul>
 <h3>3.2 Rate Lock</h3>
 <p>Commission rates are locked at the time of registration and do not change even if the global configuration is modified.</p>
@@ -189,6 +191,8 @@ const TERMS_AFFILIATE = {
 <p>Recruitment commissions apply for 6 months after the recruit's registration.</p>
 <h3>3.5 Attribution</h3>
 <p>Attribution is based on Last-Click cookie with a 30-day duration.</p>
+<h3>3.6 Non-Cumulation of Commissions</h3>
+<p>If the same Affiliate referred the client AND recruited the provider consulted during the same call, only the client referral commission is paid. Client and recruitment commissions cannot be combined on the same call for the same Affiliate.</p>
 
 <h2>Article 4 — Commission Payment</h2>
 <h3>4.1 Minimum Withdrawal Threshold</h3>
@@ -310,9 +314,9 @@ const TERMS_AFFILIATE = {
 <h3>3.1 Montos fijos</h3>
 <p>Las comisiones son montos FIJOS en USD, no sujetos a IVA, definidos por rol:</p>
 <ul>
-  <li>Comisión por llamada de cliente referido: monto fijo (ej.: 10$ por llamada pagada).</li>
-  <li>Comisión por llamada de prestador reclutado: monto fijo (ej.: 5$ por llamada).</li>
-  <li>Los montos exactos se definen en las condiciones específicas de cada rol y son consultables en el panel de control.</li>
+  <li>Comisión por llamada de cliente referido: monto fijo diferenciado según el tipo de prestador consultado — 5$ (abogado) o 3$ (expatriado asistente) por llamada pagada.</li>
+  <li>Comisión por llamada de prestador reclutado: monto fijo diferenciado — 5$ (abogado) o 3$ (expatriado asistente) por llamada recibida.</li>
+  <li>Los montos exactos son configurables por SOS-Expat y consultables en el panel de control.</li>
 </ul>
 <h3>3.2 Congelación de tasas</h3>
 <p>Las tasas de comisión se congelan en el momento de la inscripción y no cambian aunque se modifique la configuración global.</p>
@@ -322,6 +326,8 @@ const TERMS_AFFILIATE = {
 <p>Las comisiones de reclutamiento se aplican durante 6 meses después de la inscripción del reclutado.</p>
 <h3>3.5 Atribución</h3>
 <p>La atribución se realiza mediante cookie Last-Click con una duración de 30 días.</p>
+<h3>3.6 No acumulación de comisiones</h3>
+<p>Si un mismo Afiliado ha referido al cliente Y reclutado al prestador consultado durante una misma llamada, solo se abona la comisión de referencia de cliente. Las comisiones de cliente y de reclutamiento no son acumulables en una misma llamada para el mismo Afiliado.</p>
 
 <h2>Artículo 4 — Pago de comisiones</h2>
 <h3>4.1 Umbral mínimo de retiro</h3>
@@ -443,9 +449,9 @@ const TERMS_AFFILIATE = {
 <h3>3.1 Feste Beträge</h3>
 <p>Die Provisionen sind FESTE Beträge in USD, nicht umsatzsteuerpflichtig, definiert pro Rolle:</p>
 <ul>
-  <li>Provision pro vermitteltem Kundenanruf: fester Betrag (z.B. 10$ pro bezahltem Anruf).</li>
-  <li>Provision pro Anruf eines geworbenen Dienstleisters: fester Betrag (z.B. 5$ pro Anruf).</li>
-  <li>Die genauen Beträge sind in den jeweiligen rollenspezifischen AGB festgelegt und im Dashboard einsehbar.</li>
+  <li>Provision pro vermitteltem Kundenanruf: differenzierter Festbetrag je nach Dienstleistertyp — 5$ (Anwalt) oder 3$ (Expat-Helfer) pro bezahltem Anruf.</li>
+  <li>Provision pro Anruf eines geworbenen Dienstleisters: differenzierter Festbetrag — 5$ (Anwalt) oder 3$ (Expat-Helfer) pro empfangenem Anruf.</li>
+  <li>Die genauen Beträge sind von SOS-Expat konfigurierbar und im Dashboard einsehbar.</li>
 </ul>
 <h3>3.2 Festschreibung der Sätze</h3>
 <p>Die Provisionssätze werden zum Zeitpunkt der Registrierung festgeschrieben und ändern sich nicht, auch wenn die globale Konfiguration geändert wird.</p>
@@ -455,6 +461,8 @@ const TERMS_AFFILIATE = {
 <p>Rekrutierungsprovisionen gelten für 6 Monate nach der Registrierung des Geworbenen.</p>
 <h3>3.5 Zuordnung</h3>
 <p>Die Zuordnung erfolgt über Last-Click-Cookie mit einer Laufzeit von 30 Tagen.</p>
+<h3>3.6 Nichtkumulierung von Provisionen</h3>
+<p>Wenn derselbe Partner den Kunden empfohlen UND den konsultierten Dienstleister angeworben hat, wird nur die Kundenempfehlungsprovision gezahlt. Kunden- und Rekrutierungsprovisionen können nicht für denselben Anruf desselben Partners kumuliert werden.</p>
 
 <h2>Artikel 4 — Provisionszahlung</h2>
 <h3>4.1 Mindestauszahlungsschwelle</h3>
@@ -576,9 +584,9 @@ const TERMS_AFFILIATE = {
 <h3>3.1 Montantes fixos</h3>
 <p>As comissões são montantes FIXOS em USD, não sujeitos a IVA, definidos por função:</p>
 <ul>
-  <li>Comissão por chamada de cliente indicado: montante fixo (ex.: 10$ por chamada paga).</li>
-  <li>Comissão por chamada de prestador recrutado: montante fixo (ex.: 5$ por chamada).</li>
-  <li>Os montantes exatos são definidos nos termos específicos de cada função e podem ser consultados no painel de controle.</li>
+  <li>Comissão por chamada de cliente indicado: montante fixo diferenciado conforme o tipo de prestador consultado — 5$ (advogado) ou 3$ (expatriado auxiliar) por chamada paga.</li>
+  <li>Comissão por chamada de prestador recrutado: montante fixo diferenciado — 5$ (advogado) ou 3$ (expatriado auxiliar) por chamada recebida.</li>
+  <li>Os montantes exatos são configuráveis pela SOS-Expat e consultáveis no painel de controle.</li>
 </ul>
 <h3>3.2 Congelamento de taxas</h3>
 <p>As taxas de comissão são congeladas no momento da inscrição e não mudam mesmo que a configuração global seja alterada.</p>
@@ -588,6 +596,8 @@ const TERMS_AFFILIATE = {
 <p>As comissões de recrutamento aplicam-se durante 6 meses após a inscrição do recrutado.</p>
 <h3>3.5 Atribuição</h3>
 <p>A atribuição é feita por cookie Last-Click com duração de 30 dias.</p>
+<h3>3.6 Não cumulação de comissões</h3>
+<p>Se o mesmo Afiliado indicou o cliente E recrutou o prestador consultado durante a mesma chamada, apenas a comissão de indicação de cliente é paga. As comissões de cliente e de recrutamento não são acumuláveis na mesma chamada para o mesmo Afiliado.</p>
 
 <h2>Artigo 4 — Pagamento de comissões</h2>
 <h3>4.1 Limite mínimo de saque</h3>
@@ -709,9 +719,9 @@ const TERMS_AFFILIATE = {
 <h3>3.1 Фиксированные суммы</h3>
 <p>Комиссии представляют собой ФИКСИРОВАННЫЕ суммы в USD, не облагаемые НДС, определённые для каждой роли:</p>
 <ul>
-  <li>Комиссия за звонок привлечённого клиента: фиксированная сумма (напр., 10$ за оплаченный звонок).</li>
-  <li>Комиссия за звонок привлечённого поставщика услуг: фиксированная сумма (напр., 5$ за звонок).</li>
-  <li>Точные суммы определены в специальных условиях для каждой роли и доступны в личном кабинете.</li>
+  <li>Комиссия за звонок привлечённого клиента: дифференцированная фиксированная сумма в зависимости от типа поставщика услуг — 5$ (адвокат) или 3$ (экспат-помощник) за оплаченный звонок.</li>
+  <li>Комиссия за звонок привлечённого поставщика услуг: дифференцированная фиксированная сумма — 5$ (адвокат) или 3$ (экспат-помощник) за полученный звонок.</li>
+  <li>Точные суммы настраиваются SOS-Expat и доступны в личном кабинете.</li>
 </ul>
 <h3>3.2 Фиксация ставок</h3>
 <p>Ставки комиссий фиксируются на момент регистрации и не изменяются даже при изменении глобальной конфигурации.</p>
@@ -721,6 +731,8 @@ const TERMS_AFFILIATE = {
 <p>Комиссии за рекрутинг действуют в течение 6 месяцев после регистрации привлечённого лица.</p>
 <h3>3.5 Атрибуция</h3>
 <p>Атрибуция осуществляется по принципу Last-Click cookie сроком действия 30 дней.</p>
+<h3>3.6 Некумулятивность комиссий</h3>
+<p>Если один и тот же Партнёр привлёк клиента И нанял поставщика услуг, участвовавшего в том же звонке, выплачивается только комиссия за привлечение клиента. Комиссии за клиента и за рекрутинг не могут быть совмещены в рамках одного звонка для одного и того же Партнёра.</p>
 
 <h2>Статья 4 — Выплата комиссий</h2>
 <h3>4.1 Минимальный порог вывода</h3>
@@ -842,9 +854,9 @@ const TERMS_AFFILIATE = {
 <h3>3.1 निश्चित राशियाँ</h3>
 <p>कमीशन USD में निश्चित राशियाँ हैं, VAT के अधीन नहीं हैं, प्रत्येक भूमिका के अनुसार परिभाषित:</p>
 <ul>
-  <li>रेफर किए गए ग्राहक कॉल पर कमीशन: निश्चित राशि (उदा.: प्रति भुगतान किए गए कॉल पर 10$)।</li>
-  <li>भर्ती किए गए सेवा प्रदाता कॉल पर कमीशन: निश्चित राशि (उदा.: प्रति कॉल 5$)।</li>
-  <li>सटीक राशियाँ प्रत्येक भूमिका के विशिष्ट नियमों में परिभाषित हैं और डैशबोर्ड में उपलब्ध हैं।</li>
+  <li>रेफर किए गए ग्राहक कॉल पर कमीशन: सेवा प्रदाता के प्रकार के अनुसार विभेदित निश्चित राशि — 5$ (वकील) या 3$ (प्रवासी सहायक) प्रति भुगतान किए गए कॉल पर।</li>
+  <li>भर्ती किए गए सेवा प्रदाता कॉल पर कमीशन: विभेदित निश्चित राशि — 5$ (वकील) या 3$ (प्रवासी सहायक) प्रति प्राप्त कॉल।</li>
+  <li>सटीक राशियाँ SOS-Expat द्वारा कॉन्फ़िगर करने योग्य हैं और डैशबोर्ड में उपलब्ध हैं।</li>
 </ul>
 <h3>3.2 दरों का स्थिरीकरण</h3>
 <p>कमीशन दरें पंजीकरण के समय स्थिर कर दी जाती हैं और वैश्विक कॉन्फ़िगरेशन संशोधित होने पर भी नहीं बदलतीं।</p>
@@ -854,6 +866,8 @@ const TERMS_AFFILIATE = {
 <p>भर्ती कमीशन भर्ती किए गए व्यक्ति के पंजीकरण के 6 महीने बाद तक लागू होते हैं।</p>
 <h3>3.5 एट्रिब्यूशन</h3>
 <p>एट्रिब्यूशन Last-Click कुकी पर आधारित है जिसकी अवधि 30 दिन है।</p>
+<h3>3.6 कमीशन का गैर-संचयन</h3>
+<p>यदि एक ही सहबद्ध ने ग्राहक को रेफर किया और उसी कॉल के दौरान परामर्शित सेवा प्रदाता की भी भर्ती की, तो केवल ग्राहक रेफरल कमीशन का भुगतान किया जाता है। एक ही सहबद्ध के लिए एक ही कॉल पर ग्राहक और भर्ती कमीशन संयोजित नहीं किए जा सकते।</p>
 
 <h2>अनुच्छेद 4 — कमीशन का भुगतान</h2>
 <h3>4.1 न्यूनतम निकासी सीमा</h3>
@@ -975,9 +989,9 @@ const TERMS_AFFILIATE = {
 <h3>3.1 固定金额</h3>
 <p>佣金为美元固定金额，不含增值税，按角色定义：</p>
 <ul>
-  <li>推荐客户来电佣金：固定金额（例如：每次付费通话10美元）。</li>
-  <li>招募服务商来电佣金：固定金额（例如：每次通话5美元）。</li>
-  <li>具体金额在各角色的特定条款中定义，可在控制面板中查看。</li>
+  <li>推荐客户来电佣金：根据服务商类型区分的固定金额 — 5美元（律师）或3美元（外籍帮助者）每次付费通话。</li>
+  <li>招募服务商来电佣金：区分的固定金额 — 5美元（律师）或3美元（外籍帮助者）每次接听通话。</li>
+  <li>具体金额由SOS-Expat配置，可在控制面板中查看。</li>
 </ul>
 <h3>3.2 费率锁定</h3>
 <p>佣金费率在注册时锁定，即使全局配置被修改也不会改变。</p>
@@ -987,6 +1001,8 @@ const TERMS_AFFILIATE = {
 <p>招募佣金在被招募者注册后6个月内适用。</p>
 <h3>3.5 归因</h3>
 <p>归因基于Last-Click cookie，有效期为30天。</p>
+<h3>3.6 佣金不可累计</h3>
+<p>如果同一联盟成员在同一通话中既推荐了客户又招募了被咨询的服务商，则仅支付客户推荐佣金。同一联盟成员在同一通话中不可同时获得客户佣金和招募佣金。</p>
 
 <h2>第四条 — 佣金支付</h2>
 <h3>4.1 最低提现门槛</h3>
@@ -1108,9 +1124,9 @@ const TERMS_AFFILIATE = {
 <h3>3.1 مبالغ ثابتة</h3>
 <p>العمولات هي مبالغ ثابتة بالدولار الأمريكي، غير خاضعة لضريبة القيمة المضافة، محددة حسب الدور:</p>
 <ul>
-  <li>عمولة لكل مكالمة عميل مُحال: مبلغ ثابت (مثال: 10$ لكل مكالمة مدفوعة).</li>
-  <li>عمولة لكل مكالمة مقدم خدمة مُجنَّد: مبلغ ثابت (مثال: 5$ لكل مكالمة).</li>
-  <li>المبالغ الدقيقة محددة في الشروط الخاصة بكل دور ويمكن الاطلاع عليها في لوحة التحكم.</li>
+  <li>عمولة لكل مكالمة عميل مُحال: مبلغ ثابت مُتمايز حسب نوع مقدم الخدمة — 5$ (محامٍ) أو 3$ (مغترب مساعد) لكل مكالمة مدفوعة.</li>
+  <li>عمولة لكل مكالمة مقدم خدمة مُجنَّد: مبلغ ثابت مُتمايز — 5$ (محامٍ) أو 3$ (مغترب مساعد) لكل مكالمة مستلمة.</li>
+  <li>المبالغ الدقيقة قابلة للتكوين من قبل SOS-Expat ويمكن الاطلاع عليها في لوحة التحكم.</li>
 </ul>
 <h3>3.2 تجميد الأسعار</h3>
 <p>يتم تجميد معدلات العمولة عند التسجيل ولا تتغير حتى لو تم تعديل التكوين العام.</p>
@@ -1120,6 +1136,8 @@ const TERMS_AFFILIATE = {
 <p>تسري عمولات التجنيد لمدة 6 أشهر بعد تسجيل المُجنَّد.</p>
 <h3>3.5 الإسناد</h3>
 <p>يتم الإسناد بناءً على ملف تعريف الارتباط Last-Click بمدة 30 يوماً.</p>
+<h3>3.6 عدم تراكم العمولات</h3>
+<p>إذا قام نفس الشريك بإحالة العميل وتجنيد مقدم الخدمة المُستشار خلال نفس المكالمة، يتم دفع عمولة إحالة العميل فقط. لا يمكن الجمع بين عمولات العميل والتجنيد في نفس المكالمة لنفس الشريك.</p>
 
 <h2>المادة 4 — دفع العمولات</h2>
 <h3>4.1 الحد الأدنى للسحب</h3>
@@ -1254,7 +1272,7 @@ async function main() {
       type: "terms_affiliate",
       language: lang,
       isActive: true,
-      version: "1.0",
+      version: "1.1",
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
       publishedAt: FieldValue.serverTimestamp(),

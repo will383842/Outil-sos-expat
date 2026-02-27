@@ -609,6 +609,21 @@ async function processProviderRecruitmentCommission(
 
     // Get the recruiting chatter
     const recruiterChatterId = providerData.providerRecruitedByChatterId;
+
+    // Anti-double payment: skip if same chatter referred the client AND recruited the provider
+    const clientDocForCheck = await db.collection("users").doc(session.clientId).get();
+    if (clientDocForCheck.exists) {
+      const clientCheckData = clientDocForCheck.data();
+      if (clientCheckData?.referredByChatterId === recruiterChatterId) {
+        logger.info("[processProviderRecruitmentCommission] Skipping — same chatter referred client and recruited provider (anti-double)", {
+          recruiterChatterId,
+          clientId: session.clientId,
+          sessionId,
+        });
+        return;
+      }
+    }
+
     const recruiterDoc = await db.collection("chatters").doc(recruiterChatterId).get();
 
     if (!recruiterDoc.exists) {

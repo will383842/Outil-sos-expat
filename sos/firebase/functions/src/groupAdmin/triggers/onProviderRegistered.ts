@@ -217,12 +217,13 @@ export async function awardGroupAdminProviderRecruitmentCommission(
 
       if (!existingCommission.empty) continue;
 
-      // Award commission
+      // Award commission (split by provider type: lawyer=$5, expat=$3)
       const commission = await createClientReferralCommission(
         recruitment.groupAdminId,
         providerId,
         callId,
-        `Provider recruitment commission for ${recruitment.providerName}`
+        `Provider recruitment commission for ${recruitment.providerName}`,
+        recruitment.providerType
       );
 
       if (commission) {

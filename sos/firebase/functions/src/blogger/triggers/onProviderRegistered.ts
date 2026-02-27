@@ -147,7 +147,8 @@ export async function checkBloggerProviderRecruitment(
 export async function awardBloggerRecruitmentCommission(
   providerId: string,
   callId: string,
-  _callDuration: number // Reserved for future use
+  _callDuration: number, // Reserved for future use
+  clientId?: string // Anti-double payment: skip blogger who also referred this client
 ): Promise<{ awarded: boolean; commissions: { bloggerId: string; commissionId: string }[]; error?: string }> {
   const db = getFirestore();
   const commissions: { bloggerId: string; commissionId: string }[] = [];
@@ -157,6 +158,37 @@ export async function awardBloggerRecruitmentCommission(
     const config = await getBloggerConfigCached();
     if (!config.isSystemActive) {
       return { awarded: false, commissions, error: "Blogger system not active" };
+    }
+
+    // Anti-double payment: identify client's blogger referrer (if any)
+    let clientBloggerReferrerId: string | null = null;
+    if (clientId) {
+      const clientDoc = await db.collection("users").doc(clientId).get();
+      if (clientDoc.exists) {
+        const clientData = clientDoc.data();
+        const bloggerCode = clientData?.bloggerReferredBy || clientData?.referredByBlogger;
+        if (bloggerCode) {
+          const bloggerQuery = await db.collection("bloggers")
+            .where("affiliateCodeClient", "==", bloggerCode)
+            .limit(1)
+            .get();
+          if (!bloggerQuery.empty) {
+            clientBloggerReferrerId = bloggerQuery.docs[0].id;
+          }
+        }
+      }
+
+      // Fallback: check blogger_clicks attribution (client may have been referred via click, not code)
+      if (!clientBloggerReferrerId) {
+        const clickQuery = await db.collection("blogger_affiliate_clicks")
+          .where("conversionId", "==", clientId)
+          .where("converted", "==", true)
+          .limit(1)
+          .get();
+        if (!clickQuery.empty) {
+          clientBloggerReferrerId = clickQuery.docs[0].data().bloggerId;
+        }
+      }
     }
 
     // 2. Find active recruitment links for this provider
@@ -175,6 +207,16 @@ export async function awardBloggerRecruitmentCommission(
     // 3. Award commission to each blogger who recruited this provider
     for (const recruitmentDoc of recruitmentQuery.docs) {
       const recruitment = recruitmentDoc.data() as BloggerRecruitedProvider;
+
+      // Anti-double payment: skip if this blogger also referred the client
+      if (clientBloggerReferrerId && recruitment.bloggerId === clientBloggerReferrerId) {
+        logger.info("[awardBloggerRecruitmentCommission] Skipping — same blogger referred client and recruited provider (anti-double)", {
+          bloggerId: recruitment.bloggerId,
+          clientId,
+          callId,
+        });
+        continue;
+      }
 
       // Check if commission already exists for this call
       const existingCommission = await db
