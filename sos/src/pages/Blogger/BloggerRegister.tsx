@@ -246,11 +246,14 @@ const BloggerRegister: React.FC = () => {
   const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'groupAdmin', 'lawyer', 'expat', 'client'].includes(userRole);
   const isAlreadyBlogger = userRole === 'blogger';
 
+  // IMPORTANT: !isSubmitting prevents premature redirect during registration
+  // Without it, register() sets role='blogger' → isAlreadyBlogger becomes true →
+  // useEffect fires and navigates to dashboard BEFORE registerBlogger() Cloud Function is called
   useEffect(() => {
-    if (authInitialized && !authLoading && isAlreadyBlogger && !success) {
+    if (authInitialized && !authLoading && !isSubmitting && isAlreadyBlogger && !success) {
       navigate(dashboardRoute, { replace: true });
     }
-  }, [authInitialized, authLoading, isAlreadyBlogger, navigate, dashboardRoute, success]);
+  }, [authInitialized, authLoading, isSubmitting, isAlreadyBlogger, navigate, dashboardRoute, success]);
 
   // Meta Pixel: Track StartRegistration on mount
   useEffect(() => {

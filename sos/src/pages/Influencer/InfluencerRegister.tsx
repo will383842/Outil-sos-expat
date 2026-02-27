@@ -34,6 +34,7 @@ const InfluencerRegister: React.FC = () => {
 
   const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
   const [existingEmail, setExistingEmail] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
 
   // Referral code handling
   const referralCodeFromUrl = useMemo(() => {
@@ -64,11 +65,14 @@ const InfluencerRegister: React.FC = () => {
     trackMetaStartRegistration({ content_name: 'influencer_registration' });
   }, []);
 
+  // IMPORTANT: !isRegistering prevents premature redirect during registration
+  // Without it, register() sets role='influencer' → isAlreadyInfluencer becomes true →
+  // useEffect fires and navigates to dashboard BEFORE registerInfluencer() Cloud Function is called
   useEffect(() => {
-    if (authInitialized && !authLoading && isAlreadyInfluencer) {
+    if (authInitialized && !authLoading && !isRegistering && isAlreadyInfluencer) {
       navigate(dashboardRoute, { replace: true });
     }
-  }, [authInitialized, authLoading, isAlreadyInfluencer, navigate, dashboardRoute]);
+  }, [authInitialized, authLoading, isRegistering, isAlreadyInfluencer, navigate, dashboardRoute]);
 
   // Role conflict
   if (authInitialized && !authLoading && hasExistingRole && !isAlreadyInfluencer) {
@@ -257,6 +261,7 @@ const InfluencerRegister: React.FC = () => {
                       setEmailAlreadyExists(true);
                       setExistingEmail(email);
                     }}
+                    onRegistrationStateChange={setIsRegistering}
                   />
                 </div>
               </div>

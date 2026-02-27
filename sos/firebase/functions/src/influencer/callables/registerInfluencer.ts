@@ -50,6 +50,7 @@ export const registerInfluencer = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
   },

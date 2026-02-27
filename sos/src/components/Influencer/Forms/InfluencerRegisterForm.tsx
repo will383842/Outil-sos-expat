@@ -179,6 +179,7 @@ interface InfluencerFormData {
 interface InfluencerRegisterFormProps {
   referralCode?: string;
   onEmailAlreadyExists?: (email: string) => void;
+  onRegistrationStateChange?: (isRegistering: boolean) => void;
 }
 
 // ============================================================================
@@ -187,6 +188,7 @@ interface InfluencerRegisterFormProps {
 const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
   referralCode = '',
   onEmailAlreadyExists,
+  onRegistrationStateChange,
 }) => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
@@ -489,6 +491,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
     setLoading(true);
     setError(null);
     setBotError(null);
+    onRegistrationStateChange?.(true);
 
     // Anti-bot validation
     const botCheck = await validateHuman('register_influencer');
@@ -499,6 +502,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
       };
       setBotError(msgs[botCheck.reason || ''] || 'Validation error.');
       setLoading(false);
+      onRegistrationStateChange?.(false);
       return;
     }
 
@@ -589,6 +593,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         }, 2000);
       }
     } catch (err: unknown) {
+      onRegistrationStateChange?.(false);
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
 
       if (errorMessage.includes('email-already-in-use')) {

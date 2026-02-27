@@ -186,6 +186,8 @@ const ChatterRegister: React.FC = () => {
           termsAcceptedAt: data.termsAcceptedAt,
           termsVersion: data.termsVersion,
           termsType: data.termsType,
+          termsAffiliateVersion: data.termsAffiliateVersion || "1.0",
+          termsAffiliateType: data.termsAffiliateType || "terms_affiliate",
           termsAcceptanceMeta: data.termsAcceptanceMeta,
         });
       } catch (cfError) {

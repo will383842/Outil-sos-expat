@@ -408,8 +408,8 @@ async function updateAffiliateRiskScore(
     type: issues[0]?.type || "suspicious_pattern",
     severity: riskScore >= 80 ? "critical" : riskScore >= 50 ? "high" : "medium",
     affiliateId,
-    affiliateEmail: userData.email,
-    affiliateCode: userData.affiliateCode,
+    affiliateEmail: userData.email || "unknown",
+    affiliateCode: userData.affiliateCode || userData.affiliateCodeClient || null,
     details: {
       description: issues.map((i) => i.description).join("; "),
     },
@@ -425,13 +425,13 @@ async function updateAffiliateRiskScore(
   await centralAlertRef.set({
     id: centralAlertRef.id,
     userId: affiliateId,
-    email: userData.email,
+    email: userData.email || "unknown",
     source: "affiliate_referral",
     flags: issues.map((i) => i.type),
     severity: alert.severity,
     details: {
       riskScore,
-      affiliateCode: userData.affiliateCode,
+      affiliateCode: userData.affiliateCode || userData.affiliateCodeClient || null,
       issues: issues.map((i) => ({
         type: i.type,
         severity: i.severity,
