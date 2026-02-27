@@ -34,6 +34,7 @@ export const getGroupAdminPosts = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GroupAdminPostsResponse> => {
@@ -126,6 +127,7 @@ export const getGroupAdminPostContent = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<PostContentResponse> => {
@@ -229,6 +231,7 @@ export const getGroupAdminProcessedPost = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<ProcessedPostResponse> => {
@@ -388,6 +391,7 @@ export const trackGroupAdminPostUsage = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {

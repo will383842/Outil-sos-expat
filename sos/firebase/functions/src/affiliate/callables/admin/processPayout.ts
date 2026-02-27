@@ -54,6 +54,7 @@ export const adminProcessPayoutWise = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
     secrets: WISE_PAYOUT_SECRETS,
   },
@@ -239,6 +240,7 @@ export const adminProcessPayoutManual = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
     secrets: [ENCRYPTION_KEY],
   },
@@ -362,6 +364,7 @@ export const adminRejectPayout = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -487,6 +490,7 @@ export const adminApprovePayout = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -582,6 +586,7 @@ export const adminGetPendingPayouts = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {

@@ -73,6 +73,7 @@ export const submitGroup = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -152,6 +153,7 @@ export const getAvailableGroups = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -200,6 +202,7 @@ export const getMyGroups = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -234,6 +237,7 @@ export const joinGroupAsChatter = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -299,6 +303,7 @@ export const adminGetGroups = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -348,6 +353,7 @@ export const adminUpdateGroupStatus = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {

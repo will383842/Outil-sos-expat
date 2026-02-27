@@ -62,6 +62,7 @@ export const adminToggleGroupAdminVisibility = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<ToggleGroupAdminVisibilityResponse> => {

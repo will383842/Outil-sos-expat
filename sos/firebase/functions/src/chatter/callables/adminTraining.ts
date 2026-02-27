@@ -49,6 +49,7 @@ export const adminGetTrainingModules = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{
@@ -129,6 +130,7 @@ export const adminCreateTrainingModule = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; moduleId: string }> => {
@@ -232,6 +234,7 @@ export const adminUpdateTrainingModule = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -309,6 +312,7 @@ export const adminDeleteTrainingModule = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -384,6 +388,7 @@ export const adminSeedTrainingModules = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; modulesCreated: number; errors: string[] }> => {
@@ -425,6 +430,7 @@ export const adminReorderTrainingModules = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {

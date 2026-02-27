@@ -412,6 +412,7 @@ export const chatterNotifyInactiveMembers = onSchedule(
     schedule: "0 10 * * *", // Every day at 10:00 AM
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
+    maxInstances: 5,
   },
   async () => {
     ensureInitialized();
@@ -613,6 +614,7 @@ export const chatterNotifyNearTop3 = onSchedule(
     schedule: "0 18 * * *", // Every day at 6:00 PM
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
+    maxInstances: 5,
   },
   async () => {
     ensureInitialized();
@@ -792,6 +794,7 @@ export const chatterNotifyFlashBonusStart = onCall(
   {
     ...adminConfig,
     timeoutSeconds: 300,
+    maxInstances: 5,
   },
   async (request): Promise<{ success: boolean; notified: number; error?: string }> => {
     ensureInitialized();
@@ -906,6 +909,7 @@ export const chatterRegisterFcmToken = onCall(
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,
+    maxInstances: 5,
   },
   async (request): Promise<{ success: boolean; tokenId?: string; error?: string }> => {
     ensureInitialized();
@@ -995,6 +999,7 @@ export const chatterUnregisterFcmToken = onCall(
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,
+    maxInstances: 5,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();

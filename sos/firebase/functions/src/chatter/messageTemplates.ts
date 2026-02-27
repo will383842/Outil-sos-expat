@@ -456,6 +456,7 @@ export const getChatterMessageTemplates = onCall(
     region: "us-central1",
     memory: "256MiB",
     cpu: 0.083,
+    maxInstances: 5,
   },
   async (request) => {
     // Verify user is authenticated
@@ -486,6 +487,7 @@ export const adminSeedMessageTemplates = onCall(
     region: "us-central1",
     memory: "256MiB",
     cpu: 0.083,
+    maxInstances: 5,
   },
   async (request) => {
     // Verify user is authenticated and is admin
@@ -521,6 +523,7 @@ export const adminCreateMessageTemplate = onCall(
     region: "us-central1",
     memory: "256MiB",
     cpu: 0.083,
+    maxInstances: 5,
   },
   async (request) => {
     // Verify user is authenticated and is admin
@@ -573,6 +576,7 @@ export const adminUpdateMessageTemplate = onCall(
     region: "us-central1",
     memory: "256MiB",
     cpu: 0.083,
+    maxInstances: 5,
   },
   async (request) => {
     // Verify user is authenticated and is admin
@@ -627,6 +631,7 @@ export const adminDeleteMessageTemplate = onCall(
     region: "us-central1",
     memory: "256MiB",
     cpu: 0.083,
+    maxInstances: 5,
   },
   async (request) => {
     // Verify user is authenticated and is admin
@@ -678,6 +683,7 @@ export const adminResetMessageTemplatesToDefaults = onCall(
     region: "us-central1",
     memory: "256MiB",
     cpu: 0.083,
+    maxInstances: 5,
   },
   async (request) => {
     // Verify user is authenticated and is admin

@@ -47,6 +47,7 @@ export const getInfluencerTrainingModules = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetInfluencerTrainingModulesResponse> => {
@@ -171,6 +172,7 @@ export const getInfluencerTrainingModuleContent = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetInfluencerTrainingModuleContentResponse> => {
@@ -332,6 +334,7 @@ export const updateInfluencerTrainingProgress = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -393,6 +396,7 @@ export const submitInfluencerTrainingQuiz = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<SubmitInfluencerTrainingQuizResponse> => {
@@ -624,6 +628,7 @@ export const getInfluencerTrainingCertificate = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
   },
   async (request): Promise<GetInfluencerTrainingCertificateResponse> => {
     ensureInitialized();

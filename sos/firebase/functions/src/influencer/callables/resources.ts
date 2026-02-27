@@ -34,6 +34,7 @@ export const getInfluencerResources = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetInfluencerResourcesResponse> => {
@@ -135,6 +136,7 @@ export const downloadInfluencerResource = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<DownloadInfluencerResourceResponse> => {
@@ -221,6 +223,7 @@ export const copyInfluencerResourceText = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<CopyInfluencerResourceTextResponse> => {

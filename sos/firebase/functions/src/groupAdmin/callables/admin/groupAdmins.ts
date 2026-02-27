@@ -103,6 +103,7 @@ export const adminGetGroupAdminsList = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetGroupAdminsListResponse> => {
@@ -255,6 +256,7 @@ export const adminGetGroupAdminDetail = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ groupAdmin: GroupAdmin; recentWithdrawals: GroupAdminWithdrawal[]; recentCommissions: GroupAdminCommission[] }> => {
@@ -335,6 +337,7 @@ export const adminUpdateGroupAdminStatus = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -418,6 +421,7 @@ export const adminVerifyGroup = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -494,6 +498,7 @@ export const adminProcessWithdrawal = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -666,6 +671,7 @@ export const adminGetWithdrawalsList = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ withdrawals: GroupAdminWithdrawal[]; hasMore: boolean; stats: WithdrawalStats }> => {
@@ -802,6 +808,7 @@ export const adminExportGroupAdmins = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; data: ExportGroupAdminItem[]; csv: string }> => {
@@ -948,6 +955,7 @@ export const adminBulkGroupAdminAction = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {

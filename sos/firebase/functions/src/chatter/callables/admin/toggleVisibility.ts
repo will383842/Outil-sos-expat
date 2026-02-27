@@ -27,6 +27,7 @@ export const adminToggleChatterVisibility = onCall(
     memory: "512MiB",  // FIX: 256MiB caused OOM under load
     cpu: 0.5,  // memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 30,
+    maxInstances: 5,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<ToggleChatterVisibilityResponse> => {

@@ -40,6 +40,7 @@ export const adminGetInfluencerTrainingModules = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
   },
   async (request): Promise<{
     modules: Array<InfluencerTrainingModule & { studentsCount: number }>;
@@ -118,6 +119,7 @@ export const adminCreateInfluencerTrainingModule = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
   },
   async (request): Promise<{ success: boolean; moduleId: string }> => {
     ensureInitialized();
@@ -218,6 +220,7 @@ export const adminUpdateInfluencerTrainingModule = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    maxInstances: 5,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -293,6 +296,7 @@ export const adminDeleteInfluencerTrainingModule = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
+    maxInstances: 5,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -358,6 +362,7 @@ export const adminSeedInfluencerTrainingModules = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
+    maxInstances: 5,
   },
   async (request): Promise<{ success: boolean; modulesCreated: number; errors: string[] }> => {
     ensureInitialized();
