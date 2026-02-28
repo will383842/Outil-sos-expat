@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 /**
  * Subscription Dashboard Page V2
  * Page de gestion de l'abonnement du prestataire - Design moderne 2026
@@ -217,12 +218,6 @@ export const SubscriptionPage: React.FC = () => {
   const navigate = useLocaleNavigate();
   const { user } = useAuth();
 
-  // DEBUG LOGS - Page Jump Investigation
-  console.log('[SubscriptionPage DEBUG] 📦 Render', {
-    userId: user?.uid,
-    timestamp: new Date().toISOString()
-  });
-
   // Route translations
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
   const translatedRoutes = useMemo(() => ({
@@ -254,18 +249,6 @@ export const SubscriptionPage: React.FC = () => {
   } = useAiQuota();
 
   // DEBUG LOGS - State tracking
-  console.log('[SubscriptionPage DEBUG] 📊 State', {
-    subLoading,
-    quotaLoading,
-    hasSubscription: !!subscription,
-    subscriptionStatus: subscription?.status,
-    subscriptionTier: subscription?.tier,
-    currentUsage,
-    limit,
-    isInTrial,
-    timestamp: new Date().toISOString()
-  });
-
   // Local state
   const [actionLoading, setActionLoading] = React.useState(false);
   const [isInitializing, setIsInitializing] = React.useState(false);
@@ -324,6 +307,7 @@ export const SubscriptionPage: React.FC = () => {
       await initializeTrial();
     } catch (error) {
       console.error('Error starting trial:', error);
+      toast.error(intl.formatMessage({ id: 'subscription.error.trialStart', defaultMessage: 'Failed to start trial. Please try again.' }));
     } finally {
       setIsInitializing(false);
     }
@@ -335,6 +319,7 @@ export const SubscriptionPage: React.FC = () => {
       await reactivateSubscription();
     } catch (error) {
       console.error('Error reactivating:', error);
+      toast.error(intl.formatMessage({ id: 'subscription.error.reactivate', defaultMessage: 'Failed to reactivate subscription.' }));
     } finally {
       setActionLoading(false);
     }
@@ -346,6 +331,7 @@ export const SubscriptionPage: React.FC = () => {
       await openBillingPortal();
     } catch (error) {
       console.error('Error opening billing portal:', error);
+      toast.error(intl.formatMessage({ id: 'subscription.error.billingPortal', defaultMessage: 'Failed to open billing portal.' }));
       setActionLoading(false);
     }
   };
@@ -361,7 +347,6 @@ export const SubscriptionPage: React.FC = () => {
   // ============================================================================
 
   if (isLoading) {
-    console.log('[SubscriptionPage DEBUG] 🔄 Rendering LOADING state', { subLoading, quotaLoading, timestamp: new Date().toISOString() });
     return (
       <DashboardLayout activeKey="subscription">
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50/30">
@@ -405,7 +390,6 @@ export const SubscriptionPage: React.FC = () => {
   // ============================================================================
 
   if (!subscription) {
-    console.log('[SubscriptionPage DEBUG] ⚠️ Rendering NO SUBSCRIPTION state', { timestamp: new Date().toISOString() });
     return (
       <DashboardLayout activeKey="subscription">
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50/30">
@@ -471,14 +455,6 @@ export const SubscriptionPage: React.FC = () => {
   // ============================================================================
   // MAIN RENDER
   // ============================================================================
-
-  console.log('[SubscriptionPage DEBUG] ✅ Rendering MAIN state', {
-    tier: subscription?.tier,
-    status: subscription?.status,
-    currentUsage,
-    limit,
-    timestamp: new Date().toISOString()
-  });
 
   return (
     <DashboardLayout activeKey="subscription">

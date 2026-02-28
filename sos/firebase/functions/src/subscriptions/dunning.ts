@@ -15,6 +15,9 @@ import { logger } from 'firebase-functions';
 import Stripe from 'stripe';
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import { STRIPE_SECRET_KEY } from '../lib/secrets';
+import { getLanguageCode, MAILWIZZ_API_KEY_SECRET } from '../emailMarketing/config';
+import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
+import { APP_URLS } from '../subscription/constants';
 
 // Stripe client initialized lazily
 let stripeClient: Stripe | null = null;
@@ -89,31 +92,24 @@ export const DUNNING_CONFIG = {
   gracePeriodDays: 3, // Période de grâce après suspension avant annulation
 };
 
+/**
+ * P2 FIX: Multilingue dunning - template IDs sont construits dynamiquement
+ * Format: TR_PRV_dunning-{type}_{LANG} (ex: TR_PRV_dunning-payment-failed_FR)
+ * Les sujets sont dans les templates MailWizz, plus hardcodés ici
+ */
+const DUNNING_TYPE_MAP: Record<DunningEmailTemplate['type'], string> = {
+  'payment_failed': 'payment-failed',
+  'action_required': 'action-required',
+  'final_attempt': 'final-attempt',
+  'account_suspended': 'suspended',
+};
+
+/** @deprecated Kept for backward compatibility - use DUNNING_TYPE_MAP + getLanguageCode() instead */
 export const DUNNING_EMAILS: DunningEmailTemplate[] = [
-  {
-    type: 'payment_failed',
-    subject: '[SOS-Expat] Problème avec votre paiement',
-    templateId: 'dunning_payment_failed',
-    dayOffset: 1,
-  },
-  {
-    type: 'action_required',
-    subject: '[SOS-Expat] Action requise - Mise à jour de paiement',
-    templateId: 'dunning_action_required',
-    dayOffset: 3,
-  },
-  {
-    type: 'final_attempt',
-    subject: '[SOS-Expat] Dernière tentative de paiement',
-    templateId: 'dunning_final_attempt',
-    dayOffset: 5,
-  },
-  {
-    type: 'account_suspended',
-    subject: '[SOS-Expat] Votre compte a été suspendu',
-    templateId: 'dunning_suspended',
-    dayOffset: 7,
-  },
+  { type: 'payment_failed', subject: '', templateId: 'dunning_payment_failed', dayOffset: 1 },
+  { type: 'action_required', subject: '', templateId: 'dunning_action_required', dayOffset: 3 },
+  { type: 'final_attempt', subject: '', templateId: 'dunning_final_attempt', dayOffset: 5 },
+  { type: 'account_suspended', subject: '', templateId: 'dunning_suspended', dayOffset: 7 },
 ];
 
 // ============================================================================
@@ -229,7 +225,8 @@ export async function updateDunningStatus(
 }
 
 /**
- * Envoie un email de dunning
+ * Envoie un email de dunning via MailWizz (P2 FIX: multilingue)
+ * Utilise le pattern TR_PRV_dunning-{type}_{LANG} comme les autres emails transactionnels
  */
 async function sendDunningEmail(
   userId: string,
@@ -245,29 +242,50 @@ async function sendDunningEmail(
       return null;
     }
 
-    const template = DUNNING_EMAILS.find(e => e.type === emailType);
-    if (!template) return null;
+    const typeSlug = DUNNING_TYPE_MAP[emailType];
+    if (!typeSlug) return null;
 
-    // Créer l'entrée dans mail_queue pour envoi par Cloud Function dédiée
-    const emailDoc = await getDb().collection('mail_queue').add({
-      to: userData.email,
-      template: template.templateId,
-      subject: template.subject,
-      data: {
-        userName: userData.displayName || userData.firstName || 'Cher client',
-        updatePaymentUrl: 'https://sos-urgently-ac307.web.app/dashboard/subscription',
-      },
-      status: 'pending',
-      createdAt: admin.firestore.Timestamp.now(),
-    });
+    // P2 FIX: Déterminer la langue de l'utilisateur
+    const lang = getLanguageCode(userData.language || userData.preferredLanguage || userData.lang);
+    const templateId = `TR_PRV_dunning-${typeSlug}_${lang}`;
 
-    logger.info('[Dunning] Email queued:', {
-      emailId: emailDoc.id,
-      type: emailType,
-      userId,
-    });
+    const firstName = userData.firstName || userData.displayName || 'Cher client';
 
-    return emailDoc.id;
+    // P2 FIX: Envoyer via MailWizz transactionnel (même pattern que scheduledTasks.ts)
+    try {
+      const mailwizz = new MailwizzAPI();
+      await mailwizz.sendTransactional({
+        to: userData.email,
+        template: templateId,
+        customFields: {
+          FNAME: firstName,
+          UPDATE_PAYMENT_URL: APP_URLS.SUBSCRIPTION_DASHBOARD,
+        },
+      });
+
+      logger.info('[Dunning] Email sent via MailWizz:', {
+        templateId,
+        type: emailType,
+        lang,
+        userId,
+      });
+
+      return templateId;
+    } catch (mailError) {
+      // Fallback: queue in mail_queue if MailWizz fails
+      logger.warn('[Dunning] MailWizz failed, falling back to mail_queue:', mailError);
+      const emailDoc = await getDb().collection('mail_queue').add({
+        to: userData.email,
+        template: templateId,
+        data: {
+          FNAME: firstName,
+          UPDATE_PAYMENT_URL: APP_URLS.SUBSCRIPTION_DASHBOARD,
+        },
+        status: 'pending',
+        createdAt: admin.firestore.Timestamp.now(),
+      });
+      return emailDoc.id;
+    }
   } catch (error) {
     logger.error('[Dunning] Erreur envoi email:', error);
     return null;
@@ -360,7 +378,7 @@ export const processDunningQueue = onSchedule(
     schedule: '0 */4 * * *', // Every 4 hours
     region: 'europe-west3',
     timeZone: 'Europe/Paris',
-    secrets: [STRIPE_SECRET_KEY],
+    secrets: [STRIPE_SECRET_KEY, MAILWIZZ_API_KEY_SECRET],
     memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 300,
@@ -418,7 +436,14 @@ export const processDunningQueue = onSchedule(
           // Réactiver l'abonnement
           await getDb().collection('subscriptions').doc(record.userId).update({
             status: 'active',
-            aiCallsUsed: 0, // Reset du compteur
+            aiAccessEnabled: true,
+            updatedAt: admin.firestore.Timestamp.now(),
+          });
+
+          // Reset du compteur d'appels IA
+          await getDb().collection('ai_usage').doc(record.userId).update({
+            currentPeriodCalls: 0,
+            aiAccessSuspended: false,
             updatedAt: admin.firestore.Timestamp.now(),
           });
 

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// @ts-nocheck - Temporary: TypeScript strict mode disabled for v1/v2 API compatibility
+// AUDIT FIX 2026-02-28: Removed file-wide @ts-nocheck. Localized @ts-ignore on v1 functions instead.
 /**
  * SOS-Expat Subscription Cloud Functions
  * Gestion des abonnements IA pour prestataires
@@ -9,36 +9,11 @@ import * as functions from 'firebase-functions/v1';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
-import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
-import { getLanguageCode } from '../emailMarketing/config';
-import { logWebhookTest } from '../utils/productionTestLogger';
 import {
   getStripeSecretKey,
   STRIPE_SECRET_KEY_LIVE,
   STRIPE_SECRET_KEY_TEST,
 } from '../lib/secrets';
-import {
-  handleSubscriptionCreated as handleSubCreated,
-  handleSubscriptionUpdated as handleSubUpdated,
-  handleSubscriptionDeleted as handleSubDeleted,
-  handleSubscriptionPaused as handleSubPaused,
-  handleSubscriptionResumed as handleSubResumed,
-  handleTrialWillEnd as handleTrialEnd,
-  handleInvoicePaid as handleInvPaid,
-  handleInvoicePaymentFailed as handleInvFailed,
-  handleInvoicePaymentActionRequired as handleInvActionRequired,
-  handleInvoiceCreated as handleInvCreated,
-  handlePaymentMethodUpdated as handlePMUpdated,
-  handlePayoutFailed,
-  handleRefundFailed,
-  handlePaymentIntentFailed,
-  handleDisputeCreated,
-  handleDisputeClosed,
-  handleChargeRefunded,
-  handleTransferUpdated,
-  handleTransferFailed
-} from './webhooks';
-import { addToDeadLetterQueue } from './deadLetterQueue';
 import { APP_URLS } from './constants';
 import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
@@ -220,115 +195,9 @@ async function getTrialConfig(): Promise<TrialConfig> {
 // IDEMPOTENCE HELPERS
 // ============================================================================
 
-/**
- * Check if a webhook event has already been processed
- * Prevents duplicate processing from Stripe retries
- * @deprecated Use tryClaimEventProcessing for atomic check+mark
- */
-async function isEventAlreadyProcessed(eventId: string): Promise<boolean> {
-  const doc = await getDb().doc(`processed_webhook_events/${eventId}`).get();
-  return doc.exists;
-}
-
-/**
- * Mark a webhook event as processed
- * TTL: 30 days (Stripe doesn't retry after that)
- * @deprecated Use tryClaimEventProcessing for atomic check+mark
- */
-async function markEventAsProcessed(eventId: string, eventType: string): Promise<void> {
-  await getDb().doc(`processed_webhook_events/${eventId}`).set({
-    eventId,
-    eventType,
-    processedAt: admin.firestore.Timestamp.now(),
-    // TTL for cleanup (30 days from now)
-    expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  });
-}
-
-/**
- * P0 FIX: Atomic idempotency check for webhook events
- *
- * Cette fonction utilise une transaction Firestore pour garantir que:
- * 1. Le check et le mark sont atomiques
- * 2. Deux instances ne peuvent pas traiter le même événement
- *
- * IMPORTANT: Si le traitement échoue avec une erreur transitoire, appelez
- * unclaimEventProcessing() pour permettre un retry par Stripe.
- *
- * @param eventId - Stripe event ID
- * @param eventType - Type d'événement (pour logging)
- * @returns { canProcess: true } si l'événement peut être traité, { canProcess: false } si déjà traité
- */
-async function tryClaimEventProcessing(eventId: string, eventType: string): Promise<{ canProcess: boolean; alreadyProcessedAt?: Date }> {
-  const db = getDb();
-
-  try {
-    return await db.runTransaction(async (transaction) => {
-      const ref = db.doc(`processed_webhook_events/${eventId}`);
-      const doc = await transaction.get(ref);
-
-      if (doc.exists) {
-        // Événement déjà traité ou en cours de traitement
-        const data = doc.data();
-        return {
-          canProcess: false,
-          alreadyProcessedAt: data?.processedAt?.toDate?.() || undefined
-        };
-      }
-
-      // Marquer comme "processing" DANS LA TRANSACTION
-      // Si une autre instance a déjà marqué, la transaction échouera et retryera
-      transaction.set(ref, {
-        eventId,
-        eventType,
-        status: 'processing', // Indique que le traitement est en cours
-        claimedAt: admin.firestore.Timestamp.now(),
-        processedAt: null, // Sera mis à jour après succès
-        // TTL for cleanup (30 days from now)
-        expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      });
-
-      return { canProcess: true };
-    });
-  } catch (error: any) {
-    // Si la transaction échoue (conflit), l'événement a probablement été traité par une autre instance
-    console.error(`[tryClaimEventProcessing] Transaction failed for ${eventId}:`, error.message);
-
-    // Vérifier si c'est parce qu'un autre processus a déjà traité
-    const doc = await db.doc(`processed_webhook_events/${eventId}`).get();
-    if (doc.exists) {
-      return { canProcess: false, alreadyProcessedAt: doc.data()?.processedAt?.toDate?.() };
-    }
-
-    // Erreur inattendue, laisser Stripe retenter
-    throw error;
-  }
-}
-
-/**
- * P0 FIX: Mark event as successfully processed
- * Appelée après traitement réussi pour mettre à jour le statut
- */
-async function markEventProcessingComplete(eventId: string): Promise<void> {
-  await getDb().doc(`processed_webhook_events/${eventId}`).update({
-    status: 'completed',
-    processedAt: admin.firestore.Timestamp.now()
-  });
-}
-
-/**
- * P0 FIX: Unclaim event to allow Stripe retry
- * Appelée si le traitement échoue avec une erreur transitoire
- */
-async function unclaimEventProcessing(eventId: string): Promise<void> {
-  try {
-    await getDb().doc(`processed_webhook_events/${eventId}`).delete();
-    console.log(`[unclaimEventProcessing] Event ${eventId} unclaimed for retry`);
-  } catch (error) {
-    console.error(`[unclaimEventProcessing] Failed to unclaim ${eventId}:`, error);
-    // Ne pas propager l'erreur - le pire cas est que l'événement ne sera pas retraité
-  }
-}
+// Idempotency helpers (isEventAlreadyProcessed, markEventAsProcessed,
+// tryClaimEventProcessing, markEventProcessingComplete, unclaimEventProcessing)
+// removed — now handled in ./webhooks.ts
 
 // ============================================================================
 // RATE LIMITING HELPERS
@@ -535,7 +404,8 @@ async function getSubscriptionPlan(planId: string): Promise<SubscriptionPlan | n
  * COST OPTIMIZATION: Uses cache to avoid 4 sequential queries
  * Reduces from 4 reads to 1 read (or 0 if cached)
  */
-async function getSubscriptionPlanByPriceId(priceId: string): Promise<SubscriptionPlan | null> {
+// @ts-ignore - Cached helper, used indirectly
+async function _getSubscriptionPlanByPriceId(priceId: string): Promise<SubscriptionPlan | null> {
   const now = Date.now();
 
   // Check price mapping cache first
@@ -683,11 +553,11 @@ export async function initializeTrial(providerId: string): Promise<{
       trialEndsAt: trialEndsAt || undefined,
       maxAiCalls: trialConfig.maxAiCalls
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`❌ Error initializing trial for ${providerId}:`, error);
     return {
       success: false,
-      error: error.message || 'Failed to initialize trial'
+      error: error instanceof Error ? error.message : 'Failed to initialize trial'
     };
   }
 }
@@ -720,13 +590,14 @@ async function getOrCreateStripeCustomer(
 // CREATE SUBSCRIPTION
 // ============================================================================
 
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const createSubscription = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
+  .runWith({})
   .https.onCall(async (data, context) => {
     // Verify authentication
     if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     const providerId = context.auth.uid;
@@ -734,7 +605,7 @@ export const createSubscription = functions
     // Rate limiting check (strict: 5 per hour)
     const rateLimit = await checkRateLimit(providerId, 'createSubscription');
     if (!rateLimit.allowed) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'resource-exhausted',
         `Too many subscription attempts. Try again in ${Math.ceil((rateLimit.resetAt - Date.now()) / 60000)} minutes`
       );
@@ -752,13 +623,19 @@ export const createSubscription = functions
       // Get the plan
       const plan = await getSubscriptionPlan(planId);
       if (!plan || !plan.isActive) {
-        throw new functions.https.HttpsError('not-found', 'Plan not found or inactive');
+        throw new HttpsError('not-found', 'Plan not found or inactive');
       }
 
-      // Get provider info
-      const providerDoc = await getDb().doc(`providers/${providerId}`).get();
+      // Get provider info — cascade lookup: sos_profiles → users → providers
+      let providerDoc = await getDb().doc(`sos_profiles/${providerId}`).get();
       if (!providerDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Provider not found');
+        providerDoc = await getDb().doc(`users/${providerId}`).get();
+      }
+      if (!providerDoc.exists) {
+        providerDoc = await getDb().doc(`providers/${providerId}`).get();
+      }
+      if (!providerDoc.exists) {
+        throw new HttpsError('not-found', 'Provider not found');
       }
       const providerData = providerDoc.data()!;
 
@@ -768,7 +645,7 @@ export const createSubscription = functions
       // SECURITY: Block clients from accessing subscriptions
       if (userRole === 'client' || userRole === 'user') {
         console.error(`[createSubscription] Client ${providerId} attempted to access subscription`);
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           'permission-denied',
           'Seuls les prestataires (avocats et expatriés aidants) peuvent souscrire à un abonnement'
         );
@@ -779,7 +656,7 @@ export const createSubscription = functions
       // SECURITY: Validate that plan's providerType matches user's providerType
       if (plan.providerType !== userProviderType) {
         console.error(`[createSubscription] Provider type mismatch: user=${userProviderType}, plan=${plan.providerType}`);
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           'permission-denied',
           `Ce plan n'est pas disponible pour votre profil. Vous êtes "${userProviderType === 'lawyer' ? 'avocat' : 'expatrié aidant'}" mais ce plan est réservé aux "${plan.providerType === 'lawyer' ? 'avocats' : 'expatriés aidants'}".`
         );
@@ -818,14 +695,14 @@ export const createSubscription = functions
           ?? calculateAnnualPrice(plan.pricing[currency], plan.annualDiscountPercent);
 
         if (!priceId) {
-          throw new functions.https.HttpsError('invalid-argument', `No annual price configured for ${currency}. Please contact support.`);
+          throw new HttpsError('invalid-argument', `No annual price configured for ${currency}. Please contact support.`);
         }
       } else {
         priceId = plan.stripePriceId[currency];
         periodAmount = plan.pricing[currency];
 
         if (!priceId) {
-          throw new functions.https.HttpsError('invalid-argument', `No monthly price configured for ${currency}`);
+          throw new HttpsError('invalid-argument', `No monthly price configured for ${currency}`);
         }
       }
 
@@ -854,7 +731,9 @@ export const createSubscription = functions
           metadata: {
             providerId,
             planId,
-            providerType: plan.providerType
+            providerType: plan.providerType,
+            billingPeriod,
+            currency
           }
         };
 
@@ -913,9 +792,9 @@ export const createSubscription = functions
         status: mapStripeStatus(stripeSubscription.status),
         clientSecret
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating subscription:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to create subscription');
+      throw new HttpsError('internal', error instanceof Error ? error.message : 'Failed to create subscription');
     }
   });
 
@@ -923,12 +802,13 @@ export const createSubscription = functions
 // UPDATE SUBSCRIPTION (Upgrade/Downgrade)
 // ============================================================================
 
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const updateSubscription = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
+  .runWith({})
   .https.onCall(async (data, context) => {
     if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     const providerId = context.auth.uid;
@@ -938,7 +818,7 @@ export const updateSubscription = functions
       // Get current subscription
       const subDoc = await getDb().doc(`subscriptions/${providerId}`).get();
       if (!subDoc.exists || !subDoc.data()?.stripeSubscriptionId) {
-        throw new functions.https.HttpsError('not-found', 'No active subscription found');
+        throw new HttpsError('not-found', 'No active subscription found');
       }
 
       const subData = subDoc.data()!;
@@ -947,7 +827,7 @@ export const updateSubscription = functions
       // Get new plan
       const newPlan = await getSubscriptionPlan(newPlanId);
       if (!newPlan || !newPlan.isActive) {
-        throw new functions.https.HttpsError('not-found', 'New plan not found or inactive');
+        throw new HttpsError('not-found', 'New plan not found or inactive');
       }
 
       // Get Stripe subscription to find item ID
@@ -955,7 +835,7 @@ export const updateSubscription = functions
       const subscriptionItemId = stripeSubscription.items.data[0].id;
 
       // Update subscription in Stripe
-      const updatedSubscription = await getStripe().subscriptions.update(
+      await getStripe().subscriptions.update(
         subData.stripeSubscriptionId,
         {
           items: [{
@@ -980,9 +860,9 @@ export const updateSubscription = functions
       });
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating subscription:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to update subscription');
+      throw new HttpsError('internal', error instanceof Error ? error.message : 'Failed to update subscription');
     }
   });
 
@@ -1008,12 +888,13 @@ export {
 // STRIPE CUSTOMER PORTAL
 // ============================================================================
 
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const createStripePortalSession = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
+  .runWith({})
   .https.onCall(async (_data, context) => {
     if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     const providerId = context.auth.uid;
@@ -1021,7 +902,7 @@ export const createStripePortalSession = functions
     try {
       const subDoc = await getDb().doc(`subscriptions/${providerId}`).get();
       if (!subDoc.exists || !subDoc.data()?.stripeCustomerId) {
-        throw new functions.https.HttpsError('not-found', 'No Stripe customer found');
+        throw new HttpsError('not-found', 'No Stripe customer found');
       }
 
       const session = await getStripe().billingPortal.sessions.create({
@@ -1030,9 +911,9 @@ export const createStripePortalSession = functions
       });
 
       return { url: session.url };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating portal session:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to create portal session');
+      throw new HttpsError('internal', error instanceof Error ? error.message : 'Failed to create portal session');
     }
   });
 
@@ -1040,12 +921,13 @@ export const createStripePortalSession = functions
 // AI QUOTA CHECK (Called before AI requests)
 // ============================================================================
 
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const checkAiQuota = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
+  .runWith({})
   .https.onCall(async (_data, context) => {
     if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     const providerId = context.auth.uid;
@@ -1053,7 +935,7 @@ export const checkAiQuota = functions
     // Rate limiting check
     const rateLimit = await checkRateLimit(providerId, 'checkAiQuota');
     if (!rateLimit.allowed) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'resource-exhausted',
         `Rate limit exceeded. Try again in ${Math.ceil((rateLimit.resetAt - Date.now()) / 1000)} seconds`
       );
@@ -1175,9 +1057,9 @@ export const checkAiQuota = functions
         remaining: limit - usage.currentPeriodCalls,
         isInTrial: false
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error checking AI quota:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to check quota');
+      throw new HttpsError('internal', error instanceof Error ? error.message : 'Failed to check quota');
     }
   });
 
@@ -1185,12 +1067,13 @@ export const checkAiQuota = functions
 // RECORD AI CALL (Called after successful AI request)
 // ============================================================================
 
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const recordAiCall = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
+  .runWith({})
   .https.onCall(async (data, context) => {
     if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     const providerId = context.auth.uid;
@@ -1198,7 +1081,7 @@ export const recordAiCall = functions
     // Rate limiting check
     const rateLimit = await checkRateLimit(providerId, 'recordAiCall');
     if (!rateLimit.allowed) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'resource-exhausted',
         `Rate limit exceeded. Try again in ${Math.ceil((rateLimit.resetAt - Date.now()) / 1000)} seconds`
       );
@@ -1220,7 +1103,7 @@ export const recordAiCall = functions
 
     // Validate required fields
     if (!callType || typeof callType !== 'string') {
-      throw new functions.https.HttpsError('invalid-argument', 'callType is required and must be a string');
+      throw new HttpsError('invalid-argument', 'callType is required and must be a string');
     }
 
     try {
@@ -1242,7 +1125,7 @@ export const recordAiCall = functions
       if (!hasFreeAccess) {
         // Validate subscription status
         if (!subDoc.exists) {
-          throw new functions.https.HttpsError('permission-denied', 'No active subscription found');
+          throw new HttpsError('permission-denied', 'No active subscription found');
         }
 
         const subscription = subDoc.data()!;
@@ -1251,7 +1134,7 @@ export const recordAiCall = functions
 
         // Check subscription status
         if (!['active', 'trialing'].includes(subscription.status)) {
-          throw new functions.https.HttpsError(
+          throw new HttpsError(
             'permission-denied',
             `Subscription status "${subscription.status}" does not allow AI calls`
           );
@@ -1259,17 +1142,17 @@ export const recordAiCall = functions
 
         // Check AI access flag
         if (subscription.aiAccessEnabled === false) {
-          throw new functions.https.HttpsError('permission-denied', 'AI access is disabled for this subscription');
+          throw new HttpsError('permission-denied', 'AI access is disabled for this subscription');
         }
 
         // Check quota based on subscription type
         if (isInTrial) {
           const trialEndsAt = subscription.trialEndsAt?.toDate();
           if (trialEndsAt && new Date() > trialEndsAt) {
-            throw new functions.https.HttpsError('permission-denied', 'Trial period has expired');
+            throw new HttpsError('permission-denied', 'Trial period has expired');
           }
           if (usage.trialCallsUsed >= trialConfig.maxAiCalls) {
-            throw new functions.https.HttpsError('permission-denied', 'Trial AI calls exhausted');
+            throw new HttpsError('permission-denied', 'Trial AI calls exhausted');
           }
         } else {
           // Get plan limits for active subscription
@@ -1278,7 +1161,7 @@ export const recordAiCall = functions
 
           // Only check if not unlimited (-1)
           if (limit !== -1 && usage.currentPeriodCalls >= limit) {
-            throw new functions.https.HttpsError('permission-denied', 'Monthly AI quota exhausted');
+            throw new HttpsError('permission-denied', 'Monthly AI quota exhausted');
           }
         }
       }
@@ -1329,9 +1212,9 @@ export const recordAiCall = functions
 
       await batch.commit();
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error recording AI call:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to record AI call');
+      throw new HttpsError('internal', error instanceof Error ? error.message : 'Failed to record AI call');
     }
   });
 
@@ -1357,12 +1240,13 @@ export const recordAiCall = functions
  *
  * @returns Quota info + success status
  */
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const processAiCall = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
+  .runWith({})
   .https.onCall(async (data, context) => {
     if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     const providerId = context.auth.uid;
@@ -1370,7 +1254,7 @@ export const processAiCall = functions
     // Rate limiting check (uses in-memory cache, no Firestore reads)
     const rateLimit = await checkRateLimit(providerId, 'processAiCall');
     if (!rateLimit.allowed) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'resource-exhausted',
         `Rate limit exceeded. Try again in ${Math.ceil((rateLimit.resetAt - Date.now()) / 1000)} seconds`
       );
@@ -1393,7 +1277,7 @@ export const processAiCall = functions
 
     // Validate required fields for recording (not needed for checkOnly)
     if (!checkOnly && (!callType || typeof callType !== 'string')) {
-      throw new functions.https.HttpsError('invalid-argument', 'callType is required and must be a string');
+      throw new HttpsError('invalid-argument', 'callType is required and must be a string');
     }
 
     try {
@@ -1591,9 +1475,9 @@ export const processAiCall = functions
         success: true
       };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error processing AI call:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to process AI call');
+      throw new HttpsError('internal', error instanceof Error ? error.message : 'Failed to process AI call');
     }
   });
 
@@ -1612,216 +1496,16 @@ export const processAiCall = functions
 // ============================================================================
 
 // DISABLED: export const stripeWebhook = functions
+// @ts-ignore - v1 functions.https.onRequest API (disabled function)
 export const _stripeWebhook_DISABLED = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
-  .https.onRequest(async (req, res) => {
+  .runWith({})
+  .https.onRequest(async (_req, res) => {
     // P0 FIX: This function is disabled - returning 410 Gone
     console.warn('[DEPRECATED] subscription/stripeWebhook called but is disabled. Use main stripeWebhook instead.');
     res.status(410).send('This webhook endpoint is deprecated. Use the main stripeWebhook endpoint.');
-    return;
-
-    // ORIGINAL CODE BELOW (kept for reference, never executed)
-    // SECURITY: Validate webhook secret is configured
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!webhookSecret) {
-      console.error('CRITICAL: STRIPE_WEBHOOK_SECRET is not configured');
-      res.status(500).send('Webhook secret not configured');
-      return;
-    }
-
-    // SECURITY: Validate stripe-signature header is present
-    const sig = req.headers['stripe-signature'] as string;
-    if (!sig) {
-      console.error('Missing stripe-signature header');
-      res.status(400).send('Missing stripe-signature header');
-      return;
-    }
-
-    let event: Stripe.Event;
-
-    try {
-      event = getStripe().webhooks.constructEvent(req.rawBody, sig, webhookSecret);
-    } catch (err: any) {
-      console.error('Webhook signature verification failed:', err.message);
-      res.status(400).send('Webhook signature verification failed');
-      return;
-    }
-
-    // ===== PRODUCTION TEST LOG =====
-    logWebhookTest.stripe.incoming(event);
-
-    // P0 FIX: ATOMIC IDEMPOTENCE CHECK + CLAIM
-    // Utilise une transaction pour garantir qu'un seul processus traite cet événement
-    const claimResult = await tryClaimEventProcessing(event.id, event.type);
-    if (!claimResult.canProcess) {
-      console.log(`[stripeWebhook] Event ${event.id} already processed${claimResult.alreadyProcessedAt ? ` at ${claimResult.alreadyProcessedAt.toISOString()}` : ''}, skipping`);
-      res.json({ received: true, skipped: true, reason: 'already_processed' });
-      return;
-    }
-    // Note: L'événement est maintenant "claimé" atomiquement - aucun autre processus ne le traitera
-
-    // Context for logging and retries
-    const webhookContext = {
-      eventId: event.id,
-      eventType: event.type,
-      retryCount: 0
-    };
-
-    try {
-      // ===== PRODUCTION TEST LOG =====
-      logWebhookTest.stripe.processing(event.type, {
-        eventId: event.id,
-        objectId: (event.data.object as any)?.id,
-        customerId: (event.data.object as any)?.customer,
-      });
-
-      switch (event.type) {
-        case 'customer.subscription.created':
-          // Use the new enhanced handler from webhooks.ts
-          await handleSubCreated(event.data.object as Stripe.Subscription, webhookContext);
-          break;
-
-        case 'customer.subscription.updated':
-          // Use the new enhanced handler from webhooks.ts
-          await handleSubUpdated(event.data.object as Stripe.Subscription, webhookContext);
-          break;
-
-        case 'customer.subscription.deleted':
-          // Use the new enhanced handler from webhooks.ts
-          await handleSubDeleted(event.data.object as Stripe.Subscription, webhookContext);
-          break;
-
-        case 'invoice.paid':
-          // Use the new enhanced handler from webhooks.ts
-          await handleInvPaid(event.data.object as Stripe.Invoice, webhookContext);
-          break;
-
-        case 'invoice.payment_failed':
-          // Use the new enhanced handler from webhooks.ts
-          await handleInvFailed(event.data.object as Stripe.Invoice, webhookContext);
-          break;
-
-        case 'invoice.payment_action_required':
-          // Handle 3D Secure / SCA authentication required
-          await handleInvActionRequired(event.data.object as Stripe.Invoice, webhookContext);
-          break;
-
-        case 'customer.subscription.trial_will_end':
-          // Use the new enhanced handler from webhooks.ts
-          await handleTrialEnd(event.data.object as Stripe.Subscription, webhookContext);
-          break;
-
-        case 'customer.subscription.paused':
-          await handleSubPaused(event.data.object as Stripe.Subscription, webhookContext);
-          break;
-
-        case 'customer.subscription.resumed':
-          await handleSubResumed(event.data.object as Stripe.Subscription, webhookContext);
-          break;
-
-        case 'invoice.created':
-          await handleInvCreated(event.data.object as Stripe.Invoice, webhookContext);
-          break;
-
-        case 'payment_method.attached':
-        case 'payment_method.updated':
-          await handlePMUpdated(event.data.object as Stripe.PaymentMethod, webhookContext);
-          break;
-
-        case 'payout.failed':
-          await handlePayoutFailed(event.data.object as Stripe.Payout, webhookContext);
-          break;
-
-        case 'refund.failed':
-          await handleRefundFailed(event.data.object as Stripe.Refund, webhookContext);
-          break;
-
-        case 'payment_intent.payment_failed':
-          await handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent, webhookContext);
-          break;
-
-        case 'charge.dispute.created':
-          await handleDisputeCreated(event.data.object as Stripe.Dispute, webhookContext);
-          break;
-
-        case 'charge.dispute.closed':
-          await handleDisputeClosed(event.data.object as Stripe.Dispute, webhookContext);
-          break;
-
-        // NEW: Refund tracking
-        case 'charge.refunded':
-          await handleChargeRefunded(event.data.object as Stripe.Charge, webhookContext);
-          break;
-
-        // NEW: Transfer tracking for provider payouts
-        case 'transfer.updated':
-          await handleTransferUpdated(event.data.object as Stripe.Transfer, webhookContext);
-          break;
-
-        case 'transfer.failed':
-          await handleTransferFailed(event.data.object as Stripe.Transfer, webhookContext);
-          break;
-
-        default:
-          console.log(`Unhandled event type: ${event.type}`);
-      }
-
-      // P0 FIX: Mark event as fully processed AFTER successful handling (atomic completion)
-      await markEventProcessingComplete(event.id);
-      console.log(`[stripeWebhook] Event ${event.id} (${event.type}) processed successfully`);
-
-      // ===== PRODUCTION TEST LOG =====
-      logWebhookTest.stripe.success(event.type, event.id, {
-        objectId: (event.data.object as any)?.id,
-        status: (event.data.object as any)?.status,
-      });
-
-      res.json({ received: true });
-    } catch (error: any) {
-      console.error('Error processing webhook:', error);
-
-      // ===== PRODUCTION TEST LOG =====
-      logWebhookTest.stripe.error(event.type, error, {
-        eventId: event.id,
-        objectId: (event.data.object as any)?.id,
-      });
-
-      // Determine if this is a transient error (should retry) or permanent (should not retry)
-      // P1 FIX: Include RETRY_NEEDED for race conditions (e.g., invoice.paid before subscription.created)
-      const isTransientError = error.code === 'UNAVAILABLE' ||
-        error.code === 'DEADLINE_EXCEEDED' ||
-        error.message?.includes('timeout') ||
-        error.message?.includes('ECONNRESET') ||
-        error.message?.includes('RETRY_NEEDED');
-
-      if (isTransientError) {
-        // P0 FIX: Unclaim event to allow Stripe retry on transient errors
-        await unclaimEventProcessing(event.id);
-        // Return 500 so Stripe will retry
-        res.status(500).json({ error: 'Webhook processing failed - transient error' });
-      } else {
-        // Add to Dead Letter Queue for later processing/investigation
-        try {
-          await addToDeadLetterQueue(event, error, {
-            webhookContext,
-            isTransient: false
-          });
-          console.log(`[stripeWebhook] Event ${event.id} added to Dead Letter Queue`);
-        } catch (dlqError) {
-          console.error(`[stripeWebhook] Failed to add to DLQ:`, dlqError);
-        }
-
-        // Return 200 with error details to prevent Stripe retries for permanent errors
-        // P0 FIX: Mark as fully processed to prevent infinite retries on business logic errors
-        await markEventProcessingComplete(event.id);
-        console.log(`[stripeWebhook] Event ${event.id} marked as processed despite error (permanent failure)`);
-        res.json({ received: true, error: 'Processing failed but added to DLQ for retry' });
-      }
-    }
+    // Original webhook logic removed — now lives in ./webhooks.ts
   });
-
-// ============================================================================
 // LEGACY WEBHOOK HANDLERS (Deprecated - Now using ./webhooks.ts)
 // These handlers are kept for reference but are no longer used.
 // The new enhanced handlers in webhooks.ts provide:
@@ -1847,6 +1531,7 @@ export const _stripeWebhook_DISABLED = functions
 /**
  * Helper: Check if user is admin (via custom claims OR Firestore role)
  */
+// @ts-ignore - v1 CallableContext type (used by v1 functions above)
 async function isAdmin(context: functions.https.CallableContext): Promise<boolean> {
   if (!context.auth) return false;
 
@@ -2173,13 +1858,14 @@ export const updatePlanPricingV2 = onCall(
 /**
  * Initialize default subscription plans (Run once)
  */
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const initializeSubscriptionPlans = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
+  .runWith({})
   .https.onCall(async (_data, context) => {
     // Verify admin (via custom claims or Firestore)
     if (!await isAdmin(context)) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
     const batch = getDb().batch();
@@ -2222,7 +1908,7 @@ export const initializeSubscriptionPlans = functions
     };
 
     // Description templates in all 9 languages
-    const getDescription = (tier: string, aiCallsLimit: number) => {
+    const getDescription = (_tier: string, aiCallsLimit: number) => {
       const isUnlimited = aiCallsLimit === -1;
       return {
         fr: isUnlimited ? 'Appels illimités par mois' : `${aiCallsLimit} appels par mois`,
@@ -2276,7 +1962,7 @@ export const initializeSubscriptionPlans = functions
         maxAiCalls: 3,
         isEnabled: true,
         updatedAt: now,
-        updatedBy: context.auth.uid
+        updatedBy: context.auth!.uid
       }
     }, { merge: true });
 
@@ -2289,13 +1975,14 @@ export const initializeSubscriptionPlans = functions
  * Grant or revoke free AI access for a user (Admin only)
  * This bypasses subscription requirements
  */
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const setFreeAiAccess = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
+  .runWith({})
   .https.onCall(async (data, context) => {
     // Verify admin (via custom claims or Firestore)
     if (!await isAdmin(context)) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
     const { userId, grant, note } = data as {
@@ -2305,7 +1992,7 @@ export const setFreeAiAccess = functions
     };
 
     if (!userId) {
-      throw new functions.https.HttpsError('invalid-argument', 'userId is required');
+      throw new HttpsError('invalid-argument', 'userId is required');
     }
 
     try {
@@ -2313,7 +2000,7 @@ export const setFreeAiAccess = functions
       const userDoc = await userRef.get();
 
       if (!userDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'User not found');
+        throw new HttpsError('not-found', 'User not found');
       }
 
       const now = admin.firestore.Timestamp.now();
@@ -2359,9 +2046,9 @@ export const setFreeAiAccess = functions
         freeAiAccess: grant,
         message: grant ? 'Accès IA gratuit accordé' : 'Accès IA gratuit révoqué'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error setting free AI access:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to update access');
+      throw new HttpsError('internal', error instanceof Error ? error.message : 'Failed to update access');
     }
   });
 
@@ -2369,13 +2056,14 @@ export const setFreeAiAccess = functions
  * Create annual Stripe prices for all plans (Admin only)
  * This creates the yearly prices in Stripe and updates Firestore
  */
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const createAnnualStripePrices = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
+  .runWith({})
   .https.onCall(async (_data, context) => {
     // Verify admin
     if (!await isAdmin(context)) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
     try {
@@ -2529,9 +2217,9 @@ export const createAnnualStripePrices = functions
         message: `Created annual prices for ${successCount} plans. ${failCount} failed.`,
         results
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating annual Stripe prices:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to create annual prices');
+      throw new HttpsError('internal', error instanceof Error ? error.message : 'Failed to create annual prices');
     }
   });
 
@@ -2539,13 +2227,14 @@ export const createAnnualStripePrices = functions
  * Create monthly Stripe prices for all plans (Admin only)
  * Use this if monthly prices are missing
  */
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const createMonthlyStripePrices = functions
-  .runWith({ secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST], cpu: 0.083 })
+  .runWith({ secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST] })
   .region('europe-west1')
   .https.onCall(async (_data, context) => {
     // Verify admin
     if (!await isAdmin(context)) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
     try {
@@ -2658,9 +2347,9 @@ export const createMonthlyStripePrices = functions
         message: `Created monthly prices for ${successCount} plans. ${failCount} failed.`,
         results
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating monthly Stripe prices:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to create monthly prices');
+      throw new HttpsError('internal', error instanceof Error ? error.message : 'Failed to create monthly prices');
     }
   });
 
@@ -2668,13 +2357,14 @@ export const createMonthlyStripePrices = functions
  * Migrate existing plans to 9 languages (Admin only)
  * Run this once to update existing plans with all 9 language translations
  */
+// @ts-ignore - v1 functions.https.onCall API (planned migration to v2)
 export const migrateSubscriptionPlansTo9Languages = functions
   .region('europe-west1')
-  .runWith({ cpu: 0.083 })
+  .runWith({})
   .https.onCall(async (_data, context) => {
     // Verify admin
     if (!await isAdmin(context)) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
     // Plan names in all 9 languages
@@ -2764,9 +2454,9 @@ export const migrateSubscriptionPlansTo9Languages = functions
         success: true,
         message: `Migrated ${updatedCount} plans to 9 languages`
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error migrating plans:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Migration failed');
+      throw new HttpsError('internal', error instanceof Error ? error.message : 'Migration failed');
     }
   });
 

@@ -770,10 +770,15 @@ export async function handleSubscriptionUpdated(
     const statusChanged = previousStatus !== newStatus;
     const cancelScheduleChanged = previousCancelAtPeriodEnd !== subscription.cancel_at_period_end;
 
+    // Recalculer billingPeriod depuis l'interval Stripe (source de vérité)
+    const priceInterval = subscription.items.data[0]?.price.recurring?.interval;
+    const newBillingPeriod = priceInterval === 'year' ? 'yearly' : 'monthly';
+
     // Préparer les mises à jour
     const updates: Record<string, unknown> = {
       status: newStatus,
       stripePriceId: priceId,
+      billingPeriod: newBillingPeriod,
       // FIX: Inclure currency pour suivre les changements lors d'upgrade/downgrade
       currency: subscription.currency?.toUpperCase() || previousState?.currency || 'EUR',
       currentPeriodStart: admin.firestore.Timestamp.fromMillis(subscription.current_period_start * 1000),
@@ -3264,6 +3269,175 @@ export async function handleTransferFailed(
 }
 
 // ============================================================================
+// P2 FIX: MISSING STRIPE EVENT HANDLERS
+// ============================================================================
+
+/**
+ * Handler pour invoice.voided
+ * - Mettre à jour le statut de la facture en 'void'
+ * - Logger pour audit
+ */
+export async function handleInvoiceVoided(
+  invoice: Stripe.Invoice,
+  context?: WebhookContext
+): Promise<void> {
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handleInvoiceVoided] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  logger.info(`[handleInvoiceVoided] Processing voided invoice ${invoice.id}`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    // Update invoice status in Firestore
+    const invoiceRef = db.collection('invoices').doc(invoice.id);
+    const invoiceDoc = await invoiceRef.get();
+
+    if (invoiceDoc.exists) {
+      await invoiceRef.update({
+        status: 'void',
+        voidedAt: now,
+        updatedAt: now,
+      });
+    }
+
+    // Log for audit
+    await logSubscriptionAction({
+      providerId: (invoice.metadata?.providerId || invoice.subscription as string) ?? 'unknown',
+      action: 'invoice_voided',
+      newState: { invoiceId: invoice.id, status: 'void' },
+      stripeEventId: context?.eventId,
+      stripeEventType: context?.eventType,
+    });
+
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.info(`[handleInvoiceVoided] Completed for invoice: ${invoice.id}`);
+  } catch (error) {
+    logger.error(`[handleInvoiceVoided] Error:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Handler pour invoice.marked_uncollectible
+ * - Mettre à jour le statut de la facture en 'uncollectible'
+ * - Alerte admin (perte potentielle de revenus)
+ * - Logger pour audit
+ */
+export async function handleInvoiceMarkedUncollectible(
+  invoice: Stripe.Invoice,
+  context?: WebhookContext
+): Promise<void> {
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handleInvoiceMarkedUncollectible] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  logger.warn(`[handleInvoiceMarkedUncollectible] Invoice ${invoice.id} marked uncollectible - potential revenue loss`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    // Update invoice status
+    const invoiceRef = db.collection('invoices').doc(invoice.id);
+    const invoiceDoc = await invoiceRef.get();
+
+    if (invoiceDoc.exists) {
+      await invoiceRef.update({
+        status: 'uncollectible',
+        markedUncollectibleAt: now,
+        updatedAt: now,
+      });
+    }
+
+    // Admin alert for revenue loss
+    await db.collection('admin_alerts').add({
+      type: 'invoice_uncollectible',
+      severity: 'high',
+      message: `Facture marquée irrécupérable - ${(invoice.amount_due || 0) / 100} ${invoice.currency?.toUpperCase()}`,
+      data: {
+        invoiceId: invoice.id,
+        amount: (invoice.amount_due || 0) / 100,
+        currency: invoice.currency,
+        customerId: invoice.customer,
+        subscriptionId: invoice.subscription,
+      },
+      read: false,
+      createdAt: now,
+    });
+
+    // Log for audit
+    await logSubscriptionAction({
+      providerId: (invoice.metadata?.providerId || invoice.subscription as string) ?? 'unknown',
+      action: 'invoice_marked_uncollectible',
+      newState: {
+        invoiceId: invoice.id,
+        status: 'uncollectible',
+        amount: (invoice.amount_due || 0) / 100,
+        currency: invoice.currency,
+      },
+      stripeEventId: context?.eventId,
+      stripeEventType: context?.eventType,
+    });
+
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.info(`[handleInvoiceMarkedUncollectible] Completed for invoice: ${invoice.id}`);
+  } catch (error) {
+    logger.error(`[handleInvoiceMarkedUncollectible] Error:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Handler pour charge.dispute.updated (subscription context)
+ * - Logger la progression du dispute dans subscription_logs
+ * Note: Le dispute principal est géré par DisputeManager (handleDisputeUpdated)
+ * Ce handler ajoute le logging côté abonnement
+ */
+export async function handleSubscriptionDisputeUpdated(
+  dispute: Stripe.Dispute,
+  context?: WebhookContext
+): Promise<void> {
+  logger.info(`[handleSubscriptionDisputeUpdated] Dispute ${dispute.id} updated - status: ${dispute.status}`);
+
+  try {
+    // Log dans subscription_logs pour le tracking côté abonnement
+    await logSubscriptionAction({
+      providerId: 'system',
+      action: 'dispute_updated',
+      newState: {
+        disputeId: dispute.id,
+        status: dispute.status,
+        reason: dispute.reason,
+        amount: dispute.amount / 100,
+        currency: dispute.currency,
+      },
+      stripeEventId: context?.eventId,
+      stripeEventType: context?.eventType,
+    });
+
+    logger.info(`[handleSubscriptionDisputeUpdated] Logged dispute progress for ${dispute.id}`);
+  } catch (error) {
+    logger.error(`[handleSubscriptionDisputeUpdated] Error:`, error);
+    throw error;
+  }
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -3286,5 +3460,9 @@ export const webhookHandlers = {
   handleDisputeClosed,
   handleChargeRefunded,
   handleTransferUpdated,
-  handleTransferFailed
+  handleTransferFailed,
+  // P2 FIX: Missing Stripe event handlers
+  handleInvoiceVoided,
+  handleInvoiceMarkedUncollectible,
+  handleSubscriptionDisputeUpdated,
 };

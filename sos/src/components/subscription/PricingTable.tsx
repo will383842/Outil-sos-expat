@@ -282,7 +282,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
                         {intl.formatMessage({ id: 'subscription.billing.billedAnnually' }, { price: formatPrice(priceInfo.annualPrice) })}
                       </p>
                       <p className="text-xs font-semibold text-green-600">
-                        {intl.formatMessage({ id: 'subscription.billing.save' }, { percent: formatPrice(priceInfo.savings) })}{intl.formatMessage({ id: 'subscription.billing.perYear' })}
+                        {intl.formatMessage({ id: 'subscription.billing.save' }, { percent: priceInfo.discount })} ({formatPrice(priceInfo.savings)}{intl.formatMessage({ id: 'subscription.billing.perYear' })})
                       </p>
                     </div>
                   )}

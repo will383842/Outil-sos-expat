@@ -16,7 +16,7 @@ import { useSubscription } from '../../../hooks/useSubscription';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PricingTable } from '../../../components/subscription/PricingTable';
 import { createSubscription } from '../../../services/subscription/subscriptionService';
-import { SubscriptionPlan, Currency, ProviderType, BillingPeriod, SupportedLanguage } from '../../../types/subscription';
+import { SubscriptionPlan, Currency, ProviderType, BillingPeriod, SupportedLanguage, DEFAULT_ANNUAL_DISCOUNT_PERCENT, calculateAnnualPrice, calculateMonthlyEquivalent } from '../../../types/subscription';
 import { cn } from '../../../utils/cn';
 
 // HMR-safe Stripe singleton pattern to prevent "Unsupported prop change on Elements" error
@@ -42,6 +42,7 @@ const stripePromise = getStripePromise();
 interface CheckoutFormProps {
   selectedPlan: SubscriptionPlan;
   currency: Currency;
+  billingPeriod: BillingPeriod;
   onSuccess: () => void;
   onCancel: () => void;
   locale: SupportedLanguage;
@@ -51,6 +52,7 @@ interface CheckoutFormProps {
 const CheckoutForm: React.FC<CheckoutFormProps> = ({
   selectedPlan,
   currency,
+  billingPeriod,
   onSuccess,
   onCancel,
   locale,
@@ -82,7 +84,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       // Create subscription via Cloud Function
       const result = await createSubscription({
         planId: selectedPlan.id,
-        currency
+        currency,
+        billingPeriod: billingPeriod
       });
 
       if (!result.success) {
@@ -135,6 +138,16 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     }).format(price);
   };
 
+  // Calculer le prix selon la période de facturation (depuis les données admin Firestore)
+  const isYearly = billingPeriod === 'yearly';
+  const displayPrice = isYearly
+    ? (selectedPlan.annualPricing?.[currency]
+       ?? calculateAnnualPrice(selectedPlan.pricing[currency], selectedPlan.annualDiscountPercent))
+    : selectedPlan.pricing[currency];
+
+  const periodLabelId = isYearly ? 'subscription.plans.perYear' : 'subscription.plans.perMonth';
+  const totalLabelId = isYearly ? 'subscription.checkout.yearlyTotal' : 'subscription.checkout.monthlyTotal';
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Order Summary */}
@@ -145,11 +158,22 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         <div className="flex items-center justify-between mb-2">
           <span className="text-gray-600">
             {selectedPlan.name[locale] || selectedPlan.name.en}
+            {isYearly && (
+              <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                -{selectedPlan.annualDiscountPercent || DEFAULT_ANNUAL_DISCOUNT_PERCENT}%
+              </span>
+            )}
           </span>
           <span className="font-semibold text-gray-900">
-            {formatPrice(selectedPlan.pricing[currency])}{intl.formatMessage({ id: 'subscription.plans.perMonth' })}
+            {formatPrice(displayPrice)}{intl.formatMessage({ id: periodLabelId })}
           </span>
         </div>
+        {isYearly && (
+          <div className="flex items-center justify-between text-sm text-green-600 mb-1">
+            <span>{intl.formatMessage({ id: 'subscription.checkout.monthlyEquivalent' })}</span>
+            <span>{formatPrice(calculateMonthlyEquivalent(displayPrice))}{intl.formatMessage({ id: 'subscription.plans.perMonth' })}</span>
+          </div>
+        )}
         <div className="flex items-center justify-between text-sm text-gray-500">
           <span>
             {selectedPlan.aiCallsLimit === -1
@@ -159,8 +183,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         </div>
         <div className="border-t border-gray-200 mt-4 pt-4">
           <div className="flex items-center justify-between font-semibold">
-            <span>{intl.formatMessage({ id: 'subscription.checkout.monthlyTotal' })}</span>
-            <span className="text-lg">{formatPrice(selectedPlan.pricing[currency])}</span>
+            <span>{intl.formatMessage({ id: totalLabelId })}</span>
+            <span className="text-lg">{formatPrice(displayPrice)}</span>
           </div>
         </div>
       </div>
@@ -404,7 +428,7 @@ export const PlansPage: React.FC = () => {
   const translatedRoutes = useMemo(() => {
     const subscriptionSuccessSlug = getTranslatedRouteSlug('dashboard-subscription-success' as RouteKey, langCode);
     return {
-      subscriptionSuccess: `/${subscriptionSuccessSlug}`,
+      subscriptionSuccess: subscriptionSuccessSlug,
     };
   }, [langCode]);
 
@@ -506,6 +530,7 @@ export const PlansPage: React.FC = () => {
           <PricingTable
             plans={availablePlans}
             currentTier={subscription?.tier}
+            currentBillingPeriod={subscription?.billingPeriod as BillingPeriod | undefined}
             providerType={providerType}
             currency={selectedCurrency}
             onSelectPlan={handleSelectPlan}
@@ -530,6 +555,7 @@ export const PlansPage: React.FC = () => {
                   <CheckoutForm
                     selectedPlan={selectedPlan}
                     currency={selectedCurrency}
+                    billingPeriod={selectedBillingPeriod}
                     onSuccess={handleSuccess}
                     onCancel={() => setShowCheckout(false)}
                     locale={locale}
