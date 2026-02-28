@@ -14,6 +14,7 @@ import nodemailer from "nodemailer";
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import { EMAIL_USER, EMAIL_PASS } from "../lib/secrets";
 import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
+import { checkRateLimit } from "../lib/rateLimiter";
 
 type SupportedLanguage = 'fr' | 'en' | 'es' | 'pt' | 'de' | 'ru' | 'ar' | 'hi' | 'ch';
 
@@ -965,6 +966,22 @@ export const sendCustomPasswordResetEmail = onCall(
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+
+    // P0 SECURITY: Rate limit by email — 3 requests per hour
+    // Prevents SMTP spam that could blacklist our Zoho sending domain
+    // Uses centralized rateLimiter with Firestore transaction (race-condition safe)
+    try {
+      await checkRateLimit(
+        `pwd_reset_${normalizedEmail.replace(/[^a-z0-9]/g, "_")}`,
+        "password_reset",
+        { maxRequests: 3, windowMs: 60 * 60 * 1000 }
+      );
+    } catch (e) {
+      // Rate limited — return success silently (don't reveal rate limiting to attackers)
+      console.warn(`[passwordReset] Rate limited: ${normalizedEmail.substring(0, 3)}***`);
+      return { success: true };
+    }
+
     const lang = resolveLanguage(language);
     const template = templates[lang];
 
