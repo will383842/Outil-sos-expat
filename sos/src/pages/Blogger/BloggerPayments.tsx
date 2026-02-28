@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 /**
  * BloggerPayments - Full payment management page for bloggers
  *
@@ -225,6 +226,7 @@ const BloggerPayments: React.FC = () => {
         await refreshMethods();
       } catch (err) {
         console.error('Failed to delete method:', err);
+        toast.error(intl.formatMessage({ id: 'payment.error.deleteMethod', defaultMessage: 'Failed to delete payment method.' }));
       } finally {
         setDeletingMethodId(null);
       }
@@ -239,6 +241,7 @@ const BloggerPayments: React.FC = () => {
         await setDefaultMethod(methodId);
       } catch (err) {
         console.error('Failed to set default method:', err);
+        toast.error(intl.formatMessage({ id: 'payment.error.setDefault', defaultMessage: 'Failed to set default method.' }));
       }
     },
     [setDefaultMethod]
@@ -255,6 +258,7 @@ const BloggerPayments: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to cancel withdrawal:', err);
+        toast.error(intl.formatMessage({ id: 'payment.error.cancelWithdrawal', defaultMessage: 'Failed to cancel withdrawal.' }));
       }
     },
     [cancelWithdrawal, refreshWithdrawals, selectedWithdrawalId]

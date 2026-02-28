@@ -12,6 +12,7 @@
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // =============================================================================
 // EMAIL STYLES - COULEURS SOS EXPAT 🎨
@@ -1170,7 +1171,7 @@ export async function seedPayPalWelcomeTemplates(db: admin.firestore.Firestore):
 export const initPayPalWelcomeTemplates = onCall(
   {
     region: "europe-west1",
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     memory: "256MiB",
     cpu: 0.083,
   },

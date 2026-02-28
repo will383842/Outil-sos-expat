@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import { httpsCallable } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useGroupAdmin } from '@/hooks/useGroupAdmin';
-import { storage, functionsWest2 } from '@/config/firebase';
+import { storage, functionsAffiliate } from '@/config/firebase';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import { User, Users, Settings, CreditCard, Shield, Loader2, Camera, Upload } from 'lucide-react';
 import { GROUP_TYPE_LABELS, GROUP_SIZE_LABELS, GroupType, GroupSizeTier } from '@/types/groupAdmin';
@@ -151,7 +151,7 @@ const GroupAdminProfile: React.FC = () => {
 
       setLocalPhotoUrl(downloadURL);
 
-      const updateProfile = httpsCallable(functionsWest2, 'updateGroupAdminProfile');
+      const updateProfile = httpsCallable(functionsAffiliate, 'updateGroupAdminProfile');
       await updateProfile({ photoUrl: downloadURL });
 
       refresh().catch(() => {});

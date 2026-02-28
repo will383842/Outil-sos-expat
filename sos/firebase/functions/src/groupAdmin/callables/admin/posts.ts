@@ -68,7 +68,7 @@ export const adminCreatePost = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; postId: string }> => {
@@ -160,7 +160,7 @@ export const adminUpdatePost = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -237,7 +237,7 @@ export const adminDeletePost = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -302,7 +302,7 @@ export const adminGetPostsList = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ posts: GroupAdminPost[] }> => {

@@ -9,6 +9,7 @@ export { updateBloggerProfile } from "./updateBloggerProfile";
 export { bloggerRequestWithdrawal } from "./requestWithdrawal";
 export { getBloggerLeaderboard } from "./getBloggerLeaderboard";
 export { getBloggerRecruits } from "./getBloggerRecruits";
+export { getBloggerRecruitedProviders } from "./getRecruitedProviders";
 
 // Resources (EXCLUSIVE)
 export {

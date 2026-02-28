@@ -22,6 +22,7 @@
  */
 
 import * as crypto from 'crypto';
+import { logger } from 'firebase-functions/v2';
 import {
   MobileMoneyProvider,
   MobileMoneyDetails,
@@ -503,7 +504,7 @@ export class FlutterwaveProvider {
       fetchOptions.body = JSON.stringify(body);
     }
 
-    console.log(`[FlutterwaveProvider] ${method} ${endpoint}`, {
+    logger.info(`[FlutterwaveProvider] ${method} ${endpoint}`, {
       environment: this.environment,
       hasBody: !!body,
     });
@@ -519,7 +520,7 @@ export class FlutterwaveProvider {
         const errorMessage =
           errorData.message || errorData.data?.message || 'Unknown error';
 
-        console.error(`[FlutterwaveProvider] API error:`, {
+        logger.error(`[FlutterwaveProvider] API error:`, {
           status: response.status,
           code: errorCode,
           message: errorMessage,
@@ -551,7 +552,7 @@ export class FlutterwaveProvider {
       }
 
       // Network or parsing error
-      console.error(`[FlutterwaveProvider] Request failed:`, error);
+      logger.error(`[FlutterwaveProvider] Request failed:`, error);
       throw new FlutterwaveError(
         error instanceof Error ? error.message : 'Request failed',
         'NETWORK_ERROR',
@@ -633,7 +634,7 @@ export class FlutterwaveProvider {
       debit_currency: 'USD', // We always debit in USD and Flutterwave converts
     };
 
-    console.log(`[FlutterwaveProvider] Creating transfer:`, {
+    logger.info(`[FlutterwaveProvider] Creating transfer:`, {
       reference: params.reference,
       externalId: params.externalId,
       amount: params.amount,
@@ -651,7 +652,7 @@ export class FlutterwaveProvider {
       params.externalId // idempotency key = withdrawalId
     );
 
-    console.log(`[FlutterwaveProvider] Transfer created:`, {
+    logger.info(`[FlutterwaveProvider] Transfer created:`, {
       id: transfer.id,
       status: transfer.status,
       reference: transfer.reference,
@@ -667,14 +668,14 @@ export class FlutterwaveProvider {
    * @returns FlutterwaveTransferStatus
    */
   async getTransferStatus(transferId: string): Promise<FlutterwaveTransferStatus> {
-    console.log(`[FlutterwaveProvider] Getting transfer status: ${transferId}`);
+    logger.info(`[FlutterwaveProvider] Getting transfer status: ${transferId}`);
 
     const status = await this.request<FlutterwaveTransferStatus>(
       'GET',
       `/transfers/${transferId}`
     );
 
-    console.log(`[FlutterwaveProvider] Transfer status:`, {
+    logger.info(`[FlutterwaveProvider] Transfer status:`, {
       id: status.id,
       status: status.status,
       completeMessage: status.completeMessage,
@@ -690,7 +691,7 @@ export class FlutterwaveProvider {
    * @returns FlutterwaveTransfer
    */
   async retryTransfer(transferId: string, idempotencyKey?: string): Promise<FlutterwaveTransfer> {
-    console.log(`[FlutterwaveProvider] Retrying transfer: ${transferId}`);
+    logger.info(`[FlutterwaveProvider] Retrying transfer: ${transferId}`);
 
     const transfer = await this.request<FlutterwaveTransfer>(
       'POST',
@@ -699,7 +700,7 @@ export class FlutterwaveProvider {
       idempotencyKey || `retry-${transferId}-${Date.now()}`
     );
 
-    console.log(`[FlutterwaveProvider] Transfer retry initiated:`, {
+    logger.info(`[FlutterwaveProvider] Transfer retry initiated:`, {
       id: transfer.id,
       status: transfer.status,
     });
@@ -714,7 +715,7 @@ export class FlutterwaveProvider {
    * @returns FlutterwaveBalance
    */
   async getBalance(currency: string): Promise<FlutterwaveBalance> {
-    console.log(`[FlutterwaveProvider] Getting balance for: ${currency}`);
+    logger.info(`[FlutterwaveProvider] Getting balance for: ${currency}`);
 
     // Flutterwave returns all balances, we filter for the requested currency
     const balances = await this.request<FlutterwaveBalance[]>(
@@ -734,7 +735,7 @@ export class FlutterwaveProvider {
       );
     }
 
-    console.log(`[FlutterwaveProvider] Balance for ${currency}:`, {
+    logger.info(`[FlutterwaveProvider] Balance for ${currency}:`, {
       available: balance.availableBalance,
       ledger: balance.ledgerBalance,
     });
@@ -753,14 +754,14 @@ export class FlutterwaveProvider {
     currency: string;
     type: 'mobilemoney';
   }): Promise<FlutterwaveFees> {
-    console.log(`[FlutterwaveProvider] Getting transfer fees:`, params);
+    logger.info(`[FlutterwaveProvider] Getting transfer fees:`, params);
 
     const fees = await this.request<FlutterwaveFees>(
       'GET',
       `/transfers/fee?amount=${params.amount}&currency=${params.currency}&type=${params.type}`
     );
 
-    console.log(`[FlutterwaveProvider] Transfer fees:`, {
+    logger.info(`[FlutterwaveProvider] Transfer fees:`, {
       currency: fees.currency,
       fee: fees.fee,
       feeType: fees.feeType,
@@ -788,7 +789,7 @@ export class FlutterwaveProvider {
     reference: string;
     narration: string;
   }): Promise<ProviderTransactionResult> {
-    console.log(`[FlutterwaveProvider] Processing payment:`, {
+    logger.info(`[FlutterwaveProvider] Processing payment:`, {
       withdrawalId: params.withdrawalId,
       amount: params.amount,
       currency: params.currency,
@@ -806,7 +807,7 @@ export class FlutterwaveProvider {
           type: 'mobilemoney',
         });
       } catch (feeError) {
-        console.warn(
+        logger.warn(
           `[FlutterwaveProvider] Could not get fees, proceeding without:`,
           feeError
         );
@@ -817,7 +818,7 @@ export class FlutterwaveProvider {
         const balance = await this.getBalance('USD');
         const totalNeeded = params.amount + (fees ? fees.fee : 0);
         if (balance.availableBalance < totalNeeded) {
-          console.error(`[FlutterwaveProvider] Insufficient balance`, {
+          logger.error(`[FlutterwaveProvider] Insufficient balance`, {
             available: balance.availableBalance,
             needed: totalNeeded,
             withdrawalId: params.withdrawalId,
@@ -829,7 +830,7 @@ export class FlutterwaveProvider {
           };
         }
       } catch (balanceError) {
-        console.warn(
+        logger.warn(
           `[FlutterwaveProvider] Could not check balance, proceeding:`,
           balanceError
         );
@@ -858,7 +859,7 @@ export class FlutterwaveProvider {
         rawResponse: transfer as unknown as Record<string, unknown>,
       };
 
-      console.log(`[FlutterwaveProvider] Payment processed:`, {
+      logger.info(`[FlutterwaveProvider] Payment processed:`, {
         success: result.success,
         transactionId: result.transactionId,
         status: result.status,
@@ -866,7 +867,7 @@ export class FlutterwaveProvider {
 
       return result;
     } catch (error) {
-      console.error(`[FlutterwaveProvider] Payment failed:`, error);
+      logger.error(`[FlutterwaveProvider] Payment failed:`, error);
 
       if (error instanceof FlutterwaveError) {
         return {
@@ -897,7 +898,7 @@ export class FlutterwaveProvider {
    */
   verifyWebhook(signature: string, _payload: string): boolean {
     if (!this.webhookSecret) {
-      console.error('[FlutterwaveProvider] Webhook secret not configured');
+      logger.error('[FlutterwaveProvider] Webhook secret not configured');
       return false;
     }
 
@@ -905,7 +906,7 @@ export class FlutterwaveProvider {
     // The verif-hash header should match your webhook secret
     const isValid = signature === this.webhookSecret;
 
-    console.log(`[FlutterwaveProvider] Webhook verification:`, {
+    logger.info(`[FlutterwaveProvider] Webhook verification:`, {
       isValid,
       signatureLength: signature?.length || 0,
     });
@@ -924,7 +925,7 @@ export class FlutterwaveProvider {
    */
   verifyWebhookHmac(signature: string, payload: string): boolean {
     if (!this.webhookSecret) {
-      console.error('[FlutterwaveProvider] Webhook secret not configured');
+      logger.error('[FlutterwaveProvider] Webhook secret not configured');
       return false;
     }
 
@@ -938,7 +939,7 @@ export class FlutterwaveProvider {
       Buffer.from(expectedSignature)
     );
 
-    console.log(`[FlutterwaveProvider] HMAC webhook verification:`, {
+    logger.info(`[FlutterwaveProvider] HMAC webhook verification:`, {
       isValid,
     });
 

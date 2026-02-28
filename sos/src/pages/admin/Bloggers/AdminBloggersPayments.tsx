@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   Wallet,
   Search,
@@ -97,7 +97,7 @@ const AdminBloggersPayments: React.FC = () => {
 
     try {
       const adminGetBloggerWithdrawals = httpsCallable<any, WithdrawalListResponse>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetBloggerWithdrawals'
       );
 
@@ -191,7 +191,7 @@ const AdminBloggersPayments: React.FC = () => {
   const handleApprove = async (withdrawalId: string) => {
     setActionLoading(withdrawalId);
     try {
-      const adminProcessBloggerWithdrawal = httpsCallable(functionsWest2, 'adminProcessBloggerWithdrawal');
+      const adminProcessBloggerWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessBloggerWithdrawal');
       await adminProcessBloggerWithdrawal({
         withdrawalId,
         action: 'approve',
@@ -209,7 +209,7 @@ const AdminBloggersPayments: React.FC = () => {
   const handleComplete = async (withdrawalId: string, transactionId?: string) => {
     setActionLoading(withdrawalId);
     try {
-      const adminProcessBloggerWithdrawal = httpsCallable(functionsWest2, 'adminProcessBloggerWithdrawal');
+      const adminProcessBloggerWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessBloggerWithdrawal');
       await adminProcessBloggerWithdrawal({
         withdrawalId,
         action: 'complete',
@@ -230,7 +230,7 @@ const AdminBloggersPayments: React.FC = () => {
 
     setActionLoading(showRejectModal);
     try {
-      const adminProcessBloggerWithdrawal = httpsCallable(functionsWest2, 'adminProcessBloggerWithdrawal');
+      const adminProcessBloggerWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessBloggerWithdrawal');
       await adminProcessBloggerWithdrawal({
         withdrawalId: showRejectModal,
         action: 'reject',

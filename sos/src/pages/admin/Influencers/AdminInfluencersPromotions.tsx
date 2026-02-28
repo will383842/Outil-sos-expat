@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { httpsCallable } from "firebase/functions";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -140,7 +140,7 @@ const AdminInfluencersPromotions: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const fn = httpsCallable(functionsWest2, "adminGetInfluencerPromotions");
+      const fn = httpsCallable(functionsAffiliate, "adminGetInfluencerPromotions");
       const result = await fn({ includeInactive: true });
       setPromotions((result.data as { promotions: Promotion[] }).promotions);
     } catch (err) {
@@ -187,7 +187,7 @@ const AdminInfluencersPromotions: React.FC = () => {
         .filter(Boolean);
 
       if (editingPromo) {
-        const fn = httpsCallable(functionsWest2, "adminUpdateInfluencerPromotion");
+        const fn = httpsCallable(functionsAffiliate, "adminUpdateInfluencerPromotion");
         await fn({
           promotionId: editingPromo.id,
           name: formData.name,
@@ -202,7 +202,7 @@ const AdminInfluencersPromotions: React.FC = () => {
           maxBudget: formData.maxBudget,
         });
       } else {
-        const fn = httpsCallable(functionsWest2, "adminCreateInfluencerPromotion");
+        const fn = httpsCallable(functionsAffiliate, "adminCreateInfluencerPromotion");
         await fn({
           name: formData.name,
           description: formData.description,
@@ -229,7 +229,7 @@ const AdminInfluencersPromotions: React.FC = () => {
     if (!confirm("Supprimer cette promotion ?")) return;
     setIsDeleting(promoId);
     try {
-      const fn = httpsCallable(functionsWest2, "adminDeleteInfluencerPromotion");
+      const fn = httpsCallable(functionsAffiliate, "adminDeleteInfluencerPromotion");
       await fn({ promotionId: promoId });
       await fetchPromotions();
     } catch (err) {
@@ -241,7 +241,7 @@ const AdminInfluencersPromotions: React.FC = () => {
 
   const handleDuplicate = async (promo: Promotion) => {
     try {
-      const fn = httpsCallable(functionsWest2, "adminDuplicateInfluencerPromotion");
+      const fn = httpsCallable(functionsAffiliate, "adminDuplicateInfluencerPromotion");
       await fn({
         promotionId: promo.id,
         newName: `${promo.name} (copie)`,

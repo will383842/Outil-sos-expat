@@ -135,7 +135,7 @@ L'architecture Firebase utilise 3 regions distinctes pour l'isolation des charge
 - **GroupAdmin** (~30 fonctions) : inscription, dashboard, posts, ressources, recrutement prestataires & admins
 - **Commun** : withdrawals, badges, monthly rankings, notifications, fraud alerts
 
-**Frontend** : Les fichiers `.env` et `firebase.ts` utilisent `functionsWest2` pour tous les hooks/pages affiliate.
+**Frontend** : Les fichiers `.env` et `firebase.ts` utilisent `functionsAffiliate` pour tous les hooks/pages affiliate.
 
 ### 3.4 europe-west3 (Francfort) -- Payments + Twilio (PROTEGEE)
 

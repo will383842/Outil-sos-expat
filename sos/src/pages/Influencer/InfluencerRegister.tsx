@@ -53,6 +53,7 @@ const InfluencerRegister: React.FC = () => {
   }, [searchParams]);
 
   const landingRoute = `/${getTranslatedRouteSlug('influencer-landing' as RouteKey, langCode)}`;
+  const telegramRoute = `/${getTranslatedRouteSlug('influencer-telegram' as RouteKey, langCode)}`;
   const dashboardRoute = `/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`;
   const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
 
@@ -70,9 +71,14 @@ const InfluencerRegister: React.FC = () => {
   // useEffect fires and navigates to dashboard BEFORE registerInfluencer() Cloud Function is called
   useEffect(() => {
     if (authInitialized && !authLoading && !isRegistering && isAlreadyInfluencer) {
-      navigate(dashboardRoute, { replace: true });
+      // Harmonized with ChatterRegister: redirect to Telegram if not completed
+      if (!user?.telegramOnboardingCompleted) {
+        navigate(telegramRoute, { replace: true });
+      } else {
+        navigate(dashboardRoute, { replace: true });
+      }
     }
-  }, [authInitialized, authLoading, isRegistering, isAlreadyInfluencer, navigate, dashboardRoute]);
+  }, [authInitialized, authLoading, isRegistering, isAlreadyInfluencer, user?.telegramOnboardingCompleted, navigate, telegramRoute, dashboardRoute]);
 
   // Role conflict
   if (authInitialized && !authLoading && hasExistingRole && !isAlreadyInfluencer) {

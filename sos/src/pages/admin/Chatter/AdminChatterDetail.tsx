@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import {
   ArrowLeft,
   User,
@@ -92,7 +92,7 @@ const AdminChatterDetail: React.FC = () => {
 
     try {
       const adminGetChatterDetail = httpsCallable<{ chatterId: string }, ChatterDetail>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetChatterDetail'
       );
 
@@ -139,7 +139,7 @@ const AdminChatterDetail: React.FC = () => {
     setActionLoading(true);
 
     try {
-      const adminUpdateChatterStatus = httpsCallable(functionsWest2, 'adminUpdateChatterStatus');
+      const adminUpdateChatterStatus = httpsCallable(functionsAffiliate, 'adminUpdateChatterStatus');
       await adminUpdateChatterStatus({
         chatterId,
         status: newStatus,
@@ -297,7 +297,7 @@ const AdminChatterDetail: React.FC = () => {
                 onClick={async () => {
                   if (!window.confirm('Promouvoir ce chatter en Capitaine Chatter ?')) return;
                   try {
-                    const fn = httpsCallable(functionsWest2, 'adminPromoteToCaptain');
+                    const fn = httpsCallable(functionsAffiliate, 'adminPromoteToCaptain');
                     await fn({ chatterId: chatter.id });
                     toast.success('Chatter promu capitaine !');
                     fetchChatter();
@@ -318,7 +318,7 @@ const AdminChatterDetail: React.FC = () => {
                 <button
                   onClick={async () => {
                     try {
-                      const fn = httpsCallable(functionsWest2, 'adminToggleCaptainQualityBonus');
+                      const fn = httpsCallable(functionsAffiliate, 'adminToggleCaptainQualityBonus');
                       await fn({ chatterId: chatter.id, enabled: !(chatter as any).captainQualityBonusEnabled });
                       toast.success('Bonus qualité mis à jour');
                       fetchChatter();
@@ -336,7 +336,7 @@ const AdminChatterDetail: React.FC = () => {
                   onClick={async () => {
                     if (!window.confirm('Révoquer le statut de capitaine ?')) return;
                     try {
-                      const fn = httpsCallable(functionsWest2, 'adminRevokeCaptain');
+                      const fn = httpsCallable(functionsAffiliate, 'adminRevokeCaptain');
                       await fn({ chatterId: chatter.id });
                       toast.success('Statut capitaine révoqué');
                       fetchChatter();

@@ -9,7 +9,7 @@
  */
 
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
@@ -170,10 +170,28 @@ export async function handleInfluencerProviderRegistered(event: any) {
         influencerId,
         type: "new_referral",
         title: "Nouveau prestataire recruté !",
-        titleTranslations: { en: "New provider recruited!" },
+        titleTranslations: {
+          fr: "Nouveau prestataire recruté !",
+          en: "New provider recruited!",
+          es: "¡Nuevo proveedor reclutado!",
+          de: "Neuer Anbieter rekrutiert!",
+          pt: "Novo prestador recrutado!",
+          ru: "Новый поставщик привлечён!",
+          hi: "नया प्रदाता भर्ती हुआ!",
+          zh: "新服务商已招募！",
+          ar: "تم تجنيد مزوّد جديد!",
+        },
         message: `${userData.firstName} ${userData.lastName.charAt(0)}. s'est inscrit via votre lien. Vous gagnerez $5 à chaque appel reçu pendant 6 mois.`,
         messageTranslations: {
+          fr: `${userData.firstName} ${userData.lastName.charAt(0)}. s'est inscrit via votre lien. Vous gagnerez $5 à chaque appel reçu pendant 6 mois.`,
           en: `${userData.firstName} ${userData.lastName.charAt(0)}. signed up via your link. You'll earn $5 for each call they receive for 6 months.`,
+          es: `${userData.firstName} ${userData.lastName.charAt(0)}. se registró a través de tu enlace. Ganarás $5 por cada llamada durante 6 meses.`,
+          de: `${userData.firstName} ${userData.lastName.charAt(0)}. hat sich über Ihren Link registriert. Sie verdienen $5 pro Anruf für 6 Monate.`,
+          pt: `${userData.firstName} ${userData.lastName.charAt(0)}. registrou-se pelo seu link. Você ganhará $5 por cada chamada durante 6 meses.`,
+          ru: `${userData.firstName} ${userData.lastName.charAt(0)}. зарегистрировался по вашей ссылке. Вы будете получать $5 за каждый звонок в течение 6 месяцев.`,
+          hi: `${userData.firstName} ${userData.lastName.charAt(0)}. आपके लिंक से पंजीकृत हुआ। आप 6 महीने तक हर कॉल पर $5 कमाएंगे।`,
+          zh: `${userData.firstName} ${userData.lastName.charAt(0)}. 通过您的链接注册。您将在6个月内每次通话赚取 $5。`,
+          ar: `${userData.firstName} ${userData.lastName.charAt(0)}. سجّل عبر رابطك. ستحصل على $5 عن كل مكالمة لمدة 6 أشهر.`,
         },
         actionUrl: "/influencer/filleuls",
         isRead: false,
@@ -237,8 +255,10 @@ export const influencerOnProviderCallCompleted = onDocumentUpdated(
     const callData = after.data();
     const sessionId = event.params.sessionId;
 
-    // Only process when status changes TO completed
-    if (beforeData.status === "completed" || callData.status !== "completed") {
+    // Only process when call becomes completed AND paid (aligned with chatter/blogger/groupAdmin)
+    const wasNotPaid = beforeData.status !== "completed" || !beforeData.isPaid;
+    const isNowPaid = callData.status === "completed" && callData.isPaid === true;
+    if (!wasNotPaid || !isNowPaid) {
       return;
     }
 
@@ -331,6 +351,23 @@ export const influencerOnProviderCallCompleted = onDocumentUpdated(
         }
       }
 
+      // Idempotency check: skip if commission already exists for this call
+      const existingCommission = await db
+        .collection("influencer_commissions")
+        .where("influencerId", "==", referral.influencerId)
+        .where("sourceId", "==", sessionId)
+        .where("type", "==", "recruitment")
+        .limit(1)
+        .get();
+
+      if (!existingCommission.empty) {
+        logger.info("[influencerOnProviderCallCompleted] Commission already exists for this call", {
+          sessionId,
+          influencerId: referral.influencerId,
+        });
+        return;
+      }
+
       // Calculate months remaining
       const diffMs = windowEnd.getTime() - now.getTime();
       const monthsRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30));
@@ -357,10 +394,10 @@ export const influencerOnProviderCallCompleted = onDocumentUpdated(
       });
 
       if (result.success) {
-        // Update referral stats
+        // Update referral stats with atomic increments (prevent race conditions)
         await db.collection("influencer_referrals").doc(referral.id).update({
-          callsWithCommission: referral.callsWithCommission + 1,
-          totalCommissions: referral.totalCommissions + result.amount!,
+          callsWithCommission: FieldValue.increment(1),
+          totalCommissions: FieldValue.increment(result.amount!),
           lastCommissionAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         });

@@ -450,6 +450,20 @@ export const adminUpdateChatterStatus = onCall(
         updatedAt: now,
       });
 
+      // Audit trail
+      await db.collection("admin_audit_logs").add({
+        action: "chatter_status_updated",
+        targetId: input.chatterId,
+        targetType: "chatter",
+        performedBy: adminId,
+        timestamp: now,
+        details: {
+          previousStatus,
+          newStatus: input.status,
+          reason: input.reason,
+        },
+      });
+
       logger.info("[adminUpdateChatterStatus] Status updated", {
         chatterId: input.chatterId,
         previousStatus,
@@ -755,6 +769,16 @@ export const adminUpdateChatterConfig = onCall(
         "commissionCaptainCallAmountExpat",
         "captainTiers",
         "captainQualityBonusAmount",
+        "recruitmentCommissionThreshold",
+        // NEW: Simplified commission system (2026)
+        "commissionClientCallAmount",
+        "commissionN1CallAmount",
+        "commissionN2CallAmount",
+        "commissionActivationBonusAmount",
+        "commissionN1RecruitBonusAmount",
+        "activationCallsRequired",
+        "commissionProviderCallAmount",
+        "providerRecruitmentDurationMonths",
       ];
 
       const sanitizedUpdates: Record<string, unknown> = {};

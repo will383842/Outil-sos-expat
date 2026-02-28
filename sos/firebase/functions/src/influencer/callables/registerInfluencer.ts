@@ -31,6 +31,7 @@ import {
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
+import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedInfluencerLanguage[] = [
@@ -50,7 +51,7 @@ export const registerInfluencer = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 2,
     cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
   },
@@ -68,6 +69,8 @@ export const registerInfluencer = onCall(
     }
 
     const userId = request.auth.uid;
+    await checkRateLimit(userId, "registerInfluencer", RATE_LIMITS.REGISTRATION);
+
     const db = getFirestore();
 
     // 2. Validate input
@@ -254,6 +257,19 @@ export const registerInfluencer = onCall(
         throw new HttpsError("already-exists", "An influencer with this email already exists");
       }
 
+      // 6b. Cross-role email check (P2-01 harmonization)
+      const usersEmailQuery = await db
+        .collection("users")
+        .where("email", "==", input.email.toLowerCase())
+        .limit(1)
+        .get();
+      if (!usersEmailQuery.empty) {
+        const existingUserDoc = usersEmailQuery.docs[0];
+        if (existingUserDoc.id !== userId) {
+          throw new HttpsError("already-exists", "This email is already used by another account");
+        }
+      }
+
       // 7. Find recruiter if recruitment code provided
       let recruitedBy: string | null = null;
       let recruitedByCode: string | null = null;
@@ -350,10 +366,10 @@ export const registerInfluencer = onCall(
         additionalLanguages: input.additionalLanguages || [],
         platforms: input.platforms,
         ...(input.bio?.trim() ? { bio: input.bio.trim() } : {}),
-        communitySize: input.communitySize,
+        ...(input.communitySize != null ? { communitySize: input.communitySize } : {}),
         ...(input.communityNiche?.trim() ? { communityNiche: input.communityNiche.trim() } : {}),
         interventionCountries: input.interventionCountries || [],
-        socialLinks: input.socialLinks,
+        ...(input.socialLinks ? { socialLinks: input.socialLinks } : {}),
 
         status: "active", // Directly active - no quiz required
         isVisible: false,
@@ -429,19 +445,23 @@ export const registerInfluencer = onCall(
       });
 
       await db.runTransaction(async (transaction) => {
-        // Create influencer
+        // IMPORTANT: All reads MUST come before all writes in Firestore transactions
         const influencerRef = db.collection("influencers").doc(userId);
-        transaction.set(influencerRef, influencer);
-
-        // Create/update user document with INFLUENCER role
         const userRef = db.collection("users").doc(userId);
         const userDoc = await transaction.get(userRef);
+
+        // Now do all writes
+        transaction.set(influencerRef, influencer);
 
         if (userDoc.exists) {
           // Update to influencer role
           transaction.update(userRef, {
             role: "influencer",
             isInfluencer: true,
+            influencerStatus: "active",
+            affiliateCodeClient,
+            affiliateCodeRecruitment,
+            telegramOnboardingCompleted: false,
             updatedAt: now,
           });
         } else {
@@ -452,6 +472,10 @@ export const registerInfluencer = onCall(
             lastName: input.lastName.trim(),
             role: "influencer",
             isInfluencer: true,
+            influencerStatus: "active",
+            affiliateCodeClient,
+            affiliateCodeRecruitment,
+            telegramOnboardingCompleted: false,
             createdAt: now,
             updatedAt: now,
           });

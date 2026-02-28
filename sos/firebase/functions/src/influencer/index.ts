@@ -24,6 +24,8 @@ export { getInfluencerDashboard } from "./callables/getInfluencerDashboard";
 export { updateInfluencerProfile } from "./callables/updateInfluencerProfile";
 export { influencerRequestWithdrawal } from "./callables";
 export { getInfluencerLeaderboard } from "./callables/getInfluencerLeaderboard";
+export { getInfluencerRecruits } from "./callables/getInfluencerRecruits";
+export { getInfluencerRecruitedProviders } from "./callables/getRecruitedProviders";
 
 // ============================================================================
 // TRAINING CALLABLES

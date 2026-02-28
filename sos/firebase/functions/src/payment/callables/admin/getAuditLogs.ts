@@ -255,6 +255,9 @@ export const adminGetAuditLogActions = onCall(
       'payment_method_removed',
       'payment_method_verified',
       'balance_updated',
+      'balance_adjusted',
+      'manual_commission_issued',
+      'call_terminated',
       'refund_initiated',
       'refund_completed',
     ];

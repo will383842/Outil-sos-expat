@@ -232,6 +232,12 @@ export async function createCommission(
       baseCommissionAmount = calculateCommissionAmount(influencer, type, base, config, input.providerType);
     }
 
+    // AUDIT FIX 2026-02-28: Validate commission amount is an integer (cents)
+    if (!Number.isInteger(baseCommissionAmount) || baseCommissionAmount < 0) {
+      logger.error("[createCommission] Invalid baseCommissionAmount", { influencerId, type, baseCommissionAmount });
+      return { success: false, error: `Invalid amount: must be a non-negative integer (cents). Got: ${baseCommissionAmount}` };
+    }
+
     // 5b. Check for active promotions
     let promoMultiplier = 1.0;
     let promoId: string | null = null;
@@ -290,8 +296,8 @@ export async function createCommission(
       // Track budget spend asynchronously
       if (promoId) {
         import("./influencerPromotionService").then(({ trackBudgetSpend }) => {
-          trackBudgetSpend(promoId!, bonusFromPromo).catch(() => {});
-        }).catch(() => {});
+          trackBudgetSpend(promoId!, bonusFromPromo).catch((e: unknown) => console.warn("[influencerCommission] trackBudgetSpend failed:", e));
+        }).catch((e: unknown) => console.warn("[influencerCommission] import influencerPromotionService failed:", e));
       }
     }
 

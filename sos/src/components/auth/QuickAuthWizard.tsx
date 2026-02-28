@@ -6,6 +6,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { X, Mail, Lock, ArrowRight, Loader2, CheckCircle, AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { devLog } from '../../utils/devLog';
 
 // Google Icon SVG
 const GoogleIcon = () => (
@@ -39,7 +40,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   const { login, loginWithGoogle, register, user, authInitialized, isFullyReady } = useAuth();
 
   // 🔍 [BOOKING_AUTH_DEBUG] Log QuickAuthWizard render
-  console.log('[BOOKING_AUTH_DEBUG] 🧙 QuickAuthWizard RENDER', {
+  devLog('[BOOKING_AUTH_DEBUG] 🧙 QuickAuthWizard RENDER', {
     isOpen,
     providerName,
     bookingRedirectUrl,
@@ -184,7 +185,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     const authAttemptedFlag = getAuthAttempted();
 
     // 🔍 [BOOKING_AUTH_DEBUG] Log auth detection useEffect
-    console.log('[BOOKING_AUTH_DEBUG] 🔍 QuickAuthWizard AUTH DETECTION useEffect', {
+    devLog('[BOOKING_AUTH_DEBUG] 🔍 QuickAuthWizard AUTH DETECTION useEffect', {
       isOpen,
       prevUser: prevUser ? 'EXISTS' : 'NULL',
       user: user ? { id: user.id, email: user.email } : null,
@@ -205,13 +206,13 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     // Now using sessionStorage which survives component remount!
     const isAuthAttemptCompleted = isOpen && authAttemptedFlag && user && authInitialized && !successCalledRef.current;
 
-    console.log('[BOOKING_AUTH_DEBUG] 🔍 QuickAuthWizard conditions:', {
+    devLog('[BOOKING_AUTH_DEBUG] 🔍 QuickAuthWizard conditions:', {
       isNullToTruthyTransition,
       isAuthAttemptCompleted,
     });
 
     if (isNullToTruthyTransition || isAuthAttemptCompleted) {
-      console.log('[BOOKING_AUTH_DEBUG] ✅ QuickAuthWizard AUTH SUCCESS DETECTED - calling onSuccess()');
+      devLog('[BOOKING_AUTH_DEBUG] ✅ QuickAuthWizard AUTH SUCCESS DETECTED - calling onSuccess()');
       successCalledRef.current = true; // Prevent multiple calls
       setAuthAttempted(false); // Reset auth attempt flag in sessionStorage
       // Clear any pending states
@@ -219,7 +220,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setPendingSuccess(false);
       // Small delay to ensure UI shows success briefly
       setTimeout(() => {
-        console.log('[BOOKING_AUTH_DEBUG] 🚀 QuickAuthWizard calling onSuccess() NOW');
+        devLog('[BOOKING_AUTH_DEBUG] 🚀 QuickAuthWizard calling onSuccess() NOW');
         onSuccess();
       }, 100);
       return;
@@ -341,7 +342,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     }
 
     // 🔍 [BOOKING_AUTH_DEBUG] Log email/password submit
-    console.log('[BOOKING_AUTH_DEBUG] 📝 QuickAuthWizard EMAIL/PASSWORD SUBMIT', {
+    devLog('[BOOKING_AUTH_DEBUG] 📝 QuickAuthWizard EMAIL/PASSWORD SUBMIT', {
       email,
       selectedProviderInSession: sessionStorage.getItem('selectedProvider') ?
         JSON.parse(sessionStorage.getItem('selectedProvider')!).id : 'NULL',
@@ -355,9 +356,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
 
     try {
       // Try to login first
-      console.log('[BOOKING_AUTH_DEBUG] 🔐 QuickAuthWizard calling login()...');
+      devLog('[BOOKING_AUTH_DEBUG] 🔐 QuickAuthWizard calling login()...');
       await login(email, password);
-      console.log('[BOOKING_AUTH_DEBUG] ✅ QuickAuthWizard login() SUCCESS');
+      devLog('[BOOKING_AUTH_DEBUG] ✅ QuickAuthWizard login() SUCCESS');
       setIsSubmitting(false);
       setStep('success');
       // FIX: Attendre que user Firestore soit chargé avant de naviguer
@@ -373,16 +374,16 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
 
       if (errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-credential' || errorCode === 'auth/wrong-password') {
         // Essayer l'auto-inscription
-        console.log('[BOOKING_AUTH_DEBUG] 🔐 QuickAuthWizard login failed, trying REGISTER...', { errorCode });
+        devLog('[BOOKING_AUTH_DEBUG] 🔐 QuickAuthWizard login failed, trying REGISTER...', { errorCode });
         try {
           setIsNewUser(true);
-          console.log('[BOOKING_AUTH_DEBUG] 📝 QuickAuthWizard calling register()...');
+          devLog('[BOOKING_AUTH_DEBUG] 📝 QuickAuthWizard calling register()...');
           await register({
             email: email,
             role: 'client',
           }, password);
           // Inscription réussie = nouvel utilisateur créé
-          console.log('[BOOKING_AUTH_DEBUG] ✅ QuickAuthWizard register() SUCCESS');
+          devLog('[BOOKING_AUTH_DEBUG] ✅ QuickAuthWizard register() SUCCESS');
           setIsSubmitting(false);
           setStep('success');
           setPendingSuccess(true);

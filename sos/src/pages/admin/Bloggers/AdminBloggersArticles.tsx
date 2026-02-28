@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   FileText,
   Plus,
@@ -88,7 +88,7 @@ const AdminBloggersArticles: React.FC = () => {
 
     try {
       const adminGetBloggerArticles = httpsCallable<void, { articles: Article[] }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetBloggerArticles'
       );
       const result = await adminGetBloggerArticles();
@@ -155,10 +155,10 @@ const AdminBloggersArticles: React.FC = () => {
       };
 
       if (editingArticle.isNew) {
-        const createFn = httpsCallable(functionsWest2, 'adminCreateBloggerArticle');
+        const createFn = httpsCallable(functionsAffiliate, 'adminCreateBloggerArticle');
         await createFn({ article: payload });
       } else {
-        const updateFn = httpsCallable(functionsWest2, 'adminUpdateBloggerArticle');
+        const updateFn = httpsCallable(functionsAffiliate, 'adminUpdateBloggerArticle');
         await updateFn({ articleId: articleData.id, article: payload });
       }
 
@@ -179,7 +179,7 @@ const AdminBloggersArticles: React.FC = () => {
     if (!confirm('Supprimer cet article ?')) return;
 
     try {
-      const deleteFn = httpsCallable(functionsWest2, 'adminDeleteBloggerArticle');
+      const deleteFn = httpsCallable(functionsAffiliate, 'adminDeleteBloggerArticle');
       await deleteFn({ articleId: article.id });
       fetchArticles();
     } catch (err: unknown) {

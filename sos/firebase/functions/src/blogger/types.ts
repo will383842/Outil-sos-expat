@@ -47,7 +47,9 @@ export type SupportedBloggerLanguage =
   | "de"    // German
   | "it"    // Italian
   | "nl"    // Dutch
-  | "zh";   // Chinese
+  | "zh"    // Chinese
+  | "ru"    // Russian
+  | "hi";   // Hindi
 
 /**
  * Commission type for bloggers
@@ -316,6 +318,38 @@ export interface Blogger {
 
   /** Current pending withdrawal ID */
   pendingWithdrawalId: string | null;
+
+  // ---- Telegram Onboarding ----
+
+  /** Whether the Telegram onboarding flow was completed */
+  telegramOnboardingCompleted?: boolean;
+
+  /** Whether user skipped Telegram onboarding */
+  telegramOnboardingSkipped?: boolean;
+
+  /** Whether user has a linked Telegram account */
+  hasTelegram?: boolean;
+
+  /** Telegram user ID */
+  telegramId?: number;
+
+  /** Telegram username */
+  telegramUsername?: string;
+
+  /** Telegram first name */
+  telegramFirstName?: string;
+
+  /** Telegram last name */
+  telegramLastName?: string;
+
+  /** When Telegram was linked */
+  telegramLinkedAt?: Timestamp;
+
+  /** Telegram bonus credited flag */
+  telegramBonusCredited?: boolean;
+
+  /** Telegram bonus amount in cents */
+  telegramBonusAmount?: number;
 
   // ---- Timestamps ----
 

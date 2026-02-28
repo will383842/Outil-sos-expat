@@ -6,6 +6,7 @@
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
@@ -32,14 +33,7 @@ export const updateTelegramOnboarding = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<TelegramOnboardingOutput> => {
     ensureInitialized();

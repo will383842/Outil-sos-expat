@@ -17,7 +17,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../config/firebase";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
-import { BreadcrumbSchema, generateBreadcrumbs } from "../components/seo";
+import { BreadcrumbSchema, generateBreadcrumbs, FAQPageSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
 import { getLocaleString, parseLocaleFromPath } from "../multilingual-system";
@@ -154,19 +154,20 @@ const FAQ: React.FC = () => {
         title={intl.formatMessage({ id: "faq.heroTitle", defaultMessage: "Frequently Asked Questions" }) + " | SOS Expat & Travelers"}
         description={intl.formatMessage({ id: "faq.heroSubtitle", defaultMessage: "Find answers about SOS Expat & Travelers" })}
         canonicalUrl="/faq"
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: faqData.map((item) => ({
-            "@type": "Question",
-            name: item.question,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: item.answer,
-            },
-          })),
-        }}
+        author="Manon"
+        contentType="FAQPage"
       />
+
+      {/* FAQPage JSON-LD (dedicated, clean schema for Google Rich Results) */}
+      {faqData.length > 0 && (
+        <FAQPageSchema
+          faqs={faqData.map((item) => ({
+            question: item.question,
+            answer: item.answer,
+          }))}
+          pageUrl={`https://sos-expat.com/${currentLocale}/faq`}
+        />
+      )}
 
       {/* BreadcrumbList JSON-LD */}
       <BreadcrumbSchema

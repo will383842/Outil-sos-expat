@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 /**
  * MySubscription Page
  * Page "Mon Abonnement IA" pour les prestataires
@@ -395,6 +396,7 @@ export const MySubscription: React.FC = () => {
       await initializeTrial();
     } catch (error) {
       console.error('Error starting trial:', error);
+      toast.error(intl.formatMessage({ id: 'subscription.error.trialStart', defaultMessage: 'Failed to start trial. Please try again.' }));
     } finally {
       setIsInitializing(false);
     }
@@ -408,6 +410,7 @@ export const MySubscription: React.FC = () => {
       setShowCancelModal(false);
     } catch (error) {
       console.error('Error canceling subscription:', error);
+      toast.error(intl.formatMessage({ id: 'subscription.error.cancel', defaultMessage: 'Failed to cancel subscription.' }));
     } finally {
       setActionLoading(false);
     }
@@ -420,6 +423,7 @@ export const MySubscription: React.FC = () => {
       await reactivateSubscription();
     } catch (error) {
       console.error('Error reactivating subscription:', error);
+      toast.error(intl.formatMessage({ id: 'subscription.error.reactivate', defaultMessage: 'Failed to reactivate subscription.' }));
     } finally {
       setActionLoading(false);
     }
@@ -432,6 +436,7 @@ export const MySubscription: React.FC = () => {
       await openBillingPortal();
     } catch (error) {
       console.error('Error opening billing portal:', error);
+      toast.error(intl.formatMessage({ id: 'subscription.error.billingPortal', defaultMessage: 'Failed to open billing portal.' }));
       setActionLoading(false);
     }
   };

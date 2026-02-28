@@ -11,6 +11,7 @@
 import * as functions from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 import Stripe from 'stripe';
 import {
   STRIPE_SECRET_KEY_LIVE,
@@ -131,7 +132,7 @@ export const getStripeBalance = functions.onCall(
     memory: '256MiB',
     timeoutSeconds: 30,
     secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST],
-    cors: [/sos-expat\.com$/, /localhost/],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<StripeBalanceResponse> => {
     // Authentication check

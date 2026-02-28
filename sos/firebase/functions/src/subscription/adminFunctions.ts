@@ -275,12 +275,13 @@ export const adminForceAiAccess = functions
           ? `Acces IA gratuit accorde${durationDays ? ` pour ${durationDays} jours` : ' (illimite)'}`
           : 'Acces IA gratuit revoque',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
       if (!(error instanceof functions.https.HttpsError)) {
-        await logAdminAction(adminId, 'adminForceAiAccess', providerId, 'provider', { enabled }, false, error.message);
+        await logAdminAction(adminId, 'adminForceAiAccess', providerId, 'provider', { enabled }, false, errMsg);
       }
       console.error('Error in adminForceAiAccess:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to update access');
+      throw new functions.https.HttpsError('internal', errMsg || 'Failed to update access');
     }
   });
 
@@ -345,10 +346,11 @@ export const adminResetQuota = functions
           totalCallsAllTime: updatedData.totalCallsAllTime || 0,
         },
       };
-    } catch (error: any) {
-      await logAdminAction(adminId, 'adminResetQuota', providerId, 'provider', {}, false, error.message);
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      await logAdminAction(adminId, 'adminResetQuota', providerId, 'provider', {}, false, errMsg);
       console.error('Error in adminResetQuota:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to reset quota');
+      throw new functions.https.HttpsError('internal', errMsg || 'Failed to reset quota');
     }
   });
 
@@ -497,10 +499,11 @@ export const adminChangePlan = functions
           ? new Date().toISOString()
           : new Date(stripeSubscription.current_period_end * 1000).toISOString(),
       };
-    } catch (error: any) {
-      await logAdminAction(adminId, 'adminChangePlan', providerId, 'subscription', { newPlanId, immediate }, false, error.message);
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      await logAdminAction(adminId, 'adminChangePlan', providerId, 'subscription', { newPlanId, immediate }, false, errMsg);
       console.error('Error in adminChangePlan:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to change plan');
+      throw new functions.https.HttpsError('internal', errMsg || 'Failed to change plan');
     }
   });
 
@@ -618,10 +621,11 @@ export const adminCancelSubscription = functions
         effectiveCancelDate: canceledAt.toISOString(),
         reason: reason || 'admin_cancelled',
       };
-    } catch (error: any) {
-      await logAdminAction(adminId, 'adminCancelSubscription', providerId, 'subscription', { immediate, reason }, false, error.message);
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      await logAdminAction(adminId, 'adminCancelSubscription', providerId, 'subscription', { immediate, reason }, false, errMsg);
       console.error('Error in adminCancelSubscription:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to cancel subscription');
+      throw new functions.https.HttpsError('internal', errMsg || 'Failed to cancel subscription');
     }
   });
 
@@ -738,10 +742,11 @@ export const adminGetSubscriptionStats = functions
         },
         generatedAt: new Date().toISOString(),
       };
-    } catch (error: any) {
-      await logAdminAction(adminId, 'adminGetSubscriptionStats', 'system', 'system', {}, false, error.message);
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      await logAdminAction(adminId, 'adminGetSubscriptionStats', 'system', 'system', {}, false, errMsg);
       console.error('Error in adminGetSubscriptionStats:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to get stats');
+      throw new functions.https.HttpsError('internal', errMsg || 'Failed to get stats');
     }
   });
 
@@ -916,10 +921,11 @@ export const adminSyncStripePrices = functions
         message: `Synchronisation terminee: ${created} crees, ${skipped} ignores, ${errors} erreurs`,
         results,
       };
-    } catch (error: any) {
-      await logAdminAction(adminId, 'adminSyncStripePrices', 'system', 'system', {}, false, error.message);
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      await logAdminAction(adminId, 'adminSyncStripePrices', 'system', 'system', {}, false, errMsg);
       console.error('Error in adminSyncStripePrices:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to sync prices');
+      throw new functions.https.HttpsError('internal', errMsg || 'Failed to sync prices');
     }
   });
 
@@ -1020,10 +1026,11 @@ export const adminGetProviderSubscriptionHistory = functions
         adminActions,
         generatedAt: new Date().toISOString(),
       };
-    } catch (error: any) {
-      await logAdminAction(adminId, 'adminGetProviderSubscriptionHistory', providerId, 'provider', {}, false, error.message);
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      await logAdminAction(adminId, 'adminGetProviderSubscriptionHistory', providerId, 'provider', {}, false, errMsg);
       console.error('Error in adminGetProviderSubscriptionHistory:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to get history');
+      throw new functions.https.HttpsError('internal', errMsg || 'Failed to get history');
     }
   });
 
@@ -1127,14 +1134,15 @@ export const adminPauseSubscription = functions
         pausedAt: now.toDate().toISOString(),
         reason: reason || 'admin_paused',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
       if (!(error instanceof functions.https.HttpsError)) {
-        await logAdminAction(adminId, 'adminPauseSubscription', providerId, 'subscription', { reason }, false, error.message);
+        await logAdminAction(adminId, 'adminPauseSubscription', providerId, 'subscription', { reason }, false, errMsg);
       }
       console.error('Error in adminPauseSubscription:', error);
       throw error instanceof functions.https.HttpsError
         ? error
-        : new functions.https.HttpsError('internal', error.message || 'Failed to pause subscription');
+        : new functions.https.HttpsError('internal', errMsg || 'Failed to pause subscription');
     }
   });
 
@@ -1238,13 +1246,14 @@ export const adminResumeSubscription = functions
         status: newStatus,
         resumedAt: now.toDate().toISOString(),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
       if (!(error instanceof functions.https.HttpsError)) {
-        await logAdminAction(adminId, 'adminResumeSubscription', providerId, 'subscription', { note }, false, error.message);
+        await logAdminAction(adminId, 'adminResumeSubscription', providerId, 'subscription', { note }, false, errMsg);
       }
       console.error('Error in adminResumeSubscription:', error);
       throw error instanceof functions.https.HttpsError
         ? error
-        : new functions.https.HttpsError('internal', error.message || 'Failed to resume subscription');
+        : new functions.https.HttpsError('internal', errMsg || 'Failed to resume subscription');
     }
   });

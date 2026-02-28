@@ -19,7 +19,7 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2, auth } from '@/config/firebase';
+import { functionsAffiliate, auth } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
@@ -210,6 +210,7 @@ const BloggerRegister: React.FC = () => {
   }, [searchParams]);
 
   const landingRoute = `/${getTranslatedRouteSlug('blogger-landing' as RouteKey, langCode)}`;
+  const telegramRoute = `/${getTranslatedRouteSlug('blogger-telegram' as RouteKey, langCode)}`;
   const dashboardRoute = `/${getTranslatedRouteSlug('blogger-dashboard' as RouteKey, langCode)}`;
   const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
 
@@ -251,9 +252,14 @@ const BloggerRegister: React.FC = () => {
   // useEffect fires and navigates to dashboard BEFORE registerBlogger() Cloud Function is called
   useEffect(() => {
     if (authInitialized && !authLoading && !isSubmitting && isAlreadyBlogger && !success) {
-      navigate(dashboardRoute, { replace: true });
+      // Harmonized with ChatterRegister: redirect to Telegram if not completed
+      if (!user?.telegramOnboardingCompleted) {
+        navigate(telegramRoute, { replace: true });
+      } else {
+        navigate(dashboardRoute, { replace: true });
+      }
     }
-  }, [authInitialized, authLoading, isSubmitting, isAlreadyBlogger, navigate, dashboardRoute, success]);
+  }, [authInitialized, authLoading, isSubmitting, isAlreadyBlogger, user?.telegramOnboardingCompleted, navigate, telegramRoute, dashboardRoute, success]);
 
   // Meta Pixel: Track StartRegistration on mount
   useEffect(() => {
@@ -432,6 +438,11 @@ const BloggerRegister: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    // AUDIT FIX 2026-02-27: Offline guard
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setError('Pas de connexion internet. Vérifiez votre réseau.');
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -466,7 +477,7 @@ const BloggerRegister: React.FC = () => {
         metaEventId,
       }, formData.password);
 
-      const registerBlogger = httpsCallable<RegisterBloggerInput, RegisterBloggerResponse>(functionsWest2, 'registerBlogger');
+      const registerBlogger = httpsCallable<RegisterBloggerInput, RegisterBloggerResponse>(functionsAffiliate, 'registerBlogger');
 
       let result;
       try {
@@ -535,7 +546,7 @@ const BloggerRegister: React.FC = () => {
 
         await refreshUser();
         setTimeout(() => {
-          navigate(dashboardRoute, { replace: true });
+          navigate(telegramRoute, { replace: true });
         }, 2000);
       } else {
         setError(result.data.message);
@@ -1025,17 +1036,55 @@ const BloggerRegister: React.FC = () => {
                           <p className="text-sm mt-1 text-gray-300"><FormattedMessage id="blogger.register.warning.message" defaultMessage="By becoming a partner blogger, you will not be able to become a Chatter or Influencer. This choice is final and irreversible." /></p>
                         </div>
                       </div>
-                      <label className="flex items-start gap-3 cursor-pointer select-none">
-                        <input type="checkbox" checked={formData.definitiveRoleAcknowledged} onChange={(e) => { setFormData(prev => ({ ...prev, definitiveRoleAcknowledged: e.target.checked })); clearValidationError('definitiveRoleAcknowledged'); }} className={`h-5 w-5 rounded border-2 mt-0.5 ${validationErrors.definitiveRoleAcknowledged ? 'border-red-500 bg-red-500/10' : formData.definitiveRoleAcknowledged ? 'border-amber-400 bg-amber-400 text-black' : 'border-white/20 bg-white/10'} focus:ring-2 transition-all duration-200 cursor-pointer`} aria-required="true" />
-                        <span className="text-sm text-gray-300"><FormattedMessage id="blogger.register.acknowledgment" defaultMessage="I understand and accept that this role is permanent" /></span>
+                      <label className="flex items-start gap-3 cursor-pointer select-none group">
+                        <div className="relative mt-0.5">
+                          <input
+                            type="checkbox"
+                            checked={formData.definitiveRoleAcknowledged}
+                            onChange={(e) => { setFormData(prev => ({ ...prev, definitiveRoleAcknowledged: e.target.checked })); clearValidationError('definitiveRoleAcknowledged'); }}
+                            className={`
+                              h-5 w-5 rounded border-2
+                              ${validationErrors.definitiveRoleAcknowledged
+                                ? 'border-red-500 bg-red-500/10'
+                                : formData.definitiveRoleAcknowledged
+                                  ? 'border-amber-400 bg-amber-400 text-black'
+                                  : 'border-white/20 bg-white/10'
+                              }
+                              focus:ring-2 focus:ring-amber-400/30 focus:ring-offset-0
+                              transition-all duration-200 cursor-pointer
+                            `}
+                            aria-required="true"
+                          />
+                        </div>
+                        <span className="text-sm leading-relaxed text-gray-300"><FormattedMessage id="blogger.register.acknowledgment" defaultMessage="I understand and accept that this role is permanent" /></span>
                       </label>
                       {validationErrors.definitiveRoleAcknowledged && <p className={`${s.errorText} mt-2`} role="alert"><span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>{validationErrors.definitiveRoleAcknowledged}</p>}
                     </div>
 
                     {/* ---- Terms & Conditions ---- */}
                     <div className="space-y-2">
-                      <label className="flex items-start gap-3 cursor-pointer select-none">
-                        <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => { setFormData(prev => ({ ...prev, acceptTerms: e.target.checked })); clearValidationError('acceptTerms'); }} className={`h-5 w-5 rounded border-2 mt-0.5 ${validationErrors.acceptTerms ? 'border-red-500 bg-red-500/10' : formData.acceptTerms ? 'border-purple-400 bg-purple-400 text-white' : 'border-white/20 bg-white/10'} focus:ring-2 transition-all duration-200 cursor-pointer`} aria-required="true" aria-invalid={!!validationErrors.acceptTerms} />
+                      <label className="flex items-start gap-3 cursor-pointer select-none group">
+                        <div className="relative mt-0.5">
+                          <input
+                            type="checkbox"
+                            id="acceptTerms"
+                            checked={formData.acceptTerms}
+                            onChange={(e) => { setFormData(prev => ({ ...prev, acceptTerms: e.target.checked })); clearValidationError('acceptTerms'); }}
+                            className={`
+                              h-5 w-5 rounded border-2
+                              ${validationErrors.acceptTerms
+                                ? 'border-red-500 bg-red-500/10'
+                                : formData.acceptTerms
+                                  ? 'border-purple-400 bg-purple-400 text-white'
+                                  : 'border-white/20 bg-white/10'
+                              }
+                              focus:ring-2 focus:ring-purple-400/30 focus:ring-offset-0
+                              transition-all duration-200 cursor-pointer
+                            `}
+                            aria-required="true"
+                            aria-invalid={!!validationErrors.acceptTerms}
+                          />
+                        </div>
                         <span className="text-sm leading-relaxed text-gray-300">
                           <FormattedMessage
                             id="blogger.register.acceptTerms"

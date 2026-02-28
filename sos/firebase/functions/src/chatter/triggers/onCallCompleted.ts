@@ -48,7 +48,7 @@ function ensureInitialized() {
 }
 
 /** Minimum call duration in seconds to earn commission (anti-fraud) */
-const MIN_CALL_DURATION_SECONDS = 120;
+const MIN_CALL_DURATION_SECONDS = 60;
 
 interface CallSession {
   id: string;
@@ -207,6 +207,7 @@ export async function handleCallCompleted(
           db,
           chatterId,
           "commission_earned",
+          "client_call",
           "Commission appel client !",
           `Vous avez gagn\u00e9 $${(clientCallAmount / 100).toFixed(2)} pour l'appel de ${maskEmail(clientData.email)}.`,
           clientCallResult.commissionId!,
@@ -339,6 +340,7 @@ export async function handleCallCompleted(
             db,
             activationResult.recruitedBy,
             "commission_earned",
+            "activation_bonus",
             "Bonus d'activation !",
             `Votre filleul ${chatterData.firstName} ${chatterData.lastName.charAt(0)}. est maintenant activ\u00e9 ! +$${(activationBonusAmount / 100).toFixed(2)}`,
             bonusResult.commissionId!,
@@ -388,6 +390,7 @@ export async function handleCallCompleted(
                   db,
                   recruiter.recruitedBy,
                   "commission_earned",
+                  "n1_recruit_bonus",
                   "Bonus recrutement N1 !",
                   `Votre filleul ${recruiter.firstName} ${recruiter.lastName.charAt(0)}. a recrut\u00e9 un nouveau chatter activ\u00e9 ! +$${(n1RecruitBonusAmount / 100).toFixed(2)}`,
                   n1RecruitResult.commissionId!,
@@ -454,6 +457,7 @@ export async function handleCallCompleted(
               db,
               chatter.recruitedBy,
               "commission_earned",
+              "captain_commission",
               "Commission Capitaine !",
               `Votre filleul ${chatter.firstName} ${chatter.lastName.charAt(0)}. a g\u00e9n\u00e9r\u00e9 un appel ! +$${(captainN1Amount / 100).toFixed(2)}`,
               captainN1Result.commissionId!,
@@ -498,6 +502,7 @@ export async function handleCallCompleted(
               db,
               chatter.recruitedBy,
               "commission_earned",
+              "n1_commission",
               "Commission N1 !",
               `Votre filleul ${chatter.firstName} ${chatter.lastName.charAt(0)}. a g\u00e9n\u00e9r\u00e9 un appel ! +$${(n1CallAmount / 100).toFixed(2)}`,
               n1Result.commissionId!,
@@ -561,6 +566,7 @@ export async function handleCallCompleted(
                 db,
                 chatter.parrainNiveau2Id,
                 "commission_earned",
+                "captain_commission",
                 "Commission Capitaine !",
                 `Un filleul N2 a g\u00e9n\u00e9r\u00e9 un appel ! +$${(captainN2Amount / 100).toFixed(2)}`,
                 captainN2Result.commissionId!,
@@ -610,6 +616,7 @@ export async function handleCallCompleted(
                 db,
                 chatter.parrainNiveau2Id,
                 "commission_earned",
+                "n2_commission",
                 "Commission N2 !",
                 `Le filleul de ${n1Name} a g\u00e9n\u00e9r\u00e9 un appel ! +$${(n2CallAmount / 100).toFixed(2)}`,
                 n2Result.commissionId!,
@@ -646,9 +653,13 @@ export const chatterOnCallCompleted = onDocumentUpdated(
 );
 
 /**
- * Process provider recruitment commission
+ * Process provider recruitment commission (HARMONIZED with Blogger/Influencer/GroupAdmin)
+ *
  * When a chatter recruits a provider (lawyer/expat), they earn $5 on EVERY call
  * the provider receives for 6 months from recruitment date.
+ *
+ * Uses `chatter_recruited_providers` collection with atomic increments of
+ * callsWithCommission and totalCommissions (same pattern as other 3 roles).
  */
 async function processProviderRecruitmentCommission(
   db: FirebaseFirestore.Firestore,
@@ -658,154 +669,128 @@ async function processProviderRecruitmentCommission(
   flashMultiplier: number
 ): Promise<void> {
   try {
-    // Get provider data
-    const providerDoc = await db.collection("users").doc(session.providerId).get();
-
-    if (!providerDoc.exists) {
-      return;
-    }
-
-    const providerData = providerDoc.data() as UserDocument;
-
-    // Check if provider was recruited by a chatter
-    if (!providerData.providerRecruitedByChatterId) {
-      return;
-    }
-
-    // Get the recruitment link to check the date
-    const linkQuery = await db
-      .collection("chatter_recruitment_links")
-      .where("chatterId", "==", providerData.providerRecruitedByChatterId)
-      .where("usedByProviderId", "==", session.providerId)
-      .limit(1)
+    // 1. Find active recruitment records for this provider
+    const now = Timestamp.now();
+    const recruitmentQuery = await db
+      .collection("chatter_recruited_providers")
+      .where("providerId", "==", session.providerId)
+      .where("isActive", "==", true)
+      .where("commissionWindowEndsAt", ">", now)
       .get();
 
-    if (linkQuery.empty) {
-      // Fallback: check user document for recruitment date
-      // The provider might have been recruited before the link system was in place
-      logger.info("[processProviderRecruitmentCommission] No recruitment link found, checking user doc", {
-        providerId: session.providerId,
-        chatterId: providerData.providerRecruitedByChatterId,
-      });
-    }
-
-    // Determine recruitment date
-    let recruitmentDate: Date | null = null;
-
-    if (!linkQuery.empty) {
-      const linkData = linkQuery.docs[0].data();
-      recruitmentDate = linkData.usedAt?.toDate() || linkData.createdAt?.toDate();
-    }
-
-    // If no recruitment date found, use a fallback (user creation date)
-    if (!recruitmentDate && providerDoc.createTime) {
-      recruitmentDate = providerDoc.createTime.toDate();
-    }
-
-    if (!recruitmentDate) {
-      logger.warn("[processProviderRecruitmentCommission] No recruitment date found", {
-        providerId: session.providerId,
-      });
+    if (recruitmentQuery.empty) {
+      // Fallback: check legacy chatter_recruitment_links for pre-migration data
+      await processProviderRecruitmentCommissionLegacy(db, session, config, sessionId, flashMultiplier);
       return;
     }
 
-    // Check if within the commission window (6 months by default)
-    const durationMonths = getProviderRecruitmentDurationMonths(config);
-    const expirationDate = new Date(recruitmentDate);
-    expirationDate.setMonth(expirationDate.getMonth() + durationMonths);
-
-    const now = new Date();
-    if (now > expirationDate) {
-      logger.info("[processProviderRecruitmentCommission] Commission window expired", {
-        providerId: session.providerId,
-        recruitmentDate: recruitmentDate.toISOString(),
-        expirationDate: expirationDate.toISOString(),
-      });
-      return;
-    }
-
-    // Get the recruiting chatter
-    const recruiterChatterId = providerData.providerRecruitedByChatterId;
-
-    // Anti-double payment: skip if same chatter referred the client AND recruited the provider
+    // Anti-double payment: identify client's chatter referrer (if any)
+    let clientChatterReferrerId: string | null = null;
     const clientDocForCheck = await db.collection("users").doc(session.clientId).get();
     if (clientDocForCheck.exists) {
       const clientCheckData = clientDocForCheck.data();
-      if (clientCheckData?.referredByChatterId === recruiterChatterId) {
+      clientChatterReferrerId = clientCheckData?.referredByChatterId || null;
+    }
+
+    // 2. Award commission to each chatter who recruited this provider
+    for (const recruitmentDoc of recruitmentQuery.docs) {
+      const recruitment = recruitmentDoc.data();
+      const recruiterChatterId = recruitment.chatterId;
+
+      // Anti-double payment: skip if same chatter referred the client AND recruited the provider
+      if (clientChatterReferrerId && clientChatterReferrerId === recruiterChatterId) {
         logger.info("[processProviderRecruitmentCommission] Skipping — same chatter referred client and recruited provider (anti-double)", {
           recruiterChatterId,
           clientId: session.clientId,
           sessionId,
         });
-        return;
+        continue;
       }
-    }
 
-    const recruiterDoc = await db.collection("chatters").doc(recruiterChatterId).get();
+      // Check if commission already exists for this call (idempotency)
+      const existingCommission = await db
+        .collection("chatter_commissions")
+        .where("chatterId", "==", recruiterChatterId)
+        .where("sourceId", "==", sessionId)
+        .where("type", "==", "provider_call")
+        .limit(1)
+        .get();
 
-    if (!recruiterDoc.exists) {
-      logger.warn("[processProviderRecruitmentCommission] Recruiter chatter not found", {
-        chatterId: recruiterChatterId,
-      });
-      return;
-    }
+      if (!existingCommission.empty) {
+        continue; // Already awarded
+      }
 
-    const recruiter = recruiterDoc.data() as Chatter;
+      // Check recruiter is active
+      const recruiterDoc = await db.collection("chatters").doc(recruiterChatterId).get();
+      if (!recruiterDoc.exists) continue;
 
-    // Check recruiter is active
-    if (recruiter.status !== "active") {
-      logger.info("[processProviderRecruitmentCommission] Recruiter not active", {
-        chatterId: recruiterChatterId,
-        status: recruiter.status,
-      });
-      return;
-    }
+      const recruiter = recruiterDoc.data() as Chatter;
+      if (recruiter.status !== "active") continue;
 
-    // Create commission for provider call
-    const providerCallAmount = getProviderCallCommission(config, session.providerType);
-
-    const providerCallResult = await createCommission({
-      chatterId: recruiterChatterId,
-      type: "provider_call",
-      source: {
-        id: sessionId,
-        type: "call_session",
-        details: {
-          providerId: session.providerId,
-          providerEmail: providerData.email,
-          providerType: session.providerType,
-          callSessionId: sessionId,
-          callDuration: session.duration,
-        },
-      },
-      baseAmount: providerCallAmount,
-      description: `Commission prestataire recruté (${session.providerType === "lawyer" ? "avocat" : "aidant"})${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
-      skipFraudCheck: true, // Provider calls are low-fraud risk
-    });
-
-    if (providerCallResult.success) {
-      logger.info("[processProviderRecruitmentCommission] Provider call commission created", {
-        sessionId,
-        recruiterId: recruiterChatterId,
-        providerId: session.providerId,
-        commissionId: providerCallResult.commissionId,
-        amount: providerCallResult.amount,
-        monthsRemaining: Math.ceil((expirationDate.getTime() - now.getTime()) / (30 * 24 * 60 * 60 * 1000)),
-      });
-
-      // Create notification
-      await createCommissionNotification(
-        db,
-        recruiterChatterId,
-        "commission_earned",
-        "Commission prestataire recruté !",
-        `Votre ${session.providerType === "lawyer" ? "avocat" : "aidant"} recruté a reçu un appel ! +$${(providerCallAmount / 100).toFixed(2)}`,
-        providerCallResult.commissionId!,
-        providerCallResult.amount!
+      // Calculate months remaining
+      const monthsRemaining = Math.ceil(
+        (recruitment.commissionWindowEndsAt.toMillis() - now.toMillis()) /
+        (30 * 24 * 60 * 60 * 1000)
       );
 
-      // Update weekly challenge score
-      await updateChatterChallengeScore(recruiterChatterId, "provider_call");
+      // Create commission
+      const providerCallAmount = getProviderCallCommission(config, session.providerType);
+
+      const providerCallResult = await createCommission({
+        chatterId: recruiterChatterId,
+        type: "provider_call",
+        source: {
+          id: sessionId,
+          type: "call_session",
+          details: {
+            providerId: session.providerId,
+            providerEmail: recruitment.providerEmail,
+            providerType: session.providerType,
+            callSessionId: sessionId,
+            callDuration: session.duration,
+            recruitmentDate: recruitment.recruitedAt.toDate().toISOString(),
+            monthsRemaining,
+          },
+        },
+        baseAmount: providerCallAmount,
+        description: `Commission prestataire recruté - ${recruitment.providerName} - Appel #${sessionId.slice(-6)}`,
+        skipFraudCheck: true,
+      });
+
+      if (providerCallResult.success) {
+        // Atomic increment of callsWithCommission and totalCommissions
+        await recruitmentDoc.ref.update({
+          callsWithCommission: FieldValue.increment(1),
+          totalCommissions: FieldValue.increment(providerCallResult.amount!),
+          lastCommissionAt: now,
+          updatedAt: now,
+        });
+
+        logger.info("[processProviderRecruitmentCommission] Provider call commission created (harmonized)", {
+          sessionId,
+          recruiterId: recruiterChatterId,
+          providerId: session.providerId,
+          commissionId: providerCallResult.commissionId,
+          amount: providerCallResult.amount,
+          monthsRemaining,
+          callsWithCommission: (recruitment.callsWithCommission || 0) + 1,
+        });
+
+        // Create notification
+        await createCommissionNotification(
+          db,
+          recruiterChatterId,
+          "commission_earned",
+          "provider_recruited",
+          "Commission prestataire recruté !",
+          `Votre ${session.providerType === "lawyer" ? "avocat" : "aidant"} ${recruitment.providerName} a reçu un appel ! +$${(providerCallAmount / 100).toFixed(2)}`,
+          providerCallResult.commissionId!,
+          providerCallResult.amount!
+        );
+
+        // Update weekly challenge score
+        await updateChatterChallengeScore(recruiterChatterId, "provider_call");
+      }
     }
   } catch (error) {
     logger.error("[processProviderRecruitmentCommission] Error", {
@@ -817,39 +802,223 @@ async function processProviderRecruitmentCommission(
 }
 
 /**
- * Create a commission notification
+ * Legacy fallback for pre-migration data in chatter_recruitment_links.
+ * Used when no record exists in chatter_recruited_providers.
+ */
+async function processProviderRecruitmentCommissionLegacy(
+  db: FirebaseFirestore.Firestore,
+  session: CallSession,
+  config: Awaited<ReturnType<typeof getChatterConfigCached>>,
+  sessionId: string,
+  flashMultiplier: number
+): Promise<void> {
+  // Get provider data
+  const providerDoc = await db.collection("users").doc(session.providerId).get();
+  if (!providerDoc.exists) return;
+
+  const providerData = providerDoc.data() as UserDocument;
+  if (!providerData.providerRecruitedByChatterId) return;
+
+  const recruiterChatterId = providerData.providerRecruitedByChatterId;
+
+  // Get the legacy recruitment link to check the date
+  const linkQuery = await db
+    .collection("chatter_recruitment_links")
+    .where("chatterId", "==", recruiterChatterId)
+    .where("usedByProviderId", "==", session.providerId)
+    .limit(1)
+    .get();
+
+  // Determine recruitment date
+  let recruitmentDate: Date | null = null;
+  if (!linkQuery.empty) {
+    const linkData = linkQuery.docs[0].data();
+    recruitmentDate = linkData.usedAt?.toDate() || linkData.createdAt?.toDate();
+  }
+  if (!recruitmentDate && providerDoc.createTime) {
+    recruitmentDate = providerDoc.createTime.toDate();
+  }
+  if (!recruitmentDate) return;
+
+  // Check if within the commission window
+  const durationMonths = getProviderRecruitmentDurationMonths(config);
+  const expirationDate = new Date(recruitmentDate);
+  expirationDate.setMonth(expirationDate.getMonth() + durationMonths);
+
+  const now = new Date();
+  if (now > expirationDate) return;
+
+  // Anti-double payment
+  const clientDocForCheck = await db.collection("users").doc(session.clientId).get();
+  if (clientDocForCheck.exists) {
+    const clientCheckData = clientDocForCheck.data();
+    if (clientCheckData?.referredByChatterId === recruiterChatterId) return;
+  }
+
+  const recruiterDoc = await db.collection("chatters").doc(recruiterChatterId).get();
+  if (!recruiterDoc.exists) return;
+
+  const recruiter = recruiterDoc.data() as Chatter;
+  if (recruiter.status !== "active") return;
+
+  // Create commission
+  const providerCallAmount = getProviderCallCommission(config, session.providerType);
+
+  const providerCallResult = await createCommission({
+    chatterId: recruiterChatterId,
+    type: "provider_call",
+    source: {
+      id: sessionId,
+      type: "call_session",
+      details: {
+        providerId: session.providerId,
+        providerEmail: providerData.email,
+        providerType: session.providerType,
+        callSessionId: sessionId,
+        callDuration: session.duration,
+        legacy: true,
+      },
+    },
+    baseAmount: providerCallAmount,
+    description: `Commission prestataire recruté (${session.providerType === "lawyer" ? "avocat" : "aidant"})${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+    skipFraudCheck: true,
+  });
+
+  if (providerCallResult.success) {
+    // Auto-migrate: create the new chatter_recruited_providers record
+    const providerName =
+      [providerData.firstName, providerData.lastName].filter(Boolean).join(" ") || providerData.email || session.providerId;
+
+    const migrationRef = db.collection("chatter_recruited_providers").doc();
+    await migrationRef.set({
+      id: migrationRef.id,
+      chatterId: recruiterChatterId,
+      chatterCode: recruiter.affiliateCodeRecruitment || recruiter.affiliateCodeClient || "",
+      chatterEmail: recruiter.email,
+      providerId: session.providerId,
+      providerEmail: providerData.email || "",
+      providerType: session.providerType,
+      providerName,
+      recruitedAt: Timestamp.fromDate(recruitmentDate!),
+      commissionWindowEndsAt: Timestamp.fromDate(expirationDate),
+      isActive: now < expirationDate,
+      callsWithCommission: 1,
+      totalCommissions: providerCallResult.amount!,
+      lastCommissionAt: Timestamp.now(),
+      createdAt: Timestamp.fromDate(recruitmentDate!),
+      updatedAt: Timestamp.now(),
+    });
+
+    logger.info("[processProviderRecruitmentCommissionLegacy] Legacy commission + auto-migration", {
+      sessionId,
+      recruiterId: recruiterChatterId,
+      providerId: session.providerId,
+      commissionId: providerCallResult.commissionId,
+      amount: providerCallResult.amount,
+      migratedDocId: migrationRef.id,
+    });
+
+    await createCommissionNotification(
+      db,
+      recruiterChatterId,
+      "commission_earned",
+      "provider_recruited",
+      "Commission prestataire recruté !",
+      `Votre ${session.providerType === "lawyer" ? "avocat" : "aidant"} recruté a reçu un appel ! +$${(providerCallAmount / 100).toFixed(2)}`,
+      providerCallResult.commissionId!,
+      providerCallResult.amount!
+    );
+
+    await updateChatterChallengeScore(recruiterChatterId, "provider_call");
+  }
+}
+
+/**
+ * Commission notification i18n title maps (9 languages, English fallback)
+ */
+const COMM_TITLES: Record<string, Record<string, string>> = {
+  client_call: {
+    fr: "Commission appel client !", en: "Client call commission!",
+    es: "¡Comisión de llamada!", de: "Kundenanruf-Provision!",
+    pt: "Comissão de chamada!", ru: "Комиссия за звонок!",
+    hi: "कॉल कमीशन!", zh: "客户通话佣金！", ar: "عمولة مكالمة العميل!",
+  },
+  activation_bonus: {
+    fr: "Bonus d'activation !", en: "Activation bonus!",
+    es: "¡Bono de activación!", de: "Aktivierungsbonus!",
+    pt: "Bônus de ativação!", ru: "Бонус активации!",
+    hi: "एक्टिवेशन बोनस!", zh: "激活奖金！", ar: "مكافأة التفعيل!",
+  },
+  n1_recruit_bonus: {
+    fr: "Bonus recrutement N1 !", en: "N1 Recruitment bonus!",
+    es: "¡Bono reclutamiento N1!", de: "N1-Rekrutierungsbonus!",
+    pt: "Bônus recrutamento N1!", ru: "Бонус за рекрутинг N1!",
+    hi: "N1 भर्ती बोनस!", zh: "N1招募奖金！", ar: "مكافأة توظيف N1!",
+  },
+  captain_commission: {
+    fr: "Commission Capitaine !", en: "Captain commission!",
+    es: "¡Comisión de Capitán!", de: "Kapitän-Provision!",
+    pt: "Comissão de Capitão!", ru: "Комиссия Капитана!",
+    hi: "कैप्टन कमीशन!", zh: "队长佣金！", ar: "عمولة القبطان!",
+  },
+  n1_commission: {
+    fr: "Commission N1 !", en: "N1 Commission!",
+    es: "¡Comisión N1!", de: "N1-Provision!",
+    pt: "Comissão N1!", ru: "Комиссия N1!",
+    hi: "N1 कमीशन!", zh: "N1佣金！", ar: "عمولة N1!",
+  },
+  n2_commission: {
+    fr: "Commission N2 !", en: "N2 Commission!",
+    es: "¡Comisión N2!", de: "N2-Provision!",
+    pt: "Comissão N2!", ru: "Комиссия N2!",
+    hi: "N2 कमीशन!", zh: "N2佣金！", ar: "عمولة N2!",
+  },
+  provider_recruited: {
+    fr: "Commission prestataire recruté !", en: "Recruited provider commission!",
+    es: "¡Comisión proveedor reclutado!", de: "Provision rekrutierter Anbieter!",
+    pt: "Comissão prestador recrutado!", ru: "Комиссия за привлечённого!",
+    hi: "भर्ती प्रदाता कमीशन!", zh: "招募服务商佣金！", ar: "عمولة مقدم خدمة مُجنّد!",
+  },
+};
+
+function getCommMsgTranslations(amountStr: string): Record<string, string> {
+  return {
+    fr: `Vous avez gagné $${amountStr} en commission.`,
+    en: `You earned $${amountStr} in commission.`,
+    es: `Has ganado $${amountStr} en comisión.`,
+    de: `Sie haben $${amountStr} Provision verdient.`,
+    pt: `Você ganhou $${amountStr} em comissão.`,
+    ru: `Вы заработали $${amountStr} комиссии.`,
+    hi: `आपने $${amountStr} कमीशन कमाया।`,
+    zh: `您赚取了 $${amountStr} 佣金。`,
+    ar: `لقد ربحت $${amountStr} عمولة.`,
+  };
+}
+
+/**
+ * Create a commission notification (i18n: 9 languages, English fallback)
  */
 async function createCommissionNotification(
   db: FirebaseFirestore.Firestore,
   chatterId: string,
   type: ChatterNotification["type"],
+  notifKey: string,
   title: string,
   message: string,
   commissionId: string,
   amount: number
 ): Promise<void> {
   const notificationRef = db.collection("chatter_notifications").doc();
+  const amountStr = (amount / 100).toFixed(2);
 
   const notification: ChatterNotification = {
     id: notificationRef.id,
     chatterId,
     type,
     title,
-    titleTranslations: {
-      en: title.includes("N1")
-        ? "N1 Commission!"
-        : title.includes("N2")
-          ? "N2 Commission!"
-          : title.includes("activation")
-            ? "Activation Bonus!"
-            : title.includes("recrutement")
-              ? "Recruitment Bonus!"
-              : "Client Call Commission!",
-    },
+    titleTranslations: (COMM_TITLES[notifKey] || { en: title }) as ChatterNotification["titleTranslations"],
     message,
-    messageTranslations: {
-      en: message, // Simplified for now
-    },
+    messageTranslations: getCommMsgTranslations(amountStr) as ChatterNotification["messageTranslations"],
     actionUrl: "/chatter/dashboard",
     isRead: false,
     emailSent: false,
@@ -907,16 +1076,36 @@ async function checkFirstClientBadge(
     context: { clientCount: 1 },
   });
 
-  // Create notification
+  // Create notification (i18n: 9 languages, English fallback)
   const notificationRef = db.collection("chatter_notifications").doc();
   await notificationRef.set({
     id: notificationRef.id,
     chatterId,
     type: "badge_earned",
     title: "Badge d\u00e9bloqu\u00e9 : Premier Client !",
-    titleTranslations: { en: "Badge unlocked: First Client!" },
+    titleTranslations: {
+      fr: "Badge débloqué : Premier Client !",
+      en: "Badge unlocked: First Client!",
+      es: "¡Insignia desbloqueada: Primer Cliente!",
+      de: "Abzeichen freigeschaltet: Erster Kunde!",
+      pt: "Distintivo desbloqueado: Primeiro Cliente!",
+      ru: "Значок разблокирован: Первый Клиент!",
+      hi: "बैज अनलॉक: पहला क्लाइंट!",
+      zh: "徽章解锁：第一个客户！",
+      ar: "شارة مفتوحة: أول عميل!",
+    },
     message: "Vous avez r\u00e9f\u00e9r\u00e9 votre premier client !",
-    messageTranslations: { en: "You referred your first client!" },
+    messageTranslations: {
+      fr: "Vous avez référé votre premier client !",
+      en: "You referred your first client!",
+      es: "¡Referiste a tu primer cliente!",
+      de: "Sie haben Ihren ersten Kunden empfohlen!",
+      pt: "Você indicou seu primeiro cliente!",
+      ru: "Вы привлекли своего первого клиента!",
+      hi: "आपने अपना पहला क्लाइंट रेफ़र किया!",
+      zh: "您推荐了第一位客户！",
+      ar: "لقد أحلت عميلك الأول!",
+    },
     isRead: false,
     emailSent: false,
     data: { badgeType: "first_client" },

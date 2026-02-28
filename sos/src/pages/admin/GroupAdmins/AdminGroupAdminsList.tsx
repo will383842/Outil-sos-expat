@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2, functions } from '@/config/firebase';
+import { functionsAffiliate, functions } from '@/config/firebase';
 import toast from 'react-hot-toast';
 import {
   Users,
@@ -145,7 +145,7 @@ const AdminGroupAdminsList: React.FC = () => {
     const current = !!currentVisibility;
     setVisibilityLoading((prev) => new Map(prev).set(id, true));
     try {
-      const fn = httpsCallable(functionsWest2, 'adminToggleGroupAdminVisibility');
+      const fn = httpsCallable(functionsAffiliate, 'adminToggleGroupAdminVisibility');
       await fn({ groupAdminId: id, isVisible: !current });
       setGroupAdmins((prev) =>
         prev.map((x) => x.id === id ? { ...x, isVisible: !current } : x)
@@ -167,7 +167,7 @@ const AdminGroupAdminsList: React.FC = () => {
     setError(null);
     try {
       const adminGetGroupAdminsList = httpsCallable<unknown, GroupAdminListResponse>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetGroupAdminsList'
       );
       const result = await adminGetGroupAdminsList({
@@ -210,7 +210,7 @@ const AdminGroupAdminsList: React.FC = () => {
     setBulkActionLoading(true);
     try {
       for (const id of Array.from(selectedIds)) {
-        const updateStatus = httpsCallable(functionsWest2, 'adminUpdateGroupAdminStatus');
+        const updateStatus = httpsCallable(functionsAffiliate, 'adminUpdateGroupAdminStatus');
         await updateStatus({ groupAdminId: id, status: action === 'activate' ? 'active' : action === 'suspend' ? 'suspended' : 'banned' });
       }
       setSelectedIds(new Set());
@@ -225,7 +225,7 @@ const AdminGroupAdminsList: React.FC = () => {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const exportFn = httpsCallable(functionsWest2, 'adminExportGroupAdmins');
+      const exportFn = httpsCallable(functionsAffiliate, 'adminExportGroupAdmins');
       const result = await exportFn({
         status: statusFilter !== 'all' ? statusFilter : undefined,
         groupType: groupTypeFilter !== 'all' ? groupTypeFilter : undefined,

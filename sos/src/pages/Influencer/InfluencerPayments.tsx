@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 /**
  * InfluencerPayments - Full payment management page for influencers
  *
@@ -229,6 +230,7 @@ const InfluencerPayments: React.FC = () => {
         await refreshMethods();
       } catch (err) {
         console.error('Failed to delete method:', err);
+        toast.error(intl.formatMessage({ id: 'payment.error.deleteMethod', defaultMessage: 'Failed to delete payment method.' }));
       } finally {
         setDeletingMethodId(null);
       }
@@ -243,6 +245,7 @@ const InfluencerPayments: React.FC = () => {
         await setDefaultMethod(methodId);
       } catch (err) {
         console.error('Failed to set default method:', err);
+        toast.error(intl.formatMessage({ id: 'payment.error.setDefault', defaultMessage: 'Failed to set default method.' }));
       }
     },
     [setDefaultMethod]
@@ -259,6 +262,7 @@ const InfluencerPayments: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to cancel withdrawal:', err);
+        toast.error(intl.formatMessage({ id: 'payment.error.cancelWithdrawal', defaultMessage: 'Failed to cancel withdrawal.' }));
       }
     },
     [cancelWithdrawal, refreshWithdrawals, selectedWithdrawalId]

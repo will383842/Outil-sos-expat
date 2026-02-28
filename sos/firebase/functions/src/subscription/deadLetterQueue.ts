@@ -85,7 +85,7 @@ async function createCriticalAlert(entry: DLQEntry): Promise<void> {
   try {
     await getDb().collection('admin_alerts').add({
       type: 'webhook_failure',
-      severity: 'critical',
+      priority: 'critical', read: false,
       title: `Webhook Stripe échoué: ${entry.eventType}`,
       message: `L'événement ${entry.eventId} (${entry.eventType}) a échoué après ${entry.retryCount} tentatives. Erreur: ${entry.errorMessage}`,
       eventId: entry.eventId,

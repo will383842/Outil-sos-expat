@@ -71,7 +71,7 @@ export const initializeChatterConfig = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{ success: boolean; message: string; created: boolean }> => {
     ensureInitialized();
@@ -116,7 +116,7 @@ export const resetChatterConfigToDefaults = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     ensureInitialized();
@@ -923,7 +923,7 @@ export const initializeChatterSystem = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{
     success: boolean;

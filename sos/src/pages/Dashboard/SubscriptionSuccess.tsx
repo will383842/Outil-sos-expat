@@ -12,9 +12,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useIntl } from 'react-intl';
-import { useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
-import { httpsCallable } from 'firebase/functions';
 import {
   CheckCircle,
   Sparkles,
@@ -36,7 +34,6 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import { useSubscription } from '../../hooks/useSubscription';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { functions } from '../../config/firebase';
 import { SupportedLanguage, SubscriptionTier, Currency } from '../../types/subscription';
 import { cn } from '../../utils/cn';
 import { getDateLocale } from '../../utils/formatters';
@@ -222,7 +219,6 @@ export const SubscriptionSuccessPage: React.FC = () => {
   const { language: locale } = useApp();
   const navigate = useLocaleNavigate();
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
 
   const { subscription, plans, refresh } = useSubscription();
 
@@ -232,9 +228,6 @@ export const SubscriptionSuccessPage: React.FC = () => {
   const [sessionDetails, setSessionDetails] = useState<SessionDetails | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
-
-  // Get session_id from URL
-  const sessionId = searchParams.get('session_id');
 
   // Update window size for confetti
   useEffect(() => {
@@ -248,54 +241,23 @@ export const SubscriptionSuccessPage: React.FC = () => {
 
   // Verify the Stripe checkout session
   const verifySession = useCallback(async () => {
-    if (!sessionId) {
-      // No session_id, try to load subscription directly
-      await refresh();
-      setLoading(false);
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
     try {
-      // Call Cloud Function to verify session
-      const verifySubscriptionSession = httpsCallable<
-        { sessionId: string },
-        SessionDetails
-      >(functions, 'verifySubscriptionSession');
-
-      const result = await verifySubscriptionSession({ sessionId });
-
-      if (result.data.success) {
-        setSessionDetails(result.data);
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 5000);
-
-        // Reload subscription data
-        await refresh();
-      } else {
-        setError(result.data.error || intl.formatMessage({ id: 'subscription.success.error.sessionInvalid' }));
-      }
+      // Reload subscription data from Firestore (source of truth)
+      // The Stripe webhook has already updated Firestore by the time the user lands here
+      await refresh();
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
     } catch (err: unknown) {
-      console.error('Error verifying session:', err);
-
-      const firebaseError = err as { code?: string; message?: string };
-
-      // If the function doesn't exist yet, just load subscription
-      if (firebaseError.code === 'functions/not-found') {
-        await refresh();
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 5000);
-      } else {
-        setError(firebaseError.message || intl.formatMessage({ id: 'subscription.success.error.generic' }));
-      }
+      console.error('Error loading subscription:', err);
+      const firebaseError = err as { message?: string };
+      setError(firebaseError.message || intl.formatMessage({ id: 'subscription.success.error.generic' }));
     } finally {
       setLoading(false);
     }
-  }, [sessionId, refresh, intl]);
+  }, [refresh, intl]);
 
   // Verify session on mount
   useEffect(() => {

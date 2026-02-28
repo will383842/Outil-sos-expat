@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { ChevronLeft, Clock } from "lucide-react";
-import { Helmet } from "react-helmet-async";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
+import { ArticleSchema, BreadcrumbSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
 import { parseLocaleFromPath, getLocaleString, useLocaleNavigate, useLocalePath } from "../multilingual-system";
@@ -247,18 +248,56 @@ const HelpArticle: React.FC = () => {
   const currentSlug = getTranslatedValue(article.slug, language);
   const faqSchema = generateFAQSchema();
 
+  // Locale-aware canonical and article URL
+  const { locale: urlLocale } = parseLocaleFromPath(location.pathname);
+  const currentLocale = urlLocale || getLocaleString(language as any);
+  const articleUrl = `https://sos-expat.com/${currentLocale}/centre-aide/${currentSlug}`;
+
+  // Breadcrumbs for structured data
+  const breadcrumbs = [
+    { name: intl.formatMessage({ id: "nav.home" }), url: "/" },
+    { name: intl.formatMessage({ id: "helpCenter.title" }), url: `/${currentLocale}/centre-aide` },
+    { name: title },
+  ];
+
+  // Dates for ArticleSchema (use Firestore timestamps if available)
+  const datePublished = article.createdAt
+    ? (typeof article.createdAt === 'object' && 'toDate' in article.createdAt
+        ? (article.createdAt as any).toDate().toISOString()
+        : new Date(article.createdAt as any).toISOString())
+    : new Date().toISOString();
+  const dateModified = article.updatedAt
+    ? (typeof article.updatedAt === 'object' && 'toDate' in article.updatedAt
+        ? (article.updatedAt as any).toDate().toISOString()
+        : new Date(article.updatedAt as any).toISOString())
+    : datePublished;
+
   return (
     <Layout>
-      <Helmet>
-        <title>{title} | SOS Expat</title>
-        <meta name="description" content={excerpt} />
-        <link rel="canonical" href={`https://sos-expat.com/centre-aide/${currentSlug}`} />
-        {faqSchema && (
-          <script type="application/ld+json">
-            {JSON.stringify(faqSchema)}
-          </script>
-        )}
-      </Helmet>
+      <SEOHead
+        title={`${title} | SOS Expat`}
+        description={excerpt}
+        canonicalUrl={`/centre-aide/${currentSlug}`}
+        author="Manon"
+        contentType="article"
+        ogType="article"
+        publishedTime={datePublished}
+        modifiedTime={dateModified}
+        keywords={tags.join(', ')}
+        readingTime={`${article.readTime} min`}
+        structuredData={faqSchema || undefined}
+      />
+      <ArticleSchema
+        title={title}
+        description={excerpt}
+        url={articleUrl}
+        datePublished={datePublished}
+        dateModified={dateModified}
+        author="Manon"
+        keywords={tags}
+        wordCount={content ? content.split(/\s+/).length : undefined}
+      />
+      <BreadcrumbSchema items={breadcrumbs} />
 
       <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
         {/* Hero compact */}

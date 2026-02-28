@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import { useNavigate } from 'react-router-dom';
 import {
   UserPlus,
@@ -78,7 +78,7 @@ const AdminGroupAdminsRecruitments: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const getList = httpsCallable(functionsWest2, 'adminGetRecruitmentsList');
+      const getList = httpsCallable(functionsAffiliate, 'adminGetRecruitmentsList');
       const result = await getList({ page, limit, status: statusFilter, search });
       const data = result.data as {
         recruitments: Recruitment[];

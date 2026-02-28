@@ -35,7 +35,7 @@ import {
   getDocs,
   serverTimestamp,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db, getCloudRunUrl } from "../config/firebase";
 import { useIntl } from "react-intl";
 import { trackMetaContact, getMetaIdentifiers } from "../utils/metaPixel";
 import { trackAdContact } from "../services/adAttributionService";
@@ -716,7 +716,7 @@ const Contact: React.FC = () => {
 
       // Sauvegarder via Cloud Function
       const response = await fetch(
-        "https://createcontactmessage-5tfnuxa2hq-ew.a.run.app",
+        getCloudRunUrl('createcontactmessage', 'europe-west1'),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

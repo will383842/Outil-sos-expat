@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   ArrowLeft,
   User,
@@ -117,7 +117,7 @@ const AdminInfluencerDetail: React.FC = () => {
         influencer: Influencer;
         recentCommissions: Commission[];
         recentWithdrawals: Withdrawal[];
-      }>(functionsWest2, 'adminGetInfluencerDetail');
+      }>(functionsAffiliate, 'adminGetInfluencerDetail');
 
       const result = await adminGetInfluencerDetail({ influencerId: id });
       setInfluencer(result.data.influencer);
@@ -141,7 +141,7 @@ const AdminInfluencerDetail: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const adminUpdateInfluencerStatus = httpsCallable(functionsWest2, 'adminUpdateInfluencerStatus');
+      const adminUpdateInfluencerStatus = httpsCallable(functionsAffiliate, 'adminUpdateInfluencerStatus');
       await adminUpdateInfluencerStatus({
         influencerId: id,
         status: newStatus,

@@ -1099,29 +1099,48 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
           </div>
 
           {/* Terms acceptance */}
-          <div className="p-4 bg-white/10 border rounded-2xl">
-            <label className="flex items-start gap-3 cursor-pointer group">
+          <div className="space-y-2">
+            <label className="flex items-start gap-3 cursor-pointer select-none group">
               <div className="relative flex-shrink-0 mt-0.5">
                 <input
                   type="checkbox"
+                  id="acceptTerms"
                   checked={formData.acceptTerms}
                   onChange={(e) => handleChange('acceptTerms', e.target.checked)}
-                  className="w-5 h-5 rounded-md border-2 bg-white/10 text-indigo-500 focus:ring-2 transition-all duration-200"
+                  className={`
+                    h-5 w-5 rounded border-2
+                    ${validationErrors.acceptTerms
+                      ? 'border-red-500 bg-red-500/10'
+                      : formData.acceptTerms
+                        ? 'border-indigo-400 bg-indigo-400 text-white'
+                        : 'border-white/20 bg-white/10'
+                    }
+                    focus:ring-2 focus:ring-indigo-400/30 focus:ring-offset-0
+                    transition-all duration-200 cursor-pointer
+                  `}
+                  aria-required="true"
+                  aria-invalid={!!validationErrors.acceptTerms}
                 />
               </div>
-              <span className="text-sm group-hover:text-white transition-colors">
+              <span className="text-sm leading-relaxed text-gray-300">
                 <FormattedMessage
                   id="groupadmin.register.terms"
                   defaultMessage="I accept the {terms}, the {affiliateTerms} and {privacy}"
                   values={{
-                    terms: <Link to="/cgu-group-admins" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline"><FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" /></Link>,
-                    affiliateTerms: <Link to="/cgu-affiliation" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline"><FormattedMessage id="form.affiliateTerms" defaultMessage="Affiliate Program Terms" /></Link>,
-                    privacy: <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline"><FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" /></Link>,
+                    terms: <Link to="/cgu-group-admins" target="_blank" rel="noopener noreferrer" className="underline font-medium text-indigo-400 hover:text-indigo-300"><FormattedMessage id="form.termsOfService" defaultMessage="Terms of Service" /></Link>,
+                    affiliateTerms: <Link to="/cgu-affiliation" target="_blank" rel="noopener noreferrer" className="underline font-medium text-indigo-400 hover:text-indigo-300"><FormattedMessage id="form.affiliateTerms" defaultMessage="Affiliate Program Terms" /></Link>,
+                    privacy: <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline font-medium text-indigo-400 hover:text-indigo-300"><FormattedMessage id="form.privacyPolicy" defaultMessage="Privacy Policy" /></Link>,
                   }}
                 />
+                <span className="text-indigo-400 font-bold text-lg ml-0.5">*</span>
               </span>
             </label>
-            {validationErrors.acceptTerms && <p className={`${darkStyles.errorText} mt-2 ml-8`}><AlertCircle className="w-3.5 h-3.5" />{validationErrors.acceptTerms}</p>}
+            {validationErrors.acceptTerms && (
+              <p className={darkStyles.errorText} role="alert">
+                <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
+                {validationErrors.acceptTerms}
+              </p>
+            )}
           </div>
 
           {/* Action buttons */}
@@ -1137,7 +1156,7 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !formData.acceptTerms}
               className="flex-1 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-2xl shadow-lg hover:shadow-indigo-500/30 transition-all duration-200 items-center justify-center gap-2 min-h-[48px]"
             >
               {loading ? (

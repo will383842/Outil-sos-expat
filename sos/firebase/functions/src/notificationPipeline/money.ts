@@ -13,12 +13,12 @@ function minorUnitsFor(currency?: string): number {
 export function formatMoney(
   amountMinor: number | string,
   currency: string,
-  locale: "fr-FR" | "en"
+  locale: string
 ) {
   const minor = typeof amountMinor === "string" ? Number(amountMinor) : amountMinor;
   const divisor = minorUnitsFor(currency);
   const value = Number.isFinite(minor as number) ? Number(minor) / divisor : 0;
-  const loc = locale === "fr-FR" ? "fr-FR" : "en-US";
+  const loc = locale || "en-US";
   const cur = String(currency || "EUR").toUpperCase();
   try {
     return new Intl.NumberFormat(loc, { style: "currency", currency: cur }).format(value);

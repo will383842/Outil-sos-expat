@@ -298,12 +298,25 @@ async function sendDunningEmail(
 async function suspendSubscription(dunningRecord: DunningRecord): Promise<void> {
   try {
     // Mettre à jour le statut dans Firestore
+    const now = admin.firestore.Timestamp.now();
     await getDb().collection('subscriptions').doc(dunningRecord.userId).update({
       status: 'suspended',
-      suspendedAt: admin.firestore.Timestamp.now(),
+      suspendedAt: now,
       suspensionReason: 'payment_failed',
-      updatedAt: admin.firestore.Timestamp.now(),
+      updatedAt: now,
     });
+
+    // Sync sos_profiles + users subscriptionStatus
+    await getDb().doc(`sos_profiles/${dunningRecord.userId}`).set({
+      subscriptionStatus: 'suspended',
+      hasActiveSubscription: false,
+      updatedAt: now,
+    }, { merge: true });
+    await getDb().doc(`users/${dunningRecord.userId}`).set({
+      subscriptionStatus: 'suspended',
+      hasActiveSubscription: false,
+      updatedAt: now,
+    }, { merge: true });
 
     // Envoyer email de suspension
     await sendDunningEmail(dunningRecord.userId, 'account_suspended');
@@ -353,11 +366,32 @@ export async function markDunningRecovered(
     .get();
 
   if (subscriptionDoc.exists && subscriptionDoc.data()?.status === 'suspended') {
+    const now = admin.firestore.Timestamp.now();
     await subscriptionDoc.ref.update({
       status: 'active',
+      aiAccessEnabled: true,
       suspendedAt: admin.firestore.FieldValue.delete(),
       suspensionReason: admin.firestore.FieldValue.delete(),
-      updatedAt: admin.firestore.Timestamp.now(),
+      updatedAt: now,
+    });
+
+    // Sync sos_profiles + users subscriptionStatus
+    const userId = dunningRecord.userId;
+    await getDb().doc(`sos_profiles/${userId}`).set({
+      subscriptionStatus: 'active',
+      hasActiveSubscription: true,
+      updatedAt: now,
+    }, { merge: true });
+    await getDb().doc(`users/${userId}`).set({
+      subscriptionStatus: 'active',
+      hasActiveSubscription: true,
+      updatedAt: now,
+    }, { merge: true });
+
+    // Reset ai_usage
+    await getDb().doc(`ai_usage/${userId}`).update({
+      aiAccessSuspended: false,
+      updatedAt: now,
     });
   }
 

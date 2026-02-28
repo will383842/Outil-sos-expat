@@ -38,7 +38,7 @@ import {
   onSnapshot,
   Timestamp as FsTimestamp,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db, getCloudFunctionUrl } from "../config/firebase";
 import { getDocumentRest } from "../utils/firestoreRestApi";
 import Layout from "../components/layout/Layout";
 import LoadingSpinner from "../components/common/LoadingSpinner";
@@ -1698,7 +1698,7 @@ const ProviderProfile: React.FC = () => {
 
       // ✅ Image OG dynamique avec overlay (nom, rôle, pays)
       // Utilise le service Firebase pour générer une image optimisée pour les réseaux sociaux
-      const dynamicOgImageUrl = `https://europe-west1-sos-urgently-ac307.cloudfunctions.net/generateOgImage/${provider.id || provider.uid}?lang=${language}`;
+      const dynamicOgImageUrl = `${getCloudFunctionUrl('generateOgImage', 'europe-west1')}/${provider.id || provider.uid}?lang=${language}`;
 
       // Fallback vers l'image de profil simple
       const fallbackImage =
@@ -1849,7 +1849,8 @@ const ProviderProfile: React.FC = () => {
         },
       });
     } else {
-      // Save booking redirect URL before opening wizard (fallback if Google redirect/page reload)
+      // P3-5 FIX: Clear stale redirect avant d'écrire le nouveau (évite redirection vers un ancien provider)
+      sessionStorage.removeItem('loginRedirect');
       sessionStorage.setItem('loginRedirect', `/booking-request/${providerIdentifier}`);
       setShowAuthWizard(true);
     }
@@ -1977,7 +1978,7 @@ const ProviderProfile: React.FC = () => {
 
   // Image OG dynamique avec overlay pour les réseaux sociaux
   const mainPhoto: string = (provider?.id || provider?.uid)
-    ? `https://europe-west1-sos-urgently-ac307.cloudfunctions.net/generateOgImage/${provider?.id || provider?.uid}?lang=${language}`
+    ? `${getCloudFunctionUrl('generateOgImage', 'europe-west1')}/${provider?.id || provider?.uid}?lang=${language}`
     : profilePhoto;
   
   const descriptionText = useMemo(() => {
@@ -3539,7 +3540,7 @@ const ProviderProfile: React.FC = () => {
       {/* ========================================== */}
       <QuickAuthWizard
         isOpen={showAuthWizard}
-        onClose={() => setShowAuthWizard(false)}
+        onClose={() => { setShowAuthWizard(false); sessionStorage.removeItem('loginRedirect'); }}
         onSuccess={handleAuthSuccess}
         providerName={provider ? formatPublicName(provider) : undefined}
         bookingRedirectUrl={provider ? `/booking-request/${provider.shortId || provider.id}` : undefined}

@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { httpsCallable } from "firebase/functions";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,7 +109,7 @@ const AdminChatterPromotions: React.FC = () => {
       const getPromosFn = httpsCallable<
         { includeInactive?: boolean },
         { promotions: ChatterPromotion[] }
-      >(functionsWest2, "adminGetPromotions");
+      >(functionsAffiliate, "adminGetPromotions");
 
       const result = await getPromosFn({ includeInactive: true });
       setPromotions(result.data.promotions);
@@ -151,7 +151,7 @@ const AdminChatterPromotions: React.FC = () => {
         const updateFn = httpsCallable<
           { id: string; updates: Partial<PromotionFormData> },
           { success: boolean }
-        >(functionsWest2, "adminUpdatePromotion");
+        >(functionsAffiliate, "adminUpdatePromotion");
 
         await updateFn({
           id: editingPromo.id,
@@ -164,7 +164,7 @@ const AdminChatterPromotions: React.FC = () => {
         const createFn = httpsCallable<
           Omit<PromotionFormData, "countryFilter"> & { countryFilter: string | null },
           { success: boolean; promoId: string }
-        >(functionsWest2, "adminCreatePromotion");
+        >(functionsAffiliate, "adminCreatePromotion");
 
         await createFn({
           ...formData,
@@ -187,7 +187,7 @@ const AdminChatterPromotions: React.FC = () => {
     setIsDeleting(promoId);
     try {
       const deleteFn = httpsCallable<{ id: string }, { success: boolean }>(
-        functionsWest2,
+        functionsAffiliate,
         "adminDeletePromotion"
       );
 
@@ -203,7 +203,7 @@ const AdminChatterPromotions: React.FC = () => {
   const handleDuplicate = async (promo: ChatterPromotion) => {
     try {
       const duplicateFn = httpsCallable<{ id: string }, { success: boolean; promoId: string }>(
-        functionsWest2,
+        functionsAffiliate,
         "adminDuplicatePromotion"
       );
 

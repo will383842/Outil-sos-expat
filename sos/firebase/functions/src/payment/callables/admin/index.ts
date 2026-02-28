@@ -11,6 +11,7 @@
  * - adminApproveWithdrawal: Approve a withdrawal for processing
  * - adminRejectWithdrawal: Reject a withdrawal with reason
  * - adminProcessWithdrawal: Trigger actual payment via provider
+ * - adminAdjustBalance: Manually credit or debit an affiliate's balance
  * - adminGetPaymentStats: Dashboard statistics
  * - adminGetAuditLogs: Full audit trail
  * - adminGetAuditLogActions: List of audit log action types
@@ -26,6 +27,15 @@ export { adminGetPendingWithdrawals } from './getPendingWithdrawals';
 export { adminApproveWithdrawal } from './approveWithdrawal';
 export { adminRejectWithdrawal } from './rejectWithdrawal';
 export { adminProcessWithdrawal } from './processWithdrawal';
+
+// Balance Management
+export { adminAdjustBalance } from './adjustBalance';
+
+// Manual Commission
+export { adminIssueManualCommission } from './issueManualCommission';
+
+// Manual Payment
+export { adminMarkWithdrawalAsPaid } from './markWithdrawalAsPaid';
 
 // Statistics & Reporting
 export { adminGetPaymentStats } from './getPaymentStats';

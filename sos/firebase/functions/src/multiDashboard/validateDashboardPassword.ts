@@ -18,6 +18,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
 import { timingSafeEqual, randomBytes } from "crypto";
 import { MULTI_DASHBOARD_PASSWORD } from "../lib/secrets";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // Secret for dashboard password (stored in Google Cloud Secret Manager)
 // Imported from lib/secrets.ts
@@ -58,13 +59,7 @@ export const validateDashboardPassword = onCall<
     timeoutSeconds: 30,
     maxInstances: 10,
     secrets: [MULTI_DASHBOARD_PASSWORD],
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://multi.sos-expat.com",
-      "http://localhost:3000",
-      "http://localhost:5173",
-    ],
+    cors: ALLOWED_ORIGINS,
   },
   async (request) => {
     const { password } = request.data;

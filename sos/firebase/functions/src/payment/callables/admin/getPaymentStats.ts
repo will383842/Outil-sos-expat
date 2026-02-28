@@ -89,6 +89,7 @@ interface PaymentStatsResponse {
   byProvider: {
     wise: { count: number; amount: number };
     flutterwave: { count: number; amount: number };
+    manual: { count: number; amount: number };
   };
   byUserType: {
     chatter: { count: number; amount: number };
@@ -116,6 +117,14 @@ interface PaymentStatsResponse {
     requestedAt: string;
     completedAt?: string;
   }>;
+  platformKpis: {
+    refundRate: number; // percentage of refunded payments
+    refundCount: number;
+    totalPayments: number;
+    conversionRate: number; // percentage of registered users who made a first call
+    registeredUsers: number;
+    usersWithCalls: number;
+  };
 }
 
 /**
@@ -180,8 +189,7 @@ export const adminGetPaymentStats = onCall(
       });
 
       const periodStart = getPeriodStartDate(period);
-      // Note: periodTimestamp kept for potential future use with Firestore Timestamp queries
-      void Timestamp.fromDate(periodStart);
+      const periodTimestamp = Timestamp.fromDate(periodStart);
 
       // Build query based on period
       let query = db.collection('payment_withdrawals') as FirebaseFirestore.Query;
@@ -208,6 +216,7 @@ export const adminGetPaymentStats = onCall(
       const byProvider = {
         wise: { count: 0, amount: 0 },
         flutterwave: { count: 0, amount: 0 },
+        manual: { count: 0, amount: 0 },
       };
 
       const byUserType = {
@@ -335,6 +344,39 @@ export const adminGetPaymentStats = onCall(
       const totalWithdrawals = snapshot.docs.length;
       const averageAmount = totalWithdrawals > 0 ? Math.round(totalAmount / totalWithdrawals) : 0;
 
+      // Platform KPIs: refund rate + conversion rate
+      // Refund rate: count payments with status 'refunded' vs total payments
+      const paymentsSnapshot = await db.collection('payments')
+        .where('createdAt', '>=', periodTimestamp)
+        .select('status')
+        .get();
+
+      let totalPayments = 0;
+      let refundCount = 0;
+      paymentsSnapshot.docs.forEach((doc) => {
+        totalPayments++;
+        const status = doc.data().status;
+        if (status === 'refunded' || status === 'partially_refunded') {
+          refundCount++;
+        }
+      });
+      const refundRate = totalPayments > 0 ? Math.round((refundCount / totalPayments) * 10000) / 100 : 0;
+
+      // Conversion rate: % of registered clients who completed at least one call (all-time KPI)
+      const usersSnapshot = await db.collection('users')
+        .where('role', '==', 'client')
+        .select('uid')
+        .get();
+      const registeredUsers = usersSnapshot.size;
+
+      const callersSnapshot = await db.collection('call_sessions')
+        .where('status', '==', 'completed')
+        .select('clientId')
+        .get();
+      const uniqueCallers = new Set(callersSnapshot.docs.map((d) => d.data().clientId).filter(Boolean));
+      const usersWithCalls = uniqueCallers.size;
+      const conversionRate = registeredUsers > 0 ? Math.round((usersWithCalls / registeredUsers) * 10000) / 100 : 0;
+
       const response: PaymentStatsResponse = {
         period,
         periodLabel: getPeriodLabel(period),
@@ -362,6 +404,14 @@ export const adminGetPaymentStats = onCall(
           amountThisMonth,
         },
         recentActivity,
+        platformKpis: {
+          refundRate,
+          refundCount,
+          totalPayments,
+          conversionRate,
+          registeredUsers,
+          usersWithCalls,
+        },
       };
 
       logger.info('[adminGetPaymentStats] Stats fetched', {

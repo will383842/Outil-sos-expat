@@ -13,7 +13,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { BloggerDashboardLayout } from '@/components/Blogger';
 import { useBlogger } from '@/hooks/useBlogger';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import toast from 'react-hot-toast';
 import {
   Users,
@@ -95,7 +95,7 @@ const BloggerBloggerRecruitment: React.FC = () => {
 
     try {
       const getBloggerRecruits = httpsCallable<void, GetBloggerRecruitsResponse>(
-        functionsWest2,
+        functionsAffiliate,
         'getBloggerRecruits'
       );
 

@@ -23,6 +23,7 @@ import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 import { hashIP } from "../../chatter/utils";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
+import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 
 // Supported languages validation (must match app navigation languages)
 const VALID_LANGUAGES: SupportedGroupAdminLanguage[] = [
@@ -74,7 +75,7 @@ export const registerGroupAdmin = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 2,
     cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
   },
@@ -92,6 +93,8 @@ export const registerGroupAdmin = onCall(
     }
 
     const userId = request.auth.uid;
+    await checkRateLimit(userId, "registerGroupAdmin", RATE_LIMITS.REGISTRATION);
+
     const db = getFirestore();
 
     // 2. Validate input
@@ -262,6 +265,19 @@ export const registerGroupAdmin = onCall(
 
       if (!emailQuery.empty) {
         throw new HttpsError("already-exists", "A GroupAdmin with this email already exists");
+      }
+
+      // 6b. Cross-role email check (P2-01 harmonization)
+      const usersEmailQuery = await db
+        .collection("users")
+        .where("email", "==", input.email.toLowerCase())
+        .limit(1)
+        .get();
+      if (!usersEmailQuery.empty) {
+        const existingUserDoc = usersEmailQuery.docs[0];
+        if (existingUserDoc.id !== userId) {
+          throw new HttpsError("already-exists", "This email is already used by another account");
+        }
       }
 
       // 7. Check for duplicate group URL
@@ -447,19 +463,20 @@ export const registerGroupAdmin = onCall(
       });
 
       await db.runTransaction(async (transaction) => {
-        // Create GroupAdmin
+        // IMPORTANT: All reads MUST come before all writes in Firestore transactions
         const groupAdminRef = db.collection("group_admins").doc(userId);
-        transaction.set(groupAdminRef, groupAdmin);
-
-        // Create/Update user document
         const userRef = db.collection("users").doc(userId);
         const userDoc = await transaction.get(userRef);
+
+        // Now do all writes
+        transaction.set(groupAdminRef, groupAdmin);
 
         if (userDoc.exists) {
           transaction.update(userRef, {
             role: "groupAdmin",
             isGroupAdmin: true,
             groupAdminStatus: "active",
+            telegramOnboardingCompleted: false,
             updatedAt: now,
           });
         } else {
@@ -470,6 +487,7 @@ export const registerGroupAdmin = onCall(
             role: "groupAdmin",
             isGroupAdmin: true,
             groupAdminStatus: "active",
+            telegramOnboardingCompleted: false,
             createdAt: now,
             updatedAt: now,
           });

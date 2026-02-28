@@ -47,7 +47,7 @@ export const getInfluencerTrainingModules = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetInfluencerTrainingModulesResponse> => {
@@ -172,7 +172,7 @@ export const getInfluencerTrainingModuleContent = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetInfluencerTrainingModuleContentResponse> => {
@@ -334,7 +334,7 @@ export const updateInfluencerTrainingProgress = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -396,7 +396,7 @@ export const submitInfluencerTrainingQuiz = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<SubmitInfluencerTrainingQuizResponse> => {
@@ -584,11 +584,41 @@ export const submitInfluencerTrainingQuiz = onCall(
           rewardGranted = module.completionReward;
 
           if (module.completionReward.type === "bonus" && module.completionReward.bonusAmount) {
-            // Create bonus commission (implementation depends on commission system)
-            logger.info("[submitInfluencerTrainingQuiz] Bonus reward pending", {
-              userId,
-              bonusAmount: module.completionReward.bonusAmount,
-            });
+            try {
+              const { createCommission } = await import("../services/influencerCommissionService");
+              const bonusResult = await createCommission({
+                influencerId: userId,
+                type: "signup_bonus",
+                source: {
+                  id: `training_${moduleId}`,
+                  type: "user",
+                  details: {},
+                },
+                amount: module.completionReward.bonusAmount,
+                description: `Training completion bonus for module: ${module.title || moduleId}`,
+              });
+
+              if (bonusResult.success) {
+                logger.info("[submitInfluencerTrainingQuiz] Training bonus commission created", {
+                  userId,
+                  moduleId,
+                  bonusAmount: module.completionReward.bonusAmount,
+                  commissionId: bonusResult.commissionId,
+                });
+              } else {
+                logger.warn("[submitInfluencerTrainingQuiz] Training bonus commission failed", {
+                  userId,
+                  moduleId,
+                  error: bonusResult.error,
+                });
+              }
+            } catch (bonusError) {
+              logger.error("[submitInfluencerTrainingQuiz] Error creating training bonus", {
+                userId,
+                moduleId,
+                bonusError,
+              });
+            }
           }
         }
       }
@@ -628,7 +658,7 @@ export const getInfluencerTrainingCertificate = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<GetInfluencerTrainingCertificateResponse> => {
     ensureInitialized();

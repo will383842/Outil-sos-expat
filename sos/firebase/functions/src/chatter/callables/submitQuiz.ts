@@ -1,4 +1,9 @@
 /**
+ * @deprecated Quiz flow disabled since 2026-02. Chatters are now activated immediately
+ * on registration. Routes /chatter/quiz and /chatter/presentation are commented out
+ * in App.tsx. These functions are kept deployed to avoid 404 errors from cached clients
+ * but will be removed in a future cleanup deploy.
+ *
  * Callable: submitQuiz
  *
  * Submits quiz answers and evaluates if chatter passes.
@@ -38,7 +43,7 @@ export const submitQuiz = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<SubmitQuizResponse> => {
@@ -280,7 +285,7 @@ export const getQuizQuestions = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{
     success: boolean;

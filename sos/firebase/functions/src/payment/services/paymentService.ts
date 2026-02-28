@@ -216,8 +216,9 @@ export class PaymentService {
     });
 
     // Determine provider based on payment type
-    const provider: PaymentProvider = details.type === 'bank_transfer' ? 'wise' : 'flutterwave';
+    // P2-08 FIX: Handle both 'bank_transfer' and 'wise' methodType for Wise provider
     const methodType: PaymentMethodType = params.methodType || details.type;
+    const provider: PaymentProvider = (details.type === 'bank_transfer' || methodType === 'wise') ? 'wise' : 'flutterwave';
 
     // Check for existing matching payment method to avoid duplicates
     const existingMethod = await this.findMatchingPaymentMethod(userId, userType, details, methodType);
@@ -694,8 +695,14 @@ export class PaymentService {
       const currentBalance = userData.availableBalance || 0;
       const refundAmount = withdrawal.totalDebited || withdrawal.amount;
 
+      // V10 FIX: Clear pendingWithdrawalId to unblock future withdrawals
+      const pendingField = withdrawal.userType === 'affiliate'
+        ? 'pendingPayoutId'
+        : 'pendingWithdrawalId';
+
       transaction.update(userRef, {
         availableBalance: currentBalance + refundAmount,
+        [pendingField]: null,
         updatedAt: Timestamp.now(),
       });
     });
@@ -955,11 +962,13 @@ export class PaymentService {
         );
 
         // Refund balance if max retries reached
+        // P1-3 FIX: Refund totalDebited (amount + withdrawal fee), not just amount
         if (shouldRefund) {
-          await this.refundUserBalance(withdrawal.userId, withdrawal.userType, withdrawal.amount);
+          const refundAmount = withdrawal.totalDebited || withdrawal.amount;
+          await this.refundUserBalance(withdrawal.userId, withdrawal.userType, refundAmount);
           logger.info('[PaymentService.processWithdrawal] Balance refunded after max retries', {
             withdrawalId,
-            amount: withdrawal.amount,
+            amount: refundAmount,
             retryCount: newRetryCount,
           });
         }
@@ -1330,6 +1339,14 @@ export class PaymentService {
     userType: PaymentUserType,
     amount: number
   ): Promise<ValidationResult> {
+    // AUDIT FIX 2026-02-28: Validate amount is an integer (cents)
+    if (!Number.isInteger(amount) || amount <= 0) {
+      return {
+        valid: false,
+        error: `Invalid amount: must be a positive integer (cents). Received: ${amount}`,
+      };
+    }
+
     // Get config for limits
     const config = await this.getConfig();
 

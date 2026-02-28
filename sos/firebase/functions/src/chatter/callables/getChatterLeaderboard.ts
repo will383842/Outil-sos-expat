@@ -60,7 +60,7 @@ export const getChatterLeaderboard = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetLeaderboardResponse> => {
@@ -150,8 +150,8 @@ export const getChatterLeaderboard = onCall(
               const comm = doc.data() as ChatterCommission;
               if (comm.status !== "cancelled") {
                 monthlyEarnings += comm.amount;
-                if (comm.type === "client_referral") monthlyClients++;
-                if (comm.type === "recruitment") monthlyRecruits++;
+                if (comm.type === "client_referral" || comm.type === "client_call") monthlyClients++;
+                if (comm.type === "recruitment" || comm.type === "activation_bonus" || comm.type === "n1_recruit_bonus") monthlyRecruits++;
               }
             });
 

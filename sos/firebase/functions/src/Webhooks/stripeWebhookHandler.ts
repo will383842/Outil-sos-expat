@@ -68,6 +68,10 @@ import {
   handleInvoiceCreated,
   handlePaymentMethodUpdated,
   handlePayoutFailed,
+  // P2 FIX: Missing Stripe event handlers
+  handleInvoiceVoided,
+  handleInvoiceMarkedUncollectible,
+  handleSubscriptionDisputeUpdated,
 } from "../subscription/webhooks";
 import { addToDeadLetterQueue } from "../subscription/deadLetterQueue";
 
@@ -1154,8 +1158,8 @@ export const stripeWebhook = onRequest(
 
         // STEP 2: Raw body processing
         let rawBodyBuffer: Buffer;
-        if ((req as any).rawBody && Buffer.isBuffer((req as any).rawBody)) {
-          rawBodyBuffer = (req as any).rawBody;
+        if (req.rawBody && Buffer.isBuffer(req.rawBody)) {
+          rawBodyBuffer = req.rawBody;
           console.log("Using direct rawBody buffer");
         } else {
           console.log("No usable raw body");
@@ -1244,6 +1248,12 @@ export const stripeWebhook = onRequest(
 
         console.log("Event constructed:", event.type);
         console.log("Event ID:", event.id);
+
+        // Webhook heartbeat (fire-and-forget) — monitoring freshness
+        database.collection('webhook_heartbeats').doc('stripe').set({
+          lastReceivedAt: admin.firestore.FieldValue.serverTimestamp(),
+          lastEventType: event.type,
+        }, { merge: true }).catch(() => {});
 
         // STEP 5: Process the event
         const objectId = (() => {
@@ -1624,6 +1634,15 @@ export const stripeWebhook = onRequest(
                 database,
                 stripeInstance
               );
+              // P2 FIX: Also log dispute progress in subscription_logs (non-blocking)
+              try {
+                await handleSubscriptionDisputeUpdated(
+                  event.data.object as Stripe.Dispute,
+                  { eventId: event.id, eventType: event.type }
+                );
+              } catch (logError) {
+                console.error("Non-critical: subscription dispute logging failed:", logError);
+              }
               console.log("Handled charge.dispute.updated");
               break;
 
@@ -1811,7 +1830,8 @@ export const stripeWebhook = onRequest(
 
                 await database.collection("admin_alerts").add({
                   type: "stripe_account_deauthorized",
-                  severity: "medium",
+                  priority: "medium",
+                  read: false,
                   providerId: providerDoc.id,
                   stripeAccountId: deauthorizedAccountId,
                   message: `Le provider ${providerDoc.id} a deconnecte son compte Stripe`,
@@ -2001,6 +2021,37 @@ export const stripeWebhook = onRequest(
               } catch (subError) {
                 console.error("Error in handleInvoicePaymentActionRequired:", subError);
                 await addToDeadLetterQueue(event, subError as Error, { handler: "handleInvoicePaymentActionRequired" });
+                throw subError;
+              }
+              break;
+
+            // P2 FIX: Missing invoice events
+            case "invoice.voided":
+              console.log("Processing invoice.voided");
+              try {
+                await handleInvoiceVoided(
+                  event.data.object as Stripe.Invoice,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("Handled invoice.voided");
+              } catch (subError) {
+                console.error("Error in handleInvoiceVoided:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleInvoiceVoided" });
+                throw subError;
+              }
+              break;
+
+            case "invoice.marked_uncollectible":
+              console.log("Processing invoice.marked_uncollectible");
+              try {
+                await handleInvoiceMarkedUncollectible(
+                  event.data.object as Stripe.Invoice,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("Handled invoice.marked_uncollectible");
+              } catch (subError) {
+                console.error("Error in handleInvoiceMarkedUncollectible:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleInvoiceMarkedUncollectible" });
                 throw subError;
               }
               break;

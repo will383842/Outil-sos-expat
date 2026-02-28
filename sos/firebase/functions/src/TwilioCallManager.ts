@@ -2500,10 +2500,31 @@ export class TwilioCallManager {
         logger.info(`✅ [${completionId}] ✅ Session marked as completed`);
       }
 
-      // SMS/WhatsApp notifications removed - call completion logged
+      // P3-8 FIX: Notification post-appel au client (réactivé)
       const minutes = Math.floor(duration / 60);
       const seconds = duration % 60;
-      logger.info(`[TwilioCallManager] Call completed notification skipped (SMS/WhatsApp disabled), duration: ${minutes}m${seconds}s`);
+      logger.info(`[TwilioCallManager] Call completed, duration: ${minutes}m${seconds}s — sending notification`);
+      try {
+        const clientId = callSession.metadata?.clientId || callSession.clientId;
+        if (clientId) {
+          const clientNotification = {
+            eventId: "call.completed",
+            locale: callSession.metadata?.clientLanguages?.[0] || "fr",
+            to: { uid: clientId },
+            context: {
+              sessionId,
+              DURATION: `${minutes}m${seconds}s`,
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            status: "pending",
+          };
+          await this.db.collection("message_events").add(clientNotification);
+          logger.info(`📨 [${completionId}] Post-call notification created for client ${clientId}`);
+        }
+      } catch (notifError) {
+        // Non-blocking: ne pas faire échouer la completion si la notification échoue
+        logger.error(`⚠️ [${completionId}] Failed to send post-call notification (non-blocking):`, notifError);
+      }
 
       // P0 DEBUG 2026-02-02: Enhanced PayPal logging
       const isPayPalPayment = !!callSession.payment?.paypalOrderId;

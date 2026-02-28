@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import toast from 'react-hot-toast';
 import {
   Crown,
@@ -191,7 +191,7 @@ const AdminCaptainsList: React.FC = () => {
 
     try {
       const adminGetCaptainsList = httpsCallable<any, CaptainsListResponse>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetCaptainsList'
       );
 
@@ -248,7 +248,7 @@ const AdminCaptainsList: React.FC = () => {
   const handleToggleQualityBonus = useCallback(async (captainId: string, currentValue: boolean) => {
     setQualityBonusLoading(captainId);
     try {
-      const fn = httpsCallable(functionsWest2, 'adminToggleCaptainQualityBonus');
+      const fn = httpsCallable(functionsAffiliate, 'adminToggleCaptainQualityBonus');
       await fn({ captainId, enabled: !currentValue });
       setCaptains(prev =>
         prev.map(c => c.id === captainId ? { ...c, qualityBonusEnabled: !currentValue } : c)
@@ -271,7 +271,7 @@ const AdminCaptainsList: React.FC = () => {
     setExporting(true);
     try {
       const adminExportCaptainCSV = httpsCallable<any, { csv: string }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminExportCaptainCSV'
       );
 
@@ -282,7 +282,8 @@ const AdminCaptainsList: React.FC = () => {
       });
 
       // Download CSV with BOM for Excel UTF-8 compatibility
-      const blob = new Blob(['\uFEFF' + result.data.csv], { type: 'text/csv;charset=utf-8;' });
+      // Backend already includes BOM (\uFEFF) for Excel UTF-8 compatibility
+      const blob = new Blob([result.data.csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = `captains_export_${new Date().toISOString().split('T')[0]}.csv`;

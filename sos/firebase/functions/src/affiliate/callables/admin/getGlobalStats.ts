@@ -52,7 +52,7 @@ export const getAffiliateGlobalStats = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetGlobalStatsResponse> => {
@@ -106,9 +106,10 @@ export const getAffiliateGlobalStats = onCall(
         0
       );
 
-      // 5. Get total payouts amount (completed)
+      // 5. Get total payouts amount (completed) — P2-2 FIX: unified collection
       const payoutsQuery = await db
-        .collection("affiliate_payouts")
+        .collection("payment_withdrawals")
+        .where("userType", "==", "affiliate")
         .where("status", "==", "completed")
         .get();
 
@@ -117,9 +118,10 @@ export const getAffiliateGlobalStats = onCall(
         0
       );
 
-      // 6. Get pending payouts
+      // 6. Get pending payouts — P2-2 FIX: unified collection
       const pendingPayoutsQuery = await db
-        .collection("affiliate_payouts")
+        .collection("payment_withdrawals")
+        .where("userType", "==", "affiliate")
         .where("status", "in", ["pending", "approved"])
         .get();
 

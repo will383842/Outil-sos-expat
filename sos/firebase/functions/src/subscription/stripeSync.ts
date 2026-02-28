@@ -415,18 +415,19 @@ export const syncSubscriptionPlansToStripe = functions
             : `Synchronisation terminee avec ${report.errors.length} erreur(s)`,
         report,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
       await logError('stripeSync:syncSubscriptionPlansToStripe', error);
       await logSyncOperation({
         action: 'sync',
-        details: { error: error.message },
+        details: { error: errMsg },
         success: false,
-        error: error.message,
+        error: errMsg,
         adminId,
         timestamp: admin.firestore.Timestamp.now(),
       });
       console.error('[syncSubscriptionPlansToStripe] Fatal error:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Sync failed');
+      throw new functions.https.HttpsError('internal', errMsg || 'Sync failed');
     }
   });
 
@@ -671,19 +672,20 @@ export const updateStripePrices = functions
           newAnnualPriceIds,
           updatedSubscriptions,
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : String(error);
         await logError('stripeSync:updateStripePrices', error);
         await logSyncOperation({
           action: 'update_prices',
           planId,
-          details: { error: error.message },
+          details: { error: errMsg },
           success: false,
-          error: error.message,
+          error: errMsg,
           adminId,
           timestamp: admin.firestore.Timestamp.now(),
         });
         console.error('[updateStripePrices] Error:', error);
-        throw new functions.https.HttpsError('internal', error.message || 'Price update failed');
+        throw new functions.https.HttpsError('internal', errMsg || 'Price update failed');
       }
     }
   );
@@ -814,19 +816,20 @@ export const deactivateStripePlan = functions
             ? `Attention: ${affectedSubscriptions} abonnement(s) actif(s) sur ce plan. Ils continueront jusqu'a leur prochaine renouvellement.`
             : undefined,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
       await logError('stripeSync:deactivateStripePlan', error);
       await logSyncOperation({
         action: 'deactivate',
         planId,
-        details: { error: error.message },
+        details: { error: errMsg },
         success: false,
-        error: error.message,
+        error: errMsg,
         adminId,
         timestamp: admin.firestore.Timestamp.now(),
       });
       console.error('[deactivateStripePlan] Error:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Deactivation failed');
+      throw new functions.https.HttpsError('internal', errMsg || 'Deactivation failed');
     }
   });
 
@@ -929,10 +932,10 @@ export const reactivateStripePlan = functions
         message: `Plan ${planId} reactive`,
         productId,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       await logError('stripeSync:reactivateStripePlan', error);
       console.error('[reactivateStripePlan] Error:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Reactivation failed');
+      throw new functions.https.HttpsError('internal', error instanceof Error ? error.message : 'Reactivation failed');
     }
   });
 
@@ -1235,7 +1238,8 @@ export const onSubscriptionPlanPricingUpdate = functions
       );
 
       return { success: true, pricesCreated, pricesSkipped };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
       await logError('stripeSync:autoSyncPricing', error);
 
       // Log l'echec
@@ -1244,18 +1248,18 @@ export const onSubscriptionPlanPricingUpdate = functions
         planId,
         details: {
           trigger: 'firestore_update',
-          error: error.message,
+          error: errMsg,
           pricingBefore: before.pricing,
           pricingAfter: after.pricing,
         },
         success: false,
-        error: error.message,
+        error: errMsg,
         adminId: 'system_trigger',
         timestamp: admin.firestore.Timestamp.now(),
       });
 
       console.error(`[autoSyncPricing] Failed to sync plan ${planId}:`, error);
       // Ne pas throw - le trigger ne doit pas bloquer les updates Firestore
-      return { success: false, error: error.message };
+      return { success: false, error: errMsg };
     }
   });

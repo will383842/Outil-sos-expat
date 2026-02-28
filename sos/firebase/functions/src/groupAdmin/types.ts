@@ -36,7 +36,9 @@ export type SupportedGroupAdminLanguage =
   | "de"    // German
   | "it"    // Italian
   | "nl"    // Dutch
-  | "zh";   // Chinese
+  | "zh"    // Chinese
+  | "ru"    // Russian
+  | "hi";   // Hindi
 
 /**
  * Type of Facebook group managed
@@ -325,6 +327,38 @@ export interface GroupAdmin {
 
   /** Current pending withdrawal ID */
   pendingWithdrawalId: string | null;
+
+  // ---- Telegram Onboarding ----
+
+  /** Whether the Telegram onboarding flow was completed */
+  telegramOnboardingCompleted?: boolean;
+
+  /** Whether user skipped Telegram onboarding */
+  telegramOnboardingSkipped?: boolean;
+
+  /** Whether user has a linked Telegram account */
+  hasTelegram?: boolean;
+
+  /** Telegram user ID */
+  telegramId?: number;
+
+  /** Telegram username */
+  telegramUsername?: string;
+
+  /** Telegram first name */
+  telegramFirstName?: string;
+
+  /** Telegram last name */
+  telegramLastName?: string;
+
+  /** When Telegram was linked */
+  telegramLinkedAt?: Timestamp;
+
+  /** Telegram bonus credited flag */
+  telegramBonusCredited?: boolean;
+
+  /** Telegram bonus amount in cents */
+  telegramBonusAmount?: number;
 
   // ---- Timestamps ----
 
@@ -729,6 +763,7 @@ export type GroupAdminNotificationType =
   | "badge_earned"
   | "rank_achieved"
   | "group_verified"
+  | "new_provider_recruited"
   | "system_announcement";
 
 /**
@@ -747,14 +782,20 @@ export interface GroupAdminNotification {
   /** Title */
   title: string;
 
+  /** Title translations (9 languages) */
+  titleTranslations?: Record<string, string>;
+
   /** Message body */
   message: string;
+
+  /** Message translations (9 languages) */
+  messageTranslations?: Record<string, string>;
 
   /** Additional data */
   data?: Record<string, unknown>;
 
   /** Whether read */
-  read: boolean;
+  isRead: boolean;
 
   /** When created */
   createdAt: Timestamp;

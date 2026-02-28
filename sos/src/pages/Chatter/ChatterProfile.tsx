@@ -10,7 +10,7 @@ import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
 import { User, Globe, Settings, Trophy, CreditCard, Badge, Camera, Loader2, CheckCircle } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
-import { storage, functionsWest2 } from '@/config/firebase';
+import { storage, functionsAffiliate } from '@/config/firebase';
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
@@ -57,7 +57,7 @@ const ChatterProfile: React.FC = () => {
 
       setLocalPhotoUrl(downloadURL);
 
-      const updateProfile = httpsCallable(functionsWest2, 'updateChatterProfile');
+      const updateProfile = httpsCallable(functionsAffiliate, 'updateChatterProfile');
       await updateProfile({ photoUrl: downloadURL });
 
       setUploadSuccess(true);

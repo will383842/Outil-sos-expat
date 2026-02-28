@@ -467,7 +467,7 @@ export const PlansPage: React.FC = () => {
     if (!selectedPlan) return 0;
     if (selectedBillingPeriod === 'yearly') {
       return selectedPlan.annualPricing?.[selectedCurrency] ??
-        selectedPlan.pricing[selectedCurrency] * 12 * (1 - (selectedPlan.annualDiscountPercent || 20) / 100);
+        calculateAnnualPrice(selectedPlan.pricing[selectedCurrency], selectedPlan.annualDiscountPercent ?? DEFAULT_ANNUAL_DISCOUNT_PERCENT);
     }
     return selectedPlan.pricing[selectedCurrency];
   };
@@ -559,7 +559,7 @@ export const PlansPage: React.FC = () => {
                     onSuccess={handleSuccess}
                     onCancel={() => setShowCheckout(false)}
                     locale={locale}
-                    successUrl={`${window.location.origin}/${langCode}${translatedRoutes.subscriptionSuccess}`}
+                    successUrl={`${window.location.origin}/${langCode}/${translatedRoutes.subscriptionSuccess}`}
                   />
                 </Elements>
               )}

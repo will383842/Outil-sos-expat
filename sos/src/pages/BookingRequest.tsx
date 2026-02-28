@@ -57,6 +57,7 @@ import { fetchSignInMethodsForEmail } from "firebase/auth";
 
 import type { Provider } from "../types/provider";
 import { normalizeProvider } from "../types/provider";
+import { devLog, devWarn } from "../utils/devLog";
 
 import {
   usePricingConfig,
@@ -1558,7 +1559,12 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
 
     try {
       await loginWithGoogle(true);
-      onAuthSuccess();
+      // P2-2 FIX: Ne pas appeler onAuthSuccess() ici.
+      // En mode redirect (iOS/Safari), loginWithGoogle résout la promesse AVANT
+      // le retour de Google. L'auth réelle arrive via getRedirectResult dans AuthContext,
+      // qui gère la redirection via sessionStorage('loginRedirect').
+      // En mode popup (desktop), onAuthStateChanged dans AuthContext détectera le user
+      // et le composant parent re-rendera avec user !== null.
     } catch (err: any) {
       console.error("[EmailFirstAuth] Google login error:", err);
       // FIX: Reset authPending si le login échoue
@@ -2176,7 +2182,7 @@ const BookingRequest: React.FC = () => {
   const countries = useMemo(() => getCountriesForLocale(lang), [lang]);
 
   // 🔍 [BOOKING_AUTH_DEBUG] Log BookingRequest component mount
-  console.log('[BOOKING_AUTH_DEBUG] 📅 BookingRequest PAGE RENDER', {
+  devLog('[BOOKING_AUTH_DEBUG] 📅 BookingRequest PAGE RENDER', {
     providerId,
     user: user ? { id: user.id, email: user.email, role: user.role } : null,
     authLoading,
@@ -2322,21 +2328,21 @@ const BookingRequest: React.FC = () => {
 
   const readProviderFromSession = useCallback((): Provider | null => {
     // 🔍 [BOOKING_AUTH_DEBUG] Log reading provider from sessionStorage
-    console.log('[BOOKING_AUTH_DEBUG] 📖 BookingRequest readProviderFromSession() CALLED', {
+    devLog('[BOOKING_AUTH_DEBUG] 📖 BookingRequest readProviderFromSession() CALLED', {
       providerIdFromUrl: providerIdRef.current,
     });
 
     try {
       const saved = sessionStorage.getItem("selectedProvider");
-      console.log('[BOOKING_AUTH_DEBUG] 📖 BookingRequest sessionStorage.getItem("selectedProvider"):', saved ? 'EXISTS' : 'NULL');
+      devLog('[BOOKING_AUTH_DEBUG] 📖 BookingRequest sessionStorage.getItem("selectedProvider"):', saved ? 'EXISTS' : 'NULL');
 
       if (!saved) {
-        console.log('[BOOKING_AUTH_DEBUG] ❌ BookingRequest NO selectedProvider in sessionStorage');
+        devLog('[BOOKING_AUTH_DEBUG] ❌ BookingRequest NO selectedProvider in sessionStorage');
         return null;
       }
 
       const parsed = JSON.parse(saved) as Partial<Provider> & { id?: string };
-      console.log('[BOOKING_AUTH_DEBUG] 📖 BookingRequest parsed provider:', {
+      devLog('[BOOKING_AUTH_DEBUG] 📖 BookingRequest parsed provider:', {
         parsedId: parsed?.id,
         parsedName: parsed?.name,
         expectedProviderId: providerIdRef.current,
@@ -2345,13 +2351,13 @@ const BookingRequest: React.FC = () => {
 
       // Use ref to get current providerId without adding it as dependency
       if (parsed && parsed.id && parsed.id === providerIdRef.current) {
-        console.log('[BOOKING_AUTH_DEBUG] ✅ BookingRequest provider IDs MATCH - returning provider');
+        devLog('[BOOKING_AUTH_DEBUG] ✅ BookingRequest provider IDs MATCH - returning provider');
         return normalizeProvider(parsed as Partial<Provider> & { id: string });
       } else {
-        console.log('[BOOKING_AUTH_DEBUG] ⚠️ BookingRequest provider IDs DO NOT MATCH or invalid');
+        devLog('[BOOKING_AUTH_DEBUG] ⚠️ BookingRequest provider IDs DO NOT MATCH or invalid');
       }
     } catch (error) {
-      console.warn("[BOOKING_AUTH_DEBUG] ❌ BookingRequest Failed to read provider from sessionStorage", error);
+      devWarn("[BOOKING_AUTH_DEBUG] ❌ BookingRequest Failed to read provider from sessionStorage", error);
     }
     return null;
   }, []); // P0 FIX: Empty deps = stable function reference
@@ -2362,7 +2368,7 @@ const BookingRequest: React.FC = () => {
   // Chargement live du provider
   useEffect(() => {
     // 🔍 [BOOKING_AUTH_DEBUG] Log provider loading useEffect start
-    console.log('[BOOKING_AUTH_DEBUG] ⚡ BookingRequest PROVIDER LOAD useEffect START', {
+    devLog('[BOOKING_AUTH_DEBUG] ⚡ BookingRequest PROVIDER LOAD useEffect START', {
       providerId,
       providerLoadedRef: providerLoadedRef.current,
       currentProvider: provider ? provider.id : 'NULL',
@@ -2372,7 +2378,7 @@ const BookingRequest: React.FC = () => {
 
     // P0 FIX: Skip if already loaded (prevents re-mount issues)
     if (providerLoadedRef.current && provider) {
-      console.log('[BOOKING_AUTH_DEBUG] ⏭️ BookingRequest SKIPPING - already loaded');
+      devLog('[BOOKING_AUTH_DEBUG] ⏭️ BookingRequest SKIPPING - already loaded');
       return;
     }
 
@@ -2384,13 +2390,13 @@ const BookingRequest: React.FC = () => {
       setProviderLoading(true);
       const fromSession = readProviderFromSession();
 
-      console.log('[BOOKING_AUTH_DEBUG] 📖 BookingRequest fromSession result:', fromSession ? {
+      devLog('[BOOKING_AUTH_DEBUG] 📖 BookingRequest fromSession result:', fromSession ? {
         id: fromSession.id,
         name: fromSession.name,
       } : 'NULL');
 
       if (fromSession) {
-        console.log('[BOOKING_AUTH_DEBUG] ✅ BookingRequest USING provider from sessionStorage');
+        devLog('[BOOKING_AUTH_DEBUG] ✅ BookingRequest USING provider from sessionStorage');
         setProvider(fromSession);
         setProviderLoading(false);
         providerLoadedRef.current = true; // P0 FIX: Mark as loaded

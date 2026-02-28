@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import { httpsCallable } from 'firebase/functions';
-import { functions, functionsWest2 } from "@/config/firebase";
+import { functions, functionsAffiliate } from "@/config/firebase";
 
 // Design tokens
 const UI = {
@@ -80,7 +80,7 @@ const AdminChatterCountryRotation: React.FC = () => {
 
     try {
       const adminGetCountryRotationStatus = httpsCallable(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetCountryRotationStatus'
       );
 
@@ -129,7 +129,7 @@ const AdminChatterCountryRotation: React.FC = () => {
 
     try {
       const adminInitializeCountryRotation = httpsCallable(
-        functionsWest2,
+        functionsAffiliate,
         'adminInitializeCountryRotation'
       );
 
@@ -167,7 +167,7 @@ const AdminChatterCountryRotation: React.FC = () => {
     setError(null);
 
     try {
-      const adminAdvanceCycleV2 = httpsCallable(functions, 'adminAdvanceCycleV2'); // west1 temporarily — west2 quota saturated
+      const adminAdvanceCycleV2 = httpsCallable(functionsAffiliate, 'adminAdvanceCycleV2');
 
       const result = await adminAdvanceCycleV2();
       const data = result.data as { success: boolean; newCycle: number; message?: string };
@@ -205,7 +205,7 @@ const AdminChatterCountryRotation: React.FC = () => {
 
     try {
       const adminUpdateCycleThreshold = httpsCallable(
-        functionsWest2,
+        functionsAffiliate,
         'adminUpdateCycleThreshold'
       );
 

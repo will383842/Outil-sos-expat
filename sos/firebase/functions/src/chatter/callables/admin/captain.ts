@@ -10,8 +10,7 @@ import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { chatterAdminConfig as adminConfig } from "../../../lib/functionConfigs";
-import { Chatter, ChatterConfig, DEFAULT_CHATTER_CONFIG } from "../../types";
-import { getChatterConfig } from "../../chatterConfig";
+import { Chatter } from "../../types";
 
 // ============================================================================
 // LAZY INITIALIZATION
@@ -32,6 +31,37 @@ function ensureInitialized() {
 function getDb() {
   ensureInitialized();
   return getFirestore();
+}
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+function timestampToString(ts: unknown): string {
+  if (!ts) return "";
+  if (typeof ts === "object" && ts !== null && "toDate" in ts && typeof (ts as any).toDate === "function") {
+    return (ts as any).toDate().toISOString();
+  }
+  if (typeof ts === "object" && ts !== null && "_seconds" in ts) {
+    return new Date((ts as any)._seconds * 1000).toISOString();
+  }
+  if (ts instanceof Date) return ts.toISOString();
+  return String(ts);
+}
+
+/**
+ * Maps French tier names (stored in Firestore) to lowercase English keys (used by frontend).
+ */
+function getCaptainTierKey(tierName: string | null | undefined): string {
+  if (!tierName) return "bronze";
+  const map: Record<string, string> = {
+    Bronze: "bronze",
+    Argent: "silver",
+    Or: "gold",
+    Platine: "platinum",
+    Diamant: "diamond",
+  };
+  return map[tierName] || tierName.toLowerCase();
 }
 
 // ============================================================================
@@ -62,7 +92,8 @@ export const adminPromoteToCaptain = onCall(
     }
     await verifyAdmin(request.auth.uid);
 
-    const { chatterId } = request.data as { chatterId: string };
+    const data = request.data as { chatterId?: string; captainId?: string };
+    const chatterId = data.chatterId || data.captainId;
     if (!chatterId) {
       throw new HttpsError("invalid-argument", "chatterId is required");
     }
@@ -96,8 +127,18 @@ export const adminPromoteToCaptain = onCall(
       type: "captain_promoted",
       title: "Promotion Capitaine !",
       message: "F\u00e9licitations ! Vous avez \u00e9t\u00e9 promu Capitaine Chatter. Vous recevrez des commissions sur les appels de votre \u00e9quipe.",
-      read: false,
+      isRead: false,
       createdAt: Timestamp.now(),
+    });
+
+    // Audit trail
+    await db.collection("admin_audit_logs").add({
+      action: "captain_promoted",
+      targetId: chatterId,
+      targetType: "chatter",
+      performedBy: request.auth.uid,
+      timestamp: Timestamp.now(),
+      details: { previousRole: chatter.role || "chatter" },
     });
 
     logger.info("[adminPromoteToCaptain] Chatter promoted to captain", {
@@ -121,7 +162,8 @@ export const adminRevokeCaptain = onCall(
     }
     await verifyAdmin(request.auth.uid);
 
-    const { chatterId } = request.data as { chatterId: string };
+    const data = request.data as { chatterId?: string; captainId?: string };
+    const chatterId = data.chatterId || data.captainId;
     if (!chatterId) {
       throw new HttpsError("invalid-argument", "chatterId is required");
     }
@@ -155,8 +197,18 @@ export const adminRevokeCaptain = onCall(
       type: "captain_revoked",
       title: "Statut capitaine r\u00e9voqu\u00e9",
       message: "Votre statut de Capitaine Chatter a \u00e9t\u00e9 r\u00e9voqu\u00e9 par l'administration.",
-      read: false,
+      isRead: false,
       createdAt: Timestamp.now(),
+    });
+
+    // Audit trail
+    await db.collection("admin_audit_logs").add({
+      action: "captain_revoked",
+      targetId: chatterId,
+      targetType: "chatter",
+      performedBy: request.auth.uid,
+      timestamp: Timestamp.now(),
+      details: {},
     });
 
     logger.info("[adminRevokeCaptain] Captain status revoked", {
@@ -180,9 +232,10 @@ export const adminToggleCaptainQualityBonus = onCall(
     }
     await verifyAdmin(request.auth.uid);
 
-    const { chatterId, enabled } = request.data as { chatterId: string; enabled: boolean };
-    if (!chatterId || enabled === undefined) {
-      throw new HttpsError("invalid-argument", "chatterId and enabled are required");
+    const data = request.data as { chatterId?: string; captainId?: string; enabled: boolean };
+    const chatterId = data.chatterId || data.captainId;
+    if (!chatterId || data.enabled === undefined) {
+      throw new HttpsError("invalid-argument", "chatterId/captainId and enabled are required");
     }
 
     const db = getDb();
@@ -199,17 +252,27 @@ export const adminToggleCaptainQualityBonus = onCall(
     }
 
     await chatterRef.update({
-      captainQualityBonusEnabled: enabled,
+      captainQualityBonusEnabled: data.enabled,
       updatedAt: Timestamp.now(),
+    });
+
+    // Audit trail
+    await db.collection("admin_audit_logs").add({
+      action: "captain_quality_bonus_toggled",
+      targetId: chatterId,
+      targetType: "chatter",
+      performedBy: request.auth.uid,
+      timestamp: Timestamp.now(),
+      details: { enabled: data.enabled },
     });
 
     logger.info("[adminToggleCaptainQualityBonus] Quality bonus toggled", {
       chatterId,
-      enabled,
+      enabled: data.enabled,
       toggledBy: request.auth.uid,
     });
 
-    return { success: true, enabled };
+    return { success: true, enabled: data.enabled };
   }
 );
 
@@ -225,25 +288,43 @@ export const adminGetCaptainsList = onCall(
     }
     await verifyAdmin(request.auth.uid);
 
+    const {
+      page = 1,
+      limit = 20,
+      country,
+      tier,
+      search,
+      includeStats = false,
+    } = (request.data || {}) as {
+      page?: number;
+      limit?: number;
+      country?: string;
+      tier?: string;
+      search?: string;
+      includeStats?: boolean;
+    };
+
     const db = getDb();
 
+    // Get all captains
     const captainsQuery = await db
       .collection("chatters")
       .where("role", "==", "captainChatter")
       .get();
 
-    const captains = [];
+    // Build enriched captain list
+    const allCaptains = [];
     for (const doc of captainsQuery.docs) {
       const captain = doc.data() as Chatter;
 
-      // Count N1 recruits
+      // Count active N1 recruits
       const n1Query = await db
         .collection("chatters")
         .where("recruitedBy", "==", doc.id)
         .where("status", "==", "active")
         .get();
 
-      // Count N2 recruits
+      // Count active N2 recruits
       let n2Count = 0;
       for (const n1Doc of n1Query.docs) {
         const n2Query = await db
@@ -254,36 +335,93 @@ export const adminGetCaptainsList = onCall(
         n2Count += n2Query.size;
       }
 
-      captains.push({
+      const tierKey = getCaptainTierKey(captain.captainCurrentTier);
+
+      allCaptains.push({
         id: doc.id,
         firstName: captain.firstName,
         lastName: captain.lastName,
         email: captain.email,
         country: captain.country,
-        photoUrl: captain.photoUrl,
-        captainPromotedAt: captain.captainPromotedAt,
-        captainMonthlyTeamCalls: captain.captainMonthlyTeamCalls || 0,
-        captainCurrentTier: captain.captainCurrentTier,
-        captainQualityBonusEnabled: captain.captainQualityBonusEnabled || false,
+        tier: tierKey,
         n1Count: n1Query.size,
         n2Count,
-        totalEarned: captain.totalEarned,
+        monthlyTeamCalls: captain.captainMonthlyTeamCalls || 0,
+        totalTeamEarnings: captain.totalEarned || 0,
+        qualityBonusEnabled: captain.captainQualityBonusEnabled || false,
+        createdAt: timestampToString(captain.createdAt),
+        promotedAt: timestampToString(captain.captainPromotedAt),
       });
     }
 
-    // Group by country
-    const byCountry: Record<string, typeof captains> = {};
-    for (const captain of captains) {
-      const country = captain.country || "Unknown";
-      if (!byCountry[country]) byCountry[country] = [];
-      byCountry[country].push(captain);
+    // Apply filters
+    let filtered = allCaptains;
+
+    if (country) {
+      filtered = filtered.filter((c) => c.country === country);
+    }
+    if (tier) {
+      filtered = filtered.filter((c) => c.tier === tier);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.firstName?.toLowerCase().includes(q) ||
+          c.lastName?.toLowerCase().includes(q) ||
+          c.email?.toLowerCase().includes(q)
+      );
+    }
+
+    const total = filtered.length;
+
+    // Pagination
+    const startIdx = (page - 1) * limit;
+    const paginated = filtered.slice(startIdx, startIdx + limit);
+
+    // Compute stats if requested (first page)
+    let stats;
+    if (includeStats) {
+      // Count unique countries from all active chatters for coverage ratio
+      const allChattersQuery = await db
+        .collection("chatters")
+        .where("status", "==", "active")
+        .select("country")
+        .get();
+
+      const allCountries = new Set(
+        allChattersQuery.docs.map((d) => d.data().country).filter(Boolean)
+      );
+
+      const captainCountries = new Set(
+        allCaptains.map((c) => c.country).filter(Boolean)
+      );
+
+      const tierDistribution: Record<string, number> = {};
+      let totalN1 = 0;
+      let totalCalls = 0;
+      for (const c of allCaptains) {
+        tierDistribution[c.tier] = (tierDistribution[c.tier] || 0) + 1;
+        totalN1 += c.n1Count;
+        totalCalls += c.monthlyTeamCalls;
+      }
+
+      stats = {
+        totalCaptains: allCaptains.length,
+        countriesCovered: captainCountries.size,
+        totalCountries: allCountries.size,
+        avgN1PerCaptain: allCaptains.length > 0 ? totalN1 / allCaptains.length : 0,
+        avgTeamCalls: allCaptains.length > 0 ? totalCalls / allCaptains.length : 0,
+        tierDistribution,
+      };
     }
 
     return {
-      captains,
-      byCountry,
-      totalCaptains: captains.length,
-      countriesCovered: Object.keys(byCountry).length,
+      captains: paginated,
+      total,
+      page,
+      limit,
+      ...(stats ? { stats } : {}),
     };
   }
 );
@@ -317,109 +455,153 @@ export const adminGetCaptainDetail = onCall(
       throw new HttpsError("failed-precondition", "Chatter is not a captain");
     }
 
-    // Get N1 recruits with stats
-    const n1Query = await db
+    // Get ALL N1 recruits (any status) for count + active count
+    const n1AllQuery = await db
       .collection("chatters")
       .where("recruitedBy", "==", captainId)
-      .where("status", "==", "active")
       .get();
 
-    const n1Recruits = n1Query.docs.map((doc) => {
-      const data = doc.data() as Chatter;
+    const n1Recruits = n1AllQuery.docs.map((doc) => {
+      const d = doc.data() as Chatter;
       return {
         id: doc.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        totalCallCount: data.totalCallCount || 0,
-        totalEarned: data.totalEarned || 0,
-        createdAt: data.createdAt,
+        firstName: d.firstName,
+        lastName: d.lastName,
+        email: d.email,
+        country: d.country,
+        status: d.status || "pending",
+        totalCalls: (d as any).totalCallCount || 0,
+        totalEarned: d.totalEarned || 0,
+        recruitedAt: timestampToString(d.createdAt),
       };
     });
+    const n1Active = n1Recruits.filter((r) => r.status === "active").length;
 
-    // Get N2 recruits
-    const n2Recruits = [];
-    for (const n1Doc of n1Query.docs) {
+    // Get ALL N2 recruits (any status)
+    const n2Recruits: typeof n1Recruits = [];
+    for (const n1Doc of n1AllQuery.docs) {
       const n2Query = await db
         .collection("chatters")
         .where("recruitedBy", "==", n1Doc.id)
-        .where("status", "==", "active")
         .get();
 
       for (const n2Doc of n2Query.docs) {
-        const data = n2Doc.data() as Chatter;
+        const d = n2Doc.data() as Chatter;
         n2Recruits.push({
           id: n2Doc.id,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          totalCallCount: data.totalCallCount || 0,
-          totalEarned: data.totalEarned || 0,
-          recruitedVia: n1Doc.id,
-          createdAt: data.createdAt,
+          firstName: d.firstName,
+          lastName: d.lastName,
+          email: d.email,
+          country: d.country,
+          status: d.status || "pending",
+          totalCalls: (d as any).totalCallCount || 0,
+          totalEarned: d.totalEarned || 0,
+          recruitedAt: timestampToString(d.createdAt),
         });
       }
     }
+    const n2Active = n2Recruits.filter((r) => r.status === "active").length;
 
-    // Get captain_call commissions this month
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
-
-    const commissionsQuery = await db
+    // Get ALL captain commissions for financial aggregation
+    const allCommissions = await db
       .collection("chatter_commissions")
       .where("chatterId", "==", captainId)
-      .where("type", "==", "captain_call")
-      .where("createdAt", ">=", Timestamp.fromDate(monthStart))
+      .where("type", "in", ["captain_call", "captain_tier_bonus", "captain_quality_bonus"])
       .get();
 
-    const monthlyCommissions = commissionsQuery.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    // Aggregate by month and compute totals
+    const monthlyMap: Record<string, { n1: number; n2: number; quality: number; total: number }> = {};
+    let totalCaptainEarnings = 0;
+    let totalN1Commissions = 0;
+    let totalN2Commissions = 0;
+    let totalQualityBonuses = 0;
+    let totalTeamCalls = 0;
 
-    // Get archives
-    const archivesQuery = await db
-      .collection("captain_monthly_archives")
-      .where("captainId", "==", captainId)
-      .orderBy("createdAt", "desc")
-      .limit(12)
-      .get();
+    for (const doc of allCommissions.docs) {
+      const comm = doc.data();
+      const amount = comm.amount || 0;
+      const createdAt = comm.createdAt;
 
-    const archives = archivesQuery.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+      let date: Date;
+      if (createdAt?.toDate) {
+        date = createdAt.toDate();
+      } else if (createdAt?._seconds) {
+        date = new Date(createdAt._seconds * 1000);
+      } else {
+        continue;
+      }
 
-    // Load config for tier info
-    let config: ChatterConfig;
-    try {
-      config = await getChatterConfig();
-    } catch {
-      config = DEFAULT_CHATTER_CONFIG;
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = { n1: 0, n2: 0, quality: 0, total: 0 };
+      }
+
+      monthlyMap[monthKey].total += amount;
+      totalCaptainEarnings += amount;
+
+      if (comm.type === "captain_call") {
+        totalTeamCalls++;
+        if (comm.metadata?.level === "n2") {
+          monthlyMap[monthKey].n2 += amount;
+          totalN2Commissions += amount;
+        } else {
+          // Default to N1 for captain_call
+          monthlyMap[monthKey].n1 += amount;
+          totalN1Commissions += amount;
+        }
+      } else if (comm.type === "captain_quality_bonus" || comm.type === "captain_tier_bonus") {
+        monthlyMap[monthKey].quality += amount;
+        totalQualityBonuses += amount;
+      }
     }
 
-    const tiers = config.captainTiers || DEFAULT_CHATTER_CONFIG.captainTiers!;
+    const monthlyCommissions = Object.entries(monthlyMap)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([month, d]) => ({
+        month,
+        n1Commissions: d.n1,
+        n2Commissions: d.n2,
+        qualityBonus: d.quality,
+        totalAmount: d.total,
+      }));
+
+    // Balances from chatter doc
+    const availableBalance = (captain as any).availableBalance || 0;
+    const pendingBalance = (captain as any).pendingBalance || 0;
 
     return {
-      captain: {
-        id: captainId,
-        firstName: captain.firstName,
-        lastName: captain.lastName,
-        email: captain.email,
-        country: captain.country,
-        photoUrl: captain.photoUrl,
-        captainPromotedAt: captain.captainPromotedAt,
-        captainMonthlyTeamCalls: captain.captainMonthlyTeamCalls || 0,
-        captainCurrentTier: captain.captainCurrentTier,
-        captainQualityBonusEnabled: captain.captainQualityBonusEnabled || false,
-        totalEarned: captain.totalEarned,
-      },
+      id: captainId,
+      firstName: captain.firstName,
+      lastName: captain.lastName,
+      email: captain.email,
+      phone: (captain as any).phone || "",
+      country: captain.country,
+      tier: getCaptainTierKey(captain.captainCurrentTier),
+      qualityBonusEnabled: captain.captainQualityBonusEnabled || false,
+      promotedAt: timestampToString(captain.captainPromotedAt),
+      createdAt: timestampToString(captain.createdAt),
+      // Network stats
+      n1Count: n1Recruits.length,
+      n2Count: n2Recruits.length,
+      n1Active,
+      n2Active,
+      totalTeamCalls,
+      monthlyTeamCalls: captain.captainMonthlyTeamCalls || 0,
+      // Financial
+      totalCaptainEarnings,
+      totalN1Commissions,
+      totalN2Commissions,
+      totalQualityBonuses,
+      availableBalance,
+      pendingBalance,
+      // Recruits
       n1Recruits,
       n2Recruits,
+      // Monthly history (aggregated)
       monthlyCommissions,
-      archives,
-      tiers,
+      // Affiliate codes
+      affiliateCodeClient: captain.affiliateCodeClient || "",
+      affiliateCodeRecruitment: captain.affiliateCodeRecruitment || "",
     };
   }
 );

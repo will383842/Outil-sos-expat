@@ -443,7 +443,7 @@ const AdminSettings: React.FC = () => {
       // ✅ Call the backup function
       const backupFunction = httpsCallable(
         europeFunctions,
-        "createManualBackup"
+        "adminCreateManualBackup"
       );
       const result = await backupFunction();
 

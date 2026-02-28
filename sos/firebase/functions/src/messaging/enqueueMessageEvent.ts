@@ -42,16 +42,18 @@ export const enqueueMessageEvent = onCall({ region: "europe-west1", cpu: 0.083, 
     to: {
       email: to.email || null,
       phone: to.phone || null,
-      pushToken: to.pushToken || null,
-      uid: to.uid || null},
+      fcmToken: to.fcmToken || to.pushToken || null, // P0 FIX: worker reads fcmToken, not pushToken
+      uid: to.uid || null,
+    },
     context,
+    uid: authUid, // P0 FIX: uid at top level for push token lookup fallback
     requestedBy: authUid,
-    createdAt: admin.firestore.FieldValue.serverTimestamp()};
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
 
     await getDb().collection("message_events").add(doc);
     console.log("enqueueMessageEvent done - Event added to queue");
     return { ok: true };
-    console.log("enqueueMessageEvent done");
   } catch (error) {
     if(error instanceof HttpsError) {
       throw error;

@@ -178,6 +178,12 @@ export const twilioCallWebhook = onRequest(
         return;
       }
 
+      // Webhook heartbeat (fire-and-forget) — monitoring freshness
+      db.collection('webhook_heartbeats').doc('twilio').set({
+        lastReceivedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastEventType: body.CallStatus,
+      }, { merge: true }).catch(() => {});
+
       // Trouver la session d'appel par CallSid
       const sessionResult = await twilioCallManager.findSessionByCallSid(body.CallSid);
 

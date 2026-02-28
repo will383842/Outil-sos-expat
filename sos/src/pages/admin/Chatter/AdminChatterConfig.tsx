@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import {
   Settings,
   DollarSign,
@@ -113,7 +113,7 @@ const AdminChatterConfig: React.FC = () => {
 
     try {
       const adminGetChatterConfig = httpsCallable<void, { config: ChatterConfig }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetChatterConfig'
       );
 
@@ -165,7 +165,7 @@ const AdminChatterConfig: React.FC = () => {
 
     try {
       const adminUpdateChatterConfig = httpsCallable<Partial<ChatterConfig>, { success: boolean }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminUpdateChatterConfig'
       );
 
@@ -185,7 +185,7 @@ const AdminChatterConfig: React.FC = () => {
     setTogglingVisibility(true);
     setVisibilitySuccess(false);
     try {
-      const fn = httpsCallable(functionsWest2, 'adminUpdateChatterConfig');
+      const fn = httpsCallable(functionsAffiliate, 'adminUpdateChatterConfig');
       const newValue = !config?.isChatterListingPageVisible;
       await fn({ isChatterListingPageVisible: newValue });
       setConfig(prev => prev ? { ...prev, isChatterListingPageVisible: newValue } : prev);

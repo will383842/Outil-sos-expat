@@ -10,7 +10,7 @@ import { BloggerDashboardLayout } from '@/components/Blogger';
 import { User, Globe, CreditCard, Settings, Badge, Camera, Loader2, CheckCircle } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
-import { storage, functionsWest2 } from '@/config/firebase';
+import { storage, functionsAffiliate } from '@/config/firebase';
 import { BLOGGER_BADGE_INFO } from '@/types/blogger';
 
 const UI = {
@@ -51,7 +51,7 @@ const BloggerProfile: React.FC = () => {
       await uploadBytes(storageRef, file, { contentType: file.type });
       const downloadURL = await getDownloadURL(storageRef);
       setLocalPhotoUrl(downloadURL);
-      const updateBloggerProfile = httpsCallable(functionsWest2, "updateBloggerProfile");
+      const updateBloggerProfile = httpsCallable(functionsAffiliate, "updateBloggerProfile");
       await updateBloggerProfile({ photoUrl: downloadURL });
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 3000);

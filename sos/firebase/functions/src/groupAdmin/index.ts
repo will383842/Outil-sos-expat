@@ -23,6 +23,7 @@ export {
   updateGroupAdminProfile,
   requestGroupAdminWithdrawal,
   getGroupAdminRecruits,
+  getGroupAdminRecruitedProviders,
   // Resource callables
   getGroupAdminResources,
   getGroupAdminResourceContent,

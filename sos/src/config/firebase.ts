@@ -485,7 +485,7 @@ export const functionsWest3 = getFunctions(app, TRIGGERS_REGION);
 
 // ✅ Instance Functions pour chatter/influencer/blogger/groupAdmin (us-central1 - Load balancing)
 const AFFILIATE_REGION = (import.meta.env.VITE_FUNCTIONS_AFFILIATE_REGION ?? "us-central1").toString();
-export const functionsWest2 = getFunctions(app, AFFILIATE_REGION);
+export const functionsAffiliate = getFunctions(app, AFFILIATE_REGION);
 
 /** ----------------------------------------
  *  Emulateurs (optionnels en local)
@@ -521,7 +521,7 @@ if (USE_EMULATORS && typeof window !== "undefined") {
     connectFunctionsEmulator(functionsWest3, EMU_HOST, PORT_FUNC);
   } catch { /* noop */ }
   try {
-    connectFunctionsEmulator(functionsWest2, EMU_HOST, PORT_FUNC);
+    connectFunctionsEmulator(functionsAffiliate, EMU_HOST, PORT_FUNC);
   } catch { /* noop */ }
   try {
     connectStorageEmulator(storage, EMU_HOST, PORT_STORAGE);
@@ -553,6 +553,95 @@ export function call<TPayload, TReturn = unknown>(name: string) {
 
 // ✅ Expose aussi httpsCallable si besoin d'import direct
 export { httpsCallable } from "firebase/functions";
+
+// ✅ Helper to build Cloud Functions v1 URLs (for onRequest functions called via fetch)
+const PROJECT_ID = firebaseConfig.projectId;
+export function getCloudFunctionUrl(functionName: string, region: string = REGION): string {
+  return `https://${region}-${PROJECT_ID}.cloudfunctions.net/${functionName}`;
+}
+
+// Cloud Run URL hash per region (Gen2 functions)
+const CLOUD_RUN_HASHES: Record<string, string> = {
+  'europe-west1': '5tfnuxa2hq-ew',
+  'europe-west3': '5tfnuxa2hq-ey',
+  'us-central1': '5tfnuxa2hq-uc',
+};
+export function getCloudRunUrl(functionName: string, region: string = REGION): string {
+  const hash = CLOUD_RUN_HASHES[region] || CLOUD_RUN_HASHES['europe-west1'];
+  return `https://${functionName}-${hash}.a.run.app`;
+}
+
+// ✅ Timeout wrapper for httpsCallable (prevents 70s silent waits)
+export async function callWithTimeout<T>(
+  callableFn: (data?: unknown) => Promise<{ data: T }>,
+  data?: unknown,
+  timeoutMs: number = 30000
+): Promise<T> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('TIMEOUT')), timeoutMs)
+  );
+  const result = await Promise.race([callableFn(data), timeout]);
+  return result.data;
+}
+
+/**
+ * AUDIT FIX 2026-02-27: Centralized safe callable wrapper.
+ * - Checks online status before calling
+ * - Applies timeout (default 30s)
+ * - Returns typed result
+ *
+ * Usage:
+ *   const data = await safeCall<MyType>(functionsAffiliate, 'myFunction', { foo: 'bar' });
+ */
+export async function safeCall<T = unknown>(
+  functionsInstance: ReturnType<typeof getFunctions>,
+  functionName: string,
+  data?: Record<string, unknown>,
+  options?: { timeoutMs?: number }
+): Promise<T> {
+  // Offline guard
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    throw new Error('OFFLINE');
+  }
+
+  const timeoutMs = options?.timeoutMs ?? 30000;
+  const fn = httpsCallable(functionsInstance, functionName);
+
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('TIMEOUT')), timeoutMs)
+  );
+
+  const result = await Promise.race([fn(data), timeout]);
+  return result.data as T;
+}
+
+/**
+ * Maps Firebase/network error codes to user-friendly messages (FR).
+ * Use in catch blocks: catch (e) { toast.error(getCallErrorMessage(e)); }
+ */
+export function getCallErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    if (error.message === 'OFFLINE') {
+      return 'Pas de connexion internet. Vérifiez votre réseau.';
+    }
+    if (error.message === 'TIMEOUT') {
+      return 'Le serveur met trop de temps à répondre. Réessayez.';
+    }
+
+    const code = (error as Error & { code?: string }).code;
+    if (code === 'functions/unauthenticated') return 'Session expirée. Reconnectez-vous.';
+    if (code === 'functions/permission-denied') return 'Vous n\'avez pas les droits pour cette action.';
+    if (code === 'functions/not-found') return 'Fonction introuvable. Contactez le support.';
+    if (code === 'functions/internal') return 'Erreur serveur. Réessayez plus tard.';
+    if (code === 'functions/unavailable') return 'Service temporairement indisponible. Réessayez.';
+
+    // Return the error message if it's already user-friendly
+    if (error.message && !error.message.includes('Firebase') && error.message.length < 200) {
+      return error.message;
+    }
+  }
+  return 'Une erreur est survenue. Réessayez.';
+}
 
 // Exports utiles ponctuels
 export { serverTimestamp };

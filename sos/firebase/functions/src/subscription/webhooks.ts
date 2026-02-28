@@ -30,6 +30,7 @@ export type { SubscriptionStatus, SubscriptionTier };
 interface SubscriptionPlan {
   id: string;
   tier: SubscriptionTier;
+  providerType: 'lawyer' | 'expat_aidant';
   aiCallsLimit: number;
   pricing: { EUR: number; USD: number };
 }
@@ -489,8 +490,14 @@ export async function handleSubscriptionCreated(
     const billingPeriod = priceInterval === 'year' ? 'yearly' : 'monthly';
 
     // Créer/mettre à jour le document subscription
+    // Get price amount for currentPeriodAmount
+    const priceAmount = subscription.items.data[0]?.price?.unit_amount
+      ? subscription.items.data[0].price.unit_amount / 100
+      : 0;
+
     const subscriptionData = {
       providerId,
+      providerType: subscription.metadata?.providerType || 'expat_aidant',
       planId,
       tier,
       status: mapStripeStatus(subscription.status),
@@ -499,6 +506,7 @@ export async function handleSubscriptionCreated(
       stripePriceId: priceId,
       currency: subscription.currency?.toUpperCase() || 'EUR',
       billingPeriod,
+      currentPeriodAmount: priceAmount,
       currentPeriodStart: admin.firestore.Timestamp.fromMillis(subscription.current_period_start * 1000),
       currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
@@ -1336,6 +1344,19 @@ export async function handleInvoicePaid(
     });
     logger.info(`[handleInvoicePaid] Reset AI usage quota for ${providerId}`);
 
+    // Sync sos_profiles + users subscriptionStatus (same pattern as other handlers)
+    await db.doc(`sos_profiles/${providerId}`).set({
+      subscriptionStatus: 'active',
+      hasActiveSubscription: true,
+      updatedAt: now
+    }, { merge: true });
+    await db.doc(`users/${providerId}`).set({
+      subscriptionStatus: 'active',
+      hasActiveSubscription: true,
+      updatedAt: now
+    }, { merge: true });
+    logger.info(`[handleInvoicePaid] Synced sos_profiles+users subscriptionStatus=active for ${providerId}`);
+
     // Stocker la facture
     await db.collection('invoices').doc(invoice.id).set({
       stripeInvoiceId: invoice.id,
@@ -1771,8 +1792,22 @@ export async function handleSubscriptionPaused(
     await db.doc(`subscriptions/${providerId}`).update(updates);
     logger.info(`[handleSubscriptionPaused] Set status to paused for ${providerId}`);
 
+    // Sync sos_profiles + users subscriptionStatus (same pattern as other handlers)
+    await db.doc(`sos_profiles/${providerId}`).set({
+      subscriptionStatus: 'paused',
+      hasActiveSubscription: false,
+      updatedAt: now
+    }, { merge: true });
+    await db.doc(`users/${providerId}`).set({
+      subscriptionStatus: 'paused',
+      hasActiveSubscription: false,
+      updatedAt: now
+    }, { merge: true });
+    logger.info(`[handleSubscriptionPaused] Synced sos_profiles+users subscriptionStatus=paused for ${providerId}`);
+
     // Mettre à jour ai_usage - désactiver temporairement l'accès
     await db.doc(`ai_usage/${providerId}`).update({
+      aiAccessSuspended: true,
       updatedAt: now
     });
 
@@ -2150,7 +2185,8 @@ export async function handlePayoutFailed(
     // Notifier les admins
     await db.collection('admin_alerts').add({
       type: 'payout_failed',
-      severity: 'high',
+      priority: 'high',
+      read: false,
       message: `Payout ${payout.id} échoué: ${payout.failure_message}`,
       data: {
         payoutId: payout.id,
@@ -2159,7 +2195,6 @@ export async function handlePayoutFailed(
         failureCode: payout.failure_code,
         failureMessage: payout.failure_message
       },
-      read: false,
       createdAt: now
     });
 
@@ -2232,7 +2267,8 @@ export async function handleRefundFailed(
     // Notifier les admins
     await db.collection('admin_alerts').add({
       type: 'refund_failed',
-      severity: 'high',
+      priority: 'high',
+      read: false,
       message: `Remboursement ${refund.id} échoué: ${refund.failure_reason}`,
       data: {
         refundId: refund.id,
@@ -2241,7 +2277,6 @@ export async function handleRefundFailed(
         currency: refund.currency,
         failureReason: refund.failure_reason
       },
-      read: false,
       createdAt: now
     });
 
@@ -2511,7 +2546,8 @@ export async function handleDisputeCreated(
     // Notifier les admins (haute priorité)
     await db.collection('admin_alerts').add({
       type: 'dispute_created',
-      severity: 'critical',
+      priority: 'critical',
+      read: false,
       message: `Nouveau litige (${dispute.reason}) - ${dispute.amount / 100} ${dispute.currency?.toUpperCase()}`,
       data: {
         disputeId: dispute.id,
@@ -2523,7 +2559,6 @@ export async function handleDisputeCreated(
         providerId,
         evidenceDueBy: dispute.evidence_details?.due_by
       },
-      read: false,
       createdAt: now
     });
 
@@ -2678,7 +2713,8 @@ export async function handleDisputeClosed(
     // Notifier les admins
     await db.collection('admin_alerts').add({
       type: 'dispute_closed',
-      severity: isLost ? 'high' : 'medium',
+      priority: isLost ? 'high' : 'medium',
+      read: false,
       message: `Litige ${dispute.id} ${resultText} - ${dispute.amount / 100} ${dispute.currency?.toUpperCase()}`,
       data: {
         disputeId: dispute.id,
@@ -2689,7 +2725,6 @@ export async function handleDisputeClosed(
         status: dispute.status,
         result: resultText
       },
-      read: false,
       createdAt: now
     });
 
@@ -2797,7 +2832,8 @@ export async function handleChargeRefunded(
     if (refundedAmount >= 50) {
       await db.collection('admin_alerts').add({
         type: 'refund_processed',
-        severity: 'medium',
+        priority: 'medium',
+        read: false,
         message: `Remboursement ${isFullRefund ? 'total' : 'partiel'}: ${refundedAmount} ${currency}`,
         data: {
           chargeId: charge.id,
@@ -2809,7 +2845,6 @@ export async function handleChargeRefunded(
           clientId,
           providerId
         },
-        read: false,
         createdAt: now
       });
     }
@@ -2911,7 +2946,8 @@ export async function handleChargeRefunded(
         logger.error(`[handleChargeRefunded] P0-3 FIX: Error deducting provider balance:`, deductError);
         await db.collection('admin_alerts').add({
           type: 'provider_deduction_failed',
-          severity: 'critical',
+          priority: 'critical',
+          read: false,
           message: `Échec du débit provider lors du remboursement: ${charge.id}`,
           data: {
             chargeId: charge.id,
@@ -2919,7 +2955,6 @@ export async function handleChargeRefunded(
             refundedAmount,
             error: deductError instanceof Error ? deductError.message : 'Unknown',
           },
-          read: false,
           createdAt: now
         });
       }
@@ -3193,7 +3228,8 @@ export async function handleTransferFailed(
         // Create additional admin alert for Cloud Tasks failure
         await db.collection('admin_alerts').add({
           type: 'cloud_task_failure',
-          severity: 'high',
+          priority: 'high',
+          read: false,
           message: `Cloud Tasks scheduling failed - transfer retry needs manual intervention`,
           data: {
             pendingTransferId: pendingTransferRef.id,
@@ -3201,7 +3237,6 @@ export async function handleTransferFailed(
             providerId,
             error: errorMessage
           },
-          read: false,
           createdAt: now
         });
       }
@@ -3210,7 +3245,8 @@ export async function handleTransferFailed(
     // Alerte admin CRITIQUE
     await db.collection('admin_alerts').add({
       type: 'transfer_failed',
-      severity: 'critical',
+      priority: 'critical',
+      read: false,
       message: `ÉCHEC transfert prestataire: ${amount} ${currency}`,
       data: {
         transferId: transfer.id,
@@ -3223,7 +3259,6 @@ export async function handleTransferFailed(
         pendingTransferId,  // P1-2 FIX: Référence au pending_transfer pour suivi
         retryScheduled: !!pendingTransferId,  // P1-2 FIX: Indique si un retry est programmé
       },
-      read: false,
       createdAt: now
     });
 
@@ -3364,7 +3399,8 @@ export async function handleInvoiceMarkedUncollectible(
     // Admin alert for revenue loss
     await db.collection('admin_alerts').add({
       type: 'invoice_uncollectible',
-      severity: 'high',
+      priority: 'high',
+      read: false,
       message: `Facture marquée irrécupérable - ${(invoice.amount_due || 0) / 100} ${invoice.currency?.toUpperCase()}`,
       data: {
         invoiceId: invoice.id,
@@ -3373,7 +3409,6 @@ export async function handleInvoiceMarkedUncollectible(
         customerId: invoice.customer,
         subscriptionId: invoice.subscription,
       },
-      read: false,
       createdAt: now,
     });
 

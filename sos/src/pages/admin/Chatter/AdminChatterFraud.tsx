@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { httpsCallable } from "firebase/functions";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -94,7 +94,7 @@ const AdminChatterFraud: React.FC = () => {
       const getAlertsFn = httpsCallable<
         { statusFilter?: string; typeFilter?: string },
         { alerts: FraudAlert[]; stats: FraudStats }
-      >(functionsWest2, "adminGetReferralFraudAlerts");
+      >(functionsAffiliate, "adminGetReferralFraudAlerts");
 
       const result = await getAlertsFn({
         statusFilter: statusFilter !== "all" ? statusFilter : undefined,
@@ -120,7 +120,7 @@ const AdminChatterFraud: React.FC = () => {
       const reviewFn = httpsCallable<
         { alertId: string; action: string; notes: string },
         { success: boolean }
-      >(functionsWest2, "adminReviewFraudAlert");
+      >(functionsAffiliate, "adminReviewFraudAlert");
 
       await reviewFn({
         alertId,

@@ -115,6 +115,7 @@ const AdminCashFlow = lazy(() => import("../../pages/admin/Finance/CashFlow"));
 const AdminEscrow = lazy(() => import("../../pages/admin/Finance/Escrow"));
 const CostMonitoring = lazy(() => import("../../pages/admin/Finance/CostMonitoring"));
 const AdminGcpCosts = lazy(() => import("../../pages/admin/Finance/AdminGcpCosts"));
+const AdminPlans = lazy(() => import("../../pages/admin/Finance/Plans"));
 
 // ===== LAZY IMPORTS - USERS & PROVIDERS =====
 const AdminUsers = lazy(() => import("../../pages/admin/AdminUsers"));
@@ -479,6 +480,7 @@ const AdminB2BInvoices = lazy(
 const AdminB2BReports = lazy(() => import("../../pages/admin/AdminB2BReports"));
 
 // ===== LAZY IMPORTS - MONITORING =====
+const AdminEmailHealth = lazy(() => import("../../pages/admin/AdminEmailHealth"));
 const AdminAgentMonitoring = lazy(() => import("../../pages/admin/AdminAgentMonitoring"));
 const AdminFunctionalMonitoring = lazy(() => import("../../pages/admin/AdminFunctionalMonitoring"));
 const AdminConnectionLogs = lazy(() => import("../../pages/admin/AdminConnectionLogs"));
@@ -748,6 +750,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminSubscriptions />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/plans"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminPlans />
           </Suspense>
         }
       />
@@ -1617,6 +1627,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminSystemHealth />
+          </Suspense>
+        }
+      />
+      <Route
+        path="email-health"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminEmailHealth />
           </Suspense>
         }
       />

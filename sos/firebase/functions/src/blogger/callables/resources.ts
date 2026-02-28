@@ -34,7 +34,7 @@ export const getBloggerResources = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetBloggerResourcesResponse> => {
@@ -150,7 +150,7 @@ export const downloadBloggerResource = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<DownloadBloggerResourceResponse> => {
@@ -247,7 +247,7 @@ export const copyBloggerResourceText = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<CopyBloggerResourceTextResponse> => {

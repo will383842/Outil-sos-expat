@@ -55,6 +55,27 @@ function isExpired(expiresAt: string): boolean {
   return new Date(expiresAt).getTime() <= Date.now();
 }
 
+/**
+ * P3-05 FIX: Obfuscate stored data to prevent casual reading via XSS.
+ * Not encryption (codes are public), just prevents plain-text exposure.
+ */
+function obfuscate(data: string): string {
+  try {
+    return btoa(encodeURIComponent(data));
+  } catch {
+    return data;
+  }
+}
+
+function deobfuscate(data: string): string {
+  try {
+    return decodeURIComponent(atob(data));
+  } catch {
+    // Fallback: try parsing as plain JSON (backward compat with old entries)
+    return data;
+  }
+}
+
 // ============================================================================
 // CORE FUNCTIONS
 // ============================================================================
@@ -86,7 +107,7 @@ export function storeReferralCode(
   };
 
   try {
-    localStorage.setItem(getStorageKey(actorType), JSON.stringify(stored));
+    localStorage.setItem(getStorageKey(actorType), obfuscate(JSON.stringify(stored)));
   } catch (err) {
     console.warn('[referralStorage] Failed to store referral code:', err);
   }
@@ -103,7 +124,7 @@ export function getStoredReferral(actorType: ActorType): StoredReferral | null {
     const raw = localStorage.getItem(getStorageKey(actorType));
     if (!raw) return null;
 
-    const stored: StoredReferral = JSON.parse(raw);
+    const stored: StoredReferral = JSON.parse(deobfuscate(raw));
 
     if (isExpired(stored.expiresAt)) {
       // Auto-clean expired entry
@@ -193,9 +214,9 @@ export function migrateFromLegacyStorage(): void {
       const stored = localStorage.getItem(getStorageKey('client'));
       if (stored) {
         try {
-          const parsed: StoredReferral = JSON.parse(stored);
+          const parsed: StoredReferral = JSON.parse(deobfuscate(stored));
           parsed.capturedAt = capturedAt;
-          localStorage.setItem(getStorageKey('client'), JSON.stringify(parsed));
+          localStorage.setItem(getStorageKey('client'), obfuscate(JSON.stringify(parsed)));
         } catch {
           // ignore
         }

@@ -64,6 +64,10 @@ function getUserCollectionName(userType: PaymentUserType): string {
       return 'influencers';
     case 'blogger':
       return 'bloggers';
+    case 'group_admin':
+      return 'group_admins';
+    case 'affiliate':
+      return 'users';
     default:
       throw new Error(`Unknown user type: ${userType}`);
   }
@@ -148,10 +152,15 @@ export const adminRejectWithdrawal = onCall(
         const userDoc = await transaction.get(userRef);
 
         if (userDoc.exists) {
-          // Restore the pending amount to available balance
+          // Restore the pending amount (including fee) to available balance
+          const refundAmount = withdrawal.totalDebited || withdrawal.amount;
+          const pendingField = withdrawal.userType === 'affiliate'
+            ? 'pendingPayoutId'
+            : 'pendingWithdrawalId';
+
           transaction.update(userRef, {
-            availableBalance: FieldValue.increment(withdrawal.amount),
-            pendingWithdrawal: FieldValue.increment(-withdrawal.amount),
+            availableBalance: FieldValue.increment(refundAmount),
+            [pendingField]: null,
             updatedAt: Timestamp.now(),
           });
         }

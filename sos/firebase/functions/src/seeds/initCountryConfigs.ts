@@ -166,7 +166,8 @@ export const seedCountryConfigsHttp = onRequest(
   async (req, res) => {
     // Security: Check for secret header in production
     const authHeader = req.headers['x-seed-auth'];
-    if (authHeader !== 'sos-expat-seed-2024') {
+    const expectedSecret = process.env.ADMIN_INIT_SECRET;
+    if (!expectedSecret || authHeader !== expectedSecret) {
       res.status(403).json({ error: 'Unauthorized' });
       return;
     }

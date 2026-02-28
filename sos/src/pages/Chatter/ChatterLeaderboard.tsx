@@ -14,7 +14,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
 import { useApp } from '@/contexts/AppContext';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import { useChatter } from '@/hooks/useChatter';
 import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
 import {
@@ -170,7 +170,7 @@ const ChatterLeaderboard: React.FC = () => {
 
       try {
         const getLeaderboard = httpsCallable<{ month: string }, LeaderboardResponse>(
-          functionsWest2,
+          functionsAffiliate,
           'getChatterLeaderboard'
         );
 

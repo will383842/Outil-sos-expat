@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorBoundary from '../common/ErrorBoundary';
 import { checkUserRole, isUserBanned } from '../../utils/auth';
+import { devLog, devWarn, devError } from '../../utils/devLog';
 
 /**
  * Validates that a redirect URL is safe (local path only)
@@ -73,7 +74,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, isLoading, authInitialized, isFullyReady, error: authError } = useAuth();
 
   // 🔍 [BOOKING_AUTH_DEBUG] Log initial state
-  console.log('[BOOKING_AUTH_DEBUG] 🛡️ ProtectedRoute RENDER', {
+  devLog('[BOOKING_AUTH_DEBUG] 🛡️ ProtectedRoute RENDER', {
     path: location.pathname,
     search: location.search,
     user: user ? { id: user.id, email: user.email, role: user.role } : null,
@@ -110,7 +111,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isFullyReady) {
-        console.warn('🔐 [ProtectedRoute] ⚠️ Timeout sécurité atteint - forçage redirection login');
+        devWarn('🔐 [ProtectedRoute] ⚠️ Timeout sécurité atteint - forçage redirection login');
         setHasExceededMaxWait(true);
       }
     }, MAX_AUTH_WAIT_MS);
@@ -165,7 +166,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       }
     } catch (err) {
 
-      console.error('Authorization check failed:', err);
+      devError('Authorization check failed:', err);
       setError(err instanceof Error ? err.message : 'Authorization failed');
       setAuthState('error');
     }
@@ -258,7 +259,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
       case 'unauthorized':
         // 🔍 [BOOKING_AUTH_DEBUG] Log redirection vers login
-        console.log('[BOOKING_AUTH_DEBUG] 🔀 ProtectedRoute → REDIRECT to login', {
+        devLog('[BOOKING_AUTH_DEBUG] 🔀 ProtectedRoute → REDIRECT to login', {
           computedFallbackPath,
           safeRedirectParam,
           fullRedirectUrl: `${computedFallbackPath}?redirect=${encodeURIComponent(safeRedirectParam)}`,

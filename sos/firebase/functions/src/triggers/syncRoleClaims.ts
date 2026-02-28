@@ -145,8 +145,23 @@ export async function handleSyncClaimsUpdated(event: any) {
         userId: uid,
         type: "role_changed",
         title: "Votre rôle a été modifié",
-        message: `Votre rôle a été changé de ${oldRole || 'non défini'} à ${newRole}. ` +
-          "Veuillez vous reconnecter pour que les changements prennent effet.",
+        message: `Votre rôle a été changé de ${oldRole || 'non défini'} à ${newRole}. Veuillez vous reconnecter pour que les changements prennent effet.`,
+        titleTranslations: {
+          fr: "Votre rôle a été modifié", en: "Your role has been changed", es: "Su rol ha sido modificado",
+          de: "Ihre Rolle wurde geändert", pt: "Seu papel foi alterado", ru: "Ваша роль изменена",
+          hi: "आपकी भूमिका बदल दी गई है", zh: "您的角色已更改", ar: "تم تغيير دورك",
+        },
+        messageTranslations: {
+          fr: `Votre rôle a été changé de ${oldRole || 'non défini'} à ${newRole}. Veuillez vous reconnecter pour que les changements prennent effet.`,
+          en: `Your role was changed from ${oldRole || 'undefined'} to ${newRole}. Please log in again for changes to take effect.`,
+          es: `Su rol fue cambiado de ${oldRole || 'no definido'} a ${newRole}. Vuelva a iniciar sesión para que los cambios surtan efecto.`,
+          de: `Ihre Rolle wurde von ${oldRole || 'nicht definiert'} auf ${newRole} geändert. Bitte melden Sie sich erneut an.`,
+          pt: `Seu papel foi alterado de ${oldRole || 'não definido'} para ${newRole}. Faça login novamente para que as alterações tenham efeito.`,
+          ru: `Ваша роль изменена с ${oldRole || 'не определена'} на ${newRole}. Войдите заново для применения изменений.`,
+          hi: `आपकी भूमिका ${oldRole || 'अपरिभाषित'} से ${newRole} में बदल दी गई। कृपया दोबारा लॉगिन करें।`,
+          zh: `您的角色已从 ${oldRole || '未定义'} 更改为 ${newRole}。请重新登录以使更改生效。`,
+          ar: `تم تغيير دورك من ${oldRole || 'غير محدد'} إلى ${newRole}. يرجى تسجيل الدخول مرة أخرى لتفعيل التغييرات.`,
+        },
         data: {
           oldRole: oldRole || "none",
           newRole: newRole,

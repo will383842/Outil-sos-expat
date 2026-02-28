@@ -62,8 +62,10 @@ export const RATE_LIMITS = {
   ADMIN_CLAIMS: { maxRequests: 5, windowMs: 5 * 60 * 1000 },
   /** Appels: 3 req / minute */
   CREATE_CALL: { maxRequests: 3, windowMs: 60 * 1000 },
-  /** Retraits: 5 req / heure */
-  WITHDRAWAL: { maxRequests: 5, windowMs: 60 * 60 * 1000 },
+  /** Retraits: 3 req / heure (user-initiated) */
+  WITHDRAWAL: { maxRequests: 3, windowMs: 60 * 60 * 1000 },
   /** Auth sensible: 10 req / 15 min */
   SENSITIVE_AUTH: { maxRequests: 10, windowMs: 15 * 60 * 1000 },
+  /** Registration: 2 req / heure (anti-fraud) */
+  REGISTRATION: { maxRequests: 2, windowMs: 60 * 60 * 1000 },
 } as const;

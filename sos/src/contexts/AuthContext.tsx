@@ -41,6 +41,7 @@ import {
   getDocs,
   writeBatch,
   deleteField,
+  DocumentSnapshot,
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
@@ -48,6 +49,7 @@ import { auth, db, storage, functions } from '../config/firebase';
 import type { User } from './types';
 import type { AuthContextType } from './AuthContextBase';
 import { AuthContext as BaseAuthContext } from './AuthContextBase';
+import { devLog, devWarn, devError } from '../utils/devLog';
 
 /* =========================================================
    Types utilitaires
@@ -208,7 +210,7 @@ const shouldForceRedirectAuth = (): boolean => {
   // Tous les appareils iOS → redirect (Safari, Chrome iOS, Firefox iOS, etc.)
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
   if (isIOS) {
-    console.log('[Auth] iOS détecté - mode REDIRECT (custom authDomain, pas de problème ITP)');
+    devLog('[Auth] iOS détecté - mode REDIRECT (custom authDomain, pas de problème ITP)');
     return true;
   }
 
@@ -242,7 +244,7 @@ const safeStorage = {
       } catch {
         // Dernier recours: mémoire (perdu au refresh mais mieux que rien)
         safeStorage._memoryStorage[key] = value;
-        console.warn('[Auth] Storage unavailable, using memory fallback for:', key);
+        devWarn('[Auth] Storage unavailable, using memory fallback for:', key);
       }
     }
   },
@@ -300,7 +302,7 @@ const logAuthEvent = async (type: string, data: LogPayload = {}): Promise<void> 
       device: getDeviceInfo(),
     });
   } catch (e) {
-    console.warn('[Auth] logAuthEvent error', e);
+    devWarn('[Auth] logAuthEvent error', e);
   }
 };
 
@@ -373,11 +375,11 @@ const processProfilePhoto = async (
         const upload = await uploadString(storageRef, optimized.dataUrl, 'data_url');
         const url = await getDownloadURL(upload.ref);
         
-        console.log(`[Auth] Profile photo optimized: ${(optimized.originalSize / 1024).toFixed(1)}KB → ${(optimized.optimizedSize / 1024).toFixed(1)}KB (${optimized.compressionRatio.toFixed(1)}x compression)`);
+        devLog(`[Auth] Profile photo optimized: ${(optimized.originalSize / 1024).toFixed(1)}KB → ${(optimized.optimizedSize / 1024).toFixed(1)}KB (${optimized.compressionRatio.toFixed(1)}x compression)`);
         
         return url;
       } catch (error) {
-        console.error('[Auth] Image optimization failed, falling back to default:', error);
+        devError('[Auth] Image optimization failed, falling back to default:', error);
         return '/default-avatar.png';
       }
     }
@@ -485,32 +487,32 @@ const createUserDocumentViaCloudFunction = async (
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      console.log(`🔄 [CloudFunction] Tentative ${attempt}/${MAX_RETRIES} de création du document...`);
+      devLog(`🔄 [CloudFunction] Tentative ${attempt}/${MAX_RETRIES} de création du document...`);
       const result = await createUserDoc(requestData);
-      console.log(`✅ [CloudFunction] Document créé avec succès (tentative ${attempt})`);
+      devLog(`✅ [CloudFunction] Document créé avec succès (tentative ${attempt})`);
       return result.data;
     } catch (error) {
       lastError = error as Error;
-      const errorCode = (error as any)?.code || 'unknown';
-      console.warn(`⚠️ [CloudFunction] Échec tentative ${attempt}/${MAX_RETRIES}:`, errorCode, (error as Error).message);
+      const errorCode = (error as AppError)?.code || 'unknown';
+      devWarn(`⚠️ [CloudFunction] Échec tentative ${attempt}/${MAX_RETRIES}:`, errorCode, (error as Error).message);
 
       // Ne pas retry si c'est une erreur de permission ou d'authentification
       if (errorCode === 'permission-denied' || errorCode === 'unauthenticated') {
-        console.error(`❌ [CloudFunction] Erreur fatale (${errorCode}), pas de retry`);
+        devError(`❌ [CloudFunction] Erreur fatale (${errorCode}), pas de retry`);
         throw error;
       }
 
       // Attendre avant le prochain retry (sauf si c'est la dernière tentative)
       if (attempt < MAX_RETRIES) {
         const delay = BASE_DELAY * Math.pow(2, attempt - 1); // 1s, 2s, 4s
-        console.log(`⏳ [CloudFunction] Attente ${delay}ms avant retry...`);
+        devLog(`⏳ [CloudFunction] Attente ${delay}ms avant retry...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
   }
 
   // Si toutes les tentatives ont échoué
-  console.error(`❌ [CloudFunction] Échec après ${MAX_RETRIES} tentatives`);
+  devError(`❌ [CloudFunction] Échec après ${MAX_RETRIES} tentatives`);
   throw lastError || new Error('Cloud Function failed after all retries');
 };
 
@@ -691,7 +693,7 @@ const createUserDocumentInFirestore = async (
         updatedAt: serverTimestamp(),
       });
 
-      console.log('✅ [Auth] Profil créé dans sos_profiles avec tous les champs:', {
+      devLog('✅ [Auth] Profil créé dans sos_profiles avec tous les champs:', {
         uid: firebaseUser.uid,
         type: additionalData.role,
         specialties: additionalData.specialties?.length || 0,
@@ -751,17 +753,17 @@ const createUserDocumentInFirestore = async (
         updatedAt: serverTimestamp(),
       });
 
-      console.log(`✅ [Auth] Profil créé dans ${providerCollectionName}/${firebaseUser.uid} pour KYC Stripe`);
+      devLog(`✅ [Auth] Profil créé dans ${providerCollectionName}/${firebaseUser.uid} pour KYC Stripe`);
       } catch (providerCollErr) {
         // ✅ FIX: Ne pas bloquer l'inscription si l'écriture dans lawyers/expats échoue
         // Le document sera créé par Cloud Function lors du KYC Stripe si nécessaire
-        console.warn(`⚠️ [Auth] Écriture non-bloquante dans ${providerCollectionName} échouée:`, providerCollErr);
+        devWarn(`⚠️ [Auth] Écriture non-bloquante dans ${providerCollectionName} échouée:`, providerCollErr);
       }
     }
     
-    console.log('✅ User document created with verificationStatus:', approvalFields.verificationStatus);
+    devLog('✅ User document created with verificationStatus:', approvalFields.verificationStatus);
   } catch (error) {
-    console.error('Erreur création document utilisateur:', error);
+    devError('Erreur création document utilisateur:', error);
     throw error;
   }
 };
@@ -776,20 +778,20 @@ const createUserDocumentInFirestore = async (
 const getUserDocument = async (firebaseUser: FirebaseUser): Promise<User | null> => {
   const refUser = doc(db, 'users', firebaseUser.uid);
 
-  let snap: any;
+  let snap: DocumentSnapshot;
   try {
     snap = await getDoc(refUser);
   } catch (error) {
     // ⚠️ CORRECTION: Ne pas créer de document en cas d'erreur de permission
     // Retourner null pour signaler que l'utilisateur n'a pas de profil
-    console.error('[Auth] getUserDocument permission error:', error);
+    devError('[Auth] getUserDocument permission error:', error);
     return null;
   }
 
   // ⚠️ CORRECTION: Si le document n'existe pas, retourner null
   // Ne JAMAIS créer un document avec role='client' par défaut
   if (!snap.exists()) {
-    console.warn('[Auth] getUserDocument: document does not exist for uid:', firebaseUser.uid);
+    devWarn('[Auth] getUserDocument: document does not exist for uid:', firebaseUser.uid);
     return null;
   }
 
@@ -865,7 +867,7 @@ const writeUsersPresenceBestEffort = async (
       updatedAt: serverTimestamp(),
     });
   } catch (e) {
-    console.warn('[Presence] update users ignoré (règles):', e);
+    devWarn('[Presence] update users ignoré (règles):', e);
   }
 };
 
@@ -934,7 +936,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     // on considère l'utilisateur comme déconnecté pour éviter une page blanche infinie
     const safetyTimeoutId = setTimeout(() => {
       if (!authStateReceivedRef.current) {
-        console.warn('🔐 [AuthContext] ⚠️ onAuthStateChanged timeout (3s) - forçant authInitialized=true');
+        devWarn('🔐 [AuthContext] ⚠️ onAuthStateChanged timeout (3s) - forçant authInitialized=true');
         setUser(null);
         setIsLoading(false);
         setAuthInitialized(true);
@@ -1027,27 +1029,27 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     fallbackTimeoutId = setTimeout(async () => {
       // Double-check avant d'agir (protection contre race condition)
       if (firstSnapArrived.current || cancelled) {
-        console.log("🔐 [AuthContext] Fallback getDoc annulé - données déjà reçues");
+        devLog("🔐 [AuthContext] Fallback getDoc annulé - données déjà reçues");
         return;
       }
 
       const elapsed = Date.now() - listenerStartTime;
-      console.warn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] onSnapshot n'a pas répondu en 5s, tentative getDoc directe...`);
+      devWarn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] onSnapshot n'a pas répondu en 5s, tentative getDoc directe...`);
 
       try {
-        console.log("🔐 [AuthContext] 📥 Exécution getDoc(users/" + uid + ")...");
+        devLog("🔐 [AuthContext] 📥 Exécution getDoc(users/" + uid + ")...");
         const directSnap = await getDoc(refUser);
         const getDocElapsed = Date.now() - listenerStartTime;
-        console.log(`🔐 [AuthContext] 📥 getDoc terminé en ${getDocElapsed}ms, exists=${directSnap.exists()}`);
+        devLog(`🔐 [AuthContext] 📥 getDoc terminé en ${getDocElapsed}ms, exists=${directSnap.exists()}`);
 
         // Re-vérifier après l'await (onSnapshot peut avoir répondu entre temps)
         if (firstSnapArrived.current || cancelled) {
-          console.log("🔐 [AuthContext] getDoc ignoré - données déjà reçues via onSnapshot");
+          devLog("🔐 [AuthContext] getDoc ignoré - données déjà reçues via onSnapshot");
           return;
         }
 
         if (directSnap.exists()) {
-          console.log("✅ [AuthContext] getDoc réussi, données:", directSnap.data());
+          devLog("✅ [AuthContext] getDoc réussi, données:", directSnap.data());
           const data = directSnap.data() as Partial<User>;
           cancelAllFallbacks(); // Annuler les autres fallbacks
           firstSnapArrived.current = true; // Marquer AVANT setUser pour éviter les doublons
@@ -1060,14 +1062,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           } as User);
           setIsLoading(false);
           setAuthInitialized(true);
-          console.log("✅ [AuthContext] 🏁 User chargé via fallback getDoc - isLoading=false");
+          devLog("✅ [AuthContext] 🏁 User chargé via fallback getDoc - isLoading=false");
         } else {
-          console.warn("⚠️ [AuthContext] getDoc: document users/" + uid + " n'existe pas!");
+          devWarn("⚠️ [AuthContext] getDoc: document users/" + uid + " n'existe pas!");
           // Ne pas annuler les autres fallbacks - laisser le REST API essayer
         }
       } catch (e) {
         const errorElapsed = Date.now() - listenerStartTime;
-        console.error(`❌ [AuthContext] [${errorElapsed}ms] getDoc fallback échoué:`, e);
+        devError(`❌ [AuthContext] [${errorElapsed}ms] getDoc fallback échoué:`, e);
         // Ne pas annuler les autres fallbacks - laisser le REST API essayer
       }
     }, 5000);
@@ -1076,19 +1078,19 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     restFallbackTimeoutId = setTimeout(async () => {
       // Double-check avant d'agir
       if (firstSnapArrived.current || cancelled) {
-        console.log("🔐 [AuthContext] Fallback REST API annulé - données déjà reçues");
+        devLog("🔐 [AuthContext] Fallback REST API annulé - données déjà reçues");
         return;
       }
 
       const elapsed = Date.now() - listenerStartTime;
-      console.warn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] SDK Firestore bloqué, tentative REST API...`);
+      devWarn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] SDK Firestore bloqué, tentative REST API...`);
 
       try {
         const token = await authUser.getIdToken();
         const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
         const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}`;
 
-        console.log("🔐 [AuthContext] 🌐 Appel REST API:", restUrl);
+        devLog("🔐 [AuthContext] 🌐 Appel REST API:", restUrl);
         const response = await fetch(restUrl, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -1098,56 +1100,56 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         // Re-vérifier après l'await
         if (firstSnapArrived.current || cancelled) {
-          console.log("🔐 [AuthContext] REST API ignoré - données déjà reçues");
+          devLog("🔐 [AuthContext] REST API ignoré - données déjà reçues");
           return;
         }
 
         if (response.ok) {
           const restData = await response.json();
-          console.log("✅ [AuthContext] REST API réponse:", restData);
+          devLog("✅ [AuthContext] REST API réponse:", restData);
 
           const fields = restData.fields || {};
-          const userData: Partial<User> = {};
+          const userData: Record<string, unknown> = {};
 
           for (const [key, value] of Object.entries(fields)) {
             const fieldValue = value as { stringValue?: string; integerValue?: string; booleanValue?: boolean; timestampValue?: string };
-            if (fieldValue.stringValue !== undefined) userData[key as keyof User] = fieldValue.stringValue as any;
-            else if (fieldValue.integerValue !== undefined) userData[key as keyof User] = parseInt(fieldValue.integerValue) as any;
-            else if (fieldValue.booleanValue !== undefined) userData[key as keyof User] = fieldValue.booleanValue as any;
-            else if (fieldValue.timestampValue !== undefined) userData[key as keyof User] = new Date(fieldValue.timestampValue) as any;
+            if (fieldValue.stringValue !== undefined) userData[key] = fieldValue.stringValue;
+            else if (fieldValue.integerValue !== undefined) userData[key] = parseInt(fieldValue.integerValue);
+            else if (fieldValue.booleanValue !== undefined) userData[key] = fieldValue.booleanValue;
+            else if (fieldValue.timestampValue !== undefined) userData[key] = new Date(fieldValue.timestampValue);
           }
 
           cancelAllFallbacks(); // Annuler les autres fallbacks
           firstSnapArrived.current = true; // Marquer AVANT setUser
           setUser({
-            ...(userData as User),
+            ...(userData as Partial<User>),
             id: uid,
             uid,
-            email: userData.email || authUser.email || null,
+            email: (userData.email as string) || authUser.email || null,
             isVerifiedEmail: authUser.emailVerified,
           } as User);
           setIsLoading(false);
           setAuthInitialized(true);
-          console.log("✅ [AuthContext] 🏁 User chargé via REST API fallback - isLoading=false");
-          console.log("💡 [AuthContext] Le SDK Firestore est bloqué mais l'app fonctionne via REST API");
+          devLog("✅ [AuthContext] 🏁 User chargé via REST API fallback - isLoading=false");
+          devLog("💡 [AuthContext] Le SDK Firestore est bloqué mais l'app fonctionne via REST API");
         } else if (response.status === 404) {
-          console.warn("⚠️ [AuthContext] REST API: document users/" + uid + " n'existe pas");
+          devWarn("⚠️ [AuthContext] REST API: document users/" + uid + " n'existe pas");
         } else {
-          console.error("❌ [AuthContext] REST API erreur:", response.status, await response.text());
+          devError("❌ [AuthContext] REST API erreur:", response.status, await response.text());
         }
       } catch (e) {
-        console.error("❌ [AuthContext] REST API fallback échoué:", e);
+        devError("❌ [AuthContext] REST API fallback échoué:", e);
       }
     }, 10000);
 
     // Timeout de secours final si rien ne fonctionne
     const authTimeout = 30000; // 30 secondes max
-    console.log(`🔐 [AuthContext] ⏰ Timeout final configuré: ${authTimeout}ms`);
+    devLog(`🔐 [AuthContext] ⏰ Timeout final configuré: ${authTimeout}ms`);
     timeoutId = setTimeout(() => {
       const elapsed = Date.now() - listenerStartTime;
       if (!firstSnapArrived.current && !cancelled) {
-        console.error(`❌ [AuthContext] 💀 TIMEOUT FATAL [${elapsed}ms] - Firestore complètement inaccessible!`);
-        console.error(`❌ [AuthContext] Diagnostic:`, {
+        devError(`❌ [AuthContext] 💀 TIMEOUT FATAL [${elapsed}ms] - Firestore complètement inaccessible!`);
+        devError(`❌ [AuthContext] Diagnostic:`, {
           authUserUid: authUser?.uid,
           subscribedCurrent: subscribed.current,
           firstSnapArrivedCurrent: firstSnapArrived.current,
@@ -1177,8 +1179,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         // Cela corromprait le rôle des prestataires (lawyers/expats) si leur document
         // n'a pas encore été répliqué ou s'il y a une erreur de timing
         if (!docSnap.exists()) {
-          console.warn("🔐 [AuthContext] Document users/" + uid + " n'existe pas - possible race condition");
-          console.warn("🔐 [AuthContext] Cloud Function peut encore être en cours d'exécution...");
+          devWarn("🔐 [AuthContext] Document users/" + uid + " n'existe pas - possible race condition");
+          devWarn("🔐 [AuthContext] Cloud Function peut encore être en cours d'exécution...");
 
           // ✅ FIX RACE CONDITION: Retry polling avec backoff progressif
           // La Cloud Function peut prendre jusqu'à 10-15s sur réseau lent
@@ -1188,7 +1190,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             const MAX_DELAY = 1500; // Max 1.5s entre retries
             // Total max: ~15-20 secondes
 
-            console.log("🔄 [AuthContext] Démarrage du polling avec backoff progressif...");
+            devLog("🔄 [AuthContext] Démarrage du polling avec backoff progressif...");
 
             let totalWaitTime = 0;
             for (let retry = 1; retry <= MAX_RETRIES; retry++) {
@@ -1198,17 +1200,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
               totalWaitTime += delay;
 
               if (cancelled) {
-                console.log("🔄 [AuthContext] Polling annulé (cancelled=true)");
+                devLog("🔄 [AuthContext] Polling annulé (cancelled=true)");
                 return;
               }
 
-              console.log(`🔄 [AuthContext] Retry ${retry}/${MAX_RETRIES} (${Math.round(totalWaitTime/1000)}s écoulées)...`);
+              devLog(`🔄 [AuthContext] Retry ${retry}/${MAX_RETRIES} (${Math.round(totalWaitTime/1000)}s écoulées)...`);
 
               try {
                 const retrySnap = await getDoc(refUser);
 
                 if (retrySnap.exists()) {
-                  console.log(`✅ [AuthContext] Document trouvé après ${retry} retry(s) (${Math.round(totalWaitTime/1000)}s)!`);
+                  devLog(`✅ [AuthContext] Document trouvé après ${retry} retry(s) (${Math.round(totalWaitTime/1000)}s)!`);
                   // Document trouvé! Traiter les données
                   const data = retrySnap.data() as Partial<User>;
 
@@ -1228,8 +1230,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                           ? data.updatedAt.toDate()
                           : new Date(),
                       lastLoginAt:
-                        (data as any).lastLoginAt instanceof Timestamp
-                          ? (data as any).lastLoginAt.toDate()
+                        data.lastLoginAt instanceof Timestamp
+                          ? data.lastLoginAt.toDate()
                           : new Date(),
                       isVerifiedEmail: authUser.emailVerified,
                     } as User;
@@ -1243,24 +1245,24 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                   return;
                 }
               } catch (pollError) {
-                console.warn(`⚠️ [AuthContext] Erreur polling retry ${retry}:`, pollError);
+                devWarn(`⚠️ [AuthContext] Erreur polling retry ${retry}:`, pollError);
                 // Continuer le polling malgré l'erreur
               }
             }
 
             // Après tous les retries (~15-20s), le document n'existe toujours pas
-            console.error("❌ [AuthContext] Document toujours absent après " + MAX_RETRIES + " retries (~" + Math.round(totalWaitTime/1000) + "s)");
+            devError("❌ [AuthContext] Document toujours absent après " + MAX_RETRIES + " retries (~" + Math.round(totalWaitTime/1000) + "s)");
             cancelAllFallbacks(); // ✅ FIX: Annuler tous les timeouts même en cas d'échec
 
             // ✅ FIX: Tenter de réparer le compte orphelin via Cloud Function
-            console.log("🔧 [AuthContext] Tentative de réparation du compte orphelin...");
+            devLog("🔧 [AuthContext] Tentative de réparation du compte orphelin...");
             try {
               const repairFn = httpsCallable(functions, 'repairOrphanedUser');
               const result = await repairFn({});
               const repairData = result.data as { success: boolean; repaired: boolean; role?: string; message: string };
 
               if (repairData.success && repairData.repaired) {
-                console.log("✅ [AuthContext] Compte réparé avec succès:", repairData);
+                devLog("✅ [AuthContext] Compte réparé avec succès:", repairData);
                 // Relire le document maintenant qu'il existe
                 const repairedSnap = await getDoc(refUser);
                 if (repairedSnap.exists()) {
@@ -1282,7 +1284,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 }
               }
             } catch (repairError) {
-              console.error("❌ [AuthContext] Échec de la réparation:", repairError);
+              devError("❌ [AuthContext] Échec de la réparation:", repairError);
             }
 
             // Si la réparation échoue, afficher l'erreur originale
@@ -1315,8 +1317,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 ? data.updatedAt.toDate()
                 : new Date(),
             lastLoginAt:
-              (data as any).lastLoginAt instanceof Timestamp
-                ? (data as any).lastLoginAt.toDate()
+              data.lastLoginAt instanceof Timestamp
+                ? data.lastLoginAt.toDate()
                 : new Date(),
             isVerifiedEmail: authUser.emailVerified,
           } as User;
@@ -1347,7 +1349,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         });
 
         if (!firstSnapArrived.current) {
-          console.log(`✅ [AuthContext] First snapshot for users/${uid}`);
+          devLog(`✅ [AuthContext] First snapshot for users/${uid}`);
 
           firstSnapArrived.current = true;
           setIsLoading(false);
@@ -1358,7 +1360,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         // ✅ FIX: Ignorer les erreurs si déconnexion en cours ou listener annulé
         // Cela évite les erreurs "permission-denied" qui apparaissent lors de la déconnexion
         if (signingOutRef.current || cancelled) {
-          console.log(`🔐 [AuthContext] Erreur listener ignorée (déconnexion en cours ou annulé)`);
+          devLog(`🔐 [AuthContext] Erreur listener ignorée (déconnexion en cours ou annulé)`);
           return;
         }
 
@@ -1366,12 +1368,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         // ✅ FIX: Annuler TOUS les fallbacks en cas d'erreur
         cancelAllFallbacks();
 
-        const errorCode = (err as any)?.code || 'unknown';
+        const errorCode = (err as AppError)?.code || 'unknown';
 
         // ✅ FIX: Ne pas logger comme erreur critique si c'est juste une permission expirée après longtemps
         // (session expirée naturellement après > 60s d'inactivité)
         if (errorCode === 'permission-denied' && errorElapsed > 60000) {
-          console.warn(`⚠️ [AuthContext] [${errorElapsed}ms] Session expirée pour users/${uid} - déconnexion silencieuse`);
+          devWarn(`⚠️ [AuthContext] [${errorElapsed}ms] Session expirée pour users/${uid} - déconnexion silencieuse`);
           // Déconnecter proprement l'utilisateur au lieu d'afficher une erreur
           setUser(null);
           setIsLoading(false);
@@ -1379,8 +1381,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           return;
         }
 
-        console.error(`❌ [AuthContext] [${errorElapsed}ms] [users/${uid}] Erreur listener:`, err);
-        console.error(`❌ [AuthContext] Error details:`, {
+        devError(`❌ [AuthContext] [${errorElapsed}ms] [users/${uid}] Erreur listener:`, err);
+        devError(`❌ [AuthContext] Error details:`, {
           name: (err as Error)?.name,
           message: (err as Error)?.message,
           code: errorCode,
@@ -1448,14 +1450,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         setUser(null);
       }
     } catch (e) {
-      console.error('[Auth] updateUserState error:', e);
+      devError('[Auth] updateUserState error:', e);
       setUser(null);
     }
   }, []);
 
   const login = useCallback(async (email: string, password: string, rememberMe: boolean = false): Promise<void> => {
     // VERSION 8 - DEBUG AUTH
-    console.log("[DEBUG] " + "🔐 LOGIN: Début\n\nEmail: " + email + "\nRemember: " + rememberMe);
+    devLog("[DEBUG] " + "🔐 LOGIN: Début\n\nEmail: " + email + "\nRemember: " + rememberMe);
 
     setIsLoading(true);
     setError(null);
@@ -1463,7 +1465,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
     if (!email || !password) {
       const msg = 'Email et mot de passe sont obligatoires';
-      console.log("[DEBUG] " + "❌ LOGIN: Email ou mot de passe manquant");
+      devLog("[DEBUG] " + "❌ LOGIN: Email ou mot de passe manquant");
       setError(msg);
       setIsLoading(false);
       setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
@@ -1471,10 +1473,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
 
     try {
-      console.log("[DEBUG] " + "🔐 LOGIN: setPersistence...");
+      devLog("[DEBUG] " + "🔐 LOGIN: setPersistence...");
       const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistenceType);
-      console.log("[DEBUG] " + "🔐 LOGIN: signInWithEmailAndPassword...");
+      devLog("[DEBUG] " + "🔐 LOGIN: signInWithEmailAndPassword...");
 
       const timeout = deviceInfo.connectionSpeed === 'slow' ? 15000 : 10000;
       const loginPromise = signInWithEmailAndPassword(auth, normalizeEmail(email), password);
@@ -1483,14 +1485,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         new Promise<never>((_, rej) => setTimeout(() => rej(new Error('auth/timeout')), timeout)),
       ]);
 
-      console.log("[DEBUG] " + "✅ LOGIN RÉUSSI!\n\nUID: " + cred.user.uid + "\nEmail: " + cred.user.email);
+      devLog("[DEBUG] " + "✅ LOGIN RÉUSSI!\n\nUID: " + cred.user.uid + "\nEmail: " + cred.user.email);
 
       logAuthEvent('successful_login', {
         userId: cred.user.uid,
         provider: 'email',
         rememberMe,
         deviceInfo
-      }).catch(() => {});
+      }).catch((e) => devWarn("[AuthContext] logAuthEvent(successful_login) failed:", e));
 
       // ✅ FIX: Signaler le login aux autres onglets via localStorage
       try {
@@ -1498,9 +1500,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         setTimeout(() => localStorage.removeItem('sos_login_event'), 100);
       } catch { /* Ignorer si localStorage n'est pas disponible */ }
     } catch (e) {
-      const errorCode = (e as any)?.code || (e instanceof Error ? e.message : '');
-      console.log("[DEBUG] " + "❌ LOGIN ERREUR!\n\nCode: " + errorCode + "\nMessage: " + (e instanceof Error ? e.message : String(e)));
-      console.error("❌ [AuthContext] login() Error code:", errorCode);
+      const errorCode = (e as AppError)?.code || (e instanceof Error ? e.message : '');
+      devLog("[DEBUG] " + "❌ LOGIN ERREUR!\n\nCode: " + errorCode + "\nMessage: " + (e instanceof Error ? e.message : String(e)));
+      devError("❌ [AuthContext] login() Error code:", errorCode);
 
       // Mapping des erreurs Firebase Auth vers des messages utilisateur explicites
       const errorMessages: Record<string, string> = {
@@ -1524,7 +1526,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         error: errorCode,
         email: normalizeEmail(email),
         deviceInfo
-      }).catch(() => { /* ignoré */ });
+      }).catch((e) => devWarn("[AuthContext] logAuthEvent(login_failed) failed:", e));
       // ✅ FIX: Conserver le code d'erreur Firebase pour que QuickAuthWizard puisse le lire
       const authError = new Error(msg) as Error & { code?: string };
       authError.code = errorCode;
@@ -1536,12 +1538,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   const loginWithGoogle = useCallback(async (rememberMe: boolean = false): Promise<void> => {
     // VERSION 10 - PRODUCTION READY: Mobile + Desktop compatible
-    console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Début (v10 - production ready)");
+    devLog("[DEBUG] " + "🔵 GOOGLE LOGIN: Début (v10 - production ready)");
 
     // 🚫 BLOQUER les WebViews in-app (Instagram, Facebook, TikTok, etc.)
     // Ces navigateurs ne supportent pas Google Auth correctement
     if (isInAppBrowser()) {
-      console.log("[DEBUG] " + "❌ GOOGLE LOGIN: WebView in-app détecté - bloqué");
+      devLog("[DEBUG] " + "❌ GOOGLE LOGIN: WebView in-app détecté - bloqué");
       const browserName = /Instagram/i.test(navigator.userAgent) ? 'Instagram' :
                           /FBAN|FBAV/i.test(navigator.userAgent) ? 'Facebook' :
                           /TikTok/i.test(navigator.userAgent) ? 'TikTok' :
@@ -1563,10 +1565,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
     // Détecter si on doit forcer redirect (iOS, Samsung, etc.)
     const forceRedirect = shouldForceRedirectAuth();
-    console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: forceRedirect=" + forceRedirect + " (iOS/WebView/Samsung)");
+    devLog("[DEBUG] " + "🔵 GOOGLE LOGIN: forceRedirect=" + forceRedirect + " (iOS/WebView/Samsung)");
 
     try {
-      console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Création provider...");
+      devLog("[DEBUG] " + "🔵 GOOGLE LOGIN: Création provider...");
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
       provider.addScope('profile');
@@ -1578,12 +1580,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       // setPersistence est fire-and-forget: Firebase l'applique avant le prochain signIn.
       const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       setPersistence(auth, persistenceType).catch((err) =>
-        console.warn("[DEBUG] setPersistence error (non-blocking):", err)
+        devWarn("[DEBUG] setPersistence error (non-blocking):", err)
       );
 
       // 📱 Sur iOS et navigateurs problématiques: forcer redirect directement
       if (forceRedirect) {
-        console.log("[DEBUG] " + "🔄 GOOGLE LOGIN: Mode REDIRECT forcé (mobile/iOS)...");
+        devLog("[DEBUG] " + "🔄 GOOGLE LOGIN: Mode REDIRECT forcé (mobile/iOS)...");
         // If a booking is in progress, save the booking target instead of current page
         let redirectTarget = window.location.pathname + window.location.search;
         try {
@@ -1599,24 +1601,24 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       }
 
       // 💻 Sur Desktop: essayer popup d'abord
-      console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Tentative POPUP (desktop)...");
+      devLog("[DEBUG] " + "🔵 GOOGLE LOGIN: Tentative POPUP (desktop)...");
       try {
         const result = await signInWithPopup(auth, provider);
-        console.log("[DEBUG] " + "✅ GOOGLE POPUP: Succès! UID: " + result.user.uid);
+        devLog("[DEBUG] " + "✅ GOOGLE POPUP: Succès! UID: " + result.user.uid);
 
         // Process the user directly (same logic as redirect handler)
         const googleUser = result.user;
 
         // 🔧 FIX: Force token refresh to ensure Firestore rules recognize the new user
         // Without this, Firestore may reject writes because the auth token isn't propagated yet
-        console.log("[DEBUG] " + "🔄 GOOGLE POPUP: Rafraîchissement du token...");
+        devLog("[DEBUG] " + "🔄 GOOGLE POPUP: Rafraîchissement du token...");
         await googleUser.getIdToken(true);
         // ✅ Délai adaptatif selon la connexion (500ms rapide, 1500ms lent, 1000ms par défaut)
         const tokenPropagationDelay = deviceInfo.connectionSpeed === 'slow' ? 1500 :
                                        deviceInfo.connectionSpeed === 'fast' ? 500 : 1000;
-        console.log("[DEBUG] " + "⏳ GOOGLE POPUP: Attente propagation token (" + tokenPropagationDelay + "ms)...");
+        devLog("[DEBUG] " + "⏳ GOOGLE POPUP: Attente propagation token (" + tokenPropagationDelay + "ms)...");
         await new Promise(resolve => setTimeout(resolve, tokenPropagationDelay));
-        console.log("[DEBUG] " + "✅ GOOGLE POPUP: Token rafraîchi");
+        devLog("[DEBUG] " + "✅ GOOGLE POPUP: Token rafraîchi");
 
         const userRef = doc(db, 'users', googleUser.uid);
         const userDoc = await getDoc(userRef);
@@ -1624,7 +1626,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         if (userDoc.exists()) {
           const existing = userDoc.data() as Partial<User>;
           if (existing.role && existing.role !== 'client') {
-            console.log("[DEBUG] " + "❌ GOOGLE POPUP: Rôle non-client - " + existing.role);
+            devLog("[DEBUG] " + "❌ GOOGLE POPUP: Rôle non-client - " + existing.role);
             await firebaseSignOut(auth);
             setError('Les comptes Google sont réservés aux clients.');
             throw new Error('Role restriction');
@@ -1636,7 +1638,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           });
         } else {
           // Create new client user via Cloud Function (bypasses Firestore security rules)
-          console.log("[DEBUG] " + "🔵 GOOGLE POPUP: Création du document via Cloud Function...");
+          devLog("[DEBUG] " + "🔵 GOOGLE POPUP: Création du document via Cloud Function...");
 
           // ✅ FIX ORPHAN USERS: Retry avec backoff exponentiel
           const MAX_RETRIES = 3;
@@ -1651,17 +1653,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 provider: 'google.com',
                 ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
               });
-              console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document " + result.action + " via Cloud Function (tentative " + attempt + ")");
+              devLog("[DEBUG] " + "✅ GOOGLE POPUP: Document " + result.action + " via Cloud Function (tentative " + attempt + ")");
               lastError = null; // Succès, pas d'erreur
               break; // Sortir de la boucle de retry
             } catch (createError) {
               lastError = createError instanceof Error ? createError : new Error(String(createError));
-              console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec Cloud Function (tentative " + attempt + "/" + MAX_RETRIES + "):", createError);
+              devError("[DEBUG] " + "❌ GOOGLE POPUP: Échec Cloud Function (tentative " + attempt + "/" + MAX_RETRIES + "):", createError);
 
               if (attempt < MAX_RETRIES) {
                 // Attendre avant le prochain retry (backoff exponentiel: 1s, 2s, 4s)
                 const delay = Math.pow(2, attempt - 1) * 1000;
-                console.log("[DEBUG] " + "🔄 GOOGLE POPUP: Retry dans " + delay + "ms...");
+                devLog("[DEBUG] " + "🔄 GOOGLE POPUP: Retry dans " + delay + "ms...");
                 await new Promise(resolve => setTimeout(resolve, delay));
               }
             }
@@ -1669,8 +1671,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
           // Si tous les retries ont échoué, essayer la création directe en fallback
           if (lastError) {
-            console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec Cloud Function après " + MAX_RETRIES + " tentatives");
-            console.log("[DEBUG] " + "🔄 GOOGLE POPUP: Tentative fallback création directe Firestore...");
+            devError("[DEBUG] " + "❌ GOOGLE POPUP: Échec Cloud Function après " + MAX_RETRIES + " tentatives");
+            devLog("[DEBUG] " + "🔄 GOOGLE POPUP: Tentative fallback création directe Firestore...");
 
             // ✅ FIX ORPHAN USERS: Fallback vers création directe si Cloud Function échoue
             try {
@@ -1681,24 +1683,24 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 provider: 'google.com',
                 ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
               });
-              console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document créé via fallback Firestore direct");
+              devLog("[DEBUG] " + "✅ GOOGLE POPUP: Document créé via fallback Firestore direct");
             } catch (fallbackError) {
-              console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec fallback Firestore:", fallbackError);
+              devError("[DEBUG] " + "❌ GOOGLE POPUP: Échec fallback Firestore:", fallbackError);
               // Vérifier si le document existe malgré tout (race condition possible)
               const checkRef = doc(db, 'users', googleUser.uid);
               const checkDoc = await getDoc(checkRef);
               if (!checkDoc.exists()) {
                 // Document vraiment absent - afficher erreur mais ne pas bloquer
-                console.error("[DEBUG] " + "❌ GOOGLE POPUP: Document utilisateur non créé - orphan user possible");
+                devError("[DEBUG] " + "❌ GOOGLE POPUP: Document utilisateur non créé - orphan user possible");
                 setError("Votre compte a été créé mais le profil prend plus de temps. Veuillez rafraîchir la page.");
               } else {
-                console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document existait déjà (race condition résolue)");
+                devLog("[DEBUG] " + "✅ GOOGLE POPUP: Document existait déjà (race condition résolue)");
               }
             }
           }
         }
 
-        console.log("[DEBUG] " + "✅ GOOGLE POPUP: Utilisateur traité avec succès");
+        devLog("[DEBUG] " + "✅ GOOGLE POPUP: Utilisateur traité avec succès");
         await logAuthEvent('successful_google_login', { userId: googleUser.uid, userEmail: googleUser.email, deviceInfo });
 
         // ✅ FIX: Signaler le login aux autres onglets via localStorage
@@ -1713,10 +1715,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         if (savedRedirect) {
           safeStorage.removeItem('googleAuthRedirect');
           if (isAllowedRedirect(savedRedirect)) {
-            console.log('[Auth] Google popup: navigating to validated URL:', savedRedirect);
+            devLog('[Auth] Google popup: navigating to validated URL:', savedRedirect);
             window.location.href = savedRedirect;
           } else {
-            console.warn('[Auth] Google popup: blocked invalid redirect URL:', savedRedirect);
+            devWarn('[Auth] Google popup: blocked invalid redirect URL:', savedRedirect);
             window.location.href = '/dashboard';
           }
         }
@@ -1724,7 +1726,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       } catch (popupError) {
         // If popup was blocked or closed, try redirect as fallback
         const popupErrorCode = (popupError as { code?: string })?.code || '';
-        console.log("[DEBUG] " + "⚠️ GOOGLE POPUP échoué: " + popupErrorCode);
+        devLog("[DEBUG] " + "⚠️ GOOGLE POPUP échoué: " + popupErrorCode);
 
         if (popupErrorCode === 'auth/popup-closed-by-user' ||
             popupErrorCode === 'auth/cancelled-popup-request') {
@@ -1733,7 +1735,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         }
 
         if (popupErrorCode === 'auth/popup-blocked') {
-          console.log("[DEBUG] " + "🔄 Popup bloqué, fallback vers REDIRECT...");
+          devLog("[DEBUG] " + "🔄 Popup bloqué, fallback vers REDIRECT...");
           // If a booking is in progress, save the booking target instead of current page
           let redirectTarget = window.location.pathname + window.location.search;
           try {
@@ -1749,7 +1751,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         }
 
         // For other errors, try redirect as fallback
-        console.log("[DEBUG] " + "🔄 Erreur popup, fallback vers REDIRECT...");
+        devLog("[DEBUG] " + "🔄 Erreur popup, fallback vers REDIRECT...");
         // If a booking is in progress, save the booking target instead of current page
         let redirectTarget = window.location.pathname + window.location.search;
         try {
@@ -1764,9 +1766,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         return;
       }
     } catch (e) {
-      const errorCode = (e as any)?.code || 'unknown';
+      const errorCode = (e as AppError)?.code || 'unknown';
       const errorMessage = e instanceof Error ? e.message : String(e);
-      console.log("[DEBUG] " + "❌ GOOGLE LOGIN ERREUR!\n\nCode: " + errorCode + "\nMessage: " + errorMessage);
+      devLog("[DEBUG] " + "❌ GOOGLE LOGIN ERREUR!\n\nCode: " + errorCode + "\nMessage: " + errorMessage);
 
       let msg = 'Connexion Google impossible.';
       if (errorCode === 'auth/unauthorized-domain') {
@@ -1788,7 +1790,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
       setError(msg);
       setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
-      logAuthEvent('google_login_failed', { error: errorMessage, errorCode, deviceInfo }).catch(() => {});
+      logAuthEvent('google_login_failed', { error: errorMessage, errorCode, deviceInfo }).catch(() => { /* ignoré */ });
       throw new Error(msg);
     } finally {
       setIsLoading(false);
@@ -1810,7 +1812,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         if (redirectHandledRef.current) return;
 
         // VERSION 10 - PRODUCTION READY: avec timeout
-        console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Vérification du retour...");
+        devLog("[DEBUG] " + "🔵 GOOGLE REDIRECT: Vérification du retour...");
 
         // ⏱️ Timeout pour éviter blocage infini sur certains navigateurs
         // ✅ Augmenté à 60s pour les réseaux lents (3G, pays émergents, Afrique, Asie)
@@ -1831,31 +1833,31 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         } catch (raceError) {
           if (timeoutId) clearTimeout(timeoutId);
           if ((raceError as Error).message === 'REDIRECT_TIMEOUT') {
-            console.warn("[DEBUG] " + "⚠️ GOOGLE REDIRECT: Timeout après " + REDIRECT_TIMEOUT + "ms - abandon");
+            devWarn("[DEBUG] " + "⚠️ GOOGLE REDIRECT: Timeout après " + REDIRECT_TIMEOUT + "ms - abandon");
             return;
           }
           throw raceError;
         }
 
         if (!result?.user) {
-          console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Pas de résultat (normal si pas de redirect en cours)");
+          devLog("[DEBUG] " + "🔵 GOOGLE REDIRECT: Pas de résultat (normal si pas de redirect en cours)");
           return;
         }
 
-        console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: User reçu!\n\nUID: " + result.user.uid + "\nEmail: " + result.user.email);
+        devLog("[DEBUG] " + "✅ GOOGLE REDIRECT: User reçu!\n\nUID: " + result.user.uid + "\nEmail: " + result.user.email);
 
         redirectHandledRef.current = true;
         const googleUser = result.user;
 
         // 🔧 FIX: Force token refresh to ensure Firestore rules recognize the new user
-        console.log("[DEBUG] " + "🔄 GOOGLE REDIRECT: Rafraîchissement du token...");
+        devLog("[DEBUG] " + "🔄 GOOGLE REDIRECT: Rafraîchissement du token...");
         await googleUser.getIdToken(true);
         // ✅ Délai adaptatif selon la connexion (500ms rapide, 1500ms lent, 1000ms par défaut)
         const tokenPropagationDelayRedirect = deviceInfo.connectionSpeed === 'slow' ? 1500 :
                                                deviceInfo.connectionSpeed === 'fast' ? 500 : 1000;
-        console.log("[DEBUG] " + "⏳ GOOGLE REDIRECT: Attente propagation token (" + tokenPropagationDelayRedirect + "ms)...");
+        devLog("[DEBUG] " + "⏳ GOOGLE REDIRECT: Attente propagation token (" + tokenPropagationDelayRedirect + "ms)...");
         await new Promise(resolve => setTimeout(resolve, tokenPropagationDelayRedirect));
-        console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Token rafraîchi");
+        devLog("[DEBUG] " + "✅ GOOGLE REDIRECT: Token rafraîchi");
 
         const userRef = doc(db, 'users', googleUser.uid);
         const userDoc = await getDoc(userRef);
@@ -1863,7 +1865,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         if (userDoc.exists()) {
           const existing = userDoc.data() as Partial<User>;
           if (existing.role && existing.role !== 'client') {
-            console.log("[DEBUG] " + "❌ GOOGLE REDIRECT: Rôle non-client détecté - " + existing.role);
+            devLog("[DEBUG] " + "❌ GOOGLE REDIRECT: Rôle non-client détecté - " + existing.role);
             await firebaseSignOut(auth);
             setAuthMetrics((m) => ({
               ...m,
@@ -1906,7 +1908,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           });
         } else {
           // Create new user via Cloud Function (bypasses Firestore security rules)
-          console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Création du document via Cloud Function...");
+          devLog("[DEBUG] " + "🔵 GOOGLE REDIRECT: Création du document via Cloud Function...");
 
           // ✅ FIX ORPHAN USERS: Retry avec backoff exponentiel
           const MAX_RETRIES = 3;
@@ -1921,16 +1923,16 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 provider: 'google.com',
                 ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
               });
-              console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document " + result.action + " via Cloud Function (tentative " + attempt + ")");
+              devLog("[DEBUG] " + "✅ GOOGLE REDIRECT: Document " + result.action + " via Cloud Function (tentative " + attempt + ")");
               lastError = null;
               break;
             } catch (createError) {
               lastError = createError instanceof Error ? createError : new Error(String(createError));
-              console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec Cloud Function (tentative " + attempt + "/" + MAX_RETRIES + "):", createError);
+              devError("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec Cloud Function (tentative " + attempt + "/" + MAX_RETRIES + "):", createError);
 
               if (attempt < MAX_RETRIES) {
                 const delay = Math.pow(2, attempt - 1) * 1000;
-                console.log("[DEBUG] " + "🔄 GOOGLE REDIRECT: Retry dans " + delay + "ms...");
+                devLog("[DEBUG] " + "🔄 GOOGLE REDIRECT: Retry dans " + delay + "ms...");
                 await new Promise(resolve => setTimeout(resolve, delay));
               }
             }
@@ -1938,8 +1940,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
           // Si tous les retries ont échoué, essayer la création directe en fallback
           if (lastError) {
-            console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec Cloud Function après " + MAX_RETRIES + " tentatives");
-            console.log("[DEBUG] " + "🔄 GOOGLE REDIRECT: Tentative fallback création directe Firestore...");
+            devError("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec Cloud Function après " + MAX_RETRIES + " tentatives");
+            devLog("[DEBUG] " + "🔄 GOOGLE REDIRECT: Tentative fallback création directe Firestore...");
 
             // ✅ FIX ORPHAN USERS: Fallback vers création directe si Cloud Function échoue
             try {
@@ -1950,17 +1952,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 provider: 'google.com',
                 ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
               });
-              console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document créé via fallback Firestore direct");
+              devLog("[DEBUG] " + "✅ GOOGLE REDIRECT: Document créé via fallback Firestore direct");
             } catch (fallbackError) {
-              console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec fallback Firestore:", fallbackError);
+              devError("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec fallback Firestore:", fallbackError);
               // Vérifier si le document existe malgré tout (race condition possible)
               const checkRef = doc(db, 'users', googleUser.uid);
               const checkDoc = await getDoc(checkRef);
               if (!checkDoc.exists()) {
-                console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Document utilisateur non créé - orphan user possible");
+                devError("[DEBUG] " + "❌ GOOGLE REDIRECT: Document utilisateur non créé - orphan user possible");
                 setError("Votre compte a été créé mais le profil prend plus de temps. Veuillez rafraîchir la page.");
               } else {
-                console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document existait déjà (race condition résolue)");
+                devLog("[DEBUG] " + "✅ GOOGLE REDIRECT: Document existait déjà (race condition résolue)");
               }
             }
           }
@@ -1979,7 +1981,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         } catch { /* Ignorer si localStorage n'est pas disponible */ }
 
         // Log photo URL for debugging
-        console.log('[Auth] Google redirect login successful. Photo URL:', googleUser.photoURL);
+        devLog('[Auth] Google redirect login successful. Photo URL:', googleUser.photoURL);
 
         // Check for saved redirect URL after Google login
         // SECURITY: Defense-in-depth validation before redirect
@@ -1989,17 +1991,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           // m1 AUDIT FIX: Clean up loginRedirect to prevent stale redirects on next booking
           try { sessionStorage.removeItem('loginRedirect'); } catch {}
           if (isAllowedRedirect(savedRedirect)) {
-            console.log('[Auth] Google redirect: navigating to validated URL:', savedRedirect);
+            devLog('[Auth] Google redirect: navigating to validated URL:', savedRedirect);
             // Use window.location for navigation to ensure full page reload with auth state
             window.location.href = savedRedirect;
           } else {
-            console.warn('[Auth] Google redirect: blocked invalid redirect URL:', savedRedirect);
+            devWarn('[Auth] Google redirect: blocked invalid redirect URL:', savedRedirect);
             window.location.href = '/dashboard';
           }
         }
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
-        console.warn('[Auth] getRedirectResult error:', errorMessage);
+        devWarn('[Auth] getRedirectResult error:', errorMessage);
         // Ne pas afficher d'erreur à l'utilisateur pour les erreurs de redirect
         // Car getRedirectResult retourne souvent des erreurs sur page normale
       } finally {
@@ -2013,7 +2015,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     const handleStorageChange = (event: StorageEvent) => {
       // Détecter le logout depuis un autre onglet
       if (event.key === 'sos_logout_event' && event.newValue) {
-        console.log('🔐 [Auth] Logout détecté depuis un autre onglet, déconnexion...');
+        devLog('🔐 [Auth] Logout détecté depuis un autre onglet, déconnexion...');
         // Nettoyer les states sans re-signaler (éviter boucle infinie)
         signingOutRef.current = true;
         setUser(null);
@@ -2029,7 +2031,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
       // ✅ FIX: Détecter le login depuis un autre onglet
       if (event.key === 'sos_login_event' && event.newValue) {
-        console.log('🔐 [Auth] Login détecté depuis un autre onglet, rechargement de l\'état...');
+        devLog('🔐 [Auth] Login détecté depuis un autre onglet, rechargement de l\'état...');
         // Recharger la page pour synchroniser l'état d'authentification
         // C'est la méthode la plus fiable car Firebase Auth gère la session
         const currentUser = auth.currentUser;
@@ -2047,26 +2049,26 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   // REGISTER - VERSION 8 DEBUG
   const register = useCallback(async (userData: Partial<User>, password: string): Promise<void> => {
-    console.log("[DEBUG] " + "🔵 REGISTER: Début\n\nEmail: " + userData.email + "\nRole: " + userData.role);
+    devLog("[DEBUG] " + "🔵 REGISTER: Début\n\nEmail: " + userData.email + "\nRole: " + userData.role);
 
     setIsLoading(true);
     setError(null);
 
     try {
       if (!userData.role || !['client', 'lawyer', 'expat', 'admin', 'chatter', 'blogger', 'influencer', 'groupAdmin'].includes(userData.role)) {
-        console.log("[DEBUG] " + "❌ REGISTER: Rôle invalide - " + userData.role);
+        devLog("[DEBUG] " + "❌ REGISTER: Rôle invalide - " + userData.role);
         const err = new Error('Rôle utilisateur invalide ou manquant.') as AppError;
         err.code = 'sos/invalid-role';
         throw err;
       }
       if (!userData.email || !password) {
-        console.log("[DEBUG] " + "❌ REGISTER: Email ou password manquant");
+        devLog("[DEBUG] " + "❌ REGISTER: Email ou password manquant");
         const err = new Error('Email et mot de passe sont obligatoires') as AppError;
         err.code = 'sos/missing-credentials';
         throw err;
       }
       if (password.length < 8) {
-        console.log("[DEBUG] " + "❌ REGISTER: Password trop court (<8 chars)");
+        devLog("[DEBUG] " + "❌ REGISTER: Password trop court (<8 chars)");
         const err = new Error('Le mot de passe doit contenir au moins 8 caractères') as AppError;
         err.code = 'auth/weak-password';
         throw err;
@@ -2074,21 +2076,21 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
       const email = normalizeEmail(userData.email);
       if (!isValidEmail(email)) {
-        console.log("[DEBUG] " + "❌ REGISTER: Email invalide");
+        devLog("[DEBUG] " + "❌ REGISTER: Email invalide");
         const err = new Error('Adresse email invalide') as AppError;
         err.code = 'auth/invalid-email';
         throw err;
       }
 
-      console.log("[DEBUG] " + "🔵 REGISTER: createUserWithEmailAndPassword...");
+      devLog("[DEBUG] " + "🔵 REGISTER: createUserWithEmailAndPassword...");
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      console.log("[DEBUG] " + "✅ REGISTER: User créé!\n\nUID: " + cred.user.uid);
+      devLog("[DEBUG] " + "✅ REGISTER: User créé!\n\nUID: " + cred.user.uid);
 
       // ✅ FIX: Force token refresh pour que Firestore reconnaisse le nouvel utilisateur
       // Sans cela, les règles Firestore voient request.auth == null → permission-denied
-      console.log("[DEBUG] " + "🔄 REGISTER: Token refresh pour Firestore...");
+      devLog("[DEBUG] " + "🔄 REGISTER: Token refresh pour Firestore...");
       await cred.user.getIdToken(true);
-      console.log("[DEBUG] " + "⏱️ REGISTER: Waiting 2s for Firestore sync (increased from 1s)...");
+      devLog("[DEBUG] " + "⏱️ REGISTER: Waiting 2s for Firestore sync (increased from 1s)...");
       // ✅ AUGMENTÉ de 1s à 2s: connexions lentes (3G/4G) nécessitent plus de temps
       await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -2115,7 +2117,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             isVisible: false,
           };
 
-      console.log("[DEBUG] " + "📝 REGISTER: Creating user document in Firestore", {
+      devLog("[DEBUG] " + "📝 REGISTER: Creating user document in Firestore", {
         uid: cred.user.uid,
         role: userData.role,
         email: email,
@@ -2133,9 +2135,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           provider: 'password',
           ...approvalData,
         });
-        console.log("[DEBUG] " + "✅ REGISTER: User document created successfully");
+        devLog("[DEBUG] " + "✅ REGISTER: User document created successfully");
       } catch (docErr) {
-        console.log("[DEBUG] " + "❌ REGISTER: Document creation failed, rolling back auth user", {
+        devLog("[DEBUG] " + "❌ REGISTER: Document creation failed, rolling back auth user", {
           error: docErr,
           timestamp: new Date().toISOString()
         });
@@ -2151,7 +2153,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         }).catch(() => { /* no-op */ });
       }
 
-      console.log("[DEBUG] " + "✅ REGISTER RÉUSSI!\n\nUID: " + cred.user.uid + "\nRole: " + userData.role);
+      devLog("[DEBUG] " + "✅ REGISTER RÉUSSI!\n\nUID: " + cred.user.uid + "\nRole: " + userData.role);
       await logAuthEvent('registration_success', {
         userId: cred.user.uid,
         role: userData.role,
@@ -2163,7 +2165,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       });
     } catch (err) {
       const e = err as AppError;
-      console.log("[DEBUG] " + "❌ REGISTER ERREUR!\n\nCode: " + (e?.code || "unknown") + "\nMessage: " + (e?.message || String(err)));
+      devLog("[DEBUG] " + "❌ REGISTER ERREUR!\n\nCode: " + (e?.code || "unknown") + "\nMessage: " + (e?.message || String(err)));
       let msg = 'Inscription impossible. Réessayez.';
       switch (e?.code) {
         case 'auth/email-already-in-use':
@@ -2201,7 +2203,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   }, [deviceInfo]);
 
   const logout = useCallback(async (): Promise<void> => {
-    console.log('🔐 [Auth] logout() appelé');
+    devLog('🔐 [Auth] logout() appelé');
     signingOutRef.current = true;
 
     // Capturer les infos AVANT de nettoyer les states
@@ -2232,9 +2234,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         setTimeout(() => reject(new Error('SignOut timeout')), 3000)
       );
       await Promise.race([signOutPromise, timeoutPromise]);
-      console.log('✅ [Auth] Firebase signOut réussi');
+      devLog('✅ [Auth] Firebase signOut réussi');
     } catch (e) {
-      console.warn('[Auth] Firebase signOut error (ignoré):', e);
+      devWarn('[Auth] Firebase signOut error (ignoré):', e);
       // Continuer même si signOut échoue - les states sont déjà nettoyés
     }
 
@@ -2267,13 +2269,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       localStorage.removeItem('rememberMe');
       // Reset le flag de redirect pour permettre une nouvelle connexion
       redirectHandledRef.current = false;
-      console.log('✅ [Auth] État OAuth nettoyé');
+      devLog('✅ [Auth] État OAuth nettoyé');
     } catch {
       // Ignorer si storage n'est pas disponible
     }
 
     signingOutRef.current = false;
-    console.log('✅ [Auth] logout() terminé');
+    devLog('✅ [Auth] logout() terminé');
   }, [user, deviceInfo]);
 
   const clearError = useCallback((): void => setError(null), []);
@@ -2285,7 +2287,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       await reload(firebaseUser);
       await updateUserState(firebaseUser);
     } catch (e) {
-      console.error('[Auth] refreshUser error:', e);
+      devError('[Auth] refreshUser error:', e);
     } finally {
       setIsLoading(false);
     }
@@ -2299,8 +2301,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     if (user.lastLoginAt) {
       if (user.lastLoginAt instanceof Date) {
         lastLogin = user.lastLoginAt;
-      } else if (typeof (user.lastLoginAt as any).toDate === 'function') {
-        lastLogin = (user.lastLoginAt as Timestamp).toDate();
+      } else if (user.lastLoginAt instanceof Timestamp) {
+        lastLogin = user.lastLoginAt.toDate();
       }
     }
     return { date: lastLogin, device: `${deviceType} (${os})` };
@@ -2322,15 +2324,15 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         "languages", "languagesSpoken", "bio", "description"
       ];
 
-      const safeUpdates = Object.fromEntries(
+      const safeUpdates: Record<string, unknown> = Object.fromEntries(
         Object.entries(updates).filter(([key]) => allowedFields.includes(key))
       );
 
       if (updates.profilePhoto && updates.profilePhoto.startsWith('data:image')) {
         const processed = await processProfilePhoto(updates.profilePhoto, firebaseUser.uid, 'manual');
-        (safeUpdates as any).profilePhoto = processed;
-        (safeUpdates as any).photoURL = processed;
-        (safeUpdates as any).avatar = processed;
+        safeUpdates.profilePhoto = processed;
+        safeUpdates.photoURL = processed;
+        safeUpdates.avatar = processed;
       }
 
       await updateDoc(userRef, {
@@ -2342,7 +2344,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         const displayName = `${updates.firstName || user.firstName || ''} ${updates.lastName || user.lastName || ''}`.trim();
         await updateProfile(firebaseUser, {
           displayName,
-          photoURL: (safeUpdates as any).profilePhoto || user.profilePhoto || null,
+          photoURL: (safeUpdates.profilePhoto as string) || user.profilePhoto || null,
         });
       }
 
@@ -2493,7 +2495,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   // Email verification disabled - no-op function kept for interface compatibility
   const sendVerificationEmail = useCallback(async (): Promise<void> => {
     // Email verification is disabled
-    console.log('[AUTH] Email verification is disabled');
+    devLog('[AUTH] Email verification is disabled');
   }, []);
 
   const deleteUserAccount = useCallback(async (): Promise<void> => {
@@ -2509,6 +2511,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
       if (userRole === 'lawyer' || userRole === 'expat') {
         promises.push(deleteDoc(doc(db, 'sos_profiles', userId)));
+        promises.push(deleteDoc(doc(db, 'lawyers', userId)));
       }
 
       if (user.profilePhoto && user.profilePhoto.includes('firebase')) {
@@ -2516,7 +2519,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           const photoRef = ref(storage, user.profilePhoto);
           promises.push(deleteObject(photoRef));
         } catch (e) {
-          console.warn('Erreur suppression photo:', e);
+          devWarn('Erreur suppression photo:', e);
         }
       }
 
@@ -2557,16 +2560,19 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       );
 
       const snapshot = await getDocs(usersQuery);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        uid: doc.id,
-        ...doc.data(),
-        createdAt: (doc.data() as any).createdAt?.toDate() || new Date(),
-        updatedAt: (doc.data() as any).updatedAt?.toDate() || new Date(),
-        lastLoginAt: (doc.data() as any).lastLoginAt?.toDate() || new Date(),
-      })) as User[];
+      return snapshot.docs.map(docSnap => {
+        const data = docSnap.data() as Record<string, unknown>;
+        return {
+          id: docSnap.id,
+          uid: docSnap.id,
+          ...data,
+          createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
+          updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
+          lastLoginAt: data.lastLoginAt instanceof Timestamp ? data.lastLoginAt.toDate() : new Date(),
+        } as User;
+      });
     } catch (error) {
-      console.error('Erreur récupération utilisateurs:', error);
+      devError('Erreur récupération utilisateurs:', error);
       return [];
     }
   }, []);
@@ -2588,7 +2594,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         isApprovedFromSosProfiles = sosData?.isApproved === true && sosData?.approvalStatus === 'approved';
       }
     } catch (e) {
-      console.warn('Erreur lecture sos_profiles pour vérification approval:', e);
+      devWarn('Erreur lecture sos_profiles pour vérification approval:', e);
     }
 
     // Bloquer si AUCUNE source n'indique l'approbation
@@ -2660,13 +2666,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
       await logAuthEvent('availability_changed', {
         userId: firebaseUser.uid,
-        oldAvailability: (user as any).availability,
+        oldAvailability: user.availability,
         newAvailability: availability,
         deviceInfo
       });
 
     } catch (error) {
-      console.error('Erreur mise à jour disponibilité:', error);
+      devError('Erreur mise à jour disponibilité:', error);
       throw error;
     }
   }, [firebaseUser, user, deviceInfo]);
@@ -2745,7 +2751,7 @@ export const useAuth = () => {
   // c'est probablement le defaultContext - on avertit UNE SEULE FOIS
   if (!ctx.authInitialized && ctx.user === null && ctx.isLoading && !_hasWarnedUninitializedContext) {
     _hasWarnedUninitializedContext = true;
-    console.warn('[useAuth] ⚠️ Contexte non initialisé - attendre authInitialized=true avant d\'utiliser les données');
+    devWarn('[useAuth] ⚠️ Contexte non initialisé - attendre authInitialized=true avant d\'utiliser les données');
   }
 
   // Reset le flag quand le contexte est initialisé (pour permettre de re-détecter après logout/login)

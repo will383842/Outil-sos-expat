@@ -3,6 +3,7 @@
 // Garantit la deduplication correcte entre frontend et backend
 
 import { useCallback, useMemo } from 'react';
+import { getCloudRunUrl } from '../config/firebase';
 import {
   trackMetaPageView,
   trackMetaLead,
@@ -63,7 +64,7 @@ interface TrackingUserData {
  * });
  */
 // URL de l'endpoint CAPI (Cloud Function v2)
-const CAPI_ENDPOINT = 'https://trackcapievent-5tfnuxa2hq-ew.a.run.app';
+const CAPI_ENDPOINT = getCloudRunUrl('trackcapievent', 'europe-west1');
 
 export const useMetaTracking = () => {
   const isDev = import.meta.env.DEV;

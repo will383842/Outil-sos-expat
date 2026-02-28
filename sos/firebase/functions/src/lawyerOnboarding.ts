@@ -30,6 +30,7 @@ interface LawyerOnboardingData {
 
 export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
   {
+    region: "europe-west1",
     secrets: [META_CAPI_TOKEN, ...STRIPE_API_SECRETS],
   },
   async (request) => {
@@ -47,6 +48,31 @@ export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
 
     try {
       console.log("🚀 Starting lawyer onboarding for user:", userId);
+
+      // ==========================================
+      // STEP 0: Check for existing Stripe account (idempotency)
+      // ==========================================
+      const existingProfile = await admin.firestore().collection("sos_profiles").doc(userId).get();
+      const existingStripeId = existingProfile.data()?.stripeAccountId;
+
+      if (existingStripeId) {
+        console.log(`⚠️ Stripe account already exists: ${existingStripeId} — generating new onboarding link`);
+        const accountLink = await stripe.accountLinks.create({
+          account: existingStripeId,
+          refresh_url: "https://sos-expat.com/register/lawyer",
+          return_url: "https://sos-expat.com/dashboard",
+          type: "account_onboarding",
+        });
+        return {
+          success: true,
+          accountId: existingStripeId,
+          onboardingUrl: accountLink.url,
+          message: {
+            en: "Your Stripe account already exists. Please complete your verification.",
+            fr: "Votre compte Stripe existe déjà. Veuillez compléter votre vérification.",
+          },
+        };
+      }
 
       // ==========================================
       // STEP 1: Create Stripe Express Account
@@ -116,44 +142,48 @@ export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
       console.log("💾 Updating Firestore...");
 
       const lawyerRef = admin.firestore().collection("lawyers").doc(userId);
+      const sosProfileRef = admin.firestore().collection("sos_profiles").doc(userId);
 
-      await lawyerRef.set(
-        {
-          // Stripe info
-          stripeAccountId: account.id,
-          stripeOnboardingLink: accountLink.url,
-          stripeOnboardingComplete: false,
-          kycStatus: "incomplete",
+      const onboardingData = {
+        // Stripe info
+        stripeAccountId: account.id,
+        stripeOnboardingLink: accountLink.url,
+        stripeOnboardingComplete: false,
+        kycStatus: "incomplete",
 
-          // Personal info (from your form)
-          firstName: data.firstName,
-          lastName: data.lastName,
-          fullName: `${data.firstName} ${data.lastName}`,
-          email: data.email,
-          dateOfBirth: data.dateOfBirth,
-          phone: data.phone,
-          whatsapp: data.whatsapp,
+        // Personal info (from your form)
+        firstName: data.firstName,
+        lastName: data.lastName,
+        fullName: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        dateOfBirth: data.dateOfBirth,
+        phone: data.phone,
+        whatsapp: data.whatsapp,
 
-          // Address
-          address: data.address,
-          currentCountry: data.currentCountry,
-          currentPresenceCountry: data.currentPresenceCountry,
+        // Address
+        address: data.address,
+        currentCountry: data.currentCountry,
+        currentPresenceCountry: data.currentPresenceCountry,
 
-          // Professional info
-          profilePhoto: data.profilePhoto || null,
-          bio: data.bio || null,
-          specialties: data.specialties || [],
-          practiceCountries: data.practiceCountries || [],
-          yearsOfExperience: data.yearsOfExperience || 0,
+        // Professional info
+        profilePhoto: data.profilePhoto || null,
+        bio: data.bio || null,
+        specialties: data.specialties || [],
+        practiceCountries: data.practiceCountries || [],
+        yearsOfExperience: data.yearsOfExperience || 0,
 
-          // Timestamps
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+        // Timestamps
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
 
-      console.log("✅ Firestore updated");
+      // Write to BOTH lawyers (legacy) and sos_profiles (source of truth)
+      await Promise.all([
+        lawyerRef.set(onboardingData, { merge: true }),
+        sosProfileRef.set(onboardingData, { merge: true }),
+      ]);
+
+      console.log("✅ Firestore updated (lawyers + sos_profiles)");
 
       // ==========================================
       // STEP 4: META CAPI TRACKING
@@ -181,11 +211,15 @@ export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
             eventId: capiResult.eventId,
           });
 
-          // Store CAPI tracking info
-          await lawyerRef.update({
+          // Store CAPI tracking info in both collections
+          const capiData = {
             "capiTracking.onboardingLeadEventId": capiResult.eventId,
             "capiTracking.onboardingTrackedAt": admin.firestore.FieldValue.serverTimestamp(),
-          });
+          };
+          await Promise.all([
+            lawyerRef.update(capiData),
+            sosProfileRef.update(capiData).catch(() => { /* sos_profiles may not exist yet */ }),
+          ]);
         } else {
           console.warn(`⚠️ [CAPI Lawyer] Failed to track lead:`, capiResult.error);
         }

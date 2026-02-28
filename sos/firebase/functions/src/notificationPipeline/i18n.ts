@@ -9,7 +9,7 @@ const LANG_MAP: Record<string, Lang> = {
   "fr-ca": "fr",
   "fr-be": "fr",
   "fr-ch": "fr",
-  // English (default)
+  // English (fallback)
   "en": "en",
   "en-us": "en",
   "en-gb": "en",

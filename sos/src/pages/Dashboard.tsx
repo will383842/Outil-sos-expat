@@ -49,6 +49,7 @@ import KYCBannerCompact from "../components/dashboard/KYCBannerCompact";
 import DashboardAffiliateCard from "../components/dashboard/DashboardAffiliateCard";
 import QuickActions from "../components/dashboard/QuickActions";
 import ActivePromoBanner from "../components/dashboard/ActivePromoBanner";
+import DashboardGDPR from "../components/dashboard/DashboardGDPR";
 // RecentActivity removed - was causing layout issues
 
 import { useAuth } from "../contexts/AuthContext";
@@ -223,6 +224,7 @@ interface ProfileData {
 type TabType =
   | "profile"
   | "settings"
+  | "gdpr"
   | "calls"
   | "invoices"
   | "reviews"
@@ -610,7 +612,7 @@ const Dashboard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Valid tabs constant
-  const VALID_TABS: TabType[] = ['profile', 'settings', 'calls', 'invoices', 'reviews', 'messages', 'favorites', 'translations'];
+  const VALID_TABS: TabType[] = ['profile', 'settings', 'gdpr', 'calls', 'invoices', 'reviews', 'messages', 'favorites', 'translations'];
 
   // ✅ P0 FIX: Compute tab from URL directly - not memoized to ensure fresh reads
   const getTabFromUrl = useCallback((): TabType => {
@@ -2092,6 +2094,19 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                         ch: "我的最爱",
                         pt: "Meus favoritos",
                         ar: "المفضلة لدي",
+                      },
+                      {
+                        key: "gdpr",
+                        icon: <Shield className="mr-3 h-5 w-5" />,
+                        fr: "Mes données (GDPR)",
+                        en: "My Data (GDPR)",
+                        es: "Mis datos (GDPR)",
+                        de: "Meine Daten (DSGVO)",
+                        ru: "Мои данные (GDPR)",
+                        hi: "मेरा डेटा (GDPR)",
+                        ch: "我的数据 (GDPR)",
+                        pt: "Meus dados (GDPR)",
+                        ar: "بياناتي (GDPR)",
                       },
                       // AI Subscription items - for lawyers, expats, and admins
                       // Note: authInitialized must be true to ensure role is loaded
@@ -3834,6 +3849,11 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                     )}
                   </div>
                 </div>
+              )}
+
+              {/* GDPR */}
+              {activeTab === "gdpr" && (
+                <DashboardGDPR />
               )}
             </div>
           </div>

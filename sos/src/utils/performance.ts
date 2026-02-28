@@ -23,30 +23,18 @@ export const registerSW = async (): Promise<ServiceWorkerRegistration | null> =>
       }
     });
 
-    // ✅ Évite un second register si déjà contrôlé (StrictMode double-mount en dev)
-    if (navigator.serviceWorker.controller) {
-      console.log("SW already controlling this page, skip register");
-      return null;
+    // P0 FIX: sw.js is DISABLED (only cleans caches). Do NOT register it —
+    // it would conflict with firebase-messaging-sw.js (same scope '/') and
+    // break FCM push notifications. FCM SW is registered by useFCM hook.
+    // Instead, just unregister any stale sw.js registration.
+    const existingReg = await navigator.serviceWorker.getRegistration('/');
+    if (existingReg?.active?.scriptURL?.endsWith('/sw.js')) {
+      await existingReg.unregister();
+      console.log('[SW] Unregistered stale sw.js to avoid FCM conflict');
     }
 
-    // Note: updateViaCache accepte "imports" | "all"
-    const registration = await navigator.serviceWorker.register("/sw.js", {
-      scope: "/",
-      updateViaCache: "imports",
-    });
-
-    // Handle updates
-    registration.addEventListener("updatefound", () => {
-      const newWorker = registration.installing;
-      newWorker?.addEventListener("statechange", () => {
-        if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-          window.dispatchEvent(new CustomEvent("sw-update-available"));
-        }
-      });
-    });
-
-    console.log("✅ Service Worker registered successfully");
-    return registration;
+    // Return null — FCM SW is registered by useFCM hook, not here
+    return null;
   } catch (error) {
     console.error("❌ Service Worker registration failed:", error);
     return null;

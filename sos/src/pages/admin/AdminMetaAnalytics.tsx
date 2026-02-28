@@ -3,6 +3,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useIntl } from 'react-intl';
+import { getCloudRunUrl } from '../../config/firebase';
 import {
   BarChart,
   Bar,
@@ -362,7 +363,7 @@ const AdminMetaAnalytics: React.FC = () => {
 
     try {
       const response = await fetch(
-        'https://testcapiconnection-5tfnuxa2hq-ew.a.run.app'
+        getCloudRunUrl('testcapiconnection', 'europe-west1')
       );
       const result = await response.json();
       setTestResult(result);

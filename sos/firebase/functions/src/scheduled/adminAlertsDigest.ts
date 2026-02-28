@@ -68,6 +68,13 @@ interface PendingTransferSummary {
   providersAffected: number;
 }
 
+interface WebhookHealthEntry {
+  source: string;
+  lastReceived: string | null;
+  ageHours: number;
+  status: 'ok' | 'warning' | 'critical';
+}
+
 interface DigestData {
   alerts: AlertSummary;
   pendingTransfers: PendingTransferSummary;
@@ -79,6 +86,7 @@ interface DigestData {
     message: string;
     createdAt: string;
   }>;
+  webhookHealth?: WebhookHealthEntry[];
   generatedAt: string;
 }
 
@@ -319,6 +327,55 @@ async function markDigestSent(): Promise<void> {
 }
 
 // ============================================================================
+// WEBHOOK HEALTH CHECK
+// ============================================================================
+
+const WEBHOOK_HEALTH_THRESHOLDS: Record<string, { warningHours: number; criticalHours: number }> = {
+  stripe: { warningHours: 6, criticalHours: 12 },
+  twilio: { warningHours: 12, criticalHours: 24 },
+  paypal: { warningHours: 12, criticalHours: 24 },
+  wise: { warningHours: 168, criticalHours: 336 }, // 7 jours / 14 jours — payouts rares
+};
+
+async function getWebhookHealth(): Promise<WebhookHealthEntry[]> {
+  const db = getDb();
+  const now = Date.now();
+  const sources = ['stripe', 'paypal', 'twilio', 'wise'];
+  const results: WebhookHealthEntry[] = [];
+
+  for (const source of sources) {
+    const doc = await db.collection('webhook_heartbeats').doc(source).get();
+    const thresholds = WEBHOOK_HEALTH_THRESHOLDS[source];
+
+    if (!doc.exists) {
+      results.push({ source, lastReceived: null, ageHours: -1, status: 'critical' });
+      continue;
+    }
+
+    const data = doc.data()!;
+    const lastReceivedAt = data.lastReceivedAt?.toDate?.();
+    if (!lastReceivedAt) {
+      results.push({ source, lastReceived: null, ageHours: -1, status: 'critical' });
+      continue;
+    }
+
+    const ageHours = (now - lastReceivedAt.getTime()) / (1000 * 60 * 60);
+    let status: 'ok' | 'warning' | 'critical' = 'ok';
+    if (ageHours >= thresholds.criticalHours) status = 'critical';
+    else if (ageHours >= thresholds.warningHours) status = 'warning';
+
+    results.push({
+      source,
+      lastReceived: lastReceivedAt.toISOString(),
+      ageHours: Math.round(ageHours * 10) / 10,
+      status,
+    });
+  }
+
+  return results;
+}
+
+// ============================================================================
 // EMAIL GENERATION
 // ============================================================================
 
@@ -404,6 +461,34 @@ function generateDigestEmail(data: DigestData, locale: string): { subject: strin
         ` : ""}
       </div>
 
+      <!-- Webhook Health -->
+      ${data.webhookHealth && data.webhookHealth.length > 0 ? `
+        <div style="padding: 20px; background-color: white; border-bottom: 1px solid #e5e7eb;">
+          <h2 style="color: #1e3a5f; margin-top: 0;">${isFr ? "Sante Webhooks" : "Webhook Health"}</h2>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background-color: #f3f4f6;">
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Source</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">${isFr ? "Dernier recu" : "Last received"}</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">${isFr ? "Age" : "Age"}</th>
+            </tr>
+            ${data.webhookHealth.map(wh => {
+              const statusColor = wh.status === 'ok' ? '#22c55e' : wh.status === 'warning' ? '#f97316' : '#dc2626';
+              const statusLabel = wh.status === 'ok' ? 'OK' : wh.status === 'warning' ? 'Warning' : 'Critical';
+              const ageStr = wh.ageHours < 0 ? (isFr ? 'Jamais' : 'Never') : `${wh.ageHours}h`;
+              const lastStr = wh.lastReceived ? new Date(wh.lastReceived).toLocaleString(isFr ? 'fr-FR' : 'en-US') : '-';
+              return `
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">${wh.source.charAt(0).toUpperCase() + wh.source.slice(1)}</td>
+                  <td style="padding: 8px; border-bottom: 1px solid #ddd;"><span style="color: ${statusColor}; font-weight: bold;">${statusLabel}</span></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #ddd; font-size: 13px;">${lastStr}</td>
+                  <td style="padding: 8px; border-bottom: 1px solid #ddd;">${ageStr}</td>
+                </tr>`;
+            }).join('')}
+          </table>
+        </div>
+      ` : ''}
+
       <!-- Recent Alerts -->
       ${data.recentAlerts.length > 0 ? `
         <div style="padding: 20px; background-color: white;">
@@ -448,6 +533,10 @@ ${isFr ? "TRANSFERTS EN ATTENTE" : "PENDING TRANSFERS"}:
 - ${isFr ? "En cours" : "Processing"}: ${data.pendingTransfers.processing}
 - ${isFr ? "Providers affectes" : "Providers affected"}: ${data.pendingTransfers.providersAffected}
 
+${data.webhookHealth ? `
+${isFr ? "SANTE WEBHOOKS" : "WEBHOOK HEALTH"}:
+${data.webhookHealth.map(wh => `- ${wh.source}: ${wh.status.toUpperCase()} (${wh.ageHours < 0 ? 'jamais' : wh.ageHours + 'h'})`).join('\n')}
+` : ''}
 ${isFr ? "Voir le dashboard" : "View dashboard"}: https://sos-expat.com/admin/alerts
   `;
 
@@ -531,24 +620,28 @@ export const adminAlertsDigestDaily = onSchedule(
       }
 
       // Collect data
-      const [alerts, pendingTransfers, recentAlerts] = await Promise.all([
+      const [alerts, pendingTransfers, recentAlerts, webhookHealth] = await Promise.all([
         getAlertsSummary(),
         getPendingTransfersSummary(),
         getRecentAlerts(),
+        getWebhookHealth(),
       ]);
 
       const digestData: DigestData = {
         alerts,
         pendingTransfers,
         recentAlerts,
+        webhookHealth,
         generatedAt: new Date().toISOString(),
       };
 
       // Check if there's anything to report
+      const hasWebhookIssues = webhookHealth.some(wh => wh.status !== 'ok');
       const hasIssues =
         alerts.total >= DIGEST_CONFIG.minAlertsToSend ||
         pendingTransfers.pendingKyc > 0 ||
-        pendingTransfers.failed > 0;
+        pendingTransfers.failed > 0 ||
+        hasWebhookIssues;
 
       if (!hasIssues) {
         logger.info("[AdminAlertsDigest] No issues to report, skipping digest");
@@ -648,16 +741,18 @@ export const triggerAdminAlertsDigest = onCall(
 
     try {
       // Force generate (ignore cooldown for manual trigger)
-      const [alerts, pendingTransfers, recentAlerts] = await Promise.all([
+      const [alerts, pendingTransfers, recentAlerts, webhookHealth] = await Promise.all([
         getAlertsSummary(),
         getPendingTransfersSummary(),
         getRecentAlerts(),
+        getWebhookHealth(),
       ]);
 
       const digestData: DigestData = {
         alerts,
         pendingTransfers,
         recentAlerts,
+        webhookHealth,
         generatedAt: new Date().toISOString(),
       };
 
@@ -722,10 +817,11 @@ export const getAdminAlertsDigestPreview = onCall(
     }
 
     try {
-      const [alerts, pendingTransfers, recentAlerts] = await Promise.all([
+      const [alerts, pendingTransfers, recentAlerts, webhookHealth] = await Promise.all([
         getAlertsSummary(),
         getPendingTransfersSummary(),
         getRecentAlerts(),
+        getWebhookHealth(),
       ]);
 
       return {
@@ -734,6 +830,7 @@ export const getAdminAlertsDigestPreview = onCall(
           alerts,
           pendingTransfers,
           recentAlerts,
+          webhookHealth,
           generatedAt: new Date().toISOString(),
         },
       };

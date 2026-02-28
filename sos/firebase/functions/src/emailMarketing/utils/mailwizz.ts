@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import * as admin from "firebase-admin";
 import { validateMailWizzConfig } from "../config";
 
 interface MailwizzConfig {
@@ -162,6 +163,43 @@ function renderTemplate(
   return rendered;
 }
 
+// ---------------------------------------------------------------------------
+// P2 FIX (2026-02-28): Deliverability guard — prevent re-subscribing
+// bounced/unsubscribed/invalid emails to MailWizz list.
+// ---------------------------------------------------------------------------
+
+async function isEmailDeliverableForMailWizz(email: string): Promise<boolean> {
+  try {
+    const db = admin.firestore();
+    const snap = await db
+      .collection("users")
+      .where("email", "==", email)
+      .limit(1)
+      .get();
+
+    if (snap.empty) return true; // Unknown user → allow
+
+    const data = snap.docs[0].data();
+    if (data.emailBounced === true) {
+      console.log(`[MailWizz] SKIP: email bounced for ${email.slice(0, 4)}***`);
+      return false;
+    }
+    if (data.unsubscribed === true) {
+      console.log(`[MailWizz] SKIP: user unsubscribed ${email.slice(0, 4)}***`);
+      return false;
+    }
+    if (data.emailStatus === "invalid") {
+      console.log(`[MailWizz] SKIP: emailStatus=invalid for ${email.slice(0, 4)}***`);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    // Non-blocking: if Firestore fails, allow to avoid losing signups
+    console.warn("[MailWizz] deliverability check failed (allowing):", err);
+    return true;
+  }
+}
+
 export class MailwizzAPI {
   private config: MailwizzConfig;
 
@@ -193,6 +231,13 @@ export class MailwizzAPI {
         delete requestData.email;
       }
 
+      // P2 FIX: Check deliverability before adding to MailWizz
+      const email = requestData.EMAIL || requestData.email;
+      if (email && !(await isEmailDeliverableForMailWizz(email))) {
+        console.log(`[MailWizz] createSubscriber SKIPPED (not deliverable): ${email.slice(0, 4)}***`);
+        return { status: "SKIPPED_NOT_DELIVERABLE" };
+      }
+
       const formData = new URLSearchParams();
       Object.entries(requestData).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -211,8 +256,8 @@ export class MailwizzAPI {
         }
       );
 
-      const email = requestData.EMAIL || requestData.email || "unknown";
-      console.log(`✅ Subscriber created: ${email}`);
+      const createdEmail = requestData.EMAIL || requestData.email || "unknown";
+      console.log(`✅ Subscriber created: ${createdEmail}`);
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
@@ -322,6 +367,12 @@ export class MailwizzAPI {
    */
   async sendTransactional(config: TransactionalEmailConfig): Promise<any> {
     try {
+      // P2 FIX: Check deliverability before sending via MailWizz
+      if (!(await isEmailDeliverableForMailWizz(config.to))) {
+        console.log(`[MailWizz] sendTransactional SKIPPED (not deliverable): ${config.to.slice(0, 4)}***`);
+        return { status: "SKIPPED_NOT_DELIVERABLE" };
+      }
+
       // 1. Resolve language with fallback to EN
       const langMatch = config.template.match(/_([A-Z]{2})$/);
       const requestedLang = langMatch ? langMatch[1] : "EN";

@@ -245,6 +245,25 @@ export class CircuitBreakerError extends Error {
 // CIRCUIT BREAKER INSTANCES
 // ============================================================================
 
+// Lazy Firestore access for circuit breaker alerts (fire-and-forget)
+function writeCircuitBreakerAlert(service: string, message: string): void {
+  try {
+    const admin = require('firebase-admin') as typeof import('firebase-admin');
+    if (!admin.apps.length) return; // Not initialized yet (deployment analysis)
+    admin.firestore().collection('admin_alerts').add({
+      type: 'circuit_breaker_open',
+      priority: 'critical',
+      title: `Circuit Breaker ${service} OUVERT`,
+      message,
+      service,
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {}); // fire-and-forget
+  } catch {
+    // Silently ignore — never block the circuit breaker
+  }
+}
+
 // Stripe API circuit breaker
 export const stripeCircuitBreaker = new CircuitBreaker({
   name: 'Stripe',
@@ -253,6 +272,7 @@ export const stripeCircuitBreaker = new CircuitBreaker({
   requestTimeout: 15000, // 15 seconds
   onOpen: () => {
     logger.error('[Stripe Circuit Breaker] OPEN - Stripe API may be experiencing issues');
+    writeCircuitBreakerAlert('Stripe', '5 echecs consecutifs. Paiements Stripe bloques.');
   },
   onClose: () => {
     logger.info('[Stripe Circuit Breaker] CLOSED - Stripe API recovered');
@@ -269,6 +289,7 @@ export const paypalCircuitBreaker = new CircuitBreaker({
   requestTimeout: 55000, // Covers apiRequest's 3 retries + backoff
   onOpen: () => {
     logger.error('[PayPal Circuit Breaker] OPEN - PayPal API may be experiencing issues');
+    writeCircuitBreakerAlert('PayPal', '5 echecs consecutifs. Paiements PayPal bloques.');
   },
 });
 
@@ -280,6 +301,7 @@ export const wiseCircuitBreaker = new CircuitBreaker({
   requestTimeout: 30000,
   onOpen: () => {
     logger.error('[Wise Circuit Breaker] OPEN - Wise API may be experiencing issues');
+    writeCircuitBreakerAlert('Wise', '3 echecs consecutifs. Transferts Wise bloques.');
   },
 });
 
@@ -291,6 +313,7 @@ export const flutterwaveCircuitBreaker = new CircuitBreaker({
   requestTimeout: 30000,
   onOpen: () => {
     logger.error('[Flutterwave Circuit Breaker] OPEN - Flutterwave API may be experiencing issues');
+    writeCircuitBreakerAlert('Flutterwave', '3 echecs consecutifs. Transferts Flutterwave bloques.');
   },
 });
 

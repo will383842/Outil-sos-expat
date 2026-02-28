@@ -11,7 +11,7 @@ import InfluencerDashboardLayout from '@/components/Influencer/Layout/Influencer
 import { User, Globe, CreditCard, Settings, Camera, Loader2, CheckCircle } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
-import { storage, functionsWest2 } from '@/config/firebase';
+import { storage, functionsAffiliate } from '@/config/firebase';
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
@@ -60,7 +60,7 @@ const InfluencerProfile: React.FC = () => {
       setLocalPhotoUrl(downloadURL);
 
       // 3. Save to Firestore via callable
-      const updateProfile = httpsCallable(functionsWest2, 'updateInfluencerProfile');
+      const updateProfile = httpsCallable(functionsAffiliate, 'updateInfluencerProfile');
       await updateProfile({ photoUrl: downloadURL });
 
       setUploadSuccess(true);

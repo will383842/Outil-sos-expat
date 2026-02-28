@@ -24,15 +24,12 @@ import {
   getDoc,
   doc as fsDoc,
 } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db, functions } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import { useAuth } from '../../contexts/AuthContext';
-import notificationService, {
-  MultiChannelNotification,
-} from '../../services/notifications/notificationService';
 
 interface NotificationLog {
   id: string;
@@ -182,30 +179,24 @@ const AdminNotifications: React.FC = () => {
       const recipientName =
         p.name || [p.firstName, p.lastName].filter(Boolean).join(' ') || `Provider ${providerId}`;
 
-      // Build multi-channel test notification
-      const payload: MultiChannelNotification = {
-        type: 'admin_test',
-        recipientEmail: p.email,
-        recipientName,
-        recipientCountry: p.country,
-        emailSubject: intl.formatMessage({ id: 'admin.notifications.test.emailSubject' }),
-        emailHtml: `
-          <h2>${intl.formatMessage({ id: 'admin.notifications.test.emailTitle' })}</h2>
-          <p>${intl.formatMessage({ id: 'admin.notifications.test.emailBody' })}</p>
-          <p><strong>${intl.formatMessage({ id: 'admin.notifications.test.provider' })}:</strong> ${recipientName} (${providerId})</p>
-        `.trim(),
-      };
+      // P1-5 FIX: Use enqueueMessageEvent callable (admin SDK bypasses Firestore rules)
+      const { httpsCallable } = await import('firebase/functions');
+      const enqueueFn = httpsCallable(functions, 'enqueueMessageEvent');
+      await enqueueFn({
+        eventId: 'admin_test',
+        locale: intl.locale || 'fr',
+        to: { email: p.email, uid: providerId },
+        context: {
+          user: { uid: providerId, email: p.email },
+          recipientName,
+          recipientCountry: p.country || '',
+        },
+      });
 
-      const ok = await notificationService.sendMultiChannelNotification(payload);
-
-      if (ok) {
-        toast.success(intl.formatMessage({ id: 'admin.notifications.test.success' }));
-        setShowTestModal(false);
-        setTestProviderId('');
-        void loadNotificationLogs();
-      } else {
-        toast.error(intl.formatMessage({ id: 'admin.notifications.test.failed' }));
-      }
+      toast.success(intl.formatMessage({ id: 'admin.notifications.test.success' }));
+      setShowTestModal(false);
+      setTestProviderId('');
+      void loadNotificationLogs();
     } catch (error) {
       console.error('Error during notification test:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -265,12 +265,12 @@ export const getBillingPortalUrl = onCall<BillingPortalRequest>(
 
       // 6. Retourner l'URL
       return { url: session.url };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating billing portal session:", error);
 
       // Gérer les erreurs Stripe spécifiques
-      if (error.type === "StripeInvalidRequestError") {
-        if (error.code === "resource_missing") {
+      if (error instanceof Error && (error as any).type === "StripeInvalidRequestError") {
+        if ((error as any).code === "resource_missing") {
           throw new HttpsError(
             "not-found",
             "Le client Stripe n'existe plus. Veuillez contacter le support."
@@ -285,7 +285,7 @@ export const getBillingPortalUrl = onCall<BillingPortalRequest>(
 
       throw new HttpsError(
         "internal",
-        error.message || "Erreur lors de la création de la session de facturation"
+        error instanceof Error ? error.message : "Erreur lors de la création de la session de facturation"
       );
     }
   }

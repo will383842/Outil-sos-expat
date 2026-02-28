@@ -229,6 +229,9 @@ export {
 // P2 FIX 2026-02-12: Automatic invoice email delivery (multilingual)
 export { onInvoiceCreatedSendEmail } from "./triggers/onInvoiceCreatedSendEmail";
 
+// AUDIT FIX 2026-02-27: Invoice admin callables (sendInvoiceEmail, regenerateInvoice, sendBulkInvoiceEmails)
+export { sendInvoiceEmail, regenerateInvoice, sendBulkInvoiceEmails } from "./callables/invoiceCallables";
+
 // P2 FIX 2026-02-12: Payment error alerts system
 export {
   onPaymentRecordCreated,
@@ -276,6 +279,10 @@ export {
   verifyPayPalCode,
   resendPayPalVerificationCode,
 } from "./paypal/emailVerification";
+
+// Legal Documents Migrations
+// ENABLE TEMPORARILY to run, then re-comment to free Cloud Run quota
+// export { addTelegramClauseToAffiliateTerms } from "./migrations/migrateLegalDocuments";
 
 // KYC Templates Seed
 // DISABLED 2026-01-30: One-time seed functions - removed to free Cloud Run quota
@@ -2090,7 +2097,8 @@ export {
   resetMonthlyQuotas,
   checkPastDueSubscriptions,
   sendQuotaAlerts,
-  cleanupExpiredTrials
+  cleanupExpiredTrials,
+  reconcileSubscriptions, // P2 FIX: Weekly Stripe ↔ Firestore reconciliation
 } from './subscription/scheduledTasks';
 
 // Stripe sync
@@ -2138,6 +2146,9 @@ export {
   handleEmailComplaint,
   handleUnsubscribe,
 } from './emailMarketing/functions/webhooks';
+
+// ========== EMAIL UNSUBSCRIBE (P1 FIX CAN-SPAM/RGPD) ==========
+export { emailUnsubscribe } from './email/unsubscribe';
 
 // ========== HELP CENTER FAQ GENERATION ==========
 export {
@@ -2872,6 +2883,7 @@ export {
   skipTelegramOnboarding,
   telegramChatterBotWebhook,
   getReferralDashboard,
+  getChatterRecruitedProviders,
   // Posts callables
   submitPost,
   getMyPosts,
@@ -2980,6 +2992,8 @@ export {
   updateInfluencerProfile,
   influencerRequestWithdrawal,
   getInfluencerLeaderboard,
+  getInfluencerRecruits,
+  getInfluencerRecruitedProviders,
   // Public callables
   getInfluencerDirectory,
   // Admin callables
@@ -3033,6 +3047,12 @@ export {
   adminToggleInfluencerVisibility,
   // Admin withdrawals
   adminGetInfluencerWithdrawals,
+  // Admin commission rules, fraud config, export, rate history, bulk actions
+  adminUpdateCommissionRules,
+  adminGetRateHistory,
+  adminUpdateAntiFraudConfig,
+  adminExportInfluencers,
+  adminBulkInfluencerAction,
 } from './influencer';
 
 // ========== BLOGGER SYSTEM ==========
@@ -3084,6 +3104,17 @@ export {
   // Admin GET resources/guide (NEW - were missing from exports)
   adminGetBloggerResources,
   adminGetBloggerGuide,
+  // Admin SAVE/DELETE resources & guide
+  adminSaveBloggerResourceFile,
+  adminSaveBloggerResourceText,
+  adminDeleteBloggerResourceFile,
+  adminDeleteBloggerResourceText,
+  adminSaveBloggerGuideTemplate,
+  adminSaveBloggerGuideCopyText,
+  adminSaveBloggerGuideBestPractice,
+  adminDeleteBloggerGuideTemplate,
+  adminDeleteBloggerGuideCopyText,
+  adminDeleteBloggerGuideBestPractice,
   // Admin withdrawals
   adminGetBloggerWithdrawals,
   // Articles
@@ -3147,6 +3178,7 @@ export {
   registerGroupAdmin,
   getGroupAdminDashboard,
   getGroupAdminRecruits,
+  getGroupAdminRecruitedProviders,
   getGroupAdminCommissions,
   getGroupAdminNotifications,
   getGroupAdminLeaderboard,
@@ -3362,8 +3394,9 @@ export {
 // getAvailableCountriesForChatter (absent de chatter/index.ts — export direct)
 export { getAvailableCountriesForChatter } from './chatter/callables/countryRotation';
 
-// --- BLOGGER : getBloggerRecruits manquant ---
+// --- BLOGGER : getBloggerRecruits + getRecruitedProviders ---
 export { getBloggerRecruits } from './blogger';
+export { getBloggerRecruitedProviders } from './blogger';
 
 // --- SUBSCRIPTION : scheduled tasks manquants ---
 export {
@@ -3404,3 +3437,8 @@ export {
   adminGetAuditLogActions,
 } from './payment/callables/admin/getAuditLogs';
 export { adminExportWithdrawals } from './payment/callables/admin/exportWithdrawals';
+export { adminAdjustBalance } from './payment/callables/admin/adjustBalance';
+export { adminIssueManualCommission } from './payment/callables/admin/issueManualCommission';
+export { adminMarkWithdrawalAsPaid } from './payment/callables/admin/markWithdrawalAsPaid';
+export { adminTerminateCall } from './callables/adminTerminateCall';
+export { cleanupAuditLogs } from './scheduled/cleanupAuditLogs';

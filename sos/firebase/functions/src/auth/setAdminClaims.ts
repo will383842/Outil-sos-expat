@@ -12,12 +12,11 @@ import { checkRateLimit, RATE_LIMITS } from "../lib/rateLimiter";
 
 const db = getFirestore();
 
-// Fallback hardcoded list (used only if Firestore read fails or doc doesn't exist)
-const FALLBACK_ADMIN_EMAILS = [
-  'williamsjullin@gmail.com',
-  'williamjullin@gmail.com',
-  'julienvalentine1@gmail.com'
-];
+// Fallback admin emails: read from ADMIN_EMAILS env var, or use defaults
+const FALLBACK_ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'williamsjullin@gmail.com,williamjullin@gmail.com,julienvalentine1@gmail.com')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 /**
  * Get admin whitelist from Firestore, fallback to hardcoded list
@@ -179,9 +178,9 @@ export const bootstrapFirstAdmin = onCall(
         message: `Admin bootstrappé avec succès pour ${email}. Reconnectez-vous pour appliquer les changements.`,
         uid: uid
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[bootstrapFirstAdmin] Error:", error);
-      throw new HttpsError("internal", `Erreur: ${error.message}`);
+      throw new HttpsError("internal", `Erreur: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 );
@@ -273,9 +272,9 @@ export const initializeAdminClaims = onCall(
         uid: userRecord.uid,
         message: `Admin claims définis pour ${normalizedEmail}. L'utilisateur doit se reconnecter.`,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[initializeAdminClaims] Error:", error);
-      if (error.code === "auth/user-not-found") {
+      if (error instanceof Error && (error as any).code === "auth/user-not-found") {
         throw new HttpsError("not-found", "Utilisateur non trouvé avec cet email");
       }
       throw new HttpsError("internal", "Erreur lors de l'initialisation");

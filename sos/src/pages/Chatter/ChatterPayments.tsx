@@ -13,6 +13,7 @@
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { trackMetaInitiateCheckout } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useChatter } from '@/hooks/useChatter';
@@ -235,6 +236,7 @@ const ChatterPayments: React.FC = () => {
         await refreshMethods();
       } catch (err) {
         console.error('Failed to delete method:', err);
+        toast.error(intl.formatMessage({ id: 'chatter.payments.error.deleteMethod', defaultMessage: 'Failed to delete payment method.' }));
       } finally {
         setDeletingMethodId(null);
       }
@@ -249,9 +251,10 @@ const ChatterPayments: React.FC = () => {
         await setDefaultMethod(methodId);
       } catch (err) {
         console.error('Failed to set default method:', err);
+        toast.error(intl.formatMessage({ id: 'chatter.payments.error.setDefault', defaultMessage: 'Failed to set default payment method.' }));
       }
     },
-    [setDefaultMethod]
+    [setDefaultMethod, intl]
   );
 
   // Handle cancel withdrawal
@@ -265,9 +268,10 @@ const ChatterPayments: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to cancel withdrawal:', err);
+        toast.error(intl.formatMessage({ id: 'chatter.payments.error.cancelWithdrawal', defaultMessage: 'Failed to cancel withdrawal.' }));
       }
     },
-    [cancelWithdrawal, refreshWithdrawals, selectedWithdrawalId]
+    [cancelWithdrawal, refreshWithdrawals, selectedWithdrawalId, intl]
   );
 
   // Get status icon
@@ -590,6 +594,7 @@ const ChatterPayments: React.FC = () => {
               onTelegramConfirmed={handleTelegramConfirmed}
               onTelegramCancelled={handleTelegramCancelled}
               onTelegramExpired={handleTelegramExpired}
+              withdrawalFeeCents={dashboardData?.config?.withdrawalFeeCents}
             />
           </div>
         )}

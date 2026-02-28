@@ -81,8 +81,8 @@ const FEE_CONFIG: Record<PaymentMethodType, FeeConfig> = {
   },
 };
 
-/** SOS-Expat withdrawal fee in cents (configurable via admin, display default) */
-const SOS_WITHDRAWAL_FEE_CENTS = 300; // $3.00
+/** Default SOS-Expat withdrawal fee in cents (fallback when not passed via prop) */
+const DEFAULT_WITHDRAWAL_FEE_CENTS = 300; // $3.00
 
 // ============================================================================
 // MOCK HOOKS (to be replaced with actual implementations)
@@ -160,6 +160,8 @@ interface WithdrawalRequestFormProps {
   onTelegramCancelled?: () => void;
   /** Callback when Telegram confirmation expires */
   onTelegramExpired?: () => void;
+  /** SOS withdrawal fee in cents (from backend config). Defaults to 300 ($3) */
+  withdrawalFeeCents?: number;
 }
 
 // ============================================================================
@@ -233,7 +235,9 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
   onTelegramConfirmed,
   onTelegramCancelled,
   onTelegramExpired,
+  withdrawalFeeCents: propWithdrawalFeeCents,
 }) => {
+  const SOS_WITHDRAWAL_FEE_CENTS = propWithdrawalFeeCents ?? DEFAULT_WITHDRAWAL_FEE_CENTS;
   const intl = useIntl();
 
   // Use provided methods or fetch from hook
@@ -325,6 +329,10 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
   // Always send finalAmount (which already accounts for the $3 withdrawal fee in "all" mode)
   const handleSubmit = async () => {
     if (!selectedMethodId || !canSubmit) return;
+    // AUDIT FIX 2026-02-27: Offline guard — prevent submission without network
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      throw new Error('Pas de connexion internet. Vérifiez votre réseau avant de réessayer.');
+    }
     await onSubmit(selectedMethodId, finalAmount);
   };
 
@@ -851,6 +859,14 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
           </>
         )}
       </button>
+
+      {/* Fee disclaimer (P2-07 FIX) */}
+      <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+        <FormattedMessage
+          id="payment.withdrawal.feeDisclaimer"
+          defaultMessage="Les frais de transfert sont une estimation. Les frais reels appliques par le prestataire (Wise, Flutterwave) peuvent varier selon le pays et la devise de destination."
+        />
+      </p>
 
       {/* Disclaimer */}
       <p className="text-xs text-center text-gray-500 dark:text-gray-400">

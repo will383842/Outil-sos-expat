@@ -9,7 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   ArrowLeft,
   User,
@@ -143,7 +143,7 @@ const AdminBloggerDetail: React.FC = () => {
         blogger: Blogger;
         recentCommissions: Commission[];
         recentWithdrawals: Withdrawal[];
-      }>(functionsWest2, 'adminGetBloggerDetail');
+      }>(functionsAffiliate, 'adminGetBloggerDetail');
 
       const result = await adminGetBloggerDetail({ bloggerId: id });
       setBlogger(result.data.blogger);
@@ -167,7 +167,7 @@ const AdminBloggerDetail: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const adminUpdateBloggerStatus = httpsCallable(functionsWest2, 'adminUpdateBloggerStatus');
+      const adminUpdateBloggerStatus = httpsCallable(functionsAffiliate, 'adminUpdateBloggerStatus');
       await adminUpdateBloggerStatus({
         bloggerId: id,
         status: newStatus,

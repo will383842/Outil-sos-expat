@@ -295,13 +295,9 @@ const AdminPaymentDetail: React.FC = () => {
   // DATA FETCHING
   // ============================================================================
 
-  const getCollectionName = (type: PaymentUserType): string => {
-    switch (type) {
-      case 'chatter': return 'chatter_withdrawals';
-      case 'influencer': return 'influencer_withdrawals';
-      case 'blogger': return 'blogger_withdrawals';
-      default: return 'chatter_withdrawals';
-    }
+  const getCollectionName = (_type: PaymentUserType): string => {
+    // All user types use the centralized payment_withdrawals collection
+    return 'payment_withdrawals';
   };
 
   const getCommissionsCollectionName = (type: PaymentUserType): string => {
@@ -336,19 +332,11 @@ const AdminPaymentDetail: React.FC = () => {
       let userEmail = '';
       let userName = '';
 
-      if (userType === 'chatter') {
-        userId = data.chatterId || '';
-        userEmail = data.chatterEmail || '';
-        userName = data.chatterName || '';
-      } else if (userType === 'influencer') {
-        userId = data.influencerId || '';
-        userEmail = data.influencerEmail || '';
-        userName = data.influencerName || `${data.influencerFirstName || ''} ${data.influencerLastName || ''}`.trim();
-      } else if (userType === 'blogger') {
-        userId = data.bloggerId || '';
-        userEmail = data.bloggerEmail || '';
-        userName = data.bloggerName || '';
-      }
+      // Centralized payment_withdrawals uses standardized fields
+      userId = data.userId || data.chatterId || data.influencerId || data.bloggerId || '';
+      userEmail = data.userEmail || data.chatterEmail || data.influencerEmail || data.bloggerEmail || '';
+      userName = data.userName || data.chatterName || data.influencerName || data.bloggerName ||
+        `${data.influencerFirstName || ''} ${data.influencerLastName || ''}`.trim() || '';
 
       const toDate = (val: unknown): Date | undefined => {
         if (val instanceof Timestamp) return val.toDate();

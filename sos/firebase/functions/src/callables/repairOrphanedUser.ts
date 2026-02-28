@@ -13,6 +13,7 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -34,14 +35,7 @@ export const repairOrphanedUser = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<RepairResult> => {
     ensureInitialized();

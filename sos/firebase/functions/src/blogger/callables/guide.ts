@@ -33,7 +33,7 @@ export const getBloggerGuide = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetBloggerGuideResponse> => {
@@ -155,7 +155,7 @@ export const copyBloggerGuideText = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<CopyBloggerGuideTextResponse> => {
@@ -279,7 +279,7 @@ export const trackBloggerGuideUsage = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 15,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {

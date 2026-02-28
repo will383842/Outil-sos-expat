@@ -130,6 +130,75 @@
       }
     },
     {
+      "id": "call.completed",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "Chamada concluída",
+        "body": "Sua chamada terminou. Duração: {{DURATION}}"
+      },
+      "inapp": {
+        "title": "Chamada concluída",
+        "body": "Sua chamada terminou. Duração: {{DURATION}}. Obrigado por usar o SOS Expat!",
+        "action": {
+          "label": "Deixar avaliação",
+          "deeplink": "/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.refund.early_disconnect",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "Reembolso por desconexão",
+        "body": "Sua chamada foi interrompida muito cedo. Um reembolso foi iniciado."
+      },
+      "inapp": {
+        "title": "Reembolso por desconexão antecipada",
+        "body": "Sua chamada foi interrompida antes do tempo mínimo. Um reembolso automático foi iniciado.",
+        "action": {
+          "label": "Ver",
+          "deeplink": "/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.failed.early_disconnect.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "Chamada interrompida",
+        "body": "A chamada foi interrompida prematuramente. O cliente foi reembolsado."
+      },
+      "inapp": {
+        "title": "Chamada interrompida prematuramente",
+        "body": "A chamada foi interrompida antes do tempo mínimo de cobrança. O cliente foi reembolsado automaticamente.",
+        "action": {
+          "label": "Ver",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
       "id": "invoice.created",
       "roles": ["client"],
       "channels": {

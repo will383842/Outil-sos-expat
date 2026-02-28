@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   BookOpen,
   Plus,
@@ -141,7 +141,7 @@ const AdminBloggersGuide: React.FC = () => {
         templates: GuideTemplate[];
         copyTexts: GuideCopyText[];
         bestPractices: GuideBestPractice[];
-      }>(functionsWest2, 'adminGetBloggerGuide');
+      }>(functionsAffiliate, 'adminGetBloggerGuide');
 
       const result = await adminGetBloggerGuide();
       setTemplates(result.data.templates || []);
@@ -233,7 +233,7 @@ const AdminBloggersGuide: React.FC = () => {
           break;
       }
 
-      const saveFunction = httpsCallable(functionsWest2, functionName);
+      const saveFunction = httpsCallable(functionsAffiliate, functionName);
       await saveFunction({
         item: editingItem.data,
         isNew: editingItem.isNew,
@@ -272,7 +272,7 @@ const AdminBloggersGuide: React.FC = () => {
           break;
       }
 
-      const deleteFunction = httpsCallable(functionsWest2, functionName);
+      const deleteFunction = httpsCallable(functionsAffiliate, functionName);
       await deleteFunction({ itemId: item.id });
       fetchGuide();
     } catch (err: any) {

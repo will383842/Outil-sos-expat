@@ -130,6 +130,75 @@
       }
     },
     {
+      "id": "call.completed",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "कॉल समाप्त",
+        "body": "आपकी कॉल समाप्त हो गई। अवधि: {{DURATION}}"
+      },
+      "inapp": {
+        "title": "कॉल समाप्त",
+        "body": "आपकी कॉल समाप्त हो गई। अवधि: {{DURATION}}। SOS Expat का उपयोग करने के लिए धन्यवाद!",
+        "action": {
+          "label": "समीक्षा दें",
+          "deeplink": "/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.refund.early_disconnect",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "डिस्कनेक्शन के लिए रिफंड",
+        "body": "आपकी कॉल बहुत जल्दी बाधित हो गई। रिफंड शुरू कर दिया गया है।"
+      },
+      "inapp": {
+        "title": "जल्दी डिस्कनेक्शन के लिए रिफंड",
+        "body": "आपकी कॉल न्यूनतम समय से पहले बाधित हो गई। स्वचालित रिफंड शुरू कर दिया गया है।",
+        "action": {
+          "label": "देखें",
+          "deeplink": "/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.failed.early_disconnect.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "कॉल बाधित",
+        "body": "कॉल समय से पहले बाधित हो गई। ग्राहक को रिफंड कर दिया गया है।"
+      },
+      "inapp": {
+        "title": "कॉल समय से पहले बाधित",
+        "body": "कॉल न्यूनतम बिलिंग समय से पहले बाधित हो गई। ग्राहक को स्वचालित रूप से रिफंड कर दिया गया है।",
+        "action": {
+          "label": "देखें",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
       "id": "invoice.created",
       "roles": ["client"],
       "channels": {

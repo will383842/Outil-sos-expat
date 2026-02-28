@@ -13,7 +13,6 @@ import { getApps, initializeApp } from "firebase-admin/app";
 
 import {
   Chatter,
-  ChatterReferralCommission,
   GetReferralDashboardResponse,
 } from "../types";
 import {
@@ -38,7 +37,7 @@ export const getReferralDashboard = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetReferralDashboardResponse> => {
@@ -119,22 +118,30 @@ export const getReferralDashboard = onCall(
         }
       }
 
-      // Get recent referral commissions
+      // Get recent referral commissions from chatter_commissions (new system)
+      // Referral-related types: n1_call, n2_call, activation_bonus, n1_recruit_bonus, tier_bonus
+      const REFERRAL_COMMISSION_TYPES = [
+        "n1_call", "n2_call", "activation_bonus", "n1_recruit_bonus", "tier_bonus",
+        // Legacy types for backward compatibility
+        "threshold_10", "threshold_50", "threshold_50_n2", "recurring_5pct",
+      ];
+
       const commissionsQuery = await db
-        .collection("chatter_referral_commissions")
-        .where("parrainId", "==", chatterId)
+        .collection("chatter_commissions")
+        .where("chatterId", "==", chatterId)
+        .where("type", "in", REFERRAL_COMMISSION_TYPES)
         .orderBy("createdAt", "desc")
         .limit(10)
         .get();
 
       const recentCommissions = commissionsQuery.docs.map((doc) => {
-        const commission = doc.data() as ChatterReferralCommission;
+        const data = doc.data();
         return {
           id: doc.id,
-          type: commission.type,
-          filleulName: commission.filleulName,
-          amount: commission.amount,
-          createdAt: commission.createdAt?.toDate().toISOString() || "",
+          type: data.type,
+          filleulName: data.description || "",
+          amount: data.amount,
+          createdAt: data.createdAt?.toDate().toISOString() || "",
         };
       });
 
@@ -142,8 +149,9 @@ export const getReferralDashboard = onCall(
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthlyCommissionsQuery = await db
-        .collection("chatter_referral_commissions")
-        .where("parrainId", "==", chatterId)
+        .collection("chatter_commissions")
+        .where("chatterId", "==", chatterId)
+        .where("type", "in", REFERRAL_COMMISSION_TYPES)
         .where("createdAt", ">=", Timestamp.fromDate(startOfMonth))
         .get();
 
@@ -194,7 +202,7 @@ export const getReferralDashboard = onCall(
               bonusAmount: nextTier.bonusAmount,
             }
           : {
-              currentTier: 50, // Max tier achieved
+              currentTier: 500, // Max tier achieved
               nextTier: null,
               filleulsNeeded: 0,
               bonusAmount: 0,

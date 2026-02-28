@@ -198,21 +198,21 @@ export const api = onRequest(
           const pricingDoc = await db
             .doc('admin_config/pricing')
             .get()
-            .catch(() => null);
+            .catch((e: unknown) => { console.warn("[adminApi] pricing doc fetch failed:", e); return null; });
 
           const lastPayment = await db
             .collection('payments')
             .orderBy('updatedAt', 'desc')
             .limit(1)
             .get()
-            .catch(() => null);
+            .catch((e: unknown) => { console.warn("[adminApi] lastPayment fetch failed:", e); return null; });
 
           const lastAnalytics = await db
             .collection('call_sessions')
             .orderBy('updatedAt', 'desc')
             .limit(1)
             .get()
-            .catch(() => null);
+            .catch((e: unknown) => { console.warn("[adminApi] lastAnalytics fetch failed:", e); return null; });
 
           const fmt = (ts?: admin.firestore.Timestamp | null) =>
             ts ? ts.toDate().toISOString() : 'N/A';

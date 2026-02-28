@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '../config/firebase';
+import { functionsAffiliate } from '../config/firebase';
 import {
   BloggerResourcesData,
   BloggerGuideData,
@@ -39,7 +39,7 @@ export function useBloggerResources(): UseBloggerResourcesReturn {
       const getBloggerResources = httpsCallable<
         { category?: BloggerResourceCategory },
         BloggerResourcesData
-      >(functionsWest2, 'getBloggerResources');
+      >(functionsAffiliate, 'getBloggerResources');
 
       const result = await getBloggerResources({ category });
       setResources(result.data);
@@ -60,7 +60,7 @@ export function useBloggerResources(): UseBloggerResourcesReturn {
       const downloadBloggerResource = httpsCallable<
         { resourceId: string },
         { success: boolean; downloadUrl: string }
-      >(functionsWest2, 'downloadBloggerResource');
+      >(functionsAffiliate, 'downloadBloggerResource');
 
       const result = await downloadBloggerResource({ resourceId });
       return {
@@ -85,7 +85,7 @@ export function useBloggerResources(): UseBloggerResourcesReturn {
       const copyBloggerResourceText = httpsCallable<
         { textId: string },
         { success: boolean; content: string }
-      >(functionsWest2, 'copyBloggerResourceText');
+      >(functionsAffiliate, 'copyBloggerResourceText');
 
       const result = await copyBloggerResourceText({ textId });
 
@@ -144,7 +144,7 @@ export function useBloggerGuide(): UseBloggerGuideReturn {
 
     try {
       const getBloggerGuide = httpsCallable<unknown, BloggerGuideData>(
-        functionsWest2,
+        functionsAffiliate,
         'getBloggerGuide'
       );
 
@@ -171,7 +171,7 @@ export function useBloggerGuide(): UseBloggerGuideReturn {
       const copyBloggerGuideText = httpsCallable<
         { textId: string; textType: 'template' | 'copy_text'; affiliateLink: string },
         { success: boolean; content: string }
-      >(functionsWest2, 'copyBloggerGuideText');
+      >(functionsAffiliate, 'copyBloggerGuideText');
 
       const result = await copyBloggerGuideText({ textId, textType, affiliateLink });
 
@@ -235,7 +235,7 @@ export function useBloggerArticles(): UseBloggerArticlesReturn {
 
     try {
       const getBloggerArticles = httpsCallable<unknown, { articles: BloggerArticle[] }>(
-        functionsWest2,
+        functionsAffiliate,
         'getBloggerArticles'
       );
 
@@ -258,7 +258,7 @@ export function useBloggerArticles(): UseBloggerArticlesReturn {
       const copyBloggerArticle = httpsCallable<
         { articleId: string },
         { success: boolean; content: string }
-      >(functionsWest2, 'copyBloggerArticle');
+      >(functionsAffiliate, 'copyBloggerArticle');
 
       const result = await copyBloggerArticle({ articleId });
 

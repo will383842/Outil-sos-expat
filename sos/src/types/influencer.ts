@@ -223,6 +223,18 @@ export interface Influencer {
   // V2: Captured rates (frozen at registration)
   capturedRates?: InfluencerCapturedRates;
 
+  // Telegram Onboarding
+  telegramOnboardingCompleted?: boolean;
+  telegramOnboardingSkipped?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number;
+  telegramUsername?: string;
+  telegramFirstName?: string;
+  telegramLastName?: string;
+  telegramLinkedAt?: string;
+  telegramBonusCredited?: boolean;
+  telegramBonusAmount?: number;
+
   // Timestamps
   createdAt: string;
   updatedAt: string;
@@ -416,7 +428,9 @@ export interface InfluencerNotification {
   influencerId: string;
   type: InfluencerNotificationType;
   title: string;
+  titleTranslations?: Record<string, string>;
   message: string;
+  messageTranslations?: Record<string, string>;
   data?: Record<string, unknown>;
   isRead: boolean;
   readAt?: string;

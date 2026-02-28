@@ -130,6 +130,75 @@
       }
     },
     {
+      "id": "call.completed",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "Звонок завершён",
+        "body": "Ваш звонок завершён. Длительность: {{DURATION}}"
+      },
+      "inapp": {
+        "title": "Звонок завершён",
+        "body": "Ваш звонок завершён. Длительность: {{DURATION}}. Спасибо за использование SOS Expat!",
+        "action": {
+          "label": "Оставить отзыв",
+          "deeplink": "/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.refund.early_disconnect",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "Возврат за преждевременное отключение",
+        "body": "Ваш звонок был прерван слишком рано. Возврат средств инициирован."
+      },
+      "inapp": {
+        "title": "Возврат за преждевременное отключение",
+        "body": "Ваш звонок был прерван до минимального времени. Автоматический возврат средств инициирован.",
+        "action": {
+          "label": "Посмотреть",
+          "deeplink": "/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.failed.early_disconnect.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "Звонок прерван",
+        "body": "Звонок был прерван преждевременно. Клиенту возвращены средства."
+      },
+      "inapp": {
+        "title": "Звонок преждевременно прерван",
+        "body": "Звонок был прерван до минимального времени тарификации. Клиенту автоматически возвращены средства.",
+        "action": {
+          "label": "Посмотреть",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
       "id": "invoice.created",
       "roles": ["client"],
       "channels": {

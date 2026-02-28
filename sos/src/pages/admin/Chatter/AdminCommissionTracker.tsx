@@ -13,7 +13,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSearchParams } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import {
   DollarSign,
   TrendingUp,
@@ -298,7 +298,7 @@ const AdminCommissionTracker: React.FC = () => {
       const adminGetCommissionStats = httpsCallable<
         { dateRange?: { start: string; end: string } },
         CommissionStats
-      >(functionsWest2, 'adminGetCommissionStats');
+      >(functionsAffiliate, 'adminGetCommissionStats');
 
       const result = await adminGetCommissionStats({
         dateRange: dateRange.start && dateRange.end ? dateRange : undefined,
@@ -333,7 +333,7 @@ const AdminCommissionTracker: React.FC = () => {
             stats: { total: number };
             hasMore: boolean;
           }
-        >(functionsWest2, 'adminGetCommissionsDetailed');
+        >(functionsAffiliate, 'adminGetCommissionsDetailed');
 
         const result = await adminGetCommissionsDetailed({
           chatterId: chatterId || undefined,
@@ -375,7 +375,7 @@ const AdminCommissionTracker: React.FC = () => {
           sourceType?: string;
         },
         { success: boolean; csv: string; count: number }
-      >(functionsWest2, 'adminExportCommissionsCSV');
+      >(functionsAffiliate, 'adminExportCommissionsCSV');
 
       const result = await adminExportCommissionsCSV({
         chatterId: chatterId || undefined,

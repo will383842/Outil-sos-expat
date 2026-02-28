@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import {  httpsCallable  } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import { Copy, CheckCircle, FileText, Filter, Loader2, AlertCircle, Clock, Pin } from 'lucide-react';
 import { GroupAdminPost, GroupAdminPostCategory, POST_CATEGORY_LABELS } from '@/types/groupAdmin';
 
@@ -31,7 +31,7 @@ const GroupAdminPosts: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const getPosts = httpsCallable(functionsWest2, 'getGroupAdminPosts');
+      const getPosts = httpsCallable(functionsAffiliate, 'getGroupAdminPosts');
       const result = await getPosts({});
       const data = result.data as { posts: GroupAdminPost[] };
       setPosts(data.posts);
@@ -48,7 +48,7 @@ const GroupAdminPosts: React.FC = () => {
 
     setLoadingContent(post.id);
     try {
-      const getProcessedPost = httpsCallable(functionsWest2, 'getGroupAdminProcessedPost');
+      const getProcessedPost = httpsCallable(functionsAffiliate, 'getGroupAdminProcessedPost');
       const result = await getProcessedPost({ postId: post.id, language: user?.preferredLanguage || 'en' });
       const data = result.data as { content: string };
       await navigator.clipboard.writeText(data.content);

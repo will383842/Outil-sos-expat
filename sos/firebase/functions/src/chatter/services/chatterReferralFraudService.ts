@@ -523,9 +523,13 @@ export async function getPendingFraudAlerts(
 // ============================================================================
 
 /**
- * Run all fraud checks for a chatter (called periodically or on suspicious activity)
+ * Run all fraud checks for a chatter (called periodically or on suspicious activity).
+ * Includes: ratio check, rapid referrals, circular referral, and multiple accounts.
  */
-export async function runComprehensiveFraudCheck(chatterId: string): Promise<{
+export async function runComprehensiveFraudCheck(
+  chatterId: string,
+  context?: { parrainId?: string; ipHash?: string }
+): Promise<{
   hasIssues: boolean;
   issues: string[];
   shouldSuspend: boolean;
@@ -536,8 +540,10 @@ export async function runComprehensiveFraudCheck(chatterId: string): Promise<{
     shouldSuspend: false,
   };
 
+  const startMs = Date.now();
+
   try {
-    // Check high ratio
+    // 1. Check high ratio
     const ratioResult = await checkHighRatioChatter(chatterId);
     if (ratioResult.isHighRatio) {
       result.hasIssues = true;
@@ -547,18 +553,58 @@ export async function runComprehensiveFraudCheck(chatterId: string): Promise<{
       }
     }
 
-    // Check rapid referrals
+    // 2. Check rapid referrals
     const rapidResult = await checkRapidReferrals(chatterId);
     if (rapidResult.isSuspicious) {
       result.hasIssues = true;
-      result.issues.push(`Rapid referrals: ${rapidResult.referralCount} in 24h`);
+      result.issues.push(`Rapid referrals: ${rapidResult.referralCount} in ${rapidResult.timeWindowHours}h`);
       if (rapidResult.referralCount > 20) {
         result.shouldSuspend = true;
       }
     }
 
-    // Update ratio in database
+    // 3. Circular referral detection (if parrain context provided)
+    if (context?.parrainId) {
+      const circularResult = await detectCircularReferral(context.parrainId, chatterId);
+      if (circularResult.isCircular) {
+        result.hasIssues = true;
+        result.shouldSuspend = true;
+        result.issues.push(`Circular referral chain: ${circularResult.chain.join(" → ")}`);
+      }
+    }
+
+    // 4. Multiple accounts detection (if IP hash provided)
+    if (context?.ipHash) {
+      const multiResult = await detectMultipleAccounts(chatterId, context.ipHash);
+      if (multiResult.isMultiple) {
+        result.hasIssues = true;
+        result.issues.push(`Multiple accounts (${multiResult.relatedAccounts.length}) sharing IP`);
+        if (multiResult.relatedAccounts.length >= 3) {
+          result.shouldSuspend = true;
+        }
+      }
+    }
+
+    // 5. Update ratio in database
     await updateReferralToClientRatio(chatterId);
+
+    // Structured audit log
+    const durationMs = Date.now() - startMs;
+    if (result.hasIssues) {
+      logger.warn("[runComprehensiveFraudCheck] Issues detected", {
+        chatterId,
+        hasIssues: result.hasIssues,
+        shouldSuspend: result.shouldSuspend,
+        issueCount: result.issues.length,
+        issues: result.issues,
+        durationMs,
+      });
+    } else {
+      logger.info("[runComprehensiveFraudCheck] Clean", {
+        chatterId,
+        durationMs,
+      });
+    }
 
     return result;
   } catch (error) {

@@ -11,6 +11,7 @@ export { getGroupAdminLeaderboard } from "./getGroupAdminLeaderboard";
 export { updateGroupAdminProfile } from "./updateGroupAdminProfile";
 export { requestGroupAdminWithdrawal } from "./requestWithdrawal";
 export { getGroupAdminRecruits } from "./getGroupAdminRecruits";
+export { getGroupAdminRecruitedProviders } from "./getRecruitedProviders";
 
 // Resource Callables
 export {

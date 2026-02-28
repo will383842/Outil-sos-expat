@@ -176,6 +176,16 @@ export interface GroupAdmin {
   paymentDetails: GroupAdminPaymentDetails | null;
   pendingWithdrawalId: string | null;
 
+  // Telegram Onboarding
+  telegramOnboardingCompleted?: boolean;
+  telegramOnboardingSkipped?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number;
+  telegramUsername?: string;
+  telegramLinkedAt?: FirebaseDate;
+  telegramBonusCredited?: boolean;
+  telegramBonusAmount?: number;
+
   createdAt: FirebaseDate;
   updatedAt: FirebaseDate;
   lastLoginAt?: FirebaseDate | null;
@@ -297,6 +307,7 @@ export type GroupAdminNotificationType =
   | "badge_earned"
   | "rank_achieved"
   | "group_verified"
+  | "new_provider_recruited"
   | "system_announcement";
 
 export interface GroupAdminNotification {
@@ -304,9 +315,13 @@ export interface GroupAdminNotification {
   groupAdminId: string;
   type: GroupAdminNotificationType;
   title: string;
+  titleTranslations?: Record<string, string>;
   message: string;
+  messageTranslations?: Record<string, string>;
+  actionUrl?: string;
   data?: Record<string, unknown>;
-  read: boolean;
+  isRead: boolean;
+  emailSent?: boolean;
   createdAt: FirebaseDate;
   readAt?: FirebaseDate;
 }

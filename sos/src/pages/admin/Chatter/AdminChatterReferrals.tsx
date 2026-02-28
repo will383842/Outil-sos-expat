@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { httpsCallable } from "firebase/functions";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,7 +85,7 @@ const AdminChatterReferrals: React.FC = () => {
   const fetchStats = useCallback(async () => {
     try {
       const getStatsFn = httpsCallable<void, { stats: ReferralStats }>(
-        functionsWest2,
+        functionsAffiliate,
         "adminGetReferralStats"
       );
       const result = await getStatsFn();
@@ -100,7 +100,7 @@ const AdminChatterReferrals: React.FC = () => {
       const getCommissionsFn = httpsCallable<
         { limit: number; statusFilter?: string; typeFilter?: string },
         { commissions: ReferralCommission[] }
-      >(functionsWest2, "adminGetReferralCommissions");
+      >(functionsAffiliate, "adminGetReferralCommissions");
       const result = await getCommissionsFn({
         limit: 100,
         statusFilter: statusFilter !== "all" ? statusFilter : undefined,
@@ -117,7 +117,7 @@ const AdminChatterReferrals: React.FC = () => {
       const getTreeFn = httpsCallable<
         { searchTerm?: string },
         { tree: ReferralTreeNode[] }
-      >(functionsWest2, "adminGetReferralTree");
+      >(functionsAffiliate, "adminGetReferralTree");
       const result = await getTreeFn({
         searchTerm: searchTerm || undefined,
       });

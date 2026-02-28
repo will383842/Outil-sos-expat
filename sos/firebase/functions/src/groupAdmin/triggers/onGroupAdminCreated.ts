@@ -14,6 +14,7 @@ import { getApps, initializeApp } from "firebase-admin/app";
 
 import { GroupAdmin, GroupAdminNotification } from "../types";
 import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
+import { generateWelcomeEmail } from "../../email/welcomeTemplates";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -53,85 +54,44 @@ export const onGroupAdminCreated = onDocumentCreated(
         groupAdminId,
         type: "system_announcement",
         title: "Welcome to SOS-Expat Group Admin Program!",
+        titleTranslations: {
+          fr: "Bienvenue dans le programme Group Admin SOS-Expat !",
+          en: "Welcome to SOS-Expat Group Admin Program!",
+          es: "¡Bienvenido al programa Group Admin de SOS-Expat!",
+          de: "Willkommen beim SOS-Expat Group Admin Programm!",
+          pt: "Bem-vindo ao programa Group Admin SOS-Expat!",
+          ru: "Добро пожаловать в программу Group Admin SOS-Expat!",
+          hi: "SOS-Expat Group Admin कार्यक्रम में आपका स्वागत है!",
+          zh: "欢迎加入 SOS-Expat Group Admin 计划！",
+          ar: "!مرحبًا بك في برنامج Group Admin SOS-Expat",
+        },
         message: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link with your group members to earn $10 per client.`,
+        messageTranslations: {
+          fr: `Félicitations ${groupAdminData.firstName} ! Votre compte a été créé. Commencez à partager votre lien d'affiliation avec les membres de votre groupe pour gagner 10$ par client.`,
+          en: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link with your group members to earn $10 per client.`,
+          es: `¡Felicidades ${groupAdminData.firstName}! Tu cuenta ha sido creada. Comienza a compartir tu enlace de afiliación con los miembros de tu grupo para ganar $10 por cliente.`,
+          de: `Herzlichen Glückwunsch ${groupAdminData.firstName}! Ihr Konto wurde erstellt. Teilen Sie Ihren Affiliate-Link mit Ihren Gruppenmitgliedern und verdienen Sie $10 pro Kunde.`,
+          pt: `Parabéns ${groupAdminData.firstName}! Sua conta foi criada. Comece a compartilhar seu link de afiliação com os membros do seu grupo para ganhar $10 por cliente.`,
+          ru: `Поздравляем ${groupAdminData.firstName}! Ваш аккаунт создан. Начните делиться партнёрской ссылкой с участниками группы и зарабатывайте $10 за каждого клиента.`,
+          hi: `बधाई ${groupAdminData.firstName}! आपका खाता बन गया है। अपने ग्रुप के सदस्यों के साथ अपना एफिलिएट लिंक शेयर करें और प्रति ग्राहक $10 कमाएं।`,
+          zh: `恭喜 ${groupAdminData.firstName}！您的帐户已创建。开始与您的群组成员分享您的推广链接，每位客户赚取 $10。`,
+          ar: `تهانينا ${groupAdminData.firstName}! تم إنشاء حسابك. ابدأ بمشاركة رابط الإحالة مع أعضاء مجموعتك لكسب 10$ لكل عميل.`,
+        },
         data: {
           affiliateCodeClient: groupAdminData.affiliateCodeClient,
           affiliateCodeRecruitment: groupAdminData.affiliateCodeRecruitment,
         },
-        read: false,
+        isRead: false,
         createdAt: now,
       };
       batch.set(welcomeNotificationRef, welcomeNotification);
 
-      // 2. Send welcome email
+      // 2. Send welcome email (multilingual — P2 FIX 2026-02-28)
       try {
-        const welcomeHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bienvenue chez SOS-Expat Group Admin</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="text-align: center; margin-bottom: 30px;">
-    <h1 style="color: #6366F1; margin-bottom: 10px;">${groupAdminData.firstName}, c'est parti ! 🎯</h1>
-    <p style="font-size: 18px; color: #666;">Ton groupe va devenir ta source de revenus !</p>
-  </div>
+        const lang = groupAdminData.language || "fr";
+        const { subject, html, text } = generateWelcomeEmail("groupAdmin", groupAdminData.firstName, lang);
 
-  <div style="background: linear-gradient(135deg, #6366F1 0%, #818CF8 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px;">
-    <h2 style="margin-top: 0;">🏆 Bienvenue dans le programme Group Admin !</h2>
-    <p>Ton compte est prêt ! Tu as maintenant accès à ton lien d'affiliation unique et à ton code de recrutement. Partage-les dans ton groupe et regarde les commissions tomber !</p>
-    <div style="text-align: center; margin-top: 20px;">
-      <a href="https://sos-expat.com/group-admin/dashboard" style="display: inline-block; background: white; color: #6366F1; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold;">Mon tableau de bord →</a>
-    </div>
-  </div>
-
-  <div style="background: #EEF2FF; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-    <h3 style="color: #6366F1; margin-top: 0;">💰 Tes commissions</h3>
-    <ul style="padding-left: 20px;">
-      <li><strong>10$/appel</strong> — chaque membre de ton groupe qui appelle un expert via ton lien</li>
-      <li><strong>5$/admin recruté</strong> — quand un admin que tu recrutes atteint 50$ de gains</li>
-    </ul>
-    <p style="margin-bottom: 0; font-style: italic;">Plus ton groupe est actif, plus tes revenus sont réguliers. C'est mathématique ! 📈</p>
-  </div>
-
-  <div style="background: #FEF3C7; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-    <h3 style="color: #92400E; margin-top: 0;">💡 Ton plan d'action</h3>
-    <p style="margin-bottom: 0;">Épingle ton lien d'affiliation en haut de ton groupe. Quand un membre pose une question juridique ou administrative, c'est le moment parfait de lui recommander SOS-Expat !</p>
-  </div>
-
-  <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #E5E7EB;">
-    <p style="color: #999; font-size: 12px;">© ${new Date().getFullYear()} SOS-Expat — Tous droits réservés</p>
-  </div>
-</body>
-</html>`;
-
-        const welcomeText = `${groupAdminData.firstName}, c'est parti ! 🎯
-
-Ton groupe va devenir ta source de revenus !
-
-Bienvenue dans le programme Group Admin ! Ton compte est prêt.
-
-TES COMMISSIONS
-- 10$/appel — chaque membre de ton groupe qui appelle un expert via ton lien
-- 5$/admin recruté — quand un admin que tu recrutes atteint 50$ de gains
-
-Plus ton groupe est actif, plus tes revenus sont réguliers. C'est mathématique !
-
-TON PLAN D'ACTION
-Épingle ton lien d'affiliation en haut de ton groupe. Quand un membre pose une question juridique ou administrative, recommande SOS-Expat !
-
-Ton tableau de bord : https://sos-expat.com/group-admin/dashboard
-
-© ${new Date().getFullYear()} SOS-Expat — Tous droits réservés`;
-
-        await sendZoho(
-          groupAdminData.email,
-          "Ton groupe va rapporter ! 🏆",
-          welcomeHtml,
-          welcomeText
-        );
+        await sendZoho(groupAdminData.email, subject, html, text);
 
         logger.info("[onGroupAdminCreated] Welcome email sent", {
           groupAdminId,
@@ -184,13 +144,35 @@ Ton tableau de bord : https://sos-expat.com/group-admin/dashboard
             groupAdminId: groupAdminData.recruitedBy,
             type: "system_announcement",
             title: "New Admin Recruited!",
+            titleTranslations: {
+              fr: "Nouvel admin recruté !",
+              en: "New Admin Recruited!",
+              es: "¡Nuevo admin reclutado!",
+              de: "Neuer Admin rekrutiert!",
+              pt: "Novo admin recrutado!",
+              ru: "Новый админ рекрутирован!",
+              hi: "नया एडमिन भर्ती हुआ!",
+              zh: "新管理员已招募！",
+              ar: "!تم تجنيد مشرف جديد",
+            },
             message: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn $5 when they reach $50 in earnings.`,
+            messageTranslations: {
+              fr: `${groupAdminData.firstName} ${groupAdminData.lastName} a rejoint via votre lien de recrutement ! Vous gagnerez 5$ quand il atteindra 50$ de gains.`,
+              en: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn $5 when they reach $50 in earnings.`,
+              es: `${groupAdminData.firstName} ${groupAdminData.lastName} se unió a través de tu enlace de reclutamiento. Ganarás $5 cuando alcance $50 en ganancias.`,
+              de: `${groupAdminData.firstName} ${groupAdminData.lastName} ist über Ihren Rekrutierungslink beigetreten! Sie verdienen $5, wenn er $50 an Einnahmen erreicht.`,
+              pt: `${groupAdminData.firstName} ${groupAdminData.lastName} entrou pelo seu link de recrutamento! Você ganhará $5 quando ele atingir $50 em ganhos.`,
+              ru: `${groupAdminData.firstName} ${groupAdminData.lastName} присоединился по вашей ссылке! Вы получите $5, когда он заработает $50.`,
+              hi: `${groupAdminData.firstName} ${groupAdminData.lastName} आपके रिक्रूटमेंट लिंक से जुड़ा! जब वह $50 कमाएगा तो आपको $5 मिलेंगे।`,
+              zh: `${groupAdminData.firstName} ${groupAdminData.lastName} 通过您的招募链接加入了！当他赚到 $50 时，您将获得 $5。`,
+              ar: `${groupAdminData.firstName} ${groupAdminData.lastName} انضم عبر رابط التجنيد الخاص بك! ستحصل على 5$ عندما يصل إلى 50$ من الأرباح.`,
+            },
             data: {
               recruitedId: groupAdminId,
               recruitedName: `${groupAdminData.firstName} ${groupAdminData.lastName}`,
               recruitedGroupName: groupAdminData.groupName,
             },
-            read: false,
+            isRead: false,
             createdAt: now,
           };
           batch.set(recruiterNotificationRef, recruiterNotification);

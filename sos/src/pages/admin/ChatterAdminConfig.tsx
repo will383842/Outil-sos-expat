@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   Settings,
   DollarSign,
@@ -246,7 +246,7 @@ const ChatterAdminConfig: React.FC = () => {
 
     try {
       const adminGetChatterConfigSettings = httpsCallable<void, { config: ChatterConfigSettings }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetChatterConfigSettings'
       );
 
@@ -264,7 +264,7 @@ const ChatterAdminConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [functionsWest2]);
+  }, [functionsAffiliate]);
 
   useEffect(() => {
     fetchConfig();
@@ -298,7 +298,7 @@ const ChatterAdminConfig: React.FC = () => {
       const adminUpdateChatterConfigSettings = httpsCallable<
         { config: Partial<ChatterConfigSettings> },
         { success: boolean; config: ChatterConfigSettings }
-      >(functionsWest2, 'adminUpdateChatterConfigSettings');
+      >(functionsAffiliate, 'adminUpdateChatterConfigSettings');
 
       const result = await adminUpdateChatterConfigSettings({ config });
 
@@ -330,7 +330,7 @@ const ChatterAdminConfig: React.FC = () => {
       const adminToggleFlashBonus = httpsCallable<
         { enabled: boolean; multiplier: number; durationHours: number },
         { success: boolean; endsAt: string }
-      >(functionsWest2, 'adminToggleFlashBonus');
+      >(functionsAffiliate, 'adminToggleFlashBonus');
 
       const result = await adminToggleFlashBonus({
         enabled: true,

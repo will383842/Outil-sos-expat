@@ -138,6 +138,16 @@ export interface Blogger {
   paymentDetails: BloggerPaymentDetails | null;
   pendingWithdrawalId: string | null;
 
+  // Telegram Onboarding
+  telegramOnboardingCompleted?: boolean;
+  telegramOnboardingSkipped?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number;
+  telegramUsername?: string;
+  telegramLinkedAt?: string;
+  telegramBonusCredited?: boolean;
+  telegramBonusAmount?: number;
+
   // Timestamps
   createdAt: string;
   updatedAt: string;

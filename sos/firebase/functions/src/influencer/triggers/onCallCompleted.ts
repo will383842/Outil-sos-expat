@@ -28,7 +28,7 @@ function ensureInitialized() {
 }
 
 /** Minimum call duration in seconds to earn commission (anti-fraud) */
-const MIN_CALL_DURATION_SECONDS = 120;
+const MIN_CALL_DURATION_SECONDS = 60;
 
 interface CallSession {
   id: string;
@@ -187,17 +187,36 @@ export async function handleCallCompleted(
           updatedAt: Timestamp.now(),
         });
 
-        // Create notification for influencer
+        // Create notification for influencer (i18n: 9 languages, English fallback)
         const notificationRef = db.collection("influencer_notifications").doc();
+        const amountStr = (result.amount! / 100).toFixed(2);
         await notificationRef.set({
           id: notificationRef.id,
           influencerId,
           type: "commission_earned",
           title: "Nouvelle commission !",
-          titleTranslations: { en: "New commission!" },
-          message: `Vous avez gagné $${(result.amount! / 100).toFixed(2)} pour le parrainage d'un client.`,
+          titleTranslations: {
+            fr: "Nouvelle commission !",
+            en: "New commission!",
+            es: "¡Nueva comisión!",
+            de: "Neue Provision!",
+            pt: "Nova comissão!",
+            ru: "Новая комиссия!",
+            hi: "नया कमीशन!",
+            zh: "新佣金！",
+            ar: "عمولة جديدة!",
+          },
+          message: `Vous avez gagné $${amountStr} pour le parrainage d'un client.`,
           messageTranslations: {
-            en: `You earned $${(result.amount! / 100).toFixed(2)} for a client referral.`,
+            fr: `Vous avez gagné $${amountStr} pour le parrainage d'un client.`,
+            en: `You earned $${amountStr} for a client referral.`,
+            es: `Has ganado $${amountStr} por el patrocinio de un cliente.`,
+            de: `Sie haben $${amountStr} für eine Kundenempfehlung verdient.`,
+            pt: `Você ganhou $${amountStr} por uma indicação de cliente.`,
+            ru: `Вы заработали $${amountStr} за привлечение клиента.`,
+            hi: `आपने क्लाइंट रेफ़रल के लिए $${amountStr} कमाए।`,
+            zh: `您因推荐客户赚取了 $${amountStr}。`,
+            ar: `لقد ربحت $${amountStr} مقابل إحالة عميل.`,
           },
           actionUrl: "/influencer/gains",
           isRead: false,

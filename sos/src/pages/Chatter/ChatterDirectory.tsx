@@ -10,7 +10,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import { httpsCallable } from "firebase/functions";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import {
   Search,
   Globe,
@@ -147,7 +147,7 @@ const ChatterDirectory: React.FC = () => {
       const fn = httpsCallable<
         { country?: string; language?: string; platform?: string },
         DirectoryResponse
-      >(functionsWest2, "getChatterDirectory");
+      >(functionsAffiliate, "getChatterDirectory");
 
       const params: { country?: string; language?: string; platform?: string } = {};
       if (selectedCountry) params.country = selectedCountry;

@@ -33,7 +33,7 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2, auth } from '@/config/firebase';
+import { functionsAffiliate, auth } from '@/config/firebase';
 import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
 import { clearStoredReferral } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
@@ -487,6 +487,11 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    // AUDIT FIX 2026-02-27: Offline guard
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setError('Pas de connexion internet. Vérifiez votre réseau.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -523,7 +528,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         metaEventId,
       }, formData.password);
 
-      const registerInfluencer = httpsCallable(functionsWest2, 'registerInfluencer');
+      const registerInfluencer = httpsCallable(functionsAffiliate, 'registerInfluencer');
 
       let result;
       try {
@@ -589,7 +594,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
 
         await refreshUser();
         setTimeout(() => {
-          navigate(`/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`, { replace: true });
+          navigate(`/${getTranslatedRouteSlug('influencer-telegram' as RouteKey, langCode)}`, { replace: true });
         }, 2000);
       }
     } catch (err: unknown) {
@@ -1187,17 +1192,22 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
               id="acceptTerms"
               checked={formData.acceptTerms}
               onChange={handleTermsChange}
-              className={`h-5 w-5 rounded border-2${validationErrors.acceptTerms
+              className={`
+                h-5 w-5 rounded border-2
+                ${validationErrors.acceptTerms
                   ? 'border-red-500 bg-red-500/10'
                   : formData.acceptTerms
                     ? 'border-red-400 bg-red-400 text-white'
                     : 'border-white/20 bg-white/10'
-                }focus:ring-2 transition-all duration-200 cursor-pointer`}
+                }
+                focus:ring-2 focus:ring-red-400/30 focus:ring-offset-0
+                transition-all duration-200 cursor-pointer
+              `}
               aria-required="true"
               aria-invalid={!!validationErrors.acceptTerms}
             />
           </div>
-          <span className="text-sm leading-relaxed">
+          <span className="text-sm leading-relaxed text-gray-300">
             <FormattedMessage
               id="influencer.register.acceptTerms"
               defaultMessage="I accept the {termsLink}, the {affiliateTermsLink} and the {privacyLink}"

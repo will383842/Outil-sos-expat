@@ -801,7 +801,7 @@ const getLanguageCodeLocal = (languageName: string): string => {
   try {
     const code = getLanguageCode(languageName);
     if (code && code !== languageName) return code;
-  } catch (e) {}
+  } catch { /* getLanguageCode may throw for unknown languages — fallback below */ }
   
   // Fallback: retourner le nom tel quel (peut être un code déjà)
   return languageName.toLowerCase().slice(0, 2);

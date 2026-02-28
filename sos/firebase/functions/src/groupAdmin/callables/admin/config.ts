@@ -51,7 +51,7 @@ export const adminGetGroupAdminConfig = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ config: GroupAdminConfig }> => {
@@ -103,7 +103,7 @@ export const adminUpdateGroupAdminConfig = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; config: GroupAdminConfig }> => {
@@ -208,7 +208,7 @@ export const adminGetGroupAdminConfigHistory = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ history: GroupAdminConfigHistoryEntry[] }> => {

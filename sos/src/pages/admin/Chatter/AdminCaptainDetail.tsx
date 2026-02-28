@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import toast from 'react-hot-toast';
 import {
   ArrowLeft,
@@ -148,7 +148,7 @@ const AdminCaptainDetail: React.FC = () => {
 
     try {
       const adminGetCaptainDetail = httpsCallable<{ captainId: string }, CaptainDetailData>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetCaptainDetail'
       );
 
@@ -182,7 +182,7 @@ const AdminCaptainDetail: React.FC = () => {
 
     setQualityBonusLoading(true);
     try {
-      const fn = httpsCallable(functionsWest2, 'adminToggleCaptainQualityBonus');
+      const fn = httpsCallable(functionsAffiliate, 'adminToggleCaptainQualityBonus');
       await fn({ captainId, enabled: !captain.qualityBonusEnabled });
 
       setCaptain(prev => prev ? { ...prev, qualityBonusEnabled: !prev.qualityBonusEnabled } : null);
@@ -205,7 +205,7 @@ const AdminCaptainDetail: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const fn = httpsCallable(functionsWest2, 'adminRevokeCaptain');
+      const fn = httpsCallable(functionsAffiliate, 'adminRevokeCaptain');
       await fn({ captainId });
 
       toast.success(intl.formatMessage({ id: 'admin.captainDetail.revoked', defaultMessage: 'Statut capitaine revoque' }));

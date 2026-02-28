@@ -34,7 +34,7 @@ export const getGroupAdminPosts = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GroupAdminPostsResponse> => {
@@ -127,7 +127,7 @@ export const getGroupAdminPostContent = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<PostContentResponse> => {
@@ -231,7 +231,7 @@ export const getGroupAdminProcessedPost = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<ProcessedPostResponse> => {
@@ -299,8 +299,10 @@ export const getGroupAdminProcessedPost = onCall(
       };
 
       for (const [placeholder, value] of Object.entries(replacements)) {
-        if (content.includes(placeholder)) {
-          content = content.split(placeholder).join(value);
+        // Case-insensitive replacement (handles {{affiliate_link}}, {{Affiliate_Link}}, etc.)
+        const regex = new RegExp(placeholder.replace(/[{}]/g, "\\$&"), "gi");
+        if (regex.test(content)) {
+          content = content.replace(regex, value);
           placeholdersReplaced.push(placeholder);
         }
       }
@@ -391,7 +393,7 @@ export const trackGroupAdminPostUsage = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {

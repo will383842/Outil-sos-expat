@@ -118,6 +118,8 @@ async function createUserNotification(
   const now = Timestamp.now();
 
   // Determine the correct notification collection based on user type
+  // P2-3 FIX: Affiliate uses 'affiliate_notifications' (consistent with other roles)
+  // but also write to user's inapp_notifications for frontend compatibility
   const notificationCollection = `${withdrawal.userType}_notifications`;
 
   const notification = {
@@ -148,10 +150,28 @@ async function createUserNotification(
   notification.id = notificationRef.id;
   await notificationRef.set(notification);
 
+  // P2-3 FIX: For affiliates, also write to inapp_notifications (frontend reads this)
+  if (withdrawal.userType === 'affiliate') {
+    try {
+      const inappRef = db.collection('inapp_notifications').doc();
+      await inappRef.set({
+        ...notification,
+        id: inappRef.id,
+        userId: withdrawal.userId,
+        type: 'payment',
+      });
+    } catch (inappErr) {
+      logger.warn("[onWithdrawalStatusChanged] Failed to write inapp notification for affiliate", {
+        error: inappErr instanceof Error ? inappErr.message : "Unknown",
+      });
+    }
+  }
+
   logger.info("[onWithdrawalStatusChanged] User notification created", {
     withdrawalId: withdrawal.id,
     notificationId: notification.id,
     status: withdrawal.status,
+    collection: notificationCollection,
   });
 }
 
@@ -161,6 +181,8 @@ async function createUserNotification(
 async function notifyUserWithdrawalFailed(withdrawal: WithdrawalRequest): Promise<void> {
   const amountFormatted = `$${(withdrawal.amount / 100).toFixed(2)}`;
   const errorReason = withdrawal.errorMessage || "Erreur inconnue";
+  let emailSent = false;
+  let telegramSent = false;
 
   // 1. Email via Zoho SMTP
   try {
@@ -186,10 +208,13 @@ async function notifyUserWithdrawalFailed(withdrawal: WithdrawalRequest): Promis
         <p style="color: #999; font-size: 12px;">— L'équipe SOS Expat</p>
       </div>
     `;
-    await sendZoho(withdrawal.userEmail, subject, html);
+    await sendZoho(withdrawal.userEmail, subject, html, undefined, {
+      skipUnsubscribeFooter: true, // Transactional payment notification
+    });
+    emailSent = true;
     logger.info("[onWithdrawalStatusChanged] Failure email sent", { withdrawalId: withdrawal.id, to: withdrawal.userEmail });
   } catch (emailErr) {
-    logger.error("[onWithdrawalStatusChanged] Failed to send failure email", { error: emailErr });
+    logger.error("[onWithdrawalStatusChanged] Failed to send failure email", { error: emailErr instanceof Error ? emailErr.message : emailErr });
   }
 
   // 2. Telegram via global queue (rate-limited, with retries)
@@ -205,10 +230,44 @@ async function notifyUserWithdrawalFailed(withdrawal: WithdrawalRequest): Promis
         priority: "realtime",
         sourceEventType: "withdrawal_failed_user",
       });
+      telegramSent = true;
       logger.info("[onWithdrawalStatusChanged] Failure Telegram enqueued", { withdrawalId: withdrawal.id, telegramId });
     }
   } catch (tgErr) {
-    logger.error("[onWithdrawalStatusChanged] Failed to enqueue Telegram failure notification", { error: tgErr });
+    logger.error("[onWithdrawalStatusChanged] Failed to enqueue Telegram failure notification", { error: tgErr instanceof Error ? tgErr.message : tgErr });
+  }
+
+  // AUDIT FIX 2026-02-28: If BOTH channels failed, write a fallback in-app notification
+  // so the user sees the failure next time they open the dashboard
+  if (!emailSent && !telegramSent) {
+    logger.error("[onWithdrawalStatusChanged] CRITICAL: Both email and Telegram failed for withdrawal failure notification", {
+      withdrawalId: withdrawal.id,
+      userId: withdrawal.userId,
+      amount: withdrawal.amount,
+    });
+    try {
+      const db = getFirestore();
+      const fallbackRef = db.collection("inapp_notifications").doc();
+      await fallbackRef.set({
+        id: fallbackRef.id,
+        userId: withdrawal.userId,
+        type: "payment_failure",
+        title: `Retrait de ${amountFormatted} échoué`,
+        titleTranslations: { en: `Withdrawal of ${amountFormatted} failed` },
+        message: `Votre retrait a échoué (${errorReason}). Votre solde a été restauré. Réessayez depuis votre tableau de bord.`,
+        messageTranslations: { en: `Your withdrawal failed (${errorReason}). Your balance has been restored. Please retry from your dashboard.` },
+        actionUrl: `/${withdrawal.userType}/payments`,
+        isRead: false,
+        priority: "high",
+        createdAt: Timestamp.now(),
+      });
+      logger.info("[onWithdrawalStatusChanged] Fallback in-app notification created", { withdrawalId: withdrawal.id });
+    } catch (fallbackErr) {
+      logger.error("[onWithdrawalStatusChanged] CRITICAL: All notification channels failed", {
+        withdrawalId: withdrawal.id,
+        error: fallbackErr instanceof Error ? fallbackErr.message : fallbackErr,
+      });
+    }
   }
 }
 
@@ -373,6 +432,7 @@ function getUserCollection(userType: PaymentUserType): string {
     case 'influencer': return 'influencers';
     case 'blogger': return 'bloggers';
     case 'group_admin': return 'group_admins';
+    case 'affiliate': return 'users'; // P1-1 FIX: affiliate balance lives on users/{userId}
     default: return `${userType}s`;
   }
 }
@@ -416,16 +476,22 @@ async function clearPendingWithdrawalId(
     }
 
     const userData = userDoc.data()!;
-    // Only clear if the pendingWithdrawalId matches this withdrawal
-    if (userData.pendingWithdrawalId === withdrawal.id) {
+    // P1-1 FIX: Affiliate uses 'pendingPayoutId', other roles use 'pendingWithdrawalId'
+    const pendingField = withdrawal.userType === 'affiliate'
+      ? 'pendingPayoutId'
+      : 'pendingWithdrawalId';
+
+    // Only clear if the pending field matches this withdrawal
+    if (userData[pendingField] === withdrawal.id) {
       await userRef.update({
-        pendingWithdrawalId: null,
+        [pendingField]: null,
         updatedAt: Timestamp.now(),
       });
 
-      logger.info("[onWithdrawalStatusChanged] Cleared pendingWithdrawalId", {
+      logger.info("[onWithdrawalStatusChanged] Cleared pending withdrawal field", {
         userId: withdrawal.userId,
         withdrawalId: withdrawal.id,
+        field: pendingField,
         newStatus,
         collection: userCollection,
       });
@@ -500,6 +566,66 @@ async function rollbackGroupAdminCommissions(
 }
 
 /**
+ * P1-2 FIX: Rollback Affiliate commissions when a withdrawal permanently fails.
+ * Reverts commissions from "paid" back to "available" so the Affiliate can
+ * include them in a future withdrawal.
+ */
+async function rollbackAffiliateCommissions(
+  withdrawal: WithdrawalRequest
+): Promise<void> {
+  if (withdrawal.userType !== "affiliate") {
+    return;
+  }
+
+  const db = getFirestore();
+
+  try {
+    // Find commissions tied to this withdrawal that were marked "paid"
+    const commissionsSnapshot = await db
+      .collection("affiliate_commissions")
+      .where("payoutId", "==", withdrawal.id)
+      .where("status", "==", "paid")
+      .get();
+
+    if (commissionsSnapshot.empty) {
+      logger.info("[onWithdrawalStatusChanged] No affiliate commissions to rollback", {
+        withdrawalId: withdrawal.id,
+      });
+      return;
+    }
+
+    // Batch update all commissions back to "available"
+    const batch = db.batch();
+    const now = Timestamp.now();
+
+    for (const doc of commissionsSnapshot.docs) {
+      batch.update(doc.ref, {
+        status: "available",
+        payoutId: null,
+        paidAt: null,
+        rolledBackAt: now,
+        rolledBackReason: `Withdrawal ${withdrawal.id} permanently failed`,
+        updatedAt: now,
+      });
+    }
+
+    await batch.commit();
+
+    logger.info("[onWithdrawalStatusChanged] Affiliate commissions rolled back", {
+      withdrawalId: withdrawal.id,
+      affiliateId: withdrawal.userId,
+      commissionsRolledBack: commissionsSnapshot.size,
+    });
+  } catch (error) {
+    logger.error("[onWithdrawalStatusChanged] Failed to rollback affiliate commissions", {
+      withdrawalId: withdrawal.id,
+      affiliateId: withdrawal.userId,
+      error: error instanceof Error ? error.message : "Unknown",
+    });
+  }
+}
+
+/**
  * Handle specific status transitions
  */
 async function handleStatusTransition(
@@ -539,12 +665,14 @@ async function handleStatusTransition(
     });
   }
 
-  // Handle permanent failure — rollback GroupAdmin commissions
+  // Handle permanent failure — rollback commissions (GroupAdmin + Affiliate)
   if (newStatus === "failed" && withdrawal.retryCount >= withdrawal.maxRetries) {
     await rollbackGroupAdminCommissions(withdrawal);
+    await rollbackAffiliateCommissions(withdrawal); // P1-2 FIX
   }
   if (newStatus === "rejected" || newStatus === "cancelled") {
     await rollbackGroupAdminCommissions(withdrawal);
+    await rollbackAffiliateCommissions(withdrawal); // P1-2 FIX
   }
 
   // Clear pendingWithdrawalId on terminal states

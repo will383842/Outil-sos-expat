@@ -9,7 +9,9 @@
  * 5. NEAR_TOP_3 - When user is close to Top 3 (scheduled)
  * 6. FLASH_BONUS_START - When admin activates flash bonus
  *
- * FCM tokens are stored in: chatters/{uid}/fcmTokens/{tokenId}
+ * P1-1 FIX: FCM tokens unified in fcm_tokens/{uid}/tokens/{tokenId}
+ * (was chatters/{uid}/fcmTokens/{tokenId} — now reads from universal collection
+ *  written by frontend useFCM hook)
  */
 
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
@@ -67,7 +69,7 @@ export type ChatterNotificationType =
   | "FLASH_BONUS_START";
 
 /**
- * FCM Token document stored in chatters/{uid}/fcmTokens/{tokenId}
+ * FCM Token document stored in fcm_tokens/{uid}/tokens/{tokenId}
  */
 export interface ChatterFcmToken {
   /** FCM token string */
@@ -115,12 +117,13 @@ export async function sendChatterNotification(
   const messaging = getFcmMessaging();
 
   try {
-    // Get all valid FCM tokens for this chatter
+    // P1-1 FIX: Read from unified fcm_tokens collection (written by frontend useFCM hook)
     const tokensSnapshot = await db
-      .collection("chatters")
+      .collection("fcm_tokens")
       .doc(chatterId)
-      .collection("fcmTokens")
+      .collection("tokens")
       .where("isValid", "==", true)
+      .limit(10)
       .get();
 
     if (tokensSnapshot.empty) {
@@ -144,24 +147,29 @@ export async function sendChatterNotification(
         timestamp: Date.now().toString(),
       },
       webpush: {
+        headers: { TTL: "3600" },
         fcmOptions: {
           link: payload.deepLink || "/chatter/dashboard",
         },
         notification: {
           icon: "/icons/icon-192x192.png",
-          badge: "/icons/badge-72x72.png",
+          badge: "/icons/icon-72x72.png",
           vibrate: [200, 100, 200],
         },
       },
       android: {
         priority: "high",
+        ttl: 3600 * 1000, // 1 hour
         notification: {
           icon: "ic_notification",
           color: "#4F46E5",
-          clickAction: "FLUTTER_NOTIFICATION_CLICK",
+          sound: "default",
         },
       },
       apns: {
+        headers: {
+          "apns-expiration": String(Math.floor(Date.now() / 1000) + 3600),
+        },
         payload: {
           aps: {
             badge: 1,
@@ -190,14 +198,14 @@ export async function sendChatterNotification(
       }
     });
 
-    // Mark invalid tokens
+    // P1-1 FIX: Mark invalid tokens in unified fcm_tokens collection
     if (invalidTokenDocs.length > 0) {
       const batch = db.batch();
       for (const docId of invalidTokenDocs) {
         const tokenRef = db
-          .collection("chatters")
+          .collection("fcm_tokens")
           .doc(chatterId)
-          .collection("fcmTokens")
+          .collection("tokens")
           .doc(docId);
         batch.update(tokenRef, { isValid: false });
       }
@@ -412,7 +420,7 @@ export const chatterNotifyInactiveMembers = onSchedule(
     schedule: "0 10 * * *", // Every day at 10:00 AM
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async () => {
     ensureInitialized();
@@ -614,7 +622,7 @@ export const chatterNotifyNearTop3 = onSchedule(
     schedule: "0 18 * * *", // Every day at 6:00 PM
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async () => {
     ensureInitialized();
@@ -794,7 +802,7 @@ export const chatterNotifyFlashBonusStart = onCall(
   {
     ...adminConfig,
     timeoutSeconds: 300,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{ success: boolean; notified: number; error?: string }> => {
     ensureInitialized();
@@ -895,11 +903,16 @@ export const chatterNotifyFlashBonusStart = onCall(
 );
 
 // ============================================================================
-// FCM TOKEN MANAGEMENT - Callables for client-side token registration
+// FCM TOKEN MANAGEMENT
+// P1-1 FIX: Token registration is now handled by frontend useFCM() hook
+// which writes to fcm_tokens/{uid}/tokens/{tokenId}.
+// These callables are kept as thin proxies for backward compatibility
+// but now write to the unified collection instead of chatters/fcmTokens.
 // ============================================================================
 
 /**
- * Register an FCM token for push notifications
+ * Register an FCM token — proxies to unified fcm_tokens collection
+ * @deprecated Use frontend useFCM() hook instead
  */
 export const chatterRegisterFcmToken = onCall(
   {
@@ -909,7 +922,7 @@ export const chatterRegisterFcmToken = onCall(
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{ success: boolean; tokenId?: string; error?: string }> => {
     ensureInitialized();
@@ -919,7 +932,7 @@ export const chatterRegisterFcmToken = onCall(
       throw new HttpsError("unauthenticated", "Authentication required");
     }
 
-    const { token, platform, deviceId, userAgent } = request.data as {
+    const { token, platform, userAgent } = request.data as {
       token: string;
       platform: "web" | "android" | "ios";
       deviceId?: string;
@@ -934,47 +947,30 @@ export const chatterRegisterFcmToken = onCall(
       const uid = request.auth.uid;
       const now = Timestamp.now();
 
-      // Check if token already exists (by token value, not deviceId)
-      const existingQuery = await db
-        .collection("chatters")
-        .doc(uid)
-        .collection("fcmTokens")
-        .where("token", "==", token)
-        .limit(1)
-        .get();
+      // P1-1 FIX: Write to unified fcm_tokens collection
+      const tokensCol = db.collection("fcm_tokens").doc(uid).collection("tokens");
+      const existingQuery = await tokensCol.where("token", "==", token).limit(1).get();
 
       if (!existingQuery.empty) {
-        // Update existing token
-        const existingDoc = existingQuery.docs[0];
-        await existingDoc.ref.update({
+        await existingQuery.docs[0].ref.update({
           isValid: true,
           lastUsedAt: now,
-          userAgent: userAgent || existingDoc.data().userAgent,
+          userAgent: userAgent || existingQuery.docs[0].data().userAgent,
         });
-
-        return { success: true, tokenId: existingDoc.id };
+        return { success: true, tokenId: existingQuery.docs[0].id };
       }
 
-      // Create new token
-      const tokenRef = db
-        .collection("chatters")
-        .doc(uid)
-        .collection("fcmTokens")
-        .doc();
-
-      const tokenData: ChatterFcmToken = {
+      const tokenRef = tokensCol.doc();
+      await tokenRef.set({
         token,
         platform,
-        deviceId,
         userAgent,
         createdAt: now,
         lastUsedAt: now,
         isValid: true,
-      };
+      });
 
-      await tokenRef.set(tokenData);
-
-      logger.info("[chatterRegisterFcmToken] Token registered", {
+      logger.info("[chatterRegisterFcmToken] Token registered in unified collection", {
         uid,
         platform,
         tokenId: tokenRef.id,
@@ -989,7 +985,8 @@ export const chatterRegisterFcmToken = onCall(
 );
 
 /**
- * Unregister an FCM token (logout or disable notifications)
+ * Unregister an FCM token — marks as invalid in unified fcm_tokens collection
+ * @deprecated Use frontend useFCM() hook instead
  */
 export const chatterUnregisterFcmToken = onCall(
   {
@@ -999,7 +996,7 @@ export const chatterUnregisterFcmToken = onCall(
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
@@ -1018,11 +1015,11 @@ export const chatterUnregisterFcmToken = onCall(
     try {
       const uid = request.auth.uid;
 
-      // Find and mark token as invalid
+      // P1-1 FIX: Mark token as invalid in unified collection
       const tokenQuery = await db
-        .collection("chatters")
+        .collection("fcm_tokens")
         .doc(uid)
-        .collection("fcmTokens")
+        .collection("tokens")
         .where("token", "==", token)
         .limit(1)
         .get();

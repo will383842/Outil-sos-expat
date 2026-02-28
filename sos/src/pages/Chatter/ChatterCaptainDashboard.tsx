@@ -15,7 +15,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import {
@@ -297,7 +297,7 @@ function ChatterCaptainDashboard() {
     setError(null);
 
     try {
-      const callable = httpsCallable<void, CaptainDashboardData>(functionsWest2, 'getCaptainDashboard');
+      const callable = httpsCallable<void, CaptainDashboardData>(functionsAffiliate, 'getCaptainDashboard');
       const result = await callable();
       setData(result.data);
     } catch (err: unknown) {

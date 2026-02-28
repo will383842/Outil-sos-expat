@@ -782,7 +782,7 @@ export class StripeManager {
           // Créer une alerte admin
           await this.db.collection('admin_alerts').add({
             type: 'pending_transfer_creation_failed',
-            severity: 'high',
+            priority: 'high', read: false,
             paymentIntentId: paymentIntent.id,
             providerId: data.providerId,
             error: pendingError instanceof Error ? pendingError.message : 'Unknown error',
@@ -1158,7 +1158,7 @@ export class StripeManager {
               // Créer une alerte admin pour suivi
               await this.db.collection('admin_alerts').add({
                 type: 'kyc_not_verified_at_capture',
-                severity: 'high',
+                priority: 'high', read: false,
                 providerId: providerId,
                 paymentIntentId: paymentIntentId,
                 kycStatus: kycStatus || 'undefined',

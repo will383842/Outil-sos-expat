@@ -45,6 +45,7 @@ import {
   Scale,
   ArrowDownUp,
   // New icons for added pages
+  Mail,
   ClipboardCheck,
   LogIn,
   PieChart,
@@ -59,6 +60,7 @@ import {
   Wallet,
   // Chatter icons
   MessageCircle,
+  Crown,
   // Training icons
   GraduationCap,
   // Blogger icons
@@ -290,6 +292,14 @@ export const adminMenuTree: AdminMenuItem[] = [
             path: "/admin/finance/subscriptions",
             icon: Repeat,
             descriptionKey: "admin.menu.subscriptions.description",
+          },
+          {
+            id: "subscription-plans",
+            labelKey: "admin.menu.subscriptionPlans",
+            path: "/admin/finance/plans",
+            icon: CreditCard,
+            badge: "NEW",
+            descriptionKey: "admin.menu.subscriptionPlans.description",
           },
         ],
       },
@@ -603,6 +613,13 @@ export const adminMenuTree: AdminMenuItem[] = [
         path: "/admin/chatters",
         icon: Users,
         descriptionKey: "admin.menu.chattersList.description",
+      },
+      {
+        id: "chatters-captains",
+        labelKey: "admin.menu.chattersCaptains",
+        path: "/admin/chatters/captains",
+        icon: Crown,
+        descriptionKey: "admin.menu.chattersCaptains.description",
       },
       {
         id: "chatters-referrals",
@@ -1030,6 +1047,14 @@ export const adminMenuTree: AdminMenuItem[] = [
             icon: Activity,
             badge: "NEW",
             descriptionKey: "admin.menu.functionalMonitoring.description",
+          },
+          {
+            id: "email-health",
+            labelKey: "admin.menu.emailHealth",
+            path: "/admin/email-health",
+            icon: Mail,
+            badge: "NEW",
+            descriptionKey: "admin.menu.emailHealth.description",
           },
           {
             id: "connection-logs",

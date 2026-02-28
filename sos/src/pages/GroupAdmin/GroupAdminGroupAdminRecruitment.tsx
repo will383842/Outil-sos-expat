@@ -13,7 +13,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import toast from 'react-hot-toast';
 import {
   Users,
@@ -97,7 +97,7 @@ const GroupAdminGroupAdminRecruitment: React.FC = () => {
     try {
       // Fetch recruits
       const getGroupAdminRecruits = httpsCallable<void, GetGroupAdminRecruitsResponse>(
-        functionsWest2,
+        functionsAffiliate,
         'getGroupAdminRecruits'
       );
       const response = await getGroupAdminRecruits();
@@ -109,7 +109,7 @@ const GroupAdminGroupAdminRecruitment: React.FC = () => {
       setBonusAmount(data.bonusAmount);
 
       // Fetch recruitment link
-      const getDashboard = httpsCallable(functionsWest2, 'getGroupAdminDashboard');
+      const getDashboard = httpsCallable(functionsAffiliate, 'getGroupAdminDashboard');
       const dashboardResult = await getDashboard({});
       const dashboardData = dashboardResult.data as { profile: { affiliateCodeRecruitment: string } };
       const code = dashboardData.profile.affiliateCodeRecruitment;

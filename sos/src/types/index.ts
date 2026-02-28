@@ -17,6 +17,11 @@ import type { DocumentData } from 'firebase/firestore';
 export type { User, UserRole, Notification } from '../contexts/types';
 
 // -----------------------------------------------------------------------------
+// Domaine Notification (interface partagée entre rôles affiliés)
+// -----------------------------------------------------------------------------
+export type { BaseNotification } from './notification';
+
+// -----------------------------------------------------------------------------
 // Domaine Provider (fichier présent dans ce dossier)
 // -----------------------------------------------------------------------------
 export * from './provider';

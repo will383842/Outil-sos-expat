@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   Settings,
   DollarSign,
@@ -71,7 +71,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const getConfig = httpsCallable(functionsWest2, 'adminGetGroupAdminConfig');
+      const getConfig = httpsCallable(functionsAffiliate, 'adminGetGroupAdminConfig');
       const result = await getConfig({});
       const data = result.data as { config: GroupAdminConfig };
       setConfig(data.config ?? result.data as GroupAdminConfig);
@@ -94,7 +94,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
     setTogglingVisibility(true);
     setError(null);
     try {
-      const updateConfig = httpsCallable(functionsWest2, 'adminUpdateGroupAdminConfig');
+      const updateConfig = httpsCallable(functionsAffiliate, 'adminUpdateGroupAdminConfig');
       await updateConfig({ isGroupAdminListingPageVisible: newValue });
       setConfig({ ...config, isGroupAdminListingPageVisible: newValue });
       setVisibilitySuccess(true);
@@ -115,7 +115,7 @@ const AdminGroupAdminsConfig: React.FC = () => {
     setSuccess(false);
 
     try {
-      const updateConfig = httpsCallable(functionsWest2, 'adminUpdateGroupAdminConfig');
+      const updateConfig = httpsCallable(functionsAffiliate, 'adminUpdateGroupAdminConfig');
       await updateConfig(config);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

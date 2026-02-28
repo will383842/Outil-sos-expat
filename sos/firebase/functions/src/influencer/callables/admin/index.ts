@@ -76,7 +76,7 @@ export const adminGetInfluencersList = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetInfluencersListResponse> => {
@@ -201,7 +201,7 @@ export const adminGetInfluencerDetail = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetInfluencerDetailResponse> => {
@@ -299,7 +299,7 @@ export const adminProcessInfluencerWithdrawal = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
@@ -377,7 +377,7 @@ export const adminUpdateInfluencerStatus = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
@@ -430,6 +430,20 @@ export const adminUpdateInfluencerStatus = onCall(
         createdAt: now,
       });
 
+      // Audit trail
+      await db.collection("admin_audit_logs").add({
+        action: "influencer_status_updated",
+        targetId: influencerId,
+        targetType: "influencer",
+        performedBy: adminId,
+        timestamp: now,
+        details: {
+          previousStatus: influencerDoc.data()?.status || "unknown",
+          newStatus: status,
+          reason,
+        },
+      });
+
       logger.info("[adminUpdateInfluencerStatus] Status updated", {
         influencerId,
         status,
@@ -460,7 +474,7 @@ export const adminGetPendingInfluencerWithdrawals = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ withdrawals: InfluencerWithdrawal[] }> => {
@@ -487,7 +501,7 @@ export const adminGetInfluencerConfig = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ config: InfluencerConfig }> => {
@@ -510,7 +524,7 @@ export const adminUpdateInfluencerConfig = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; config: InfluencerConfig }> => {
@@ -552,7 +566,7 @@ export const adminUpdateCommissionRules = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; config: InfluencerConfig }> => {
@@ -614,7 +628,7 @@ export const adminGetRateHistory = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ history: InfluencerRateHistoryEntry[] }> => {
@@ -650,7 +664,7 @@ export const adminUpdateAntiFraudConfig = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; config: InfluencerConfig }> => {
@@ -692,7 +706,7 @@ export const adminGetInfluencerLeaderboard = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{
@@ -759,7 +773,7 @@ export const adminExportInfluencers = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ csv: string; count: number }> => {
@@ -893,7 +907,7 @@ export const adminBulkInfluencerAction = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; processed: number; failed: number; message: string }> => {
@@ -1042,7 +1056,7 @@ export const adminGetInfluencerWithdrawals = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{

@@ -6,6 +6,7 @@ import { Helmet } from 'react-helmet-async';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { useAuth } from './contexts/AuthContext';
 import { registerSW, measurePerformance } from './utils/performance';
+import { useWebVitals } from './hooks/useWebVitals';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -14,12 +15,16 @@ import { trackEvent, hasAnalyticsConsent } from './utils/ga4';
 import MetaPageViewTracker from './components/common/MetaPageViewTracker';
 import { setMetaPixelUserData, applyMetaPixelUserData, clearMetaPixelUserData } from './utils/metaPixel';
 import { captureTrafficSource } from './utils/trafficSource';
+import { devLog } from './utils/devLog';
 import './App.css';
 import PWAProvider from './components/pwa/PWAProvider';
 import { WizardProvider } from './contexts/WizardContext';
 import { FeedbackButton } from './components/feedback';
+import { OfflineBanner } from './components/common/OfflineBanner';
 import ProviderOnlineManager from './components/providers/ProviderOnlineManager';
 import { PayPalProvider } from './contexts/PayPalContext';
+// FCM Push Notifications — P0-1 FIX: was never imported/called
+import { useFCM } from './hooks/useFCM';
 // AFFILIATE: Capture referral codes from URL
 import { useReferralCapture } from './hooks/useAffiliate';
 import { migrateFromLegacyStorage, storeReferralCode } from './utils/referralStorage';
@@ -87,7 +92,6 @@ const CallCheckout = lazy(() => import('./pages/CallCheckoutWrapper'));
 const BookingRequest = lazy(() => import('./pages/BookingRequest'));
 const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
 const ProviderProfile = lazy(() => import('./pages/ProviderProfile'));
-const Providers = lazy(() => import('./pages/Providers'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 
 // Pages d'info
@@ -566,7 +570,7 @@ const PageViewTracker: React.FC = () => {
         page_path: location.pathname,
         page_title: document.title,
       });
-      console.log('📊 GA4: Page view tracked for:', location.pathname);
+      devLog('📊 GA4: Page view tracked for:', location.pathname);
     }
   }, [location]);
 
@@ -656,9 +660,9 @@ const ReferralCodeCapture: React.FC = () => {
 
   useEffect(() => {
     if (referralCode) {
-      console.log('[Affiliate] Referral code captured:', referralCode);
+      devLog('[Affiliate] Referral code captured:', referralCode);
       if (referralTracking) {
-        console.log('[Affiliate] Tracking data:', {
+        devLog('[Affiliate] Tracking data:', {
           utmSource: referralTracking.utmSource,
           utmMedium: referralTracking.utmMedium,
           utmCampaign: referralTracking.utmCampaign,
@@ -711,6 +715,9 @@ const App: React.FC = () => {
   const { isMobile } = useDeviceDetection();
   const [locale, setLocale] = useState<Locale>("fr"); // Default to French since your site is French
 
+  // P0-1 FIX: Activate FCM push notifications for all authenticated users
+  useFCM();
+
   // Signal pour react-snap que le rendu est terminé
   useEffect(() => {
     // Marquer la page comme prête pour react-snap
@@ -719,6 +726,9 @@ const App: React.FC = () => {
     // Signal pour le loading screen
     window.dispatchEvent(new Event('app-mounted'));
   }, []);
+
+  // Core Web Vitals → GA4 (LCP, CLS, INP, FCP, TTFB)
+  useWebVitals();
 
   // SW + perf
   useEffect(() => {
@@ -847,7 +857,7 @@ const App: React.FC = () => {
     return routes.map((routePath, i) => {
       // Debug: log route paths in development
       if (process.env.NODE_ENV === 'development' && path === "/") {
-        console.log(`[Route] Registering locale route: ${routePath}`);
+        devLog(`[Route] Registering locale route: ${routePath}`);
       }
 
       return (
@@ -895,6 +905,7 @@ const App: React.FC = () => {
 
   return (
     <IntlProvider locale={locale} messages={messages[locale] as unknown as Record<string, string>} defaultLocale="fr" >
+      <OfflineBanner />
       <PayPalProvider>
       <WizardProvider>
       <PWAProvider

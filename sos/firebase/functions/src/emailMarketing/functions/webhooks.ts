@@ -1,4 +1,5 @@
 import { onRequest } from "firebase-functions/v2/https";
+import type { Request, Response } from "express";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 import { MailwizzAPI } from "../utils/mailwizz";
@@ -12,7 +13,7 @@ import { getMailWizzWebhookSecret } from "../config";
  * SECURITY: Uses timing-safe comparison to prevent timing attacks
  * Returns true if secret matches, false otherwise
  */
-function verifyWebhookSecret(req: any): boolean {
+function verifyWebhookSecret(req: Request): boolean {
   try {
     // Check header first, then fall back to query parameter
     const receivedSecret = (req.headers["x-webhook-secret"] as string) || (req.query?.secret as string);
@@ -41,8 +42,8 @@ function verifyWebhookSecret(req: any): boolean {
     }
 
     return true;
-  } catch (error: any) {
-    console.error("❌ Error verifying webhook secret:", error.message);
+  } catch (error: unknown) {
+    console.error("❌ Error verifying webhook secret:", error instanceof Error ? error.message : error);
     return false;
   }
 }
@@ -57,8 +58,7 @@ export const handleEmailOpen = onRequest(
     region: "europe-west1",
     cpu: 0.083,
   },
-  // @ts-ignore - Type compatibility issue between firebase-functions and express types
-  async (req: any, res: any) => {
+  async (req: Request, res: Response) => {
     try {
       // Verify webhook secret
       if (!verifyWebhookSecret(req)) {
@@ -112,7 +112,7 @@ export const handleEmailOpen = onRequest(
 
       console.log(`✅ Email opened: ${email} (campaign: ${campaign_uid || "unknown"})`);
       res.status(200).send("OK");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Error handling email open:", error);
       res.status(500).send("Error");
     }
@@ -129,8 +129,7 @@ export const handleEmailClick = onRequest(
     region: "europe-west1",
     cpu: 0.083,
   },
-  // @ts-ignore - Type compatibility issue between firebase-functions and express types
-  async (req: any, res: any) => {
+  async (req: Request, res: Response) => {
     try {
       // Verify webhook secret
       if (!verifyWebhookSecret(req)) {
@@ -212,7 +211,7 @@ export const handleEmailClick = onRequest(
 
       console.log(`✅ Email clicked: ${email} → ${url || "unknown URL"} (campaign: ${campaign_uid || "unknown"})`);
       res.status(200).send("OK");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Error handling email click:", error);
       res.status(500).send("Error");
     }
@@ -229,8 +228,7 @@ export const handleEmailBounce = onRequest(
     region: "europe-west1",
     cpu: 0.083,
   },
-  // @ts-ignore - Type compatibility issue between firebase-functions and express types
-  async (req: any, res: any) => {
+  async (req: Request, res: Response) => {
     try {
       // Verify webhook secret
       if (!verifyWebhookSecret(req)) {
@@ -328,7 +326,7 @@ export const handleEmailBounce = onRequest(
 
       console.log(`✅ Bounce handled: ${email} (${bounce_type || "unknown"})`);
       res.status(200).send("OK");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Error handling bounce:", error);
       res.status(500).send("Error");
     }
@@ -345,8 +343,7 @@ export const handleEmailComplaint = onRequest(
     region: "europe-west1",
     cpu: 0.083,
   },
-  // @ts-ignore - Type compatibility issue between firebase-functions and express types
-  async (req: any, res: any) => {
+  async (req: Request, res: Response) => {
     try {
       // Verify webhook secret
       if (!verifyWebhookSecret(req)) {
@@ -428,7 +425,7 @@ export const handleEmailComplaint = onRequest(
 
       console.log(`✅ Complaint handled: ${email}`);
       res.status(200).send("OK");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Error handling complaint:", error);
       res.status(500).send("Error");
     }
@@ -445,8 +442,7 @@ export const handleUnsubscribe = onRequest(
     region: "europe-west1",
     cpu: 0.083,
   },
-  // @ts-ignore - Type compatibility issue between firebase-functions and express types
-  async (req: any, res: any) => {
+  async (req: Request, res: Response) => {
     try {
       // Verify webhook secret
       if (!verifyWebhookSecret(req)) {
@@ -525,7 +521,7 @@ export const handleUnsubscribe = onRequest(
 
       console.log(`✅ Unsubscribe handled: ${email}`);
       res.status(200).send("OK");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Error handling unsubscribe:", error);
       res.status(500).send("Error");
     }

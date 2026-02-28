@@ -42,7 +42,9 @@ export type SupportedChatterLanguage =
   | "de"    // German
   | "it"    // Italian
   | "nl"    // Dutch
-  | "zh";   // Chinese
+  | "zh"    // Chinese
+  | "ru"    // Russian
+  | "hi";   // Hindi
 
 /**
  * Commission type for chatters
@@ -194,6 +196,7 @@ export interface Chatter {
   firstName: string;
   lastName: string;
   phone?: string;
+  whatsapp?: string;
 
   /** Profile photo URL */
   photoUrl?: string;
@@ -489,6 +492,9 @@ export interface Chatter {
     acceptanceMethod?: string; // "checkbox_click"
     ipHash?: string; // Hashed IP for RGPD compliance
   };
+
+  /** Hashed IP at registration for multi-account fraud detection (P2-05) */
+  registrationIpHash?: string;
 }
 
 /**
@@ -805,11 +811,63 @@ export interface ChatterRecruitedChatter {
 }
 
 // ============================================================================
-// RECRUITMENT LINK
+// RECRUITED PROVIDERS TRACKING
 // ============================================================================
 
 /**
- * Recruitment link for provider onboarding
+ * Provider recruitment tracking (harmonized with Blogger/Influencer/GroupAdmin)
+ * Collection: chatter_recruited_providers/{id}
+ *
+ * Tracks providers recruited by chatters for 6-month commission window.
+ * Chatter earns $5 on EVERY call the provider receives (continuous, not one-time).
+ */
+export interface ChatterRecruitedProvider {
+  /** Document ID */
+  id: string;
+
+  /** Chatter who recruited the provider */
+  chatterId: string;
+  chatterCode: string;
+  chatterEmail: string;
+
+  /** Recruited provider info */
+  providerId: string;
+  providerEmail: string;
+  providerType: "lawyer" | "expat";
+  providerName: string;
+
+  /** Recruitment date */
+  recruitedAt: Timestamp;
+
+  /** Commission window end date (6 months from recruitment) */
+  commissionWindowEndsAt: Timestamp;
+
+  /** Whether commission window is still active */
+  isActive: boolean;
+
+  /** Number of calls that generated commissions */
+  callsWithCommission: number;
+
+  /** Total commissions earned from this referral (cents) */
+  totalCommissions: number;
+
+  /** Last commission date */
+  lastCommissionAt: Timestamp | null;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+// ============================================================================
+// RECRUITMENT LINK (LEGACY)
+// ============================================================================
+
+/**
+ * @deprecated Use ChatterRecruitedProvider instead.
+ * Kept for backward compatibility with existing data.
  * Collection: chatter_recruitment_links/{linkId}
  */
 export interface ChatterRecruitmentLink {
@@ -1515,6 +1573,7 @@ export interface ChatterNotification {
     rank?: number;
     month?: string;
     amount?: number;
+    referralId?: string;
   };
 
   /** Created timestamp */
@@ -2418,10 +2477,16 @@ export interface GetChatterDashboardResponse {
   config: Pick<ChatterConfig,
     | "commissionClientAmount"
     | "commissionRecruitmentAmount"
+    | "commissionClientCallAmount"
+    | "commissionN1CallAmount"
+    | "commissionN2CallAmount"
     | "minimumWithdrawalAmount"
     | "levelThresholds"
     | "levelBonuses"
-  >;
+  > & {
+    /** Withdrawal fee in cents (from admin_config/fees) */
+    withdrawalFeeCents: number;
+  };
 
   /** Referral system stats (2-level) */
   referralStats: {
@@ -2492,6 +2557,12 @@ export interface GetChatterDashboardResponse {
     recruitsVsLastMonth: number;
     /** Rank change (+2 means improved 2 positions, -1 means dropped 1) */
     rankChange: number;
+    /** Last month raw values for display */
+    lastMonth: {
+      earnings: number;
+      clients: number;
+      recruits: number;
+    };
   };
 
   /** Simple forecast based on current pace */
@@ -2502,6 +2573,8 @@ export interface GetChatterDashboardResponse {
     estimatedNextLevel: string | null;
     /** Next tier bonus available (cents) */
     potentialBonus: number;
+    /** Current day of month (1-31) */
+    currentDayOfMonth: number;
   };
 }
 

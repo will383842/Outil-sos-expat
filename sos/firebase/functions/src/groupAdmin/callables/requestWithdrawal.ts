@@ -22,6 +22,7 @@ import {
 } from "../types";
 import { areWithdrawalsEnabled, getMinimumWithdrawalAmount } from "../groupAdminConfig";
 import { getPaymentService } from "../../payment/services/paymentService";
+import { getWithdrawalFee } from "../../services/feeCalculationService";
 import {
   PaymentMethodDetails,
   BankTransferDetails,
@@ -101,7 +102,7 @@ export const requestGroupAdminWithdrawal = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
     secrets: [...TELEGRAM_SECRETS],
   },
@@ -178,6 +179,11 @@ export const requestGroupAdminWithdrawal = onCall(
         paymentConfig.paymentMode === 'automatic' ||
         (paymentConfig.paymentMode === 'hybrid' && input.amount <= paymentConfig.autoPaymentThreshold);
 
+      // 6b. P2-1 FIX: Calculate withdrawal fee (same as chatter/influencer/blogger)
+      const feeConfig = await getWithdrawalFee();
+      const withdrawalFeeCents = feeConfig.fixedFee * 100; // Convert dollars to cents
+      const totalDebited = input.amount + withdrawalFeeCents;
+
       // 7. Atomic transaction: validate state + select commissions + create withdrawal in payment_withdrawals
       const withdrawalId = db.collection(COLLECTIONS.WITHDRAWALS).doc().id;
       const now = new Date().toISOString();
@@ -201,10 +207,11 @@ export const requestGroupAdminWithdrawal = onCall(
           throw new HttpsError("failed-precondition", "You already have a pending withdrawal request");
         }
 
-        if (input.amount > groupAdmin.availableBalance) {
+        // P2-1 FIX: Check balance covers amount + withdrawal fee
+        if (totalDebited > groupAdmin.availableBalance) {
           throw new HttpsError(
             "invalid-argument",
-            `Insufficient balance. Available: $${(groupAdmin.availableBalance / 100).toFixed(2)}`
+            `Insufficient balance. Need $${(totalDebited / 100).toFixed(2)} (incl. $${feeConfig.fixedFee} fee). Available: $${(groupAdmin.availableBalance / 100).toFixed(2)}`
           );
         }
 
@@ -264,6 +271,8 @@ export const requestGroupAdminWithdrawal = onCall(
           userEmail: groupAdmin.email || "",
           userName: groupAdmin.firstName || "",
           amount: input.amount,
+          withdrawalFee: withdrawalFeeCents, // P2-1 FIX
+          totalDebited,                       // P2-1 FIX
           sourceCurrency: 'USD',
           targetCurrency: paymentMethod.details.currency || 'USD',
           paymentMethodId: paymentMethod.id,
@@ -290,9 +299,9 @@ export const requestGroupAdminWithdrawal = onCall(
           });
         }
 
-        // Deduct balance + lock account for this withdrawal
+        // Deduct balance (amount + fee) + lock account for this withdrawal
         transaction.update(groupAdminDoc.ref, {
-          availableBalance: FieldValue.increment(-input.amount),
+          availableBalance: FieldValue.increment(-totalDebited), // P2-1 FIX: include fee
           pendingWithdrawalId: withdrawalId,
           updatedAt: Timestamp.now(),
         });
@@ -329,10 +338,10 @@ export const requestGroupAdminWithdrawal = onCall(
           withdrawalId, userId,
         });
         try {
-          // Reverse the transaction: refund balance + clear pendingWithdrawalId
+          // Reverse the transaction: refund balance (amount + fee) + clear pendingWithdrawalId
           await db.runTransaction(async (tx) => {
             tx.update(db.collection("group_admins").doc(userId), {
-              availableBalance: FieldValue.increment(input.amount),
+              availableBalance: FieldValue.increment(totalDebited), // P2-1 FIX: refund total
               pendingWithdrawalId: null,
               updatedAt: Timestamp.now(),
             });

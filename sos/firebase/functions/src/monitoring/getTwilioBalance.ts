@@ -11,6 +11,7 @@
 import * as functions from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 import {
   TWILIO_ACCOUNT_SID_SECRET,
   TWILIO_AUTH_TOKEN_SECRET,
@@ -114,7 +115,7 @@ export const getTwilioBalance = functions.onCall(
     memory: '256MiB',
     timeoutSeconds: 30,
     secrets: [TWILIO_ACCOUNT_SID_SECRET, TWILIO_AUTH_TOKEN_SECRET],
-    cors: [/sos-expat\.com$/, /localhost/],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<TwilioBalanceResponse> => {
     // Verification d'authentification

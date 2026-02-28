@@ -6,22 +6,14 @@ import {
   getDocs,
   setDoc,
   query,
-  where,
   orderBy,
   limit,
   startAfter,
-  addDoc,
-  serverTimestamp,
   QueryDocumentSnapshot,
   DocumentData
 } from "firebase/firestore";
-// Remplacez par le bon chemin selon votre structure :
-// import { db } from "./firebase";
-// import { db } from "../firebase";
-// import { db } from "../../firebase";
-// import { db } from "@/lib/firebase";
-import { db } from "@/config/firebase";
-import { getAuth } from "firebase/auth";
+import { db, functions } from "@/config/firebase";
+import { httpsCallable } from "firebase/functions";
 
 // Types
 type Locale = "fr-FR" | "en";
@@ -75,19 +67,6 @@ type DeliveryFilters = {
 type PaginationResult<T> = {
   items: T[];
   next: QueryDocumentSnapshot<DocumentData> | null;
-};
-
-type MessageEvent = {
-  eventId: string;
-  locale: Locale;
-  to: Recipient;
-  context: Record<string, unknown>;
-  vars: Record<string, unknown>;
-  createdAt: ReturnType<typeof serverTimestamp> | string;
-  status: DeliveryStatus;
-  channelHint?: MessageChannel | null;
-  uid?: string | null;
-  createdBy?: string | null;
 };
 
 /** TEMPLATES **/
@@ -198,21 +177,16 @@ export async function listDeliveries(
   }
 }
 
-/** RESEND: recrée un message_events à partir d'un delivery */
+/** RESEND: recrée un message_events via enqueueMessageEvent callable */
 export async function resendDelivery(delivery: MessageDelivery): Promise<boolean> {
   try {
-    const evt: Omit<MessageEvent, 'createdAt'> & { createdAt: string } = {
+    const enqueueFn = httpsCallable(functions, 'enqueueMessageEvent');
+    await enqueueFn({
       eventId: delivery.eventId,
-      uid: delivery.uid || null,
       locale: delivery.locale || "en",
-      to: delivery.to || { uid: null, email: null, phone: null, whatsapp: null },
+      to: delivery.to || {},
       context: delivery.context || {},
-      vars: delivery.context || {},
-      createdAt: new Date().toISOString(),
-      status: "queued",
-      channelHint: null
-    };
-    await addDoc(collection(db, "message_events"), evt);
+    });
     return true;
   } catch (error) {
     console.error('[comms] Erreur resendDelivery:', error);
@@ -220,7 +194,7 @@ export async function resendDelivery(delivery: MessageDelivery): Promise<boolean
   }
 }
 
-/** Envoi manuel (crée un message_events) */
+/** Envoi manuel via enqueueMessageEvent callable */
 export async function manualSend(
   eventId: string,
   locale: Locale,
@@ -228,20 +202,13 @@ export async function manualSend(
   context: Record<string, unknown>
 ): Promise<void> {
   try {
-    const uid = getAuth().currentUser?.uid || null;
-
-    const payload: MessageEvent = {
-      eventId,           // ex: "whatsapp_provider_booking_request"
-      locale,            // ex: "fr-FR"
-      to,                // { uid, email, phone, whatsapp }
-      context,           // variables pour le template
-      vars: context,     // ✅ miroir des variables pour le worker
-      createdAt: serverTimestamp(),
-      status: "queued",  // lu par le worker
-      channelHint: null, // optionnel: "whatsapp" | "sms" | "email"
-      createdBy: uid,    // UID de l'admin qui envoie
-    };
-    await addDoc(collection(db, "message_events"), payload);
+    const enqueueFn = httpsCallable(functions, 'enqueueMessageEvent');
+    await enqueueFn({
+      eventId,
+      locale,
+      to,
+      context,
+    });
   } catch (error) {
     console.error('[comms] Erreur manualSend:', error);
     throw new Error('Impossible d\'envoyer le message');

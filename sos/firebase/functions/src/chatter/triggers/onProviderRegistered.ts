@@ -3,17 +3,17 @@
  *
  * Fires when a new provider (lawyer/expat) is created.
  * - Checks if they were recruited via chatter recruitment link
- * - Links the provider to the recruiting chatter
- * - Commission will be created when provider receives first call
+ * - Creates a record in chatter_recruited_providers (harmonized structure)
+ * - Commission will be created on EVERY call the provider receives (6-month window)
  */
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { findChatterByRecruitmentCode } from "../utils";
-import { Chatter, ChatterNotification } from "../types";
+import { Chatter, ChatterRecruitedProvider, ChatterNotification } from "../types";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -80,13 +80,71 @@ export async function handleChatterProviderRegistered(event: any) {
       const chatterId = chatterSnapshot.id;
       const chatter = chatterSnapshot.data() as Chatter;
 
+      // Check chatter is active
+      if (chatter.status !== "active") {
+        logger.info("[chatterOnProviderRegistered] Chatter not active, skipping", {
+          chatterId,
+          status: chatter.status,
+        });
+        return;
+      }
+
+      // Check if this provider was already recruited by this chatter
+      const existingRecruitment = await db
+        .collection("chatter_recruited_providers")
+        .where("chatterId", "==", chatterId)
+        .where("providerId", "==", userId)
+        .limit(1)
+        .get();
+
+      if (!existingRecruitment.empty) {
+        logger.info("[chatterOnProviderRegistered] Provider already recruited by this chatter", {
+          userId,
+          chatterId,
+        });
+        return;
+      }
+
       // Update user document with chatter ID
       await db.collection("users").doc(userId).update({
         providerRecruitedByChatterId: chatterId,
         providerFirstCallReceived: false,
       });
 
-      // Update or create recruitment link tracking
+      // Create recruitment record in chatter_recruited_providers (harmonized structure)
+      const now = Timestamp.now();
+      const sixMonthsLater = new Date();
+      sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+
+      const providerName =
+        `${userData.firstName || ""} ${userData.lastName || ""}`.trim() ||
+        userData.email ||
+        userId;
+
+      const recruitmentRef = db.collection("chatter_recruited_providers").doc();
+
+      const recruitment: ChatterRecruitedProvider = {
+        id: recruitmentRef.id,
+        chatterId,
+        chatterCode: chatter.affiliateCodeRecruitment || chatter.affiliateCodeClient,
+        chatterEmail: chatter.email,
+        providerId: userId,
+        providerEmail: userData.email,
+        providerType: userData.role as "lawyer" | "expat",
+        providerName,
+        recruitedAt: now,
+        commissionWindowEndsAt: Timestamp.fromDate(sixMonthsLater),
+        isActive: true,
+        callsWithCommission: 0,
+        totalCommissions: 0,
+        lastCommissionAt: null,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      await recruitmentRef.set(recruitment);
+
+      // Also update legacy chatter_recruitment_links for backward compat
       const linkQuery = await db
         .collection("chatter_recruitment_links")
         .where("chatterId", "==", chatterId)
@@ -96,32 +154,17 @@ export async function handleChatterProviderRegistered(event: any) {
         .get();
 
       if (!linkQuery.empty) {
-        // Update existing link
         await linkQuery.docs[0].ref.update({
           usedByProviderId: userId,
-          usedAt: Timestamp.now(),
-        });
-      } else {
-        // Create new link record
-        const linkRef = db.collection("chatter_recruitment_links").doc();
-        const sixMonthsLater = new Date();
-        sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
-
-        await linkRef.set({
-          id: linkRef.id,
-          chatterId,
-          chatterCode: chatter.affiliateCodeClient,
-          code: recruitmentCode.toUpperCase(),
-          trackingUrl: `https://sos-expat.com?ref=${recruitmentCode}`,
-          usedByProviderId: userId,
-          usedAt: Timestamp.now(),
-          commissionPaid: false,
-          commissionId: null,
-          expiresAt: Timestamp.fromDate(sixMonthsLater),
-          isActive: false, // Link is used now
-          createdAt: Timestamp.now(),
+          usedAt: now,
         });
       }
+
+      // Update chatter's recruit count (atomic)
+      await db.collection("chatters").doc(chatterId).update({
+        totalRecruits: FieldValue.increment(1),
+        updatedAt: now,
+      });
 
       // Create notification for chatter
       const notificationRef = db.collection("chatter_notifications").doc();
@@ -132,29 +175,44 @@ export async function handleChatterProviderRegistered(event: any) {
         type: "system",
         title: "Nouveau prestataire recruté !",
         titleTranslations: {
+          fr: "Nouveau prestataire recruté !",
           en: "New provider recruited!",
-          es: "Nuevo proveedor reclutado!",
-          pt: "Novo provedor recrutado!",
+          es: "¡Nuevo proveedor reclutado!",
+          de: "Neuer Anbieter rekrutiert!",
+          pt: "Novo prestador recrutado!",
+          ru: "Новый поставщик привлечён!",
+          hi: "नया प्रदाता भर्ती हुआ!",
+          zh: "新服务商已招募！",
+          ar: "تم تجنيد مزوّد جديد!",
         },
-        message: `${userData.firstName || "Un prestataire"} s'est inscrit avec votre lien de recrutement. Vous recevrez votre commission quand il/elle recevra son premier appel payant.`,
+        message: `${providerName} s'est inscrit avec votre lien de recrutement. Vous gagnerez $5 sur chaque appel pendant 6 mois.`,
         messageTranslations: {
-          en: `${userData.firstName || "A provider"} signed up with your recruitment link. You'll receive your commission when they get their first paid call.`,
+          fr: `${providerName} s'est inscrit avec votre lien de recrutement. Vous gagnerez $5 sur chaque appel pendant 6 mois.`,
+          en: `${providerName} registered via your link. You'll earn $5 on each call for 6 months.`,
+          es: `${providerName} se registró a través de tu enlace. Ganarás $5 por cada llamada durante 6 meses.`,
+          de: `${providerName} hat sich über Ihren Link registriert. Sie verdienen $5 pro Anruf für 6 Monate.`,
+          pt: `${providerName} registrou-se pelo seu link. Você ganhará $5 por cada chamada durante 6 meses.`,
+          ru: `${providerName} зарегистрировался по вашей ссылке. Вы будете получать $5 за каждый звонок в течение 6 месяцев.`,
+          hi: `${providerName} आपके लिंक से पंजीकृत हुआ। आप 6 महीने तक हर कॉल पर $5 कमाएंगे।`,
+          zh: `${providerName} 通过您的链接注册。您将在6个月内每次通话赚取 $5。`,
+          ar: `${providerName} سجّل عبر رابطك. ستحصل على $5 عن كل مكالمة لمدة 6 أشهر.`,
         },
         actionUrl: "/chatter/dashboard",
         isRead: false,
         emailSent: false,
         data: {
-          // No commission yet - will be added when provider receives first call
+          referralId: recruitmentRef.id,
         },
         createdAt: Timestamp.now(),
       };
 
       await notificationRef.set(notification);
 
-      logger.info("[chatterOnProviderRegistered] Provider linked to chatter", {
+      logger.info("[chatterOnProviderRegistered] Provider linked to chatter (harmonized)", {
         userId,
         chatterId,
         recruitmentCode,
+        recruitmentId: recruitmentRef.id,
       });
     } catch (error) {
       logger.error("[chatterOnProviderRegistered] Error", {
@@ -257,11 +315,27 @@ export async function handleChatterClientRegistered(event: any) {
         type: "system",
         title: "Nouveau client référé !",
         titleTranslations: {
+          fr: "Nouveau client référé !",
           en: "New client referred!",
+          es: "¡Nuevo cliente referido!",
+          de: "Neuer Kunde empfohlen!",
+          pt: "Novo cliente indicado!",
+          ru: "Новый клиент привлечён!",
+          hi: "नया क्लाइंट रेफ़र किया!",
+          zh: "新客户已推荐！",
+          ar: "تمت إحالة عميل جديد!",
         },
         message: `${userData.firstName || "Un client"} s'est inscrit avec votre code. Vous recevrez une commission quand il/elle effectuera un appel payant.`,
         messageTranslations: {
+          fr: `${userData.firstName || "Un client"} s'est inscrit avec votre code. Vous recevrez une commission quand il/elle effectuera un appel payant.`,
           en: `${userData.firstName || "A client"} signed up with your code. You'll receive a commission when they make a paid call.`,
+          es: `${userData.firstName || "Un cliente"} se registró con tu código. Recibirás una comisión cuando haga una llamada de pago.`,
+          de: `${userData.firstName || "Ein Kunde"} hat sich mit Ihrem Code angemeldet. Sie erhalten eine Provision bei einem kostenpflichtigen Anruf.`,
+          pt: `${userData.firstName || "Um cliente"} inscreveu-se com o seu código. Você receberá uma comissão quando fizer uma chamada paga.`,
+          ru: `${userData.firstName || "Клиент"} зарегистрировался по вашему коду. Вы получите комиссию, когда он сделает платный звонок.`,
+          hi: `${userData.firstName || "एक क्लाइंट"} आपके कोड से साइन अप किया। भुगतान कॉल पर आपको कमीशन मिलेगा।`,
+          zh: `${userData.firstName || "一位客户"} 使用您的代码注册。他们进行付费通话时您将获得佣金。`,
+          ar: `${userData.firstName || "عميل"} سجّل بكودك. ستحصل على عمولة عند إجراء مكالمة مدفوعة.`,
         },
         isRead: false,
         emailSent: false,

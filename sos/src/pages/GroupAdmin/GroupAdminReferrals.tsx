@@ -7,7 +7,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import {  httpsCallable  } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import { Users, Copy, CheckCircle, Loader2, ExternalLink, DollarSign, Clock, AlertTriangle, Info } from 'lucide-react';
 import { GroupAdminRecruit, getGroupAdminRecruitmentLink, formatGroupAdminAmount, FirebaseDate } from '@/types/groupAdmin';
 
@@ -44,7 +44,7 @@ const GroupAdminReferrals: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const getDashboard = httpsCallable(functionsWest2, 'getGroupAdminDashboard');
+      const getDashboard = httpsCallable(functionsAffiliate, 'getGroupAdminDashboard');
       const result = await getDashboard({});
       const data = result.data as { profile: { affiliateCodeRecruitment: string }; recentRecruits: GroupAdminRecruit[] };
       setAffiliateCode(data.profile.affiliateCodeRecruitment);

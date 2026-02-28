@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { BaseNotification } from '@/types/notification';
 import {
   collection,
   query,
@@ -15,10 +16,11 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  writeBatch,
   Timestamp,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { db, functionsWest2 } from '../config/firebase';
+import { db, functionsAffiliate } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Blogger,
@@ -72,9 +74,11 @@ interface UseBloggerReturn {
     message: string;
   }>;
   markNotificationRead: (notificationId: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
 
   // Computed
   clientShareUrl: string;
+  unreadNotificationsCount: number;
   recruitmentShareUrl: string;
   canWithdraw: boolean;
   minimumWithdrawal: number;
@@ -117,7 +121,7 @@ export function useBlogger(): UseBloggerReturn {
 
     try {
       const getBloggerDashboard = httpsCallable<unknown, BloggerDashboardData>(
-        functionsWest2,
+        functionsAffiliate,
         'getBloggerDashboard'
       );
 
@@ -147,7 +151,7 @@ export function useBlogger(): UseBloggerReturn {
 
     try {
       const getBloggerLeaderboard = httpsCallable<unknown, BloggerLeaderboardData>(
-        functionsWest2,
+        functionsAffiliate,
         'getBloggerLeaderboard'
       );
 
@@ -190,6 +194,8 @@ export function useBlogger(): UseBloggerReturn {
         } as BloggerCommission;
       });
       setCommissions(data);
+    }, (err) => {
+      console.error('[useBlogger] Commissions subscription error:', err);
     });
 
     // Subscribe to withdrawals
@@ -214,6 +220,8 @@ export function useBlogger(): UseBloggerReturn {
         } as BloggerWithdrawal;
       });
       setWithdrawals(data);
+    }, (err) => {
+      console.error('[useBlogger] Withdrawals subscription error:', err);
     });
 
     // Subscribe to notifications
@@ -235,6 +243,8 @@ export function useBlogger(): UseBloggerReturn {
         } as BloggerNotification;
       });
       setNotifications(data);
+    }, (err) => {
+      console.error('[useBlogger] Notifications subscription error:', err);
     });
 
     return () => {
@@ -263,7 +273,7 @@ export function useBlogger(): UseBloggerReturn {
         const registerBlogger = httpsCallable<
           Partial<RegisterBloggerInput>,
           RegisterBloggerResponse
-        >(functionsWest2, 'registerBlogger');
+        >(functionsAffiliate, 'registerBlogger');
 
         const result = await registerBlogger(input);
 
@@ -298,7 +308,7 @@ export function useBlogger(): UseBloggerReturn {
         const bloggerRequestWithdrawal = httpsCallable<
           RequestBloggerWithdrawalInput,
           RequestBloggerWithdrawalResponse
-        >(functionsWest2, 'bloggerRequestWithdrawal');
+        >(functionsAffiliate, 'bloggerRequestWithdrawal');
 
         const result = await bloggerRequestWithdrawal(input);
 
@@ -332,7 +342,7 @@ export function useBlogger(): UseBloggerReturn {
         const updateBloggerProfile = httpsCallable<
           UpdateBloggerProfileInput,
           { success: boolean; message: string }
-        >(functionsWest2, 'updateBloggerProfile');
+        >(functionsAffiliate, 'updateBloggerProfile');
 
         const result = await updateBloggerProfile(input);
 
@@ -367,6 +377,33 @@ export function useBlogger(): UseBloggerReturn {
     []
   );
 
+  const markAllNotificationsRead = useCallback(
+    async (): Promise<void> => {
+      if (!user?.uid) return;
+
+      try {
+        const batch = writeBatch(db);
+        const now = Timestamp.now();
+        const unreadNotifications = notifications.filter((n) => !n.isRead);
+
+        if (unreadNotifications.length === 0) return;
+
+        for (const notification of unreadNotifications) {
+          const notificationRef = doc(db, 'blogger_notifications', notification.id);
+          batch.update(notificationRef, {
+            isRead: true,
+            readAt: now,
+          });
+        }
+
+        await batch.commit();
+      } catch (err) {
+        console.error('[useBlogger] Failed to mark all notifications as read:', err);
+      }
+    },
+    [user?.uid, notifications]
+  );
+
   // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
@@ -399,6 +436,10 @@ export function useBlogger(): UseBloggerReturn {
     return blogger.availableBalance + blogger.pendingBalance + blogger.validatedBalance;
   }, [blogger]);
 
+  const unreadNotificationsCount = useMemo(() => {
+    return notifications.filter((n) => !n.isRead).length;
+  }, [notifications]);
+
   // ============================================================================
   // RETURN
   // ============================================================================
@@ -425,9 +466,11 @@ export function useBlogger(): UseBloggerReturn {
     requestWithdrawal,
     updateProfile,
     markNotificationRead,
+    markAllNotificationsRead,
 
     // Computed
     clientShareUrl,
+    unreadNotificationsCount,
     recruitmentShareUrl,
     canWithdraw,
     minimumWithdrawal,

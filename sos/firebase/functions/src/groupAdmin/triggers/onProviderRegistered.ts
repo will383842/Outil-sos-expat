@@ -141,16 +141,37 @@ export async function checkGroupAdminProviderRecruitment(
       updatedAt: now,
     });
 
-    // 6. Notify GroupAdmin
+    // 6. Notify GroupAdmin (i18n: 9 languages, English fallback)
+    const gaLang = groupAdmin.language || "en";
+    const recruitTitles: Record<string, string> = {
+      fr: "Nouveau prestataire recruté !",
+      en: "New provider recruited!",
+      es: "¡Nuevo proveedor reclutado!",
+      de: "Neuer Anbieter rekrutiert!",
+      pt: "Novo prestador recrutado!",
+      ru: "Новый поставщик привлечён!",
+      hi: "नया प्रदाता भर्ती हुआ!",
+      zh: "新服务商已招募！",
+      ar: "تم تجنيد مزوّد جديد!",
+    };
+    const recruitMessages: Record<string, string> = {
+      fr: `${providerName} s'est inscrit via votre lien. Vous gagnerez une commission sur chaque appel pendant ${windowMonths} mois.`,
+      en: `${providerName} registered via your link. You'll earn a commission on each call for ${windowMonths} months.`,
+      es: `${providerName} se registró a través de tu enlace. Ganarás una comisión por cada llamada durante ${windowMonths} meses.`,
+      de: `${providerName} hat sich über Ihren Link registriert. Sie verdienen eine Provision für jeden Anruf während ${windowMonths} Monaten.`,
+      pt: `${providerName} registrou-se pelo seu link. Você ganhará uma comissão por cada chamada durante ${windowMonths} meses.`,
+      ru: `${providerName} зарегистрировался по вашей ссылке. Вы будете получать комиссию за каждый звонок в течение ${windowMonths} месяцев.`,
+      hi: `${providerName} आपके लिंक से पंजीकृत हुआ। आप ${windowMonths} महीने तक प्रत्येक कॉल पर कमीशन कमाएंगे।`,
+      zh: `${providerName} 通过您的链接注册。您将在 ${windowMonths} 个月内从每次通话中获得佣金。`,
+      ar: `${providerName} سجّل عبر رابطك. ستحصل على عمولة عن كل مكالمة لمدة ${windowMonths} أشهر.`,
+    };
     await db.collection("group_admin_notifications").add({
       groupAdminId,
       type: "new_provider_recruited",
-      title: "Nouveau prestataire recruté !",
-      titleTranslations: { en: "New provider recruited!" },
-      message: `${providerName} s'est inscrit via votre lien. Vous gagnerez une commission sur chaque appel pendant ${windowMonths} mois.`,
-      messageTranslations: {
-        en: `${providerName} registered via your link. You'll earn a commission on each call for ${windowMonths} months.`,
-      },
+      title: recruitTitles[gaLang] || recruitTitles.en,
+      titleTranslations: recruitTitles,
+      message: recruitMessages[gaLang] || recruitMessages.en,
+      messageTranslations: recruitMessages,
       isRead: false,
       emailSent: false,
       data: { recruitmentId: recruitmentRef.id },
@@ -203,10 +224,51 @@ export async function awardGroupAdminProviderRecruitmentCommission(
       return { awarded: false };
     }
 
+    // Anti-double payment: identify the client's GroupAdmin referrer (if any)
+    // Lookup call session to get clientId
+    let clientGroupAdminReferrerId: string | null = null;
+    const callDoc = await db.collection("call_sessions").doc(callId).get();
+    if (callDoc.exists) {
+      const callData = callDoc.data();
+      const clientId = callData?.clientId;
+      if (clientId) {
+        const clientDoc = await db.collection("users").doc(clientId).get();
+        if (clientDoc.exists) {
+          const clientData = clientDoc.data();
+          const pendingCode = clientData?.pendingReferralCode;
+          const referredBy = clientData?.referredBy;
+          const groupAdminCode = (pendingCode && typeof pendingCode === "string" && pendingCode.toUpperCase().startsWith("GROUP-"))
+            ? pendingCode.toUpperCase()
+            : (referredBy && typeof referredBy === "string" && referredBy.toUpperCase().startsWith("GROUP-"))
+              ? referredBy.toUpperCase()
+              : null;
+
+          if (groupAdminCode) {
+            const gaQuery = await db.collection("group_admins")
+              .where("affiliateCodeClient", "==", groupAdminCode)
+              .limit(1)
+              .get();
+            if (!gaQuery.empty) {
+              clientGroupAdminReferrerId = gaQuery.docs[0].id;
+            }
+          }
+        }
+      }
+    }
+
     for (const recruitmentDoc of recruitmentQuery.docs) {
       const recruitment = recruitmentDoc.data() as GroupAdminRecruitedProvider;
 
-      // Check for duplicate commission on this call
+      // Anti-double payment: skip if same GroupAdmin referred client AND recruited provider
+      if (clientGroupAdminReferrerId && clientGroupAdminReferrerId === recruitment.groupAdminId) {
+        logger.info("[awardGroupAdminProviderRecruitmentCommission] Skipping — same GroupAdmin referred client and recruited provider (anti-double)", {
+          groupAdminId: recruitment.groupAdminId,
+          callId,
+        });
+        continue;
+      }
+
+      // Check for duplicate commission on this call (idempotency)
       const existingCommission = await db
         .collection("group_admin_commissions")
         .where("groupAdminId", "==", recruitment.groupAdminId)

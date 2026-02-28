@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   DollarSign,
   CheckCircle,
@@ -71,7 +71,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
     setError(null);
 
     try {
-      const getWithdrawals = httpsCallable(functionsWest2, 'adminGetGroupAdminWithdrawalsList');
+      const getWithdrawals = httpsCallable(functionsAffiliate, 'adminGetGroupAdminWithdrawalsList');
       const result = await getWithdrawals({ status: statusFilter !== 'all' ? statusFilter : undefined });
       const data = result.data as { withdrawals: Withdrawal[]; stats: WithdrawalStats };
       setWithdrawals(data.withdrawals);
@@ -91,7 +91,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
   const handleApprove = async (withdrawal: Withdrawal) => {
     setProcessingId(withdrawal.id);
     try {
-      const processWithdrawal = httpsCallable(functionsWest2, 'adminProcessGroupAdminWithdrawal');
+      const processWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessGroupAdminWithdrawal');
       await processWithdrawal({
         withdrawalId: withdrawal.id,
         action: 'approve',
@@ -110,7 +110,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
 
     setProcessingId(withdrawal.id);
     try {
-      const processWithdrawal = httpsCallable(functionsWest2, 'adminProcessGroupAdminWithdrawal');
+      const processWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessGroupAdminWithdrawal');
       await processWithdrawal({
         withdrawalId: withdrawal.id,
         action: 'reject',
@@ -127,7 +127,7 @@ const AdminGroupAdminsPayments: React.FC = () => {
   const handleComplete = async (withdrawal: Withdrawal) => {
     setProcessingId(withdrawal.id);
     try {
-      const processWithdrawal = httpsCallable(functionsWest2, 'adminProcessGroupAdminWithdrawal');
+      const processWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessGroupAdminWithdrawal');
       await processWithdrawal({
         withdrawalId: withdrawal.id,
         action: 'complete',

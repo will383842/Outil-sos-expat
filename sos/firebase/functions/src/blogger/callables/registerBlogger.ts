@@ -27,6 +27,7 @@ import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 import { hashIP } from "../../chatter/utils";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
+import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 
 // ============================================================================
 // VALIDATION
@@ -142,7 +143,7 @@ export const registerBlogger = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 2,
     cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
   },
@@ -159,6 +160,8 @@ export const registerBlogger = onCall(
     }
 
     const uid = request.auth.uid;
+    await checkRateLimit(uid, "registerBlogger", RATE_LIMITS.REGISTRATION);
+
     const input = request.data as RegisterBloggerInput;
 
     logger.info("[registerBlogger] 🔵 DÉBUT INSCRIPTION", {
@@ -196,11 +199,12 @@ export const registerBlogger = onCall(
         throw new HttpsError("already-exists", "You are already registered as a blogger");
       }
 
-      // 5. IMPORTANT: Check if user is already a chatter, influencer, or provider
-      // Bloggers CANNOT be chatters, influencers, or providers (definitive role)
-      const [chatterDoc, influencerDoc, providerDoc] = await Promise.all([
+      // 5. IMPORTANT: Check if user is already a chatter, influencer, groupAdmin, or provider
+      // Bloggers CANNOT hold any other role (definitive role)
+      const [chatterDoc, influencerDoc, groupAdminDoc, providerDoc] = await Promise.all([
         db.collection("chatters").doc(uid).get(),
         db.collection("influencers").doc(uid).get(),
+        db.collection("group_admins").doc(uid).get(),
         db.collection("providers").doc(uid).get(),
       ]);
 
@@ -215,6 +219,13 @@ export const registerBlogger = onCall(
         throw new HttpsError(
           "failed-precondition",
           "You cannot become a blogger because you are already registered as an influencer"
+        );
+      }
+
+      if (groupAdminDoc.exists) {
+        throw new HttpsError(
+          "failed-precondition",
+          "You cannot become a blogger because you are already registered as a group admin"
         );
       }
 
@@ -237,6 +248,19 @@ export const registerBlogger = onCall(
           "already-exists",
           "This blog URL is already registered by another blogger"
         );
+      }
+
+      // 6b. Cross-role email check (P2-01 harmonization)
+      const usersEmailQuery = await db
+        .collection("users")
+        .where("email", "==", input.email.toLowerCase().trim())
+        .limit(1)
+        .get();
+      if (!usersEmailQuery.empty) {
+        const existingUserDoc = usersEmailQuery.docs[0];
+        if (existingUserDoc.id !== uid) {
+          throw new HttpsError("already-exists", "This email is already used by another account");
+        }
       }
 
       // 7. Find recruiter if recruitment code provided
@@ -422,12 +446,13 @@ export const registerBlogger = onCall(
       });
 
       await db.runTransaction(async (transaction) => {
+        // IMPORTANT: All reads MUST come before all writes in Firestore transactions
         const bloggerRef = db.collection("bloggers").doc(uid);
-        transaction.set(bloggerRef, blogger);
-
-        // Update users/{uid} with blogger role (matching chatter/influencer pattern)
         const userRef = db.collection("users").doc(uid);
         const userDoc = await transaction.get(userRef);
+
+        // Now do all writes
+        transaction.set(bloggerRef, blogger);
 
         if (userDoc.exists) {
           transaction.update(userRef, {
@@ -436,6 +461,7 @@ export const registerBlogger = onCall(
             bloggerStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            telegramOnboardingCompleted: false,
             updatedAt: now,
           });
         } else {
@@ -448,6 +474,7 @@ export const registerBlogger = onCall(
             bloggerStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            telegramOnboardingCompleted: false,
             createdAt: now,
             updatedAt: now,
           });
@@ -497,13 +524,27 @@ export const registerBlogger = onCall(
           type: "system",
           title: "Bienvenue dans le programme Blogueurs SOS-Expat !",
           titleTranslations: {
+            fr: "Bienvenue dans le programme Blogueurs SOS-Expat !",
             en: "Welcome to the SOS-Expat Blogger Program!",
             es: "¡Bienvenido al Programa de Bloggers de SOS-Expat!",
+            de: "Willkommen im SOS-Expat Blogger-Programm!",
             pt: "Bem-vindo ao Programa de Blogueiros SOS-Expat!",
+            ru: "Добро пожаловать в программу блогеров SOS-Expat!",
+            hi: "SOS-Expat ब्लॉगर प्रोग्राम में आपका स्वागत है!",
+            zh: "欢迎加入 SOS-Expat 博主计划！",
+            ar: "مرحبًا بك في برنامج مدوني SOS-Expat!",
           },
           message: `Félicitations ${input.firstName} ! Votre compte blogueur est maintenant actif. Découvrez vos outils de promotion et commencez à gagner des commissions dès aujourd'hui.`,
           messageTranslations: {
+            fr: `Félicitations ${input.firstName} ! Votre compte blogueur est maintenant actif. Découvrez vos outils de promotion et commencez à gagner des commissions dès aujourd'hui.`,
             en: `Congratulations ${input.firstName}! Your blogger account is now active. Discover your promotion tools and start earning commissions today.`,
+            es: `¡Felicidades ${input.firstName}! Tu cuenta de blogger está activa. Descubre tus herramientas de promoción y comienza a ganar comisiones hoy.`,
+            de: `Herzlichen Glückwunsch ${input.firstName}! Ihr Blogger-Konto ist jetzt aktiv. Entdecken Sie Ihre Promotion-Tools und verdienen Sie noch heute Provisionen.`,
+            pt: `Parabéns ${input.firstName}! Sua conta de blogueiro está ativa. Descubra suas ferramentas de promoção e comece a ganhar comissões hoje.`,
+            ru: `Поздравляем, ${input.firstName}! Ваш аккаунт блогера активен. Откройте инструменты продвижения и начните зарабатывать комиссии.`,
+            hi: `बधाई ${input.firstName}! आपका ब्लॉगर खाता सक्रिय है। अपने प्रचार उपकरण खोजें और आज ही कमीशन कमाना शुरू करें।`,
+            zh: `恭喜 ${input.firstName}！您的博主账户已激活。发现您的推广工具，立即开始赚取佣金。`,
+            ar: `تهانينا ${input.firstName}! حساب المدون الخاص بك نشط الآن. اكتشف أدوات الترويج وابدأ بكسب العمولات اليوم.`,
           },
           actionUrl: "/blogger/tableau-de-bord",
           isRead: false,

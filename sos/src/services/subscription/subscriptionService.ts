@@ -221,6 +221,8 @@ export function subscribeToPlans(
           updatedAt: doc.data().updatedAt?.toDate()
         })) as SubscriptionPlan[];
         sharedCallback(plans);
+      }, (err) => {
+        console.error('[subscriptionService] Plans subscription error:', err);
       });
     },
     (plans) => callback(plans || [])
@@ -421,6 +423,9 @@ export function subscribeToSubscription(
           } else {
             callback(null);
           }
+        }, (err) => {
+          console.error('[subscriptionService] Subscription snapshot error:', err);
+          callback(null);
         });
         return;
       }
@@ -439,6 +444,9 @@ export function subscribeToSubscription(
           } else {
             callback(null);
           }
+        }, (err) => {
+          console.error('[subscriptionService] Subscription alt snapshot error:', err);
+          callback(null);
         });
         return;
       }
@@ -456,6 +464,9 @@ export function subscribeToSubscription(
         } else {
           callback(null);
         }
+      }, (err) => {
+        console.error('[subscriptionService] User subscription fallback error:', err);
+        callback(null);
       });
     } catch (error) {
       console.error('[subscribeToSubscription] Error initializing listener:', error);
@@ -553,7 +564,7 @@ export async function createSubscription(
 ): Promise<CreateSubscriptionResponse> {
   const createSubscriptionFn = httpsCallable<CreateSubscriptionRequest, CreateSubscriptionResponse>(
     functions,
-    'createSubscription'
+    'subscriptionCreate'
   );
 
   const result = await createSubscriptionFn(request);
@@ -568,7 +579,7 @@ export async function updateSubscription(
 ): Promise<{ success: boolean; error?: string }> {
   const updateSubscriptionFn = httpsCallable<{ newPlanId: string }, { success: boolean; error?: string }>(
     functions,
-    'updateSubscription'
+    'subscriptionUpdate'
   );
 
   const result = await updateSubscriptionFn({ newPlanId });
@@ -610,7 +621,7 @@ export async function reactivateSubscription(): Promise<{ success: boolean; erro
 export async function openCustomerPortal(): Promise<{ url: string }> {
   const createPortalSessionFn = httpsCallable<void, { url: string }>(
     functions,
-    'createStripePortalSession'
+    'subscriptionPortal'
   );
 
   const result = await createPortalSessionFn();
@@ -1068,6 +1079,7 @@ function parseSubscription(id: string, data: any): Subscription {
     canceledAt: data.canceledAt?.toDate() ?? null,
     cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
     currency: data.currency,
+    billingPeriod: data.billingPeriod || undefined,
     currentPeriodAmount: data.currentPeriodAmount,
     createdAt: data.createdAt?.toDate(),
     updatedAt: data.updatedAt?.toDate()

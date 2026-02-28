@@ -12,10 +12,9 @@
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
-import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
-import { Chatter, ChatterConfig, DEFAULT_CHATTER_CONFIG } from "../types";
+import { Chatter, DEFAULT_CHATTER_CONFIG } from "../types";
 import { getChatterConfigCached } from "../utils";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
@@ -93,7 +92,7 @@ export const getCaptainDashboard = onCall(
         lastName: data.lastName,
         photoUrl: data.photoUrl,
         country: data.country,
-        totalCallCount: data.totalCallCount || 0,
+        totalCallCount: (data as any).totalCallCount || 0,
         createdAt: data.createdAt,
       };
     });
@@ -115,7 +114,7 @@ export const getCaptainDashboard = onCall(
           lastName: data.lastName,
           photoUrl: data.photoUrl,
           country: data.country,
-          totalCallCount: data.totalCallCount || 0,
+          totalCallCount: (data as any).totalCallCount || 0,
           recruitedVia: n1Doc.id,
           createdAt: data.createdAt,
         });

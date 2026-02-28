@@ -365,13 +365,36 @@ export class DisputeManager {
   ): Promise<void> {
     try {
       const locale = await this.getProviderLocale(providerId);
+      const amountStr = `${(disputeRecord.amount / 100).toFixed(2)} ${disputeRecord.currency.toUpperCase()}`;
+      const reasonStr = DISPUTE_REASON_LABELS[disputeRecord.reason] || disputeRecord.reason;
+      const dueDate = disputeRecord.evidenceDueBy?.toLocaleDateString(locale) || "N/A";
       await this.db.collection("notifications").add({
         userId: providerId,
         type: "dispute_opened",
         title: "Litige ouvert sur votre compte",
-        message: `Un client a ouvert un litige de ${(disputeRecord.amount / 100).toFixed(2)} ${disputeRecord.currency.toUpperCase()}. ` +
-          `Raison: ${DISPUTE_REASON_LABELS[disputeRecord.reason] || disputeRecord.reason}. ` +
-          `Vous devez répondre via votre dashboard Stripe avant le ${disputeRecord.evidenceDueBy?.toLocaleDateString(locale) || "N/A"}.`,
+        message: `Un client a ouvert un litige de ${amountStr}. Raison: ${reasonStr}. Vous devez répondre via votre dashboard Stripe avant le ${dueDate}.`,
+        titleTranslations: {
+          fr: "Litige ouvert sur votre compte",
+          en: "Dispute opened on your account",
+          es: "Disputa abierta en su cuenta",
+          de: "Streitfall auf Ihrem Konto eröffnet",
+          pt: "Disputa aberta na sua conta",
+          ru: "Спор открыт на вашем аккаунте",
+          hi: "आपके खाते पर विवाद खोला गया",
+          zh: "您的账户上已开启争议",
+          ar: "تم فتح نزاع على حسابك",
+        },
+        messageTranslations: {
+          fr: `Un client a ouvert un litige de ${amountStr}. Raison: ${reasonStr}. Vous devez répondre via votre dashboard Stripe avant le ${dueDate}.`,
+          en: `A client opened a dispute of ${amountStr}. Reason: ${reasonStr}. You must respond via your Stripe dashboard before ${dueDate}.`,
+          es: `Un cliente abrió una disputa de ${amountStr}. Razón: ${reasonStr}. Debe responder a través de su panel de Stripe antes del ${dueDate}.`,
+          de: `Ein Kunde hat einen Streitfall über ${amountStr} eröffnet. Grund: ${reasonStr}. Bitte antworten Sie über Ihr Stripe-Dashboard vor dem ${dueDate}.`,
+          pt: `Um cliente abriu uma disputa de ${amountStr}. Motivo: ${reasonStr}. Responda pelo painel Stripe antes de ${dueDate}.`,
+          ru: `Клиент открыл спор на ${amountStr}. Причина: ${reasonStr}. Ответьте через панель Stripe до ${dueDate}.`,
+          hi: `एक ग्राहक ने ${amountStr} का विवाद खोला। कारण: ${reasonStr}। कृपया ${dueDate} से पहले अपने Stripe डैशबोर्ड से जवाब दें।`,
+          zh: `客户就 ${amountStr} 开启了争议。原因：${reasonStr}。请在 ${dueDate} 之前通过 Stripe 面板回复。`,
+          ar: `فتح عميل نزاعاً بقيمة ${amountStr}. السبب: ${reasonStr}. يجب الرد عبر لوحة Stripe قبل ${dueDate}.`,
+        },
         data: {
           disputeId: disputeRecord.id,
           amount: disputeRecord.amount,
@@ -406,11 +429,24 @@ export class DisputeManager {
         withdrawn: "Le client a retiré sa demande de litige.",
       };
 
+      const outcomeTitles: Record<string, Record<string, string>> = {
+        won: { fr: "Litige gagné", en: "Dispute won", es: "Disputa ganada", de: "Streitfall gewonnen", pt: "Disputa ganha", ru: "Спор выигран", hi: "विवाद जीता", zh: "争议胜诉", ar: "تم كسب النزاع" },
+        lost: { fr: "Litige perdu", en: "Dispute lost", es: "Disputa perdida", de: "Streitfall verloren", pt: "Disputa perdida", ru: "Спор проигран", hi: "विवाद हारा", zh: "争议败诉", ar: "تم خسارة النزاع" },
+        withdrawn: { fr: "Litige retiré", en: "Dispute withdrawn", es: "Disputa retirada", de: "Streitfall zurückgezogen", pt: "Disputa retirada", ru: "Спор отозван", hi: "विवाद वापस लिया गया", zh: "争议已撤回", ar: "تم سحب النزاع" },
+      };
+      const outcomeMessagesI18n: Record<string, Record<string, string>> = {
+        won: { fr: "Bonne nouvelle ! Le litige a été résolu en votre faveur.", en: "Great news! The dispute was resolved in your favor.", es: "¡Buenas noticias! La disputa se resolvió a su favor.", de: "Gute Nachrichten! Der Streitfall wurde zu Ihren Gunsten entschieden.", pt: "Boas notícias! A disputa foi resolvida a seu favor.", ru: "Отличные новости! Спор решён в вашу пользу.", hi: "बढ़िया खबर! विवाद आपके पक्ष में सुलझा दिया गया।", zh: "好消息！争议已裁定为您胜诉。", ar: "أخبار سارة! تم حل النزاع لصالحك." },
+        lost: { fr: "Le litige a été résolu en faveur du client. Le montant a été débité de votre compte Stripe.", en: "The dispute was resolved in favor of the client. The amount was debited from your Stripe account.", es: "La disputa se resolvió a favor del cliente. El monto fue debitado de su cuenta Stripe.", de: "Der Streitfall wurde zugunsten des Kunden entschieden. Der Betrag wurde von Ihrem Stripe-Konto abgebucht.", pt: "A disputa foi resolvida a favor do cliente. O valor foi debitado da sua conta Stripe.", ru: "Спор решён в пользу клиента. Сумма списана с вашего Stripe-аккаунта.", hi: "विवाद ग्राहक के पक्ष में सुलझा। राशि आपके Stripe खाते से डेबिट की गई।", zh: "争议裁定为客户胜诉。金额已从您的 Stripe 账户中扣除。", ar: "تم حل النزاع لصالح العميل. تم خصم المبلغ من حساب Stripe الخاص بك." },
+        withdrawn: { fr: "Le client a retiré sa demande de litige.", en: "The client withdrew the dispute.", es: "El cliente retiró la disputa.", de: "Der Kunde hat den Streitfall zurückgezogen.", pt: "O cliente retirou a disputa.", ru: "Клиент отозвал спор.", hi: "ग्राहक ने विवाद वापस ले लिया।", zh: "客户已撤回争议。", ar: "سحب العميل النزاع." },
+      };
+
       await this.db.collection("notifications").add({
         userId: providerId,
         type: "dispute_resolved",
         title: `Litige ${outcome === "won" ? "gagné" : outcome === "lost" ? "perdu" : "retiré"}`,
         message: outcomeMessages[outcome],
+        titleTranslations: outcomeTitles[outcome],
+        messageTranslations: outcomeMessagesI18n[outcome],
         data: {
           disputeId,
           outcome,

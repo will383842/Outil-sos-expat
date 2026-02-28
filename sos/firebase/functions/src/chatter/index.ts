@@ -41,6 +41,9 @@ export {
 // Referral Dashboard
 export { getReferralDashboard } from "./callables/getReferralDashboard";
 
+// Recruited Providers
+export { getChatterRecruitedProviders } from "./callables/getRecruitedProviders";
+
 // ============================================================================
 // TRAINING CALLABLES
 // ============================================================================
@@ -364,6 +367,7 @@ export type {
   ChatterWiseDetails,
   ChatterMobileMoneyDetails,
   ChatterBankDetails,
+  ChatterRecruitedProvider,
   ChatterRecruitmentLink,
   ChatterQuizQuestion,
   ChatterQuizAttempt,

@@ -3,6 +3,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useIntl } from 'react-intl';
+import { getCloudFunctionUrl } from '../../config/firebase';
 import {
   BarChart,
   Bar,
@@ -337,7 +338,7 @@ const AdminGoogleAdsAnalytics: React.FC = () => {
 
     try {
       const response = await fetch(
-        'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/testGoogleAdsConnection'
+        getCloudFunctionUrl('testGoogleAdsConnection', 'europe-west1')
       );
       const result = await response.json();
       setTestResult(result);

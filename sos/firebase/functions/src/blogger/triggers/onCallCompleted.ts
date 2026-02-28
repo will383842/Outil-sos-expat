@@ -21,7 +21,7 @@ import { awardBloggerRecruitmentCommission } from "./onProviderRegistered";
 import { getBloggerConfigCached } from "../utils/bloggerConfigService";
 
 /** Minimum call duration in seconds to earn commission (anti-fraud) */
-const MIN_CALL_DURATION_SECONDS = 120;
+const MIN_CALL_DURATION_SECONDS = 60;
 
 /**
  * Check and award blogger commission when a call is completed
@@ -195,15 +195,34 @@ async function awardBloggerCommission(
       amount: result.amount,
     });
 
-    // Create notification
+    // Create notification (i18n: 9 languages, English fallback)
+    const amountStr = (result.amount! / 100).toFixed(2);
     await db.collection("blogger_notifications").add({
       bloggerId,
       type: "commission_earned",
       title: "Nouvelle commission !",
-      titleTranslations: { en: "New commission!" },
-      message: `Vous avez gagné $${(result.amount! / 100).toFixed(2)} pour un client référé.`,
+      titleTranslations: {
+        fr: "Nouvelle commission !",
+        en: "New commission!",
+        es: "¡Nueva comisión!",
+        de: "Neue Provision!",
+        pt: "Nova comissão!",
+        ru: "Новая комиссия!",
+        hi: "नया कमीशन!",
+        zh: "新佣金！",
+        ar: "عمولة جديدة!",
+      },
+      message: `Vous avez gagné $${amountStr} pour un client référé.`,
       messageTranslations: {
-        en: `You earned $${(result.amount! / 100).toFixed(2)} for a referred client.`,
+        fr: `Vous avez gagné $${amountStr} pour un client référé.`,
+        en: `You earned $${amountStr} for a referred client.`,
+        es: `Has ganado $${amountStr} por un cliente referido.`,
+        de: `Sie haben $${amountStr} für einen geworbenen Kunden verdient.`,
+        pt: `Você ganhou $${amountStr} por um cliente indicado.`,
+        ru: `Вы заработали $${amountStr} за привлечённого клиента.`,
+        hi: `आपने रेफ़र किए गए क्लाइंट के लिए $${amountStr} कमाए।`,
+        zh: `您因推荐客户赚取了 $${amountStr}。`,
+        ar: `لقد ربحت $${amountStr} مقابل عميل محال.`,
       },
       isRead: false,
       emailSent: false,

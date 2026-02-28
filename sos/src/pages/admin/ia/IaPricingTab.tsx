@@ -478,76 +478,23 @@ export const IaPricingTab: React.FC = () => {
     }
   };
 
+  // AUDIT FIX 2026-02-27: These are one-shot seed/migration functions already executed.
+  // Backend functions are disabled (commented in index.ts) to save Cloud Run quota.
+  // Show user-friendly message instead of silent not-found error.
   const initializePlans = async () => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      const initFn = httpsCallable(functions, 'subscriptionInitializePlans');
-      await initFn();
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-      await loadData();
-    } catch (err) {
-      console.error('Error initializing plans:', err);
-      setError((err as Error).message || iaT.errorModification);
-    } finally {
-      setSaving(false);
-    }
+    setError('Cette fonction a déjà été exécutée. Les plans sont déjà initialisés.');
   };
 
   const createMonthlyPrices = async () => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      const createMonthlyFn = httpsCallable(functions, 'createMonthlyStripePrices');
-      await createMonthlyFn();
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-      await loadData();
-    } catch (err) {
-      console.error('Error creating monthly prices:', err);
-      setError((err as Error).message || iaT.errorSaving);
-    } finally {
-      setSaving(false);
-    }
+    setError('Cette fonction a déjà été exécutée. Les prix mensuels Stripe existent déjà.');
   };
 
   const createAnnualPrices = async () => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      const createAnnualFn = httpsCallable(functions, 'createAnnualStripePrices');
-      await createAnnualFn();
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-      await loadData();
-    } catch (err) {
-      console.error('Error creating annual prices:', err);
-      setError((err as Error).message || iaT.errorSaving);
-    } finally {
-      setSaving(false);
-    }
+    setError('Cette fonction a déjà été exécutée. Les prix annuels Stripe existent déjà.');
   };
 
   const migrateTo9Languages = async () => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      const migrateFn = httpsCallable(functions, 'subscriptionMigrateTo9Languages');
-      await migrateFn({});
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-      await loadData();
-    } catch (err) {
-      console.error('Error migrating to 9 languages:', err);
-      setError((err as Error).message || iaT.errorModification);
-    } finally {
-      setSaving(false);
-    }
+    setError('Cette fonction a déjà été exécutée. La migration vers 9 langues est terminée.');
   };
 
   if (loading) {

@@ -21,8 +21,8 @@
 // (e.g., direct Firestore writes, Telegram notifications, or backend email triggers).
 // =============================================
 
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../../config/firebase';
+// AUDIT-FIX 2026-02-27: Removed unused httpsCallable/functions imports
+// (sendNotification/sendPushNotification Cloud Functions do not exist in backend)
 
 export interface NotificationData {
   type: 'success' | 'error' | 'info' | 'warning' | 'sos';
@@ -78,10 +78,8 @@ class NotificationService {
   private notifications: NotificationData[] = [];
   private listeners: ((notifications: NotificationData[]) => void)[] = [];
 
-  // AUDIT-FIX C1: These Cloud Functions do NOT exist in the backend — calls will fail with "not-found"
-  // Kept as references but sendMultiChannelNotification/sendPushNotification now return early
-  private sendNotificationFn = httpsCallable(functions, 'sendNotification');
-  private sendPushNotificationFn = httpsCallable(functions, 'sendPushNotification');
+  // AUDIT-FIX 2026-02-27: Removed dead httpsCallable references — these Cloud Functions
+  // do NOT exist in backend. sendMultiChannelNotification/sendPushNotification return early.
 
   /**
    * Affiche une notification toast dans l'interface

@@ -501,7 +501,7 @@ export const adminUpdateChatterConfigSettings = onCall(
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{
     success: boolean;
@@ -609,7 +609,7 @@ export const adminGetChatterConfigSettings = onCall(
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{
     success: boolean;
@@ -652,7 +652,7 @@ export const adminInitializeChatterConfigSettings = onCall(
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{
     success: boolean;
@@ -707,7 +707,7 @@ export const adminToggleFlashBonus = onCall(
     cpu: 0.1,
     minInstances: 0,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{
     success: boolean;

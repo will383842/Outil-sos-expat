@@ -435,7 +435,13 @@ export function usePaymentMethods(): UsePaymentMethodsReturn {
       );
 
       const result = await getPaymentMethodsFn();
-      setMethods(result.data.methods);
+      // Normalize: legacy records may have methodType='bank_transfer' with provider='wise'
+      const normalizedMethods = result.data.methods.map((m) =>
+        m.methodType === "bank_transfer" && m.provider === "wise"
+          ? { ...m, methodType: "wise" as PaymentMethodType }
+          : m
+      );
+      setMethods(normalizedMethods);
       setDefaultMethodId(result.data.defaultMethodId);
     } catch (err) {
       console.error("[usePaymentMethods] Error fetching methods:", err);

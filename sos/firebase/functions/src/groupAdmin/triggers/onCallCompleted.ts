@@ -32,7 +32,7 @@ function ensureInitialized() {
 }
 
 /** Minimum call duration in seconds to earn commission (anti-fraud) */
-const MIN_CALL_DURATION_SECONDS = 120;
+const MIN_CALL_DURATION_SECONDS = 60;
 
 /** Prefix used by GroupAdmin affiliate codes */
 const GROUP_ADMIN_CODE_PREFIX = "GROUP-";
@@ -192,7 +192,7 @@ export async function handleCallCompleted(
       // ================================================================
       // CREATE COMMISSION
       // ================================================================
-      const providerType = afterData.providerType ?? afterData.metadata?.providerType;
+      const providerType = (afterData as any).providerType ?? (afterData as any).metadata?.providerType;
       const commission = await createClientReferralCommission(
         groupAdminId,
         afterData.clientId,
@@ -208,15 +208,40 @@ export async function handleCallCompleted(
           groupAdminCommissionAt: Timestamp.now(),
         });
 
-        // Create commission notification
+        // Create commission notification (i18n: 9 languages, English fallback)
         const notifRef = db.collection("group_admin_notifications").doc();
         const amountDollars = ((commission.amount || 0) / 100).toFixed(2);
+        const gaLang = groupAdmin.language || "en";
+        const commTitles: Record<string, string> = {
+          fr: "Commission client reçue !",
+          en: "Client commission received!",
+          es: "¡Comisión de cliente recibida!",
+          de: "Kundenprovision erhalten!",
+          pt: "Comissão de cliente recebida!",
+          ru: "Комиссия за клиента получена!",
+          hi: "क्लाइंट कमीशन प्राप्त!",
+          zh: "客户佣金已收到！",
+          ar: "تم استلام عمولة العميل!",
+        };
+        const commMessages: Record<string, string> = {
+          fr: `Vous avez gagné $${amountDollars} pour l'appel de la session ${sessionId}.`,
+          en: `You earned $${amountDollars} for the call session ${sessionId}.`,
+          es: `Has ganado $${amountDollars} por la sesión de llamada ${sessionId}.`,
+          de: `Sie haben $${amountDollars} für die Anrufsitzung ${sessionId} verdient.`,
+          pt: `Você ganhou $${amountDollars} pela sessão de chamada ${sessionId}.`,
+          ru: `Вы заработали $${amountDollars} за сессию звонка ${sessionId}.`,
+          hi: `आपने कॉल सत्र ${sessionId} के लिए $${amountDollars} कमाए।`,
+          zh: `您在通话会话 ${sessionId} 中赚取了 $${amountDollars}。`,
+          ar: `لقد ربحت $${amountDollars} من جلسة المكالمة ${sessionId}.`,
+        };
         await notifRef.set({
           id: notifRef.id,
           groupAdminId,
           type: "commission_earned",
-          title: "Commission client reçue !",
-          message: `Vous avez gagné $${amountDollars} pour l'appel de la session ${sessionId}.`,
+          title: commTitles[gaLang] || commTitles.en,
+          titleTranslations: commTitles,
+          message: commMessages[gaLang] || commMessages.en,
+          messageTranslations: commMessages,
           isRead: false,
           emailSent: false,
           data: {

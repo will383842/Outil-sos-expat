@@ -45,7 +45,6 @@ import {
 } from "../services/pricingService";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useForm } from "react-hook-form";
-import { saveProviderMessage } from "@/firebase/saveProviderMessage";
 import { useApp } from "@/contexts/AppContext";
 import { FormattedMessage, useIntl } from "react-intl";
 import { formatCurrency } from "../utils/localeFormatters";
@@ -2305,7 +2304,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               }
             } catch (cfErr: unknown) {
               console.error("[PaymentRequest] createAndScheduleCall error:", cfErr);
-              // Continue even if call scheduling fails - payment is still successful
+              // P1-2 FIX: Informer le client — le paiement est en manual capture,
+              // pas de débit tant que l'appel n'a pas eu lieu
+              currentOnError(
+                t("checkout.err.callSchedulingFailed") ||
+                "Une erreur est survenue lors de la planification de l'appel. Votre carte n'a pas été débitée. Veuillez réessayer."
+              );
+              return; // Stop le flow — pas de navigation vers payment-success
             }
           } else {
             console.warn("[PaymentRequest] Missing/invalid phone(s). Skipping call scheduling.", {
@@ -2347,140 +2352,6 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     // Les autres valeurs sont lues depuis paymentDataRef.current
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [paymentRequest, stripe]);
-
-    const sendProviderNotifications = useCallback(
-      async (
-        paymentIntentId: string,
-        clientPhoneE164: string,
-        providerPhoneE164: string
-      ) => {
-        try {
-          // Anti-doublon
-          const paymentDocRef = doc(db, "payments", paymentIntentId);
-          const paymentSnap = await getDoc(paymentDocRef);
-          if (paymentSnap.exists() && paymentSnap.data()?.notifiedAt) {
-            console.log(
-              "Notifications already sent for payment:",
-              paymentIntentId
-            );
-            return;
-          }
-
-          // ---- Données de la demande
-          const title = (
-            bookingMeta?.title ||
-            intl.formatMessage({ id: "checkout.request.untitled" })
-          ).toString();
-          const desc = (bookingMeta?.description || "").toString();
-          const country = (
-            bookingMeta?.country ||
-            provider.country ||
-            ""
-          ).toString();
-          const clientFirstName = (
-            user.firstName ||
-            bookingMeta?.clientFirstName ||
-            ""
-          ).toString();
-
-          // 1) In-app message
-          try {
-            await saveProviderMessage(
-              provider.id,
-              `🔔 ${intl.formatMessage({ id: "checkout.request.paid" })} — ${title}\n\n${desc.slice(0, 600)}${
-                country
-                  ? `\n\n${intl.formatMessage({ id: "checkout.request.country" })}: ${country}`
-                  : ""
-              }`,
-              {
-                clientFirstName,
-                requestTitle: title,
-                requestDescription: desc,
-                requestCountry: country,
-                paymentIntentId,
-                providerPhone: providerPhoneE164 || null,
-              }
-            );
-          } catch (e) {
-            console.warn("saveProviderMessage failed:", e);
-          }
-
-          console.log("admin pricing : ", adminPricing.totalAmount);
-          // return;
-          // 2) SMS + Email via pipeline
-          try {
-            const enqueueMessageEvent = httpsCallable(
-              functions,
-              "enqueueMessageEvent"
-            );
-            await enqueueMessageEvent({
-              eventId: "booking_paid_provider",
-              // eventId: "handoff.to.provider", -> to check the whatsapp messaging
-              locale: getDateLocale(language),
-              to: {
-                email: provider.email || null,
-                phone: providerPhoneE164 || null,
-                uid: provider.id,
-              },
-              context: {
-                provider: {
-                  id: provider.id,
-                  name: provider.fullName || provider.name,
-                },
-                client: {
-                  id: user.uid,
-                  firstName: clientFirstName,
-                  name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-                  country,
-                  phone: clientPhoneE164 || null,
-                },
-                request: { title, description: desc, country },
-                booking: {
-                  paymentIntentId,
-                  amount: adminPricing.totalAmount,
-                  currency: serviceCurrency.toUpperCase(),
-                  serviceType: service.serviceType,
-                  createdAt: new Date().toISOString(),
-                },
-              },
-            });
-            console.log(
-              "Provider notifications enqueued successfully for payment:",
-              paymentIntentId
-            );
-          } catch (e) {
-            console.warn("enqueueMessageEvent failed");
-            console.warn("enqueueMessageEvent failed:", e);
-          }
-
-          // Marque comme notifié
-          await setDoc(
-            paymentDocRef,
-            { notifiedAt: serverTimestamp() },
-            { merge: true }
-          );
-          console.log(
-            "Provider notifications sent successfully for payment:",
-            paymentIntentId
-          );
-        } catch (notificationError) {
-          console.warn(
-            "Failed to send provider notifications:",
-            notificationError
-          );
-        }
-      },
-      [
-        provider,
-        user,
-        service,
-        adminPricing,
-        serviceCurrency,
-        language,
-        bookingMeta,
-        intl,
-      ]
-    );
 
     const actuallySubmitPayment = useCallback(async () => {
       // VERSION 8 - LOGS COMPLETS
@@ -2786,7 +2657,15 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             }
           } catch (cfErr: unknown) {
             logCallableError("createAndScheduleCall:error", cfErr);
-            // Continue even if call scheduling fails - payment is still successful
+            // P1-2 FIX: Ne pas continuer silencieusement — informer le client
+            // Le paiement est en mode manual capture, il ne sera PAS débité
+            // tant que l'appel n'a pas lieu (capture après 2 min de conversation)
+            // NOTE: `return` (pas `throw`) pour éviter que le catch externe n'appelle onError une 2e fois
+            onError(
+              t("checkout.err.callSchedulingFailed") ||
+              "Une erreur est survenue lors de la planification de l'appel. Votre carte n'a pas été débitée. Veuillez réessayer."
+            );
+            return;
           }
         } else {
           console.warn("Missing/invalid phone(s). Skipping call scheduling.");
@@ -2796,11 +2675,9 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         const orderId = await persistPaymentDocs(paymentIntent.id);
         console.log("🔵 [STRIPE_DEBUG] persistPaymentDocs result:", { orderId });
 
-        void sendProviderNotifications(
-          paymentIntent.id,
-          clientPhoneE164,
-          providerPhoneE164
-        );
+        // P2-3 FIX: Supprimé sendProviderNotifications() ici — les notifications
+        // sont déjà envoyées par createAndScheduleCallHTTPS côté backend
+        // (message_events créés dans la Cloud Function). L'appel ici causait un double SMS.
 
         const gtag = getGtag();
         gtag?.("event", "checkout_success", {
@@ -2906,7 +2783,6 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       onSuccess,
       onError,
       persistPaymentDocs,
-      sendProviderNotifications,
       setError,
       watch,
       bookingMeta,

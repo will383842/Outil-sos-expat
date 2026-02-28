@@ -2,10 +2,13 @@
  * BloggerDashboard - Main dashboard page for bloggers
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { trackMetaViewContent, trackMetaLead } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
+import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { BloggerDashboardLayout } from '@/components/Blogger';
 import { useBlogger } from '@/hooks/useBlogger';
 import toast from 'react-hot-toast';
@@ -22,13 +25,21 @@ import {
   Loader2,
 } from 'lucide-react';
 
+const NotificationBell = lazy(() =>
+  import('@/components/shared/NotificationBell').then(m => ({ default: m.NotificationBell }))
+);
+
 const BloggerDashboard: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
+  const { language } = useApp();
+  const { user } = useAuth();
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
   const {
     dashboardData,
     blogger,
     commissions,
+    notifications,
     isLoading,
     error,
     isBlogger,
@@ -36,7 +47,19 @@ const BloggerDashboard: React.FC = () => {
     recruitmentShareUrl,
     totalBalance,
     canWithdraw,
+    markNotificationRead,
+    markAllNotificationsRead,
+    unreadNotificationsCount,
   } = useBlogger();
+
+  const telegramRoute = `/${getTranslatedRouteSlug('blogger-telegram' as RouteKey, langCode)}`;
+
+  // Telegram onboarding check (mandatory for withdrawals)
+  useEffect(() => {
+    if (user && !user.telegramOnboardingCompleted) {
+      navigate(telegramRoute, { replace: true });
+    }
+  }, [user, navigate, telegramRoute]);
 
   // Redirect if not a blogger
   useEffect(() => {
@@ -88,19 +111,31 @@ const BloggerDashboard: React.FC = () => {
       <div className="space-y-6">
         {/* Welcome Header */}
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-2xl p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">
-            <FormattedMessage
-              id="blogger.dashboard.welcome"
-              defaultMessage="Bonjour, {name} !"
-              values={{ name: blogger.firstName }}
-            />
-          </h1>
-          <p className="text-purple-100">
-            <FormattedMessage
-              id="blogger.dashboard.welcomeSubtitle"
-              defaultMessage="Bienvenue dans votre espace blogueur partenaire"
-            />
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold mb-2">
+                <FormattedMessage
+                  id="blogger.dashboard.welcome"
+                  defaultMessage="Bonjour, {name} !"
+                  values={{ name: blogger.firstName }}
+                />
+              </h1>
+              <p className="text-purple-100">
+                <FormattedMessage
+                  id="blogger.dashboard.welcomeSubtitle"
+                  defaultMessage="Bienvenue dans votre espace blogueur partenaire"
+                />
+              </p>
+            </div>
+            <Suspense fallback={<div className="w-10 h-10" />}>
+              <NotificationBell
+                notifications={notifications}
+                unreadCount={unreadNotificationsCount}
+                onMarkAsRead={markNotificationRead}
+                onMarkAllAsRead={markAllNotificationsRead}
+              />
+            </Suspense>
+          </div>
         </div>
 
         {/* Stats Cards - Mobile optimized with 2x2 grid on mobile */}

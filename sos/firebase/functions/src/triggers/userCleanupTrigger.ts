@@ -88,6 +88,9 @@ export const onUserDeleted = onDocumentDeleted(
         "kyc_documents",
         "chatters",
         "bloggers",
+        "influencers",
+        "group_admins",
+        "lawyers",
         "chatter_call_counts",
         "chatter_badges",
       ];

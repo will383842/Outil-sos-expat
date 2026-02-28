@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   Trophy,
   Medal,
@@ -66,7 +66,7 @@ const AdminInfluencersLeaderboard: React.FC = () => {
 
     try {
       const getLeaderboard = httpsCallable<{ month?: number; year?: number }, LeaderboardData>(
-        functionsWest2,
+        functionsAffiliate,
         'getInfluencerLeaderboard'
       );
 

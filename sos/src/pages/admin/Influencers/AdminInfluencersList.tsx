@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2, functions } from '@/config/firebase';
+import { functionsAffiliate, functions } from '@/config/firebase';
 import toast from 'react-hot-toast';
 import {
   Users,
@@ -152,7 +152,7 @@ const AdminInfluencersList: React.FC = () => {
     const current = !!currentVisibility;
     setVisibilityLoading((prev) => new Map(prev).set(id, true));
     try {
-      const fn = httpsCallable(functionsWest2, 'adminToggleInfluencerVisibility');
+      const fn = httpsCallable(functionsAffiliate, 'adminToggleInfluencerVisibility');
       await fn({ influencerId: id, isVisible: !current });
       setInfluencers((prev) =>
         prev.map((x) => x.id === id ? { ...x, isVisible: !current } : x)
@@ -185,7 +185,7 @@ const AdminInfluencersList: React.FC = () => {
 
     try {
       const adminGetInfluencersList = httpsCallable<any, InfluencerListResponse>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetInfluencersList'
       );
 
@@ -271,7 +271,7 @@ const AdminInfluencersList: React.FC = () => {
     setExporting(true);
     try {
       const adminExportInfluencers = httpsCallable<any, { csv: string }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminExportInfluencers'
       );
 
@@ -302,7 +302,7 @@ const AdminInfluencersList: React.FC = () => {
 
     setBulkActionLoading(true);
     try {
-      const adminBulkInfluencerAction = httpsCallable(functionsWest2, 'adminBulkInfluencerAction');
+      const adminBulkInfluencerAction = httpsCallable(functionsAffiliate, 'adminBulkInfluencerAction');
       await adminBulkInfluencerAction({
         influencerIds: Array.from(selectedIds),
         action,

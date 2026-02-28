@@ -17,6 +17,7 @@ import { Chatter, ChatterNotification } from "../types";
 import { calculateParrainN2 } from "../services/chatterReferralService";
 import { updateChatterChallengeScore } from "../scheduled/weeklyChallenges";
 import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
+import { generateWelcomeEmail } from "../../email/welcomeTemplates";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -62,17 +63,29 @@ export const chatterOnChatterCreated = onDocumentCreated(
         type: "system",
         title: "Bienvenue chez SOS-Expat Chatters !",
         titleTranslations: {
+          fr: "Bienvenue chez SOS-Expat Chatters !",
           en: "Welcome to SOS-Expat Chatters!",
-          es: "Bienvenido a SOS-Expat Chatters!",
+          es: "¡Bienvenido a SOS-Expat Chatters!",
+          de: "Willkommen bei SOS-Expat Chatters!",
           pt: "Bem-vindo ao SOS-Expat Chatters!",
+          ru: "Добро пожаловать в SOS-Expat Chatters!",
+          hi: "SOS-Expat Chatters में आपका स्वागत है!",
+          zh: "欢迎加入 SOS-Expat Chatters！",
+          ar: "مرحبًا بك في SOS-Expat Chatters!",
         },
-        message: "Pour commencer à gagner des commissions, veuillez compléter le quiz de qualification.",
+        message: "Votre compte est actif ! Connectez votre Telegram pour recevoir vos notifications et un bonus de 50$.",
         messageTranslations: {
-          en: "To start earning commissions, please complete the qualification quiz.",
-          es: "Para comenzar a ganar comisiones, complete el cuestionario de calificación.",
-          pt: "Para começar a ganhar comissões, complete o questionário de qualificação.",
+          fr: "Votre compte est actif ! Connectez votre Telegram pour recevoir vos notifications et un bonus de 50$.",
+          en: "Your account is active! Connect your Telegram to receive notifications and a $50 bonus.",
+          es: "¡Tu cuenta está activa! Conecta tu Telegram para recibir notificaciones y un bono de $50.",
+          de: "Ihr Konto ist aktiv! Verbinden Sie Ihr Telegram, um Benachrichtigungen und einen $50-Bonus zu erhalten.",
+          pt: "Sua conta está ativa! Conecte seu Telegram para receber notificações e um bônus de $50.",
+          ru: "Ваш аккаунт активен! Подключите Telegram, чтобы получать уведомления и бонус $50.",
+          hi: "आपका खाता सक्रिय है! सूचनाएं और $50 बोनस प्राप्त करने के लिए अपना टेलीग्राम कनेक्ट करें।",
+          zh: "您的账户已激活！连接您的 Telegram 以接收通知和 $50 奖金。",
+          ar: "حسابك نشط! اربط حساب Telegram الخاص بك لتلقي الإشعارات ومكافأة بقيمة 50$.",
         },
-        actionUrl: "/chatter/quiz",
+        actionUrl: "/chatter/telegram",
         isRead: false,
         emailSent: false,
         createdAt: now,
@@ -82,83 +95,12 @@ export const chatterOnChatterCreated = onDocumentCreated(
       notification.id = notificationRef.id;
       await notificationRef.set(notification);
 
-      // 2. Send welcome email
+      // 2. Send welcome email (multilingual — P2 FIX 2026-02-28)
       try {
-        const welcomeEmailHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bienvenue chez SOS-Expat Chatters</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="text-align: center; margin-bottom: 30px;">
-    <h1 style="color: #4F46E5; margin-bottom: 10px;">Bienvenue ${chatter.firstName} !</h1>
-    <p style="font-size: 18px; color: #666;">Tu fais maintenant partie de l'équipe SOS-Expat Chatters</p>
-  </div>
+        const lang = chatter.language || "fr";
+        const { subject, html, text } = generateWelcomeEmail("chatter", chatter.firstName, lang);
 
-  <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px;">
-    <h2 style="margin-top: 0;">🎯 Prochaine étape : Le Quiz</h2>
-    <p>Pour commencer à gagner des commissions, tu dois passer le quiz de qualification (5 questions, 85% requis).</p>
-    <div style="text-align: center; margin-top: 20px;">
-      <a href="https://sos-expat.com/chatter/quiz" style="display: inline-block; background: white; color: #4F46E5; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold;">Passer le Quiz →</a>
-    </div>
-  </div>
-
-  <div style="background: #F3F4F6; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-    <h3 style="color: #4F46E5; margin-top: 0;">💰 Comment ça marche ?</h3>
-    <ul style="padding-left: 20px;">
-      <li><strong>10$/appel</strong> pour chaque client que tu apportes</li>
-      <li><strong>1$/appel</strong> pour les appels de tes filleuls N1</li>
-      <li><strong>0.50$/appel</strong> pour les appels de tes filleuls N2</li>
-      <li><strong>5$/activation</strong> quand ton filleul fait son 2e appel</li>
-      <li><strong>Bonus paliers</strong> : 15$, 35$, 90$, 250$, 600$ !</li>
-    </ul>
-  </div>
-
-  <div style="background: #FEF3C7; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-    <h3 style="color: #92400E; margin-top: 0;">🚀 Astuce pour démarrer</h3>
-    <p style="margin-bottom: 0;">Rejoins les groupes Facebook d'expatriés français et aide les membres qui ont des questions juridiques. Chaque mise en relation = une commission !</p>
-  </div>
-
-  <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #E5E7EB;">
-    <p style="color: #666; font-size: 14px;">Des questions ? Réponds à cet email ou contacte ton parrain.</p>
-    <p style="color: #999; font-size: 12px;">© ${new Date().getFullYear()} SOS-Expat - Tous droits réservés</p>
-  </div>
-</body>
-</html>`;
-
-        const welcomeEmailText = `
-Bienvenue ${chatter.firstName} !
-
-Tu fais maintenant partie de l'équipe SOS-Expat Chatters.
-
-PROCHAINE ÉTAPE : LE QUIZ
-Pour commencer à gagner des commissions, tu dois passer le quiz de qualification (5 questions, 85% requis).
-Passe le quiz ici : https://sos-expat.com/chatter/quiz
-
-COMMENT ÇA MARCHE ?
-- 10$/appel pour chaque client que tu apportes
-- 1$/appel pour les appels de tes filleuls N1
-- 0.50$/appel pour les appels de tes filleuls N2
-- 5$/activation quand ton filleul fait son 2e appel
-- Bonus paliers : 15$, 35$, 90$, 250$, 600$ !
-
-ASTUCE POUR DÉMARRER
-Rejoins les groupes Facebook d'expatriés français et aide les membres qui ont des questions juridiques. Chaque mise en relation = une commission !
-
-Des questions ? Réponds à cet email ou contacte ton parrain.
-
-© ${new Date().getFullYear()} SOS-Expat - Tous droits réservés
-`;
-
-        await sendZoho(
-          chatter.email,
-          "Bienvenue chez SOS-Expat Chatters ! 🎉",
-          welcomeEmailHtml,
-          welcomeEmailText
-        );
+        await sendZoho(chatter.email, subject, html, text);
 
         // Mark notification as email sent
         await notificationRef.update({ emailSent: true });
@@ -242,11 +184,27 @@ Des questions ? Réponds à cet email ou contacte ton parrain.
           type: "system",
           title: "Nouveau chatter recruté !",
           titleTranslations: {
+            fr: "Nouveau chatter recruté !",
             en: "New chatter recruited!",
+            es: "¡Nuevo chatter reclutado!",
+            de: "Neuer Chatter rekrutiert!",
+            pt: "Novo chatter recrutado!",
+            ru: "Новый чаттер привлечён!",
+            hi: "नया चैटर भर्ती हुआ!",
+            zh: "新聊天员已招募！",
+            ar: "تم تجنيد متحدث جديد!",
           },
           message: `${chatter.firstName} ${chatter.lastName.charAt(0)}. s'est inscrit avec votre lien de recrutement.`,
           messageTranslations: {
+            fr: `${chatter.firstName} ${chatter.lastName.charAt(0)}. s'est inscrit avec votre lien de recrutement.`,
             en: `${chatter.firstName} ${chatter.lastName.charAt(0)}. signed up with your recruitment link.`,
+            es: `${chatter.firstName} ${chatter.lastName.charAt(0)}. se registró con tu enlace de reclutamiento.`,
+            de: `${chatter.firstName} ${chatter.lastName.charAt(0)}. hat sich über Ihren Rekrutierungslink registriert.`,
+            pt: `${chatter.firstName} ${chatter.lastName.charAt(0)}. inscreveu-se com o seu link de recrutamento.`,
+            ru: `${chatter.firstName} ${chatter.lastName.charAt(0)}. зарегистрировался по вашей ссылке.`,
+            hi: `${chatter.firstName} ${chatter.lastName.charAt(0)}. आपके रिक्रूटमेंट लिंक से साइन अप किया।`,
+            zh: `${chatter.firstName} ${chatter.lastName.charAt(0)}. 通过您的招募链接注册。`,
+            ar: `${chatter.firstName} ${chatter.lastName.charAt(0)}. سجّل عبر رابط التجنيد الخاص بك.`,
           },
           isRead: false,
           emailSent: false,

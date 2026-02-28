@@ -10,7 +10,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import { httpsCallable } from "firebase/functions";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import {
   Search,
   Globe,
@@ -448,7 +448,7 @@ const GroupAdminDirectory: React.FC = () => {
             limit: number;
           },
           DirectoryResponse
-        >(functionsWest2, "getGroupAdminDirectory");
+        >(functionsAffiliate, "getGroupAdminDirectory");
 
         const pageToFetch = reset ? 1 : currentPage;
 

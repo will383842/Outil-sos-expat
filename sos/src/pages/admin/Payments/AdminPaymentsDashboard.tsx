@@ -252,13 +252,9 @@ const AdminPaymentsDashboard: React.FC = () => {
   // DATA FETCHING
   // ============================================================================
 
-  const getCollectionName = (userType: PaymentUserType): string => {
-    switch (userType) {
-      case 'chatter': return 'chatter_withdrawals';
-      case 'influencer': return 'influencer_withdrawals';
-      case 'blogger': return 'blogger_withdrawals';
-      default: return 'chatter_withdrawals';
-    }
+  const getCollectionName = (_userType: PaymentUserType): string => {
+    // All user types use the centralized payment_withdrawals collection
+    return 'payment_withdrawals';
   };
 
   const mapDocToWithdrawal = (docSnap: QueryDocumentSnapshot<DocumentData>, userType: PaymentUserType): UnifiedWithdrawal => {
@@ -348,6 +344,9 @@ const AdminPaymentsDashboard: React.FC = () => {
         const colRef = collection(db, getCollectionName(userType));
         const constraints: Parameters<typeof query>[1][] = [];
 
+        // Filter by userType since all types share payment_withdrawals
+        constraints.push(where('userType', '==', userType));
+
         if (statusFilter !== 'all') {
           constraints.push(where('status', '==', statusFilter));
         }
@@ -417,7 +416,7 @@ const AdminPaymentsDashboard: React.FC = () => {
         const colRef = collection(db, getCollectionName(userType));
 
         // Pending
-        const pendingQuery = query(colRef, where('status', '==', 'pending'));
+        const pendingQuery = query(colRef, where('userType', '==', userType), where('status', '==', 'pending'));
         const pendingSnap = await getDocs(pendingQuery);
         pendingSnap.forEach(doc => {
           const data = doc.data();
@@ -428,7 +427,7 @@ const AdminPaymentsDashboard: React.FC = () => {
         // Processing (includes approved, queued, processing, sent)
         const processingStatuses = ['approved', 'queued', 'processing', 'sent'];
         for (const status of processingStatuses) {
-          const processingQuery = query(colRef, where('status', '==', status));
+          const processingQuery = query(colRef, where('userType', '==', userType), where('status', '==', status));
           const processingSnap = await getDocs(processingQuery);
           processingSnap.forEach(doc => {
             const data = doc.data();
@@ -440,6 +439,7 @@ const AdminPaymentsDashboard: React.FC = () => {
         // Completed in last 30 days
         const completedQuery = query(
           colRef,
+          where('userType', '==', userType),
           where('status', '==', 'completed'),
           where('completedAt', '>=', Timestamp.fromDate(thirtyDaysAgo))
         );
@@ -454,6 +454,7 @@ const AdminPaymentsDashboard: React.FC = () => {
         // Failed in last 30 days (for success rate)
         const failedQuery = query(
           colRef,
+          where('userType', '==', userType),
           where('status', 'in', ['failed', 'rejected']),
           where('requestedAt', '>=', Timestamp.fromDate(thirtyDaysAgo))
         );

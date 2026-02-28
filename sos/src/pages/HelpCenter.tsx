@@ -14,6 +14,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
+import { BreadcrumbSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
 import { parseLocaleFromPath, getLocaleString } from "../multilingual-system";
@@ -332,9 +334,33 @@ const HelpCenter: React.FC = () => {
     return html;
   };
 
+  // SEO breadcrumbs
+  const breadcrumbs = [
+    { name: intl.formatMessage({ id: "nav.home" }), url: "/" },
+    { name: intl.formatMessage({ id: "helpCenter.title" }) },
+  ];
+
   // ======================= Vue liste =======================
   return (
     <Layout>
+      <SEOHead
+        title={intl.formatMessage({ id: "helpCenter.title" }) + " | SOS Expat"}
+        description={intl.formatMessage({ id: "helpCenter.subtitle" })}
+        canonicalUrl="/centre-aide"
+        author="Manon"
+        structuredData={{
+          "@type": "CollectionPage",
+          "@context": "https://schema.org",
+          name: intl.formatMessage({ id: "helpCenter.title" }),
+          description: intl.formatMessage({ id: "helpCenter.subtitle" }),
+          url: `https://sos-expat.com/${currentLocale}/centre-aide`,
+          provider: {
+            "@type": "Organization",
+            name: "SOS Expat",
+          },
+        }}
+      />
+      <BreadcrumbSchema items={breadcrumbs} />
       <div className="min-h-screen bg-gray-50">
         {/* HERO */}
         <header className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">

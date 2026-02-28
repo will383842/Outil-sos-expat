@@ -237,6 +237,12 @@ export const wiseWebhook = onRequest(
         });
       }
 
+      // Webhook heartbeat (fire-and-forget) — monitoring freshness
+      db.collection('webhook_heartbeats').doc('wise').set({
+        lastReceivedAt: FieldValue.serverTimestamp(),
+        lastEventType: event.event_type,
+      }, { merge: true }).catch(() => {});
+
       res.status(200).send("OK");
     } catch (error) {
       logger.error("[WiseWebhook] Error processing webhook", { error });
@@ -363,19 +369,28 @@ async function createPayoutNotification(
         return;
     }
 
-    // Create message event for notification pipeline
+    // Create message event for notification pipeline (standard schema)
     await db.collection("message_events").add({
       eventId: eventType,
-      recipientUserId: userId,
-      recipientEmail: userData.email,
-      recipientName: userData.displayName || userData.firstName || "Affilié",
-      data: {
+      uid: userId,
+      locale: userData.preferredLanguage || "fr",
+      to: {
+        email: userData.email,
+        uid: userId,
+      },
+      context: {
+        user: {
+          uid: userId,
+          email: userData.email,
+        },
+      },
+      vars: {
+        recipientName: userData.displayName || userData.firstName || "Affilié",
         amount: amount / 100,
         currency: "USD",
         status,
       },
-      channels: ["email", "push", "in_app"],
-      status: "pending",
+      channels: ["email", "push", "inapp"],
       createdAt: Timestamp.now(),
     });
 

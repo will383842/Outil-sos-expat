@@ -804,6 +804,8 @@ export function useUrgentDisputesAlert(onNewUrgent?: (dispute: Dispute) => void)
 
       // Update ref (doesn't trigger re-render or effect re-run)
       seenIdsRef.current = new Set(disputes.map(d => d.id));
+    }, (err) => {
+      console.error('[useDisputes] Urgent disputes subscription error:', err);
     });
 
     return () => unsubscribe();

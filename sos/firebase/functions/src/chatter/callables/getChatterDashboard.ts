@@ -28,6 +28,7 @@ import { getChatterConfigCached } from "../utils";
 import { getNextTierBonus, getClientEarnings } from "../services/chatterReferralService";
 import { getActivePromotions } from "../services/chatterPromotionService";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
+import { getWithdrawalFee } from "../../services/feeCalculationService";
 
 // Helper function to get week start date (Monday)
 function getWeekStart(date: Date): Date {
@@ -98,32 +99,18 @@ export const getChatterDashboard = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetChatterDashboardResponse> => {
-    // ULTRA DEBUG - Log immediately
-    console.log("[getChatterDashboard] ===== FUNCTION CALLED =====");
-    logger.info("[getChatterDashboard] ===== FUNCTION ENTRY =====", {
-      hasAuth: !!request.auth,
-      timestamp: new Date().toISOString(),
-    });
-
-    try {
-      ensureInitialized();
-    } catch (initError) {
-      console.error("[getChatterDashboard] ensureInitialized FAILED:", initError);
-      throw new HttpsError("internal", "Function initialization failed");
-    }
+    ensureInitialized();
 
     // 1. Check authentication
     if (!request.auth) {
-      logger.warn("[getChatterDashboard] No auth - rejecting");
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
     const userId = request.auth.uid;
-    console.log("[getChatterDashboard] userId:", userId);
     const db = getFirestore();
 
     try {
@@ -185,10 +172,10 @@ export const getChatterDashboard = onCall(
         if (data.status === "available" || data.status === "paid") {
           monthlyEarnings += data.amount;
         }
-        if (data.type === "client_referral") {
+        if (data.type === "client_referral" || data.type === "client_call") {
           monthlyClients++;
         }
-        if (data.type === "recruitment") {
+        if (data.type === "recruitment" || data.type === "activation_bonus" || data.type === "n1_recruit_bonus") {
           monthlyRecruits++;
         }
       });
@@ -240,10 +227,10 @@ export const getChatterDashboard = onCall(
           if (commission.status === "available" || commission.status === "paid") {
             earningsWeekly[weekIndex] += commission.amount;
           }
-          if (commission.type === "client_referral") {
+          if (commission.type === "client_referral" || commission.type === "client_call") {
             clientsWeekly[weekIndex]++;
           }
-          if (commission.type === "recruitment") {
+          if (commission.type === "recruitment" || commission.type === "activation_bonus" || commission.type === "n1_recruit_bonus") {
             recruitsWeekly[weekIndex]++;
           }
         }
@@ -280,10 +267,10 @@ export const getChatterDashboard = onCall(
           if (commission.status === "available" || commission.status === "paid") {
             lastMonthEarnings += commission.amount;
           }
-          if (commission.type === "client_referral") {
+          if (commission.type === "client_referral" || commission.type === "client_call") {
             lastMonthClients++;
           }
-          if (commission.type === "recruitment") {
+          if (commission.type === "recruitment" || commission.type === "activation_bonus" || commission.type === "n1_recruit_bonus") {
             lastMonthRecruits++;
           }
         }
@@ -323,6 +310,11 @@ export const getChatterDashboard = onCall(
           monthlyRank !== null && lastMonthRank !== null
             ? lastMonthRank - monthlyRank // Positive = improved (moved up in rank)
             : 0,
+        lastMonth: {
+          earnings: lastMonthEarnings,
+          clients: lastMonthClients,
+          recruits: lastMonthRecruits,
+        },
       };
 
       // Build forecast object
@@ -348,6 +340,7 @@ export const getChatterDashboard = onCall(
         estimatedMonthlyEarnings,
         estimatedNextLevel,
         potentialBonus,
+        currentDayOfMonth: dayOfMonth,
       };
 
       // 7. Get upcoming Zoom meeting
@@ -403,6 +396,7 @@ export const getChatterDashboard = onCall(
           firstName: chatter.firstName,
           lastName: chatter.lastName,
           phone: chatter.phone,
+          whatsapp: chatter.whatsapp,
           photoUrl: chatter.photoUrl,
           country: chatter.country,
           interventionCountries: chatter.interventionCountries,
@@ -479,9 +473,13 @@ export const getChatterDashboard = onCall(
         config: {
           commissionClientAmount: config.commissionClientAmount,
           commissionRecruitmentAmount: config.commissionRecruitmentAmount,
+          commissionClientCallAmount: config.commissionClientCallAmount,
+          commissionN1CallAmount: config.commissionN1CallAmount,
+          commissionN2CallAmount: config.commissionN2CallAmount,
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
           levelThresholds: config.levelThresholds,
           levelBonuses: config.levelBonuses,
+          withdrawalFeeCents: await getWithdrawalFee().then(f => f.fixedFee * 100).catch(() => 300),
         },
         // Referral system stats
         referralStats: {

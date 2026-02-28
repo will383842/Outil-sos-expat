@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   Settings,
   Save,
@@ -126,7 +126,7 @@ const AdminInfluencersConfig: React.FC = () => {
 
     try {
       const adminGetInfluencerConfig = httpsCallable<void, { config: InfluencerConfig }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetInfluencerConfig'
       );
 
@@ -160,7 +160,7 @@ const AdminInfluencersConfig: React.FC = () => {
     setSuccess(false);
 
     try {
-      const adminUpdateInfluencerConfig = httpsCallable(functionsWest2, 'adminUpdateInfluencerConfig');
+      const adminUpdateInfluencerConfig = httpsCallable(functionsAffiliate, 'adminUpdateInfluencerConfig');
       await adminUpdateInfluencerConfig({
         updates: {
           clientReferralCommission: config.clientReferralCommission,
@@ -192,7 +192,7 @@ const AdminInfluencersConfig: React.FC = () => {
     setError(null);
 
     try {
-      const adminUpdateCommissionRules = httpsCallable(functionsWest2, 'adminUpdateCommissionRules');
+      const adminUpdateCommissionRules = httpsCallable(functionsAffiliate, 'adminUpdateCommissionRules');
       await adminUpdateCommissionRules({ rules, reason });
       setCommissionRules(rules);
       setSuccess(true);
@@ -212,7 +212,7 @@ const AdminInfluencersConfig: React.FC = () => {
     setError(null);
 
     try {
-      const adminUpdateAntiFraudConfig = httpsCallable(functionsWest2, 'adminUpdateAntiFraudConfig');
+      const adminUpdateAntiFraudConfig = httpsCallable(functionsAffiliate, 'adminUpdateAntiFraudConfig');
       await adminUpdateAntiFraudConfig({ antiFraud });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -229,7 +229,7 @@ const AdminInfluencersConfig: React.FC = () => {
     const newValue = !config.isInfluencerListingPageVisible;
     setTogglingVisibility(true);
     try {
-      const updateConfig = httpsCallable(functionsWest2, 'adminUpdateInfluencerConfig');
+      const updateConfig = httpsCallable(functionsAffiliate, 'adminUpdateInfluencerConfig');
       await updateConfig({ updates: { isInfluencerListingPageVisible: newValue } });
       setConfig({ ...config, isInfluencerListingPageVisible: newValue });
       setVisibilitySuccess(true);

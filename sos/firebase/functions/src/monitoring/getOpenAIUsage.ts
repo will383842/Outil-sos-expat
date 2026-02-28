@@ -15,6 +15,7 @@ import * as functions from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
 import { OPENAI_API_KEY } from '../lib/secrets';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
 // ============================================================================
 // TYPES
@@ -361,7 +362,7 @@ export const getOpenAIUsage = functions.onCall(
     memory: '256MiB',
     timeoutSeconds: 60,
     secrets: [OPENAI_API_KEY],
-    cors: [/sos-expat\.com$/, /localhost/],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<OpenAIUsageResponse> => {
     // Authentication check

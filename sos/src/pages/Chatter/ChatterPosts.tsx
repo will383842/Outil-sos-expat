@@ -8,7 +8,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   FileText,
   Plus,
@@ -99,7 +99,7 @@ const ChatterPosts: React.FC = () => {
     setError(null);
 
     try {
-      const getMyPosts = httpsCallable(functionsWest2, 'getMyPosts');
+      const getMyPosts = httpsCallable(functionsAffiliate, 'getMyPosts');
 
       const result = await getMyPosts({
         status: filterStatus === 'all' ? undefined : filterStatus,
@@ -138,7 +138,7 @@ const ChatterPosts: React.FC = () => {
     setError(null);
 
     try {
-      const submitPost = httpsCallable(functionsWest2, 'submitPost');
+      const submitPost = httpsCallable(functionsAffiliate, 'submitPost');
 
       const result = await submitPost(formData);
       const data = result.data as { success: boolean; postId?: string };

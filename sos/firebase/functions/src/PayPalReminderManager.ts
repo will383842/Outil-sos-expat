@@ -215,10 +215,11 @@ export class PayPalReminderManager {
       locale: providerData.preferredLanguage || "fr",
       to: {
         email: reminder.email,
-        userId: reminder.userId,
+        uid: reminder.userId, // P0 FIX: worker reads to.uid, not to.userId
       },
       context: {
         user: {
+          uid: reminder.userId, // P0 FIX: needed for inapp notifications
           firstName: providerData.firstName || providerData.name?.split(" ")[0] || "",
           lastName: providerData.lastName || "",
           displayName: providerData.fullName || providerData.name || reminder.email,
@@ -241,19 +242,27 @@ export class PayPalReminderManager {
     });
 
     // Creer une notification in-app
+    const isFirstReminder = reminder.reminderNumber === 1;
+    const isEarlyReminder = reminder.reminderNumber <= 3;
     await this.db.collection("notifications").add({
       userId: reminder.userId,
       type: "paypal_connection_reminder",
-      title: reminder.reminderNumber === 1
+      title: isFirstReminder
         ? "Connectez votre compte PayPal"
-        : reminder.reminderNumber <= 3
+        : isEarlyReminder
           ? "Rappel: Connexion PayPal requise"
           : "Action urgente: Connexion PayPal",
-      message: reminder.reminderNumber <= 3
-        ? "Pour etre visible sur la plateforme et recevoir des paiements, " +
-          "veuillez connecter votre compte PayPal."
-        : "Votre profil n'est pas visible car vous n'avez pas connecte PayPal. " +
-          "Connectez-vous maintenant pour commencer a recevoir des clients.",
+      message: isEarlyReminder
+        ? "Pour etre visible sur la plateforme et recevoir des paiements, veuillez connecter votre compte PayPal."
+        : "Votre profil n'est pas visible car vous n'avez pas connecte PayPal. Connectez-vous maintenant pour commencer a recevoir des clients.",
+      titleTranslations: isFirstReminder
+        ? { fr: "Connectez votre compte PayPal", en: "Connect your PayPal account", es: "Conecte su cuenta PayPal", de: "Verbinden Sie Ihr PayPal-Konto", pt: "Conecte sua conta PayPal", ru: "Подключите аккаунт PayPal", hi: "अपना PayPal खाता कनेक्ट करें", zh: "连接您的 PayPal 账户", ar: "قم بربط حسابك على PayPal" }
+        : isEarlyReminder
+          ? { fr: "Rappel: Connexion PayPal requise", en: "Reminder: PayPal connection required", es: "Recordatorio: Conexión PayPal requerida", de: "Erinnerung: PayPal-Verbindung erforderlich", pt: "Lembrete: Conexão PayPal necessária", ru: "Напоминание: требуется подключение PayPal", hi: "रिमाइंडर: PayPal कनेक्शन आवश्यक", zh: "提醒：需要连接 PayPal", ar: "تذكير: يجب ربط PayPal" }
+          : { fr: "Action urgente: Connexion PayPal", en: "Urgent: Connect PayPal", es: "Urgente: Conecte PayPal", de: "Dringend: PayPal verbinden", pt: "Urgente: Conecte PayPal", ru: "Срочно: подключите PayPal", hi: "तत्काल: PayPal कनेक्ट करें", zh: "紧急：连接 PayPal", ar: "عاجل: اربط PayPal" },
+      messageTranslations: isEarlyReminder
+        ? { fr: "Pour être visible sur la plateforme et recevoir des paiements, veuillez connecter votre compte PayPal.", en: "To be visible on the platform and receive payments, please connect your PayPal account.", es: "Para ser visible en la plataforma y recibir pagos, conecte su cuenta PayPal.", de: "Um auf der Plattform sichtbar zu sein und Zahlungen zu erhalten, verbinden Sie bitte Ihr PayPal-Konto.", pt: "Para ficar visível na plataforma e receber pagamentos, conecte sua conta PayPal.", ru: "Чтобы быть видимым на платформе и получать платежи, подключите аккаунт PayPal.", hi: "प्लेटफ़ॉर्म पर दिखाई देने और भुगतान प्राप्त करने के लिए, अपना PayPal खाता कनेक्ट करें।", zh: "为了在平台上可见并接收付款，请连接您的 PayPal 账户。", ar: "لتكون مرئياً على المنصة وتستقبل المدفوعات، يرجى ربط حسابك على PayPal." }
+        : { fr: "Votre profil n'est pas visible car vous n'avez pas connecté PayPal. Connectez-vous maintenant pour commencer à recevoir des clients.", en: "Your profile is not visible because PayPal is not connected. Connect now to start receiving clients.", es: "Su perfil no es visible porque PayPal no está conectado. Conéctese ahora para empezar a recibir clientes.", de: "Ihr Profil ist nicht sichtbar, da PayPal nicht verbunden ist. Verbinden Sie sich jetzt, um Kunden zu empfangen.", pt: "Seu perfil não está visível porque o PayPal não está conectado. Conecte agora para começar a receber clientes.", ru: "Ваш профиль невидим, так как PayPal не подключён. Подключитесь сейчас, чтобы начать получать клиентов.", hi: "आपकी प्रोफ़ाइल दिखाई नहीं दे रही क्योंकि PayPal कनेक्ट नहीं है। क्लाइंट प्राप्त करना शुरू करने के लिए अभी कनेक्ट करें।", zh: "您的个人资料不可见，因为 PayPal 未连接。立即连接以开始接收客户。", ar: "ملفك الشخصي غير مرئي لأن PayPal غير مربوط. اربطه الآن لبدء استقبال العملاء." },
       data: {
         action: "connect_paypal",
         reminderNumber: reminder.reminderNumber,
@@ -600,9 +609,24 @@ export async function onPayPalConnected(
   await db.collection("notifications").add({
     userId,
     type: "paypal_connected",
-    title: "Compte PayPal connecte",
-    message: "Votre compte PayPal est maintenant connecte. " +
-      "Votre profil est desormais visible sur la plateforme et vous pouvez recevoir des paiements.",
+    title: "Compte PayPal connecté",
+    message: "Votre compte PayPal est maintenant connecté. Votre profil est désormais visible sur la plateforme et vous pouvez recevoir des paiements.",
+    titleTranslations: {
+      fr: "Compte PayPal connecté", en: "PayPal account connected", es: "Cuenta PayPal conectada",
+      de: "PayPal-Konto verbunden", pt: "Conta PayPal conectada", ru: "Аккаунт PayPal подключён",
+      hi: "PayPal खाता कनेक्ट हुआ", zh: "PayPal 账户已连接", ar: "تم ربط حساب PayPal",
+    },
+    messageTranslations: {
+      fr: "Votre compte PayPal est maintenant connecté. Votre profil est désormais visible sur la plateforme et vous pouvez recevoir des paiements.",
+      en: "Your PayPal account is now connected. Your profile is now visible on the platform and you can receive payments.",
+      es: "Su cuenta PayPal está conectada. Su perfil es ahora visible en la plataforma y puede recibir pagos.",
+      de: "Ihr PayPal-Konto ist verbunden. Ihr Profil ist jetzt auf der Plattform sichtbar und Sie können Zahlungen empfangen.",
+      pt: "Sua conta PayPal está conectada. Seu perfil agora está visível na plataforma e você pode receber pagamentos.",
+      ru: "Ваш аккаунт PayPal подключён. Ваш профиль теперь виден на платформе, и вы можете получать платежи.",
+      hi: "आपका PayPal खाता कनेक्ट हो गया। आपकी प्रोफ़ाइल अब प्लेटफ़ॉर्म पर दिखाई दे रही है और आप भुगतान प्राप्त कर सकते हैं।",
+      zh: "您的 PayPal 账户已连接。您的个人资料现在在平台上可见，可以接收付款。",
+      ar: "تم ربط حسابك على PayPal. ملفك الشخصي مرئي الآن على المنصة ويمكنك استقبال المدفوعات.",
+    },
     data: {
       paypalMerchantId,
       action: "view_dashboard",

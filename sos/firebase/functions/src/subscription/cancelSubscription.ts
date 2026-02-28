@@ -673,6 +673,18 @@ export const reactivateSubscription = functions
         updatedAt: now
       });
 
+      // 6b. Sync sos_profiles + users subscriptionStatus
+      await db.doc(`sos_profiles/${providerId}`).set({
+        subscriptionStatus: 'active',
+        hasActiveSubscription: true,
+        updatedAt: now
+      }, { merge: true });
+      await db.doc(`users/${providerId}`).set({
+        subscriptionStatus: 'active',
+        hasActiveSubscription: true,
+        updatedAt: now
+      }, { merge: true });
+
       // 7. Get provider data for email
       const providerData = providerDoc.exists
         ? providerDoc.data() as ProviderData

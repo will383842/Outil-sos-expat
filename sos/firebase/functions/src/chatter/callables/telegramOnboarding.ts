@@ -18,6 +18,7 @@ import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import * as crypto from "crypto";
 import { REFERRAL_CONFIG } from "../types";
 import { handleWithdrawalCallback } from "../../telegram/withdrawalConfirmation";
@@ -167,12 +168,14 @@ function buildDeepLink(code: string): string {
 }
 
 /**
- * Build a QR code URL (using a public QR generator API)
- * In production, consider generating this server-side
+ * Build a QR code URL.
+ * P3-04 FIX: Removed dependency on external api.qrserver.com (SPOF).
+ * Frontend uses qrcode.react (QRCodeSVG) to generate QR locally.
+ * This returns the deep link itself — frontend generates the QR from it.
  */
 function buildQrCodeUrl(deepLink: string): string {
-  const encoded = encodeURIComponent(deepLink);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encoded}&format=png`;
+  // Return the deep link as-is; frontend renders QR via qrcode.react
+  return deepLink;
 }
 
 /**
@@ -367,14 +370,7 @@ export const generateTelegramLink = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GenerateLinkOutput> => {
     ensureInitialized();
@@ -475,14 +471,7 @@ export const checkTelegramLinkStatus = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 15,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<CheckStatusOutput> => {
     ensureInitialized();
@@ -656,14 +645,116 @@ export const telegramChatterBotWebhook = onRequest(
       const telegramFirstName = from?.first_name || null;
       const telegramLastName = from?.last_name || null;
 
+      // P3-01 FIX: Handle bot commands (/balance, /stats, /help)
+      if (text === "/help" || text === "/aide") {
+        await sendTelegramMessage(
+          chatId,
+          "📋 <b>Commandes disponibles</b>\n\n" +
+            "/balance — Voir votre solde\n" +
+            "/stats — Voir vos statistiques\n" +
+            "/help — Afficher cette aide\n\n" +
+            "💡 Pour gérer votre compte, rendez-vous sur le dashboard:\n" +
+            "📱 <a href='https://sos-expat.com/dashboard'>Mon Dashboard</a>"
+        );
+        res.status(200).send("OK");
+        return;
+      }
+
+      if (text === "/balance" || text === "/solde") {
+        const db = getDb();
+        // Search across ALL affiliate role collections (not just chatters)
+        const roleCollections = ["chatters", "influencers", "bloggers", "group_admins"];
+        let foundData: FirebaseFirestore.DocumentData | null = null;
+        let foundRole = "";
+
+        for (const collection of roleCollections) {
+          const query = await db
+            .collection(collection)
+            .where("telegramId", "==", telegramId)
+            .limit(1)
+            .get();
+          if (!query.empty) {
+            foundData = query.docs[0].data();
+            foundRole = collection.replace("_", " ").replace(/s$/, "");
+            break;
+          }
+        }
+
+        if (!foundData) {
+          await sendTelegramMessage(
+            chatId,
+            "❌ Aucun compte lié à ce Telegram.\nUtilisez le lien dans l'application pour connecter votre compte."
+          );
+        } else {
+          const available = ((foundData.availableBalance || 0) / 100).toFixed(2);
+          const pending = ((foundData.pendingBalance || 0) / 100).toFixed(2);
+          const totalEarned = ((foundData.totalEarned || 0) / 100).toFixed(2);
+          await sendTelegramMessage(
+            chatId,
+            `💰 <b>Votre solde</b> (${foundRole})\n\n` +
+              `Disponible: <b>$${available}</b>\n` +
+              `En attente: $${pending}\n` +
+              `Total gagné: $${totalEarned}\n\n` +
+              `📱 <a href='https://sos-expat.com/dashboard'>Demander un retrait</a>`
+          );
+        }
+        res.status(200).send("OK");
+        return;
+      }
+
+      if (text === "/stats" || text === "/statistiques") {
+        const db = getDb();
+        // Search across ALL affiliate role collections
+        const roleCollections = ["chatters", "influencers", "bloggers", "group_admins"];
+        let foundData: FirebaseFirestore.DocumentData | null = null;
+        let foundRole = "";
+
+        for (const collection of roleCollections) {
+          const query = await db
+            .collection(collection)
+            .where("telegramId", "==", telegramId)
+            .limit(1)
+            .get();
+          if (!query.empty) {
+            foundData = query.docs[0].data();
+            foundRole = collection.replace("_", " ").replace(/s$/, "");
+            break;
+          }
+        }
+
+        if (!foundData) {
+          await sendTelegramMessage(
+            chatId,
+            "❌ Aucun compte lié à ce Telegram.\nUtilisez le lien dans l'application pour connecter votre compte."
+          );
+        } else {
+          const totalClients = foundData.totalClients || 0;
+          const totalRecruits = foundData.totalRecruits || 0;
+          const totalEarned = ((foundData.totalEarned || 0) / 100).toFixed(2);
+          const available = ((foundData.availableBalance || 0) / 100).toFixed(2);
+          await sendTelegramMessage(
+            chatId,
+            `📊 <b>Vos statistiques</b> (${foundRole})\n\n` +
+              `Clients référés: <b>${totalClients}</b>\n` +
+              `Recrutés: <b>${totalRecruits}</b>\n` +
+              `Total gagné: <b>$${totalEarned}</b>\n` +
+              `Solde disponible: $${available}\n\n` +
+              `📱 <a href='https://sos-expat.com/dashboard'>Voir le dashboard</a>`
+          );
+        }
+        res.status(200).send("OK");
+        return;
+      }
+
       // Check if it's a /start command with payload
       if (!text.startsWith("/start")) {
-        // Not a start command, send help message
+        // Unknown command or text, send help
         await sendTelegramMessage(
           chatId,
           "👋 <b>Bienvenue sur SOS-Expat!</b>\n\n" +
+            "Tapez /help pour voir les commandes disponibles.\n\n" +
             "Pour connecter votre compte, utilisez le lien fourni dans l'application SOS-Expat.\n\n" +
-            "📱 <a href='https://sos-expat.com/chatter'>Devenir Chatter</a>"
+            "📱 <a href='https://sos-expat.com'>Visiter SOS-Expat</a>"
         );
         res.status(200).send("OK");
         return;
@@ -987,14 +1078,7 @@ export const skipTelegramOnboarding = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 15,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
     ensureInitialized();

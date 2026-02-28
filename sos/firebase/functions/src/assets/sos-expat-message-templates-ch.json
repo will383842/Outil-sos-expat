@@ -130,6 +130,75 @@
       }
     },
     {
+      "id": "call.completed",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "通话结束",
+        "body": "您的通话已结束。时长：{{DURATION}}"
+      },
+      "inapp": {
+        "title": "通话结束",
+        "body": "您的通话已结束。时长：{{DURATION}}。感谢使用 SOS Expat！",
+        "action": {
+          "label": "留下评价",
+          "deeplink": "/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.refund.early_disconnect",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "因断线退款",
+        "body": "您的通话过早中断。退款已启动。"
+      },
+      "inapp": {
+        "title": "因提前断线退款",
+        "body": "您的通话在最低时间之前中断。已启动自动退款。",
+        "action": {
+          "label": "查看",
+          "deeplink": "/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.failed.early_disconnect.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "通话中断",
+        "body": "通话过早中断。客户已获得退款。"
+      },
+      "inapp": {
+        "title": "通话过早中断",
+        "body": "通话在最低计费时间之前中断。客户已自动获得退款。",
+        "action": {
+          "label": "查看",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
       "id": "invoice.created",
       "roles": ["client"],
       "channels": {

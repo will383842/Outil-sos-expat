@@ -1015,7 +1015,9 @@ export function getLocalizedTemplate(
   lang: string | undefined,
   eventId: TelegramEventType
 ): NotificationTemplate {
-  const normalizedLang = (lang || 'fr').substring(0, 2).toLowerCase() as SupportedLanguage;
+  const raw = (lang || 'fr').substring(0, 2).toLowerCase();
+  // Normalize: pipeline uses 'ch' for Chinese, but templates use 'zh'
+  const normalizedLang = (raw === 'ch' ? 'zh' : raw) as SupportedLanguage;
   const templates = I18N_TEMPLATES[normalizedLang] || I18N_TEMPLATES.fr;
   return templates[eventId] || I18N_TEMPLATES.fr[eventId];
 }

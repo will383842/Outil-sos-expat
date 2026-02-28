@@ -71,6 +71,7 @@ type Destinations = {
   phone?: string;
   whatsapp?: string;
   fcmToken?: string;
+  uid?: string;
 };
 
 type Context = {
@@ -89,6 +90,7 @@ type MessageEvent = {
   channels?: Channel[];
   dedupeKey?: string;
   uid?: string;
+  createdAt?: admin.firestore.Timestamp;
 };
 
 // ----- Helpers pour sélection des canaux
@@ -99,9 +101,10 @@ function hasContact(channel: Channel, ctx: Context): boolean {
     return (
       (Array.isArray(ctx?.user?.fcmTokens) &&
         (ctx.user?.fcmTokens?.length ?? 0) > 0) ||
-      !!ctx?.to?.fcmToken
+      !!ctx?.to?.fcmToken ||
+      !!ctx?.user?.uid || !!ctx?.to?.uid  // P0 FIX: tokens will be looked up from Firestore by uid
     );
-  if (channel === "inapp") return !!ctx?.user?.uid;
+  if (channel === "inapp") return !!(ctx?.user?.uid || ctx?.to?.uid);  // P0 FIX: fallback on to.uid
   return false;
 }
 
@@ -150,7 +153,12 @@ async function sendOne(
       ? render(tmpl.email.text, { ...ctx, ...evt.vars })
       : undefined;
 
-    const messageId = await sendZoho(to, subject, html, text || html);
+    const emailLang = (ctx as Record<string, unknown>)?.locale as string | undefined;
+    const messageId = await sendZoho(to, subject, html, text || html, { lang: emailLang });
+    if (messageId === "SKIPPED_NOT_DELIVERABLE") {
+      console.log(`[worker] Email to ${to.slice(0, 4)}*** skipped (not deliverable)`);
+      return { messageId: "SKIPPED_NOT_DELIVERABLE" };
+    }
     return { messageId };
   }
 
@@ -230,9 +238,37 @@ async function sendOne(
   }
 
   if (channel === "push") {
-    const token = ctx?.user?.fcmTokens?.[0] || evt.to?.fcmToken;
-    if (!token || !tmpl.push?.enabled)
-      throw new Error("Missing FCM token or disabled template");
+    if (!tmpl.push?.enabled)
+      throw new Error("Push template disabled");
+
+    // P0 FIX: Resolve FCM tokens — try context first, then Firestore lookup
+    let tokens: string[] = [];
+
+    if (Array.isArray(ctx?.user?.fcmTokens) && ctx.user!.fcmTokens!.length > 0) {
+      tokens = ctx.user!.fcmTokens!;
+    } else if (evt.to?.fcmToken) {
+      tokens = [evt.to.fcmToken];
+    } else {
+      // Lookup tokens from Firestore for this user (multi-device support)
+      const uid = ctx?.user?.uid || evt.to?.uid || evt.uid;
+      if (uid) {
+        try {
+          const tokenSnap = await getDb()
+            .collection("fcm_tokens")
+            .doc(uid)
+            .collection("tokens")
+            .where("isValid", "==", true)
+            .limit(10)
+            .get();
+          tokens = tokenSnap.docs.map((d) => d.data().token as string);
+        } catch (e) {
+          console.warn(`[push] Failed to lookup FCM tokens for ${uid}:`, e);
+        }
+      }
+    }
+
+    if (tokens.length === 0)
+      throw new Error("Missing FCM token");
 
     const title = render(tmpl.push.title || "", { ...ctx, ...evt.vars });
     const body = render(tmpl.push.body || "", { ...ctx, ...evt.vars });
@@ -240,12 +276,22 @@ async function sendOne(
       ? { deeplink: String(tmpl.push.deeplink) }
       : {};
 
-    await sendPush(token, title, body, data);
-    return { messageId: `fcm_${Date.now()}` };
+    // Send to all tokens (multi-device), pass uid for cleanup on invalid tokens
+    const pushUid = ctx?.user?.uid || evt.to?.uid || evt.uid;
+    const results = await Promise.allSettled(
+      tokens.map((t) => sendPush(t, title, body, data, pushUid))
+    );
+    const succeeded = results.filter((r) => r.status === "fulfilled").length;
+    if (succeeded === 0) {
+      // All failed — throw the first error
+      const firstErr = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+      throw firstErr.reason;
+    }
+    return { messageId: `fcm_${Date.now()}_${succeeded}of${tokens.length}` };
   }
 
   if (channel === "inapp") {
-    const uid = ctx?.user?.uid;
+    const uid = ctx?.user?.uid || evt.to?.uid || evt.uid; // P0 FIX: fallback on to.uid and evt.uid
     if (!uid || !tmpl.inapp?.enabled)
       throw new Error("Missing user ID or disabled template");
 
@@ -374,7 +420,7 @@ export const onMessageEventCreate = onDocumentCreated(
     // 2) Résolution de la langue
     console.log(`\n📬 [${debugId}] STEP 2: Language resolution...`);
     const lang = resolveLang(
-      evt?.locale || evt?.context?.user?.preferredLanguage
+      evt?.locale || evt?.context?.user?.preferredLanguage || (evt?.context?.user as Record<string, unknown>)?.language as string | undefined
     );
     const debugLocale = resolveLang(evt?.locale);
     const debugUserLocale = resolveLang(evt?.context?.user?.preferredLanguage);
@@ -439,6 +485,11 @@ export const onMessageEventCreate = onDocumentCreated(
       locale: lang,
       to: evt.to,
     };
+    // P2 FIX: Inject evt.uid into context.user.uid if missing,
+    // so hasContact("push"/"inapp") can find tokens via Firestore lookup
+    if (evt.uid && !context.user?.uid) {
+      context.user = { ...(context.user || {}), uid: evt.uid };
+    }
 
     // Debug: Check hasContact for each channel
     console.log(`📬 [${debugId}]   Checking contact availability per channel:`);
@@ -582,12 +633,9 @@ function getDestinationForChannel(
     case "sms":
       return ctx?.user?.phoneNumber || evt.to?.phone;
     case "push":
-      return (
-        ((ctx?.user?.fcmTokens?.[0] || evt.to?.fcmToken) ?? "").slice(0, 20) +
-        "..."
-      );
+      return ctx?.user?.uid || evt.to?.uid || evt.uid || evt.to?.fcmToken?.slice(0, 20);
     case "inapp":
-      return ctx?.user?.uid;
+      return ctx?.user?.uid || evt.to?.uid || evt.uid;
     default:
       return undefined;
   }

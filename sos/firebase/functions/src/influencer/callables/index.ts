@@ -8,6 +8,8 @@ export { getInfluencerDashboard } from "./getInfluencerDashboard";
 export { updateInfluencerProfile } from "./updateInfluencerProfile";
 export { requestWithdrawal as influencerRequestWithdrawal } from "./requestWithdrawal";
 export { getInfluencerLeaderboard } from "./getInfluencerLeaderboard";
+export { getInfluencerRecruits } from "./getInfluencerRecruits";
+export { getInfluencerRecruitedProviders } from "./getRecruitedProviders";
 
 // Training Callables
 export {

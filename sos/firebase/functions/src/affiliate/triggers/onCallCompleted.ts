@@ -127,9 +127,9 @@ export async function handleCallCompleted(
       // 3. Calculate call duration
       const callDuration = after.duration || after.durationSeconds || 0;
 
-      // 3b. Skip if call has no meaningful duration (prevents ghost commissions)
-      if (callDuration <= 0) {
-        logger.info("[affiliateOnCallCompleted] Skipping - call has no duration", {
+      // 3b. Skip if call too short (anti-fraud, harmonized with other roles)
+      if (!callDuration || callDuration < 60) {
+        logger.info("[affiliateOnCallCompleted] Skipping - call too short", {
           sessionId,
           clientId,
         });
@@ -254,7 +254,7 @@ export async function handleCallCompleted(
           sessionId,
         });
 
-        // Create commission notification
+        // Create commission notification (i18n: 9 languages, English fallback)
         const notifRef = db.collection("affiliate_notifications").doc();
         const amountDollars = ((commissionResult.amount || 0) / 100).toFixed(2);
         await notifRef.set({
@@ -262,7 +262,41 @@ export async function handleCallCompleted(
           affiliateId: referredByUserId,
           type: "commission_earned",
           title: isFirstCall ? "Premier appel converti !" : "Commission appel reçue !",
+          titleTranslations: isFirstCall
+            ? {
+                fr: "Premier appel converti !",
+                en: "First call converted!",
+                es: "¡Primera llamada convertida!",
+                de: "Erster Anruf konvertiert!",
+                pt: "Primeira chamada convertida!",
+                ru: "Первый звонок конвертирован!",
+                hi: "पहला कॉल कन्वर्ट हुआ!",
+                zh: "首次通话已转化！",
+                ar: "تم تحويل المكالمة الأولى!",
+              }
+            : {
+                fr: "Commission appel reçue !",
+                en: "Call commission received!",
+                es: "¡Comisión de llamada recibida!",
+                de: "Anruf-Provision erhalten!",
+                pt: "Comissão de chamada recebida!",
+                ru: "Комиссия за звонок получена!",
+                hi: "कॉल कमीशन प्राप्त!",
+                zh: "通话佣金已收到！",
+                ar: "تم استلام عمولة المكالمة!",
+              },
           message: `Vous avez gagné $${amountDollars} pour l'appel de ${clientData.email}.`,
+          messageTranslations: {
+            fr: `Vous avez gagné $${amountDollars} pour l'appel de ${clientData.email}.`,
+            en: `You earned $${amountDollars} for the call from ${clientData.email}.`,
+            es: `Has ganado $${amountDollars} por la llamada de ${clientData.email}.`,
+            de: `Sie haben $${amountDollars} für den Anruf von ${clientData.email} verdient.`,
+            pt: `Você ganhou $${amountDollars} pela chamada de ${clientData.email}.`,
+            ru: `Вы заработали $${amountDollars} за звонок от ${clientData.email}.`,
+            hi: `आपने ${clientData.email} की कॉल के लिए $${amountDollars} कमाए।`,
+            zh: `您因 ${clientData.email} 的通话赚取了 $${amountDollars}。`,
+            ar: `لقد ربحت $${amountDollars} مقابل مكالمة ${clientData.email}.`,
+          },
           isRead: false,
           emailSent: false,
           data: {

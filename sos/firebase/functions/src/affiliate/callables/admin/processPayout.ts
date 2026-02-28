@@ -5,6 +5,9 @@
  * - Approve and process via Wise (automatic)
  * - Approve and mark as manually processed
  * - Reject payout
+ *
+ * P2-2 FIX: Migrated from orphaned `affiliate_payouts` to unified `payment_withdrawals` collection.
+ * The affiliate requestWithdrawal now writes to payment_withdrawals with userType="affiliate".
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
@@ -14,7 +17,6 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
 import { WISE_PAYOUT_SECRETS, ENCRYPTION_KEY } from "../../../lib/secrets";
-import { AffiliatePayout, PayoutStatus } from "../../types";
 import { decryptBankDetails } from "../../utils/bankDetailsEncryption";
 import {
   isWiseConfigured,
@@ -23,6 +25,22 @@ import {
   executeWisePayout,
   WiseApiError,
 } from "../../wise";
+
+// P2-2 FIX: Inline type for affiliate withdrawal docs in payment_withdrawals
+interface AffiliateWithdrawal {
+  id: string;
+  userId: string;
+  userType: string;
+  amount: number;
+  withdrawalFee?: number;
+  totalDebited?: number;
+  status: string;
+  targetCurrency?: string;
+  commissionIds: string[];
+  commissionCount?: number;
+  requestedAt: string;
+  [key: string]: unknown;
+}
 
 // Lazy initialization
 function ensureInitialized() {
@@ -54,7 +72,7 @@ export const adminProcessPayoutWise = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
     secrets: WISE_PAYOUT_SECRETS,
   },
@@ -90,14 +108,14 @@ export const adminProcessPayoutWise = onCall(
 
     try {
       // Get payout document
-      const payoutRef = db.collection("affiliate_payouts").doc(payoutId);
+      const payoutRef = db.collection("payment_withdrawals").doc(payoutId);
       const payoutDoc = await payoutRef.get();
 
       if (!payoutDoc.exists) {
         throw new HttpsError("not-found", "Payout not found");
       }
 
-      const payout = { id: payoutDoc.id, ...payoutDoc.data() } as AffiliatePayout;
+      const payout = { id: payoutDoc.id, ...payoutDoc.data() } as AffiliateWithdrawal;
 
       // Verify payout status
       if (payout.status !== "pending" && payout.status !== "approved") {
@@ -132,7 +150,7 @@ export const adminProcessPayoutWise = onCall(
 
       // Update status to processing
       await payoutRef.update({
-        status: "processing" as PayoutStatus,
+        status: "processing",
         processedAt: Timestamp.now(),
         processedBy: adminUid,
         updatedAt: Timestamp.now(),
@@ -151,7 +169,7 @@ export const adminProcessPayoutWise = onCall(
         // 2. Create quote
         const payoutDetails = await calculatePayoutDetails(
           payout.amount,
-          payout.targetCurrency
+          payout.targetCurrency || "USD"
         );
 
         // 3. Execute the payout
@@ -164,7 +182,7 @@ export const adminProcessPayoutWise = onCall(
 
         // 4. Update payout with Wise details
         await payoutRef.update({
-          status: "processing" as PayoutStatus,
+          status: "processing",
           wiseRecipientId: recipient.id.toString(),
           wiseQuoteId: payoutDetails.quote.id,
           wiseTransferId: transfer.id.toString(),
@@ -198,7 +216,7 @@ export const adminProcessPayoutWise = onCall(
         });
 
         await payoutRef.update({
-          status: "pending" as PayoutStatus,
+          status: "pending",
           processedAt: null,
           processedBy: null,
           failureReason:
@@ -240,7 +258,7 @@ export const adminProcessPayoutManual = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
     secrets: [ENCRYPTION_KEY],
   },
@@ -272,14 +290,14 @@ export const adminProcessPayoutManual = onCall(
 
     try {
       // Get payout document
-      const payoutRef = db.collection("affiliate_payouts").doc(payoutId);
+      const payoutRef = db.collection("payment_withdrawals").doc(payoutId);
       const payoutDoc = await payoutRef.get();
 
       if (!payoutDoc.exists) {
         throw new HttpsError("not-found", "Payout not found");
       }
 
-      const payout = { id: payoutDoc.id, ...payoutDoc.data() } as AffiliatePayout;
+      const payout = { id: payoutDoc.id, ...payoutDoc.data() } as AffiliateWithdrawal;
 
       // Verify payout status
       if (payout.status !== "pending" && payout.status !== "approved") {
@@ -301,7 +319,7 @@ export const adminProcessPayoutManual = onCall(
       await db.runTransaction(async (transaction) => {
         // Update payout as completed
         transaction.update(payoutRef, {
-          status: "completed" as PayoutStatus,
+          status: "completed",
           processedAt: now,
           processedBy: adminUid,
           completedAt: now,
@@ -364,7 +382,7 @@ export const adminRejectPayout = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -398,14 +416,14 @@ export const adminRejectPayout = onCall(
 
     try {
       // Get payout document
-      const payoutRef = db.collection("affiliate_payouts").doc(payoutId);
+      const payoutRef = db.collection("payment_withdrawals").doc(payoutId);
       const payoutDoc = await payoutRef.get();
 
       if (!payoutDoc.exists) {
         throw new HttpsError("not-found", "Payout not found");
       }
 
-      const payout = { id: payoutDoc.id, ...payoutDoc.data() } as AffiliatePayout;
+      const payout = { id: payoutDoc.id, ...payoutDoc.data() } as AffiliateWithdrawal;
 
       // Verify payout status
       if (payout.status !== "pending" && payout.status !== "approved") {
@@ -427,7 +445,7 @@ export const adminRejectPayout = onCall(
       await db.runTransaction(async (transaction) => {
         // Update payout as rejected
         transaction.update(payoutRef, {
-          status: "rejected" as PayoutStatus,
+          status: "rejected",
           processedAt: Timestamp.now(),
           processedBy: adminUid,
           rejectionReason: reason.trim(),
@@ -444,18 +462,21 @@ export const adminRejectPayout = onCall(
           });
         }
 
-        // Restore user's available balance
+        // P2-2 FIX: Restore user's available balance (amount + fee)
+        const refundAmount = payout.totalDebited || payout.amount;
         const userRef = db.collection("users").doc(payout.userId);
         transaction.update(userRef, {
-          availableBalance: FieldValue.increment(payout.amount),
+          availableBalance: FieldValue.increment(refundAmount),
           pendingPayoutId: null,
           updatedAt: Timestamp.now(),
         });
       });
 
+      const refundedAmount = payout.totalDebited || payout.amount;
       logger.info("[adminRejectPayout] Payout rejected and balance restored", {
         payoutId,
         amount: payout.amount,
+        totalRefunded: refundedAmount,
         commissionCount: payout.commissionIds.length,
       });
 
@@ -463,7 +484,7 @@ export const adminRejectPayout = onCall(
         success: true,
         message: "Payout rejected and balance restored",
         payoutId,
-        restoredAmount: payout.amount,
+        restoredAmount: refundedAmount,
       };
     } catch (error) {
       if (error instanceof HttpsError) {
@@ -490,7 +511,7 @@ export const adminApprovePayout = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -520,14 +541,14 @@ export const adminApprovePayout = onCall(
 
     try {
       // Get payout document
-      const payoutRef = db.collection("affiliate_payouts").doc(payoutId);
+      const payoutRef = db.collection("payment_withdrawals").doc(payoutId);
       const payoutDoc = await payoutRef.get();
 
       if (!payoutDoc.exists) {
         throw new HttpsError("not-found", "Payout not found");
       }
 
-      const payout = { id: payoutDoc.id, ...payoutDoc.data() } as AffiliatePayout;
+      const payout = { id: payoutDoc.id, ...payoutDoc.data() } as AffiliateWithdrawal;
 
       // Verify payout status
       if (payout.status !== "pending") {
@@ -546,7 +567,7 @@ export const adminApprovePayout = onCall(
 
       // Update payout as approved
       await payoutRef.update({
-        status: "approved" as PayoutStatus,
+        status: "approved",
         processedAt: Timestamp.now(),
         processedBy: adminUid,
         adminNotes: notes || null,
@@ -586,7 +607,7 @@ export const adminGetPendingPayouts = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -606,9 +627,10 @@ export const adminGetPendingPayouts = onCall(
     const db = getFirestore();
 
     try {
-      // Get pending and approved payouts
+      // P2-2 FIX: Filter by userType="affiliate" in unified collection
       const payoutsQuery = await db
-        .collection("affiliate_payouts")
+        .collection("payment_withdrawals")
+        .where("userType", "==", "affiliate")
         .where("status", "in", ["pending", "approved", "processing"])
         .orderBy("requestedAt", "desc")
         .limit(100)

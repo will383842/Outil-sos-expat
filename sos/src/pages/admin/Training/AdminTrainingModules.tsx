@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable, getFunctions } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   GraduationCap,
   Search,
@@ -160,11 +160,11 @@ const AdminTrainingModules: React.FC = () => {
 
     try {
       const functionName = moduleType === 'chatter'
-        ? 'adminGetTrainingModules'
+        ? 'adminGetChatterTrainingModules'
         : 'adminGetInfluencerTrainingModules';
 
       const getModules = httpsCallable<unknown, { modules: TrainingModule[]; total: number }>(
-        functionsWest2,
+        functionsAffiliate,
         functionName
       );
 
@@ -176,7 +176,7 @@ const AdminTrainingModules: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [moduleType, functionsWest2]);
+  }, [moduleType, functionsAffiliate]);
 
   useEffect(() => {
     fetchModules();
@@ -201,7 +201,7 @@ const AdminTrainingModules: React.FC = () => {
         : 'adminSeedInfluencerTrainingModules';
 
       const seedModules = httpsCallable<unknown, { success: boolean; modulesCreated: number; errors: string[] }>(
-        functionsWest2,
+        functionsAffiliate,
         functionName
       );
 
@@ -222,10 +222,10 @@ const AdminTrainingModules: React.FC = () => {
 
     try {
       const functionName = moduleType === 'chatter'
-        ? 'adminDeleteTrainingModule'
+        ? 'adminDeleteChatterTrainingModule'
         : 'adminDeleteInfluencerTrainingModule';
 
-      const deleteModule = httpsCallable(functionsWest2, functionName);
+      const deleteModule = httpsCallable(functionsAffiliate, functionName);
       await deleteModule({ moduleId });
 
       fetchModules();
@@ -241,10 +241,10 @@ const AdminTrainingModules: React.FC = () => {
 
     try {
       const functionName = moduleType === 'chatter'
-        ? 'adminUpdateTrainingModule'
+        ? 'adminUpdateChatterTrainingModule'
         : 'adminUpdateInfluencerTrainingModule';
 
-      const updateModule = httpsCallable(functionsWest2, functionName);
+      const updateModule = httpsCallable(functionsAffiliate, functionName);
       await updateModule({ moduleId: module.id, status: newStatus });
 
       fetchModules();
@@ -666,7 +666,7 @@ const AdminTrainingModules: React.FC = () => {
             setEditingModule(null);
             fetchModules();
           }}
-          functions={functionsWest2}
+          functions={functionsAffiliate}
         />
       )}
     </AdminLayout>
@@ -765,10 +765,10 @@ const ModuleEditModal: React.FC<ModuleEditModalProps> = ({
     setSaving(true);
     try {
       const functionName = isEditing
-        ? (moduleType === 'chatter' ? 'adminUpdateTrainingModule' : 'adminUpdateInfluencerTrainingModule')
-        : (moduleType === 'chatter' ? 'adminCreateTrainingModule' : 'adminCreateInfluencerTrainingModule');
+        ? (moduleType === 'chatter' ? 'adminUpdateChatterTrainingModule' : 'adminUpdateInfluencerTrainingModule')
+        : (moduleType === 'chatter' ? 'adminCreateChatterTrainingModule' : 'adminCreateInfluencerTrainingModule');
 
-      const saveModule = httpsCallable(functionsWest2, functionName);
+      const saveModule = httpsCallable(functionsAffiliate, functionName);
 
       const data = {
         ...(isEditing && { moduleId: module.id }),

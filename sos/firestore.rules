@@ -319,13 +319,23 @@ service cloud.firestore {
       allow delete: if isAdmin() || isDev();
     }
 
-    // ================= FCM TOKENS COLLECTION (P0 Fix: fcm_tokens → fcmTokens) =================
-    match /fcmTokens/{userId} {
-      // Only token owner can read their own token
+    // ================= FCM TOKENS COLLECTION (P0 Fix: multi-device sub-collection) =================
+    match /fcm_tokens/{userId} {
       allow read: if isOwner(userId) || isAdmin() || isDev();
-      // Only token owner can create/update their token
       allow create, update: if isOwner(userId);
-      // Owner or admin can delete
+      allow delete: if isOwner(userId) || isAdmin() || isDev();
+
+      match /tokens/{tokenId} {
+        allow read: if isOwner(userId) || isAdmin() || isDev();
+        allow create, update: if isOwner(userId);
+        allow delete: if isOwner(userId) || isAdmin() || isDev();
+      }
+    }
+
+    // Legacy: keep old fcmTokens rule for backward compatibility during migration
+    match /fcmTokens/{userId} {
+      allow read: if isOwner(userId) || isAdmin() || isDev();
+      allow create, update: if isOwner(userId);
       allow delete: if isOwner(userId) || isAdmin() || isDev();
     }
 

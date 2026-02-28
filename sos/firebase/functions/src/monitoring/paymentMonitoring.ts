@@ -368,6 +368,139 @@ async function checkCallSessions(): Promise<void> {
 }
 
 // =====================
+// WEBHOOK LIVENESS CHECK
+// =====================
+
+const WEBHOOK_LIVENESS_THRESHOLDS: Record<string, { warningHours: number; criticalHours: number }> = {
+  stripe: { warningHours: 6, criticalHours: 12 },
+  twilio: { warningHours: 12, criticalHours: 24 },
+  paypal: { warningHours: 12, criticalHours: 24 },
+  wise: { warningHours: 168, criticalHours: 336 }, // 7 jours / 14 jours — payouts rares
+};
+
+async function checkWebhookLiveness(): Promise<void> {
+  try {
+    const sources = Object.keys(WEBHOOK_LIVENESS_THRESHOLDS);
+    const now = Date.now();
+
+    for (const source of sources) {
+      const doc = await db().collection('webhook_heartbeats').doc(source).get();
+      const thresholds = WEBHOOK_LIVENESS_THRESHOLDS[source];
+
+      if (!doc.exists) {
+        // No heartbeat ever recorded — warning only (might be new deployment)
+        await createPaymentAlert(
+          'warning',
+          'general',
+          `Webhook ${source} jamais recu`,
+          `Aucun heartbeat enregistre pour ${source}. Verifiez la configuration du webhook.`,
+          { source }
+        );
+        continue;
+      }
+
+      const data = doc.data()!;
+      const lastReceivedAt = data.lastReceivedAt?.toDate?.();
+      if (!lastReceivedAt) continue;
+
+      const ageHours = (now - lastReceivedAt.getTime()) / (1000 * 60 * 60);
+
+      if (ageHours >= thresholds.criticalHours) {
+        await createPaymentAlert(
+          'critical',
+          'general',
+          `Webhook ${source} silencieux depuis ${Math.round(ageHours)}h`,
+          `Dernier webhook ${source} recu il y a ${Math.round(ageHours)}h (seuil critique: ${thresholds.criticalHours}h). Verifiez le service.`,
+          { source, ageHours: Math.round(ageHours), lastEventType: data.lastEventType }
+        );
+      } else if (ageHours >= thresholds.warningHours) {
+        await createPaymentAlert(
+          'warning',
+          'general',
+          `Webhook ${source} silencieux depuis ${Math.round(ageHours)}h`,
+          `Dernier webhook ${source} recu il y a ${Math.round(ageHours)}h (seuil warning: ${thresholds.warningHours}h).`,
+          { source, ageHours: Math.round(ageHours), lastEventType: data.lastEventType }
+        );
+      }
+    }
+
+    logger.debug('PaymentMonitoring', 'Webhook liveness check completed');
+  } catch (error) {
+    logger.error('PaymentMonitoring', 'Webhook liveness check failed', { error });
+  }
+}
+
+// =====================
+// NOTIFICATION DLQ CHECK
+// =====================
+
+async function checkNotificationHealth(): Promise<void> {
+  try {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const timestampThirtyMinAgo = admin.firestore.Timestamp.fromDate(thirtyMinutesAgo);
+
+    const dlqDocs = await db().collection('notification_dlq')
+      .where('createdAt', '>=', timestampThirtyMinAgo)
+      .get();
+
+    const count = dlqDocs.size;
+
+    if (count >= 20) {
+      await createPaymentAlert(
+        'critical',
+        'general',
+        'File DLQ notifications critique',
+        `${count} notifications en dead-letter queue dans les 30 dernieres minutes. Pipeline de notifications potentiellement en panne.`,
+        { dlqCount: count, period: '30min' }
+      );
+    } else if (count >= 5) {
+      await createPaymentAlert(
+        'warning',
+        'general',
+        'Notifications en DLQ',
+        `${count} notifications en dead-letter queue dans les 30 dernieres minutes.`,
+        { dlqCount: count, period: '30min' }
+      );
+    }
+
+    logger.debug('PaymentMonitoring', 'Notification health check completed', { dlqCount: count });
+  } catch (error) {
+    logger.error('PaymentMonitoring', 'Notification health check failed', { error });
+  }
+}
+
+// =====================
+// CIRCUIT BREAKER SNAPSHOT
+// =====================
+
+async function saveCircuitBreakerSnapshot(): Promise<void> {
+  try {
+    const { getAllCircuitBreakerStats } = await import('../lib/circuitBreaker');
+    const stats = getAllCircuitBreakerStats();
+
+    await db().collection(CONFIG.METRICS_COLLECTION).add({
+      type: 'circuit_breaker_snapshot',
+      timestamp: admin.firestore.Timestamp.now(),
+      breakers: stats.map(s => ({
+        name: s.name,
+        state: s.state,
+        failures: s.failures,
+        totalRequests: s.totalRequests,
+        failedRequests: s.failedRequests,
+        lastFailure: s.lastFailure?.toISOString() || null,
+        lastSuccess: s.lastSuccess?.toISOString() || null,
+      })),
+    });
+
+    logger.debug('PaymentMonitoring', 'Circuit breaker snapshot saved', {
+      breakers: stats.map(s => `${s.name}:${s.state}`).join(', '),
+    });
+  } catch (error) {
+    logger.error('PaymentMonitoring', 'Circuit breaker snapshot failed', { error });
+  }
+}
+
+// =====================
 // METRICS COLLECTION
 // =====================
 
@@ -474,11 +607,17 @@ export const runPaymentHealthCheck = onSchedule(
     functionsLogger.info('[PaymentMonitoring] Starting payment health check...');
 
     try {
+      // Core payment checks (parallel)
       await Promise.all([
         checkStripePayments(),
         checkPayPalPayments(),
         checkCallSessions()
       ]);
+
+      // Operational monitoring checks (sequential, lightweight)
+      await checkWebhookLiveness();
+      await checkNotificationHealth();
+      await saveCircuitBreakerSnapshot();
 
       functionsLogger.info('[PaymentMonitoring] Payment health check completed');
     } catch (error) {

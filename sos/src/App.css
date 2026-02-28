@@ -1109,6 +1109,17 @@ body.rtl {
   font-family: 'Noto Sans Arabic', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* Hindi (Devanagari) Font Family Override */
+html[lang="hi"] {
+  font-family: 'Noto Sans Devanagari', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Chinese (Simplified) Font Family Override */
+html[lang="ch"],
+html[lang^="zh"] {
+  font-family: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
 /* =================================================================
    FIN - CSS PROFESSIONNEL CORRIGÉ SANS CONFLITS CARTE
    ================================================================= */

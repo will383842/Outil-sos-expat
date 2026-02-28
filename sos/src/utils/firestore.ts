@@ -663,6 +663,8 @@ export const listenToUserOnlineStatus = (
       const data = asDict(snap.data());
       callback(!!data.isOnline);
     }
+  }, (err) => {
+    console.error('[firestore] Online status subscription error:', err);
   });
 };
 

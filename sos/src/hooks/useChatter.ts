@@ -20,7 +20,7 @@ import {
   limit,
   onSnapshot,
 } from "firebase/firestore";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { useApp } from "../contexts/AppContext";
 import { getTranslatedRouteSlug } from "@/multilingual-system/core/routing/localeRoutes";
@@ -106,7 +106,7 @@ export function useChatter(): UseChatterReturn {
 
     try {
       const getChatterDashboardFn = httpsCallable<void, ChatterDashboardData>(
-        functionsWest2,
+        functionsAffiliate,
         "getChatterDashboard"
       );
 
@@ -124,7 +124,7 @@ export function useChatter(): UseChatterReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.uid, functionsWest2]);
+  }, [user?.uid, functionsAffiliate]);
 
   // Request withdrawal
   const requestWithdrawal = useCallback(
@@ -138,7 +138,7 @@ export function useChatter(): UseChatterReturn {
       const requestWithdrawalFn = httpsCallable<
         RequestWithdrawalInput,
         { success: boolean; withdrawalId: string; amount: number; message: string }
-      >(functionsWest2, "chatterRequestWithdrawal");
+      >(functionsAffiliate, "chatterRequestWithdrawal");
 
       const result = await requestWithdrawalFn(input);
       await refreshDashboard();
@@ -148,7 +148,7 @@ export function useChatter(): UseChatterReturn {
         message: result.data.message,
       };
     },
-    [user?.uid, functionsWest2, refreshDashboard]
+    [user?.uid, functionsAffiliate, refreshDashboard]
   );
 
   // Update profile
@@ -163,13 +163,13 @@ export function useChatter(): UseChatterReturn {
       const updateProfileFn = httpsCallable<
         UpdateChatterProfileInput,
         { success: boolean; message: string }
-      >(functionsWest2, "updateChatterProfile");
+      >(functionsAffiliate, "updateChatterProfile");
 
       const result = await updateProfileFn(input);
       await refreshDashboard();
       return result.data;
     },
-    [user?.uid, functionsWest2, refreshDashboard]
+    [user?.uid, functionsAffiliate, refreshDashboard]
   );
 
   // Mark notification as read
@@ -265,8 +265,9 @@ export function useChatter(): UseChatterReturn {
     if (!user?.uid || !isChatter) return;
 
     const withdrawalsQuery = query(
-      collection(db, "chatter_withdrawals"),
-      where("chatterId", "==", user.uid),
+      collection(db, "payment_withdrawals"),
+      where("userId", "==", user.uid),
+      where("userType", "==", "chatter"),
       orderBy("requestedAt", "desc"),
       limit(20)
     );

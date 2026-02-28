@@ -9,7 +9,7 @@ import {
   usePayPalCardFields,
   usePayPalScriptReducer,
 } from "@paypal/react-paypal-js";
-import { auth } from "../../config/firebase";
+import { auth, getCloudRunUrl } from "../../config/firebase";
 import { AlertCircle, CheckCircle, CreditCard, Lock, ShieldCheck, Calendar, Shield } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { usePricingConfig } from "../../services/pricingService";
@@ -320,7 +320,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
       // Appeler la fonction HTTP au lieu de la fonction callable
       const response = await fetch(
-        "https://createpaypalorderhttp-5tfnuxa2hq-ey.a.run.app",
+        getCloudRunUrl('createpaypalorderhttp', 'europe-west3'),
         {
           method: "POST",
           headers: {
@@ -399,7 +399,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
       // Appeler la fonction HTTP d'autorisation (pas de capture immédiate)
       const response = await fetch(
-        "https://authorizepaypalorderhttp-5tfnuxa2hq-ey.a.run.app",
+        getCloudRunUrl('authorizepaypalorderhttp', 'europe-west3'),
         {
           method: "POST",
           headers: {

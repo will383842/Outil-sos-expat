@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { httpsCallable } from "firebase/functions";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   ChatterReferralDashboardData,
@@ -54,7 +54,7 @@ export function useChatterReferrals(): UseChatterReferralsReturn {
 
     try {
       const getReferralDashboard = httpsCallable<void, ChatterReferralDashboardData>(
-        functionsWest2,
+        functionsAffiliate,
         "getReferralDashboard"
       );
 

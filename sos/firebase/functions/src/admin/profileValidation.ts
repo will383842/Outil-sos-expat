@@ -981,14 +981,14 @@ export const getValidationQueue = onCall(
         .count()
         .get()
         .then(snap => snap.data().count)
-        .catch(() => 0),
+        .catch((e: unknown) => { console.warn("[profileValidation] approvedToday count failed:", e); return 0; }),
       db.collection("validation_queue")
         .where("status", "==", "rejected")
         .where("decisionAt", ">=", todayStart)
         .count()
         .get()
         .then(snap => snap.data().count)
-        .catch(() => 0),
+        .catch((e: unknown) => { console.warn("[profileValidation] rejectedToday count failed:", e); return 0; }),
     ]);
 
     // Return data in format expected by frontend
@@ -1197,23 +1197,79 @@ export const onValidationDecision = onDocumentUpdated(
         decisionReason: afterData.decisionReason,
       };
 
+      // i18n titles and messages (9 languages, English fallback)
+      const i18n: Record<string, { approved: { title: string; message: string }; rejected: { title: string; message: string }; changes_requested: { title: string; message: string } }> = {
+        fr: {
+          approved: { title: "Profil approuvé !", message: "Félicitations ! Votre profil a été approuvé et est maintenant visible sur la plateforme." },
+          rejected: { title: "Profil refusé", message: `Votre profil a été refusé. Raison : ${afterData.decisionReason}` },
+          changes_requested: { title: "Modifications demandées", message: "Des modifications ont été demandées sur votre profil avant qu'il puisse être approuvé." },
+        },
+        en: {
+          approved: { title: "Profile Approved!", message: "Congratulations! Your profile has been approved and is now visible on the platform." },
+          rejected: { title: "Profile Rejected", message: `Your profile has been rejected. Reason: ${afterData.decisionReason}` },
+          changes_requested: { title: "Changes Requested", message: "Changes have been requested for your profile before it can be approved." },
+        },
+        es: {
+          approved: { title: "¡Perfil aprobado!", message: "¡Felicidades! Tu perfil ha sido aprobado y ahora es visible en la plataforma." },
+          rejected: { title: "Perfil rechazado", message: `Tu perfil ha sido rechazado. Razón: ${afterData.decisionReason}` },
+          changes_requested: { title: "Cambios solicitados", message: "Se han solicitado cambios en tu perfil antes de poder aprobarlo." },
+        },
+        de: {
+          approved: { title: "Profil genehmigt!", message: "Herzlichen Glückwunsch! Ihr Profil wurde genehmigt und ist jetzt auf der Plattform sichtbar." },
+          rejected: { title: "Profil abgelehnt", message: `Ihr Profil wurde abgelehnt. Grund: ${afterData.decisionReason}` },
+          changes_requested: { title: "Änderungen angefordert", message: "Es wurden Änderungen an Ihrem Profil angefordert, bevor es genehmigt werden kann." },
+        },
+        pt: {
+          approved: { title: "Perfil aprovado!", message: "Parabéns! Seu perfil foi aprovado e agora está visível na plataforma." },
+          rejected: { title: "Perfil rejeitado", message: `Seu perfil foi rejeitado. Motivo: ${afterData.decisionReason}` },
+          changes_requested: { title: "Alterações solicitadas", message: "Foram solicitadas alterações no seu perfil antes que ele possa ser aprovado." },
+        },
+        ru: {
+          approved: { title: "Профиль одобрен!", message: "Поздравляем! Ваш профиль одобрен и теперь виден на платформе." },
+          rejected: { title: "Профиль отклонён", message: `Ваш профиль отклонён. Причина: ${afterData.decisionReason}` },
+          changes_requested: { title: "Запрошены изменения", message: "Для вашего профиля запрошены изменения перед одобрением." },
+        },
+        hi: {
+          approved: { title: "प्रोफ़ाइल स्वीकृत!", message: "बधाई! आपकी प्रोफ़ाइल स्वीकृत हो गई है और अब प्लेटफ़ॉर्म पर दिखाई दे रही है।" },
+          rejected: { title: "प्रोफ़ाइल अस्वीकृत", message: `आपकी प्रोफ़ाइल अस्वीकृत हो गई है। कारण: ${afterData.decisionReason}` },
+          changes_requested: { title: "बदलाव अनुरोधित", message: "स्वीकृति से पहले आपकी प्रोफ़ाइल में बदलाव अनुरोधित किए गए हैं।" },
+        },
+        zh: {
+          approved: { title: "个人资料已批准！", message: "恭喜！您的个人资料已被批准，现在在平台上可见。" },
+          rejected: { title: "个人资料被拒绝", message: `您的个人资料被拒绝。原因：${afterData.decisionReason}` },
+          changes_requested: { title: "请求修改", message: "在批准之前，您的个人资料需要进行修改。" },
+        },
+        ar: {
+          approved: { title: "تم الموافقة على الملف!", message: "تهانينا! تم الموافقة على ملفك الشخصي وهو الآن مرئي على المنصة." },
+          rejected: { title: "تم رفض الملف", message: `تم رفض ملفك الشخصي. السبب: ${afterData.decisionReason}` },
+          changes_requested: { title: "تم طلب تغييرات", message: "تم طلب تغييرات على ملفك الشخصي قبل الموافقة عليه." },
+        },
+      };
+
+      // Get provider locale
+      const providerDoc = await db.collection("users").doc(afterData.providerId).get();
+      const providerLocale = providerDoc.data()?.preferredLanguage || "en";
+      const lang = i18n[providerLocale] || i18n.en;
+
       switch (afterData.status) {
         case "approved":
           eventId = "profile_approved";
-          context.message = "Congratulations! Your profile has been approved and is now visible on the platform.";
+          context.message = lang.approved.message;
           break;
         case "rejected":
           eventId = "profile_rejected";
-          context.message = `Your profile has been rejected. Reason: ${afterData.decisionReason}`;
+          context.message = lang.rejected.message;
           break;
         case "changes_requested":
           eventId = "profile_changes_requested";
-          context.message = "Changes have been requested for your profile before it can be approved.";
+          context.message = lang.changes_requested.message;
           context.requestedChanges = afterData.requestedChanges;
           break;
         default:
           return;
       }
+
+      const statusKey = afterData.status as "approved" | "rejected" | "changes_requested";
 
       // Send notification to provider
       await sendNotification(afterData.providerId, eventId, context);
@@ -1222,12 +1278,14 @@ export const onValidationDecision = onDocumentUpdated(
       await db.collection("notifications").add({
         userId: afterData.providerId,
         type: eventId,
-        title: afterData.status === "approved"
-          ? "Profile Approved!"
-          : afterData.status === "rejected"
-            ? "Profile Rejected"
-            : "Changes Requested",
-        message: context.message,
+        title: lang[statusKey].title,
+        message: lang[statusKey].message,
+        titleTranslations: Object.fromEntries(
+          Object.entries(i18n).map(([l, texts]) => [l, texts[statusKey].title])
+        ),
+        messageTranslations: Object.fromEntries(
+          Object.entries(i18n).map(([l, texts]) => [l, texts[statusKey].message])
+        ),
         data: {
           validationId,
           status: afterData.status,

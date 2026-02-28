@@ -12,6 +12,7 @@
 import * as functions from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
+import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
 
 // ============================================================================
 // TYPES
@@ -120,7 +121,7 @@ export const getPerplexityUsage = functions.onCall(
     cpu: 0.083,
     memory: '256MiB',
     timeoutSeconds: 60,
-    cors: [/sos-expat\.com$/, /localhost/],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<PerplexityUsageResponse> => {
     // Authentication check

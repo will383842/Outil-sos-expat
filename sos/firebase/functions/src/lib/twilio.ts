@@ -243,8 +243,8 @@ export const TWILIO_PHONE_NUMBER_SECRET = TWILIO_PHONE_NUMBER;
 // Reads from admin_config/twilio_security.cryptoValidationBlocking
 // Cached for 5 minutes. Uses synchronous cache read + background refresh
 // to avoid making validateTwilioWebhookSignature async (7 callers).
-// Default: false (monitoring mode) — admin can set to true via Firestore.
-let cryptoBlockingCached = false;
+// Default: true (blocking mode) — admin can set to false via Firestore for debugging.
+let cryptoBlockingCached = true; // AUDIT FIX 2026-02-28: Default to BLOCKING (was false/monitoring)
 let cryptoBlockingLastFetch = 0;
 const CRYPTO_BLOCKING_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 let cryptoBlockingFetchInProgress = false;
@@ -310,8 +310,8 @@ export function validateTwilioWebhookSignature(
   // before switching to blocking mode. If crypto fails but layers 1+2 pass,
   // the request is ALLOWED but logged as a warning for review.
   //
-  // TODO: Once logs confirm crypto validation passes consistently,
-  // switch to blocking mode by uncommenting the 403 response below.
+  // AUDIT FIX 2026-02-28: Crypto validation now BLOCKING by default.
+  // Admin can disable via admin_config/twilio_security.cryptoValidationBlocking = false
 
   const twilioSignature = req.headers["x-twilio-signature"] as string;
   if (!twilioSignature) {

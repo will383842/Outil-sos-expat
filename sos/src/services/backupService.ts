@@ -55,6 +55,8 @@ export function subscribeBackups(cb: (rows: BackupRow[]) => void): () => void {
       };
     });
     cb(list);
+  }, (err) => {
+    console.error('[backupService] Backups subscription error:', err);
   });
   return unsub;
 }

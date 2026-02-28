@@ -78,8 +78,10 @@ async function refundUserBalance(withdrawal: WithdrawalRequest): Promise<void> {
 
   try {
     // P2-11 FIX: Use FieldValue.increment() — atomic, no read required, safe under concurrency
+    // P1-3 FIX: Refund totalDebited (amount + withdrawal fee), not just amount
+    const refundAmount = withdrawal.totalDebited || withdrawal.amount;
     await userRef.update({
-      availableBalance: FieldValue.increment(withdrawal.amount),
+      availableBalance: FieldValue.increment(refundAmount),
       updatedAt: Timestamp.now(),
     });
 
@@ -213,6 +215,51 @@ async function processWithdrawal(
       actorType: "system",
       note: "Automatic processing started",
     };
+
+    // P1-01 FIX: Verify user account is still active before processing payment
+    const userCollectionName = getUserCollectionName(withdrawal.userType);
+    const userRef = db.collection(userCollectionName).doc(withdrawal.userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      logger.warn("[processAutomaticPayments] User account not found, auto-cancelling withdrawal", {
+        withdrawalId: withdrawal.id,
+        userId: withdrawal.userId,
+      });
+      await withdrawalRef.update({
+        status: "cancelled",
+        cancelledAt: new Date().toISOString(),
+        statusHistory: FieldValue.arrayUnion({
+          status: "cancelled",
+          timestamp: new Date().toISOString(),
+          actorType: "system",
+          note: "Auto-cancelled: user account not found",
+        }),
+      });
+      await refundUserBalance(withdrawal);
+      return { success: false, error: "User account not found" };
+    }
+
+    const userData = userDoc.data();
+    if (userData?.status === "suspended" || userData?.status === "banned") {
+      logger.warn("[processAutomaticPayments] User account suspended/banned, auto-cancelling withdrawal", {
+        withdrawalId: withdrawal.id,
+        userId: withdrawal.userId,
+        userStatus: userData.status,
+      });
+      await withdrawalRef.update({
+        status: "cancelled",
+        cancelledAt: new Date().toISOString(),
+        statusHistory: FieldValue.arrayUnion({
+          status: "cancelled",
+          timestamp: new Date().toISOString(),
+          actorType: "system",
+          note: `Auto-cancelled: user account ${userData.status}`,
+        }),
+      });
+      await refundUserBalance(withdrawal);
+      return { success: false, error: `User account ${userData.status}` };
+    }
 
     const canProcess = await db.runTransaction(async (transaction) => {
       const freshDoc = await transaction.get(withdrawalRef);
@@ -434,6 +481,88 @@ async function logProcessingRun(
 }
 
 /**
+ * P1-02 FIX: Cleanup stale Telegram confirmations.
+ * If a user never clicks Confirm/Cancel, the withdrawal stays pending forever.
+ * This finds withdrawals with expired Telegram confirmations and auto-cancels them.
+ */
+async function cleanupStaleTelegramConfirmations(): Promise<number> {
+  const db = getFirestore();
+  const now = Timestamp.now();
+  let cleaned = 0;
+
+  try {
+    // Find withdrawals stuck with telegramConfirmationPending=true
+    // that were requested more than 20 minutes ago (15min expiry + 5min buffer)
+    const cutoff = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+
+    const staleQuery = await db
+      .collection(WITHDRAWAL_COLLECTION)
+      .where("telegramConfirmationPending", "==", true)
+      .where("status", "in", ["pending", "approved"])
+      .limit(10)
+      .get();
+
+    for (const doc of staleQuery.docs) {
+      const withdrawal = doc.data();
+      const requestedAt = withdrawal.requestedAt;
+
+      // Only cleanup if requested more than 20 minutes ago
+      if (requestedAt && requestedAt < cutoff) {
+        const refundAmount = withdrawal.totalDebited || withdrawal.amount;
+        const userCollectionName = getUserCollectionName(withdrawal.userType);
+
+        await db.runTransaction(async (transaction) => {
+          // Cancel the withdrawal
+          transaction.update(doc.ref, {
+            status: "cancelled",
+            cancelledAt: new Date().toISOString(),
+            telegramConfirmationPending: false,
+            statusHistory: FieldValue.arrayUnion({
+              status: "cancelled",
+              timestamp: new Date().toISOString(),
+              actorType: "system",
+              note: "Auto-cancelled: Telegram confirmation expired (no user action)",
+            }),
+          });
+
+          // Refund balance
+          const userRef = db.collection(userCollectionName).doc(withdrawal.userId);
+          transaction.update(userRef, {
+            availableBalance: FieldValue.increment(refundAmount),
+            pendingWithdrawalId: null,
+            updatedAt: now,
+          });
+        });
+
+        // Also mark the confirmation doc as expired if it exists
+        if (withdrawal.telegramConfirmationCode) {
+          try {
+            await db.collection("telegram_withdrawal_confirmations")
+              .doc(withdrawal.telegramConfirmationCode)
+              .update({ status: "expired", resolvedAt: now });
+          } catch {
+            // Confirmation doc may not exist or already expired
+          }
+        }
+
+        cleaned++;
+        logger.info("[cleanupStaleTelegramConfirmations] Auto-cancelled stale withdrawal", {
+          withdrawalId: doc.id,
+          userId: withdrawal.userId,
+          refundAmount,
+        });
+      }
+    }
+  } catch (error) {
+    logger.error("[cleanupStaleTelegramConfirmations] Error during cleanup", {
+      error: error instanceof Error ? error.message : "Unknown",
+    });
+  }
+
+  return cleaned;
+}
+
+/**
  * Main scheduled function
  */
 export const paymentProcessAutomaticPayments = onSchedule(
@@ -451,6 +580,12 @@ export const paymentProcessAutomaticPayments = onSchedule(
     logger.info("[processAutomaticPayments] Starting automatic payment processing");
 
     try {
+      // P1-02 FIX: Cleanup stale Telegram confirmations before processing
+      const cleanedCount = await cleanupStaleTelegramConfirmations();
+      if (cleanedCount > 0) {
+        logger.info("[processAutomaticPayments] Cleaned stale Telegram confirmations", { cleanedCount });
+      }
+
       // 1. Get payment configuration
       const config = await getPaymentConfig();
 

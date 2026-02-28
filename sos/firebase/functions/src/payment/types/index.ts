@@ -15,8 +15,9 @@
  * Supported payment providers
  * - wise: International bank transfers worldwide
  * - flutterwave: Mobile Money for Africa
+ * - manual: Admin-initiated payment outside automated providers
  */
-export type PaymentProvider = 'wise' | 'flutterwave';
+export type PaymentProvider = 'wise' | 'flutterwave' | 'manual';
 
 /**
  * Types of payment methods available

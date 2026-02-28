@@ -10,7 +10,7 @@ export type Lang = 'fr' | 'en' | 'de' | 'ru' | 'ch' | 'es' | 'pt' | 'ar' | 'hi';
 
 export const SUPPORTED_LANGS: readonly Lang[] = ['fr', 'en', 'de', 'ru', 'ch', 'es', 'pt', 'ar', 'hi'] as const;
 const DEFAULT_LANG: Lang = 'fr';
-const STORAGE_KEY = 'app:lang';
+const STORAGE_KEY = 'sos_language';
 export const LANG_EVENT = 'i18n:change' as const;
 
 /** Normalise une langue si supportée, sinon null. */

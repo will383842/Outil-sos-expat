@@ -17,6 +17,7 @@ import { PAYMENT_FUNCTIONS_REGION } from '../../configs/callRegion';
 import { sendWithdrawalConfirmation, WithdrawalConfirmationRole } from '../../telegram/withdrawalConfirmation';
 import { TELEGRAM_SECRETS } from '../../lib/secrets';
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
+import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -154,6 +155,8 @@ export const requestWithdrawal = onCall(
     }
 
     const userId = request.auth.uid;
+    await checkRateLimit(userId, "payment_requestWithdrawal", RATE_LIMITS.WITHDRAWAL);
+
     const input = request.data;
 
     // 2. Validate input

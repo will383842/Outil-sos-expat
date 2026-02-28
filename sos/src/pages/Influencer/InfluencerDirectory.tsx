@@ -10,7 +10,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import { httpsCallable } from "firebase/functions";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import {
   Search,
   Globe,
@@ -327,7 +327,7 @@ const InfluencerDirectory: React.FC = () => {
     setError(null);
     try {
       const fn = httpsCallable<unknown, DirectoryResponse>(
-        functionsWest2,
+        functionsAffiliate,
         "getInfluencerDirectory"
       );
       const currentPage = reset ? 1 : page;

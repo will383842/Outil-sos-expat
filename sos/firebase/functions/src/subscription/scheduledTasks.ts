@@ -14,7 +14,7 @@ import { onSchedule, ScheduledEvent } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
 import { getLanguageCode, MAILWIZZ_API_KEY_SECRET } from '../emailMarketing/config';
-import { APP_URLS } from './constants';
+import { APP_URLS, getGracePeriodConfig } from './constants';
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import { STRIPE_SECRET_KEY } from '../lib/secrets';
 
@@ -303,12 +303,16 @@ export const checkPastDueSubscriptions = onSchedule(
     const now = admin.firestore.Timestamp.now();
     const nowDate = now.toDate();
 
-    // Calculate date thresholds
-    const threeDaysAgo = new Date(nowDate);
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    // P3 FIX: Grace period configurable depuis Firestore settings/subscription
+    const { gracePeriodDays, reminderDays } = await getGracePeriodConfig(db);
+    logger.info(`[checkPastDueSubscriptions] Config: reminderDays=${reminderDays}, gracePeriodDays=${gracePeriodDays}`);
 
-    const sevenDaysAgo = new Date(nowDate);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Calculate date thresholds from config
+    const reminderThreshold = new Date(nowDate);
+    reminderThreshold.setDate(reminderThreshold.getDate() - reminderDays);
+
+    const suspensionThreshold = new Date(nowDate);
+    suspensionThreshold.setDate(suspensionThreshold.getDate() - gracePeriodDays);
 
     // Query subscriptions with status='past_due'
     const pastDueSnapshot = await db
@@ -343,15 +347,15 @@ export const checkPastDueSubscriptions = onSchedule(
         const firstName = userInfo?.firstName || userInfo?.displayName || 'Cher client';
         const lang = getLanguageCode(userInfo?.language || userInfo?.preferredLanguage || userInfo?.lang);
 
-        // Check if past_due for more than 7 days -> Suspend
-        if (pastDueSince <= sevenDaysAgo) {
-          logger.info(`[checkPastDueSubscriptions] Suspending subscription: ${providerId} (past_due since ${pastDueSince.toISOString()})`);
+        // Check if past_due for more than gracePeriodDays -> Suspend
+        if (pastDueSince <= suspensionThreshold) {
+          logger.info(`[checkPastDueSubscriptions] Suspending subscription: ${providerId} (past_due since ${pastDueSince.toISOString()}, threshold: ${gracePeriodDays}d)`);
 
           // Update subscription to suspended
           batch.update(doc.ref, {
             status: 'suspended',
             suspendedAt: now,
-            suspensionReason: 'payment_failed_7_days',
+            suspensionReason: `payment_failed_${gracePeriodDays}_days`,
             updatedAt: now,
           });
 
@@ -373,8 +377,8 @@ export const checkPastDueSubscriptions = onSchedule(
 
           suspendedCount++;
         }
-        // Check if past_due for more than 3 days -> Send reminder
-        else if (pastDueSince <= threeDaysAgo) {
+        // Check if past_due for more than reminderDays -> Send reminder
+        else if (pastDueSince <= reminderThreshold) {
           logger.info(`[checkPastDueSubscriptions] Sending reminder for: ${providerId} (past_due since ${pastDueSince.toISOString()})`);
 
           // Check if we already sent a 3-day reminder
@@ -383,7 +387,7 @@ export const checkPastDueSubscriptions = onSchedule(
           if (!reminderSent && email) {
             await sendEmail(email, `TR_PRV_subscription-payment-reminder_${lang}`, {
               FNAME: firstName,
-              DAYS_REMAINING: '4',
+              DAYS_REMAINING: String(gracePeriodDays - reminderDays),
               UPDATE_PAYMENT_URL: APP_URLS.SUBSCRIPTION_DASHBOARD,
             });
 
@@ -785,6 +789,179 @@ export const cleanupExpiredDocuments = onSchedule(
     }
 
     logger.info(`[cleanupExpiredDocuments] Completed: ${totalDeleted} documents deleted, ${errorCount} errors`);
+  }
+);
+
+// ============================================================================
+// 6. RECONCILE SUBSCRIPTIONS (Stripe ↔ Firestore)
+// Scheduled: Every Sunday at 04:00 UTC
+// P2 FIX: Detect webhook losses — log only, no auto-correction
+// ============================================================================
+
+export const reconcileSubscriptions = onSchedule(
+  {
+    schedule: '0 4 * * 0', // Sunday at 04:00 UTC
+    region: 'europe-west3',
+    timeZone: 'UTC',
+    secrets: [STRIPE_SECRET_KEY],
+    memory: '512MiB',
+    cpu: 0.167,
+    timeoutSeconds: 540, // 9 minutes
+  },
+  async (_event: ScheduledEvent) => {
+    logger.info('[reconcileSubscriptions] Starting weekly Stripe ↔ Firestore reconciliation...');
+
+    const StripeModule = await import('stripe');
+    const StripeClass = StripeModule.default;
+    const stripe = new StripeClass(STRIPE_SECRET_KEY.value(), {
+      apiVersion: '2023-10-16' as any,
+    });
+
+    const db = getDb();
+    const now = admin.firestore.Timestamp.now();
+
+    // Query all active subscriptions with a Stripe subscription ID
+    const activeSubsSnapshot = await db
+      .collection('subscriptions')
+      .where('status', '==', 'active')
+      .get();
+
+    if (activeSubsSnapshot.empty) {
+      logger.info('[reconcileSubscriptions] No active subscriptions found');
+      return;
+    }
+
+    const allDocs = activeSubsSnapshot.docs.filter(
+      (doc) => doc.data().stripeSubscriptionId
+    );
+
+    logger.info(`[reconcileSubscriptions] Checking ${allDocs.length} active subscriptions with Stripe IDs`);
+
+    let checkedCount = 0;
+    let mismatchCount = 0;
+    let errorCount = 0;
+
+    // Process in batches of 20 to avoid Stripe rate limits
+    const batchSize = 20;
+
+    for (let i = 0; i < allDocs.length; i += batchSize) {
+      const chunk = allDocs.slice(i, i + batchSize);
+
+      const results = await Promise.allSettled(
+        chunk.map(async (doc) => {
+          const firestoreData = doc.data() as SubscriptionDoc;
+          const stripeSubId = firestoreData.stripeSubscriptionId!;
+
+          try {
+            const stripeSub = await stripe.subscriptions.retrieve(stripeSubId);
+
+            // Map Stripe status to our internal status
+            const stripeStatus = stripeSub.status;
+            const firestoreStatus = firestoreData.status;
+
+            // Check for status mismatch
+            const statusMap: Record<string, string[]> = {
+              'active': ['active'],
+              'past_due': ['past_due'],
+              'canceled': ['cancelled', 'expired'],
+              'unpaid': ['past_due', 'suspended'],
+              'trialing': ['trialing'],
+              'paused': ['paused'],
+              'incomplete': ['expired'],
+              'incomplete_expired': ['expired'],
+            };
+
+            const expectedStatuses = statusMap[stripeStatus] || [];
+            const isMatch = expectedStatuses.includes(firestoreStatus);
+
+            if (!isMatch) {
+              mismatchCount++;
+              logger.warn('[reconcileSubscriptions] STATUS MISMATCH:', {
+                providerId: doc.id,
+                stripeSubscriptionId: stripeSubId,
+                stripeStatus,
+                firestoreStatus,
+                action: 'LOG_ONLY — review manually',
+              });
+
+              // Log in subscription_logs for admin review
+              await db.collection('subscription_logs').add({
+                providerId: doc.id,
+                action: 'reconciliation_mismatch',
+                previousState: { firestoreStatus },
+                newState: { stripeStatus },
+                metadata: {
+                  stripeSubscriptionId: stripeSubId,
+                  reconciliationType: 'weekly_cron',
+                },
+                createdAt: now,
+              });
+
+              // Admin alert
+              await db.collection('admin_alerts').add({
+                type: 'subscription_reconciliation_mismatch',
+                priority: 'medium',
+                read: false,
+                message: `Incohérence abonnement ${doc.id}: Firestore=${firestoreStatus}, Stripe=${stripeStatus}`,
+                data: {
+                  providerId: doc.id,
+                  stripeSubscriptionId: stripeSubId,
+                  stripeStatus,
+                  firestoreStatus,
+                },
+                createdAt: now,
+              });
+            }
+
+            checkedCount++;
+          } catch (stripeError: unknown) {
+            const message = stripeError instanceof Error ? stripeError.message : String(stripeError);
+            // Stripe subscription not found — might be deleted
+            if (message.includes('No such subscription')) {
+              mismatchCount++;
+              logger.warn('[reconcileSubscriptions] Stripe subscription not found:', {
+                providerId: doc.id,
+                stripeSubscriptionId: stripeSubId,
+                firestoreStatus: firestoreData.status,
+              });
+
+              await db.collection('subscription_logs').add({
+                providerId: doc.id,
+                action: 'reconciliation_stripe_not_found',
+                previousState: { firestoreStatus: firestoreData.status },
+                newState: { stripeStatus: 'not_found' },
+                metadata: { stripeSubscriptionId: stripeSubId },
+                createdAt: now,
+              });
+
+              // Admin alert — active in Firestore but deleted in Stripe is critical
+              await db.collection('admin_alerts').add({
+                type: 'subscription_stripe_not_found',
+                priority: 'high',
+                read: false,
+                message: `Abonnement ${doc.id} actif en Firestore mais supprimé dans Stripe (${stripeSubId})`,
+                data: {
+                  providerId: doc.id,
+                  stripeSubscriptionId: stripeSubId,
+                  firestoreStatus: firestoreData.status,
+                },
+                createdAt: now,
+              });
+            } else {
+              errorCount++;
+              logger.error(`[reconcileSubscriptions] Error checking ${doc.id}:`, stripeError);
+            }
+          }
+        })
+      );
+
+      // Count settled errors
+      results.forEach((r) => {
+        if (r.status === 'rejected') errorCount++;
+      });
+    }
+
+    logger.info(`[reconcileSubscriptions] Completed: ${checkedCount} checked, ${mismatchCount} mismatches, ${errorCount} errors`);
   }
 );
 

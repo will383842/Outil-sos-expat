@@ -76,7 +76,7 @@ export const chatterAdminConfig = {
   region: "us-central1" as const,
   memory: "512MiB" as const,  // FIX: 256MiB causes OOM under load (chatters list, stats, withdrawals)
   cpu: 0.5,  // memory > 256MiB requires cpu >= 0.5
-  maxInstances: 5,
+  maxInstances: 1,  // QUOTA FIX: 5→1 to stay under 48 vCPU/region (0.5 CPU × 5 = 2.5 per fn)
   minInstances: 0,
   concurrency: 1,
   cors: ALLOWED_ORIGINS,
@@ -90,7 +90,7 @@ export const affiliateAdminConfig = {
   region: "us-central1" as const,
   memory: "512MiB" as const,  // FIX: 256MiB causes OOM under load (same as chatterAdminConfig)
   cpu: 0.5,  // memory > 256MiB requires cpu >= 0.5
-  maxInstances: 5,
+  maxInstances: 1,  // QUOTA FIX: 5→1 to stay under 48 vCPU/region (0.5 CPU × 5 = 2.5 per fn)
   minInstances: 0,
   concurrency: 1,
   cors: ALLOWED_ORIGINS,

@@ -6,11 +6,12 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { trackMetaViewContent, trackMetaLead } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
+import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useGroupAdmin } from '@/hooks/useGroupAdmin';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
-import {  httpsCallable  } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
 import {
   DollarSign,
   Users,
@@ -18,7 +19,6 @@ import {
   Copy,
   CheckCircle,
   ExternalLink,
-  Bell,
   ArrowRight,
   Loader2,
   Award,
@@ -30,12 +30,15 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import {
-  GroupAdminDashboardResponse,
   formatGroupAdminAmount,
   getGroupAdminAffiliateLink,
   getGroupAdminRecruitmentLink,
   GROUP_ADMIN_BADGES,
 } from '@/types/groupAdmin';
+
+const NotificationBell = lazy(() =>
+  import('@/components/shared/NotificationBell').then(m => ({ default: m.NotificationBell }))
+);
 
 // ============================================================================
 // SKELETON COMPONENTS
@@ -54,35 +57,38 @@ const CardSkeleton: React.FC = () => (
 const GroupAdminDashboard: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
+  const { language } = useApp();
   const { user } = useAuth();
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [dashboardData, setDashboardData] = useState<GroupAdminDashboardResponse | null>(null);
+  const {
+    profile,
+    recentCommissions,
+    recentRecruits,
+    notifications,
+    leaderboard,
+    isLoading: loading,
+    error,
+    refresh: fetchDashboard,
+    markNotificationRead,
+    markAllNotificationsRead,
+    unreadNotificationsCount,
+  } = useGroupAdmin();
+
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const telegramRoute = `/${getTranslatedRouteSlug('groupadmin-telegram' as RouteKey, langCode)}`;
 
+  // Telegram onboarding check (mandatory for withdrawals)
   useEffect(() => {
-    fetchDashboard();
-  }, []);
+    if (user && !user.telegramOnboardingCompleted) {
+      navigate(telegramRoute, { replace: true });
+    }
+  }, [user, navigate, telegramRoute]);
 
   // Meta Pixel - ViewContent on dashboard mount
   useEffect(() => {
     trackMetaViewContent({ content_name: 'groupadmin_dashboard', content_category: 'affiliate' });
   }, []);
-
-  const fetchDashboard = async () => {
-    try {
-      setLoading(true);
-      const getDashboard = httpsCallable(functionsWest2, 'getGroupAdminDashboard');
-      const result = await getDashboard({});
-      setDashboardData(result.data as GroupAdminDashboardResponse);
-    } catch (err: unknown) {
-      const error = err as { message?: string };
-      setError(error.message || 'Failed to load dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const copyToClipboard = async (text: string, type: string) => {
     await navigator.clipboard.writeText(text);
@@ -103,7 +109,7 @@ const GroupAdminDashboard: React.FC = () => {
     );
   }
 
-  if (error || !dashboardData) {
+  if (error || !profile) {
     return (
       <GroupAdminDashboardLayout>
         <div className="flex items-center justify-center p-4 min-h-[60vh]">
@@ -125,7 +131,6 @@ const GroupAdminDashboard: React.FC = () => {
     );
   }
 
-  const { profile, recentCommissions, recentRecruits, notifications, leaderboard } = dashboardData;
   const affiliateLink = getGroupAdminAffiliateLink(profile.affiliateCodeClient);
   const recruitmentLink = getGroupAdminRecruitmentLink(profile.affiliateCodeRecruitment);
 
@@ -135,27 +140,37 @@ const GroupAdminDashboard: React.FC = () => {
 
       <div>
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl dark:text-white md:text-3xl font-bold mb-2">
-              <FormattedMessage
-                id="groupAdmin.dashboard.welcome"
-                defaultMessage="Welcome, {name}!"
-                values={{ name: profile.firstName }}
+          <div className="mb-8 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl dark:text-white md:text-3xl font-bold mb-2">
+                <FormattedMessage
+                  id="groupAdmin.dashboard.welcome"
+                  defaultMessage="Welcome, {name}!"
+                  values={{ name: profile.firstName }}
+                />
+              </h1>
+              <p className="text-gray-600">
+                <FormattedMessage
+                  id="groupAdmin.dashboard.groupInfo"
+                  defaultMessage="Managing {groupName}"
+                  values={{ groupName: profile.groupName }}
+                />
+                {profile.isGroupVerified && (
+                  <span className="inline-flex items-center gap-1 ml-2 text-green-600">
+                    <CheckCircle className="w-4 h-4" />
+                    <FormattedMessage id="groupAdmin.dashboard.verified" defaultMessage="Verified" />
+                  </span>
+                )}
+              </p>
+            </div>
+            <Suspense fallback={<div className="w-10 h-10" />}>
+              <NotificationBell
+                notifications={notifications}
+                unreadCount={unreadNotificationsCount}
+                onMarkAsRead={markNotificationRead}
+                onMarkAllAsRead={markAllNotificationsRead}
               />
-            </h1>
-            <p className="text-gray-600">
-              <FormattedMessage
-                id="groupAdmin.dashboard.groupInfo"
-                defaultMessage="Managing {groupName}"
-                values={{ groupName: profile.groupName }}
-              />
-              {profile.isGroupVerified && (
-                <span className="inline-flex items-center gap-1 ml-2 text-green-600">
-                  <CheckCircle className="w-4 h-4" />
-                  <FormattedMessage id="groupAdmin.dashboard.verified" defaultMessage="Verified" />
-                </span>
-              )}
-            </p>
+            </Suspense>
           </div>
 
           {/* Balance Cards */}

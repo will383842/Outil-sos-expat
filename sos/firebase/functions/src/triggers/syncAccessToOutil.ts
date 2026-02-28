@@ -164,7 +164,8 @@ export async function handleUserAccessUpdated(event: any) {
 
     if (!result.ok) {
       logger.error("[onUserAccessUpdated] Echec sync pour:", uid, result.error);
-      // TODO: Ajouter a une queue de retry si necessaire
+      // AUDIT FIX 2026-02-28: Throw to trigger Firebase Functions automatic retry
+      throw new Error(`[onUserAccessUpdated] Sync failed for ${uid}: ${result.error}`);
     } else {
       logger.info("[onUserAccessUpdated] Acces synchronise vers Outil:", uid);
     }

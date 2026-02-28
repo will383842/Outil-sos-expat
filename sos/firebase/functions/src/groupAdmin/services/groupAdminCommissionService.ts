@@ -10,6 +10,7 @@ import { logger } from "firebase-functions/v2";
 
 import {
   GroupAdmin,
+  GroupAdminBadgeType,
   GroupAdminCommission,
   GroupAdminCommissionType,
   GroupAdminCommissionStatus,
@@ -103,8 +104,8 @@ export async function createClientReferralCommission(
         const bonusFromPromo = amount - beforePromo;
         if (promoResult.promoId) {
           import("./groupAdminPromotionService").then(({ trackBudgetSpend }) => {
-            trackBudgetSpend(promoResult.promoId!, bonusFromPromo).catch(() => {});
-          }).catch(() => {});
+            trackBudgetSpend(promoResult.promoId!, bonusFromPromo).catch((e: unknown) => console.warn("[groupAdminCommission] trackBudgetSpend failed:", e));
+          }).catch((e: unknown) => console.warn("[groupAdminCommission] import groupAdminPromotionService failed:", e));
         }
       }
     } catch {
@@ -165,6 +166,11 @@ export async function createClientReferralCommission(
 
     // Check if this GroupAdmin was recruited and if the threshold is now met
     await checkAndPayRecruitmentCommission(groupAdminId);
+
+    // Check for badge awards (non-blocking)
+    checkAndAwardBadges(groupAdminId).catch((err) =>
+      logger.warn("[GroupAdminCommission] Badge check failed (non-critical)", { groupAdminId, err })
+    );
 
     return commission;
   } catch (error) {
@@ -788,5 +794,90 @@ async function createCommission(
       error,
     });
     return null;
+  }
+}
+
+// ============================================================================
+// BADGE AUTOMATION
+// ============================================================================
+
+/** Badge thresholds: badgeType → { field, threshold } */
+const BADGE_THRESHOLDS: Array<{
+  badge: GroupAdminBadgeType;
+  field: "totalClients" | "totalEarned" | "totalRecruits";
+  threshold: number;
+}> = [
+  // First conversion
+  { badge: "first_conversion", field: "totalClients", threshold: 1 },
+  // Earnings (in cents)
+  { badge: "earnings_100", field: "totalEarned", threshold: 10000 },
+  { badge: "earnings_500", field: "totalEarned", threshold: 50000 },
+  { badge: "earnings_1000", field: "totalEarned", threshold: 100000 },
+  { badge: "earnings_5000", field: "totalEarned", threshold: 500000 },
+  // Recruitment
+  { badge: "recruit_1", field: "totalRecruits", threshold: 1 },
+  { badge: "recruit_10", field: "totalRecruits", threshold: 10 },
+  { badge: "recruit_25", field: "totalRecruits", threshold: 25 },
+];
+
+/**
+ * Check and award badges to a GroupAdmin based on current stats.
+ * Called after commission creation (non-blocking).
+ */
+export async function checkAndAwardBadges(groupAdminId: string): Promise<void> {
+  const db = getDb();
+
+  try {
+    const gaDoc = await db.collection("group_admins").doc(groupAdminId).get();
+    if (!gaDoc.exists) return;
+
+    const ga = gaDoc.data() as GroupAdmin;
+    const currentBadges = ga.badges || [];
+    const newBadges: GroupAdminBadgeType[] = [];
+
+    for (const { badge, field, threshold } of BADGE_THRESHOLDS) {
+      if (currentBadges.includes(badge)) continue;
+
+      const value = ga[field] || 0;
+      if (value >= threshold) {
+        newBadges.push(badge);
+      }
+    }
+
+    if (newBadges.length === 0) return;
+
+    const now = Timestamp.now();
+    const batch = db.batch();
+
+    // Add badges to GroupAdmin doc
+    batch.update(gaDoc.ref, {
+      badges: FieldValue.arrayUnion(...newBadges),
+      updatedAt: now,
+    });
+
+    // Create badge award records
+    for (const badge of newBadges) {
+      const awardRef = db.collection("group_admin_badge_awards").doc();
+      batch.set(awardRef, {
+        id: awardRef.id,
+        groupAdminId,
+        groupAdminEmail: ga.email,
+        badgeType: badge,
+        earnedAt: now,
+        valueAtEarning: ga[BADGE_THRESHOLDS.find((b) => b.badge === badge)!.field] || 0,
+      });
+    }
+
+    await batch.commit();
+
+    logger.info("[GroupAdminCommission] Badges awarded", {
+      groupAdminId,
+      newBadges,
+    });
+  } catch (error) {
+    logger.warn("[GroupAdminCommission] Badge check error (non-critical)", {
+      groupAdminId,
+      error,
+    });
   }
 }

@@ -823,12 +823,23 @@ export const updateSubscription = functions
 
       const subData = subDoc.data()!;
       const currency = subData.currency as Currency;
+      const currentBillingPeriod = subData.billingPeriod || 'monthly';
 
       // Get new plan
       const newPlan = await getSubscriptionPlan(newPlanId);
       if (!newPlan || !newPlan.isActive) {
         throw new HttpsError('not-found', 'New plan not found or inactive');
       }
+
+      // Select the correct Stripe price ID based on current billing period
+      const stripePriceId = currentBillingPeriod === 'yearly'
+        ? (newPlan.stripePriceIdAnnual?.[currency] || newPlan.stripePriceId[currency])
+        : newPlan.stripePriceId[currency];
+
+      // Calculate the correct amount for the current billing period
+      const currentPeriodAmount = currentBillingPeriod === 'yearly'
+        ? (newPlan.annualPricing?.[currency] ?? calculateAnnualPrice(newPlan.pricing[currency], newPlan.annualDiscountPercent ?? DEFAULT_ANNUAL_DISCOUNT_PERCENT))
+        : newPlan.pricing[currency];
 
       // Get Stripe subscription to find item ID
       const stripeSubscription = await getStripe().subscriptions.retrieve(subData.stripeSubscriptionId);
@@ -840,12 +851,13 @@ export const updateSubscription = functions
         {
           items: [{
             id: subscriptionItemId,
-            price: newPlan.stripePriceId[currency]
+            price: stripePriceId
           }],
           proration_behavior: 'create_prorations',
           metadata: {
             planId: newPlanId,
-            providerType: newPlan.providerType
+            providerType: newPlan.providerType,
+            billingPeriod: currentBillingPeriod
           }
         }
       );
@@ -854,8 +866,8 @@ export const updateSubscription = functions
       await getDb().doc(`subscriptions/${providerId}`).update({
         planId: newPlanId,
         tier: newPlan.tier,
-        stripePriceId: newPlan.stripePriceId[currency],
-        currentPeriodAmount: newPlan.pricing[currency],
+        stripePriceId: stripePriceId,
+        currentPeriodAmount: currentPeriodAmount,
         updatedAt: admin.firestore.Timestamp.now()
       });
 

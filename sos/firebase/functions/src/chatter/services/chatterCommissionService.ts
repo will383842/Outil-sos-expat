@@ -53,6 +53,13 @@ export interface CreateCommissionInput {
       // For social likes bonus
       networkCount?: number;
       networks?: string;
+      // For captain commissions (n1/n2 level)
+      level?: string;
+      // For provider recruitment commissions (harmonized)
+      recruitmentDate?: string;
+      monthsRemaining?: number;
+      callId?: string;
+      legacy?: boolean;
     };
   };
   baseAmount?: number; // Override base amount (otherwise use config)
@@ -214,6 +221,12 @@ export async function createCommission(
         default:
           baseAmount = 0;
       }
+    }
+
+    // AUDIT FIX 2026-02-28: Validate baseAmount is an integer (cents)
+    if (!Number.isInteger(baseAmount) || baseAmount < 0) {
+      logger.error("[createCommission] Invalid baseAmount", { chatterId, type, baseAmount });
+      return { success: false, error: `Invalid baseAmount: must be a non-negative integer (cents). Got: ${baseAmount}` };
     }
 
     // 6. No bonus multipliers — finalAmount equals baseAmount
@@ -1048,22 +1061,30 @@ export async function checkAndAwardBadges(chatterId: string): Promise<{
       }
       await batch.commit();
 
-      // Create notifications for each badge
+      // Create notifications for each badge (individual try-catch to avoid partial failure)
       for (const badge of newBadges) {
-        const notificationRef = db.collection("chatter_notifications").doc();
-        await notificationRef.set({
-          id: notificationRef.id,
-          chatterId,
-          type: "badge_earned",
-          title: `Badge débloqué : ${getBadgeDisplayName(badge)} !`,
-          titleTranslations: { en: `Badge unlocked: ${getBadgeDisplayName(badge)}!` },
-          message: getBadgeDescription(badge),
-          messageTranslations: { en: getBadgeDescription(badge) },
-          isRead: false,
-          emailSent: false,
-          data: { badgeType: badge },
-          createdAt: Timestamp.now(),
-        });
+        try {
+          const notificationRef = db.collection("chatter_notifications").doc();
+          await notificationRef.set({
+            id: notificationRef.id,
+            chatterId,
+            type: "badge_earned",
+            title: `Badge débloqué : ${getBadgeDisplayName(badge)} !`,
+            titleTranslations: { en: `Badge unlocked: ${getBadgeDisplayName(badge)}!` },
+            message: getBadgeDescription(badge),
+            messageTranslations: { en: getBadgeDescription(badge) },
+            isRead: false,
+            emailSent: false,
+            data: { badgeType: badge },
+            createdAt: Timestamp.now(),
+          });
+        } catch (notifErr) {
+          logger.error("[checkAndAwardBadges] Failed to create notification for badge", {
+            chatterId,
+            badge,
+            error: notifErr instanceof Error ? notifErr.message : notifErr,
+          });
+        }
       }
 
       badgesAwarded.push(...newBadges);

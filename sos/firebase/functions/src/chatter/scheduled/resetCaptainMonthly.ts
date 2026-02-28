@@ -11,13 +11,13 @@
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
-import { getChatterConfig } from "../chatterConfig";
+import { getChatterConfigCached } from "../utils";
 import { createCommission } from "../services/chatterCommissionService";
-import { Chatter, ChatterConfig, DEFAULT_CHATTER_CONFIG } from "../types";
+import { Chatter, DEFAULT_CHATTER_CONFIG } from "../types";
 
 // ============================================================================
 // LAZY INITIALIZATION
@@ -87,9 +87,9 @@ export const chatterResetCaptainMonthly = onSchedule(
     logger.info("[resetCaptainMonthly] Starting monthly captain reset", { monthKey });
 
     // Load config
-    let config: ChatterConfig;
+    let config;
     try {
-      config = await getChatterConfig();
+      config = await getChatterConfigCached();
     } catch {
       config = DEFAULT_CHATTER_CONFIG;
     }
@@ -126,12 +126,11 @@ export const chatterResetCaptainMonthly = onSchedule(
             type: "captain_tier_bonus",
             source: {
               id: `captain_tier_${captainId}_${monthKey}`,
-              type: "monthly_tier",
+              type: "bonus",
               details: {
                 month: monthKey,
-                teamCalls,
-                tierName: bestTier.name,
-                tierMinCalls: bestTier.minCalls,
+                bonusType: "captain_tier",
+                bonusReason: `${bestTier.name} (${teamCalls} appels)`,
               },
             },
             baseAmount: bestTier.bonus,
@@ -156,10 +155,11 @@ export const chatterResetCaptainMonthly = onSchedule(
             type: "captain_quality_bonus",
             source: {
               id: `captain_quality_${captainId}_${monthKey}`,
-              type: "quality_bonus",
+              type: "bonus",
               details: {
                 month: monthKey,
-                teamCalls,
+                bonusType: "captain_quality",
+                bonusReason: `Bonus qualit\u00e9 (${teamCalls} appels)`,
               },
             },
             baseAmount: qualityBonusAmount,
@@ -173,10 +173,14 @@ export const chatterResetCaptainMonthly = onSchedule(
 
         // 4. Archive monthly stats
         const archiveId = `${captainId}_${monthKey}`;
+        const totalBonus = (bestTier?.bonus || 0) + (captain.captainQualityBonusEnabled ? qualityBonusAmount : 0);
         await db.collection("captain_monthly_archives").doc(archiveId).set({
           captainId,
-          month: monthKey,
+          month: prevMonth.getMonth() + 1,
+          year: prevMonth.getFullYear(),
           teamCalls,
+          tierName: bestTier?.name || "Aucun",
+          bonusAmount: totalBonus,
           tierReached: bestTier?.name || null,
           tierBonus: bestTier?.bonus || 0,
           qualityBonusPaid: captain.captainQualityBonusEnabled || false,

@@ -161,7 +161,8 @@ export const onSosProfileCreated = onDocumentCreated(
 
     if (!result.ok) {
       console.error("[onSosProfileCreated] Échec sync pour:", uid, result.error);
-      // TODO: Ajouter à une queue de retry
+      // AUDIT FIX 2026-02-28: Throw to trigger Firebase Functions automatic retry
+      throw new Error(`[onSosProfileCreated] Sync failed for ${uid}: ${result.error}`);
     }
   }
 );
@@ -251,7 +252,8 @@ export const onSosProfileUpdated = onDocumentUpdated(
 
     if (!result.ok) {
       console.error("[onSosProfileUpdated] Échec sync pour:", uid, result.error);
-      // TODO: Ajouter à une queue de retry
+      // AUDIT FIX 2026-02-28: Throw to trigger Firebase Functions automatic retry
+      throw new Error(`[onSosProfileUpdated] Sync failed for ${uid}: ${result.error}`);
     }
   }
 );

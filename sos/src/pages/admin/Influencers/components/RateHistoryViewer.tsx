@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import type { InfluencerRateHistoryEntry, InfluencerCommissionRule } from '@/types/influencer';
 import { History, ChevronDown, ChevronUp, Clock, User } from 'lucide-react';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -46,7 +46,7 @@ const RateHistoryViewer: React.FC<RateHistoryViewerProps> = ({ onClose }) => {
 
     try {
       const adminGetRateHistory = httpsCallable<{ limit?: number }, { history: InfluencerRateHistoryEntry[] }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetRateHistory'
       );
       const result = await adminGetRateHistory({ limit: 20 });

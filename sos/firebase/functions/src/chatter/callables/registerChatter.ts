@@ -21,12 +21,14 @@ import {
 } from "../types";
 import { getChatterConfigCached, areRegistrationsEnabled, isCountrySupported, hashIP } from "../utils";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
+import { detectCircularReferral, runComprehensiveFraudCheck } from "../services/chatterReferralFraudService";
 import {
   generateChatterClientCode,
   generateChatterRecruitmentCode,
 } from "../utils/chatterCodeGenerator";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
+import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedChatterLanguage[] = [
@@ -46,7 +48,7 @@ export const registerChatter = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 2,
     cors: ALLOWED_ORIGINS,
     secrets: [BACKLINK_ENGINE_WEBHOOK_SECRET],
   },
@@ -64,6 +66,8 @@ export const registerChatter = onCall(
     }
 
     const userId = request.auth.uid;
+    await checkRateLimit(userId, "registerChatter", RATE_LIMITS.REGISTRATION);
+
     const db = getFirestore();
 
     // 2. Validate input
@@ -256,7 +260,7 @@ export const registerChatter = onCall(
         }
       }
 
-      // 7. Check for duplicate email
+      // 7. Check for duplicate email (P2-01: cross-role check)
       const emailQuery = await db
         .collection("chatters")
         .where("email", "==", input.email.toLowerCase())
@@ -265,6 +269,20 @@ export const registerChatter = onCall(
 
       if (!emailQuery.empty) {
         throw new HttpsError("already-exists", "A chatter with this email already exists");
+      }
+
+      // P2-01 FIX: Also check if email is used by another user account (cross-role)
+      const usersEmailQuery = await db
+        .collection("users")
+        .where("email", "==", input.email.toLowerCase())
+        .limit(1)
+        .get();
+
+      if (!usersEmailQuery.empty) {
+        const existingUserDoc = usersEmailQuery.docs[0];
+        if (existingUserDoc.id !== userId) {
+          throw new HttpsError("already-exists", "This email is already used by another account");
+        }
       }
 
       // 8. Find recruiter FIRST (needed for fraud check)
@@ -305,8 +323,28 @@ export const registerChatter = onCall(
               });
               // Silently ignore the referral code (don't block registration)
             } else {
-              recruitedBy = recruiterId;
-              recruitedByCode = input.recruitmentCode.toUpperCase();
+              // P2-02 FIX: Check for circular referral chain before accepting
+              try {
+                const circularCheck = await detectCircularReferral(recruiterId, userId);
+                if (circularCheck.isCircular) {
+                  logger.warn("[registerChatter] Circular referral detected, ignoring code", {
+                    userId,
+                    recruiterId,
+                    chain: circularCheck.chain,
+                  });
+                  // Silently ignore the referral code (don't block registration)
+                } else {
+                  recruitedBy = recruiterId;
+                  recruitedByCode = input.recruitmentCode.toUpperCase();
+                }
+              } catch (circularError) {
+                // If circular check fails, still accept the referral (don't block registration)
+                logger.warn("[registerChatter] Circular check failed, accepting referral", {
+                  error: circularError instanceof Error ? circularError.message : String(circularError),
+                });
+                recruitedBy = recruiterId;
+                recruitedByCode = input.recruitmentCode.toUpperCase();
+              }
             }
           }
         }
@@ -385,7 +423,7 @@ export const registerChatter = onCall(
           });
         } catch (alertError) {
           // Don't block registration if alert writing fails
-          logger.error("[registerChatter] Failed to write fraud alert", { error: alertError });
+          console.warn("[registerChatter] Failed to write fraud alert", String(alertError));
         }
       }
 
@@ -397,13 +435,12 @@ export const registerChatter = onCall(
       );
       const affiliateCodeRecruitment = generateChatterRecruitmentCode(affiliateCodeClient);
 
-      logger.info("[registerChatter] Generated affiliate codes", {
-        userId,
-        affiliateCodeClient,
-        affiliateCodeRecruitment,
-      });
+      console.log("[registerChatter] STEP 10: Codes generated", JSON.stringify({
+        userId, affiliateCodeClient, affiliateCodeRecruitment, elapsed: Date.now() - startTime,
+      }));
 
       // 11. Create chatter document with ACTIVE status
+      console.log("[registerChatter] STEP 11: Creating chatter object...");
       const chatter: Chatter = {
         id: userId,
         email: input.email.toLowerCase(),
@@ -501,26 +538,24 @@ export const registerChatter = onCall(
           acceptanceMethod: "checkbox_click",
           ipHash: hashIP(request.rawRequest?.ip || "unknown"),
         },
+
+        // P2-05 FIX: Store IP hash for multi-account fraud detection
+        registrationIpHash: hashIP(request.rawRequest?.ip || "unknown"),
       };
 
       // 12. Create user document and chatter document in transaction
-      // IMPORTANT: Chatters get a dedicated role, not shared with other roles
-      logger.info("[registerChatter] 📝 DÉBUT TRANSACTION FIRESTORE", {
-        timestamp: new Date().toISOString(),
-        userId,
-        email: input.email,
-        collections: ["chatters", "users", "chatter_affiliate_clicks", "chatter_recruited_chatters"],
-        elapsedSinceStart: Date.now() - startTime
-      });
+      console.log("[registerChatter] STEP 11b: Chatter object created OK, elapsed:", Date.now() - startTime);
+      console.log("[registerChatter] STEP 12: Starting Firestore transaction...");
 
       await db.runTransaction(async (transaction) => {
-        // Create chatter
+        console.log("[registerChatter] STEP 12a: Inside transaction");
+        // IMPORTANT: All reads MUST come before all writes in Firestore transactions
         const chatterRef = db.collection("chatters").doc(userId);
-        transaction.set(chatterRef, chatter);
-
-        // Create user document with CHATTER role (not client)
         const userRef = db.collection("users").doc(userId);
         const userDoc = await transaction.get(userRef);
+
+        // Now do all writes
+        transaction.set(chatterRef, chatter);
 
         if (userDoc.exists) {
           // This should only happen if user passed all role checks above
@@ -588,23 +623,26 @@ export const registerChatter = onCall(
         }
       });
 
-      logger.info("[registerChatter] ✅ TRANSACTION FIRESTORE RÉUSSIE", {
-        timestamp: new Date().toISOString(),
-        userId,
-        email: input.email,
-        duration: Date.now() - startTime
-      });
+      console.log("[registerChatter] STEP 12b: Transaction SUCCESS, elapsed:", Date.now() - startTime);
 
-      logger.info("[registerChatter] ✅ INSCRIPTION TERMINÉE", {
-        timestamp: new Date().toISOString(),
+      // P2-03 FIX: Run comprehensive fraud check post-registration (non-blocking)
+      if (recruitedBy) {
+        runComprehensiveFraudCheck(userId, {
+          parrainId: recruitedBy,
+          ipHash: hashIP(request.rawRequest?.ip || "unknown"),
+        }).catch((err) => {
+          logger.warn("[registerChatter] Post-registration fraud check failed", {
+            error: err instanceof Error ? err.message : String(err),
+          });
+        });
+      }
+
+      console.log("[registerChatter] STEP 13: INSCRIPTION TERMINÉE", JSON.stringify({
         chatterId: userId,
         email: input.email,
-        country: input.country,
-        recruitedBy,
         affiliateCodeClient,
-        affiliateCodeRecruitment,
-        totalDuration: Date.now() - startTime
-      });
+        totalDuration: Date.now() - startTime,
+      }));
 
       // ✅ NOUVEAU : Notify Backlink Engine to stop prospecting campaigns
       await notifyBacklinkEngineUserRegistered({
@@ -632,23 +670,27 @@ export const registerChatter = onCall(
         message: "Registration successful. Your account is now active!",
       };
     } catch (error) {
-      logger.error("[registerChatter] ❌ ERREUR INSCRIPTION", {
+      // Use console.error to avoid firebase-functions logger serialization crash
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const errCode = (error as any)?.code;
+      const errStack = error instanceof Error ? error.stack?.substring(0, 500) : undefined;
+      console.error("[registerChatter] ❌ ERREUR INSCRIPTION", JSON.stringify({
         timestamp: new Date().toISOString(),
         userId,
         email: input?.email,
         errorType: error?.constructor?.name,
-        errorCode: (error as any)?.code,
-        errorMessage: (error as Error)?.message,
-        errorStack: (error as Error)?.stack,
+        errorCode: errCode,
+        errorMessage: errMsg,
+        errorStack: errStack,
         duration: Date.now() - startTime,
-        isHttpsError: error instanceof HttpsError
-      });
+        isHttpsError: error instanceof HttpsError,
+      }));
 
       if (error instanceof HttpsError) {
         throw error;
       }
 
-      throw new HttpsError("internal", "Failed to register chatter");
+      throw new HttpsError("internal", "Failed to register chatter: " + errMsg);
     }
   }
 );

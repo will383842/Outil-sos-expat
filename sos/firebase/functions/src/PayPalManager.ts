@@ -1194,20 +1194,23 @@ export class PayPalManager {
     // ========================================
     // Mettre le provider en busy dès maintenant pour éviter le double-booking
     // pendant les 1-4 minutes avant qu'il réponde au téléphone
+    // P1-1 FIX: setProviderBusy BLOQUANT pour éliminer la race condition double-booking PayPal
+    // Même logique que le flux Stripe dans createAndScheduleCallFunction
     if (orderData.callSessionId && orderData.providerId) {
-      try {
-        console.log(`🔶 [PAYPAL] Setting provider ${orderData.providerId} to BUSY (pending_call)...`);
-        const busyResult = await setProviderBusy(orderData.providerId, orderData.callSessionId, 'pending_call');
+      console.log(`🔶 [PAYPAL] Setting provider ${orderData.providerId} to BUSY (pending_call)...`);
+      const busyResult = await setProviderBusy(orderData.providerId, orderData.callSessionId, 'pending_call');
 
-        if (busyResult.success) {
-          console.log(`✅ [PAYPAL] Provider ${orderData.providerId} marked as BUSY (pending_call)`);
-        } else {
-          console.warn(`⚠️ [PAYPAL] Failed to set provider busy: ${busyResult.error}`);
-        }
-      } catch (busyError) {
-        console.error(`⚠️ [PAYPAL] Error setting provider busy (non-blocking):`, busyError);
-        // Non-blocking: on continue même si le provider n'est pas marqué busy
+      if (!busyResult.success) {
+        console.error(`❌ [PAYPAL] Cannot reserve provider: ${busyResult.error}`);
+        throw new Error('Le prestataire n\'est pas disponible actuellement. Veuillez réessayer.');
       }
+
+      if (busyResult.message === 'Provider already busy') {
+        console.error(`❌ [PAYPAL] Provider already busy for another call`);
+        throw new Error('Le prestataire est actuellement en appel. Veuillez réessayer dans quelques minutes.');
+      }
+
+      console.log(`✅ [PAYPAL] Provider ${orderData.providerId} marked as BUSY (pending_call)`);
     }
 
     // ========================================
@@ -3793,6 +3796,12 @@ export const paypalWebhook = onRequest(
       });
       // ========== END P0 FIX ==========
 
+      // Webhook heartbeat (fire-and-forget) — monitoring freshness
+      db.collection('webhook_heartbeats').doc('paypal').set({
+        lastReceivedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastEventType: eventType,
+      }, { merge: true }).catch(() => {});
+
       // Logger l'événement (kept for audit trail)
       await db.collection("paypal_webhook_events").add({
         eventId: event.id,
@@ -4028,7 +4037,7 @@ export const paypalWebhook = onRequest(
             console.error("❌ [PAYPAL] Error handling CAPTURE.DENIED:", deniedError);
             await db.collection("admin_alerts").add({
               type: "paypal_capture_denied_error",
-              severity: "critical",
+              priority: "critical",
               title: "Erreur traitement PayPal CAPTURE.DENIED",
               message: `Erreur lors du traitement de CAPTURE.DENIED pour ${deniedCaptureId}`,
               data: {
@@ -4174,7 +4183,7 @@ export const paypalWebhook = onRequest(
               console.error("❌ [PAYPAL] Error handling CAPTURE.REVERSED:", reversalError);
               await db.collection("admin_alerts").add({
                 type: "paypal_reversal_handling_failed",
-                severity: "critical",
+                priority: "critical",
                 title: "Échec traitement reversal PayPal",
                 message: `Impossible de traiter le reversal PayPal ${reversedCaptureId}`,
                 data: {
@@ -4319,7 +4328,7 @@ export const paypalWebhook = onRequest(
               console.error("❌ [PAYPAL] P0-1 FIX: Error deducting provider balance:", refundError);
               await db.collection("admin_alerts").add({
                 type: "paypal_provider_deduction_failed",
-                severity: "critical",
+                priority: "critical",
                 title: "Échec déduction provider - Remboursement PayPal",
                 message: `Impossible de débiter le provider pour le remboursement PayPal ${refundCaptureId}`,
                 data: {
@@ -4569,6 +4578,22 @@ export const paypalWebhook = onRequest(
                   type: "payout_success",
                   title: "Paiement reçu",
                   message: `Vous avez reçu ${payoutData.amount} ${payoutData.currency} sur votre compte PayPal.`,
+                  titleTranslations: {
+                    fr: "Paiement reçu", en: "Payment received", es: "Pago recibido",
+                    de: "Zahlung erhalten", pt: "Pagamento recebido", ru: "Платёж получен",
+                    hi: "भुगतान प्राप्त", zh: "已收到付款", ar: "تم استلام الدفعة",
+                  },
+                  messageTranslations: {
+                    fr: `Vous avez reçu ${payoutData.amount} ${payoutData.currency} sur votre compte PayPal.`,
+                    en: `You received ${payoutData.amount} ${payoutData.currency} on your PayPal account.`,
+                    es: `Ha recibido ${payoutData.amount} ${payoutData.currency} en su cuenta PayPal.`,
+                    de: `Sie haben ${payoutData.amount} ${payoutData.currency} auf Ihrem PayPal-Konto erhalten.`,
+                    pt: `Você recebeu ${payoutData.amount} ${payoutData.currency} na sua conta PayPal.`,
+                    ru: `Вы получили ${payoutData.amount} ${payoutData.currency} на ваш PayPal-аккаунт.`,
+                    hi: `आपको अपने PayPal खाते पर ${payoutData.amount} ${payoutData.currency} प्राप्त हुआ।`,
+                    zh: `您的 PayPal 账户已收到 ${payoutData.amount} ${payoutData.currency}。`,
+                    ar: `لقد استلمت ${payoutData.amount} ${payoutData.currency} في حسابك على PayPal.`,
+                  },
                   read: false,
                   createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 });
@@ -4720,6 +4745,22 @@ export const paypalWebhook = onRequest(
                   type: "payout_unclaimed",
                   title: "Paiement en attente",
                   message: `Un paiement de ${payoutData.amount} ${payoutData.currency} attend d'être réclamé. Vérifiez que votre email PayPal est correct et que votre compte est actif.`,
+                  titleTranslations: {
+                    fr: "Paiement en attente", en: "Payment pending", es: "Pago pendiente",
+                    de: "Zahlung ausstehend", pt: "Pagamento pendente", ru: "Платёж ожидает",
+                    hi: "भुगतान लंबित", zh: "付款待领取", ar: "دفعة معلقة",
+                  },
+                  messageTranslations: {
+                    fr: `Un paiement de ${payoutData.amount} ${payoutData.currency} attend d'être réclamé. Vérifiez que votre email PayPal est correct et que votre compte est actif.`,
+                    en: `A payment of ${payoutData.amount} ${payoutData.currency} is waiting to be claimed. Check that your PayPal email is correct and your account is active.`,
+                    es: `Un pago de ${payoutData.amount} ${payoutData.currency} está esperando ser reclamado. Verifique que su email de PayPal sea correcto y su cuenta esté activa.`,
+                    de: `Eine Zahlung von ${payoutData.amount} ${payoutData.currency} wartet auf Abholung. Prüfen Sie, ob Ihre PayPal-E-Mail korrekt und Ihr Konto aktiv ist.`,
+                    pt: `Um pagamento de ${payoutData.amount} ${payoutData.currency} aguarda ser reclamado. Verifique se seu email PayPal está correto e sua conta ativa.`,
+                    ru: `Платёж ${payoutData.amount} ${payoutData.currency} ожидает получения. Проверьте, что ваш email PayPal верен и аккаунт активен.`,
+                    hi: `${payoutData.amount} ${payoutData.currency} का भुगतान दावा किए जाने की प्रतीक्षा में है। जाँचें कि आपका PayPal ईमेल सही और खाता सक्रिय है।`,
+                    zh: `${payoutData.amount} ${payoutData.currency} 的付款等待领取。请检查您的 PayPal 邮箱是否正确且账户处于活跃状态。`,
+                    ar: `دفعة بقيمة ${payoutData.amount} ${payoutData.currency} بانتظار المطالبة. تحقق من صحة بريد PayPal وأن حسابك نشط.`,
+                  },
                   read: false,
                   createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 });

@@ -111,6 +111,27 @@
       ],
       "rate_limit_h": 0
     },
+    "call.completed": {
+      "channels": [
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
+    "call.refund.early_disconnect": {
+      "channels": [
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
+    "call.failed.early_disconnect.provider": {
+      "channels": [
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
     "payment.failed.client": {
       "channels": [
         "email",

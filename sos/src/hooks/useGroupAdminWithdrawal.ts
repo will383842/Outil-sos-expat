@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   RequestWithdrawalRequest,
@@ -55,7 +55,7 @@ export function useGroupAdminWithdrawal(): UseGroupAdminWithdrawalReturn {
     setResult(null);
 
     try {
-      const submitWithdrawal = httpsCallable(functionsWest2, 'requestGroupAdminWithdrawal');
+      const submitWithdrawal = httpsCallable(functionsAffiliate, 'requestGroupAdminWithdrawal');
       const response = await submitWithdrawal(request);
       const data = response.data as WithdrawalResult;
 

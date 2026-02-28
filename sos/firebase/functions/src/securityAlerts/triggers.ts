@@ -633,20 +633,29 @@ export async function securityDailyReportHandler(): Promise<void> {
       bySeverity: Record<AlertSeverity, number>;
     };
     if (alertStats.total > 0 || (escalationStats.totalEscalated > 0)) {
+      // Standard schema: admin_all handled by sending one event per admin
+      // For now, send to the system admin email from env
       await db.collection('message_events').add({
         eventId: 'security.daily_report',
-        recipientType: 'admin_all',
+        uid: 'system',
         locale: 'fr',
-        data: {
+        to: {
+          email: process.env.ADMIN_EMAIL || 'admin@sos-expat.com',
+        },
+        context: {
+          user: {
+            email: process.env.ADMIN_EMAIL || 'admin@sos-expat.com',
+          },
+        },
+        vars: {
           date: new Date().toLocaleDateString('fr-FR'),
           totalAlerts: alertStats.total,
           criticalAlerts: alertStats.bySeverity.critical || 0,
           emergencyAlerts: alertStats.bySeverity.emergency || 0,
           escalatedAlerts: escalationStats.totalEscalated,
-          blockedEntities: blockedEntities,
+          blockedEntities: JSON.stringify(blockedEntities),
         },
         channels: ['email'],
-        status: 'pending',
         createdAt: Timestamp.now(),
       });
     }

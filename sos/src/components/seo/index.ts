@@ -34,6 +34,10 @@ export type { ServiceSchemaProps, ServiceOffer } from './ServiceSchema';
 export { default as FAQPageSchema, generateFAQPageSchema } from './FAQPageSchema';
 export type { FAQPageSchemaProps, FAQItem } from './FAQPageSchema';
 
+// Video schema for video rich results
+export { default as VideoSchema, generateVideoSchema } from './VideoSchema';
+export type { VideoSchemaProps } from './VideoSchema';
+
 // Provider schema utilities (centralized to avoid aggregateRating errors)
 export {
   generateProviderItemSchema,

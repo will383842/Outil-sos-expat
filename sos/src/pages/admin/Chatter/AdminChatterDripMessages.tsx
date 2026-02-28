@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import {
   MessageSquare,
   Send,
@@ -139,7 +139,7 @@ const AdminChatterDripMessages: React.FC = () => {
   // Load stats from Cloud Function
   const loadStats = async () => {
     try {
-      const getStatsFunction = httpsCallable(functionsWest2, 'chatter_getDripStats');
+      const getStatsFunction = httpsCallable(functionsAffiliate, 'chatter_getDripStats');
       const result: any = await getStatsFunction();
       setStats(result.data);
     } catch (error) {
@@ -159,7 +159,7 @@ const AdminChatterDripMessages: React.FC = () => {
   const handleSendManual = async (messageDay: number, chatterId: string) => {
     try {
       setSending(messageDay);
-      const sendFunction = httpsCallable(functionsWest2, 'chatter_sendDripMessage');
+      const sendFunction = httpsCallable(functionsAffiliate, 'chatter_sendDripMessage');
       await sendFunction({ chatterId, day: messageDay, language: selectedLanguage });
       toast.success(`Message jour ${messageDay} envoyé avec succès !`);
       await loadStats();

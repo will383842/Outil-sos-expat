@@ -40,7 +40,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import AdminLayout from "../../components/admin/AdminLayout";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
@@ -610,7 +610,7 @@ const AdminAffiliateConfig: React.FC = () => {
   const { user } = useAuth();
   const intl = useIntl();
   const db = getFirestore();
-  const functions = functionsWest2;
+  const functions = functionsAffiliate;
 
   // State
   const [config, setConfig] = useState<AffiliateConfig>(DEFAULT_CONFIG);

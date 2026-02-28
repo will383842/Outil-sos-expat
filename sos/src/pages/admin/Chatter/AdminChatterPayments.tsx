@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import {
   Wallet,
   Clock,
@@ -69,7 +69,7 @@ const AdminChatterPayments: React.FC = () => {
       // Note: This would need a proper admin function to list all withdrawals
       // For now, we'll simulate with a placeholder
       const adminGetWithdrawals = httpsCallable<{ status?: string }, { withdrawals: Withdrawal[] }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetPendingChatterWithdrawals'
       );
 
@@ -103,7 +103,7 @@ const AdminChatterPayments: React.FC = () => {
     setProcessingId(withdrawalId);
 
     try {
-      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessChatterWithdrawal');
+      const adminProcessWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessChatterWithdrawal');
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'approve',
@@ -126,7 +126,7 @@ const AdminChatterPayments: React.FC = () => {
     setProcessingId(withdrawalId);
 
     try {
-      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessChatterWithdrawal');
+      const adminProcessWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessChatterWithdrawal');
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'reject',
@@ -149,7 +149,7 @@ const AdminChatterPayments: React.FC = () => {
     setProcessingId(withdrawalId);
 
     try {
-      const adminProcessWithdrawal = httpsCallable(functionsWest2, 'adminProcessChatterWithdrawal');
+      const adminProcessWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessChatterWithdrawal');
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'complete',

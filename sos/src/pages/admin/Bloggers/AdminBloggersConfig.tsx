@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   Settings,
   Save,
@@ -98,7 +98,7 @@ const AdminBloggersConfig: React.FC = () => {
 
     try {
       const adminGetBloggerConfig = httpsCallable<void, { config: BloggerConfig }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetBloggerConfig'
       );
 
@@ -130,7 +130,7 @@ const AdminBloggersConfig: React.FC = () => {
     setSuccess(false);
 
     try {
-      const adminUpdateBloggerConfig = httpsCallable(functionsWest2, 'adminUpdateBloggerConfig');
+      const adminUpdateBloggerConfig = httpsCallable(functionsAffiliate, 'adminUpdateBloggerConfig');
       await adminUpdateBloggerConfig({
         updates: {
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
@@ -178,7 +178,7 @@ const AdminBloggersConfig: React.FC = () => {
     setTogglingVisibility(true);
     setVisibilitySuccess(false);
     try {
-      const fn = httpsCallable(functionsWest2, 'adminUpdateBloggerConfig');
+      const fn = httpsCallable(functionsAffiliate, 'adminUpdateBloggerConfig');
       const newValue = !config.isBloggerListingPageVisible;
       await fn({ isBloggerListingPageVisible: newValue });
       setConfig(prev => ({ ...prev, isBloggerListingPageVisible: newValue }));

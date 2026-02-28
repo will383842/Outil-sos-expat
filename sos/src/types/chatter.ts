@@ -60,11 +60,15 @@ export type ChatterCommissionStatus =
 
 export type ChatterWithdrawalStatus =
   | "pending"
+  | "validating"
   | "approved"
+  | "queued"
   | "processing"
+  | "sent"
   | "completed"
   | "failed"
-  | "rejected";
+  | "rejected"
+  | "cancelled";
 
 export type ChatterPaymentMethod = "wise" | "mobile_money" | "bank_transfer";
 
@@ -143,7 +147,10 @@ export interface ChatterWiseDetails {
   bic?: string;
 }
 
-export type MobileMoneyProvider = "mtn" | "orange" | "moov" | "airtel" | "mpesa" | "wave";
+export type MobileMoneyProvider =
+  | "mtn" | "orange" | "moov" | "airtel" | "mpesa" | "wave"         // Legacy shorthand
+  | "mtn_momo" | "orange_money" | "moov_money" | "airtel_money"     // Backend canonical names
+  | "free_money" | "t_money" | "flooz" | "vodacom" | "mobilis";     // Additional providers
 
 export interface ChatterMobileMoneyDetails {
   type: "mobile_money";
@@ -206,11 +213,7 @@ export interface ChatterData {
   totalClients: number;
   totalRecruits: number;
   totalCommissions: number;
-  commissionsByType: {
-    client_referral: { count: number; amount: number };
-    recruitment: { count: number; amount: number };
-    bonus: { count: number; amount: number };
-  };
+  commissionsByType: Record<string, { count: number; amount: number }>;
 
   currentStreak: number;
   bestStreak: number;
@@ -246,6 +249,26 @@ export interface ChatterData {
   threshold10Reached: boolean;
   threshold50Reached: boolean;
   tierBonusesPaid: number[];
+
+  // New Simplified Commission System (2026)
+  totalClientCalls: number;
+  isActivated: boolean;
+  activatedAt: string | null;
+  activationBonusPaid: boolean;
+  recruiterCommissionPaid?: boolean;
+
+  // Monthly Top Multiplier (reward for top 3)
+  monthlyTopMultiplier?: number;
+  monthlyTopMultiplierMonth?: string | null;
+
+  // Visibility
+  isVisible?: boolean;
+
+  // Terms acceptance tracking
+  termsAccepted?: boolean;
+  termsAcceptedAt?: string;
+  termsVersion?: string;
+  termsType?: string;
 
   // Telegram Integration
   // AUDIT-FIX M3: Aligned field names and types with backend (chatter/types.ts)
@@ -416,7 +439,9 @@ export interface ChatterNotification {
   id: string;
   type: string;
   title: string;
+  titleTranslations?: Record<string, string>;
   message: string;
+  messageTranslations?: Record<string, string>;
   actionUrl?: string;
   isRead: boolean;
   createdAt: string;
@@ -451,9 +476,19 @@ export interface ChatterLeaderboardEntry {
 // ============================================================================
 
 export interface ChatterConfig {
+  /** @deprecated Use commissionClientCallAmount */
   commissionClientAmount: number;
+  /** @deprecated Use commissionN1RecruitBonusAmount */
   commissionRecruitmentAmount: number;
+  /** Commission for direct client call (cents) — e.g. 1000 = $10 */
+  commissionClientCallAmount: number;
+  /** Commission for N1 referral call (cents) — e.g. 100 = $1 */
+  commissionN1CallAmount: number;
+  /** Commission for N2 referral call (cents) — e.g. 50 = $0.50 */
+  commissionN2CallAmount: number;
   minimumWithdrawalAmount: number;
+  /** SOS withdrawal fee in cents (from admin_config/fees) — e.g. 300 = $3 */
+  withdrawalFeeCents: number;
   levelThresholds: {
     level2: number;
     level3: number;
@@ -490,13 +525,13 @@ export interface PiggyBankData {
  * Weekly/monthly trend data for visualization
  */
 export interface ChatterTrendsData {
-  /** Daily earnings for this week (7 values, in cents) */
+  /** Earnings for last 4 weeks (cents), index 0 = oldest week, index 3 = current week */
   earningsWeekly: number[];
-  /** Daily earnings for last week (7 values, in cents) */
+  /** Earnings for last 6 months (cents), index 0 = oldest month, index 5 = current month */
   earningsMonthly: number[];
-  /** Daily clients for this week (7 values) */
+  /** Client referrals for last 4 weeks, index 0 = oldest week */
   clientsWeekly: number[];
-  /** Daily recruits for this week (7 values) */
+  /** Recruits for last 4 weeks, index 0 = oldest week */
   recruitsWeekly: number[];
 }
 
@@ -504,13 +539,13 @@ export interface ChatterTrendsData {
  * Month-over-month comparison data
  */
 export interface ChatterComparisonData {
-  /** Earnings this month vs last month (percentage change) */
+  /** Percentage change in earnings vs last month (+15 means +15%) */
   earningsVsLastMonth: number;
-  /** Clients this month vs last month (percentage change) */
+  /** Percentage change in clients vs last month */
   clientsVsLastMonth: number;
-  /** Recruits this month vs last month (percentage change) */
+  /** Percentage change in recruits vs last month */
   recruitsVsLastMonth: number;
-  /** Rank change (positive = moved up) */
+  /** Rank change (+2 means improved 2 positions, -1 means dropped 1) */
   rankChange: number;
   /** Last month raw values for display */
   lastMonth: {
@@ -524,13 +559,13 @@ export interface ChatterComparisonData {
  * Forecast/projection data
  */
 export interface ChatterForecastData {
-  /** Estimated end-of-month earnings (in cents) */
+  /** Estimated monthly earnings based on current pace (cents) */
   estimatedMonthlyEarnings: number;
-  /** Estimated time to next level (in days, null if max level) */
-  estimatedNextLevel: number | null;
-  /** Potential bonus from next tier (in cents) */
+  /** Estimated time to reach next level (e.g., "2 weeks") or null if already max */
+  estimatedNextLevel: string | null;
+  /** Next tier bonus available (cents) */
   potentialBonus: number;
-  /** Current day of month */
+  /** Current day of month (1-31) */
   currentDayOfMonth: number;
 }
 
@@ -551,13 +586,44 @@ export interface ChatterDashboardData {
   } | null;
   unreadNotifications: number;
   config: ChatterConfig;
-  piggyBank?: PiggyBankData;
+
+  /** Referral system stats (2-level) */
+  referralStats: {
+    filleulsN1: number;
+    qualifiedFilleulsN1: number;
+    filleulsN2: number;
+    referralEarnings: number;
+    nextTierBonus: {
+      tier: number;
+      filleulsNeeded: number;
+      bonusAmount: number;
+    } | null;
+  };
+
+  /** Earnings ratio (affiliation vs referral) */
+  earningsRatio: {
+    affiliationEarnings: number;
+    referralEarnings: number;
+    affiliationPercent: number;
+    referralPercent: number;
+  };
+
+  /** Active promotion if any */
+  activePromotion: {
+    id: string;
+    name: string;
+    multiplier: number;
+    endsAt: string;
+  } | null;
+
+  /** Piggy Bank - Bonus pending unlock */
+  piggyBank: PiggyBankData;
   /** Weekly/monthly trend data for visualization */
-  trends?: ChatterTrendsData;
+  trends: ChatterTrendsData;
   /** Month-over-month comparison data */
-  comparison?: ChatterComparisonData;
+  comparison: ChatterComparisonData;
   /** Forecast/projection data */
-  forecast?: ChatterForecastData;
+  forecast: ChatterForecastData;
 }
 
 // ============================================================================
@@ -577,6 +643,15 @@ export interface RegisterChatterInput {
   platforms: ChatterPlatform[];
   bio?: string;
   recruitmentCode?: string;
+  /** ISO date string from referral capture — enforces 30-day attribution window */
+  referralCapturedAt?: string;
+  /** Legal compliance (RGPD/eIDAS) */
+  acceptTerms?: boolean;
+  termsAcceptedAt?: string;
+  termsVersion?: string;
+  termsType?: string;
+  termsAffiliateVersion?: string;
+  termsAffiliateType?: string;
 }
 
 export interface SubmitQuizInput {
@@ -786,7 +861,9 @@ export interface ChatterReferralCommission {
   parrainEmail: string;
   filleulId: string;
   filleulName: string;
-  type: "threshold_10" | "threshold_50" | "threshold_50_n2" | "recurring_5pct" | "tier_bonus";
+  type:
+    | "n1_call" | "n2_call" | "activation_bonus" | "n1_recruit_bonus" | "tier_bonus"  // New system
+    | "threshold_10" | "threshold_50" | "threshold_50_n2" | "recurring_5pct";          // Legacy
   level: 1 | 2;
   baseAmount: number;
   promoMultiplier: number;

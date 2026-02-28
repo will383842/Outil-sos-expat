@@ -10,6 +10,7 @@
 
 import { onRequest } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
+import * as admin from 'firebase-admin';
 import type { Request, Response } from 'express';
 import { CACHE_INVALIDATION_KEY } from '../lib/secrets';
 
@@ -28,8 +29,11 @@ const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 const RENDER_TIMEOUT_MS = 30000; // 30 seconds for page load
 const WAIT_FOR_READY_TIMEOUT_MS = 10000; // 10 seconds to wait for React
 
-// In-memory cache for rendered HTML
-const htmlCache = new Map<string, { html: string; timestamp: number }>();
+// Firestore collection for persistent SSR cache (survives cold starts)
+const SSR_CACHE_COLLECTION = 'ssr_cache';
+
+// L1: In-memory cache (fast, same instance — lost on cold start)
+const memoryCache = new Map<string, { html: string; timestamp: number }>();
 
 /**
  * List of bot user-agents to detect
@@ -91,32 +95,75 @@ function isBot(userAgent: string): boolean {
 }
 
 /**
- * Get cached HTML if available and not expired
+ * Encode a URL path into a safe Firestore document ID.
+ * Firestore doc IDs cannot contain '/' so we replace them.
  */
-function getCachedHtml(path: string): string | null {
-  const cached = htmlCache.get(path);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
-    return cached.html;
+function pathToDocId(path: string): string {
+  return encodeURIComponent(path).replace(/\./g, '%2E');
+}
+
+/**
+ * L1+L2 cache read: memory first, then Firestore.
+ * Populates L1 from L2 on hit for subsequent fast reads.
+ */
+async function getCachedHtml(path: string): Promise<string | null> {
+  const now = Date.now();
+
+  // L1: Check in-memory cache
+  const mem = memoryCache.get(path);
+  if (mem && now - mem.timestamp < CACHE_DURATION_MS) {
+    return mem.html;
   }
+
+  // L2: Check Firestore persistent cache
+  try {
+    const docId = pathToDocId(path);
+    const doc = await admin.firestore().collection(SSR_CACHE_COLLECTION).doc(docId).get();
+    if (doc.exists) {
+      const data = doc.data() as { html: string; timestamp: number; path: string } | undefined;
+      if (data && now - data.timestamp < CACHE_DURATION_MS) {
+        // Promote to L1 for fast subsequent reads
+        memoryCache.set(path, { html: data.html, timestamp: data.timestamp });
+        return data.html;
+      }
+    }
+  } catch (err) {
+    // Firestore read failure is non-fatal — fall through to render
+    logger.warn('Firestore cache read failed', { path, error: (err as Error).message });
+  }
+
   return null;
 }
 
 /**
- * Store HTML in cache
+ * L1+L2 cache write: store in both memory and Firestore.
+ * Firestore write is fire-and-forget (non-blocking).
  */
 function cacheHtml(path: string, html: string): void {
-  htmlCache.set(path, { html, timestamp: Date.now() });
+  const now = Date.now();
 
-  // Clean old entries (keep cache under 100 entries)
-  if (htmlCache.size > 100) {
-    const entries = Array.from(htmlCache.entries());
+  // L1: In-memory
+  memoryCache.set(path, { html, timestamp: now });
+
+  // Evict oldest L1 entries if over limit
+  if (memoryCache.size > 100) {
+    const entries = Array.from(memoryCache.entries());
     entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-
-    // Remove oldest 20 entries
     for (let i = 0; i < 20; i++) {
-      htmlCache.delete(entries[i][0]);
+      memoryCache.delete(entries[i][0]);
     }
   }
+
+  // L2: Firestore (fire-and-forget — don't await)
+  const docId = pathToDocId(path);
+  admin.firestore().collection(SSR_CACHE_COLLECTION).doc(docId).set({
+    path,
+    html,
+    timestamp: now,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }).catch((err) => {
+    logger.warn('Firestore cache write failed', { path, error: (err as Error).message });
+  });
 }
 
 /**
@@ -251,8 +298,8 @@ export const renderForBotsV2 = onRequest(
       return;
     }
 
-    // Check cache first
-    const cachedHtml = getCachedHtml(requestPath);
+    // Check cache first (L1 memory → L2 Firestore)
+    const cachedHtml = await getCachedHtml(requestPath);
     if (cachedHtml) {
       logger.info('Serving cached HTML', { path: requestPath });
       res.set('Content-Type', 'text/html; charset=utf-8');
@@ -293,27 +340,61 @@ export const renderForBotsV2 = onRequest(
   });
 
 /**
- * Invalidate cache for specific paths or patterns
- * Used when content is updated (profile, blog, etc.)
+ * Invalidate cache for specific paths or patterns (L1 + L2).
+ * L2 Firestore cleanup is async and best-effort.
  */
 export function invalidateCache(pathPattern?: string): number {
   if (!pathPattern) {
-    // Clear all cache
-    const size = htmlCache.size;
-    htmlCache.clear();
-    logger.info('Cache cleared completely', { entriesRemoved: size });
+    // Clear all L1
+    const size = memoryCache.size;
+    memoryCache.clear();
+
+    // Clear all L2 (fire-and-forget batch delete)
+    admin.firestore().collection(SSR_CACHE_COLLECTION).listDocuments()
+      .then(async (docs) => {
+        const batch = admin.firestore().batch();
+        docs.forEach((doc) => batch.delete(doc));
+        await batch.commit();
+        logger.info('Firestore SSR cache cleared', { entriesRemoved: docs.length });
+      })
+      .catch((err) => logger.warn('Firestore cache clear failed', { error: (err as Error).message }));
+
+    logger.info('Cache cleared completely', { l1EntriesRemoved: size });
     return size;
   }
 
-  // Clear entries matching pattern
+  // Clear matching entries from L1
   let removed = 0;
-  for (const [path] of htmlCache) {
+  for (const [path] of memoryCache) {
     if (path.includes(pathPattern)) {
-      htmlCache.delete(path);
+      memoryCache.delete(path);
       removed++;
     }
   }
-  logger.info('Cache invalidated for pattern', { pattern: pathPattern, entriesRemoved: removed });
+
+  // Clear matching entries from L2 (fire-and-forget)
+  // Use full collection scan + client-side filter (consistent with L1 includes() logic)
+  // Safe: ssr_cache is small (max ~200 entries)
+  admin.firestore().collection(SSR_CACHE_COLLECTION).get()
+    .then(async (snapshot) => {
+      if (snapshot.empty) return;
+      const batch = admin.firestore().batch();
+      let l2Removed = 0;
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data() as { path?: string };
+        if (data.path && data.path.includes(pathPattern)) {
+          batch.delete(doc.ref);
+          l2Removed++;
+        }
+      });
+      if (l2Removed > 0) {
+        await batch.commit();
+        logger.info('Firestore SSR cache invalidated', { pattern: pathPattern, entriesRemoved: l2Removed });
+      }
+    })
+    .catch((err) => logger.warn('Firestore cache invalidation failed', { error: (err as Error).message }));
+
+  logger.info('Cache invalidated for pattern', { pattern: pathPattern, l1EntriesRemoved: removed });
   return removed;
 }
 
@@ -365,11 +446,15 @@ export const invalidateCacheEndpoint = onRequest(
     } else if (pattern) {
       totalRemoved = invalidateCache(pattern);
     } else if (paths && Array.isArray(paths)) {
-      for (const path of paths) {
-        if (htmlCache.has(path)) {
-          htmlCache.delete(path);
+      for (const p of paths) {
+        // L1
+        if (memoryCache.has(p)) {
+          memoryCache.delete(p);
           totalRemoved++;
         }
+        // L2 (fire-and-forget)
+        const docId = pathToDocId(p);
+        admin.firestore().collection(SSR_CACHE_COLLECTION).doc(docId).delete().catch(() => {});
       }
     }
 

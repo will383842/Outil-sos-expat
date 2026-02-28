@@ -44,6 +44,7 @@ export {
   getProviderCallCommission,
   getProviderRecruitmentDurationMonths,
   getStreakBonusMultiplier,
+  getCaptainCallCommission,
 } from "./chatterConfigService";
 
 // Fraud Detection

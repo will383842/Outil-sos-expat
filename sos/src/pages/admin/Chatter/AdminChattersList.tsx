@@ -8,7 +8,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2, functions } from "@/config/firebase";
+import { functionsAffiliate, functions } from "@/config/firebase";
 import toast from 'react-hot-toast';
 import {
   Users,
@@ -216,7 +216,7 @@ const AdminChattersList: React.FC = () => {
 
     try {
       const adminGetChattersList = httpsCallable<any, ChatterListResponse>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetChattersList'
       );
 
@@ -324,7 +324,7 @@ const AdminChattersList: React.FC = () => {
   const handleToggleVisibility = useCallback(async (chatterId: string, currentVisible: boolean) => {
     setVisibilityLoading(prev => new Map(prev).set(chatterId, true));
     try {
-      const fn = httpsCallable(functionsWest2, 'adminToggleChatterVisibility');
+      const fn = httpsCallable(functionsAffiliate, 'adminToggleChatterVisibility');
       await fn({ chatterId, isVisible: !currentVisible });
       setChatters(prev => prev.map(c => c.id === chatterId ? { ...c, isVisible: !currentVisible } : c));
       toast.success(!currentVisible ? 'Chatter visible dans le répertoire' : 'Chatter masqué du répertoire');
@@ -341,7 +341,7 @@ const AdminChattersList: React.FC = () => {
     setExporting(true);
     try {
       const adminExportChatters = httpsCallable<any, { csv: string }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminExportChatters'
       );
 
@@ -372,7 +372,7 @@ const AdminChattersList: React.FC = () => {
 
     setBulkActionLoading(true);
     try {
-      const adminBulkChatterAction = httpsCallable(functionsWest2, 'adminBulkChatterAction');
+      const adminBulkChatterAction = httpsCallable(functionsAffiliate, 'adminBulkChatterAction');
       await adminBulkChatterAction({
         chatterIds: Array.from(selectedIds),
         action,

@@ -54,6 +54,40 @@ export const DEFAULT_TRIAL_CONFIG = {
 export const DEFAULT_GRACE_PERIOD_DAYS = 7;
 
 /**
+ * Nombre de jours avant l'envoi du rappel de paiement
+ */
+export const DEFAULT_REMINDER_DAYS = 3;
+
+/**
+ * Récupère la configuration grace period depuis Firestore settings/subscription
+ * Fallback sur les constantes par défaut si le document n'existe pas
+ */
+export async function getGracePeriodConfig(db: FirebaseFirestore.Firestore): Promise<{
+  gracePeriodDays: number;
+  reminderDays: number;
+}> {
+  let gp = DEFAULT_GRACE_PERIOD_DAYS;
+  let rd = DEFAULT_REMINDER_DAYS;
+
+  try {
+    const settingsDoc = await db.doc('settings/subscription').get();
+    if (settingsDoc.exists) {
+      const data = settingsDoc.data();
+      gp = data?.gracePeriodDays ?? DEFAULT_GRACE_PERIOD_DAYS;
+      rd = data?.reminderDays ?? DEFAULT_REMINDER_DAYS;
+    }
+  } catch {
+    // Silently fall back to defaults
+  }
+
+  // Validation: both must be >= 1 and reminderDays must be < gracePeriodDays
+  const gracePeriodDays = Math.max(1, gp);
+  const reminderDays = Math.min(Math.max(1, rd), gracePeriodDays - 1);
+
+  return { gracePeriodDays, reminderDays };
+}
+
+/**
  * Limite fair use pour les plans illimités (-1)
  * Même les plans "illimités" ont une limite raisonnable
  */

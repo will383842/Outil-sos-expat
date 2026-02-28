@@ -73,7 +73,7 @@ export const getAvailableCountriesForChatter = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -112,7 +112,7 @@ export const assignCountriesToCurrentChatter = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -170,7 +170,7 @@ export const adminInitializeCountryRotation = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -196,7 +196,7 @@ export const adminGetCountryRotationStatus = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -235,11 +235,11 @@ export const adminGetCountryRotationStatus = onCall(
  */
 export const adminAdvanceCycleV2 = onCall(
   {
-    region: "europe-west1", // Temporarily west1 — west2 quota saturated by stuck Cloud Run deletions
+    region: "us-central1",
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {
@@ -275,7 +275,7 @@ export const adminUpdateCycleThreshold = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request) => {

@@ -85,7 +85,7 @@ const ChatterAffiliateLinks = lazy(() =>
   import('@/components/Chatter/Links').then(m => ({ default: m.ChatterAffiliateLinks }))
 );
 const NotificationBell = lazy(() =>
-  import('@/components/Chatter/NotificationBell').then(m => ({ default: m.NotificationBell }))
+  import('@/components/shared/NotificationBell').then(m => ({ default: m.NotificationBell }))
 );
 const QuickActionsMenu = lazy(() => import('@/components/Chatter/QuickActionsMenu'));
 const DashboardTour = lazy(() => import('@/components/Chatter/DashboardTour'));
@@ -287,12 +287,13 @@ const UI = {
   card: "bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
 } as const;
 
-// Level thresholds in cents
-const LEVEL_THRESHOLDS = {
+// Default level thresholds in cents (fallback when config not loaded)
+// Must match backend defaults in chatter/types.ts DEFAULT_CHATTER_CONFIG.levelThresholds
+const DEFAULT_LEVEL_THRESHOLDS = {
   1: 0,
-  2: 5000,     // $50
-  3: 25000,    // $250
-  4: 100000,   // $1000
+  2: 10000,    // $100
+  3: 50000,    // $500
+  4: 200000,   // $2000
   5: 500000,   // $5000
 };
 
@@ -694,11 +695,15 @@ const ChatterDashboard: React.FC = () => {
     // User skipped the tour - no additional action needed
   }, []);
 
-  // Get next level threshold
+  // Get next level threshold — uses config from backend, falls back to defaults
   const getNextLevelThreshold = useCallback((currentLevel: number): number => {
     const nextLevel = Math.min(currentLevel + 1, 5) as 1 | 2 | 3 | 4 | 5;
-    return LEVEL_THRESHOLDS[nextLevel];
-  }, []);
+    const configThresholds = dashboardData?.config?.levelThresholds;
+    const thresholds: Record<number, number> = configThresholds
+      ? { 1: 0, 2: configThresholds.level2, 3: configThresholds.level3, 4: configThresholds.level4, 5: configThresholds.level5 }
+      : DEFAULT_LEVEL_THRESHOLDS;
+    return thresholds[nextLevel];
+  }, [dashboardData?.config?.levelThresholds]);
 
   // ============================================================================
   // SUCCESS FEEDBACK
@@ -1023,15 +1028,15 @@ const ChatterDashboard: React.FC = () => {
             <div className="flex gap-3">
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full font-semibold">
                 <Phone className="w-3.5 h-3.5" />
-                <FormattedMessage id="chatter.commissions.clientCall" defaultMessage="Client = 10$" />
+                <FormattedMessage id="chatter.commissions.clientCall" defaultMessage="Client = {amount}" values={{ amount: formatAmount(dashboardData?.config?.commissionClientCallAmount ?? 1000) }} />
               </span>
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-full font-semibold">
                 <Users className="w-3.5 h-3.5" />
-                <FormattedMessage id="chatter.commissions.n1Call" defaultMessage="N1 = 1$" />
+                <FormattedMessage id="chatter.commissions.n1Call" defaultMessage="N1 = {amount}" values={{ amount: formatAmount(dashboardData?.config?.commissionN1CallAmount ?? 100) }} />
               </span>
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 rounded-full font-semibold">
                 <Users className="w-3.5 h-3.5" />
-                <FormattedMessage id="chatter.commissions.n2Call" defaultMessage="N2 = 0.50$" />
+                <FormattedMessage id="chatter.commissions.n2Call" defaultMessage="N2 = {amount}" values={{ amount: formatAmount(dashboardData?.config?.commissionN2CallAmount ?? 50) }} />
               </span>
             </div>
           </div>
@@ -1079,8 +1084,8 @@ const ChatterDashboard: React.FC = () => {
                     <p className="text-xs dark:text-green-400">
                       <FormattedMessage
                         id="chatter.dashboard.clientsCount"
-                        defaultMessage="{count} clients ($10/ea)"
-                        values={{ count: commissionBreakdown.clientCalls }}
+                        defaultMessage="{count} clients ({rate}/ea)"
+                        values={{ count: commissionBreakdown.clientCalls, rate: formatAmount(dashboardData?.config?.commissionClientCallAmount ?? 1000) }}
                       />
                     </p>
                   )}
@@ -1233,7 +1238,7 @@ const ChatterDashboard: React.FC = () => {
                   />
                 </Suspense>
               )}
-              {dashboardData?.comparison && (
+              {dashboardData?.comparison && dashboardData?.monthlyStats && (
                 <Suspense fallback={<CardSkeleton height="h-48" />}>
                   <ComparisonStatsCard
                     thisMonth={{
@@ -1247,7 +1252,7 @@ const ChatterDashboard: React.FC = () => {
                   />
                 </Suspense>
               )}
-              {dashboardData?.forecast && (
+              {dashboardData?.forecast && dashboardData?.monthlyStats && (
                 <Suspense fallback={<CardSkeleton height="h-48" />}>
                   <ForecastCard
                     currentMonthEarnings={dashboardData.monthlyStats.earnings}
@@ -1508,7 +1513,7 @@ const ChatterDashboard: React.FC = () => {
                           <FormattedMessage id="chatter.referrals.directN1" defaultMessage="Directs (N1)" />
                         </p>
                         <p className="text-xs dark:text-red-400 font-medium mt-0.5">
-                          <FormattedMessage id="chatter.dashboard.n1RatePerCall" defaultMessage="$1/call" />
+                          <FormattedMessage id="chatter.dashboard.n1RatePerCall" defaultMessage="{amount}/call" values={{ amount: formatAmount(dashboardData?.config?.commissionN1CallAmount ?? 100) }} />
                         </p>
                       </div>
                       <div className="text-center p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
@@ -1519,7 +1524,7 @@ const ChatterDashboard: React.FC = () => {
                           <FormattedMessage id="chatter.referrals.indirectN2" defaultMessage="Indirects (N2)" />
                         </p>
                         <p className="text-xs dark:text-pink-400 font-medium mt-0.5">
-                          <FormattedMessage id="chatter.dashboard.n2RatePerCall" defaultMessage="$0.50/call" />
+                          <FormattedMessage id="chatter.dashboard.n2RatePerCall" defaultMessage="{amount}/call" values={{ amount: formatAmount(dashboardData?.config?.commissionN2CallAmount ?? 50) }} />
                         </p>
                       </div>
                     </div>

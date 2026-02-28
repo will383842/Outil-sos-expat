@@ -9,7 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2, functions } from '@/config/firebase';
+import { functionsAffiliate, functions } from '@/config/firebase';
 import toast from 'react-hot-toast';
 import {
   Users,
@@ -138,7 +138,7 @@ const AdminBloggersList: React.FC = () => {
   const handleToggleVisibility = useCallback(async (bloggerId: string, currentVisible: boolean) => {
     setVisibilityLoading(prev => new Map(prev).set(bloggerId, true));
     try {
-      const fn = httpsCallable(functionsWest2, 'adminToggleBloggerVisibility');
+      const fn = httpsCallable(functionsAffiliate, 'adminToggleBloggerVisibility');
       await fn({ bloggerId, isVisible: !currentVisible });
       setBloggers(prev => prev.map(b => b.id === bloggerId ? { ...b, isVisible: !currentVisible } : b));
       toast.success(!currentVisible ? 'Blogueur visible dans le répertoire ✓' : 'Blogueur masqué du répertoire');
@@ -180,7 +180,7 @@ const AdminBloggersList: React.FC = () => {
 
     try {
       const adminGetBloggersList = httpsCallable<any, BloggerListResponse>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetBloggersList'
       );
 
@@ -266,7 +266,7 @@ const AdminBloggersList: React.FC = () => {
     setExporting(true);
     try {
       const adminExportBloggers = httpsCallable<any, { csv: string }>(
-        functionsWest2,
+        functionsAffiliate,
         'adminExportBloggers'
       );
 
@@ -297,7 +297,7 @@ const AdminBloggersList: React.FC = () => {
 
     setBulkActionLoading(true);
     try {
-      const adminBulkBloggerAction = httpsCallable(functionsWest2, 'adminBulkBloggerAction');
+      const adminBulkBloggerAction = httpsCallable(functionsAffiliate, 'adminBulkBloggerAction');
       await adminBulkBloggerAction({
         bloggerIds: Array.from(selectedIds),
         action,

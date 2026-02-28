@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   FileText,
   Plus,
@@ -105,7 +105,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
     setError(null);
 
     try {
-      const getPosts = httpsCallable(functionsWest2, 'adminGetGroupAdminPostsList');
+      const getPosts = httpsCallable(functionsAffiliate, 'adminGetGroupAdminPostsList');
       const result = await getPosts({
         category: categoryFilter !== 'all' ? categoryFilter : undefined,
       });
@@ -167,10 +167,10 @@ const AdminGroupAdminsPosts: React.FC = () => {
       };
 
       if (editingPost) {
-        const updatePost = httpsCallable(functionsWest2, 'adminUpdateGroupAdminPost');
+        const updatePost = httpsCallable(functionsAffiliate, 'adminUpdateGroupAdminPost');
         await updatePost({ postId: editingPost.id, ...data });
       } else {
-        const createPost = httpsCallable(functionsWest2, 'adminCreateGroupAdminPost');
+        const createPost = httpsCallable(functionsAffiliate, 'adminCreateGroupAdminPost');
         await createPost(data);
       }
 
@@ -187,7 +187,7 @@ const AdminGroupAdminsPosts: React.FC = () => {
     if (!window.confirm(`Delete post "${post.name}"?`)) return;
 
     try {
-      const deletePost = httpsCallable(functionsWest2, 'adminDeleteGroupAdminPost');
+      const deletePost = httpsCallable(functionsAffiliate, 'adminDeleteGroupAdminPost');
       await deletePost({ postId: post.id });
       fetchPosts();
     } catch (err) {

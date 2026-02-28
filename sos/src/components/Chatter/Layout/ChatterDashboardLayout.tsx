@@ -74,7 +74,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       if (snap.exists() && snap.data()?.role === 'captainChatter') {
         setIsCaptain(true);
       }
-    }).catch(() => {});
+    }).catch((e) => console.warn("[ChatterDashboardLayout] Failed to check captain role:", e));
   }, [user?.uid]);
 
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';

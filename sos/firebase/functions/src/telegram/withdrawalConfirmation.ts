@@ -14,6 +14,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import * as crypto from "crypto";
 import { getTelegramBotToken } from "../lib/secrets";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // ============================================================================
 // TYPES
@@ -327,12 +328,64 @@ export async function handleWithdrawalCallback(
     return;
   }
 
-  // Check expiry
+  // Check expiry — P1-02 FIX: also cancel the withdrawal and refund balance
   if (confirmation.expiresAt.toMillis() < Date.now()) {
-    await confirmRef.update({ status: "expired" });
-    await answerCallbackQuery(callbackQuery.id, "Demande expirée", true);
+    try {
+      await db.runTransaction(async (transaction) => {
+        // Read withdrawal doc
+        const withdrawalRef = db.collection(confirmation.collection).doc(confirmation.withdrawalId);
+        const withdrawalSnap = await transaction.get(withdrawalRef);
+
+        // Update confirmation status
+        transaction.update(confirmRef, { status: "expired", resolvedAt: now });
+
+        // Cancel withdrawal and refund if still pending/approved
+        if (withdrawalSnap.exists) {
+          const wData = withdrawalSnap.data()!;
+          if (wData.status === "pending" || wData.status === "approved") {
+            const refundAmount = wData.totalDebited || confirmation.amount;
+
+            transaction.update(withdrawalRef, {
+              status: "cancelled",
+              cancelledAt: now.toDate().toISOString(),
+              telegramConfirmationPending: false,
+              statusHistory: FieldValue.arrayUnion({
+                status: "cancelled",
+                timestamp: now.toDate().toISOString(),
+                actorType: "system",
+                note: "Auto-cancelled: Telegram confirmation expired",
+              }),
+            });
+
+            // Refund balance
+            const roleCollections: Record<string, string> = {
+              chatter: "chatters",
+              influencer: "influencers",
+              blogger: "bloggers",
+              groupAdmin: "group_admins",
+              affiliate: "users",
+            };
+            const col = roleCollections[confirmation.role];
+            if (col) {
+              const roleRef = db.collection(col).doc(confirmation.userId);
+              transaction.update(roleRef, {
+                availableBalance: FieldValue.increment(refundAmount),
+                pendingWithdrawalId: null,
+                updatedAt: now,
+              });
+            }
+          }
+        }
+      });
+    } catch (expiryError) {
+      logger.error("[handleWithdrawalCallback] Expiry cancellation failed", { code, expiryError });
+    }
+
+    await answerCallbackQuery(callbackQuery.id, "Demande expirée — retrait annulé", true);
     if (chatId && messageId) {
-      await editMessageText(chatId, messageId, "⏰ <b>Demande expirée</b>\n\nCette demande de retrait a expiré.");
+      await editMessageText(chatId, messageId,
+        "⏰ <b>Demande expirée</b>\n\nCette demande de retrait a expiré.\nLe montant a été recrédité à votre solde."
+      );
     }
     return;
   }
@@ -412,11 +465,14 @@ export async function handleWithdrawalCallback(
         }),
       });
 
+      // FIX: Use totalDebited from withdrawal doc (includes $3 fee) instead of confirmation.amount
+      const refundAmount = withdrawalData.totalDebited || confirmation.amount;
+
       // Refund balance based on role
       if (confirmation.role === "groupAdmin") {
         const gaRef = db.collection("group_admins").doc(confirmation.userId);
         transaction.update(gaRef, {
-          availableBalance: FieldValue.increment(confirmation.amount),
+          availableBalance: FieldValue.increment(refundAmount),
           pendingWithdrawalId: null,
           updatedAt: now,
         });
@@ -425,7 +481,7 @@ export async function handleWithdrawalCallback(
         // commissionIds are stored directly on the withdrawal doc (payment_withdrawals)
         const userRef = db.collection("users").doc(confirmation.userId);
         transaction.update(userRef, {
-          availableBalance: FieldValue.increment(confirmation.amount),
+          availableBalance: FieldValue.increment(refundAmount),
           pendingPayoutId: null,
           updatedAt: now,
         });
@@ -450,7 +506,8 @@ export async function handleWithdrawalCallback(
         if (col) {
           const roleRef = db.collection(col).doc(confirmation.userId);
           transaction.update(roleRef, {
-            availableBalance: FieldValue.increment(confirmation.amount),
+            availableBalance: FieldValue.increment(refundAmount),
+            pendingWithdrawalId: null,
             updatedAt: now,
           });
         }
@@ -488,14 +545,7 @@ export const getWithdrawalConfirmationStatus = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 15,
-    cors: [
-      "https://sos-expat.com",
-      "https://www.sos-expat.com",
-      "https://ia.sos-expat.com",
-      "https://outil-sos-expat.pages.dev",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{
     success: boolean;

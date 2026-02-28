@@ -73,7 +73,7 @@ export const adminGetBloggersList = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetBloggersListResponse> => {
@@ -181,7 +181,7 @@ export const adminGetBloggerDetail = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetBloggerDetailResponse> => {
@@ -304,7 +304,7 @@ export const adminProcessBloggerWithdrawal = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
@@ -358,7 +358,7 @@ export const adminUpdateBloggerStatus = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
@@ -406,10 +406,24 @@ export const adminUpdateBloggerStatus = onCall(
         createdAt: Timestamp.now(),
       });
 
+      // Audit trail
+      await db.collection("admin_audit_logs").add({
+        action: "blogger_status_updated",
+        targetId: input.bloggerId,
+        targetType: "blogger",
+        performedBy: request.auth!.uid,
+        timestamp: Timestamp.now(),
+        details: {
+          previousStatus: bloggerDoc.data()?.status || "unknown",
+          newStatus: input.status,
+          reason: input.reason,
+        },
+      });
+
       logger.info("[adminUpdateBloggerStatus] Status updated", {
         bloggerId: input.bloggerId,
         newStatus: input.status,
-        adminId: request.auth.uid,
+        adminId: request.auth!.uid,
       });
 
       return {
@@ -434,7 +448,7 @@ export const adminGetBloggerConfig = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<AdminGetBloggerConfigResponse> => {
@@ -460,7 +474,7 @@ export const adminUpdateBloggerConfig = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; message: string }> => {
@@ -506,7 +520,7 @@ export const adminCreateBloggerResource = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; resourceId: string }> => {
@@ -565,7 +579,7 @@ export const adminUpdateBloggerResource = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -605,7 +619,7 @@ export const adminDeleteBloggerResource = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -639,7 +653,7 @@ export const adminCreateBloggerResourceText = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; textId: string }> => {
@@ -692,7 +706,7 @@ export const adminCreateBloggerGuideTemplate = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; templateId: string }> => {
@@ -744,7 +758,7 @@ export const adminUpdateBloggerGuideTemplate = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -786,7 +800,7 @@ export const adminCreateBloggerGuideCopyText = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; textId: string }> => {
@@ -835,7 +849,7 @@ export const adminUpdateBloggerGuideCopyText = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -884,7 +898,7 @@ export const adminCreateBloggerGuideBestPractice = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; practiceId: string }> => {
@@ -932,7 +946,7 @@ export const adminUpdateBloggerGuideBestPractice = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -974,7 +988,7 @@ export const adminExportBloggers = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 300,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{ success: boolean; data: string; count: number }> => {
     if (!request.auth) {
@@ -1052,7 +1066,7 @@ export const adminGetBloggerLeaderboard = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
   },
   async (request): Promise<{ rankings: unknown[]; month: string }> => {
     if (!request.auth) {
@@ -1097,7 +1111,7 @@ export const adminGetBloggerResources = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ files: unknown[]; texts: unknown[] }> => {
@@ -1153,7 +1167,7 @@ export const adminGetBloggerGuide = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{
@@ -1224,7 +1238,7 @@ export const adminSaveBloggerResourceFile = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; resourceId: string }> => {
@@ -1308,7 +1322,7 @@ export const adminSaveBloggerResourceText = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; resourceId: string }> => {
@@ -1382,7 +1396,7 @@ export const adminDeleteBloggerResourceFile = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -1419,7 +1433,7 @@ export const adminDeleteBloggerResourceText = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -1456,7 +1470,7 @@ export const adminSaveBloggerGuideTemplate = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; templateId: string }> => {
@@ -1548,7 +1562,7 @@ export const adminSaveBloggerGuideCopyText = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; textId: string }> => {
@@ -1629,7 +1643,7 @@ export const adminSaveBloggerGuideBestPractice = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; practiceId: string }> => {
@@ -1710,7 +1724,7 @@ export const adminDeleteBloggerGuideTemplate = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -1747,7 +1761,7 @@ export const adminDeleteBloggerGuideCopyText = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -1784,7 +1798,7 @@ export const adminBulkBloggerAction = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 120,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; processed: number; errors: number }> => {
@@ -1878,7 +1892,7 @@ export const adminDeleteBloggerGuideBestPractice = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean }> => {
@@ -1915,7 +1929,7 @@ export const adminGetBloggerConfigHistory = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ history: BloggerConfigHistoryEntry[] }> => {
@@ -1953,7 +1967,7 @@ export const adminGetBloggerWithdrawals = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 30,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{

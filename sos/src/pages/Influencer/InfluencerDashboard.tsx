@@ -19,6 +19,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useInfluencer } from '@/hooks/useInfluencer';
 import type { InfluencerCommission } from '@/types/influencer';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
@@ -47,6 +48,9 @@ const InfluencerEarningsBreakdownCard = lazy(() =>
 const InfluencerTeamCard = lazy(() =>
   import('@/components/Influencer/Cards/InfluencerTeamCard').then(m => ({ default: m.InfluencerTeamCard }))
 );
+const NotificationBell = lazy(() =>
+  import('@/components/shared/NotificationBell').then(m => ({ default: m.NotificationBell }))
+);
 const InfluencerAffiliateLinks = lazy(() =>
   import('@/components/Influencer/Links/InfluencerAffiliateLinks')
 );
@@ -57,7 +61,6 @@ import {
   Users,
   TrendingUp,
   ArrowRight,
-  Bell,
   RefreshCw,
   Rocket,
   Share2,
@@ -190,9 +193,19 @@ const InfluencerDashboard: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const { language } = useApp();
+  const { user } = useAuth();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
-  const { dashboardData: dashboard, isLoading: loading, error, refreshDashboard } = useInfluencer();
+  const {
+    dashboardData: dashboard,
+    isLoading: loading,
+    error,
+    refreshDashboard,
+    notifications,
+    markNotificationRead,
+    markAllNotificationsRead,
+    unreadNotificationsCount,
+  } = useInfluencer();
 
   // ============================================================================
   // STATE
@@ -208,6 +221,7 @@ const InfluencerDashboard: React.FC = () => {
   // MEMOIZED ROUTES
   // ============================================================================
   const routes = useMemo(() => ({
+    telegram: `/${getTranslatedRouteSlug('influencer-telegram' as RouteKey, langCode)}`,
     tools: `/${getTranslatedRouteSlug('influencer-tools' as RouteKey, langCode)}`,
     payments: `/${getTranslatedRouteSlug('influencer-payments' as RouteKey, langCode)}`,
     referrals: `/${getTranslatedRouteSlug('influencer-referrals' as RouteKey, langCode)}`,
@@ -237,11 +251,6 @@ const InfluencerDashboard: React.FC = () => {
   const recentCommissions = useMemo(() =>
     (dashboard?.recentCommissions || []).slice(0, 5),
     [dashboard?.recentCommissions]
-  );
-
-  const unreadCount = useMemo(() =>
-    (dashboard?.recentNotifications || []).filter(n => !n.readAt).length,
-    [dashboard?.recentNotifications]
   );
 
   const thisMonthCommissions = useMemo(() => {
@@ -317,6 +326,13 @@ const InfluencerDashboard: React.FC = () => {
   // ============================================================================
   // EFFECTS
   // ============================================================================
+
+  // Telegram onboarding check (mandatory for withdrawals)
+  useEffect(() => {
+    if (user && !user.telegramOnboardingCompleted) {
+      navigate(routes.telegram, { replace: true });
+    }
+  }, [user, navigate, routes.telegram]);
 
   // Initial load
   useEffect(() => {
@@ -451,14 +467,14 @@ const InfluencerDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {unreadCount > 0 && (
-              <button className="relative p-2 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              </button>
-            )}
+            <Suspense fallback={<div className="w-10 h-10" />}>
+              <NotificationBell
+                notifications={notifications}
+                unreadCount={unreadNotificationsCount}
+                onMarkAsRead={markNotificationRead}
+                onMarkAllAsRead={markAllNotificationsRead}
+              />
+            </Suspense>
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}

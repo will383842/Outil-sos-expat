@@ -16,7 +16,7 @@ import Layout from '@/components/layout/Layout';
 import GroupAdminRegisterForm from '@/components/GroupAdmin/Forms/GroupAdminRegisterForm';
 import type { GroupAdminRegistrationData } from '@/components/GroupAdmin/Forms/GroupAdminRegisterForm';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2, auth } from '@/config/firebase';
+import { functionsAffiliate, auth } from '@/config/firebase';
 import { Users, ArrowLeft, ArrowRight, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
@@ -60,6 +60,7 @@ const GroupAdminRegister: React.FC = () => {
 
   // Routes
   const landingRoute = `/${getTranslatedRouteSlug('groupadmin-landing' as RouteKey, langCode)}`;
+  const telegramRoute = `/${getTranslatedRouteSlug('groupadmin-telegram' as RouteKey, langCode)}`;
   const dashboardRoute = `/${getTranslatedRouteSlug('groupadmin-dashboard' as RouteKey, langCode)}`;
   const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
 
@@ -72,9 +73,14 @@ const GroupAdminRegister: React.FC = () => {
 
   useEffect(() => {
     if (authInitialized && !authLoading && !loading && isAlreadyGroupAdmin && !success) {
-      navigate(dashboardRoute, { replace: true });
+      // Harmonized with ChatterRegister: redirect to Telegram if not completed
+      if (!user?.telegramOnboardingCompleted) {
+        navigate(telegramRoute, { replace: true });
+      } else {
+        navigate(dashboardRoute, { replace: true });
+      }
     }
-  }, [authInitialized, authLoading, loading, isAlreadyGroupAdmin, navigate, dashboardRoute, success]);
+  }, [authInitialized, authLoading, loading, isAlreadyGroupAdmin, user?.telegramOnboardingCompleted, navigate, telegramRoute, dashboardRoute, success]);
 
   // Meta Pixel: Track StartRegistration on mount
   useEffect(() => {
@@ -123,6 +129,11 @@ const GroupAdminRegister: React.FC = () => {
 
   // Handle form submission
   const handleSubmit = async (data: GroupAdminRegistrationData) => {
+    // AUDIT FIX 2026-02-27: Offline guard
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setError('Pas de connexion internet. Vérifiez votre réseau.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setEmailAlreadyExists(false);
@@ -154,7 +165,7 @@ const GroupAdminRegister: React.FC = () => {
       }
 
       // Step 2: Call Cloud Function
-      const registerGroupAdmin = httpsCallable(functionsWest2, 'registerGroupAdmin');
+      const registerGroupAdmin = httpsCallable(functionsAffiliate, 'registerGroupAdmin');
       let result;
       try {
         result = await registerGroupAdmin({
@@ -218,7 +229,7 @@ const GroupAdminRegister: React.FC = () => {
         });
 
         setTimeout(() => {
-          navigate(dashboardRoute, { replace: true });
+          navigate(telegramRoute, { replace: true });
         }, 3000);
       }
     } catch (err: unknown) {
@@ -305,7 +316,7 @@ const GroupAdminRegister: React.FC = () => {
                 <div className="w-20 h-20 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
                 <h2 className="text-3xl font-bold text-white mb-3">✅ Inscription réussie !</h2>
                 <p className="text-lg text-gray-300 mb-2">Votre compte Admin de Groupe a été créé avec succès.</p>
-                <p className="text-sm text-gray-400">Redirection vers votre tableau de bord...</p>
+                <p className="text-sm text-gray-400">Redirection vers l'activation Telegram...</p>
               </div>
             </div>
           ) : emailAlreadyExists ? (

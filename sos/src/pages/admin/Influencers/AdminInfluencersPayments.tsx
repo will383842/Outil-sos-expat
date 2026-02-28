@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   Wallet,
   Search,
@@ -96,7 +96,7 @@ const AdminInfluencersPayments: React.FC = () => {
 
     try {
       const adminGetInfluencerWithdrawals = httpsCallable<any, WithdrawalListResponse>(
-        functionsWest2,
+        functionsAffiliate,
         'adminGetInfluencerWithdrawals'
       );
 
@@ -190,7 +190,7 @@ const AdminInfluencersPayments: React.FC = () => {
   const handleApprove = async (withdrawalId: string) => {
     setActionLoading(withdrawalId);
     try {
-      const adminProcessInfluencerWithdrawal = httpsCallable(functionsWest2, 'adminProcessInfluencerWithdrawal');
+      const adminProcessInfluencerWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessInfluencerWithdrawal');
       await adminProcessInfluencerWithdrawal({
         withdrawalId,
         action: 'approve',
@@ -208,7 +208,7 @@ const AdminInfluencersPayments: React.FC = () => {
   const handleComplete = async (withdrawalId: string, transactionId?: string) => {
     setActionLoading(withdrawalId);
     try {
-      const adminProcessInfluencerWithdrawal = httpsCallable(functionsWest2, 'adminProcessInfluencerWithdrawal');
+      const adminProcessInfluencerWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessInfluencerWithdrawal');
       await adminProcessInfluencerWithdrawal({
         withdrawalId,
         action: 'complete',
@@ -229,7 +229,7 @@ const AdminInfluencersPayments: React.FC = () => {
 
     setActionLoading(showRejectModal);
     try {
-      const adminProcessInfluencerWithdrawal = httpsCallable(functionsWest2, 'adminProcessInfluencerWithdrawal');
+      const adminProcessInfluencerWithdrawal = httpsCallable(functionsAffiliate, 'adminProcessInfluencerWithdrawal');
       await adminProcessInfluencerWithdrawal({
         withdrawalId: showRejectModal,
         action: 'reject',

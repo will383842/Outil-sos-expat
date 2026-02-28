@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   InfluencerTrainingModule,
   InfluencerTrainingProgress,
@@ -56,7 +56,7 @@ export function useInfluencerTraining(): UseInfluencerTrainingReturn {
     setError(null);
 
     try {
-      const getTrainingModules = httpsCallable(functionsWest2, 'getInfluencerTrainingModules');
+      const getTrainingModules = httpsCallable(functionsAffiliate, 'getInfluencerTrainingModules');
       const result = await getTrainingModules();
       const data = result.data as {
         modules: InfluencerTrainingModuleListItem[];
@@ -86,7 +86,7 @@ export function useInfluencerTraining(): UseInfluencerTrainingReturn {
     setError(null);
 
     try {
-      const getModuleContent = httpsCallable(functionsWest2, 'getInfluencerTrainingModuleContent');
+      const getModuleContent = httpsCallable(functionsAffiliate, 'getInfluencerTrainingModuleContent');
       const result = await getModuleContent({ moduleId });
       const data = result.data as {
         module: InfluencerTrainingModule;
@@ -113,7 +113,7 @@ export function useInfluencerTraining(): UseInfluencerTrainingReturn {
   // Update slide progress
   const updateProgress = useCallback(async (moduleId: string, slideIndex: number) => {
     try {
-      const updateTrainingProgress = httpsCallable(functionsWest2, 'updateInfluencerTrainingProgress');
+      const updateTrainingProgress = httpsCallable(functionsAffiliate, 'updateInfluencerTrainingProgress');
       await updateTrainingProgress({ moduleId, slideIndex });
 
       // Update local state
@@ -138,7 +138,7 @@ export function useInfluencerTraining(): UseInfluencerTrainingReturn {
     setError(null);
 
     try {
-      const submitTrainingQuiz = httpsCallable(functionsWest2, 'submitInfluencerTrainingQuiz');
+      const submitTrainingQuiz = httpsCallable(functionsAffiliate, 'submitInfluencerTrainingQuiz');
       const result = await submitTrainingQuiz({ moduleId, answers });
       const data = result.data as SubmitInfluencerTrainingQuizResult;
 
@@ -170,7 +170,7 @@ export function useInfluencerTraining(): UseInfluencerTrainingReturn {
     setError(null);
 
     try {
-      const getCertificate = httpsCallable(functionsWest2, 'getInfluencerTrainingCertificate');
+      const getCertificate = httpsCallable(functionsAffiliate, 'getInfluencerTrainingCertificate');
       const result = await getCertificate({ certificateId });
       const data = result.data as {
         certificate: InfluencerTrainingCertificate;

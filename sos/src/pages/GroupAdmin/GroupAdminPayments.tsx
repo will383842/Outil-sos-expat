@@ -8,7 +8,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import {  httpsCallable  } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { DollarSign, CreditCard, Clock, CheckCircle, XCircle, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import TelegramConnect from '@/components/shared/TelegramConnect';
@@ -73,7 +73,7 @@ const GroupAdminPayments: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const getDashboard = httpsCallable(functionsWest2, 'getGroupAdminDashboard');
+      const getDashboard = httpsCallable(functionsAffiliate, 'getGroupAdminDashboard');
       const result = await getDashboard({});
       const data = result.data as {
         profile: GroupAdmin;
@@ -142,7 +142,7 @@ const GroupAdminPayments: React.FC = () => {
           };
       }
 
-      const requestWithdrawal = httpsCallable<unknown, { success: boolean; withdrawalId: string; telegramConfirmationRequired?: boolean }>(functionsWest2, 'requestGroupAdminWithdrawal');
+      const requestWithdrawal = httpsCallable<unknown, { success: boolean; withdrawalId: string; telegramConfirmationRequired?: boolean }>(functionsAffiliate, 'requestGroupAdminWithdrawal');
       const result = await requestWithdrawal({
         amount: withdrawForm.amount,
         paymentMethod: withdrawForm.paymentMethod,

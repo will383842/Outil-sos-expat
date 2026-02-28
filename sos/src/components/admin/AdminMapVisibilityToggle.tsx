@@ -16,6 +16,8 @@ export default function AdminMapVisibilityToggle({ userId, className = '' }: Pro
     return onSnapshot(ref, (snap) => {
       const data = snap.data() as any;
       setChecked(Boolean(data?.isVisibleOnMap ?? true));
+    }, (err) => {
+      console.error('[AdminMapVisibilityToggle] Snapshot error:', err);
     });
   }, [userId]);
 

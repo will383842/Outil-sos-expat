@@ -15,7 +15,7 @@ import Layout from '@/components/layout/Layout';
 import ChatterRegisterForm from '@/components/Chatter/Forms/ChatterRegisterForm';
 import type { ChatterRegistrationData } from '@/components/Chatter/Forms/ChatterRegisterForm';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2, auth } from '@/config/firebase';
+import { functionsAffiliate, auth } from '@/config/firebase';
 import { Star, ArrowLeft, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
@@ -134,6 +134,11 @@ const ChatterRegister: React.FC = () => {
 
   // Handle registration
   const handleSubmit = async (data: ChatterRegistrationData) => {
+    // AUDIT FIX 2026-02-27: Offline guard
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setError('Pas de connexion internet. Vérifiez votre réseau.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setEmailAlreadyExists(false);
@@ -169,7 +174,7 @@ const ChatterRegister: React.FC = () => {
 
       // Step 2: Now that user is authenticated, call registerChatter Cloud Function
       // to create the chatter profile with additional data
-      const registerChatterFn = httpsCallable(functionsWest2, 'registerChatter');
+      const registerChatterFn = httpsCallable(functionsAffiliate, 'registerChatter');
       try {
         await registerChatterFn({
           firstName: data.firstName,

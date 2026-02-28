@@ -45,6 +45,7 @@ export {
   bloggerRequestWithdrawal,
   getBloggerLeaderboard,
   getBloggerRecruits,
+  getBloggerRecruitedProviders,
 
   // Resources (EXCLUSIVE)
   getBloggerResources,

@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsWest2 } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import {
   ArrowLeft,
   User,
@@ -145,7 +145,7 @@ const AdminGroupAdminDetail: React.FC = () => {
     setError(null);
 
     try {
-      const getDetail = httpsCallable(functionsWest2, 'adminGetGroupAdminDetail');
+      const getDetail = httpsCallable(functionsAffiliate, 'adminGetGroupAdminDetail');
       const result = await getDetail({ groupAdminId: id });
       const data = result.data as { groupAdmin: GroupAdminDetail; recentCommissions: Commission[] };
       setAdmin(data.groupAdmin);
@@ -162,7 +162,7 @@ const AdminGroupAdminDetail: React.FC = () => {
     if (!id) return;
     setRecruitsLoading(true);
     try {
-      const getRecruits = httpsCallable(functionsWest2, 'adminGetGroupAdminRecruits');
+      const getRecruits = httpsCallable(functionsAffiliate, 'adminGetGroupAdminRecruits');
       const result = await getRecruits({ recruiterId: id });
       const data = result.data as { recruits: Recruit[] };
       setRecruits(data.recruits || []);
@@ -189,7 +189,7 @@ const AdminGroupAdminDetail: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const updateStatus = httpsCallable(functionsWest2, 'adminUpdateGroupAdminStatus');
+      const updateStatus = httpsCallable(functionsAffiliate, 'adminUpdateGroupAdminStatus');
       await updateStatus({
         groupAdminId: admin.id,
         status: newStatus,
@@ -209,7 +209,7 @@ const AdminGroupAdminDetail: React.FC = () => {
 
     setActionLoading(true);
     try {
-      const verifyGroup = httpsCallable(functionsWest2, 'adminVerifyGroup');
+      const verifyGroup = httpsCallable(functionsAffiliate, 'adminVerifyGroup');
       await verifyGroup({ groupAdminId: admin.id });
       fetchDetails();
     } catch (err) {

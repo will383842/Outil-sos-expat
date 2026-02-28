@@ -570,24 +570,30 @@ async function sendEmailNotification(
   const body = interpolateMessage(shortMessage, alert.context);
 
   try {
-    // Créer un message_event pour l'email
+    // Créer un message_event pour l'email (standard schema)
     await db.collection('message_events').add({
       eventId: `security.alert.${alert.type}`,
-      recipientId: recipient.uid,
-      recipientType: 'admin',
-      recipientEmail: recipient.email,
+      uid: recipient.uid,
       locale,
-      data: {
+      to: {
+        email: recipient.email,
+        uid: recipient.uid,
+      },
+      context: {
+        user: {
+          uid: recipient.uid,
+          email: recipient.email,
+        },
+      },
+      vars: {
         alertId: alert.id,
         alertType: alert.type,
         severity: alert.severity,
         subject,
         body,
-        context: alert.context,
-        timestamp: alert.createdAt,
+        timestamp: alert.createdAt ? alert.createdAt.toDate().toISOString() : new Date().toISOString(),
       },
       channels: ['email'],
-      status: 'pending',
       createdAt: Timestamp.now(),
     });
 
@@ -618,21 +624,28 @@ async function sendSmsNotification(
   const smsText = `SOS Expat: ${subject}\n${interpolateMessage(shortMessage, alert.context)}`;
 
   try {
-    // Utiliser Twilio via le pipeline de notifications
+    // Utiliser Twilio via le pipeline de notifications (standard schema)
     await db.collection('message_events').add({
       eventId: `security.alert.${alert.type}`,
-      recipientId: recipient.uid,
-      recipientType: 'admin',
-      recipientPhone: recipient.phone,
+      uid: recipient.uid,
       locale,
-      data: {
+      to: {
+        phone: recipient.phone,
+        uid: recipient.uid,
+      },
+      context: {
+        user: {
+          uid: recipient.uid,
+          phoneNumber: recipient.phone,
+        },
+      },
+      vars: {
         alertId: alert.id,
         alertType: alert.type,
         severity: alert.severity,
         text: smsText,
       },
       channels: ['sms'],
-      status: 'pending',
       createdAt: Timestamp.now(),
     });
 
@@ -647,12 +660,14 @@ async function sendSmsNotification(
 // ENVOI PUSH
 // ==========================================
 
+/**
+ * P1-2 FIX: Multi-device support — reads all tokens from fcm_tokens/{uid}/tokens/
+ * P1-3 FIX: Invalid token cleanup — marks isValid=false on permanent FCM errors
+ */
 async function sendPushNotification(
   alert: SecurityAlert,
   recipient: AlertRecipient
 ): Promise<boolean> {
-  if (!recipient.fcmToken) return false;
-
   const templates = ALERT_TEMPLATES[alert.type];
   if (!templates) return false;
 
@@ -663,39 +678,113 @@ async function sendPushNotification(
     alert.context
   );
 
-  try {
-    await messaging.send({
-      token: recipient.fcmToken,
-      notification: {
-        title,
-        body,
-      },
-      data: {
-        alertId: alert.id,
-        alertType: alert.type,
-        severity: alert.severity,
-        click_action: 'OPEN_SECURITY_ALERTS',
-      },
-      android: {
-        priority: alert.severity === 'emergency' ? 'high' : 'normal',
-        notification: {
-          channelId: 'security_alerts',
-          priority: alert.severity === 'emergency' ? 'max' : 'high',
+  // P1-2 FIX: Multi-device — lookup all valid tokens from unified collection
+  const uid = recipient.uid;
+  if (!uid) {
+    // Fallback to legacy single token if no uid
+    if (!recipient.fcmToken) return false;
+    try {
+      await messaging.send({
+        token: recipient.fcmToken,
+        notification: { title, body },
+        data: {
+          alertId: alert.id,
+          alertType: alert.type,
+          severity: alert.severity,
+          click_action: 'OPEN_SECURITY_ALERTS',
         },
-      },
-      apns: {
-        payload: {
-          aps: {
-            sound: alert.severity === 'emergency' ? 'critical.caf' : 'default',
-            badge: 1,
-          },
-        },
-      },
-    });
+      });
+      return true;
+    } catch (error) {
+      console.error('[Notifier] Push error (legacy single token):', error);
+      return false;
+    }
+  }
 
-    return true;
+  try {
+    const tokensSnap = await db
+      .collection('fcm_tokens')
+      .doc(uid)
+      .collection('tokens')
+      .where('isValid', '==', true)
+      .limit(10)
+      .get();
+
+    if (tokensSnap.empty) {
+      console.warn(`[Notifier] No valid FCM tokens for admin ${uid}`);
+      return false;
+    }
+
+    let anySuccess = false;
+
+    for (const tokenDoc of tokensSnap.docs) {
+      const token = tokenDoc.data().token as string;
+      try {
+        await messaging.send({
+          token,
+          notification: { title, body },
+          data: {
+            alertId: alert.id,
+            alertType: alert.type,
+            severity: alert.severity,
+            click_action: 'OPEN_SECURITY_ALERTS',
+          },
+          android: {
+            priority: alert.severity === 'emergency' ? 'high' : 'normal',
+            ttl: 3600 * 1000, // 1 hour
+            notification: {
+              icon: 'ic_notification',
+              color: '#4F46E5',
+              channelId: 'security_alerts',
+              priority: alert.severity === 'emergency' ? 'max' : 'high',
+              sound: 'default',
+            },
+          },
+          webpush: {
+            headers: { TTL: '3600' },
+            fcmOptions: {
+              link: '/admin/security-alerts',
+            },
+            notification: {
+              icon: '/icons/icon-192x192.png',
+              badge: '/icons/icon-72x72.png',
+            },
+          },
+          apns: {
+            headers: { 'apns-expiration': String(Math.floor(Date.now() / 1000) + 3600) },
+            payload: {
+              aps: {
+                sound: alert.severity === 'emergency' ? 'critical.caf' : 'default',
+                badge: 1,
+              },
+            },
+          },
+        });
+        anySuccess = true;
+      } catch (error: unknown) {
+        // P1-3 FIX: Clean up invalid tokens
+        const code = error && typeof error === 'object' && 'code' in error
+          ? (error as { code: string }).code
+          : '';
+        if (
+          code === 'messaging/invalid-registration-token' ||
+          code === 'messaging/registration-token-not-registered'
+        ) {
+          console.warn(`[Notifier] Invalid FCM token for ${uid}, marking isValid=false`);
+          try {
+            await tokenDoc.ref.update({ isValid: false });
+          } catch (cleanupErr) {
+            console.error('[Notifier] Token cleanup failed:', cleanupErr);
+          }
+        } else {
+          console.error(`[Notifier] Push error for ${uid}:`, error);
+        }
+      }
+    }
+
+    return anySuccess;
   } catch (error) {
-    console.error('[Notifier] Push error:', error);
+    console.error('[Notifier] Push multi-device error:', error);
     return false;
   }
 }

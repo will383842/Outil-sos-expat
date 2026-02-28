@@ -448,6 +448,103 @@ export const migrateLegalDocuments = functions
     };
   });
 
+// =============================================================================
+// TELEGRAM WITHDRAWAL REQUIREMENT - Clause to append to terms_affiliate
+// =============================================================================
+
+const telegramClauseFr = `
+
+---
+
+## Obligation de connexion Telegram pour les retraits
+
+**IMPORTANT — Cette clause s'applique à tous les affiliés (Chatters, Influenceurs, Blogueurs, Admins Groupe).**
+
+1. **Connexion Telegram obligatoire.** Pour pouvoir effectuer un retrait de commissions, l'Affilié doit impérativement avoir connecté son compte Telegram à la Plateforme via le processus d'onboarding prévu à cet effet.
+
+2. **Confirmation de retrait via Telegram.** Chaque demande de retrait doit être confirmée par l'Affilié via le bot Telegram de SOS Expat. Sans cette confirmation, le retrait ne sera pas traité.
+
+3. **Impossibilité de retrait sans Telegram.** En l'absence de connexion Telegram valide, l'Affilié ne pourra pas récupérer ses fonds. Les commissions resteront créditées sur son compte mais ne pourront être versées tant que le compte Telegram n'aura pas été connecté.
+
+4. **Sécurité.** Ce mécanisme de double validation (demande via la Plateforme + confirmation via Telegram) constitue une mesure de sécurité visant à protéger les fonds de l'Affilié contre les retraits non autorisés.
+
+5. **Assistance.** En cas de difficulté pour connecter son compte Telegram, l'Affilié peut contacter le support via le formulaire de contact : https://sos-expat.com/contact
+`;
+
+const telegramClauseEn = `
+
+---
+
+## Mandatory Telegram Connection for Withdrawals
+
+**IMPORTANT — This clause applies to all affiliates (Chatters, Influencers, Bloggers, Group Admins).**
+
+1. **Mandatory Telegram connection.** In order to withdraw commissions, the Affiliate must have connected their Telegram account to the Platform through the designated onboarding process.
+
+2. **Withdrawal confirmation via Telegram.** Each withdrawal request must be confirmed by the Affiliate via the SOS Expat Telegram bot. Without this confirmation, the withdrawal will not be processed.
+
+3. **No withdrawal without Telegram.** Without a valid Telegram connection, the Affiliate will not be able to recover their funds. Commissions will remain credited to their account but cannot be paid out until the Telegram account has been connected.
+
+4. **Security.** This double validation mechanism (request via the Platform + confirmation via Telegram) is a security measure designed to protect the Affiliate's funds against unauthorized withdrawals.
+
+5. **Support.** If the Affiliate encounters any difficulty connecting their Telegram account, they may contact support via the contact form: https://sos-expat.com/contact
+`;
+
+/**
+ * Migration: Append Telegram withdrawal requirement to all terms_affiliate documents
+ * Run this once after deploying to add the mandatory Telegram clause to CGU affiliate
+ */
+export const addTelegramClauseToAffiliateTerms = functions
+  .region("europe-west1")
+  .runWith({ timeoutSeconds: 120, memory: "256MB" })
+  .https.onCall(async (_data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    const userDoc = await db.collection("users").doc(context.auth.uid).get();
+    if (!userDoc.exists || userDoc.data()?.role !== "admin") {
+      throw new functions.https.HttpsError("permission-denied", "Only admins can run migrations");
+    }
+
+    const affiliateTermsQuery = await db
+      .collection("legal_documents")
+      .where("type", "==", "terms_affiliate")
+      .get();
+
+    let updated = 0;
+    const telegramClauses: Record<string, string> = {
+      fr: telegramClauseFr,
+      en: telegramClauseEn,
+      // Other languages fall back to EN
+    };
+
+    for (const doc of affiliateTermsQuery.docs) {
+      const data = doc.data();
+      const content = data.content || "";
+
+      // Skip if already contains the Telegram clause
+      if (content.includes("Telegram") && (content.includes("retrait") || content.includes("Withdrawal"))) {
+        continue;
+      }
+
+      const clause = telegramClauses[data.language] || telegramClauseEn;
+      await doc.ref.update({
+        content: content + clause,
+        updatedAt: FieldValue.serverTimestamp(),
+        version: "1.1",
+      });
+      updated++;
+    }
+
+    return {
+      success: true,
+      message: `Telegram clause added to ${updated} terms_affiliate documents`,
+      documentsUpdated: updated,
+      totalDocuments: affiliateTermsQuery.size,
+    };
+  });
+
 /**
  * Alternative: HTTP endpoint for migration (can be called via curl or browser)
  */
@@ -463,7 +560,8 @@ export const migrateLegalDocumentsHttp = functions
 
     // Simple secret key check (set this in Firebase config)
     const secretKey = req.headers["x-migration-key"];
-    if (secretKey !== process.env.MIGRATION_SECRET_KEY && secretKey !== "sos-expat-migration-2025") {
+    const expectedSecret = process.env.MIGRATION_SECRET_KEY || process.env.ADMIN_INIT_SECRET;
+    if (!expectedSecret || secretKey !== expectedSecret) {
       res.status(401).send("Unauthorized");
       return;
     }

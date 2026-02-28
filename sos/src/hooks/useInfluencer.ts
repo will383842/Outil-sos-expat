@@ -21,7 +21,7 @@ import {
   limit,
   onSnapshot,
 } from "firebase/firestore";
-import { functionsWest2 } from "@/config/firebase";
+import { functionsAffiliate } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { useApp } from "../contexts/AppContext";
 import { getTranslatedRouteSlug } from "@/multilingual-system/core/routing/localeRoutes";
@@ -64,9 +64,11 @@ interface UseInfluencerReturn {
     input: UpdateInfluencerProfileInput
   ) => Promise<{ success: boolean; message: string }>;
   markNotificationRead: (notificationId: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
 
   // Computed
   clientShareUrl: string;
+  unreadNotificationsCount: number;
   recruitmentShareUrl: string;
   canWithdraw: boolean;
   minimumWithdrawal: number;
@@ -111,7 +113,7 @@ export function useInfluencer(): UseInfluencerReturn {
 
     try {
       const getInfluencerDashboardFn = httpsCallable<void, InfluencerDashboardData>(
-        functionsWest2,
+        functionsAffiliate,
         "getInfluencerDashboard"
       );
 
@@ -129,7 +131,7 @@ export function useInfluencer(): UseInfluencerReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.uid, functionsWest2]);
+  }, [user?.uid, functionsAffiliate]);
 
   // Fetch leaderboard data
   const refreshLeaderboard = useCallback(async () => {
@@ -137,7 +139,7 @@ export function useInfluencer(): UseInfluencerReturn {
 
     try {
       const getLeaderboardFn = httpsCallable<void, InfluencerLeaderboardData>(
-        functionsWest2,
+        functionsAffiliate,
         "getInfluencerLeaderboard"
       );
 
@@ -146,7 +148,7 @@ export function useInfluencer(): UseInfluencerReturn {
     } catch (err) {
       console.error("[useInfluencer] Error fetching leaderboard:", err);
     }
-  }, [user?.uid, functionsWest2]);
+  }, [user?.uid, functionsAffiliate]);
 
   /**
    * @deprecated This method is deprecated.
@@ -167,7 +169,7 @@ export function useInfluencer(): UseInfluencerReturn {
       const requestWithdrawalFn = httpsCallable<
         RequestInfluencerWithdrawalInput,
         { success: boolean; withdrawalId: string; amount: number; message: string }
-      >(functionsWest2, "influencerRequestWithdrawal");
+      >(functionsAffiliate, "influencerRequestWithdrawal");
 
       const result = await requestWithdrawalFn(input);
       await refreshDashboard();
@@ -177,7 +179,7 @@ export function useInfluencer(): UseInfluencerReturn {
         message: result.data.message,
       };
     },
-    [user?.uid, functionsWest2, refreshDashboard]
+    [user?.uid, functionsAffiliate, refreshDashboard]
   );
 
   // Update profile
@@ -192,13 +194,13 @@ export function useInfluencer(): UseInfluencerReturn {
       const updateProfileFn = httpsCallable<
         UpdateInfluencerProfileInput,
         { success: boolean; message: string }
-      >(functionsWest2, "updateInfluencerProfile");
+      >(functionsAffiliate, "updateInfluencerProfile");
 
       const result = await updateProfileFn(input);
       await refreshDashboard();
       return result.data;
     },
-    [user?.uid, functionsWest2, refreshDashboard]
+    [user?.uid, functionsAffiliate, refreshDashboard]
   );
 
   // Mark notification as read
@@ -207,7 +209,6 @@ export function useInfluencer(): UseInfluencerReturn {
       if (!user?.uid) return;
 
       try {
-        // Update directly in Firestore (allowed by rules)
         const { doc, updateDoc, Timestamp } = await import("firebase/firestore");
         const notificationRef = doc(db, "influencer_notifications", notificationId);
         await updateDoc(notificationRef, {
@@ -216,10 +217,38 @@ export function useInfluencer(): UseInfluencerReturn {
         });
       } catch (error) {
         console.error("[useInfluencer] Failed to mark notification as read:", error);
-        // Silently fail - notification read status is not critical
       }
     },
     [user?.uid, db]
+  );
+
+  // Mark all notifications as read
+  const markAllNotificationsRead = useCallback(
+    async (): Promise<void> => {
+      if (!user?.uid) return;
+
+      try {
+        const { doc, Timestamp, writeBatch } = await import("firebase/firestore");
+        const batch = writeBatch(db);
+        const now = Timestamp.now();
+        const unreadNotifications = notifications.filter((n) => !n.isRead);
+
+        if (unreadNotifications.length === 0) return;
+
+        for (const notification of unreadNotifications) {
+          const notificationRef = doc(db, "influencer_notifications", notification.id);
+          batch.update(notificationRef, {
+            isRead: true,
+            readAt: now,
+          });
+        }
+
+        await batch.commit();
+      } catch (error) {
+        console.error("[useInfluencer] Failed to mark all notifications as read:", error);
+      }
+    },
+    [user?.uid, db, notifications]
   );
 
   // Subscribe to commissions
@@ -402,6 +431,10 @@ export function useInfluencer(): UseInfluencerReturn {
 
   const clientDiscount = dashboardData?.config?.clientDiscountPercent ?? 0;
 
+  const unreadNotificationsCount = useMemo(() => {
+    return notifications.filter((n) => !n.isRead).length;
+  }, [notifications]);
+
   return {
     dashboardData,
     commissions,
@@ -417,6 +450,8 @@ export function useInfluencer(): UseInfluencerReturn {
     requestWithdrawal,
     updateProfile,
     markNotificationRead,
+    markAllNotificationsRead,
+    unreadNotificationsCount,
     clientShareUrl,
     recruitmentShareUrl,
     canWithdraw,

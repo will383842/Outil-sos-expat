@@ -1169,20 +1169,7 @@ const PasswordReset: React.FC = () => {
           <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
           <link rel="dns-prefetch" href="//www.google-analytics.com" />
           
-          {/* Service Worker registration */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                if ('serviceWorker' in navigator) {
-                  window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/sw.js')
-                      .then(registration => console.log('SW registered:', registration))
-                      .catch(error => console.log('SW registration failed:', error));
-                  });
-                }
-              `
-            }}
-          />
+          {/* P0 FIX: Removed sw.js registration — conflicts with firebase-messaging-sw.js (FCM push) */}
         </main>
       </Layout>
     </ErrorBoundary>

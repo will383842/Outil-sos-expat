@@ -251,6 +251,75 @@
       }
     },
     {
+      "id": "call.completed",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "Call completed",
+        "body": "Your call has ended. Duration: {{DURATION}}"
+      },
+      "inapp": {
+        "title": "Call completed",
+        "body": "Your call has ended. Duration: {{DURATION}}. Thank you for using SOS Expat!",
+        "action": {
+          "label": "Leave a review",
+          "deeplink": "/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.refund.early_disconnect",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "Refund for early disconnection",
+        "body": "Your call was interrupted too early. A refund has been initiated."
+      },
+      "inapp": {
+        "title": "Refund for early disconnection",
+        "body": "Your call was interrupted before the minimum time. An automatic refund has been initiated.",
+        "action": {
+          "label": "View",
+          "deeplink": "/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.failed.early_disconnect.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "push": {
+        "title": "Call interrupted",
+        "body": "The call was interrupted prematurely. The client has been refunded."
+      },
+      "inapp": {
+        "title": "Call interrupted prematurely",
+        "body": "The call was interrupted before the minimum billing time. The client has been automatically refunded.",
+        "action": {
+          "label": "View",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
       "id": "handoff.started.client",
       "roles": ["client"],
       "channels": {

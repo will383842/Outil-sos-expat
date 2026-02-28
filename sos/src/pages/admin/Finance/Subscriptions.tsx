@@ -942,20 +942,19 @@ const Subscriptions: React.FC = () => {
         toast.error('Fonction non disponible : adminCancelSubscription n\'est pas implémentée côté backend. Utilisez le portail Stripe.');
         return;
       } else if (action === 'sendReminder') {
-        // Send reminder via notification pipeline
-        const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
-        const { db } = await import('@/config/firebase');
+        // Send reminder via enqueueMessageEvent callable (bypasses Firestore rules)
+        const { httpsCallable } = await import('firebase/functions');
+        const { functions } = await import('@/config/firebase');
+        const enqueueFn = httpsCallable(functions, 'enqueueMessageEvent');
 
         for (const subscriptionId of idsArray) {
           const subscription = filteredSubscriptions.find((s) => s.id === subscriptionId);
           if (subscription?.providerId) {
             try {
-              await addDoc(collection(db, 'message_events'), {
-                uid: subscription.providerId,
+              await enqueueFn({
                 eventId: 'subscription.reminder',
-                channel: 'email',
-                createdAt: serverTimestamp(),
-                status: 'pending',
+                to: { uid: subscription.providerId },
+                context: { user: { uid: subscription.providerId } },
               });
               successCount++;
             } catch {

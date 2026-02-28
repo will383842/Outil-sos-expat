@@ -12,9 +12,9 @@ import {
   SubscriptionStatus,
   SubscriptionTier,
   DEFAULT_TRIAL_CONFIG,
-  DEFAULT_GRACE_PERIOD_DAYS,
   FAIR_USE_LIMIT,
-  QUOTA_WARNING_THRESHOLD
+  QUOTA_WARNING_THRESHOLD,
+  getGracePeriodConfig
 } from './constants';
 
 // Lazy initialization pattern to prevent deployment timeout
@@ -134,14 +134,11 @@ async function getTrialConfig(): Promise<{ durationDays: number; maxAiCalls: num
 
 /**
  * P2 FIX: Recupere la periode de grace configurable depuis Firestore
- * Permet de configurer la grace period depuis la console admin
+ * Utilise la fonction centralisée getGracePeriodConfig() de constants.ts
  */
 async function getGracePeriodDays(): Promise<number> {
-  const settingsDoc = await getDb().doc('settings/subscription').get();
-  if (!settingsDoc.exists) {
-    return DEFAULT_GRACE_PERIOD_DAYS;
-  }
-  return settingsDoc.data()?.gracePeriodDays ?? DEFAULT_GRACE_PERIOD_DAYS;
+  const { gracePeriodDays } = await getGracePeriodConfig(getDb());
+  return gracePeriodDays;
 }
 
 /**
@@ -537,7 +534,7 @@ export const checkAiAccess = functions
         // Verifier si acces jusqu'a fin de periode
         const periodEnd = subscription.currentPeriodEnd?.toDate ? subscription.currentPeriodEnd.toDate() : null;
 
-        if (periodEnd && now < periodEnd && !subscription.canceledAt) {
+        if (periodEnd && now < periodEnd && subscription.cancelAtPeriodEnd === true) {
           const plan = await getSubscriptionPlan(subscription.planId);
           const limit = plan?.aiCallsLimit ?? 0;
           const currentPeriodCalls = usage.currentPeriodCalls || 0;
@@ -595,9 +592,9 @@ export const checkAiAccess = functions
         canUpgrade: true
       } as AiAccessCheckResult;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error checking AI access:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to check AI access');
+      throw new functions.https.HttpsError('internal', error instanceof Error ? error.message : 'Failed to check AI access');
     }
   });
 
@@ -729,9 +726,9 @@ export const incrementAiUsage = functions
         quotaWarningMessage
       } as AiUsageIncrementResult;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error incrementing AI usage:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to increment usage');
+      throw new functions.https.HttpsError('internal', error instanceof Error ? error.message : 'Failed to increment usage');
     }
   });
 
@@ -889,9 +886,9 @@ export const getSubscriptionDetails = functions
         trialConfig
       } as SubscriptionDetailsResult & { trialConfig: typeof trialConfig };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error getting subscription details:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to get subscription details');
+      throw new functions.https.HttpsError('internal', error instanceof Error ? error.message : 'Failed to get subscription details');
     }
   });
 
@@ -1599,8 +1596,8 @@ export const checkAndIncrementAiUsage = functions
 
     try {
       return await checkAndIncrementAiUsageAtomic(providerId);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in checkAndIncrementAiUsage:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to check and increment AI usage');
+      throw new functions.https.HttpsError('internal', error instanceof Error ? error.message : 'Failed to check and increment AI usage');
     }
   });

@@ -23,9 +23,11 @@ import {
   getWithdrawalSettings,
   areWithdrawalsEnabled,
 } from "../utils/configService";
+import { getWithdrawalFee } from "../../services/feeCalculationService";
 import { maskBankAccount } from "../utils/bankDetailsEncryption";
 import { sendWithdrawalConfirmation, WithdrawalConfirmationRole } from "../../telegram/withdrawalConfirmation";
 import { TELEGRAM_SECRETS } from "../../lib/secrets";
+import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -40,7 +42,7 @@ export const requestWithdrawal = onCall(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    maxInstances: 5,
+    maxInstances: 1,
     cors: ALLOWED_ORIGINS,
     secrets: [...TELEGRAM_SECRETS],
   },
@@ -53,6 +55,8 @@ export const requestWithdrawal = onCall(
     }
 
     const userId = request.auth.uid;
+    await checkRateLimit(userId, "affiliate_requestWithdrawal", RATE_LIMITS.WITHDRAWAL);
+
     const input = request.data as RequestWithdrawalInput;
 
     logger.info("[requestWithdrawal] Processing request", {
@@ -123,14 +127,19 @@ export const requestWithdrawal = onCall(
         );
       }
 
-      // 9. Determine withdrawal amount
-      const withdrawalAmount = input.amount ? Math.min(input.amount, availableBalance) : availableBalance;
+      // 8b. P2-1 FIX: Calculate withdrawal fee (same as all other roles)
+      const feeConfig = await getWithdrawalFee();
+      const withdrawalFeeCents = feeConfig.fixedFee * 100; // Convert dollars to cents
+
+      // 9. Determine withdrawal amount (must leave room for fee)
+      const maxWithdrawable = Math.max(0, availableBalance - withdrawalFeeCents);
+      const withdrawalAmount = input.amount ? Math.min(input.amount, maxWithdrawable) : maxWithdrawable;
 
       // 10. Check minimum amount
       if (withdrawalAmount < settings.minimumAmount) {
         throw new HttpsError(
           "failed-precondition",
-          `Minimum withdrawal amount is €${(settings.minimumAmount / 100).toFixed(2)}`
+          `Minimum withdrawal amount is $${(settings.minimumAmount / 100).toFixed(2)}`
         );
       }
 
@@ -177,7 +186,7 @@ export const requestWithdrawal = onCall(
           const remaining = settings.maxAmountPerMonth - monthlyTotal;
           throw new HttpsError(
             "failed-precondition",
-            `Monthly limit exceeded. You can withdraw up to €${(remaining / 100).toFixed(2)} more this month`
+            `Monthly limit exceeded. You can withdraw up to $${(remaining / 100).toFixed(2)} more this month`
           );
         }
       }
@@ -209,7 +218,7 @@ export const requestWithdrawal = onCall(
       if (totalFromCommissions < settings.minimumAmount) {
         throw new HttpsError(
           "failed-precondition",
-          `Available commissions (€${(totalFromCommissions / 100).toFixed(2)}) are below the minimum withdrawal amount`
+          `Available commissions ($${(totalFromCommissions / 100).toFixed(2)}) are below the minimum withdrawal amount`
         );
       }
 
@@ -221,6 +230,7 @@ export const requestWithdrawal = onCall(
       const nowIso = now.toDate().toISOString();
 
       let actualAmount = 0;
+      let totalDebited = 0; // P2-1 FIX: amount + fee
       const commissionIds: string[] = [];
 
       await db.runTransaction(async (transaction: Transaction) => {
@@ -257,10 +267,13 @@ export const requestWithdrawal = onCall(
           );
         }
 
-        // Re-verify balance is sufficient
+        // P2-1 FIX: Calculate totalDebited = commissions + withdrawal fee
+        totalDebited = actualAmount + withdrawalFeeCents;
+
+        // Re-verify balance is sufficient (including fee)
         const freshBalance = freshUserData.availableBalance || 0;
-        if (freshBalance < actualAmount) {
-          throw new HttpsError("failed-precondition", "Insufficient balance, please retry");
+        if (freshBalance < totalDebited) {
+          throw new HttpsError("failed-precondition", "Insufficient balance (including withdrawal fee), please retry");
         }
 
         const userName = `${freshUserData.firstName || ""} ${freshUserData.lastName || ""}`.trim();
@@ -276,6 +289,8 @@ export const requestWithdrawal = onCall(
           userName,
           // Amount
           amount: actualAmount,
+          withdrawalFee: withdrawalFeeCents,  // P2-1 FIX
+          totalDebited,                        // P2-1 FIX
           sourceCurrency: "USD",
           targetCurrency: bankDetails.currency || "USD",
           // Payment method (synthetic ID — affiliates don't use paymentMethods collection)
@@ -329,9 +344,9 @@ export const requestWithdrawal = onCall(
           });
         }
 
-        // Update user balance
+        // Update user balance (amount + withdrawal fee)
         transaction.update(db.collection("users").doc(userId), {
-          availableBalance: FieldValue.increment(-actualAmount),
+          availableBalance: FieldValue.increment(-totalDebited), // P2-1 FIX: include fee
           pendingPayoutId: withdrawalRef.id,
           updatedAt: now,
         });
@@ -366,7 +381,7 @@ export const requestWithdrawal = onCall(
               });
             }
             revertTx.update(db.collection("users").doc(userId), {
-              availableBalance: FieldValue.increment(actualAmount),
+              availableBalance: FieldValue.increment(totalDebited), // P2-1 FIX: refund total
               pendingPayoutId: null,
               updatedAt: Timestamp.now(),
             });

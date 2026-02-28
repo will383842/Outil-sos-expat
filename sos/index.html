@@ -194,6 +194,10 @@
   <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="prefetch" href="/icons/icon-512x512.png" />
 
+  <!-- 🌐 MULTILINGUAL FONTS (Google Fonts - async load) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'" />
+
   <!-- 🚀 PREFETCH - Pages fréquemment visitées (améliore navigation) -->
   <link rel="prefetch" href="/fr-fr/" />
   <link rel="prefetch" href="/fr-fr/tarifs" />
@@ -374,24 +378,28 @@
       };
 
       // Supported languages
-      var SUPPORTED_LANGS = ['fr', 'en', 'es', 'de', 'ru', 'pt', 'zh', 'hi', 'ar'];
+      var SUPPORTED_LANGS = ['fr', 'en', 'es', 'de', 'ru', 'pt', 'ch', 'hi', 'ar'];
 
       // Map browser lang codes to our lang codes
-      var LANG_MAP = { 'zh': 'ch' }; // Chinese uses 'ch' in our system
+      var LANG_MAP = { 'zh': 'ch' }; // Chinese: browser returns 'zh', we use 'ch' internally
 
       var lang = 'fr'; // Default language
       var country = 'fr'; // Default country
 
       // 1. Check saved preference (user manually changed language)
       try {
-        var saved = localStorage.getItem('sos_language');
-        if (saved && SUPPORTED_LANGS.includes(saved)) {
-          lang = saved;
+        var saved = localStorage.getItem('sos_language') || localStorage.getItem('app:lang');
+        if (saved) {
+          // Normalize: browser/external may save 'zh', we use 'ch'
+          if (saved === 'zh') saved = 'ch';
+          if (SUPPORTED_LANGS.includes(saved)) {
+            lang = saved;
+          }
         }
       } catch (e) { }
 
       // 2. Detect language from browser (if no saved preference)
-      if (!localStorage.getItem('sos_language')) {
+      if (!localStorage.getItem('sos_language') && !localStorage.getItem('app:lang')) {
         try {
           var browserLang = (navigator.language || navigator.userLanguage || '').substring(0, 2).toLowerCase();
           if (browserLang && SUPPORTED_LANGS.includes(browserLang)) {

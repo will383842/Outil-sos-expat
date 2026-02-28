@@ -9,10 +9,10 @@
  * Solution: This scheduled function runs every 30 minutes to:
  * 1. Find payments stuck in 'requires_capture' for more than 10 minutes
  * 2. Check if the call session is completed - if so, capture the payment
- * 3. Find payments stuck in 'requires_capture' for more than 6 hours - refund them
+ * 3. Find payments stuck in 'requires_capture' for more than 30 minutes - refund them
  * 4. Alert admins about stuck payments
  *
- * Runs every 15 minutes
+ * Runs every 30 minutes
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -41,7 +41,8 @@ const RECOVERY_CONFIG = {
   // Payments stuck for more than 1 hour without completed call = auto-refund
   // P0 FIX 2026-01-30: Reduced from 24h to 6h
   // P0 FIX 2026-02-09: Reduced from 6h to 1h for much faster customer refund
-  REFUND_THRESHOLD_HOURS: 1,
+  // 2026-02-28: Reduced from 1h to 30min — cron runs every 30min, worst case = 1h max
+  REFUND_THRESHOLD_HOURS: 0.5,
   // Maximum payments to process per run
   BATCH_SIZE: 50,
   // Minimum call duration for capture (seconds) - P0 FIX 2026-02-01: Reduced from 2 min to 1 min
@@ -63,12 +64,12 @@ function getStripeInstance(): Stripe {
 }
 
 /**
- * Scheduled function - runs every 15 minutes
- * 2026-02-09: Changed from 4h to 15min - refund threshold is 1h so we need frequent checks
+ * Scheduled function - runs every 30 minutes
+ * 2026-02-09: Changed from 4h to 15min, then optimized to 30min - refund threshold is 0.5h
  */
 export const stuckPaymentsRecovery = onSchedule(
   {
-    schedule: "*/30 * * * *", // Every 30 minutes (optimized from 15min - refund threshold is 1h so 30min is safe)
+    schedule: "*/30 * * * *", // Every 30 minutes - refund threshold is 0.5h so 30min is safe
     region: "europe-west3",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
@@ -502,10 +503,11 @@ async function captureCompletedPayPalPayments(
 }
 
 /**
- * Find old stuck payments (> 1 hour) and refund them
+ * Find old stuck payments (> 30 minutes) and refund them
  * This prevents money from being held indefinitely
  * P0 FIX 2026-01-30: Reduced from 24h to 6h for better customer experience
  * P0 FIX 2026-02-09: Reduced from 6h to 1h for much faster customer refund
+ * 2026-02-28: Reduced from 1h to 0.5h (30min)
  */
 async function refundOldStuckPayments(
   db: admin.firestore.Firestore,

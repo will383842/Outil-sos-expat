@@ -298,9 +298,9 @@ export async function setProviderBusy(
           };
           await Promise.all([
             db.collection('users').doc(providerId).update(selfHealData),
-            db.collection('sos_profiles').doc(providerId).update(selfHealData).catch(() => {}),
+            db.collection('sos_profiles').doc(providerId).update(selfHealData).catch((e: unknown) => console.warn(`[${logId}] Self-heal sos_profiles failed (non-blocking):`, e)),
           ]);
-          console.log(`🔧 [${logId}] Self-healed: wrote parent config to provider ${providerId}'s own docs`);
+          console.log(`[${logId}] Self-healed: wrote parent config to provider ${providerId}'s own docs`);
         } catch (selfHealErr) {
           console.warn(`⚠️ [${logId}] Self-heal failed (non-blocking):`, selfHealErr);
         }
@@ -311,9 +311,9 @@ export async function setProviderBusy(
           const standaloneData = { linkedProviderIds: [], shareBusyStatus: false };
           await Promise.all([
             db.collection('users').doc(providerId).update(standaloneData),
-            db.collection('sos_profiles').doc(providerId).update(standaloneData).catch(() => {}),
+            db.collection('sos_profiles').doc(providerId).update(standaloneData).catch((e: unknown) => console.warn(`[${logId}] Standalone sos_profiles write failed (non-blocking):`, e)),
           ]);
-          console.log(`🔧 [${logId}] Marked provider ${providerId} as standalone (no future lookups)`);
+          console.log(`[${logId}] Marked provider ${providerId} as standalone (no future lookups)`);
         } catch (standaloneErr) {
           console.warn(`⚠️ [${logId}] Failed to mark standalone (non-blocking):`, standaloneErr);
         }

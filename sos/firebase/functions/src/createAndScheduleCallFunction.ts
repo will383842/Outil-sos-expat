@@ -427,52 +427,60 @@ export const createAndScheduleCallHTTPS = onCall(
       console.log(`✅ [${requestId}] PaymentIntent validé: ${paymentIntentId}`);
 
       // ========================================
-      // 8. CRÉATION DE LA SESSION D'APPEL (SANS PLANIFICATION)
+      // 8. RÉSERVER LE PROVIDER (ATOMIQUE — ANTI DOUBLE-BOOKING)
+      // ========================================
+      // P1-1 FIX: setProviderBusy AVANT createCallSession pour éliminer la race condition.
+      // La transaction Firestore dans setProviderBusy garantit qu'un seul booking
+      // peut réserver le provider à la fois. Si le provider est déjà busy,
+      // on refuse le booking AVANT de créer la session ou planifier l'appel.
+      // Générer un callSessionId si non fourni par le frontend
+      const effectiveCallSessionId = callSessionId || admin.firestore().collection('call_sessions').doc().id;
+      console.log(`🔶 [${requestId}] Réservation atomique du provider ${providerId}...`);
+      const busyResult = await setProviderBusy(providerId, effectiveCallSessionId, 'pending_call');
+
+      if (!busyResult.success) {
+        console.error(`❌ [${requestId}] Cannot reserve provider: ${busyResult.error}`);
+        throw new HttpsError(
+          'failed-precondition',
+          'Le prestataire n\'est pas disponible actuellement. Veuillez réessayer.'
+        );
+      }
+
+      if (busyResult.message === 'Provider already busy') {
+        console.error(`❌ [${requestId}] Provider already busy for another call`);
+        throw new HttpsError(
+          'failed-precondition',
+          'Le prestataire est actuellement en appel. Veuillez réessayer dans quelques minutes.'
+        );
+      }
+
+      console.log(`✅ [${requestId}] Provider ${providerId} réservé (pending_call)`);
+
+      // ========================================
+      // 8.1 CRÉATION DE LA SESSION D'APPEL
       // ========================================
       console.log(`📞 [${requestId}] Création session d'appel initiée`);
       console.log(`👥 [${requestId}] Client: ${clientId.substring(0, 8)}... → Provider: ${providerId.substring(0, 8)}...`);
       console.log(`💰 [${requestId}] Montant: ${amount}€ pour service ${serviceType}`);
       console.log(`💳 [${requestId}] PaymentIntent: ${paymentIntentId}`);
-      console.log(`⚠️ [${requestId}] NOUVEAU FLUX: Pas de planification immédiate - sera géré par webhook Stripe`);
 
-      // ✅ RECTIFICATION: Appel uniquement à createCallSession (sans planification)
       const callSession = await createCallSession({
         providerId,
         clientId,
         providerPhone,
         clientPhone,
-         sessionId: callSessionId,
-        clientWhatsapp: clientWhatsapp || clientPhone, // Fallback si clientWhatsapp n'est pas fourni
+        sessionId: effectiveCallSessionId,
+        clientWhatsapp: clientWhatsapp || clientPhone,
         serviceType,
         providerType,
         paymentIntentId,
-        amount, // ✅ EN EUROS directement
+        amount,
         requestId,
         clientLanguages: clientLanguages || ['fr'],
         providerLanguages: providerLanguages || ['fr']
       });
 
       console.log(`✅ [${requestId}] Session d'appel créée avec succès - ID: ${callSession.id}`);
-
-      // ========================================
-      // 8.1 P0 FIX: RÉSERVER LE PROVIDER IMMÉDIATEMENT
-      // ========================================
-      // Mettre le provider en busy dès maintenant pour éviter le double-booking
-      // pendant les 1-4 minutes avant qu'il réponde au téléphone
-      try {
-        console.log(`🔶 [${requestId}] Setting provider ${providerId} to BUSY (pending_call)...`);
-        const busyResult = await setProviderBusy(providerId, callSession.id, 'pending_call');
-
-        if (busyResult.success) {
-          console.log(`✅ [${requestId}] Provider ${providerId} marked as BUSY (pending_call)`);
-        } else {
-          console.warn(`⚠️ [${requestId}] Failed to set provider busy: ${busyResult.error}`);
-        }
-      } catch (busyError) {
-        console.error(`⚠️ [${requestId}] Error setting provider busy (non-blocking):`, busyError);
-        // Non-blocking: on continue même si le provider n'est pas marqué busy
-        // Le double-booking est rare et sera géré par les vérifications côté provider
-      }
 
       // ========================================
       // 9. ÉCRITURE VERS LA COLLECTION PAYMENTS

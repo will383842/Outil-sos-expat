@@ -9,6 +9,7 @@ export { getChatterDashboard } from "./getChatterDashboard";
 export { requestWithdrawal } from "./requestWithdrawal";
 export { updateChatterProfile } from "./updateChatterProfile";
 export { updateTelegramOnboarding } from "./updateTelegramOnboarding";
+export { getChatterRecruitedProviders } from "./getRecruitedProviders";
 
 // Training Callables
 export {

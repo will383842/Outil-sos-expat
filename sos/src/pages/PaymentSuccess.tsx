@@ -213,7 +213,7 @@ const SuccessPayment: React.FC = () => {
     callStatus === "failed" ? "failed" : "connecting"
   );
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [countdownToCall, setCountdownToCall] = useState(300); // 5 minutes (affichage)
+  const [countdownToCall, setCountdownToCall] = useState(240); // P2-4 FIX: 4 minutes (aligné avec Cloud Task)
   const [paymentTimestamp, setPaymentTimestamp] = useState<number | null>(null);
   // P0 FIX: Track failure reason to display the correct message (client vs provider no_answer)
   const [failureReason, setFailureReason] = useState<string | null>(null);
@@ -429,7 +429,8 @@ const SuccessPayment: React.FC = () => {
     const updateCountdown = () => {
       const now = Date.now();
       const elapsedSeconds = Math.floor((now - paymentTimestamp) / 1000);
-      const displayCountdownSeconds = 300; // 5 min (affichage du compte à rebours)
+      // P2-4 FIX: Aligner le timer d'affichage sur le délai réel du Cloud Task (240s)
+      const displayCountdownSeconds = 240; // 4 min (aligné avec le Cloud Task backend)
       const callTriggerSeconds = 240; // 4 min (déclenchement de l'appel)
       const remainingSeconds = Math.max(
         0,
@@ -598,8 +599,9 @@ const SuccessPayment: React.FC = () => {
           break;
         case "completed":
           setCallState("completed");
-          // P0 FIX: Store actual call duration to check before allowing review
-          const duration = data?.actualDuration || data?.duration || 0;
+          // P2-1 FIX: Lire conference.billingDuration (champ réel dans call_sessions)
+          // au lieu de actualDuration/duration qui n'existent pas
+          const duration = data?.conference?.billingDuration || data?.actualDuration || data?.duration || 0;
           setCallDuration(duration);
           break;
         case "failed":
@@ -618,8 +620,8 @@ const SuccessPayment: React.FC = () => {
           break;
       }
 
-      // P0 FIX: Only show review modal if call actually happened (duration >= 5 minutes)
-      const actualDuration = data?.actualDuration || data?.duration || 0;
+      // P2-1 FIX: Lire conference.billingDuration (champ réel dans call_sessions)
+      const actualDuration = data?.conference?.billingDuration || data?.actualDuration || data?.duration || 0;
       const MIN_DURATION_FOR_REVIEW = 300; // 5 minutes
       if (data?.status === "completed" && !reviewModelShown && actualDuration >= MIN_DURATION_FOR_REVIEW) {
         console.log(`🔵 [SUCCESS_PAGE_DEBUG] Call completed with duration ${actualDuration}s, showing review modal in 1.5s`);
