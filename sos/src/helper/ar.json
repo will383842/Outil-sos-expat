@@ -1092,19 +1092,19 @@
   "chatter.dashboard.viewAllCommissions": "عرض جميع عمولاتي",
   "chatter.dashboard.welcome": "مرحباً، {name}!",
   "chatter.earnings.team": "من أرباح فريقك. إلى الأبد.",
-  "chatter.faq.a1": "تشاتر هو سفير علامة تجارية يكسب المال بتوصية SOS-Expat بشكل طبيعي. تحدث على واتساب، فيسبوك، إنستغرام، تيك توك - أينما كنت - وشارك رابطك الفريد.",
-  "chatter.faq.a2": "الأرباح تختلف حسب النشاط: $3-5 لكل مكالمة عميل، $5 لكل مكالمة للمحامين المجنّدين. التشاترز النشطون يكسبون $200-$800/شهر.",
-  "chatter.faq.a3": "N1: $1 عند $10، $4 عند $50، +5% للأبد. N2: $2 عند $50. بالإضافة لمكافآت المستويات!",
-  "chatter.faq.a4": "أول 50 تشاتر لكل دولة يصلون لـ $50 يصبحون رواداً ويحصلون على +50% مكافأة مدى الحياة. لا تفوّت مكانك!",
+  "chatter.faq.a1": "الأمر بسيط: انضم إلى مجموعات فيسبوك للمغتربين (مثل 'مغتربون في إسبانيا'، 'عرب في لندن'...)، مجموعات واتساب، ريديت، منتديات. عندما ترى شخصاً لديه مشكلة (تأشيرة، قانونية، طوارئ)، شارك رابطك الفريد. عندما يتصلون بمحامٍ أو مساعد مغتربين، تكسب $3-5. هذا كل شيء!",
+  "chatter.faq.a2": "يعتمد على نشاطك. 5 عملاء = $15-25. 20 عميل = $60-100. ابنِ فريقاً: تكسب $1/مكالمة من مجنّديك المباشرين (N1) و$0.50/مكالمة من مجنّديهم (N2). أفضل التشاترز يكسبون $500-2000/شهر.",
+  "chatter.faq.a3": "مساعدو المغتربين هم مغتربون ذوو خبرة يقدمون نصائح عملية ومرافقة. ليسوا محامين، لكنهم يعرفون النظام المحلي جيداً ويمكنهم المساعدة في الأسئلة اليومية حول التأشيرات والإدارة والسكن وغيرها.",
+  "chatter.faq.a4": "مجاني 100%. بدون رسوم، بدون استثمار. فقط اجتز اختباراً سريعاً لإثبات فهمك لكيفية عمل SOS-Expat، وتحصل على روابط الإحالة فوراً.",
   "chatter.faq.a5": "اسحب في أي وقت بدءاً من $30. تُطبّق رسوم سحب بقيمة $3 لكل معاملة. ندعم Wise (عالمي)، Orange Money، Wave، MTN MoMo، M-Pesa، Airtel Money والتحويل البنكي. معالجة خلال 48 ساعة.",
-  "chatter.faq.a6": "نعم! 89+ دولة في أفريقيا، أوروبا، الأمريكتين، وآسيا. كل ما تحتاجه هو إنترنت وأشخاص للمساعدة.",
-  "chatter.faq.a7": "جند شاترز آخرين برابطك الخاص. تكسب 1$ لكل مكالمة من المجندين المباشرين (N1)، و0.50$ لكل مكالمة من مجنديهم (N2). حجم فريقك غير محدود!",
-  "chatter.faq.q1": "ما هو SOS-Expat Chatter بالضبط؟",
+  "chatter.faq.a6": "لا! أنت لا تقدم نصائح. أنت ببساطة تربط الأشخاص الذين يحتاجون مساعدة بمحامينا ومساعدي المغتربين. أنت وسيط، لست خبيراً.",
+  "chatter.faq.a7": "جنّد تشاترز آخرين برابطك الخاص. تكسب $1 لكل مكالمة من المجنّدين المباشرين (N1)، و$0.50 لكل مكالمة من مجنّديهم (N2). حجم فريقك غير محدود!",
+  "chatter.faq.q1": "ماذا يجب أن أفعل بالضبط؟",
   "chatter.faq.q2": "كم يمكنني أن أكسب واقعياً؟",
-  "chatter.faq.q3": "كيف يعمل نظام الإحالة بمستويين؟",
-  "chatter.faq.q4": "ما هي مكافأة الرائد المبكر؟",
+  "chatter.faq.q3": "ما هو 'مساعد المغتربين'؟",
+  "chatter.faq.q4": "هل هذا مجاني فعلاً؟",
   "chatter.faq.q5": "كيف ومتى أُدفع؟",
-  "chatter.faq.q6": "هل هذا متاح في بلدي؟",
+  "chatter.faq.q6": "هل أحتاج أن أكون خبيراً؟",
   "chatter.faq.q7": "كيف يعمل بناء الفريق؟",
   "chatter.faq.quiz": "هل الاختبار صعب؟ هل سأفشل؟",
   "chatter.faq.quiz.answer": "الاختبار سهل جداً! فقط 5 أسئلة بسيطة للتأكد من فهمك لكيفية عمل SOS-Expat. 95% من الناس ينجحون من المحاولة الأولى. وإذا لم تنجح، يمكنك إعادته فوراً. نعطيك حتى فيديو تدريبي قصير للمساعدة!",
@@ -1194,7 +1194,7 @@
   "chatter.landing.money.method1.time": "اليوم",
   "chatter.landing.money.method1.title": "🚀 بداية سريعة (دقيقتان)",
   "chatter.landing.money.method2.action": "قوالب جاهزة مقدمة",
-  "chatter.landing.money.method2.desc": "انشر في مجموعات Facebook/Telegram/WhatsApp للمغتربين. نسخ ولصق بسيط. 1 مكالمة = 10$.",
+  "chatter.landing.money.method2.desc": "انشر في مجموعات Facebook/Telegram/WhatsApp للمغتربين. نسخ ولصق بسيط. 1 مكالمة = 3-5$.",
   "chatter.landing.money.method2.time": "الآن",
   "chatter.landing.money.method2.title": "📱 شارك رابطك (5 دقائق/يوم)",
   "chatter.landing.money.method3.action": "MLM غير محدود",
@@ -1288,9 +1288,9 @@
   "chatter.landing.success.title": "لقد غيروا",
   "chatter.landing.topEarnerBadge": "أفضل كاسب",
   "chatter.landing.unlimited": "غير محدودة",
-  "chatter.leaderboard.bonus.top1": "المركز الأول: 500 دولار",
-  "chatter.leaderboard.bonus.top2": "المركز الثاني: 300 دولار",
-  "chatter.leaderboard.bonus.top3": "المركز الثالث: 200 دولار",
+  "chatter.leaderboard.bonus.top1": "المركز الأول: 200 دولار",
+  "chatter.leaderboard.bonus.top2": "المركز الثاني: 100 دولار",
+  "chatter.leaderboard.bonus.top3": "المركز الثالث: 50 دولار",
   "chatter.leaderboard.bonusEligible": "مؤهل للمكافأة",
   "chatter.leaderboard.bonusTitle": "مكافآت شهرية",
   "chatter.leaderboard.conversions": "التحويلات",
@@ -1398,31 +1398,6 @@
   "chatter.platform.forum": "منتديات",
   "chatter.platform.forums": "منتديات متخصصة",
   "chatter.platform.forums.name": "منتديات",
-  "chatter.posts.clicks": "النقرات",
-  "chatter.posts.conversions": "التحويلات",
-  "chatter.posts.earnings": "الأرباح",
-  "chatter.posts.empty.message": "لا توجد منشورات بعد. أنشئ منشورك الأول لبدء الربح!",
-  "chatter.posts.empty.title": "لا توجد منشورات",
-  "chatter.posts.fetchError": "خطأ في تحميل المنشورات",
-  "chatter.posts.filter.all": "الكل",
-  "chatter.posts.filter.approved": "معتمدة",
-  "chatter.posts.filter.pending": "معلقة",
-  "chatter.posts.filter.rejected": "مرفوضة",
-  "chatter.posts.form.content": "المحتوى",
-  "chatter.posts.form.contentPlaceholder": "صف منشورك (URL، المنصة، الوصف...)",
-  "chatter.posts.form.language": "لغة المنشور",
-  "chatter.posts.form.platform": "المنصة",
-  "chatter.posts.form.submit": "نشر",
-  "chatter.posts.form.url": "رابط المنشور",
-  "chatter.posts.new": "منشور جديد",
-  "chatter.posts.newPost.title": "منشور جديد",
-  "chatter.posts.rejectionReason": "سبب الرفض",
-  "chatter.posts.status.approved": "معتمد",
-  "chatter.posts.status.pending": "معلق",
-  "chatter.posts.status.rejected": "مرفوض",
-  "chatter.posts.submitSuccess": "تم تقديم المنشور بنجاح! ستتم مراجعته خلال 48 ساعة.",
-  "chatter.posts.subtitle": "شارك منشوراتك",
-  "chatter.posts.title": "منشوراتي",
   "chatter.promo.dismiss": "إغلاق",
   "chatter.provider.badge": "برنامج مزود الخدمة",
   "chatter.provider.benefit1.desc": "وظّف محامين واكسب 100 دولار لكل محامٍ مفعّل",
@@ -1713,6 +1688,87 @@
   "chatter.tiers.note": "مكافآت لمرة واحدة تُدفع عند الوصول لكل معلم",
   "chatter.tiers.recruits": "مجندين",
   "chatter.tiers.title": "اكسب مكافأة عند كل معلم!",
+  "chatter.progression.title": "تقدمي",
+  "chatter.progression.subtitle": "تابع تطورك وأهدافك",
+  "chatter.progression.level.title": "مستواي",
+  "chatter.progression.level.current": "المستوى الحالي",
+  "chatter.progression.level.next": "المستوى التالي",
+  "chatter.progression.level.maxReached": "تم الوصول للمستوى الأقصى!",
+  "chatter.progression.level.forecast": "تقدير: {level} في ~{days} يوم",
+  "chatter.progression.level.earned": "تم كسب {amount}",
+  "chatter.progression.level.needed": "يلزم {amount} إضافي للمستوى {level}",
+  "chatter.progression.recruitment.title": "معالم التوظيف",
+  "chatter.progression.recruitment.subtitle": "قم بتوظيف مسوقين لفتح المكافآت",
+  "chatter.progression.recruitment.qualified": "{count} إحالات مؤهلة",
+  "chatter.progression.recruitment.nextBonus": "المكافأة التالية: {amount} عند {count} مجند",
+  "chatter.progression.recruitment.allAchieved": "تم تحقيق جميع المعالم!",
+  "chatter.progression.recruitment.milestone": "{count} مجند",
+  "chatter.progression.stats.title": "الإحصائيات العامة",
+  "chatter.progression.stats.totalEarned": "إجمالي الأرباح",
+  "chatter.progression.stats.monthRank": "تصنيف الشهر",
+  "chatter.progression.stats.bestRank": "أفضل تصنيف",
+  "chatter.progression.stats.currentStreak": "السلسلة الحالية",
+  "chatter.progression.stats.bestStreak": "أفضل سلسلة",
+  "chatter.progression.stats.badges": "الشارات المكتسبة",
+  "chatter.progression.stats.days": "{count}ي",
+  "chatter.progression.stats.notRanked": "غير مصنف",
+  "chatter.progression.piggyBank.title": "حصالة المكافآت",
+  "chatter.progression.captain.title": "تقدم القائد",
+  "chatter.progression.captain.subtitle": "تقدمك في مستويات القائد",
+  "chatter.progression.captain.currentTier": "المستوى الحالي",
+  "chatter.progression.captain.nextTier": "المستوى التالي",
+  "chatter.progression.captain.callsNeeded": "يلزم {count} مكالمة أخرى لـ {tier}",
+  "chatter.progression.captain.maxTier": "تم الوصول للمستوى الأقصى!",
+  "chatter.progression.teaser.title": "كن قائداً!",
+  "chatter.progression.teaser.description": "يدير القادة فريقاً من المسوقين ويكسبون عمولات إضافية على مكالمات فريقهم. حقق مستوى أداء ممتاز لتكون مؤهلاً!",
+  "chatter.progression.teaser.cta": "تواصل مع الدعم لمعرفة المزيد",
+  "chatter.howToEarn.title": "كيف تكسب",
+  "chatter.howToEarn.subtitle": "كل ما تحتاج معرفته للبدء في الكسب",
+  "chatter.howToEarn.steps.title": "3 خطوات بسيطة",
+  "chatter.howToEarn.step1.title": "انسخ رابطك",
+  "chatter.howToEarn.step1.desc": "رابطك الفريد جاهز. انسخه بنقرة واحدة.",
+  "chatter.howToEarn.copied": "تم النسخ!",
+  "chatter.howToEarn.copy": "نسخ",
+  "chatter.howToEarn.step2.title": "شاركه",
+  "chatter.howToEarn.step2.desc": "شارك رابطك في مجموعات فيسبوك، واتساب، تيليغرام، منتديات المغتربين... في أي مكان يبحث فيه المغتربون عن مساعدة قانونية أو إدارية.",
+  "chatter.howToEarn.step3.title": "شخص ما يتصل ← أنت تكسب",
+  "chatter.howToEarn.step3.desc": "عندما ينقر شخص ما على رابطك ويجري مكالمة مدفوعة، تحصل تلقائياً على عمولتك. هذا كل شيء!",
+  "chatter.howToEarn.step3.highlight": "{amount} لكل مكالمة",
+  "chatter.howToEarn.commissions.title": "جميع مصادر دخلك",
+  "chatter.howToEarn.comm.clientCall": "مكالمة عميل",
+  "chatter.howToEarn.comm.perCall": "لكل مكالمة",
+  "chatter.howToEarn.comm.n1Call": "مكالمة إحالة N1",
+  "chatter.howToEarn.comm.passive": "دخل سلبي",
+  "chatter.howToEarn.comm.n2Call": "مكالمة إحالة N2",
+  "chatter.howToEarn.comm.activation": "مكافأة التفعيل",
+  "chatter.howToEarn.comm.activationDesc": "إحالة نشطة (مكالمتان)",
+  "chatter.howToEarn.comm.tierBonuses": "مكافآت المستوى",
+  "chatter.howToEarn.comm.tierDesc": "5 إلى 500 مجند",
+  "chatter.howToEarn.comm.recruitBonus": "مكافأة التجنيد",
+  "chatter.howToEarn.comm.recruitDesc": "الإحالة تجند شخصاً",
+  "chatter.howToEarn.tiers.title": "مكافآت التجنيد",
+  "chatter.howToEarn.tiers.subtitle": "جند محادثين آخرين وافتح مكافآت فريدة",
+  "chatter.howToEarn.captain.title": "أرباحك كقائد",
+  "chatter.howToEarn.captain.desc": "كقائد، تكسب عمولات على كل مكالمة يولدها فريقك (محادثوك N1 وN2). كلما جندت وحفزت ودعمت محادثيك أكثر، كانوا أكثر نشاطاً وكسبت أكثر.",
+  "chatter.howToEarn.captain.perCallLawyer": "لكل مكالمة محامي",
+  "chatter.howToEarn.captain.teamCall": "مكالمة فريقك",
+  "chatter.howToEarn.captain.perCallExpat": "لكل مكالمة مغترب",
+  "chatter.howToEarn.captain.role": "دورك كقائد:",
+  "chatter.howToEarn.captain.role1": "جند محادثين متحمسين",
+  "chatter.howToEarn.captain.role2": "ساعدهم على البدء وفهم النظام",
+  "chatter.howToEarn.captain.role3": "حفزهم بانتظام (بدون رسائل مزعجة!)",
+  "chatter.howToEarn.captain.role4": "تابع نشاطهم وادعمهم",
+  "chatter.howToEarn.captain.tiersTitle": "مستويات القائد الخاصة بك",
+  "chatter.howToEarn.captain.tiersSubtitle": "كلما زادت مكالمات فريقك، زادت مكافأتك الشهرية",
+  "chatter.howToEarn.captain.monthCalls": "{count} مكالمة هذا الشهر",
+  "chatter.howToEarn.captain.nextAt": "التالي: {tier} عند {count} مكالمة",
+  "chatter.howToEarn.noSpam.title": "رسائل مزعجة = إيقاف فوري",
+  "chatter.howToEarn.noSpam.desc": "الرسائل المزعجة محظورة بشكل صارم. لا تنشر نفس الرسالة بشكل متكرر، لا تنسخ بشكل جماعي، لا تضايق أحداً. شارك رابطك بشكل طبيعي ومفيد في محادثات ذات صلة. الرسائل المزعجة تضر بسمعة الجميع وتؤدي إلى إيقاف فوري ودائم.",
+  "chatter.howToEarn.tips.title": "نصائح للنجاح",
+  "chatter.howToEarn.tip1": "استهدف مجموعات المغتربين على فيسبوك وواتساب وتيليغرام — هناك عملاؤك المستقبليون",
+  "chatter.howToEarn.tip2": "أجب على أسئلة الناس بشكل طبيعي، ثم اقترح رابطك كحل",
+  "chatter.howToEarn.tip3": "جند محادثين آخرين — كل مكالمة من إحالاتك تكسبك أيضاً",
+  "chatter.howToEarn.tip4": "كن نشطاً بانتظام — السلاسل تظهر التزامك",
   "chatter.tools.badge": "كل شيء مشمول",
   "chatter.tools.community.desc": "مجموعة خاصة لمشاركة النصائح، الاحتفال بالنجاحات، والتعلم من الأفضل.",
   "chatter.tools.community.title": "مجتمع الشاترز",
@@ -1753,6 +1809,27 @@
   "chatter.training.subtitle": "طور مهاراتك",
   "chatter.training.tips.title": "نصائح للنجاح",
   "chatter.training.title": "التدريب",
+  "chatter.training.continue": "متابعة",
+  "chatter.training.empty": "لا توجد وحدات تدريبية متاحة حالياً.",
+  "chatter.training.finish": "إنهاء",
+  "chatter.training.goToQuiz": "الذهاب إلى الاختبار",
+  "chatter.training.loadError": "تعذر تحميل الوحدة.",
+  "chatter.training.loadingModule": "جاري تحميل الوحدة...",
+  "chatter.training.next": "التالي",
+  "chatter.training.prev": "السابق",
+  "chatter.training.required": "مطلوب",
+  "chatter.training.retry": "إعادة المحاولة",
+  "chatter.training.slideOf": "شريحة {current} / {total}",
+  "chatter.training.quiz.badgeReward": "تم فتح شارة جديدة!",
+  "chatter.training.quiz.bonusReward": "تم إضافة مكافأة ${amount}!",
+  "chatter.training.quiz.continue": "متابعة",
+  "chatter.training.quiz.failed": "ليس بعد...",
+  "chatter.training.quiz.passed": "تهانينا!",
+  "chatter.training.quiz.passedToast": "تم إكمال الوحدة!",
+  "chatter.training.quiz.passingScore": "الدرجة المطلوبة: {score}%",
+  "chatter.training.quiz.retry": "إعادة المحاولة",
+  "chatter.training.quiz.submit": "إرسال الاختبار",
+  "chatter.training.quiz.title": "اختبار التحقق",
   "chatter.validatedBalance": "الرصيد المعتمد",
   "chatter.what.badge": "ما ستروج له",
   "chatter.what.easy1": "حاجة حقيقية، حل حقيقي",
@@ -1834,6 +1911,11 @@
   "chatter.captain.qualityBonus": "مكافأة الجودة",
   "chatter.captain.qualityBonusEnabled": "مكافأة الجودة مفعّلة",
   "chatter.captain.qualityBonusDisabled": "مكافأة الجودة معطّلة",
+  "chatter.captain.qualityBonus.title": "مكافأة الجودة الشهرية",
+  "chatter.captain.qualityBonus.qualified": "مؤهل — +{amount} هذا الشهر",
+  "chatter.captain.qualityBonus.notQualified": "لم تتحقق المعايير هذا الشهر",
+  "chatter.captain.qualityBonus.recruits": "المجندون النشطون",
+  "chatter.captain.qualityBonus.commissions": "عمولات الفريق",
   "chatter.captain.promote": "ترقية إلى قائد",
   "chatter.captain.revoke": "إلغاء القيادة",
   "chatter.captain.countryCoverage": "تغطية الدول",
@@ -2473,6 +2555,11 @@
   "form.countriesSelected": "البلدان المختارة",
   "form.country": "الدولة",
   "form.country.placeholder": "اختر دولة",
+  "form.whatsapp": "رقم واتساب",
+  "form.whatsapp.countryCode": "رمز الدولة",
+  "form.whatsapp.placeholder": "5 12 34 56 78",
+  "form.whatsapp.hint": "يُستخدم فقط للتواصل الداخلي للفريق — لا يُشارك أبداً علنياً",
+  "form.error.whatsappInvalid": "يرجى إدخال رقم واتساب صالح (7-15 رقم)",
   "form.email": "البريد الإلكتروني",
   "form.email.placeholder": "your@email.com",
   "form.error.emailInvalid": "يرجى إدخال بريد إلكتروني صالح",

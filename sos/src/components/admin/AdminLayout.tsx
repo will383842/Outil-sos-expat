@@ -19,7 +19,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-import { adminMenuTree } from '../../config/adminMenu';
+import { adminMenuTree, type AdminMenuItem } from '../../config/adminMenu';
 import SidebarItem from './sidebar/SidebarItem';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -178,6 +178,26 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [loggingOut, setLoggingOut] = useState(false);
 
   // =========================================================================
+  // MENU FILTRE PAR ROLE
+  // =========================================================================
+  const filteredMenu = useMemo(() => {
+    const userRole = user?.role || 'admin';
+    if (userRole === 'admin') return adminMenuTree;
+    // Pour les rôles non-admin (ex: accountant), ne montrer que les items
+    // qui ont allowedRoles incluant ce rôle (ou sans restriction)
+    function filterItems(items: AdminMenuItem[]): AdminMenuItem[] {
+      return items.filter(item => {
+        if (!item.allowedRoles) return false; // pas de allowedRoles = admin only
+        return item.allowedRoles.includes(userRole);
+      }).map(item => ({
+        ...item,
+        children: item.children ? filterItems(item.children) : undefined,
+      }));
+    }
+    return filterItems(adminMenuTree);
+  }, [user?.role]);
+
+  // =========================================================================
   // EFFECTS
   // =========================================================================
 
@@ -298,11 +318,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     );
   }
 
-  // Guard 2: Not admin - vérifie le rôle admin
-  // On vérifie user.role === 'admin' au lieu de comparer les emails
-  // car user.email peut être undefined si le champ n'existe pas dans Firestore
-  const isAdmin = user?.role === 'admin';
-  if (!user || !isAdmin) {
+  // Guard 2: Vérifie que l'utilisateur a un rôle autorisé (admin ou accountant)
+  const isAllowedRole = user?.role === 'admin' || user?.role === 'accountant';
+  if (!user || !isAllowedRole) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
@@ -384,7 +402,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
               <div className="flex-1 overflow-y-auto">
                 <nav className="px-2 py-4 space-y-1">
-                  {adminMenuTree.map((node) => (
+                  {filteredMenu.map((node) => (
                     <SidebarItem key={node.id} node={node} />
                   ))}
 

@@ -112,6 +112,14 @@ export const registerChatter = onCall(
       }
     }
 
+    // WhatsApp validation (optional, but check format if provided)
+    if (input.whatsapp) {
+      const waDigits = input.whatsapp.replace(/\D/g, '').length;
+      if (waDigits < 8 || waDigits > 20) {
+        throw new HttpsError("invalid-argument", "WhatsApp number format is invalid");
+      }
+    }
+
     if (!input.country || input.country.length !== 2) {
       throw new HttpsError("invalid-argument", "Valid country code is required");
     }
@@ -447,6 +455,7 @@ export const registerChatter = onCall(
         firstName: input.firstName.trim(),
         lastName: input.lastName.trim(),
         ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}), // Only include phone if provided
+        ...(input.whatsapp?.trim() ? { whatsapp: input.whatsapp.trim() } : {}), // WhatsApp with country code
         country: input.country.toUpperCase(),
         interventionCountries: input.interventionCountries?.map((c) => c.toUpperCase()) || [input.country.toUpperCase()],
         language: input.language,

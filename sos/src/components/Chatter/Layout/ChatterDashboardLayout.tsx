@@ -15,7 +15,6 @@ import {
   Wallet,
   Users,
   Trophy,
-  FileText,
   LogOut,
   Copy,
   CheckCircle,
@@ -28,6 +27,8 @@ import {
   BookOpen,
   DollarSign,
   Crown,
+  TrendingUp,
+  Lightbulb,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
@@ -109,24 +110,29 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     const dashboardSlug = getTranslatedRouteSlug('chatter-dashboard' as RouteKey, langCode);
     const leaderboardSlug = getTranslatedRouteSlug('chatter-leaderboard' as RouteKey, langCode);
     const paymentsSlug = getTranslatedRouteSlug('chatter-payments' as RouteKey, langCode);
-    const postsSlug = getTranslatedRouteSlug('chatter-posts' as RouteKey, langCode);
     const zoomSlug = getTranslatedRouteSlug('chatter-zoom' as RouteKey, langCode);
     const trainingSlug = getTranslatedRouteSlug('chatter-training' as RouteKey, langCode);
     const referralsSlug = getTranslatedRouteSlug('chatter-referrals' as RouteKey, langCode);
     const referralEarningsSlug = getTranslatedRouteSlug('chatter-referral-earnings' as RouteKey, langCode);
     const referSlug = getTranslatedRouteSlug('chatter-refer' as RouteKey, langCode);
+    const progressionSlug = getTranslatedRouteSlug('chatter-progression' as RouteKey, langCode);
+    const howToEarnSlug = getTranslatedRouteSlug('chatter-how-to-earn' as RouteKey, langCode);
+    const captainTeamSlug = getTranslatedRouteSlug('chatter-captain-team' as RouteKey, langCode);
+    const profileSlug = getTranslatedRouteSlug('chatter-profile' as RouteKey, langCode);
 
     return {
       dashboard: `/${dashboardSlug}`,
       leaderboard: `/${leaderboardSlug}`,
+      progression: `/${progressionSlug}`,
+      howToEarn: `/${howToEarnSlug}`,
       payments: `/${paymentsSlug}`,
-      posts: `/${postsSlug}`,
       zoom: `/${zoomSlug}`,
       training: `/${trainingSlug}`,
       referrals: `/${referralsSlug}`,
       referralEarnings: `/${referralEarningsSlug}`,
       refer: `/${referSlug}`,
-      profile: '/chatter/profil',
+      captainTeam: `/${captainTeamSlug}`,
+      profile: `/${profileSlug}`,
     };
   }, [langCode]);
 
@@ -164,8 +170,9 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     if (activeKey) return activeKey;
     const path = location.pathname;
     if (path.includes('/leaderboard') || path.includes('/classement') || path.includes('/clasificacion') || path.includes('/rangliste') || path.includes('/reiting') || path.includes('/classificacao') || path.includes('/paihangbang')) return 'leaderboard';
+    if (path.includes('/progression') || path.includes('/progresion') || path.includes('/fortschritt') || path.includes('/progressao') || path.includes('/jindu') || path.includes('/pragati') || path.includes('/التقدم') || path.includes('/progress')) return 'progression';
+    if (path.includes('/comment-gagner') || path.includes('/how-to-earn') || path.includes('/como-ganar') || path.includes('/wie-verdienen') || path.includes('/kak-zarabotat') || path.includes('/como-ganhar') || path.includes('/ruhe-zhuanqian') || path.includes('/kaise-kamaye') || path.includes('/كيف-تكسب')) return 'how-to-earn';
     if (path.includes('/payments') || path.includes('/paiements') || path.includes('/pagos') || path.includes('/zahlungen') || path.includes('/platezhi') || path.includes('/pagamentos') || path.includes('/fukuan') || path.includes('/bhugtaan')) return 'payments';
-    if (path.includes('/posts') || path.includes('/publicaciones') || path.includes('/beitraege') || path.includes('/posty') || path.includes('/publicacoes') || path.includes('/tiezi')) return 'posts';
     if (path.includes('/zoom')) return 'zoom';
     if (path.includes('/training') || path.includes('/formation') || path.includes('/formacion') || path.includes('/schulung') || path.includes('/obuchenie') || path.includes('/formacao') || path.includes('/peixun') || path.includes('/prashikshan')) return 'training';
     // Referral routes
@@ -201,16 +208,22 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       labels: { fr: "Classement", en: "Leaderboard", es: "Clasificación", de: "Rangliste", ru: "Рейтинг", pt: "Classificação", ch: "排行榜", hi: "रैंकिंग", ar: "الترتيب" },
     },
     {
+      key: "progression",
+      icon: <TrendingUp className="mr-3 h-5 w-5" />,
+      route: translatedRoutes.progression,
+      labels: { fr: "Progression", en: "Progression", es: "Progresión", de: "Fortschritt", ru: "Прогресс", pt: "Progressão", ch: "进度", hi: "प्रगति", ar: "التقدم" },
+    },
+    {
+      key: "how-to-earn",
+      icon: <Lightbulb className="mr-3 h-5 w-5" />,
+      route: translatedRoutes.howToEarn,
+      labels: { fr: "Comment gagner", en: "How to earn", es: "Cómo ganar", de: "Wie verdienen", ru: "Как заработать", pt: "Como ganhar", ch: "如何赚钱", hi: "कैसे कमाएं", ar: "كيف تكسب" },
+    },
+    {
       key: "payments",
       icon: <Wallet className="mr-3 h-5 w-5" />,
       route: translatedRoutes.payments,
       labels: { fr: "Mes paiements", en: "My payments", es: "Mis pagos", de: "Meine Zahlungen", ru: "Мои платежи", pt: "Meus pagamentos", ch: "我的付款", hi: "मेरे भुगतान", ar: "مدفوعاتي" },
-    },
-    {
-      key: "posts",
-      icon: <FileText className="mr-3 h-5 w-5" />,
-      route: translatedRoutes.posts,
-      labels: { fr: "Mes posts", en: "My posts", es: "Mis posts", de: "Meine Beiträge", ru: "Мои посты", pt: "Meus posts", ch: "我的帖子", hi: "मेरे पोस्ट", ar: "منشوراتي" },
     },
     // DISABLED: Zoom bonus feature removed - not implemented
     // {
@@ -247,7 +260,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     ...(isCaptain ? [{
       key: "captain-team",
       icon: <Crown className="mr-3 h-5 w-5" />,
-      route: '/chatter/mon-equipe',
+      route: translatedRoutes.captainTeam,
       labels: { fr: "Mon équipe", en: "My Team", es: "Mi Equipo", de: "Mein Team", ru: "Моя команда", pt: "Minha Equipe", ch: "我的团队", hi: "मेरी टीम", ar: "فريقي" },
     }] : []),
     {
@@ -281,18 +294,23 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
                 {/* Header with user info */}
                 <div className={`p-6 ${CHATTER_THEME.header}`}>
                   <div className="flex items-center space-x-4">
-                    {user.profilePhoto ? (
-                      <img
-                        src={user.profilePhoto}
-                        alt={getUserFirstName()}
-                        className="w-16 h-16 rounded-full object-cover ring-2"
-                        loading="eager"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                        <User className="h-8 w-8 text-white" />
-                      </div>
-                    )}
+                    {(() => {
+                      const photo = [user.profilePhoto, user.photoURL, user.avatar].find(
+                        (u) => u && u.startsWith('http')
+                      );
+                      return photo ? (
+                        <img
+                          src={photo}
+                          alt={getUserFirstName()}
+                          className="w-16 h-16 rounded-full object-cover ring-2"
+                          loading="eager"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                          <User className="h-8 w-8 text-white" />
+                        </div>
+                      );
+                    })()}
                     <div>
                       <h2 className="text-xl font-extrabold leading-tight">
                         {getUserFullName()}

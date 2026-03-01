@@ -301,21 +301,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
                 {/* Header avec photo et infos utilisateur */}
                 <div className={`p-6 ${headerGradient}`}>
                   <div className="flex items-center space-x-4">
-                    {user.profilePhoto ? (
-                      <img
-                        src={user.profilePhoto}
-                        alt={getUserFirstName()}
-                        className="w-16 h-16 rounded-full object-cover ring-2 ring-white/80"
-                        loading="eager"
-                        decoding="async"
-                        width={64}
-                        height={64}
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                        <User className="h-8 w-8 text-white" />
-                      </div>
-                    )}
+                    {(() => {
+                      const photo = [user.profilePhoto, user.photoURL, user.avatar].find(
+                        (u) => u && u.startsWith('http')
+                      );
+                      return photo ? (
+                        <img
+                          src={photo}
+                          alt={getUserFirstName()}
+                          className="w-16 h-16 rounded-full object-cover ring-2 ring-white/80"
+                          loading="eager"
+                          decoding="async"
+                          width={64}
+                          height={64}
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                          <User className="h-8 w-8 text-white" />
+                        </div>
+                      );
+                    })()}
                     <div>
                       <h2 className="text-xl font-extrabold leading-tight">
                         {getUserFullName()}

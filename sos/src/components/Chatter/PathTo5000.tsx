@@ -31,7 +31,7 @@ import {
 
 // Commission constants (in cents)
 const COMMISSIONS = {
-  CLIENT_CALL: 1000,        // $10
+  CLIENT_CALL: 400,         // ~$3-5 average (lawyer=$5, expat=$3)
   N1_CALL: 100,             // $1
   N2_CALL: 50,              // $0.50
   ACTIVATION_BONUS: 500,    // $5

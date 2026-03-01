@@ -3,16 +3,19 @@
  *
  * Features:
  * - Calculates monthly rankings based on totalEarned during the month
- * - Awards commission MULTIPLIERS to Top 3 performers (not cash)
+ * - Awards CASH BONUSES to Top 3 performers
+ * - Eligibility: minimum $200 in direct commissions (totalEarned)
  * - Updates currentMonthRank on chatters for the new month
  * - Stores rankings history in chatter_monthly_rankings collection
  *
  * Schedule: Runs on 1st of each month at 00:30 UTC
  *
- * Rewards (commission multipliers for the following month):
- * - Top 1: 2.0x (commissions doubled)
- * - Top 2: 1.5x (commissions +50%)
- * - Top 3: 1.15x (commissions +15%)
+ * Rewards (cash bonuses):
+ * - Top 1: $200 (20000 cents)
+ * - Top 2: $100 (10000 cents)
+ * - Top 3: $50 (5000 cents)
+ *
+ * Eligibility: Chatter must have >= $200 in total direct commissions
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -21,7 +24,21 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { Chatter, ChatterMonthlyRanking, ChatterCommission } from "../types";
-import { getChatterConfig, getMonthlyTopMultiplier } from "../chatterConfig";
+import { getChatterConfig } from "../chatterConfig";
+
+// ============================================================================
+// MONTHLY TOP 3 CASH BONUS CONSTANTS
+// ============================================================================
+
+/** Cash bonus amounts for Top 3 (in cents) */
+const MONTHLY_TOP3_CASH_BONUS: Record<number, number> = {
+  1: 20000, // $200
+  2: 10000, // $100
+  3: 5000,  // $50
+};
+
+/** Minimum total direct commissions (in cents) to be eligible for Top 3 bonus */
+const MONTHLY_TOP3_MIN_ELIGIBILITY = 20000; // $200
 
 // ============================================================================
 // TYPES
@@ -198,110 +215,147 @@ async function calculateMonthlyRankings(monthId: string): Promise<MonthlyChatter
 }
 
 /**
- * Set commission multipliers for Top 3 performers (applied to next month's commissions)
+ * Award cash bonuses to Top 3 performers
  *
- * NEW SYSTEM (2026):
- * - Top 1: 2.0x (commissions doubled for the month)
- * - Top 2: 1.5x (commissions +50%)
- * - Top 3: 1.15x (commissions +15%)
+ * - Top 1: $200 cash bonus
+ * - Top 2: $100 cash bonus
+ * - Top 3: $50 cash bonus
  *
- * No cash bonus is created - instead, the multiplier is stored on the chatter
- * and applied when commissions are created during the following month.
+ * Eligibility: chatter must have >= $200 total direct commissions
+ * Creates a bonus_top3 commission credited to availableBalance
  */
-async function setTop3Multipliers(
+async function awardTop3Bonuses(
   rankings: MonthlyChatterStats[],
-  _monthId: string
-): Promise<{ chatterIds: string[]; multipliersSet: number }> {
+  monthId: string
+): Promise<{ commissionIds: string[]; totalAwarded: number }> {
   const db = getFirestore();
-  const config = await getChatterConfig();
+  await getChatterConfig(); // ensure config loaded
 
-  const chatterIds: string[] = [];
-  let multipliersSet = 0;
+  const commissionIds: string[] = [];
+  let totalAwarded = 0;
 
-  // Calculate the month when multiplier will be active (current month)
-  const activeMonth = getCurrentMonth();
-
-  // Set multipliers for top 3 (if they exist)
   const top3 = rankings.slice(0, 3);
 
   for (let i = 0; i < top3.length; i++) {
     const rank = i + 1;
     const chatterStats = top3[i];
-    const multiplier = getMonthlyTopMultiplier(rank, config);
+    const bonusAmount = MONTHLY_TOP3_CASH_BONUS[rank];
 
-    if (multiplier <= 1.0) {
-      logger.warn("[setTop3Multipliers] No multiplier configured for rank", { rank });
+    if (!bonusAmount) {
+      logger.warn("[awardTop3Bonuses] No bonus configured for rank", { rank });
       continue;
     }
 
     // Get chatter data
     const chatterDoc = await db.collection("chatters").doc(chatterStats.chatterId).get();
-
     if (!chatterDoc.exists) {
-      logger.error("[setTop3Multipliers] Chatter not found", { chatterId: chatterStats.chatterId });
+      logger.error("[awardTop3Bonuses] Chatter not found", { chatterId: chatterStats.chatterId });
       continue;
     }
 
-    // Set the multiplier on the chatter for the current month
+    const chatter = chatterDoc.data() as Chatter;
+
+    // Check eligibility: minimum $200 in total direct commissions
+    if ((chatter.totalEarned || 0) < MONTHLY_TOP3_MIN_ELIGIBILITY) {
+      logger.info("[awardTop3Bonuses] Chatter not eligible (totalEarned below minimum)", {
+        rank,
+        chatterId: chatterStats.chatterId,
+        totalEarned: chatter.totalEarned || 0,
+        minRequired: MONTHLY_TOP3_MIN_ELIGIBILITY,
+      });
+      continue;
+    }
+
+    // Create cash bonus commission
+    const commissionRef = db.collection("chatter_commissions").doc();
+    const bonusDollars = (bonusAmount / 100).toFixed(0);
+
+    const commission: Partial<ChatterCommission> = {
+      id: commissionRef.id,
+      chatterId: chatterStats.chatterId,
+      chatterEmail: chatter.email || "",
+      chatterCode: chatter.affiliateCodeClient || "",
+      type: "bonus_top3",
+      sourceType: "bonus",
+      sourceDetails: {
+        bonusType: "monthly_top3",
+        bonusReason: `Top ${rank} du mois ${monthId} — prime de $${bonusDollars}`,
+        rank,
+        month: monthId,
+      },
+      baseAmount: bonusAmount,
+      amount: bonusAmount,
+      levelBonus: 0,
+      top3Bonus: 0,
+      zoomBonus: 0,
+      streakBonus: 1.0,
+      monthlyTopMultiplier: 1.0,
+      calculationDetails: `Prime Top ${rank}: $${bonusDollars}`,
+      currency: "USD",
+      status: "available", // Immediately available (bonus, no validation delay)
+      description: `Prime mensuelle Top ${rank} — $${bonusDollars}`,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      availableAt: Timestamp.now(),
+    };
+
+    await commissionRef.set(commission);
+
+    // Credit the chatter's balance immediately
     await db.collection("chatters").doc(chatterStats.chatterId).update({
-      monthlyTopMultiplier: multiplier,
-      monthlyTopMultiplierMonth: activeMonth,
+      availableBalance: FieldValue.increment(bonusAmount),
+      totalEarned: FieldValue.increment(bonusAmount),
+      currentMonthRank: rank,
       updatedAt: Timestamp.now(),
     });
 
     // Create notification for chatter
     const notificationRef = db.collection("chatter_notifications").doc();
-    const bonusPercentage = Math.round((multiplier - 1) * 100);
 
     await notificationRef.set({
       id: notificationRef.id,
       chatterId: chatterStats.chatterId,
       type: "system",
-      title: `Top ${rank} du mois !`,
+      title: `Top ${rank} du mois — $${bonusDollars} !`,
       titleTranslations: {
-        en: `Top ${rank} of the month!`,
-        es: `Top ${rank} del mes!`,
-        pt: `Top ${rank} do mês!`,
+        en: `Top ${rank} of the month — $${bonusDollars}!`,
+        es: `Top ${rank} del mes — $${bonusDollars}!`,
+        pt: `Top ${rank} do mês — $${bonusDollars}!`,
       },
-      message: `Félicitations ! Vous étiez Top ${rank} le mois dernier. Toutes vos commissions ce mois-ci seront majorées de +${bonusPercentage}% !`,
+      message: `Félicitations ! Vous étiez Top ${rank} le mois dernier. Une prime de $${bonusDollars} a été créditée sur votre solde !`,
       messageTranslations: {
-        en: `Congratulations! You were Top ${rank} last month. All your commissions this month will be boosted by +${bonusPercentage}%!`,
+        en: `Congratulations! You were Top ${rank} last month. A $${bonusDollars} bonus has been credited to your balance!`,
+        es: `¡Felicidades! Fuiste Top ${rank} el mes pasado. ¡Un bono de $${bonusDollars} fue acreditado a tu saldo!`,
+        pt: `Parabéns! Você foi Top ${rank} no mês passado. Um bônus de $${bonusDollars} foi creditado no seu saldo!`,
       },
       actionUrl: "/chatter/dashboard",
       isRead: false,
       emailSent: false,
       data: {
         rank,
-        multiplier,
-        activeMonth,
+        bonusAmount,
+        monthId,
       },
       createdAt: Timestamp.now(),
     });
 
-    chatterIds.push(chatterStats.chatterId);
-    multipliersSet++;
+    commissionIds.push(commissionRef.id);
+    totalAwarded += bonusAmount;
 
-    logger.info("[setTop3Multipliers] Multiplier set", {
+    logger.info("[awardTop3Bonuses] Cash bonus awarded", {
       rank,
       chatterId: chatterStats.chatterId,
       chatterName: chatterStats.chatterName,
-      multiplier,
-      activeMonth,
+      bonusAmount,
+      commissionId: commissionRef.id,
     });
   }
 
-  return { chatterIds, multipliersSet };
+  return { commissionIds, totalAwarded };
 }
 
-// Keep old function name as alias for backwards compatibility
-const awardTop3Bonuses = async (
-  rankings: MonthlyChatterStats[],
-  monthId: string
-): Promise<{ commissionIds: string[]; totalAwarded: number }> => {
-  const result = await setTop3Multipliers(rankings, monthId);
-  // Return compatible format (no commissions created, no cash awarded)
-  return { commissionIds: result.chatterIds, totalAwarded: result.multipliersSet };
-};
+// Legacy alias
+const setTop3Multipliers = awardTop3Bonuses;
 
 /**
  * Update currentMonthRank for all chatters

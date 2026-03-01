@@ -727,7 +727,9 @@ const UserAvatar = memo<UserAvatarProps>(function UserAvatar({
 
   const sizeClasses = size === "sm" ? "w-10 h-10" : "w-12 h-12";
   const u = user as WithAuthExtras | null;
-  const photoUrl = u?.profilePhoto || u?.photoURL;
+  const photoUrl = [u?.profilePhoto, u?.photoURL, u?.avatar].find(
+    (p) => p && p.startsWith('http')
+  ) || null;
   const fallbackUser = intl.formatMessage({ id: "header.auth.user" });
   const displayName = u?.firstName || u?.displayName || u?.email || fallbackUser;
 
@@ -1595,12 +1597,14 @@ const Header: React.FC = () => {
     if (affiliateRole === 'chatter') {
       return [
         { path: '/chatter/tableau-de-bord', label: intl.formatMessage({ id: 'chatter.menu.dashboard', defaultMessage: 'Tableau de bord' }) },
-        { path: '/chatter/gains', label: intl.formatMessage({ id: 'chatter.menu.earnings', defaultMessage: 'Mes gains' }) },
-        { path: '/chatter/filleuls', label: intl.formatMessage({ id: 'chatter.menu.referrals', defaultMessage: 'Mes filleuls' }) },
-        { path: '/chatter/formations', label: intl.formatMessage({ id: 'chatter.menu.training', defaultMessage: 'Formations' }) },
-        { path: '/chatter/posts', label: intl.formatMessage({ id: 'chatter.menu.posts', defaultMessage: 'Posts' }) },
         { path: '/chatter/classement', label: intl.formatMessage({ id: 'chatter.menu.leaderboard', defaultMessage: 'Classement' }) },
+        { path: '/chatter/progression', label: intl.formatMessage({ id: 'chatter.menu.progression', defaultMessage: 'Progression' }) },
+        { path: '/chatter/comment-gagner', label: intl.formatMessage({ id: 'chatter.menu.howToEarn', defaultMessage: 'Comment gagner' }) },
         { path: '/chatter/paiements', label: intl.formatMessage({ id: 'chatter.menu.payments', defaultMessage: 'Paiements' }) },
+        { path: '/chatter/formation', label: intl.formatMessage({ id: 'chatter.menu.training', defaultMessage: 'Formation' }) },
+        { path: '/chatter/filleuls', label: intl.formatMessage({ id: 'chatter.menu.referrals', defaultMessage: 'Mes filleuls' }) },
+        { path: '/chatter/gains-parrainage', label: intl.formatMessage({ id: 'chatter.menu.referralEarnings', defaultMessage: 'Gains parrainage' }) },
+        { path: '/chatter/parrainer', label: intl.formatMessage({ id: 'chatter.menu.refer', defaultMessage: 'Parrainer' }) },
         { path: '/chatter/profil', label: intl.formatMessage({ id: 'chatter.menu.profile', defaultMessage: 'Mon profil' }) },
       ];
     }

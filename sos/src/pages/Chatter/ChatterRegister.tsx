@@ -182,6 +182,10 @@ const ChatterRegister: React.FC = () => {
           email: data.email,
           country: data.country,
           interventionCountries: data.interventionCountries,
+          // WhatsApp: combine country code + number into full international format
+          ...(data.whatsappNumber?.trim() ? {
+            whatsapp: `${data.whatsappCountryCode || ''}${data.whatsappNumber.replace(/\D/g, '')}`,
+          } : {}),
           language: data.language,
           additionalLanguages: data.additionalLanguages,
           recruitmentCode: data.referralCode || undefined,

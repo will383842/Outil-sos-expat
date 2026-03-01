@@ -472,14 +472,14 @@ const AdminChatterConfig: React.FC = () => {
               <div className="flex items-center gap-2">
                 <input
                   type="number"
-                  value={formData.commissionCaptainCallAmountLawyer ?? config?.commissionCaptainCallAmountLawyer ?? 200}
+                  value={formData.commissionCaptainCallAmountLawyer ?? config?.commissionCaptainCallAmountLawyer ?? 300}
                   onChange={(e) => handleChange('commissionCaptainCallAmountLawyer', parseInt(e.target.value))}
                   className={UI.input}
                   min={0}
                   step={50}
                 />
                 <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  = {formatCents(formData.commissionCaptainCallAmountLawyer ?? config?.commissionCaptainCallAmountLawyer ?? 200)}
+                  = {formatCents(formData.commissionCaptainCallAmountLawyer ?? config?.commissionCaptainCallAmountLawyer ?? 300)}
                 </span>
               </div>
             </div>
@@ -490,14 +490,14 @@ const AdminChatterConfig: React.FC = () => {
               <div className="flex items-center gap-2">
                 <input
                   type="number"
-                  value={formData.commissionCaptainCallAmountExpat ?? config?.commissionCaptainCallAmountExpat ?? 100}
+                  value={formData.commissionCaptainCallAmountExpat ?? config?.commissionCaptainCallAmountExpat ?? 200}
                   onChange={(e) => handleChange('commissionCaptainCallAmountExpat', parseInt(e.target.value))}
                   className={UI.input}
                   min={0}
                   step={50}
                 />
                 <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  = {formatCents(formData.commissionCaptainCallAmountExpat ?? config?.commissionCaptainCallAmountExpat ?? 100)}
+                  = {formatCents(formData.commissionCaptainCallAmountExpat ?? config?.commissionCaptainCallAmountExpat ?? 200)}
                 </span>
               </div>
             </div>

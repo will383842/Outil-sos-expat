@@ -304,12 +304,15 @@ export type RouteKey =
   | "chatter-payments"     // /chatter/paiements -> /chatter/payments, etc.
   | "chatter-suspended"    // /chatter/suspendu -> /chatter/suspended, etc.
   | "chatter-country-selection" // /chatter/pays -> /chatter/country-selection, etc.
-  | "chatter-posts"        // /chatter/posts -> /chatter/posts, etc.
   | "chatter-zoom"         // /chatter/zoom -> /chatter/zoom, etc.
   | "chatter-training"     // /chatter/formation -> /chatter/training, etc.
   | "chatter-referrals"    // /chatter/filleuls -> /chatter/referrals, etc.
   | "chatter-referral-earnings" // /chatter/gains-parrainage -> /chatter/referral-earnings, etc.
   | "chatter-refer"        // /chatter/parrainer -> /chatter/refer, etc.
+  | "chatter-progression"  // /chatter/progression -> /chatter/progression, etc.
+  | "chatter-how-to-earn"  // /chatter/comment-gagner -> /chatter/how-to-earn, etc.
+  | "chatter-captain-team" // /chatter/mon-equipe -> /chatter/my-team, etc.
+  | "chatter-profile"      // /chatter/profil -> /chatter/profile, etc.
   | "pioneers"             // /pioneers -> /pioneers, etc.
   // Influencer routes
   | "influencer-landing"      // /devenir-influenceur -> /become-influencer, etc.
@@ -1044,17 +1047,6 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     hi: "chatter/desh",
     ar: "مسوق/البلدان",
   },
-  "chatter-posts": {
-    fr: "chatter/posts",
-    en: "chatter/posts",
-    es: "chatter/publicaciones",
-    de: "chatter/beitraege",
-    ru: "chatter/posty",
-    pt: "chatter/publicacoes",
-    ch: "chatter/tiezi",
-    hi: "chatter/post",
-    ar: "مسوق/المنشورات",
-  },
   "chatter-zoom": {
     fr: "chatter/zoom",
     en: "chatter/zoom",
@@ -1109,6 +1101,50 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "chatter/tuijian-pengyou",
     hi: "chatter/refer-kare",
     ar: "مسوق/إحالة",
+  },
+  "chatter-progression": {
+    fr: "chatter/progression",
+    en: "chatter/progression",
+    es: "chatter/progresion",
+    de: "chatter/fortschritt",
+    ru: "chatter/progress",
+    pt: "chatter/progressao",
+    ch: "chatter/jindu",
+    hi: "chatter/pragati",
+    ar: "مسوق/التقدم",
+  },
+  "chatter-how-to-earn": {
+    fr: "chatter/comment-gagner",
+    en: "chatter/how-to-earn",
+    es: "chatter/como-ganar",
+    de: "chatter/wie-verdienen",
+    ru: "chatter/kak-zarabotat",
+    pt: "chatter/como-ganhar",
+    ch: "chatter/ruhe-zhuanqian",
+    hi: "chatter/kaise-kamaye",
+    ar: "مسوق/كيف-تكسب",
+  },
+  "chatter-captain-team": {
+    fr: "chatter/mon-equipe",
+    en: "chatter/my-team",
+    es: "chatter/mi-equipo",
+    de: "chatter/mein-team",
+    ru: "chatter/moya-komanda",
+    pt: "chatter/minha-equipe",
+    ch: "chatter/wode-tuandui",
+    hi: "chatter/meri-team",
+    ar: "مسوق/فريقي",
+  },
+  "chatter-profile": {
+    fr: "chatter/profil",
+    en: "chatter/profile",
+    es: "chatter/perfil",
+    de: "chatter/profil",
+    ru: "chatter/profil",
+    pt: "chatter/perfil",
+    ch: "chatter/geren-ziliao",
+    hi: "chatter/profile",
+    ar: "مسوق/الملف-الشخصي",
   },
   "pioneers": {
     fr: "pioneers",

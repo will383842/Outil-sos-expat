@@ -249,7 +249,7 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
           navigate("/chatter/filleuls");
           break;
         case "caller":
-          navigate("/chatter/posts");
+          navigate("/chatter/parrainer");
           break;
         case "team":
           navigate("/chatter/parrainer");

@@ -49,7 +49,7 @@ interface RevenueCalculatorCardProps {
 // ============================================================================
 
 const GAINS = {
-  CLIENT_CALL: 1000,        // 10$ in cents
+  CLIENT_CALL: 400,         // ~$3-5 average in cents (lawyer=$5, expat=$3)
   N1_CALL: 100,             // 1$ in cents
   N2_CALL: 50,              // 0.50$ in cents
   ACTIVATION_BONUS: 500,    // 5$ in cents
@@ -657,7 +657,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                   <div className="text-xs dark:text-blue-300">
                     <FormattedMessage
                       id="calculator.rates.info"
-                      defaultMessage="Rates: Your calls = $10 | N1 calls = $1 | N2 calls = $0.50"
+                      defaultMessage="Rates: Your calls = $3-5 | N1 calls = $1 | N2 calls = $0.50"
                     />
                   </div>
                 </div>

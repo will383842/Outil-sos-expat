@@ -21,20 +21,17 @@ import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
 import Stripe from 'stripe';
 
-// Import credentials from existing lib modules
+// Import secrets directly from centralized secrets (avoid re-export aliases)
 import {
-  TWILIO_ACCOUNT_SID_SECRET,
-  TWILIO_AUTH_TOKEN_SECRET,
-  getTwilioAccountSid,
-  getTwilioAuthToken,
-} from '../lib/twilio';
-import {
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
   STRIPE_SECRET_KEY_LIVE,
   STRIPE_SECRET_KEY_TEST,
-  getStripeSecretKey,
-} from '../lib/stripe';
+  OPENAI_API_KEY,
+} from '../lib/secrets';
+import { getTwilioAccountSid, getTwilioAuthToken } from '../lib/twilio';
+import { getStripeSecretKey } from '../lib/stripe';
 import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
-import { OPENAI_API_KEY } from '../lib/secrets';
 
 // ============================================================================
 // TYPES
@@ -789,8 +786,8 @@ export const checkServiceBalances = onSchedule(
     cpu: 0.083,
     timeoutSeconds: 120,
     secrets: [
-      TWILIO_ACCOUNT_SID_SECRET,
-      TWILIO_AUTH_TOKEN_SECRET,
+      TWILIO_ACCOUNT_SID,
+      TWILIO_AUTH_TOKEN,
       STRIPE_SECRET_KEY_LIVE,
       STRIPE_SECRET_KEY_TEST,
       OPENAI_API_KEY,
@@ -1112,8 +1109,8 @@ export const triggerServiceBalanceCheck = onCall(
     timeoutSeconds: 120,
     cors: ALLOWED_ORIGINS,
     secrets: [
-      TWILIO_ACCOUNT_SID_SECRET,
-      TWILIO_AUTH_TOKEN_SECRET,
+      TWILIO_ACCOUNT_SID,
+      TWILIO_AUTH_TOKEN,
       STRIPE_SECRET_KEY_LIVE,
       STRIPE_SECRET_KEY_TEST,
       OPENAI_API_KEY,

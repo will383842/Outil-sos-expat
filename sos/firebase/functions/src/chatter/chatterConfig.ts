@@ -137,7 +137,7 @@ export const DEFAULT_CHATTER_CONFIG_SETTINGS: Omit<
   },
 
   gains: {
-    clientCall: 1000,      // $10
+    clientCall: 300,       // $3 (fallback, overridden by lawyer/expat specific amounts)
     n1Call: 100,           // $1
     n2Call: 50,            // $0.50
     activationBonus: 500,  // $5

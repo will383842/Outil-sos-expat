@@ -167,6 +167,8 @@ export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
 
         // Professional info
         profilePhoto: data.profilePhoto || null,
+        photoURL: data.profilePhoto || null,
+        avatar: data.profilePhoto || null,
         bio: data.bio || null,
         specialties: data.specialties || [],
         practiceCountries: data.practiceCountries || [],

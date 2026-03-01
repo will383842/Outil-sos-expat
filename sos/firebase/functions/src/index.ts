@@ -381,14 +381,59 @@ export {
   onPayoutCompleted,
   onSubscriptionPaymentReceived,
 
-  // Admin Callable Functions
+  // Triggers - Commission entries
+  onChatterCommissionCreated,
+  onInfluencerCommissionCreated,
+  onBloggerCommissionCreated,
+  onGroupAdminCommissionCreated,
+  onAffiliateCommissionCreated,
+
+  // Triggers - Withdrawals & Provider transfers
+  onWithdrawalCompleted,
+  onProviderTransferCompleted,
+
+  // Scheduled - ECB exchange rates
+  fetchDailyExchangeRates,
+
+  // Admin Callable Functions - Entries
   postJournalEntry,
   reverseJournalEntry,
   regenerateJournalEntry,
   getAccountingStats,
   generateOssVatDeclaration,
   getAccountBalances,
+
+  // Admin Callable Functions - Period closing & archiving
+  closeAccountingPeriod,
+  reopenAccountingPeriod,
+  getClosingReport,
+  archiveAccountingPeriod,
+  verifyArchive,
+
+  // Admin Callable Functions - Backfill
+  backfillCommissions,
+  backfillWithdrawals,
+
+  // Admin Callable Functions - ECB rates
+  triggerFetchExchangeRates,
+  triggerFetchHistoricalRates,
+
+  // Admin Callable Functions - Supporting Documents
+  createSupportingDocument,
+  updateSupportingDocument,
+  archiveSupportingDocument,
+  listSupportingDocuments,
+  getSupportingDocument,
+  linkDocumentToJournalEntry,
+  getDocumentUploadUrl,
+  validateSupportingDocument,
+  getDocumentStats,
+  searchJournalEntries,
+  exportSupportingDocuments,
 } from "./accounting";
+
+// AI Tax Watch - Semiannual tax compliance monitoring
+export { aiTaxWatch } from "./scheduled/aiTaxWatch";
 
 // Alias pour usage local dans GLOBAL_SECRETS
 const PAYPAL_CLIENT_ID = _PAYPAL_CLIENT_ID;
@@ -2426,7 +2471,7 @@ export { syncFromOutil } from './triggers/syncFromOutil';
 export { generateOutilToken } from './auth/generateOutilToken';
 
 // ========== ADMIN CLAIMS ==========
-export { setAdminClaims, initializeAdminClaims, bootstrapFirstAdmin } from './auth/setAdminClaims';
+export { setAdminClaims, initializeAdminClaims, bootstrapFirstAdmin, setAccountantClaims } from './auth/setAdminClaims';
 
 // ========== RESTORE USER ROLES (BUG FIX 30/12/2025) ==========
 // Scripts de restauration pour corriger les rôles perdus suite aux bugs
@@ -2702,9 +2747,9 @@ export const createUserDocument = onCall(
           firstName,
           lastName,
           fullName,
-          photoURL: request.data.photoURL || null,
+          photoURL: request.data.profilePhoto || request.data.photoURL || '/default-avatar.png',
           profilePhoto: request.data.profilePhoto || request.data.photoURL || '/default-avatar.png',
-          avatar: request.data.photoURL || '/default-avatar.png',
+          avatar: request.data.profilePhoto || request.data.photoURL || '/default-avatar.png',
           role,
           provider,
           isVerified: request.data.isVerified ?? false,
@@ -2768,8 +2813,8 @@ export const createUserDocument = onCall(
               name: fullName,
               displayName: fullName,
               profilePhoto: request.data.profilePhoto || request.data.photoURL || '/default-avatar.png',
-              photoURL: request.data.photoURL || '/default-avatar.png',
-              avatar: request.data.photoURL || '/default-avatar.png',
+              photoURL: request.data.profilePhoto || request.data.photoURL || '/default-avatar.png',
+              avatar: request.data.profilePhoto || request.data.photoURL || '/default-avatar.png',
               phone: request.data.phone || null,
               phoneNumber: request.data.phone || null,
               phoneCountryCode: request.data.phoneCountryCode || null,

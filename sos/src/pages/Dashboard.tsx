@@ -704,7 +704,9 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
         "",
       residenceCountry:
         (user as { residenceCountry?: string })?.residenceCountry || "",
-      profilePhoto: user?.profilePhoto || user?.photoURL || "",
+      profilePhoto: [user?.profilePhoto, user?.photoURL, user?.avatar].find(
+        (u) => u && u.startsWith('http')
+      ) || "",
       isOnline: user?.isOnline ?? true,
       preferredLanguage:
         (user as { preferredLanguage?: "fr" | "en" })?.preferredLanguage ||
@@ -1977,17 +1979,22 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
               <div className={`${softCard} overflow-hidden`}>
                 <div className={`p-6 ${headerGradient}`}>
                   <div className="flex items-center space-x-4">
-                    {user.profilePhoto ? (
-                      <img
-                        src={`${user.profilePhoto}?v=${(user.updatedAt as Date | undefined)?.valueOf?.() || Date.now()}`}
-                        alt={getUserFirstName()}
-                        className="w-16 h-16 rounded-full object-cover ring-2 ring-white/80"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                        <User className="h-8 w-8 text-white" />
-                      </div>
-                    )}
+                    {(() => {
+                      const photo = [user.profilePhoto, user.photoURL, user.avatar].find(
+                        (u) => u && u.startsWith('http')
+                      );
+                      return photo ? (
+                        <img
+                          src={`${photo}?v=${(user.updatedAt as Date | undefined)?.valueOf?.() || Date.now()}`}
+                          alt={getUserFirstName()}
+                          className="w-16 h-16 rounded-full object-cover ring-2 ring-white/80"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                          <User className="h-8 w-8 text-white" />
+                        </div>
+                      );
+                    })()}
                     <div>
                       <h2 className="text-xl font-extrabold leading-tight">
                         {getUserFullName()}
@@ -2440,17 +2447,22 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                           {intl.formatMessage({ id: "dashboard.photoBio" })}
                         </h3>
                         <div className="flex items-start gap-6">
-                          {user.profilePhoto ? (
-                            <img
-                              src={`${user.profilePhoto}?v=${(user.updatedAt as Date | undefined)?.valueOf?.() || Date.now()}`}
-                              alt={getUserFirstName()}
-                              className="w-32 h-32 rounded-full object-cover border border-white/30 dark:border-white/10"
-                            />
-                          ) : (
-                            <div className="w-32 h-32 bg-red-100 dark:bg-white/10 rounded-full flex items-center justify-center">
-                              <User className="h-16 w-16 text-red-600 dark:text-white/70" />
-                            </div>
-                          )}
+                          {(() => {
+                            const photo = [user.profilePhoto, user.photoURL, user.avatar].find(
+                              (u) => u && u.startsWith('http')
+                            );
+                            return photo ? (
+                              <img
+                                src={`${photo}?v=${(user.updatedAt as Date | undefined)?.valueOf?.() || Date.now()}`}
+                                alt={getUserFirstName()}
+                                className="w-32 h-32 rounded-full object-cover border border-white/30 dark:border-white/10"
+                              />
+                            ) : (
+                              <div className="w-32 h-32 bg-red-100 dark:bg-white/10 rounded-full flex items-center justify-center">
+                                <User className="h-16 w-16 text-red-600 dark:text-white/70" />
+                              </div>
+                            );
+                          })()}
                           <div className="flex-1">
                             <p className={`${UI.text} whitespace-pre-wrap`}>
                               {(user as { bio?: string }).bio ||

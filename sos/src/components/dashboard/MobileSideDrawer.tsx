@@ -266,17 +266,22 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-white/10">
           <div className="flex items-center gap-3">
-            {user?.profilePhoto?.startsWith('http') ? (
-              <img
-                src={user.profilePhoto}
-                alt={`${user?.firstName || 'User'} profile photo`}
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-white/20"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
-              </div>
-            )}
+            {(() => {
+              const photo = [user?.profilePhoto, user?.photoURL, user?.avatar].find(
+                (u) => u && u.startsWith('http')
+              );
+              return photo ? (
+                <img
+                  src={photo}
+                  alt={`${user?.firstName || 'User'} profile photo`}
+                  className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-white/20"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+              );
+            })()}
             <div>
               <p className="font-semibold text-gray-900 dark:text-white text-sm">
                 {user?.firstName || user?.email?.split('@')[0]}

@@ -158,13 +158,14 @@ const ChatterDashboard = lazy(() => import('./pages/Chatter/ChatterDashboard'));
 const ChatterLeaderboard = lazy(() => import('./pages/Chatter/ChatterLeaderboard'));
 const ChatterPayments = lazy(() => import('./pages/Chatter/ChatterPayments'));
 const ChatterSuspended = lazy(() => import('./pages/Chatter/ChatterSuspended'));
-const ChatterPosts = lazy(() => import('./pages/Chatter/ChatterPosts'));
 const ChatterTraining = lazy(() => import('./pages/Chatter/ChatterTraining'));
 const ChatterReferrals = lazy(() => import('./pages/Chatter/ChatterReferrals'));
 const ChatterReferralEarnings = lazy(() => import('./pages/Chatter/ChatterReferralEarnings'));
 const ChatterRefer = lazy(() => import('./pages/Chatter/ChatterRefer'));
 const ChatterProfile = lazy(() => import('./pages/Chatter/ChatterProfile'));
 const ChatterCaptainDashboard = lazy(() => import('./pages/Chatter/ChatterCaptainDashboard'));
+const ChatterProgression = lazy(() => import('./pages/Chatter/ChatterProgression'));
+const ChatterHowToEarn = lazy(() => import('./pages/Chatter/ChatterHowToEarn'));
 // Influencer System
 const InfluencerLanding = lazy(() => import('./pages/Influencer/InfluencerLanding'));
 const InfluencerRegister = lazy(() => import('./pages/Influencer/InfluencerRegister'));
@@ -386,15 +387,16 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/chatter/telegram", component: ChatterTelegramOnboarding, protected: true, role: 'chatter', translated: "chatter-telegram" },
   { path: "/chatter/tableau-de-bord", component: ChatterDashboard, protected: true, role: 'chatter', translated: "chatter-dashboard" },
   { path: "/chatter/classement", component: ChatterLeaderboard, protected: true, role: 'chatter', translated: "chatter-leaderboard" },
+  { path: "/chatter/progression", component: ChatterProgression, protected: true, role: 'chatter', translated: "chatter-progression" },
+  { path: "/chatter/comment-gagner", component: ChatterHowToEarn, protected: true, role: 'chatter', translated: "chatter-how-to-earn" },
   { path: "/chatter/paiements", component: ChatterPayments, protected: true, role: 'chatter', translated: "chatter-payments" },
   { path: "/chatter/suspendu", component: ChatterSuspended, protected: true, role: 'chatter', translated: "chatter-suspended" },
-  { path: "/chatter/posts", component: ChatterPosts, protected: true, role: 'chatter', translated: "chatter-posts" },
   { path: "/chatter/formation", component: ChatterTraining, protected: true, role: 'chatter', translated: "chatter-training" },
   { path: "/chatter/filleuls", component: ChatterReferrals, protected: true, role: 'chatter', translated: "chatter-referrals" },
   { path: "/chatter/gains-parrainage", component: ChatterReferralEarnings, protected: true, role: 'chatter', translated: "chatter-referral-earnings" },
   { path: "/chatter/parrainer", component: ChatterRefer, protected: true, role: 'chatter', translated: "chatter-refer" },
-  { path: "/chatter/mon-equipe", component: ChatterCaptainDashboard, protected: true, role: 'chatter' },
-  { path: "/chatter/profil", component: ChatterProfile, protected: true, role: 'chatter' },
+  { path: "/chatter/mon-equipe", component: ChatterCaptainDashboard, protected: true, role: 'chatter', translated: "chatter-captain-team" },
+  { path: "/chatter/profil", component: ChatterProfile, protected: true, role: 'chatter', translated: "chatter-profile" },
 
   // Influencer System Routes - Protected routes for registered influencers
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un influenceur ne peut pas être client/lawyer/expat/chatter.

@@ -17,6 +17,9 @@ import {
   RefundData,
   PayoutData,
   SubscriptionData,
+  CommissionData,
+  WithdrawalData,
+  AffiliateUserType,
   AccountBalance,
   OssVatDeclaration,
   OssCountryDetail,
@@ -28,9 +31,12 @@ import {
   generateRefundEntry,
   generatePayoutEntry,
   generateSubscriptionEntry,
+  generateCommissionEntry,
+  generateWithdrawalEntry,
+  generateProviderTransferEntry,
   validateJournalEntry,
-  // calculateVatInfo - available for future use
 } from './generateJournalEntry';
+import { convertCentsToEur } from './ecbExchangeRateService';
 
 // =============================================================================
 // INITIALISATION
@@ -67,7 +73,18 @@ const COLLECTIONS = {
   USERS: 'users',
   ACCOUNTING_SEQUENCES: 'accounting_sequences',
   ACCOUNTING_PERIODS: 'accounting_periods',
+  EXCHANGE_RATES: 'exchange_rates',
+  CHATTER_COMMISSIONS: 'chatter_commissions',
+  INFLUENCER_COMMISSIONS: 'influencer_commissions',
+  BLOGGER_COMMISSIONS: 'blogger_commissions',
+  GROUP_ADMIN_COMMISSIONS: 'group_admin_commissions',
+  AFFILIATE_COMMISSIONS: 'affiliate_commissions',
+  PAYMENT_WITHDRAWALS: 'payment_withdrawals',
 } as const;
+
+// Cache: period closed status (avoid repeated Firestore reads)
+const closedPeriodCache: Map<string, { closed: boolean; cachedAt: number }> = new Map();
+const PERIOD_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 // =============================================================================
 // UTILITAIRES
@@ -81,17 +98,10 @@ function round2(value: number): number {
 }
 
 /**
- * Convertir centimes en euros
- */
-function centsToEur(cents: number): number {
-  return round2(cents / 100);
-}
-
-/**
  * Generer le prochain numero de sequence
  */
 async function getNextSequence(
-  type: 'PAYMENT' | 'REFUND' | 'PAYOUT' | 'SUBSCRIPTION',
+  type: 'PAYMENT' | 'REFUND' | 'PAYOUT' | 'SUBSCRIPTION' | 'COMMISSION' | 'WITHDRAWAL' | 'PROVIDER_TRANSFER',
   year: number
 ): Promise<number> {
   const docRef = getDb().collection(COLLECTIONS.ACCOUNTING_SEQUENCES).doc(`${type}_${year}`);
@@ -127,7 +137,7 @@ async function getNextSequence(
  * Generer une reference unique avec sequence
  */
 async function generateUniqueReference(
-  type: 'PAYMENT' | 'REFUND' | 'PAYOUT' | 'SUBSCRIPTION',
+  type: 'PAYMENT' | 'REFUND' | 'PAYOUT' | 'SUBSCRIPTION' | 'COMMISSION' | 'WITHDRAWAL' | 'PROVIDER_TRANSFER',
   date: Date
 ): Promise<string> {
   const prefix = DEFAULT_ACCOUNTING_CONFIG.referencePrefix[type.toLowerCase() as keyof typeof DEFAULT_ACCOUNTING_CONFIG.referencePrefix];
@@ -176,19 +186,35 @@ export class AccountingService {
         return existingEntry.docs[0].data() as JournalEntry;
       }
 
+      // Verifier periode
+      const payDate = paymentData.createdAt?.toDate() || new Date();
+      const payPeriod = `${payDate.getFullYear()}-${(payDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (await this.isPeriodClosed(payPeriod)) {
+        logger.warn('AccountingService: Period closed, skipping payment entry', { payPeriod, paymentId });
+        return null;
+      }
+
       // Recuperer les infos client
       const customerInfo = await this.getCustomerInfo(paymentData.clientId);
 
-      // Calculer les frais — utiliser le feeBreakdown stocké si disponible, sinon fallback ancien calcul
-      const amountEur = centsToEur(paymentData.amount || 0);
+      // Convertir via taux ECB si devise != EUR
+      const currency = (paymentData.currency || 'USD').toUpperCase();
+      const paymentDate = paymentData.createdAt?.toDate() || new Date();
+
+      const amountConv = await convertCentsToEur(paymentData.amount || 0, currency, paymentDate);
+      const amountEur = amountConv.amountEur;
+      const exchangeRate = amountConv.exchangeRate;
+      const exchangeRateDate = amountConv.exchangeRateDate;
+
       const feeBreakdown = paymentData.feeBreakdown as { processingFee?: number } | undefined;
-      const currency = (paymentData.currency || 'EUR').toUpperCase();
       const fallbackFixedFee = currency === 'USD' ? 0.30 : 0.25;
       const stripeFeeEur = feeBreakdown?.processingFee != null
-        ? round2(feeBreakdown.processingFee)
+        ? round2(feeBreakdown.processingFee / (currency !== 'EUR' ? exchangeRate : 1))
         : round2(amountEur * 0.029 + fallbackFixedFee);
-      const commissionEur = centsToEur(paymentData.commissionAmount || 0);
-      const providerAmountEur = centsToEur(paymentData.providerAmount || 0);
+      const commissionConv = await convertCentsToEur(paymentData.commissionAmount || 0, currency, paymentDate);
+      const commissionEur = commissionConv.amountEur;
+      const providerConv = await convertCentsToEur(paymentData.providerAmount || 0, currency, paymentDate);
+      const providerAmountEur = providerConv.amountEur;
 
       // Preparer les donnees pour le generateur
       const data: PaymentData = {
@@ -215,6 +241,14 @@ export class AccountingService {
 
       // Generer l'ecriture
       const entry = generatePaymentEntry(data);
+
+      // Ajouter les infos de taux de change dans les metadata
+      entry.metadata = {
+        ...entry.metadata,
+        originalCurrency: currency,
+        exchangeRate,
+        exchangeRateDate,
+      };
 
       // Generer une reference unique
       entry.reference = await generateUniqueReference('PAYMENT', data.paymentDate);
@@ -288,12 +322,24 @@ export class AccountingService {
       // Recuperer l'ecriture du paiement original pour les infos TVA
       const originalPaymentEntry = await this.getEntryBySourceDocument('PAYMENT', refundData.paymentId);
 
+      // Convertir via taux ECB
+      const refundCurrency = (refundData.currency || 'USD').toUpperCase();
+      const refundDate = refundData.createdAt?.toDate() || new Date();
+      const refundAmountConv = await convertCentsToEur(refundData.amount || 0, refundCurrency, refundDate);
+
+      // Verifier periode
+      const refundPeriod = `${refundDate.getFullYear()}-${(refundDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (await this.isPeriodClosed(refundPeriod)) {
+        logger.warn('AccountingService: Period closed, skipping refund entry', { refundPeriod, refundId });
+        return null;
+      }
+
       const data: RefundData = {
         refundId,
         originalPaymentId: refundData.paymentId,
         amountCents: refundData.amount || 0,
-        amountEur: centsToEur(refundData.amount || 0),
-        currency: refundData.currency || 'EUR',
+        amountEur: refundAmountConv.amountEur,
+        currency: refundCurrency,
         processor: 'stripe',
         reason: refundData.reason || 'customer_request',
         serviceType: refundData.serviceType || 'lawyer_call',
@@ -311,6 +357,14 @@ export class AccountingService {
 
       const entry = generateRefundEntry(data);
       entry.reference = await generateUniqueReference('REFUND', data.refundDate);
+
+      // Ajouter metadata taux de change
+      entry.metadata = {
+        ...entry.metadata,
+        originalCurrency: refundCurrency,
+        exchangeRate: refundAmountConv.exchangeRate,
+        exchangeRateDate: refundAmountConv.exchangeRateDate,
+      };
 
       const validation = validateJournalEntry(entry);
       if (!validation.isValid) {
@@ -367,9 +421,22 @@ export class AccountingService {
         return existingEntry.docs[0].data() as JournalEntry;
       }
 
-      // Frais Wise par defaut: 1 EUR
+      // Convertir via taux ECB
+      const payoutCurrency = (payoutData.currency || 'EUR').toUpperCase();
+      const payoutDate = payoutData.createdAt?.toDate() || new Date();
+
+      // Verifier periode
+      const payoutPeriod = `${payoutDate.getFullYear()}-${(payoutDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (await this.isPeriodClosed(payoutPeriod)) {
+        logger.warn('AccountingService: Period closed, skipping payout entry', { payoutPeriod, payoutId });
+        return null;
+      }
+
+      const grossConv = await convertCentsToEur(payoutData.amount || 0, payoutCurrency, payoutDate);
+      const grossAmountEur = grossConv.amountEur;
+
+      // Frais de transfert (en EUR, provient du prestataire de paiement)
       const transferFeeEur = payoutData.transferFee || 1.00;
-      const grossAmountEur = centsToEur(payoutData.amount || 0);
 
       const data: PayoutData = {
         payoutId,
@@ -381,11 +448,19 @@ export class AccountingService {
         netAmountCents: payoutData.netAmount || (payoutData.amount - Math.round(transferFeeEur * 100)),
         netAmountEur: round2(grossAmountEur - transferFeeEur),
         paymentMethod: payoutData.paymentMethod || 'wise',
-        payoutDate: payoutData.createdAt?.toDate() || new Date(),
+        payoutDate,
       };
 
       const entry = generatePayoutEntry(data);
       entry.reference = await generateUniqueReference('PAYOUT', data.payoutDate);
+
+      // Ajouter metadata taux de change
+      entry.metadata = {
+        ...entry.metadata,
+        originalCurrency: payoutCurrency,
+        exchangeRate: grossConv.exchangeRate,
+        exchangeRateDate: grossConv.exchangeRateDate,
+      };
 
       const validation = validateJournalEntry(entry);
       if (!validation.isValid) {
@@ -442,8 +517,17 @@ export class AccountingService {
         return existingEntry.docs[0].data() as JournalEntry;
       }
 
+      const subDate = subData.paidAt?.toDate() || new Date();
+      const subPeriod = `${subDate.getFullYear()}-${(subDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (await this.isPeriodClosed(subPeriod)) {
+        logger.warn('AccountingService: Period closed, skipping subscription entry', { subPeriod, subscriptionId });
+        return null;
+      }
+
       const customerInfo = await this.getCustomerInfo(subData.userId);
-      const amountEur = centsToEur(subData.amountPaid || subData.pricePerMonth || 0);
+      const subCurrency = (subData.currency || 'USD').toUpperCase();
+      const amountConvSub = await convertCentsToEur(subData.amountPaid || subData.pricePerMonth || 0, subCurrency, subDate);
+      const amountEur = amountConvSub.amountEur;
       const stripeFeeEur = round2(amountEur * 0.029 + 0.25);
 
       const data: SubscriptionData = {
@@ -451,7 +535,7 @@ export class AccountingService {
         userId: subData.userId,
         amountCents: subData.amountPaid || subData.pricePerMonth || 0,
         amountEur,
-        currency: subData.currency || 'EUR',
+        currency: subCurrency,
         processorFeeCents: Math.round(stripeFeeEur * 100),
         processorFeeEur: stripeFeeEur,
         processor: 'stripe',
@@ -462,6 +546,14 @@ export class AccountingService {
 
       const entry = generateSubscriptionEntry(data);
       entry.reference = await generateUniqueReference('SUBSCRIPTION', data.paymentDate);
+
+      // Ajouter metadata taux de change
+      entry.metadata = {
+        ...entry.metadata,
+        originalCurrency: subCurrency,
+        exchangeRate: amountConvSub.exchangeRate,
+        exchangeRateDate: amountConvSub.exchangeRateDate,
+      };
 
       const validation = validateJournalEntry(entry);
       if (!validation.isValid) {
@@ -487,42 +579,349 @@ export class AccountingService {
   }
 
   /**
+   * Invalider le cache de periode (appeler apres reouverture)
+   */
+  invalidatePeriodCache(period: string): void {
+    closedPeriodCache.delete(period);
+  }
+
+  /**
+   * Verifier si une periode comptable est cloturee (avec cache)
+   */
+  async isPeriodClosed(period: string): Promise<boolean> {
+    const cached = closedPeriodCache.get(period);
+    if (cached && (Date.now() - cached.cachedAt) < PERIOD_CACHE_TTL_MS) {
+      return cached.closed;
+    }
+
+    try {
+      const doc = await getDb().collection(COLLECTIONS.ACCOUNTING_PERIODS).doc(period).get();
+      const closed = doc.exists && doc.data()?.status === 'CLOSED';
+      closedPeriodCache.set(period, { closed, cachedAt: Date.now() });
+      return closed;
+    } catch (error) {
+      // Fail-closed : en cas d'erreur Firestore, bloquer par securite
+      logger.error('AccountingService: isPeriodClosed check failed, blocking by default', {
+        period,
+        error: error instanceof Error ? error.message : error,
+      });
+      return true;
+    }
+  }
+
+  /**
+   * Creer une ecriture pour une commission affilie
+   */
+  async createCommissionEntry(
+    commissionId: string,
+    userType: AffiliateUserType,
+    collectionName: string
+  ): Promise<JournalEntry | null> {
+    try {
+      logger.info('AccountingService: Creating commission entry', { commissionId, userType });
+
+      // Verifier si ecriture existe deja
+      const existing = await getDb()
+        .collection(COLLECTIONS.JOURNAL_ENTRIES)
+        .where('sourceDocument.type', '==', 'COMMISSION')
+        .where('sourceDocument.id', '==', commissionId)
+        .limit(1)
+        .get();
+
+      if (!existing.empty) {
+        logger.info('AccountingService: Commission entry already exists', { commissionId });
+        return existing.docs[0].data() as JournalEntry;
+      }
+
+      // Lire la commission
+      const comDoc = await getDb().collection(collectionName).doc(commissionId).get();
+      if (!comDoc.exists) {
+        logger.error('AccountingService: Commission not found', { commissionId, collectionName });
+        return null;
+      }
+
+      const comData = comDoc.data()!;
+      const amountCents = comData.amount || comData.commissionAmount || 0;
+
+      // Guard: rejeter les montants invalides
+      if (amountCents <= 0) {
+        logger.warn('AccountingService: Skipping zero/negative commission amount', { commissionId, amountCents });
+        return null;
+      }
+
+      // Guard: rejeter si aucun userId identifiable
+      const userId = comData.userId || comData.chatterId || comData.influencerId || comData.bloggerId || comData.groupAdminId || comData.referrerId;
+      if (!userId) {
+        logger.error('AccountingService: No userId found for commission', { commissionId, collectionName });
+        return null;
+      }
+
+      const currency = (comData.currency || 'USD').toUpperCase();
+      const comDate = comData.createdAt?.toDate() || new Date();
+
+      // Verifier periode
+      const period = `${comDate.getFullYear()}-${(comDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (await this.isPeriodClosed(period)) {
+        logger.warn('AccountingService: Period closed, skipping commission entry', { period, commissionId });
+        return null;
+      }
+
+      // Convertir via ECB
+      const conv = await convertCentsToEur(amountCents, currency, comDate);
+
+      const data: CommissionData = {
+        commissionId,
+        userType,
+        userId,
+        amountCents,
+        amountEur: conv.amountEur,
+        currency,
+        exchangeRate: conv.exchangeRate,
+        exchangeRateDate: conv.exchangeRateDate,
+        commissionDate: comDate,
+        source: comData.source || comData.type,
+      };
+
+      const entry = generateCommissionEntry(data);
+      entry.reference = await generateUniqueReference('COMMISSION', comDate);
+      entry.sourceDocument.collection = collectionName;
+
+      const validation = validateJournalEntry(entry);
+      if (!validation.isValid) {
+        entry.metadata = { ...entry.metadata, validationErrors: validation.errors };
+      }
+
+      await getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
+
+      logger.info('AccountingService: Commission entry created', {
+        commissionId,
+        entryId: entry.id,
+        reference: entry.reference,
+        amountEur: conv.amountEur,
+      });
+
+      return entry;
+    } catch (error) {
+      logger.error('AccountingService: Error creating commission entry', {
+        commissionId,
+        error: error instanceof Error ? error.message : error,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Creer une ecriture pour un retrait affilie
+   */
+  async createWithdrawalEntry(withdrawalId: string): Promise<JournalEntry | null> {
+    try {
+      logger.info('AccountingService: Creating withdrawal entry', { withdrawalId });
+
+      // Verifier si ecriture existe deja
+      const existing = await getDb()
+        .collection(COLLECTIONS.JOURNAL_ENTRIES)
+        .where('sourceDocument.type', '==', 'WITHDRAWAL')
+        .where('sourceDocument.id', '==', withdrawalId)
+        .limit(1)
+        .get();
+
+      if (!existing.empty) {
+        logger.info('AccountingService: Withdrawal entry already exists', { withdrawalId });
+        return existing.docs[0].data() as JournalEntry;
+      }
+
+      const wdDoc = await getDb().collection(COLLECTIONS.PAYMENT_WITHDRAWALS).doc(withdrawalId).get();
+      if (!wdDoc.exists) {
+        logger.error('AccountingService: Withdrawal not found', { withdrawalId });
+        return null;
+      }
+
+      const wdData = wdDoc.data()!;
+      const amountCents = wdData.amount || 0;
+
+      // Guard: rejeter les montants invalides
+      if (amountCents <= 0) {
+        logger.warn('AccountingService: Skipping zero/negative withdrawal amount', { withdrawalId, amountCents });
+        return null;
+      }
+
+      const feeCents = wdData.withdrawalFee ?? 300; // Default $3 (nullish coalescing pour permettre fee=0)
+      const currency = (wdData.sourceCurrency || wdData.currency || 'USD').toUpperCase();
+      const wdDate = wdData.completedAt
+        ? (typeof wdData.completedAt === 'string' ? new Date(wdData.completedAt) : wdData.completedAt?.toDate?.() || new Date())
+        : wdData.requestedAt
+          ? (typeof wdData.requestedAt === 'string' ? new Date(wdData.requestedAt) : wdData.requestedAt?.toDate?.() || new Date())
+          : wdData.createdAt?.toDate?.() || new Date();
+
+      // Verifier periode
+      const period = `${wdDate.getFullYear()}-${(wdDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (await this.isPeriodClosed(period)) {
+        logger.warn('AccountingService: Period closed, skipping withdrawal entry', { period, withdrawalId });
+        return null;
+      }
+
+      // Convertir via ECB
+      const amountConv = await convertCentsToEur(amountCents, currency, wdDate);
+      const feeConv = await convertCentsToEur(feeCents, currency, wdDate);
+
+      // Determiner le type d'affilie
+      const userType: AffiliateUserType = wdData.userType || wdData.affiliateType || 'chatter';
+
+      const data: WithdrawalData = {
+        withdrawalId,
+        userType,
+        userId: wdData.userId || '',
+        amountCents,
+        amountEur: amountConv.amountEur,
+        withdrawalFeeCents: feeCents,
+        withdrawalFeeEur: feeConv.amountEur,
+        currency,
+        exchangeRate: amountConv.exchangeRate,
+        exchangeRateDate: amountConv.exchangeRateDate,
+        paymentMethod: wdData.methodType || wdData.provider || wdData.paymentMethod || 'wise',
+        withdrawalDate: wdDate,
+      };
+
+      const entry = generateWithdrawalEntry(data);
+      entry.reference = await generateUniqueReference('WITHDRAWAL', wdDate);
+      entry.sourceDocument.collection = 'payment_withdrawals';
+
+      const validation = validateJournalEntry(entry);
+      if (!validation.isValid) {
+        entry.metadata = { ...entry.metadata, validationErrors: validation.errors };
+      }
+
+      await getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
+
+      logger.info('AccountingService: Withdrawal entry created', {
+        withdrawalId,
+        entryId: entry.id,
+        reference: entry.reference,
+      });
+
+      return entry;
+    } catch (error) {
+      logger.error('AccountingService: Error creating withdrawal entry', {
+        withdrawalId,
+        error: error instanceof Error ? error.message : error,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Creer une ecriture pour un transfert Stripe vers prestataire (liberation transit)
+   */
+  async createProviderTransferEntry(paymentId: string): Promise<JournalEntry | null> {
+    try {
+      logger.info('AccountingService: Creating provider transfer entry', { paymentId });
+
+      // Verifier si ecriture existe deja
+      const existing = await getDb()
+        .collection(COLLECTIONS.JOURNAL_ENTRIES)
+        .where('sourceDocument.type', '==', 'PROVIDER_TRANSFER')
+        .where('sourceDocument.id', '==', paymentId)
+        .limit(1)
+        .get();
+
+      if (!existing.empty) {
+        logger.info('AccountingService: Transfer entry already exists', { paymentId });
+        return existing.docs[0].data() as JournalEntry;
+      }
+
+      const payDoc = await getDb().collection(COLLECTIONS.PAYMENTS).doc(paymentId).get();
+      if (!payDoc.exists) {
+        logger.error('AccountingService: Payment not found for transfer', { paymentId });
+        return null;
+      }
+
+      const payData = payDoc.data()!;
+      const providerAmountCents = payData.providerAmount || 0;
+      const currency = (payData.currency || 'USD').toUpperCase();
+      const transferDate = payData.transferCompletedAt?.toDate() || payData.updatedAt?.toDate() || new Date();
+
+      // Verifier periode
+      const trfPeriod = `${transferDate.getFullYear()}-${(transferDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (await this.isPeriodClosed(trfPeriod)) {
+        logger.warn('AccountingService: Period closed, skipping provider transfer entry', { trfPeriod, paymentId });
+        return null;
+      }
+
+      const conv = await convertCentsToEur(providerAmountCents, currency, transferDate);
+
+      const entry = generateProviderTransferEntry({
+        paymentId,
+        providerId: payData.providerId || '',
+        amountEur: conv.amountEur,
+        currency,
+        exchangeRate: conv.exchangeRate,
+        exchangeRateDate: conv.exchangeRateDate,
+        originalAmountCents: providerAmountCents,
+        transferDate,
+      });
+
+      entry.reference = await generateUniqueReference('PROVIDER_TRANSFER', transferDate);
+
+      const validation = validateJournalEntry(entry);
+      if (!validation.isValid) {
+        entry.metadata = { ...entry.metadata, validationErrors: validation.errors };
+      }
+
+      await getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
+
+      logger.info('AccountingService: Provider transfer entry created', {
+        paymentId,
+        entryId: entry.id,
+        reference: entry.reference,
+      });
+
+      return entry;
+    } catch (error) {
+      logger.error('AccountingService: Error creating provider transfer entry', {
+        paymentId,
+        error: error instanceof Error ? error.message : error,
+      });
+      throw error;
+    }
+  }
+
+  /**
    * Valider (poster) une ecriture
    */
   async postEntry(entryId: string, userId: string): Promise<boolean> {
     try {
-      const entryRef = getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entryId);
-      const entryDoc = await entryRef.get();
+      const db = getDb();
+      const entryRef = db.collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entryId);
 
-      if (!entryDoc.exists) {
-        logger.error('AccountingService: Entry not found for posting', { entryId });
-        return false;
-      }
+      await db.runTransaction(async (transaction) => {
+        const entryDoc = await transaction.get(entryRef);
 
-      const entry = entryDoc.data() as JournalEntry;
+        if (!entryDoc.exists) {
+          throw new Error('Entry not found');
+        }
 
-      if (entry.status !== 'DRAFT') {
-        logger.warn('AccountingService: Entry already posted or reversed', {
-          entryId,
-          status: entry.status,
+        const entry = entryDoc.data() as JournalEntry;
+
+        if (entry.status !== 'DRAFT') {
+          throw new Error(`Entry already ${entry.status}`);
+        }
+
+        // Verifier que la periode n'est pas cloturee
+        if (entry.period && await this.isPeriodClosed(entry.period)) {
+          throw new Error(`Period ${entry.period} is closed`);
+        }
+
+        // Revalider avant de poster
+        const validation = validateJournalEntry(entry);
+        if (!validation.isValid) {
+          throw new Error(`Validation errors: ${validation.errors.join(', ')}`);
+        }
+
+        transaction.update(entryRef, {
+          status: 'POSTED' as JournalEntryStatus,
+          postedAt: Timestamp.now(),
+          postedBy: userId,
         });
-        return false;
-      }
-
-      // Revalider avant de poster
-      const validation = validateJournalEntry(entry);
-      if (!validation.isValid) {
-        logger.error('AccountingService: Cannot post invalid entry', {
-          entryId,
-          errors: validation.errors,
-        });
-        return false;
-      }
-
-      await entryRef.update({
-        status: 'POSTED' as JournalEntryStatus,
-        postedAt: Timestamp.now(),
-        postedBy: userId,
       });
 
       logger.info('AccountingService: Entry posted', { entryId, postedBy: userId });
@@ -541,52 +940,66 @@ export class AccountingService {
    */
   async reverseEntry(entryId: string, userId: string, reason: string): Promise<JournalEntry | null> {
     try {
-      const entryRef = getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entryId);
-      const entryDoc = await entryRef.get();
+      const db = getDb();
+      const entryRef = db.collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entryId);
 
-      if (!entryDoc.exists) {
-        logger.error('AccountingService: Entry not found for reversal', { entryId });
-        return null;
-      }
+      const reversalEntry = await db.runTransaction(async (transaction) => {
+        const entryDoc = await transaction.get(entryRef);
 
-      const entry = entryDoc.data() as JournalEntry;
+        if (!entryDoc.exists) {
+          throw new Error('Entry not found for reversal');
+        }
 
-      if (entry.status === 'REVERSED') {
-        logger.warn('AccountingService: Entry already reversed', { entryId });
-        return null;
-      }
+        const entry = entryDoc.data() as JournalEntry;
 
-      // Creer l'ecriture d'extourne (inverser debit/credit)
-      const reversalEntry: JournalEntry = {
-        ...entry,
-        id: `rev_${entry.id}`,
-        reference: `REV-${entry.reference}`,
-        description: `Extourne: ${entry.description} - ${reason}`,
-        lines: entry.lines.map(line => ({
-          ...line,
-          debit: line.credit,
-          credit: line.debit,
-          description: `Extourne: ${line.description || ''}`,
-        })),
-        status: 'POSTED',
-        createdAt: Timestamp.now(),
-        postedAt: Timestamp.now(),
-        postedBy: userId,
-        metadata: {
-          ...entry.metadata,
-          reversalOf: entryId,
-          reversalReason: reason,
-        },
-      };
+        if (entry.status === 'REVERSED') {
+          throw new Error('Entry already reversed');
+        }
 
-      // Sauvegarder l'extourne
-      await getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(reversalEntry.id).set(reversalEntry);
+        // Verifier que la periode n'est pas cloturee
+        if (entry.period && await this.isPeriodClosed(entry.period)) {
+          throw new Error(`Period ${entry.period} is closed`);
+        }
 
-      // Marquer l'ecriture originale comme extournee
-      await entryRef.update({
-        status: 'REVERSED' as JournalEntryStatus,
-        reversedAt: Timestamp.now(),
-        reversalEntryId: reversalEntry.id,
+        // Creer l'ecriture d'extourne (inverser debit/credit)
+        const now = Timestamp.now();
+        const reversal: JournalEntry = {
+          ...entry,
+          id: `rev_${entry.id}`,
+          reference: `REV-${entry.reference}`,
+          description: `Extourne: ${entry.description} - ${reason}`,
+          lines: entry.lines.map(line => ({
+            ...line,
+            debit: line.credit,
+            credit: line.debit,
+            description: `Extourne: ${line.description || ''}`,
+          })),
+          status: 'POSTED',
+          date: now, // Date d'extourne = maintenant (pas la date originale)
+          createdAt: now,
+          postedAt: now,
+          postedBy: userId,
+          metadata: {
+            ...entry.metadata,
+            reversalOf: entryId,
+            reversalReason: reason,
+          },
+        };
+
+        // Recalculer la periode de l'extourne basee sur la date actuelle
+        const nowDate = now.toDate();
+        reversal.period = `${nowDate.getFullYear()}-${(nowDate.getMonth() + 1).toString().padStart(2, '0')}`;
+
+        // Atomique : sauvegarder extourne + marquer originale
+        const reversalRef = db.collection(COLLECTIONS.JOURNAL_ENTRIES).doc(reversal.id);
+        transaction.set(reversalRef, reversal);
+        transaction.update(entryRef, {
+          status: 'REVERSED' as JournalEntryStatus,
+          reversedAt: now,
+          reversalEntryId: reversal.id,
+        });
+
+        return reversal;
       });
 
       logger.info('AccountingService: Entry reversed', {

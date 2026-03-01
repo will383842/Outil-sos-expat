@@ -855,7 +855,7 @@ const ChatterLeaderboard: React.FC = () => {
           </div>
         )}
 
-        {/* Info Cards - Commission multipliers for next month */}
+        {/* Info Cards - Cash bonus prizes for Top 3 */}
         <div className="grid md:grid-cols-3 gap-4">
           <div className={`${UI.card}p-4 bg-gradient-to-br from-yellow-50 dark:from-yellow-900/10 to-amber-50 dark:to-amber-900/10`}>
             <div className="flex items-center gap-3">
@@ -868,7 +868,7 @@ const ChatterLeaderboard: React.FC = () => {
                   <span className="text-yellow-600 dark:text-yellow-400">2x</span>
                 </p>
                 <p className="text-sm dark:text-gray-400">
-                  <FormattedMessage id="chatter.leaderboard.bonus.top1" defaultMessage="Commissions doublées le mois suivant" />
+                  <FormattedMessage id="chatter.leaderboard.bonus.top1" defaultMessage="1er place : 200$" />
                 </p>
               </div>
             </div>
@@ -885,7 +885,7 @@ const ChatterLeaderboard: React.FC = () => {
                   <span className="text-gray-600 dark:text-gray-400">1.5x</span>
                 </p>
                 <p className="text-sm dark:text-gray-400">
-                  <FormattedMessage id="chatter.leaderboard.bonus.top2" defaultMessage="+50% sur tes commissions le mois suivant" />
+                  <FormattedMessage id="chatter.leaderboard.bonus.top2" defaultMessage="2ème place : 100$" />
                 </p>
               </div>
             </div>
@@ -902,7 +902,7 @@ const ChatterLeaderboard: React.FC = () => {
                   <span className="text-amber-600 dark:text-amber-400">1.15x</span>
                 </p>
                 <p className="text-sm dark:text-gray-400">
-                  <FormattedMessage id="chatter.leaderboard.bonus.top3" defaultMessage="+15% sur tes commissions le mois suivant" />
+                  <FormattedMessage id="chatter.leaderboard.bonus.top3" defaultMessage="3ème place : 50$" />
                 </p>
               </div>
             </div>

@@ -96,6 +96,8 @@ export const chatterResetCaptainMonthly = onSchedule(
 
     const tiers = config.captainTiers || DEFAULT_CHATTER_CONFIG.captainTiers!;
     const qualityBonusAmount = config.captainQualityBonusAmount || DEFAULT_CHATTER_CONFIG.captainQualityBonusAmount!;
+    const qualityMinRecruits = config.captainQualityBonusMinRecruits ?? DEFAULT_CHATTER_CONFIG.captainQualityBonusMinRecruits!;
+    const qualityMinCommissions = config.captainQualityBonusMinCommissions ?? DEFAULT_CHATTER_CONFIG.captainQualityBonusMinCommissions!;
 
     // Query all captains
     const captainsQuery = await db
@@ -148,8 +150,40 @@ export const chatterResetCaptainMonthly = onSchedule(
           }
         }
 
-        // 3. Pay quality bonus if enabled
-        if (captain.captainQualityBonusEnabled) {
+        // 3. Pay quality bonus — HYBRID: automatic criteria OR admin override
+        // Criteria: N1 active recruits >= threshold AND monthly captain_call commissions >= threshold
+        // Admin veto: captainQualityBonusEnabled can force-enable (admin override)
+        const n1CountQuery = await db
+          .collection("chatters")
+          .where("recruitedBy", "==", captainId)
+          .where("status", "==", "active")
+          .get();
+        const activeN1Count = n1CountQuery.size;
+
+        // Sum captain_call commissions this month
+        const monthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const monthEnd = new Date(today.getFullYear(), today.getMonth(), 1);
+        const captainCommissionsQuery = await db
+          .collection("chatter_commissions")
+          .where("chatterId", "==", captainId)
+          .where("type", "==", "captain_call")
+          .where("createdAt", ">=", Timestamp.fromDate(monthStart))
+          .where("createdAt", "<", Timestamp.fromDate(monthEnd))
+          .get();
+        const monthlyTeamCommissions = captainCommissionsQuery.docs.reduce(
+          (sum, doc) => sum + (doc.data().amount || 0), 0
+        );
+
+        const criteriaMetN1 = activeN1Count >= qualityMinRecruits;
+        const criteriaMetCommissions = monthlyTeamCommissions >= qualityMinCommissions;
+        const criteriaMet = criteriaMetN1 && criteriaMetCommissions;
+        const adminOverride = captain.captainQualityBonusEnabled === true;
+        const shouldPayQualityBonus = criteriaMet || adminOverride;
+
+        if (shouldPayQualityBonus) {
+          const reason = criteriaMet
+            ? `Automatique (${activeN1Count} recrues, $${(monthlyTeamCommissions / 100).toFixed(0)} commissions)`
+            : `Admin override (${activeN1Count}/${qualityMinRecruits} recrues, $${(monthlyTeamCommissions / 100).toFixed(0)}/$${(qualityMinCommissions / 100).toFixed(0)} commissions)`;
           const qualityResult = await createCommission({
             chatterId: captainId,
             type: "captain_quality_bonus",
@@ -159,7 +193,11 @@ export const chatterResetCaptainMonthly = onSchedule(
               details: {
                 month: monthKey,
                 bonusType: "captain_quality",
-                bonusReason: `Bonus qualit\u00e9 (${teamCalls} appels)`,
+                bonusReason: reason,
+                criteriaMet,
+                adminOverride,
+                activeN1Count,
+                monthlyTeamCommissions,
               },
             },
             baseAmount: qualityBonusAmount,
@@ -168,12 +206,15 @@ export const chatterResetCaptainMonthly = onSchedule(
 
           if (qualityResult.success) {
             qualityBonusesPaid++;
+            logger.info("[resetCaptainMonthly] Quality bonus paid", {
+              captainId, criteriaMet, adminOverride, activeN1Count, monthlyTeamCommissions,
+            });
           }
         }
 
         // 4. Archive monthly stats
         const archiveId = `${captainId}_${monthKey}`;
-        const totalBonus = (bestTier?.bonus || 0) + (captain.captainQualityBonusEnabled ? qualityBonusAmount : 0);
+        const totalBonus = (bestTier?.bonus || 0) + (shouldPayQualityBonus ? qualityBonusAmount : 0);
         await db.collection("captain_monthly_archives").doc(archiveId).set({
           captainId,
           month: prevMonth.getMonth() + 1,
@@ -183,8 +224,12 @@ export const chatterResetCaptainMonthly = onSchedule(
           bonusAmount: totalBonus,
           tierReached: bestTier?.name || null,
           tierBonus: bestTier?.bonus || 0,
-          qualityBonusPaid: captain.captainQualityBonusEnabled || false,
-          qualityBonusAmount: captain.captainQualityBonusEnabled ? qualityBonusAmount : 0,
+          qualityBonusPaid: shouldPayQualityBonus,
+          qualityBonusAmount: shouldPayQualityBonus ? qualityBonusAmount : 0,
+          qualityBonusCriteriaMet: criteriaMet,
+          qualityBonusAdminOverride: adminOverride,
+          activeN1Count,
+          monthlyTeamCommissions,
           createdAt: now,
         });
 

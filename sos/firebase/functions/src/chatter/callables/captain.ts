@@ -187,11 +187,32 @@ export const getCaptainDashboard = onCall(
       nextTier = sortedTiers[0];
     }
 
+    // Quality bonus criteria check
+    const qualityMinRecruits = config.captainQualityBonusMinRecruits ?? DEFAULT_CHATTER_CONFIG.captainQualityBonusMinRecruits!;
+    const qualityMinCommissions = config.captainQualityBonusMinCommissions ?? DEFAULT_CHATTER_CONFIG.captainQualityBonusMinCommissions!;
+    const activeN1Count = n1Query.size; // Already fetched above
+    const monthlyTeamCommissions = monthlyCommissions.reduce(
+      (sum, c) => sum + (c.amount || 0), 0
+    );
+
+    const criteriaMet = activeN1Count >= qualityMinRecruits && monthlyTeamCommissions >= qualityMinCommissions;
+    const adminOverride = chatter.captainQualityBonusEnabled === true;
+
     return {
       captainInfo: {
         captainPromotedAt: chatter.captainPromotedAt,
         captainMonthlyTeamCalls: teamCalls,
-        captainQualityBonusEnabled: chatter.captainQualityBonusEnabled || false,
+        captainQualityBonusEnabled: adminOverride,
+      },
+      qualityBonusStatus: {
+        activeN1Count,
+        minRecruits: qualityMinRecruits,
+        monthlyTeamCommissions,
+        minCommissions: qualityMinCommissions,
+        criteriaMet,
+        adminOverride,
+        qualified: criteriaMet || adminOverride,
+        bonusAmount: config.captainQualityBonusAmount || DEFAULT_CHATTER_CONFIG.captainQualityBonusAmount!,
       },
       tierProgression: {
         currentTier: currentTier ? { name: currentTier.name, bonus: currentTier.bonus } : null,

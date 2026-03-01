@@ -10,7 +10,11 @@ import { onDocumentUpdated, onDocumentCreated } from 'firebase-functions/v2/fire
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
 import { accountingService } from './accountingService';
-import { JournalEntry } from './types';
+import { JournalEntry, AffiliateUserType } from './types';
+import { closePeriod, reopenPeriod, generateClosingReport } from './periodClosing';
+import { archivePeriod, verifyArchiveIntegrity } from './archiving';
+import { backfillCommissionEntries, backfillWithdrawalEntries } from './backfillEntries';
+import { fetchAndStoreDailyRates, fetchAndStoreHistoricalRates } from './ecbExchangeRateService';
 
 // =============================================================================
 // CONFIGURATION
@@ -298,6 +302,151 @@ export const onSubscriptionPaymentReceived = onDocumentUpdated(
 );
 
 // =============================================================================
+// TRIGGERS: COMMISSIONS AFFILIES
+// =============================================================================
+
+/**
+ * Factorise la logique commune des triggers commission
+ */
+const COMMISSION_VALID_STATUSES = ['validated', 'available', 'released', 'paid', 'completed'];
+
+async function handleCommissionCreated(
+  commissionId: string,
+  userType: AffiliateUserType,
+  collectionName: string,
+  docData?: Record<string, unknown>
+): Promise<void> {
+  try {
+    // Verifier que la commission a un statut comptabilisable
+    // (pas pending, cancelled, rejected, etc.)
+    const status = (docData?.status as string) || '';
+    if (!status || !COMMISSION_VALID_STATUSES.includes(status)) {
+      logger.info(`onCommissionCreated[${userType}]: Skipping missing/invalid status`, { commissionId, status });
+      return;
+    }
+
+    const entry = await accountingService.createCommissionEntry(commissionId, userType, collectionName);
+    if (entry) {
+      logger.info(`onCommissionCreated[${userType}]: Entry created`, {
+        commissionId,
+        entryId: entry.id,
+        reference: entry.reference,
+      });
+    }
+  } catch (error) {
+    logger.error(`onCommissionCreated[${userType}]: Error`, {
+      commissionId,
+      error: error instanceof Error ? error.message : error,
+    });
+  }
+}
+
+export const onChatterCommissionCreated = onDocumentCreated(
+  { document: 'chatter_commissions/{commissionId}', ...TRIGGER_CONFIG },
+  async (event) => {
+    await handleCommissionCreated(event.params.commissionId, 'chatter', 'chatter_commissions', event.data?.data());
+  }
+);
+
+export const onInfluencerCommissionCreated = onDocumentCreated(
+  { document: 'influencer_commissions/{commissionId}', ...TRIGGER_CONFIG },
+  async (event) => {
+    await handleCommissionCreated(event.params.commissionId, 'influencer', 'influencer_commissions', event.data?.data());
+  }
+);
+
+export const onBloggerCommissionCreated = onDocumentCreated(
+  { document: 'blogger_commissions/{commissionId}', ...TRIGGER_CONFIG },
+  async (event) => {
+    await handleCommissionCreated(event.params.commissionId, 'blogger', 'blogger_commissions', event.data?.data());
+  }
+);
+
+export const onGroupAdminCommissionCreated = onDocumentCreated(
+  { document: 'group_admin_commissions/{commissionId}', ...TRIGGER_CONFIG },
+  async (event) => {
+    await handleCommissionCreated(event.params.commissionId, 'group_admin', 'group_admin_commissions', event.data?.data());
+  }
+);
+
+export const onAffiliateCommissionCreated = onDocumentCreated(
+  { document: 'affiliate_commissions/{commissionId}', ...TRIGGER_CONFIG },
+  async (event) => {
+    await handleCommissionCreated(event.params.commissionId, 'affiliate', 'affiliate_commissions', event.data?.data());
+  }
+);
+
+// =============================================================================
+// TRIGGER: RETRAIT AFFILIE COMPLETE
+// =============================================================================
+
+export const onWithdrawalCompleted = onDocumentUpdated(
+  { document: 'payment_withdrawals/{withdrawalId}', ...TRIGGER_CONFIG },
+  async (event) => {
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data();
+    if (!beforeData || !afterData) return;
+
+    const wasNotCompleted = beforeData.status !== 'completed';
+    const isNowCompleted = afterData.status === 'completed';
+    if (!wasNotCompleted || !isNowCompleted) return;
+
+    logger.info('onWithdrawalCompleted: Withdrawal completed', { withdrawalId: event.params.withdrawalId });
+
+    try {
+      const entry = await accountingService.createWithdrawalEntry(event.params.withdrawalId);
+      if (entry) {
+        logger.info('onWithdrawalCompleted: Entry created', {
+          withdrawalId: event.params.withdrawalId,
+          entryId: entry.id,
+        });
+      }
+    } catch (error) {
+      logger.error('onWithdrawalCompleted: Error', {
+        withdrawalId: event.params.withdrawalId,
+        error: error instanceof Error ? error.message : error,
+      });
+    }
+  }
+);
+
+// =============================================================================
+// TRIGGER: TRANSFERT PRESTATAIRE COMPLETE
+// =============================================================================
+
+export const onProviderTransferCompleted = onDocumentUpdated(
+  { document: 'payments/{paymentId}', ...TRIGGER_CONFIG },
+  async (event) => {
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data();
+    if (!beforeData || !afterData) return;
+
+    // Detecter quand le transfert vers le prestataire est complete
+    // Le webhook Stripe ecrit transferStatus: 'completed' et transferCompletedAt
+    const wasNotTransferred = beforeData.transferStatus !== 'completed';
+    const isNowTransferred = afterData.transferStatus === 'completed';
+    if (!wasNotTransferred || !isNowTransferred) return;
+
+    logger.info('onProviderTransferCompleted: Transfer completed', { paymentId: event.params.paymentId });
+
+    try {
+      const entry = await accountingService.createProviderTransferEntry(event.params.paymentId);
+      if (entry) {
+        logger.info('onProviderTransferCompleted: Entry created', {
+          paymentId: event.params.paymentId,
+          entryId: entry.id,
+        });
+      }
+    } catch (error) {
+      logger.error('onProviderTransferCompleted: Error', {
+        paymentId: event.params.paymentId,
+        error: error instanceof Error ? error.message : error,
+      });
+    }
+  }
+);
+
+// =============================================================================
 // FONCTIONS CALLABLE (Admin)
 // =============================================================================
 
@@ -414,8 +563,22 @@ export const regenerateJournalEntry = onCall(
       case 'SUBSCRIPTION':
         entry = await accountingService.createSubscriptionEntry(documentId);
         break;
+      case 'COMMISSION': {
+        const { userType, collectionName } = request.data;
+        if (!userType || !collectionName) {
+          throw new HttpsError('invalid-argument', 'userType et collectionName requis pour COMMISSION');
+        }
+        entry = await accountingService.createCommissionEntry(documentId, userType, collectionName);
+        break;
+      }
+      case 'WITHDRAWAL':
+        entry = await accountingService.createWithdrawalEntry(documentId);
+        break;
+      case 'PROVIDER_TRANSFER':
+        entry = await accountingService.createProviderTransferEntry(documentId);
+        break;
       default:
-        throw new HttpsError('invalid-argument', 'documentType invalide');
+        throw new HttpsError('invalid-argument', `documentType invalide: ${documentType}`);
     }
 
     if (!entry) {
@@ -444,8 +607,9 @@ export const getAccountingStats = onCall(
     }
 
     const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
-    if (!isAdmin) {
-      throw new HttpsError('permission-denied', 'Droits administrateur requis');
+    const isAccountant = request.auth.token.accountant === true;
+    if (!isAdmin && !isAccountant) {
+      throw new HttpsError('permission-denied', 'Droits administrateur ou comptable requis');
     }
 
     const { period } = request.data;
@@ -478,8 +642,9 @@ export const generateOssVatDeclaration = onCall(
     }
 
     const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
-    if (!isAdmin) {
-      throw new HttpsError('permission-denied', 'Droits administrateur requis');
+    const isAccountant = request.auth.token.accountant === true;
+    if (!isAdmin && !isAccountant) {
+      throw new HttpsError('permission-denied', 'Droits administrateur ou comptable requis');
     }
 
     const { year, quarter } = request.data;
@@ -512,8 +677,9 @@ export const getAccountBalances = onCall(
     }
 
     const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
-    if (!isAdmin) {
-      throw new HttpsError('permission-denied', 'Droits administrateur requis');
+    const isAccountant = request.auth.token.accountant === true;
+    if (!isAdmin && !isAccountant) {
+      throw new HttpsError('permission-denied', 'Droits administrateur ou comptable requis');
     }
 
     const { period } = request.data;
@@ -525,5 +691,189 @@ export const getAccountBalances = onCall(
     const balances = await accountingService.calculateAccountBalances(period);
 
     return { period, balances };
+  }
+);
+
+// =============================================================================
+// CALLABLES: CLOTURE DE PERIODE
+// =============================================================================
+
+/**
+ * Cloturer une periode comptable
+ */
+export const closeAccountingPeriod = onCall(
+  { ...TRIGGER_CONFIG, memory: '512MiB' as const, timeoutSeconds: 120 },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise');
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
+    if (!isAdmin) throw new HttpsError('permission-denied', 'Droits administrateur requis');
+
+    const { period } = request.data;
+    if (!period || typeof period !== 'string') {
+      throw new HttpsError('invalid-argument', 'period requis (format: YYYY-MM)');
+    }
+
+    const result = await closePeriod(period, request.auth.uid);
+    if (!result.success) {
+      throw new HttpsError('failed-precondition', result.error || 'Echec cloture');
+    }
+    return result;
+  }
+);
+
+/**
+ * Reouvrir une periode cloturee (superAdmin uniquement)
+ */
+export const reopenAccountingPeriod = onCall(
+  { ...TRIGGER_CONFIG, memory: '256MiB' as const },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise');
+    // Admin only: reopening a closed period is a critical operation (audit logged)
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
+    if (!isAdmin) {
+      throw new HttpsError('permission-denied', 'Droits administrateur requis pour reouvrir une periode');
+    }
+
+    const { period, reason } = request.data;
+    if (!period || !reason) {
+      throw new HttpsError('invalid-argument', 'period et reason requis');
+    }
+
+    const result = await reopenPeriod(period, request.auth.uid, reason);
+    if (!result.success) {
+      throw new HttpsError('failed-precondition', result.error || 'Echec reouverture');
+    }
+    return result;
+  }
+);
+
+/**
+ * Generer un rapport de cloture (sans cloturer)
+ */
+export const getClosingReport = onCall(
+  { ...TRIGGER_CONFIG, memory: '512MiB' as const, timeoutSeconds: 120 },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise');
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
+    const isAccountant = request.auth.token.accountant === true;
+    if (!isAdmin && !isAccountant) {
+      throw new HttpsError('permission-denied', 'Droits administrateur ou comptable requis');
+    }
+
+    const { period } = request.data;
+    if (!period) throw new HttpsError('invalid-argument', 'period requis');
+
+    return await generateClosingReport(period);
+  }
+);
+
+// =============================================================================
+// CALLABLES: ARCHIVAGE
+// =============================================================================
+
+/**
+ * Archiver une periode cloturee
+ */
+export const archiveAccountingPeriod = onCall(
+  { ...TRIGGER_CONFIG, memory: '512MiB' as const, timeoutSeconds: 300 },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise');
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
+    if (!isAdmin) throw new HttpsError('permission-denied', 'Droits administrateur requis');
+
+    const { period } = request.data;
+    if (!period) throw new HttpsError('invalid-argument', 'period requis');
+
+    const result = await archivePeriod(period, request.auth?.uid);
+    if (!result.success) {
+      throw new HttpsError('failed-precondition', result.error || 'Echec archivage');
+    }
+    return result;
+  }
+);
+
+/**
+ * Verifier l'integrite d'une archive
+ */
+export const verifyArchive = onCall(
+  { ...TRIGGER_CONFIG, memory: '256MiB' as const },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise');
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
+    const isAccountant = request.auth.token.accountant === true;
+    if (!isAdmin && !isAccountant) {
+      throw new HttpsError('permission-denied', 'Droits requis');
+    }
+
+    const { period } = request.data;
+    if (!period) throw new HttpsError('invalid-argument', 'period requis');
+
+    return await verifyArchiveIntegrity(period);
+  }
+);
+
+// =============================================================================
+// CALLABLES: BACKFILL
+// =============================================================================
+
+/**
+ * Backfill retroactif des ecritures commission
+ */
+export const backfillCommissions = onCall(
+  { ...TRIGGER_CONFIG, memory: '512MiB' as const, timeoutSeconds: 300 },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise');
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
+    if (!isAdmin) throw new HttpsError('permission-denied', 'Droits administrateur requis');
+
+    const { userType, startAfter, limit } = request.data || {};
+    return await backfillCommissionEntries({ userType, startAfter, limit: limit || 50 });
+  }
+);
+
+/**
+ * Backfill retroactif des ecritures retrait
+ */
+export const backfillWithdrawals = onCall(
+  { ...TRIGGER_CONFIG, memory: '512MiB' as const, timeoutSeconds: 300 },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise');
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
+    if (!isAdmin) throw new HttpsError('permission-denied', 'Droits administrateur requis');
+
+    const { startAfter, limit } = request.data || {};
+    return await backfillWithdrawalEntries({ startAfter, limit: limit || 50 });
+  }
+);
+
+// =============================================================================
+// CALLABLES: ECB EXCHANGE RATES (manual trigger)
+// =============================================================================
+
+/**
+ * Forcer le fetch des taux ECB quotidiens
+ */
+export const triggerFetchExchangeRates = onCall(
+  { ...TRIGGER_CONFIG, memory: '256MiB' as const },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise');
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
+    if (!isAdmin) throw new HttpsError('permission-denied', 'Droits administrateur requis');
+
+    return await fetchAndStoreDailyRates();
+  }
+);
+
+/**
+ * Backfill des taux ECB historiques
+ */
+export const triggerFetchHistoricalRates = onCall(
+  { ...TRIGGER_CONFIG, memory: '1GiB' as const, timeoutSeconds: 300 },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise');
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
+    if (!isAdmin) throw new HttpsError('permission-denied', 'Droits administrateur requis');
+
+    return await fetchAndStoreHistoricalRates();
   }
 );

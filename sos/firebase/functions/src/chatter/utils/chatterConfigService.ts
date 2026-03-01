@@ -293,7 +293,7 @@ export function getClientCallCommission(config: ChatterConfig, providerType?: 'l
   } else if (providerType === 'expat' && config.commissionClientCallAmountExpat != null) {
     base = config.commissionClientCallAmountExpat;
   } else {
-    base = config.commissionClientCallAmount || 1000;
+    base = config.commissionClientCallAmount || 300;
   }
   const flashMultiplier = getFlashBonusMultiplier(config);
   return Math.round(base * flashMultiplier);
@@ -374,7 +374,7 @@ export function getCaptainCallCommission(config: ChatterConfig, providerType?: '
   if (providerType === 'expat' && config.commissionCaptainCallAmountExpat != null) {
     return config.commissionCaptainCallAmountExpat;
   }
-  return config.commissionCaptainCallAmountLawyer ?? 200;
+  return config.commissionCaptainCallAmountLawyer ?? 300;
 }
 
 /**

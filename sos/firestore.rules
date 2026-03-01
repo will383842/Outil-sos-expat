@@ -49,6 +49,16 @@ service cloud.firestore {
       return isAdmin();
     }
 
+    // Expert-comptable: acces lecture seule aux donnees financieres
+    function isAccountant() {
+      return isAuthenticated() && request.auth.token.accountant == true;
+    }
+
+    // Lecteur finance: admin OU expert-comptable
+    function isFinanceReader() {
+      return isFinanceAdmin() || isAccountant();
+    }
+
     // Vérifie si l'utilisateur est agency_manager (pour dashboard multi-prestataire)
     function isAgencyManager() {
       return request.auth != null &&
@@ -1338,11 +1348,33 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
+    // ================= EXCHANGE RATES (ECB) =================
+    // Taux de change BCE quotidiens - conformite comptable estonienne
+    match /exchange_rates/{date} {
+      // Lecture: admin ou expert-comptable
+      allow read: if isFinanceReader();
+      // Ecriture: Cloud Functions uniquement (fetch ECB automatique)
+      allow write: if false;
+    }
+
+    // ================= ACCOUNTING ARCHIVES =================
+    // Archives comptables (fallback Firestore si Storage indisponible)
+    match /accounting_archives/{period} {
+      allow read: if isFinanceReader();
+      allow write: if false;
+    }
+
+    // ================= ACCOUNTING CLOSING REPORTS =================
+    match /accounting_closing_reports/{period} {
+      allow read: if isFinanceReader();
+      allow write: if false;
+    }
+
     // ================= TAX CONFIGS =================
     // Configuration TVA par pays (taux standard, reduit, etc.)
     match /tax_configs/{countryCode} {
-      // Lecture: admin uniquement (donnees sensibles)
-      allow read: if isAdmin();
+      // Lecture: admin ou expert-comptable
+      allow read: if isFinanceReader();
       // Ecriture: admin uniquement
       allow write: if isAdmin();
     }
@@ -1359,8 +1391,8 @@ service cloud.firestore {
     // ================= TAX DECLARATIONS =================
     // Declarations TVA par pays/periode
     match /tax_declarations/{declarationId} {
-      // Lecture: admin uniquement
-      allow read: if isAdmin();
+      // Lecture: admin ou expert-comptable
+      allow read: if isFinanceReader();
       // Ecriture: admin uniquement
       allow write: if isAdmin();
     }
@@ -1368,8 +1400,8 @@ service cloud.firestore {
     // ================= THRESHOLD TRACKING =================
     // Suivi des seuils de CA par pays (pour obligations fiscales)
     match /threshold_tracking/{trackingId} {
-      // Lecture: admin (donnees sensibles)
-      allow read: if isAdmin();
+      // Lecture: admin ou expert-comptable
+      allow read: if isFinanceReader();
       // Ecriture: admin ou Cloud Functions
       allow write: if isAdmin();
     }
@@ -1377,8 +1409,8 @@ service cloud.firestore {
     // ================= THRESHOLD ALERTS =================
     // Alertes quand un seuil est proche ou atteint
     match /threshold_alerts/{alertId} {
-      // Lecture: admin
-      allow read: if isAdmin();
+      // Lecture: admin ou expert-comptable
+      allow read: if isFinanceReader();
       // Ecriture: admin
       allow write: if isAdmin();
     }
@@ -1387,8 +1419,8 @@ service cloud.firestore {
     // Ecritures comptables (debit/credit)
     // IMMUTABILITE: une ecriture POSTED ne peut plus etre modifiee
     match /journal_entries/{entryId} {
-      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
-      allow read: if isFinanceAdmin();
+      // Lecture: FINANCE_ADMIN, SUPER_ADMIN ou EXPERT-COMPTABLE
+      allow read: if isFinanceReader();
       // Creation: Cloud Functions uniquement (genere automatiquement)
       allow create: if false;
       // Update: FINANCE_ADMIN peut faire passer DRAFT -> POSTED uniquement
@@ -1403,11 +1435,33 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ================= SUPPORTING DOCUMENTS =================
+    // Pieces justificatives externes (factures fournisseurs, recus, releves, contrats)
+    // Retention legale estonienne 7 ans - JAMAIS de suppression
+    match /supporting_documents/{docId} {
+      // Lecture: admin ou expert-comptable
+      allow read: if isFinanceReader();
+      // Creation: Cloud Functions uniquement (numerotation sequentielle)
+      allow create: if false;
+      // Modification: admin uniquement, champs immutables proteges
+      allow update: if isFinanceAdmin() &&
+                    !request.resource.data.diff(resource.data).affectedKeys()
+                      .hasAny(['documentNumber', 'uploadedBy', 'createdAt']);
+      // Suppression: JAMAIS (retention legale 7 ans)
+      allow delete: if false;
+    }
+
+    // Compteurs numerotation sequentielle - Cloud Functions only
+    match /supporting_document_counters/{year} {
+      allow read: if isFinanceReader();
+      allow write: if false;
+    }
+
     // ================= CHART OF ACCOUNTS =================
     // Plan comptable (liste des comptes: 411000 Clients, 701000 Ventes, etc.)
     match /chart_of_accounts/{accountCode} {
-      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
-      allow read: if isFinanceAdmin();
+      // Lecture: FINANCE_ADMIN, SUPER_ADMIN ou EXPERT-COMPTABLE
+      allow read: if isFinanceReader();
       // Ecriture: SUPER_ADMIN uniquement (modification du plan comptable = risque)
       allow create, update, delete: if isSuperAdmin();
     }
@@ -1415,8 +1469,8 @@ service cloud.firestore {
     // ================= ACCOUNTING PERIODS =================
     // Periodes comptables (mois, trimestres, annees)
     match /accounting_periods/{periodId} {
-      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
-      allow read: if isFinanceAdmin();
+      // Lecture: FINANCE_ADMIN, SUPER_ADMIN ou EXPERT-COMPTABLE
+      allow read: if isFinanceReader();
       // Creation/Suppression: SUPER_ADMIN uniquement
       allow create, delete: if isSuperAdmin();
       // Update: FINANCE_ADMIN peut cloturer une periode (status: OPEN -> CLOSED)
@@ -1432,8 +1486,8 @@ service cloud.firestore {
     // ================= TAX FILINGS =================
     // Declarations fiscales (TVA mensuelle, trimestrielle, annuelle)
     match /tax_filings/{filingId} {
-      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
-      allow read: if isFinanceAdmin();
+      // Lecture: FINANCE_ADMIN, SUPER_ADMIN ou EXPERT-COMPTABLE
+      allow read: if isFinanceReader();
       // Creation: Cloud Functions uniquement (genere automatiquement)
       allow create: if false;
       // Update: FINANCE_ADMIN peut changer le statut et ajouter des notes
@@ -1466,8 +1520,8 @@ service cloud.firestore {
     // ================= RECONCILIATION RECORDS =================
     // Rapprochements bancaires et comptables
     match /reconciliation_records/{recordId} {
-      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
-      allow read: if isFinanceAdmin();
+      // Lecture: FINANCE_ADMIN, SUPER_ADMIN ou EXPERT-COMPTABLE
+      allow read: if isFinanceReader();
       // Ecriture: FINANCE_ADMIN ou SUPER_ADMIN
       allow create, update: if isFinanceAdmin();
       // Delete: SUPER_ADMIN uniquement (pour correction d'erreurs)
@@ -1478,8 +1532,8 @@ service cloud.firestore {
     // Logs d'audit specifiques aux operations comptables
     // Toute modification comptable doit etre tracee ici
     match /finance_audit_logs/{logId} {
-      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
-      allow read: if isFinanceAdmin();
+      // Lecture: FINANCE_ADMIN, SUPER_ADMIN ou EXPERT-COMPTABLE
+      allow read: if isFinanceReader();
       // Ecriture: Cloud Functions uniquement (audit automatique)
       allow write: if false;
     }
@@ -1487,8 +1541,8 @@ service cloud.firestore {
     // ================= TAX FILING NOTIFICATIONS =================
     // Rappels automatiques pour echeances fiscales
     match /tax_filing_notifications/{notifId} {
-      // Lecture: Admin uniquement
-      allow read: if isAdmin();
+      // Lecture: Admin ou expert-comptable
+      allow read: if isFinanceReader();
       // Ecriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -1496,8 +1550,8 @@ service cloud.firestore {
     // ================= TAX FILING CONFIGS =================
     // Configuration par type de declaration (seuils, emails de notification)
     match /tax_filing_configs/{configId} {
-      // Lecture: Admin uniquement
-      allow read: if isAdmin();
+      // Lecture: Admin ou expert-comptable
+      allow read: if isFinanceReader();
       // Ecriture: Admin uniquement (configuration manuelle)
       allow write: if isAdmin();
     }

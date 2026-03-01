@@ -186,6 +186,112 @@ export const bootstrapFirstAdmin = onCall(
 );
 
 /**
+ * Get accountant whitelist from Firestore
+ */
+async function getAccountantEmails(): Promise<string[]> {
+  try {
+    const doc = await db.collection("settings").doc("accountant_whitelist").get();
+    if (doc.exists) {
+      const data = doc.data();
+      if (data?.emails && Array.isArray(data.emails)) {
+        return data.emails.map((e: string) => e.toLowerCase());
+      }
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Set accountant claims for an external accountant (read-only finance access)
+ * REQUIRES: Caller must be an existing admin
+ */
+export const setAccountantClaims = onCall(
+  {
+    region: "europe-west1",
+    cors: ALLOWED_ORIGINS,
+    memory: "256MiB",
+    cpu: 0.083,
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Vous devez être connecté");
+    }
+
+    // Only admins can set accountant claims
+    const callerIsAdmin = request.auth.token.admin === true || request.auth.token.role === "admin";
+    if (!callerIsAdmin) {
+      throw new HttpsError("permission-denied", "Seuls les administrateurs peuvent ajouter un expert-comptable");
+    }
+
+    const { email } = request.data || {};
+    if (!email) {
+      throw new HttpsError("invalid-argument", "Email requis");
+    }
+
+    const normalizedEmail = email.toLowerCase();
+
+    // Verify email is in accountant whitelist (whitelist must exist and contain the email)
+    const accountantEmails = await getAccountantEmails();
+    if (accountantEmails.length === 0) {
+      throw new HttpsError("failed-precondition", "La whitelist expert-comptable est vide. Configurez settings/accountant_whitelist d'abord.");
+    }
+    if (!accountantEmails.includes(normalizedEmail)) {
+      throw new HttpsError("permission-denied", "Cet email n'est pas dans la whitelist expert-comptable");
+    }
+
+    await checkRateLimit(request.auth.uid, "setAccountantClaims", RATE_LIMITS.ADMIN_CLAIMS);
+
+    try {
+      const userRecord = await getAuth().getUserByEmail(normalizedEmail);
+
+      // Set accountant claims (financeRead for read-only access to finance data)
+      await getAuth().setCustomUserClaims(userRecord.uid, {
+        role: "accountant",
+        accountant: true,
+        financeRead: true,
+      });
+
+      await db.collection("users").doc(userRecord.uid).set(
+        {
+          role: "accountant",
+          isAccountant: true,
+          financeRead: true,
+          email: normalizedEmail,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      );
+
+      // Audit log
+      await db.collection("admin_audit_logs").add({
+        action: "accountant_claims_set",
+        targetEmail: normalizedEmail,
+        targetUid: userRecord.uid,
+        performedBy: request.auth.uid,
+        performedByEmail: request.auth.token.email,
+        timestamp: new Date(),
+      });
+
+      console.log(`[setAccountantClaims] Accountant claims set for ${normalizedEmail} by ${request.auth.token.email}`);
+
+      return {
+        success: true,
+        uid: userRecord.uid,
+        message: `Claims expert-comptable définis pour ${normalizedEmail}.`,
+      };
+    } catch (error: unknown) {
+      console.error("[setAccountantClaims] Error:", error);
+      if (error instanceof Error && (error as any).code === "auth/user-not-found") {
+        throw new HttpsError("not-found", "Utilisateur non trouvé avec cet email");
+      }
+      throw new HttpsError("internal", "Erreur lors de la définition des claims");
+    }
+  }
+);
+
+/**
  * P0 SECURITY FIX: Force la mise à jour des claims admin (pour les admins existants)
  * REQUIRES: Caller must be an existing admin to add new admins
  * This prevents unauthenticated privilege escalation

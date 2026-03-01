@@ -392,9 +392,11 @@ const ProfileEdit: React.FC = () => {
         }
 
         // Firestore
-        const updateData: Partial<UserData> & { updatedAt: Date; photoURL?: string } = {
+        const updateData: Partial<UserData> & { updatedAt: Date; photoURL?: string; profilePhoto?: string; avatar?: string } = {
           ...formData,
           photoURL,
+          profilePhoto: photoURL,
+          avatar: photoURL,
           updatedAt: new Date(),
         };
 
@@ -415,6 +417,8 @@ const ProfileEdit: React.FC = () => {
 
           const sosProfileUpdate: Record<string, unknown> = {
             photoURL,
+            profilePhoto: photoURL,
+            avatar: photoURL,
             updatedAt: serverTimestamp() as Timestamp,
             // P0 FIX: Synchroniser l'email vers sos_profiles
             ...(formData.email && {

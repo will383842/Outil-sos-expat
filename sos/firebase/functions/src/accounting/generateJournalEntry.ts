@@ -16,8 +16,11 @@ import {
   RefundData,
   PayoutData,
   SubscriptionData,
+  CommissionData,
+  WithdrawalData,
   VatInfo,
   CustomerInfo,
+  AffiliateUserType,
   DEFAULT_ACCOUNTING_CONFIG,
 } from './types';
 
@@ -67,10 +70,23 @@ const ACCOUNT_NAMES: Record<string, string> = {
   '512200': 'PayPal',
   '512300': 'Wise',
   '512400': 'Banque LHV',
+  '516100': 'Wise - transit',
+  '516200': 'Flutterwave - transit',
+  '621100': 'Commissions chatters',
+  '621200': 'Commissions influencers',
+  '621300': 'Commissions bloggers',
+  '621400': 'Commissions group admins',
+  '621500': 'Commissions affilies',
   '622100': 'Frais Stripe',
   '622200': 'Frais PayPal',
   '622300': 'Frais Wise',
+  '622400': 'Frais retrait SOS',
   '627000': 'Frais bancaires',
+  '421100': 'Chatters a payer',
+  '421200': 'Influencers a payer',
+  '421300': 'Bloggers a payer',
+  '421400': 'Group admins a payer',
+  '421500': 'Affilies a payer',
   '706000': 'Commissions sur services',
   '706100': 'Commission appels avocats',
   '706200': 'Commission appels expatries',
@@ -809,6 +825,347 @@ export function generateSubscriptionEntry(data: SubscriptionData): JournalEntry 
   };
 
   return entry;
+}
+
+// =============================================================================
+// HELPERS COMMISSIONS & RETRAITS
+// =============================================================================
+
+/**
+ * Code compte charge commission par type d'affilie (621xxx)
+ */
+function getCommissionChargeAccountCode(userType: AffiliateUserType): string {
+  switch (userType) {
+    case 'chatter': return '621100';
+    case 'influencer': return '621200';
+    case 'blogger': return '621300';
+    case 'group_admin': return '621400';
+    case 'affiliate': return '621500';
+    default: return '621500';
+  }
+}
+
+/**
+ * Code compte dette affilie par type (421xxx)
+ */
+function getAffiliatePayableAccountCode(userType: AffiliateUserType): string {
+  switch (userType) {
+    case 'chatter': return '421100';
+    case 'influencer': return '421200';
+    case 'blogger': return '421300';
+    case 'group_admin': return '421400';
+    case 'affiliate': return '421500';
+    default: return '421500';
+  }
+}
+
+/**
+ * Code compte transit sortant par methode de paiement
+ */
+function getTransitAccountCode(paymentMethod: string): string {
+  switch (paymentMethod) {
+    case 'wise':
+    case 'bank_transfer':
+      return '516100';
+    case 'flutterwave':
+    case 'mobile_money':
+      return '516200';
+    case 'paypal':
+      return '512200';
+    case 'stripe':
+      return '512100';
+    default:
+      return '512400';
+  }
+}
+
+/**
+ * Libelle humain du type d'affilie
+ */
+function getUserTypeLabel(userType: AffiliateUserType): string {
+  switch (userType) {
+    case 'chatter': return 'Chatter';
+    case 'influencer': return 'Influencer';
+    case 'blogger': return 'Blogger';
+    case 'group_admin': return 'Group Admin';
+    case 'affiliate': return 'Affilie';
+    default: return 'Affilie';
+  }
+}
+
+// =============================================================================
+// GENERATION ECRITURES - COMMISSION AFFILIE
+// =============================================================================
+
+/**
+ * Generer l'ecriture comptable pour une commission affilie
+ *
+ * Schema:
+ * ```
+ * DEBIT  621xxx Commissions [type]  XX.XX  (charge)
+ * CREDIT 421xxx [type] a payer      XX.XX  (dette envers l'affilie)
+ * ```
+ */
+export function generateCommissionEntry(data: CommissionData): JournalEntry {
+  const {
+    commissionId,
+    userType,
+    userId,
+    amountEur,
+    currency,
+    exchangeRate,
+    exchangeRateDate,
+    commissionDate,
+    source,
+  } = data;
+
+  const chargeAccount = getCommissionChargeAccountCode(userType);
+  const payableAccount = getAffiliatePayableAccountCode(userType);
+  const label = getUserTypeLabel(userType);
+
+  const lines: JournalLine[] = [
+    {
+      accountCode: chargeAccount,
+      accountName: getAccountName(chargeAccount),
+      debit: amountEur,
+      credit: 0,
+      currency: 'EUR',
+      description: `Commission ${label} ${userId}${source ? ` (${source})` : ''}`,
+      originalCurrency: currency,
+      originalAmount: data.amountCents / 100,
+      exchangeRate,
+      exchangeRateDate,
+    },
+    {
+      accountCode: payableAccount,
+      accountName: getAccountName(payableAccount),
+      debit: 0,
+      credit: amountEur,
+      currency: 'EUR',
+      description: `Commission due ${label} ${userId}`,
+      originalCurrency: currency,
+      originalAmount: data.amountCents / 100,
+      exchangeRate,
+      exchangeRateDate,
+    },
+  ];
+
+  return {
+    id: `je_com_${commissionId}_${Date.now()}`,
+    date: Timestamp.fromDate(commissionDate),
+    reference: generateReference('COM', commissionDate),
+    description: `Commission ${label} - ${userId}`,
+    sourceDocument: {
+      type: 'COMMISSION',
+      id: commissionId,
+    },
+    lines,
+    period: getPeriod(commissionDate),
+    status: 'DRAFT' as JournalEntryStatus,
+    totalDebit: amountEur,
+    totalCredit: amountEur,
+    createdAt: Timestamp.now(),
+    metadata: {
+      userType,
+      userId,
+      originalCurrency: currency,
+      exchangeRate,
+      exchangeRateDate,
+      source,
+    },
+  };
+}
+
+// =============================================================================
+// GENERATION ECRITURES - RETRAIT AFFILIE
+// =============================================================================
+
+/**
+ * Generer l'ecriture comptable pour un retrait affilie
+ *
+ * Schema:
+ * ```
+ * DEBIT  421xxx [type] a payer      XX.XX  (liberation dette)
+ * DEBIT  622400 Frais retrait SOS    3.00  (frais de retrait)
+ * CREDIT 516xxx Transit [methode]   XX.XX  (sortie tresorerie)
+ * ```
+ */
+export function generateWithdrawalEntry(data: WithdrawalData): JournalEntry {
+  const {
+    withdrawalId,
+    userType,
+    userId,
+    amountEur,
+    withdrawalFeeEur,
+    currency,
+    exchangeRate,
+    exchangeRateDate,
+    paymentMethod,
+    withdrawalDate,
+  } = data;
+
+  const payableAccount = getAffiliatePayableAccountCode(userType);
+  const transitAccount = getTransitAccountCode(paymentMethod);
+  const label = getUserTypeLabel(userType);
+  const totalOut = round2(amountEur + withdrawalFeeEur);
+
+  const lines: JournalLine[] = [
+    // DEBIT: Liberation de la dette affilie
+    {
+      accountCode: payableAccount,
+      accountName: getAccountName(payableAccount),
+      debit: amountEur,
+      credit: 0,
+      currency: 'EUR',
+      description: `Retrait ${label} ${userId}`,
+      originalCurrency: currency,
+      originalAmount: data.amountCents / 100,
+      exchangeRate,
+      exchangeRateDate,
+    },
+  ];
+
+  // DEBIT: Frais de retrait SOS (si > 0)
+  if (withdrawalFeeEur > 0) {
+    lines.push({
+      accountCode: '622400',
+      accountName: getAccountName('622400'),
+      debit: withdrawalFeeEur,
+      credit: 0,
+      currency: 'EUR',
+      description: `Frais retrait ${withdrawalId}`,
+      originalCurrency: currency,
+      originalAmount: data.withdrawalFeeCents / 100,
+      exchangeRate,
+      exchangeRateDate,
+    });
+  }
+
+  // CREDIT: Sortie tresorerie
+  lines.push({
+    accountCode: transitAccount,
+    accountName: getAccountName(transitAccount),
+    debit: 0,
+    credit: totalOut,
+    currency: 'EUR',
+    description: `Paiement ${label} ${userId} via ${paymentMethod}`,
+    originalCurrency: currency,
+    originalAmount: (data.amountCents + data.withdrawalFeeCents) / 100,
+    exchangeRate,
+    exchangeRateDate,
+  });
+
+  return {
+    id: `je_wdr_${withdrawalId}_${Date.now()}`,
+    date: Timestamp.fromDate(withdrawalDate),
+    reference: generateReference('WDR', withdrawalDate),
+    description: `Retrait ${label} ${userId} via ${paymentMethod}`,
+    sourceDocument: {
+      type: 'WITHDRAWAL',
+      id: withdrawalId,
+    },
+    lines,
+    period: getPeriod(withdrawalDate),
+    status: 'DRAFT' as JournalEntryStatus,
+    totalDebit: round2(lines.reduce((sum, l) => sum + l.debit, 0)),
+    totalCredit: round2(lines.reduce((sum, l) => sum + l.credit, 0)),
+    createdAt: Timestamp.now(),
+    metadata: {
+      userType,
+      userId,
+      paymentMethod,
+      originalCurrency: currency,
+      exchangeRate,
+      exchangeRateDate,
+      withdrawalFeeEur,
+    },
+  };
+}
+
+// =============================================================================
+// GENERATION ECRITURES - TRANSFERT PRESTATAIRE (liberation escrow)
+// =============================================================================
+
+/**
+ * Generer l'ecriture pour le transfert Stripe vers prestataire
+ *
+ * Schema:
+ * ```
+ * DEBIT  467100 Transit presta    70.00  (liberation de la dette)
+ * CREDIT 512100 Stripe            70.00  (sortie de notre compte)
+ * ```
+ */
+export function generateProviderTransferEntry(data: {
+  paymentId: string;
+  providerId: string;
+  amountEur: number;
+  currency: string;
+  exchangeRate: number;
+  exchangeRateDate: string;
+  originalAmountCents: number;
+  transferDate: Date;
+}): JournalEntry {
+  const {
+    paymentId,
+    providerId,
+    amountEur,
+    currency,
+    exchangeRate,
+    exchangeRateDate,
+    originalAmountCents,
+    transferDate,
+  } = data;
+
+  const lines: JournalLine[] = [
+    {
+      accountCode: '467100',
+      accountName: getAccountName('467100'),
+      debit: amountEur,
+      credit: 0,
+      currency: 'EUR',
+      description: `Liberation transit prestataire ${providerId}`,
+      originalCurrency: currency,
+      originalAmount: originalAmountCents / 100,
+      exchangeRate,
+      exchangeRateDate,
+    },
+    {
+      accountCode: '512100',
+      accountName: getAccountName('512100'),
+      debit: 0,
+      credit: amountEur,
+      currency: 'EUR',
+      description: `Transfert Stripe vers prestataire ${providerId}`,
+      originalCurrency: currency,
+      originalAmount: originalAmountCents / 100,
+      exchangeRate,
+      exchangeRateDate,
+    },
+  ];
+
+  return {
+    id: `je_trf_${paymentId}_${Date.now()}`,
+    date: Timestamp.fromDate(transferDate),
+    reference: generateReference('TRF', transferDate),
+    description: `Transfert prestataire ${providerId}`,
+    sourceDocument: {
+      type: 'PROVIDER_TRANSFER',
+      id: paymentId,
+      collection: 'payments',
+    },
+    lines,
+    period: getPeriod(transferDate),
+    status: 'DRAFT' as JournalEntryStatus,
+    totalDebit: amountEur,
+    totalCredit: amountEur,
+    createdAt: Timestamp.now(),
+    metadata: {
+      providerId,
+      originalCurrency: currency,
+      exchangeRate,
+      exchangeRateDate,
+    },
+  };
 }
 
 // =============================================================================

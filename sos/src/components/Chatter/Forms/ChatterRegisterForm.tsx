@@ -24,6 +24,7 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
+  Phone,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -124,6 +125,8 @@ export interface ChatterRegistrationData {
   email: string;
   password: string;
   country: string;
+  whatsappCountryCode?: string;
+  whatsappNumber?: string;
   interventionCountries?: string[];
   language: string;
   additionalLanguages?: string[];
@@ -291,6 +294,16 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           return intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Password must be at least 8 characters' });
         }
         return null;
+      case 'whatsappNumber': {
+        if (!value.trim()) {
+          return intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+        }
+        const digitsOnly = value.replace(/\D/g, '');
+        if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+          return intl.formatMessage({ id: 'form.error.whatsappInvalid', defaultMessage: 'Please enter a valid WhatsApp number (7-15 digits)' });
+        }
+        return null;
+      }
       default:
         return null;
     }
@@ -339,6 +352,11 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     setFormData(prev => ({
       ...prev,
       country: entry.code,
+      // Auto-set WhatsApp country code if not manually changed yet
+      ...(!prev.whatsappCountryCode || prev.whatsappCountryCode === (selectedCountryEntry?.phoneCode || '')
+        ? { whatsappCountryCode: entry.phoneCode }
+        : {}
+      ),
     }));
     setShowCountryDropdown(false);
     setCountrySearch('');
@@ -457,6 +475,18 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     }
     if (!formData.country) {
       errors.country = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    }
+    // WhatsApp is required
+    if (!formData.whatsappNumber?.trim()) {
+      errors.whatsappNumber = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    } else {
+      const waDigits = formData.whatsappNumber.replace(/\D/g, '');
+      if (waDigits.length < 7 || waDigits.length > 15) {
+        errors.whatsappNumber = intl.formatMessage({ id: 'form.error.whatsappInvalid', defaultMessage: 'Please enter a valid WhatsApp number (7-15 digits)' });
+      }
+    }
+    if (!formData.whatsappCountryCode) {
+      errors.whatsappCountryCode = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
     }
     if (!formData.language) {
       errors.language = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
@@ -820,6 +850,71 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           <p id="country-error" className={s.errorText} role="alert">
             <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
             {validationErrors.country}
+          </p>
+        )}
+      </div>
+
+      {/* WhatsApp Number */}
+      <div className="space-y-2">
+        <label htmlFor="whatsappNumber" className={s.label}>
+          <FormattedMessage id="form.whatsapp" defaultMessage="WhatsApp number" />
+          <span className={`font-bold text-lg ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
+        </label>
+        <div className="flex gap-2">
+          {/* Country code selector */}
+          <div className="relative w-[130px] flex-shrink-0">
+            <select
+              id="whatsappCountryCode"
+              value={formData.whatsappCountryCode || ''}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, whatsappCountryCode: e.target.value }));
+                if (validationErrors.whatsappCountryCode) {
+                  setValidationErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.whatsappCountryCode;
+                    return newErrors;
+                  });
+                }
+              }}
+              className={`${s.input} pl-3 pr-1 text-sm appearance-none cursor-pointer ${validationErrors.whatsappCountryCode ? s.inputError : s.inputDefault}`}
+              aria-label={intl.formatMessage({ id: 'form.whatsapp.countryCode', defaultMessage: 'Country code' })}
+            >
+              <option value="">+--</option>
+              {phoneCodesData.map(entry => (
+                <option key={`wa-${entry.code}`} value={entry.phoneCode}>
+                  {getFlag(entry.code)} {entry.phoneCode}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+          </div>
+          {/* Phone number input */}
+          <div className="relative flex-1">
+            <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${iconColor} z-10 pointer-events-none`} />
+            <input
+              type="tel"
+              id="whatsappNumber"
+              name="whatsappNumber"
+              value={formData.whatsappNumber || ''}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder={intl.formatMessage({ id: 'form.whatsapp.placeholder', defaultMessage: '6 12 34 56 78' })}
+              inputMode="tel"
+              enterKeyHint="next"
+              className={`${s.input} pl-12 ${validationErrors.whatsappNumber ? s.inputError : s.inputDefault} ${formData.whatsappNumber ? s.inputFilled : ''}`}
+              aria-required="true"
+              aria-invalid={!!validationErrors.whatsappNumber}
+              aria-describedby={validationErrors.whatsappNumber ? 'whatsapp-error' : 'whatsapp-hint'}
+            />
+          </div>
+        </div>
+        <p id="whatsapp-hint" className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+          <FormattedMessage id="form.whatsapp.hint" defaultMessage="Used for team communication only — never shared publicly" />
+        </p>
+        {(validationErrors.whatsappNumber || validationErrors.whatsappCountryCode) && (
+          <p id="whatsapp-error" className={s.errorText} role="alert">
+            <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white">!</span>
+            {validationErrors.whatsappNumber || validationErrors.whatsappCountryCode}
           </p>
         )}
       </div>

@@ -124,18 +124,23 @@ const InfluencerDashboardLayout: React.FC<InfluencerDashboardLayoutProps> = ({ c
                 {/* Header avec photo utilisateur */}
                 <div className="bg-gradient-to-r from-red-500 to-rose-600 p-4">
                   <div className="flex items-center gap-3">
-                    {user?.profilePhoto?.startsWith('http') ? (
-                      <img
-                        src={user.profilePhoto}
-                        alt={user.firstName || user.displayName || ''}
-                        className="w-12 h-12 rounded-full object-cover ring-2 ring-white/50"
-                        loading="eager"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-white" />
-                      </div>
-                    )}
+                    {(() => {
+                      const photo = [user?.profilePhoto, user?.photoURL, user?.avatar].find(
+                        (u) => u && u.startsWith('http')
+                      );
+                      return photo ? (
+                        <img
+                          src={photo}
+                          alt={user?.firstName || user?.displayName || ''}
+                          className="w-12 h-12 rounded-full object-cover ring-2 ring-white/50"
+                          loading="eager"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                          <User className="w-6 h-6 text-white" />
+                        </div>
+                      );
+                    })()}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-white truncate">
                         {user?.firstName || user?.displayName?.split(' ')[0] || user?.email || ''}

@@ -37,6 +37,9 @@ import {
   User,
   Calendar,
   ArrowRight,
+  CheckCircle2,
+  XCircle,
+  Sparkles,
 } from 'lucide-react';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 
@@ -94,12 +97,24 @@ interface TierInfo {
   minCalls?: number;
 }
 
+interface QualityBonusStatus {
+  activeN1Count: number;
+  minRecruits: number;
+  monthlyTeamCommissions: number;
+  minCommissions: number;
+  criteriaMet: boolean;
+  adminOverride: boolean;
+  qualified: boolean;
+  bonusAmount: number;
+}
+
 interface CaptainDashboardData {
   captainInfo: {
     captainPromotedAt: string | { _seconds: number; _nanoseconds: number } | null;
     captainMonthlyTeamCalls: number;
     captainQualityBonusEnabled: boolean;
   };
+  qualityBonusStatus?: QualityBonusStatus;
   tierProgression: {
     currentTier: TierInfo | null;
     nextTier: (TierInfo & { minCalls: number }) | null;
@@ -575,6 +590,110 @@ function ChatterCaptainDashboard() {
           </p>
         </div>
       </div>
+
+      {/* ============================================================== */}
+      {/* QUALITY BONUS STATUS */}
+      {/* ============================================================== */}
+      {data.qualityBonusStatus && (
+        <div className={`${UI.card} p-5 sm:p-6`}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              data.qualityBonusStatus.qualified
+                ? 'bg-green-100 dark:bg-green-900/30'
+                : 'bg-gray-100 dark:bg-white/10'
+            }`}>
+              <Sparkles className={`h-5 w-5 ${
+                data.qualityBonusStatus.qualified ? 'text-green-600 dark:text-green-400' : 'text-gray-400'
+              }`} />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                <FormattedMessage id="chatter.captain.qualityBonus.title" defaultMessage="Bonus qualité mensuel" />
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {data.qualityBonusStatus.qualified ? (
+                  <span className="text-green-600 dark:text-green-400 font-medium">
+                    <FormattedMessage
+                      id="chatter.captain.qualityBonus.qualified"
+                      defaultMessage="Qualifié — +{amount} ce mois"
+                      values={{ amount: formatCents(data.qualityBonusStatus.bonusAmount) }}
+                    />
+                  </span>
+                ) : (
+                  <FormattedMessage id="chatter.captain.qualityBonus.notQualified" defaultMessage="Critères non atteints ce mois" />
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Criteria progress bars */}
+          <div className="space-y-4">
+            {/* N1 Recruits criterion */}
+            {(() => {
+              const qb = data.qualityBonusStatus!;
+              const recruitsPercent = qb.minRecruits > 0 ? Math.min(100, Math.round((qb.activeN1Count / qb.minRecruits) * 100)) : 0;
+              const recruitsMet = qb.activeN1Count >= qb.minRecruits;
+              return (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2 text-sm">
+                      {recruitsMet ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400" />
+                      )}
+                      <span className={recruitsMet ? 'text-green-700 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-400'}>
+                        <FormattedMessage id="chatter.captain.qualityBonus.recruits" defaultMessage="Recrues actives" />
+                      </span>
+                    </div>
+                    <span className={`text-sm font-bold ${recruitsMet ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-300'}`}>
+                      {qb.activeN1Count}/{qb.minRecruits}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${recruitsMet ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-500'}`}
+                      style={{ width: `${recruitsPercent}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Monthly commissions criterion */}
+            {(() => {
+              const qb = data.qualityBonusStatus!;
+              const commPercent = qb.minCommissions > 0 ? Math.min(100, Math.round((qb.monthlyTeamCommissions / qb.minCommissions) * 100)) : 0;
+              const commMet = qb.monthlyTeamCommissions >= qb.minCommissions;
+              return (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2 text-sm">
+                      {commMet ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400" />
+                      )}
+                      <span className={commMet ? 'text-green-700 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-400'}>
+                        <FormattedMessage id="chatter.captain.qualityBonus.commissions" defaultMessage="Commissions équipe" />
+                      </span>
+                    </div>
+                    <span className={`text-sm font-bold ${commMet ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-300'}`}>
+                      {formatCents(qb.monthlyTeamCommissions)}/{formatCents(qb.minCommissions)}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${commMet ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-500'}`}
+                      style={{ width: `${commPercent}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* ============================================================== */}
       {/* N1 RECRUITS */}

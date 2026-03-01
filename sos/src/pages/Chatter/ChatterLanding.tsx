@@ -488,7 +488,7 @@ const ChatterLanding: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-sm sm:text-base text-white/90 mb-3">
-                  <FormattedMessage id="chatter.landing.money.method2.desc" defaultMessage="Poster dans groupes Facebook/Telegram/WhatsApp d'expats. Copier-coller simple. 1 appel = 10$." />
+                  <FormattedMessage id="chatter.landing.money.method2.desc" defaultMessage="Poster dans groupes Facebook/Telegram/WhatsApp d'expats. Copier-coller simple. 1 appel = 3-5$." />
                 </p>
                 <div className="bg-black/30 border border-amber-500/30 rounded-xl p-3">
                   <p className="text-xs sm:text-sm font-bold text-amber-400">

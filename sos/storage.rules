@@ -182,6 +182,24 @@ service firebase.storage {
       allow delete: if isAdmin();
     }
 
+    // SUPPORTING DOCUMENTS: Pieces justificatives comptables
+    // Retention legale estonienne 7 ans - JAMAIS de suppression
+    match /supporting_documents/{year}/{month}/{docId}/{fileName} {
+      // Lecture: admin uniquement (signed URLs generees par Cloud Functions)
+      allow read: if isAdmin();
+      // Creation: admin avec validation type et taille (15MB max)
+      allow create: if isAdmin() &&
+                    (isValidDocumentType() || isImage() ||
+                     request.resource.contentType in [
+                       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                       'application/vnd.ms-excel', 'text/csv']) &&
+                    isValidFileSize();
+      // Mise a jour: interdite (immutabilite)
+      allow update: if false;
+      // Suppression: JAMAIS (retention legale 7 ans)
+      allow delete: if false;
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

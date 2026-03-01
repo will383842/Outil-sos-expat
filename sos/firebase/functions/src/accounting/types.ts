@@ -14,7 +14,7 @@ import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 
 export type JournalEntryStatus = 'DRAFT' | 'POSTED' | 'REVERSED';
 
-export type SourceDocumentType = 'PAYMENT' | 'REFUND' | 'PAYOUT' | 'SUBSCRIPTION';
+export type SourceDocumentType = 'PAYMENT' | 'REFUND' | 'PAYOUT' | 'SUBSCRIPTION' | 'COMMISSION' | 'WITHDRAWAL' | 'PROVIDER_TRANSFER';
 
 export type ServiceType = 'lawyer_call' | 'expat_call';
 
@@ -46,6 +46,14 @@ export interface JournalLine {
   taxCode?: string;
   /** Code pays ISO pour TVA OSS */
   countryCode?: string;
+  /** Devise originale de la transaction (avant conversion EUR) */
+  originalCurrency?: string;
+  /** Montant original dans la devise source */
+  originalAmount?: number;
+  /** Taux de change ECB utilise (1 EUR = X devise) */
+  exchangeRate?: number;
+  /** Date du taux de change ECB utilise (YYYY-MM-DD) */
+  exchangeRateDate?: string;
 }
 
 /**
@@ -266,6 +274,71 @@ export interface SubscriptionData {
 }
 
 // =============================================================================
+// INTERFACES COMMISSIONS & RETRAITS
+// =============================================================================
+
+/**
+ * Type d'affilié pour les commissions
+ */
+export type AffiliateUserType = 'chatter' | 'influencer' | 'blogger' | 'group_admin' | 'affiliate';
+
+/**
+ * Donnees d'une commission pour generation d'ecriture
+ */
+export interface CommissionData {
+  /** ID de la commission */
+  commissionId: string;
+  /** Type d'affilié */
+  userType: AffiliateUserType;
+  /** ID de l'affilié */
+  userId: string;
+  /** Montant en centimes USD */
+  amountCents: number;
+  /** Montant en EUR (converti via ECB) */
+  amountEur: number;
+  /** Devise originale */
+  currency: string;
+  /** Taux de change ECB utilise */
+  exchangeRate: number;
+  /** Date du taux ECB */
+  exchangeRateDate: string;
+  /** Date de la commission */
+  commissionDate: Date;
+  /** Source (ex: appel, recrutement) */
+  source?: string;
+}
+
+/**
+ * Donnees d'un retrait pour generation d'ecriture
+ */
+export interface WithdrawalData {
+  /** ID du retrait */
+  withdrawalId: string;
+  /** Type d'affilié */
+  userType: AffiliateUserType;
+  /** ID de l'affilié */
+  userId: string;
+  /** Montant demande en centimes USD */
+  amountCents: number;
+  /** Montant en EUR */
+  amountEur: number;
+  /** Frais de retrait SOS en centimes USD */
+  withdrawalFeeCents: number;
+  /** Frais de retrait en EUR */
+  withdrawalFeeEur: number;
+  /** Devise originale */
+  currency: string;
+  /** Taux de change ECB */
+  exchangeRate: number;
+  /** Date du taux ECB */
+  exchangeRateDate: string;
+  /** Methode de paiement */
+  paymentMethod: 'wise' | 'bank_transfer' | 'flutterwave' | 'mobile_money' | 'paypal' | 'stripe';
+  /** Date du retrait */
+  withdrawalDate: Date;
+}
+
+// =============================================================================
 // INTERFACES REPORTING
 // =============================================================================
 
@@ -349,6 +422,9 @@ export interface AccountingConfig {
     refund: string;
     payout: string;
     subscription: string;
+    commission: string;
+    withdrawal: string;
+    provider_transfer: string;
   };
 }
 
@@ -363,5 +439,8 @@ export const DEFAULT_ACCOUNTING_CONFIG: AccountingConfig = {
     refund: 'REF',
     payout: 'OUT',
     subscription: 'SUB',
+    commission: 'COM',
+    withdrawal: 'WDR',
+    provider_transfer: 'TRF',
   },
 };

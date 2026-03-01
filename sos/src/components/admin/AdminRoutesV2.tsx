@@ -2,6 +2,7 @@
 import React, { Suspense, lazy } from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import ProtectedRoute from "../auth/ProtectedRoute";
+import { useAuth } from "../../contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
 // ===== DÉTECTION LANGUE NAVIGATEUR =====
@@ -116,6 +117,7 @@ const AdminEscrow = lazy(() => import("../../pages/admin/Finance/Escrow"));
 const CostMonitoring = lazy(() => import("../../pages/admin/Finance/CostMonitoring"));
 const AdminGcpCosts = lazy(() => import("../../pages/admin/Finance/AdminGcpCosts"));
 const AdminPlans = lazy(() => import("../../pages/admin/Finance/Plans"));
+const AdminSupportingDocuments = lazy(() => import("../../pages/admin/Finance/SupportingDocuments"));
 
 // ===== LAZY IMPORTS - USERS & PROVIDERS =====
 const AdminUsers = lazy(() => import("../../pages/admin/AdminUsers"));
@@ -566,10 +568,26 @@ const AdminTelegramConfig = lazy(() => import("../../pages/admin/Telegram/AdminT
 
 // ===== LAYOUT PROTÉGÉ ADMIN =====
 const AdminProtectedLayout: React.FC = () => (
-  <ProtectedRoute allowedRoles="admin">
+  <ProtectedRoute allowedRoles={["admin"]}>
     <Outlet />
   </ProtectedRoute>
 );
+
+// ===== LAYOUT PROTÉGÉ FINANCE (admin + expert-comptable en lecture seule) =====
+const FinanceProtectedLayout: React.FC = () => (
+  <ProtectedRoute allowedRoles={["admin", "accountant"]}>
+    <Outlet />
+  </ProtectedRoute>
+);
+
+// ===== REDIRECTION INDEX SELON LE ROLE =====
+const AdminIndexRedirect: React.FC = () => {
+  const { user } = useAuth() as { user: { role?: string } | null };
+  if (user?.role === 'accountant') {
+    return <Navigate to="finance/dashboard" replace />;
+  }
+  return <Navigate to="dashboard" replace />;
+};
 
 // ===== COMPOSANT PRINCIPAL =====
 const AdminRoutesV2: React.FC = () => {
@@ -585,10 +603,11 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
+      {/* Index /admin → redirige selon le rôle */}
+      <Route index element={<AdminIndexRedirect />} />
+
       {/* ===== Toutes les routes admin protégées ===== */}
       <Route element={<AdminProtectedLayout />}>
-      {/* Index /admin → /admin/dashboard */}
-      <Route index element={<Navigate to="dashboard" replace />} />
 
       {/* 📊 DASHBOARD */}
       <Route
@@ -728,7 +747,12 @@ const AdminRoutesV2: React.FC = () => {
         element={<Navigate to="../approvals/lawyers" replace />}
       />
 
-      {/* 💰 FINANCES - NEW COMPREHENSIVE ROUTES */}
+      {/* 📞 APPELS — suite dans AdminProtectedLayout après les finances */}
+
+      </Route>{/* End AdminProtectedLayout — les routes finance sont en parallele ci-dessous */}
+
+      {/* 💰 FINANCES — Accessible aux admins ET aux experts-comptables (lecture seule) */}
+      <Route element={<FinanceProtectedLayout />}>
       <Route
         path="finance/dashboard"
         element={
@@ -777,8 +801,6 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
-
-      {/* 💰 FINANCES */}
       <Route
         path="finance/payments"
         element={
@@ -907,6 +929,19 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="finance/supporting-documents"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminSupportingDocuments />
+          </Suspense>
+        }
+      />
+      <Route path="finance" element={<Navigate to="finance/dashboard" replace />} />
+      </Route>{/* End FinanceProtectedLayout */}
+
+      {/* ===== Suite des routes admin protégées (admin uniquement) ===== */}
+      <Route element={<AdminProtectedLayout />}>
 
       {/* 📞 APPELS */}
       <Route
@@ -1924,6 +1959,7 @@ export const useAdminRouteValidation = () => {
       "/admin/finance/profit-loss",
       "/admin/finance/cash-flow",
       "/admin/finance/costs",
+      "/admin/finance/supporting-documents",
       "/admin/calls",
       "/admin/calls/sessions",
       "/admin/calls/received",

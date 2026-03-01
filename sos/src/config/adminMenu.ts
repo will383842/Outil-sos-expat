@@ -31,6 +31,7 @@ import {
   Bot,
   Activity,
   Cpu,
+  Paperclip,
   // Finance icons
   LayoutDashboard,
   Repeat,
@@ -77,6 +78,7 @@ export type AdminMenuItem = {
   icon?: LucideIcon;
   badge?: string;
   descriptionKey?: string;
+  allowedRoles?: string[];
 };
 
 export const adminMenuTree: AdminMenuItem[] = [
@@ -251,11 +253,13 @@ export const adminMenuTree: AdminMenuItem[] = [
   },
 
   // ===== FINANCES (Priorite 4 - Business critique) =====
+  // Accessible aux roles: admin, accountant
   {
     id: "finance",
     labelKey: "admin.menu.finance",
     icon: DollarSign,
     descriptionKey: "admin.menu.finance.description",
+    allowedRoles: ["admin", "accountant"],
     children: [
       // Dashboard Financier
       {
@@ -416,6 +420,14 @@ export const adminMenuTree: AdminMenuItem[] = [
             icon: ArrowDownUp,
             badge: "NEW",
             descriptionKey: "admin.menu.cashFlow.description",
+          },
+          {
+            id: "supporting-documents",
+            labelKey: "admin.menu.supportingDocuments",
+            path: "/admin/finance/supporting-documents",
+            icon: Paperclip,
+            badge: "NEW",
+            descriptionKey: "admin.menu.supportingDocuments.description",
           },
         ],
       },
