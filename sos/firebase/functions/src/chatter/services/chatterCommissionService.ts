@@ -234,12 +234,9 @@ export async function createCommission(
       return { success: false, error: `Invalid baseAmount: must be a non-negative integer (cents). Got: ${baseAmount}` };
     }
 
-    // 6. No bonus multipliers — finalAmount equals baseAmount
-    const levelBonus = 0;
-    const top3Bonus = 0;
-    const zoomBonus = 0;
-    const streakBonus = 1.0;
-    const monthlyTopMultiplier = 1.0;
+    // 6. P1-1 FIX: Multipliers permanently disabled (zero-percentage policy)
+    // Admin UI sections for levelBonuses, top3, zoom, streak multipliers have been removed.
+    // All commissions use fixed amounts only — finalAmount always equals baseAmount.
     const finalAmount = baseAmount;
     const finalCalculationDetails = `Base: $${(baseAmount / 100).toFixed(2)}`;
 
@@ -259,11 +256,11 @@ export async function createCommission(
       sourceType: source.type,
       sourceDetails: source.details,
       baseAmount,
-      levelBonus,
-      top3Bonus,
-      zoomBonus,
-      streakBonus,
-      monthlyTopMultiplier, // multiplier for being top 3 previous month
+      levelBonus: 0,
+      top3Bonus: 0,
+      zoomBonus: 0,
+      streakBonus: 1.0,
+      monthlyTopMultiplier: 1.0, // P1-1: all multipliers permanently disabled
       amount: finalAmount,
       currency: "USD",
       calculationDetails: finalCalculationDetails,
@@ -377,9 +374,6 @@ export async function createCommission(
       type,
       baseAmount,
       finalAmount,
-      levelBonus,
-      top3Bonus,
-      zoomBonus,
     });
 
     return {
@@ -1142,7 +1136,6 @@ function getBadgeDisplayName(badge: string): string {
     // Special badges
     first_client: "Premier Client",
     first_recruitment: "Première Recrue",
-    first_quiz_pass: "Quiz Réussi",
     top1_monthly: "Top 1 Mensuel",
     top3_monthly: "Top 3 Mensuel",
   };
@@ -1184,7 +1177,6 @@ function getBadgeDescription(badge: string): string {
     // Special badges
     first_client: "Vous avez référé votre premier client !",
     first_recruitment: "Vous avez recruté votre premier membre d'équipe !",
-    first_quiz_pass: "Vous avez réussi le quiz de qualification !",
     top1_monthly: "Vous avez été #1 du classement mensuel !",
     top3_monthly: "Vous avez été dans le Top 3 mensuel !",
   };

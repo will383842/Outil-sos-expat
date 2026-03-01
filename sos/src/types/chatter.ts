@@ -14,6 +14,7 @@ export type ChatterStatus = "active" | "suspended" | "banned";
 
 export type ChatterLevel = 1 | 2 | 3 | 4 | 5;
 
+// P1-3 FIX: Added ru, hi to match backend (11 languages)
 export type SupportedChatterLanguage =
   | "fr"
   | "en"
@@ -23,7 +24,9 @@ export type SupportedChatterLanguage =
   | "de"
   | "it"
   | "nl"
-  | "zh";
+  | "zh"
+  | "ru"
+  | "hi";
 
 export type ChatterCommissionType =
   // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
@@ -92,7 +95,6 @@ export type ChatterPlatform =
 export type ChatterBadgeType =
   | "first_client"
   | "first_recruitment"
-  | "first_quiz_pass"
   | "streak_7"
   | "streak_30"
   | "streak_100"
@@ -224,10 +226,6 @@ export interface ChatterData {
 
   zoomMeetingsAttended: number;
   lastZoomAttendance: string | null;
-
-  quizAttempts: number;
-  lastQuizAttempt: string | null;
-  quizPassedAt: string | null;
 
   preferredPaymentMethod: ChatterPaymentMethod | null;
   pendingWithdrawalId: string | null;
@@ -378,29 +376,6 @@ export interface ChatterWithdrawal {
   failedAt?: string;
   rejectionReason?: string;
   failureReason?: string;
-}
-
-// ============================================================================
-// QUIZ
-// ============================================================================
-
-export interface ChatterQuizQuestion {
-  id: string;
-  question: string;
-  /** Options from backend (named 'options' to match API response) */
-  options: Array<{
-    id: string;
-    text: string;
-    /** Only present in quiz results, not in initial questions */
-    isCorrect?: boolean;
-  }>;
-}
-
-export interface ChatterQuizResult {
-  questionId: string;
-  isCorrect: boolean;
-  correctAnswerId: string;
-  explanation?: string;
 }
 
 // ============================================================================
@@ -652,14 +627,6 @@ export interface RegisterChatterInput {
   termsType?: string;
   termsAffiliateVersion?: string;
   termsAffiliateType?: string;
-}
-
-export interface SubmitQuizInput {
-  answers: Array<{
-    questionId: string;
-    answerId: string;
-  }>;
-  startedAt: string;
 }
 
 /**

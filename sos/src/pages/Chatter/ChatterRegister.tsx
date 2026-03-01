@@ -20,6 +20,7 @@ import { Star, ArrowLeft, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
+import { logAnalyticsEvent } from '@/config/firebase';
 import { generateEventIdForType } from '@/utils/sharedEventId';
 
 // Design tokens - Harmonized with ChatterLanding dark theme
@@ -88,9 +89,10 @@ const ChatterRegister: React.FC = () => {
     }
   }, [authInitialized, authLoading, loading, isAlreadyChatter, user?.telegramOnboardingCompleted, navigate, telegramRoute, dashboardRoute, success]);
 
-  // Meta Pixel: Track StartRegistration on mount
+  // Meta Pixel + Firebase Analytics: Track StartRegistration on mount
   useEffect(() => {
     trackMetaStartRegistration({ content_name: 'chatter_registration' });
+    logAnalyticsEvent('begin_sign_up', { method: 'chatter_registration' });
   }, []);
 
   // Show error if user has another role
@@ -222,7 +224,8 @@ const ChatterRegister: React.FC = () => {
 
       setSuccess(true);
 
-      // Meta Pixel: Track CompleteRegistration + Ad Attribution + Advanced Matching
+      // Meta Pixel + Firebase Analytics: Track CompleteRegistration + Ad Attribution + Advanced Matching
+      logAnalyticsEvent('sign_up', { method: 'chatter_registration', country: data.country });
       trackMetaCompleteRegistration({
         content_name: 'chatter_registration',
         status: 'completed',

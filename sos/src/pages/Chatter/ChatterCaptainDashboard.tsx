@@ -66,6 +66,7 @@ interface Recruit {
   photoUrl?: string;
   country?: string;
   totalCallCount: number;
+  totalEarned: number;
   createdAt: string | { _seconds: number; _nanoseconds: number };
   recruitedVia?: string; // only N2
 }
@@ -237,6 +238,7 @@ interface RecruitRowProps {
 }
 
 function RecruitRow({ recruit, locale }: RecruitRowProps) {
+  const intl = useIntl();
   const joinDate = parseTimestamp(recruit.createdAt);
 
   return (
@@ -271,10 +273,21 @@ function RecruitRow({ recruit, locale }: RecruitRowProps) {
         </div>
       </div>
 
-      {/* Call count badge */}
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 flex-shrink-0">
-        <Phone className="h-3.5 w-3.5" />
-        <span className="text-sm font-bold">{recruit.totalCallCount}</span>
+      {/* Badges */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Earnings badge */}
+        <div
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400"
+          title={intl.formatMessage({ id: 'chatter.captain.recruitEarnings', defaultMessage: 'Gains totaux' })}
+        >
+          <DollarSign className="h-3.5 w-3.5" />
+          <span className="text-sm font-bold">{formatCents(recruit.totalEarned)}</span>
+        </div>
+        {/* Call count badge */}
+        <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400">
+          <Phone className="h-3.5 w-3.5" />
+          <span className="text-sm font-bold">{recruit.totalCallCount}</span>
+        </div>
       </div>
     </div>
   );

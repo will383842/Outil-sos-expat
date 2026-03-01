@@ -372,6 +372,12 @@ const AdminChatterCountryRotation = lazy(
 const AdminChatterDripMessages = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterDripMessages")
 );
+const AdminChatterAnalytics = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterAnalytics")
+);
+const AdminChatterFunnel = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterFunnel")
+);
 
 // ===== LAZY IMPORTS - INFLUENCER =====
 const AdminInfluencersList = lazy(
@@ -1307,6 +1313,22 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminChatterDripMessages />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/analytics"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterAnalytics />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/funnel"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterFunnel />
           </Suspense>
         }
       />

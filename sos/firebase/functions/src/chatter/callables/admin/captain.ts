@@ -3,6 +3,28 @@
  *
  * Admin-only functions for managing captain chatters.
  * Region: us-central1 (affiliate/marketing region)
+ *
+ * ## Captain Lifecycle
+ *
+ * **Promotion**: Manual admin action only (`adminPromoteToCaptain`).
+ *   No automatic criteria — admin decides based on recruits, engagement, quality.
+ *
+ * **Monthly Reset** (1st of month, 00:05 UTC via `resetCaptainMonthly`):
+ *   1. Calculate best tier from `captainMonthlyTeamCalls` (Bronze→Diamant)
+ *   2. Pay tier bonus commission if any tier reached
+ *   3. Pay quality bonus if: (10+ active N1 recruits AND $100+ team commissions) OR admin override
+ *   4. Archive monthly stats to `captain_monthly_archives`
+ *   5. Reset `captainMonthlyTeamCalls: 0` and `captainCurrentTier: null`
+ *   NOTE: Reset does NOT revoke captain status — captain stays captain even with 0 calls.
+ *
+ * **Demotion/Revocation**: Manual admin action only (`adminRevokeCaptain`).
+ *   - Deletes all `captain*` fields via FieldValue.delete()
+ *   - Sends notification + creates audit log
+ *   - There is NO automatic demotion. A captain remains captain indefinitely.
+ *
+ * **Tier Bonus Levels** (configurable in admin_config/chatter_config):
+ *   Bronze: 20 calls → $25 | Argent: 50 → $50 | Or: 100 → $100
+ *   Platine: 200 → $200 | Diamant: 400 → $400
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";

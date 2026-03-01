@@ -2905,8 +2905,6 @@ export {
 export {
   // Triggers
   chatterOnChatterCreated,
-  // DISABLED 2026-02-08: Quiz feature removed from chatter flow
-  // chatterOnQuizPassed,
   // chatterOnCallCompleted,  // → consolidatedOnCallCompleted
   // chatterOnProviderRegistered,  // → consolidatedOnUserCreated
   // chatterOnClientRegistered,  // → consolidatedOnUserCreated
@@ -2914,9 +2912,6 @@ export {
   chatterOnCommissionCreated,
   // User callables
   registerChatter,
-  // DISABLED 2026-02-08: Quiz feature removed from chatter flow
-  // submitQuiz,
-  // getQuizQuestions,
   getChatterDashboard,
   getChatterLeaderboard,
   chatterRequestWithdrawal,

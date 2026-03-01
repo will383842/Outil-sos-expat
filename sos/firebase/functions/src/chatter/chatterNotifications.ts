@@ -179,8 +179,22 @@ export async function sendChatterNotification(
       },
     };
 
-    // Send multicast
-    const response = await messaging.sendEachForMulticast(message);
+    // Send multicast with retry on transient errors
+    let response = await messaging.sendEachForMulticast(message);
+
+    // P2-08 FIX: Retry once if ALL sends failed (transient FCM outage)
+    if (response.successCount === 0 && response.failureCount > 0) {
+      const firstError = response.responses[0]?.error;
+      const isTransient = firstError?.code === "messaging/internal-error" ||
+        firstError?.code === "messaging/server-unavailable";
+      if (isTransient) {
+        await new Promise((r) => setTimeout(r, 1000));
+        response = await messaging.sendEachForMulticast(message);
+        logger.info("[sendChatterNotification] Retried after transient error", {
+          chatterId, retrySuccess: response.successCount,
+        });
+      }
+    }
 
     // Handle invalid tokens
     const invalidTokenDocs: string[] = [];
@@ -231,6 +245,25 @@ export async function sendChatterNotification(
     };
   } catch (error) {
     logger.error("[sendChatterNotification] Error", { chatterId, error });
+
+    // P2-08 FIX: Create in-app notification as fallback when FCM completely fails
+    try {
+      await db.collection("chatter_notifications").add({
+        chatterId,
+        type: payload.data?.type || "chatter_notification",
+        title: payload.title,
+        message: payload.body,
+        data: payload.data || {},
+        isRead: false,
+        emailSent: false,
+        fcmFailed: true,
+        createdAt: Timestamp.now(),
+      });
+      logger.info("[sendChatterNotification] Created in-app fallback notification", { chatterId });
+    } catch (fallbackError) {
+      logger.error("[sendChatterNotification] Fallback also failed", { chatterId, fallbackError });
+    }
+
     return { success: false, sent: 0, failed: 0 };
   }
 }
@@ -335,6 +368,7 @@ export const chatterNotifyCommissionEarned = onDocumentCreated(
         reason = commission.description || "Commission";
     }
 
+    // Send FCM push notification
     await sendChatterNotification(chatterId, {
       title: "Ka-ching !",
       body: `+${amountFormatted}$ - ${reason}`,
@@ -346,6 +380,30 @@ export const chatterNotifyCommissionEarned = onDocumentCreated(
       },
       deepLink: "/chatter/dashboard",
     });
+
+    // P0 FIX: Create in-app notification document for dashboard history
+    try {
+      const db = getDb();
+      await db.collection("chatter_notifications").add({
+        chatterId,
+        type: "commission_earned",
+        title: "Ka-ching !",
+        message: `+${amountFormatted}$ - ${reason}`,
+        data: {
+          commissionId: commission.id,
+          amount: commission.amount,
+          commissionType: type,
+        },
+        isRead: false,
+        emailSent: false,
+        createdAt: Timestamp.now(),
+      });
+    } catch (notifError) {
+      logger.error("[chatterNotifyCommissionEarned] Failed to create in-app notification", {
+        chatterId,
+        error: notifError,
+      });
+    }
   }
 );
 

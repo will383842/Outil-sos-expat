@@ -599,40 +599,7 @@ const AdminChatterConfig: React.FC = () => {
         </div>
       </div>
 
-      {/* Level Bonuses */}
-      <div className={`${UI.card} p-6`}>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Star className="w-5 h-5 text-yellow-500" />
-          <FormattedMessage id="admin.chatterConfig.levelBonuses" defaultMessage="Bonus par niveau" />
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {([1, 2, 3, 4, 5] as const).map((level) => {
-            const levelKey = `level${level}` as 'level1' | 'level2' | 'level3' | 'level4' | 'level5';
-            const bonusValue = (formData.levelBonuses?.[levelKey] ?? config?.levelBonuses?.[levelKey]) ?? 1;
-            return (
-              <div key={level}>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Niveau {level} {level === 1 ? '(Bronze)' : level === 2 ? '(Silver)' : level === 3 ? '(Gold)' : level === 4 ? '(Platinum)' : '(Diamond)'}
-                </label>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    value={bonusValue}
-                    onChange={(e) => handleNestedChange('levelBonuses', levelKey, parseFloat(e.target.value))}
-                    className={UI.input}
-                    step={0.05}
-                    min={1}
-                  />
-                  <Percent className="w-4 h-4 text-gray-400" />
-                </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  +{((bonusValue - 1) * 100).toFixed(0)}%
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* P1-1 FIX: Level Bonuses REMOVED — multipliers are disabled (zero-percentage policy) */}
 
       {/* Level Thresholds */}
       <div className={`${UI.card} p-6`}>
@@ -668,65 +635,7 @@ const AdminChatterConfig: React.FC = () => {
         </div>
       </div>
 
-      {/* Top 3 Bonuses */}
-      <div className={`${UI.card} p-6`}>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-red-500" />
-          <FormattedMessage id="admin.chatterConfig.top3Bonuses" defaultMessage="Bonus Top 3 mensuel" />
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.top1Bonus" defaultMessage="Top 1 (multiplicateur)" />
-            </label>
-            <input
-              type="number"
-              value={formData.top1BonusMultiplier ?? config?.top1BonusMultiplier ?? 2.0}
-              onChange={(e) => handleChange('top1BonusMultiplier', parseFloat(e.target.value))}
-              className={UI.input}
-              step={0.1}
-              min={1}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              +{((formData.top1BonusMultiplier ?? config?.top1BonusMultiplier ?? 2.0) - 1) * 100}% bonus
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.top2Bonus" defaultMessage="Top 2 (multiplicateur)" />
-            </label>
-            <input
-              type="number"
-              value={formData.top2BonusMultiplier ?? config?.top2BonusMultiplier ?? 1.5}
-              onChange={(e) => handleChange('top2BonusMultiplier', parseFloat(e.target.value))}
-              className={UI.input}
-              step={0.1}
-              min={1}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              +{((formData.top2BonusMultiplier ?? config?.top2BonusMultiplier ?? 1.5) - 1) * 100}% bonus
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.top3Bonus" defaultMessage="Top 3 (multiplicateur)" />
-            </label>
-            <input
-              type="number"
-              value={formData.top3BonusMultiplier ?? config?.top3BonusMultiplier ?? 1.15}
-              onChange={(e) => handleChange('top3BonusMultiplier', parseFloat(e.target.value))}
-              className={UI.input}
-              step={0.05}
-              min={1}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              +{((formData.top3BonusMultiplier ?? config?.top3BonusMultiplier ?? 1.15) - 1) * 100}% bonus
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* P1-1 FIX: Top 3 Bonuses REMOVED — multipliers are disabled (zero-percentage policy) */}
 
       {/* Zoom & Quiz Settings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -737,23 +646,7 @@ const AdminChatterConfig: React.FC = () => {
             <FormattedMessage id="admin.chatterConfig.zoomSettings" defaultMessage="Bonus Zoom" />
           </h2>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                <FormattedMessage id="admin.chatterConfig.zoomBonus" defaultMessage="Multiplicateur bonus Zoom" />
-              </label>
-              <input
-                type="number"
-                value={formData.zoomBonusMultiplier ?? config?.zoomBonusMultiplier ?? 1.1}
-                onChange={(e) => handleChange('zoomBonusMultiplier', parseFloat(e.target.value))}
-                className={UI.input}
-                step={0.05}
-                min={1}
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                +{((formData.zoomBonusMultiplier ?? config?.zoomBonusMultiplier ?? 1.1) - 1) * 100}% bonus
-              </p>
-            </div>
-
+            {/* P1-1 FIX: Zoom bonus multiplier REMOVED — multipliers disabled */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <FormattedMessage id="admin.chatterConfig.zoomDuration" defaultMessage="Durée du bonus (jours)" />

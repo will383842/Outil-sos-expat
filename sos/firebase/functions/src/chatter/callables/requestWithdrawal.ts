@@ -133,32 +133,7 @@ export const requestWithdrawal = onCall(
     }
 
     try {
-      // 3. Get chatter data
-      const chatterDoc = await db.collection("chatters").doc(userId).get();
-
-      if (!chatterDoc.exists) {
-        throw new HttpsError("not-found", "Chatter profile not found");
-      }
-
-      const chatter = chatterDoc.data() as Chatter;
-
-      // 4. Check chatter status
-      if (chatter.status !== "active") {
-        throw new HttpsError(
-          "failed-precondition",
-          `Cannot request withdrawal: account is ${chatter.status}`
-        );
-      }
-
-      // 5. Check for existing pending withdrawal (legacy field check)
-      if (chatter.pendingWithdrawalId) {
-        throw new HttpsError(
-          "failed-precondition",
-          "A withdrawal request is already pending"
-        );
-      }
-
-      // 6. Get config and validate
+      // 3. Get config first (outside transaction since it's cached/static)
       const config = await getChatterConfigCached();
 
       if (!areWithdrawalsEnabled(config)) {
@@ -169,23 +144,67 @@ export const requestWithdrawal = onCall(
       }
 
       const minimumAmount = getMinimumWithdrawalAmount(config);
-      const requestedAmount = input.amount || chatter.availableBalance;
 
-      if (requestedAmount < minimumAmount) {
-        throw new HttpsError(
-          "invalid-argument",
-          `Minimum withdrawal amount is $${(minimumAmount / 100).toFixed(2)}`
-        );
-      }
+      // P1-7 FIX: Use Firestore transaction to atomically check balance + claim withdrawal slot
+      // This prevents race conditions where two concurrent requests both pass the balance check
+      let requestedAmount = 0;
+      let chatterEmail = "";
+      let chatterFirstName = "";
 
-      if (requestedAmount > chatter.availableBalance) {
-        throw new HttpsError(
-          "invalid-argument",
-          `Insufficient balance. Available: $${(chatter.availableBalance / 100).toFixed(2)}`
-        );
-      }
+      await db.runTransaction(async (transaction) => {
+        const chatterRef = db.collection("chatters").doc(userId);
+        const chatterDoc = await transaction.get(chatterRef);
 
-      // 7. Convert legacy details → centralized format
+        if (!chatterDoc.exists) {
+          throw new HttpsError("not-found", "Chatter profile not found");
+        }
+
+        const chatter = chatterDoc.data() as Chatter;
+
+        // 4. Check chatter status
+        if (chatter.status !== "active") {
+          throw new HttpsError(
+            "failed-precondition",
+            `Cannot request withdrawal: account is ${chatter.status}`
+          );
+        }
+
+        // 5. Check for existing pending withdrawal (atomic read inside transaction)
+        if (chatter.pendingWithdrawalId) {
+          throw new HttpsError(
+            "failed-precondition",
+            "A withdrawal request is already pending"
+          );
+        }
+
+        // 6. Calculate and validate amount (inside transaction for accurate balance)
+        requestedAmount = input.amount || chatter.availableBalance;
+
+        if (requestedAmount < minimumAmount) {
+          throw new HttpsError(
+            "invalid-argument",
+            `Minimum withdrawal amount is $${(minimumAmount / 100).toFixed(2)}`
+          );
+        }
+
+        if (requestedAmount > chatter.availableBalance) {
+          throw new HttpsError(
+            "invalid-argument",
+            `Insufficient balance. Available: $${(chatter.availableBalance / 100).toFixed(2)}`
+          );
+        }
+
+        chatterEmail = chatter.email || "";
+        chatterFirstName = chatter.firstName || "";
+
+        // Claim the withdrawal slot atomically (prevents double withdrawal)
+        transaction.update(chatterRef, {
+          pendingWithdrawalId: `pending_lock_${Date.now()}`,
+          updatedAt: Timestamp.now(),
+        });
+      });
+
+      // 7. Convert legacy details → centralized format (outside transaction)
       const centralizedDetails = convertToPaymentMethodDetails(
         input.paymentMethod,
         input.paymentDetails
@@ -202,16 +221,26 @@ export const requestWithdrawal = onCall(
       });
 
       // 9. Create withdrawal via centralized service
-      const withdrawal = await paymentService.createWithdrawalRequest({
-        userId,
-        userType: "chatter",
-        userEmail: chatter.email || "",
-        userName: chatter.firstName || "",
-        amount: requestedAmount,
-        paymentMethodId: paymentMethod.id,
-      });
+      let withdrawal;
+      try {
+        withdrawal = await paymentService.createWithdrawalRequest({
+          userId,
+          userType: "chatter",
+          userEmail: chatterEmail!,
+          userName: chatterFirstName!,
+          amount: requestedAmount!,
+          paymentMethodId: paymentMethod.id,
+        });
+      } catch (withdrawalError) {
+        // If withdrawal creation fails, release the lock
+        await db.collection("chatters").doc(userId).update({
+          pendingWithdrawalId: null,
+          updatedAt: Timestamp.now(),
+        });
+        throw withdrawalError;
+      }
 
-      // 10. Set pendingWithdrawalId on chatter doc (backward compatibility)
+      // 10. Update pendingWithdrawalId with actual withdrawal ID
       await db.collection("chatters").doc(userId).update({
         pendingWithdrawalId: withdrawal.id,
         updatedAt: Timestamp.now(),

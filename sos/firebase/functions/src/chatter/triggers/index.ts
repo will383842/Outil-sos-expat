@@ -3,7 +3,6 @@
  */
 
 export { chatterOnChatterCreated } from "./onChatterCreated";
-export { chatterOnQuizPassed } from "./onChatterQuizPassed";
 export { chatterOnCallCompleted } from "./onCallCompleted";
 export {
   chatterOnProviderRegistered,

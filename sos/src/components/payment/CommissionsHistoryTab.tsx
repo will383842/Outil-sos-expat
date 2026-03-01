@@ -112,8 +112,9 @@ function getStatusLabel(status: CommissionStatus): string {
   return labels[status] || status;
 }
 
+// P1-4 FIX: Use browser locale instead of hardcoded 'fr-FR'
 function formatAmountUSD(cents: number): string {
-  return new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat(navigator.language || 'fr-FR', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
@@ -122,7 +123,7 @@ function formatAmountUSD(cents: number): string {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
+  return new Date(dateStr).toLocaleDateString(navigator.language || 'fr-FR', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

@@ -92,7 +92,8 @@ export const getCaptainDashboard = onCall(
         lastName: data.lastName,
         photoUrl: data.photoUrl,
         country: data.country,
-        totalCallCount: (data as any).totalCallCount || 0,
+        totalCallCount: data.totalClients || 0,
+        totalEarned: data.totalEarned || 0,
         createdAt: data.createdAt,
       };
     });
@@ -114,7 +115,8 @@ export const getCaptainDashboard = onCall(
           lastName: data.lastName,
           photoUrl: data.photoUrl,
           country: data.country,
-          totalCallCount: (data as any).totalCallCount || 0,
+          totalCallCount: data.totalClients || 0,
+          totalEarned: data.totalEarned || 0,
           recruitedVia: n1Doc.id,
           createdAt: data.createdAt,
         });

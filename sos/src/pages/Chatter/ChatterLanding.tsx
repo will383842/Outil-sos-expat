@@ -19,6 +19,7 @@ import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import { trackMetaViewContent } from '@/utils/metaPixel';
+import { logAnalyticsEvent } from '@/config/firebase';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import {
   ArrowRight,
@@ -307,6 +308,7 @@ const ChatterLanding: React.FC = () => {
 
   useEffect(() => {
     trackMetaViewContent({ content_name: 'chatter_landing', content_category: 'landing_page', content_type: 'page' });
+    logAnalyticsEvent('page_view', { page_title: 'chatter_landing', page_location: window.location.href });
   }, []);
 
   useEffect(() => {

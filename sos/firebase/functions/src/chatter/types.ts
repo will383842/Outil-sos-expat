@@ -98,14 +98,21 @@ export type ChatterCommissionStatus =
 
 /**
  * Withdrawal status lifecycle
+ * P1-2 FIX: Aligned with centralized payment system (payment/types/index.ts)
+ * Flow: pending -> validating -> approved/queued -> processing -> sent -> completed
+ * Alternative endings: failed, rejected, cancelled
  */
 export type ChatterWithdrawalStatus =
-  | "pending"       // Requested, waiting for admin
-  | "approved"      // Admin approved, processing
-  | "processing"    // Payment in progress
-  | "completed"     // Payment successful
-  | "failed"        // Payment failed
-  | "rejected";     // Admin rejected
+  | "pending"       // Just requested by user
+  | "validating"    // Being validated (fraud checks, balance verification)
+  | "approved"      // Admin approved (manual mode only)
+  | "queued"        // Queued for processing
+  | "processing"    // Being processed by payment provider
+  | "sent"          // Sent by provider, awaiting confirmation
+  | "completed"     // Confirmed received by recipient
+  | "failed"        // Failed (may be retryable)
+  | "rejected"      // Rejected by admin
+  | "cancelled";    // Cancelled by user
 
 /**
  * Payment method for withdrawals
@@ -142,7 +149,6 @@ export type ChatterBadgeType =
   // Onboarding badges
   | "first_client"          // First client referral
   | "first_recruitment"     // First team member recruited
-  | "first_quiz_pass"       // First quiz pass
   // Streak badges (consecutive activity days)
   | "streak_7"              // 7-day streak
   | "streak_30"             // 30-day streak
@@ -315,17 +321,6 @@ export interface Chatter {
   /** Last Zoom attendance date */
   lastZoomAttendance: Timestamp | null;
 
-  // ---- Quiz ----
-
-  /** Quiz attempts count */
-  quizAttempts: number;
-
-  /** Last quiz attempt date */
-  lastQuizAttempt: Timestamp | null;
-
-  /** Quiz passed date */
-  quizPassedAt: Timestamp | null;
-
   // ---- Payment Details ----
 
   /** Preferred payment method */
@@ -402,17 +397,20 @@ export interface Chatter {
   tierBonusesPaid: number[];
 
   // ---- Captain Chatter ----
-  /** Role: undefined = regular chatter, 'captainChatter' = captain */
+  // Lifecycle: Promotion = admin-only | Demotion = admin-only (no auto-demotion)
+  // Monthly reset: calls→0, tier→null (but captain status stays)
+  // See admin/captain.ts for full lifecycle docs
+  /** Role: undefined = regular chatter, 'captainChatter' = captain (permanent until admin revoke) */
   role?: 'captainChatter';
   /** When promoted to captain */
   captainPromotedAt?: Timestamp;
   /** Admin who promoted */
   captainPromotedBy?: string;
-  /** Monthly team calls counter (N1+N2 calls, reset 1st of month) */
+  /** Monthly team calls counter (N1+N2 calls, reset 1st of month by cron) */
   captainMonthlyTeamCalls?: number;
-  /** Current tier based on monthly calls */
+  /** Current tier based on monthly calls (Bronze/Argent/Or/Platine/Diamant, reset monthly) */
   captainCurrentTier?: string;
-  /** Whether admin enabled quality bonus for this captain */
+  /** Admin override: force quality bonus even if criteria not met */
   captainQualityBonusEnabled?: boolean;
 
   // ---- Telegram Integration ----
@@ -972,9 +970,9 @@ export interface ChatterConfig {
   commissionProviderCallAmountExpat?: number;
 
   // === CAPTAIN CHATTER COMMISSIONS (configurable admin) ===
-  /** Commission captain call — lawyer provider (200 cents = $2) */
+  /** Commission captain call — lawyer provider (300 cents = $3) */
   commissionCaptainCallAmountLawyer?: number;
-  /** Commission captain call — expat provider (100 cents = $1) */
+  /** Commission captain call — expat provider (200 cents = $2) */
   commissionCaptainCallAmountExpat?: number;
   /** Captain monthly tier thresholds and bonuses */
   captainTiers?: Array<{ name: string; minCalls: number; bonus: number }>;
@@ -1072,17 +1070,6 @@ export interface ChatterConfig {
   /** Time before validated becomes available (hours) */
   releaseDelayHours: number;
 
-  // ---- Quiz Settings ----
-
-  /** Passing score percentage */
-  quizPassingScore: number;
-
-  /** Hours to wait before retry */
-  quizRetryDelayHours: number;
-
-  /** Number of questions per quiz */
-  quizQuestionsCount: number;
-
   // ---- Attribution ----
 
   /** Cookie duration in days */
@@ -1157,9 +1144,9 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
     { name: "Platine", minCalls: 200, bonus: 20000 },
     { name: "Diamant", minCalls: 400, bonus: 40000 },
   ],
-  captainQualityBonusAmount: 5000,        // $50 - Quality bonus
-  captainQualityBonusMinRecruits: 15,    // Min 15 active N1 recruits
-  captainQualityBonusMinCommissions: 5000, // Min $50 monthly team commissions
+  captainQualityBonusAmount: 10000,       // $100 - Quality bonus
+  captainQualityBonusMinRecruits: 10,    // Min 10 active N1 recruits
+  captainQualityBonusMinCommissions: 10000, // Min $100 monthly team commissions
   recruitmentWindowMonths: 6,             // 6 months window for recruitment commissions
   providerRecruitmentDurationMonths: 6,   // @deprecated Use recruitmentWindowMonths instead
   flashBonusMultiplier: 1.0,              // No flash bonus by default
@@ -1206,10 +1193,6 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   minimumWithdrawalAmount: 3000,     // $30
   validationHoldPeriodHours: 48,     // 2 days
   releaseDelayHours: 24,             // 1 day after validation
-
-  quizPassingScore: 85,
-  quizRetryDelayHours: 6,
-  quizQuestionsCount: 5,
 
   attributionWindowDays: 30,
 
@@ -2437,31 +2420,8 @@ export interface RegisterChatterResponse {
   affiliateCodeClient?: string;
   affiliateCodeRecruitment?: string;
   message: string;
-}
-
-export interface SubmitQuizInput {
-  answers: Array<{
-    questionId: string;
-    answerId: string;
-  }>;
-  startedAt: string; // ISO timestamp
-}
-
-export interface SubmitQuizResponse {
-  success: boolean;
-  passed: boolean;
-  score: number;
-  correctAnswers: number;
-  totalQuestions: number;
-  results: Array<{
-    questionId: string;
-    isCorrect: boolean;
-    correctAnswerId: string;
-    explanation?: string;
-  }>;
-  canRetryAt?: string; // ISO timestamp if failed
-  affiliateCodeClient?: string; // If passed
-  affiliateCodeRecruitment?: string; // If passed
+  /** P1-6 FIX: Warnings about referral code issues (expired, self-referral, circular) */
+  warnings?: string[];
 }
 
 export interface GetChatterDashboardResponse {

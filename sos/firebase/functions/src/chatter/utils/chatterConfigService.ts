@@ -365,16 +365,19 @@ export function getProviderCallCommission(config: ChatterConfig, providerType?: 
 
 /**
  * Get commission amount for captain chatter calls (N1/N2 of captain)
- * No flash bonus applied — captain commissions are fixed rates
+ * Flash bonus is applied when active (same as regular chatters)
  */
 export function getCaptainCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat'): number {
+  let base: number;
   if (providerType === 'lawyer' && config.commissionCaptainCallAmountLawyer != null) {
-    return config.commissionCaptainCallAmountLawyer;
+    base = config.commissionCaptainCallAmountLawyer;
+  } else if (providerType === 'expat' && config.commissionCaptainCallAmountExpat != null) {
+    base = config.commissionCaptainCallAmountExpat;
+  } else {
+    base = config.commissionCaptainCallAmountLawyer ?? 300;
   }
-  if (providerType === 'expat' && config.commissionCaptainCallAmountExpat != null) {
-    return config.commissionCaptainCallAmountExpat;
-  }
-  return config.commissionCaptainCallAmountLawyer ?? 300;
+  const flashMultiplier = getFlashBonusMultiplier(config);
+  return Math.round(base * flashMultiplier);
 }
 
 /**

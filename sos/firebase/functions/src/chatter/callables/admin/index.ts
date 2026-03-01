@@ -375,6 +375,24 @@ export const adminProcessWithdrawal = onCall(
         processedBy: adminId,
       });
 
+      // P2-02 FIX: Create audit log for withdrawal action
+      try {
+        await getFirestore().collection("admin_audit_logs").add({
+          action: `withdrawal_${input.action}`,
+          targetId: input.withdrawalId,
+          targetType: "payment_withdrawal",
+          performedBy: adminId,
+          timestamp: Timestamp.now(),
+          details: {
+            reason: input.reason || null,
+            notes: input.notes || null,
+            paymentReference: input.paymentReference || null,
+          },
+        });
+      } catch (auditErr) {
+        logger.error("[adminProcessWithdrawal] Audit log failed", { auditErr });
+      }
+
       return {
         success: true,
         message: `Withdrawal ${input.action}d successfully`,

@@ -10,7 +10,6 @@
 
 export {
   chatterOnChatterCreated,
-  chatterOnQuizPassed,
   chatterOnCallCompleted,
   chatterOnProviderRegistered,
   chatterOnClientRegistered,
@@ -23,7 +22,6 @@ export {
 // ============================================================================
 
 export { registerChatter } from "./callables/registerChatter";
-export { submitQuiz, getQuizQuestions } from "./callables/submitQuiz";
 export { getChatterDashboard } from "./callables/getChatterDashboard";
 export { getChatterLeaderboard } from "./callables/getChatterLeaderboard";
 export { requestWithdrawal as chatterRequestWithdrawal } from "./callables/requestWithdrawal";
@@ -369,8 +367,6 @@ export type {
   ChatterBankDetails,
   ChatterRecruitedProvider,
   ChatterRecruitmentLink,
-  ChatterQuizQuestion,
-  ChatterQuizAttempt,
   ChatterBadgeType,
   ChatterBadgeDefinition,
   ChatterBadgeAward,
@@ -386,8 +382,6 @@ export type {
   SupportedChatterLanguage,
   RegisterChatterInput,
   RegisterChatterResponse,
-  SubmitQuizInput,
-  SubmitQuizResponse,
   GetChatterDashboardResponse,
   RequestWithdrawalInput,
   RequestWithdrawalResponse,

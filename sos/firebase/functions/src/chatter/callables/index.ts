@@ -4,7 +4,6 @@
 
 // User Callables
 export { registerChatter } from "./registerChatter";
-export { submitQuiz, getQuizQuestions } from "./submitQuiz";
 export { getChatterDashboard } from "./getChatterDashboard";
 export { requestWithdrawal } from "./requestWithdrawal";
 export { updateChatterProfile } from "./updateChatterProfile";

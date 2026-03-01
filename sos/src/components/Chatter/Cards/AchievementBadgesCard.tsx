@@ -34,7 +34,6 @@ import {
   Medal,
   Rocket,
   Heart,
-  BookOpen,
   DollarSign,
 } from 'lucide-react';
 import type { ChatterBadgeType, ChatterData } from '@/types/chatter';
@@ -109,19 +108,6 @@ const BADGE_CONFIG: BadgeConfig[] = [
     rarity: 'common',
     category: 'milestone',
     requirement: { type: 'recruits', target: 1 },
-  },
-  {
-    id: 'first_quiz_pass',
-    icon: BookOpen,
-    nameKey: 'chatter.badges.firstQuiz.name',
-    defaultName: 'Certifie',
-    descriptionKey: 'chatter.badges.firstQuiz.desc',
-    defaultDescription: 'Quiz de certification reussi',
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
-    glowColor: 'shadow-blue-500/30',
-    rarity: 'common',
-    category: 'activity',
   },
   // Streak badges
   {

@@ -20,6 +20,7 @@
 
 import React, { useMemo, useState, useEffect, useCallback, useRef, lazy, Suspense, memo } from 'react';
 import { trackMetaViewContent, trackMetaLead } from '@/utils/metaPixel';
+import { logAnalyticsEvent } from '@/config/firebase';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
@@ -402,9 +403,10 @@ const ChatterDashboard: React.FC = () => {
     }
   }, [user, navigate, routes.telegram]);
 
-  // Meta Pixel - ViewContent on dashboard mount
+  // Meta Pixel + Firebase Analytics - ViewContent on dashboard mount
   useEffect(() => {
     trackMetaViewContent({ content_name: 'chatter_dashboard', content_category: 'affiliate' });
+    logAnalyticsEvent('page_view', { page_title: 'chatter_dashboard', page_location: window.location.href });
   }, []);
 
   // ============================================================================

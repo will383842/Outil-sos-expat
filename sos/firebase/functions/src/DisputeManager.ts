@@ -285,6 +285,40 @@ export class DisputeManager {
         );
       }
 
+      // P0 FIX: Annuler toutes les commissions affiliées si dispute perdue (chargeback)
+      if (outcome === "lost" && existingData.callSessionId) {
+        try {
+          const { cancelCommissionsForCallSession: cancelChatter } = await import("./chatter/services/chatterCommissionService");
+          const { cancelCommissionsForCallSession: cancelInfluencer } = await import("./influencer/services/influencerCommissionService");
+          const { cancelBloggerCommissionsForCallSession: cancelBlogger } = await import("./blogger/services/bloggerCommissionService");
+          const { cancelCommissionsForCallSession: cancelGroupAdmin } = await import("./groupAdmin/services/groupAdminCommissionService");
+          const { cancelCommissionsForCallSession: cancelAffiliate } = await import("./affiliate/services/commissionService");
+
+          const cancelReason = `Chargeback lost: dispute ${dispute.id}`;
+          const results = await Promise.allSettled([
+            cancelChatter(existingData.callSessionId, cancelReason, "chargeback"),
+            cancelInfluencer(existingData.callSessionId, cancelReason, "chargeback"),
+            cancelBlogger(existingData.callSessionId, cancelReason, "chargeback"),
+            cancelGroupAdmin(existingData.callSessionId, cancelReason),
+            cancelAffiliate(existingData.callSessionId, cancelReason, "chargeback"),
+          ]);
+
+          const labels = ["chatter", "influencer", "blogger", "groupAdmin", "affiliate"];
+          let totalCancelled = 0;
+          for (let i = 0; i < results.length; i++) {
+            const r = results[i];
+            if (r.status === "fulfilled") {
+              totalCancelled += r.value.cancelledCount;
+            } else {
+              console.error(`[DISPUTE_CLOSED] Failed to cancel ${labels[i]} commissions:`, r.reason);
+            }
+          }
+          console.log(`[DISPUTE_CLOSED] Cancelled ${totalCancelled} commissions for session ${existingData.callSessionId}`);
+        } catch (commissionError) {
+          console.error("[DISPUTE_CLOSED] Failed to cancel commissions on chargeback:", commissionError);
+        }
+      }
+
       // Notifier le provider du résultat
       if (existingData.providerId) {
         await this.notifyProviderOfDisputeResolution(

@@ -425,9 +425,6 @@ export const getChatterDashboard = onCall(
           bestRank: chatter.bestRank,
           zoomMeetingsAttended: chatter.zoomMeetingsAttended,
           lastZoomAttendance: chatter.lastZoomAttendance,
-          quizAttempts: chatter.quizAttempts,
-          lastQuizAttempt: chatter.lastQuizAttempt,
-          quizPassedAt: chatter.quizPassedAt,
           preferredPaymentMethod: chatter.preferredPaymentMethod,
           pendingWithdrawalId: chatter.pendingWithdrawalId,
           recruitedBy: chatter.recruitedBy,
@@ -461,7 +458,7 @@ export const getChatterDashboard = onCall(
           termsType: chatter.termsType || "terms_chatters",
           isVisible: chatter.isVisible ?? true,
           hasTelegram: chatter.hasTelegram || false,
-          telegramId: chatter.telegramId || null,
+          telegramId: chatter.telegramId ?? undefined,
         },
         recentCommissions,
         monthlyStats: {

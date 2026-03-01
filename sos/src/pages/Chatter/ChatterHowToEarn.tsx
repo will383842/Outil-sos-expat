@@ -711,20 +711,41 @@ function ChatterHowToEarn() {
                 detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.perCall', defaultMessage: 'par appel' })}
                 color="text-green-600 dark:text-green-400"
               />
-              <CommissionRow
-                icon={<Users className="h-4 w-4" />}
-                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.n1Call', defaultMessage: 'Appel filleul N1' })}
-                amount={formatCents(n1CallAmount)}
-                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.passive', defaultMessage: 'revenu passif' })}
-                color="text-blue-600 dark:text-blue-400"
-              />
-              <CommissionRow
-                icon={<Users className="h-4 w-4" />}
-                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.n2Call', defaultMessage: 'Appel filleul N2' })}
-                amount={formatCents(n2CallAmount)}
-                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.passive', defaultMessage: 'revenu passif' })}
-                color="text-indigo-600 dark:text-indigo-400"
-              />
+              {isCaptain ? (
+                <>
+                  <CommissionRow
+                    icon={<Crown className="h-4 w-4" />}
+                    label={intl.formatMessage({ id: 'chatter.howToEarn.comm.captainCallLawyer', defaultMessage: 'Appel équipe (avocat)' })}
+                    amount="$3"
+                    detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.captainCallLawyerDesc', defaultMessage: 'par appel de votre équipe' })}
+                    color="text-purple-600 dark:text-purple-400"
+                  />
+                  <CommissionRow
+                    icon={<Crown className="h-4 w-4" />}
+                    label={intl.formatMessage({ id: 'chatter.howToEarn.comm.captainCallExpat', defaultMessage: 'Appel équipe (expatrié)' })}
+                    amount="$2"
+                    detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.captainCallExpatDesc', defaultMessage: 'par appel de votre équipe' })}
+                    color="text-purple-600 dark:text-purple-400"
+                  />
+                </>
+              ) : (
+                <>
+                  <CommissionRow
+                    icon={<Users className="h-4 w-4" />}
+                    label={intl.formatMessage({ id: 'chatter.howToEarn.comm.n1Call', defaultMessage: 'Appel filleul N1' })}
+                    amount={formatCents(n1CallAmount)}
+                    detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.passive', defaultMessage: 'revenu passif' })}
+                    color="text-blue-600 dark:text-blue-400"
+                  />
+                  <CommissionRow
+                    icon={<Users className="h-4 w-4" />}
+                    label={intl.formatMessage({ id: 'chatter.howToEarn.comm.n2Call', defaultMessage: 'Appel filleul N2' })}
+                    amount={formatCents(n2CallAmount)}
+                    detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.passive', defaultMessage: 'revenu passif' })}
+                    color="text-indigo-600 dark:text-indigo-400"
+                  />
+                </>
+              )}
             </div>
           </div>
 

@@ -6,11 +6,12 @@
  * Fires when a call session is marked as completed and paid.
  *
  * Commission Structure:
- * 1. CLIENT CALL: $10 - when a client calls via chatter's link
+ * 1. CLIENT CALL: $5 (lawyer) / $3 (expat) - when a client calls via chatter's link
  * 2. N1 CALL: $1 - when your direct referral (N1) makes a call
  * 3. N2 CALL: $0.50 - when your N1's referral (N2) makes a call
  * 4. ACTIVATION BONUS: $5 - ONLY after referral's 2nd client call (anti-fraud)
  * 5. N1 RECRUIT BONUS: $1 - when your N1 recruits someone who activates
+ * 6. CAPTAIN CALL: $3 (lawyer) / $2 (expat) - replaces N1/N2 for captains
  *
  * Removed (OLD SYSTEM):
  * - NO commission at signup (was $2)
@@ -349,6 +350,7 @@ export async function handleCallCompleted(
 
           // ========================================================================
           // 4. N1 RECRUIT BONUS ($1) - When N1 recruits someone who activates
+          // P1-8 FIX: Added idempotence flag to prevent double-credit
           // ========================================================================
 
           // Check if the recruiter (N1) was also recruited by someone (N2 parrain)
@@ -356,7 +358,12 @@ export async function handleCallCompleted(
           if (recruiterDoc.exists) {
             const recruiter = recruiterDoc.data() as Chatter;
 
-            if (recruiter.recruitedBy) {
+            // P1-8 FIX: Check idempotence flag before paying N1 recruit bonus
+            const activatedChatterDoc = await db.collection("chatters").doc(chatterId).get();
+            const activatedChatterData = activatedChatterDoc.data();
+            const n1RecruitBonusPaid = activatedChatterData?.n1RecruitBonusPaid === true;
+
+            if (recruiter.recruitedBy && !n1RecruitBonusPaid) {
               const n1RecruitBonusAmount = getN1RecruitBonusAmount(config);
 
               const n1RecruitResult = await createCommission({
@@ -378,6 +385,11 @@ export async function handleCallCompleted(
               });
 
               if (n1RecruitResult.success) {
+                // P1-8 FIX: Set idempotence flag on activated chatter
+                await db.collection("chatters").doc(chatterId).update({
+                  n1RecruitBonusPaid: true,
+                });
+
                 logger.info("[chatterOnCallCompleted] N1 recruit bonus paid", {
                   n2ParrainId: recruiter.recruitedBy,
                   n1RecruiterId: activationResult.recruitedBy,
@@ -435,7 +447,7 @@ export async function handleCallCompleted(
               },
             },
             baseAmount: captainN1Amount,
-            description: `Commission capitaine \u2014 appel N1 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}`,
+            description: `Commission capitaine \u2014 appel N1 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
           });
 
           if (captainN1Result.success) {
@@ -545,7 +557,7 @@ export async function handleCallCompleted(
                 },
               },
               baseAmount: captainN2Amount,
-              description: `Commission capitaine \u2014 appel N2 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}`,
+              description: `Commission capitaine \u2014 appel N2 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
             });
 
             if (captainN2Result.success) {

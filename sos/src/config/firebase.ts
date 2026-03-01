@@ -334,6 +334,29 @@ if (typeof navigator !== 'undefined' && 'storage' in navigator) {
   }).catch(() => { /* Storage API non disponible */ });
 }
 
+// ✅ Firebase Analytics (P2-03 FIX)
+import { getAnalytics, logEvent as firebaseLogEvent, isSupported as analyticsIsSupported, type Analytics } from "firebase/analytics";
+
+let analyticsInstance: Analytics | null = null;
+if (typeof window !== 'undefined') {
+  analyticsIsSupported().then((supported) => {
+    if (supported) {
+      analyticsInstance = getAnalytics(app);
+      console.log("📊 [Firebase] Analytics initialisé");
+    }
+  }).catch(() => { /* Analytics not supported */ });
+}
+
+/**
+ * Log a custom event to Firebase Analytics.
+ * Safe to call even if Analytics is not available (SSR, unsupported browser).
+ */
+export function logAnalyticsEvent(eventName: string, params?: Record<string, string | number | boolean>) {
+  if (analyticsInstance) {
+    firebaseLogEvent(analyticsInstance, eventName, params);
+  }
+}
+
 // 🔇 Réduire le bruit Firestore (logs seulement si erreur)
 setLogLevel("error");
 

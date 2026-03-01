@@ -297,8 +297,6 @@ export type RouteKey =
   | "chatter-landing"      // /devenir-chatter -> /become-chatter, etc.
   | "chatter-register"     // /chatter/inscription -> /chatter/register, etc.
   | "chatter-telegram"     // /chatter/telegram -> /chatter/telegram, etc.
-  | "chatter-presentation" // /chatter/presentation -> /chatter/presentation, etc.
-  | "chatter-quiz"         // /chatter/quiz -> /chatter/quiz, etc.
   | "chatter-dashboard"    // /chatter/tableau-de-bord -> /chatter/dashboard, etc.
   | "chatter-leaderboard"  // /chatter/classement -> /chatter/leaderboard, etc.
   | "chatter-payments"     // /chatter/paiements -> /chatter/payments, etc.
@@ -969,28 +967,6 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "chatter/telegram",
     hi: "chatter/telegram",
     ar: "مسوق/تيليجرام",
-  },
-  "chatter-presentation": {
-    fr: "chatter/presentation",
-    en: "chatter/presentation",
-    es: "chatter/presentacion",
-    de: "chatter/praesentation",
-    ru: "chatter/prezentatsiya",
-    pt: "chatter/apresentacao",
-    ch: "chatter/jieshao",
-    hi: "chatter/parichay",
-    ar: "مسوق/عرض",
-  },
-  "chatter-quiz": {
-    fr: "chatter/quiz",
-    en: "chatter/quiz",
-    es: "chatter/cuestionario",
-    de: "chatter/quiz",
-    ru: "chatter/viktorina",
-    pt: "chatter/questionario",
-    ch: "chatter/ceshi",
-    hi: "chatter/prashnottari",
-    ar: "مسوق/اختبار",
   },
   "chatter-dashboard": {
     fr: "chatter/tableau-de-bord",

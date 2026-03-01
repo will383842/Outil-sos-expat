@@ -12,6 +12,8 @@ import { useState, useCallback, useMemo } from "react";
 import { useChatter } from "@/hooks/useChatter";
 import { useChatterMissions } from "@/hooks/useChatterMissions";
 import { ChatterViralKit } from "@/types/chatter";
+import { trackMetaCustomEvent } from "@/utils/metaPixel";
+import { logAnalyticsEvent } from "@/config/firebase";
 
 interface SharePlatform {
   id: string;
@@ -163,8 +165,15 @@ export function useViralKit(): UseViralKitReturn {
     }
   };
 
-  const copyLink = () => copyToClipboard(referralLink);
-  const copyCode = () => copyToClipboard(referralCode);
+  const copyLink = () => {
+    // P1-5 FIX: Track copy link event
+    try { trackMetaCustomEvent("CopyReferralLink", { referralCode }); } catch {}
+    return copyToClipboard(referralLink);
+  };
+  const copyCode = () => {
+    try { trackMetaCustomEvent("CopyReferralCode", { referralCode }); } catch {}
+    return copyToClipboard(referralCode);
+  };
   const copyMessage = (message: string) => copyToClipboard(message);
 
   // Share on platform
@@ -176,6 +185,17 @@ export function useViralKit(): UseViralKitReturn {
     const shareUrl = platform.getShareUrl(message, referralLink);
 
     window.open(shareUrl, "_blank", "noopener,noreferrer");
+
+    // P1-5 FIX: Track share event for analytics
+    try {
+      trackMetaCustomEvent("ShareReferralLink", {
+        platform: platformId,
+        referralCode,
+      });
+      logAnalyticsEvent("share", { method: platformId, content_type: "referral_link" });
+    } catch {
+      // Analytics tracking should never break the app
+    }
 
     // Track share for daily missions
     trackShare();

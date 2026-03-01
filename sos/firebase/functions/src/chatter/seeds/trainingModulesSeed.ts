@@ -214,7 +214,7 @@ After these exchanges:
         content: `Parlons argent ! 🤑
 
 **Pour chaque personne que tu aides et qui appelle :**
-# 💵 $10 par appel
+# 💵 $5 par appel avocat / $3 par appel expatrié
 
 **Si tu recrutes un avocat ou expatrié aidant :**
 # 💵 $5 par appel qu'il reçoit (pendant 6 mois !)
@@ -227,33 +227,33 @@ After these exchanges:
 
 **Exemple concret :**
 - Tu aides 3 personnes cette semaine
-- 2 finissent par appeler
-- **Tu gagnes $20** 🎉
+- 1 appelle un avocat ($5) + 1 appelle un expatrié ($3)
+- **Tu gagnes $8** 🎉
 
 **En un mois actif :**
 - ~10-15 conversations par semaine
 - ~5-8 conversions
-- **$50-80/mois** sans te prendre la tête !
+- **$30-50/mois** en direct + revenus passifs de ton réseau !
 
 Et plus tu deviens bon dans l'art de la conversation, plus tes stats montent ! 📈`,
         contentTranslations: {
           en: `Let's talk money! 🤑
 
-**For each person you help who calls a lawyer:**
-# 💵 $10
+**For each person you help who makes a call:**
+# 💵 $5 per lawyer call / $3 per expat call
 
 **If you recruit a lawyer to the platform:**
 # 💵 $5 per call they receive (for 6 months!)
 
 **Real example:**
 - You help 3 people this week
-- 2 end up calling a lawyer
-- **You earn $20** 🎉
+- 1 calls a lawyer ($5) + 1 calls an expat ($3)
+- **You earn $8** 🎉
 
 **In an active month:**
 - ~10-15 conversations per week
 - ~5-8 conversions
-- **$50-80/month** without stressing!
+- **$30-50/month** direct + passive income from your network!
 
 And the better you get at conversation, the more your stats go up! 📈`,
         },
@@ -1372,6 +1372,860 @@ Now go help people and make money! 💪💰`,
         correctAnswerId: "c",
         explanation: "YESSSS ! T'as tout compris, t'es motivé(e), maintenant GO faire des $$$ ! 💪🎉",
         explanationTranslations: { en: "YESSSS! You got it all, you're motivated, now GO make $$$! 💪🎉" },
+      },
+    ],
+  },
+
+  // ============================================================================
+  // MODULE 6: Devenir Capitaine — Recruter efficacement 🎯
+  // ============================================================================
+  {
+    order: 6,
+    title: "Devenir Capitaine : Recruter efficacement 🎯",
+    titleTranslations: {
+      en: "Becoming a Captain: Recruiting Effectively 🎯",
+    },
+    description: "Apprends à trouver, convaincre et recruter les meilleurs chatters pour ton équipe !",
+    descriptionTranslations: {
+      en: "Learn how to find, convince and recruit the best chatters for your team!",
+    },
+    category: "recruitment",
+    coverImageUrl: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800",
+    estimatedMinutes: 5,
+    isRequired: false,
+    prerequisites: [],
+    status: "published",
+    passingScore: 70,
+    slides: [
+      {
+        order: 1,
+        type: "text",
+        title: "Pourquoi recruter ? 🤔",
+        titleTranslations: { en: "Why recruit? 🤔" },
+        content: `En tant que Capitaine, ta mission #1 c'est **construire une équipe solide** !
+
+**Pourquoi c'est si important :**
+
+💰 **Revenus passifs** — Tu gagnes $3 par appel avocat et $2 par appel expatrié de TOUTE ton équipe
+📈 **Effet boule de neige** — Plus ton équipe grandit, plus tes gains augmentent sans effort
+🏆 **Bonus paliers** — 20 appels = Bronze, 50 = Argent, 100 = Or... jusqu'à Diamant !
+⭐ **Bonus qualité** — Atteins 10 recrues actives + $100 de commissions mensuelles = bonus mensuel !
+
+**Le calcul magique :**
+- 10 recrues actives × 5 appels/mois chacune = 50 appels
+- 50 appels × $2-3 = **$100-150/mois de revenu passif** 💪
+
+**C'est LE levier qui fait la différence !**`,
+        contentTranslations: {
+          en: `As a Captain, your #1 mission is to **build a solid team**!
+
+**Why it matters:**
+
+💰 **Passive income** — You earn $3 per lawyer call and $2 per expat call from your ENTIRE team
+📈 **Snowball effect** — The bigger your team, the more you earn effortlessly
+🏆 **Tier bonuses** — 20 calls = Bronze, 50 = Silver, 100 = Gold... up to Diamond!
+⭐ **Quality bonus** — Reach 10 active recruits + $100 monthly commissions = monthly bonus!
+
+**The magic math:**
+- 10 active recruits × 5 calls/month each = 50 calls
+- 50 calls × $2-3 = **$100-150/month passive income** 💪
+
+**This is THE lever that makes the difference!**`,
+        },
+      },
+      {
+        order: 2,
+        type: "text",
+        title: "Où trouver des recrues ? 🔍",
+        titleTranslations: { en: "Where to find recruits? 🔍" },
+        content: `Les meilleurs chatters sont partout autour de toi !
+
+**🌍 Réseaux sociaux :**
+- Groupes Facebook d'expatriés (il y en a des centaines !)
+- Forums Reddit r/expats, r/iwantout
+- Groupes WhatsApp/Telegram de communautés expat
+- LinkedIn — profils intéressés par le freelance/remote work
+
+**👥 Ton réseau personnel :**
+- Amis expatriés ou qui connaissent des expats
+- Collègues qui cherchent un revenu complémentaire
+- Étudiants en langues ou en droit international
+
+**💡 Le profil idéal :**
+- Quelqu'un qui parle bien (empathique, à l'écoute)
+- Actif sur les réseaux sociaux
+- Motivé par un revenu complémentaire
+- Pas besoin d'expérience — on les forme !
+
+**Astuce pro** : Les meilleurs recruteurs partagent leur propre histoire de succès 📖`,
+        contentTranslations: {
+          en: `The best chatters are everywhere around you!
+
+**🌍 Social media:**
+- Facebook expat groups (hundreds of them!)
+- Reddit forums r/expats, r/iwantout
+- WhatsApp/Telegram expat community groups
+- LinkedIn — profiles interested in freelance/remote work
+
+**👥 Your personal network:**
+- Expat friends or people who know expats
+- Colleagues looking for side income
+- Language or international law students
+
+**💡 The ideal profile:**
+- Someone who communicates well (empathetic, good listener)
+- Active on social media
+- Motivated by side income
+- No experience needed — we train them!
+
+**Pro tip**: The best recruiters share their own success story 📖`,
+        },
+      },
+      {
+        order: 3,
+        type: "text",
+        title: "Les arguments qui marchent 🎤",
+        titleTranslations: { en: "Arguments that work 🎤" },
+        content: `Voici les phrases qui convertissent le mieux :
+
+**🔥 L'argument liberté :**
+> "Tu peux gagner de l'argent depuis ton canapé, en aidant des gens. Pas de patron, pas d'horaires."
+
+**💰 L'argument concret :**
+> "J'ai gagné $X le mois dernier juste en discutant sur les réseaux. Tu veux que je t'explique ?"
+
+**❤️ L'argument impact :**
+> "Tu connais des expatriés qui galèrent ? Il y a un moyen de les aider ET d'être rémunéré."
+
+**⚡ L'argument simplicité :**
+> "C'est gratuit, ça prend 2 min de s'inscrire, et tu as une formation complète. Zéro risque."
+
+**📊 L'argument preuve :**
+Partage une capture d'écran de tes gains (floutée si tu veux) — rien de plus convaincant !`,
+        contentTranslations: {
+          en: `Here are the phrases that convert best:
+
+**🔥 The freedom argument:**
+> "You can earn money from your couch, helping people. No boss, no schedule."
+
+**💰 The concrete argument:**
+> "I earned $X last month just chatting on social media. Want me to explain?"
+
+**❤️ The impact argument:**
+> "Know expats who are struggling? There's a way to help them AND get paid."
+
+**⚡ The simplicity argument:**
+> "It's free, takes 2 min to sign up, and you get full training. Zero risk."
+
+**📊 The proof argument:**
+Share a screenshot of your earnings (blurred if you want) — nothing more convincing!`,
+        },
+      },
+      {
+        order: 4,
+        type: "text",
+        title: "Les erreurs à éviter 🚫",
+        titleTranslations: { en: "Mistakes to avoid 🚫" },
+        content: `Ce qui fait fuir les recrues potentielles :
+
+❌ **Spammer** — N'envoie pas le même message à 50 personnes. Personnalise !
+❌ **Promettre la lune** — "Tu vas gagner $10K/mois" → Sois réaliste, ça construit la confiance
+❌ **Forcer** — Si quelqu'un dit non, respecte. Il reviendra peut-être plus tard
+❌ **Négliger le suivi** — Recruter c'est bien, accompagner c'est MIEUX
+❌ **Recruter n'importe qui** — Quelqu'un de pas motivé = perte de temps pour tout le monde
+
+✅ **À la place, fais ça :**
+- Cible les personnes qui ont déjà un intérêt (groupes expat, freelance)
+- Explique honnêtement les gains réalistes
+- Propose d'aider personnellement les premiers jours
+- Partage ta propre expérience authentique`,
+        contentTranslations: {
+          en: `What scares away potential recruits:
+
+❌ **Spamming** — Don't send the same message to 50 people. Personalize!
+❌ **Overpromising** — "You'll earn $10K/month" → Be realistic, it builds trust
+❌ **Forcing** — If someone says no, respect it. They may come back later
+❌ **Neglecting follow-up** — Recruiting is good, supporting is BETTER
+❌ **Recruiting anyone** — Someone unmotivated = waste of time for everyone
+
+✅ **Instead, do this:**
+- Target people who already have interest (expat groups, freelance)
+- Honestly explain realistic earnings
+- Offer to personally help in the first days
+- Share your own authentic experience`,
+        },
+      },
+      {
+        order: 5,
+        type: "text",
+        title: "Scripts prêts à copier-coller 📋✂️",
+        titleTranslations: { en: "Ready-to-copy scripts 📋✂️" },
+        content: `Copie et personnalise ces messages ! Remplace [TON_PRÉNOM] et [TON_LIEN].
+
+**📱 WhatsApp / Telegram — Message personnel :**
+
+"Salut [PRÉNOM] ! 😊 J'ai trouvé un truc sympa que je voulais te partager. C'est une plateforme qui aide les expatriés à trouver un avocat ou un aidant en 5 min par téléphone. Le truc c'est qu'on peut gagner de l'argent en les aidant à nous trouver — moi je gagne déjà [TON_MONTANT] par mois juste en discutant sur les réseaux. C'est gratuit, pas de boss, tu gères comme tu veux. Tu veux que je t'explique ? 😊"
+
+**📘 Facebook — Post dans un groupe expat :**
+
+"🌍 Tu connais des expatriés qui cherchent un revenu complémentaire flexible ? SOS-Expat rémunère des ambassadeurs (chatters) pour aider les expats à trouver de l'aide juridique ou pratique. Pas besoin d'expérience, formation gratuite incluse. Tu choisis tes horaires et tu gagnes à chaque appel généré. DM moi si ça t'intéresse ! 💬"
+
+**💼 LinkedIn — Message ciblé :**
+
+"Bonjour [PRÉNOM], j'ai vu que tu étais [expat / intéressé par le remote work]. Je fais partie d'un programme d'ambassadeurs chez SOS-Expat. On aide les expatriés et on est rémunéré à la performance. Si tu cherches un complément de revenu flexible, je serais ravi de t'en dire plus."
+
+**⚡ Relance douce (J+3 sans réponse) :**
+
+"Hey [PRÉNOM] ! Juste un petit coucou — je voulais savoir si tu avais eu le temps de regarder ce dont je t'ai parlé ? Pas de pression hein, mais si tu as des questions je suis là ! 😊"`,
+        contentTranslations: {
+          en: `Copy and personalize these messages! Replace [YOUR_NAME] and [YOUR_LINK].
+
+**📱 WhatsApp / Telegram — Personal message:**
+
+"Hey [NAME]! 😊 I found something cool I wanted to share. It's a platform that helps expats find a lawyer or helper in 5 min by phone. The thing is, you can earn money by helping people find us — I'm already earning [YOUR_AMOUNT] per month just chatting on social media. It's free, no boss, you work whenever you want. Want me to explain? 😊"
+
+**📘 Facebook — Post in an expat group:**
+
+"🌍 Know expats looking for a flexible side income? SOS-Expat pays ambassadors (chatters) to help expats find legal or practical help. No experience needed, free training included. You choose your hours and earn for each call generated. DM me if interested! 💬"
+
+**💼 LinkedIn — Targeted message:**
+
+"Hi [NAME], I saw you were [an expat / interested in remote work]. I'm part of an ambassador program at SOS-Expat. We help expats and get paid per performance. If you're looking for flexible side income, I'd love to tell you more."
+
+**⚡ Gentle follow-up (Day 3, no reply):**
+
+"Hey [NAME]! Just a quick check-in — did you have a chance to look at what I mentioned? No pressure at all, but if you have questions I'm here! 😊"`,
+        },
+      },
+    ],
+    quizQuestions: [
+      {
+        id: "m6_q1",
+        question: "Quel est l'argument le plus efficace pour recruter ? 🎯",
+        questionTranslations: { en: "What's the most effective argument for recruiting? 🎯" },
+        options: [
+          { id: "a", text: "\"Tu vas devenir millionnaire !\"", textTranslations: { en: "\"You'll become a millionaire!\"" } },
+          { id: "b", text: "Partager ton expérience réelle et des gains concrets", textTranslations: { en: "Share your real experience and concrete earnings" } },
+          { id: "c", text: "Spammer les groupes avec ton lien", textTranslations: { en: "Spam groups with your link" } },
+          { id: "d", text: "Mentir sur les montants", textTranslations: { en: "Lie about the amounts" } },
+        ],
+        correctAnswerId: "b",
+        explanation: "L'authenticité gagne toujours ! Partage tes vrais résultats et ton histoire — c'est ce qui convainc le plus 🙌",
+        explanationTranslations: { en: "Authenticity always wins! Share your real results and story — that's what convinces the most 🙌" },
+      },
+      {
+        id: "m6_q2",
+        question: "Combien gagnes-tu par appel avocat de ton équipe en tant que Capitaine ? 💰",
+        questionTranslations: { en: "How much do you earn per lawyer call from your team as Captain? 💰" },
+        options: [
+          { id: "a", text: "$1", textTranslations: { en: "$1" } },
+          { id: "b", text: "$3 🎉", textTranslations: { en: "$3 🎉" } },
+          { id: "c", text: "$10", textTranslations: { en: "$10" } },
+          { id: "d", text: "$0.50", textTranslations: { en: "$0.50" } },
+        ],
+        correctAnswerId: "b",
+        explanation: "$3 par appel avocat ! Et $2 par appel expatrié. Avec 10 recrues actives, ça monte vite ! 🚀",
+        explanationTranslations: { en: "$3 per lawyer call! And $2 per expat call. With 10 active recruits, it adds up fast! 🚀" },
+      },
+    ],
+  },
+
+  // ============================================================================
+  // MODULE 7: Capitaine — Onboarder et former vos recrues 🎓
+  // ============================================================================
+  {
+    order: 7,
+    title: "Capitaine : Onboarder et former vos recrues 🎓",
+    titleTranslations: {
+      en: "Captain: Onboarding and Training Your Recruits 🎓",
+    },
+    description: "Les premiers jours sont critiques ! Apprends à bien accueillir et former tes nouvelles recrues.",
+    descriptionTranslations: {
+      en: "The first days are critical! Learn how to properly welcome and train your new recruits.",
+    },
+    category: "best_practices",
+    coverImageUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800",
+    estimatedMinutes: 5,
+    isRequired: false,
+    prerequisites: [],
+    status: "published",
+    passingScore: 70,
+    slides: [
+      {
+        order: 1,
+        type: "text",
+        title: "Les premiers jours sont critiques ⚡",
+        titleTranslations: { en: "The first days are critical ⚡" },
+        content: `**80% des abandons** se produisent dans les 7 premiers jours !
+
+**Pourquoi ?**
+- La recrue ne sait pas par où commencer
+- Elle n'a pas de résultats rapides → perd la motivation
+- Elle se sent seule face à ses questions
+
+**Ton rôle de Capitaine :**
+Tu es leur **mentor**. Les premiers jours, sois ULTRA disponible !
+
+**L'objectif des 7 premiers jours :**
+1. ✅ Inscription terminée
+2. ✅ Formation modules 1-5 complétée
+3. ✅ Premier message posté dans un groupe
+4. ✅ Premier client référé (même si pas d'appel)
+5. ✅ Telegram lié pour les notifications
+
+**Une recrue qui fait son premier $$$ dans la première semaine → reste pour toujours ! 💎**`,
+        contentTranslations: {
+          en: `**80% of dropouts** happen in the first 7 days!
+
+**Why?**
+- The recruit doesn't know where to start
+- No quick results → loses motivation
+- Feels alone with their questions
+
+**Your role as Captain:**
+You're their **mentor**. In the first days, be ULTRA available!
+
+**The 7-day goal:**
+1. ✅ Registration completed
+2. ✅ Training modules 1-5 completed
+3. ✅ First message posted in a group
+4. ✅ First client referred (even if no call)
+5. ✅ Telegram linked for notifications
+
+**A recruit who makes their first $$$ in the first week → stays forever! 💎**`,
+        },
+      },
+      {
+        order: 2,
+        type: "text",
+        title: "Checklist d'onboarding 📋",
+        titleTranslations: { en: "Onboarding checklist 📋" },
+        content: `Dès qu'une recrue s'inscrit, suis cette checklist :
+
+**📱 Jour 1 — Accueil :**
+- Envoie un message de bienvenue personnalisé
+- Propose un appel rapide (5 min) pour te présenter
+- Explique les 3 étapes : Formation → Pratique → Gains
+- Partage 1-2 tips concrets pour démarrer
+
+**📚 Jours 2-3 — Formation :**
+- Vérifie qu'il/elle a commencé les modules
+- Réponds à ses questions en temps réel
+- Partage des exemples de messages qui marchent
+
+**🚀 Jours 4-7 — Lancement :**
+- Encourage à poster dans 2-3 groupes
+- Aide à formuler ses premiers messages
+- Célèbre chaque petit succès ("Bravo, ton 1er clic !")
+- Si pas d'activité → relance gentiment
+
+**🔄 Semaine 2+ — Suivi :**
+- Check hebdo rapide : "Comment ça va ?"
+- Partage les succès de l'équipe pour motiver
+- Propose des astuces personnalisées`,
+        contentTranslations: {
+          en: `As soon as a recruit signs up, follow this checklist:
+
+**📱 Day 1 — Welcome:**
+- Send a personalized welcome message
+- Offer a quick call (5 min) to introduce yourself
+- Explain the 3 steps: Training → Practice → Earnings
+- Share 1-2 concrete tips to get started
+
+**📚 Days 2-3 — Training:**
+- Check they've started the modules
+- Answer their questions in real time
+- Share examples of messages that work
+
+**🚀 Days 4-7 — Launch:**
+- Encourage posting in 2-3 groups
+- Help formulate first messages
+- Celebrate every small win ("Congrats, your 1st click!")
+- If no activity → gently follow up
+
+**🔄 Week 2+ — Follow-up:**
+- Quick weekly check: "How's it going?"
+- Share team successes to motivate
+- Offer personalized tips`,
+        },
+      },
+      {
+        order: 3,
+        type: "text",
+        title: "Aider tes recrues à performer 📈",
+        titleTranslations: { en: "Help your recruits perform 📈" },
+        content: `Les capitaines qui réussissent font ces choses :
+
+**💬 Communication régulière :**
+- Crée un groupe WhatsApp/Telegram pour ton équipe
+- Partage un "tip du jour" chaque matin
+- Mets en avant les succès de chacun
+
+**📊 Suivi des performances :**
+- Consulte ton dashboard capitaine régulièrement
+- Identifie qui est actif et qui ne l'est pas
+- Contacte les inactifs après 3 jours de silence
+
+**🎯 Fixe des objectifs :**
+- "Cette semaine, on vise 5 appels en équipe !"
+- Petits objectifs = victoires fréquentes = motivation !
+
+**🏆 Crée de la compétition saine :**
+- "Qui fera le plus de clics cette semaine ?"
+- Petit défi entre recrues (bienveillant !)
+
+**❤️ Sois humain avant tout :**
+- Félicite en public, corrige en privé
+- Comprends les situations personnelles
+- Un capitaine bienveillant → équipe fidèle`,
+        contentTranslations: {
+          en: `Successful captains do these things:
+
+**💬 Regular communication:**
+- Create a WhatsApp/Telegram group for your team
+- Share a "tip of the day" every morning
+- Highlight everyone's successes
+
+**📊 Performance tracking:**
+- Check your captain dashboard regularly
+- Identify who's active and who's not
+- Contact inactive members after 3 days of silence
+
+**🎯 Set goals:**
+- "This week, we're aiming for 5 team calls!"
+- Small goals = frequent wins = motivation!
+
+**🏆 Create healthy competition:**
+- "Who'll get the most clicks this week?"
+- Friendly challenges between recruits!
+
+**❤️ Be human above all:**
+- Praise publicly, correct privately
+- Understand personal situations
+- A caring captain → loyal team`,
+        },
+      },
+      {
+        order: 4,
+        type: "text",
+        title: "Lire le dashboard capitaine 📊",
+        titleTranslations: { en: "Reading the captain dashboard 📊" },
+        content: `Ton dashboard capitaine est ton **outil #1** pour gérer ton équipe !
+
+**📌 Ce que tu y trouves :**
+
+**🎯 Jauge des appels équipe :**
+- Nombre total d'appels ce mois
+- Progression vers le prochain palier (Bronze → Argent → Or → Platine → Diamant)
+- Plus d'appels = plus gros bonus mensuel !
+
+**👥 Liste des recrues N1 :**
+- Chaque recrue avec son nombre d'appels et ses gains totaux
+- Identifie qui performe et qui a besoin d'aide
+
+**👥👥 Liste des recrues N2 :**
+- Les recrues de tes recrues — l'effet réseau !
+- Tu gagnes aussi sur leurs appels
+
+**💰 Commissions :**
+- Historique détaillé de tous tes gains capitaine
+- Distinction appels / bonus palier / bonus qualité
+
+**⭐ Bonus qualité :**
+- Barre de progression vers les critères
+- 10 recrues actives + $100 commissions = bonus mensuel !
+
+**Consulte-le au moins 1 fois par jour ! 👀**`,
+        contentTranslations: {
+          en: `Your captain dashboard is your **#1 tool** for managing your team!
+
+**📌 What you'll find:**
+
+**🎯 Team calls gauge:**
+- Total calls this month
+- Progress to next tier (Bronze → Silver → Gold → Platinum → Diamond)
+- More calls = bigger monthly bonus!
+
+**👥 N1 recruits list:**
+- Each recruit with their call count and total earnings
+- Identify who's performing and who needs help
+
+**👥👥 N2 recruits list:**
+- Your recruits' recruits — the network effect!
+- You earn from their calls too
+
+**💰 Commissions:**
+- Detailed history of all your captain earnings
+- Distinction between calls / tier bonus / quality bonus
+
+**⭐ Quality bonus:**
+- Progress bar toward criteria
+- 10 active recruits + $100 commissions = monthly bonus!
+
+**Check it at least once a day! 👀**`,
+        },
+      },
+      {
+        order: 5,
+        type: "text",
+        title: "Messages d'onboarding prêts à envoyer 📲",
+        titleTranslations: { en: "Ready-to-send onboarding messages 📲" },
+        content: `Copie ces messages et envoie-les à chaque nouvelle recrue ! Remplace [PRÉNOM].
+
+**🎉 Jour 1 — Bienvenue :**
+
+"Bienvenue dans l'équipe [PRÉNOM] ! 🎉 Je suis ton capitaine et je suis là pour t'aider à réussir. Voici les 3 étapes pour bien démarrer :
+1️⃣ Complète les modules de formation (onglet Formation)
+2️⃣ Lie ton Telegram pour recevoir les notifications 💰
+3️⃣ Poste ton premier message dans un groupe expat
+Des questions ? Je suis dispo ! 😊"
+
+**📚 Jour 2 — Suivi formation :**
+
+"Hey [PRÉNOM] ! Tu as pu avancer sur les modules de formation ? 📚 Les modules 1 à 3 sont les plus importants pour bien comprendre le fonctionnement. Si tu bloques sur quoi que ce soit, n'hésite pas ! Je suis passé par là aussi 😄"
+
+**🚀 Jour 4 — Premier message :**
+
+"[PRÉNOM] ! C'est le moment de passer à l'action 💪 Rejoins 2-3 groupes Facebook ou WhatsApp d'expatriés et poste un premier message. Pas besoin d'un truc parfait — l'important c'est de commencer ! Voici un exemple :
+'Expatriés, vous avez des questions juridiques ? SOS-Expat vous met en relation avec un avocat en 5 min par téléphone 📞 [TON_LIEN]'
+Montre-moi ton message quand c'est fait, je te donnerai des tips ! 🎯"
+
+**⚠️ Jour 7 — Relance si inactif :**
+
+"Hey [PRÉNOM], ça fait quelques jours que j'ai pas de nouvelles ! 😊 Tout va bien ? Si tu as des doutes ou des questions, on peut en parler. Beaucoup de chatters ont mis quelques jours avant de se lancer et maintenant ils gagnent régulièrement. Je suis là pour t'aider ! 💪"
+
+**🏆 Après le 1er appel — Célébration :**
+
+"[PRÉNOM] !!! 🎉🎉🎉 Tu as généré ton premier appel ! C'est ÉNORME — beaucoup s'arrêtent avant. Tu fais partie des meilleurs ! Le prochain sera encore plus facile, tu verras 💰🚀"`,
+        contentTranslations: {
+          en: `Copy these messages and send them to every new recruit! Replace [NAME].
+
+**🎉 Day 1 — Welcome:**
+
+"Welcome to the team [NAME]! 🎉 I'm your captain and I'm here to help you succeed. Here are the 3 steps to get started:
+1️⃣ Complete the training modules (Training tab)
+2️⃣ Link your Telegram for notifications 💰
+3️⃣ Post your first message in an expat group
+Questions? I'm available! 😊"
+
+**📚 Day 2 — Training follow-up:**
+
+"Hey [NAME]! Were you able to work on the training modules? 📚 Modules 1 to 3 are the most important to understand how things work. If you get stuck on anything, don't hesitate! I went through it too 😄"
+
+**🚀 Day 4 — First message:**
+
+"[NAME]! Time to take action 💪 Join 2-3 Facebook or WhatsApp expat groups and post a first message. Doesn't need to be perfect — just start! Here's an example:
+'Expats, have legal questions? SOS-Expat connects you with a lawyer in 5 min by phone 📞 [YOUR_LINK]'
+Show me your message when done, I'll give you tips! 🎯"
+
+**⚠️ Day 7 — Follow-up if inactive:**
+
+"Hey [NAME], haven't heard from you in a few days! 😊 Everything okay? If you have doubts or questions, let's talk. Many chatters took a few days before getting started and now they earn regularly. I'm here to help! 💪"
+
+**🏆 After 1st call — Celebration:**
+
+"[NAME]!!! 🎉🎉🎉 You generated your first call! That's HUGE — many stop before that. You're one of the best! The next one will be even easier, you'll see 💰🚀"`,
+        },
+      },
+    ],
+    quizQuestions: [
+      {
+        id: "m7_q1",
+        question: "Quand se produisent 80% des abandons de recrues ? ⏰",
+        questionTranslations: { en: "When do 80% of recruit dropouts happen? ⏰" },
+        options: [
+          { id: "a", text: "Après 1 mois", textTranslations: { en: "After 1 month" } },
+          { id: "b", text: "Dans les 7 premiers jours !", textTranslations: { en: "In the first 7 days!" } },
+          { id: "c", text: "Après 3 mois", textTranslations: { en: "After 3 months" } },
+          { id: "d", text: "Jamais, personne n'abandonne", textTranslations: { en: "Never, nobody quits" } },
+        ],
+        correctAnswerId: "b",
+        explanation: "Les 7 premiers jours sont CRITIQUES ! C'est pour ça que ton rôle de mentor est si important au début 🎯",
+        explanationTranslations: { en: "The first 7 days are CRITICAL! That's why your mentor role is so important at the start 🎯" },
+      },
+      {
+        id: "m7_q2",
+        question: "Quelle est la meilleure chose à faire quand une recrue s'inscrit ? 🤝",
+        questionTranslations: { en: "What's the best thing to do when a recruit signs up? 🤝" },
+        options: [
+          { id: "a", text: "Attendre qu'elle se débrouille seule", textTranslations: { en: "Wait for them to figure it out alone" } },
+          { id: "b", text: "Envoyer un message de bienvenue et proposer un appel rapide", textTranslations: { en: "Send a welcome message and offer a quick call" } },
+          { id: "c", text: "Lui envoyer 10 messages d'affilée", textTranslations: { en: "Send them 10 messages in a row" } },
+          { id: "d", text: "Ne rien faire", textTranslations: { en: "Do nothing" } },
+        ],
+        correctAnswerId: "b",
+        explanation: "Un accueil chaleureux + un appel rapide = la recrue se sent soutenue et démarre bien ! 🚀",
+        explanationTranslations: { en: "A warm welcome + a quick call = the recruit feels supported and starts well! 🚀" },
+      },
+    ],
+  },
+
+  // ============================================================================
+  // MODULE 8: Capitaine — Motiver et faire grandir votre équipe 🌟
+  // ============================================================================
+  {
+    order: 8,
+    title: "Capitaine : Motiver et faire grandir votre équipe 🌟",
+    titleTranslations: {
+      en: "Captain: Motivating and Growing Your Team 🌟",
+    },
+    description: "Deviens un leader inspirant ! Techniques de motivation et gestion d'équipe au quotidien.",
+    descriptionTranslations: {
+      en: "Become an inspiring leader! Motivation techniques and daily team management.",
+    },
+    category: "best_practices",
+    coverImageUrl: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800",
+    estimatedMinutes: 5,
+    isRequired: false,
+    prerequisites: [],
+    status: "published",
+    passingScore: 70,
+    slides: [
+      {
+        order: 1,
+        type: "text",
+        title: "La motivation au quotidien 🔥",
+        titleTranslations: { en: "Daily motivation 🔥" },
+        content: `Un capitaine qui motive = une équipe qui performe !
+
+**🌅 Routine quotidienne du Capitaine :**
+
+**Le matin :**
+- Message d'encouragement dans le groupe ("Allez l'équipe, on attaque ! 💪")
+- Partage un objectif du jour ("Objectif : 3 appels aujourd'hui !")
+
+**En journée :**
+- Réponds aux questions rapidement
+- Partage les bonnes nouvelles ("Marie vient de faire son 1er appel ! 🎉")
+- Envoie un tip pratique
+
+**Le soir :**
+- Récap de la journée ("Super journée ! 4 appels générés 🎯")
+- Remercie ceux qui ont été actifs
+
+**💡 Les 3 piliers de la motivation :**
+1. **Reconnaissance** — Félicite CHAQUE succès, même petit
+2. **Progression** — Montre les chiffres qui montent
+3. **Communauté** — L'équipe, c'est une famille !`,
+        contentTranslations: {
+          en: `A captain who motivates = a team that performs!
+
+**🌅 Captain's daily routine:**
+
+**Morning:**
+- Encouragement message in the group ("Let's go team! 💪")
+- Share a daily goal ("Goal: 3 calls today!")
+
+**During the day:**
+- Answer questions quickly
+- Share good news ("Marie just made her 1st call! 🎉")
+- Send a practical tip
+
+**Evening:**
+- Day recap ("Great day! 4 calls generated 🎯")
+- Thank those who were active
+
+**💡 The 3 pillars of motivation:**
+1. **Recognition** — Celebrate EVERY success, even small ones
+2. **Progress** — Show the rising numbers
+3. **Community** — The team is a family!`,
+        },
+      },
+      {
+        order: 2,
+        type: "text",
+        title: "Techniques de motivation avancées 🧠",
+        titleTranslations: { en: "Advanced motivation techniques 🧠" },
+        content: `Passe au niveau supérieur avec ces techniques :
+
+**🎯 Micro-objectifs :**
+- "Qui fait 2 clics aujourd'hui ?" plutôt que "Faites plus de ventes"
+- Petit = atteignable = satisfaction = motivation pour la suite !
+
+**🏅 Système de reconnaissance :**
+- "Chatter de la semaine" dans le groupe
+- Mentionne les progrès individuels publiquement
+- Envoie un message privé pour les gros succès
+
+**📈 Partage les chiffres :**
+- "L'équipe a généré 23 appels ce mois ! On vise 30 !"
+- Les gens aiment voir les progrès collectifs
+
+**🎮 Gamification :**
+- Crée des défis hebdomadaires ("Défi : 3 nouveaux groupes rejoints")
+- Petits classements entre recrues (bienveillant !)
+
+**💬 Les messages qui motivent :**
+- "Tu es à 2 appels du prochain palier !" (urgence positive)
+- "Regarde tes gains ce mois vs le mois dernier !" (progression)
+- "On est 3ème au classement, on peut être 1er !" (esprit d'équipe)`,
+        contentTranslations: {
+          en: `Level up with these techniques:
+
+**🎯 Micro-goals:**
+- "Who gets 2 clicks today?" rather than "Make more sales"
+- Small = achievable = satisfaction = motivation for what's next!
+
+**🏅 Recognition system:**
+- "Chatter of the week" in the group
+- Mention individual progress publicly
+- Send a private message for big successes
+
+**📈 Share the numbers:**
+- "The team generated 23 calls this month! Let's aim for 30!"
+- People love seeing collective progress
+
+**🎮 Gamification:**
+- Create weekly challenges ("Challenge: 3 new groups joined")
+- Friendly rankings between recruits!
+
+**💬 Messages that motivate:**
+- "You're 2 calls away from the next tier!" (positive urgency)
+- "Look at your earnings this month vs last month!" (progress)
+- "We're 3rd in the ranking, we can be 1st!" (team spirit)`,
+        },
+      },
+      {
+        order: 3,
+        type: "text",
+        title: "Détecter et résoudre les problèmes 🔧",
+        titleTranslations: { en: "Detecting and solving problems 🔧" },
+        content: `Un bon capitaine voit les problèmes AVANT qu'ils n'explosent !
+
+**🚨 Signaux d'alerte :**
+
+**⚠️ Recrue inactive (0 activité depuis 3+ jours) :**
+→ Message privé : "Hey ! Tout va bien ? Je suis là si tu as des questions 😊"
+→ Propose un appel rapide pour remotiver
+
+**⚠️ Recrue frustrée (se plaint de pas de résultats) :**
+→ Analyse : où poste-t-elle ? Quels messages ? Quels groupes ?
+→ Propose des ajustements concrets
+→ Rappelle que les premiers résultats prennent 1-2 semaines
+
+**⚠️ Recrue qui veut abandonner :**
+→ Écoute d'abord (ne juge pas !)
+→ Rappelle les succès passés, même petits
+→ Propose un objectif ultra-simple pour relancer
+
+**⚠️ Conflit dans l'équipe :**
+→ Médiation privée, jamais en public
+→ Rappelle les règles de bienveillance
+
+**La règle d'or : Ne laisse JAMAIS une recrue sans réponse pendant plus de 24h !**`,
+        contentTranslations: {
+          en: `A good captain spots problems BEFORE they explode!
+
+**🚨 Warning signs:**
+
+**⚠️ Inactive recruit (0 activity for 3+ days):**
+→ Private message: "Hey! Everything okay? I'm here if you have questions 😊"
+→ Offer a quick call to re-motivate
+
+**⚠️ Frustrated recruit (complaining about no results):**
+→ Analyze: where do they post? What messages? Which groups?
+→ Suggest concrete adjustments
+→ Remind that first results take 1-2 weeks
+
+**⚠️ Recruit wanting to quit:**
+→ Listen first (don't judge!)
+→ Remind of past successes, even small ones
+→ Suggest an ultra-simple goal to restart
+
+**⚠️ Team conflict:**
+→ Private mediation, never public
+→ Remind of kindness rules
+
+**Golden rule: NEVER leave a recruit without a response for more than 24h!**`,
+        },
+      },
+      {
+        order: 4,
+        type: "text",
+        title: "Viser les paliers ensemble 🏆",
+        titleTranslations: { en: "Reaching tiers together 🏆" },
+        content: `Les paliers sont la clé pour des **bonus massifs** !
+
+**🎯 Rappel des paliers :**
+- 🥉 **Bronze** (20 appels) — Bonus mensuel garanti
+- 🥈 **Argent** (50 appels) — Bonus ×2
+- 🥇 **Or** (100 appels) — Bonus ×4
+- 💎 **Platine** (200 appels) — Bonus ×8
+- 👑 **Diamant** (400 appels) — Bonus maximum !
+
+**Comment atteindre les paliers :**
+
+**Stratégie "10×5" :**
+- 10 recrues actives × 5 appels/mois = 50 appels = **Palier Argent** !
+- C'est très atteignable avec un bon suivi
+
+**Stratégie d'accélération :**
+- Recrute 2-3 nouvelles personnes par semaine
+- Aide les recrues existantes à augmenter leurs appels
+- Les N2 comptent aussi ! Encourage tes N1 à recruter
+
+**Le bonus qualité en plus :**
+- 10 recrues actives + $100 commissions = bonus qualité mensuel
+- C'est le combo gagnant : palier + qualité = revenus maximums ! 🤑
+
+**Partagez le tableau de progression dans le groupe chaque semaine !**`,
+        contentTranslations: {
+          en: `Tiers are the key to **massive bonuses**!
+
+**🎯 Tier reminder:**
+- 🥉 **Bronze** (20 calls) — Guaranteed monthly bonus
+- 🥈 **Silver** (50 calls) — Bonus ×2
+- 🥇 **Gold** (100 calls) — Bonus ×4
+- 💎 **Platinum** (200 calls) — Bonus ×8
+- 👑 **Diamond** (400 calls) — Maximum bonus!
+
+**How to reach tiers:**
+
+**"10×5" strategy:**
+- 10 active recruits × 5 calls/month = 50 calls = **Silver Tier**!
+- Very achievable with good follow-up
+
+**Acceleration strategy:**
+- Recruit 2-3 new people per week
+- Help existing recruits increase their calls
+- N2s count too! Encourage your N1s to recruit
+
+**Quality bonus on top:**
+- 10 active recruits + $100 commissions = monthly quality bonus
+- The winning combo: tier + quality = maximum earnings! 🤑
+
+**Share the progression board in the group every week!**`,
+        },
+      },
+    ],
+    quizQuestions: [
+      {
+        id: "m8_q1",
+        question: "Quelle est la meilleure façon de motiver une recrue inactive ? 💬",
+        questionTranslations: { en: "What's the best way to motivate an inactive recruit? 💬" },
+        options: [
+          { id: "a", text: "L'ignorer — elle reviendra toute seule", textTranslations: { en: "Ignore them — they'll come back on their own" } },
+          { id: "b", text: "Lui envoyer un message bienveillant et proposer de l'aide", textTranslations: { en: "Send a caring message and offer help" } },
+          { id: "c", text: "La critiquer publiquement dans le groupe", textTranslations: { en: "Publicly criticize them in the group" } },
+          { id: "d", text: "La supprimer de l'équipe", textTranslations: { en: "Remove them from the team" } },
+        ],
+        correctAnswerId: "b",
+        explanation: "Un message bienveillant + une offre d'aide = la meilleure façon de remotiver ! La bienveillance, toujours 💛",
+        explanationTranslations: { en: "A caring message + offer of help = the best way to re-motivate! Kindness, always 💛" },
+      },
+      {
+        id: "m8_q2",
+        question: "Combien de recrues actives + combien de commissions pour le bonus qualité ? ⭐",
+        questionTranslations: { en: "How many active recruits + how much in commissions for the quality bonus? ⭐" },
+        options: [
+          { id: "a", text: "5 recrues + $50", textTranslations: { en: "5 recruits + $50" } },
+          { id: "b", text: "10 recrues + $100 🎯", textTranslations: { en: "10 recruits + $100 🎯" } },
+          { id: "c", text: "20 recrues + $500", textTranslations: { en: "20 recruits + $500" } },
+          { id: "d", text: "100 recrues + $1000", textTranslations: { en: "100 recruits + $1000" } },
+        ],
+        correctAnswerId: "b",
+        explanation: "10 recrues actives + $100 de commissions mensuelles = tu es qualifié pour le bonus qualité mensuel ! 🏆",
+        explanationTranslations: { en: "10 active recruits + $100 monthly commissions = you qualify for the monthly quality bonus! 🏆" },
       },
     ],
   },

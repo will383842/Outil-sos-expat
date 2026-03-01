@@ -1968,12 +1968,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == chatterId;
     }
 
-    // Fonction pour vérifier si l'utilisateur a un profil chatter (actif ou pending_quiz)
-    // Utilisé pour les ressources accessibles aux chatters en cours d'inscription
+    // Fonction pour vérifier si l'utilisateur a un profil chatter actif
+    // Note: pending_quiz supprimé (flow simplifié, activation immédiate)
     function hasChatterProfile() {
       return isAuthenticated() &&
              exists(/databases/$(database)/documents/chatters/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/chatters/$(request.auth.uid)).data.status in ['active', 'pending_quiz'];
+             get(/databases/$(database)/documents/chatters/$(request.auth.uid)).data.status == 'active';
     }
 
     // Profils des chatters
@@ -2037,9 +2037,9 @@ service cloud.firestore {
       allow write: if isAdmin() || isDev();
     }
 
-    // Questions du quiz chatter
+    // Questions du quiz chatter (legacy collection — quiz removed, kept for historical data)
     match /chatter_quiz_questions/{questionId} {
-      // Lecture: chatters (actifs ou pending_quiz pour passer le quiz) ou admin
+      // Lecture: chatters actifs ou admin
       allow read: if hasChatterProfile() || isAdmin() || isDev();
       // Écriture: admin uniquement
       allow write: if isAdmin() || isDev();
@@ -2247,6 +2247,60 @@ service cloud.firestore {
       allow create: if false;
       allow update: if isAdmin() || isDev();
       allow delete: if false;
+    }
+
+    // P0 FIX: Modules de formation chatters
+    match /chatter_training_modules/{moduleId} {
+      // Lecture: chatters actifs (pour suivre la formation) ou admin
+      allow read: if isChatter() || isAdmin() || isDev();
+      // Écriture: admin uniquement (gestion du contenu)
+      allow write: if isAdmin() || isDev();
+    }
+
+    // P0 FIX: Progression formation chatters
+    match /chatter_training_progress/{progressId} {
+      // Lecture: le propriétaire (chatterId) ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement (progression auto)
+      allow write: if false;
+    }
+
+    // P0 FIX: Certificats de formation chatters
+    match /chatter_training_certificates/{certId} {
+      // Lecture: le propriétaire (chatterId) ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // P0 FIX: Archives mensuelles Captain Chatter
+    match /captain_monthly_archives/{archiveId} {
+      // Lecture: admin uniquement (données agrégées)
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement (cron mensuel)
+      allow write: if false;
+    }
+
+    // P0 FIX: Messages drip chatters (onboarding Telegram)
+    match /chatter_drip_messages/{messageId} {
+      // Lecture: admin (gestion des templates)
+      allow read: if isAdmin() || isDev();
+      // Écriture: admin uniquement (configuration)
+      allow write: if isAdmin() || isDev();
+    }
+
+    // P0 FIX: Prestataires recrutés par chatters
+    match /chatter_recruited_providers/{recruitId} {
+      // Lecture: le chatter recruteur ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement (trigger onProviderRegistered)
+      allow write: if false;
     }
 
     // ================= INFLUENCER SYSTEM =================

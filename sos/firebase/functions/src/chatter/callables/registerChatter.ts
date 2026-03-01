@@ -296,6 +296,7 @@ export const registerChatter = onCall(
       // 8. Find recruiter FIRST (needed for fraud check)
       let recruitedBy: string | null = null;
       let recruitedByCode: string | null = null;
+      const referralWarnings: string[] = [];
 
       if (input.recruitmentCode) {
         // Enforce 30-day attribution window if capturedAt is provided
@@ -309,6 +310,8 @@ export const registerChatter = onCall(
               capturedAt: input.referralCapturedAt,
             });
             referralExpired = true;
+            // P1-6 FIX: Inform user that referral code expired
+            referralWarnings.push("REFERRAL_EXPIRED");
           }
         }
 
@@ -329,7 +332,8 @@ export const registerChatter = onCall(
                 userId,
                 code: input.recruitmentCode,
               });
-              // Silently ignore the referral code (don't block registration)
+              // P1-6 FIX: Inform user about self-referral
+              referralWarnings.push("SELF_REFERRAL");
             } else {
               // P2-02 FIX: Check for circular referral chain before accepting
               try {
@@ -340,7 +344,8 @@ export const registerChatter = onCall(
                     recruiterId,
                     chain: circularCheck.chain,
                   });
-                  // Silently ignore the referral code (don't block registration)
+                  // P1-6 FIX: Inform user about circular referral
+                  referralWarnings.push("CIRCULAR_REFERRAL");
                 } else {
                   recruitedBy = recruiterId;
                   recruitedByCode = input.recruitmentCode.toUpperCase();
@@ -354,6 +359,9 @@ export const registerChatter = onCall(
                 recruitedByCode = input.recruitmentCode.toUpperCase();
               }
             }
+          } else {
+            // P1-6 FIX: Code not found or recruiter inactive
+            referralWarnings.push("REFERRAL_CODE_INVALID");
           }
         }
       }
@@ -499,10 +507,6 @@ export const registerChatter = onCall(
 
         zoomMeetingsAttended: 0,
         lastZoomAttendance: null,
-
-        quizAttempts: 0,
-        lastQuizAttempt: null,
-        quizPassedAt: null,
 
         preferredPaymentMethod: null,
         paymentDetails: null,
@@ -677,6 +681,8 @@ export const registerChatter = onCall(
         affiliateCodeClient,
         affiliateCodeRecruitment,
         message: "Registration successful. Your account is now active!",
+        // P1-6 FIX: Include referral warnings so frontend can display them
+        ...(referralWarnings.length > 0 && { warnings: referralWarnings }),
       };
     } catch (error) {
       // Use console.error to avoid firebase-functions logger serialization crash
