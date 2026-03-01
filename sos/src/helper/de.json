@@ -5737,5 +5737,43 @@
   "footer.services.chatters": "Unsere Chatters",
   "footer.services.groupCommunity": "Community-Gruppen",
   "footer.services.influencers": "Unsere Influencer",
-  "groupAdmin.register.acceptTerms": "Ich akzeptiere die {termsLink}, die {affiliateTermsLink} und die {privacyLink}. Ich verstehe, dass die Telegram-Verbindung für die Auszahlung meiner Provisionen obligatorisch ist."
+  "groupAdmin.register.acceptTerms": "Ich akzeptiere die {termsLink}, die {affiliateTermsLink} und die {privacyLink}. Ich verstehe, dass die Telegram-Verbindung für die Auszahlung meiner Provisionen obligatorisch ist.",
+
+  "chatter.howToEarn.nextGoal.label": "Ihr nächstes Ziel",
+  "chatter.howToEarn.nextGoal.firstCall": "Teilen Sie Ihren Link und verdienen Sie Ihre ersten {amount}!",
+  "chatter.howToEarn.nextGoal.telegram": "Verbinden Sie Telegram, um $50 Bonus freizuschalten",
+  "chatter.howToEarn.nextGoal.tierBonus": "Noch {count} Rekruten für {bonus}",
+  "chatter.howToEarn.nextGoal.top3": "Top {rank} — steigen Sie {count} Plätze für $50-200!",
+  "chatter.howToEarn.nextGoal.piggyBank": "Noch {amount} um Ihr $50 Sparschwein freizuschalten",
+  "chatter.howToEarn.nextGoal.nextLevel": "Weiter so — Level {level} in Reichweite ({progress}%)",
+
+  "chatter.howToEarn.step4.title": "Rekrutieren Sie einen Anbieter",
+  "chatter.howToEarn.step4.desc": "Rekrutieren Sie einen Anwalt oder Experten. Sie verdienen $5 pro Anruf, den er 6 Monate lang erhält!",
+  "chatter.howToEarn.step4.highlight": "$5 pro Anruf für 6 Monate",
+
+  "chatter.howToEarn.comm.providerCall": "Anbieter-Rekrutierung",
+  "chatter.howToEarn.comm.providerCallDesc": "pro Anruf für 6 Monate",
+  "chatter.howToEarn.comm.top3": "Monatliche Top 3",
+  "chatter.howToEarn.comm.top3Desc": "Preis jeden Monat",
+  "chatter.howToEarn.comm.telegram": "Telegram-Bonus",
+  "chatter.howToEarn.comm.telegramDesc": "Telegram verbinden + $150 Umsatz",
+
+  "chatter.howToEarn.provider.title": "Anbieter-Rekrutierung",
+  "chatter.howToEarn.provider.badge": "Premium-Einkommen",
+  "chatter.howToEarn.provider.desc": "Rekrutieren Sie Anwälte oder Expat-Experten auf der Plattform. Für jeden bezahlten Anruf, den sie erhalten, verdienen Sie $5 für 6 Monate.",
+  "chatter.howToEarn.provider.example.title": "Konkretes Beispiel",
+  "chatter.howToEarn.provider.example.text": "1 Anwalt × 3 Anrufe/Tag = $15/Tag für SIE. Über 6 Monate = $2.700!",
+
+  "chatter.howToEarn.competition.title": "Monatlicher Wettbewerb — Top 3",
+  "chatter.howToEarn.competition.daysLeft": "{count}T verbleibend",
+  "chatter.howToEarn.competition.yourRank": "Ihre Position: #{rank}",
+  "chatter.howToEarn.competition.eligibility": "Mindestens $200 Gesamtprovisionen erforderlich",
+
+  "chatter.howToEarn.captain.qualityBonus.title": "Qualitätsbonus",
+  "chatter.howToEarn.captain.qualityBonus.criteria1": "Aktive N1: {current}/{min}",
+  "chatter.howToEarn.captain.qualityBonus.criteria2": "Team-Provisionen: ${current}/${min}",
+
+  "chatter.howToEarn.tip5": "Rekrutieren Sie Anwälte oder Expat-Experten — das ist Ihre stärkste Quelle für passives Einkommen ($5/Anruf für 6 Monate)",
+
+  "chatter.howToEarn.tiers.qualifiedCount": "Sie haben {count} qualifizierte Empfehlungen"
 }

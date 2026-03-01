@@ -5735,5 +5735,43 @@
   "footer.services.chatters": "हमारे चैटर",
   "footer.services.groupCommunity": "सामुदायिक समूह",
   "footer.services.influencers": "हमारे इन्फ्लुएंसर",
-  "groupAdmin.register.acceptTerms": "मैं {termsLink}, {affiliateTermsLink} और {privacyLink} स्वीकार करता/करती हूँ. मैं समझता/समझती हूँ कि टेलीग्राम कनेक्शन मेरे कमीशन निकालने के लिए अनिवार्य है।"
+  "groupAdmin.register.acceptTerms": "मैं {termsLink}, {affiliateTermsLink} और {privacyLink} स्वीकार करता/करती हूँ. मैं समझता/समझती हूँ कि टेलीग्राम कनेक्शन मेरे कमीशन निकालने के लिए अनिवार्य है।",
+
+  "chatter.howToEarn.nextGoal.label": "आपका अगला लक्ष्य",
+  "chatter.howToEarn.nextGoal.firstCall": "अपना लिंक साझा करें और अपने पहले {amount} कमाएं!",
+  "chatter.howToEarn.nextGoal.telegram": "Telegram जोड़ें और $50 बोनस अनलॉक करें",
+  "chatter.howToEarn.nextGoal.tierBonus": "{bonus} के लिए {count} और भर्ती करें",
+  "chatter.howToEarn.nextGoal.top3": "टॉप {rank} — $50-200 के लिए {count} और पदों ऊपर चढ़ें!",
+  "chatter.howToEarn.nextGoal.piggyBank": "आपकी $50 गुल्लक अनलॉक करने के लिए {amount} और",
+  "chatter.howToEarn.nextGoal.nextLevel": "जारी रखें — स्तर {level} पहुंच में ({progress}%)",
+
+  "chatter.howToEarn.step4.title": "एक प्रदाता भर्ती करें",
+  "chatter.howToEarn.step4.desc": "एक वकील या विशेषज्ञ भर्ती करें। उन्हें 6 महीने तक मिलने वाली हर कॉल पर आप $5 कमाते हैं!",
+  "chatter.howToEarn.step4.highlight": "6 महीने तक प्रति कॉल $5",
+
+  "chatter.howToEarn.comm.providerCall": "प्रदाता भर्ती",
+  "chatter.howToEarn.comm.providerCallDesc": "6 महीने तक प्रति कॉल",
+  "chatter.howToEarn.comm.top3": "मासिक टॉप 3",
+  "chatter.howToEarn.comm.top3Desc": "हर महीने पुरस्कार",
+  "chatter.howToEarn.comm.telegram": "Telegram बोनस",
+  "chatter.howToEarn.comm.telegramDesc": "Telegram जोड़ें + $150 बिक्री",
+
+  "chatter.howToEarn.provider.title": "प्रदाता भर्ती",
+  "chatter.howToEarn.provider.badge": "प्रीमियम आय",
+  "chatter.howToEarn.provider.desc": "प्लेटफॉर्म पर वकीलों या प्रवासी विशेषज्ञों की भर्ती करें। उन्हें मिलने वाली हर भुगतान कॉल पर आप 6 महीने तक $5 कमाते हैं।",
+  "chatter.howToEarn.provider.example.title": "ठोस उदाहरण",
+  "chatter.howToEarn.provider.example.text": "1 वकील × 3 कॉल/दिन = आपके लिए $15/दिन। 6 महीनों में = $2,700!",
+
+  "chatter.howToEarn.competition.title": "मासिक प्रतियोगिता — टॉप 3",
+  "chatter.howToEarn.competition.daysLeft": "{count} दिन शेष",
+  "chatter.howToEarn.competition.yourRank": "आपकी स्थिति: #{rank}",
+  "chatter.howToEarn.competition.eligibility": "पात्र होने के लिए न्यूनतम $200 कुल कमीशन",
+
+  "chatter.howToEarn.captain.qualityBonus.title": "गुणवत्ता बोनस",
+  "chatter.howToEarn.captain.qualityBonus.criteria1": "सक्रिय N1: {current}/{min}",
+  "chatter.howToEarn.captain.qualityBonus.criteria2": "टीम कमीशन: ${current}/${min}",
+
+  "chatter.howToEarn.tip5": "वकीलों या प्रवासी विशेषज्ञों की भर्ती करें — यह आपकी सबसे शक्तिशाली निष्क्रिय आय स्रोत है (6 महीने तक $5/कॉल)",
+
+  "chatter.howToEarn.tiers.qualifiedCount": "आपके {count} योग्य रेफरल हैं"
 }

@@ -9904,5 +9904,43 @@
   "supportingDocs.error.emptyFile": "Fichier vide : {name}",
   "supportingDocs.error.titleRequired": "Le titre est requis",
   "supportingDocs.error.fileRequired": "Au moins un fichier est requis",
-  "supportingDocs.error.uploadPartial": "Document créé mais {count} fichier(s) non uploadé(s) : {names}"
+  "supportingDocs.error.uploadPartial": "Document créé mais {count} fichier(s) non uploadé(s) : {names}",
+
+  "chatter.howToEarn.nextGoal.label": "Votre prochain objectif",
+  "chatter.howToEarn.nextGoal.firstCall": "Partagez votre lien et gagnez vos premiers {amount} !",
+  "chatter.howToEarn.nextGoal.telegram": "Liez Telegram pour débloquer $50 de bonus",
+  "chatter.howToEarn.nextGoal.tierBonus": "Encore {count} recrues pour {bonus}",
+  "chatter.howToEarn.nextGoal.top3": "Top {rank} — montez de {count} places pour $50-200 !",
+  "chatter.howToEarn.nextGoal.piggyBank": "Encore {amount} pour débloquer votre tirelire de $50",
+  "chatter.howToEarn.nextGoal.nextLevel": "Continuez — niveau {level} à portée ({progress}%)",
+
+  "chatter.howToEarn.step4.title": "Recrutez un prestataire",
+  "chatter.howToEarn.step4.desc": "Recrutez un avocat ou expert. Vous gagnez $5 par appel qu'il reçoit pendant 6 mois !",
+  "chatter.howToEarn.step4.highlight": "$5 par appel pendant 6 mois",
+
+  "chatter.howToEarn.comm.providerCall": "Recrutement prestataire",
+  "chatter.howToEarn.comm.providerCallDesc": "par appel pendant 6 mois",
+  "chatter.howToEarn.comm.top3": "Top 3 mensuel",
+  "chatter.howToEarn.comm.top3Desc": "prix chaque mois",
+  "chatter.howToEarn.comm.telegram": "Bonus Telegram",
+  "chatter.howToEarn.comm.telegramDesc": "lier Telegram + $150 ventes",
+
+  "chatter.howToEarn.provider.title": "Recrutement de prestataires",
+  "chatter.howToEarn.provider.badge": "Revenu premium",
+  "chatter.howToEarn.provider.desc": "Recrutez des avocats ou experts expatriés sur la plateforme. Pour chaque appel payant qu'ils reçoivent, vous touchez $5 pendant 6 mois.",
+  "chatter.howToEarn.provider.example.title": "Exemple concret",
+  "chatter.howToEarn.provider.example.text": "1 avocat × 3 appels/jour = $15/jour pour VOUS. Sur 6 mois = $2,700 !",
+
+  "chatter.howToEarn.competition.title": "Compétition mensuelle — Top 3",
+  "chatter.howToEarn.competition.daysLeft": "{count}j restants",
+  "chatter.howToEarn.competition.yourRank": "Votre position : #{rank}",
+  "chatter.howToEarn.competition.eligibility": "Minimum $200 de commissions totales pour être éligible",
+
+  "chatter.howToEarn.captain.qualityBonus.title": "Bonus qualité",
+  "chatter.howToEarn.captain.qualityBonus.criteria1": "N1 actifs : {current}/{min}",
+  "chatter.howToEarn.captain.qualityBonus.criteria2": "Commissions équipe : ${current}/${min}",
+
+  "chatter.howToEarn.tip5": "Recrutez des avocats ou des experts expatriés — c'est votre source de revenus passifs la plus puissante ($5/appel pendant 6 mois)",
+
+  "chatter.howToEarn.tiers.qualifiedCount": "Vous avez {count} filleuls qualifiés"
 }

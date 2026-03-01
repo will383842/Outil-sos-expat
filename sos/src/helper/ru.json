@@ -5735,5 +5735,43 @@
   "footer.services.chatters": "Наши чаттеры",
   "footer.services.groupCommunity": "Группы сообщества",
   "footer.services.influencers": "Наши инфлюенсеры",
-  "groupAdmin.register.acceptTerms": "Я принимаю {termsLink}, {affiliateTermsLink} и {privacyLink}. Я понимаю, что подключение Telegram обязательно для вывода моих комиссий."
+  "groupAdmin.register.acceptTerms": "Я принимаю {termsLink}, {affiliateTermsLink} и {privacyLink}. Я понимаю, что подключение Telegram обязательно для вывода моих комиссий.",
+
+  "chatter.howToEarn.nextGoal.label": "Ваша следующая цель",
+  "chatter.howToEarn.nextGoal.firstCall": "Поделитесь ссылкой и заработайте первые {amount}!",
+  "chatter.howToEarn.nextGoal.telegram": "Привяжите Telegram, чтобы разблокировать бонус $50",
+  "chatter.howToEarn.nextGoal.tierBonus": "Ещё {count} рекрутов до {bonus}",
+  "chatter.howToEarn.nextGoal.top3": "Топ {rank} — поднимитесь на {count} позиций за $50-200!",
+  "chatter.howToEarn.nextGoal.piggyBank": "Ещё {amount} до разблокировки копилки $50",
+  "chatter.howToEarn.nextGoal.nextLevel": "Продолжайте — уровень {level} рядом ({progress}%)",
+
+  "chatter.howToEarn.step4.title": "Привлеките специалиста",
+  "chatter.howToEarn.step4.desc": "Привлеките юриста или эксперта. Вы получаете $5 за каждый звонок, который он получает в течение 6 месяцев!",
+  "chatter.howToEarn.step4.highlight": "$5 за звонок в течение 6 месяцев",
+
+  "chatter.howToEarn.comm.providerCall": "Привлечение специалиста",
+  "chatter.howToEarn.comm.providerCallDesc": "за звонок в течение 6 месяцев",
+  "chatter.howToEarn.comm.top3": "Топ-3 месяца",
+  "chatter.howToEarn.comm.top3Desc": "приз каждый месяц",
+  "chatter.howToEarn.comm.telegram": "Бонус Telegram",
+  "chatter.howToEarn.comm.telegramDesc": "привязать Telegram + $150 продаж",
+
+  "chatter.howToEarn.provider.title": "Привлечение специалистов",
+  "chatter.howToEarn.provider.badge": "Премиум доход",
+  "chatter.howToEarn.provider.desc": "Привлекайте юристов или экспертов по эмиграции на платформу. За каждый оплаченный звонок, который они получают, вы зарабатываете $5 в течение 6 месяцев.",
+  "chatter.howToEarn.provider.example.title": "Конкретный пример",
+  "chatter.howToEarn.provider.example.text": "1 юрист × 3 звонка/день = $15/день для ВАС. За 6 месяцев = $2,700!",
+
+  "chatter.howToEarn.competition.title": "Ежемесячное соревнование — Топ 3",
+  "chatter.howToEarn.competition.daysLeft": "{count}д осталось",
+  "chatter.howToEarn.competition.yourRank": "Ваша позиция: #{rank}",
+  "chatter.howToEarn.competition.eligibility": "Минимум $200 общих комиссий для участия",
+
+  "chatter.howToEarn.captain.qualityBonus.title": "Бонус за качество",
+  "chatter.howToEarn.captain.qualityBonus.criteria1": "Активные N1: {current}/{min}",
+  "chatter.howToEarn.captain.qualityBonus.criteria2": "Комиссии команды: ${current}/${min}",
+
+  "chatter.howToEarn.tip5": "Привлекайте юристов или экспертов по эмиграции — это ваш самый мощный источник пассивного дохода ($5/звонок в течение 6 месяцев)",
+
+  "chatter.howToEarn.tiers.qualifiedCount": "У вас {count} квалифицированных рефералов"
 }

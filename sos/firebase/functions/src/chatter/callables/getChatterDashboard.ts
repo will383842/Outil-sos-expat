@@ -460,6 +460,8 @@ export const getChatterDashboard = onCall(
           termsVersion: chatter.termsVersion || "1.0",
           termsType: chatter.termsType || "terms_chatters",
           isVisible: chatter.isVisible ?? true,
+          hasTelegram: chatter.hasTelegram || false,
+          telegramId: chatter.telegramId || null,
         },
         recentCommissions,
         monthlyStats: {

@@ -5737,5 +5737,43 @@
   "footer.services.chatters": "Nossos Chatters",
   "footer.services.groupCommunity": "Grupos comunitários",
   "footer.services.influencers": "Nossos Influencers",
-  "groupAdmin.register.acceptTerms": "Aceito os {termsLink}, os {affiliateTermsLink} e a {privacyLink}. Entendo que a conexão ao Telegram é obrigatória para retirar minhas comissões."
+  "groupAdmin.register.acceptTerms": "Aceito os {termsLink}, os {affiliateTermsLink} e a {privacyLink}. Entendo que a conexão ao Telegram é obrigatória para retirar minhas comissões.",
+
+  "chatter.howToEarn.nextGoal.label": "Seu próximo objetivo",
+  "chatter.howToEarn.nextGoal.firstCall": "Compartilhe seu link e ganhe seus primeiros {amount}!",
+  "chatter.howToEarn.nextGoal.telegram": "Vincule o Telegram para desbloquear $50 de bônus",
+  "chatter.howToEarn.nextGoal.tierBonus": "Mais {count} recrutas para {bonus}",
+  "chatter.howToEarn.nextGoal.top3": "Top {rank} — suba {count} posições para $50-200!",
+  "chatter.howToEarn.nextGoal.piggyBank": "Mais {amount} para desbloquear seu cofrinho de $50",
+  "chatter.howToEarn.nextGoal.nextLevel": "Continue — nível {level} ao alcance ({progress}%)",
+
+  "chatter.howToEarn.step4.title": "Recrute um prestador",
+  "chatter.howToEarn.step4.desc": "Recrute um advogado ou especialista. Você ganha $5 por chamada que ele recebe durante 6 meses!",
+  "chatter.howToEarn.step4.highlight": "$5 por chamada durante 6 meses",
+
+  "chatter.howToEarn.comm.providerCall": "Recrutamento de prestador",
+  "chatter.howToEarn.comm.providerCallDesc": "por chamada durante 6 meses",
+  "chatter.howToEarn.comm.top3": "Top 3 mensal",
+  "chatter.howToEarn.comm.top3Desc": "prêmio todo mês",
+  "chatter.howToEarn.comm.telegram": "Bônus Telegram",
+  "chatter.howToEarn.comm.telegramDesc": "vincular Telegram + $150 vendas",
+
+  "chatter.howToEarn.provider.title": "Recrutamento de prestadores",
+  "chatter.howToEarn.provider.badge": "Renda premium",
+  "chatter.howToEarn.provider.desc": "Recrute advogados ou especialistas em expatriação na plataforma. Para cada chamada paga que receberem, você ganha $5 durante 6 meses.",
+  "chatter.howToEarn.provider.example.title": "Exemplo concreto",
+  "chatter.howToEarn.provider.example.text": "1 advogado × 3 chamadas/dia = $15/dia para VOCÊ. Em 6 meses = $2.700!",
+
+  "chatter.howToEarn.competition.title": "Competição mensal — Top 3",
+  "chatter.howToEarn.competition.daysLeft": "{count}d restantes",
+  "chatter.howToEarn.competition.yourRank": "Sua posição: #{rank}",
+  "chatter.howToEarn.competition.eligibility": "Mínimo $200 de comissões totais para ser elegível",
+
+  "chatter.howToEarn.captain.qualityBonus.title": "Bônus de qualidade",
+  "chatter.howToEarn.captain.qualityBonus.criteria1": "N1 ativos: {current}/{min}",
+  "chatter.howToEarn.captain.qualityBonus.criteria2": "Comissões da equipe: ${current}/${min}",
+
+  "chatter.howToEarn.tip5": "Recrute advogados ou especialistas em expatriação — é sua fonte mais poderosa de renda passiva ($5/chamada durante 6 meses)",
+
+  "chatter.howToEarn.tiers.qualifiedCount": "Você tem {count} indicados qualificados"
 }

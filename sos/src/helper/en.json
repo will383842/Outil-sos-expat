@@ -9904,5 +9904,43 @@
   "supportingDocs.error.emptyFile": "Empty file: {name}",
   "supportingDocs.error.titleRequired": "Title is required",
   "supportingDocs.error.fileRequired": "At least one file is required",
-  "supportingDocs.error.uploadPartial": "Document created but {count} file(s) failed to upload: {names}"
+  "supportingDocs.error.uploadPartial": "Document created but {count} file(s) failed to upload: {names}",
+
+  "chatter.howToEarn.nextGoal.label": "Your next goal",
+  "chatter.howToEarn.nextGoal.firstCall": "Share your link and earn your first {amount}!",
+  "chatter.howToEarn.nextGoal.telegram": "Link Telegram to unlock $50 bonus",
+  "chatter.howToEarn.nextGoal.tierBonus": "{count} more recruits for {bonus}",
+  "chatter.howToEarn.nextGoal.top3": "Top {rank} — climb {count} more spots for $50-200!",
+  "chatter.howToEarn.nextGoal.piggyBank": "{amount} more to unlock your $50 piggy bank",
+  "chatter.howToEarn.nextGoal.nextLevel": "Keep going — level {level} within reach ({progress}%)",
+
+  "chatter.howToEarn.step4.title": "Recruit a provider",
+  "chatter.howToEarn.step4.desc": "Recruit a lawyer or expert. You earn $5 per call they receive for 6 months!",
+  "chatter.howToEarn.step4.highlight": "$5 per call for 6 months",
+
+  "chatter.howToEarn.comm.providerCall": "Provider recruitment",
+  "chatter.howToEarn.comm.providerCallDesc": "per call for 6 months",
+  "chatter.howToEarn.comm.top3": "Monthly Top 3",
+  "chatter.howToEarn.comm.top3Desc": "prize every month",
+  "chatter.howToEarn.comm.telegram": "Telegram bonus",
+  "chatter.howToEarn.comm.telegramDesc": "link Telegram + $150 sales",
+
+  "chatter.howToEarn.provider.title": "Provider recruitment",
+  "chatter.howToEarn.provider.badge": "Premium income",
+  "chatter.howToEarn.provider.desc": "Recruit lawyers or expat experts to the platform. For each paid call they receive, you earn $5 for 6 months.",
+  "chatter.howToEarn.provider.example.title": "Concrete example",
+  "chatter.howToEarn.provider.example.text": "1 lawyer × 3 calls/day = $15/day for YOU. Over 6 months = $2,700!",
+
+  "chatter.howToEarn.competition.title": "Monthly competition — Top 3",
+  "chatter.howToEarn.competition.daysLeft": "{count}d left",
+  "chatter.howToEarn.competition.yourRank": "Your position: #{rank}",
+  "chatter.howToEarn.competition.eligibility": "Minimum $200 total commissions to be eligible",
+
+  "chatter.howToEarn.captain.qualityBonus.title": "Quality bonus",
+  "chatter.howToEarn.captain.qualityBonus.criteria1": "Active N1: {current}/{min}",
+  "chatter.howToEarn.captain.qualityBonus.criteria2": "Team commissions: ${current}/${min}",
+
+  "chatter.howToEarn.tip5": "Recruit lawyers or expat experts — it's your most powerful source of passive income ($5/call for 6 months)",
+
+  "chatter.howToEarn.tiers.qualifiedCount": "You have {count} qualified referrals"
 }

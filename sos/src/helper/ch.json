@@ -5735,5 +5735,43 @@
   "footer.services.chatters": "我们的聊天员",
   "footer.services.groupCommunity": "社区群组",
   "footer.services.influencers": "我们的影响者",
-  "groupAdmin.register.acceptTerms": "我接受{termsLink}、{affiliateTermsLink}和{privacyLink}。我理解连接Telegram是提取佣金的必要条件。"
+  "groupAdmin.register.acceptTerms": "我接受{termsLink}、{affiliateTermsLink}和{privacyLink}。我理解连接Telegram是提取佣金的必要条件。",
+
+  "chatter.howToEarn.nextGoal.label": "您的下一个目标",
+  "chatter.howToEarn.nextGoal.firstCall": "分享您的链接，赚取您的第一个 {amount}！",
+  "chatter.howToEarn.nextGoal.telegram": "绑定 Telegram 解锁 $50 奖金",
+  "chatter.howToEarn.nextGoal.tierBonus": "再招募 {count} 人即可获得 {bonus}",
+  "chatter.howToEarn.nextGoal.top3": "第 {rank} 名 — 再上升 {count} 位即可获得 $50-200！",
+  "chatter.howToEarn.nextGoal.piggyBank": "再赚 {amount} 即可解锁 $50 存钱罐",
+  "chatter.howToEarn.nextGoal.nextLevel": "继续加油 — 等级 {level} 触手可及 ({progress}%)",
+
+  "chatter.howToEarn.step4.title": "招募服务商",
+  "chatter.howToEarn.step4.desc": "招募律师或专家。他们每接一个电话，您就赚 $5，持续 6 个月！",
+  "chatter.howToEarn.step4.highlight": "每通电话 $5，持续 6 个月",
+
+  "chatter.howToEarn.comm.providerCall": "服务商招募",
+  "chatter.howToEarn.comm.providerCallDesc": "每通电话持续 6 个月",
+  "chatter.howToEarn.comm.top3": "月度前三",
+  "chatter.howToEarn.comm.top3Desc": "每月奖品",
+  "chatter.howToEarn.comm.telegram": "Telegram 奖金",
+  "chatter.howToEarn.comm.telegramDesc": "绑定 Telegram + $150 销售额",
+
+  "chatter.howToEarn.provider.title": "服务商招募",
+  "chatter.howToEarn.provider.badge": "高级收入",
+  "chatter.howToEarn.provider.desc": "在平台上招募律师或外籍专家。他们每接一个付费电话，您就赚 $5，持续 6 个月。",
+  "chatter.howToEarn.provider.example.title": "具体示例",
+  "chatter.howToEarn.provider.example.text": "1 位律师 × 每天 3 个电话 = 每天 $15 归您。6 个月 = $2,700！",
+
+  "chatter.howToEarn.competition.title": "月度竞赛 — 前三名",
+  "chatter.howToEarn.competition.daysLeft": "剩余 {count} 天",
+  "chatter.howToEarn.competition.yourRank": "您的排名：第 {rank} 名",
+  "chatter.howToEarn.competition.eligibility": "总佣金需达到 $200 才有资格参加",
+
+  "chatter.howToEarn.captain.qualityBonus.title": "质量奖金",
+  "chatter.howToEarn.captain.qualityBonus.criteria1": "活跃 N1：{current}/{min}",
+  "chatter.howToEarn.captain.qualityBonus.criteria2": "团队佣金：${current}/${min}",
+
+  "chatter.howToEarn.tip5": "招募律师或外籍专家 — 这是您最强大的被动收入来源（每通电话 $5，持续 6 个月）",
+
+  "chatter.howToEarn.tiers.qualifiedCount": "您有 {count} 个合格推荐人"
 }

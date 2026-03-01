@@ -5735,5 +5735,43 @@
   "footer.services.chatters": "محادثونا",
   "footer.services.groupCommunity": "مجموعات المجتمع",
   "footer.services.influencers": "مؤثرونا",
-  "groupAdmin.register.acceptTerms": "أوافق على {termsLink} و{affiliateTermsLink} و{privacyLink}. أفهم أن ربط تيليجرام إلزامي لسحب عمولاتي."
+  "groupAdmin.register.acceptTerms": "أوافق على {termsLink} و{affiliateTermsLink} و{privacyLink}. أفهم أن ربط تيليجرام إلزامي لسحب عمولاتي.",
+
+  "chatter.howToEarn.nextGoal.label": "هدفك التالي",
+  "chatter.howToEarn.nextGoal.firstCall": "شارك رابطك واكسب أول {amount}!",
+  "chatter.howToEarn.nextGoal.telegram": "اربط Telegram لفتح مكافأة $50",
+  "chatter.howToEarn.nextGoal.tierBonus": "{count} مجندين آخرين للحصول على {bonus}",
+  "chatter.howToEarn.nextGoal.top3": "المركز {rank} — اصعد {count} مراكز للحصول على $50-200!",
+  "chatter.howToEarn.nextGoal.piggyBank": "{amount} أخرى لفتح حصالتك بقيمة $50",
+  "chatter.howToEarn.nextGoal.nextLevel": "استمر — المستوى {level} في متناول يدك ({progress}%)",
+
+  "chatter.howToEarn.step4.title": "جنّد مقدم خدمة",
+  "chatter.howToEarn.step4.desc": "جنّد محامياً أو خبيراً. تكسب $5 عن كل مكالمة يتلقاها لمدة 6 أشهر!",
+  "chatter.howToEarn.step4.highlight": "$5 لكل مكالمة لمدة 6 أشهر",
+
+  "chatter.howToEarn.comm.providerCall": "تجنيد مقدم خدمة",
+  "chatter.howToEarn.comm.providerCallDesc": "لكل مكالمة لمدة 6 أشهر",
+  "chatter.howToEarn.comm.top3": "أفضل 3 شهرياً",
+  "chatter.howToEarn.comm.top3Desc": "جائزة كل شهر",
+  "chatter.howToEarn.comm.telegram": "مكافأة Telegram",
+  "chatter.howToEarn.comm.telegramDesc": "ربط Telegram + $150 مبيعات",
+
+  "chatter.howToEarn.provider.title": "تجنيد مقدمي الخدمات",
+  "chatter.howToEarn.provider.badge": "دخل مميز",
+  "chatter.howToEarn.provider.desc": "جنّد محامين أو خبراء مغتربين على المنصة. عن كل مكالمة مدفوعة يتلقونها، تكسب $5 لمدة 6 أشهر.",
+  "chatter.howToEarn.provider.example.title": "مثال ملموس",
+  "chatter.howToEarn.provider.example.text": "محامي واحد × 3 مكالمات/يوم = $15/يوم لك. خلال 6 أشهر = $2,700!",
+
+  "chatter.howToEarn.competition.title": "المسابقة الشهرية — أفضل 3",
+  "chatter.howToEarn.competition.daysLeft": "{count} يوم متبقي",
+  "chatter.howToEarn.competition.yourRank": "مركزك: #{rank}",
+  "chatter.howToEarn.competition.eligibility": "الحد الأدنى $200 عمولات إجمالية للأهلية",
+
+  "chatter.howToEarn.captain.qualityBonus.title": "مكافأة الجودة",
+  "chatter.howToEarn.captain.qualityBonus.criteria1": "N1 نشطون: {current}/{min}",
+  "chatter.howToEarn.captain.qualityBonus.criteria2": "عمولات الفريق: ${current}/${min}",
+
+  "chatter.howToEarn.tip5": "جنّد محامين أو خبراء مغتربين — إنه أقوى مصدر دخل سلبي لديك ($5/مكالمة لمدة 6 أشهر)",
+
+  "chatter.howToEarn.tiers.qualifiedCount": "لديك {count} إحالات مؤهلة"
 }
