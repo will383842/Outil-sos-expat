@@ -5775,5 +5775,11 @@
 
   "chatter.howToEarn.tip5": "Rekrutieren Sie Anwälte oder Expat-Experten — das ist Ihre stärkste Quelle für passives Einkommen ($5/Anruf für 6 Monate)",
 
-  "chatter.howToEarn.tiers.qualifiedCount": "Sie haben {count} qualifizierte Empfehlungen"
+  "chatter.howToEarn.tiers.qualifiedCount": "Sie haben {count} qualifizierte Empfehlungen",
+
+  "chatter.howToEarn.comm.category.calls": "Direkte Provisionen",
+  "chatter.howToEarn.comm.category.referral": "Empfehlungsbonus",
+  "chatter.howToEarn.comm.category.premium": "Premium",
+  "chatter.howToEarn.comm.clientCallLawyer": "Kundenanruf (Anwalt)",
+  "chatter.howToEarn.comm.clientCallExpat": "Kundenanruf (Expat-Helfer)"
 }

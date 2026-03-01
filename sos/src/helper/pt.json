@@ -5775,5 +5775,11 @@
 
   "chatter.howToEarn.tip5": "Recrute advogados ou especialistas em expatriação — é sua fonte mais poderosa de renda passiva ($5/chamada durante 6 meses)",
 
-  "chatter.howToEarn.tiers.qualifiedCount": "Você tem {count} indicados qualificados"
+  "chatter.howToEarn.tiers.qualifiedCount": "Você tem {count} indicados qualificados",
+
+  "chatter.howToEarn.comm.category.calls": "Comissões diretas",
+  "chatter.howToEarn.comm.category.referral": "Bônus de indicação",
+  "chatter.howToEarn.comm.category.premium": "Premium",
+  "chatter.howToEarn.comm.clientCallLawyer": "Chamada cliente (advogado)",
+  "chatter.howToEarn.comm.clientCallExpat": "Chamada cliente (expatriado)"
 }

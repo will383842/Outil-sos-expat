@@ -5773,5 +5773,11 @@
 
   "chatter.howToEarn.tip5": "招募律师或外籍专家 — 这是您最强大的被动收入来源（每通电话 $5，持续 6 个月）",
 
-  "chatter.howToEarn.tiers.qualifiedCount": "您有 {count} 个合格推荐人"
+  "chatter.howToEarn.tiers.qualifiedCount": "您有 {count} 个合格推荐人",
+
+  "chatter.howToEarn.comm.category.calls": "直接佣金",
+  "chatter.howToEarn.comm.category.referral": "推荐奖金",
+  "chatter.howToEarn.comm.category.premium": "高级",
+  "chatter.howToEarn.comm.clientCallLawyer": "客户通话（律师）",
+  "chatter.howToEarn.comm.clientCallExpat": "客户通话（外籍助手）"
 }

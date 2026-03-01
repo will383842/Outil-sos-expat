@@ -5773,5 +5773,11 @@
 
   "chatter.howToEarn.tip5": "Привлекайте юристов или экспертов по эмиграции — это ваш самый мощный источник пассивного дохода ($5/звонок в течение 6 месяцев)",
 
-  "chatter.howToEarn.tiers.qualifiedCount": "У вас {count} квалифицированных рефералов"
+  "chatter.howToEarn.tiers.qualifiedCount": "У вас {count} квалифицированных рефералов",
+
+  "chatter.howToEarn.comm.category.calls": "Прямые комиссии",
+  "chatter.howToEarn.comm.category.referral": "Реферальные бонусы",
+  "chatter.howToEarn.comm.category.premium": "Премиум",
+  "chatter.howToEarn.comm.clientCallLawyer": "Звонок клиента (юрист)",
+  "chatter.howToEarn.comm.clientCallExpat": "Звонок клиента (экспат-помощник)"
 }

@@ -5773,5 +5773,11 @@
 
   "chatter.howToEarn.tip5": "वकीलों या प्रवासी विशेषज्ञों की भर्ती करें — यह आपकी सबसे शक्तिशाली निष्क्रिय आय स्रोत है (6 महीने तक $5/कॉल)",
 
-  "chatter.howToEarn.tiers.qualifiedCount": "आपके {count} योग्य रेफरल हैं"
+  "chatter.howToEarn.tiers.qualifiedCount": "आपके {count} योग्य रेफरल हैं",
+
+  "chatter.howToEarn.comm.category.calls": "प्रत्यक्ष कमीशन",
+  "chatter.howToEarn.comm.category.referral": "रेफरल बोनस",
+  "chatter.howToEarn.comm.category.premium": "प्रीमियम",
+  "chatter.howToEarn.comm.clientCallLawyer": "क्लाइंट कॉल (वकील)",
+  "chatter.howToEarn.comm.clientCallExpat": "क्लाइंट कॉल (प्रवासी सहायक)"
 }

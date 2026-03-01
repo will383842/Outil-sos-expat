@@ -197,6 +197,37 @@ function CommissionCard({
 }
 
 // ============================================================================
+// COMMISSION ROW (list format, clearer than cards)
+// ============================================================================
+
+function CommissionRow({
+  icon,
+  label,
+  amount,
+  detail,
+  color,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  amount: string;
+  detail?: string;
+  color: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 py-2.5 px-3 rounded-xl bg-gray-50 dark:bg-white/5">
+      <span className={`flex-shrink-0 ${color}`}>{icon}</span>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm font-medium text-gray-900 dark:text-white">{label}</span>
+        {detail && (
+          <span className="text-xs text-gray-400 dark:text-gray-500 block sm:inline sm:ml-2">— {detail}</span>
+        )}
+      </div>
+      <span className={`text-lg font-black flex-shrink-0 ${color}`}>{amount}</span>
+    </div>
+  );
+}
+
+// ============================================================================
 // YOUR NEXT GOAL
 // ============================================================================
 
@@ -649,81 +680,113 @@ function ChatterHowToEarn() {
       </div>
 
       {/* ============================================================ */}
-      {/* SECTION 3: ALL COMMISSIONS - 9 cards */}
+      {/* SECTION 3: ALL COMMISSIONS - grouped rows */}
       {/* ============================================================ */}
       <div className={`${UI.card} p-6`}>
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-5">
           <DollarSign className="h-5 w-5 text-green-500" />
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
             <FormattedMessage id="chatter.howToEarn.commissions.title" defaultMessage="Toutes vos sources de revenus" />
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <CommissionCard
-            icon={<Phone className="h-5 w-5" />}
-            label={intl.formatMessage({ id: 'chatter.howToEarn.comm.clientCall', defaultMessage: 'Appel client' })}
-            amount={formatCents(clientCallAmount)}
-            sublabel={intl.formatMessage({ id: 'chatter.howToEarn.comm.perCall', defaultMessage: 'par appel' })}
-            color="text-green-600 dark:text-green-400"
-          />
-          <CommissionCard
-            icon={<Users className="h-5 w-5" />}
-            label={intl.formatMessage({ id: 'chatter.howToEarn.comm.n1Call', defaultMessage: 'Appel filleul N1' })}
-            amount={formatCents(n1CallAmount)}
-            sublabel={intl.formatMessage({ id: 'chatter.howToEarn.comm.passive', defaultMessage: 'revenu passif' })}
-            color="text-blue-600 dark:text-blue-400"
-          />
-          <CommissionCard
-            icon={<Users className="h-5 w-5" />}
-            label={intl.formatMessage({ id: 'chatter.howToEarn.comm.n2Call', defaultMessage: 'Appel filleul N2' })}
-            amount={formatCents(n2CallAmount)}
-            sublabel={intl.formatMessage({ id: 'chatter.howToEarn.comm.passive', defaultMessage: 'revenu passif' })}
-            color="text-indigo-600 dark:text-indigo-400"
-          />
-          <CommissionCard
-            icon={<Target className="h-5 w-5" />}
-            label={intl.formatMessage({ id: 'chatter.howToEarn.comm.activation', defaultMessage: 'Bonus activation' })}
-            amount="$5"
-            sublabel={intl.formatMessage({ id: 'chatter.howToEarn.comm.activationDesc', defaultMessage: 'filleul actif (2 appels)' })}
-            color="text-orange-600 dark:text-orange-400"
-          />
-          <CommissionCard
-            icon={<TrendingUp className="h-5 w-5" />}
-            label={intl.formatMessage({ id: 'chatter.howToEarn.comm.tierBonuses', defaultMessage: 'Bonus paliers' })}
-            amount="$15→$4K"
-            sublabel={intl.formatMessage({ id: 'chatter.howToEarn.comm.tierDesc', defaultMessage: '5 à 500 recrues' })}
-            color="text-red-600 dark:text-red-400"
-          />
-          <CommissionCard
-            icon={<Share2 className="h-5 w-5" />}
-            label={intl.formatMessage({ id: 'chatter.howToEarn.comm.recruitBonus', defaultMessage: 'Bonus recrutement' })}
-            amount="$1"
-            sublabel={intl.formatMessage({ id: 'chatter.howToEarn.comm.recruitDesc', defaultMessage: 'filleul recrute qqun' })}
-            color="text-teal-600 dark:text-teal-400"
-          />
-          {/* 3 NEW cards */}
-          <CommissionCard
-            icon={<Briefcase className="h-5 w-5" />}
-            label={intl.formatMessage({ id: 'chatter.howToEarn.comm.providerCall', defaultMessage: 'Recrutement prestataire' })}
-            amount="$5"
-            sublabel={intl.formatMessage({ id: 'chatter.howToEarn.comm.providerCallDesc', defaultMessage: 'par appel pendant 6 mois' })}
-            color="text-emerald-600 dark:text-emerald-400"
-          />
-          <CommissionCard
-            icon={<Trophy className="h-5 w-5" />}
-            label={intl.formatMessage({ id: 'chatter.howToEarn.comm.top3', defaultMessage: 'Top 3 mensuel' })}
-            amount="$50→$200"
-            sublabel={intl.formatMessage({ id: 'chatter.howToEarn.comm.top3Desc', defaultMessage: 'prix chaque mois' })}
-            color="text-yellow-600 dark:text-yellow-400"
-          />
-          <CommissionCard
-            icon={<MessageCircle className="h-5 w-5" />}
-            label={intl.formatMessage({ id: 'chatter.howToEarn.comm.telegram', defaultMessage: 'Bonus Telegram' })}
-            amount="$50"
-            sublabel={intl.formatMessage({ id: 'chatter.howToEarn.comm.telegramDesc', defaultMessage: 'lier Telegram + $150 ventes' })}
-            color="text-sky-600 dark:text-sky-400"
-          />
+        <div className="space-y-5">
+          {/* Category 1: Direct commissions */}
+          <div>
+            <h3 className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-wider mb-2">
+              <FormattedMessage id="chatter.howToEarn.comm.category.calls" defaultMessage="Commissions directes" />
+            </h3>
+            <div className="space-y-1.5">
+              <CommissionRow
+                icon={<Phone className="h-4 w-4" />}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.clientCallLawyer', defaultMessage: 'Appel client (avocat)' })}
+                amount="$5"
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.perCall', defaultMessage: 'par appel' })}
+                color="text-green-600 dark:text-green-400"
+              />
+              <CommissionRow
+                icon={<Phone className="h-4 w-4" />}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.clientCallExpat', defaultMessage: 'Appel client (expatrié aidant)' })}
+                amount="$3"
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.perCall', defaultMessage: 'par appel' })}
+                color="text-green-600 dark:text-green-400"
+              />
+              <CommissionRow
+                icon={<Users className="h-4 w-4" />}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.n1Call', defaultMessage: 'Appel filleul N1' })}
+                amount={formatCents(n1CallAmount)}
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.passive', defaultMessage: 'revenu passif' })}
+                color="text-blue-600 dark:text-blue-400"
+              />
+              <CommissionRow
+                icon={<Users className="h-4 w-4" />}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.n2Call', defaultMessage: 'Appel filleul N2' })}
+                amount={formatCents(n2CallAmount)}
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.passive', defaultMessage: 'revenu passif' })}
+                color="text-indigo-600 dark:text-indigo-400"
+              />
+            </div>
+          </div>
+
+          {/* Category 2: Referral bonuses */}
+          <div>
+            <h3 className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-wider mb-2">
+              <FormattedMessage id="chatter.howToEarn.comm.category.referral" defaultMessage="Parrainage" />
+            </h3>
+            <div className="space-y-1.5">
+              <CommissionRow
+                icon={<Target className="h-4 w-4" />}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.activation', defaultMessage: 'Bonus activation' })}
+                amount="$5"
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.activationDesc', defaultMessage: 'filleul actif (2 appels)' })}
+                color="text-orange-600 dark:text-orange-400"
+              />
+              <CommissionRow
+                icon={<Share2 className="h-4 w-4" />}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.recruitBonus', defaultMessage: 'Bonus recrutement' })}
+                amount="$1"
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.recruitDesc', defaultMessage: 'filleul recrute qqun' })}
+                color="text-teal-600 dark:text-teal-400"
+              />
+              <CommissionRow
+                icon={<TrendingUp className="h-4 w-4" />}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.tierBonuses', defaultMessage: 'Bonus paliers' })}
+                amount="$15→$4K"
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.tierDesc', defaultMessage: '5 à 500 recrues' })}
+                color="text-red-600 dark:text-red-400"
+              />
+            </div>
+          </div>
+
+          {/* Category 3: Premium */}
+          <div>
+            <h3 className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-wider mb-2">
+              <FormattedMessage id="chatter.howToEarn.comm.category.premium" defaultMessage="Premium" />
+            </h3>
+            <div className="space-y-1.5">
+              <CommissionRow
+                icon={<Briefcase className="h-4 w-4" />}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.providerCall', defaultMessage: 'Recrutement prestataire' })}
+                amount="$5"
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.providerCallDesc', defaultMessage: 'par appel pendant 6 mois' })}
+                color="text-emerald-600 dark:text-emerald-400"
+              />
+              <CommissionRow
+                icon={<Trophy className="h-4 w-4" />}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.top3', defaultMessage: 'Top 3 mensuel' })}
+                amount="$50→$200"
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.top3Desc', defaultMessage: 'prix chaque mois' })}
+                color="text-yellow-600 dark:text-yellow-400"
+              />
+              <CommissionRow
+                icon={<MessageCircle className="h-4 w-4" />}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.telegram', defaultMessage: 'Bonus Telegram' })}
+                amount="$50"
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.telegramDesc', defaultMessage: 'lier Telegram + $150 ventes' })}
+                color="text-sky-600 dark:text-sky-400"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

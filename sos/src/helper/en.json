@@ -9942,5 +9942,11 @@
 
   "chatter.howToEarn.tip5": "Recruit lawyers or expat experts — it's your most powerful source of passive income ($5/call for 6 months)",
 
-  "chatter.howToEarn.tiers.qualifiedCount": "You have {count} qualified referrals"
+  "chatter.howToEarn.tiers.qualifiedCount": "You have {count} qualified referrals",
+
+  "chatter.howToEarn.comm.category.calls": "Direct commissions",
+  "chatter.howToEarn.comm.category.referral": "Referral bonuses",
+  "chatter.howToEarn.comm.category.premium": "Premium",
+  "chatter.howToEarn.comm.clientCallLawyer": "Client call (lawyer)",
+  "chatter.howToEarn.comm.clientCallExpat": "Client call (expat helper)"
 }

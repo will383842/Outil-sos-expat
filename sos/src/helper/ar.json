@@ -5773,5 +5773,11 @@
 
   "chatter.howToEarn.tip5": "جنّد محامين أو خبراء مغتربين — إنه أقوى مصدر دخل سلبي لديك ($5/مكالمة لمدة 6 أشهر)",
 
-  "chatter.howToEarn.tiers.qualifiedCount": "لديك {count} إحالات مؤهلة"
+  "chatter.howToEarn.tiers.qualifiedCount": "لديك {count} إحالات مؤهلة",
+
+  "chatter.howToEarn.comm.category.calls": "عمولات مباشرة",
+  "chatter.howToEarn.comm.category.referral": "مكافآت الإحالة",
+  "chatter.howToEarn.comm.category.premium": "مميز",
+  "chatter.howToEarn.comm.clientCallLawyer": "مكالمة عميل (محامي)",
+  "chatter.howToEarn.comm.clientCallExpat": "مكالمة عميل (مساعد مغترب)"
 }

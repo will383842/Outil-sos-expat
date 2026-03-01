@@ -9942,5 +9942,11 @@
 
   "chatter.howToEarn.tip5": "Recrutez des avocats ou des experts expatriés — c'est votre source de revenus passifs la plus puissante ($5/appel pendant 6 mois)",
 
-  "chatter.howToEarn.tiers.qualifiedCount": "Vous avez {count} filleuls qualifiés"
+  "chatter.howToEarn.tiers.qualifiedCount": "Vous avez {count} filleuls qualifiés",
+
+  "chatter.howToEarn.comm.category.calls": "Commissions directes",
+  "chatter.howToEarn.comm.category.referral": "Parrainage",
+  "chatter.howToEarn.comm.category.premium": "Premium",
+  "chatter.howToEarn.comm.clientCallLawyer": "Appel client (avocat)",
+  "chatter.howToEarn.comm.clientCallExpat": "Appel client (expatrié aidant)"
 }
