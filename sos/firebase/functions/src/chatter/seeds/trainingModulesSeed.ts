@@ -1441,44 +1441,60 @@ Now go help people and make money! 💪💰`,
         content: `Les meilleurs chatters sont partout autour de toi !
 
 **🌍 Réseaux sociaux :**
-- Groupes Facebook d'expatriés (il y en a des centaines !)
-- Forums Reddit r/expats, r/iwantout
-- Groupes WhatsApp/Telegram de communautés expat
+- Groupes Facebook d'expatriés, voyageurs, vacanciers (il y en a des centaines !)
+- Forums Reddit r/expats, r/iwantout, r/travel, r/solotravel
+- Groupes WhatsApp/Telegram de communautés expat et voyage
 - LinkedIn — profils intéressés par le freelance/remote work
+- Instagram/TikTok — commente les posts voyage et expatriation
 
-**👥 Ton réseau personnel :**
-- Amis expatriés ou qui connaissent des expats
+**📢 Annonces et offres d'emploi :**
+- Sites de petites annonces (Leboncoin, Craigslist, Gumtree...)
+- Sites d'offres d'emploi freelance (Indeed, Fiverr, Upwork — section "remote")
+- Forums de discussion (forums expat, forums voyage, forums par pays)
+- Groupes Facebook "jobs remote" / "travail à domicile" / "complément de revenu"
+
+**👥 Ton réseau personnel (le plus efficace !) :**
+- Parle à tes amis, ta famille, tes connaissances — le bouche à oreille est roi !
 - Collègues qui cherchent un revenu complémentaire
-- Étudiants en langues ou en droit international
+- Étudiants en langues, droit ou tourisme
+- Anciens camarades de classe, voisins, contacts de sport...
 
 **💡 Le profil idéal :**
 - Quelqu'un qui parle bien (empathique, à l'écoute)
-- Actif sur les réseaux sociaux
+- Actif sur les réseaux sociaux ou à l'aise en ligne
 - Motivé par un revenu complémentaire
 - Pas besoin d'expérience — on les forme !
 
-**Astuce pro** : Les meilleurs recruteurs partagent leur propre histoire de succès 📖`,
+**Astuce pro** : Les meilleurs recruteurs partagent leur propre histoire de succès et parlent à TOUT LE MONDE 📖`,
         contentTranslations: {
           en: `The best chatters are everywhere around you!
 
 **🌍 Social media:**
-- Facebook expat groups (hundreds of them!)
-- Reddit forums r/expats, r/iwantout
-- WhatsApp/Telegram expat community groups
+- Facebook groups for expats, travelers, vacationers (hundreds of them!)
+- Reddit forums r/expats, r/iwantout, r/travel, r/solotravel
+- WhatsApp/Telegram expat and travel community groups
 - LinkedIn — profiles interested in freelance/remote work
+- Instagram/TikTok — comment on travel and expatriation posts
 
-**👥 Your personal network:**
-- Expat friends or people who know expats
+**📢 Ads and job boards:**
+- Classified ad sites (Craigslist, Gumtree, local equivalents...)
+- Freelance job sites (Indeed, Fiverr, Upwork — "remote" section)
+- Discussion forums (expat forums, travel forums, country-specific forums)
+- Facebook groups "remote jobs" / "work from home" / "side income"
+
+**👥 Your personal network (most effective!):**
+- Talk to friends, family, acquaintances — word of mouth is king!
 - Colleagues looking for side income
-- Language or international law students
+- Language, law or tourism students
+- Old classmates, neighbors, sports contacts...
 
 **💡 The ideal profile:**
 - Someone who communicates well (empathetic, good listener)
-- Active on social media
+- Active on social media or comfortable online
 - Motivated by side income
 - No experience needed — we train them!
 
-**Pro tip**: The best recruiters share their own success story 📖`,
+**Pro tip**: The best recruiters share their own success story and talk to EVERYONE 📖`,
         },
       },
       {
@@ -1495,7 +1511,7 @@ Now go help people and make money! 💪💰`,
 > "J'ai gagné $X le mois dernier juste en discutant sur les réseaux. Tu veux que je t'explique ?"
 
 **❤️ L'argument impact :**
-> "Tu connais des expatriés qui galèrent ? Il y a un moyen de les aider ET d'être rémunéré."
+> "Tu connais des expatriés ou des voyageurs qui galèrent ? Il y a un moyen de les aider ET d'être rémunéré."
 
 **⚡ L'argument simplicité :**
 > "C'est gratuit, ça prend 2 min de s'inscrire, et tu as une formation complète. Zéro risque."
@@ -1512,7 +1528,7 @@ Partage une capture d'écran de tes gains (floutée si tu veux) — rien de plus
 > "I earned $X last month just chatting on social media. Want me to explain?"
 
 **❤️ The impact argument:**
-> "Know expats who are struggling? There's a way to help them AND get paid."
+> "Know expats or travelers who are struggling? There's a way to help them AND get paid."
 
 **⚡ The simplicity argument:**
 > "It's free, takes 2 min to sign up, and you get full training. Zero risk."
@@ -1535,7 +1551,7 @@ Share a screenshot of your earnings (blurred if you want) — nothing more convi
 ❌ **Recruter n'importe qui** — Quelqu'un de pas motivé = perte de temps pour tout le monde
 
 ✅ **À la place, fais ça :**
-- Cible les personnes qui ont déjà un intérêt (groupes expat, freelance)
+- Cible les personnes qui ont déjà un intérêt (groupes expat, voyage, freelance)
 - Explique honnêtement les gains réalistes
 - Propose d'aider personnellement les premiers jours
 - Partage ta propre expérience authentique`,
@@ -1549,7 +1565,7 @@ Share a screenshot of your earnings (blurred if you want) — nothing more convi
 ❌ **Recruiting anyone** — Someone unmotivated = waste of time for everyone
 
 ✅ **Instead, do this:**
-- Target people who already have interest (expat groups, freelance)
+- Target people who already have interest (expat groups, travel groups, freelance)
 - Honestly explain realistic earnings
 - Offer to personally help in the first days
 - Share your own authentic experience`,
@@ -1564,15 +1580,15 @@ Share a screenshot of your earnings (blurred if you want) — nothing more convi
 
 **📱 WhatsApp / Telegram — Message personnel :**
 
-"Salut [PRÉNOM] ! 😊 J'ai trouvé un truc sympa que je voulais te partager. C'est une plateforme qui aide les expatriés à trouver un avocat ou un aidant en 5 min par téléphone. Le truc c'est qu'on peut gagner de l'argent en les aidant à nous trouver — moi je gagne déjà [TON_MONTANT] par mois juste en discutant sur les réseaux. C'est gratuit, pas de boss, tu gères comme tu veux. Tu veux que je t'explique ? 😊"
+"Salut [PRÉNOM] ! 😊 J'ai trouvé un truc sympa que je voulais te partager. C'est une plateforme qui aide les expatriés, voyageurs et vacanciers à trouver un avocat ou un aidant en 5 min par téléphone. Le truc c'est qu'on peut gagner de l'argent en les aidant à nous trouver — moi je gagne déjà [TON_MONTANT] par mois juste en discutant sur les réseaux. C'est gratuit, pas de boss, tu gères comme tu veux. Tu veux que je t'explique ? 😊"
 
-**📘 Facebook — Post dans un groupe expat :**
+**📘 Facebook — Post dans un groupe :**
 
-"🌍 Tu connais des expatriés qui cherchent un revenu complémentaire flexible ? SOS-Expat rémunère des ambassadeurs (chatters) pour aider les expats à trouver de l'aide juridique ou pratique. Pas besoin d'expérience, formation gratuite incluse. Tu choisis tes horaires et tu gagnes à chaque appel généré. DM moi si ça t'intéresse ! 💬"
+"🌍 Tu connais des expatriés, voyageurs ou vacanciers qui ont besoin d'aide ? SOS-Expat rémunère des ambassadeurs (chatters) pour aider ces personnes à trouver de l'aide juridique ou pratique. Pas besoin d'expérience, formation gratuite incluse. Tu choisis tes horaires et tu gagnes à chaque appel généré. DM moi si ça t'intéresse ! 💬"
 
 **💼 LinkedIn — Message ciblé :**
 
-"Bonjour [PRÉNOM], j'ai vu que tu étais [expat / intéressé par le remote work]. Je fais partie d'un programme d'ambassadeurs chez SOS-Expat. On aide les expatriés et on est rémunéré à la performance. Si tu cherches un complément de revenu flexible, je serais ravi de t'en dire plus."
+"Bonjour [PRÉNOM], j'ai vu que tu étais [expat / voyageur / intéressé par le remote work]. Je fais partie d'un programme d'ambassadeurs chez SOS-Expat. On aide les expatriés, voyageurs et vacanciers et on est rémunéré à la performance. Si tu cherches un complément de revenu flexible, je serais ravi de t'en dire plus."
 
 **⚡ Relance douce (J+3 sans réponse) :**
 
@@ -1582,15 +1598,15 @@ Share a screenshot of your earnings (blurred if you want) — nothing more convi
 
 **📱 WhatsApp / Telegram — Personal message:**
 
-"Hey [NAME]! 😊 I found something cool I wanted to share. It's a platform that helps expats find a lawyer or helper in 5 min by phone. The thing is, you can earn money by helping people find us — I'm already earning [YOUR_AMOUNT] per month just chatting on social media. It's free, no boss, you work whenever you want. Want me to explain? 😊"
+"Hey [NAME]! 😊 I found something cool I wanted to share. It's a platform that helps expats, travelers and vacationers find a lawyer or helper in 5 min by phone. The thing is, you can earn money by helping people find us — I'm already earning [YOUR_AMOUNT] per month just chatting on social media. It's free, no boss, you work whenever you want. Want me to explain? 😊"
 
-**📘 Facebook — Post in an expat group:**
+**📘 Facebook — Post in a group:**
 
-"🌍 Know expats looking for a flexible side income? SOS-Expat pays ambassadors (chatters) to help expats find legal or practical help. No experience needed, free training included. You choose your hours and earn for each call generated. DM me if interested! 💬"
+"🌍 Know expats, travelers or vacationers who need help? SOS-Expat pays ambassadors (chatters) to help these people find legal or practical assistance. No experience needed, free training included. You choose your hours and earn for each call generated. DM me if interested! 💬"
 
 **💼 LinkedIn — Targeted message:**
 
-"Hi [NAME], I saw you were [an expat / interested in remote work]. I'm part of an ambassador program at SOS-Expat. We help expats and get paid per performance. If you're looking for flexible side income, I'd love to tell you more."
+"Hi [NAME], I saw you were [an expat / traveler / interested in remote work]. I'm part of an ambassador program at SOS-Expat. We help expats, travelers and vacationers and get paid per performance. If you're looking for flexible side income, I'd love to tell you more."
 
 **⚡ Gentle follow-up (Day 3, no reply):**
 
@@ -1877,7 +1893,7 @@ You're their **mentor**. In the first days, be ULTRA available!
 "Bienvenue dans l'équipe [PRÉNOM] ! 🎉 Je suis ton capitaine et je suis là pour t'aider à réussir. Voici les 3 étapes pour bien démarrer :
 1️⃣ Complète les modules de formation (onglet Formation)
 2️⃣ Lie ton Telegram pour recevoir les notifications 💰
-3️⃣ Poste ton premier message dans un groupe expat
+3️⃣ Poste ton premier message dans un groupe expat/voyage
 Des questions ? Je suis dispo ! 😊"
 
 **📚 Jour 2 — Suivi formation :**
@@ -1886,8 +1902,8 @@ Des questions ? Je suis dispo ! 😊"
 
 **🚀 Jour 4 — Premier message :**
 
-"[PRÉNOM] ! C'est le moment de passer à l'action 💪 Rejoins 2-3 groupes Facebook ou WhatsApp d'expatriés et poste un premier message. Pas besoin d'un truc parfait — l'important c'est de commencer ! Voici un exemple :
-'Expatriés, vous avez des questions juridiques ? SOS-Expat vous met en relation avec un avocat en 5 min par téléphone 📞 [TON_LIEN]'
+"[PRÉNOM] ! C'est le moment de passer à l'action 💪 Rejoins 2-3 groupes Facebook ou WhatsApp d'expatriés ou de voyageurs et poste un premier message. Pas besoin d'un truc parfait — l'important c'est de commencer ! Voici un exemple :
+'Expatriés, voyageurs, besoin d'aide juridique ou pratique ? SOS-Expat vous met en relation avec un avocat ou un aidant en 5 min par téléphone 📞 [TON_LIEN]'
 Montre-moi ton message quand c'est fait, je te donnerai des tips ! 🎯"
 
 **⚠️ Jour 7 — Relance si inactif :**
@@ -1905,7 +1921,7 @@ Montre-moi ton message quand c'est fait, je te donnerai des tips ! 🎯"
 "Welcome to the team [NAME]! 🎉 I'm your captain and I'm here to help you succeed. Here are the 3 steps to get started:
 1️⃣ Complete the training modules (Training tab)
 2️⃣ Link your Telegram for notifications 💰
-3️⃣ Post your first message in an expat group
+3️⃣ Post your first message in an expat/travel group
 Questions? I'm available! 😊"
 
 **📚 Day 2 — Training follow-up:**
@@ -1914,8 +1930,8 @@ Questions? I'm available! 😊"
 
 **🚀 Day 4 — First message:**
 
-"[NAME]! Time to take action 💪 Join 2-3 Facebook or WhatsApp expat groups and post a first message. Doesn't need to be perfect — just start! Here's an example:
-'Expats, have legal questions? SOS-Expat connects you with a lawyer in 5 min by phone 📞 [YOUR_LINK]'
+"[NAME]! Time to take action 💪 Join 2-3 Facebook or WhatsApp expat or travel groups and post a first message. Doesn't need to be perfect — just start! Here's an example:
+'Expats, travelers, need legal or practical help? SOS-Expat connects you with a lawyer or helper in 5 min by phone 📞 [YOUR_LINK]'
 Show me your message when done, I'll give you tips! 🎯"
 
 **⚠️ Day 7 — Follow-up if inactive:**
