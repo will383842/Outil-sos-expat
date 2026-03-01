@@ -354,6 +354,9 @@ const AdminCaptainsList = lazy(
 const AdminCaptainDetail = lazy(
   () => import("../../pages/admin/Chatter/AdminCaptainDetail")
 );
+const AdminCaptainCoverage = lazy(
+  () => import("../../pages/admin/Chatter/AdminCaptainCoverage")
+);
 const AdminChatterReferrals = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterReferrals")
 );
@@ -1257,6 +1260,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminCaptainDetail />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/captains/coverage"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminCaptainCoverage />
           </Suspense>
         }
       />

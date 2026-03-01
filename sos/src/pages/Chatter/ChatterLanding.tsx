@@ -238,7 +238,6 @@ const ChatterLanding: React.FC = () => {
     { q: 'chatter.faq.q5', a: 'chatter.faq.a5' },
     { q: 'chatter.faq.q6', a: 'chatter.faq.a6' },
     { q: 'chatter.faq.q7', a: 'chatter.faq.a7' },
-    { q: 'chatter.faq.quiz', a: 'chatter.faq.quiz.answer' },
   ];
 
   // Schema.org FAQPage JSON-LD (Google Snippet 0)

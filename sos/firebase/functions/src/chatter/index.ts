@@ -131,6 +131,9 @@ export {
   adminGetCaptainsList,
   adminGetCaptainDetail,
   adminExportCaptainCSV,
+  adminAssignCaptainCoverage,
+  adminTransferChatters,
+  adminGetCaptainCoverageMap,
 } from "./callables/admin/captain";
 
 // Admin Commissions Tracker

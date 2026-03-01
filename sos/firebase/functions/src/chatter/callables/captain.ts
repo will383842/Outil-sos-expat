@@ -205,6 +205,8 @@ export const getCaptainDashboard = onCall(
         captainPromotedAt: chatter.captainPromotedAt,
         captainMonthlyTeamCalls: teamCalls,
         captainQualityBonusEnabled: adminOverride,
+        assignedCountries: chatter.captainAssignedCountries || [],
+        assignedLanguages: chatter.captainAssignedLanguages || [],
       },
       qualityBonusStatus: {
         activeN1Count,
@@ -228,6 +230,10 @@ export const getCaptainDashboard = onCall(
       recentCommissions,
       archives,
       tiers,
+      captainConfig: {
+        commissionCaptainCallAmountLawyer: config.commissionCaptainCallAmountLawyer ?? DEFAULT_CHATTER_CONFIG.commissionCaptainCallAmountLawyer!,
+        commissionCaptainCallAmountExpat: config.commissionCaptainCallAmountExpat ?? DEFAULT_CHATTER_CONFIG.commissionCaptainCallAmountExpat!,
+      },
     };
   }
 );

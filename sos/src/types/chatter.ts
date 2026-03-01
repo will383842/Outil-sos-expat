@@ -46,6 +46,10 @@ export type ChatterCommissionType =
   | "bonus_zoom"         // Zoom attendance bonus
   | "bonus_telegram"     // Telegram onboarding bonus ($50, unlocked at $150 earnings)
   | "manual_adjustment"  // Admin manual adjustment
+  // Captain Chatter commissions
+  | "captain_call"          // Captain commission on N1/N2 team call ($3 lawyer / $2 expat)
+  | "captain_tier_bonus"    // Monthly tier bonus for captain (Bronze $25 → Diamond $400)
+  | "captain_quality_bonus" // Monthly quality bonus for captain ($100)
   // LEGACY (kept for backward compatibility)
   | "client_referral"    // @deprecated - Use client_call
   | "recruitment"        // @deprecated - Use activation_bonus

@@ -203,6 +203,33 @@ export const adminRevokeCaptain = onCall(
       throw new HttpsError("failed-precondition", "Chatter is not a captain");
     }
 
+    // Archive current month stats before revoking (so in-progress month data is not lost)
+    const now = Timestamp.now();
+    const today = new Date();
+    const monthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    const archiveId = `${chatterId}_${monthKey}_revoked`;
+    const teamCalls = chatter.captainMonthlyTeamCalls || 0;
+    if (teamCalls > 0) {
+      await db.collection("captain_monthly_archives").doc(archiveId).set({
+        captainId: chatterId,
+        month: today.getMonth() + 1,
+        year: today.getFullYear(),
+        teamCalls,
+        tierName: chatter.captainCurrentTier || "Aucun",
+        tierReached: chatter.captainCurrentTier || null,
+        tierBonus: 0,
+        bonusAmount: 0,
+        qualityBonusPaid: false,
+        qualityBonusAmount: 0,
+        qualityBonusCriteriaMet: false,
+        qualityBonusAdminOverride: false,
+        activeN1Count: 0,
+        monthlyTeamCommissions: 0,
+        revokedAt: now,
+        createdAt: now,
+      });
+    }
+
     await chatterRef.update({
       role: FieldValue.delete(),
       captainPromotedAt: FieldValue.delete(),
@@ -210,7 +237,7 @@ export const adminRevokeCaptain = onCall(
       captainMonthlyTeamCalls: FieldValue.delete(),
       captainCurrentTier: FieldValue.delete(),
       captainQualityBonusEnabled: FieldValue.delete(),
-      updatedAt: Timestamp.now(),
+      updatedAt: now,
     });
 
     // Create notification
@@ -369,8 +396,10 @@ export const adminGetCaptainsList = onCall(
         n1Count: n1Query.size,
         n2Count,
         monthlyTeamCalls: captain.captainMonthlyTeamCalls || 0,
-        totalTeamEarnings: captain.totalEarned || 0,
+        totalEarnings: captain.totalEarned || 0,
         qualityBonusEnabled: captain.captainQualityBonusEnabled || false,
+        assignedCountries: captain.captainAssignedCountries || [],
+        assignedLanguages: captain.captainAssignedLanguages || [],
         createdAt: timestampToString(captain.createdAt),
         promotedAt: timestampToString(captain.captainPromotedAt),
       });
@@ -591,6 +620,32 @@ export const adminGetCaptainDetail = onCall(
     const availableBalance = (captain as any).availableBalance || 0;
     const pendingBalance = (captain as any).pendingBalance || 0;
 
+    // Fetch monthly archives
+    const archivesQuery = await db
+      .collection("captain_monthly_archives")
+      .where("captainId", "==", captainId)
+      .orderBy("createdAt", "desc")
+      .limit(24)
+      .get();
+
+    const archives = archivesQuery.docs.map((doc) => {
+      const d = doc.data();
+      return {
+        id: doc.id,
+        month: d.month,
+        year: d.year,
+        teamCalls: d.teamCalls || 0,
+        tierName: d.tierName || "Aucun",
+        tierBonus: d.tierBonus || 0,
+        qualityBonusPaid: d.qualityBonusPaid || false,
+        qualityBonusAmount: d.qualityBonusAmount || 0,
+        bonusAmount: d.bonusAmount || 0,
+        activeN1Count: d.activeN1Count || 0,
+        revokedAt: d.revokedAt ? timestampToString(d.revokedAt) : null,
+        createdAt: timestampToString(d.createdAt),
+      };
+    });
+
     return {
       id: captainId,
       firstName: captain.firstName,
@@ -621,9 +676,14 @@ export const adminGetCaptainDetail = onCall(
       n2Recruits,
       // Monthly history (aggregated)
       monthlyCommissions,
+      // Coverage
+      assignedCountries: captain.captainAssignedCountries || [],
+      assignedLanguages: captain.captainAssignedLanguages || [],
       // Affiliate codes
       affiliateCodeClient: captain.affiliateCodeClient || "",
       affiliateCodeRecruitment: captain.affiliateCodeRecruitment || "",
+      // Monthly archives
+      archives,
     };
   }
 );
@@ -647,6 +707,15 @@ export const adminExportCaptainCSV = onCall(
       .where("role", "==", "captainChatter")
       .get();
 
+    // Helper to escape CSV field (wrap in quotes if contains comma, quote, or newline)
+    const esc = (val: string | number): string => {
+      const s = String(val);
+      if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+        return `"${s.replace(/"/g, '""')}"`;
+      }
+      return s;
+    };
+
     const rows: string[] = [];
     rows.push("ID,Pr\u00e9nom,Nom,Email,Pays,Promu le,Appels \u00e9quipe mois,Palier,Bonus qualit\u00e9,Total gagn\u00e9");
 
@@ -655,22 +724,308 @@ export const adminExportCaptainCSV = onCall(
       const promotedAt = c.captainPromotedAt
         ? new Date((c.captainPromotedAt as Timestamp).toMillis()).toISOString().split("T")[0]
         : "";
+
+      // Sum captain-only commissions for accurate "Total gagné"
+      const captainCommissionsQuery = await db
+        .collection("chatter_commissions")
+        .where("chatterId", "==", doc.id)
+        .where("type", "in", ["captain_call", "captain_tier_bonus", "captain_quality_bonus"])
+        .get();
+      const captainTotalEarned = captainCommissionsQuery.docs.reduce(
+        (sum, d) => sum + (d.data().amount || 0), 0
+      );
+
       rows.push(
         [
-          doc.id,
-          c.firstName,
-          c.lastName,
-          c.email,
-          c.country || "",
-          promotedAt,
-          c.captainMonthlyTeamCalls || 0,
-          c.captainCurrentTier || "",
-          c.captainQualityBonusEnabled ? "Oui" : "Non",
-          ((c.totalEarned || 0) / 100).toFixed(2),
+          esc(doc.id),
+          esc(c.firstName),
+          esc(c.lastName),
+          esc(c.email),
+          esc(c.country || ""),
+          esc(promotedAt),
+          esc(c.captainMonthlyTeamCalls || 0),
+          esc(c.captainCurrentTier || ""),
+          esc(c.captainQualityBonusEnabled ? "Oui" : "Non"),
+          esc((captainTotalEarned / 100).toFixed(2)),
         ].join(",")
       );
     }
 
     return { csv: "\uFEFF" + rows.join("\n") };
+  }
+);
+
+// ============================================================================
+// 7. ASSIGN CAPTAIN COUNTRIES & LANGUAGES
+// ============================================================================
+
+export const adminAssignCaptainCoverage = onCall(
+  { ...adminConfig, timeoutSeconds: 30 },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentication required");
+    }
+    await verifyAdmin(request.auth.uid);
+
+    const { captainId, countries, languages } = request.data as {
+      captainId?: string;
+      countries?: string[];
+      languages?: string[];
+    };
+
+    if (!captainId) {
+      throw new HttpsError("invalid-argument", "captainId is required");
+    }
+    if (!countries && !languages) {
+      throw new HttpsError("invalid-argument", "countries or languages is required");
+    }
+
+    const db = getDb();
+    const chatterRef = db.collection("chatters").doc(captainId);
+    const chatterDoc = await chatterRef.get();
+
+    if (!chatterDoc.exists) {
+      throw new HttpsError("not-found", "Chatter not found");
+    }
+    const chatter = chatterDoc.data() as Chatter;
+    if (chatter.role !== "captainChatter") {
+      throw new HttpsError("failed-precondition", "Chatter is not a captain");
+    }
+
+    const updateData: Record<string, unknown> = { updatedAt: Timestamp.now() };
+    if (countries !== undefined) {
+      updateData.captainAssignedCountries = countries;
+    }
+    if (languages !== undefined) {
+      updateData.captainAssignedLanguages = languages;
+    }
+
+    await chatterRef.update(updateData);
+
+    // Audit trail
+    await db.collection("admin_audit_logs").add({
+      action: "captain_coverage_updated",
+      targetId: captainId,
+      targetType: "chatter",
+      performedBy: request.auth.uid,
+      timestamp: Timestamp.now(),
+      details: { countries, languages },
+    });
+
+    logger.info("[adminAssignCaptainCoverage] Coverage updated", {
+      captainId,
+      countries,
+      languages,
+      updatedBy: request.auth.uid,
+    });
+
+    return { success: true, countries, languages };
+  }
+);
+
+// ============================================================================
+// 8. TRANSFER CHATTERS BETWEEN CAPTAINS
+// ============================================================================
+
+export const adminTransferChatters = onCall(
+  { ...adminConfig, timeoutSeconds: 60 },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentication required");
+    }
+    await verifyAdmin(request.auth.uid);
+
+    const { chatterIds, fromCaptainId, toCaptainId } = request.data as {
+      chatterIds: string[];
+      fromCaptainId: string;
+      toCaptainId: string;
+    };
+
+    if (!chatterIds?.length || !fromCaptainId || !toCaptainId) {
+      throw new HttpsError("invalid-argument", "chatterIds, fromCaptainId, and toCaptainId are required");
+    }
+    if (fromCaptainId === toCaptainId) {
+      throw new HttpsError("invalid-argument", "Source and target captain must be different");
+    }
+
+    const db = getDb();
+
+    // Verify both are captains
+    const [fromDoc, toDoc] = await Promise.all([
+      db.collection("chatters").doc(fromCaptainId).get(),
+      db.collection("chatters").doc(toCaptainId).get(),
+    ]);
+
+    if (!fromDoc.exists || (fromDoc.data() as Chatter).role !== "captainChatter") {
+      throw new HttpsError("failed-precondition", "Source is not a captain");
+    }
+    if (!toDoc.exists || (toDoc.data() as Chatter).role !== "captainChatter") {
+      throw new HttpsError("failed-precondition", "Target is not a captain");
+    }
+
+    const now = Timestamp.now();
+    let transferred = 0;
+    const errors: string[] = [];
+
+    for (const chatterId of chatterIds) {
+      try {
+        const chatterDoc = await db.collection("chatters").doc(chatterId).get();
+        if (!chatterDoc.exists) {
+          errors.push(`${chatterId}: not found`);
+          continue;
+        }
+        const chatter = chatterDoc.data() as Chatter;
+        if (chatter.recruitedBy !== fromCaptainId) {
+          errors.push(`${chatterId}: not recruited by source captain`);
+          continue;
+        }
+
+        await db.collection("chatters").doc(chatterId).update({
+          recruitedBy: toCaptainId,
+          updatedAt: now,
+        });
+        transferred++;
+      } catch (err) {
+        errors.push(`${chatterId}: ${(err as Error).message}`);
+      }
+    }
+
+    // Audit trail
+    await db.collection("admin_audit_logs").add({
+      action: "captain_chatters_transferred",
+      performedBy: request.auth.uid,
+      timestamp: now,
+      details: {
+        fromCaptainId,
+        toCaptainId,
+        chatterIds,
+        transferred,
+        errors,
+      },
+    });
+
+    logger.info("[adminTransferChatters] Transfer complete", {
+      fromCaptainId,
+      toCaptainId,
+      requested: chatterIds.length,
+      transferred,
+      errors: errors.length,
+    });
+
+    return { success: true, transferred, errors };
+  }
+);
+
+// ============================================================================
+// 9. GET CAPTAIN COVERAGE MAP (for admin matrix view)
+// ============================================================================
+
+export const adminGetCaptainCoverageMap = onCall(
+  { ...adminConfig, timeoutSeconds: 60 },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentication required");
+    }
+    await verifyAdmin(request.auth.uid);
+
+    const db = getDb();
+
+    const captainsQuery = await db
+      .collection("chatters")
+      .where("role", "==", "captainChatter")
+      .where("status", "==", "active")
+      .get();
+
+    // Build country → captains mapping
+    const countryMap: Record<string, Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      country: string;
+    }>> = {};
+
+    // Build language → captains mapping
+    const languageMap: Record<string, Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+    }>> = {};
+
+    const captainsList: Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      country: string;
+      assignedCountries: string[];
+      assignedLanguages: string[];
+      n1Count: number;
+      monthlyTeamCalls: number;
+    }> = [];
+
+    for (const doc of captainsQuery.docs) {
+      const c = doc.data() as Chatter;
+      const assignedCountries = c.captainAssignedCountries || [];
+      const assignedLanguages = c.captainAssignedLanguages || [];
+
+      // Count N1 for this captain
+      const n1Query = await db
+        .collection("chatters")
+        .where("recruitedBy", "==", doc.id)
+        .where("status", "==", "active")
+        .get();
+
+      const captainEntry = {
+        id: doc.id,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        country: c.country || "",
+        assignedCountries,
+        assignedLanguages,
+        n1Count: n1Query.size,
+        monthlyTeamCalls: c.captainMonthlyTeamCalls || 0,
+      };
+      captainsList.push(captainEntry);
+
+      // Map assigned countries
+      for (const cc of assignedCountries) {
+        if (!countryMap[cc]) countryMap[cc] = [];
+        countryMap[cc].push({
+          id: doc.id,
+          firstName: c.firstName,
+          lastName: c.lastName,
+          country: c.country || "",
+        });
+      }
+
+      // Also map the captain's own country if not already assigned
+      if (c.country && !assignedCountries.includes(c.country)) {
+        if (!countryMap[c.country]) countryMap[c.country] = [];
+        countryMap[c.country].push({
+          id: doc.id,
+          firstName: c.firstName,
+          lastName: c.lastName,
+          country: c.country,
+        });
+      }
+
+      // Map assigned languages
+      for (const lang of assignedLanguages) {
+        if (!languageMap[lang]) languageMap[lang] = [];
+        languageMap[lang].push({
+          id: doc.id,
+          firstName: c.firstName,
+          lastName: c.lastName,
+        });
+      }
+    }
+
+    return {
+      captains: captainsList,
+      countryMap,
+      languageMap,
+      totalCaptains: captainsList.length,
+      coveredCountries: Object.keys(countryMap).length,
+      coveredLanguages: Object.keys(languageMap).length,
+    };
   }
 );

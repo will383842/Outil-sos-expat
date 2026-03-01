@@ -3429,6 +3429,9 @@ export {
   adminGetCaptainsList,
   adminGetCaptainDetail,
   adminExportCaptainCSV,
+  adminAssignCaptainCoverage,
+  adminTransferChatters,
+  adminGetCaptainCoverageMap,
 } from './chatter';
 
 // getAvailableCountriesForChatter (absent de chatter/index.ts — export direct)

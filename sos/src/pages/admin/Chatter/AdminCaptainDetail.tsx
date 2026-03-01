@@ -36,6 +36,11 @@ import {
   DollarSign,
   Clock,
   FileText,
+  Languages,
+  MapPin,
+  Save,
+  Edit2,
+  ArrowRightLeft,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -51,14 +56,44 @@ const UI = {
   },
 } as const;
 
-// Captain tier definitions with thresholds
+// Captain tier definitions — based on monthly team calls (aligned with backend captainTiers)
 const CAPTAIN_TIERS = [
-  { key: 'bronze', label: 'Bronze', color: 'from-amber-400 to-amber-600', textColor: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-100 dark:bg-amber-900/30', minN1: 0 },
-  { key: 'silver', label: 'Silver', color: 'from-gray-300 to-gray-500', textColor: 'text-gray-600 dark:text-gray-300', bgColor: 'bg-gray-200 dark:bg-gray-700/50', minN1: 5 },
-  { key: 'gold', label: 'Gold', color: 'from-yellow-400 to-yellow-600', textColor: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30', minN1: 15 },
-  { key: 'platinum', label: 'Platinum', color: 'from-blue-400 to-blue-600', textColor: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/30', minN1: 30 },
-  { key: 'diamond', label: 'Diamond', color: 'from-purple-400 to-purple-600', textColor: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-100 dark:bg-purple-900/30', minN1: 50 },
+  { key: 'bronze', label: 'Bronze', color: 'from-amber-400 to-amber-600', textColor: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-100 dark:bg-amber-900/30', minCalls: 20 },
+  { key: 'silver', label: 'Silver', color: 'from-gray-300 to-gray-500', textColor: 'text-gray-600 dark:text-gray-300', bgColor: 'bg-gray-200 dark:bg-gray-700/50', minCalls: 50 },
+  { key: 'gold', label: 'Gold', color: 'from-yellow-400 to-yellow-600', textColor: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30', minCalls: 100 },
+  { key: 'platinum', label: 'Platinum', color: 'from-blue-400 to-blue-600', textColor: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/30', minCalls: 200 },
+  { key: 'diamond', label: 'Diamond', color: 'from-purple-400 to-purple-600', textColor: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-100 dark:bg-purple-900/30', minCalls: 400 },
 ];
+
+// Supported languages
+const LANGUAGES = [
+  { code: 'fr', label: 'Francais' }, { code: 'en', label: 'English' },
+  { code: 'es', label: 'Espanol' }, { code: 'de', label: 'Deutsch' },
+  { code: 'pt', label: 'Portugues' }, { code: 'ru', label: 'Russkij' },
+  { code: 'ar', label: 'Arabi' }, { code: 'zh', label: 'Zhongwen' },
+  { code: 'hi', label: 'Hindi' },
+];
+
+// Top countries (most common for expats)
+const TOP_COUNTRIES = [
+  { code: 'FR', name: 'France' }, { code: 'US', name: 'USA' }, { code: 'GB', name: 'UK' },
+  { code: 'DE', name: 'Germany' }, { code: 'ES', name: 'Spain' }, { code: 'CA', name: 'Canada' },
+  { code: 'AU', name: 'Australia' }, { code: 'BR', name: 'Brazil' }, { code: 'IN', name: 'India' },
+  { code: 'CN', name: 'China' }, { code: 'JP', name: 'Japan' }, { code: 'IT', name: 'Italy' },
+  { code: 'NL', name: 'Netherlands' }, { code: 'BE', name: 'Belgium' }, { code: 'CH', name: 'Switzerland' },
+  { code: 'PT', name: 'Portugal' }, { code: 'SE', name: 'Sweden' }, { code: 'NO', name: 'Norway' },
+  { code: 'DK', name: 'Denmark' }, { code: 'FI', name: 'Finland' }, { code: 'PL', name: 'Poland' },
+  { code: 'RU', name: 'Russia' }, { code: 'MX', name: 'Mexico' }, { code: 'AR', name: 'Argentina' },
+  { code: 'CL', name: 'Chile' }, { code: 'CO', name: 'Colombia' }, { code: 'ZA', name: 'South Africa' },
+  { code: 'NG', name: 'Nigeria' }, { code: 'KE', name: 'Kenya' }, { code: 'MA', name: 'Morocco' },
+  { code: 'TN', name: 'Tunisia' }, { code: 'SN', name: 'Senegal' }, { code: 'CI', name: "Cote d'Ivoire" },
+  { code: 'CM', name: 'Cameroon' }, { code: 'DZ', name: 'Algeria' }, { code: 'EG', name: 'Egypt' },
+  { code: 'TH', name: 'Thailand' }, { code: 'VN', name: 'Vietnam' }, { code: 'PH', name: 'Philippines' },
+  { code: 'KR', name: 'South Korea' }, { code: 'AE', name: 'UAE' }, { code: 'SA', name: 'Saudi Arabia' },
+  { code: 'TR', name: 'Turkey' }, { code: 'IL', name: 'Israel' }, { code: 'MY', name: 'Malaysia' },
+  { code: 'SG', name: 'Singapore' }, { code: 'ID', name: 'Indonesia' }, { code: 'NZ', name: 'New Zealand' },
+  { code: 'IE', name: 'Ireland' }, { code: 'AT', name: 'Austria' }, { code: 'CZ', name: 'Czechia' },
+].sort((a, b) => a.name.localeCompare(b.name));
 
 interface Recruit {
   id: string;
@@ -78,6 +113,21 @@ interface MonthlyCommission {
   n2Commissions: number;
   qualityBonus: number;
   totalAmount: number;
+}
+
+interface CaptainArchive {
+  id: string;
+  month: number;
+  year: number;
+  teamCalls: number;
+  tierName: string;
+  tierBonus: number;
+  qualityBonusPaid: boolean;
+  qualityBonusAmount: number;
+  bonusAmount: number;
+  activeN1Count: number;
+  revokedAt: string | null;
+  createdAt: string;
 }
 
 interface CaptainDetailData {
@@ -105,11 +155,16 @@ interface CaptainDetailData {
   totalQualityBonuses: number;
   availableBalance: number;
   pendingBalance: number;
+  // Coverage
+  assignedCountries?: string[];
+  assignedLanguages?: string[];
   // Recruits
   n1Recruits: Recruit[];
   n2Recruits: Recruit[];
   // Monthly history
   monthlyCommissions: MonthlyCommission[];
+  // Archives
+  archives?: CaptainArchive[];
   // Affiliate codes
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
@@ -138,6 +193,15 @@ const AdminCaptainDetail: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [qualityBonusLoading, setQualityBonusLoading] = useState(false);
   const [revokeConfirm, setRevokeConfirm] = useState(false);
+  const [coverageLoading, setCoverageLoading] = useState(false);
+  const [editCountries, setEditCountries] = useState<string[]>([]);
+  const [editLanguages, setEditLanguages] = useState<string[]>([]);
+  const [showCoverageEdit, setShowCoverageEdit] = useState(false);
+  // Transfer state
+  const [selectedForTransfer, setSelectedForTransfer] = useState<Set<string>>(new Set());
+  const [transferTargetId, setTransferTargetId] = useState('');
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
 
   // Fetch captain detail
   const fetchCaptain = useCallback(async () => {
@@ -219,21 +283,74 @@ const AdminCaptainDetail: React.FC = () => {
     }
   };
 
+  // Transfer chatters to another captain
+  const handleTransfer = async () => {
+    if (!captainId || !transferTargetId || selectedForTransfer.size === 0) return;
+    setTransferLoading(true);
+    try {
+      const fn = httpsCallable(functionsAffiliate, 'adminTransferChatters');
+      const result = await fn({
+        chatterIds: Array.from(selectedForTransfer),
+        fromCaptainId: captainId,
+        toCaptainId: transferTargetId,
+      });
+      const data = result.data as { transferred: number; errors: string[] };
+      toast.success(intl.formatMessage(
+        { id: 'admin.captainDetail.transfer.success', defaultMessage: '{count} chatters transferes' },
+        { count: data.transferred }
+      ));
+      setSelectedForTransfer(new Set());
+      setTransferTargetId('');
+      setShowTransfer(false);
+      fetchCaptain(); // Refresh data
+    } catch (err: any) {
+      console.error('Transfer error:', err);
+      toast.error(err.message || 'Erreur de transfert');
+    } finally {
+      setTransferLoading(false);
+    }
+  };
+
+  // Save coverage (countries + languages)
+  const handleSaveCoverage = async () => {
+    if (!captainId) return;
+    setCoverageLoading(true);
+    try {
+      const fn = httpsCallable(functionsAffiliate, 'adminAssignCaptainCoverage');
+      await fn({ captainId, countries: editCountries, languages: editLanguages });
+      setCaptain(prev => prev ? { ...prev, assignedCountries: editCountries, assignedLanguages: editLanguages } : null);
+      setShowCoverageEdit(false);
+      toast.success(intl.formatMessage({ id: 'admin.captainDetail.coverage.saved', defaultMessage: 'Couverture mise a jour' }));
+    } catch (err: any) {
+      console.error('Failed to save coverage:', err);
+      toast.error(err.message || 'Erreur');
+    } finally {
+      setCoverageLoading(false);
+    }
+  };
+
+  // Open coverage editor with current values
+  const openCoverageEdit = () => {
+    setEditCountries(captain?.assignedCountries || []);
+    setEditLanguages(captain?.assignedLanguages || []);
+    setShowCoverageEdit(true);
+  };
+
   // Get tier info
   const getTierInfo = (tierKey: string) => {
     return CAPTAIN_TIERS.find(t => t.key === tierKey) || CAPTAIN_TIERS[0];
   };
 
-  // Get tier progression percentage
-  const getTierProgress = (tierKey: string, n1Count: number) => {
+  // Get tier progression percentage — based on monthly team calls (not N1 count)
+  const getTierProgress = (tierKey: string, monthlyTeamCalls: number) => {
     const currentTierIndex = CAPTAIN_TIERS.findIndex(t => t.key === tierKey);
     const nextTier = CAPTAIN_TIERS[currentTierIndex + 1];
 
     if (!nextTier) return 100; // Already at max tier
 
-    const currentMin = CAPTAIN_TIERS[currentTierIndex].minN1;
-    const nextMin = nextTier.minN1;
-    const progress = ((n1Count - currentMin) / (nextMin - currentMin)) * 100;
+    const currentMin = CAPTAIN_TIERS[currentTierIndex].minCalls;
+    const nextMin = nextTier.minCalls;
+    const progress = ((monthlyTeamCalls - currentMin) / (nextMin - currentMin)) * 100;
     return Math.min(Math.max(progress, 0), 100);
   };
 
@@ -276,6 +393,7 @@ const AdminCaptainDetail: React.FC = () => {
       id: 'archives',
       label: intl.formatMessage({ id: 'admin.captainDetail.tab.archives', defaultMessage: 'Archives' }),
       icon: <FileText className="w-4 h-4" />,
+      count: captain?.archives?.length,
     },
   ];
 
@@ -320,7 +438,7 @@ const AdminCaptainDetail: React.FC = () => {
   }
 
   const tierInfo = getTierInfo(captain.tier);
-  const tierProgress = getTierProgress(captain.tier, captain.n1Count);
+  const tierProgress = getTierProgress(captain.tier, captain.monthlyTeamCalls);
   const currentTierIndex = CAPTAIN_TIERS.findIndex(t => t.key === captain.tier);
   const nextTier = CAPTAIN_TIERS[currentTierIndex + 1];
 
@@ -551,7 +669,7 @@ const AdminCaptainDetail: React.FC = () => {
                       <span className={`text-xs ${
                         isActive ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'
                       }`}>
-                        {tier.minN1}+
+                        {tier.minCalls}+
                       </span>
                     </div>
                   );
@@ -564,10 +682,10 @@ const AdminCaptainDetail: React.FC = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 <FormattedMessage
                   id="admin.captainDetail.nextTier"
-                  defaultMessage="Prochain tier: {tier} (encore {remaining} N1 requis)"
+                  defaultMessage="Prochain tier: {tier} (encore {remaining} appels requis)"
                   values={{
                     tier: nextTier.label,
-                    remaining: Math.max(0, nextTier.minN1 - captain.n1Count),
+                    remaining: Math.max(0, nextTier.minCalls - captain.monthlyTeamCalls),
                   }}
                 />
               </p>
@@ -670,6 +788,141 @@ const AdminCaptainDetail: React.FC = () => {
           </div>
         </div>
 
+        {/* Coverage — Countries & Languages */}
+        <div className={`${UI.card} p-4 sm:p-6`}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-blue-500" />
+              <FormattedMessage id="admin.captainDetail.coverage.title" defaultMessage="Couverture pays & langues" />
+            </h3>
+            {!showCoverageEdit ? (
+              <button onClick={openCoverageEdit} className={`${UI.button.secondary} px-3 py-1.5 text-sm flex items-center gap-1.5`}>
+                <Edit2 className="w-3.5 h-3.5" />
+                <FormattedMessage id="common.edit" defaultMessage="Modifier" />
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveCoverage}
+                  disabled={coverageLoading}
+                  className={`${UI.button.success} px-3 py-1.5 text-sm flex items-center gap-1.5`}
+                >
+                  {coverageLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  <FormattedMessage id="common.save" defaultMessage="Enregistrer" />
+                </button>
+                <button onClick={() => setShowCoverageEdit(false)} className={`${UI.button.secondary} px-3 py-1.5 text-sm`}>
+                  <FormattedMessage id="common.cancel" defaultMessage="Annuler" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {!showCoverageEdit ? (
+            /* Read mode */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
+                  <Globe className="w-3.5 h-3.5" />
+                  <FormattedMessage id="admin.captainDetail.coverage.countries" defaultMessage="Pays assignes" />
+                </p>
+                {(captain.assignedCountries?.length || 0) > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {captain.assignedCountries!.map(cc => (
+                      <span key={cc} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs font-medium">
+                        {getFlagEmoji(cc)} {cc}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 italic">
+                    <FormattedMessage id="admin.captainDetail.coverage.none" defaultMessage="Aucun" />
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
+                  <Languages className="w-3.5 h-3.5" />
+                  <FormattedMessage id="admin.captainDetail.coverage.languages" defaultMessage="Langues assignees" />
+                </p>
+                {(captain.assignedLanguages?.length || 0) > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {captain.assignedLanguages!.map(lang => {
+                      const l = LANGUAGES.find(l => l.code === lang);
+                      return (
+                        <span key={lang} className="inline-flex items-center px-2 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 text-xs font-medium">
+                          {l?.label || lang}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 italic">
+                    <FormattedMessage id="admin.captainDetail.coverage.none" defaultMessage="Aucun" />
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Edit mode */
+            <div className="space-y-4">
+              {/* Countries multi-select */}
+              <div>
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">
+                  <FormattedMessage id="admin.captainDetail.coverage.selectCountries" defaultMessage="Pays (cliquer pour ajouter/retirer)" />
+                </p>
+                <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-2 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10">
+                  {TOP_COUNTRIES.map(c => {
+                    const isSelected = editCountries.includes(c.code);
+                    return (
+                      <button
+                        key={c.code}
+                        onClick={() => setEditCountries(prev =>
+                          isSelected ? prev.filter(x => x !== c.code) : [...prev, c.code]
+                        )}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
+                          isSelected
+                            ? 'bg-blue-500 text-white shadow-sm'
+                            : 'bg-white dark:bg-white/10 text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                        }`}
+                      >
+                        {getFlagEmoji(c.code)} {c.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-400 mt-1">{editCountries.length} <FormattedMessage id="admin.captainDetail.coverage.selected" defaultMessage="selectionnes" /></p>
+              </div>
+              {/* Languages multi-select */}
+              <div>
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">
+                  <FormattedMessage id="admin.captainDetail.coverage.selectLanguages" defaultMessage="Langues" />
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {LANGUAGES.map(l => {
+                    const isSelected = editLanguages.includes(l.code);
+                    return (
+                      <button
+                        key={l.code}
+                        onClick={() => setEditLanguages(prev =>
+                          isSelected ? prev.filter(x => x !== l.code) : [...prev, l.code]
+                        )}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          isSelected
+                            ? 'bg-purple-500 text-white shadow-sm'
+                            : 'bg-white dark:bg-white/10 text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
+                        }`}
+                      >
+                        {l.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-400 mt-1">{editLanguages.length} <FormattedMessage id="admin.captainDetail.coverage.selected" defaultMessage="selectionnes" /></p>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Tabs */}
         <div className={`${UI.card} overflow-hidden`}>
           {/* Tab Headers */}
@@ -704,6 +957,49 @@ const AdminCaptainDetail: React.FC = () => {
             {/* N1 Recruits Tab */}
             {activeTab === 'n1' && (
               <div>
+                {/* Transfer toolbar */}
+                {captain.n1Recruits.length > 0 && (
+                  <div className="px-4 py-3 bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 flex flex-wrap items-center gap-2">
+                    {!showTransfer ? (
+                      <button
+                        onClick={() => setShowTransfer(true)}
+                        className={`${UI.button.secondary} px-3 py-1.5 text-xs flex items-center gap-1.5`}
+                      >
+                        <ArrowRightLeft className="w-3.5 h-3.5" />
+                        <FormattedMessage id="admin.captainDetail.transfer.btn" defaultMessage="Transferer des chatters" />
+                      </button>
+                    ) : (
+                      <>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {selectedForTransfer.size} <FormattedMessage id="admin.captainDetail.transfer.selected" defaultMessage="selectionnes" />
+                        </span>
+                        <input
+                          type="text"
+                          value={transferTargetId}
+                          onChange={(e) => setTransferTargetId(e.target.value)}
+                          placeholder={intl.formatMessage({ id: 'admin.captainDetail.transfer.targetId', defaultMessage: 'ID du captain cible' })}
+                          className="px-2 py-1 text-xs bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg w-48"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <button
+                          onClick={handleTransfer}
+                          disabled={transferLoading || selectedForTransfer.size === 0 || !transferTargetId}
+                          className={`${UI.button.warning} px-3 py-1.5 text-xs flex items-center gap-1.5 disabled:opacity-50`}
+                        >
+                          {transferLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRightLeft className="w-3.5 h-3.5" />}
+                          <FormattedMessage id="admin.captainDetail.transfer.confirm" defaultMessage="Transferer" />
+                        </button>
+                        <button
+                          onClick={() => { setShowTransfer(false); setSelectedForTransfer(new Set()); setTransferTargetId(''); }}
+                          className={`${UI.button.secondary} px-2 py-1.5 text-xs`}
+                        >
+                          <FormattedMessage id="common.cancel" defaultMessage="Annuler" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 {captain.n1Recruits.length === 0 ? (
                   <div className="py-8 text-center">
                     <Users className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
@@ -716,6 +1012,22 @@ const AdminCaptainDetail: React.FC = () => {
                     <table className="w-full">
                       <thead className="bg-gray-50 dark:bg-white/5">
                         <tr>
+                          {showTransfer && (
+                            <th className="px-2 py-3 w-8">
+                              <input
+                                type="checkbox"
+                                checked={selectedForTransfer.size === captain.n1Recruits.length}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedForTransfer(new Set(captain.n1Recruits.map(r => r.id)));
+                                  } else {
+                                    setSelectedForTransfer(new Set());
+                                  }
+                                }}
+                                className="rounded border-gray-300"
+                              />
+                            </th>
+                          )}
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                             <FormattedMessage id="admin.captainDetail.recruit.name" defaultMessage="Nom" />
                           </th>
@@ -744,6 +1056,23 @@ const AdminCaptainDetail: React.FC = () => {
                             onClick={() => navigate(`/admin/chatters/${recruit.id}`)}
                             className="hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
                           >
+                            {showTransfer && (
+                              <td className="px-2 py-3 w-8" onClick={(e) => e.stopPropagation()}>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedForTransfer.has(recruit.id)}
+                                  onChange={() => {
+                                    setSelectedForTransfer(prev => {
+                                      const next = new Set(prev);
+                                      if (next.has(recruit.id)) next.delete(recruit.id);
+                                      else next.add(recruit.id);
+                                      return next;
+                                    });
+                                  }}
+                                  className="rounded border-gray-300"
+                                />
+                              </td>
+                            )}
                             <td className="px-4 py-3 whitespace-nowrap">
                               <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
@@ -978,20 +1307,126 @@ const AdminCaptainDetail: React.FC = () => {
 
             {/* Archives Tab */}
             {activeTab === 'archives' && (
-              <div className="py-8 text-center">
-                <FileText className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-                <p className="text-gray-500 dark:text-gray-400">
-                  <FormattedMessage
-                    id="admin.captainDetail.archivesPlaceholder"
-                    defaultMessage="Les archives d'activite seront disponibles prochainement."
-                  />
-                </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                  <FormattedMessage
-                    id="admin.captainDetail.archivesDescription"
-                    defaultMessage="Historique des promotions, tier changes, et actions admin."
-                  />
-                </p>
+              <div>
+                {!captain.archives || captain.archives.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <FileText className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      <FormattedMessage
+                        id="admin.captainDetail.archivesEmpty"
+                        defaultMessage="Aucune archive disponible."
+                      />
+                    </p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                      <FormattedMessage
+                        id="admin.captainDetail.archivesEmptyHint"
+                        defaultMessage="Les archives sont generees automatiquement le 1er de chaque mois."
+                      />
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            <FormattedMessage id="admin.captainDetail.archive.month" defaultMessage="Mois" />
+                          </th>
+                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            <FormattedMessage id="admin.captainDetail.archive.teamCalls" defaultMessage="Appels equipe" />
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            <FormattedMessage id="admin.captainDetail.archive.tier" defaultMessage="Palier" />
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden sm:table-cell">
+                            <FormattedMessage id="admin.captainDetail.archive.tierBonus" defaultMessage="Bonus palier" />
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">
+                            <FormattedMessage id="admin.captainDetail.archive.qualityBonus" defaultMessage="Bonus qualite" />
+                          </th>
+                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">
+                            <FormattedMessage id="admin.captainDetail.archive.n1" defaultMessage="N1 actifs" />
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            <FormattedMessage id="admin.captainDetail.archive.total" defaultMessage="Total" />
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                        {captain.archives.map((archive) => {
+                          const monthDate = new Date(archive.year, archive.month - 1);
+                          const monthLabel = monthDate.toLocaleDateString(intl.locale, { month: 'long', year: 'numeric' });
+                          return (
+                            <tr key={archive.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">{monthLabel}</span>
+                                  {archive.revokedAt && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium">
+                                      <FormattedMessage id="admin.captainDetail.archive.revoked" defaultMessage="Revoque" />
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-center">
+                                <span className="text-sm font-semibold text-gray-900 dark:text-white">{archive.teamCalls}</span>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <span className="text-sm text-gray-700 dark:text-gray-300">{archive.tierName}</span>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-right hidden sm:table-cell">
+                                {archive.tierBonus > 0 ? (
+                                  <span className="text-sm text-green-600 dark:text-green-400">{formatAmount(archive.tierBonus)}</span>
+                                ) : (
+                                  <span className="text-sm text-gray-400">-</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-right hidden md:table-cell">
+                                {archive.qualityBonusPaid ? (
+                                  <span className="text-sm text-green-600 dark:text-green-400">{formatAmount(archive.qualityBonusAmount)}</span>
+                                ) : (
+                                  <span className="text-sm text-gray-400">-</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-center hidden md:table-cell">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">{archive.activeN1Count}</span>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-right">
+                                <span className="text-sm font-bold text-gray-900 dark:text-white">{formatAmount(archive.bonusAmount)}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot className="bg-gray-50 dark:bg-white/5 border-t-2 border-gray-200 dark:border-white/10">
+                        <tr>
+                          <td className="px-4 py-3" colSpan={2}>
+                            <span className="text-sm font-bold text-gray-900 dark:text-white">
+                              TOTAL ({captain.archives.length} <FormattedMessage id="admin.captainDetail.archive.months" defaultMessage="mois" />)
+                            </span>
+                          </td>
+                          <td className="px-4 py-3" />
+                          <td className="px-4 py-3 text-right hidden sm:table-cell">
+                            <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                              {formatAmount(captain.archives.reduce((sum, a) => sum + a.tierBonus, 0))}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right hidden md:table-cell">
+                            <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                              {formatAmount(captain.archives.reduce((sum, a) => sum + a.qualityBonusAmount, 0))}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 hidden md:table-cell" />
+                          <td className="px-4 py-3 text-right">
+                            <span className="text-sm font-bold text-gray-900 dark:text-white">
+                              {formatAmount(captain.archives.reduce((sum, a) => sum + a.bonusAmount, 0))}
+                            </span>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>

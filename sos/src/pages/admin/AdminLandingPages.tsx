@@ -46,6 +46,8 @@ import {
   Trash2,
   ChevronDown,
   ChevronRight,
+  Link,
+  CheckCircle,
 } from 'lucide-react';
 
 // ============================================================================
@@ -93,6 +95,8 @@ const AdminLandingPages: React.FC = () => {
   const [filterRegion, setFilterRegion] = useState<GeoRegion | 'all'>('all');
   const [filterLang, setFilterLang] = useState('fr');
   const [collapsedRegions, setCollapsedRegions] = useState<Set<string>>(new Set());
+  const [showUrlDirectory, setShowUrlDirectory] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState('');
 
   // Edit modal
   const [editModal, setEditModal] = useState<{
@@ -283,6 +287,129 @@ const AdminLandingPages: React.FC = () => {
             {stats.totalConfigs} configs créées | {filterLang.toUpperCase()}: {stats.publishedFiltered}/{stats.totalLangFiltered} publiées ({stats.progress}%)
           </p>
         </div>
+      </div>
+
+      {/* ================================================================
+          URL DIRECTORY - Quick access to all landing page URLs
+      ================================================================ */}
+      <div className="mb-6 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+        <button
+          onClick={() => setShowUrlDirectory(!showUrlDirectory)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/30 dark:hover:to-purple-900/30 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Link className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <span className="font-semibold text-gray-900 dark:text-white">Annuaire des URLs Landing Pages</span>
+            <span className="text-xs bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">5 pages</span>
+          </div>
+          <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${showUrlDirectory ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showUrlDirectory && (
+          <div className="p-4 bg-white dark:bg-gray-800 space-y-4">
+            {(() => {
+              const BASE = 'https://sos-expat.com';
+              const LOCALE_MAP: Record<string, string> = {
+                fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de',
+                pt: 'pt-pt', ru: 'ru-ru', zh: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
+              };
+              const LANG_LABELS: Record<string, string> = {
+                fr: '🇫🇷 FR', en: '🇬🇧 EN', es: '🇪🇸 ES', de: '🇩🇪 DE',
+                pt: '🇵🇹 PT', ru: '🇷🇺 RU', zh: '🇨🇳 ZH', hi: '🇮🇳 HI', ar: '🇸🇦 AR',
+              };
+              const LANDING_PAGES = [
+                {
+                  name: 'Chatter',
+                  icon: '💬',
+                  color: 'amber',
+                  slugs: { fr: 'devenir-chatter', en: 'become-chatter', es: 'ser-chatter', de: 'chatter-werden', pt: 'tornar-se-chatter', ru: 'stat-chatterom', zh: 'chengwei-chatter', hi: 'chatter-bane', ar: 'كن-مسوقا' },
+                },
+                {
+                  name: 'Capitaine Chatter',
+                  icon: '👑',
+                  color: 'purple',
+                  slugs: { fr: 'devenir-capitaine', en: 'become-captain', es: 'ser-capitan', de: 'kapitaen-werden', pt: 'tornar-se-capitao', ru: 'stat-kapitanom', zh: 'chengwei-duizhang', hi: 'captain-bane', ar: 'كن-قائدا' },
+                },
+                {
+                  name: 'Influencer',
+                  icon: '📢',
+                  color: 'red',
+                  slugs: { fr: 'devenir-influenceur', en: 'become-influencer', es: 'ser-influencer', de: 'influencer-werden', pt: 'tornar-se-influencer', ru: 'stat-influenserom', zh: 'chengwei-influencer', hi: 'influencer-bane', ar: 'كن-مؤثرا' },
+                },
+                {
+                  name: 'Blogger',
+                  icon: '✍️',
+                  color: 'blue',
+                  slugs: { fr: 'devenir-blogger', en: 'become-blogger', es: 'ser-blogger', de: 'blogger-werden', pt: 'tornar-se-blogger', ru: 'stat-bloggerom', zh: 'chengwei-blogger', hi: 'blogger-bane', ar: 'كن-مدونا' },
+                },
+                {
+                  name: 'Admin Groupe',
+                  icon: '👥',
+                  color: 'green',
+                  slugs: { fr: 'devenir-admin-groupe', en: 'become-group-admin', es: 'ser-admin-grupo', de: 'gruppenadmin-werden', pt: 'tornar-se-admin-grupo', ru: 'stat-admin-gruppy', zh: 'chengwei-qunzhu', hi: 'group-admin-bane', ar: 'كن-مدير-مجموعة' },
+                },
+              ];
+
+              const handleCopy = (url: string) => {
+                navigator.clipboard.writeText(url);
+                setCopiedUrl(url);
+                setTimeout(() => setCopiedUrl(''), 2000);
+              };
+
+              return LANDING_PAGES.map((page) => (
+                <div key={page.name} className="border border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700/50">
+                    <span className="text-lg">{page.icon}</span>
+                    <span className="font-semibold text-sm text-gray-900 dark:text-white">{page.name}</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 p-2">
+                    {Object.entries(page.slugs).map(([lang, slug]) => {
+                      const url = `${BASE}/${LOCALE_MAP[lang]}/${slug}`;
+                      const isCopied = copiedUrl === url;
+                      return (
+                        <div
+                          key={lang}
+                          className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 group text-xs"
+                        >
+                          <span className="font-medium text-gray-500 dark:text-gray-400 w-12 flex-shrink-0">{LANG_LABELS[lang]}</span>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 dark:text-indigo-400 hover:underline truncate flex-1"
+                            title={url}
+                          >
+                            /{LOCALE_MAP[lang]}/{slug}
+                          </a>
+                          <button
+                            onClick={() => handleCopy(url)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 flex-shrink-0"
+                            title="Copier l'URL"
+                          >
+                            {isCopied ? (
+                              <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5 text-gray-400" />
+                            )}
+                          </button>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 flex-shrink-0"
+                            title="Ouvrir"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+        )}
       </div>
 
       {/* Stats bar */}

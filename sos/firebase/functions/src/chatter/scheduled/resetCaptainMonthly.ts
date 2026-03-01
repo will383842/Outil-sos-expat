@@ -68,7 +68,7 @@ function getBestTier(
 export const chatterResetCaptainMonthly = onSchedule(
   {
     schedule: "5 0 1 * *", // 1st of every month at 00:05 UTC
-    region: "europe-west3",
+    region: "us-central1",
     timeZone: "UTC",
     memory: "256MiB",
     cpu: 0.083,
@@ -147,6 +147,32 @@ export const chatterResetCaptainMonthly = onSchedule(
               bonus: bestTier.bonus,
               teamCalls,
             });
+
+            // Notify captain about tier bonus
+            await db.collection("chatter_notifications").add({
+              chatterId: captainId,
+              type: "captain_tier_bonus",
+              title: "Bonus palier Capitaine !",
+              titleTranslations: {
+                fr: "Bonus palier Capitaine !",
+                en: "Captain Tier Bonus!",
+                es: "Bono de nivel Capitán!",
+                de: "Kapitän Stufen-Bonus!",
+                pt: "Bónus de nível Capitão!",
+                ru: "Бонус уровня Капитана!",
+                ar: "مكافأة مستوى القبطان!",
+                zh: "队长等级奖金！",
+                hi: "कैप्टन टियर बोनस!",
+              },
+              message: `Palier ${bestTier.name} atteint avec ${teamCalls} appels — bonus de $${(bestTier.bonus / 100).toFixed(0)} !`,
+              messageTranslations: {
+                fr: `Palier ${bestTier.name} atteint avec ${teamCalls} appels — bonus de $${(bestTier.bonus / 100).toFixed(0)} !`,
+                en: `${bestTier.name} tier reached with ${teamCalls} calls — $${(bestTier.bonus / 100).toFixed(0)} bonus!`,
+              },
+              isRead: false,
+              createdAt: now,
+              data: { amount: bestTier.bonus },
+            });
           }
         }
 
@@ -208,6 +234,32 @@ export const chatterResetCaptainMonthly = onSchedule(
             qualityBonusesPaid++;
             logger.info("[resetCaptainMonthly] Quality bonus paid", {
               captainId, criteriaMet, adminOverride, activeN1Count, monthlyTeamCommissions,
+            });
+
+            // Notify captain about quality bonus
+            await db.collection("chatter_notifications").add({
+              chatterId: captainId,
+              type: "captain_quality_bonus",
+              title: "Bonus qualité Capitaine !",
+              titleTranslations: {
+                fr: "Bonus qualité Capitaine !",
+                en: "Captain Quality Bonus!",
+                es: "Bono de calidad Capitán!",
+                de: "Kapitän Qualitäts-Bonus!",
+                pt: "Bónus de qualidade Capitão!",
+                ru: "Бонус качества Капитана!",
+                ar: "مكافأة جودة القبطان!",
+                zh: "队长质量奖金！",
+                hi: "कैप्टन गुणवत्ता बोनस!",
+              },
+              message: `Bonus qualité de $${(qualityBonusAmount / 100).toFixed(0)} crédité — ${monthKey}`,
+              messageTranslations: {
+                fr: `Bonus qualité de $${(qualityBonusAmount / 100).toFixed(0)} crédité — ${monthKey}`,
+                en: `Quality bonus of $${(qualityBonusAmount / 100).toFixed(0)} credited — ${monthKey}`,
+              },
+              isRead: false,
+              createdAt: now,
+              data: { amount: qualityBonusAmount },
             });
           }
         }

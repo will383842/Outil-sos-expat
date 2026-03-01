@@ -76,6 +76,10 @@ interface CaptainDashboardData {
   monthlyCommissions: unknown[];
   recentCommissions: unknown[];
   archives: unknown[];
+  captainConfig?: {
+    commissionCaptainCallAmountLawyer: number;
+    commissionCaptainCallAmountExpat: number;
+  };
 }
 
 const CAPTAIN_TIER_ICONS: Record<string, React.ReactNode> = {
@@ -716,14 +720,14 @@ function ChatterHowToEarn() {
                   <CommissionRow
                     icon={<Crown className="h-4 w-4" />}
                     label={intl.formatMessage({ id: 'chatter.howToEarn.comm.captainCallLawyer', defaultMessage: 'Appel équipe (avocat)' })}
-                    amount="$3"
+                    amount={`$${((captainData?.captainConfig?.commissionCaptainCallAmountLawyer ?? 300) / 100).toFixed(0)}`}
                     detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.captainCallLawyerDesc', defaultMessage: 'par appel de votre équipe' })}
                     color="text-purple-600 dark:text-purple-400"
                   />
                   <CommissionRow
                     icon={<Crown className="h-4 w-4" />}
                     label={intl.formatMessage({ id: 'chatter.howToEarn.comm.captainCallExpat', defaultMessage: 'Appel équipe (expatrié)' })}
-                    amount="$2"
+                    amount={`$${((captainData?.captainConfig?.commissionCaptainCallAmountExpat ?? 200) / 100).toFixed(0)}`}
                     detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.captainCallExpatDesc', defaultMessage: 'par appel de votre équipe' })}
                     color="text-purple-600 dark:text-purple-400"
                   />
@@ -895,14 +899,14 @@ function ChatterHowToEarn() {
             <CommissionCard
               icon={<Phone className="h-5 w-5" />}
               label={intl.formatMessage({ id: 'chatter.howToEarn.captain.perCallLawyer', defaultMessage: 'Par appel avocat' })}
-              amount="$3"
+              amount={`$${((captainData?.captainConfig?.commissionCaptainCallAmountLawyer ?? 300) / 100).toFixed(0)}`}
               sublabel={intl.formatMessage({ id: 'chatter.howToEarn.captain.teamCall', defaultMessage: 'appel de votre équipe' })}
               color="text-orange-600 dark:text-orange-400"
             />
             <CommissionCard
               icon={<Phone className="h-5 w-5" />}
               label={intl.formatMessage({ id: 'chatter.howToEarn.captain.perCallExpat', defaultMessage: 'Par appel expatrié' })}
-              amount="$2"
+              amount={`$${((captainData?.captainConfig?.commissionCaptainCallAmountExpat ?? 200) / 100).toFixed(0)}`}
               sublabel={intl.formatMessage({ id: 'chatter.howToEarn.captain.teamCall', defaultMessage: 'appel de votre équipe' })}
               color="text-amber-600 dark:text-amber-400"
             />

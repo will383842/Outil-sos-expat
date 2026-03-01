@@ -509,7 +509,7 @@ const AdminChatterConfig: React.FC = () => {
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                value={formData.captainQualityBonusAmount ?? config?.captainQualityBonusAmount ?? 5000}
+                value={formData.captainQualityBonusAmount ?? config?.captainQualityBonusAmount ?? 10000}
                 onChange={(e) => handleChange('captainQualityBonusAmount', parseInt(e.target.value))}
                 className={UI.input}
                 min={0}
@@ -517,7 +517,7 @@ const AdminChatterConfig: React.FC = () => {
                 style={{ maxWidth: 200 }}
               />
               <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                = {formatCents(formData.captainQualityBonusAmount ?? config?.captainQualityBonusAmount ?? 5000)}
+                = {formatCents(formData.captainQualityBonusAmount ?? config?.captainQualityBonusAmount ?? 10000)}
               </span>
             </div>
           </div>

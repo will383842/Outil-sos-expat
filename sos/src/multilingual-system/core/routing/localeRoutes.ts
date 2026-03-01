@@ -359,7 +359,8 @@ export type RouteKey =
   | "group-community"         // /groupes-communaute -> /community-groups, etc.
   | "influencer-directory"   // /nos-influenceurs -> /our-influencers, etc.
   | "blogger-directory"   // /nos-blogueurs -> /our-bloggers, etc.
-  | "chatter-directory";  // /nos-chatters -> /our-chatters, etc.
+  | "chatter-directory"  // /nos-chatters -> /our-chatters, etc.
+  | "captain-landing";   // /devenir-capitaine -> /become-captain, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -1476,6 +1477,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ru: "nashi-chattery",
     hi: "hamare-chatters",
     ch: "women-de-chatters",
+  },
+  "captain-landing": {
+    fr: "devenir-capitaine",
+    en: "become-captain",
+    es: "ser-capitan",
+    de: "kapitaen-werden",
+    ru: "stat-kapitanom",
+    pt: "tornar-se-capitao",
+    ch: "chengwei-duizhang",
+    hi: "captain-bane",
+    ar: "كن-قائدا",
   },
   "groupadmin-register": {
     fr: "groupadmin/inscription",

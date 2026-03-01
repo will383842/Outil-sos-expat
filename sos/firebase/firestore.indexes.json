@@ -4819,6 +4819,20 @@
       ]
     },
     {
+      "collectionGroup": "chatters",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "recruitedBy",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "captain_monthly_archives",
       "queryScope": "COLLECTION",
       "fields": [

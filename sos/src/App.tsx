@@ -152,6 +152,7 @@ const MultiProviderDashboard = lazy(() => import('./pages/MultiProviderDashboard
 // Chatter System
 const ChatterLanding = lazy(() => import('./pages/Chatter/ChatterLanding'));
 const ChatterLandingOld = lazy(() => import('./pages/Chatter/ChatterLandingOld'));
+const CaptainLanding = lazy(() => import('./pages/Chatter/CaptainLanding'));
 const ChatterRegister = lazy(() => import('./pages/Chatter/ChatterRegister'));
 const ChatterTelegramOnboarding = lazy(() => import('./pages/Chatter/ChatterTelegramOnboarding'));
 const ChatterDashboard = lazy(() => import('./pages/Chatter/ChatterDashboard'));
@@ -322,6 +323,9 @@ const routeConfigs: RouteConfig[] = [
   { path: "/devenir-chatter", component: ChatterLanding, translated: "chatter-landing" },
   // Ancienne version (backup)
   { path: "/devenir-chatter-old", component: ChatterLandingOld },
+
+  // Captain Landing Page (public)
+  { path: "/devenir-capitaine", component: CaptainLanding, translated: "captain-landing" },
 
   // Influencer Landing Page (public)
   { path: "/devenir-influenceur", component: InfluencerLanding, translated: "influencer-landing" },

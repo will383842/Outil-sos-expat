@@ -54,4 +54,7 @@ export {
   adminGetCaptainsList,
   adminGetCaptainDetail,
   adminExportCaptainCSV,
+  adminAssignCaptainCoverage,
+  adminTransferChatters,
+  adminGetCaptainCoverageMap,
 } from "./admin/captain";

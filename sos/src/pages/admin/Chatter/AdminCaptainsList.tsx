@@ -4,7 +4,7 @@
  * Features: Country filter, search, tier display, quality bonus toggle, CSV export
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
@@ -15,6 +15,8 @@ import {
   Search,
   Filter,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Loader2,
   RefreshCw,
   Download,
@@ -129,7 +131,7 @@ interface Captain {
   n1Count: number;
   n2Count: number;
   monthlyTeamCalls: number;
-  totalTeamEarnings: number;
+  totalEarnings: number;
   qualityBonusEnabled: boolean;
   createdAt: string;
   promotedAt?: string;
@@ -181,6 +183,35 @@ const AdminCaptainsList: React.FC = () => {
   const [stats, setStats] = useState<CaptainsListResponse['stats']>();
   const [qualityBonusLoading, setQualityBonusLoading] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+
+  // Column sorting (client-side on current page)
+  type SortField = 'n1Count' | 'n2Count' | 'monthlyTeamCalls' | 'totalEarnings' | 'name';
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(prev => prev === 'desc' ? 'asc' : 'desc');
+    } else {
+      setSortField(field);
+      setSortDir('desc');
+    }
+  };
+
+  const sortedCaptains = useMemo(() => {
+    if (!sortField) return captains;
+    return [...captains].sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case 'name': cmp = `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`); break;
+        case 'n1Count': cmp = a.n1Count - b.n1Count; break;
+        case 'n2Count': cmp = a.n2Count - b.n2Count; break;
+        case 'monthlyTeamCalls': cmp = a.monthlyTeamCalls - b.monthlyTeamCalls; break;
+        case 'totalEarnings': cmp = a.totalEarnings - b.totalEarnings; break;
+      }
+      return sortDir === 'desc' ? -cmp : cmp;
+    });
+  }, [captains, sortField, sortDir]);
 
   const limit = 20;
 
@@ -326,6 +357,15 @@ const AdminCaptainsList: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => navigate('/admin/chatters/captains/coverage')}
+              className={`${UI.button.secondary} px-3 py-2 flex items-center gap-2 text-sm`}
+            >
+              <Globe className="w-4 h-4" />
+              <span className="hidden sm:inline">
+                <FormattedMessage id="admin.captains.coverageMap" defaultMessage="Couverture" />
+              </span>
+            </button>
             <button
               onClick={handleExport}
               disabled={exporting}
@@ -528,20 +568,44 @@ const AdminCaptainsList: React.FC = () => {
                   <table className="w-full">
                     <thead className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10">
                       <tr>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          <FormattedMessage id="admin.captains.col.captain" defaultMessage="Capitaine" />
+                        <th
+                          className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                          onClick={() => handleSort('name')}
+                        >
+                          <span className="inline-flex items-center gap-1">
+                            <FormattedMessage id="admin.captains.col.captain" defaultMessage="Capitaine" />
+                            {sortField === 'name' && (sortDir === 'desc' ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                          </span>
                         </th>
                         <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">
                           <FormattedMessage id="admin.captains.col.country" defaultMessage="Pays" />
                         </th>
-                        <th className="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          <FormattedMessage id="admin.captains.col.n1" defaultMessage="N1" />
+                        <th
+                          className="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                          onClick={() => handleSort('n1Count')}
+                        >
+                          <span className="inline-flex items-center gap-1 justify-center">
+                            <FormattedMessage id="admin.captains.col.n1" defaultMessage="N1" />
+                            {sortField === 'n1Count' && (sortDir === 'desc' ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                          </span>
                         </th>
-                        <th className="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
-                          <FormattedMessage id="admin.captains.col.n2" defaultMessage="N2" />
+                        <th
+                          className="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                          onClick={() => handleSort('n2Count')}
+                        >
+                          <span className="inline-flex items-center gap-1 justify-center">
+                            <FormattedMessage id="admin.captains.col.n2" defaultMessage="N2" />
+                            {sortField === 'n2Count' && (sortDir === 'desc' ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                          </span>
                         </th>
-                        <th className="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
-                          <FormattedMessage id="admin.captains.col.teamCalls" defaultMessage="Appels equipe/mois" />
+                        <th
+                          className="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                          onClick={() => handleSort('monthlyTeamCalls')}
+                        >
+                          <span className="inline-flex items-center gap-1 justify-center">
+                            <FormattedMessage id="admin.captains.col.teamCalls" defaultMessage="Appels equipe/mois" />
+                            {sortField === 'monthlyTeamCalls' && (sortDir === 'desc' ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                          </span>
                         </th>
                         <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           <FormattedMessage id="admin.captains.col.tier" defaultMessage="Tier" />
@@ -549,8 +613,14 @@ const AdminCaptainsList: React.FC = () => {
                         <th className="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                           <FormattedMessage id="admin.captains.col.qualityBonus" defaultMessage="Bonus Q." />
                         </th>
-                        <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          <FormattedMessage id="admin.captains.col.earnings" defaultMessage="Gains equipe" />
+                        <th
+                          className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                          onClick={() => handleSort('totalEarnings')}
+                        >
+                          <span className="inline-flex items-center gap-1 justify-end">
+                            <FormattedMessage id="admin.captains.col.earnings" defaultMessage="Total gagné" />
+                            {sortField === 'totalEarnings' && (sortDir === 'desc' ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                          </span>
                         </th>
                         <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-10">
                           {/* Action column */}
@@ -558,7 +628,7 @@ const AdminCaptainsList: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                      {captains.map((captain) => {
+                      {sortedCaptains.map((captain) => {
                         const tierInfo = getTierInfo(captain.tier);
                         return (
                           <tr
@@ -654,7 +724,7 @@ const AdminCaptainsList: React.FC = () => {
                             {/* Team Earnings */}
                             <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                               <span className="font-medium text-green-600 dark:text-green-400 text-sm">
-                                {formatAmount(captain.totalTeamEarnings)}
+                                {formatAmount(captain.totalEarnings)}
                               </span>
                             </td>
 

@@ -37,9 +37,13 @@ import {
   User,
   Calendar,
   ArrowRight,
+  ArrowUpDown,
+  Search,
   CheckCircle2,
   XCircle,
   Sparkles,
+  MapPin,
+  Languages,
 } from 'lucide-react';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 
@@ -114,6 +118,8 @@ interface CaptainDashboardData {
     captainPromotedAt: string | { _seconds: number; _nanoseconds: number } | null;
     captainMonthlyTeamCalls: number;
     captainQualityBonusEnabled: boolean;
+    assignedCountries?: string[];
+    assignedLanguages?: string[];
   };
   qualityBonusStatus?: QualityBonusStatus;
   tierProgression: {
@@ -313,6 +319,11 @@ function ChatterCaptainDashboard() {
   const [showCommissions, setShowCommissions] = useState(true);
   const [showArchives, setShowArchives] = useState(false);
 
+  // Recruit search & sort
+  const [recruitSearch, setRecruitSearch] = useState('');
+  type SortKey = 'name' | 'calls' | 'earned' | 'date';
+  const [recruitSort, setRecruitSort] = useState<SortKey>('calls');
+
   // --------------------------------------------------
   // Fetch data
   // --------------------------------------------------
@@ -362,6 +373,35 @@ function ChatterCaptainDashboard() {
 
   // All tiers for the progression visual
   const allTiers = useMemo(() => data?.tiers ?? [], [data]);
+
+  // Filtered + sorted recruits
+  const filterAndSortRecruits = useCallback((recruits: Recruit[]) => {
+    let list = recruits;
+    if (recruitSearch.trim()) {
+      const q = recruitSearch.toLowerCase();
+      list = list.filter(r =>
+        r.firstName?.toLowerCase().includes(q) ||
+        r.lastName?.toLowerCase().includes(q) ||
+        r.country?.toLowerCase().includes(q)
+      );
+    }
+    return [...list].sort((a, b) => {
+      switch (recruitSort) {
+        case 'name': return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+        case 'calls': return b.totalCallCount - a.totalCallCount;
+        case 'earned': return b.totalEarned - a.totalEarned;
+        case 'date': {
+          const da = parseTimestamp(a.createdAt)?.getTime() ?? 0;
+          const db = parseTimestamp(b.createdAt)?.getTime() ?? 0;
+          return db - da;
+        }
+        default: return 0;
+      }
+    });
+  }, [recruitSearch, recruitSort]);
+
+  const filteredN1 = useMemo(() => data ? filterAndSortRecruits(data.n1Recruits) : [], [data, filterAndSortRecruits]);
+  const filteredN2 = useMemo(() => data ? filterAndSortRecruits(data.n2Recruits) : [], [data, filterAndSortRecruits]);
 
   // Monthly commissions total
   const monthlyCommissionsTotal = useMemo(() => {
@@ -605,6 +645,52 @@ function ChatterCaptainDashboard() {
       </div>
 
       {/* ============================================================== */}
+      {/* COVERAGE (assigned countries & languages) */}
+      {/* ============================================================== */}
+      {((data.captainInfo.assignedCountries?.length ?? 0) > 0 || (data.captainInfo.assignedLanguages?.length ?? 0) > 0) && (
+        <div className={`${UI.card} p-5 sm:p-6`}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              <FormattedMessage id="chatter.captain.coverage.title" defaultMessage="Votre couverture" />
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(data.captainInfo.assignedCountries?.length ?? 0) > 0 && (
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <FormattedMessage id="chatter.captain.coverage.countries" defaultMessage="Pays assignes" />
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {data.captainInfo.assignedCountries!.map(cc => (
+                    <span key={cc} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs font-medium">
+                      {String.fromCodePoint(...cc.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0)))} {cc}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(data.captainInfo.assignedLanguages?.length ?? 0) > 0 && (
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <FormattedMessage id="chatter.captain.coverage.languages" defaultMessage="Langues" />
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {data.captainInfo.assignedLanguages!.map(lang => (
+                    <span key={lang} className="inline-flex items-center px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 text-xs font-medium">
+                      {lang.toUpperCase()}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
       {/* QUALITY BONUS STATUS */}
       {/* ============================================================== */}
       {data.qualityBonusStatus && (
@@ -709,6 +795,43 @@ function ChatterCaptainDashboard() {
       )}
 
       {/* ============================================================== */}
+      {/* RECRUIT SEARCH & SORT */}
+      {/* ============================================================== */}
+      {(data.n1Recruits.length > 0 || data.n2Recruits.length > 0) && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={recruitSearch}
+              onChange={(e) => setRecruitSearch(e.target.value)}
+              placeholder={intl.formatMessage({ id: 'chatter.captain.searchRecruits', defaultMessage: 'Rechercher une recrue...' })}
+              className="w-full pl-9 pr-3 py-2 text-sm bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <ArrowUpDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
+            {(['calls', 'earned', 'name', 'date'] as SortKey[]).map((key) => (
+              <button
+                key={key}
+                onClick={() => setRecruitSort(key)}
+                className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                  recruitSort === key
+                    ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                    : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                }`}
+              >
+                {key === 'calls' ? intl.formatMessage({ id: 'chatter.captain.sort.calls', defaultMessage: 'Appels' })
+                  : key === 'earned' ? intl.formatMessage({ id: 'chatter.captain.sort.earned', defaultMessage: 'Gains' })
+                  : key === 'name' ? intl.formatMessage({ id: 'chatter.captain.sort.name', defaultMessage: 'Nom' })
+                  : intl.formatMessage({ id: 'chatter.captain.sort.date', defaultMessage: 'Date' })}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
       {/* N1 RECRUITS */}
       {/* ============================================================== */}
       <div className={UI.card}>
@@ -730,6 +853,11 @@ function ChatterCaptainDashboard() {
                   defaultMessage="{count} chatters recrutes"
                   values={{ count: data.n1Recruits.length }}
                 />
+                {recruitSearch && filteredN1.length !== data.n1Recruits.length && (
+                  <span className="ml-1 text-red-500">
+                    ({filteredN1.length} <FormattedMessage id="chatter.captain.filtered" defaultMessage="filtrés" />)
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -738,12 +866,16 @@ function ChatterCaptainDashboard() {
 
         {showN1 && (
           <div className="px-4 sm:px-5 pb-5 space-y-1">
-            {data.n1Recruits.length === 0 ? (
+            {filteredN1.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">
-                <FormattedMessage id="chatter.captain.noRecruits" defaultMessage="Aucune recrue pour le moment." />
+                {recruitSearch ? (
+                  <FormattedMessage id="chatter.captain.noResults" defaultMessage="Aucun résultat." />
+                ) : (
+                  <FormattedMessage id="chatter.captain.noRecruits" defaultMessage="Aucune recrue pour le moment." />
+                )}
               </p>
             ) : (
-              data.n1Recruits.map((recruit) => (
+              filteredN1.map((recruit) => (
                 <RecruitRow key={recruit.id} recruit={recruit} locale={locale} />
               ))
             )}
@@ -773,6 +905,11 @@ function ChatterCaptainDashboard() {
                   defaultMessage="{count} chatters via vos N1"
                   values={{ count: data.n2Recruits.length }}
                 />
+                {recruitSearch && filteredN2.length !== data.n2Recruits.length && (
+                  <span className="ml-1 text-red-500">
+                    ({filteredN2.length} <FormattedMessage id="chatter.captain.filtered" defaultMessage="filtrés" />)
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -781,12 +918,16 @@ function ChatterCaptainDashboard() {
 
         {showN2 && (
           <div className="px-4 sm:px-5 pb-5 space-y-1">
-            {data.n2Recruits.length === 0 ? (
+            {filteredN2.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">
-                <FormattedMessage id="chatter.captain.noRecruits" defaultMessage="Aucune recrue pour le moment." />
+                {recruitSearch ? (
+                  <FormattedMessage id="chatter.captain.noResults" defaultMessage="Aucun résultat." />
+                ) : (
+                  <FormattedMessage id="chatter.captain.noRecruits" defaultMessage="Aucune recrue pour le moment." />
+                )}
               </p>
             ) : (
-              data.n2Recruits.map((recruit) => (
+              filteredN2.map((recruit) => (
                 <RecruitRow key={recruit.id} recruit={recruit} locale={locale} />
               ))
             )}

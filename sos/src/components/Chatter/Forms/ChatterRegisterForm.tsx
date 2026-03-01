@@ -194,7 +194,9 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   const [languageSearch, setLanguageSearch] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [showWaDropdown, setShowWaDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
+  const [waSearch, setWaSearch] = useState('');
   const [antiBotError, setAntiBotError] = useState<string | null>(null);
   const [focusedDropdownIndex, setFocusedDropdownIndex] = useState(-1); // Keyboard navigation
 
@@ -202,8 +204,10 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
 
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
+  const waDropdownRef = useRef<HTMLDivElement>(null);
   const countryListRef = useRef<HTMLDivElement>(null);
   const languageListRef = useRef<HTMLDivElement>(null);
+  const waListRef = useRef<HTMLDivElement>(null);
   const errorAnnouncerRef = useRef<HTMLDivElement>(null); // ARIA live region
 
   // Close dropdowns on outside click
@@ -216,6 +220,10 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       if (languageDropdownRef.current && !languageDropdownRef.current.contains(e.target as Node)) {
         setShowLanguageDropdown(false);
         setLanguageSearch('');
+      }
+      if (waDropdownRef.current && !waDropdownRef.current.contains(e.target as Node)) {
+        setShowWaDropdown(false);
+        setWaSearch('');
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -232,6 +240,24 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       entry.code.toLowerCase().includes(search)
     );
   }, [countrySearch, locale]);
+
+  // Filter WhatsApp country codes based on search
+  const filteredWaCountries = useMemo(() => {
+    if (!waSearch) return phoneCodesData;
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const search = strip(waSearch);
+    return phoneCodesData.filter(entry =>
+      strip(getCountryName(entry, locale)).includes(search) ||
+      entry.phoneCode.includes(search) ||
+      entry.code.toLowerCase().includes(search)
+    );
+  }, [waSearch, locale]);
+
+  // Get selected WhatsApp country entry
+  const selectedWaEntry = useMemo(() =>
+    phoneCodesData.find(e => e.phoneCode === formData.whatsappCountryCode),
+    [formData.whatsappCountryCode]
+  );
 
   // Filter languages based on search (accent-insensitive)
   const filteredLanguages = useMemo(() => {
@@ -433,7 +459,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   // Reset focused index when dropdown opens/closes
   useEffect(() => {
     setFocusedDropdownIndex(-1);
-  }, [showCountryDropdown, showLanguageDropdown]);
+  }, [showCountryDropdown, showLanguageDropdown, showWaDropdown]);
 
   // Password strength calculation
   const passwordStrength = useMemo(
@@ -861,32 +887,79 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           <span className={`font-bold text-lg ml-0.5 ${darkMode ? 'text-amber-400' : 'text-red-500'}`}>*</span>
         </label>
         <div className="flex gap-2">
-          {/* Country code selector */}
-          <div className="relative w-[130px] flex-shrink-0">
-            <select
-              id="whatsappCountryCode"
-              value={formData.whatsappCountryCode || ''}
-              onChange={(e) => {
-                setFormData(prev => ({ ...prev, whatsappCountryCode: e.target.value }));
-                if (validationErrors.whatsappCountryCode) {
-                  setValidationErrors(prev => {
-                    const newErrors = { ...prev };
-                    delete newErrors.whatsappCountryCode;
-                    return newErrors;
-                  });
-                }
-              }}
-              className={`${s.input} pl-3 pr-1 text-sm appearance-none cursor-pointer ${validationErrors.whatsappCountryCode ? s.inputError : s.inputDefault}`}
+          {/* Country code selector - custom dropdown */}
+          <div ref={waDropdownRef} className="relative w-[130px] flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowWaDropdown(v => !v)}
+              className={`${s.input} pl-3 pr-8 text-sm text-left flex items-center gap-1.5 ${validationErrors.whatsappCountryCode ? s.inputError : s.inputDefault}`}
+              aria-haspopup="listbox"
+              aria-expanded={showWaDropdown}
               aria-label={intl.formatMessage({ id: 'form.whatsapp.countryCode', defaultMessage: 'Country code' })}
             >
-              <option value="">+--</option>
-              {phoneCodesData.map(entry => (
-                <option key={`wa-${entry.code}`} value={entry.phoneCode}>
-                  {getFlag(entry.code)} {entry.phoneCode}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+              {selectedWaEntry ? (
+                <>
+                  <span className="text-base leading-none">{getFlag(selectedWaEntry.code)}</span>
+                  <span className="font-medium">{selectedWaEntry.phoneCode}</span>
+                </>
+              ) : (
+                <span className="text-gray-500">+--</span>
+              )}
+            </button>
+            <ChevronDown className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none transition-transform duration-200 ${showWaDropdown ? 'rotate-180' : ''}`} />
+
+            {showWaDropdown && (
+              <div className={`${s.dropdown} w-64`} role="listbox" aria-label={intl.formatMessage({ id: 'form.whatsapp.countryCode', defaultMessage: 'Country code' })}>
+                <div className={`p-2 border-b ${darkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={waSearch}
+                      onChange={(e) => setWaSearch(e.target.value)}
+                      placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search country...' })}
+                      className={s.dropdownSearch}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div ref={waListRef} className="max-h-[240px] overflow-y-auto overscroll-contain">
+                  {filteredWaCountries.map(entry => (
+                    <button
+                      key={`wa-dd-${entry.code}`}
+                      type="button"
+                      role="option"
+                      aria-selected={entry.phoneCode === formData.whatsappCountryCode}
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, whatsappCountryCode: entry.phoneCode }));
+                        if (validationErrors.whatsappCountryCode) {
+                          setValidationErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors.whatsappCountryCode;
+                            return newErrors;
+                          });
+                        }
+                        setShowWaDropdown(false);
+                        setWaSearch('');
+                      }}
+                      className={`${s.dropdownItem} ${entry.phoneCode === formData.whatsappCountryCode ? selectedBg : ''}`}
+                    >
+                      <span className="text-xl">{getFlag(entry.code)}</span>
+                      <span className="flex-1 text-sm">{getCountryName(entry, locale)}</span>
+                      <span className={`text-sm font-mono ${darkMode ? 'text-amber-400' : 'text-gray-500'}`}>{entry.phoneCode}</span>
+                      {entry.phoneCode === formData.whatsappCountryCode && (
+                        <Check className={`w-4 h-4 ${checkColor}`} />
+                      )}
+                    </button>
+                  ))}
+                  {filteredWaCountries.length === 0 && (
+                    <p className="text-center text-sm text-gray-500 py-4">
+                      {intl.formatMessage({ id: 'form.search.noResults', defaultMessage: 'No results' })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           {/* Phone number input */}
           <div className="relative flex-1">

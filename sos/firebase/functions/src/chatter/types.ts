@@ -412,6 +412,10 @@ export interface Chatter {
   captainCurrentTier?: string;
   /** Admin override: force quality bonus even if criteria not met */
   captainQualityBonusEnabled?: boolean;
+  /** Countries assigned to this captain (ISO 3166-1 alpha-2 codes) */
+  captainAssignedCountries?: string[];
+  /** Languages assigned to this captain (ISO 639-1 codes) */
+  captainAssignedLanguages?: string[];
 
   // ---- Telegram Integration ----
 

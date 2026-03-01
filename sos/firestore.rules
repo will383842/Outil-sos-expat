@@ -1993,7 +1993,11 @@ service cloud.firestore {
                                    'totalCommissions', 'commissionsByType',
                                    'currentStreak', 'bestStreak', 'badges',
                                    'currentMonthRank', 'bestRank', 'quizPassedAt',
-                                   'recruitedBy', 'recruitedByCode', 'recruitedAt']))
+                                   'recruitedBy', 'recruitedByCode', 'recruitedAt',
+                                   'role', 'captainPromotedAt', 'captainPromotedBy',
+                                   'captainMonthlyTeamCalls', 'captainCurrentTier',
+                                   'captainQualityBonusEnabled',
+                                   'captainAssignedCountries', 'captainAssignedLanguages']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
 

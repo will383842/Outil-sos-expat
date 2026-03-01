@@ -4,9 +4,6 @@ export * from './Layout';
 // Card components
 export * from './Cards';
 
-// Quiz components
-export * from './Quiz';
-
 // Form components
 export * from './Forms';
 
