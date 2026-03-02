@@ -292,7 +292,7 @@ const CaptainLanding: React.FC = () => {
   const faqItems = useMemo(() => [
     {
       q: intl.formatMessage({ id: 'captain.faq.q1', defaultMessage: "Comment on devient Capitaine ?" }),
-      a: intl.formatMessage({ id: 'captain.faq.a1', defaultMessage: "Postulez ici, on vous contacte pour un echange. Vous commencez comme chatter pour comprendre le terrain, puis on vous confie une equipe selon vos resultats." }),
+      a: intl.formatMessage({ id: 'captain.faq.a1', defaultMessage: "Postulez ici, on vous contacte pour un echange. Apres un entretien, on vous confie directement une equipe a recruter et animer. Pas besoin d'etre chatter au prealable." }),
     },
     {
       q: intl.formatMessage({ id: 'captain.faq.q2', defaultMessage: "C'est quoi concretement le role ?" }),
@@ -364,22 +364,32 @@ const CaptainLanding: React.FC = () => {
               <FormattedMessage id="captain.landing.hero.desc" defaultMessage="On cherche des leaders pour construire et animer des equipes de chatters dans le monde entier. Un vrai poste, evolutif, au sein d'une startup en pleine croissance." />
             </p>
 
+            {/* Hero number */}
+            <div className="mb-6 sm:mb-8">
+              <div className="text-5xl sm:text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-green-400 mb-1">
+                1 500$+<span className="text-3xl sm:text-4xl"><FormattedMessage id="captain.landing.hero.permonth" defaultMessage="/mois" /></span>
+              </div>
+              {localBlock(1500) && (
+                <p className="text-lg sm:text-xl text-amber-300/70">{localBlock(1500)}<FormattedMessage id="captain.landing.hero.permonth" defaultMessage="/mois" /></p>
+              )}
+            </div>
+
             {/* 3 key facts */}
             <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8 max-w-2xl mx-auto">
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <DollarSign className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-                <p className="text-xs sm:text-sm font-bold text-white"><FormattedMessage id="captain.landing.hero.fact1" defaultMessage="Revenus attractifs" /></p>
-                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact1b" defaultMessage="$ + {currency}" values={{ currency: countryConfig.currency.symbol }} /></p>
+                <p className="text-xs sm:text-sm font-black text-amber-400"><FormattedMessage id="captain.landing.hero.fact1" defaultMessage="2-3$/appel" /></p>
+                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact1b" defaultMessage="par call equipe" /></p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <TrendingUp className="w-5 h-5 text-green-400 mx-auto mb-1" />
-                <p className="text-xs sm:text-sm font-bold text-white"><FormattedMessage id="captain.landing.hero.fact2" defaultMessage="Poste evolutif" /></p>
-                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact2b" defaultMessage="Grandissez avec nous" /></p>
+                <p className="text-xs sm:text-sm font-black text-green-400"><FormattedMessage id="captain.landing.hero.fact2" defaultMessage="400$/mois" /></p>
+                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact2b" defaultMessage="bonus palier max" /></p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <Crown className="w-5 h-5 text-purple-400 mx-auto mb-1" />
-                <p className="text-xs sm:text-sm font-bold text-white"><FormattedMessage id="captain.landing.hero.fact3" defaultMessage="Contact CEO" /></p>
-                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact3b" defaultMessage="Direct, sans filtre" /></p>
+                <p className="text-xs sm:text-sm font-black text-purple-400"><FormattedMessage id="captain.landing.hero.fact3" defaultMessage="+100$/mois" /></p>
+                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact3b" defaultMessage="bonus qualite" /></p>
               </div>
             </div>
 
@@ -400,10 +410,10 @@ const CaptainLanding: React.FC = () => {
         ================================================================ */}
         <section className="section-content bg-black" aria-labelledby="captain-profile-title">
           <div className="max-w-4xl mx-auto">
-            <h2 id="captain-profile-title" className="!text-3xl sm:!text-4xl font-black text-center mb-2">
+            <h2 id="captain-profile-title" className="!text-4xl sm:!text-5xl font-black text-center mb-2">
               <FormattedMessage id="captain.landing.profile.title" defaultMessage="Qui on recherche" />
             </h2>
-            <p className="text-sm sm:text-base text-white/60 text-center mb-8">
+            <p className="text-base sm:text-lg text-white/60 text-center mb-8">
               <FormattedMessage id="captain.landing.profile.sub" defaultMessage="Pas besoin de diplome. On cherche un etat d'esprit." />
             </p>
 
@@ -451,10 +461,10 @@ const CaptainLanding: React.FC = () => {
         ================================================================ */}
         <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="captain-role-title">
           <div className="max-w-4xl mx-auto">
-            <h2 id="captain-role-title" className="!text-3xl sm:!text-4xl font-black text-center mb-2">
+            <h2 id="captain-role-title" className="!text-4xl sm:!text-5xl font-black text-center mb-2">
               <FormattedMessage id="captain.landing.role.title" defaultMessage="Le role de Capitaine" />
             </h2>
-            <p className="text-sm sm:text-base text-white/60 text-center mb-8">
+            <p className="text-base sm:text-lg text-white/60 text-center mb-8">
               <FormattedMessage id="captain.landing.role.sub" defaultMessage="Vous etes un leader d'equipe, pas un freelance isole." />
             </p>
 
@@ -481,7 +491,7 @@ const CaptainLanding: React.FC = () => {
         ================================================================ */}
         <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="captain-rev-title">
           <div className="max-w-5xl mx-auto">
-            <h2 id="captain-rev-title" className="!text-3xl sm:!text-4xl font-black text-center mb-2">
+            <h2 id="captain-rev-title" className="!text-4xl sm:!text-5xl font-black text-center mb-2">
               <FormattedMessage id="captain.landing.rev.title" defaultMessage="Vos revenus" />
             </h2>
             <p className="text-sm text-white/60 text-center mb-8">
@@ -638,7 +648,7 @@ const CaptainLanding: React.FC = () => {
         ================================================================ */}
         <section className="section-content bg-gradient-to-b from-black via-green-950/20 to-gray-950" aria-labelledby="captain-calc-title">
           <div className="max-w-5xl mx-auto">
-            <h2 id="captain-calc-title" className="!text-3xl sm:!text-4xl font-black text-center mb-2">
+            <h2 id="captain-calc-title" className="!text-4xl sm:!text-5xl font-black text-center mb-2">
               <FormattedMessage id="captain.landing.calc.title" defaultMessage="Estimez vos revenus" />
             </h2>
             <p className="text-sm text-white/50 text-center mb-8"><FormattedMessage id="captain.landing.calc.sub" defaultMessage="Deplacez les curseurs pour simuler" /></p>
@@ -723,10 +733,10 @@ const CaptainLanding: React.FC = () => {
                   <FormattedMessage id="captain.landing.form.ok.title" defaultMessage="Candidature recue !" />
                 </h3>
                 <p className="text-sm text-white/70 mb-4">
-                  <FormattedMessage id="captain.landing.form.ok.desc" defaultMessage="On revient vers vous tres vite sur WhatsApp. En attendant, vous pouvez deja creer votre compte chatter pour decouvrir la plateforme." />
+                  <FormattedMessage id="captain.landing.form.ok.desc" defaultMessage="On revient vers vous tres vite sur WhatsApp pour organiser un echange. Impatients de vous rencontrer !" />
                 </p>
-                <CTAButton onClick={() => navigate(registerRoute)} className="mx-auto">
-                  <FormattedMessage id="captain.landing.form.ok.cta" defaultMessage="Creer mon compte" />
+                <CTAButton onClick={() => navigate('/')} className="mx-auto">
+                  <FormattedMessage id="captain.landing.form.ok.cta" defaultMessage="Decouvrir SOS-Expat" />
                 </CTAButton>
               </div>
             ) : (
@@ -859,7 +869,7 @@ const CaptainLanding: React.FC = () => {
         ================================================================ */}
         <section className="section-content bg-black" id="faq" aria-labelledby="captain-faq-title">
           <div className="max-w-3xl mx-auto">
-            <h2 id="captain-faq-title" className="!text-3xl sm:!text-4xl font-black text-center mb-6">
+            <h2 id="captain-faq-title" className="!text-4xl sm:!text-5xl font-black text-center mb-6">
               <FormattedMessage id="captain.faq.title" defaultMessage="Questions frequentes" />
             </h2>
             <div className="space-y-3">
@@ -877,7 +887,7 @@ const CaptainLanding: React.FC = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,191,36,0.06),transparent_50%)]" aria-hidden="true" />
           <div className="relative z-10 max-w-3xl mx-auto text-center">
             <Rocket className="w-12 h-12 sm:w-16 sm:h-16 text-amber-400 mx-auto mb-4" />
-            <h2 id="captain-cta-final" className="!text-2xl sm:!text-4xl lg:!text-5xl font-black text-white mb-3 sm:mb-5">
+            <h2 id="captain-cta-final" className="!text-3xl sm:!text-5xl lg:!text-6xl font-black text-white mb-3 sm:mb-5">
               <FormattedMessage id="captain.landing.cta.title" defaultMessage="L'aventure commence ici." />
             </h2>
             <p className="text-sm sm:text-base text-white/60 mb-6 max-w-xl mx-auto">
