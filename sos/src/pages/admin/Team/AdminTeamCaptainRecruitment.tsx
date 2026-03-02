@@ -219,7 +219,13 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                           className="text-green-600 hover:text-green-800 underline">{app.whatsapp}</a>
                       </td>
                       <td className="px-4 py-3 text-gray-600">{app.country}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(app.createdAt)}</td>
+                      <td className="px-4 py-3 text-gray-500 text-xs">
+                        <div>{formatDate(app.createdAt)}</div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {app.language && <span className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-medium text-gray-500 uppercase">{app.language}</span>}
+                          {app.source && <span className="px-1.5 py-0.5 bg-blue-50 rounded text-[10px] font-medium text-blue-500">{app.source}</span>}
+                        </div>
+                      </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[app.status]?.bg} ${STATUS_STYLES[app.status]?.text}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${STATUS_STYLES[app.status]?.dot}`} />
@@ -319,6 +325,7 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                         </span>
                         <span className="flex items-center gap-1"><Globe className="w-3 h-3" /> {app.country}</span>
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(app.createdAt)}</span>
+                        {app.language && <span className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-medium text-gray-500 uppercase">{app.language}</span>}
                       </div>
                     </div>
                   </div>

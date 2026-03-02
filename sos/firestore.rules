@@ -3143,9 +3143,15 @@ service cloud.firestore {
     match /captain_applications/{applicationId} {
       // Create: anyone can submit a captain application (landing page, no auth)
       allow create: if request.resource.data.keys().hasAll(['name', 'whatsapp', 'country', 'status'])
+                    && request.resource.data.keys().hasOnly(['name', 'whatsapp', 'country', 'status', 'motivation', 'cvUrl', 'photoUrl', 'source', 'language', 'createdAt'])
                     && request.resource.data.status == 'pending';
       // Read, update, delete: admin only
       allow read, update, delete: if isAdmin();
+    }
+
+    match /ssr_cache/{docId} {
+      allow read: if true;   // Cache public pour les bots
+      allow write: if false; // Cloud Functions Admin SDK uniquement
     }
 
     // ================= CATCH-ALL (deny by default) =================

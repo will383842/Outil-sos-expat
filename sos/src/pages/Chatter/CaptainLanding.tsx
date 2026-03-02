@@ -106,7 +106,7 @@ const FAQItem: React.FC<{
   onToggle: () => void;
   index: number;
 }> = ({ question, answer, isOpen, onToggle, index }) => (
-  <div className="border rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20">
+  <div className="border border-white/10 rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20">
     <button type="button" onClick={onToggle} className="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-4 sm:py-5 text-left min-h-[48px]" aria-expanded={isOpen} aria-controls={`faq-captain-answer-${index}`} id={`faq-captain-question-${index}`}>
       <span className="text-base sm:text-lg font-semibold pr-2">{question}</span>
       <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
@@ -121,7 +121,7 @@ const FAQItem: React.FC<{
 
 const ScrollIndicator: React.FC<{ label: string }> = ({ label }) => (
   <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2" aria-hidden="true">
-    <span className="text-white/80 sm:text-sm font-medium">{label}</span>
+    <span className="text-xs sm:text-sm text-white/80 font-medium">{label}</span>
     <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-white/80 animate-bounce" />
   </div>
 );
@@ -130,11 +130,11 @@ const ScrollIndicator: React.FC<{ label: string }> = ({ label }) => (
 // TIER DATA
 // ============================================================================
 const TIERS = [
-  { name: 'Bronze', calls: 20, bonus: 25, color: 'from-orange-700/30 to-orange-600/10', border: 'border-orange-600/30', text: 'text-orange-400', icon: '🥉' },
-  { name: 'Argent', calls: 50, bonus: 50, color: 'from-gray-400/20 to-gray-300/10', border: 'border-gray-400/30', text: 'text-gray-300', icon: '🥈' },
-  { name: 'Or', calls: 100, bonus: 100, color: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/30', text: 'text-amber-400', icon: '🥇' },
-  { name: 'Platine', calls: 200, bonus: 200, color: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400', icon: '💎' },
-  { name: 'Diamant', calls: 400, bonus: 400, color: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/30', text: 'text-purple-400', icon: '👑' },
+  { nameKey: 'captain.landing.tier.bronze', nameDefault: 'Bronze', calls: 20, bonus: 25, color: 'from-orange-700/30 to-orange-600/10', border: 'border-orange-600/30', text: 'text-orange-400', icon: '🥉' },
+  { nameKey: 'captain.landing.tier.silver', nameDefault: 'Argent', calls: 50, bonus: 50, color: 'from-gray-400/20 to-gray-300/10', border: 'border-gray-400/30', text: 'text-gray-300', icon: '🥈' },
+  { nameKey: 'captain.landing.tier.gold', nameDefault: 'Or', calls: 100, bonus: 100, color: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/30', text: 'text-amber-400', icon: '🥇' },
+  { nameKey: 'captain.landing.tier.platinum', nameDefault: 'Platine', calls: 200, bonus: 200, color: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400', icon: '💎' },
+  { nameKey: 'captain.landing.tier.diamond', nameDefault: 'Diamant', calls: 400, bonus: 400, color: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/30', text: 'text-purple-400', icon: '👑' },
 ];
 
 // ============================================================================
@@ -277,6 +277,10 @@ const CaptainLanding: React.FC = () => {
       });
       logAnalyticsEvent('captain_application', { country: form.country });
       setFormState('sent');
+      setForm({ name: '', whatsapp: '', country: '', motivation: '' });
+      setCvFile(null); setCvUrl('');
+      setPhotoFile(null); setPhotoUrl('');
+      if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(''); }
     } catch {
       setFormState('error');
     }
@@ -508,11 +512,11 @@ const CaptainLanding: React.FC = () => {
               </div>
               <div className="divide-y divide-white/5">
                 {TIERS.map(t => (
-                  <div key={t.name} className="flex items-center justify-between px-5 py-3 hover:bg-white/5 transition-colors">
+                  <div key={t.nameKey} className="flex items-center justify-between px-5 py-3 hover:bg-white/5 transition-colors">
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{t.icon}</span>
-                      <span className={`font-bold ${t.text}`}>{t.name}</span>
-                      <span className="text-xs text-white/40">{t.calls}+ appels</span>
+                      <span className={`font-bold ${t.text}`}>{intl.formatMessage({ id: t.nameKey, defaultMessage: t.nameDefault })}</span>
+                      <span className="text-xs text-white/40">{t.calls}+ {intl.formatMessage({ id: 'captain.landing.tier.calls', defaultMessage: 'appels' })}</span>
                     </div>
                     <div className="text-right">
                       <span className={`font-black text-lg ${t.text}`}>{t.bonus}$</span>
@@ -541,7 +545,7 @@ const CaptainLanding: React.FC = () => {
                 <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.team" defaultMessage="Equipe" /></p><p className="font-black text-amber-400">1 125$</p></div>
                 <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.tier" defaultMessage="Palier" /></p><p className="font-black text-green-400">400$</p></div>
                 <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.quality" defaultMessage="Qualite" /></p><p className="font-black text-purple-400">100$</p></div>
-                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40">TOTAL</p><p className="font-black text-white">1 625$</p></div>
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.total" defaultMessage="TOTAL" /></p><p className="font-black text-white">1 625$</p></div>
               </div>
               <p className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-green-400">
                 = 1 625${local(1625)}/mois
@@ -649,7 +653,7 @@ const CaptainLanding: React.FC = () => {
                       <span className="text-amber-400 font-bold">{teamSize}</span>
                     </label>
                     <input id="c-team" type="range" min="5" max="200" value={teamSize} onChange={e => setTeamSize(Number(e.target.value))}
-                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-400 [&::-webkit-slider-thumb]:cursor-pointer" />
+                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-400 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-amber-400 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer" />
                   </div>
                   <div>
                     <label htmlFor="c-calls" className="text-sm flex justify-between mb-2">
@@ -657,7 +661,7 @@ const CaptainLanding: React.FC = () => {
                       <span className="text-green-400 font-bold">{callsPerChatter}</span>
                     </label>
                     <input id="c-calls" type="range" min="5" max="40" value={callsPerChatter} onChange={e => setCallsPerChatter(Number(e.target.value))}
-                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-400 [&::-webkit-slider-thumb]:cursor-pointer" />
+                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-400 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-green-400 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer" />
                   </div>
                   <div>
                     <label htmlFor="c-pers" className="text-sm flex justify-between mb-2">
@@ -665,11 +669,11 @@ const CaptainLanding: React.FC = () => {
                       <span className="text-blue-400 font-bold">{personalCalls}</span>
                     </label>
                     <input id="c-pers" type="range" min="0" max="60" value={personalCalls} onChange={e => setPersonalCalls(Number(e.target.value))}
-                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-400 [&::-webkit-slider-thumb]:cursor-pointer" />
+                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-400 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blue-400 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer" />
                   </div>
                   <div className={`bg-gradient-to-r ${tier.color} border ${tier.border} rounded-xl p-3 text-center`}>
-                    <span className={`text-lg font-black ${tier.text}`}>{tier.icon} {tier.name}</span>
-                    <span className="text-xs text-white/40 ml-2">({totalTeamCalls} appels)</span>
+                    <span className={`text-lg font-black ${tier.text}`}>{tier.icon} {intl.formatMessage({ id: tier.nameKey, defaultMessage: tier.nameDefault })}</span>
+                    <span className="text-xs text-white/40 ml-2">({totalTeamCalls} {intl.formatMessage({ id: 'captain.landing.tier.calls', defaultMessage: 'appels' })})</span>
                   </div>
                 </div>
               </div>
@@ -684,7 +688,7 @@ const CaptainLanding: React.FC = () => {
 
                 <div className="space-y-1.5 text-sm mb-5">
                   <div className="flex justify-between"><span className="text-white/60"><FormattedMessage id="captain.landing.calc.r1" defaultMessage="Commissions equipe" /></span><span className="font-bold text-amber-400">{teamComm.toLocaleString()}$</span></div>
-                  <div className="flex justify-between"><span className="text-white/60"><FormattedMessage id="captain.landing.calc.r2" defaultMessage="Bonus palier" /> ({tier.name})</span><span className="font-bold text-green-400">{tier.bonus}$</span></div>
+                  <div className="flex justify-between"><span className="text-white/60"><FormattedMessage id="captain.landing.calc.r2" defaultMessage="Bonus palier" /> ({intl.formatMessage({ id: tier.nameKey, defaultMessage: tier.nameDefault })})</span><span className="font-bold text-green-400">{tier.bonus}$</span></div>
                   <div className={`flex justify-between ${!qualityOk ? 'opacity-40' : ''}`}><span className="text-white/60"><FormattedMessage id="captain.landing.calc.r3" defaultMessage="Bonus qualite" /></span><span className="font-bold text-purple-400">{qualityBonus}$</span></div>
                   <div className="flex justify-between"><span className="text-white/60"><FormattedMessage id="captain.landing.calc.r4" defaultMessage="Appels directs" /></span><span className="font-bold text-blue-400">{persRev}$</span></div>
                 </div>
@@ -759,8 +763,8 @@ const CaptainLanding: React.FC = () => {
                       <div className="relative w-16 h-16 flex-shrink-0">
                         <img src={photoPreview} alt="Preview" className="w-full h-full object-cover rounded-full border-2 border-amber-400" />
                         <button type="button" onClick={() => { if (photoPreview) URL.revokeObjectURL(photoPreview); setPhotoFile(null); setPhotoPreview(''); setPhotoUrl(''); }}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center z-10">
-                          <X className="w-3 h-3 text-white" />
+                          className="absolute -top-2 -right-2 w-7 h-7 min-w-[28px] min-h-[28px] bg-red-500 rounded-full flex items-center justify-center z-10 touch-manipulation">
+                          <X className="w-3.5 h-3.5 text-white" />
                         </button>
                       </div>
                     ) : (
@@ -790,16 +794,24 @@ const CaptainLanding: React.FC = () => {
                   <label className="text-sm font-medium text-white/80 block mb-1.5">
                     <FormattedMessage id="captain.landing.form.cv" defaultMessage="CV (PDF ou Word, max 5MB)" />
                   </label>
-                  <label className="block cursor-pointer">
-                    <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-3 hover:border-amber-400/50 transition-colors min-h-[48px]">
-                      {cvFile ? <FileText className="w-4 h-4 text-amber-400" /> : <Upload className="w-4 h-4 text-white/50" />}
-                      <span className={cvFile ? 'text-white text-sm' : 'text-white/50 text-sm'}>
-                        {cvUploading ? `Upload... ${cvProgress}%` : cvFile ? cvFile.name : intl.formatMessage({ id: 'captain.landing.form.cv.ph', defaultMessage: 'Choisir un fichier' })}
-                      </span>
-                      {cvFile && !cvUploading && <Check className="w-4 h-4 text-green-400 ml-auto" />}
-                    </div>
-                    <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleCvSelect} />
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="flex-1 cursor-pointer">
+                      <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-3 hover:border-amber-400/50 transition-colors min-h-[48px]">
+                        {cvFile ? <FileText className="w-4 h-4 text-amber-400" /> : <Upload className="w-4 h-4 text-white/50" />}
+                        <span className={cvFile ? 'text-white text-sm truncate' : 'text-white/50 text-sm'}>
+                          {cvUploading ? `Upload... ${cvProgress}%` : cvFile ? cvFile.name : intl.formatMessage({ id: 'captain.landing.form.cv.ph', defaultMessage: 'Choisir un fichier' })}
+                        </span>
+                        {cvFile && !cvUploading && <Check className="w-4 h-4 text-green-400 ml-auto flex-shrink-0" />}
+                      </div>
+                      <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleCvSelect} />
+                    </label>
+                    {cvFile && !cvUploading && (
+                      <button type="button" onClick={() => { setCvFile(null); setCvUrl(''); }}
+                        className="w-8 h-8 min-w-[32px] bg-red-500/20 hover:bg-red-500/40 rounded-lg flex items-center justify-center transition-colors touch-manipulation">
+                        <X className="w-4 h-4 text-red-400" />
+                      </button>
+                    )}
+                  </div>
                   {cvUploading && (
                     <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
                       <div className="h-full bg-amber-400 rounded-full transition-all duration-300" style={{ width: `${cvProgress}%` }} />
@@ -882,7 +894,7 @@ const CaptainLanding: React.FC = () => {
         ================================================================ */}
         {showStickyCTA && (
           <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} role="complementary" aria-label={ctaLabel}>
-            <div className="bg-black/95 backdrop-blur-md border-t px-4 py-3">
+            <div className="bg-black/95 backdrop-blur-md border-t border-white/10 px-4 py-3">
               <button onClick={scrollToForm} aria-label={ctaLabel}
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] sm:text-lg will-change-transform">
                 <Rocket className="w-5 h-5" aria-hidden="true" />
