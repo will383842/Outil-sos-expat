@@ -475,7 +475,7 @@ export interface GroupAdminCommission {
 
   /**
    * Currency — always USD.
-   * Commission amounts are fixed dollar values ($10 client, $5 recruitment),
+   * Commission amounts are fixed dollar values ($5/$3 client, $1 N1, $0.50 N2, $5 activation bonus),
    * NOT a percentage of the call price. The call itself may be billed in EUR
    * or another currency, but commissions are always computed and stored in
    * USD cents, making the sum currency-safe.
@@ -579,6 +579,12 @@ export interface GroupAdminWithdrawal {
 
   /** Net amount after fees */
   netAmount?: number;
+
+  /** Fixed SOS withdrawal fee in cents (300 = $3) */
+  withdrawalFee?: number;
+
+  /** Total amount debited from balance (amount + withdrawalFee) */
+  totalDebited?: number;
 
   // ---- Status Tracking ----
 

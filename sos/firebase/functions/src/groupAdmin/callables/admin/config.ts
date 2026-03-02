@@ -79,12 +79,15 @@ interface UpdateConfigInput {
   newRegistrationsEnabled?: boolean;
   withdrawalsEnabled?: boolean;
   isGroupAdminListingPageVisible?: boolean;
-  commissionClientAmount?: number;
   commissionClientAmountLawyer?: number;
   commissionClientAmountExpat?: number;
-  commissionRecruitmentAmount?: number;
+  commissionClientCallAmount?: number;
+  commissionN1CallAmount?: number;
+  commissionN2CallAmount?: number;
+  commissionActivationBonusAmount?: number;
+  commissionN1RecruitBonusAmount?: number;
+  activationCallsRequired?: number;
   clientDiscountAmount?: number;
-  recruitmentCommissionThreshold?: number;
   paymentMode?: "manual" | "automatic";
   recruitmentWindowMonths?: number;
   attributionWindowDays?: number;
@@ -118,28 +121,24 @@ export const adminUpdateGroupAdminConfig = onCall(
     const input = request.data as UpdateConfigInput;
 
     // Validate numeric values
-    if (input.commissionClientAmount !== undefined && input.commissionClientAmount < 0) {
-      throw new HttpsError("invalid-argument", "Commission amount cannot be negative");
+    const numericFields: Array<[keyof UpdateConfigInput, string]> = [
+      ["commissionClientAmountLawyer", "Commission (lawyer) cannot be negative"],
+      ["commissionClientAmountExpat", "Commission (expat) cannot be negative"],
+      ["commissionClientCallAmount", "Commission (fallback) cannot be negative"],
+      ["commissionN1CallAmount", "N1 call commission cannot be negative"],
+      ["commissionN2CallAmount", "N2 call commission cannot be negative"],
+      ["commissionActivationBonusAmount", "Activation bonus cannot be negative"],
+      ["commissionN1RecruitBonusAmount", "N1 recruit bonus cannot be negative"],
+      ["clientDiscountAmount", "Client discount cannot be negative"],
+    ];
+    for (const [field, msg] of numericFields) {
+      if (input[field] !== undefined && (input[field] as number) < 0) {
+        throw new HttpsError("invalid-argument", msg);
+      }
     }
 
-    if (input.commissionClientAmountLawyer !== undefined && input.commissionClientAmountLawyer < 0) {
-      throw new HttpsError("invalid-argument", "Commission amount (lawyer) cannot be negative");
-    }
-
-    if (input.commissionClientAmountExpat !== undefined && input.commissionClientAmountExpat < 0) {
-      throw new HttpsError("invalid-argument", "Commission amount (expat) cannot be negative");
-    }
-
-    if (input.commissionRecruitmentAmount !== undefined && input.commissionRecruitmentAmount < 0) {
-      throw new HttpsError("invalid-argument", "Recruitment commission amount cannot be negative");
-    }
-
-    if (input.clientDiscountAmount !== undefined && input.clientDiscountAmount < 0) {
-      throw new HttpsError("invalid-argument", "Client discount amount cannot be negative");
-    }
-
-    if (input.recruitmentCommissionThreshold !== undefined && input.recruitmentCommissionThreshold < 0) {
-      throw new HttpsError("invalid-argument", "Recruitment commission threshold cannot be negative");
+    if (input.activationCallsRequired !== undefined && (input.activationCallsRequired < 1 || input.activationCallsRequired > 10)) {
+      throw new HttpsError("invalid-argument", "Activation calls required must be between 1 and 10");
     }
 
     if (input.paymentMode !== undefined && !["manual", "automatic"].includes(input.paymentMode)) {
@@ -165,12 +164,15 @@ export const adminUpdateGroupAdminConfig = onCall(
       if (input.newRegistrationsEnabled !== undefined) updates.newRegistrationsEnabled = input.newRegistrationsEnabled;
       if (input.withdrawalsEnabled !== undefined) updates.withdrawalsEnabled = input.withdrawalsEnabled;
       if (input.isGroupAdminListingPageVisible !== undefined) updates.isGroupAdminListingPageVisible = input.isGroupAdminListingPageVisible;
-      if (input.commissionClientAmount !== undefined) updates.commissionClientAmount = input.commissionClientAmount;
       if (input.commissionClientAmountLawyer !== undefined) updates.commissionClientAmountLawyer = input.commissionClientAmountLawyer;
       if (input.commissionClientAmountExpat !== undefined) updates.commissionClientAmountExpat = input.commissionClientAmountExpat;
-      if (input.commissionRecruitmentAmount !== undefined) updates.commissionRecruitmentAmount = input.commissionRecruitmentAmount;
+      if (input.commissionClientCallAmount !== undefined) updates.commissionClientCallAmount = input.commissionClientCallAmount;
+      if (input.commissionN1CallAmount !== undefined) updates.commissionN1CallAmount = input.commissionN1CallAmount;
+      if (input.commissionN2CallAmount !== undefined) updates.commissionN2CallAmount = input.commissionN2CallAmount;
+      if (input.commissionActivationBonusAmount !== undefined) updates.commissionActivationBonusAmount = input.commissionActivationBonusAmount;
+      if (input.commissionN1RecruitBonusAmount !== undefined) updates.commissionN1RecruitBonusAmount = input.commissionN1RecruitBonusAmount;
+      if (input.activationCallsRequired !== undefined) updates.activationCallsRequired = input.activationCallsRequired;
       if (input.clientDiscountAmount !== undefined) updates.clientDiscountAmount = input.clientDiscountAmount;
-      if (input.recruitmentCommissionThreshold !== undefined) updates.recruitmentCommissionThreshold = input.recruitmentCommissionThreshold;
       if (input.paymentMode !== undefined) updates.paymentMode = input.paymentMode;
       if (input.recruitmentWindowMonths !== undefined) updates.recruitmentWindowMonths = input.recruitmentWindowMonths;
       if (input.attributionWindowDays !== undefined) updates.attributionWindowDays = input.attributionWindowDays;

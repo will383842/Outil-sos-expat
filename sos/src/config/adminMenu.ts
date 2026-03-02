@@ -69,6 +69,9 @@ import {
   Code,
   // Team icons
   UsersRound,
+  // Press icons
+  Newspaper,
+  Image,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -536,6 +539,30 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: MessageSquare,
         badge: "NEW",
         descriptionKey: "admin.menu.userFeedback.description",
+      },
+      {
+        id: "press",
+        labelKey: "admin.menu.press",
+        icon: Newspaper,
+        descriptionKey: "admin.menu.press.description",
+        children: [
+          {
+            id: "press-resources",
+            labelKey: "admin.menu.pressResources",
+            path: "/admin/press/resources",
+            icon: Image,
+            badge: "NEW",
+            descriptionKey: "admin.menu.pressResources.description",
+          },
+          {
+            id: "press-releases",
+            labelKey: "admin.menu.pressReleases",
+            path: "/admin/press/releases",
+            icon: FileText,
+            badge: "NEW",
+            descriptionKey: "admin.menu.pressReleases.description",
+          },
+        ],
       },
     ],
   },

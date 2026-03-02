@@ -360,7 +360,8 @@ export type RouteKey =
   | "influencer-directory"   // /nos-influenceurs -> /our-influencers, etc.
   | "blogger-directory"   // /nos-blogueurs -> /our-bloggers, etc.
   | "chatter-directory"  // /nos-chatters -> /our-chatters, etc.
-  | "captain-landing";   // /devenir-capitaine -> /become-captain, etc.
+  | "captain-landing"    // /devenir-capitaine -> /become-captain, etc.
+  | "press";             // /presse -> /press, /prensa, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -1488,6 +1489,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "chengwei-duizhang",
     hi: "captain-bane",
     ar: "كن-قائدا",
+  },
+  "press": {
+    fr: "presse",
+    en: "press",
+    es: "prensa",
+    de: "presse",
+    ru: "pressa",
+    pt: "imprensa",
+    ch: "xinwen",
+    hi: "press",
+    ar: "صحافة",
   },
   "groupadmin-register": {
     fr: "groupadmin/inscription",

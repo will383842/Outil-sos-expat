@@ -3,17 +3,20 @@
  *
  * Returns list of groupAdmins recruited by the current groupAdmin with:
  * - Recruit info (name, email, registration date, group name)
- * - Current direct earnings (client_referral only)
- * - Progress towards $200 threshold
- * - Whether $50 bonus has been paid
+ * - Activation call count (referrals made by the recruit)
+ * - Progress towards activation threshold (default: 2 referrals)
+ * - Whether $5 activation bonus has been paid
  * - Commission window expiration
+ *
+ * NOTE: Migrated from old $200 threshold / $50 bonus system to
+ * Chatter-style activation: $5 bonus when recruit makes 2 referrals.
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
-import { GroupAdmin, GroupAdminRecruit, GroupAdminCommission } from "../types";
-import { getGroupAdminConfig } from "../groupAdminConfig";
+import { GroupAdmin, GroupAdminRecruit } from "../types";
+import { getActivationBonusAmount, getActivationCallsRequired } from "../groupAdminConfig";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 export interface GroupAdminRecruitInfo {
@@ -26,14 +29,14 @@ export interface GroupAdminRecruitInfo {
   commissionWindowEnd: string;
   isActive: boolean;
 
-  // Earnings data
-  totalDirectEarnings: number; // Sum of client_referral commissions (in cents)
-  progressPercent: number; // Progress towards threshold (0-100)
-  threshold: number; // $200 = 20000 cents
+  // Activation progress (Chatter-style: count of referrals made by recruit)
+  activationCallCount: number;   // How many client_referral calls the recruit has made
+  progressPercent: number;       // Progress towards activationCallsRequired (0-100)
+  threshold: number;             // activationCallsRequired (default: 2)
 
   // Bonus status
   bonusPaid: boolean;
-  bonusAmount: number; // $50 = 5000 cents
+  bonusAmount: number;           // $5 = 500 cents
   bonusPaidAt: string | null;
   commissionId: string | null;
 }
@@ -82,10 +85,11 @@ export const getGroupAdminRecruits = onCall(
         throw new HttpsError("permission-denied", "GroupAdmin account is not active");
       }
 
-      // 3. Get config for threshold and bonus amount
-      const config = await getGroupAdminConfig();
-      const threshold = config.recruitmentCommissionThreshold; // 20000 cents ($200)
-      const bonusAmount = config.commissionRecruitmentAmount; // $50 = 5000 cents (from config)
+      // 3. Get config for activation threshold and bonus amount (Chatter-style)
+      const [threshold, bonusAmount] = await Promise.all([
+        getActivationCallsRequired(), // 2 referrals required (not $200)
+        getActivationBonusAmount(),   // $5 = 500 cents (not $50)
+      ]);
 
       // 4. Get all groupAdmin recruits
       const recruitsQuery = await db
@@ -119,24 +123,16 @@ export const getGroupAdminRecruits = onCall(
         // Check if commission window is still active
         const isActive = recruit.commissionWindowEnd.toMillis() > now;
 
-        // Get all client_referral commissions for this recruited groupAdmin
-        const commissionsQuery = await db
-          .collection("group_admin_commissions")
-          .where("groupAdminId", "==", recruit.recruitedId)
-          .where("type", "==", "client_referral")
-          .get();
+        // Use activationCallCount stored on recruit doc (maintained by checkAndPayActivationBonus)
+        const activationCallCount = recruit.activationCallCount ?? 0;
 
-        // Sum non-cancelled commissions
-        let totalDirectEarnings = 0;
-        for (const commDoc of commissionsQuery.docs) {
-          const comm = commDoc.data() as GroupAdminCommission;
-          if (comm.status !== "cancelled") {
-            totalDirectEarnings += comm.amount;
-          }
-        }
+        // Calculate progress towards activation (call count vs required calls)
+        const progressPercent = Math.min(100, Math.round((activationCallCount / threshold) * 100));
 
-        // Calculate progress
-        const progressPercent = Math.min(100, Math.round((totalDirectEarnings / threshold) * 100));
+        // Bonus paid: check new field first, then legacy for backward compat
+        const bonusPaid = recruit.activationBonusPaid || recruit.commissionPaid || false;
+        const bonusPaidAt = (recruit.activationBonusPaidAt ?? recruit.commissionPaidAt)?.toDate().toISOString() || null;
+        const commissionId = recruit.activationBonusCommissionId || recruit.commissionId || null;
 
         recruits.push({
           recruitId: recruitDoc.id,
@@ -147,13 +143,13 @@ export const getGroupAdminRecruits = onCall(
           recruitedAt: recruit.recruitedAt.toDate().toISOString(),
           commissionWindowEnd: recruit.commissionWindowEnd.toDate().toISOString(),
           isActive,
-          totalDirectEarnings,
+          activationCallCount,
           progressPercent,
           threshold,
-          bonusPaid: recruit.commissionPaid || false,
+          bonusPaid,
           bonusAmount,
-          bonusPaidAt: recruit.commissionPaidAt?.toDate().toISOString() || null,
-          commissionId: recruit.commissionId || null,
+          bonusPaidAt,
+          commissionId,
         });
       }
 
@@ -163,7 +159,7 @@ export const getGroupAdminRecruits = onCall(
         activeRecruits: recruits.filter(r => r.isActive).length,
         bonusesPaid: recruits.filter(r => r.bonusPaid).length,
         bonusesPending: recruits.filter(r => !r.bonusPaid && r.isActive).length,
-        totalBonusEarned: recruits.filter(r => r.bonusPaid).length * bonusAmount,
+        totalBonusEarned: recruits.filter(r => r.bonusPaid).length * bonusAmount, // $5 per paid bonus
       };
 
       // 7. Sort by recruitment date (newest first)

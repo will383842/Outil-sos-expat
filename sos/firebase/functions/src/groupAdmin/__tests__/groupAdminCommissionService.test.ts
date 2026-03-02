@@ -77,14 +77,23 @@ jest.mock("firebase-functions/v2", () => ({
 
 jest.mock("../groupAdminConfig", () => ({
   getGroupAdminConfig: jest.fn().mockResolvedValue({
-    commissionClientCallAmount: 1000, // $10
-    commissionRecruitmentAmount: 500, // $5 per call from recruited member
-    validationDelayDays: 7,
-    releaseDelayDays: 3,
+    commissionClientAmountLawyer: 500,    // $5 lawyer
+    commissionClientAmountExpat: 300,     // $3 expat
+    commissionClientCallAmount: 300,      // $3 fallback
+    commissionN1CallAmount: 100,          // $1
+    commissionN2CallAmount: 50,           // $0.50
+    commissionActivationBonusAmount: 500, // $5
+    commissionN1RecruitBonusAmount: 100,  // $1
+    activationCallsRequired: 2,
+    validationHoldPeriodDays: 7,
+    releaseDelayHours: 24,
   }),
-  getClientCommissionAmount: jest.fn().mockResolvedValue(1000),
-  getRecruitmentCommissionAmount: jest.fn().mockResolvedValue(500),
-  getRecruitmentCommissionThreshold: jest.fn().mockResolvedValue(0),
+  getClientCommissionAmount: jest.fn().mockResolvedValue(500),
+  getN1CallAmount: jest.fn().mockResolvedValue(100),
+  getN2CallAmount: jest.fn().mockResolvedValue(50),
+  getActivationBonusAmount: jest.fn().mockResolvedValue(500),
+  getN1RecruitBonusAmount: jest.fn().mockResolvedValue(100),
+  getActivationCallsRequired: jest.fn().mockResolvedValue(2),
   areWithdrawalsEnabled: jest.fn().mockResolvedValue(true),
   isGroupAdminSystemActive: jest.fn().mockResolvedValue(true),
 }));

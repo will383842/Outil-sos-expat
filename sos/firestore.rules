@@ -2267,8 +2267,17 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
                    isAdmin() || isDev());
-      // Écriture: Cloud Functions uniquement (progression auto)
+      // Écriture: Admin SDK (Cloud Functions) uniquement
       allow write: if false;
+
+      // Sous-collection modules — structure réelle: chatter_training_progress/{userId}/modules/{moduleId}
+      match /modules/{moduleId} {
+        // Lecture: l'utilisateur propriétaire (progressId == uid) ou admin
+        allow read: if isAuthenticated() &&
+                    (progressId == request.auth.uid || isAdmin() || isDev());
+        // Écriture: Admin SDK (Cloud Functions) uniquement — les callables utilisent initializeApp()
+        allow write: if false;
+      }
     }
 
     // P0 FIX: Certificats de formation chatters

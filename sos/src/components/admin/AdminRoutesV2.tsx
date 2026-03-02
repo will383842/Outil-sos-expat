@@ -567,6 +567,10 @@ const AdminMetaAnalytics = lazy(() => import("../../pages/admin/AdminMetaAnalyti
 const AdminGoogleAdsAnalytics = lazy(() => import("../../pages/admin/AdminGoogleAdsAnalytics"));
 const AdminLandingPages = lazy(() => import("../../pages/admin/AdminLandingPages"));
 
+// ===== LAZY IMPORTS - PRESS =====
+const AdminPressResources = lazy(() => import("../../pages/admin/AdminPressResources"));
+const AdminPressReleases = lazy(() => import("../../pages/admin/AdminPressReleases"));
+
 // ===== LAZY IMPORTS - TELEGRAM =====
 import TelegramLayout from "../Telegram/TelegramLayout";
 const AdminTelegramDashboard = lazy(() => import("../../pages/admin/Telegram/AdminTelegramDashboard"));
@@ -1960,6 +1964,24 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route path="marketing" element={<Navigate to="marketing/templates-emails" replace />} />
+
+      {/* 📰 PRESSE */}
+      <Route
+        path="press/resources"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminPressResources />
+          </Suspense>
+        }
+      />
+      <Route
+        path="press/releases"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminPressReleases />
+          </Suspense>
+        }
+      />
 
       {/* 404 admin */}
       <Route path="*" element={<AdminNotFound />} />

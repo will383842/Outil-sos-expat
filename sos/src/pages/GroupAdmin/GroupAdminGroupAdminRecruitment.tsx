@@ -43,11 +43,11 @@ interface GroupAdminRecruitInfo {
   recruitedAt: string;
   commissionWindowEnd: string;
   isActive: boolean;
-  totalDirectEarnings: number;
+  activationCallCount: number;  // referrals made by recruit (replaces totalDirectEarnings)
   progressPercent: number;
-  threshold: number;
+  threshold: number;            // referrals required for activation bonus (e.g. 2)
   bonusPaid: boolean;
-  bonusAmount: number;
+  bonusAmount: number;          // $5 = 500 cents
   bonusPaidAt: string | null;
   commissionId: string | null;
 }
@@ -323,7 +323,7 @@ const GroupAdminGroupAdminRecruitment: React.FC = () => {
                       <FormattedMessage id="groupAdmin.groupAdminRecruitment.table.progress" />
                     </th>
                     <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      <FormattedMessage id="groupAdmin.groupAdminRecruitment.table.earnings" />
+                      <FormattedMessage id="groupAdmin.groupAdminRecruitment.table.referrals" defaultMessage="Referrals" />
                     </th>
                     <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                       <FormattedMessage id="groupAdmin.groupAdminRecruitment.table.bonus" />
@@ -351,7 +351,7 @@ const GroupAdminGroupAdminRecruitment: React.FC = () => {
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-700 dark:text-gray-300">{recruit.progressPercent}%</span>
                             <span className="text-xs text-gray-500 dark:text-gray-500">
-                              {formatCurrency(recruit.totalDirectEarnings)} / {formatCurrency(recruit.threshold)}
+                              {recruit.activationCallCount}/{recruit.threshold}
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
@@ -372,7 +372,7 @@ const GroupAdminGroupAdminRecruitment: React.FC = () => {
                       </td>
                       <td className="py-4 px-2">
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          {formatCurrency(recruit.totalDirectEarnings)}
+                          {recruit.activationCallCount} / {recruit.threshold}
                         </p>
                       </td>
                       <td className="py-4 px-2">

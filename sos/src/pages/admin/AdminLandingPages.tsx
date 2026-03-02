@@ -348,6 +348,12 @@ const AdminLandingPages: React.FC = () => {
                   color: 'green',
                   slugs: { fr: 'devenir-admin-groupe', en: 'become-group-admin', es: 'convertirse-admin-grupo', de: 'gruppenadmin-werden', pt: 'tornar-se-admin-grupo', ru: 'stat-admin-gruppy', zh: 'chengwei-qunzhu', hi: 'group-admin-bane', ar: 'كن-مسؤول-مجموعة' },
                 },
+                {
+                  name: 'Espace Presse',
+                  icon: '📰',
+                  color: 'red',
+                  slugs: { fr: 'presse', en: 'press', es: 'prensa', de: 'presse', pt: 'imprensa', ru: 'pressa', zh: 'xinwen', hi: 'press', ar: 'صحافة' },
+                },
               ];
 
               const handleCopy = (url: string) => {

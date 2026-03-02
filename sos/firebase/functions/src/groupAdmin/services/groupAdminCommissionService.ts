@@ -40,7 +40,7 @@ function getDb(): Firestore {
 
 /**
  * Create a client referral commission.
- * Amount is a fixed USD value from config (default $10 = 1000 cents),
+ * Amount is a fixed USD value from config ($5 lawyer / $3 expat),
  * independent of the call's billing currency (EUR, USD, etc.).
  */
 export async function createClientReferralCommission(
@@ -255,8 +255,8 @@ export async function createRecruitmentCommission(
       return null;
     }
 
-    // Get commission amount
-    const amount = await getRecruitmentCommissionAmount();
+    // Get commission amount — use activation bonus amount ($5) as legacy fallback
+    const amount = await getActivationBonusAmount();
 
     // Create commission
     const commission = await createCommission(

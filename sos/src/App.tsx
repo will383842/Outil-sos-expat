@@ -115,6 +115,7 @@ const HelpArticle = lazy(() => import('./pages/HelpArticle'));
 const FAQ = lazy(() => import('./pages/FAQ'));
 const FAQDetail = lazy(() => import('./pages/FAQDetail'));
 const Contact = lazy(() => import('./pages/Contact'));
+const Press = lazy(() => import('./pages/Press'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
 
 
@@ -339,6 +340,9 @@ const routeConfigs: RouteConfig[] = [
   { path: "/nos-influenceurs", component: InfluencerDirectory, translated: "influencer-directory" },
   { path: "/nos-blogueurs", component: BloggerDirectory, translated: "blogger-directory" },
   { path: "/nos-chatters", component: ChatterDirectory, translated: "chatter-directory" },
+
+  // Presse
+  { path: "/presse", component: Press, alias: "/press", translated: "press" },
 ];
 
 // Protégées (utilisateur)

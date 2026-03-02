@@ -699,6 +699,10 @@ const Footer: React.FC = () => {
             label: intl.formatMessage({ id: "footer.support.serviceStatus" }),
             href: `/${getTranslatedRouteSlug("service-status", resolvedLang)}`,
           },
+          {
+            label: intl.formatMessage({ id: "footer.support.press" }),
+            href: `/${getTranslatedRouteSlug("press", resolvedLang)}`,
+          },
         ],
       },
     }),
