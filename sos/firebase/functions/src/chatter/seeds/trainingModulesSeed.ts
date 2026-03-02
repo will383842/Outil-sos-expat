@@ -2245,6 +2245,387 @@ Show me your message when done, I'll give you tips! 🎯"
       },
     ],
   },
+
+  // ============================================================================
+  // MODULE 9: Répondre aux posts avec douleur réelle 🎯
+  // ============================================================================
+  {
+    order: 9,
+    title: "Répondre aux posts avec douleur réelle 🎯",
+    titleTranslations: {
+      en: "Responding to Posts with Real Pain 🎯",
+      es: "Responder a publicaciones con dolor real 🎯",
+      de: "Auf Posts mit echtem Leidensdruck antworten 🎯",
+      pt: "Responder a posts com dor real 🎯",
+    },
+    description: "Apprends à identifier les posts qui méritent une réponse et la structure exacte à utiliser : empathie, mise en garde, solution, prix, lien.",
+    descriptionTranslations: {
+      en: "Learn to identify posts worth responding to and the exact structure to use: empathy, warning, solution, price, link.",
+      es: "Aprende a identificar las publicaciones que merecen respuesta y la estructura exacta a utilizar.",
+      de: "Lerne, welche Posts eine Antwort verdienen, und die genaue Struktur: Empathie, Warnung, Lösung, Preis, Link.",
+    },
+    category: "conversion",
+    coverImageUrl: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800",
+    estimatedMinutes: 4,
+    isRequired: true,
+    prerequisites: [],
+    status: "published",
+    passingScore: 80,
+    slides: [
+      {
+        order: 1,
+        type: "text",
+        title: "Quels posts méritent une réponse ? 🔍",
+        titleTranslations: { en: "Which posts deserve a response? 🔍" },
+        content: `**La règle d'or : répondre UNIQUEMENT aux posts avec une douleur réelle.**
+
+Pas un "ah ouais c'est cool", pas une curiosité — une vraie galère.
+
+---
+
+**✅ Les 4 situations qui méritent ta réponse :**
+
+🔴 **"Mon visa est bloqué"**
+→ Délai dépassé, refus, convocation, dossier perdu...
+
+🔴 **"Problème avec mon employeur"**
+→ Licenciement abusif, salaires impayés, harcèlement, contrat non respecté...
+
+🔴 **"Arrestation / police"**
+→ Garde à vue, convocation, amende contestée, expulsion menacée...
+
+🔴 **"Litige logement"**
+→ Propriétaire qui vire, dépôt de garantie non rendu, charges abusives...
+
+---
+
+**❌ Ces posts NE méritent PAS ta réponse :**
+
+- "Quelqu'un connaît un bon restaurant à Paris ?"
+- "Comment ça va la vie en Espagne ?"
+- "Je cherche un appartement"
+- Questions générales sans urgence
+
+---
+
+**🧠 Le test mental :**
+> "Est-ce que cette personne a besoin d'un expert MAINTENANT ?"
+
+Si oui → réponds.
+Si non → passe ton chemin.`,
+        contentTranslations: {
+          en: `**The golden rule: respond ONLY to posts with real pain.**
+
+Not "oh that's cool", not curiosity — a real problem.
+
+---
+
+**✅ The 4 situations that deserve your response:**
+
+🔴 **"My visa is blocked"**
+→ Overdue deadline, refusal, summons, lost file...
+
+🔴 **"Problem with my employer"**
+→ Unfair dismissal, unpaid wages, harassment, contract breach...
+
+🔴 **"Arrest / police"**
+→ Custody, summons, contested fine, threatened deportation...
+
+🔴 **"Housing dispute"**
+→ Landlord evicting, deposit not returned, abusive charges...
+
+---
+
+**❌ These posts do NOT deserve your response:**
+
+- "Anyone know a good restaurant in Paris?"
+- "How's life in Spain?"
+- "Looking for an apartment"
+- General questions without urgency
+
+---
+
+**🧠 The mental test:**
+> "Does this person need an expert RIGHT NOW?"
+
+If yes → respond.
+If no → move on.`,
+        },
+      },
+      {
+        order: 2,
+        type: "text",
+        title: "La structure de réponse parfaite ✍️",
+        titleTranslations: { en: "The perfect response structure ✍️" },
+        content: `**5 étapes. Dans cet ordre. Toujours.**
+
+---
+
+**1️⃣ EMPATHIE** — Montre que tu comprends la douleur
+> "Oh mince, c'est vraiment stressant comme situation..."
+> "Je comprends, ça peut vraiment faire peur..."
+> "Ouf, c'est pas simple ça du tout..."
+
+⚠️ **Jamais de fausse empathie robotique.** Sois naturel.
+
+---
+
+**2️⃣ MISE EN GARDE** — Forum ≠ conseil fiable
+> "Les réponses sur les forums, c'est souvent des avis généraux qui ne correspondent pas à ta situation exacte..."
+> "Attention, chaque cas est différent, ce qui a marché pour quelqu'un peut ne pas s'appliquer à toi..."
+
+🎯 Ça positionne SOS-Expat comme LA solution sérieuse.
+
+---
+
+**3️⃣ SOLUTION CLAIRE** — Présente le service
+> "Il y a un service où tu peux parler directement à un avocat ou un expat qui connaît exactement ce genre de situation, en moins de 5 minutes par téléphone."
+
+---
+
+**4️⃣ PRIX** — Annonce-le toujours, ça rassure
+> "C'est ~19€ avec un expat aidant ou ~49€ avec un avocat pour 20 min."
+
+Ne cache jamais le prix. Les gens qui ont un vrai problème PAIENT pour une vraie solution.
+
+---
+
+**5️⃣ LIEN** — Place ton lien affilié
+> "[ton lien personnalisé]"
+
+---
+
+**⚡ Résumé : Court. Direct. Pas agressif.**
+
+3 à 5 lignes max. Tu n'as pas besoin de tout expliquer — juste d'ouvrir la porte.`,
+        contentTranslations: {
+          en: `**5 steps. In this order. Always.**
+
+---
+
+**1️⃣ EMPATHY** — Show you understand the pain
+> "Oh no, that's really stressful..."
+> "I understand, that can be really scary..."
+
+⚠️ **Never fake robotic empathy.** Be natural.
+
+---
+
+**2️⃣ WARNING** — Forum ≠ reliable advice
+> "Forum answers are usually general opinions that don't match your exact situation..."
+> "Careful, every case is different, what worked for someone may not apply to you..."
+
+🎯 This positions SOS-Expat as THE serious solution.
+
+---
+
+**3️⃣ CLEAR SOLUTION** — Present the service
+> "There's a service where you can speak directly with a lawyer or an expat who knows exactly this kind of situation, in less than 5 minutes by phone."
+
+---
+
+**4️⃣ PRICE** — Always mention it, it reassures
+> "It's ~€19 with an expat helper or ~€49 with a lawyer for 20 min."
+
+Never hide the price. People with real problems PAY for real solutions.
+
+---
+
+**5️⃣ LINK** — Place your affiliate link
+> "[your personalized link]"
+
+---
+
+**⚡ Summary: Short. Direct. Not aggressive.**
+
+3 to 5 lines max. You don't need to explain everything — just open the door.`,
+        },
+      },
+      {
+        order: 3,
+        type: "text",
+        title: "Exemples concrets 📋",
+        titleTranslations: { en: "Concrete examples 📋" },
+        content: `**4 exemples prêts à l'emploi — adapte avec tes propres mots !**
+
+---
+
+**🔴 Post : "Mon visa est bloqué depuis 3 mois, je sais plus quoi faire"**
+
+> "Oh c'est vraiment épuisant ce genre de situation... Les réponses sur les forums sont souvent trop générales et chaque dossier est différent. Il y a un service pour parler directement à un avocat spécialisé en 5 min par téléphone — ça peut vraiment débloquer la situation. ~49€ pour 20 min avec un expert : [lien]"
+
+---
+
+**🔴 Post : "Mon employeur m'a mis dehors sans raison valable"**
+
+> "Mince, c'est vraiment injuste... Les conseils de forum peuvent t'induire en erreur sur tes droits exacts dans ton pays. Pour un licenciement abusif, mieux vaut parler vite à un avocat. Il y a un service d'appel rapide, ~49€ pour 20 min : [lien]"
+
+---
+
+**🔴 Post : "J'ai été arrêté par la police, je ne comprends pas ce qu'ils me reprochent"**
+
+> "C'est une situation très stressante, je comprends... Dans ce cas précis, le forum ne suffira pas — chaque situation légale est différente. Un avocat par téléphone en 5 min peut t'expliquer exactement quels sont tes droits là maintenant. ~49€ : [lien]"
+
+---
+
+**🔴 Post : "Mon proprio veut me virer, il me harcèle depuis des semaines"**
+
+> "C'est épuisant et c'est pas normal... Les droits des locataires varient beaucoup selon les pays, les conseils généraux de forum peuvent être trompeurs. Il y a un service pour parler à un expat qui connaît ça ou un avocat en 5 min. ~19€ (expat aidant) ou ~49€ (avocat) : [lien]"
+
+---
+
+**💡 Observe le pattern :**
+Empathie courte → Mise en garde douce → Solution → Prix → Lien.
+Jamais plus de 5 lignes.`,
+        contentTranslations: {
+          en: `**4 ready-to-use examples — adapt with your own words!**
+
+---
+
+**🔴 Post: "My visa has been blocked for 3 months, I don't know what to do"**
+
+> "Oh that's really exhausting... Forum answers are usually too general and each file is different. There's a service to speak directly with a specialized lawyer in 5 min by phone — it can really unblock things. ~$55 for 20 min with an expert: [link]"
+
+---
+
+**🔴 Post: "My employer fired me for no valid reason"**
+
+> "That's really unfair... Forum advice can mislead you about your exact rights in your country. For unfair dismissal, better to talk quickly to a lawyer. There's a quick call service, ~$55 for 20 min: [link]"
+
+---
+
+**🔴 Post: "I was arrested by police, I don't understand what they're accusing me of"**
+
+> "That's a very stressful situation... In this specific case, forums won't be enough — each legal situation is different. A lawyer by phone in 5 min can explain exactly what your rights are right now. ~$55: [link]"
+
+---
+
+**🔴 Post: "My landlord wants to evict me, he's been harassing me for weeks"**
+
+> "That's exhausting and it's not normal... Tenant rights vary a lot between countries, general forum advice can be misleading. There's a service to speak with an expat who knows this or a lawyer in 5 min. ~$25 (expat helper) or ~$55 (lawyer): [link]"`,
+        },
+      },
+      {
+        order: 4,
+        type: "text",
+        title: "Ce qu'il ne faut JAMAIS faire ⛔",
+        titleTranslations: { en: "What you should NEVER do ⛔" },
+        content: `**Ces comportements = BAN DÉFINITIF de la plateforme. Sans avertissement.**
+
+---
+
+**❌ Répondre à TOUS les posts** (même sans douleur réelle)
+→ Tu deviens un spammeur. Les gens t'ignorent, les admins de groupes te banissent.
+
+**❌ Poster le lien en premier** (avant l'empathie et la conversation)
+→ C'est de la pub. Personne ne clique. Tu te fais expulser du groupe.
+
+**❌ Copier-coller le même message partout**
+→ Les algorithmes Facebook/Reddit le détectent. Les gens aussi. = Zéro crédibilité.
+
+**❌ Promettre des résultats garantis**
+> ~~"Ils vont résoudre ton problème à 100%"~~
+→ Tu n'es pas avocat. Tu recommandes un service, c'est tout.
+
+**❌ Mentir sur le prix** (dire que c'est gratuit)
+→ Les gens arrivent déçus. Mauvaise expérience = mauvaises reviews = tout le monde perd.
+
+**❌ Forcer ou relancer agressivement**
+> ~~"Tu as cliqué sur le lien ?"~~
+> ~~"Pourquoi t'as pas appelé ?"~~
+→ C'est du harcèlement. Ça ne convertit pas, ça détruit.
+
+---
+
+**✅ La bonne attitude :**
+
+Tu fais de l'aide sincère, pas de la vente.
+Tu mentionnes SOS-Expat naturellement, pas agressivement.
+Tu n'es pas responsable si la personne n'appelle pas — tu as ouvert la porte, c'est tout.
+
+**Court. Direct. Bienveillant. Jamais agressif.** 💛`,
+        contentTranslations: {
+          en: `**These behaviors = PERMANENT BAN from the platform. No warning.**
+
+---
+
+**❌ Responding to ALL posts** (even without real pain)
+→ You become a spammer. People ignore you, group admins ban you.
+
+**❌ Posting the link first** (before empathy and conversation)
+→ It's an ad. Nobody clicks. You get kicked from the group.
+
+**❌ Copy-pasting the same message everywhere**
+→ Facebook/Reddit algorithms detect it. People do too. = Zero credibility.
+
+**❌ Promising guaranteed results**
+> ~~"They'll solve your problem 100%"~~
+→ You're not a lawyer. You're recommending a service, that's all.
+
+**❌ Lying about the price** (saying it's free)
+→ People arrive disappointed. Bad experience = bad reviews = everyone loses.
+
+**❌ Forcing or aggressively following up**
+> ~~"Did you click the link?"~~
+→ That's harassment. It doesn't convert, it destroys.
+
+---
+
+**✅ The right attitude:**
+
+You provide sincere help, not sales.
+You mention SOS-Expat naturally, not aggressively.
+You're not responsible if the person doesn't call — you opened the door, that's it.
+
+**Short. Direct. Kind. Never aggressive.** 💛`,
+        },
+      },
+    ],
+    quizQuestions: [
+      {
+        id: "m9_q1",
+        question: "Un expatrié poste : 'Quelqu'un connaît un bon avocat à Madrid ?' — Tu fais quoi ? 🤔",
+        questionTranslations: { en: "An expat posts: 'Anyone know a good lawyer in Madrid?' — What do you do? 🤔" },
+        options: [
+          { id: "a", text: "Tu réponds immédiatement avec ton lien SOS-Expat", textTranslations: { en: "You reply immediately with your SOS-Expat link" } },
+          { id: "b", text: "Tu ignores — ce n'est pas une douleur réelle urgente", textTranslations: { en: "You ignore it — this isn't real urgent pain" } },
+          { id: "c", text: "Tu demandes quel est son problème exact avant de répondre", textTranslations: { en: "You ask what their exact problem is before responding" } },
+          { id: "d", text: "Tu copies un message générique sur les avocats", textTranslations: { en: "You copy a generic message about lawyers" } },
+        ],
+        correctAnswerId: "c",
+        explanation: "Bonne approche ! Demander quel est le problème exact te permet d'évaluer si c'est une vraie douleur. Si oui, tu appliques la structure en 5 étapes. 🎯",
+        explanationTranslations: { en: "Good approach! Asking what the exact problem is lets you assess if it's real pain. If yes, apply the 5-step structure. 🎯" },
+      },
+      {
+        id: "m9_q2",
+        question: "Dans la structure de réponse parfaite, qu'est-ce qui vient EN PREMIER ? ✍️",
+        questionTranslations: { en: "In the perfect response structure, what comes FIRST? ✍️" },
+        options: [
+          { id: "a", text: "Le lien affilié", textTranslations: { en: "The affiliate link" } },
+          { id: "b", text: "Le prix du service", textTranslations: { en: "The service price" } },
+          { id: "c", text: "L'empathie — montrer que tu comprends la douleur", textTranslations: { en: "Empathy — showing you understand the pain" } },
+          { id: "d", text: "La mise en garde contre les forums", textTranslations: { en: "The warning against forums" } },
+        ],
+        correctAnswerId: "c",
+        explanation: "L'empathie en premier, toujours ! Sans empathie, tout le reste ressemble à du spam. Une vraie connexion humaine d'abord, solution ensuite. 💛",
+        explanationTranslations: { en: "Empathy first, always! Without empathy, everything else looks like spam. A real human connection first, solution second. 💛" },
+      },
+      {
+        id: "m9_q3",
+        question: "Pourquoi faut-il TOUJOURS mentionner le prix dans ta réponse ? 💰",
+        questionTranslations: { en: "Why should you ALWAYS mention the price in your response? 💰" },
+        options: [
+          { id: "a", text: "Pour décourager les gens qui ne veulent pas payer", textTranslations: { en: "To discourage people who don't want to pay" } },
+          { id: "b", text: "Parce que le prix rassure — les gens avec un vrai problème paient pour une vraie solution", textTranslations: { en: "Because the price reassures — people with a real problem pay for a real solution" } },
+          { id: "c", text: "Pour paraître professionnel", textTranslations: { en: "To appear professional" } },
+          { id: "d", text: "Ce n'est pas nécessaire, mieux vaut ne pas en parler", textTranslations: { en: "It's not necessary, better not to mention it" } },
+        ],
+        correctAnswerId: "b",
+        explanation: "Exact ! Mentionner le prix filtre naturellement les curieux et rassure ceux qui ont un vrai problème. Cacher le prix = mauvaises surprises = mauvaise expérience. 🎯",
+        explanationTranslations: { en: "Exactly! Mentioning the price naturally filters curious people and reassures those with a real problem. Hiding the price = bad surprises = bad experience. 🎯" },
+      },
+    ],
+  },
 ];
 
 /**
